@@ -1,6 +1,14 @@
+function getFollowersText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class FollowersManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Manages followers systems' });
+    super({ description: getFollowersText('ui.colony.followers.managerDescription', 'Manages followers systems') });
     this.enabled = false;
     this.assignmentMode = 'manual';
     this.assignmentStep = 1;
@@ -40,22 +48,22 @@ class FollowersManager extends EffectableEntity {
     return [
       {
         id: 'festivalGoldenDuration',
-        label: 'Festival and Gold Duration +5s',
-        description: 'Increases Festival and Golden Asteroid multiplier durations by 5 seconds each.',
+        label: getFollowersText('ui.colony.followers.holyWorld.shop.festivalGoldenDuration.label', 'Festival and Gold Duration +5s'),
+        description: getFollowersText('ui.colony.followers.holyWorld.shop.festivalGoldenDuration.description', 'Increases Festival and Golden Asteroid multiplier durations by 5 seconds each.'),
         maxPurchases: 18,
         cost: 1
       },
       {
         id: 'patienceMax',
-        label: 'Maximum Patience +1',
-        description: 'Increases maximum patience by 1.',
+        label: getFollowersText('ui.colony.followers.holyWorld.shop.patienceMax.label', 'Maximum Patience +1'),
+        description: getFollowersText('ui.colony.followers.holyWorld.shop.patienceMax.description', 'Increases maximum patience by 1.'),
         maxPurchases: 12,
         cost: 1
       },
       {
         id: 'conversionPower',
-        label: 'Conversion Power +10%',
-        description: 'Increases Faith conversion power by 10%.',
+        label: getFollowersText('ui.colony.followers.holyWorld.shop.conversionPower.label', 'Conversion Power +10%'),
+        description: getFollowersText('ui.colony.followers.holyWorld.shop.conversionPower.description', 'Increases Faith conversion power by 10%.'),
         maxPurchases: 10,
         cost: 1
       }
@@ -162,22 +170,30 @@ class FollowersManager extends EffectableEntity {
     return [
       {
         id: 'terraformed',
-        label: 'World is fully terraformed',
+        label: getFollowersText('ui.colony.followers.holyWorld.requirements.terraformed', 'World is fully terraformed'),
         met: terraformed
       },
       {
         id: 'noOtherSpecialization',
-        label: 'No other world specialization complete or ongoing',
+        label: getFollowersText('ui.colony.followers.holyWorld.requirements.noOtherSpecialization', 'No other world specialization complete or ongoing'),
         met: noOtherSpecialization
       },
       {
         id: 'ecumenopolisCoverage',
-        label: `Ecumenopolis coverage at least 80% (${formatNumber(ecumenopolisCoverage * 100, false, 2)}%)`,
+        label: getFollowersText(
+          'ui.colony.followers.holyWorld.requirements.ecumenopolisCoverage',
+          'Ecumenopolis coverage at least 80% ({value}%)',
+          { value: formatNumber(ecumenopolisCoverage * 100, false, 2) }
+        ),
         met: ecumenopolisCoverage >= 0.8
       },
       {
         id: 'occupancy',
-        label: `Colonist occupancy at least 90% (${formatNumber(occupancyRatio * 100, false, 2)}%)`,
+        label: getFollowersText(
+          'ui.colony.followers.holyWorld.requirements.occupancy',
+          'Colonist occupancy at least 90% ({value}%)',
+          { value: formatNumber(occupancyRatio * 100, false, 2) }
+        ),
         met: occupancyRatio >= 0.9
       }
     ];

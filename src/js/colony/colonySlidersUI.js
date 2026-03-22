@@ -1,5 +1,13 @@
 // Colony sliders management
 
+function getColonySlidersText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 let mechanicalAssistanceRow;
 let mechanicalAssistanceInfo;
 let mechanicalAssistanceEffect;
@@ -27,7 +35,7 @@ function initializeColonySlidersUI() {
   header.classList.add('card-header');
   const title = document.createElement('span');
   title.classList.add('card-title');
-  title.textContent = 'Colony Management';
+  title.textContent = getColonySlidersText('ui.colony.sliders.title', 'Colony Management');
   header.appendChild(title);
   card.appendChild(header);
 
@@ -39,7 +47,7 @@ function initializeColonySlidersUI() {
 
   const label = document.createElement('label');
   label.htmlFor = 'workforce-slider';
-  label.textContent = 'Workforce Allocation';
+  label.textContent = getColonySlidersText('ui.colony.sliders.workforceAllocation', 'Workforce Allocation');
   sliderRow.appendChild(label);
 
   const valueSpan = document.createElement('span');
@@ -91,8 +99,8 @@ function initializeColonySlidersUI() {
     if (valueSpan && effectSpan) {
       const workers = Math.round(val);
       const scientists = 100 - workers;
-      valueSpan.textContent = `Workers: ${workers}%`;
-      effectSpan.textContent = `Scientists: ${scientists}%`;
+      valueSpan.textContent = getColonySlidersText('ui.colony.sliders.workersValue', 'Workers: {value}%', { value: workers });
+      effectSpan.textContent = getColonySlidersText('ui.colony.sliders.scientistsValue', 'Scientists: {value}%', { value: scientists });
     }
   };
   let startVal = 50;
@@ -120,7 +128,7 @@ function initializeColonySlidersUI() {
   foodRow.classList.add('colony-slider');
   const foodLabel = document.createElement('label');
   foodLabel.htmlFor = 'food-slider';
-  foodLabel.textContent = 'Food Consumption';
+  foodLabel.textContent = getColonySlidersText('ui.colony.sliders.foodConsumption', 'Food Consumption');
   foodRow.appendChild(foodLabel);
 
   const foodValue = document.createElement('span');
@@ -169,7 +177,7 @@ function initializeColonySlidersUI() {
       foodValue.textContent = `${val.toFixed(1)}x`;
       const growth = 1 + (val - 1) * 0.02;
       const percent = ((growth - 1) * 100).toFixed(1);
-      foodEffect.textContent = `Growth: +${percent}%`;
+      foodEffect.textContent = getColonySlidersText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
     }
   };
   let initialFood;
@@ -194,7 +202,7 @@ function initializeColonySlidersUI() {
   waterRow.classList.add('colony-slider');
   const waterLabel = document.createElement('label');
   waterLabel.htmlFor = 'water-slider';
-  waterLabel.textContent = 'Luxury Water Use';
+  waterLabel.textContent = getColonySlidersText('ui.colony.sliders.luxuryWaterUse', 'Luxury Water Use');
   waterRow.appendChild(waterLabel);
 
   const waterValue = document.createElement('span');
@@ -243,7 +251,7 @@ function initializeColonySlidersUI() {
       waterValue.textContent = `${val.toFixed(1)}x`;
       const growth = 1 + (val - 1) * 0.01;
       const percent = ((growth - 1) * 100).toFixed(1);
-      waterEffect.textContent = `Growth: +${percent}%`;
+      waterEffect.textContent = getColonySlidersText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
     }
   };
   let initialWater;
@@ -268,7 +276,7 @@ function initializeColonySlidersUI() {
   oreRow.classList.add('colony-slider');
   const oreLabel = document.createElement('label');
   oreLabel.htmlFor = 'ore-worker-slider';
-  oreLabel.textContent = 'Ore Mine Workers';
+  oreLabel.textContent = getColonySlidersText('ui.colony.sliders.oreMineWorkers', 'Ore Mine Workers');
   oreRow.appendChild(oreLabel);
 
   const oreValue = document.createElement('span');
@@ -320,10 +328,10 @@ function initializeColonySlidersUI() {
   mechanicalAssistanceRow.id = 'mechanical-assistance-row';
   const mechLabel = document.createElement('label');
   mechLabel.htmlFor = 'mechanical-assistance-slider';
-  mechLabel.textContent = 'Mechanical Assistance ';
+  mechLabel.textContent = getColonySlidersText('ui.colony.sliders.mechanicalAssistance', 'Mechanical Assistance ');
   const mechInfo = document.createElement('span');
   mechInfo.classList.add('info-tooltip-icon');
-  mechInfo.title = 'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.';
+  mechInfo.title = getColonySlidersText('ui.colony.sliders.mechanicalAssistanceTooltip', 'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.');
   mechInfo.innerHTML = '&#9432;';
   mechLabel.appendChild(mechInfo);
   mechanicalAssistanceRow.appendChild(mechLabel);
@@ -411,7 +419,9 @@ function initializeColonySlidersUI() {
       mechanicalAssistanceValue.textContent = `${sliderText}x`;
     }
     if (mechanicalAssistanceEffect) {
-      mechanicalAssistanceEffect.textContent = `Gravity decay reduction: -${mitigationText}%`;
+      mechanicalAssistanceEffect.textContent = getColonySlidersText('ui.colony.sliders.gravityDecayReduction', 'Gravity decay reduction: -{value}%', {
+        value: mitigationText
+      });
     }
 
     let gravity;
@@ -431,13 +441,16 @@ function initializeColonySlidersUI() {
 
     if (mechanicalAssistanceInfo) {
       mechanicalAssistanceInfo.title = [
-        'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.',
-        `Slider: ${sliderText}x.`,
-        `Components coverage: ${coveragePercent}%.`,
-        `Current gravity: ${gravity.toFixed(2)} m/s² (${aboveTwenty.toFixed(2)} above 20).`,
-        `Effective mitigation: ${effectiveMitigation}% of gravity decay.`,
-        `High-gravity adaptation: ${adaptationStatus}`,
-        `Remaining decay: ${remaining}% of the original high-gravity loss per day when gravity exceeds 20 m/s².`
+        getColonySlidersText('ui.colony.sliders.mechanicalAssistanceTooltip', 'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.'),
+        getColonySlidersText('ui.colony.sliders.sliderValue', 'Slider: {value}x.', { value: sliderText }),
+        getColonySlidersText('ui.colony.sliders.componentsCoverage', 'Components coverage: {value}%.', { value: coveragePercent }),
+        getColonySlidersText('ui.colony.sliders.currentGravity', 'Current gravity: {gravity} m/s^2 ({above} above 20).', {
+          gravity: gravity.toFixed(2),
+          above: aboveTwenty.toFixed(2)
+        }),
+        getColonySlidersText('ui.colony.sliders.effectiveMitigation', 'Effective mitigation: {value}% of gravity decay.', { value: effectiveMitigation }),
+        getColonySlidersText('ui.colony.sliders.highGravityAdaptation', 'High-gravity adaptation: {value}', { value: adaptationStatus }),
+        getColonySlidersText('ui.colony.sliders.remainingDecay', 'Remaining decay: {value}% of the original high-gravity loss per day when gravity exceeds 20 m/s^2.', { value: remaining })
       ].join('\n');
     }
   };
@@ -450,7 +463,7 @@ function initializeColonySlidersUI() {
   warpnetRow.id = 'warpnet-row';
   const warpnetLabel = document.createElement('label');
   warpnetLabel.htmlFor = 'warpnet-slider';
-  warpnetLabel.textContent = 'Warpnet ';
+  warpnetLabel.textContent = getColonySlidersText('ui.colony.sliders.warpnet', 'Warpnet ');
   const warpnetInfoIcon = document.createElement('span');
   warpnetInfoIcon.classList.add('info-tooltip-icon');
   warpnetInfoIcon.innerHTML = '&#9432;';
@@ -503,7 +516,7 @@ function initializeColonySlidersUI() {
 
   warpnetInfo = attachDynamicInfoTooltip(
     warpnetInfoIcon,
-    'Warpnet funnels instant communication to coordinate research output.'
+    getColonySlidersText('ui.colony.sliders.warpnetTooltip', 'Warpnet funnels instant communication to coordinate research output.')
   );
   warpnetEffect = warpnetEffectSpan;
   warpnetValue = warpnetValueSpan;
@@ -528,16 +541,16 @@ function initializeColonySlidersUI() {
       warpnetValue.textContent = label;
     }
     if (warpnetEffect) {
-      warpnetEffect.textContent = `Research: +${percent}%`;
+      warpnetEffect.textContent = getColonySlidersText('ui.colony.sliders.researchEffect', 'Research: +{value}%', { value: percent });
     }
     setTooltipText(
       warpnetInfo,
       [
-        'Warpnet funnels instant communication to coordinate research output.',
-        `Left value multiplies colony and android housing energy upkeep: ${label}.`,
-        `Right value adds a global research boost: +${percent}%`,
-        'Energy cost scales steeply with Warpnet intensity.',
-        'Note: Solis pays for starting androids.'
+        getColonySlidersText('ui.colony.sliders.warpnetTooltip', 'Warpnet funnels instant communication to coordinate research output.'),
+        getColonySlidersText('ui.colony.sliders.warpnetEnergyUpkeep', 'Left value multiplies colony and android housing energy upkeep: {value}.', { value: label }),
+        getColonySlidersText('ui.colony.sliders.warpnetResearchBoost', 'Right value adds a global research boost: +{value}%', { value: percent }),
+        getColonySlidersText('ui.colony.sliders.warpnetEnergyCost', 'Energy cost scales steeply with Warpnet intensity.'),
+        getColonySlidersText('ui.colony.sliders.warpnetSolisNote', 'Note: Solis pays for starting androids.')
       ].join('\n')
     );
   };
@@ -554,7 +567,7 @@ function initializeColonySlidersUI() {
       oreValue.textContent = `${workers}`;
       const mult = val === 0 ? 0 : val;
       const percent = (mult * 100).toFixed(0);
-      oreEffect.textContent = `Boost: ${percent}%`;
+      oreEffect.textContent = getColonySlidersText('ui.colony.sliders.boostEffect', 'Boost: {value}%', { value: percent });
     }
   };
 

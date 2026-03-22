@@ -1,10 +1,18 @@
 // Colony sliders manager
 
+function getColonySliderText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 const colonyIds = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
 class ColonySlidersManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Manages colony sliders' });
+    super({ description: getColonySliderText('ui.colony.sliders.managerDescription', 'Manages colony sliders') });
     this.workerRatio = 0.5;
     this.foodConsumption = 1;
     this.luxuryWater = 1;
@@ -42,8 +50,8 @@ class ColonySlidersManager extends EffectableEntity {
       if (valueSpan && effectSpan) {
         const workers = Math.round(value * 100);
         const scientists = 100 - workers;
-        valueSpan.textContent = `Workers: ${workers}%`;
-        effectSpan.textContent = `Scientists: ${scientists}%`;
+        valueSpan.textContent = getColonySliderText('ui.colony.sliders.workersValue', 'Workers: {value}%', { value: workers });
+        effectSpan.textContent = getColonySliderText('ui.colony.sliders.scientistsValue', 'Scientists: {value}%', { value: scientists });
       }
     }
   }
@@ -62,7 +70,7 @@ class ColonySlidersManager extends EffectableEntity {
         valueSpan.textContent = `${value.toFixed(1)}x`;
         const growthVal = 1 + (value - 1) * 0.02;
         const percent = ((growthVal - 1) * 100).toFixed(1);
-        effectSpan.textContent = `Growth: +${percent}%`;
+        effectSpan.textContent = getColonySliderText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
       }
     }
   }
@@ -81,7 +89,7 @@ class ColonySlidersManager extends EffectableEntity {
         valueSpan.textContent = `${value.toFixed(1)}x`;
         const growthVal = 1 + (value - 1) * 0.01;
         const percent = ((growthVal - 1) * 100).toFixed(1);
-        effectSpan.textContent = `Growth: +${percent}%`;
+        effectSpan.textContent = getColonySliderText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
       }
     }
   }
@@ -102,7 +110,7 @@ class ColonySlidersManager extends EffectableEntity {
         valueSpan.textContent = `${workers}`;
         const mult = value === 0 ? 0 : value;
         const percent = (mult * 100).toFixed(0);
-        effectSpan.textContent = `Boost: ${percent}%`;
+        effectSpan.textContent = getColonySliderText('ui.colony.sliders.boostEffect', 'Boost: {value}%', { value: percent });
       }
     }
   }
@@ -125,7 +133,7 @@ class ColonySlidersManager extends EffectableEntity {
         const sliderMitigation = Math.min(50, value * clampedCoverage * 25);
         const totalMitigation = Math.min(100, adaptationMitigation + sliderMitigation);
         const mitigationText = totalMitigation.toFixed(1).replace(/\.0$/, '');
-        effectSpan.textContent = `Gravity decay reduction: -${mitigationText}%`;
+        effectSpan.textContent = getColonySliderText('ui.colony.sliders.gravityDecayReduction', 'Gravity decay reduction: -{value}%', { value: mitigationText });
       }
     }
   }
@@ -141,10 +149,12 @@ class ColonySlidersManager extends EffectableEntity {
       const valueSpan = document.getElementById('warpnet-slider-value');
       const effectSpan = document.getElementById('warpnet-slider-effect');
       if (valueSpan && effectSpan) {
-        const label = value === 0 ? 'x1' : `x1e${value}`;
+        const label = value === 0
+          ? getColonySliderText('ui.colony.sliders.warpnetLabelBase', 'x1')
+          : getColonySliderText('ui.colony.sliders.warpnetLabelExp', 'x1e{value}', { value });
         const percent = value * 100;
         valueSpan.textContent = label;
-        effectSpan.textContent = `Research: +${percent}%`;
+        effectSpan.textContent = getColonySliderText('ui.colony.sliders.researchEffect', 'Research: +{value}%', { value: percent });
       }
     }
   }
@@ -170,7 +180,7 @@ class ColonySlidersManager extends EffectableEntity {
         value: researchMultiplier,
         effectId: 'researchSlider',
         sourceId: 'researchSlider',
-        name: 'Colony sliders'
+        name: getColonySliderText('ui.colony.sliders.sourceName', 'Colony sliders')
       });
     });
   }
@@ -196,7 +206,7 @@ class ColonySlidersManager extends EffectableEntity {
         value: value,
         effectId: 'foodConsumption',
         sourceId: 'foodConsumption',
-        name: 'Colony sliders'
+        name: getColonySliderText('ui.colony.sliders.sourceName', 'Colony sliders')
       });
     });
   }
@@ -222,7 +232,7 @@ class ColonySlidersManager extends EffectableEntity {
         value: value,
         effectId: 'luxuryWaterMaintenance',
         sourceId: 'luxuryWaterMaintenance',
-        name: 'Colony sliders'
+        name: getColonySliderText('ui.colony.sliders.sourceName', 'Colony sliders')
       });
     });
   }
@@ -246,7 +256,7 @@ class ColonySlidersManager extends EffectableEntity {
       value: multiplier,
       effectId: 'oreMineProductionBoost',
       sourceId: 'oreMineWorkers',
-      name: 'Colony sliders'
+      name: getColonySliderText('ui.colony.sliders.sourceName', 'Colony sliders')
     });
   }
 

@@ -57,6 +57,14 @@ const followersUICache = {
   rowsById: {},
 };
 
+function getFollowersText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function cacheFollowersUIElements() {
   if (!followersUICache.host || !followersUICache.host.isConnected) {
     followersUICache.host = document.getElementById('followers-colonies-content');
@@ -108,15 +116,15 @@ function buildFollowersUI() {
   root.classList.add('followers-layout');
 
   const orbitalsTooltipText = [
-    'With orbitals, humanity can now help HOPE with its project directly.',
-    'Assign orbitals to produce resources automatically.',
-    'You can assign up to your effective terraformed world count.',
-    'Manual mode sets exact assignments with the current step size.',
-    'Weight mode distributes assignments by integer weights among unlocked resources.',
-    'Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.',
-    'Orbitals only produce if the target resource is unlocked.'
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line1', 'With orbitals, humanity can now help HOPE with its project directly.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line2', 'Assign orbitals to produce resources automatically.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line3', 'You can assign up to your effective terraformed world count.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line4', 'Manual mode sets exact assignments with the current step size.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line5', 'Weight mode distributes assignments by integer weights among unlocked resources.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line6', 'Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line7', 'Orbitals only produce if the target resource is unlocked.')
   ].join('\n');
-  const orbitals = createFollowersCard('Orbitals', 'followers-orbitals-card', orbitalsTooltipText);
+  const orbitals = createFollowersCard(getFollowersText('ui.colony.followers.orbitals.title', 'Orbitals'), 'followers-orbitals-card', orbitalsTooltipText);
 
   const orbitalKesslerWarning = document.createElement('div');
   orbitalKesslerWarning.classList.add('project-kessler-warning', 'followers-orbitals-kessler-warning');
@@ -125,7 +133,7 @@ function buildFollowersUI() {
   orbitalWarningIconLeft.classList.add('project-kessler-warning__icon');
   orbitalWarningIconLeft.textContent = '⚠';
   const orbitalWarningText = document.createElement('span');
-  orbitalWarningText.textContent = 'Orbitals cannot approach due to Kessler Skies. Limited to research.';
+  orbitalWarningText.textContent = getFollowersText('ui.colony.followers.orbitals.kesslerWarning', 'Orbitals cannot approach due to Kessler Skies. Limited to research.');
   const orbitalWarningIconRight = document.createElement('span');
   orbitalWarningIconRight.classList.add('project-kessler-warning__icon');
   orbitalWarningIconRight.textContent = '⚠';
@@ -135,7 +143,11 @@ function buildFollowersUI() {
   const summary = document.createElement('div');
   summary.id = 'followers-orbitals-summary';
   summary.classList.add('followers-orbitals-summary');
-  summary.textContent = 'Orbitals Assigned: 0 / 0 | Unassigned: 0';
+  summary.textContent = getFollowersText('ui.colony.followers.orbitals.summary', 'Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}', {
+    assigned: 0,
+    available: 0,
+    unassigned: 0
+  });
   orbitals.body.appendChild(summary);
 
   const modeRow = document.createElement('div');
@@ -143,9 +155,13 @@ function buildFollowersUI() {
 
   const modeLabel = document.createElement('span');
   modeLabel.classList.add('followers-inline-label');
-  modeLabel.textContent = 'Mode';
+  modeLabel.textContent = getFollowersText('ui.colony.followers.orbitals.mode', 'Mode');
 
-  const modeToggle = createToggleButton({ onLabel: 'Weight', offLabel: 'Manual', isOn: false });
+  const modeToggle = createToggleButton({
+    onLabel: getFollowersText('ui.colony.followers.orbitals.modeWeight', 'Weight'),
+    offLabel: getFollowersText('ui.colony.followers.orbitals.modeManual', 'Manual'),
+    isOn: false
+  });
   modeToggle.classList.add('followers-mode-toggle');
 
   const stepControls = document.createElement('div');
@@ -153,7 +169,7 @@ function buildFollowersUI() {
 
   const stepLabel = document.createElement('span');
   stepLabel.classList.add('followers-inline-label');
-  stepLabel.textContent = 'Step';
+  stepLabel.textContent = getFollowersText('ui.colony.followers.common.step', 'Step');
 
   const stepValue = document.createElement('span');
   stepValue.id = 'followers-assignment-step';
@@ -163,12 +179,12 @@ function buildFollowersUI() {
   const divideStepButton = document.createElement('button');
   divideStepButton.type = 'button';
   divideStepButton.classList.add('followers-action-button', 'followers-step-button');
-  divideStepButton.textContent = '/10';
+  divideStepButton.textContent = getFollowersText('ui.structures.common.divideTen', '/10');
 
   const multiplyStepButton = document.createElement('button');
   multiplyStepButton.type = 'button';
   multiplyStepButton.classList.add('followers-action-button', 'followers-step-button');
-  multiplyStepButton.textContent = 'x10';
+  multiplyStepButton.textContent = getFollowersText('ui.structures.common.timesTen', 'x10');
 
   stepControls.append(stepLabel, stepValue, divideStepButton, multiplyStepButton);
   modeRow.append(modeLabel, modeToggle, stepControls);
@@ -193,7 +209,7 @@ function buildFollowersUI() {
 
     const assigned = document.createElement('span');
     assigned.classList.add('followers-orbital-assigned');
-    assigned.textContent = 'Assigned: 0';
+    assigned.textContent = getFollowersText('ui.colony.followers.orbitals.assigned', 'Assigned: {value}', { value: 0 });
 
     const assignedBlock = document.createElement('div');
     assignedBlock.classList.add('followers-orbital-assigned-block');
@@ -207,7 +223,7 @@ function buildFollowersUI() {
 
     const autoAssignText = document.createElement('span');
     autoAssignText.classList.add('followers-auto-assign-text');
-    autoAssignText.textContent = 'Auto assign';
+    autoAssignText.textContent = getFollowersText('ui.colony.followers.orbitals.autoAssign', 'Auto assign');
 
     autoAssignRow.append(autoAssignCheckbox, autoAssignText);
     assignedBlock.append(assigned, autoAssignRow);
@@ -219,11 +235,11 @@ function buildFollowersUI() {
 
     const perOrbitalRate = document.createElement('span');
     perOrbitalRate.classList.add('followers-orbital-rate');
-    perOrbitalRate.textContent = 'Per orbital: +0/s';
+    perOrbitalRate.textContent = getFollowersText('ui.colony.followers.orbitals.perOrbital', 'Per orbital: +{value}/s', { value: 0 });
 
     const totalRate = document.createElement('span');
     totalRate.classList.add('followers-orbital-rate', 'followers-orbital-rate-total');
-    totalRate.textContent = 'Total: +0/s';
+    totalRate.textContent = getFollowersText('ui.colony.followers.orbitals.totalRate', 'Total: +{value}/s', { value: 0 });
 
     stats.append(perOrbitalRate, totalRate);
 
@@ -248,7 +264,7 @@ function buildFollowersUI() {
     const manualMax = document.createElement('button');
     manualMax.type = 'button';
     manualMax.classList.add('followers-action-button', 'followers-manual-button', 'followers-manual-button-max');
-    manualMax.textContent = 'Max';
+    manualMax.textContent = getFollowersText('ui.common.max', 'Max');
 
     manualControls.append(manualZero, manualMinus, manualPlus, manualMax);
 
@@ -258,7 +274,7 @@ function buildFollowersUI() {
 
     const weightLabel = document.createElement('span');
     weightLabel.classList.add('followers-inline-label');
-    weightLabel.textContent = 'Weight';
+    weightLabel.textContent = getFollowersText('ui.colony.followers.orbitals.weight', 'Weight');
 
     const weightInput = document.createElement('input');
     weightInput.type = 'number';
@@ -324,12 +340,12 @@ function buildFollowersUI() {
   orbitals.body.appendChild(rowsContainer);
 
   const artGalleryTooltipText = [
-    'Galactic population generates Art Power through cultural output.  HOPE has been chosen as custodian via a special orbital facility.  This has multiple effects on the population.',
-    'Population factor is galactic population.',
-    'Artifact factor is artifacts invested.',
-    'Funding factor is funding invested.',
-    'Total Art Power = population * artifacts invested * funding invested.',
-    'Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.'
+    getFollowersText('ui.colony.followers.art.tooltip.line1', 'Galactic population generates Art Power through cultural output. HOPE has been chosen as custodian via a special orbital facility. This has multiple effects on the population.'),
+    getFollowersText('ui.colony.followers.art.tooltip.line2', 'Population factor is galactic population.'),
+    getFollowersText('ui.colony.followers.art.tooltip.line3', 'Artifact factor is artifacts invested.'),
+    getFollowersText('ui.colony.followers.art.tooltip.line4', 'Funding factor is funding invested.'),
+    getFollowersText('ui.colony.followers.art.tooltip.line5', 'Total Art Power = population * artifacts invested * funding invested.'),
+    getFollowersText('ui.colony.followers.art.tooltip.line6', 'Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.')
   ].join('\n');
   const artGallery = document.createElement('div');
   artGallery.classList.add('followers-art-gallery');
@@ -339,7 +355,7 @@ function buildFollowersUI() {
 
   const artTitle = document.createElement('span');
   artTitle.classList.add('followers-art-title');
-  artTitle.textContent = 'Art Gallery';
+  artTitle.textContent = getFollowersText('ui.colony.followers.art.title', 'Art Gallery');
 
   const artInfo = document.createElement('span');
   artInfo.classList.add('info-tooltip-icon');
@@ -367,13 +383,13 @@ function buildFollowersUI() {
     return { stat, value };
   };
 
-  const artPopulationStat = createArtStat('Galactic Population', '0');
-  const artBasePowerStat = createArtStat('Population Factor', '0');
-  const artArtifactMultiplierStat = createArtStat('Artifact Factor', 'x0');
-  const artFundingMultiplierStat = createArtStat('Funding Factor', 'x0');
-  const artTotalPowerStat = createArtStat('Art Power', '0');
-  const artHappinessBonusStat = createArtStat('Happiness Bonus', '+0.00%');
-  const artWorkerMultiplierStat = createArtStat('Worker/Colonist', 'x1.00');
+  const artPopulationStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.galacticPopulation', 'Galactic Population'), '0');
+  const artBasePowerStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.populationFactor', 'Population Factor'), '0');
+  const artArtifactMultiplierStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.artifactFactor', 'Artifact Factor'), 'x0');
+  const artFundingMultiplierStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.fundingFactor', 'Funding Factor'), 'x0');
+  const artTotalPowerStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.artPower', 'Art Power'), '0');
+  const artHappinessBonusStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.happinessBonus', 'Happiness Bonus'), '+0.00%');
+  const artWorkerMultiplierStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.workerColonist', 'Worker/Colonist'), 'x1.00');
   artStats.append(
     artPopulationStat.stat,
     artBasePowerStat.stat,
@@ -398,7 +414,7 @@ function buildFollowersUI() {
 
     const available = document.createElement('div');
     available.classList.add('followers-art-invest-available');
-    available.textContent = 'Available: 0';
+      available.textContent = getFollowersText('ui.colony.followers.art.available', 'Available: {value}', { value: 0 });
 
     const amountRow = document.createElement('div');
     amountRow.classList.add('followers-art-invest-row');
@@ -411,12 +427,12 @@ function buildFollowersUI() {
     const investButton = document.createElement('button');
     investButton.type = 'button';
     investButton.classList.add('followers-action-button');
-    investButton.textContent = 'Invest';
+    investButton.textContent = getFollowersText('ui.colony.followers.art.invest', 'Invest');
 
     const maxButton = document.createElement('button');
     maxButton.type = 'button';
     maxButton.classList.add('followers-action-button');
-    maxButton.textContent = 'Max';
+    maxButton.textContent = getFollowersText('ui.common.max', 'Max');
     amountRow.append(amountInput, investButton, maxButton);
 
     const stepRow = document.createElement('div');
@@ -424,7 +440,7 @@ function buildFollowersUI() {
 
     const stepLabel = document.createElement('span');
     stepLabel.classList.add('followers-inline-label');
-    stepLabel.textContent = 'Step';
+    stepLabel.textContent = getFollowersText('ui.colony.followers.common.step', 'Step');
 
     const stepValue = document.createElement('span');
     stepValue.classList.add('followers-step-value');
@@ -433,17 +449,17 @@ function buildFollowersUI() {
     const stepDown = document.createElement('button');
     stepDown.type = 'button';
     stepDown.classList.add('followers-action-button', 'followers-step-button');
-    stepDown.textContent = '/10';
+    stepDown.textContent = getFollowersText('ui.structures.common.divideTen', '/10');
 
     const stepUp = document.createElement('button');
     stepUp.type = 'button';
     stepUp.classList.add('followers-action-button', 'followers-step-button');
-    stepUp.textContent = 'x10';
+    stepUp.textContent = getFollowersText('ui.structures.common.timesTen', 'x10');
 
     const investStep = document.createElement('button');
     investStep.type = 'button';
     investStep.classList.add('followers-action-button');
-    investStep.textContent = 'Invest Step';
+    investStep.textContent = getFollowersText('ui.colony.followers.art.investStep', 'Invest Step');
 
     stepRow.append(stepLabel, stepValue, stepDown, stepUp, investStep);
     panel.append(label, available, amountRow, stepRow);
@@ -461,8 +477,8 @@ function buildFollowersUI() {
     };
   };
 
-  const artifactPanel = createInvestmentPanel('Artifacts');
-  const fundingPanel = createInvestmentPanel('Funding');
+  const artifactPanel = createInvestmentPanel(getFollowersText('ui.colony.followers.art.artifacts', 'Artifacts'));
+  const fundingPanel = createInvestmentPanel(getFollowersText('ui.colony.followers.art.funding', 'Funding'));
   artControls.append(artifactPanel.panel, fundingPanel.panel);
   artGallery.appendChild(artControls);
   orbitals.body.appendChild(artGallery);
@@ -526,14 +542,14 @@ function buildFollowersUI() {
   bottomRow.classList.add('followers-secondary-row');
 
   const faithTooltipText = [
-    'Believers in the Church of HOPE convert the current population exponentially.',
-    'All colonist imports bring population that respect the galactic believers %',
-    'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).',
-    'Once world believers reaches its cap, galactic faith also rises at 1/250 the base world conversion % rate (before Crusaders bonus).',
-    'On a Holy World, world faith can continue up to Galactic + 15 percentage points.',
-    'After travelling, world count will join the galactic count.'
+    getFollowersText('ui.colony.followers.faith.tooltip.line1', 'Believers in the Church of HOPE convert the current population exponentially.'),
+    getFollowersText('ui.colony.followers.faith.tooltip.line2', 'All colonist imports bring population that respect the galactic believers %.'),
+    getFollowersText('ui.colony.followers.faith.tooltip.line3', 'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).'),
+    getFollowersText('ui.colony.followers.faith.tooltip.line4', 'Once world believers reaches its cap, galactic faith also rises at 1/250 the base world conversion % rate (before Crusaders bonus).'),
+    getFollowersText('ui.colony.followers.faith.tooltip.line5', 'On a Holy World, world faith can continue up to Galactic + 15 percentage points.'),
+    getFollowersText('ui.colony.followers.faith.tooltip.line6', 'After travelling, world count will join the galactic count.')
   ].join('\n');
-  const faith = createFollowersCard('Faith', 'followers-feature-card', faithTooltipText);
+  const faith = createFollowersCard(getFollowersText('ui.colony.followers.faith.title', 'Faith'), 'followers-feature-card', faithTooltipText);
   faith.body.classList.add('followers-faith-body');
 
   const faithProgress = document.createElement('div');
@@ -567,7 +583,7 @@ function buildFollowersUI() {
     return { row, value, track, fill };
   };
 
-  const worldProgress = createFaithProgress('World Believers', '0.00%');
+  const worldProgress = createFaithProgress(getFollowersText('ui.colony.followers.faith.worldBelievers', 'World Believers'), '0.00%');
   const worldBaseCapMarker = document.createElement('div');
   worldBaseCapMarker.classList.add('followers-faith-progress-marker', 'followers-faith-progress-marker-base');
   worldProgress.track.appendChild(worldBaseCapMarker);
@@ -576,7 +592,7 @@ function buildFollowersUI() {
   worldHolyCapMarker.style.display = 'none';
   worldProgress.track.appendChild(worldHolyCapMarker);
 
-  const galacticProgress = createFaithProgress('Galactic Believers', '10.00%');
+  const galacticProgress = createFaithProgress(getFollowersText('ui.colony.followers.faith.galacticBelievers', 'Galactic Believers'), '10.00%');
   faithProgress.append(worldProgress.row, galacticProgress.row);
   faith.body.appendChild(faithProgress);
 
@@ -606,18 +622,18 @@ function buildFollowersUI() {
     return { stat, value };
   };
 
-  const worldBelieversStat = createFaithStat('World Count', '0');
-  const galacticBelieversStat = createFaithStat('Galactic Count', '0');
-  const worldCapStat = createFaithStat('World Cap', '15.00%');
-  const worldRateStat = createFaithStat('World Conversion', '+0.0000%/s');
-  const worldRatePercentStat = createFaithStat('World Conversion (%)', '+0.0000%/s');
+  const worldBelieversStat = createFaithStat(getFollowersText('ui.colony.followers.faith.worldCount', 'World Count'), '0');
+  const galacticBelieversStat = createFaithStat(getFollowersText('ui.colony.followers.faith.galacticCount', 'Galactic Count'), '0');
+  const worldCapStat = createFaithStat(getFollowersText('ui.colony.followers.faith.worldCap', 'World Cap'), '15.00%');
+  const worldRateStat = createFaithStat(getFollowersText('ui.colony.followers.faith.worldConversion', 'World Conversion'), '+0.0000%/s');
+  const worldRatePercentStat = createFaithStat(getFollowersText('ui.colony.followers.faith.worldConversionPercent', 'World Conversion (%)'), '+0.0000%/s');
   const crusadersBonusStat = createFaithStat(
-    'Crusaders Bonus',
+    getFollowersText('ui.colony.followers.faith.crusadersBonus', 'Crusaders Bonus'),
     'x1.000',
-    'World conversion multiplier from Crusaders ratio (Crusaders / Colonists). Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at a 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.'
+    getFollowersText('ui.colony.followers.faith.crusadersTooltip', 'World conversion multiplier from Crusaders ratio (Crusaders / Colonists). Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at a 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.')
   );
-  const galacticRateStat = createFaithStat('Galactic Conversion (%)', '+0.0000%/s');
-  const galacticAbsoluteRateStat = createFaithStat('Galactic Conversion', '+0/s');
+  const galacticRateStat = createFaithStat(getFollowersText('ui.colony.followers.faith.galacticConversionPercent', 'Galactic Conversion (%)'), '+0.0000%/s');
+  const galacticAbsoluteRateStat = createFaithStat(getFollowersText('ui.colony.followers.faith.galacticConversion', 'Galactic Conversion'), '+0/s');
 
   faithStatsGrid.append(
     worldBelieversStat.stat,
@@ -635,15 +651,15 @@ function buildFollowersUI() {
   faithBonuses.classList.add('followers-faith-bonuses');
 
   const effectsTooltipText = [
-    'Pilgrims: increases population growth by galactic believer %.',
-    'Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).',
-    'Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.',
-    'Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %; base rate is 1/250 of base world conversion (before Crusaders bonus).'
+    getFollowersText('ui.colony.followers.faith.effectsTooltip.line1', 'Pilgrims: increases population growth by galactic believer %.'),
+    getFollowersText('ui.colony.followers.faith.effectsTooltip.line2', 'Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).'),
+    getFollowersText('ui.colony.followers.faith.effectsTooltip.line3', 'Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.'),
+    getFollowersText('ui.colony.followers.faith.effectsTooltip.line4', 'Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %; base rate is 1/250 of base world conversion (before Crusaders bonus).')
   ].join('\n');
   const faithBonusesHeader = document.createElement('div');
   faithBonusesHeader.classList.add('followers-faith-bonuses-header');
   const faithBonusesHeaderLabel = document.createElement('span');
-  faithBonusesHeaderLabel.textContent = 'Effects';
+  faithBonusesHeaderLabel.textContent = getFollowersText('ui.colony.followers.faith.effects', 'Effects');
   const faithBonusesHeaderInfo = document.createElement('span');
   faithBonusesHeaderInfo.classList.add('info-tooltip-icon');
   faithBonusesHeaderInfo.innerHTML = '&#9432;';
@@ -668,25 +684,25 @@ function buildFollowersUI() {
     return value;
   };
 
-  const pilgrimBonus = createFaithBonus('Pilgrims (Growth)', '+0.00%');
-  const zealBonus = createFaithBonus('Zeal (Worker Efficiency)', '+0.00%');
-  const apostlesBonus = createFaithBonus('Apostles (Orbitals)', '+0.00%');
-  const missionariesBonus = createFaithBonus('Missionaries (Galactic Conversion)', '+0.00%');
+  const pilgrimBonus = createFaithBonus(getFollowersText('ui.colony.followers.faith.bonuses.pilgrims', 'Pilgrims (Growth)'), '+0.00%');
+  const zealBonus = createFaithBonus(getFollowersText('ui.colony.followers.faith.bonuses.zeal', 'Zeal (Worker Efficiency)'), '+0.00%');
+  const apostlesBonus = createFaithBonus(getFollowersText('ui.colony.followers.faith.bonuses.apostles', 'Apostles (Orbitals)'), '+0.00%');
+  const missionariesBonus = createFaithBonus(getFollowersText('ui.colony.followers.faith.bonuses.missionaries', 'Missionaries (Galactic Conversion)'), '+0.00%');
 
   faith.body.appendChild(faithBonuses);
 
   const holyWorldTooltipText = [
-    'Consecrate this world into a Holy World once requirements and scaled costs are met.',
-    'Consecrated worlds block other world specializations on that world.',
-    'Each departure from a consecrated world grants 1 Holy Point.',
-    'Spend Holy Points on persistent upgrades. Use Respec to refund spent Holy Points.'
+    getFollowersText('ui.colony.followers.holyWorld.tooltip.line1', 'Consecrate this world into a Holy World once requirements and scaled costs are met.'),
+    getFollowersText('ui.colony.followers.holyWorld.tooltip.line2', 'Consecrated worlds block other world specializations on that world.'),
+    getFollowersText('ui.colony.followers.holyWorld.tooltip.line3', 'Each departure from a consecrated world grants 1 Holy Point.'),
+    getFollowersText('ui.colony.followers.holyWorld.tooltip.line4', 'Spend Holy Points on persistent upgrades. Use Respec to refund spent Holy Points.')
   ].join('\n');
-  const holyWorld = createFollowersCard('Holy World', 'followers-feature-card', holyWorldTooltipText);
+  const holyWorld = createFollowersCard(getFollowersText('ui.colony.followers.holyWorld.title', 'Holy World'), 'followers-feature-card', holyWorldTooltipText);
   holyWorld.body.classList.add('followers-holy-world-body');
 
   const holyStatus = document.createElement('div');
   holyStatus.classList.add('followers-holy-status');
-  holyStatus.textContent = 'Not consecrated';
+  holyStatus.textContent = getFollowersText('ui.colony.followers.holyWorld.notConsecrated', 'Not consecrated');
   holyWorld.body.appendChild(holyStatus);
 
   const holyRequirements = document.createElement('div');
@@ -714,11 +730,11 @@ function buildFollowersUI() {
   const costHeader = document.createElement('div');
   costHeader.classList.add('followers-holy-cost-header');
   const costHeaderLabel = document.createElement('span');
-  costHeaderLabel.textContent = 'Consecration Cost';
+  costHeaderLabel.textContent = getFollowersText('ui.colony.followers.holyWorld.consecrationCost', 'Consecration Cost');
   const costHeaderInfo = document.createElement('span');
   costHeaderInfo.classList.add('info-tooltip-icon');
   costHeaderInfo.innerHTML = '&#9432;';
-  attachDynamicInfoTooltip(costHeaderInfo, 'Consecration costs double after each successful consecration.');
+  attachDynamicInfoTooltip(costHeaderInfo, getFollowersText('ui.colony.followers.holyWorld.costTooltip', 'Consecration costs double after each successful consecration.'));
   costHeader.append(costHeaderLabel, costHeaderInfo);
   costContainer.appendChild(costHeader);
 
@@ -731,7 +747,9 @@ function buildFollowersUI() {
 
     const label = document.createElement('span');
     label.classList.add('followers-holy-cost-label');
-    label.textContent = key === 'superalloys' ? 'Superalloys' : key.charAt(0).toUpperCase() + key.slice(1);
+    label.textContent = key === 'superalloys'
+      ? getFollowersText('ui.colony.followers.holyWorld.costLabels.superalloys', 'Superalloys')
+      : getFollowersText(`ui.colony.followers.holyWorld.costLabels.${key}`, key.charAt(0).toUpperCase() + key.slice(1));
 
     const value = document.createElement('span');
     value.classList.add('followers-holy-cost-value');
@@ -749,13 +767,13 @@ function buildFollowersUI() {
   const consecrateButton = document.createElement('button');
   consecrateButton.type = 'button';
   consecrateButton.classList.add('followers-action-button', 'followers-holy-consecrate');
-  consecrateButton.textContent = 'Consecrate';
+  consecrateButton.textContent = getFollowersText('ui.colony.followers.holyWorld.consecrate', 'Consecrate');
   consecrateButton.addEventListener('click', () => {
     followersManager.consecrateHolyWorld();
   });
   const consecratePoints = document.createElement('div');
   consecratePoints.classList.add('followers-holy-consecrate-points');
-  consecratePoints.textContent = 'Holy Points: 0';
+  consecratePoints.textContent = getFollowersText('ui.colony.followers.holyWorld.points', 'Holy Points: {value}', { value: 0 });
   holyActions.append(consecrateButton, consecratePoints);
   holyWorld.body.appendChild(holyActions);
 
@@ -764,11 +782,11 @@ function buildFollowersUI() {
   const holyShopHeader = document.createElement('div');
   holyShopHeader.classList.add('followers-holy-shop-header');
   const holyShopTitle = document.createElement('span');
-  holyShopTitle.textContent = 'Holy Shop';
+  holyShopTitle.textContent = getFollowersText('ui.colony.followers.holyWorld.shopTitle', 'Holy Shop');
   const respecButton = document.createElement('button');
   respecButton.type = 'button';
   respecButton.classList.add('followers-action-button', 'followers-holy-respec-button');
-  respecButton.textContent = 'Respec';
+  respecButton.textContent = getFollowersText('ui.colony.followers.holyWorld.respec', 'Respec');
   respecButton.addEventListener('click', () => {
     followersManager.respecHolyWorldShop();
   });
@@ -799,7 +817,7 @@ function buildFollowersUI() {
     const button = document.createElement('button');
     button.type = 'button';
     button.classList.add('followers-action-button', 'followers-holy-shop-button');
-    button.textContent = 'Buy';
+    button.textContent = getFollowersText('ui.colony.followers.holyWorld.buy', 'Buy');
     button.addEventListener('click', (event) => {
       const purchaseCount = event.shiftKey ? item.maxPurchases : 1;
       followersManager.purchaseHolyWorldUpgrade(item.id, purchaseCount);
@@ -924,7 +942,15 @@ function updateFollowersUI() {
 
   setToggleButtonState(followersUICache.modeToggle, mode === 'weight');
 
-  followersUICache.summary.textContent = `Orbitals Assigned: ${formatNumber(snapshot.assigned, true)} / ${formatNumber(snapshot.availableOrbitals, true)} | Unassigned: ${formatNumber(snapshot.unassigned, true)}`;
+  followersUICache.summary.textContent = getFollowersText(
+    'ui.colony.followers.orbitals.summary',
+    'Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}',
+    {
+      assigned: formatNumber(snapshot.assigned, true),
+      available: formatNumber(snapshot.availableOrbitals, true),
+      unassigned: formatNumber(snapshot.unassigned, true)
+    }
+  );
   followersUICache.stepValue.textContent = formatNumber(step, true);
   followersUICache.divideStepButton.disabled = !manualMode;
   followersUICache.multiplyStepButton.disabled = !manualMode;
@@ -944,9 +970,15 @@ function updateFollowersUI() {
     const isAutoAssignTarget = autoAssignId === config.id;
     const isKesslerLocked = kesslerRestricted && config.id !== 'research';
 
-    row.assigned.textContent = `Assigned: ${formatNumber(assigned, true)}`;
-    row.perOrbitalRate.textContent = `Per orbital: +${formatNumber(perOrbital, false, 2)}/s`;
-    row.totalRate.textContent = `Total: +${formatNumber(totalRate, false, 2)}/s`;
+    row.assigned.textContent = getFollowersText('ui.colony.followers.orbitals.assigned', 'Assigned: {value}', {
+      value: formatNumber(assigned, true)
+    });
+    row.perOrbitalRate.textContent = getFollowersText('ui.colony.followers.orbitals.perOrbital', 'Per orbital: +{value}/s', {
+      value: formatNumber(perOrbital, false, 2)
+    });
+    row.totalRate.textContent = getFollowersText('ui.colony.followers.orbitals.totalRate', 'Total: +{value}/s', {
+      value: formatNumber(totalRate, false, 2)
+    });
 
     row.manualMinus.textContent = `-${formatNumber(step, true)}`;
     row.manualPlus.textContent = `+${formatNumber(step, true)}`;
@@ -983,8 +1015,14 @@ function updateFollowersUI() {
   followersUICache.artTotalPower.textContent = formatNumber(art.artPower, true);
   followersUICache.artHappinessBonus.textContent = `+${formatNumber(art.happinessBonus * 100, false, 2)}%`;
   followersUICache.artWorkerMultiplier.textContent = `x${formatNumber(art.workerMultiplier, false, 3)}`;
-  followersUICache.artArtifactAvailable.textContent = `Available: ${formatNumber(artifactAvailable, true)} | Invested: ${formatNumber(art.artifactsInvested, true)}`;
-  followersUICache.artFundingAvailable.textContent = `Available: ${formatNumber(fundingAvailable, true)} | Invested: ${formatNumber(art.fundingInvested, true)}`;
+  followersUICache.artArtifactAvailable.textContent = getFollowersText('ui.colony.followers.art.availableInvested', 'Available: {available} | Invested: {invested}', {
+    available: formatNumber(artifactAvailable, true),
+    invested: formatNumber(art.artifactsInvested, true)
+  });
+  followersUICache.artFundingAvailable.textContent = getFollowersText('ui.colony.followers.art.availableInvested', 'Available: {available} | Invested: {invested}', {
+    available: formatNumber(fundingAvailable, true),
+    invested: formatNumber(art.fundingInvested, true)
+  });
   followersUICache.artArtifactStepValue.textContent = formatNumber(art.artifactStep, true);
   followersUICache.artFundingStepValue.textContent = formatNumber(art.fundingStep, true);
   followersUICache.artArtifactInvestButton.disabled = artifactAvailable <= 0;
@@ -1047,11 +1085,19 @@ function updateFollowersUI() {
     row.row.classList.toggle('is-unmet', available < required);
   }
 
-  followersUICache.holyWorldStatus.textContent = consecrated ? 'Consecrated' : 'Not consecrated';
+  followersUICache.holyWorldStatus.textContent = consecrated
+    ? getFollowersText('ui.colony.followers.holyWorld.consecrated', 'Consecrated')
+    : getFollowersText('ui.colony.followers.holyWorld.notConsecrated', 'Not consecrated');
   followersUICache.holyWorldStatus.classList.toggle('is-consecrated', consecrated);
   followersUICache.holyWorldConsecrateButton.disabled = !followersManager.canConsecrateHolyWorld();
-  followersUICache.holyWorldConsecrateButton.textContent = consecrated ? 'Consecrated' : 'Consecrate';
-  followersUICache.holyWorldConsecratePoints.textContent = `Holy Points: ${formatNumber(followersManager.getHolyWorldPointBalance(), true, 1, false, true)}`;
+  followersUICache.holyWorldConsecrateButton.textContent = consecrated
+    ? getFollowersText('ui.colony.followers.holyWorld.consecrated', 'Consecrated')
+    : getFollowersText('ui.colony.followers.holyWorld.consecrate', 'Consecrate');
+  followersUICache.holyWorldConsecratePoints.textContent = getFollowersText(
+    'ui.colony.followers.holyWorld.points',
+    'Holy Points: {value}',
+    { value: formatNumber(followersManager.getHolyWorldPointBalance(), true, 1, false, true) }
+  );
 
   const holyShopRows = followersUICache.holyWorldShopRows;
   for (const id in holyShopRows) {
@@ -1060,7 +1106,9 @@ function updateFollowersUI() {
     const canBuy = followersManager.canPurchaseHolyWorldUpgrade(shopRow.item);
     shopRow.count.textContent = `${purchases}/${shopRow.item.maxPurchases}`;
     shopRow.button.disabled = !canBuy;
-    shopRow.button.textContent = purchases >= shopRow.item.maxPurchases ? 'Maxed' : 'Buy';
+    shopRow.button.textContent = purchases >= shopRow.item.maxPurchases
+      ? getFollowersText('ui.colony.followers.holyWorld.maxed', 'Maxed')
+      : getFollowersText('ui.colony.followers.holyWorld.buy', 'Buy');
   }
   const shopItems = followersManager.getHolyWorldShopItems();
   let hasPurchases = false;

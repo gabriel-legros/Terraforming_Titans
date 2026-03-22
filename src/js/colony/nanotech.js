@@ -1,6 +1,14 @@
+function getNanotechText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class NanotechManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Manages the nanobot swarm' });
+    super({ description: getNanotechText('ui.colony.nanotech.managerDescription', 'Manages the nanobot swarm') });
     this.nanobots = 1; // starting nanobot count
     this.siliconSlider = 10; // 0-10
     this.maintenanceSlider = 0; // 0-10
@@ -143,13 +151,21 @@ class NanotechManager extends EffectableEntity {
     const unit = getTemperatureUnit();
     const currentTemperature = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
     const cutoffTemperature = formatNumber(toDisplayTemperature(MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD), false, 2);
-    return `Nanocolony disabled: global average temperature is ${currentTemperature} ${unit}. All nanocolony functions shut down above ${cutoffTemperature} ${unit}.`;
+    return getNanotechText(
+      'ui.colony.nanotech.temperature.warning',
+      'Nanocolony disabled: global average temperature is {currentTemperature} {unit}. All nanocolony functions shut down above {cutoffTemperature} {unit}.',
+      { currentTemperature, cutoffTemperature, unit }
+    );
   }
 
   getTemperatureDisableLabel() {
     const unit = getTemperatureUnit();
     const cutoffTemperature = formatNumber(toDisplayTemperature(MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD), false, 2);
-    return `Disabled by heat (> ${cutoffTemperature} ${unit})`;
+    return getNanotechText(
+      'ui.colony.nanotech.temperature.disabledLabel',
+      'Disabled by heat (> {cutoffTemperature} {unit})',
+      { cutoffTemperature, unit }
+    );
   }
 
   resetActivityState() {
@@ -703,95 +719,95 @@ class NanotechManager extends EffectableEntity {
       container.classList.add('project-card');
       hostContainer.appendChild(container);
       container.innerHTML = `
-        <div class="card-header"><span class="card-title">Nanocolony</span></div>
+        <div class="card-header"><span class="card-title">${getNanotechText('ui.colony.nanotech.title', 'Nanocolony')}</span></div>
         <div class="card-body nanotech-card-body">
           <div id="nanotech-temperature-warning" class="nanotech-temperature-warning"></div>
           <div class="nanotech-summary-grid">
             <div class="nanotech-summary-card">
-              <span class="summary-label">Nanobots</span>
+              <span class="summary-label">${getNanotechText('ui.colony.nanotech.summary.nanobots', 'Nanobots')}</span>
               <div class="summary-value">
                 <span id="nanobot-count">1</span>
                 <span class="summary-divider">/</span>
                 <span id="nanobot-cap">1</span>
               </div>
               <div class="nanotech-time-to-full">
-                <span id="nanobot-time-to-full">Time to full: --</span>
+                <span id="nanobot-time-to-full">${getNanotechText('ui.colony.nanotech.summary.timeToFull', 'Time to full: {value}', { value: '--' })}</span>
               </div>
             </div>
             <div class="nanotech-summary-card">
-              <span class="summary-label">Growth rate</span>
+              <span class="summary-label">${getNanotechText('ui.colony.nanotech.summary.growthRate', 'Growth rate')}</span>
               <span class="summary-value" id="nanobot-growth-rate">0%</span>
             </div>
 	            <div class="nanotech-summary-card nanotech-energy-card">
 	              <div class="summary-label">
-	                Energy allocation <span class="info-tooltip-icon" id="nanotech-energy-tooltip"></span>
+	                ${getNanotechText('ui.colony.nanotech.summary.energyAllocation', 'Energy allocation')} <span class="info-tooltip-icon" id="nanotech-energy-tooltip"></span>
 	              </div>
 	              <div class="nanotech-energy-limit">
 	                <input type="text" id="nanotech-energy-limit" value="${this.maxEnergyPercent}">
 	                <select id="nanotech-energy-limit-mode">
-	                  <option value="percent" selected>percentage of power</option>
-	                  <option value="absolute">absolute</option>
-	                  <option value="uncapped">uncapped</option>
+	                  <option value="percent" selected>${getNanotechText('ui.colony.nanotech.limitModes.percentPower', 'percentage of power')}</option>
+	                  <option value="absolute">${getNanotechText('ui.colony.nanotech.limitModes.absolute', 'absolute')}</option>
+	                  <option value="uncapped">${getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped')}</option>
 	                </select>
 	              </div>
               <div class="nanotech-energy-stats">
                 <div class="energy-stat">
-                  <span class="energy-label">Growth boost</span>
+                  <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.growthBoost', 'Growth boost')}</span>
                   <span class="energy-value" id="nanotech-growth-impact">+0.00%</span>
                 </div>
                 <div class="energy-stat">
-                  <span class="energy-label">Draw</span>
+                  <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.draw', 'Draw')}</span>
                   <span class="energy-value" id="nanotech-growth-energy">0 W</span>
                 </div>
               </div>
             </div>
           </div>
-          <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide <span id="nanotech-travel-cap">${formatNumber(this.getTravelPreserveCap())}</span> nanobots from the Dead Hand Protocol <span class="info-tooltip-icon" id="nanotech-travel-tooltip"></span>.</p>
+          <p class="nanotech-hint">${getNanotechText('ui.colony.nanotech.hint', 'The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide {travelCap} nanobots from the Dead Hand Protocol.', { travelCap: `<span id="nanotech-travel-cap">${formatNumber(this.getTravelPreserveCap())}</span>` })} <span class="info-tooltip-icon" id="nanotech-travel-tooltip"></span>.</p>
           <div class="nanotech-stage">
             <div class="nanotech-stage-header">
-              <h4>Stage I <span id="nanotech-stage1-warning" class="nanotech-stage-warning"></span></h4>
+              <h4>${getNanotechText('ui.colony.nanotech.stages.stage1', 'Stage I')} <span id="nanotech-stage1-warning" class="nanotech-stage-warning"></span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
                 <div class="nanotech-allocation-header">
                   <span class="allocation-title">
-                    Silica allocation <span class="info-tooltip-icon" id="nanotech-silicon-tooltip"></span>
+                    ${getNanotechText('ui.colony.nanotech.stage1.silicaAllocation', 'Silica allocation')} <span class="info-tooltip-icon" id="nanotech-silicon-tooltip"></span>
                   </span>
                   <div class="nanotech-recycling-toggles">
-                    <span class="nanotech-recycling-resource" id="nanotech-junk-label">Junk</span>
+                    <span class="nanotech-recycling-resource" id="nanotech-junk-label">${getNanotechText('ui.colony.nanotech.recycling.junk', 'Junk')}</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-junk-wrapper">
                       <input type="checkbox" id="nanotech-only-junk">
-                      <span>only</span>
+                      <span>${getNanotechText('ui.colony.nanotech.recycling.only', 'only')}</span>
                     </label>
                     <label class="nanotech-recycling-toggle" id="nanotech-uncapped-junk-wrapper">
                       <input type="checkbox" id="nanotech-uncapped-junk">
-                      <span>uncapped</span>
+                      <span>${getNanotechText('ui.colony.nanotech.recycling.uncapped', 'uncapped')}</span>
                     </label>
                   </div>
                 </div>
                 <div class="nanotech-energy-limit">
                   <input type="text" id="nanotech-silicon-limit" value="${this.maxSiliconPercent}">
                   <select id="nanotech-silicon-limit-mode">
-                    <option value="percent" selected>percentage of production</option>
-                    <option value="absolute">absolute</option>
-                    <option value="uncapped">uncapped</option>
+                    <option value="percent" selected>${getNanotechText('ui.colony.nanotech.limitModes.percentProduction', 'percentage of production')}</option>
+                    <option value="absolute">${getNanotechText('ui.colony.nanotech.limitModes.absolute', 'absolute')}</option>
+                    <option value="uncapped">${getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped')}</option>
                   </select>
                 </div>
                 <div class="nanotech-energy-stats">
                   <div class="energy-stat">
-                    <span class="energy-label">Growth boost</span>
+                    <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.growthBoost', 'Growth boost')}</span>
                     <span class="energy-value" id="nanotech-silicon-impact">+0.00%</span>
                   </div>
                   <div class="energy-stat">
-                    <span class="energy-label">Draw</span>
+                    <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.draw', 'Draw')}</span>
                     <span class="energy-value" id="nanotech-silicon-rate">0 ton/s</span>
                   </div>
                 </div>
-                <p class="slider-description">Consumes silica to boost growth.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage1.silicaDescription', 'Consumes silica to boost growth.')}</p>
               </div>
               <div class="nanotech-slider-card">
                 <div class="slider-header">
-                  <span class="slider-title">Maintenance I</span>
+                  <span class="slider-title">${getNanotechText('ui.colony.nanotech.stage1.maintenance', 'Maintenance I')}</span>
                   <div class="slider-values">
                     <span id="nanotech-maintenance-impact">0.00%</span>
                     <span id="nanotech-maintenance-rate">0%</span>
@@ -803,11 +819,11 @@ class NanotechManager extends EffectableEntity {
                     <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
-                <p class="slider-description">Reduces metal, glass, and water maintenance by up to 50%.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage1.maintenanceDescription', 'Reduces metal, glass, and water maintenance by up to 50%.')}</p>
               </div>
               <div class="nanotech-slider-card">
                 <div class="slider-header">
-                  <span class="slider-title">Glass Production</span>
+                  <span class="slider-title">${getNanotechText('ui.colony.nanotech.stage1.glassProduction', 'Glass Production')}</span>
                   <div class="slider-values">
                     <span id="nanotech-glass-impact">0.00%</span>
                     <span id="nanotech-glass-rate">0 ton/s</span>
@@ -819,55 +835,55 @@ class NanotechManager extends EffectableEntity {
                     <div class="tick-marks" id="nanotech-glass-ticks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
-                <p class="slider-description">Diverts growth to fabricate glass.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage1.glassDescription', 'Diverts growth to fabricate glass.')}</p>
               </div>
             </div>
           </div>
           <div class="nanotech-stage" id="nanotech-stage-2">
             <div class="nanotech-stage-header">
-              <h4>Stage II <span id="nanotech-stage2-warning" class="nanotech-stage-warning"></span></h4>
+              <h4>${getNanotechText('ui.colony.nanotech.stages.stage2', 'Stage II')} <span id="nanotech-stage2-warning" class="nanotech-stage-warning"></span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
                 <div class="nanotech-allocation-header">
                   <span class="allocation-title">
-                    Metal allocation <span class="info-tooltip-icon" id="nanotech-metal-tooltip"></span>
+                    ${getNanotechText('ui.colony.nanotech.stage2.metalAllocation', 'Metal allocation')} <span class="info-tooltip-icon" id="nanotech-metal-tooltip"></span>
                   </span>
                   <div class="nanotech-recycling-toggles">
-                    <span class="nanotech-recycling-resource" id="nanotech-scrap-label">Scrap</span>
+                    <span class="nanotech-recycling-resource" id="nanotech-scrap-label">${getNanotechText('ui.colony.nanotech.recycling.scrap', 'Scrap')}</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-scrap-wrapper">
                       <input type="checkbox" id="nanotech-only-scrap">
-                      <span>only</span>
+                      <span>${getNanotechText('ui.colony.nanotech.recycling.only', 'only')}</span>
                     </label>
                     <label class="nanotech-recycling-toggle" id="nanotech-uncapped-scrap-wrapper">
                       <input type="checkbox" id="nanotech-uncapped-scrap">
-                      <span>uncapped</span>
+                      <span>${getNanotechText('ui.colony.nanotech.recycling.uncapped', 'uncapped')}</span>
                     </label>
                   </div>
                 </div>
                 <div class="nanotech-energy-limit">
                   <input type="text" id="nanotech-metal-limit" value="${this.maxMetalPercent}">
                   <select id="nanotech-metal-limit-mode">
-                    <option value="percent" selected>percentage of production</option>
-                    <option value="absolute">absolute</option>
-                    <option value="uncapped">uncapped</option>
+                    <option value="percent" selected>${getNanotechText('ui.colony.nanotech.limitModes.percentProduction', 'percentage of production')}</option>
+                    <option value="absolute">${getNanotechText('ui.colony.nanotech.limitModes.absolute', 'absolute')}</option>
+                    <option value="uncapped">${getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped')}</option>
                   </select>
                 </div>
                 <div class="nanotech-energy-stats">
                   <div class="energy-stat">
-                    <span class="energy-label">Growth boost</span>
+                    <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.growthBoost', 'Growth boost')}</span>
                     <span class="energy-value" id="nanotech-metal-impact">+0.00%</span>
                   </div>
                   <div class="energy-stat">
-                    <span class="energy-label">Draw</span>
+                    <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.draw', 'Draw')}</span>
                     <span class="energy-value" id="nanotech-metal-rate">0 ton/s</span>
                   </div>
                 </div>
-                <p class="slider-description">Consumes metal to boost growth.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage2.metalDescription', 'Consumes metal to boost growth.')}</p>
               </div>
               <div class="nanotech-slider-card">
                 <div class="slider-header">
-                  <span class="slider-title">Maintenance II</span>
+                  <span class="slider-title">${getNanotechText('ui.colony.nanotech.stage2.maintenance', 'Maintenance II')}</span>
                   <div class="slider-values">
                     <span id="nanotech-maintenance2-impact">0.00%</span>
                     <span id="nanotech-maintenance2-rate">0%</span>
@@ -879,11 +895,11 @@ class NanotechManager extends EffectableEntity {
                     <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
-                <p class="slider-description">Reduces components and superconductors maintenance by up to 50%.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage2.maintenanceDescription', 'Reduces components and superconductors maintenance by up to 50%.')}</p>
               </div>
               <div class="nanotech-slider-card">
                 <div class="slider-header">
-                  <span class="slider-title">Components Production</span>
+                  <span class="slider-title">${getNanotechText('ui.colony.nanotech.stage2.componentsProduction', 'Components Production')}</span>
                   <div class="slider-values">
                     <span id="nanotech-components-impact">0.00%</span>
                     <span id="nanotech-components-rate">0 ton/s</span>
@@ -895,56 +911,56 @@ class NanotechManager extends EffectableEntity {
                     <div class="tick-marks" id="nanotech-components-ticks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
-                <p class="slider-description">Diverts growth to fabricate components.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage2.componentsDescription', 'Diverts growth to fabricate components.')}</p>
               </div>
             </div>
           </div>
           <div class="nanotech-stage" id="nanotech-stage-3">
             <div class="nanotech-stage-header">
-              <h4>Stage III <span id="nanotech-stage3-warning" class="nanotech-stage-warning"></span></h4>
+              <h4>${getNanotechText('ui.colony.nanotech.stages.stage3', 'Stage III')} <span id="nanotech-stage3-warning" class="nanotech-stage-warning"></span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
                 <div class="nanotech-allocation-header">
                   <span class="allocation-title">
-                    Biomass allocation <span class="info-tooltip-icon" id="nanotech-biomass-tooltip">&#9432;</span>
+                    ${getNanotechText('ui.colony.nanotech.stage3.biomassAllocation', 'Biomass allocation')} <span class="info-tooltip-icon" id="nanotech-biomass-tooltip">&#9432;</span>
                   </span>
                   <div class="nanotech-recycling-toggles">
-                    <span class="nanotech-recycling-resource" id="nanotech-trash-label">Trash</span>
+                    <span class="nanotech-recycling-resource" id="nanotech-trash-label">${getNanotechText('ui.colony.nanotech.recycling.trash', 'Trash')}</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-trash-wrapper">
                       <input type="checkbox" id="nanotech-only-trash">
-                      <span>only</span>
+                      <span>${getNanotechText('ui.colony.nanotech.recycling.only', 'only')}</span>
                     </label>
                     <label class="nanotech-recycling-toggle" id="nanotech-uncapped-trash-wrapper">
                       <input type="checkbox" id="nanotech-uncapped-trash">
-                      <span>uncapped</span>
+                      <span>${getNanotechText('ui.colony.nanotech.recycling.uncapped', 'uncapped')}</span>
                     </label>
                   </div>
                 </div>
                 <div class="nanotech-energy-limit">
                   <input type="text" id="nanotech-biomass-limit" value="${this.maxBiomassPercent}">
                   <select id="nanotech-biomass-limit-mode">
-                    <option value="percent" selected>percentage of production</option>
-                    <option value="percent_total">percentage of total biomass</option>
-                    <option value="absolute">absolute</option>
-                    <option value="uncapped">uncapped</option>
+                    <option value="percent" selected>${getNanotechText('ui.colony.nanotech.limitModes.percentProduction', 'percentage of production')}</option>
+                    <option value="percent_total">${getNanotechText('ui.colony.nanotech.limitModes.percentTotalBiomass', 'percentage of total biomass')}</option>
+                    <option value="absolute">${getNanotechText('ui.colony.nanotech.limitModes.absolute', 'absolute')}</option>
+                    <option value="uncapped">${getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped')}</option>
                   </select>
                 </div>
                 <div class="nanotech-energy-stats">
                   <div class="energy-stat">
-                    <span class="energy-label">Growth boost</span>
+                    <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.growthBoost', 'Growth boost')}</span>
                     <span class="energy-value" id="nanotech-biomass-impact">+0.00%</span>
                   </div>
                   <div class="energy-stat">
-                    <span class="energy-label">Draw</span>
+                    <span class="energy-label">${getNanotechText('ui.colony.nanotech.summary.draw', 'Draw')}</span>
                     <span class="energy-value" id="nanotech-biomass-rate">0 ton/s</span>
                   </div>
                 </div>
-                <p class="slider-description">Consumes biomass to boost growth.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage3.biomassDescription', 'Consumes biomass to boost growth.')}</p>
               </div>
               <div class="nanotech-slider-card">
                 <div class="slider-header">
-                  <span class="slider-title">Maintenance III</span>
+                  <span class="slider-title">${getNanotechText('ui.colony.nanotech.stage3.maintenance', 'Maintenance III')}</span>
                   <div class="slider-values">
                     <span id="nanotech-maintenance3-impact">0.00%</span>
                     <span id="nanotech-maintenance3-rate">0%</span>
@@ -956,11 +972,11 @@ class NanotechManager extends EffectableEntity {
                     <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
-                <p class="slider-description">Reduces electronics maintenance by up to 50%.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage3.maintenanceDescription', 'Reduces electronics maintenance by up to 50%.')}</p>
               </div>
               <div class="nanotech-slider-card">
                 <div class="slider-header">
-                  <span class="slider-title">Electronics Production</span>
+                  <span class="slider-title">${getNanotechText('ui.colony.nanotech.stage3.electronicsProduction', 'Electronics Production')}</span>
                   <div class="slider-values">
                     <span id="nanotech-electronics-impact">0.00%</span>
                     <span id="nanotech-electronics-rate">0 ton/s</span>
@@ -972,7 +988,7 @@ class NanotechManager extends EffectableEntity {
                     <div class="tick-marks" id="nanotech-electronics-ticks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
-                <p class="slider-description">Diverts growth to fabricate electronics.</p>
+                <p class="slider-description">${getNanotechText('ui.colony.nanotech.stage3.electronicsDescription', 'Diverts growth to fabricate electronics.')}</p>
               </div>
             </div>
           </div>
@@ -1024,21 +1040,21 @@ class NanotechManager extends EffectableEntity {
       this.uiState.componentsMax = componentsMax;
     }
 
-    const stage1Warning = hasSand ? '' : '⚠️ No sand deposits; glass capped to silica.';
+    const stage1Warning = hasSand ? '' : getNanotechText('ui.colony.nanotech.warnings.noSand', '⚠️ No sand deposits; glass capped to silica.');
     if (C.stage1WarningEl && C.stage1WarningEl.textContent !== stage1Warning) {
       C.stage1WarningEl.textContent = stage1Warning;
       this.uiState.stage1Warning = stage1Warning;
     }
 
     const stage2Warning = stage2Active && !hasOre
-      ? '⚠️ No ore deposits; components capped to metal.'
+      ? getNanotechText('ui.colony.nanotech.warnings.noOre', '⚠️ No ore deposits; components capped to metal.')
       : '';
     if (C.stage2WarningEl && C.stage2WarningEl.textContent !== stage2Warning) {
       C.stage2WarningEl.textContent = stage2Warning;
       this.uiState.stage2Warning = stage2Warning;
     }
     const stage3Warning = stage3Active && isArtificialWorld
-      ? '⚠️ No resources; electronics capped to biomass.'
+      ? getNanotechText('ui.colony.nanotech.warnings.noResources', '⚠️ No resources; electronics capped to biomass.')
       : '';
     if (C.stage3WarningEl && C.stage3WarningEl.textContent !== stage3Warning) {
       C.stage3WarningEl.textContent = stage3Warning;
@@ -1064,7 +1080,7 @@ class NanotechManager extends EffectableEntity {
     if (C.growthEl) {
       let actualRate = 0;
       if (temperatureDisabled) {
-        C.growthEl.textContent = 'Disabled';
+        C.growthEl.textContent = getNanotechText('ui.colony.nanotech.status.disabled', 'Disabled');
         C.growthEl.style.color = '#c92a2a';
         this.effectiveGrowthRate = 0;
       } else {
@@ -1101,16 +1117,16 @@ class NanotechManager extends EffectableEntity {
         if (temperatureDisabled) {
           timeToFullText = this.getTemperatureDisableLabel();
         } else if (this.nanobots >= max) {
-          timeToFullText = 'Full';
+          timeToFullText = getNanotechText('ui.colony.nanotech.status.full', 'Full');
         } else if (actualRate > 0 && this.nanobots > 0 && max > this.nanobots) {
           const secondsToFull = Math.log(max / this.nanobots) / actualRate;
           timeToFullText = Number.isFinite(secondsToFull) && secondsToFull >= 0
             ? formatDuration(secondsToFull)
             : '--';
         } else if (actualRate <= 0) {
-          timeToFullText = 'Never';
+          timeToFullText = getNanotechText('ui.colony.nanotech.status.never', 'Never');
         }
-        C.timeToFullEl.textContent = `Time to full: ${timeToFullText}`;
+        C.timeToFullEl.textContent = getNanotechText('ui.colony.nanotech.summary.timeToFull', 'Time to full: {value}', { value: timeToFullText });
       }
     }
     if (C.mSlider && document.activeElement !== C.mSlider) C.mSlider.value = this.maintenanceSlider;
@@ -1139,7 +1155,7 @@ class NanotechManager extends EffectableEntity {
       } else if (this.energyLimitMode === 'uncapped') {
         C.eLimit.dataset.energyLimit = '0';
         C.eLimit.value = '';
-        C.eLimit.placeholder = 'uncapped';
+        C.eLimit.placeholder = getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped');
         C.eLimit.removeAttribute('max');
         C.eLimit.disabled = true;
       } else {
@@ -1164,7 +1180,7 @@ class NanotechManager extends EffectableEntity {
       } else if (this.siliconLimitMode === 'uncapped') {
         C.sLimit.dataset.siliconLimit = '0';
         C.sLimit.value = '';
-        C.sLimit.placeholder = 'uncapped';
+        C.sLimit.placeholder = getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped');
         C.sLimit.removeAttribute('max');
         C.sLimit.disabled = true;
       } else {
@@ -1189,7 +1205,7 @@ class NanotechManager extends EffectableEntity {
       } else if (this.metalLimitMode === 'uncapped') {
         C.metalLimit.dataset.metalLimit = '0';
         C.metalLimit.value = '';
-        C.metalLimit.placeholder = 'uncapped';
+        C.metalLimit.placeholder = getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped');
         C.metalLimit.removeAttribute('max');
         C.metalLimit.disabled = true;
       } else {
@@ -1214,7 +1230,7 @@ class NanotechManager extends EffectableEntity {
       } else if (this.biomassLimitMode === 'uncapped') {
         C.biomassLimit.dataset.biomassLimit = '0';
         C.biomassLimit.value = '';
-        C.biomassLimit.placeholder = 'uncapped';
+        C.biomassLimit.placeholder = getNanotechText('ui.colony.nanotech.limitModes.uncapped', 'uncapped');
         C.biomassLimit.removeAttribute('max');
         C.biomassLimit.disabled = true;
       } else {
@@ -1629,35 +1645,35 @@ class NanotechManager extends EffectableEntity {
     if (C.energyTooltipIcon?.dataset?.nanotechBound !== 'energyTooltip') {
       attachDynamicInfoTooltip(
         C.energyTooltipIcon,
-        'Percentage of power: Maximum percentage of total energy production the swarm may consume per second.\nAbsolute: Fixed energy limit in watts the swarm may consume per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+        getNanotechText('ui.colony.nanotech.tooltips.energy', 'Percentage of power: Maximum percentage of total energy production the swarm may consume per second.\nAbsolute: Fixed energy limit in watts the swarm may consume per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).')
       );
       C.energyTooltipIcon.dataset.nanotechBound = 'energyTooltip';
     }
     if (C.travelTooltipIcon?.dataset?.nanotechBound !== 'travelTooltip') {
       attachDynamicInfoTooltip(
         C.travelTooltipIcon,
-        'Each nanocolony stage after Stage I multiplies the preserved amount by 10.'
+        getNanotechText('ui.colony.nanotech.tooltips.travel', 'Each nanocolony stage after Stage I multiplies the preserved amount by 10.')
       );
       C.travelTooltipIcon.dataset.nanotechBound = 'travelTooltip';
     }
     if (C.siliconTooltipIcon?.dataset?.nanotechBound !== 'siliconTooltip') {
       attachDynamicInfoTooltip(
         C.siliconTooltipIcon,
-        'Percentage of silica production: maximum share of silicon production the swarm may consume per second.\nAbsolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: junk usage is not capped, but silica usage still follows this limit.'
+        getNanotechText('ui.colony.nanotech.tooltips.silica', 'Percentage of silica production: maximum share of silicon production the swarm may consume per second.\nAbsolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: junk usage is not capped, but silica usage still follows this limit.')
       );
       C.siliconTooltipIcon.dataset.nanotechBound = 'siliconTooltip';
     }
     if (C.metalTooltipIcon?.dataset?.nanotechBound !== 'metalTooltip') {
       attachDynamicInfoTooltip(
         C.metalTooltipIcon,
-        'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: scrap usage is not capped, but metal usage still follows this limit.'
+        getNanotechText('ui.colony.nanotech.tooltips.metal', 'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: scrap usage is not capped, but metal usage still follows this limit.')
       );
       C.metalTooltipIcon.dataset.nanotechBound = 'metalTooltip';
     }
     if (C.biomassTooltipIcon?.dataset?.nanotechBound !== 'biomassTooltip') {
       attachDynamicInfoTooltip(
         C.biomassTooltipIcon,
-        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: trash usage is not capped, but biomass usage still follows this limit.'
+        getNanotechText('ui.colony.nanotech.tooltips.biomass', 'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: trash usage is not capped, but biomass usage still follows this limit.')
       );
       C.biomassTooltipIcon.dataset.nanotechBound = 'biomassTooltip';
     }

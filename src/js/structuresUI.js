@@ -1,5 +1,13 @@
 // structures-ui.js
 
+function getStructuresUIText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
@@ -144,7 +152,9 @@ function getAutoBuildInputValue(structure) {
 }
 
 function getAutoBuildMaxBasisLabel(structure) {
-  return structure.getAutoBuildMaxModeLabel ? structure.getAutoBuildMaxModeLabel() : 'Max';
+  return structure.getAutoBuildMaxModeLabel
+    ? structure.getAutoBuildMaxModeLabel()
+    : getStructuresUIText('ui.common.max', 'Max');
 }
 
 function updateAutoBuildStepButtonLabels(structure, incrementBtn, decrementBtn) {
@@ -190,10 +200,16 @@ function refreshAutoBuildTarget(structure) {
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesFill
-      ? `Max fill : ${formatNumber(structure.autoBuildFillPercent || 0, true)}%`
+      ? getStructuresUIText('ui.structures.autoBuild.maxFill', 'Max fill : {value}%', {
+          value: formatNumber(structure.autoBuildFillPercent || 0, true)
+        })
       : autoBuildUsesMax
-        ? `Target : ${getAutoBuildMaxBasisLabel(structure)}`
-        : `Target : ${formatNumber(targetCount, true)}`;
+        ? getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
+            value: getAutoBuildMaxBasisLabel(structure)
+          })
+        : getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
+            value: formatNumber(targetCount, true)
+          });
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
     }
@@ -291,7 +307,7 @@ function createAutoBuildStepControls(structure, autoBuildInput) {
   const multiplyButton = document.createElement('button');
   multiplyButton.type = 'button';
   multiplyButton.classList.add('auto-build-step-button', 'auto-build-step-multiply');
-  multiplyButton.textContent = 'x10';
+  multiplyButton.textContent = getStructuresUIText('ui.structures.common.timesTen', 'x10');
   grid.appendChild(multiplyButton);
 
   const decrementButton = document.createElement('button');
@@ -302,7 +318,7 @@ function createAutoBuildStepControls(structure, autoBuildInput) {
   const divideButton = document.createElement('button');
   divideButton.type = 'button';
   divideButton.classList.add('auto-build-step-button', 'auto-build-step-divide');
-  divideButton.textContent = '/10';
+  divideButton.textContent = getStructuresUIText('ui.structures.common.divideTen', '/10');
   grid.appendChild(divideButton);
 
   updateAutoBuildStepButtonLabels(structure, incrementButton, decrementButton);
@@ -678,7 +694,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
 
   autoBuildHeaderLabel.appendChild(autoBuildCheckbox);
-  autoBuildHeaderLabel.appendChild(document.createTextNode('Auto-build'));
+  autoBuildHeaderLabel.appendChild(document.createTextNode(
+    getStructuresUIText('ui.structures.autoBuild.header', 'Auto-build')
+  ));
   autoBuildHeaderContainer.appendChild(autoBuildHeaderLabel);
 
   const autoBuildInput = document.createElement('input');
@@ -725,41 +743,41 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   if (structure.autoBuildFillEnabled) {
     const fillOption = document.createElement('option');
     fillOption.value = 'fill';
-    fillOption.textContent = '% filled';
+    fillOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.fill', '% filled');
     autoBuildBasisSelect.appendChild(fillOption);
   }
   const popOption = document.createElement('option');
   popOption.value = 'population';
-  popOption.textContent = '% of pop';
+  popOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.population', '% of pop');
   autoBuildBasisSelect.appendChild(popOption);
   const workerOption = document.createElement('option');
   workerOption.value = 'workers';
-  workerOption.textContent = '% of workers';
+  workerOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers');
   autoBuildBasisSelect.appendChild(workerOption);
   if (structure.requiresWorker > 0) {
     const shareOption = document.createElement('option');
     shareOption.value = 'workerShare';
-    shareOption.textContent = '% worker share';
+    shareOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share');
     autoBuildBasisSelect.appendChild(shareOption);
   }
   if (structure.requiresLand > 0) {
     const landOption = document.createElement('option');
     landOption.value = 'landShare';
-    landOption.textContent = '% land share';
+    landOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.landShare', '% land share');
     autoBuildBasisSelect.appendChild(landOption);
   }
   const initialLandOption = document.createElement('option');
   initialLandOption.value = 'initialLand';
-  initialLandOption.textContent = '% initial land';
+  initialLandOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.initialLand', '% initial land');
   autoBuildBasisSelect.appendChild(initialLandOption);
   const fixedOption = document.createElement('option');
   fixedOption.value = 'fixed';
-  fixedOption.textContent = 'Fixed';
+  fixedOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.fixed', 'Fixed');
   autoBuildBasisSelect.appendChild(fixedOption);
   if (!hasAutoBuildBasisOption(autoBuildBasisSelect, 'building:storageDepot')) {
     const storageDepotOption = document.createElement('option');
     storageDepotOption.value = 'building:storageDepot';
-    storageDepotOption.textContent = '% of Storage Depots';
+    storageDepotOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.storageDepots', '% of Storage Depots');
     autoBuildBasisSelect.appendChild(storageDepotOption);
   }
   if (Array.isArray(structure.automationBuildingsDropDown)) {
@@ -767,7 +785,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       const option = document.createElement('option');
       option.value = `building:${name}`;
       const displayName = (buildings[name] && buildings[name].displayName) || name;
-      option.textContent = `% of ${displayName}`;
+      option.textContent = getStructuresUIText('ui.structures.autoBuild.basis.percentOf', '% of {name}', {
+        name: displayName
+      });
       autoBuildBasisSelect.appendChild(option);
     });
   }
@@ -797,7 +817,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const controlsLabel = document.createElement('div');
   controlsLabel.classList.add('building-controls-label');
-  controlsLabel.textContent = 'Controls';
+  controlsLabel.textContent = getStructuresUIText('ui.structures.controls.title', 'Controls');
   controlsColumn.appendChild(controlsLabel);
 
   const customControlsContainer = document.createElement('div');
@@ -821,7 +841,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const hideButton = document.createElement('button');
   hideButton.classList.add('hide-button');
-  hideButton.textContent = 'Hide';
+  hideButton.textContent = getStructuresUIText('ui.structures.controls.hide', 'Hide');
   hideButton.addEventListener('click', function () {
     structure.isHidden = true;
     disableStructureAutomations(structure, isColony);
@@ -869,7 +889,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const reverseInlineBtn = document.createElement('button');
   reverseInlineBtn.classList.add('reverse-button');
   reverseInlineBtn.id = `${structure.name}-reverse-button`;
-  reverseInlineBtn.textContent = 'Reverse';
+  reverseInlineBtn.textContent = getStructuresUIText('ui.structures.controls.reverse', 'Reverse');
   reverseInlineBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
   reverseInlineBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -945,7 +965,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     productivityContainer.classList.add('productivity-container');
 
     const productivityLabel = document.createElement('span');
-    productivityLabel.innerHTML = `<strong>Productivity:</strong> `;
+    productivityLabel.innerHTML = `<strong>${getStructuresUIText('ui.structures.labels.productivity', 'Productivity')}:</strong> `;
     productivityContainer.appendChild(productivityLabel);
 
     const productivityValue = document.createElement('span');
@@ -957,7 +977,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       const warning = document.createElement('span');
       warning.id = `${structure.name}-life-warning`;
       warning.classList.add('biodome-life-warning');
-      warning.textContent = '⚠ Requires Active Life Design ⚠';
+      warning.textContent = getStructuresUIText('ui.structures.warnings.biodomeLife', '⚠ Requires Active Life Design ⚠');
       warning.style.display = 'none';
       productivityContainer.appendChild(warning);
       structureUIElements[structure.name] = structureUIElements[structure.name] || {};
@@ -1002,7 +1022,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const autoBuildPriorityLabel = document.createElement('label');
   autoBuildPriorityLabel.classList.add('auto-build-priority-label');
-  autoBuildPriorityLabel.textContent = 'Priority : ';
+  autoBuildPriorityLabel.textContent = getStructuresUIText('ui.structures.autoBuild.priority', 'Priority : ');
   const priorityContainer = document.createElement('span');
   priorityContainer.classList.add('worker-priority-container');
   const priorityUp = document.createElement('span');
@@ -1068,7 +1088,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const autoBuildTarget = document.createElement('span');
   autoBuildTarget.classList.add('auto-build-target');
   autoBuildTarget.id = `${structure.name}-auto-build-target`;
-  autoBuildTarget.textContent = 'Target : 0';
+  autoBuildTarget.textContent = getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', { value: '0' });
   cached.autoBuildTarget = autoBuildTarget;
   autoBuildTargetContainer.appendChild(autoBuildTarget);
 
@@ -1078,7 +1098,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveButton.classList.add('auto-build-setactive-button');
 
   const setActiveLabel = document.createElement('span');
-  setActiveLabel.textContent = 'Set active to target';
+  setActiveLabel.textContent = getStructuresUIText('ui.structures.autoBuild.setActiveToTarget', 'Set active to target');
 
   const autoActiveCheckbox = document.createElement('input');
   autoActiveCheckbox.type = 'checkbox';
@@ -1160,7 +1180,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const setTargetButton = document.createElement('button');
   setTargetButton.id = `${structure.name}-set-target-button`;
   setTargetButton.classList.add('auto-build-setactive-button');
-  setTargetButton.textContent = 'Set Target to Active';
+  setTargetButton.textContent = getStructuresUIText('ui.structures.autoBuild.setTargetToActive', 'Set Target to Active');
 
   setTargetButtonContainer.appendChild(setTargetButton);
 
@@ -1357,7 +1377,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     });
 
     autoUpgradeContainer.appendChild(autoUpgradeCheckbox);
-    autoUpgradeContainer.appendChild(document.createTextNode('Auto-upgrade'));
+    autoUpgradeContainer.appendChild(document.createTextNode(
+      getStructuresUIText('ui.structures.autoBuild.autoUpgrade', 'Auto-upgrade')
+    ));
 
     structureUIElements[structure.name].autoUpgradeCheckbox = autoUpgradeCheckbox;
     structureUIElements[structure.name].autoUpgradeContainer = autoUpgradeContainer;
@@ -1378,12 +1400,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
       const anyOption = document.createElement('option');
       anyOption.value = 'any';
-      anyOption.textContent = 'Any';
+      anyOption.textContent = getStructuresUIText('ui.structures.autoBuild.fill.any', 'Any');
       select.appendChild(anyOption);
 
       const noneOption = document.createElement('option');
       noneOption.value = 'none';
-      noneOption.textContent = 'None';
+      noneOption.textContent = getStructuresUIText('ui.structures.autoBuild.fill.none', 'None');
       select.appendChild(noneOption);
 
       for (const category in structure.storage) {
@@ -1403,8 +1425,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       return { wrapper, select };
     };
 
-    const primarySelect = buildFillSelect('Primary', structure.autoBuildFillResourcePrimary || 'any');
-    const secondarySelect = buildFillSelect('Secondary', structure.autoBuildFillResourceSecondary || 'none');
+    const primarySelect = buildFillSelect(
+      getStructuresUIText('ui.structures.autoBuild.fill.primary', 'Primary'),
+      structure.autoBuildFillResourcePrimary || 'any'
+    );
+    const secondarySelect = buildFillSelect(
+      getStructuresUIText('ui.structures.autoBuild.fill.secondary', 'Secondary'),
+      structure.autoBuildFillResourceSecondary || 'none'
+    );
 
     primarySelect.select.addEventListener('change', () => {
       structure.autoBuildFillResourcePrimary = primarySelect.select.value;
@@ -1500,7 +1528,7 @@ function createStructureControls(structure, toggleCallback) {
 
     zeroButton = document.createElement('button');
     zeroButton.id = `${structure.name}-zero-button`;
-    zeroButton.textContent = '0';
+    zeroButton.textContent = getStructuresUIText('ui.structures.common.zero', '0');
     zeroButton.addEventListener('click', function () {
       toggleCallback(structure, -structure.active);
       disableAutoActive(structure);
@@ -1529,7 +1557,7 @@ function createStructureControls(structure, toggleCallback) {
     structureControls.appendChild(increaseButton);
 
     maxButton = document.createElement('button');
-    maxButton.textContent = 'Max';
+    maxButton.textContent = getStructuresUIText('ui.common.max', 'Max');
     maxButton.addEventListener('click', function () {
       toggleCallback(structure, structure.count - structure.active);
       disableAutoActive(structure);
@@ -1565,7 +1593,7 @@ function updateDecreaseButtonText(button, buildCount) {
     // Rebuild the button label structure if expected nodes are missing
     if (!countSpan || !button.buttonNameNode) {
       button.textContent = '';
-      button.append('Build ');
+      button.append(getStructuresUIText('ui.structures.controls.buildPrefix', 'Build '));
       countSpan = document.createElement('span');
       countSpan.classList.add('build-button-count');
       button.appendChild(countSpan);
@@ -1671,12 +1699,14 @@ function updateDecreaseButtonText(button, buildCount) {
     if (!id.startsWith('rwg-')) return null;
     const type = id.slice(4).replace(/-/g, ' ');
     const name = type.replace(/\b\w/g, char => char.toUpperCase());
-    return name ? `Random World: ${name}` : 'Random World';
+    return name
+      ? getStructuresUIText('ui.structures.sources.randomWorldNamed', 'Random World: {name}', { name })
+      : getStructuresUIText('ui.structures.sources.randomWorld', 'Random World');
   }
 
   function resolveCostMultiplierSourceName(effect) {
     if (effect.sourceId === 'wgcRD') {
-      return 'Warp Gate Command R&D';
+      return getStructuresUIText('ui.structures.sources.wgcRd', 'Warp Gate Command R&D');
     }
     const rwgName = formatRwgMultiplierSource(effect.sourceId);
     const skillName = skillManager?.skills?.[effect.sourceId]?.name;
@@ -1695,7 +1725,7 @@ function updateDecreaseButtonText(button, buildCount) {
       ?? colonies[effect.sourceId]?.name
       ?? rwgName
       ?? effect.effectId
-      ?? 'Unknown effect';
+      ?? getStructuresUIText('ui.structures.sources.unknownEffect', 'Unknown effect');
   }
 
   function buildStructureCostTooltip(structure, category, resource, buildCount) {
@@ -1709,16 +1739,22 @@ function updateDecreaseButtonText(button, buildCount) {
       const selectedTotalCost =
         structure.getEffectiveCost(buildCount)?.[category]?.[resource] ?? 0;
       const aerostatLines = [
-        `One additional aerostat cost: ${formatNumber(singleCost, true)}`,
-        `Selected total cost: ${formatNumber(selectedTotalCost, true)}`
+        getStructuresUIText('ui.structures.tooltips.oneAerostatCost', 'One additional aerostat cost: {value}', {
+          value: formatNumber(singleCost, true)
+        }),
+        getStructuresUIText('ui.structures.tooltips.selectedTotalCost', 'Selected total cost: {value}', {
+          value: formatNumber(selectedTotalCost, true)
+        })
       ];
       const aerostatMultipliers = [];
       const aerostatKesslerMultiplier = structure.getKesslerCostMultiplier();
 
       if (aerostatKesslerMultiplier !== 1) {
-        const sizeLabel = structure.kesslerDebrisSize === 'large' ? 'large' : 'small';
+        const sizeLabel = structure.kesslerDebrisSize === 'large'
+          ? getStructuresUIText('ui.structures.kessler.large', 'large')
+          : getStructuresUIText('ui.structures.kessler.small', 'small');
         aerostatMultipliers.push({
-          name: `Kessler debris (${sizeLabel})`,
+          name: getStructuresUIText('ui.structures.kessler.debris', 'Kessler debris ({size})', { size: sizeLabel }),
           value: aerostatKesslerMultiplier
         });
       }
@@ -1737,12 +1773,15 @@ function updateDecreaseButtonText(button, buildCount) {
       });
 
       if (aerostatMultipliers.length) {
-        aerostatLines.push('Multipliers:');
+        aerostatLines.push(getStructuresUIText('ui.structures.tooltips.multipliers', 'Multipliers:'));
         aerostatMultipliers.forEach(multiplier => {
-          aerostatLines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+          aerostatLines.push(getStructuresUIText('ui.structures.tooltips.multiplierEntry', '- {name}: x{value}', {
+            name: multiplier.name,
+            value: formatNumber(multiplier.value, false, 3)
+          }));
         });
       } else {
-        aerostatLines.push('Multipliers: none');
+        aerostatLines.push(getStructuresUIText('ui.structures.tooltips.multipliersNone', 'Multipliers: none'));
       }
 
       return aerostatLines.join('\n');
@@ -1751,13 +1790,17 @@ function updateDecreaseButtonText(button, buildCount) {
     const baseCost = structure.cost?.[category]?.[resource] ?? 0;
     const totalBaseCost = baseCost * buildCount;
     const kesslerMultiplier = structure.getKesslerCostMultiplier();
-    const lines = [`Base cost: ${formatNumber(totalBaseCost, true)}`];
+    const lines = [getStructuresUIText('ui.structures.tooltips.baseCost', 'Base cost: {value}', {
+      value: formatNumber(totalBaseCost, true)
+    })];
     const multipliers = [];
 
     if (kesslerMultiplier !== 1) {
-      const sizeLabel = structure.kesslerDebrisSize === 'large' ? 'large' : 'small';
+      const sizeLabel = structure.kesslerDebrisSize === 'large'
+        ? getStructuresUIText('ui.structures.kessler.large', 'large')
+        : getStructuresUIText('ui.structures.kessler.small', 'small');
       multipliers.push({
-        name: `Kessler debris (${sizeLabel})`,
+        name: getStructuresUIText('ui.structures.kessler.debris', 'Kessler debris ({size})', { size: sizeLabel }),
         value: kesslerMultiplier
       });
     }
@@ -1776,12 +1819,15 @@ function updateDecreaseButtonText(button, buildCount) {
     });
 
     if (multipliers.length) {
-      lines.push('Multipliers:');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliers', 'Multipliers:'));
       multipliers.forEach(multiplier => {
-        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+        lines.push(getStructuresUIText('ui.structures.tooltips.multiplierEntry', '- {name}: x{value}', {
+          name: multiplier.name,
+          value: formatNumber(multiplier.value, false, 3)
+        }));
       });
     } else {
-      lines.push('Multipliers: none');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliersNone', 'Multipliers: none'));
     }
 
     return lines.join('\n');
@@ -1792,8 +1838,12 @@ function updateDecreaseButtonText(button, buildCount) {
     const totalBaseCost = effectiveCost?.colony?.[resource] ?? 0;
     const baseMaintenanceMultiplier = maintenanceFraction * structure.maintenanceFactor;
     const lines = [
-      `Base cost: ${formatNumber(totalBaseCost, true)}`,
-      `Innate maintenance multiplier: x${baseMaintenanceMultiplier}`
+      getStructuresUIText('ui.structures.tooltips.baseCost', 'Base cost: {value}', {
+        value: formatNumber(totalBaseCost, true)
+      }),
+      getStructuresUIText('ui.structures.tooltips.maintenanceMultiplier', 'Innate maintenance multiplier: x{value}', {
+        value: baseMaintenanceMultiplier
+      })
     ];
     const multipliers = [];
 
@@ -1823,18 +1873,21 @@ function updateDecreaseButtonText(button, buildCount) {
     if (resourceMultiplier !== 1) {
       const resourceLabel = resources.colony[resource].displayName || resource;
       multipliers.push({
-        name: `${resourceLabel} modifier`,
+        name: getStructuresUIText('ui.structures.tooltips.resourceModifier', '{label} modifier', { label: resourceLabel }),
         value: resourceMultiplier
       });
     }
 
     if (multipliers.length) {
-      lines.push('Multipliers:');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliers', 'Multipliers:'));
       multipliers.forEach(multiplier => {
-        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+        lines.push(getStructuresUIText('ui.structures.tooltips.multiplierEntry', '- {name}: x{value}', {
+          name: multiplier.name,
+          value: formatNumber(multiplier.value, false, 3)
+        }));
       });
     } else {
-      lines.push('Multipliers: none');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliersNone', 'Multipliers: none'));
     }
 
     return lines.join('\n');
@@ -1843,7 +1896,9 @@ function updateDecreaseButtonText(button, buildCount) {
   function buildStructureProductionTooltip(structure, category, resource, buildCount) {
     const baseProduction = structure.production?.[category]?.[resource] ?? 0;
     const totalBaseProduction = baseProduction * buildCount;
-    const lines = [`Base production: ${formatNumber(totalBaseProduction, true, 2)}`];
+    const lines = [getStructuresUIText('ui.structures.tooltips.baseProduction', 'Base production: {value}', {
+      value: formatNumber(totalBaseProduction, true, 2)
+    })];
     const multipliers = [];
 
     structure.activeEffects.forEach(effect => {
@@ -1866,12 +1921,15 @@ function updateDecreaseButtonText(button, buildCount) {
     });
 
     if (multipliers.length) {
-      lines.push('Multipliers:');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliers', 'Multipliers:'));
       multipliers.forEach(multiplier => {
-        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+        lines.push(getStructuresUIText('ui.structures.tooltips.multiplierEntry', '- {name}: x{value}', {
+          name: multiplier.name,
+          value: formatNumber(multiplier.value, false, 3)
+        }));
       });
     } else {
-      lines.push('Multipliers: none');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliersNone', 'Multipliers: none'));
     }
 
     return lines.join('\n');
@@ -1883,9 +1941,13 @@ function updateDecreaseButtonText(button, buildCount) {
     const reverseConsumption = isReverseMode
       ? (structure.production?.[category]?.[resource] || 0) * buildCount
       : 0;
-    const lines = [`Base consumption: ${formatNumber(baseConsumption, true, 2)}`];
+    const lines = [getStructuresUIText('ui.structures.tooltips.baseConsumption', 'Base consumption: {value}', {
+      value: formatNumber(baseConsumption, true, 2)
+    })];
     if (reverseConsumption > 0) {
-      lines.push(`Reverse-mode base consumption: ${formatNumber(reverseConsumption, true, 2)}`);
+      lines.push(getStructuresUIText('ui.structures.tooltips.reverseBaseConsumption', 'Reverse-mode base consumption: {value}', {
+        value: formatNumber(reverseConsumption, true, 2)
+      }));
     }
     const multipliers = [];
     const reverseMultipliers = [];
@@ -1928,22 +1990,28 @@ function updateDecreaseButtonText(button, buildCount) {
     });
 
     if (multipliers.length) {
-      lines.push('Multipliers:');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliers', 'Multipliers:'));
       multipliers.forEach(multiplier => {
-        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+        lines.push(getStructuresUIText('ui.structures.tooltips.multiplierEntry', '- {name}: x{value}', {
+          name: multiplier.name,
+          value: formatNumber(multiplier.value, false, 3)
+        }));
       });
     } else {
-      lines.push('Multipliers: none');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliersNone', 'Multipliers: none'));
     }
 
     if (reverseConsumption > 0) {
       if (reverseMultipliers.length) {
-        lines.push('Reverse multipliers:');
+        lines.push(getStructuresUIText('ui.structures.tooltips.reverseMultipliers', 'Reverse multipliers:'));
         reverseMultipliers.forEach(multiplier => {
-          lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+          lines.push(getStructuresUIText('ui.structures.tooltips.multiplierEntry', '- {name}: x{value}', {
+            name: multiplier.name,
+            value: formatNumber(multiplier.value, false, 3)
+          }));
         });
       } else {
-        lines.push('Reverse multipliers: none');
+        lines.push(getStructuresUIText('ui.structures.tooltips.reverseMultipliersNone', 'Reverse multipliers: none'));
       }
     }
 
@@ -1953,9 +2021,13 @@ function updateDecreaseButtonText(button, buildCount) {
   function buildStructureWorkerTooltip(structure, buildCount) {
     const baseWorkers = structure.requiresWorker * buildCount;
     const addedWorkers = structure.getAddedWorkerNeed() * buildCount;
-    const lines = [`Base workers: ${formatNumber(baseWorkers, true)}`];
+    const lines = [getStructuresUIText('ui.structures.tooltips.baseWorkers', 'Base workers: {value}', {
+      value: formatNumber(baseWorkers, true)
+    })];
     if (addedWorkers > 0) {
-      lines.push(`Added workers: ${formatNumber(addedWorkers, true)}`);
+      lines.push(getStructuresUIText('ui.structures.tooltips.addedWorkers', 'Added workers: {value}', {
+        value: formatNumber(addedWorkers, true)
+      }));
     }
     const multipliers = [];
 
@@ -1969,12 +2041,15 @@ function updateDecreaseButtonText(button, buildCount) {
     });
 
     if (multipliers.length) {
-      lines.push('Multipliers:');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliers', 'Multipliers:'));
       multipliers.forEach(multiplier => {
-        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+        lines.push(getStructuresUIText('ui.structures.tooltips.multiplierEntry', '- {name}: x{value}', {
+          name: multiplier.name,
+          value: formatNumber(multiplier.value, false, 3)
+        }));
       });
     } else {
-      lines.push('Multipliers: none');
+      lines.push(getStructuresUIText('ui.structures.tooltips.multipliersNone', 'Multipliers: none'));
     }
 
     return lines.join('\n');
@@ -2003,7 +2078,7 @@ function updateDecreaseButtonText(button, buildCount) {
     if (structure.getTotalWorkerNeed() > 0) {
       items.push({
         key: 'colony.workers',
-        label: 'Workers',
+        label: getStructuresUIText('ui.structures.costLabels.workers', 'Workers'),
         required: structure.getTotalWorkerNeed() * structure.getEffectiveWorkerMultiplier(),
         available: resources.colony.workers?.value || 0,
         insufficientColor: 'orange',
@@ -2015,7 +2090,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const requiredLand = structure.requiresLand * buildCount;
       items.push({
         key: 'colony.land',
-        label: 'Land',
+        label: getStructuresUIText('ui.structures.costLabels.land', 'Land'),
         required: structure.requiresLand,
         available: structure.canAffordLand(buildCount) ? requiredLand : 0,
         insufficientColor: 'red'
@@ -2026,7 +2101,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const requiredDeposit = buildCount;
       items.push({
         key: 'deposit',
-        label: 'Deposit',
+        label: getStructuresUIText('ui.structures.costLabels.deposit', 'Deposit'),
         required: 1,
         available: structure.canAffordDeposit(buildCount) ? requiredDeposit : 0,
         insufficientColor: 'red'
@@ -2039,7 +2114,7 @@ function updateDecreaseButtonText(button, buildCount) {
       costElement.dataset.keys = keyString;
       costElement.textContent = '';
       const label = document.createElement('strong');
-      label.textContent = 'Cost:';
+      label.textContent = getStructuresUIText('ui.structures.labels.cost', 'Cost:');
       costElement.append(label, ' ');
       list = document.createElement('span');
       costElement.appendChild(list);
@@ -2073,7 +2148,7 @@ function updateDecreaseButtonText(button, buildCount) {
         costElement._spans.set(item.key, span);
         list.appendChild(span);
         if (idx < items.length - 1) {
-          list.appendChild(document.createTextNode(', '));
+          list.appendChild(document.createTextNode(getStructuresUIText('ui.structures.common.commaSeparator', ', ')));
         }
       });
     }
@@ -2262,7 +2337,11 @@ function updateDecreaseButtonText(button, buildCount) {
         warning.style.display = 'none';
         return;
       }
-      warningText.textContent = `Extra Cost from Kessler x${formatNumber(multiplier, false, 2)} will create debris`;
+      warningText.textContent = getStructuresUIText(
+        'ui.structures.kessler.warning',
+        'Extra Cost from Kessler x{value} will create debris',
+        { value: formatNumber(multiplier, false, 2) }
+      );
       const tooltip = elements.kesslerWarningTooltip;
       const baseCost = structure.getBaseEffectiveCost(buildCount);
       const debrisAdded = structure._getKesslerDebrisFromCost(baseCost, multiplier);
@@ -2273,10 +2352,21 @@ function updateDecreaseButtonText(button, buildCount) {
       const currentChances = hazardManager.kesslerHazard.getProjectFailureChances();
       const nextChances = hazardManager.kesslerHazard.getProjectFailureChancesForDebris(totalDebris);
       const tooltipText = [
-        `Debris from this build: +${formatNumber(debrisAdded, true)} t`,
-        `Cost multiplier: ${formatNumber(multiplier, false, 2)}x -> ${formatNumber(nextMultiplier, false, 2)}x`,
-        `Small project failure: ${formatNumber(currentChances.smallFailure * 100, false, 2)}% -> ${formatNumber(nextChances.smallFailure * 100, false, 2)}%`,
-        `Large project failure: ${formatNumber(currentChances.largeFailure * 100, false, 2)}% -> ${formatNumber(nextChances.largeFailure * 100, false, 2)}%`
+        getStructuresUIText('ui.structures.kessler.tooltip.debris', 'Debris from this build: +{value} t', {
+          value: formatNumber(debrisAdded, true)
+        }),
+        getStructuresUIText('ui.structures.kessler.tooltip.costMultiplier', 'Cost multiplier: {current}x -> {next}x', {
+          current: formatNumber(multiplier, false, 2),
+          next: formatNumber(nextMultiplier, false, 2)
+        }),
+        getStructuresUIText('ui.structures.kessler.tooltip.smallFailure', 'Small project failure: {current}% -> {next}%', {
+          current: formatNumber(currentChances.smallFailure * 100, false, 2),
+          next: formatNumber(nextChances.smallFailure * 100, false, 2)
+        }),
+        getStructuresUIText('ui.structures.kessler.tooltip.largeFailure', 'Large project failure: {current}% -> {next}%', {
+          current: formatNumber(currentChances.largeFailure * 100, false, 2),
+          next: formatNumber(nextChances.largeFailure * 100, false, 2)
+        })
       ].join('\n');
       setTooltipText(tooltip, tooltipText, elements.kesslerWarningTooltipCache, 'text');
       warning.style.display = 'flex';

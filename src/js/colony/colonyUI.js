@@ -1,6 +1,14 @@
 let showObsoleteBuildings = false;
 const growthRateDisplayCache = { tooltips: {}, tooltipCache: {} };
 
+function getColonyUIText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function createGrowthRateDisplay(){
   const controlsContainer = document.getElementById('colony-controls-container');
   if(!controlsContainer || document.getElementById('growth-rate-container')) return;
@@ -13,7 +21,7 @@ function createGrowthRateDisplay(){
   header.classList.add('card-header');
   const title = document.createElement('span');
   title.classList.add('card-title');
-  title.textContent = 'Growth Rate';
+  title.textContent = getColonyUIText('ui.colony.growthRate.title', 'Growth Rate');
   header.appendChild(title);
   card.appendChild(header);
 
@@ -24,7 +32,7 @@ function createGrowthRateDisplay(){
   const capLine = document.createElement('div');
   capLine.classList.add('growth-rate-line');
   const capLabel = document.createElement('span');
-  capLabel.textContent = 'Capacity:';
+  capLabel.textContent = getColonyUIText('ui.colony.growthRate.capacity', 'Capacity:');
   const capValue = document.createElement('span');
   capValue.id = 'growth-capacity-value';
   capValue.textContent = '0%';
@@ -37,7 +45,10 @@ function createGrowthRateDisplay(){
   const capInfo = document.createElement('span');
   capInfo.classList.add('info-tooltip-icon');
   capInfo.innerHTML = '&#9432;';
-  const capacityText = 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.  \n\n If you feel that the game is very slow, there is a very high chance that this multiplier is the reason why.  Try to keep it as high as possible by building more housing.';
+  const capacityText = getColonyUIText(
+    'ui.colony.growthRate.capacityTooltip',
+    'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.\n\nIf you feel that the game is very slow, there is a very high chance that this multiplier is the reason why. Try to keep it as high as possible by building more housing.'
+  );
   growthRateDisplayCache.tooltips.capacity = attachDynamicInfoTooltip(capInfo, capacityText);
   capLine.appendChild(capInfo);
   body.appendChild(capLine);
@@ -48,7 +59,7 @@ function createGrowthRateDisplay(){
   const baseLine = document.createElement('div');
   baseLine.classList.add('growth-rate-line');
   const baseLabel = document.createElement('span');
-  baseLabel.textContent = 'Base rate:';
+  baseLabel.textContent = getColonyUIText('ui.colony.growthRate.baseRate', 'Base rate:');
   const baseValue = document.createElement('span');
   baseValue.id = 'growth-base-value';
   baseValue.textContent = '0%/s';
@@ -57,14 +68,10 @@ function createGrowthRateDisplay(){
   const baseInfo = document.createElement('span');
   baseInfo.classList.add('info-tooltip-icon');
   baseInfo.innerHTML = '&#9432;';
-  const baseText = [
-    'Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).',
-    '- Food and energy each grant up to +25 happiness when satisfied.',
-    '- Comfort adds 20× its rating.',
-    '- Electronics and androids each add up to +10 happiness when food and energy are met.',
-    '- Milestones ready to claim or claimed add +0.5 happiness each.',
-    '- Happiness below 50% pauses growth.'
-  ].join('\n');
+  const baseText = getColonyUIText(
+    'ui.colony.growthRate.baseTooltip',
+    'Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).\n- Food and energy each grant up to +25 happiness when satisfied.\n- Comfort adds 20x its rating.\n- Electronics and androids each add up to +10 happiness when food and energy are met.\n- Milestones ready to claim or claimed add +0.5 happiness each.\n- Happiness below 50% pauses growth.'
+  );
   growthRateDisplayCache.tooltips.base = attachDynamicInfoTooltip(baseInfo, baseText);
   baseLine.appendChild(baseInfo);
   body.appendChild(baseLine);
@@ -74,7 +81,7 @@ function createGrowthRateDisplay(){
   const otherLine = document.createElement('div');
   otherLine.classList.add('growth-rate-line');
   const otherLabel = document.createElement('span');
-  otherLabel.textContent = 'Other multipliers:';
+  otherLabel.textContent = getColonyUIText('ui.colony.growthRate.otherMultipliers', 'Other multipliers:');
   const otherValue = document.createElement('span');
   otherValue.id = 'growth-other-value';
   otherValue.textContent = '1x';
@@ -85,7 +92,7 @@ function createGrowthRateDisplay(){
   otherInfo.innerHTML = '&#9432;';
   growthRateDisplayCache.tooltips.other = attachDynamicInfoTooltip(
     otherInfo,
-    'Multipliers from colony sliders, and other effects.'
+    getColonyUIText('ui.colony.growthRate.otherTooltip', 'Multipliers from colony sliders, and other effects.')
   );
   otherLine.appendChild(otherInfo);
   body.appendChild(otherLine);
@@ -94,7 +101,7 @@ function createGrowthRateDisplay(){
   const decayLine = document.createElement('div');
   decayLine.classList.add('growth-rate-line');
   const decayLabel = document.createElement('span');
-  decayLabel.textContent = 'Decay:';
+  decayLabel.textContent = getColonyUIText('ui.colony.growthRate.decay', 'Decay:');
   const decayValue = document.createElement('span');
   decayValue.id = 'growth-decay-value';
   decayValue.textContent = '0%/s';
@@ -105,7 +112,7 @@ function createGrowthRateDisplay(){
   decayInfo.innerHTML = '&#9432;';
   growthRateDisplayCache.tooltips.decay = attachDynamicInfoTooltip(
     decayInfo,
-    'Combined population loss from shortages, overpopulation, and high gravity.'
+    getColonyUIText('ui.colony.growthRate.decayTooltip', 'Combined population loss from shortages, overpopulation, and high gravity.')
   );
   decayLine.appendChild(decayInfo);
   body.appendChild(decayLine);
@@ -115,7 +122,7 @@ function createGrowthRateDisplay(){
   const growthLine = document.createElement('div');
   growthLine.classList.add('growth-rate-line');
   const growthLabel = document.createElement('span');
-  growthLabel.textContent = 'Growth:';
+  growthLabel.textContent = getColonyUIText('ui.colony.growthRate.growth', 'Growth:');
   const growthValue = document.createElement('span');
   growthValue.id = 'growth-rate-value';
   growthValue.textContent = '0%/s';
@@ -126,7 +133,7 @@ function createGrowthRateDisplay(){
   growthInfo.innerHTML = '&#9432;';
   growthRateDisplayCache.tooltips.growth = attachDynamicInfoTooltip(
     growthInfo,
-    'Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.'
+    getColonyUIText('ui.colony.growthRate.growthTooltip', 'Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.')
   );
   growthLine.appendChild(growthInfo);
   body.appendChild(growthLine);
@@ -151,11 +158,11 @@ function getGrowthMultiplierBreakdown(){
       const mult = effect.value;
       if(mult === 1) return;
       const sourceId = String(effect.sourceId || '');
-      let name = effect.name || effect.sourceId || effect.effectId || 'Unknown';
+      let name = effect.name || effect.sourceId || effect.effectId || getColonyUIText('ui.colony.common.unknown', 'Unknown');
       if (sourceId.startsWith('rwg-')) {
         const typeKey = sourceId.slice(4);
         const typeName = RWG_WORLD_TYPES[typeKey]?.displayName || typeKey.replace(/-/g, ' ');
-        name = `Random World: ${typeName}`;
+        name = getColonyUIText('ui.colony.common.randomWorldNamed', 'Random World: {name}', { name: typeName });
       } else {
         name = name.toString()
                    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -170,7 +177,9 @@ function getGrowthMultiplierBreakdown(){
     const pilgrimBonus = followersManager.getPilgrimGrowthBonus();
     const pilgrimMultiplier = 1 + pilgrimBonus;
     if (Math.abs(pilgrimMultiplier - 1) > 1e-9) {
-      lines.push(`Pilgrim Followers: ${formatNumber(pilgrimMultiplier, false, 3)}x`);
+      lines.push(getColonyUIText('ui.colony.growthRate.pilgrimFollowers', 'Pilgrim Followers: {value}x', {
+        value: formatNumber(pilgrimMultiplier, false, 3)
+      }));
     }
   }
   return lines;
@@ -198,7 +207,7 @@ function updateGrowthRateDisplay(){
   const otherTooltip = growthRateDisplayCache.tooltips.other;
   if(otherTooltip){
     const breakdown = getGrowthMultiplierBreakdown();
-    let title = 'Multipliers from colony sliders, and other effects.';
+    let title = getColonyUIText('ui.colony.growthRate.otherTooltip', 'Multipliers from colony sliders, and other effects.');
     if(breakdown.length > 0){
       title += '\n' + breakdown.join('\n');
     }
@@ -230,11 +239,23 @@ function updateGrowthRateDisplay(){
       const gravity = terraforming?.celestialParameters?.gravity ?? 0;
       const aboveTwenty = Math.max(0, gravity - 20);
       const text = [
-        'Combined population loss from shortages, overpopulation, and high gravity.',
-        `• Starvation: ${formatNumber(starvationRate, false, 3)}%/s (${formatNumber(starvingPercent, false, 1)}% starving; 100% per 360 s).`,
-        `• Energy: ${formatNumber(energyRate, false, 3)}%/s (${formatNumber(withoutPower, false, 1)}% without power; 100% per 90 s).`,
-        `• Overpopulation: ${formatNumber(overpopulationRate, false, 3)}%/s.`,
-        `• Gravity: ${formatNumber(gravityRate, false, 4)}%/s (gravity ${formatNumber(gravity, false, 2)} m/s²; ${formatNumber(aboveTwenty, false, 2)} above 20).`
+        getColonyUIText('ui.colony.growthRate.decayTooltip', 'Combined population loss from shortages, overpopulation, and high gravity.'),
+        getColonyUIText('ui.colony.growthRate.decayStarvation', '• Starvation: {rate}%/s ({share}% starving; 100% per 360 s).', {
+          rate: formatNumber(starvationRate, false, 3),
+          share: formatNumber(starvingPercent, false, 1)
+        }),
+        getColonyUIText('ui.colony.growthRate.decayEnergy', '• Energy: {rate}%/s ({share}% without power; 100% per 90 s).', {
+          rate: formatNumber(energyRate, false, 3),
+          share: formatNumber(withoutPower, false, 1)
+        }),
+        getColonyUIText('ui.colony.growthRate.decayOverpopulation', '• Overpopulation: {rate}%/s.', {
+          rate: formatNumber(overpopulationRate, false, 3)
+        }),
+        getColonyUIText('ui.colony.growthRate.decayGravity', '• Gravity: {rate}%/s (gravity {gravity} m/s^2; {above} above 20).', {
+          rate: formatNumber(gravityRate, false, 4),
+          gravity: formatNumber(gravity, false, 2),
+          above: formatNumber(aboveTwenty, false, 2)
+        })
       ].join('\n');
       setTooltipText(decayTooltip, text, growthRateDisplayCache.tooltipCache, 'decay');
     }
@@ -258,8 +279,8 @@ function createColonyDetails(structure) {
   structure.needBoxCache = {};
 
   // Add comfort and happiness boxes
-  const happinessBox = createNeedBox('happiness', 'Happiness', structure.happiness, false, structure);
-  const comfortBox = createNeedBox('comfort', 'Comfort', structure.getComfort(), false, structure);
+  const happinessBox = createNeedBox('happiness', getColonyUIText('ui.colony.needs.happiness', 'Happiness'), structure.happiness, false, structure);
+  const comfortBox = createNeedBox('comfort', getColonyUIText('ui.colony.needs.comfort', 'Comfort'), structure.getComfort(), false, structure);
 
   colonyDetails.appendChild(happinessBox);
   colonyDetails.appendChild(comfortBox);
@@ -299,8 +320,8 @@ function updateColonyDetailsDisplay(structureRow, structure) {
   }
 
   // Update comfort and happiness boxes
-  updateNeedBox(structure.needBoxCache.happiness, 'Happiness', 'happiness', structure.happiness, false, structure);
-  updateNeedBox(structure.needBoxCache.comfort, 'Comfort', 'comfort', structure.getComfort(), false, structure);
+  updateNeedBox(structure.needBoxCache.happiness, getColonyUIText('ui.colony.needs.happiness', 'Happiness'), 'happiness', structure.happiness, false, structure);
+  updateNeedBox(structure.needBoxCache.comfort, getColonyUIText('ui.colony.needs.comfort', 'Comfort'), 'comfort', structure.getComfort(), false, structure);
 
   // Update need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
