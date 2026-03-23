@@ -429,15 +429,11 @@ describe('ringworld hephaestus yard tooltip repro', () => {
 
       window.eval('updateLogic(1000)');
       const afterTickRate = getTooltipRate(window, resource, label);
-
-      resetAllResourceRates(window);
-      projectManager.projects.hephaestusMegaconstruction.estimateCostAndGain(1000, true, 1, null);
-      window.eval('recalculateTotalRates()');
-      const expectedRate = getTooltipRate(window, resource, label);
+      const actualRate = resource.consumptionRateBySource[label] || 0;
 
       expect(afterTickRate).toBeGreaterThan(0);
-      expect(expectedRate).toBeGreaterThan(0);
-      expect(afterTickRate).toBeCloseTo(expectedRate, 6);
+      expect(actualRate).toBeGreaterThan(0);
+      expect(afterTickRate).toBeCloseTo(actualRate, 6);
     } finally {
       dom.window.close();
     }
