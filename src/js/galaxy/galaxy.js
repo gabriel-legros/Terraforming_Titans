@@ -1,326 +1,4 @@
-let GalaxySectorClass;
-let GalaxyFactionClass;
-let GalaxyFactionAIClass;
-let GalaxyOperationManagerClass;
-let galaxyFactionParametersConfig;
-let galaxySectorControlOverridesConfig;
-let galaxySectorParametersConfig;
-let defaultSectorValue = 100;
-let defaultSectorReward = [];
-const defaultUpdateFactions = () => {};
-let updateFactionsFunction = defaultUpdateFactions;
-const DEFAULT_UHF_FACTION_ID = 'uhf';
-let galaxyUhfId = DEFAULT_UHF_FACTION_ID;
-let operationAutoThresholdDefault = 2.1;
-
-if (typeof module !== 'undefined' && module.exports) {
-    ({ GalaxySector: GalaxySectorClass } = require('./sector'));
-    ({ GalaxyFaction: GalaxyFactionClass, updateFactions: updateFactionsFunction, UHF_FACTION_ID: galaxyUhfId } = require('./faction'));
-    try {
-        ({ GalaxyFactionAI: GalaxyFactionAIClass } = require('./factionAI'));
-    } catch (error) {
-        GalaxyFactionAIClass = undefined;
-    }
-    try {
-        ({
-            GalaxyOperationManager: GalaxyOperationManagerClass,
-            DEFAULT_OPERATION_AUTO_THRESHOLD: operationAutoThresholdDefault
-        } = require('./operation'));
-    } catch (error) {
-        GalaxyOperationManagerClass = undefined;
-    }
-    ({
-        galaxyFactionParameters: galaxyFactionParametersConfig,
-        galaxySectorControlOverrides: galaxySectorControlOverridesConfig
-    } = require('./factions-parameters'));
-    const sectorParametersModule = require('./sector-parameters');
-    galaxySectorParametersConfig = sectorParametersModule.galaxySectorParameters;
-    defaultSectorValue = sectorParametersModule.DEFAULT_SECTOR_VALUE;
-    if (sectorParametersModule.getDefaultSectorValue) {
-        defaultSectorValue = sectorParametersModule.getDefaultSectorValue();
-    }
-} else if (typeof window !== 'undefined') {
-    GalaxySectorClass = window.GalaxySector;
-    GalaxyFactionClass = window.GalaxyFaction;
-    if (window.GalaxyFactionAI) {
-        GalaxyFactionAIClass = window.GalaxyFactionAI;
-    }
-    if (window.GalaxyOperationManager) {
-        GalaxyOperationManagerClass = window.GalaxyOperationManager;
-    }
-    if (Number.isFinite(window.DEFAULT_OPERATION_AUTO_THRESHOLD) && window.DEFAULT_OPERATION_AUTO_THRESHOLD > 0) {
-        operationAutoThresholdDefault = window.DEFAULT_OPERATION_AUTO_THRESHOLD;
-    }
-    galaxyFactionParametersConfig = galaxyFactionParameters;
-    galaxySectorControlOverridesConfig = galaxySectorControlOverrides;
-    galaxySectorParametersConfig = window.galaxySectorParameters;
-    if (window.getGalaxySectorDefaultValue) {
-        defaultSectorValue = window.getGalaxySectorDefaultValue();
-    } else {
-        defaultSectorValue = window.galaxySectorDefaultValue;
-    }
-    if (window.getGalaxySectorDefaultReward) {
-        defaultSectorReward = window.getGalaxySectorDefaultReward();
-    } else if (Array.isArray(window.galaxySectorDefaultReward)) {
-        defaultSectorReward = window.galaxySectorDefaultReward;
-    }
-    if (typeof window.updateFactions === 'function') {
-        updateFactionsFunction = window.updateFactions;
-    }
-    if (typeof window.UHF_FACTION_ID === 'string') {
-        galaxyUhfId = window.UHF_FACTION_ID;
-    }
-}
-
-if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionParametersConfig)) && typeof globalThis !== 'undefined') {
-    if (!GalaxySectorClass && globalThis.GalaxySector) {
-        GalaxySectorClass = globalThis.GalaxySector;
-    }
-    if (!GalaxyFactionClass && globalThis.GalaxyFaction) {
-        GalaxyFactionClass = globalThis.GalaxyFaction;
-    }
-    if (!GalaxyFactionAIClass && globalThis.GalaxyFactionAI) {
-        GalaxyFactionAIClass = globalThis.GalaxyFactionAI;
-    }
-    if (!GalaxyOperationManagerClass && globalThis.GalaxyOperationManager) {
-        GalaxyOperationManagerClass = globalThis.GalaxyOperationManager;
-    }
-    if (Number.isFinite(globalThis.DEFAULT_OPERATION_AUTO_THRESHOLD) && globalThis.DEFAULT_OPERATION_AUTO_THRESHOLD > 0) {
-        operationAutoThresholdDefault = globalThis.DEFAULT_OPERATION_AUTO_THRESHOLD;
-    }
-    if (!galaxyFactionParametersConfig || !Array.isArray(galaxyFactionParametersConfig)) {
-        galaxyFactionParametersConfig = galaxyFactionParameters;
-    }
-    if (!galaxySectorControlOverridesConfig) {
-        galaxySectorControlOverridesConfig = galaxySectorControlOverrides;
-    }
-    if (!galaxySectorParametersConfig && globalThis.galaxySectorParameters) {
-        galaxySectorParametersConfig = globalThis.galaxySectorParameters;
-    }
-    if (globalThis.getGalaxySectorDefaultValue) {
-        defaultSectorValue = globalThis.getGalaxySectorDefaultValue();
-    } else {
-        const globalDefaultSectorValue = globalThis.galaxySectorDefaultValue;
-        if (Number.isFinite(globalDefaultSectorValue) && globalDefaultSectorValue > 0) {
-            defaultSectorValue = globalDefaultSectorValue;
-        }
-    }
-    if (globalThis.getGalaxySectorDefaultReward) {
-        defaultSectorReward = globalThis.getGalaxySectorDefaultReward();
-    } else if (Array.isArray(globalThis.galaxySectorDefaultReward)) {
-        defaultSectorReward = globalThis.galaxySectorDefaultReward;
-    }
-    if (typeof updateFactionsFunction !== 'function' && typeof globalThis.updateFactions === 'function') {
-        updateFactionsFunction = globalThis.updateFactions;
-    }
-    if (typeof globalThis.UHF_FACTION_ID === 'string') {
-        galaxyUhfId = globalThis.UHF_FACTION_ID;
-    }
-}
-
-if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionParametersConfig)) && typeof require === 'function') {
-    try {
-        if (!GalaxySectorClass) {
-            ({ GalaxySector: GalaxySectorClass } = require('./sector'));
-        }
-        if (!GalaxyFactionClass || updateFactionsFunction === defaultUpdateFactions) {
-            ({ GalaxyFaction: GalaxyFactionClass, updateFactions: updateFactionsFunction, UHF_FACTION_ID: galaxyUhfId } = require('./faction'));
-        }
-        if (!GalaxyFactionAIClass) {
-            ({ GalaxyFactionAI: GalaxyFactionAIClass } = require('./factionAI'));
-        }
-        if (!GalaxyOperationManagerClass) {
-            ({
-                GalaxyOperationManager: GalaxyOperationManagerClass,
-                DEFAULT_OPERATION_AUTO_THRESHOLD: operationAutoThresholdDefault
-            } = require('./operation'));
-        }
-        if (!Array.isArray(galaxyFactionParametersConfig)) {
-            ({
-                galaxyFactionParameters: galaxyFactionParametersConfig,
-                galaxySectorControlOverrides: galaxySectorControlOverridesConfig
-            } = require('./factions-parameters'));
-        }
-        if (!galaxySectorParametersConfig) {
-            const sectorParametersModule = require('./sector-parameters');
-            galaxySectorParametersConfig = sectorParametersModule.galaxySectorParameters;
-            defaultSectorValue = sectorParametersModule.DEFAULT_SECTOR_VALUE;
-            if (sectorParametersModule.getDefaultSectorValue) {
-                defaultSectorValue = sectorParametersModule.getDefaultSectorValue();
-            }
-            if (sectorParametersModule.getDefaultSectorReward) {
-                defaultSectorReward = sectorParametersModule.getDefaultSectorReward();
-            } else if (Array.isArray(sectorParametersModule.DEFAULT_SECTOR_REWARD)) {
-                defaultSectorReward = sectorParametersModule.DEFAULT_SECTOR_REWARD;
-            }
-        }
-    } catch (error) {
-        // Ignore resolution errors in browser contexts.
-    }
-}
-
-if (typeof updateFactionsFunction !== 'function') {
-    updateFactionsFunction = defaultUpdateFactions;
-}
-
-if (typeof galaxyUhfId !== 'string' || !galaxyUhfId) {
-    galaxyUhfId = DEFAULT_UHF_FACTION_ID;
-}
-
-if (!Array.isArray(galaxyFactionParametersConfig)) {
-    galaxyFactionParametersConfig = [];
-}
-galaxySectorControlOverridesConfig = galaxySectorControlOverridesConfig || {};
-if (!galaxySectorParametersConfig) {
-    galaxySectorParametersConfig = {};
-}
-if (!Number.isFinite(defaultSectorValue) || defaultSectorValue <= 0) {
-    defaultSectorValue = 100;
-}
-if (!Array.isArray(defaultSectorReward)) {
-    defaultSectorReward = [];
-}
-
-const R507_PROTECTED_COORDINATES = { q: 4, r: -5 };
-const R507_PROTECTED_KEY = GalaxySectorClass?.createKey?.(
-    R507_PROTECTED_COORDINATES.q,
-    R507_PROTECTED_COORDINATES.r
-) ?? `${R507_PROTECTED_COORDINATES.q},${R507_PROTECTED_COORDINATES.r}`;
-const R507_PROTECTED_CONTROL_THRESHOLD = 0.1;
-const R507_PROTECTED_CONTROL_TOLERANCE = 1e-6;
-
-function resolveDefaultSectorValue() {
-    return defaultSectorValue;
-}
-
-function resolveSectorOverrideValue(sectorKey) {
-    if (!sectorKey) {
-        return null;
-    }
-    const overrides = galaxySectorParametersConfig.overrides;
-    if (!overrides) {
-        return null;
-    }
-    const override = overrides[sectorKey];
-    if (!override) {
-        return null;
-    }
-    const overrideValue = override.value;
-    if (!Number.isFinite(overrideValue) || overrideValue <= 0) {
-        return null;
-    }
-    return overrideValue;
-}
-
-function cloneRewardDefinition(rewardDefinition) {
-    if (!rewardDefinition) {
-        return [];
-    }
-    const source = Array.isArray(rewardDefinition)
-        ? rewardDefinition
-        : [rewardDefinition];
-    const cloned = [];
-    source.forEach((entry) => {
-        if (!entry) {
-            return;
-        }
-        if (typeof entry === 'object') {
-            cloned.push({ ...entry });
-            return;
-        }
-        if (typeof entry === 'string') {
-            cloned.push(entry);
-        }
-    });
-    return cloned;
-}
-
-function resolveDefaultSectorReward() {
-    const definition = galaxySectorParametersConfig.defaultReward ?? defaultSectorReward;
-    if (!definition) {
-        return [];
-    }
-    return cloneRewardDefinition(definition);
-}
-
-function resolveSectorReward(sectorKey) {
-    if (sectorKey) {
-        const overrides = galaxySectorParametersConfig.overrides;
-        if (overrides) {
-            const override = overrides[sectorKey];
-            if (override && Object.prototype.hasOwnProperty.call(override, 'reward')) {
-                return cloneRewardDefinition(override.reward);
-            }
-        }
-    }
-    return resolveDefaultSectorReward();
-}
-
-function cloneStoryRequirement(requirement) {
-    const world = Number(requirement?.world);
-    if (!Number.isFinite(world) || world <= 0) {
-        return null;
-    }
-    return { world };
-}
-
-function resolveSectorStoryRequirement(sectorKey) {
-    if (!sectorKey) {
-        return null;
-    }
-    const overrides = galaxySectorParametersConfig.overrides;
-    if (!overrides) {
-        return null;
-    }
-    const override = overrides[sectorKey];
-    if (!override || !override.storyRequirement) {
-        return null;
-    }
-    return cloneStoryRequirement(override.storyRequirement);
-}
-
-
-const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
-    militaryResearch: {
-        key: 'militaryResearch',
-        label: 'Military R&D',
-        description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
-        increment: FLEET_UPGRADE_INCREMENT,
-        baseCost: 100000,
-        costType: 'resource',
-        resourceCategory: 'colony',
-        resourceId: 'advancedResearch',
-        costLabel: 'Advanced Research'
-    },
-    micOutsource: {
-        key: 'micOutsource',
-        label: 'MIC Outsourcing',
-        description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
-        increment: FLEET_UPGRADE_INCREMENT,
-        baseCost: 1000,
-        costType: 'solis',
-        costLabel: 'Solis Points'
-    },
-    enemyLessons: {
-        key: 'enemyLessons',
-        label: 'Reverse Engineering',
-        description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
-        increment: FLEET_UPGRADE_INCREMENT,
-        baseCost: 100,
-        costType: 'artifact',
-        costLabel: 'Alien Artifacts'
-    },
-    pandoraBox: {
-        key: 'pandoraBox',
-        label: "PANDORA'S Box",
-        description: 'Spend a skill point to greenlight unconventional fleet experiments.',
-        increment: 0.25,
-        baseCost: 1,
-        costType: 'skill',
-        costLabel: 'Skill Points'
-    }
-};
-const GALAXY_FLEET_UPGRADE_KEYS = Object.keys(GALAXY_FLEET_UPGRADE_DEFINITIONS);
+let operationAutoThresholdDefault = DEFAULT_OPERATION_AUTO_THRESHOLD;
 
 function generateSectorCoordinates(radius) {
     const coordinates = [];
@@ -352,7 +30,7 @@ class GalaxyManager extends EffectableEntity {
         });
         this.successfulOperations = 0;
         const operationHooks = {
-            uhfFactionId: galaxyUhfId,
+            uhfFactionId: UHF_FACTION_ID,
             hasNeighboringStronghold: (sector, factionId) => this.#hasNeighboringStronghold(sector, factionId),
             hasFactionPresence: (sector, factionId) => this.#hasFactionPresence(sector, factionId),
             isFactionFullControlSector: (sector, factionId) => this.#isFactionFullControlSector(sector, factionId),
@@ -373,13 +51,9 @@ class GalaxyManager extends EffectableEntity {
                 }
             }
         };
-        if (GalaxyOperationManagerClass) {
-            this.operationManager = new GalaxyOperationManagerClass(this, {
-                ...operationHooks
-            });
-        } else {
-            this.operationManager = null;
-        }
+        this.operationManager = new GalaxyOperationManager(this, {
+            ...operationHooks
+        });
     }
 
     initialize() {
@@ -399,7 +73,7 @@ class GalaxyManager extends EffectableEntity {
         if(!this.enabled){
             return;
         }
-        updateFactionsFunction.call(this, deltaMs);
+        updateFactions.call(this, deltaMs);
         if (this.operationManager) {
             this.operationManager.update(deltaMs);
         }
@@ -577,7 +251,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     getSector(q, r) {
-        return this.sectors.get(GalaxySectorClass.createKey(q, r)) || null;
+        return this.sectors.get(GalaxySector.createKey(q, r)) || null;
     }
 
     getSectors() {
@@ -590,7 +264,7 @@ class GalaxyManager extends EffectableEntity {
         }
         const controlled = [];
         this.sectors.forEach((sector) => {
-            if (this.#isFactionFullControlSector(sector, galaxyUhfId)) {
+            if (this.#isFactionFullControlSector(sector, UHF_FACTION_ID)) {
                 controlled.push(sector);
             }
         });
@@ -745,7 +419,7 @@ class GalaxyManager extends EffectableEntity {
         };
     }
 
-    getManualDefenseAssignment(sectorKey, factionId = galaxyUhfId) {
+    getManualDefenseAssignment(sectorKey, factionId = UHF_FACTION_ID) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getManualDefenseAssignment !== 'function') {
             return 0;
@@ -753,7 +427,7 @@ class GalaxyManager extends EffectableEntity {
         return faction.getManualDefenseAssignment(sectorKey);
     }
 
-    getDefenseAssignment(sectorKey, factionId = galaxyUhfId) {
+    getDefenseAssignment(sectorKey, factionId = UHF_FACTION_ID) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getDefenseAssignment !== 'function') {
             return 0;
@@ -761,7 +435,7 @@ class GalaxyManager extends EffectableEntity {
         return faction.getDefenseAssignment(sectorKey);
     }
 
-    setDefenseAssignment({ factionId = galaxyUhfId, sectorKey, value }) {
+    setDefenseAssignment({ factionId = UHF_FACTION_ID, sectorKey, value }) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.setDefenseAssignment !== 'function') {
             return 0;
@@ -769,7 +443,7 @@ class GalaxyManager extends EffectableEntity {
         return faction.setDefenseAssignment(sectorKey, value, this);
     }
 
-    adjustDefenseAssignment({ factionId = galaxyUhfId, sectorKey, delta }) {
+    adjustDefenseAssignment({ factionId = UHF_FACTION_ID, sectorKey, delta }) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.adjustDefenseAssignment !== 'function') {
             return 0;
@@ -777,12 +451,12 @@ class GalaxyManager extends EffectableEntity {
         return faction.adjustDefenseAssignment(sectorKey, delta, this);
     }
 
-    clearDefenseAssignments(factionId = galaxyUhfId) {
+    clearDefenseAssignments(factionId = UHF_FACTION_ID) {
         const faction = this.getFaction(factionId);
         return faction.clearDefenseAssignments(this);
     }
 
-    getDefenseCapacity(factionId = galaxyUhfId) {
+    getDefenseCapacity(factionId = UHF_FACTION_ID) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getDefenseCapacity !== 'function') {
             return 0;
@@ -790,7 +464,7 @@ class GalaxyManager extends EffectableEntity {
         return faction.getDefenseCapacity(this);
     }
 
-    getDefenseAssignmentTotal(factionId = galaxyUhfId) {
+    getDefenseAssignmentTotal(factionId = UHF_FACTION_ID) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getDefenseAssignmentTotal !== 'function') {
             return 0;
@@ -802,7 +476,7 @@ class GalaxyManager extends EffectableEntity {
         return this.operationManager ? this.operationManager.getRecentAttackHistory(limit) : [];
     }
 
-    getDefenseReservation(factionId = galaxyUhfId) {
+    getDefenseReservation(factionId = UHF_FACTION_ID) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getDefenseReservation !== 'function') {
             return 0;
@@ -810,7 +484,7 @@ class GalaxyManager extends EffectableEntity {
         return faction.getDefenseReservation(this);
     }
 
-    getDefenseStep(sectorKey, factionId = galaxyUhfId) {
+    getDefenseStep(sectorKey, factionId = UHF_FACTION_ID) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getDefenseStep !== 'function') {
             return 1;
@@ -818,7 +492,7 @@ class GalaxyManager extends EffectableEntity {
         return faction.getDefenseStep(sectorKey);
     }
 
-    setDefenseStep({ factionId = galaxyUhfId, sectorKey, value }) {
+    setDefenseStep({ factionId = UHF_FACTION_ID, sectorKey, value }) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.setDefenseStep !== 'function') {
             return 1;
@@ -908,7 +582,7 @@ class GalaxyManager extends EffectableEntity {
         });
     }
 
-    getOperationTargetFaction(sectorOrKey, attackerId = galaxyUhfId) {
+    getOperationTargetFaction(sectorOrKey, attackerId = UHF_FACTION_ID) {
         const sector = this.#resolveSectorReference(sectorOrKey);
         if (!sector) {
             return null;
@@ -976,7 +650,7 @@ class GalaxyManager extends EffectableEntity {
     getTerraformedWorldCountForSector(sector) {
         const label = sector.getDisplayName();
         const baseCount = Number(spaceManager.getWorldCountPerSector(label)) || 0;
-        const rewardCount = this.#isFactionFullControlSector(sector, galaxyUhfId)
+        const rewardCount = this.#isFactionFullControlSector(sector, UHF_FACTION_ID)
             ? this.getSectorRewardWorldCount(sector)
             : 0;
         return baseCount + rewardCount;
@@ -1028,7 +702,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     #getFullyControlledSectorsForFaction(factionId) {
-        if (factionId === galaxyUhfId) {
+        if (factionId === UHF_FACTION_ID) {
             return this.getUhfControlledSectors();
         }
         const faction = this.factions.get(factionId);
@@ -1049,8 +723,8 @@ class GalaxyManager extends EffectableEntity {
         return controlled;
     }
 
-    getControlledSectorWorldCount(factionId = galaxyUhfId) {
-        const targetFaction = factionId || galaxyUhfId;
+    getControlledSectorWorldCount(factionId = UHF_FACTION_ID) {
+        const targetFaction = factionId || UHF_FACTION_ID;
         if (
             !this.controlledSectorCacheDirty &&
             this.controlledSectorWorldCountCache[targetFaction] !== undefined
@@ -1191,7 +865,7 @@ class GalaxyManager extends EffectableEntity {
         }
         const nextCount = this.getFleetUpgradeCount(key) + 1;
         this.fleetUpgradePurchases[key] = nextCount;
-        const faction = this.getFaction(galaxyUhfId);
+        const faction = this.getFaction(UHF_FACTION_ID);
         if (faction) {
             faction.updateFleetCapacity(this);
         }
@@ -1239,29 +913,31 @@ class GalaxyManager extends EffectableEntity {
     }
 
     hasUhfNeighboringStronghold(q, r) {
-        return this.hasNeighboringStronghold(galaxyUhfId, q, r);
+        return this.hasNeighboringStronghold(UHF_FACTION_ID, q, r);
     }
 
     #initializeSectors() {
         this.sectors.clear();
         const coordinates = generateSectorCoordinates(this.radius);
-        const defaultValue = resolveDefaultSectorValue();
+        const defaultValue = getGalaxySectorDefaultValue();
+        const defaultReward = getGalaxySectorDefaultReward();
+        const overrides = galaxySectorParameters.overrides || {};
         coordinates.forEach(({ q, r }) => {
-            const sectorKey = GalaxySectorClass.createKey(q, r);
-            const overrideValue = resolveSectorOverrideValue(sectorKey);
-            const sectorDefaultValue = overrideValue ?? defaultValue;
-            const sectorReward = resolveSectorReward(sectorKey);
-            const storyRequirement = resolveSectorStoryRequirement(sectorKey);
-            const sectorOverrides = galaxySectorParametersConfig && galaxySectorParametersConfig.overrides
-                ? galaxySectorParametersConfig.overrides[sectorKey]
-                : null;
-            const sector = new GalaxySectorClass({
+            const sectorKey = GalaxySector.createKey(q, r);
+            const sectorOverrides = overrides[sectorKey];
+            const sectorDefaultValue = Number.isFinite(sectorOverrides?.value) && sectorOverrides.value > 0
+                ? sectorOverrides.value
+                : defaultValue;
+            const sectorReward = sectorOverrides && Object.prototype.hasOwnProperty.call(sectorOverrides, 'reward')
+                ? sectorOverrides.reward
+                : defaultReward;
+            const sector = new GalaxySector({
                 q,
                 r,
                 value: sectorDefaultValue,
                 defaultValue: sectorDefaultValue,
                 reward: sectorReward,
-                storyRequirement,
+                storyRequirement: sectorOverrides?.storyRequirement,
                 richResource: sectorOverrides?.richResource,
                 poorResources: sectorOverrides?.poorResources
             });
@@ -1272,11 +948,9 @@ class GalaxyManager extends EffectableEntity {
     #initializeFactions() {
         this.factions.clear();
         const ringCache = new Map();
-        galaxyFactionParametersConfig.forEach((definition) => {
+        galaxyFactionParameters.forEach((definition) => {
             const startingSectors = this.#resolveStartingSectors(definition, ringCache);
-            const FactionCtor = definition.id === galaxyUhfId || !GalaxyFactionAIClass
-                ? GalaxyFactionClass
-                : GalaxyFactionAIClass;
+            const FactionCtor = definition.id === UHF_FACTION_ID ? GalaxyFaction : GalaxyFactionAI;
             const faction = new FactionCtor({
                 ...definition,
                 startingSectors
@@ -1322,14 +996,14 @@ class GalaxyManager extends EffectableEntity {
             if (!operation || operation.status !== 'running') {
                 continue;
             }
-            if (!operation.factionId || operation.factionId === galaxyUhfId) {
+            if (!operation.factionId || operation.factionId === UHF_FACTION_ID) {
                 continue;
             }
             const sector = this.sectors.get(operation.sectorKey);
             if (!sector) {
                 continue;
             }
-            const uhfControl = Number(sector.getControlValue?.(galaxyUhfId)) || 0;
+            const uhfControl = Number(sector.getControlValue?.(UHF_FACTION_ID)) || 0;
             if (!(uhfControl > 0)) {
                 continue;
             }
@@ -1570,7 +1244,7 @@ class GalaxyManager extends EffectableEntity {
                 this.#setSectorControlValue(sector, faction.id, 100);
             });
         });
-        Object.entries(galaxySectorControlOverridesConfig).forEach(([sectorKey, controlMap]) => {
+        Object.entries(galaxySectorControlOverrides).forEach(([sectorKey, controlMap]) => {
             const sector = this.sectors.get(sectorKey);
             if (!sector) {
                 return;
@@ -1614,14 +1288,14 @@ class GalaxyManager extends EffectableEntity {
     }
 
     #hasUhfPresence(sector) {
-        return this.#hasFactionPresence(sector, galaxyUhfId);
+        return this.#hasFactionPresence(sector, UHF_FACTION_ID);
     }
 
     #isSectorTargetingRestricted(sector) {
         if (!sector || sector.key !== R507_PROTECTED_KEY) {
             return false;
         }
-        const uhfControl = Number(sector.getControlValue?.(galaxyUhfId)) || 0;
+        const uhfControl = Number(sector.getControlValue?.(UHF_FACTION_ID)) || 0;
         return uhfControl <= R507_PROTECTED_CONTROL_THRESHOLD + R507_PROTECTED_CONTROL_TOLERANCE;
     }
 
@@ -1630,7 +1304,7 @@ class GalaxyManager extends EffectableEntity {
             return [];
         }
         if (targetRing === 0) {
-            const centerKey = GalaxySectorClass.createKey(0, 0);
+            const centerKey = GalaxySector.createKey(0, 0);
             return this.sectors.has(centerKey) ? [centerKey] : [];
         }
         const keys = [];
@@ -1646,7 +1320,7 @@ class GalaxyManager extends EffectableEntity {
         let currentR = 0;
         directions.forEach(({ q: dq, r: dr }) => {
             for (let step = 0; step < targetRing; step += 1) {
-                const key = GalaxySectorClass.createKey(currentQ, currentR);
+                const key = GalaxySector.createKey(currentQ, currentR);
                 if (this.sectors.has(key)) {
                     keys.push(key);
                 }
@@ -1670,7 +1344,7 @@ class GalaxyManager extends EffectableEntity {
                     return;
                 }
                 if (entry && Number.isFinite(entry.q) && Number.isFinite(entry.r)) {
-                    resolved.add(GalaxySectorClass.createKey(entry.q, entry.r));
+                    resolved.add(GalaxySector.createKey(entry.q, entry.r));
                 }
             });
         }
@@ -1739,7 +1413,7 @@ class GalaxyManager extends EffectableEntity {
             if (!Number.isFinite(baseDefense)) {
                 baseDefense = 0;
             }
-            if (factionId === galaxyUhfId) {
+            if (factionId === UHF_FACTION_ID) {
                 const totalDefense = baseDefense > 0 ? baseDefense : 0;
                 const assignment = Number(faction.getDefenseAssignment?.(sector.key));
                 const scale = Number(faction.getDefenseScale?.(this));
@@ -1768,20 +1442,4 @@ class GalaxyManager extends EffectableEntity {
         return contributions;
     }
 
-}
-
-if (typeof window !== 'undefined') {
-    window.GalaxyManager = GalaxyManager;
-}
-if (typeof globalThis !== 'undefined') {
-    globalThis.GalaxyManager = GalaxyManager;
-    globalThis.GALAXY_FLEET_UPGRADE_INCREMENT = FLEET_UPGRADE_INCREMENT;
-    globalThis.GALAXY_FLEET_UPGRADE_DEFINITIONS = GALAXY_FLEET_UPGRADE_DEFINITIONS;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        GalaxyManager,
-        GALAXY_FLEET_UPGRADE_INCREMENT: FLEET_UPGRADE_INCREMENT,
-        GALAXY_FLEET_UPGRADE_DEFINITIONS
-    };
 }
