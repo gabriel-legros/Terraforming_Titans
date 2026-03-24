@@ -2474,6 +2474,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'hyperlane',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 15_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'spaceManager',
+            type: 'booleanFlag',
+            flagId: 'hyperlane',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'core_surgery',
         name: '',
         description: '',
@@ -2526,4 +2541,3 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = researchParameters;
 }
   
-

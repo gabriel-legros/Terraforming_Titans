@@ -1178,6 +1178,9 @@ setLanguageData({
       uniqueWorldsTerraforming: 'Unique worlds terraformed',
       effectiveWorldsTerraforming: 'Effective worlds terraformed',
       oneillCylinders: "O'Neill cylinders",
+      oneillTooltipLocked: "Complete the O'Neill Cylinders advanced research to seed orbital habitats.",
+      oneillTooltipBase: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
+      oneillTooltipHyperlane: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity. Hyperlane makes each fully controlled sector contribute O'Neill cylinder capacity by the same Warp Gate Network multiplier used for resource import caps, with a minimum base capacity of 1000 when no sectors are controlled.\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
       currentWorldLabel: 'Current World',
       originalProperties: 'Original Properties',
       worldSelectionTitle: 'World Selection',
@@ -2153,6 +2156,10 @@ setLanguageData({
         additional_dyson_spheres: {
           name: 'Additional Dyson Spheres',
           description: 'Raises Dyson Sphere expansion beyond a single sphere up to 100 billion spheres, with extra superalloy requirements once exceeding 1 sphere worth of power.',
+        },
+        hyperlane: {
+          name: 'Hyperlane',
+          description: "Applies Warp Gate Network sector multipliers to O'Neill cylinder capacity, increasing the maximum cylinders each fully controlled sector can support.",
         },
         nanotechnology_recycling: {
           name: 'Nanotechnology recycling',

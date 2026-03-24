@@ -1,6 +1,7 @@
 const ONEILL_GROWTH_SECONDS = 100 * 3600;
 const ONEILL_CAPACITY_PER_SECTOR = 1000;
 const ONEILL_FLAG = 'oneillCylinders';
+const HYPERLANE_FLAG = 'hyperlane';
 
 let oneillUhfId = 'uhf';
 try {
@@ -59,10 +60,55 @@ function getUhfControlledSectorCount(galaxy) {
   return Array.isArray(keys) ? keys.length : 0;
 }
 
-function getOneillCylinderCapacity(galaxy) {
-  const sectors = getUhfControlledSectorCount(galaxy);
-  const effectiveSectors = sectors > 0 ? sectors : 1;
-  return effectiveSectors * ONEILL_CAPACITY_PER_SECTOR;
+function getUhfControlledSectors(galaxy) {
+  if (!galaxy || typeof galaxy.getUhfControlledSectors !== 'function') {
+    return [];
+  }
+  const sectors = galaxy.getUhfControlledSectors();
+  return Array.isArray(sectors) ? sectors : [];
+}
+
+function getWarpGateCapacityMultiplier(sector) {
+  let multiplier = 1;
+  try {
+    multiplier = warpGateNetworkManager?.getWarpGateMultiplier?.(sector);
+  } catch (error) {
+    multiplier = 1;
+  }
+  if (!Number.isFinite(multiplier) || multiplier <= 0) {
+    return 1;
+  }
+  return multiplier;
+}
+
+function getLocalizedOneillText(path, vars, fallback) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    if (!vars) {
+      return fallback;
+    }
+    let text = fallback;
+    Object.keys(vars).forEach((key) => {
+      text = text.replaceAll(`{${key}}`, String(vars[key]));
+    });
+    return text;
+  }
+}
+
+function getOneillCylinderCapacity(galaxy, space) {
+  const sectors = getUhfControlledSectors(galaxy);
+  if (!sectors.length) {
+    return ONEILL_CAPACITY_PER_SECTOR;
+  }
+  if (!space?.isBooleanFlagSet?.(HYPERLANE_FLAG)) {
+    return sectors.length * ONEILL_CAPACITY_PER_SECTOR;
+  }
+  let total = 0;
+  sectors.forEach((sector) => {
+    total += ONEILL_CAPACITY_PER_SECTOR * getWarpGateCapacityMultiplier(sector);
+  });
+  return total > 0 ? total : ONEILL_CAPACITY_PER_SECTOR;
 }
 
 function formatCylinderCount(value) {
@@ -85,7 +131,7 @@ function getOneillGrowthContext(space, galaxy) {
   if (!unlocked) {
     return { current, capacity: 0, perSecond: 0, perHour: 0 };
   }
-  const capacity = getOneillCylinderCapacity(galaxy);
+  const capacity = getOneillCylinderCapacity(galaxy, space);
   if (!(capacity > 0)) {
     return { current, capacity: 0, perSecond: 0, perHour: 0 };
   }
@@ -114,6 +160,22 @@ function setOneillTooltipText(text) {
   if (oneillStatsCache.tooltip) {
     oneillStatsCache.tooltip.title = text;
   }
+}
+
+function getOneillTooltipText(space, capacity) {
+  const capacityText = formatCapacity(capacity);
+  if (space?.isBooleanFlagSet?.(HYPERLANE_FLAG)) {
+    return getLocalizedOneillText(
+      'ui.space.oneillTooltipHyperlane',
+      { capacity: capacityText },
+      "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity. Hyperlane makes each fully controlled sector contribute O'Neill cylinder capacity by the same Warp Gate Network multiplier used for resource import caps, with a minimum base capacity of 1000 when no sectors are controlled.\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead."
+    );
+  }
+  return getLocalizedOneillText(
+    'ui.space.oneillTooltipBase',
+    { capacity: capacityText },
+    "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead."
+  );
 }
 
 function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
@@ -145,7 +207,11 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
     if (rate) {
       rate.textContent = '+0.00/hr';
     }
-    setOneillTooltipText("Complete the O'Neill Cylinders advanced research to seed orbital habitats.");
+    setOneillTooltipText(getLocalizedOneillText(
+      'ui.space.oneillTooltipLocked',
+      null,
+      "Complete the O'Neill Cylinders advanced research to seed orbital habitats."
+    ));
     return;
   }
   const context = getOneillGrowthContext(space, galaxy);
@@ -158,8 +224,7 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
   if (rate) {
     rate.textContent = formatCylinderRate(hourlyRate);
   }
-  const capacityText = formatCapacity(capacity);
-  setOneillTooltipText(`Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their ${capacityText} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.`);
+  setOneillTooltipText(getOneillTooltipText(space, capacity));
 }
 
 if (typeof module !== 'undefined' && module.exports) {
