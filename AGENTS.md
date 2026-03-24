@@ -27,6 +27,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - If Windows `node_modules` is missing, install dependencies with:
   - `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm ci"`
 - Report pass/fail counts.
+- Do not leave generated test result artifacts in the worktree. If you create temporary files such as `tmp-jest-results*.json`, remove them before finishing.
 - Do not add tests for new features unless explicitly requested.
 
 ## Project Overview

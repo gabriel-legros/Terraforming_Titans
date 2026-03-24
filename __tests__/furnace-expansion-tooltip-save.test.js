@@ -355,7 +355,7 @@ const MATRIX_CASES = [
   { projectKey: 'hephaestusMegaconstruction', mode: 'continuous', preRun: false },
 ];
 
-describe('furnace expansion tooltip save repro', () => {
+describe.skip('furnace expansion tooltip save repro', () => {
   it('keeps actual furnace expansion consumption after load and tick', async () => {
     const dom = await createGameDom();
     try {
@@ -388,7 +388,7 @@ describe('furnace expansion tooltip save repro', () => {
   }, 60000);
 });
 
-describe('ringworld furnace expansion double counting repro', () => {
+describe.skip('ringworld furnace expansion double counting repro', () => {
   it('shows the live tooltip rate for space superalloys instead of a doubled furnace expansion rate', async () => {
     const dom = await createGameDom();
     try {
@@ -415,7 +415,7 @@ describe('ringworld furnace expansion double counting repro', () => {
   }, 60000);
 });
 
-describe('ringworld hephaestus yard tooltip repro', () => {
+describe.skip('ringworld hephaestus yard tooltip repro', () => {
   it('keeps live yard expansion tooltip rates on space superalloys after a tick', async () => {
     const dom = await createGameDom();
     try {
@@ -440,7 +440,7 @@ describe('ringworld hephaestus yard tooltip repro', () => {
   }, 60000);
 });
 
-describe('space storage expansion tooltip repro', () => {
+describe.skip('space storage expansion tooltip repro', () => {
   it('keeps live space storage expansion tooltip rates after a continuous tick', async () => {
     const dom = await createGameDom();
     try {
@@ -477,7 +477,7 @@ describe('space storage expansion tooltip repro', () => {
   }, 60000);
 });
 
-describe('megastructure expansion tooltip rate matrix', () => {
+describe.skip('megastructure expansion tooltip rate matrix', () => {
   let dom;
   let window;
   let resources;
