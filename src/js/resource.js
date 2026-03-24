@@ -353,27 +353,84 @@ class Resource extends EffectableEntity {
     }
   }
 
-  toJSON() {
-    const serialized = { ...this };
-    delete serialized.exactValue;
-    delete serialized.exactReserved;
-    delete serialized.exactReservedSources;
+  saveState() {
+    const state = {
+      value: this.value,
+      reserved: this.reserved,
+      unlocked: this.unlocked
+    };
+
+    if ('enabled' in this) {
+      state.enabled = this.enabled;
+    }
+
+    if (!this.isExactLandResource() && this.reservedSources && this.reservedSources.constructor === Object) {
+      const reservedSources = {};
+
+      for (const key in this.reservedSources) {
+        const value = this.reservedSources[key];
+        if (value > 0) {
+          reservedSources[key] = value;
+        }
+      }
+
+      if (Object.keys(reservedSources).length > 0) {
+        state.reservedSources = reservedSources;
+      }
+    }
 
     if (this.isExactLandResource()) {
       this.ensureExactLandState();
-      const savedSources = {};
+
+      const exactReservedSources = {};
       for (const key in this.exactReservedSources) {
         const value = this.exactReservedSources[key];
         if (value > 0n) {
-          savedSources[key] = value.toString();
+          exactReservedSources[key] = value.toString();
         }
       }
-      serialized._exactLandValue = this.exactValue.toString();
-      serialized._exactLandReserved = this.exactReserved.toString();
-      serialized._exactLandReservedSources = savedSources;
+
+      state._exactLandValue = this.exactValue.toString();
+      state._exactLandReserved = this.exactReserved.toString();
+      state._exactLandReservedSources = exactReservedSources;
     }
 
-    return serialized;
+    return state;
+  }
+
+  loadState(state = {}) {
+    this.activeEffects = [];
+    this.booleanFlags = new Set();
+    this.resetTransientRateState();
+    this.reservedSources = {};
+
+    if (!state || state.constructor !== Object) {
+      return;
+    }
+
+    if ('value' in state) this.value = state.value;
+    if ('reserved' in state) this.reserved = state.reserved;
+    if ('unlocked' in state) this.unlocked = state.unlocked;
+    if ('enabled' in state) this.enabled = state.enabled;
+
+    if (state.reservedSources && state.reservedSources.constructor === Object) {
+      for (const key in state.reservedSources) {
+        const value = state.reservedSources[key];
+        if (value > 0) {
+          this.reservedSources[key] = value;
+        }
+      }
+    }
+
+    this.hydrateSerializedState(state);
+
+    if (!this.isExactLandResource() && Object.keys(this.reservedSources).length > 0) {
+      this.recalculateReservedFromSources();
+    }
+  }
+
+  toJSON() {
+    return this.saveState();
   }
 
   increase(amount, ignoreCap) {
@@ -590,6 +647,12 @@ class Resource extends EffectableEntity {
 
   resetBaseProductionRate() {
     this.baseProductionRate = 0;
+  }
+
+  resetTransientRateState() {
+    this.resetBaseProductionRate();
+    this.resetRates();
+    this.rateHistory = [];
   }
 
   // Record a net production rate and keep only the last 10 entries

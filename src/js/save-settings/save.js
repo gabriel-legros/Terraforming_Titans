@@ -117,7 +117,19 @@ function recalculateLandUsage() {
 function getGameState() {
   return {
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
-    resources: typeof resources !== 'undefined' ? resources : undefined,
+    resources: typeof resources !== 'undefined'
+      ? Object.fromEntries(
+          Object.entries(resources).map(([category, categoryResources]) => [
+            category,
+            Object.fromEntries(
+              Object.entries(categoryResources).map(([name, resource]) => [
+                name,
+                (resource && typeof resource.saveState === 'function') ? resource.saveState() : {}
+              ])
+            )
+          ])
+        )
+      : undefined,
     buildings: typeof buildings !== 'undefined'
       ? Object.fromEntries(
           Object.entries(buildings).map(([name, building]) => [
@@ -351,21 +363,20 @@ function loadGame(slotOrCustomString, recreate = true) {
           if (resources[category]) {
             for (const resourceName in gameState.resources[category]) {
               if (resources[category][resourceName]) {
-                Object.assign(resources[category][resourceName], gameState.resources[category][resourceName]);
-  
-                // Ensure infinite cap resources are restored correctly
-                if (!resources[category][resourceName].hasCap) {
-                  resources[category][resourceName].cap = Infinity;
-                }
                 const newConfig = currentPlanetParameters.resources[category][resourceName];
                 if(newConfig){
                   resources[category][resourceName].initializeFromConfig(resourceName, newConfig);
                 }
-                if (resources[category][resourceName].hydrateSerializedState) {
-                  resources[category][resourceName].hydrateSerializedState(gameState.resources[category][resourceName]);
+                if (typeof resources[category][resourceName].loadState === 'function') {
+                  resources[category][resourceName].loadState(gameState.resources[category][resourceName]);
+                } else {
+                  Object.assign(resources[category][resourceName], gameState.resources[category][resourceName]);
                 }
-                resources[category][resourceName].activeEffects = [];
-                resources[category][resourceName].booleanFlags = new Set();
+
+                // Ensure infinite cap resources are restored correctly
+                if (!resources[category][resourceName].hasCap) {
+                  resources[category][resourceName].cap = Infinity;
+                }
                 if (typeof resources[category][resourceName].reinitializeDisplayElements === 'function') {
                   resources[category][resourceName].reinitializeDisplayElements();
                 }

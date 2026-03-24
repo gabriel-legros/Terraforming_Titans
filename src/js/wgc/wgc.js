@@ -100,6 +100,12 @@ function replaceStoryPlaceholders(line, team, selected) {
   return formatted;
 }
 
+function formatOperationLogHeader(op) {
+  const number = op && op.number ? op.number : 0;
+  const difficulty = op ? (op.activeDifficulty ?? op.difficulty ?? 0) : 0;
+  return `=== Operation #${number} (DC ${formatNumber(difficulty, false, 0)}) ===`;
+}
+
 class WarpGateCommand extends EffectableEntity {
   constructor() {
     super({ description: 'Warp Gate Command manager' });
@@ -875,7 +881,7 @@ class WarpGateCommand extends EffectableEntity {
           op.criticalSuccessWeight = 0;
           op.activeDifficulty = op.difficulty ?? 0;
           op.summary = operationStartText;
-          this.addLog(idx, `=== Operation #${op.number} ===`);
+          this.addLog(idx, formatOperationLogHeader(op));
           this.refreshOperationProgress(op, idx);
         } else {
           op.active = false;
@@ -1157,7 +1163,7 @@ class WarpGateCommand extends EffectableEntity {
     op.criticalSuccessWeight = 0;
     this.refreshOperationProgress(op, teamIndex);
     op.progress = this.calculateOperationProgress(op);
-    this.addLog(teamIndex, `=== Operation #${op.number} ===`);
+    this.addLog(teamIndex, formatOperationLogHeader(op));
     return true;
   }
 
