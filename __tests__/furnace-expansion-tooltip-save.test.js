@@ -440,6 +440,43 @@ describe('ringworld hephaestus yard tooltip repro', () => {
   }, 60000);
 });
 
+describe('space storage expansion tooltip repro', () => {
+  it('keeps live space storage expansion tooltip rates after a continuous tick', async () => {
+    const dom = await createGameDom();
+    try {
+      const { window } = dom;
+      loadSave(window, 'furnace_expansion_tooltip_bug.json');
+
+      const resources = getGlobal(window, 'resources');
+      const projectManager = getGlobal(window, 'projectManager');
+      const project = projectManager.projects.spaceStorage;
+
+      configureSpaceStorageProject(project, 'continuous');
+      const { label, rates } = getExpansionExpectation('spaceStorage', project);
+      provisionExpansionResources(window, rates);
+
+      resetAllResourceRates(window);
+      project.applyCostAndGain(1000, null, 1);
+      window.eval('recalculateTotalRates()');
+
+      for (const category in rates) {
+        for (const resourceName in rates[category]) {
+          const resource = resources[category]?.[resourceName];
+          const expectedRate = rates[category][resourceName];
+          const actualRate = getTooltipRate(window, resource, label);
+          expectRelativeClose(
+            actualRate,
+            expectedRate,
+            `spaceStorage continuous actual ${category}.${resourceName} ${label}`
+          );
+        }
+      }
+    } finally {
+      dom.window.close();
+    }
+  }, 60000);
+});
+
 describe('megastructure expansion tooltip rate matrix', () => {
   let dom;
   let window;

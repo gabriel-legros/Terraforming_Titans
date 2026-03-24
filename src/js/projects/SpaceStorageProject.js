@@ -220,6 +220,10 @@ class SpaceStorageProject extends SpaceshipProject {
     return effectiveCost;
   }
 
+  getExpansionRateSourceLabel() {
+    return 'Space storage expansion';
+  }
+
   getSpaceStorageResource(resourceKey) {
     return resources?.spaceStorage?.[resourceKey] || null;
   }
@@ -977,7 +981,12 @@ class SpaceStorageProject extends SpaceshipProject {
     const result = this.applyRequestedExpansionProgress(
       tick.requestedProgress,
       this.getScaledCost(),
-      accumulatedChanges
+      accumulatedChanges,
+      {
+        applyRates: tick.seconds > 0 && this.showsInResourcesRate(),
+        seconds: tick.seconds,
+        rateSourceLabel: this.getExpansionRateSourceLabel()
+      }
     );
     this.shortfallLastTick = result.shortfall;
   }
@@ -1149,7 +1158,7 @@ class SpaceStorageProject extends SpaceshipProject {
           storageState,
           {
             applyRates,
-            sourceLabel: 'Space storage expansion'
+            sourceLabel: this.getExpansionRateSourceLabel()
           }
         );
         this.mergeResourceTotals(totals.cost, expansionCostTotals);
