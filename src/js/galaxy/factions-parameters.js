@@ -13,17 +13,24 @@ function createKey(q, r) {
     return `${q},${r}`;
 }
 
+function getFactionName(id, fallback) {
+    if (typeof t === 'function') {
+        return t(`catalogs.factions.${id}.name`, null, fallback);
+    }
+    return fallback;
+}
+
 const galaxyFactionParameters = [
     {
         id: 'uhf',
-        name: '',
+        name: getFactionName('uhf', 'UHF'),
         color: '#3b82f6',
         startingSectors: [],
         defensiveness: null
     },
     {
         id: 'cewinsii',
-        name: '',
+        name: getFactionName('cewinsii', 'Cewinsii'),
         color: '#f97316',
         startingSectors: [
             createKey(0, 0)
@@ -39,7 +46,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'helian',
-        name: '',
+        name: getFactionName('helian', 'Helian'),
         color: '#facc15',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -56,7 +63,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'virellan',
-        name: '',
+        name: getFactionName('virellan', 'Virellan'),
         color: '#10b981',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -73,7 +80,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'karthid',
-        name: '',
+        name: getFactionName('karthid', 'Karthid'),
         color: '#8b5cf6',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -90,7 +97,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'neran',
-        name: '',
+        name: getFactionName('neran', 'Neran'),
         color: '#ec4899',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -107,7 +114,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'okoth',
-        name: '',
+        name: getFactionName('okoth', 'Okoth'),
         color: '#ef4444',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -136,10 +143,6 @@ const galaxySectorControlOverrides = {
     }
 };
 
-if (typeof window !== 'undefined') {
-    window.galaxyFactionParameters = galaxyFactionParameters;
-    window.galaxySectorControlOverrides = galaxySectorControlOverrides;
-}
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { galaxyFactionParameters, galaxySectorControlOverrides };
 }

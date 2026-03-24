@@ -51,8 +51,8 @@ if (typeof module !== 'undefined' && module.exports) {
     if (Number.isFinite(window.DEFAULT_OPERATION_AUTO_THRESHOLD) && window.DEFAULT_OPERATION_AUTO_THRESHOLD > 0) {
         operationAutoThresholdDefault = window.DEFAULT_OPERATION_AUTO_THRESHOLD;
     }
-    galaxyFactionParametersConfig = window.galaxyFactionParameters;
-    galaxySectorControlOverridesConfig = window.galaxySectorControlOverrides;
+    galaxyFactionParametersConfig = galaxyFactionParameters;
+    galaxySectorControlOverridesConfig = galaxySectorControlOverrides;
     galaxySectorParametersConfig = window.galaxySectorParameters;
     if (window.getGalaxySectorDefaultValue) {
         defaultSectorValue = window.getGalaxySectorDefaultValue();
@@ -88,11 +88,11 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
     if (Number.isFinite(globalThis.DEFAULT_OPERATION_AUTO_THRESHOLD) && globalThis.DEFAULT_OPERATION_AUTO_THRESHOLD > 0) {
         operationAutoThresholdDefault = globalThis.DEFAULT_OPERATION_AUTO_THRESHOLD;
     }
-    if ((!galaxyFactionParametersConfig || !Array.isArray(galaxyFactionParametersConfig)) && globalThis.galaxyFactionParameters) {
-        galaxyFactionParametersConfig = globalThis.galaxyFactionParameters;
+    if (!galaxyFactionParametersConfig || !Array.isArray(galaxyFactionParametersConfig)) {
+        galaxyFactionParametersConfig = galaxyFactionParameters;
     }
-    if (!galaxySectorControlOverridesConfig && globalThis.galaxySectorControlOverrides) {
-        galaxySectorControlOverridesConfig = globalThis.galaxySectorControlOverrides;
+    if (!galaxySectorControlOverridesConfig) {
+        galaxySectorControlOverridesConfig = galaxySectorControlOverrides;
     }
     if (!galaxySectorParametersConfig && globalThis.galaxySectorParameters) {
         galaxySectorParametersConfig = globalThis.galaxySectorParameters;
