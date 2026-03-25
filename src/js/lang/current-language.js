@@ -1889,9 +1889,10 @@ setLanguageData({
       kerati: {
         displayName: 'Kerati',
         lore: [
-          'The Kerati are a carbon-water dominion that had the unfortunate misfortune of evolving in Cewinsii-compatible environments.  Their main intelligent species happened to be a nearly sapient insectoid hive.  Organized around hive queens, members of a Kerati hive are docile and hard working.',
-          'Unfortunately, the Cewinsii immediately identified the benefits of using them as slave labour.  Their Queens, more intelligent than most members, were for the most part culled and kept at a low number, just enough for population replacement.',
-          'While individually of poor intelligence, it was found that collectively, a Kerati Hive is indeed capable of art, complex thought and more importantly, grief and suffering.  The individual may not appear to suffer, but the collective does.'
+          'The Kerati are a carbon-water dominion whose primary sapient lineage evolved in environments highly compatible with Cewinsii expansion. Their best-known species is an insectoid hive organized around fertile queens, with most members specialized for labor, construction, hunting, and brood care. To outside observers, individual Kerati often appear docile, narrow in intellect, and almost unnervingly eager to work.',
+          'The Cewinsii recognized their usefulness immediately. Kerati hives were broken, transplanted, and reorganized into systems of controlled reproduction and mass labor. Queens, far more cognitively capable than most castes, were culled or tightly rationed so that hive growth could be managed without allowing genuine autonomy. In many regions, only enough were permitted to survive to sustain replacement populations.',
+          'This arrangement rested on a profound misunderstanding. A single Kerati worker is limited; a functioning hive is not. Distributed across castes, signals, pheromonal memory, and queen-brood coordination, a full hive can support planning, aesthetic judgment, cultural continuity, and collective emotional life. The individual may seem simple, but the hive as a whole can think, create, mourn, and remember.',
+          'The result is a people that has endured millennia of coerced service while remaining fully capable of suffering it. Kerati hives carry a deep, persistent grief shaped by generations of confinement, dismemberment, and forced breeding. Their fearsome military reputation comes less from innate aggression than from long use as expendable shock troops in Cewinsii wars, where an enslaved hive\'s capacity for coordination was exploited while its personhood was denied.',
         ].join('\n\n'),
         lifeDesign: {
           processes: {
