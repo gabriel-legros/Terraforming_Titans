@@ -1595,7 +1595,7 @@ function getRingFluxWm2Value() {
 function renderArtificialHistory(force = false) {
   const manager = artificialManager;
   if (!manager || !artificialUICache.historyList || !artificialUICache.historyPage) return;
-  const entries = typeof manager.getHistoryEntries === 'function' ? manager.getHistoryEntries() : (manager.history || []);
+  const entries = typeof manager.getHistoryEntries === 'function' ? manager.getHistoryEntries() : [];
   const pageSize = 6;
   const maxPage = Math.max(0, Math.ceil(entries.length / pageSize) - 1);
   artificialHistoryPage = Math.min(artificialHistoryPage, maxPage);

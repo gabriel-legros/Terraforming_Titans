@@ -280,8 +280,6 @@ class ArtificialManager extends EffectableEntity {
         this.nextId = 1;
         this.activeProject = null;
         this.draftSelection = this.normalizeDraftSelection(this.createDefaultDraftSelection());
-        this.history = [];
-        this.travelHistory = [];
         this.prepay = {
             signature: '',
             paid: { metal: 0, superalloys: 0 }
@@ -1408,30 +1406,7 @@ class ArtificialManager extends EffectableEntity {
     }
 
     recordHistoryEntry(status) {
-        if (!this.activeProject) return;
-        const landHa = this.activeProject.areaHa || this.activeProject.landHa || this.calculateAreaHectares(this.activeProject.radiusEarth);
-        const entry = {
-            id: this.activeProject.id,
-            seed: this.activeProject.seed,
-            name: this.activeProject.name,
-            type: this.activeProject.type,
-            core: this.activeProject.core,
-            radiusEarth: this.activeProject.radiusEarth,
-            landHa,
-            sector: this.activeProject.sector || currentPlanetParameters?.celestialParameters?.sector || null,
-            terraformedValue: this.deriveTerraformWorldValue(this.activeProject),
-            fleetCapacityValue: this.deriveFleetCapacityWorldValue(this.activeProject),
-            builtFrom: this.activeProject.builtFrom,
-            constructedAt: this.activeProject.startedAt,
-            completedAt: this.activeProject.completedAt || null,
-            status,
-            traveledAt: status === 'traveled' ? Date.now() : null,
-            discardedAt: status === 'discarded' ? Date.now() : null
-        };
-        this.history.unshift(entry);
-        this.history = this.history.slice(0, 50);
-        this.travelHistory.unshift(entry);
-        this.travelHistory = this.travelHistory.slice(0, 50);
+        return status;
     }
 
     getConstructedWorldWarning(actionLabel) {
@@ -1475,20 +1450,6 @@ class ArtificialManager extends EffectableEntity {
             if (currentPlanetParameters) {
                 currentPlanetParameters.name = nextName;
             }
-        }
-        if (this.history && this.history.length) {
-            this.history.forEach((entry) => {
-                if (String(entry.id) === key) {
-                    entry.name = nextName;
-                }
-            });
-        }
-        if (this.travelHistory && this.travelHistory.length) {
-            this.travelHistory.forEach((entry) => {
-                if (String(entry.id) === key) {
-                    entry.name = nextName;
-                }
-            });
         }
         this.updateUI(true);
         return true;
@@ -1720,8 +1681,6 @@ class ArtificialManager extends EffectableEntity {
             nextId: this.nextId,
             activeProject: project,
             draftSelection: { ...this.draftSelection },
-            history: this.history,
-            travelHistory: this.travelHistory,
             prepay: this.prepay
         };
     }
@@ -1854,18 +1813,6 @@ class ArtificialManager extends EffectableEntity {
             }
         }
         this.nextId = Math.max(state.nextId || this.nextId, (this.activeProject?.id || 0) + 1, 1);
-        this.history = Array.isArray(state.history)
-            ? state.history.map((entry) => ({
-                ...entry,
-                terraformedValue: this.deriveTerraformWorldValue(entry)
-            }))
-            : [];
-        this.travelHistory = Array.isArray(state.travelHistory)
-            ? state.travelHistory.map((entry) => ({
-                ...entry,
-                terraformedValue: this.deriveTerraformWorldValue(entry)
-            }))
-            : [...this.history];
         this.updateUI(true);
     }
 
