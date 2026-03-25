@@ -14,6 +14,7 @@ class SpaceMirrorAdvancedOversight {
 
       // ---------------- Config knobs (tune as needed) ----------------
       const K_TOL = 0.001;         // Temperature tolerance (K) for zones
+      const FLUX_TOL = 0.01;       // Flux tolerance (W/m^2) for zones
       const WATER_REL_TOL = 0.00001; // Relative tol (1%) for water melt target
       const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
       const MAX_PRUNE_ACTIONS = 12; // Final cleanup only; pruning every pass is too expensive
@@ -112,8 +113,15 @@ class SpaceMirrorAdvancedOversight {
         return 0;
       };
 
+      const getZoneMode = (z) => settings.tempMode?.[z] || 'average';
+      const getZoneTolerance = (z) => getZoneMode(z) === 'flux' ? FLUX_TOL : K_TOL;
+
       const getZoneTemp = (z) => {
-        const mode = settings.tempMode?.[z] || 'average';
+        const mode = getZoneMode(z);
+        if (mode === 'flux') {
+          const flux = terraforming.calculateZoneSolarFlux(z);
+          return Number.isFinite(flux) ? flux / 4 : NaN;
+        }
         const data = terraforming?.temperature?.zones?.[z];
         if (!data) return NaN;
         if (mode === 'day') return data.day;
@@ -122,7 +130,8 @@ class SpaceMirrorAdvancedOversight {
       };
 
       const getZoneTrendTemp = (z) => {
-        const mode = settings.tempMode?.[z] || 'average';
+        const mode = getZoneMode(z);
+        if (mode === 'flux') return getZoneTemp(z);
         const data = terraforming?.temperature?.zones?.[z];
         if (!data) return NaN;
         const meanTrend = Number.isFinite(data.trendValue) ? data.trendValue : data.value;
@@ -543,7 +552,7 @@ class SpaceMirrorAdvancedOversight {
               if (rz === 'focus') return FOCUS_FLAG && (targets.water)>0 && (prio.focus||5) <= passLevel;
               if (isMirrorReverse(rz)) return false;
               const t = getZoneTemp(rz);
-              return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel && isFinite(t) && t < (targets[rz]-K_TOL);
+              return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel && isFinite(t) && t < (targets[rz] - getZoneTolerance(rz));
             });
             const baseScoreR = objective(passLevel);
 
@@ -725,7 +734,7 @@ class SpaceMirrorAdvancedOversight {
           if (!(tgt > 0)) continue;
           if ((prio[z] || 5) <= passLevel) {
             if (!isFinite(t[z])) return false;
-            if (Math.abs(t[z] - tgt) > K_TOL) return false;
+            if (Math.abs(t[z] - tgt) > getZoneTolerance(z)) return false;
           }
         }
         if (FOCUS_FLAG && (targets.water) > 0 && (prio.focus||5) <= passLevel) {

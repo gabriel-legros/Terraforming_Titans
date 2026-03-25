@@ -61,6 +61,30 @@ function getSpaceMirrorZoneLabel(zone) {
   return getSpaceMirrorText(keyMap[zone] || '', fallbackMap[zone] || zone);
 }
 
+function normalizeMirrorOversightMode(mode) {
+  return mode === 'day' || mode === 'night' || mode === 'flux' ? mode : 'average';
+}
+
+function isMirrorOversightFluxMode(mode) {
+  return normalizeMirrorOversightMode(mode) === 'flux';
+}
+
+function getMirrorOversightTargetDisplayValue(settings, zone) {
+  const mode = normalizeMirrorOversightMode(settings?.tempMode?.[zone]);
+  const rawTarget = Number(settings?.targets?.[zone]) || 0;
+  if (isMirrorOversightFluxMode(mode)) return rawTarget;
+  const baseTarget = rawTarget > 0 ? rawTarget : 293.15;
+  const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
+  return toDisp(baseTarget);
+}
+
+function parseMirrorOversightTargetInputValue(settings, zone, rawValue) {
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed)) return 0;
+  if (isMirrorOversightFluxMode(settings?.tempMode?.[zone])) return parsed;
+  return gameSettings.useCelsius ? parsed + 273.15 : parsed;
+}
+
 function mergeSettingKeys(primary, secondary) {
   const keys = new Set(Object.keys(primary || {}));
   Object.keys(secondary || {}).forEach(key => keys.add(key));
@@ -165,8 +189,7 @@ function applyMirrorOversightSettings(settings, saved = {}) {
 
   const savedTempMode = saved.tempMode || {};
   mergeSettingKeys(settings.tempMode, savedTempMode).forEach(zone => {
-    const mode = savedTempMode[zone];
-    settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
+    settings.tempMode[zone] = normalizeMirrorOversightMode(savedTempMode[zone]);
   });
 
   const savedPriority = saved.priority || {};
@@ -210,8 +233,7 @@ function applyMirrorOversightTravelSettings(settings, saved = {}) {
 
   const savedTempMode = saved.tempMode || {};
   mergeSettingKeys(settings.tempMode, savedTempMode).forEach(zone => {
-    const mode = savedTempMode[zone];
-    settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
+    settings.tempMode[zone] = normalizeMirrorOversightMode(savedTempMode[zone]);
   });
 
   const savedPriority = saved.priority || {};
@@ -819,7 +841,7 @@ function initializeMirrorOversightUI(container) {
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.title', 'Advanced Oversight')}</label>
-    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.')}">&#9432;</span>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.')}">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
     <label for="mirror-allow-available-heat">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeat', 'Allow available to heat')}</label>
     <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.')}">&#9432;</span>
@@ -838,7 +860,7 @@ function initializeMirrorOversightUI(container) {
   advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriority', 'Targets & Priority')}</span>
-      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriorityTooltip', 'Set temperature targets for each zone using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.')}">&#9432;</span>
+      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriorityTooltip', 'Set temperature targets in the current unit or flux targets in W/m^2 for each zone, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.')}">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" data-zone="tropical" style="display:flex; gap:8px; align-items:center;">
@@ -848,6 +870,7 @@ function initializeMirrorOversightUI(container) {
           <option value="average">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.average', 'Average')}</option>
           <option value="day">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.day', 'Day')}</option>
           <option value="night">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.night', 'Night')}</option>
+          <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-tropical" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
@@ -860,6 +883,7 @@ function initializeMirrorOversightUI(container) {
           <option value="average">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.average', 'Average')}</option>
           <option value="day">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.day', 'Day')}</option>
           <option value="night">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.night', 'Night')}</option>
+          <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-temperate" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
@@ -872,6 +896,7 @@ function initializeMirrorOversightUI(container) {
           <option value="average">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.average', 'Average')}</option>
           <option value="day">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.day', 'Day')}</option>
           <option value="night">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.night', 'Night')}</option>
+          <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-polar" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
@@ -963,7 +988,6 @@ function initializeMirrorOversightUI(container) {
   Object.keys(advInputs).forEach(k => {
     const el = advInputs[k];
     if (!el) return;
-    const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
     if (k === 'water') {
       const scale = mirrorOversightSettings.waterMultiplier || 1000;
       el.value = Number((mirrorOversightSettings.targets[k] || 0) / scale);
@@ -975,16 +999,12 @@ function initializeMirrorOversightUI(container) {
       el.addEventListener('input', handleWaterInput);
       el.addEventListener('change', handleWaterInput);
     } else {
-      const base = (mirrorOversightSettings.targets[k] || 293.15);
-      el.value = toDisp(base).toFixed(2);
-      const handleTempInput = () => {
-        let raw = Number(el.value);
-        const useC = (typeof gameSettings !== 'undefined' && gameSettings.useCelsius);
-        if (useC) raw = raw + 273.15; // convert back to Kelvin
-        mirrorOversightSettings.targets[k] = isNaN(raw) ? 0 : raw;
+      el.value = getMirrorOversightTargetDisplayValue(mirrorOversightSettings, k).toFixed(2);
+      const handleTargetInput = () => {
+        mirrorOversightSettings.targets[k] = parseMirrorOversightTargetInputValue(mirrorOversightSettings, k, el.value);
       };
-      el.addEventListener('input', handleTempInput);
-      el.addEventListener('change', handleTempInput);
+      el.addEventListener('input', handleTargetInput);
+      el.addEventListener('change', handleTargetInput);
     }
   });
   if (waterScaleSelect) {
@@ -1009,12 +1029,15 @@ function initializeMirrorOversightUI(container) {
   Object.keys(advTiming).forEach(k => {
     const el = advTiming[k];
     if (!el) return;
-    const cur = mirrorOversightSettings.tempMode?.[k] || 'average';
+    const cur = normalizeMirrorOversightMode(mirrorOversightSettings.tempMode?.[k]);
     el.value = cur;
     el.addEventListener('change', () => {
-      const val = el.value === 'day' ? 'day' : (el.value === 'night' ? 'night' : 'average');
+      const val = normalizeMirrorOversightMode(el.value);
       if (!mirrorOversightSettings.tempMode) mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
       mirrorOversightSettings.tempMode[k] = val;
+      if (advInputs[k] && document.activeElement !== advInputs[k]) {
+        advInputs[k].value = getMirrorOversightTargetDisplayValue(mirrorOversightSettings, k).toFixed(2);
+      }
     });
   });
 
@@ -1393,18 +1416,16 @@ function updateMirrorOversightUI() {
     mirrorOversightCache.allowHeatCheckbox.checked = mirrorOversightSettings.allowAvailableToHeat !== false;
   }
   const advControls = document.getElementById('advanced-oversight-controls');
-  // Show temperature targets in current unit and hide water row without focusing
-  const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
+  // Show zone targets using temperature units or W/m^2 and hide the water row without focusing
   ['tropical','temperate','polar'].forEach(k => {
     const input = document.getElementById(`adv-target-${k}`);
     if (input && mirrorOversightSettings.targets && document.activeElement !== input) {
-      const v = mirrorOversightSettings.targets[k] || 293.15;
-      input.value = (toDisp(v)).toFixed(2);
+      input.value = getMirrorOversightTargetDisplayValue(mirrorOversightSettings, k).toFixed(2);
     }
     const sel = document.getElementById(`adv-priority-${k}`);
     if (sel && document.activeElement !== sel) sel.value = String(mirrorOversightSettings.priority[k] || 1);
     const timing = document.getElementById(`adv-timing-${k}`);
-    if (timing && document.activeElement !== timing) timing.value = mirrorOversightSettings.tempMode?.[k] || 'average';
+    if (timing && document.activeElement !== timing) timing.value = normalizeMirrorOversightMode(mirrorOversightSettings.tempMode?.[k]);
   });
   const waterRow = document.getElementById('adv-water-row');
   if (waterRow) waterRow.style.display = focusEnabled ? 'flex' : 'none';
