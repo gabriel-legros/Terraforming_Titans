@@ -683,6 +683,228 @@
     flex-wrap: wrap;
 }
 
+.kerati-hive-card .card-body.kerati-hive-layout {
+    display: grid;
+    gap: 12px;
+}
+
+.kerati-hive-summary-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.kerati-hive-summary-panel {
+    display: grid;
+    gap: 10px;
+}
+
+.kerati-hive-summary-label-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.kerati-hive-status-card,
+.kerati-hive-panel {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.kerati-hive-status-card {
+    display: grid;
+    gap: 8px;
+    background: linear-gradient(180deg, #fbfdff 0%, #f3f7fb 100%);
+}
+
+.kerati-hive-status-card__bar {
+    height: 10px;
+    border-radius: 999px;
+    background: #dfe6ee;
+    overflow: hidden;
+}
+
+.kerati-hive-status-card__fill {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #7aa95c 0%, #4caf50 55%, #2f7a35 100%);
+    transition: width 0.2s ease-out;
+}
+
+.kerati-hive-status-card__text {
+    color: #495057;
+    font-size: 0.92em;
+    line-height: 1.4;
+}
+
+.kerati-hive-section {
+    display: grid;
+    gap: 12px;
+}
+
+.kerati-hive-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.kerati-hive-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.kerati-hive-section-meta {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.kerati-hive-section-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kerati-hive-recover-button {
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #495057;
+    cursor: pointer;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.kerati-hive-recover-button:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.kerati-hive-transfer-controls {
+    display: grid;
+    grid-template-columns: minmax(120px, 180px) auto auto;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.kerati-hive-transfer-input {
+    min-width: 0;
+}
+
+.kerati-hive-transfer-button {
+    min-width: 84px;
+}
+
+.kerati-hive-action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 10px;
+}
+
+.kerati-hive-action-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #dfe6ee;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
+}
+
+.kerati-hive-action-card__info {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.kerati-hive-action-card__title {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: #212529;
+}
+
+.kerati-hive-action-card__summary {
+    font-size: 0.92em;
+    color: #2f3b47;
+}
+
+.kerati-hive-action-card__meta {
+    display: grid;
+    gap: 2px;
+    font-size: 0.82em;
+    color: #6c757d;
+    line-height: 1.35;
+}
+
+.kerati-hive-action-card__meta-line {
+    display: block;
+}
+
+.kerati-hive-action-card__controls {
+    display: grid;
+    gap: 8px;
+    justify-items: end;
+}
+
+.kerati-hive-action-card__batch {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.kerati-hive-action-card__batch button,
+.kerati-hive-transfer-button {
+    padding: 4px 8px;
+    font-size: 0.82em;
+}
+
+.kerati-hive-action-card__button {
+    min-width: 118px;
+    margin: 0;
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .kerati-hive-summary-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .kerati-hive-transfer-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .kerati-hive-transfer-input {
+        grid-column: 1 / -1;
+    }
+
+    .kerati-hive-action-card {
+        grid-template-columns: 1fr;
+    }
+
+    .kerati-hive-action-card__controls {
+        justify-items: stretch;
+    }
+
+    .kerati-hive-action-card__batch {
+        justify-content: flex-start;
+    }
+
+    .kerati-hive-action-card__button {
+        width: 100%;
+    }
+}
+
 .hephaestus-weight-header {
     text-align: center;
 }

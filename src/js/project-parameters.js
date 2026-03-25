@@ -514,6 +514,67 @@ const projectParameters = {
     automationRequiresEverEnabled: true,
     attributes: {}
   },
+  keratiHive: {
+    type: 'KeratiHiveProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 0,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    automationRequiresEverEnabled: true,
+    attributes: {
+      tuning: {
+        initialState: {
+          territory: 1,
+          spawningPools: 1,
+          poolProgress: 0,
+          hiveFood: 0,
+          honey: 0,
+          larva: 0,
+          drones: 1,
+          builders: 0,
+          hunters: 0,
+          princesses: 1,
+          queens: 0,
+          empresses: 0
+        },
+        batch: {
+          defaultAmount: 1,
+          maxAmount: 1e18
+        },
+        foodTransfer: {
+          defaultAmount: 1
+        },
+        costs: {
+          droneLarva: 1,
+          droneHoney: 5,
+          builderLarva: 1,
+          builderHoney: 15,
+          hunterLarva: 1,
+          hunterHoney: 50,
+          princessLarva: 5,
+          princessHoney: 100,
+          queenHoney: 5000,
+          empressHoney: 100000
+        },
+        rates: {
+          droneFoodPerSecond: 1,
+          droneHoneyPerSecond: 1,
+          builderHoneyPerSecond: 5,
+          builderPoolProgressPerSecond: 0.005,
+          hunterBiomassPerSecond: 0.1,
+          hunterFoodPerSecond: 10,
+          hunterTerritoryPerSecond: 0.005,
+          princessLarvaPerSecond: 0.1,
+          queenLarvaPerSecond: 1,
+          empressLarvaPerSecond: 10
+        },
+        territoryPerPool: 1
+      }
+    }
+  },
   artificialSky: {
     type: 'ArtificialSkyProject',
     name: '',

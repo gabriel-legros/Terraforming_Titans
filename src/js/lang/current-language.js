@@ -19,6 +19,14 @@ setLanguageData({
       pause: 'Pause',
       refresh: 'Refresh',
     },
+    resourcePanel: {
+      land: {
+        available: 'Available {value}',
+        used: 'Used {value}',
+        worldEffects: 'World Effects',
+        keratiTerritory: 'Kerati Territory',
+      },
+    },
     lifeDesigner: {
       attributes: {
         bioships: {
@@ -490,6 +498,106 @@ setLanguageData({
         divideTen: '/10',
         timesTen: 'x10',
         buildButton: 'Build {count} Batteries',
+      },
+      keratiHive: {
+        title: 'Kerati Hive',
+        tooltip: 'Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.',
+        common: {
+          divideTen: '/10',
+          timesTen: 'x10',
+          max: 'Max',
+        },
+        summary: {
+          territory: 'Territory',
+          pools: 'Spawning Pools',
+          poolsTooltip: 'Spawning pool cap comes from Hive territory. Each pool needs {territoryPerPool} territory, so {territory} territory supports up to {cap} pools.',
+          spawners: 'Spawners',
+          hiveFood: 'Hive Food',
+          honey: 'Honey',
+          larva: 'Larva',
+        },
+        sections: {
+          foodTransfer: 'Food Transfer',
+          hiveOverview: 'Hive',
+          hiveStores: 'Hive Stores',
+          workers: 'Workers',
+          spawners: 'Spawners',
+        },
+        foodTransfer: {
+          add: 'Add Food',
+          available: 'Colony Food {value}',
+        },
+        hunting: {
+          on: 'Hunting On',
+          off: 'Hunting Off',
+          recoverLand: 'Recover Land',
+        },
+        actions: {
+          drone: {
+            label: 'Drones',
+            summary: {
+              owned: '{count} owned',
+              available: 'Can hatch {available}',
+            },
+            button: 'Hatch x{count}',
+            cost: 'Cost: {larva} larva + {honey} honey',
+            each: 'Each: {foodRate} food/s -> {honeyRate} honey/s',
+          },
+          builder: {
+            label: 'Builders',
+            summary: {
+              owned: '{count} owned',
+              available: 'Can hatch {available}',
+            },
+            button: 'Hatch x{count}',
+            cost: 'Cost: {larva} larva + {honey} honey',
+            each: 'Each: {poolRate} pool/s',
+          },
+          hunter: {
+            label: 'Hunters',
+            summary: {
+              owned: '{count} owned',
+              available: 'Can hatch {available}',
+            },
+            button: 'Hatch x{count}',
+            cost: 'Cost: {larva} larva + {honey} honey',
+            each: 'Each: {biomassRate} biomass/s -> {foodRate} food/s + {territoryRate} territory/s',
+          },
+          princess: {
+            label: 'Princesses',
+            summary: {
+              owned: '{count} owned',
+              available: 'Can hatch {available}',
+            },
+            button: 'Hatch x{count}',
+            cost: 'Cost: {larva} larva + {honey} honey',
+            each: 'Each: {larvaRate} larva/s',
+          },
+          queen: {
+            label: 'Queens',
+            summary: {
+              owned: '{count} owned',
+              available: 'Can promote {available}',
+            },
+            button: 'Promote x{count}',
+            cost: 'Cost: 1 princess + {honey} honey',
+            each: 'Each: {larvaRate} larva/s',
+          },
+          empress: {
+            label: 'Empresses',
+            summary: {
+              owned: '{count} owned',
+              available: 'Can promote {available}',
+            },
+            button: 'Promote x{count}',
+            cost: 'Cost: 1 queen + {honey} honey',
+            each: 'Each: {larvaRate} larva/s',
+          },
+        },
+        status: {
+          completed: 'Kerati Hive complete. Territory covers the world.',
+          progress: 'Completion {percent}% | Honey {honey}/s | Larva {larva}/s | Food {food}/s | Territory {territory}/s | Biomass use {biomass}/s',
+        },
       },
       spaceMirrorFacility: {
         common: {
@@ -1591,6 +1699,10 @@ setLanguageData({
         name: 'Klishy web',
         description: 'Construct a massive web of Klishy-compatible copper wires and fibre optics, suitable for a new Klishy community.',
       },
+      keratiHive: {
+        name: 'Kerati Hive',
+        description: 'Construct a planet-scale Kerati hive complex with brood basins, condensers, gas-exchange towers, and communal chambers suitable for a permanent Kerati settlement.',
+      },
       artificialSky: {
         name: 'Artificial Sky',
         description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count is based on initial land, and assigned spaceships (required) accelerate construction. Partial completion proportionally reduces pulsar hazard intensity and solar flux. Full completion clears the pulsar hazard, counts as magnetic shielding for terraforming requirements, removes all solar flux, disables space mirrors (lanterns can still be used), and permanently disables Magnetic Shield.',
@@ -1681,6 +1793,119 @@ setLanguageData({
       disposeResources: {
         name: 'Resource Disposal',
         description: 'Use your spaceships to dispose of unwanted resources somewhere.  Cheaper than importing.',
+      },
+    },
+    terraformingRequirements: {
+      human: {
+        displayName: 'Ribosa (Human)',
+        lore: [
+          'The Ribosa are a carbon-water dominion that originated on Earth. Their name comes from a shared biological root: the ribosome and the ribose backbone at the heart of genetic chemistry.',
+          'Ribosan metabolism is built around light-driven chemistry, including photosynthesis and its descendants. Across deep time, repeated oxygenation crises and mass extinctions pushed Earth life toward increasingly oxygen-tolerant and often oxygen-dependent biochemistry. As a result, Ribosan ecosystems thrive in high-oxygen atmospheres and treat oxygen as a stable baseline condition their biology assumes, to the horror of most of the galactic community.',
+          'Humans are the dominant sapient lineage of Ribosa. In the era immediately preceding the Great Imperial Civil War, the dominion underwent sweeping genetic refactoring. This purity movement did not mean simplicity; it meant control: genomes scrubbed of inherited disease, aging mechanisms rewritten, and redundant repair pathways layered into every organ system.',
+          'Modern humans are exceptionally resilient: they resist infection, do not meaningfully senesce, and can regenerate from injuries that would kill most species. Not long before the Civil War, Ribosa lost Earth. From this catastrophe, the dominion became a people without a cradle, biologically engineered for survival yet culturally defined by a homeworld they can no longer return to.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            photosynthesis: {
+              displayName: 'Photosynthesis',
+            },
+          },
+        },
+      },
+      gabbagian: {
+        displayName: 'Gabbagian',
+        lore: [
+          'The Gabbagians are a carbon-water dominion that evolved on Gabbag, a dim world rich in hydrogen and carbon dioxide where light is scarce and photosynthesis is unreliable. Their biosphere solved the energy problem by leaning into chemistry instead of sunlight.',
+          'Hydrogen is their primary fuel, and much of their metabolism resembles planet-scale fermentation: they reduce carbon compounds and exhale vast quantities of methane as waste. For most of their history, Gabbag\'s atmosphere could heal this methane. Photochemistry in the upper layers broke methane down over time, slowly returning it toward hydrogen and maintaining a fragile equilibrium.',
+          'In effect, the planet ran on a recycling loop: life produced methane; the sky dismantled it again. Then the loop failed. Excessive growth, aggressive industrialization, and other choices the Gabbagians prefer not to celebrate pushed production beyond what the atmosphere could process.',
+          'Methane and related byproducts accumulated faster than they could be broken down. Climate, chemistry, and ecology tipped into a new steady state: a polluted, devastated world where the old balance could not be restored quickly enough.',
+          'They tried to reverse it and failed. In the end, evacuation became the only option. The Gabbagians are a diaspora not because their planet exploded, but because the systems that made it livable were overrun and could not be rebuilt in time.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            methanogenesis: {
+              displayName: 'Methanogenesis',
+            },
+          },
+        },
+      },
+      ammonia: {
+        displayName: 'Fritizian',
+        lore: [
+          'The Fritizians arose on the moon Fritiz, shaped by an environment unusually rich in ammonia. Over evolutionary time, ammonia ceased to be merely a background chemical and became a direct pillar of Fritizian metabolism.',
+          'They still rely on carbon dioxide and water, but their core biochemical pathways assume ammonia-derived chemistry in ways that are deeply integrated and difficult to substitute. This specialization comes with a severe constraint: oxygen is lethally toxic to them. Even modest oxygen levels can damage their proteins, destabilize membranes, and crash key metabolic reactions.',
+          'They prefer aquatic or sealed habitats where chemistry can be buffered and tightly regulated, keeping oxygen extremely low while maintaining the precise mix of dissolved compounds their bodies require.',
+          'Fritizian civilization is defined by environmental mastery. Their technology focuses on stability: controlled oceans, sealed atmospheres, and habitat systems designed to hold narrow conditions for centuries. That same precision makes expansion difficult; few worlds naturally match their requirements, and transforming a world to fit them demands vast, careful engineering.',
+          'So the Fritizians remain mostly bound to Fritiz—safe, technologically advanced, and strategically vulnerable. Their dependence on a narrow ecological niche leaves them “protected” by the Empire in the way a cage protects a rare animal: kept stable, kept useful, and kept contained.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            ammoniaPhotosynthesis: {
+              displayName: 'Ammonia Photosynthesis',
+            },
+          },
+        },
+      },
+      oommaa: {
+        displayName: 'Oommaa',
+        lore: [
+          'The Oommaa are an aquatic carbon-water dominion with one major twist: on their homeworld, extreme pressure and low light make carbon dioxide readily available in liquid form. Instead of being mostly an atmospheric gas, CO2 collects in dense layers and pools within the global ocean, creating habitats where liquid CO2 and liquid water meet.',
+          'Oommaa biology is adapted to these mixed environments—regions with roughly comparable amounts of CO2 and water, often in stratified basins or along turbulent boundaries where the two fluids interact. Their light-harvesting metabolism is a pressure-adapted form of photosynthesis designed for dim conditions, and it does not vent oxygen as waste. Any free oxygen is treated as a useful reagent rather than something to release.',
+          'A defining feature of the Oommaa is how they turn oxygen into armor. They use oxygen together with calcium to grow thick shells that serve as both protection and structural support. Shell growth is responsive: it thickens under threat and can develop layered patterns that reflect an individual’s age and life history.',
+          'Oommaa are extremely long-lived, with slow metabolisms and long memories. Many individuals alive today were already adults during the era of the Early Empire, and their resentment toward it is personal and enduring. Culturally, they favor patience: long, unhurried conversations, careful deliberation, and extended periods of sleep are all considered normal—signs of maturity.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            carbonateShellPhotosynthesis: {
+              displayName: 'Carbonate-Shell Photosynthesis',
+            },
+          },
+        },
+      },
+      klishy: {
+        displayName: 'Klishy',
+        lore: [
+          'The Klishy are a silicon-metal dominion: an artificial lineage that became self-sustaining. They emerged on Klish like many other artificial lifeforms: manufactured, seeded into the world as servants with engineered replication.',
+          'Klish fell to Imperial invasion roughly two millennia before the Great Imperial Civil War. The invasion did not come for the Klishy; it came for their makers. Their work was condemned as illegal electronics, and the purge that followed destroyed much of the industrial base that maintained early Klishy populations.',
+          'The Empire debated for a long time whether the Klishy counted as machines or as life. It settled on "life" while still denying them expansion and offworld growth. Replication remained part of their design; suppressing it is not symbolic to the Klishy, it is an ongoing constraint on population and infrastructure planning.',
+          'Klishy bodies are robust at low temperatures and vulnerable to liquid water. Water bridges and shorts exposed conductors and creeps into microstructures; free oxygen builds insulating oxides and degrades interfaces. Their metabolism scavenges and refines silicon and metal, then spends significant energy on maintenance, sealing, and repair to keep electrical pathways within specification.',
+          'Klishy cognition is partially externalized. They inherited their creators’ cabling, conduits, and switching hardware and rebuilt it into a planetary mesh: copper runs, fiber-optic trunks, junction boxes, and repeaters. The Klishy Web provides low-latency communication and distributed thought; individual capability scales with local network density and uptime.',
+          'Outsiders call this a hive-mind and assume it implies uniformity. In practice, identity remains local while the Web supports shared sensor feeds, indexed "trace" archives, and consensus decision systems. A Klishy can operate alone, but without access to the Web they lose external memory and cooperative compute and become markedly less capable over time.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            metallotrophy: {
+              displayName: 'Metallotrophy',
+            },
+          },
+        },
+        otherRequirements: {
+          klishyWeb: {
+            label: 'Klishy Web',
+            targetText: 'Complete Klishy Web project.',
+          },
+        },
+      },
+      kerati: {
+        displayName: 'Kerati',
+        lore: [
+          'The Kerati are a carbon-water dominion that had the unfortunate misfortune of evolving in Cewinsii-compatible environments.  Their main intelligent species happened to be a nearly sapient insectoid hive.  Organized around hive queens, members of a Kerati hive are docile and hard working.',
+          'Unfortunately, the Cewinsii immediately identified the benefits of using them as slave labour.  Their Queens, more intelligent than most members, were for the most part culled and kept at a low number, just enough for population replacement.',
+          'While individually of poor intelligence, it was found that collectively, a Kerati Hive is indeed capable of art, complex thought and more importantly, grief and suffering.  The individual may not appear to suffer, but the collective does.'
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            hydrogenotrophicBiosynthesis: {
+              displayName: 'Hydrogenotrophic Biosynthesis',
+            },
+          },
+        },
+        otherRequirements: {
+          keratiHive: {
+            label: 'Kerati Hive',
+            targetText: 'Complete Kerati Hive project.',
+          },
+        },
       },
     },
     research: {

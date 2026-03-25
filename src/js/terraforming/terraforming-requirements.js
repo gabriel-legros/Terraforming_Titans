@@ -3,13 +3,8 @@ const DEFAULT_TERRAFORMING_REQUIREMENT_ID = 'human';
 const terraformingRequirements = {
   human: {
     id: 'human',
-    displayName: 'Ribosa (Human)',
-    lore: [
-      'The Ribosa are a carbon-water dominion that originated on Earth. Their name comes from a shared biological root: the ribosome and the ribose backbone at the heart of genetic chemistry.',
-      'Ribosan metabolism is built around light-driven chemistry, including photosynthesis and its descendants. Across deep time, repeated oxygenation crises and mass extinctions pushed Earth life toward increasingly oxygen-tolerant and often oxygen-dependent biochemistry. As a result, Ribosan ecosystems thrive in high-oxygen atmospheres and treat oxygen as a stable baseline condition their biology assumes, to the horror of most of the galactic community.',
-      'Humans are the dominant sapient lineage of Ribosa. In the era immediately preceding the Great Imperial Civil War, the dominion underwent sweeping genetic refactoring. This purity movement did not mean simplicity; it meant control: genomes scrubbed of inherited disease, aging mechanisms rewritten, and redundant repair pathways layered into every organ system.',
-      'Modern humans are exceptionally resilient: they resist infection, do not meaningfully senesce, and can regenerate from injuries that would kill most species. Not long before the Civil War, Ribosa lost Earth. From this catastrophe, the dominion became a people without a cradle, biologically engineered for survival yet culturally defined by a homeworld they can no longer return to.',
-    ].join('\n\n'),
+    displayName: '',
+    lore: '',
     temperatureRangeK: { min: 278.15, max: 298.15 },
     luminosityRange: { min: 600, max: 2000 },
     totalPressureRangeKPa: { min: 80, max: 120 },
@@ -39,7 +34,7 @@ const terraformingRequirements = {
         processes: {
           photosynthesis: {
             id: 'photosynthesis',
-            displayName: 'Photosynthesis',
+            displayName: '',
             growth: {
               usesLuminosity: true,
               perBiomass: {
@@ -74,14 +69,8 @@ const terraformingRequirements = {
   },
   gabbagian: {
     id: 'gabbagian',
-    displayName: 'Gabbagian',
-    lore: [
-      'The Gabbagians are a carbon-water dominion that evolved on Gabbag, a dim world rich in hydrogen and carbon dioxide where light is scarce and photosynthesis is unreliable. Their biosphere solved the energy problem by leaning into chemistry instead of sunlight.',
-      'Hydrogen is their primary fuel, and much of their metabolism resembles planet-scale fermentation: they reduce carbon compounds and exhale vast quantities of methane as waste. For most of their history, Gabbag\'s atmosphere could heal this methane. Photochemistry in the upper layers broke methane down over time, slowly returning it toward hydrogen and maintaining a fragile equilibrium.',
-      'In effect, the planet ran on a recycling loop: life produced methane; the sky dismantled it again. Then the loop failed. Excessive growth, aggressive industrialization, and other choices the Gabbagians prefer not to celebrate pushed production beyond what the atmosphere could process.',
-      'Methane and related byproducts accumulated faster than they could be broken down. Climate, chemistry, and ecology tipped into a new steady state: a polluted, devastated world where the old balance could not be restored quickly enough.',
-      'They tried to reverse it and failed. In the end, evacuation became the only option. The Gabbagians are a diaspora not because their planet exploded, but because the systems that made it livable were overrun and could not be rebuilt in time.',
-    ].join('\n\n'),
+    displayName: '',
+    lore: '',
     temperatureRangeK: { min: 328.15, max: 368.15 },
     luminosityRange: { min: 0, max: 2000 },
     totalPressureRangeKPa: { min: 1000, max: 2000 },
@@ -112,7 +101,7 @@ const terraformingRequirements = {
         processes: {
           methanogenesis: {
             id: 'methanogenesis',
-            displayName: 'Methanogenesis',
+            displayName: '',
             growth: {
               usesLuminosity: false,
               perBiomass: {
@@ -155,14 +144,8 @@ const terraformingRequirements = {
   },
   ammonia: {
     id: 'ammonia',
-    displayName: 'Fritizian',
-    lore: [
-      'The Fritizians arose on the moon Fritiz, shaped by an environment unusually rich in ammonia. Over evolutionary time, ammonia ceased to be merely a background chemical and became a direct pillar of Fritizian metabolism.',
-      'They still rely on carbon dioxide and water, but their core biochemical pathways assume ammonia-derived chemistry in ways that are deeply integrated and difficult to substitute. This specialization comes with a severe constraint: oxygen is lethally toxic to them. Even modest oxygen levels can damage their proteins, destabilize membranes, and crash key metabolic reactions.',
-      'They prefer aquatic or sealed habitats where chemistry can be buffered and tightly regulated, keeping oxygen extremely low while maintaining the precise mix of dissolved compounds their bodies require.',
-      'Fritizian civilization is defined by environmental mastery. Their technology focuses on stability: controlled oceans, sealed atmospheres, and habitat systems designed to hold narrow conditions for centuries. That same precision makes expansion difficult; few worlds naturally match their requirements, and transforming a world to fit them demands vast, careful engineering.',
-      'So the Fritizians remain mostly bound to Fritiz—safe, technologically advanced, and strategically vulnerable. Their dependence on a narrow ecological niche leaves them “protected” by the Empire in the way a cage protects a rare animal: kept stable, kept useful, and kept contained.',
-    ].join('\n\n'),
+    displayName: '',
+    lore: '',
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 5 },
     temperatureRangeK: { min: 278.15, max: 293.15 },
     luminosityRange: { min: 800, max: 2000 },
@@ -194,7 +177,7 @@ const terraformingRequirements = {
         processes: {
           ammoniaPhotosynthesis: {
             id: 'ammoniaPhotosynthesis',
-            displayName: 'Ammonia Photosynthesis',
+            displayName: '',
             growth: {
               usesLuminosity: true,
               perBiomass: {
@@ -239,13 +222,8 @@ const terraformingRequirements = {
   },
   oommaa: {
     id: 'oommaa',
-    displayName: 'Oommaa',
-    lore: [
-      'The Oommaa are an aquatic carbon–water dominion with one major twist: on their homeworld, extreme pressure and low light make carbon dioxide readily available in liquid form. Instead of being mostly an atmospheric gas, CO₂ collects in dense layers and pools within the global ocean, creating habitats where liquid CO₂ and liquid water meet.',
-      'Oommaa biology is adapted to these mixed environments—regions with roughly comparable amounts of CO₂ and water, often in stratified basins or along turbulent boundaries where the two fluids interact. Their light-harvesting metabolism is a pressure-adapted form of photosynthesis designed for dim conditions, and it does not vent oxygen as waste. Any free oxygen is treated as a useful reagent rather than something to release.',
-      'A defining feature of the Oommaa is how they turn oxygen into armor. They use oxygen together with calcium to grow thick shells that serve as both protection and structural support. Shell growth is responsive: it thickens under threat and can develop layered patterns that reflect an individual’s age and life history.',
-      'Oommaa are extremely long-lived, with slow metabolisms and long memories. Many individuals alive today were already adults during the era of the Early Empire, and their resentment toward it is personal and enduring. Culturally, they favor patience: long, unhurried conversations, careful deliberation, and extended periods of sleep are all considered normal—signs of maturity.'
-    ].join('\n\n'),
+    displayName: '',
+    lore: '',
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 10 },
     temperatureRangeK: { min: 283.15, max: 298.15 },
     luminosityRange: { min: 0, max: 100 },
@@ -279,7 +257,7 @@ const terraformingRequirements = {
         processes: {
           carbonateShellPhotosynthesis: {
             id: 'carbonateShellPhotosynthesis',
-            displayName: 'Carbonate-Shell Photosynthesis',
+            displayName: '',
             growth: {
               usesLuminosity: true,
               perBiomass: {
@@ -314,15 +292,8 @@ const terraformingRequirements = {
   },
   klishy: {
     id: 'klishy',
-    displayName: 'Klishy',
-    lore: [
-      'The Klishy are a silicon–metal dominion: an artificial lineage that became self-sustaining. They emerged on Klish like many other artificial lifeforms : manufactured—seeded into the world as servants with engineered replication.',
-      'Klish fell to Imperial invasion roughly two millennia before the Great Imperial Civil War. The invasion did not come for the Klishy; it came for their makers. Their work was condemned as illegal electronics, and the purge that followed destroyed much of the industrial base that maintained early Klishy populations.',
-      'The Empire debated for a long time whether the Klishy counted as machines or as life. It settled on “life”—docile, limited, and therefore tolerable—while still denying them expansion and offworld growth. Replication remained part of their design; suppressing it is not symbolic to the Klishy, it is an ongoing constraint on population and infrastructure planning.',
-      'Klishy bodies are robust at low temperatures and vulnerable to liquid water. Water bridges and shorts exposed conductors and creeps into microstructures; free oxygen builds insulating oxides and degrades interfaces. Their metabolism scavenges and refines silicon and metal, then spends significant energy on maintenance, sealing, and repair to keep electrical pathways within specification.',
-      'Klishy cognition is partially externalized. They inherited their creators’ cabling, conduits, and switching hardware and rebuilt it into a planetary mesh: copper runs, fiber-optic trunks, junction boxes, and repeaters. The Klishy Web provides low-latency communication and distributed thought; individual capability scales with local network density and uptime.',
-      'Outsiders call this a hive-mind and assume it implies uniformity. In practice, identity remains local while the Web supports shared sensor feeds, indexed “trace” archives, and consensus decision systems. A Klishy can operate alone, but without access to the Web they lose external memory and cooperative compute and become markedly less capable over time.'
-    ].join('\n\n'),
+    displayName: '',
+    lore: '',
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 20 },
     temperatureRangeK: { min: 218.15, max: 228.15 },
     luminosityRange: { min: 0, max: 1_000_000_000 },
@@ -343,8 +314,8 @@ const terraformingRequirements = {
       {
         type: 'projectCompletion',
         projectId: 'klishyWeb',
-        label: 'Klishy Web',
-        targetText: 'Complete Klishy Web project.',
+        label: '',
+        targetText: '',
       },
     ],
     lifeDesign: {
@@ -363,7 +334,7 @@ const terraformingRequirements = {
         processes: {
           metallotrophy: {
             id: 'metallotrophy',
-            displayName: 'Metallotrophy',
+            displayName: '',
             growth: {
               usesLuminosity: false,
               perBiomass: {
@@ -381,6 +352,93 @@ const terraformingRequirements = {
               perBiomass: {
                 surface: { biomass: -1 },
                 atmospheric: {},
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 100,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+        bioships: 1000,
+      },
+    },
+  },
+  kerati: {
+    id: 'kerati',
+    displayName: '',
+    lore: '',
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 30 },
+    temperatureRangeK: { min: 293.15, max: 308.15 },
+    luminosityRange: { min: 0, max: 1_500 },
+    totalPressureRangeKPa: { min: 120, max: 320 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 5_000, max: 30_000 },
+      oxygen: { min: 0, max: 100 },
+      inertGas: { min: 60_000, max: 240_000 },
+      hydrogen: { min: 20_000, max: 100_000 },
+    },
+    liquidCoverageTarget: 0.2,
+    liquidType: 'water',
+    lifeCoverageTarget: 0.5,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    appliedEffects: [
+      { target: 'project', targetId: 'keratiHive', type: 'enable' },
+    ],
+    otherRequirements: [
+      {
+        type: 'projectCompletion',
+        projectId: 'keratiHive',
+        label: '',
+        targetText: '',
+      },
+    ],
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 278.15, max: 323.15 },
+      optimalGrowthTemperatureBaseK: 300.15,
+      growthTemperatureToleranceBaseC: 1.5,
+      growthTemperatureTolerancePerPointC: 0.6,
+      photosynthesisRatePerPoint: 0.00005,
+      bioworkersPerBiomassPerPoint: 0.00004,
+      baseMaxBiomassDensityTPerM2: 0.12,
+      radiationToleranceThresholdPoints: 100,
+      minimumBiomassDecayRateTPerS: 1,
+      requiresLiquidWaterForGrowth: true,
+      metabolism: {
+        primaryProcessId: 'hydrogenotrophicBiosynthesis',
+        processes: {
+          hydrogenotrophicBiosynthesis: {
+            id: 'hydrogenotrophicBiosynthesis',
+            displayName: '',
+            growth: {
+              usesLuminosity: false,
+              perBiomass: {
+                surface: { biomass: 1, liquidWater: -0.5 },
+                atmospheric: {
+                  carbonDioxide: -0.5,
+                  hydrogen: -0.5,
+                  atmosphericWater: 0.5,
+                },
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1, liquidWater: 1 },
+                atmospheric: {
+                  carbonDioxide: 2,
+                  hydrogen: 5,
+                  atmosphericWater: -3,
+                },
               },
             },
           },

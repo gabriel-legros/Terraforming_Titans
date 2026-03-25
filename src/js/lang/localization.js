@@ -458,6 +458,63 @@ function applyLocalizedProjectFields(localizedProjects) {
   }
 }
 
+function applyLocalizedTerraformingRequirementFields(localizedRequirements) {
+  if (!localizedRequirements) {
+    return;
+  }
+  let targetRequirements;
+  try {
+    targetRequirements = terraformingRequirements;
+  } catch (error) {
+    return;
+  }
+  for (const key in localizedRequirements) {
+    const requirement = targetRequirements[key];
+    const localizedRequirement = localizedRequirements[key];
+    if (!requirement || !localizedRequirement) {
+      continue;
+    }
+    if (localizedRequirement.displayName !== undefined) {
+      requirement.displayName = localizedRequirement.displayName;
+    }
+    if (localizedRequirement.lore !== undefined) {
+      requirement.lore = localizedRequirement.lore;
+    }
+    const localizedProcesses = localizedRequirement.lifeDesign?.processes;
+    const targetProcesses = requirement.lifeDesign?.metabolism?.processes;
+    if (localizedProcesses && targetProcesses) {
+      for (const processKey in localizedProcesses) {
+        const process = targetProcesses[processKey];
+        const localizedProcess = localizedProcesses[processKey];
+        if (!process || !localizedProcess) {
+          continue;
+        }
+        if (localizedProcess.displayName !== undefined) {
+          process.displayName = localizedProcess.displayName;
+        }
+      }
+    }
+    const localizedOtherRequirements = localizedRequirement.otherRequirements;
+    const targetOtherRequirements = requirement.otherRequirements;
+    if (localizedOtherRequirements && Array.isArray(targetOtherRequirements)) {
+      for (let i = 0; i < targetOtherRequirements.length; i += 1) {
+        const otherRequirement = targetOtherRequirements[i];
+        const localizationKey = otherRequirement.projectId || otherRequirement.key || `${i}`;
+        const localizedOtherRequirement = localizedOtherRequirements[localizationKey];
+        if (!localizedOtherRequirement) {
+          continue;
+        }
+        if (localizedOtherRequirement.label !== undefined) {
+          otherRequirement.label = localizedOtherRequirement.label;
+        }
+        if (localizedOtherRequirement.targetText !== undefined) {
+          otherRequirement.targetText = localizedOtherRequirement.targetText;
+        }
+      }
+    }
+  }
+}
+
 function languageTextToLines(text) {
   if (Array.isArray(text)) {
     return text.slice();
@@ -513,6 +570,7 @@ function applyLanguageToGameData() {
   const catalogs = activeLanguageData.catalogs || {};
   applyLocalizedBuildingFields(catalogs.buildings);
   applyLocalizedProjectFields(catalogs.projects);
+  applyLocalizedTerraformingRequirementFields(catalogs.terraformingRequirements);
   applyLocalizedEntryFields(colonyParameters, catalogs.colonies, ['name', 'description', 'displayName']);
   applyLocalizedSkillFields(catalogs.skills);
   applyLocalizedResearchFields(catalogs.research);

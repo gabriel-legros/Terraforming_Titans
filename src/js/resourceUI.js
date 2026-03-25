@@ -23,6 +23,14 @@ const SPACE_STORAGE_DIVIDER_TOP_RESOURCES = new Set(['components', 'liquidWater'
 const SPACE_STORAGE_DIVIDER_MARGIN = 10;
 let resourceViewModeUpdating = false;
 
+function getResourceUIText(path, fallback, vars) {
+  try {
+    return t(`ui.resourcePanel.${path}`, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function showSpaceStorageInDefaultPanel() {
   return gameSettings.showSpaceStorageInDefaultPanel === true;
 }
@@ -994,6 +1002,21 @@ function updateLandAssignments(assignmentsDiv) {
       }
     }
   }
+  const landResource = resources?.surface?.land;
+  if (landResource?.getReservedAmountForSource) {
+    const hazardReserved = landResource.getReservedAmountForSource('hazards')
+      || landResource.getReservedAmountForSource('hazardousBiomass')
+      || 0;
+    if (hazardReserved > 0) {
+      const worldEffectLabel = landResource.worldEffectReservationLabel || getResourceUIText('land.worldEffects', 'World Effects');
+      assignments.push([worldEffectLabel, hazardReserved]);
+    }
+
+    const keratiReserved = landResource.getReservedAmountForSource('keratiTerritory') || 0;
+    if (keratiReserved > 0) {
+      assignments.push([getResourceUIText('land.keratiTerritory', 'Kerati Territory'), keratiReserved]);
+    }
+  }
   assignments.sort((a, b) => b[1] - a[1]);
 
   let tableContainer = assignmentsDiv._tableContainer;
@@ -1758,17 +1781,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         valueDiv._hazard = hazard;
       }
       const availableAmount = resource.getAvailableAmount ? resource.getAvailableAmount() : (resource.value - resource.reserved);
-      const availText = `Available ${formatNumber(availableAmount, false, 3)}`;
-      const usedText = `Used ${formatNumber(resource.reserved, false, 3)}`;
+      const availText = getResourceUIText('land.available', 'Available {value}', {
+        value: formatNumber(availableAmount, false, 3),
+      });
+      const usedText = getResourceUIText('land.used', 'Used {value}', {
+        value: formatNumber(resource.reserved, false, 3),
+      });
       if (avail.textContent !== availText) avail.textContent = availText;
       if (used.textContent !== usedText) used.textContent = usedText;
-      const hazardReserved = resource.getReservedAmountForSource
-        ? (resource.getReservedAmountForSource('hazards') || resource.getReservedAmountForSource('hazardousBiomass'))
-        : 0;
-      const worldEffectLabel = resource.worldEffectReservationLabel || 'World Effects';
-      const hazardText = `${worldEffectLabel} ${formatNumber(hazardReserved, false, 3)}`;
-      if (hazard.textContent !== hazardText) hazard.textContent = hazardText;
-      hazard.style.display = hazardReserved > 0 ? '' : 'none';
+      if (hazard.textContent !== '') hazard.textContent = '';
+      hazard.style.display = 'none';
     } else {
       const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
       if (valueDiv.textContent !== text) valueDiv.textContent = text;

@@ -1060,6 +1060,42 @@
     background-color: #e7ecf7;
 }
 
+.dark-mode .kerati-hive-status-card,
+.dark-mode .kerati-hive-panel,
+.dark-mode .kerati-hive-action-card {
+    background: #101826;
+    border-color: #24324a;
+}
+
+.dark-mode .kerati-hive-status-card {
+    background: linear-gradient(180deg, #132033 0%, #0f1928 100%);
+}
+
+.dark-mode .kerati-hive-status-card__bar {
+    background: #24324a;
+}
+
+.dark-mode .kerati-hive-status-card__text,
+.dark-mode .kerati-hive-action-card__summary {
+    color: #d6deea;
+}
+
+.dark-mode .kerati-hive-section-title,
+.dark-mode .kerati-hive-action-card__title {
+    color: #eef3fb;
+}
+
+.dark-mode .kerati-hive-section-meta,
+.dark-mode .kerati-hive-action-card__meta {
+    color: #95a4bb;
+}
+
+.dark-mode .kerati-hive-recover-button {
+    background: #0e1421;
+    border-color: #24324a;
+    color: #d6deea;
+}
+
 .dark-mode .deep-mining-option {
     background-color: #2d2d2d;
     border-color: #444;
