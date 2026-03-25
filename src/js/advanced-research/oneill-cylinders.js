@@ -146,6 +146,42 @@ function getOneillGrowthContext(space, galaxy) {
   return { current, capacity, perSecond, perHour: perSecond * 3600 };
 }
 
+function getOneillGrowthDelta(deltaTime, { space, galaxy } = {}) {
+  const context = getOneillGrowthContext(space, galaxy);
+  const { current, capacity, perSecond } = context;
+  if (!(capacity > 0)) {
+    return {
+      current,
+      capacity,
+      perSecond: 0,
+      perHour: 0,
+      gain: 0,
+      next: 0
+    };
+  }
+  if (!(perSecond > 0)) {
+    return {
+      current,
+      capacity,
+      perSecond,
+      perHour: context.perHour,
+      gain: 0,
+      next: current
+    };
+  }
+  const deltaSeconds = deltaTime / 1000;
+  const gain = perSecond * deltaSeconds;
+  const next = current + gain;
+  return {
+    current,
+    capacity,
+    perSecond,
+    perHour: context.perHour,
+    gain,
+    next: next > capacity ? capacity : next
+  };
+}
+
 function formatCylinderRate(value) {
   const numeric = Number.isFinite(value) && value > 0 ? value : 0;
   const rounded = numeric >= 1 ? numeric.toFixed(2) : numeric.toFixed(3);
@@ -179,7 +215,7 @@ function getOneillTooltipText(space, capacity) {
 }
 
 function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
-  const { current, capacity, perSecond } = getOneillGrowthContext(space, galaxy);
+  const { current, capacity, perSecond, next } = getOneillGrowthDelta(deltaTime, { space, galaxy });
   if (!(capacity > 0)) {
     space?.setOneillCylinderCount?.(0, 0);
     return 0;
@@ -188,8 +224,6 @@ function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
     space?.setOneillCylinderCount?.(current, capacity);
     return space?.getOneillCylinderCount?.() ?? 0;
   }
-  const deltaSeconds = deltaTime / 1000;
-  const next = current + (perSecond * deltaSeconds);
   space?.setOneillCylinderCount?.(next, capacity);
   return space?.getOneillCylinderCount?.() ?? 0;
 }
@@ -233,6 +267,8 @@ if (typeof module !== 'undefined' && module.exports) {
     updateOneillCylinderStatsUI,
     setOneillStatsElements,
     getOneillCylinderCapacity,
+    getOneillGrowthContext,
+    getOneillGrowthDelta,
     getUhfControlledSectorCount
   };
 }
@@ -242,5 +278,7 @@ if (typeof window !== 'undefined') {
   window.updateOneillCylinderStatsUI = updateOneillCylinderStatsUI;
   window.setOneillStatsElements = setOneillStatsElements;
   window.getOneillCylinderCapacity = getOneillCylinderCapacity;
+  window.getOneillGrowthContext = getOneillGrowthContext;
+  window.getOneillGrowthDelta = getOneillGrowthDelta;
   window.getUhfControlledSectorCount = getUhfControlledSectorCount;
 }

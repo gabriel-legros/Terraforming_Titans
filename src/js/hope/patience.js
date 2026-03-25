@@ -202,25 +202,14 @@ class PatienceManager extends EffectableEntity {
             - (transferProduction - transferConsumption);
         const metalGain = metalNetRate > 0 ? metalNetRate * seconds : 0;
 
-        const unlockedOneill = spaceManager?.isBooleanFlagSet?.('oneillCylinders');
-        const oneillCapacity = unlockedOneill ? getOneillCylinderCapacity(galaxyManager) : 0;
-        const currentOneill = spaceManager?.getOneillCylinderCount?.() || 0;
-        const effectiveWorlds = spaceManager?.getTerraformedPlanetCount?.() || 0;
-        const hasCapacity = oneillCapacity > 0 && unlockedOneill && effectiveWorlds > 0;
-
-        let oneillGain = 0;
-        if (hasCapacity) {
-            const baseRate = effectiveWorlds / (100 * 3600);
-            const remainingFraction = 1 - (currentOneill / oneillCapacity);
-            const perSecond = baseRate * (remainingFraction > 0 ? remainingFraction : 0);
-            oneillGain = perSecond > 0 ? perSecond * seconds : 0;
-            const availableRoom = oneillCapacity - currentOneill;
-            if (oneillGain > availableRoom) {
-                oneillGain = availableRoom;
-            } else if (oneillGain < 0) {
-                oneillGain = 0;
-            }
-        }
+        const oneillDelta = typeof getOneillGrowthDelta === 'function'
+            ? getOneillGrowthDelta(seconds * 1000, {
+                space: spaceManager,
+                galaxy: galaxyManager
+            })
+            : { capacity: 0, gain: 0 };
+        const oneillCapacity = oneillDelta.capacity || 0;
+        const oneillGain = oneillDelta.gain || 0;
 
         return {
             superalloyGain,
