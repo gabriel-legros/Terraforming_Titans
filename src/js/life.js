@@ -23,6 +23,16 @@ if (!lifeRadiationPenaltyFromDose) {
     return 1 / (1 + Math.pow(D0 / D, a));
   };
 }
+const BIOSHIPS_FRACTION_PER_POINT_PER_SECOND = 0.0001;
+const BIOSHIP_BIOMASS_PER_SPACESHIP = 10000;
+
+function getLifeText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
 
 function getTerraformingSafe() {
   try {
@@ -213,6 +223,12 @@ class LifeAttribute {
           ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.bioworkersPerBiomassPerPoint
           ?? 0.00001;
         return `${(this.value * bioworkersPerBiomassPerPoint).toFixed(5)} workers per ton biomass`;
+      case 'bioships':
+        return getLifeText(
+          'ui.lifeDesigner.attributes.bioships.convertedValue',
+          '{percent}% biomass/s to spaceships',
+          { percent: formatNumber(this.value * BIOSHIPS_FRACTION_PER_POINT_PER_SECOND * 100, false, 2) }
+        );
       default:
         return null;
     }
@@ -229,7 +245,8 @@ class LifeDesign {
     spaceEfficiency, // Added new attribute
     geologicalBurial, // Added Geological Burial
     growthTemperatureTolerance = 0,
-    bioworkforce = 0
+    bioworkforce = 0,
+    bioships = 0
   ) {
     this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', getAttributeMaxUpgrades('minTemperatureTolerance'));
     this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', getAttributeMaxUpgrades('maxTemperatureTolerance'));
@@ -247,6 +264,13 @@ class LifeDesign {
     this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', getAttributeMaxUpgrades('spaceEfficiency'));
     this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', getAttributeMaxUpgrades('geologicalBurial'));
     this.bioworkforce = new LifeAttribute('bioworkforce', bioworkforce, 'Bioworkforce', 'Allocates a fraction of global biomass to work for you.', getAttributeMaxUpgrades('bioworkforce'));
+    this.bioships = new LifeAttribute(
+      'bioships',
+      bioships,
+      getLifeText('ui.lifeDesigner.attributes.bioships.name', 'Bioships'),
+      getLifeText('ui.lifeDesigner.attributes.bioships.description', 'Converts a fraction of global biomass into living spaceships.'),
+      getAttributeMaxUpgrades('bioships')
+    );
   }
 
   getDesignCost() {
@@ -323,7 +347,8 @@ class LifeDesign {
       invasiveness: this.invasiveness.value,
       spaceEfficiency: this.spaceEfficiency.value, // Added for saving
       geologicalBurial: this.geologicalBurial.value, // Added Geological Burial
-      bioworkforce: this.bioworkforce.value
+      bioworkforce: this.bioworkforce.value,
+      bioships: this.bioships.value
     };
     return data;
   }
@@ -338,7 +363,8 @@ class LifeDesign {
       data.spaceEfficiency ?? 0, // Added for loading, default to 0 if missing in save
       data.geologicalBurial ?? 0, // Added Geological Burial, default 0
       data.growthTemperatureTolerance ?? 0,
-      data.bioworkforce ?? 0
+      data.bioworkforce ?? 0,
+      data.bioships ?? 0
     );
 
     design.optimalGrowthTemperature.value = data.optimalGrowthTemperature ?? 0;
@@ -638,7 +664,7 @@ class LifeDesigner extends EffectableEntity {
   constructor() {
     super({ description: 'Life Designer' });
     this.baseApplyDuration = 30000;
-    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency, geologicalBurial, and bioworkforce defaults
+    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     this.tentativeDesign = null;
 
     this.baseMaxPoints = lifeDesignerConfig.maxPoints;
@@ -744,7 +770,8 @@ class LifeDesigner extends EffectableEntity {
     spaceEfficiency,
     geologicalBurial,
     growthTemperatureTolerance = 0,
-    bioworkforce = 0
+    bioworkforce = 0,
+    bioships = 0
   ) {
     this.tentativeDesign = new LifeDesign(
       minTemperatureTolerance,
@@ -755,7 +782,8 @@ class LifeDesigner extends EffectableEntity {
       spaceEfficiency,
       geologicalBurial, // Pass geologicalBurial
       growthTemperatureTolerance,
-      bioworkforce
+      bioworkforce,
+      bioships
     );
   }
 
@@ -1602,6 +1630,35 @@ class LifeManager extends EffectableEntity {
     });
 
     // Global resource object amounts are updated directly, modifyRate updates UI tracking.
+
+    const bioshipsValue = design.bioships.value;
+    if (bioshipsValue > 0 && secondsMultiplier > 0) {
+      const biomassToSpaceshipsRate = bioshipsValue * BIOSHIPS_FRACTION_PER_POINT_PER_SECOND;
+      let totalConvertedBiomass = 0;
+
+      zones.forEach(zoneName => {
+        const currentZonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
+        if (currentZonalBiomass <= 0) {
+          return;
+        }
+
+        const convertedBiomass = Math.min(currentZonalBiomass, currentZonalBiomass * biomassToSpaceshipsRate * secondsMultiplier);
+        if (convertedBiomass <= 1e-9) {
+          return;
+        }
+
+        terraforming.zonalSurface[zoneName].biomass -= convertedBiomass;
+        totalConvertedBiomass += convertedBiomass;
+      });
+
+      if (totalConvertedBiomass > 1e-9) {
+        const bioshipsReason = getLifeText('ui.lifeDesigner.attributes.bioships.rateReason', 'Bioships');
+        const producedSpaceships = totalConvertedBiomass / BIOSHIP_BIOMASS_PER_SPACESHIP;
+        resources.surface.biomass.modifyRate(-totalConvertedBiomass / secondsMultiplier, bioshipsReason, 'life');
+        resources.special.spaceships.modifyRate(producedSpaceships / secondsMultiplier, bioshipsReason, 'life');
+        resources.special.spaceships.increase(producedSpaceships);
+      }
+    }
 
     // --- Geological Burial Step (after growth/decay) ---
     const burialValue = design.geologicalBurial.value;

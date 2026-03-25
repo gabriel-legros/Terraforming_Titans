@@ -253,6 +253,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Specialized Systems
 - Buildings moved toward dedicated subclass logic (e.g., GHG/Oxygen factories, Dyson receiver, biodome behavior).
+- Advanced research includes `Bioships` (8B), unlocking a Life Designer attribute with up to 1000 points that linearly converts biomass into spaceships after life growth/decay, reaching 10% of biomass per second at max investment.
 - Life Designer advanced-research point purchases now cost `1, 2, 4, 8, ...`; legacy saves convert old quadratic spend into the new purchase count and grant `+1` bonus advanced-research purchase when the save had any legacy advanced-research purchases.
 - Ecumenopolis life-land penalty now has a Biodome floor: life land multiplier uses `max(1 - ecumenopolis land fraction, biodome land fraction)`, where biodome fraction is active biodome land over initial land.
 - Advanced research includes `Warp Storage` (75M), unlocking a Storage Depot alternate recipe with `10x` storage and `1M` energy consumption, and a Space Storage expansion recipe selector (`Standard Storage`/`Warp Storage`) where Warp mode costs metal+components+electronics and runs Space Storage expansion `10x` faster; selection persists through save/load, travel, and project presets.

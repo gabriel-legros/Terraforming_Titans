@@ -8,7 +8,8 @@ const LIFE_AUTOMATION_ATTRIBUTES = [
   'invasiveness',
   'spaceEfficiency',
   'geologicalBurial',
-  'bioworkforce'
+  'bioworkforce',
+  'bioships'
 ];
 const LIFE_AUTOMATION_ZONE_KEYS = ['tropical', 'temperate', 'polar'];
 const LIFE_AUTOMATION_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY = 0.01;
@@ -481,7 +482,7 @@ class LifeAutomation {
     if (remaining <= 0) {
       return null;
     }
-    const candidate = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    const candidate = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     for (let index = 0; index < preset.designSteps.length; index += 1) {
       if (remaining <= 0) {
@@ -564,7 +565,7 @@ class LifeAutomation {
     if (remaining <= 0) {
       return spends;
     }
-    const candidate = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    const candidate = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     for (let index = 0; index < preset.designSteps.length; index += 1) {
       if (remaining <= 0) {

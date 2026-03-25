@@ -2460,6 +2460,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'bioships',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 8_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'bioships',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'gigafoundries',
         name: '',
         description: '',

@@ -323,8 +323,8 @@ function getLifeAutomationAttributeOptions() {
 }
 
 function isLifeAutomationAttributeAvailable(attributeName) {
-  if (attributeName === 'bioworkforce') {
-    return isBioworkforceUnlocked();
+  if (!isLifeAttributeUnlocked(attributeName)) {
+    return false;
   }
   return lifeDesigner.currentDesign[attributeName].maxUpgrades > 0;
 }

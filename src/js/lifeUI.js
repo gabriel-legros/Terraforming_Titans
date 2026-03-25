@@ -6,6 +6,15 @@ const lifeShopCategories = [
   { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' },
   { name: 'advancedResearch', label: 'advanced research', description: 'Push our knowledge even further.', tooltip: 'Costs 1, 2, 4, 8, ... advanced research and persists when travelling.  Bonuses that grant more points per purchase apply retroactively.', requiresFlag: 'nextGenBioEngineering' }
 ];
+const LIFE_UI_BIOSHIPS_FRACTION_PER_POINT_PER_SECOND = 0.0001;
+
+function getLifeUIText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
 
 const lifeShopCategoryLookup = Object.fromEntries(
   lifeShopCategories.map(category => [category.name, category])
@@ -156,8 +165,13 @@ const baseLifeAttributeOrder = [
   'optimalGrowthTemperature', 'growthTemperatureTolerance',
   'photosynthesisEfficiency',
   'radiationTolerance',
-  'invasiveness', 'spaceEfficiency', 'geologicalBurial', 'bioworkforce'
+  'invasiveness', 'spaceEfficiency', 'geologicalBurial', 'bioworkforce', 'bioships'
 ];
+
+const lifeAttributeUnlockFlags = {
+  bioworkforce: 'bioworkforce',
+  bioships: 'bioships'
+};
 
 function getLifeManagerSafe() {
   try {
@@ -177,6 +191,14 @@ function isLifeFlagActive(flagId) {
 
 function isBioworkforceUnlocked() {
   return isLifeFlagActive('bioworkforce');
+}
+
+function isLifeAttributeUnlocked(attributeName) {
+  const requiredFlag = lifeAttributeUnlockFlags[attributeName];
+  if (!requiredFlag) {
+    return true;
+  }
+  return isLifeFlagActive(requiredFlag);
 }
 
 function isLifeShopCategoryUnlocked(category) {
@@ -223,7 +245,7 @@ const lifeUICache = {
   pointShopDecreaseButton: null,
   pointShopIncreaseButton: null,
   tentativeCells: [],
-  bioworkforceElements: [],
+  gatedAttributeElements: [],
   attributeCells: {}, // { [attributeName]: { row, currentDiv, tentativeDiv, tentativeDisplay, tentativeCell, modifyCell } }
   cells: {
     dayTemp: {},
@@ -416,9 +438,9 @@ function cacheLifeAttributeCells() {
   });
 }
 
-function cacheBioworkforceElements() {
-  lifeUICache.bioworkforceElements = Array.from(
-    document.querySelectorAll('[data-bioworkforce-ui]')
+function cacheGatedAttributeElements() {
+  lifeUICache.gatedAttributeElements = Array.from(
+    document.querySelectorAll('[data-life-attribute-ui]')
   );
 }
 
@@ -431,7 +453,7 @@ function invalidateLifeUICache() {
   lifeUICache.pointShopDecreaseButton = null;
   lifeUICache.pointShopIncreaseButton = null;
   lifeUICache.tentativeCells = [];
-  lifeUICache.bioworkforceElements = [];
+  lifeUICache.gatedAttributeElements = [];
   lifeUICache.attributeCells = {};
 }
 
@@ -595,14 +617,14 @@ function initializeLifeTerraformingDesignerUI() {
       const attributeOrder = baseLifeAttributeOrder;
       const metabolismStrings = buildMetabolismEfficiencyUIStrings();
       const bioworkersPerBiomassPerPoint = getActiveLifeDesignRequirements().bioworkersPerBiomassPerPoint ?? 0.00001;
+      const bioshipsPercentPerPoint = formatNumber(LIFE_UI_BIOSHIPS_FRACTION_PER_POINT_PER_SECOND * 100, false, 2);
 
       for (const attributeName of attributeOrder) {
         if (!lifeDesigner.currentDesign[attributeName]) continue;
 
         const attribute = lifeDesigner.currentDesign[attributeName];
         const convertedValue = getConvertedDisplay(attributeName, attribute);
-        const isBioworkforceRow = attributeName === 'bioworkforce';
-        const bioworkforceRowHidden = isBioworkforceRow && !isBioworkforceUnlocked();
+        const rowHidden = !isLifeAttributeUnlocked(attributeName);
       const isMetabolismEfficiency = attributeName === 'photosynthesisEfficiency';
       const isOptimalGrowthTemperature = attributeName === 'optimalGrowthTemperature';
       const displayName = isMetabolismEfficiency ? metabolismStrings.displayName : attribute.displayName;
@@ -612,10 +634,10 @@ function initializeLifeTerraformingDesignerUI() {
             ? `<span id="${attributeName}-description">${getOptimalGrowthTemperatureDescription()}</span>`
             : attribute.description;
         rows += `
-          <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
+          <tr id="life-attribute-row-${attributeName}"${lifeAttributeUnlockFlags[attributeName] ? ` data-life-attribute-ui="${attributeName}"` : ''}${rowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${attribute.maxUpgrades}</span>)
-              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'radiationTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}`}</div>
+              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'radiationTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}${attributeName === 'bioships' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.lifeDesigner.attributes.bioships.tooltip', 'Each point converts {percent}% of global biomass per second into spaceships after life growth and decay are resolved.', { percent: bioshipsPercentPerPoint })}">&#9432;</span>` : ''}`}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -639,7 +661,7 @@ function initializeLifeTerraformingDesignerUI() {
     }
     // Event listener for the "Create New Design" button
     newDesignBtn.addEventListener('click', () => {
-      lifeDesigner.createNewDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
+      lifeDesigner.createNewDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
       lifeDesigner.tentativeDesign.copyFrom(lifeDesigner.currentDesign);
       document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
       updateLifeUI();
@@ -838,7 +860,7 @@ function initializeLifeTerraformingDesignerUI() {
   cacheLifeModifyButtons();
   cacheLifeTentativeCells();
   cacheLifeAttributeCells();
-  cacheBioworkforceElements();
+  cacheGatedAttributeElements();
   cacheLifePointShopButtons();
   document.dispatchEvent(new Event('lifeStatusTableRebuilt'));
 }
@@ -857,8 +879,7 @@ function updateLifeUI() {
   }
 
    setTerraformingLifeVisibility(lifeDesigner.enabled);
-    const bioworkforceUnlocked = isBioworkforceUnlocked();
-    toggleBioworkforceElements(bioworkforceUnlocked);
+    toggleGatedAttributeElements();
 
     updateMetabolismEfficiencyRow();
     updateOptimalGrowthTemperatureDescription();
@@ -1004,26 +1025,30 @@ function updateLifeUI() {
         });
     }
   
-    function toggleBioworkforceElements(bioworkforceUnlocked) {
-      if (!lifeUICache.bioworkforceElements.length) {
-        cacheBioworkforceElements();
+    function toggleGatedAttributeElements() {
+      if (!lifeUICache.gatedAttributeElements.length) {
+        cacheGatedAttributeElements();
       }
 
-      lifeUICache.bioworkforceElements.forEach(element => {
-        element.style.display = bioworkforceUnlocked ? '' : 'none';
+      lifeUICache.gatedAttributeElements.forEach(element => {
+        const attributeName = element.dataset.lifeAttributeUi;
+        element.style.display = isLifeAttributeUnlocked(attributeName) ? '' : 'none';
       });
 
-      if (!bioworkforceUnlocked) {
-        const bioworkforceCells = lifeUICache.attributeCells.bioworkforce || {};
-        const modifyCell = bioworkforceCells.modifyCell;
-        const tentativeCell = bioworkforceCells.tentativeCell;
+      Object.keys(lifeAttributeUnlockFlags).forEach(attributeName => {
+        if (isLifeAttributeUnlocked(attributeName)) {
+          return;
+        }
+        const attributeCells = lifeUICache.attributeCells[attributeName] || {};
+        const modifyCell = attributeCells.modifyCell;
+        const tentativeCell = attributeCells.tentativeCell;
         if (modifyCell) {
           modifyCell.style.display = 'none';
         }
         if (tentativeCell) {
           tentativeCell.style.display = 'none';
         }
-      }
+      });
 	    }
 
 	    function updateMetabolismEfficiencyRow() {

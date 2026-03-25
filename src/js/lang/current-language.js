@@ -19,6 +19,17 @@ setLanguageData({
       pause: 'Pause',
       refresh: 'Refresh',
     },
+    lifeDesigner: {
+      attributes: {
+        bioships: {
+          name: 'Bioships',
+          description: 'Converts a fraction of global biomass into living spaceships.',
+          convertedValue: '{percent}% biomass/s to spaceships',
+          tooltip: 'Each point converts {percent}% of global biomass per second into spaceships at a 10000:1 ratio.',
+          rateReason: 'Bioships',
+        },
+      },
+    },
     buildings: {
       common: {
         recipeLabel: 'Recipe: ',
@@ -2072,6 +2083,10 @@ setLanguageData({
         bioworkforce: {
           name: 'Bioworlds',
           description: 'Unlocks the Bioworld mega project for evolution point upgrades and the ability to use biomass as a workforce.',
+        },
+        bioships: {
+          name: 'Bioships',
+          description: 'Finally catching up to what PANDORA could do.  Enables biomass to produce bioships, complete with Dead Hand Protocol compatibility.',
         },
         biocortex_integration: {
           name: 'Biocortex-human integration',
