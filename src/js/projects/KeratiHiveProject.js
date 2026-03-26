@@ -169,20 +169,7 @@ class KeratiHiveProject extends Project {
   }
 
   getInitialLand() {
-    const candidates = [
-      currentPlanetParameters?.resources?.surface?.land?.initialValue,
-      resources?.surface?.land?.initialValue,
-      terraforming?.initialLand,
-    ];
-
-    for (let index = 0; index < candidates.length; index += 1) {
-      const candidate = candidates[index];
-      if (Number.isFinite(candidate) && candidate > 0) {
-        return candidate;
-      }
-    }
-
-    return 0;
+    return terraforming.initialLand;
   }
 
   getCurrentLandValue() {
