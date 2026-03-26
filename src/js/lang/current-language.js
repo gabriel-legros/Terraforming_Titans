@@ -1359,6 +1359,7 @@ setLanguageData({
         projectsAutomationDescription: 'Store project presets and apply them in priority order.',
         colonyAutomationTitle: 'Colony Automation',
         colonyAutomationDescription: 'Store colony control and autobuild presets for colony systems.',
+        selectedPresetJsonSummary: 'Selected preset JSON',
       },
     },
     settings: {

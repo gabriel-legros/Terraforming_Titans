@@ -128,6 +128,9 @@ function buildAutomationBuildingsUI() {
   selectedList.classList.add('building-automation-builder-list');
   builderSection.appendChild(selectedList);
 
+  const presetJsonDetails = createAutomationPresetJsonDetails('building-automation-preset-json-details');
+  builderSection.appendChild(presetJsonDetails);
+
   body.appendChild(builderSection);
 
   const applySection = document.createElement('div');
@@ -237,6 +240,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderAddCategoryButton = addCategoryButton;
   automationElements.buildingsBuilderClearButton = clearButton;
   automationElements.buildingsBuilderSelectedList = selectedList;
+  automationElements.buildingsPresetJsonDetails = presetJsonDetails;
   automationElements.buildingsApplyCombinationButton = applyCombinationButton;
   automationElements.buildingsApplyNextTravelSelect = applyNextTravelSelect;
   automationElements.buildingsApplyNextTravelPersistToggle = applyNextTravelPersistToggle;
@@ -277,6 +281,7 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderAddCategoryButton,
     buildingsBuilderClearButton,
     buildingsBuilderSelectedList,
+    buildingsPresetJsonDetails,
     buildingsApplyList,
     buildingsApplyHint,
     buildingsApplyCombinationButton,
@@ -344,6 +349,7 @@ function updateBuildingsAutomationUI() {
   if (!activePreset && buildingAutomationUIState.syncedPresetId) {
     buildingAutomationUIState.syncedPresetId = null;
   }
+  updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset);
 
   if (document.activeElement !== buildingsBuilderPresetNameInput) {
     buildingsBuilderPresetNameInput.value = activePreset ? activePreset.name : buildingAutomationUIState.builderName;

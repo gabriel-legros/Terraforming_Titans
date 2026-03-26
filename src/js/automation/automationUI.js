@@ -60,6 +60,7 @@ const automationElements = {
   buildingsBuilderAddCategoryButton: null,
   buildingsBuilderClearButton: null,
   buildingsBuilderSelectedList: null,
+  buildingsPresetJsonDetails: null,
   buildingsApplyList: null,
   buildingsApplyHint: null,
   buildingsApplyCombinationButton: null,
@@ -93,6 +94,7 @@ const automationElements = {
   projectsBuilderAddCategoryButton: null,
   projectsBuilderClearButton: null,
   projectsBuilderSelectedList: null,
+  projectsPresetJsonDetails: null,
   projectsApplyList: null,
   projectsApplyHint: null,
   projectsApplyCombinationButton: null,
@@ -128,6 +130,7 @@ const automationElements = {
   colonyBuilderAddCategoryButton: null,
   colonyBuilderClearButton: null,
   colonyBuilderSelectedList: null,
+  colonyPresetJsonDetails: null,
   colonyApplyList: null,
   colonyApplyHint: null,
   colonyApplyCombinationButton: null,
@@ -582,6 +585,52 @@ function createAutomationCardHeader(card, titleText, onToggle) {
     onToggle();
   });
   return { collapse, titleGroup };
+}
+
+function getAutomationCardText(path, vars, fallback) {
+  return t(`ui.hope.automationCards.${path}`, vars, fallback);
+}
+
+function createAutomationPresetJsonDetails(extraClassName) {
+  const details = document.createElement('details');
+  details.classList.add('automation-preset-json-details');
+  if (extraClassName) {
+    details.classList.add(extraClassName);
+  }
+
+  const summary = document.createElement('summary');
+  summary.classList.add('automation-preset-json-summary');
+  details.appendChild(summary);
+
+  const pre = document.createElement('pre');
+  pre.classList.add('automation-preset-json-content');
+  details.appendChild(pre);
+
+  details._summaryNode = summary;
+  details._contentNode = pre;
+  details.style.display = 'none';
+  return details;
+}
+
+function updateAutomationPresetJsonDetails(details, preset) {
+  if (!details) {
+    return;
+  }
+
+  if (!preset) {
+    details.open = false;
+    details.style.display = 'none';
+    details._contentNode.textContent = '';
+    return;
+  }
+
+  details.style.display = '';
+  details._summaryNode.textContent = getAutomationCardText(
+    'selectedPresetJsonSummary',
+    { name: preset.name || `Preset ${preset.id}` },
+    'Selected preset JSON'
+  );
+  details._contentNode.textContent = JSON.stringify(preset, null, 2);
 }
 
 function createAutomationPresetRow(body) {

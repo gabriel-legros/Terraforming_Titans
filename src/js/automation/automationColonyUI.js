@@ -128,6 +128,9 @@ function buildAutomationColonyUI() {
   selectedList.classList.add('colony-automation-builder-list', 'building-automation-builder-list');
   builderSection.appendChild(selectedList);
 
+  const presetJsonDetails = createAutomationPresetJsonDetails('colony-automation-preset-json-details');
+  builderSection.appendChild(presetJsonDetails);
+
   body.appendChild(builderSection);
 
   const applySection = document.createElement('div');
@@ -237,6 +240,7 @@ function buildAutomationColonyUI() {
   automationElements.colonyBuilderAddCategoryButton = addCategoryButton;
   automationElements.colonyBuilderClearButton = clearButton;
   automationElements.colonyBuilderSelectedList = selectedList;
+  automationElements.colonyPresetJsonDetails = presetJsonDetails;
   automationElements.colonyApplyCombinationButton = applyCombinationButton;
   automationElements.colonyApplyNextTravelSelect = applyNextTravelSelect;
   automationElements.colonyApplyNextTravelPersistToggle = applyNextTravelPersistToggle;
@@ -277,6 +281,7 @@ function updateColonyAutomationUI() {
     colonyBuilderAddCategoryButton,
     colonyBuilderClearButton,
     colonyBuilderSelectedList,
+    colonyPresetJsonDetails,
     colonyApplyList,
     colonyApplyHint,
     colonyApplyCombinationButton,
@@ -343,6 +348,7 @@ function updateColonyAutomationUI() {
   if (!activePreset && colonyAutomationUIState.syncedPresetId) {
     colonyAutomationUIState.syncedPresetId = null;
   }
+  updateAutomationPresetJsonDetails(colonyPresetJsonDetails, activePreset);
 
   if (document.activeElement !== colonyBuilderPresetNameInput) {
     colonyBuilderPresetNameInput.value = activePreset ? activePreset.name : colonyAutomationUIState.builderName;

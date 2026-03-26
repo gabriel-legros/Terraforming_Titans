@@ -897,6 +897,20 @@
     background: transparent;
 }
 
+.dark-mode .automation-preset-json-details {
+    background: #111827;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-mode .automation-preset-json-summary {
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-preset-json-content {
+    color: #d7e2f3;
+}
+
 .dark-mode .automation-preset-row {
     background: #111827;
     border-color: #24324a;

@@ -65,6 +65,33 @@
   padding: 10px 12px 12px;
 }
 
+.automation-preset-json-details {
+  border: 1px solid #dbe1ec;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 0 #e6ebf3 inset;
+}
+
+.automation-preset-json-summary {
+  cursor: pointer;
+  padding: 8px 10px;
+  font-weight: 600;
+  color: #2f3a4d;
+}
+
+.automation-preset-json-content {
+  margin: 0;
+  padding: 0 10px 10px;
+  overflow: auto;
+  max-height: 260px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #223049;
+}
+
 .automation-preset-row,
 .automation-add-entry-row {
   display: flex;
