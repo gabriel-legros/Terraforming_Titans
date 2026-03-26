@@ -1009,6 +1009,7 @@ setLanguageData({
       needs: {
         happiness: 'Happiness',
         comfort: 'Comfort',
+        value: '{name}: {value}%',
       },
       growthRate: {
         title: 'Growth Rate',
@@ -1023,10 +1024,21 @@ setLanguageData({
         growth: 'Growth:',
         growthTooltip: 'Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.',
         pilgrimFollowers: 'Pilgrim Followers: {value}x',
+        multiplierEntry: '{name}: {value}x',
         decayStarvation: '• Starvation: {rate}%/s ({share}% starving; 100% per 360 s).',
         decayEnergy: '• Energy: {rate}%/s ({share}% without power; 100% per 90 s).',
         decayOverpopulation: '• Overpopulation: {rate}%/s.',
         decayGravity: '• Gravity: {rate}%/s (gravity {gravity} m/s^2; {above} above 20).',
+      },
+      constructionOffice: {
+        title: 'Construction Office',
+        autobuilder: 'Autobuilder: ',
+        statusActive: 'active',
+        statusDisabled: 'disabled',
+        pause: 'Pause',
+        resume: 'Resume',
+        strategicReserve: 'Strategic reserve',
+        strategicReserveTooltip: 'Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity. Does not apply to workers.',
       },
       sliders: {
         managerDescription: 'Manages colony sliders',

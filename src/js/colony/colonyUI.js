@@ -9,6 +9,13 @@ function getColonyUIText(path, fallback, vars) {
   }
 }
 
+function formatColonyNeedText(displayName, value) {
+  return getColonyUIText('ui.colony.needs.value', '{name}: {value}%', {
+    name: displayName,
+    value: (value * 100).toFixed(0)
+  });
+}
+
 function createGrowthRateDisplay(){
   const controlsContainer = document.getElementById('colony-controls-container');
   if(!controlsContainer || document.getElementById('growth-rate-container')) return;
@@ -170,7 +177,10 @@ function getGrowthMultiplierBreakdown(){
                    .replace(/(^\w|\s\w)/g, m => m.toUpperCase())
                    .trim();
       }
-      lines.push(`${name}: ${formatNumber(mult, false, 3)}x`);
+      lines.push(getColonyUIText('ui.colony.growthRate.multiplierEntry', '{name}: {value}x', {
+        name,
+        value: formatNumber(mult, false, 3)
+      }));
     }
   });
   if (followersManager && followersManager.enabled) {
@@ -294,7 +304,9 @@ function createColonyDetails(structure) {
     colonyDetails.appendChild(needBox);
   }
 
-  globalThis.Aerostat?.attachBuoyancySection?.(colonyDetails, structure);
+  if (Aerostat.attachBuoyancySection) {
+    Aerostat.attachBuoyancySection(colonyDetails, structure);
+  }
 
   return colonyDetails;
 }
@@ -337,7 +349,9 @@ function updateColonyDetailsDisplay(structureRow, structure) {
     updateNeedBox(structure.needBoxCache[need], resources.colony[need].displayName, need, structure.filledNeeds[need], isLuxury, structure);
   }
 
-  globalThis.Aerostat?.updateBuoyancySection?.(structure);
+  if (Aerostat.updateBuoyancySection) {
+    Aerostat.updateBuoyancySection(structure);
+  }
 }
 
 // Helper function to create a need box with dynamic fill and color
@@ -369,7 +383,7 @@ function createNeedBox(needKey, displayName, value, isLuxury, structure) {
   const textContainer = document.createElement('div');
   textContainer.classList.add('text-container');
   const textSpan = document.createElement('span');
-  textSpan.textContent = `${displayName}: ${(value * 100).toFixed(0)}%`;
+  textSpan.textContent = formatColonyNeedText(displayName, value);
   textContainer.appendChild(textSpan);
 
   const fillElement = document.createElement('div');
@@ -396,7 +410,7 @@ function updateNeedBox(cacheEntry, displayName, needKey, value, isLuxury, struct
     cacheEntry.fill.style.width = `${value === 0 ? 100 : value * 100}%`;
     const isDarkMode = document.body.classList.contains('dark-mode');
     cacheEntry.fill.style.backgroundColor = getNeedColor(value, isDarkMode, needKey);
-    cacheEntry.text.innerText = `${displayName}: ${(value * 100).toFixed(0)}%`;
+    cacheEntry.text.innerText = formatColonyNeedText(displayName, value);
     cacheEntry.text.style.color = isDarkMode ? 'white' : 'black';
 
     if (isLuxury && cacheEntry.checkbox) {

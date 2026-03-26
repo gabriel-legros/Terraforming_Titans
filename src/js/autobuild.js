@@ -60,6 +60,14 @@ const autobuildCostTracker = {
     }
 };
 
+function getConstructionOfficeText(path, fallback, vars) {
+    try {
+        return t(path, vars, fallback);
+    } catch (error) {
+        return fallback;
+    }
+}
+
 function addCostToPrioritizedReserve(reserve, cost) {
     if (!cost) return;
     for (const category in cost) {
@@ -388,13 +396,17 @@ function updateConstructionOfficeUI() {
         container.classList.toggle('invisible', !unlocked);
     }
     if (statusSpan) {
-        statusSpan.textContent = constructionOfficeState.autobuilderActive ? 'active' : 'disabled';
+        statusSpan.textContent = constructionOfficeState.autobuilderActive
+            ? getConstructionOfficeText('ui.colony.constructionOffice.statusActive', 'active')
+            : getConstructionOfficeText('ui.colony.constructionOffice.statusDisabled', 'disabled');
     }
     if (pauseBtn) {
-        pauseBtn.textContent = constructionOfficeState.autobuilderActive ? 'Pause' : 'Resume';
+        pauseBtn.textContent = constructionOfficeState.autobuilderActive
+            ? getConstructionOfficeText('ui.colony.constructionOffice.pause', 'Pause')
+            : getConstructionOfficeText('ui.colony.constructionOffice.resume', 'Resume');
     }
     if (reserveInput) {
-        const activeElement = globalThis.document?.activeElement;
+        const activeElement = document.activeElement;
         if (reserveInput !== activeElement) {
             reserveInput.value = `${constructionOfficeState.strategicReserve}`;
         }
@@ -452,7 +464,7 @@ function initializeConstructionOfficeUI() {
     header.classList.add('card-header');
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = 'Construction Office';
+    title.textContent = getConstructionOfficeText('ui.colony.constructionOffice.title', 'Construction Office');
     header.appendChild(title);
     card.appendChild(header);
 
@@ -461,7 +473,7 @@ function initializeConstructionOfficeUI() {
 
     const statusDiv = document.createElement('div');
     const statusLabel = document.createElement('span');
-    statusLabel.textContent = 'Autobuilder: ';
+    statusLabel.textContent = getConstructionOfficeText('ui.colony.constructionOffice.autobuilder', 'Autobuilder: ');
     const statusValue = document.createElement('span');
     statusValue.id = 'autobuilder-status';
     statusDiv.appendChild(statusLabel);
@@ -481,11 +493,17 @@ function initializeConstructionOfficeUI() {
     reserveDiv.style.gap = '4px';
 
     const reserveLabel = document.createElement('label');
-    reserveLabel.textContent = 'Strategic reserve';
+    reserveLabel.textContent = getConstructionOfficeText('ui.colony.constructionOffice.strategicReserve', 'Strategic reserve');
     const reserveInfo = document.createElement('span');
     reserveInfo.classList.add('info-tooltip-icon');
     reserveInfo.innerHTML = '&#9432;';
-    reserveInfo.title = 'Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity.  Does not apply to workers.';
+    attachDynamicInfoTooltip(
+        reserveInfo,
+        getConstructionOfficeText(
+            'ui.colony.constructionOffice.strategicReserveTooltip',
+            'Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity. Does not apply to workers.'
+        )
+    );
     reserveLabel.appendChild(reserveInfo);
     reserveDiv.appendChild(reserveLabel);
 
