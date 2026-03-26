@@ -444,6 +444,24 @@
   line-height: 1.5;
   overflow-y: auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rwg-lore-reward-status {
+  font-weight: 700;
+}
+
+.rwg-lore-reward-status.claimed {
+  color: #77d48b;
+}
+
+.rwg-lore-reward-status.unclaimed {
+  color: #ff7b7b;
+}
+
+.rwg-lore-text-body {
   white-space: pre-wrap;
 }
 

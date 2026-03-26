@@ -554,7 +554,7 @@ const projectParameters = {
           builderHoney: 15,
           hunterLarva: 1,
           hunterHoney: 50,
-          princessLarva: 5,
+          princessLarva: 2,
           princessHoney: 100,
           queenHoney: 5000,
           empressHoney: 100000

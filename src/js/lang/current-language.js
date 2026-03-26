@@ -19,6 +19,14 @@ setLanguageData({
       pause: 'Pause',
       refresh: 'Refresh',
     },
+    rwg: {
+      dominionLore: {
+        title: 'Dominion Lore',
+        close: 'Close',
+        rewardClaimed: 'Reward claimed',
+        rewardUnclaimed: 'Reward unclaimed',
+      },
+    },
     resourcePanel: {
       land: {
         available: 'Available {value}',

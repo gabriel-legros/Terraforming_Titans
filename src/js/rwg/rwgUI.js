@@ -26,6 +26,8 @@ let rwgEquilibrateInfoEl;
 let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
 let rwgDominionLoreTextEl;
+let rwgDominionLoreRewardStatusEl;
+let rwgDominionLoreBodyTextEl;
 let rwgDominionLoreCloseBtnEl;
 let rwgDominionLoreItems = {};
 let rwgDominionLoreOrder = [];
@@ -102,6 +104,14 @@ const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
 const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 90;
 const RWG_EQUILIBRATE_TOOLTIP_TEXT = 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.';
+
+function getRwgText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
 
 function escapeTooltipAttribute(text) {
   return String(text || '')
@@ -271,11 +281,11 @@ function initializeDominionLoreOverlay() {
   header.className = 'rwg-lore-header';
   const title = document.createElement('div');
   title.className = 'rwg-lore-title';
-  title.textContent = 'Dominion Lore';
+  title.textContent = getRwgText('ui.rwg.dominionLore.title', 'Dominion Lore');
   const closeBtn = document.createElement('button');
   closeBtn.id = 'rwg-dominion-lore-close';
   closeBtn.className = 'rwg-btn';
-  closeBtn.textContent = 'Close';
+  closeBtn.textContent = getRwgText('ui.rwg.dominionLore.close', 'Close');
   header.appendChild(title);
   header.appendChild(closeBtn);
 
@@ -287,6 +297,13 @@ function initializeDominionLoreOverlay() {
   const text = document.createElement('div');
   text.id = 'rwg-dominion-lore-text';
   text.className = 'rwg-lore-text';
+  const rewardStatus = document.createElement('div');
+  rewardStatus.className = 'rwg-lore-reward-status';
+  rewardStatus.style.display = 'none';
+  const loreBody = document.createElement('div');
+  loreBody.className = 'rwg-lore-text-body';
+  text.appendChild(rewardStatus);
+  text.appendChild(loreBody);
   body.appendChild(list);
   body.appendChild(text);
 
@@ -298,6 +315,8 @@ function initializeDominionLoreOverlay() {
   rwgDominionLoreOverlayEl = overlay;
   rwgDominionLoreListEl = list;
   rwgDominionLoreTextEl = text;
+  rwgDominionLoreRewardStatusEl = rewardStatus;
+  rwgDominionLoreBodyTextEl = loreBody;
   rwgDominionLoreCloseBtnEl = closeBtn;
 
   closeBtn.addEventListener('click', () => {
@@ -351,7 +370,20 @@ function selectDominionLore(id) {
     const item = rwgDominionLoreItems[entryId];
     item.classList.toggle('active', entryId === id);
   });
-  rwgDominionLoreTextEl.textContent = terraformingRequirements[id].lore;
+  if (id === 'human' || id === 'gabbagian') {
+    rwgDominionLoreRewardStatusEl.style.display = 'none';
+    rwgDominionLoreRewardStatusEl.textContent = '';
+    rwgDominionLoreRewardStatusEl.className = 'rwg-lore-reward-status';
+  } else {
+    const rewardClaimed = !!spaceManager.dominionTerraformRewards[id];
+    rwgDominionLoreRewardStatusEl.style.display = '';
+    rwgDominionLoreRewardStatusEl.textContent = rewardClaimed
+      ? getRwgText('ui.rwg.dominionLore.rewardClaimed', 'Reward claimed')
+      : getRwgText('ui.rwg.dominionLore.rewardUnclaimed', 'Reward unclaimed');
+    rwgDominionLoreRewardStatusEl.className = 'rwg-lore-reward-status';
+    rwgDominionLoreRewardStatusEl.classList.add(rewardClaimed ? 'claimed' : 'unclaimed');
+  }
+  rwgDominionLoreBodyTextEl.textContent = terraformingRequirements[id].lore;
 }
 
 function openDominionLore() {
