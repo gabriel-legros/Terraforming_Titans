@@ -169,7 +169,24 @@ class KeratiHiveProject extends Project {
   }
 
   getInitialLand() {
-    return Math.max(terraforming.initialLand || 0, 0);
+    const candidates = [
+      currentPlanetParameters?.resources?.surface?.land?.initialValue,
+      resources?.surface?.land?.initialValue,
+      terraforming?.initialLand,
+    ];
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      const candidate = candidates[index];
+      if (Number.isFinite(candidate) && candidate > 0) {
+        return candidate;
+      }
+    }
+
+    return 0;
+  }
+
+  getCurrentLandValue() {
+    return Math.max(resources.surface.land.value || 0, 0);
   }
 
   getTotalSpawners() {
@@ -194,7 +211,7 @@ class KeratiHiveProject extends Project {
   }
 
   getMaxTerritoryForGrowth() {
-    return Math.max(0, Math.min(this.getInitialLand(), this.getInitialLand() - this.getOtherReservedLand()));
+    return Math.max(0, this.getCurrentLandValue() - this.getOtherReservedLand());
   }
 
   getRemainingTerritoryCapacity() {
