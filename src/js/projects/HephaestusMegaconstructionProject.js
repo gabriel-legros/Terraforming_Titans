@@ -218,7 +218,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   }
 
   setAssignmentStep(step) {
-    const next = Math.min(1_000_000_000, Math.max(1, Math.round(step)));
+    const next = Math.min(1e30, Math.max(1, Math.round(step)));
     this.assignmentStep = next;
   }
 
