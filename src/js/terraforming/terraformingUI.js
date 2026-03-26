@@ -2103,7 +2103,7 @@ function updateLifeBox() {
     row.appendChild(luminosityBox);
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 0)} and ${formatNumber(terraforming.luminosity.targetMax, false, 0)}.`;
+    targetSpan.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 1)} and ${formatNumber(terraforming.luminosity.targetMax, false, 1)}.`;
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     luminosityBox.appendChild(targetSpan);
@@ -2157,7 +2157,7 @@ function updateLifeBox() {
     luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? 'green' : 'red';
 
     if (els.target) {
-      els.target.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 0)} and ${formatNumber(terraforming.luminosity.targetMax, false, 0)}.`;
+      els.target.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 1)} and ${formatNumber(terraforming.luminosity.targetMax, false, 1)}.`;
     }
 
     if (els.groundAlbedo) {
