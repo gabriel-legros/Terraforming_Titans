@@ -68,6 +68,7 @@ class KeratiHiveProject extends Project {
       foodTransfer: {
         defaultAmount: Math.max(1, foodTransfer.defaultAmount ?? 1),
       },
+      completedWorkersPerInitialLand: Math.max(0, tuning.completedWorkersPerInitialLand ?? 0),
       costs: {
         droneLarva: costs.droneLarva ?? 1,
         droneHoney: costs.droneHoney ?? 5,
@@ -172,6 +173,13 @@ class KeratiHiveProject extends Project {
     return terraforming.initialLand;
   }
 
+  getCompletedWorkerContribution() {
+    if (!this.isCompleted) {
+      return 0;
+    }
+    return Math.floor(this.getInitialLand() * this.tuning.completedWorkersPerInitialLand);
+  }
+
   getCurrentLandValue() {
     return Math.max(resources.surface.land.value || 0, 0);
   }
@@ -205,21 +213,21 @@ class KeratiHiveProject extends Project {
     return Math.max(0, this.getMaxTerritoryForGrowth() - this.territory);
   }
 
-  getBiomassZones() {
+  getSurfaceResourceZones(resourceKey) {
     const zones = getZones();
     const entries = zones.map((zone) => ({
       zone,
-      amount: (terraforming?.zonalSurface?.[zone]?.biomass) || 0,
+      amount: (terraforming?.zonalSurface?.[zone]?.[resourceKey]) || 0,
     }));
     const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
     return { entries, total };
   }
 
-  removeBiomassFromZones(amount) {
+  removeSurfaceResourceFromZones(resourceKey, amount) {
     if (!terraforming || amount <= 0) {
       return 0;
     }
-    const { entries, total } = this.getBiomassZones();
+    const { entries, total } = this.getSurfaceResourceZones(resourceKey);
     if (total <= 0) {
       return 0;
     }
@@ -231,11 +239,44 @@ class KeratiHiveProject extends Project {
       const take = requested * (entry.amount / total);
       const zoneData = terraforming.zonalSurface?.[entry.zone];
       if (zoneData) {
-        zoneData.biomass = Math.max(0, zoneData.biomass - take);
+        zoneData[resourceKey] = Math.max(0, zoneData[resourceKey] - take);
       }
     });
-    terraforming.synchronizeGlobalResources();
     return requested;
+  }
+
+  getAvailableHunterBiomass() {
+    return Math.max(
+      0,
+      (resources.surface.hazardousBiomass.value || 0) + (resources.surface.biomass.value || 0)
+    );
+  }
+
+  consumeHunterBiomass(amount, seconds) {
+    if (!(amount > 0) || !(seconds > 0)) {
+      return 0;
+    }
+    const hazardousUsed = this.removeSurfaceResourceFromZones('hazardousBiomass', amount);
+    const regularUsed = this.removeSurfaceResourceFromZones('biomass', amount - hazardousUsed);
+    const totalUsed = hazardousUsed + regularUsed;
+    if (!(totalUsed > 0)) {
+      return 0;
+    }
+
+    terraforming.synchronizeGlobalResources();
+
+    if (hazardousUsed > 0) {
+      resources.surface.hazardousBiomass.modifyRate(-(hazardousUsed / seconds), this.displayName, 'project');
+      if (hazardManager?.hazardousBiomassHazard) {
+        hazardManager.hazardousBiomassHazard.updateHazardousLandReservation(terraforming, hazardManager.parameters.hazardousBiomass);
+      }
+    }
+
+    if (regularUsed > 0) {
+      resources.surface.biomass.modifyRate(-(regularUsed / seconds), this.displayName, 'project');
+    }
+
+    return totalUsed;
   }
 
   getCompletionFraction() {
@@ -334,10 +375,9 @@ class KeratiHiveProject extends Project {
     const hunterCount = this.hunters;
     const biomassNeeded = hunterCount * rates.hunterBiomassPerSecond * seconds;
     if (biomassNeeded > 0) {
-      const actualBiomass = this.removeBiomassFromZones(biomassNeeded);
+      const actualBiomass = this.consumeHunterBiomass(biomassNeeded, seconds);
       const biomassRatio = biomassNeeded > 0 ? (actualBiomass / biomassNeeded) : 0;
       if (actualBiomass > 0 && biomassRatio > 0) {
-        resources.surface.biomass.modifyRate(-(actualBiomass / seconds), this.displayName, 'project');
         this.hiveFood += hunterCount * rates.hunterFoodPerSecond * seconds * biomassRatio;
       }
     }
@@ -503,7 +543,7 @@ class KeratiHiveProject extends Project {
       : 0;
     const builderRatio = this.builders > 0 && this.spawningPools < this.getPoolCapacityFromTerritory() ? 1 : 0;
     const hunterFoodRatio = this.hunters > 0 && this.huntingEnabled && rates.hunterBiomassPerSecond > 0
-      ? Math.min(1, Math.max(0, resources.surface.biomass.value || 0) / Math.max(this.hunters * rates.hunterBiomassPerSecond, 1e-9))
+      ? Math.min(1, this.getAvailableHunterBiomass() / Math.max(this.hunters * rates.hunterBiomassPerSecond, 1e-9))
       : 0;
     const hunterTerritoryRatio = this.hunters > 0 && this.huntingEnabled && rates.hunterTerritoryPerSecond > 0
       ? Math.min(1, this.getRemainingTerritoryCapacity() / Math.max(this.hunters * rates.hunterTerritoryPerSecond, 1e-9))
@@ -972,7 +1012,9 @@ class KeratiHiveProject extends Project {
 
     const progressPercent = Math.max(0, Math.min(100, this.getCompletionFraction() * 100));
     const progressText = this.isCompleted
-      ? getKeratiHiveText('status.completed', 'Kerati Hive complete. Territory covers the world.')
+      ? getKeratiHiveText('status.completed', 'Kerati Hive complete. Territory covers the world and provides {workers} workers.', {
+          workers: formatNumber(this.getCompletedWorkerContribution(), true, 3),
+        })
       : getKeratiHiveText('status.progress', 'Completion {percent}% | Honey {honey}/s | Larva {larva}/s | Food {food}/s | Territory {territory}/s | Biomass use {biomass}/s', {
           percent: formatNumber(progressPercent, false, 2),
           honey: formatNumber(rates.honeyPerSecond, true, 3),

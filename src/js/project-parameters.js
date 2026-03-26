@@ -547,6 +547,7 @@ const projectParameters = {
         foodTransfer: {
           defaultAmount: 1
         },
+        completedWorkersPerInitialLand: 50,
         costs: {
           droneLarva: 1,
           droneHoney: 5,

@@ -914,7 +914,9 @@ function updateWorkerAssignments(assignmentsDiv) {
     assignmentsDiv._ratioDiv = ratioDiv;
   }
   const ratioPercent = (workerBreakdown.ratio * 100).toFixed(0);
-  const ratioText = `${ratioPercent}% of colonists provide workers`;
+  const ratioText = getResourceUIText('workers.ratio', '{value}% of colonists provide workers', {
+    value: ratioPercent,
+  });
   if (ratioDiv.textContent !== ratioText) ratioDiv.textContent = ratioText;
 
   if (typeof resources !== 'undefined') {
@@ -929,8 +931,33 @@ function updateWorkerAssignments(assignmentsDiv) {
       }
       assignmentsDiv._colonistDiv = colonistDiv;
     }
-    const colonistText = `${formatNumber(workerBreakdown.colonistWorkers, true)} from colonists`;
+    const colonistText = getResourceUIText('workers.colonists', '{value} from colonists', {
+      value: formatNumber(workerBreakdown.colonistWorkers, true),
+    });
     if (colonistDiv.textContent !== colonistText) colonistDiv.textContent = colonistText;
+
+    let keratiHiveDiv = assignmentsDiv._keratiHiveDiv;
+    const keratiHiveWorkers = workerBreakdown.keratiHiveWorkers || 0;
+    if (keratiHiveWorkers > 0) {
+      if (!keratiHiveDiv) {
+        keratiHiveDiv = document.createElement('div');
+        assignmentsDiv._keratiHiveDiv = keratiHiveDiv;
+      }
+      const existingAndroidDiv = assignmentsDiv._androidDiv;
+      if (existingAndroidDiv && existingAndroidDiv.parentNode === assignmentsDiv) {
+        if (keratiHiveDiv.parentNode !== assignmentsDiv || keratiHiveDiv.nextSibling !== existingAndroidDiv) {
+          assignmentsDiv.insertBefore(keratiHiveDiv, existingAndroidDiv);
+        }
+      } else if (keratiHiveDiv.parentNode !== assignmentsDiv) {
+        assignmentsDiv.appendChild(keratiHiveDiv);
+      }
+      const keratiHiveText = getResourceUIText('workers.keratiHive', '{value} from Kerati Hive', {
+        value: formatNumber(keratiHiveWorkers, true),
+      });
+      if (keratiHiveDiv.textContent !== keratiHiveText) keratiHiveDiv.textContent = keratiHiveText;
+    } else if (keratiHiveDiv && keratiHiveDiv.parentNode === assignmentsDiv) {
+      assignmentsDiv.removeChild(keratiHiveDiv);
+    }
 
     let androidDiv = assignmentsDiv._androidDiv;
     if (!androidDiv) {
@@ -938,7 +965,9 @@ function updateWorkerAssignments(assignmentsDiv) {
       assignmentsDiv.appendChild(androidDiv);
       assignmentsDiv._androidDiv = androidDiv;
     }
-    const androidText = `${formatNumber(workerBreakdown.androidWorkers, true)} from androids`;
+    const androidText = getResourceUIText('workers.androids', '{value} from androids', {
+      value: formatNumber(workerBreakdown.androidWorkers, true),
+    });
     if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
 
     const bioworkers = workerBreakdown.bioworkers;
@@ -951,7 +980,9 @@ function updateWorkerAssignments(assignmentsDiv) {
       if (bioworkerDiv.parentNode !== assignmentsDiv || bioworkerDiv.nextSibling !== androidDiv) {
         assignmentsDiv.insertBefore(bioworkerDiv, androidDiv);
       }
-      const bioworkerText = `${formatNumber(bioworkers, true)} from bioworkers`;
+      const bioworkerText = getResourceUIText('workers.bioworkers', '{value} from bioworkers', {
+        value: formatNumber(bioworkers, true),
+      });
       if (bioworkerDiv.textContent !== bioworkerText) bioworkerDiv.textContent = bioworkerText;
     } else if (bioworkerDiv && bioworkerDiv.parentNode === assignmentsDiv) {
       assignmentsDiv.removeChild(bioworkerDiv);

@@ -34,6 +34,13 @@ setLanguageData({
         worldEffects: 'World Effects',
         keratiTerritory: 'Kerati Territory',
       },
+      workers: {
+        ratio: '{value}% of colonists provide workers',
+        colonists: '{value} from colonists',
+        keratiHive: '{value} from Kerati Hive',
+        androids: '{value} from androids',
+        bioworkers: '{value} from bioworkers',
+      },
     },
     lifeDesigner: {
       attributes: {
@@ -509,7 +516,7 @@ setLanguageData({
       },
       keratiHive: {
         title: 'Kerati Hive',
-        tooltip: 'Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.',
+        tooltip: 'Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.  Provides workers once complete.',
         common: {
           divideTen: '/10',
           timesTen: 'x10',
@@ -603,7 +610,7 @@ setLanguageData({
           },
         },
         status: {
-          completed: 'Kerati Hive complete. Territory covers the world.',
+          completed: 'Kerati Hive complete. Territory covers the world and provides {workers} workers.',
           progress: 'Completion {percent}% | Honey {honey}/s | Larva {larva}/s | Food {food}/s | Territory {territory}/s | Biomass use {biomass}/s',
         },
       },
@@ -1721,7 +1728,7 @@ setLanguageData({
       },
       keratiHive: {
         name: 'Kerati Hive',
-        description: 'Construct a planet-scale Kerati hive complex with brood basins, condensers, gas-exchange towers, and communal chambers suitable for a permanent Kerati settlement.',
+        description: 'Construct a planet-scale Kerati hive complex with brood basins, condensers, gas-exchange towers, and communal chambers suitable for a permanent Kerati settlement. Once complete, it provides 50 workers per initial land on that world.',
       },
       artificialSky: {
         name: 'Artificial Sky',

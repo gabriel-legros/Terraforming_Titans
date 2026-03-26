@@ -83,6 +83,7 @@ class PopulationModule extends EffectableEntity {
     const multipliers = this.getWorkerEfficiencyMultipliers();
     const androidState = this.getAndroidWorkerState(enforceAssignmentCap);
     const bioworkers = this.getBioworkerContribution();
+    const keratiHiveWorkers = this.getKeratiHiveWorkerContribution();
     const colonistWorkers = Math.floor(
       ratio * this.populationResource.value * multipliers.colonistMultiplier
     );
@@ -94,7 +95,8 @@ class PopulationModule extends EffectableEntity {
       colonistWorkers,
       androidWorkers: androidState.availableAndroids,
       bioworkers,
-      totalWorkers: colonistWorkers + androidState.availableAndroids + bioworkers
+      keratiHiveWorkers,
+      totalWorkers: colonistWorkers + androidState.availableAndroids + bioworkers + keratiHiveWorkers
     };
   }
 
@@ -345,6 +347,18 @@ class PopulationModule extends EffectableEntity {
         return 0;
       }
       return Math.floor(biomass.value * points * bioworkersPerBiomassPerPoint);
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  getKeratiHiveWorkerContribution() {
+    try {
+      const keratiHiveProject = projectManager?.projects?.keratiHive;
+      if (!keratiHiveProject || !keratiHiveProject.getCompletedWorkerContribution) {
+        return 0;
+      }
+      return keratiHiveProject.getCompletedWorkerContribution();
     } catch (error) {
       return 0;
     }
