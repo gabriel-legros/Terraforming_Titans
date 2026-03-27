@@ -2817,7 +2817,7 @@ setLanguageData({
         requirements: {
           terraformed: 'World is fully terraformed',
           biomassDensity: 'Biomass density above 1 ton/m^2',
-          ecumenopolisCount: 'Fewer than 1,000 Ecumenopolis Districts',
+          ecumenopolisCount: 'Fewer than 1,000 Ecumenopolis Districts constructed (not active)',
           otherSpecialization: 'No other specialization started or completed',
         },
         shopItems: {

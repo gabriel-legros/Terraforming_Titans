@@ -16,15 +16,19 @@ class AndroidHousing extends Building {
           'ui.buildings.automationBasis.androidCount',
           '% of androids'
         )
-      },
-      {
-        value: 'androidCapacityShare',
-        label: getAndroidHousingText(
-          'ui.buildings.automationBasis.androidCapacity',
-          '% android capacity'
-        )
       }
     ]);
+  }
+
+  normalizeAutoBuildBasis() {
+    if (this.autoBuildBasis === 'androidCapacityShare') {
+      this.autoBuildBasis = 'androidCount';
+    }
+  }
+
+  loadState(state = {}) {
+    super.loadState(state);
+    this.normalizeAutoBuildBasis();
   }
 
   getAndroidCapacityShareTarget(totalAndroidCapacity) {

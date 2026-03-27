@@ -568,6 +568,9 @@ class BuildingAutomation {
     }
     if (building.autoBuildBasis !== automation.autoBuildBasis) {
       building.autoBuildBasis = automation.autoBuildBasis;
+      if (typeof building.normalizeAutoBuildBasis === 'function') {
+        building.normalizeAutoBuildBasis();
+      }
       changed = true;
     }
     if (building.autoBuildPercent !== automation.autoBuildPercent) {

@@ -334,6 +334,9 @@ class Building extends EffectableEntity {
     this.currentProduction = {};
     this.currentConsumption = {};
     this.currentMaintenance = {};
+    if (typeof this.normalizeAutoBuildBasis === 'function') {
+      this.normalizeAutoBuildBasis();
+    }
   }
 
   // External: enable reversal via effect
