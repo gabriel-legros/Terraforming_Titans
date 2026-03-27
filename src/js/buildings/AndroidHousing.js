@@ -11,6 +11,13 @@ class AndroidHousing extends Building {
     super(config, buildingName);
     this.automationCustomBasisOptions = (this.automationCustomBasisOptions || []).concat([
       {
+        value: 'androidCount',
+        label: getAndroidHousingText(
+          'ui.buildings.automationBasis.androidCount',
+          '% of androids'
+        )
+      },
+      {
         value: 'androidCapacityShare',
         label: getAndroidHousingText(
           'ui.buildings.automationBasis.androidCapacity',
@@ -28,6 +35,16 @@ class AndroidHousing extends Building {
 
     const capacityBudget = Math.max(0, (this.autoBuildPercent || 0) * totalAndroidCapacity / 100);
     return Math.floor(capacityBudget / perBuildingCapacity);
+  }
+
+  getAndroidCountTarget(totalAndroidCount) {
+    const perBuildingCapacity = this.getStorageAmount('colony', 'androids');
+    if (perBuildingCapacity <= 0) {
+      return 0;
+    }
+
+    const androidBudget = Math.max(0, (this.autoBuildPercent || 0) * totalAndroidCount / 100);
+    return Math.floor(androidBudget / perBuildingCapacity);
   }
 
   getConsumptionRatio() {

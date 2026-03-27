@@ -58,6 +58,7 @@ setLanguageData({
         recipeLabel: 'Recipe: ',
       },
       automationBasis: {
+        androidCount: '% of androids',
         androidCapacity: '% android capacity',
         colonistCapacity: '% colonist capacity',
         sandQuarryGlassAndElectronics: '% of G.S. + 4*E.F.',

@@ -47,12 +47,13 @@
       this.generateCloudMap(w, h);
     }
     const cloudPct = Math.max(0, Math.min(100, this.viz.coverage?.cloud || 0));
+    const cov = cloudPct / 100;
     const total = this.cloudHist.total || (w * h);
     const target = Math.round((cloudPct / 100) * total);
-    let thr = -1;
-    if (target > 0) {
+    let thr = 256;
+    if (target > 0 && target < total) {
       let acc = 0;
-      for (let k = 0; k <= 255; k++) {
+      for (let k = 255; k >= 0; k--) {
         acc += this.cloudHist.counts[k];
         if (acc >= target) { thr = k; break; }
       }
@@ -63,8 +64,9 @@
     const ctx = canv.getContext('2d');
     const img = ctx.createImageData(w, h);
     const data = img.data;
-    const thrValue = thr >= 0 ? thr / 255 : -1;
-    const edge = 0.05;
+    const thrValue = thr <= 255 ? thr / 255 : 2;
+    const edge = 0.025;
+    const overcastFloor = cov > 0.9 ? 0.35 * ((cov - 0.9) / 0.1) : 0;
     const isRing = this.isRingWorld();
     const smoothstep = (a, b, t) => {
       const v = Math.max(0, Math.min(1, (t - a) / (b - a)));
@@ -72,10 +74,13 @@
     };
     for (let i = 0; i < w * h; i++) {
       const v = Math.max(0, Math.min(1, this.cloudMap[i] || 0));
-      const alphaBase = thrValue >= 0
-        ? 1 - smoothstep(thrValue - edge, thrValue + edge, v)
-        : 0;
-      const density = 0.55 + 0.6 * (1 - v);
+      let alphaBase = 0;
+      if (target >= total) {
+        alphaBase = 1;
+      } else if (target > 0) {
+        alphaBase = smoothstep(thrValue - edge, thrValue + edge, v);
+      }
+      const density = 0.25 + 0.75 * Math.pow(v, 1.1);
       let bandMask = 1;
       if (isRing) {
         const y = Math.floor(i / w);
@@ -83,11 +88,12 @@
         const dist = Math.abs(vy - 0.5);
         bandMask = 1 - smoothstep(0.47, 0.5, dist);
       }
+      const alpha = Math.max(overcastFloor, alphaBase * density) * bandMask;
       const idx = i * 4;
       data[idx] = 255;
       data[idx + 1] = 255;
       data[idx + 2] = 255;
-      data[idx + 3] = Math.max(0, Math.min(255, Math.round(190 * alphaBase * density * bandMask)));
+      data[idx + 3] = Math.max(0, Math.min(255, Math.round(205 * alpha)));
     }
     for (let y = 0; y < h; y++) {
       const row = y * w * 4;
@@ -105,6 +111,9 @@
     tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.needsUpdate = true;
     this.cloudMaterial.map = tex;
+    if (this.cloudMaterial) {
+      this.cloudMaterial.opacity = 0.45 + 0.55 * Math.pow(cov, 1.15);
+    }
     this.cloudMaterial.needsUpdate = true;
     this._lastCloudCoverageKey = `${cloudPct.toFixed(2)}`;
   };
@@ -316,6 +325,39 @@
       }
       return f;
     };
+    const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+    const clampUnit = (v) => Math.max(-1, Math.min(1, v));
+    const smoothstep = (a, b, t) => {
+      const v = clamp01((t - a) / (b - a));
+      return v * v * (3 - 2 * v);
+    };
+    const storms = [];
+    for (let i = 0; i < 4; i++) {
+      const stormLat = (rand() * 1.1 - 0.55) * (Math.PI / 2);
+      const stormLon = rand() * Math.PI * 2;
+      const stormCosLat = Math.cos(stormLat);
+      storms.push({
+        x: Math.cos(stormLon) * stormCosLat,
+        y: Math.sin(stormLat),
+        z: Math.sin(stormLon) * stormCosLat,
+        ex: -Math.sin(stormLon),
+        ey: 0,
+        ez: Math.cos(stormLon),
+        nx: -Math.cos(stormLon) * Math.sin(stormLat),
+        ny: stormCosLat,
+        nz: -Math.sin(stormLon) * Math.sin(stormLat),
+        spin: rand() < 0.5 ? -1 : 1,
+        cosOuter: Math.cos(0.72 + rand() * 0.16),
+        cosInner: Math.cos(0.24 + rand() * 0.12),
+        swirl: 0.12 + rand() * 0.05,
+        pull: 0.02 + rand() * 0.02,
+        twist: 7 + rand() * 4,
+        arms: 2 + Math.floor(rand() * 2),
+        phase: rand() * Math.PI * 2,
+        bandBoost: 0.05 + rand() * 0.03,
+      });
+    }
     const arr = new Float32Array(w * h);
     let minV = Infinity, maxV = -Infinity;
     for (let y = 0; y < h; y++) {
@@ -326,20 +368,65 @@
       for (let x = 0; x < w; x++) {
         const vx = x / w;
         const lon = vx * Math.PI * 2;
-        const nx = Math.cos(lon) * cosLat;
-        const ny = sinLat;
-        const nz = Math.sin(lon) * cosLat;
-        const warp = fbm3(nx * 1.45 + 7.3, ny * 1.45 - 3.1, nz * 1.45 + 5.9, 3, 2.05, 0.55);
-        const ux = nx * 2.05 + (warp - 0.5) * 0.95;
-        const uy = ny * 2.05 + (warp - 0.5) * 0.8;
-        const uz = nz * 2.05 + (warp - 0.5) * 0.95;
+        const px = Math.cos(lon) * cosLat;
+        const py = sinLat;
+        const pz = Math.sin(lon) * cosLat;
+        const eastX = -Math.sin(lon);
+        const eastY = 0;
+        const eastZ = Math.cos(lon);
+        const northX = -Math.cos(lon) * sinLat;
+        const northY = cosLat;
+        const northZ = -Math.sin(lon) * sinLat;
+        const jetBand = clamp01(1 - Math.abs(Math.abs(sinLat) - 0.55) / 0.55);
+        const jetNoise = fbm3(px * 1.3 + 9.7, py * 1.3 - 3.6, pz * 1.3 + 4.8, 3, 2.0, 0.5) - 0.5;
+        let flowEast = 0.2 * Math.sin(lat * 6.5 + jetNoise * 7.5) * jetBand;
+        flowEast += 0.16 * (fbm3(px * 1.6 - 6.4, py * 1.6 + 2.8, pz * 1.6 + 7.1, 3, 2.1, 0.55) - 0.5);
+        const flowNorth = 0.12 * (fbm3(px * 1.7 + 1.6, py * 1.7 - 7.4, pz * 1.7 + 3.2, 3, 2.0, 0.5) - 0.5);
+        let flowX = eastX * flowEast + northX * flowNorth;
+        let flowY = eastY * flowEast + northY * flowNorth;
+        let flowZ = eastZ * flowEast + northZ * flowNorth;
+        let stormBands = 0;
+        for (let i = 0; i < storms.length; i++) {
+          const storm = storms[i];
+          const dot = px * storm.x + py * storm.y + pz * storm.z;
+          if (dot <= storm.cosOuter) continue;
+          const influence = smoothstep(storm.cosOuter, storm.cosInner, dot);
+          const tangentX = storm.y * pz - storm.z * py;
+          const tangentY = storm.z * px - storm.x * pz;
+          const tangentZ = storm.x * py - storm.y * px;
+          const tangentLen = Math.sqrt(tangentX * tangentX + tangentY * tangentY + tangentZ * tangentZ) || 1;
+          const radialX = storm.x - dot * px;
+          const radialY = storm.y - dot * py;
+          const radialZ = storm.z - dot * pz;
+          const radialLen = Math.sqrt(radialX * radialX + radialY * radialY + radialZ * radialZ) || 1;
+          flowX += influence * (storm.spin * (tangentX / tangentLen) * storm.swirl + (radialX / radialLen) * storm.pull);
+          flowY += influence * (storm.spin * (tangentY / tangentLen) * storm.swirl + (radialY / radialLen) * storm.pull);
+          flowZ += influence * (storm.spin * (tangentZ / tangentLen) * storm.swirl + (radialZ / radialLen) * storm.pull);
+          const localU = px * storm.ex + py * storm.ey + pz * storm.ez;
+          const localV = px * storm.nx + py * storm.ny + pz * storm.nz;
+          const angle = Math.atan2(localV, localU);
+          const radius = Math.acos(clampUnit(dot));
+          const spiral = 0.5 + 0.5 * Math.cos(storm.spin * angle * storm.arms - radius * storm.twist + storm.phase);
+          stormBands += influence * spiral * storm.bandBoost;
+        }
+        const flowLen = Math.sqrt((px + flowX) * (px + flowX) + (py + flowY) * (py + flowY) + (pz + flowZ) * (pz + flowZ)) || 1;
+        const sx = (px + flowX) / flowLen;
+        const sy = (py + flowY) / flowLen;
+        const sz = (pz + flowZ) / flowLen;
+        const warp = fbm3(sx * 1.45 + 7.3, sy * 1.45 - 3.1, sz * 1.45 + 5.9, 3, 2.05, 0.55);
+        const ux = sx * 2.05 + flowX * 0.7 + (warp - 0.5) * 0.95;
+        const uy = sy * 2.05 + flowY * 0.7 + (warp - 0.5) * 0.8;
+        const uz = sz * 2.05 + flowZ * 0.7 + (warp - 0.5) * 0.95;
         const cumulus = fbm3(ux, uy, uz, 6, 1.9, 0.5);
         const cirrus = Math.pow(fbm3(ux * 2.15, uy * 1.05, uz * 2.15, 4, 2.0, 0.6), 1.35);
         const cracks1 = billow3(ux * 2.8, uy * 2.8, uz * 2.8, 4, 1.95, 0.55);
         const cracks2 = billow3(ux * 5.2, uy * 5.2, uz * 5.2, 2, 2.0, 0.6);
-        let v = 0.69 * cumulus + 0.31 * cirrus;
+        const polarCap = smoothstep(0.6, 0.96, Math.abs(sinLat));
+        const polarBreakup = billow3(ux * 7.4 + 4.3, uy * 4.6 - 6.1, uz * 7.4 + 1.7, 3, 2.05, 0.58);
+        let v = 0.67 * cumulus + 0.33 * cirrus + stormBands * (1 - 0.4 * polarCap);
         v = v - 0.24 * cracks1 - 0.1 * cracks2;
-        v *= 0.85 + 0.15 * (1 - Math.abs(sinLat));
+        v = v - 0.09 * Math.pow(polarBreakup, 1.15) * polarCap;
+        v *= 0.84 + 0.16 * (1 - Math.abs(sinLat));
         minV = Math.min(minV, v); maxV = Math.max(maxV, v);
         arr[y * w + x] = v;
       }
