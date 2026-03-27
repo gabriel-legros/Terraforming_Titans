@@ -252,6 +252,7 @@ class GalacticMarketProject extends Project {
         if (resourceId === 'spaceships') {
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
+          tooltip.innerHTML = '&#9432;';
           attachDynamicInfoTooltip(
             tooltip,
             this.getGalacticMarketText(
@@ -259,7 +260,6 @@ class GalacticMarketProject extends Project {
               'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by progressing further in the game.'
             )
           );
-          tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         }
 
