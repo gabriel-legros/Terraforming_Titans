@@ -58,6 +58,9 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   canStart() {
+    if (buildings.oreMine.count <= 0) {
+      return false;
+    }
     if (this.averageDepth >= this.maxDepth) {
       return false;
     }

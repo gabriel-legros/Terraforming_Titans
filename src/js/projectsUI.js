@@ -1037,6 +1037,17 @@ function getAvailableProjectCostAmount(project, category, resource) {
   return colonyAvailable;
 }
 
+function shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount) {
+  if (project.ignoreCostForResource && project.ignoreCostForResource(category, resource)) {
+    return false;
+  }
+  const costShortfall = project.costShortfallLastTick ?? project.shortfallLastTick;
+  if (project.isContinuous()) {
+    return costShortfall || availableAmount < requiredAmount;
+  }
+  return availableAmount < requiredAmount;
+}
+
 function updateCostDisplay(project) {
   const elements = projectElements[project.name];
   if (elements && elements.costItems) {
@@ -1054,12 +1065,7 @@ function updateCostDisplay(project) {
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
         item.textContent = `${prefix}${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
-        const continuous = project.isContinuous();
-        const costShortfall = project.costShortfallLastTick ?? project.shortfallLastTick;
-        const highlight = continuous
-          ? costShortfall && !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource))
-          : availableAmount < requiredAmount &&
-            !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
+        const highlight = shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount);
         item.style.color = highlight ? 'red' : '';
         item.style.display = '';
       } else {
@@ -1658,12 +1664,9 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
 
       // Check if the player has enough of this resource
       const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`;
-      const continuous = project && typeof project.isContinuous === 'function' && project.isContinuous();
-      const costShortfall = project ? (project.costShortfallLastTick ?? project.shortfallLastTick) : false;
-      const highlight = continuous
-        ? costShortfall
-        : availableAmount < requiredAmount &&
-          !(project && project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
+      const highlight = project
+        ? shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount)
+        : availableAmount < requiredAmount;
       const formattedResourceText = highlight
         ? `<span style="color: red;">${resourceText}</span>`
         : resourceText;
