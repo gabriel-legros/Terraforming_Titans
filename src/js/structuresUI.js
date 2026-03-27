@@ -1639,6 +1639,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const items = [];
     for (const category in cost) {
       for (const resource in cost[category]) {
+        if (isColony && resource === 'land') continue;
         let available = resources[category][resource]?.value || 0;
         if (resource === 'land') {
           available = resources[category][resource].getAvailableAmount
