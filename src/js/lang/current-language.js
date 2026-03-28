@@ -48,7 +48,7 @@ setLanguageData({
           name: 'Bioships',
           description: 'Converts a fraction of global biomass into living spaceships.',
           convertedValue: '{percent}% biomass/s to spaceships',
-          tooltip: 'Each point converts {percent}% of global biomass per second into spaceships at a 10000:1 ratio.',
+          tooltip: 'Each point converts {percent}% of global biomass into spaceships at a 10000:1 ratio each second.',
           rateReason: 'Bioships',
         },
       },
