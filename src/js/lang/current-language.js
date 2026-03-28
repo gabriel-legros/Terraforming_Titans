@@ -421,7 +421,7 @@ setLanguageData({
         amount: 'Amount',
         priceFunding: 'Price (Funding)',
         totalCost: 'Total Cost: ',
-        spaceshipPriceTooltip: 'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by progressing further in the game.',
+        spaceshipPriceTooltip: 'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by terraforming more worlds.',
       },
       importColonists: {
         separator: ': ',
