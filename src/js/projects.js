@@ -294,8 +294,8 @@ class Project extends EffectableEntity {
     return effectiveCost;
   }
 
-  applyDurationEffects(baseDuration) {
-    return baseDuration * this.getDurationMultiplier();
+  applyDurationEffects(baseDuration, options) {
+    return baseDuration * this.getDurationMultiplier(options);
   }
 
   getEffectiveDuration(){
@@ -316,7 +316,7 @@ class Project extends EffectableEntity {
     }
   }
 
-  getDurationMultiplier() {
+  getDurationMultiplier(options) {
     if (this.attributes.ignoreDurationModifiers) {
       return 1;
     }
@@ -325,7 +325,7 @@ class Project extends EffectableEntity {
       typeof projectManager !== 'undefined' &&
       typeof projectManager.getDurationMultiplier === 'function'
     ) {
-      multiplier *= projectManager.getDurationMultiplier(this);
+      multiplier *= projectManager.getDurationMultiplier(this, options);
     }
     for (const effect of this.activeEffects) {
       if (effect.type === 'projectDurationMultiplier') {
@@ -1049,9 +1049,13 @@ class ProjectManager extends EffectableEntity {
     return !targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey;
   }
 
-  getDurationMultiplier(project) {
+  getDurationMultiplier(project, options) {
     let multiplier = 1;
-    const isSpaceshipProject = project.attributes.spaceMining || project.attributes.spaceExport;
+    const isSpaceshipProject = !!(
+      options?.treatAsSpaceshipProject
+      || project.attributes.spaceMining
+      || project.attributes.spaceExport
+    );
     for (const effect of this.activeEffects) {
       if (effect.excludeSpaceships && isSpaceshipProject) {
         continue;
