@@ -1319,10 +1319,7 @@ function updateProjectUI(projectName) {
     elements.autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
   }
   if (elements.autoStartLabel) {
-    const continuous = project.isContinuous();
-    elements.autoStartLabel.textContent = continuous
-      ? getProjectsUIText('ui.projects.run', 'Run')
-      : getProjectsUIText('ui.projects.autoStart', 'Auto start');
+    elements.autoStartLabel.textContent = getProjectsUIText('ui.projects.autoStart', 'Auto start');
   }
 
   if (elements.waitCapacityCheckbox) {

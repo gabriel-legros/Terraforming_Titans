@@ -940,9 +940,7 @@ function updateSpaceStorageUI(project) {
     els.prioritizeRowContainer.style.display = display;
   }
   if (els.shipAutoStartLabel) {
-    els.shipAutoStartLabel.textContent = project.isShipOperationContinuous()
-      ? getSpaceStorageUIText('ui.projects.run', 'Run')
-      : getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
+    els.shipAutoStartLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
   }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 2);
