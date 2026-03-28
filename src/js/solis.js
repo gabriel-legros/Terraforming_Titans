@@ -681,12 +681,8 @@ class SolisManager extends EffectableEntity {
     if (this.refreshCooldownRemaining > 0) {
       this.refreshCooldownRemaining = Math.max(0, this.refreshCooldownRemaining - elapsed);
     }
-    if (!this.currentQuest) {
-      if (!this.hasGeneratedQuest) {
-        this.generateQuest();
-      } else if (this.questCooldownRemaining <= 0) {
-        this.generateQuest();
-      }
+    if (!this.currentQuest && this.questCooldownRemaining <= 0) {
+      this.generateQuest();
     }
   }
 
