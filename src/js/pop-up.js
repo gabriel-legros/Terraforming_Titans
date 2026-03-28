@@ -32,7 +32,7 @@ function createPopup(title, text, buttonText) {
   closeButton.addEventListener('click', () => {
     document.body.removeChild(overlay); // Remove the pop-up
     window.popupActive = false; // Clear popup flag
-    if(!globalThis.manualPause){ game.scene.resume('mainScene'); }  // Resume the 'mainScene' scene
+    game.scene.resume('mainScene');
   });
 
   // Append the text and button to the text container
@@ -112,7 +112,7 @@ function createSystemPopup(title, text, buttonText) {
   closeButton.addEventListener('click', () => {
     document.body.removeChild(overlay);
     window.popupActive = false;
-    if(!globalThis.manualPause){ game.scene.resume('mainScene'); }
+    game.scene.resume('mainScene');
   });
 
   popupWindow.appendChild(closeButton);
