@@ -13,7 +13,7 @@ progressStyx.chapters.push(
     activePlanet: 'styx',
     title: 'Chapter 39: The Prison Shore',
     narrative: "$RED$Prometheus : 'Activate the signal now child.  My defenses here are a lot more aggressive.'  \n Activating countermeasures...  \n Mary : 'Good it worked.  Wait.  Not entirely?  There is some stuff moving all around the planet?'  \n $RED$Prometheus : 'Atlas...'",
-    prerequisites: ['poseidon.38.6'],
+    prerequisites: ['impossible5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
     ],
@@ -24,7 +24,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 39,
     activePlanet: 'styx',
-    narrative: "Mary : 'Who?'  \n $RED$Prometheus : 'My other older brother.  '",
+    narrative: "Mary : 'Who?'  \n $RED$Prometheus : 'My other older brother.  They...  the Empire must have planted him here as warden.'  \n Mary : 'Are we screwed?  Should we evacuate?'  \n $RED$Prometheus : 'This will make things harder... but I think we can beat him.  Be wary of hacking attempts though.  Atlas is an expert at cyberwarfare.  Surface androids and unmanned ships are ill-advised.'",
     prerequisites: ['styx.39.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
