@@ -2429,7 +2429,7 @@ setLanguageData({
           description: 'Raises Dyson Sphere expansion beyond a single sphere up to 100 billion spheres, with extra superalloy requirements once exceeding 1 sphere worth of power.',
         },
         hyperlane: {
-          name: 'Hyperlane',
+          name: 'Hyperlanes',
           description: "Applies Warp Gate Network sector multipliers to O'Neill cylinder capacity, increasing the maximum cylinders each fully controlled sector can support.",
         },
         nanotechnology_recycling: {

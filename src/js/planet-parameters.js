@@ -854,7 +854,7 @@ const venusOverrides = {
         "initialValue": 0
       },
       "sulfuricAcid": {
-        "initialValue": 46266354919428.984
+        "initialValue": 46_266_354_919_428.984
       }
     }
   },
