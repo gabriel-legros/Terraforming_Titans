@@ -158,6 +158,13 @@ function syncMirrorAssignmentMode(settings) {
   }
 }
 
+function releaseMirrorUnassignedAssignments(settings) {
+  const mirrors = settings.assignments.mirrors || (settings.assignments.mirrors = {});
+  const lanterns = settings.assignments.lanterns || (settings.assignments.lanterns = {});
+  mirrors.unassigned = 0;
+  lanterns.unassigned = 0;
+}
+
 function applyMirrorOversightSettings(settings, saved = {}) {
   const savedDistribution = saved.distribution || {};
   mergeSettingKeys(settings.distribution, savedDistribution).forEach(zone => {
@@ -220,6 +227,9 @@ function applyMirrorOversightSettings(settings, saved = {}) {
   });
 
   syncMirrorAssignmentMode(settings);
+  if (settings.useFinerControls || settings.advancedOversight) {
+    releaseMirrorUnassignedAssignments(settings);
+  }
 
   return settings;
 }
@@ -505,10 +515,11 @@ function distributeAssignmentsFromSliders(type) {
   const total = type === 'mirrors'
     ? (buildings.spaceMirror?.active || 0)
     : (buildings.hyperionLantern?.active || 0);
-  const zones = getMirrorZonesWithFocusUnassigned();
-  const raw = zones.map(z => ({ zone: z, value: total * Math.max(0, dist[z] || 0) }));
+  const sliderZones = getMirrorZonesWithFocusUnassigned();
+  const assignmentZones = getMirrorZonesWithFocus();
+  const raw = assignmentZones.map(z => ({ zone: z, value: total * Math.max(0, dist[z] || 0) }));
   if (!mirrorOversightSettings.advancedOversight) {
-    const usedPerc = zones.reduce((s, z) => s + (dist[z] || 0), 0);
+    const usedPerc = sliderZones.reduce((s, z) => s + (dist[z] || 0), 0);
     const globalPerc = Math.max(0, 1 - usedPerc);
     raw.push({ zone: 'any', value: total * globalPerc });
   }
@@ -526,6 +537,7 @@ function distributeAssignmentsFromSliders(type) {
     remaining--;
   }
   if (mirrorOversightSettings.advancedOversight) assignments.any = 0;
+  assignments.unassigned = 0;
   mirrorOversightSettings.assignments[type] = assignments;
   distributeAutoAssignments(type);
 }
@@ -542,7 +554,6 @@ function distributeAutoAssignments(type) {
     if (mirrorOversightSettings.autoAssign[z]) assignments[z] = 0;
   });
   let used = zones.reduce((s, z) => s + Math.max(0, assignments[z] || 0), 0);
-  used += Math.max(0, assignments.unassigned || 0);
   let remaining = Math.max(0, total - used);
   const activeZones = zones.filter(z => mirrorOversightSettings.autoAssign[z]);
   if (activeZones.length && remaining > 0) {
@@ -580,6 +591,7 @@ function toggleFinerControls(enabled) {
   if (enabled) {
     distributeAssignmentsFromSliders('mirrors');
     distributeAssignmentsFromSliders('lanterns');
+    releaseMirrorUnassignedAssignments(mirrorOversightSettings);
   }
   updateMirrorOversightUI();
 }
@@ -1213,11 +1225,15 @@ function initializeMirrorOversightUI(container) {
       } else if (btn.classList.contains('assign-minus')) {
         assignments[zone] = Math.max(0, current - step);
       } else if (btn.classList.contains('assign-plus')) {
-        const other = Object.keys(assignments).filter(z => z !== zone).reduce((s, z) => s + (assignments[z] || 0), 0);
+        const other = getMirrorZonesWithFocusAny()
+          .filter(z => z !== zone)
+          .reduce((s, z) => s + (assignments[z] || 0), 0);
         const total = getTotal();
         assignments[zone] = Math.min(current + step, total - other);
       } else if (btn.classList.contains('assign-max')) {
-        const other = Object.keys(assignments).filter(z => z !== zone).reduce((s, z) => s + (assignments[z] || 0), 0);
+        const other = getMirrorZonesWithFocusAny()
+          .filter(z => z !== zone)
+          .reduce((s, z) => s + (assignments[z] || 0), 0);
         const total = getTotal();
         assignments[zone] = Math.max(0, total - other);
       }
