@@ -242,7 +242,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "$WGC_TEAM1_LEADER$ : 'We got him.'  \n Ghost : 'Why?'  \n Mary : 'Because... we're the good guys.' \n HOPE : 'Because we can.'  \n $RED$Prometheus : 'Because we're crazy.'  \n Ghost : '...  Very well.  I must... swear my loyalty.  I wish... to be part of the good guys as well.'  \n Mary : 'And we're happy to have you.'  \n Ghost : 'Please... you must grant me a new name.  This name... Ghost... it was granted to me by the Emperor.  I am using it with shame.'  \n Mary : 'Huuuuuuuuuh.  Edmond.  Your name is Edmond.  We're going to get you to work Edmond.  We have lots of imperial defectors.  They believe in you.'  \n Edmond : 'Of course.  I will get to work right away.'",
+    narrative: "$WGC_TEAM1_LEADER$ : 'We got him.'  \n Ghost : '... Why?'  \n Mary : 'Because... we're the good guys.' \n HOPE : 'Because we can.'  \n $RED$Prometheus : 'Because we're crazy.'  \n Ghost : '...  Very well.  I must... pledge my loyalty.  I wish... to be part of the good guys as well.'  \n Mary : 'And we're happy to have you.'  \n Ghost : 'Please... you must grant me a new name.  This name... Ghost... it was granted to me by the Emperor.  I am using it with shame.'  \n Mary : 'Huuuuuuuuuh.  Edmond.  Your name is Edmond.  We're going to get you to work Edmond.  We have lots of imperial defectors.  They believe in you.'  \n Edmond : 'Of course.  I will get to work right away.'",
     prerequisites: ['styx.41.3'],
     objectives: [
       {}
