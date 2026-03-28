@@ -13,7 +13,7 @@ progressStyx.chapters.push(
     activePlanet: 'styx',
     title: 'Chapter 39: The Prison Shore',
     narrative: "$RED$Prometheus : 'Activate the signal now child.  My defenses here are a lot more aggressive.'  \n Activating countermeasures...  \n Mary : 'Good it worked.  Wait.  Not entirely?  There is some stuff moving all around the planet?'  \n $RED$Prometheus : 'Atlas...'",
-    prerequisites: ['impossible5'],
+    prerequisites: ['impossible8'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
     ],
