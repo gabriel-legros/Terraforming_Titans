@@ -245,6 +245,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Story effects support `onTravel: false`.
 - New/expanded worlds and arcs include Umbra, Solis Prime, Tartarus/Gabbag placeholders, and Hades (airless pulsar world at 20 AU with placeholder chapters 33-35).
 - Poseidon placeholder story arc was added with chapters 36-38, using colonist milestone objectives from 10 up to 10 billion; Hades chapter 35 now bridges with a sector-conquest objective (`R5-10`) and a travel objective to Poseidon.
+- Styx placeholder story arc follows Poseidon with chapters 39-41, using colonist milestone objectives at each `1x` and `5x` step from `50` through `10 billion`.
 - Terraforming dominions now include Kerati: a warm wet hydrogen-carbon dioxide hive species unlocked at 30 fully controlled sectors, requiring 20% liquid-water coverage plus completion of the `Kerati Hive` infrastructure project to finish terraforming.
 - Poseidon and RWG molten worlds no longer start with atmospheric oxygen; the molten RWG atmosphere mix shifts that share into water vapor, and both Poseidon and RWG molten worlds set geothermal deposits equal to initial land while keeping ore deposits at zero.
 - Poseidon chapter `poseidon.38.0` grants aerostat flag `aerostats_collision_avoidance`, allowing Aerostat Colonies to build above the normal 25% initial-land cap with an added research build cost and matching research maintenance that scales by `+10` research per extra base-cap tier; gravity and temperature penalties do not increase that research upkeep.
