@@ -213,10 +213,10 @@ class WorkerCapacityBatchProject extends Project {
     max.id = `${this.name}-max`;
     const info = document.createElement('span');
     info.className = 'info-tooltip-icon';
+    info.innerHTML = '&#9432;';
     if (tooltip) {
       attachDynamicInfoTooltip(info, tooltip);
     }
-    info.innerHTML = '&#9432;';
     amountDisplay.append(val, slash, max, info);
 
     const controls = document.createElement('div');
