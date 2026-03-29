@@ -141,14 +141,19 @@ function formatBigInteger(number) {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
-function formatShipCount(value) {
+function formatGroupedNumber(value, maximumFractionDigits = 2, minimumFractionDigits = 0) {
   if (value === Infinity) return '∞';
   if (!Number.isFinite(value)) return '0';
-  const rounded = Math.round(value * 100) / 100;
-  return rounded.toLocaleString('en-US', {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 0
+  const rounded = Math.round(value * Math.pow(10, maximumFractionDigits)) / Math.pow(10, maximumFractionDigits);
+  const normalized = Object.is(rounded, -0) ? 0 : rounded;
+  return normalized.toLocaleString('en-US', {
+    maximumFractionDigits,
+    minimumFractionDigits
   });
+}
+
+function formatShipCount(value) {
+  return formatGroupedNumber(value, 2, 0);
 }
 
   function toDisplayTemperature(kelvin) {
@@ -321,6 +326,7 @@ function parseFlexibleNumber(value) {
     module.exports = {
       formatNumber,
       formatBigInteger,
+      formatGroupedNumber,
       formatShipCount,
       formatBuildingCount,
       formatScientific,

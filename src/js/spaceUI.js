@@ -593,12 +593,8 @@ function updateSpaceStatsUI() {
     }
     const uniqueCount = _spaceManagerInstance.getUnmodifiedTerraformedWorldCount();
     const effectiveCount = _spaceManagerInstance.getTerraformedPlanetCount();
-    spaceStatUniqueValueEl.textContent = uniqueCount;
-    let effectiveDisplay = effectiveCount;
-    if (Number.isFinite(effectiveCount) && !Number.isInteger(effectiveCount)) {
-        effectiveDisplay = effectiveCount.toFixed(2);
-    }
-    spaceStatEffectiveValueEl.textContent = effectiveDisplay;
+    spaceStatUniqueValueEl.textContent = formatGroupedNumber(uniqueCount, 2, 0);
+    spaceStatEffectiveValueEl.textContent = formatGroupedNumber(effectiveCount, 2, 0);
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
         const uniqueBase = 'Counts every distinct story world and terraformed random world you have completed. Ignores all other bonuses.';

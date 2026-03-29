@@ -113,16 +113,13 @@ function getOneillCylinderCapacity(galaxy, space) {
 
 function formatCylinderCount(value) {
   if (!Number.isFinite(value) || value <= 0) {
-    return '0.00';
+    return '0';
   }
-  return value.toFixed(2);
+  return formatGroupedNumber(value, 2, 0);
 }
 
 function formatCapacity(value) {
-  if (!Number.isFinite(value) || value <= 0) {
-    return '0';
-  }
-  return Math.round(value).toLocaleString('en-US');
+  return formatGroupedNumber(Math.round(value), 0, 0);
 }
 
 function getOneillGrowthContext(space, galaxy) {
@@ -236,7 +233,7 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
   }
   if (!unlocked) {
     if (value) {
-      value.textContent = '0.00';
+      value.textContent = formatCylinderCount(0);
     }
     if (rate) {
       rate.textContent = '+0.00/hr';
