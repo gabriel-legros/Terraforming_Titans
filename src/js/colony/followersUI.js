@@ -8,7 +8,6 @@ const followersUICache = {
   stepValue: null,
   divideStepButton: null,
   multiplyStepButton: null,
-  artPopulation: null,
   artBasePower: null,
   artArtifactMultiplier: null,
   artFundingMultiplier: null,
@@ -383,7 +382,6 @@ function buildFollowersUI() {
     return { stat, value };
   };
 
-  const artPopulationStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.galacticPopulation', 'Galactic Population'), '0');
   const artBasePowerStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.populationFactor', 'Population Factor'), '0');
   const artArtifactMultiplierStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.artifactFactor', 'Artifact Factor'), 'x0');
   const artFundingMultiplierStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.fundingFactor', 'Funding Factor'), 'x0');
@@ -391,7 +389,6 @@ function buildFollowersUI() {
   const artHappinessBonusStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.happinessBonus', 'Happiness Bonus'), '+0.00%');
   const artWorkerMultiplierStat = createArtStat(getFollowersText('ui.colony.followers.art.stats.workerColonist', 'Worker/Colonist'), 'x1.00');
   artStats.append(
-    artPopulationStat.stat,
     artBasePowerStat.stat,
     artArtifactMultiplierStat.stat,
     artFundingMultiplierStat.stat,
@@ -856,7 +853,6 @@ function buildFollowersUI() {
   followersUICache.stepValue = stepValue;
   followersUICache.divideStepButton = divideStepButton;
   followersUICache.multiplyStepButton = multiplyStepButton;
-  followersUICache.artPopulation = artPopulationStat.value;
   followersUICache.artBasePower = artBasePowerStat.value;
   followersUICache.artArtifactMultiplier = artArtifactMultiplierStat.value;
   followersUICache.artFundingMultiplier = artFundingMultiplierStat.value;
@@ -1008,7 +1004,6 @@ function updateFollowersUI() {
   const art = followersManager.getArtPowerSnapshot();
   const artifactAvailable = resources.special.alienArtifact.value;
   const fundingAvailable = resources.colony.funding.value;
-  followersUICache.artPopulation.textContent = formatNumber(art.population, true);
   followersUICache.artBasePower.textContent = formatNumber(art.basePower, true);
   followersUICache.artArtifactMultiplier.textContent = `x${formatNumber(art.artifactMultiplier, false, 3)}`;
   followersUICache.artFundingMultiplier.textContent = `x${formatNumber(art.fundingMultiplier, false, 3)}`;
