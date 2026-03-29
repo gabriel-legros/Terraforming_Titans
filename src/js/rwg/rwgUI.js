@@ -421,13 +421,14 @@ function cacheResultControls() {
 
 function applyDominionSelection(res) {
   const override = res.override || (res.override = {});
-  const special = override.specialAttributes || {};
+  const special = { ...(override.specialAttributes || {}) };
   override.specialAttributes = special;
   const dominions = rwgManager.getAvailableDominions();
   const selection = rwgSelectedDominion === RWG_DOMINION_RANDOM
     ? dominions[Math.floor(Math.random() * dominions.length)]
     : rwgSelectedDominion;
   special.terraformingRequirementId = selection;
+  res.merged.specialAttributes = { ...(res.merged.specialAttributes || {}) };
   res.merged.specialAttributes.terraformingRequirementId = selection;
 }
 
