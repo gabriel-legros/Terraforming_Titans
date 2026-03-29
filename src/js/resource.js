@@ -99,6 +99,8 @@ class Resource extends EffectableEntity {
     this.consumptionRate = 0;
     this.projectedProductionRate = 0;
     this.projectedConsumptionRate = 0;
+    this.productionRateBySource = {};
+    this.consumptionRateBySource = {};
     this.projectedProductionRateByType = {};
     this.projectedConsumptionRateByType = {};
     this.projectedProductionRateBySource = {};
