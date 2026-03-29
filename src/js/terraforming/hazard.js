@@ -97,6 +97,34 @@ function cloneHazardParameters(parameters) {
   }
 }
 
+function mergeHazardParameterValues(baseValue, overrideValue) {
+  if (!(baseValue && baseValue.constructor === Object && overrideValue && overrideValue.constructor === Object)) {
+    return overrideValue;
+  }
+
+  const merged = { ...baseValue };
+  Object.keys(overrideValue).forEach((key) => {
+    merged[key] = mergeHazardParameterValues(baseValue[key], overrideValue[key]);
+  });
+  return merged;
+}
+
+function mergeHazardParameters(baseParameters, overrideParameters) {
+  const base = cloneHazardParameters(baseParameters);
+  const override = cloneHazardParameters(overrideParameters);
+  const merged = base && base.constructor === Object ? base : {};
+
+  if (!(override && override.constructor === Object)) {
+    return merged;
+  }
+
+  Object.keys(override).forEach((key) => {
+    merged[key] = mergeHazardParameterValues(merged[key], override[key]);
+  });
+
+  return merged;
+}
+
 function getPlanetHazards(parameters) {
   if (parameters && parameters.constructor === Object) {
     return parameters;
@@ -212,7 +240,7 @@ class HazardManager {
     this.lastSerializedParameters = serialized;
     this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
     if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.syncPendingTravelTuning) {
-      this.hazardousBiomassHazard.syncPendingTravelTuning(this.parameters.hazardousBiomass);
+      this.hazardousBiomassHazard.syncPendingTravelTuning(this.parameters.hazardousBiomass, options);
     }
 
     const activeTerraforming = getTerraforming();
@@ -348,7 +376,17 @@ class HazardManager {
   }
 
   load(data) {
-    this.initialize(getPlanetHazards(), { unlockOnly: true });
+    const savedParameters = data && data.parameters && data.parameters.constructor === Object
+      ? data.parameters
+      : null;
+    const parameters = savedParameters
+      ? mergeHazardParameters(getPlanetHazards(), savedParameters)
+      : getPlanetHazards();
+
+    this.initialize(parameters, {
+      unlockOnly: true,
+      skipPendingTravelTuning: !!savedParameters
+    });
     const storedTarget = data && data.crusaderTargetZone && data.crusaderTargetZone.trim
       ? data.crusaderTargetZone
       : 'any';

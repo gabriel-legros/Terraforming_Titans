@@ -221,7 +221,12 @@ class HazardousBiomassHazard {
     this.manager.setHazardLandReservationShare('hazardousBiomass', 0);
   }
 
-  syncPendingTravelTuning(hazardParameters) {
+  syncPendingTravelTuning(hazardParameters, options = {}) {
+    if (options.skipPendingTravelTuning) {
+      this.pendingTravelTuning = false;
+      return;
+    }
+
     let specialAttributes = null;
     try {
       specialAttributes = currentPlanetParameters.specialAttributes;
