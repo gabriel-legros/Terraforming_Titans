@@ -748,6 +748,7 @@ setLanguageData({
           escapeDv: 'Escape Δv:',
           hillRadius: 'Hill Radius:',
           goRogue: 'Go Rogue',
+          autoGoRogueAriaLabel: 'Automatically go rogue when available',
           goRogueTooltip: 'Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet, removes the star, and shutters planetary thrusters.',
           escapeParentFirst: '⚠ Escape parent first',
           parentFallback: 'Parent',

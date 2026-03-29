@@ -171,6 +171,7 @@ class PlanetaryThrustersProject extends Project{
     super(cfg,name);
     this.power=0;this.step=1;
     this.spinInvest=false;this.motionInvest=false;
+    this.autoGoRogue=false;
 
     this.tgtDays=1;this.tgtAU=1;
 
@@ -268,7 +269,10 @@ class PlanetaryThrustersProject extends Project{
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.burnTime', 'Burn Time:')}</span><span id="distBurn" class="stat-value">—</span></div>
       </div>
       <div class="invest-container left"><label><input id="distInvest" type="checkbox"> ${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.invest', 'Invest')}</label>
-        <button id="rogueBtn" disabled style="margin-left:8px;">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.goRogue', 'Go Rogue')}</button>
+        <span style="position:relative; display:inline-flex; align-items:center; margin-left:8px;">
+          <button id="rogueBtn" disabled style="padding-left:30px;">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.goRogue', 'Go Rogue')}</button>
+          <input id="rogueAutoCb" type="checkbox" aria-label="${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.autoGoRogueAriaLabel', 'Automatically go rogue when available')}" title="${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.autoGoRogueAriaLabel', 'Automatically go rogue when available')}" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); margin:0; z-index:1;">
+        </span>
         <span id="thruster-rogue-tooltip" class="info-tooltip-icon" style="margin-left:6px;">&#9432;</span>
       </div>
       <div id="moonWarn" class="moon-warning" style="display:none;">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.escapeParentFirst', '⚠ Escape parent first')}</div>
@@ -313,7 +317,7 @@ class PlanetaryThrustersProject extends Project{
       distTargetRow:distTargetEl.parentElement,
       distDv:distDvEl,distDvRow:distDvEl.parentElement,
       distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
-      distSpent:g('#distSpent',motCard),distBurn:g('#distBurn',motCard),goRogueBtn:g('#rogueBtn',motCard),
+      distSpent:g('#distSpent',motCard),distBurn:g('#distBurn',motCard),goRogueBtn:g('#rogueBtn',motCard),goRogueAutoCb:g('#rogueAutoCb',motCard),
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       hillRow:g('#hillRow',motCard),hillVal:g('#hillVal',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
@@ -361,6 +365,7 @@ class PlanetaryThrustersProject extends Project{
     /* restore saved values */
     this.el.rotCb.checked = this.spinInvest;
     this.el.distCb.checked = this.motionInvest;
+    this.el.goRogueAutoCb.checked = this.autoGoRogue;
     this.el.rotTarget.value = this.tgtDays;
     this.el.distTarget.value = this.tgtAU;
 
@@ -383,6 +388,11 @@ class PlanetaryThrustersProject extends Project{
         this.prepareJob(true,false);
         this.activeMode='motion';
       }
+    };
+    this.el.goRogueAutoCb.onclick = event => event.stopPropagation();
+    this.el.goRogueAutoCb.onchange = ()=>{
+      this.autoGoRogue = this.el.goRogueAutoCb.checked;
+      if(this.autoGoRogue && this.canGoRogue()) this.goRogue();
     };
     this.el.goRogueBtn.onclick = ()=>this.goRogue();
 
@@ -535,6 +545,12 @@ class PlanetaryThrustersProject extends Project{
     terraforming?.updateLuminosity?.();
   }
 
+  tryAutoGoRogue(){
+    if(!this.autoGoRogue || !this.canGoRogue()) return false;
+    this.goRogue();
+    return true;
+  }
+
 /* ---------- job preparation ------------------------------------------ */
   prepareJob(resetDV=false, resetEnergy=false){
     const p = terraforming.celestialParameters;
@@ -578,6 +594,7 @@ class PlanetaryThrustersProject extends Project{
     }
     if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
+    if(this.el.goRogueAutoCb) this.el.goRogueAutoCb.checked = this.autoGoRogue;
     if(this.el.goRogueBtn) this.el.goRogueBtn.disabled = !this.canGoRogue();
     const p = terraforming.celestialParameters;
 
@@ -688,6 +705,10 @@ class PlanetaryThrustersProject extends Project{
 /* ------------------  T I C K  ---------------------------------------- */
   update(dtMs){
     super.update(dtMs);
+    if(this.tryAutoGoRogue()){
+      this.lastActiveTime = 0;
+      return;
+    }
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
       this.lastActiveTime = 0;
       return;
@@ -855,6 +876,10 @@ class PlanetaryThrustersProject extends Project{
           p.distanceFromSun=this.tgtAU;
           this.motionInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;
         }
+        if(this.tryAutoGoRogue()){
+          this.lastActiveTime = 0;
+          return;
+        }
       }
     }
     this.lastActiveTime = 0;
@@ -872,6 +897,7 @@ class PlanetaryThrustersProject extends Project{
       step: this.step,
       spinInvest: this.spinInvest === true,
       motionInvest: this.motionInvest === true,
+      autoGoRogue: this.autoGoRogue === true,
       tgtDays: this.tgtDays,
       tgtAU: this.tgtAU
     };
@@ -895,6 +921,9 @@ class PlanetaryThrustersProject extends Project{
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'motionInvest')) {
       this.motionInvest = settings.motionInvest === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoGoRogue')) {
+      this.autoGoRogue = settings.autoGoRogue === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'tgtDays')) {
       this.tgtDays = Math.max(0.1, settings.tgtDays || 1);
@@ -926,6 +955,9 @@ class PlanetaryThrustersProject extends Project{
     if (this.el.distCb) {
       this.el.distCb.checked = this.motionInvest;
     }
+    if (this.el.goRogueAutoCb) {
+      this.el.goRogueAutoCb.checked = this.autoGoRogue;
+    }
 
     if (this.spinInvest) {
       this.motionInvest = false;
@@ -949,6 +981,7 @@ class PlanetaryThrustersProject extends Project{
       this.calcSpinCost();
       this.calcMotionCost();
     }
+    this.tryAutoGoRogue();
   }
 
   saveState(){
@@ -957,6 +990,7 @@ class PlanetaryThrustersProject extends Project{
     state.step = this.step;
     state.spinInvest = this.spinInvest;
     state.motionInvest = this.motionInvest;
+    state.autoGoRogue = this.autoGoRogue;
     state.tgtDays = this.tgtDays;
     state.tgtAU = this.tgtAU;
     state.dVreq = this.dVreq;
@@ -976,6 +1010,7 @@ class PlanetaryThrustersProject extends Project{
     this.step = state.step || 1;
     this.spinInvest = state.spinInvest || false;
     this.motionInvest = state.motionInvest || false;
+    this.autoGoRogue = state.autoGoRogue === true;
     this.tgtDays = state.tgtDays || 1;
     this.tgtAU = state.tgtAU || 1;
     this.dVreq = state.dVreq || 0;
@@ -994,6 +1029,7 @@ class PlanetaryThrustersProject extends Project{
     if(this.el && Object.keys(this.el).length){
       if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
       if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
+      if(this.el.goRogueAutoCb) this.el.goRogueAutoCb.checked = this.autoGoRogue;
       if(this.el.rotTarget) this.el.rotTarget.value = this.tgtDays;
       if(this.el.distTarget) this.el.distTarget.value = this.tgtAU;
     }
