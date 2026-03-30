@@ -1212,6 +1212,9 @@ function produceResources(deltaTime, buildings) {
   let otherSpaceBuildingOperations = [];
 
   reconcileLandResourceValue();
+  if (typeof recalculateLandUsage === 'function') {
+    recalculateLandUsage();
+  }
   updateAntimatterStorageCap(resources);
 
   // Update storage cap for all resources except workers

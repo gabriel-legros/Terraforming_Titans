@@ -651,6 +651,19 @@ function autoUpgradeColonies(buildings) {
     }
 }
 
+function canApplyAutoActiveTarget(building) {
+    const autoActiveLocked = building.name === 'massDriver'
+        && building.isBooleanFlagSet('autoActiveLockedByShipAutomation');
+    if (autoActiveLocked) {
+        building.autoActiveEnabled = false;
+        return false;
+    }
+    if (building.enforceAutoActiveLock && building.enforceAutoActiveLock()) {
+        return false;
+    }
+    return !!building.autoActiveEnabled;
+}
+
 function autoBuild(buildings, delta = 0) {
     resetAutoBuildPartialFlags(buildings);
     resetAutoBuildResourceShortages(typeof resources !== 'undefined' ? resources : null);
@@ -790,9 +803,10 @@ function autoBuild(buildings, delta = 0) {
                 const previousCount = building.count;
                 const plannedEffectiveCost = building.getEffectiveCost(buildCount);
                 const plannedBaseCost = building.getBaseEffectiveCost(buildCount);
+                const activateImmediately = canApplyAutoActiveTarget(building);
                 let built = false;
                 if (typeof building.build === 'function') {
-                    built = building.build(buildCount, false);
+                    built = building.build(buildCount, activateImmediately);
                 }
                 const actualBuilt = built ? Math.max(0, building.count - previousCount) : 0;
                 if (built && actualBuilt > 0) {
@@ -835,24 +849,16 @@ function autoBuild(buildings, delta = 0) {
 
     // Step 4: Auto-set active counts after building
     buildingInfos.forEach(({ building, targetCount }) => {
-        const autoActiveLocked = building.name === 'massDriver'
-            && building.isBooleanFlagSet('autoActiveLockedByShipAutomation');
-        if (autoActiveLocked) {
-            building.autoActiveEnabled = false;
+        if (!canApplyAutoActiveTarget(building)) {
             return;
         }
-        if (building.enforceAutoActiveLock && building.enforceAutoActiveLock()) {
-            return;
-        }
-        if (building.autoActiveEnabled) {
-            const desiredActive = Math.min(targetCount, building.count);
-            const change = desiredActive - building.active;
-            if (change !== 0) {
-                if (typeof adjustStructureActivation === 'function') {
-                    adjustStructureActivation(building, change);
-                } else {
-                    building.active = Math.max(0, Math.min(building.active + change, building.count));
-                }
+        const desiredActive = Math.min(targetCount, building.count);
+        const change = desiredActive - building.active;
+        if (change !== 0) {
+            if (typeof adjustStructureActivation === 'function') {
+                adjustStructureActivation(building, change);
+            } else {
+                building.active = Math.max(0, Math.min(building.active + change, building.count));
             }
         }
     });
