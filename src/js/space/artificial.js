@@ -1102,6 +1102,8 @@ class ArtificialManager extends EffectableEntity {
         status.fleetCapacityValue = fleetCapacityValue;
         status.landHa = landHa;
         status.cachedLandHa = landHa;
+        status.type = project.type || snapshot.type || 'shell';
+        status.core = project.core || snapshot.core || 'unknown';
         status.sector = project.sector || snapshot.sector || currentPlanetParameters?.celestialParameters?.sector || null;
         status.builtFrom = project.builtFrom || 'unknown';
         status.constructedAt = project.startedAt || null;
@@ -1594,8 +1596,8 @@ class ArtificialManager extends EffectableEntity {
                 id: key,
                 seed: key,
                 name: status.name || merged?.name || snapshot?.name || `Artificial ${key}`,
-                type: merged?.classification?.type || snapshot?.type || 'shell',
-                core: merged?.classification?.core || snapshot?.core || 'unknown',
+                type: status.type || merged?.classification?.type || snapshot?.type || (/\bring(world)?\b/i.test(status.name || '') ? 'ring' : 'shell'),
+                core: status.core || merged?.classification?.core || snapshot?.core || 'unknown',
                 radiusEarth: radiusEarth || snapshot?.radiusEarth,
                 landHa,
                 sector: status.sector || merged?.celestialParameters?.sector || snapshot?.sector || null,

@@ -682,10 +682,52 @@ class SpaceManager extends EffectableEntity {
         delete status.artificialSnapshot;
     }
 
+    _inferArtificialWorldTypeFromName(name) {
+        const text = String(name || '').trim();
+        if (!text) {
+            return null;
+        }
+        return /\bring(world)?\b/i.test(text) ? 'ring' : null;
+    }
+
+    _resolveArtificialWorldType(status) {
+        if (!status) {
+            return 'shell';
+        }
+        return status.type
+            || status.classification?.type
+            || status.original?.merged?.classification?.type
+            || status.original?.override?.classification?.type
+            || status.original?.classification?.type
+            || status.merged?.classification?.type
+            || status.override?.classification?.type
+            || status.artificialSnapshot?.type
+            || this._inferArtificialWorldTypeFromName(status.name)
+            || 'shell';
+    }
+
+    _resolveArtificialWorldCore(status, type = null) {
+        if (!status) {
+            return 'unknown';
+        }
+        const resolvedType = type || this._resolveArtificialWorldType(status);
+        return status.core
+            || status.classification?.core
+            || status.original?.merged?.classification?.core
+            || status.original?.override?.classification?.core
+            || status.original?.classification?.core
+            || status.merged?.classification?.core
+            || status.override?.classification?.core
+            || status.artificialSnapshot?.core
+            || (resolvedType === 'ring' ? 'unknown' : 'super-earth');
+    }
+
     _prepareCompactableArtificialStatus(status) {
         if (!status) {
             return status;
         }
+        status.type = this._resolveArtificialWorldType(status);
+        status.core = this._resolveArtificialWorldCore(status, status.type);
         if (!status.sector) {
             status.sector = normalizeSectorLabel(resolveSectorFromSources(status, status.original));
         } else {
@@ -1794,6 +1836,8 @@ class SpaceManager extends EffectableEntity {
                         stored: false,
                         departedAt: null,
                         ecumenopolisPercent: 0,
+                        type: currentPlanetParameters?.classification?.type || original?.merged?.classification?.type || original?.classification?.type || 'shell',
+                        core: currentPlanetParameters?.classification?.core || original?.merged?.classification?.core || original?.classification?.core || 'unknown',
                         terraformedValue,
                         fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue }),
                         sector: resolveSectorFromSources(original)
@@ -1810,6 +1854,8 @@ class SpaceManager extends EffectableEntity {
                 if (!Number.isFinite(target.fleetCapacityValue) || target.fleetCapacityValue <= 0) {
                     target.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(target);
                 }
+                target.type = this._resolveArtificialWorldType(target);
+                target.core = this._resolveArtificialWorldCore(target, target.type);
                 if (target.terraformed !== isComplete) {
                     target.terraformed = isComplete;
                     console.log(`SpaceManager: Terraformed status for artificial world ${resolvedKey} updated to ${isComplete}`);
@@ -2008,6 +2054,8 @@ class SpaceManager extends EffectableEntity {
                     naturalMagnetosphere: false,
                     specialization: '',
                     artificial: true,
+                    type: currentPlanetParameters?.classification?.type || 'shell',
+                    core: currentPlanetParameters?.classification?.core || 'unknown',
                     landHa,
                     cachedLandHa: landHa,
                     terraformedValue,
@@ -2024,6 +2072,8 @@ class SpaceManager extends EffectableEntity {
             st.specialization = specialization;
             st.stored = false;
             st.abandoned = !this._isCurrentWorldTerraformed();
+            st.type = currentPlanetParameters?.classification?.type || st.type || 'shell';
+            st.core = currentPlanetParameters?.classification?.core || st.core || this._resolveArtificialWorldCore(st, st.type);
             if (!st.terraformedValue) {
                 st.terraformedValue = this._deriveArtificialTerraformValue({
                     landHa: this._getCurrentWorldLandHa(),
@@ -2208,6 +2258,24 @@ class SpaceManager extends EffectableEntity {
             : 1;
         const landHa = isArtificial ? getLandFromParams(travelResult?.merged) : 0;
         const sector = resolveSectorFromSources(travelResult);
+        const artificialType = isArtificial
+            ? (
+                travelResult?.merged?.classification?.type
+                || travelResult?.original?.merged?.classification?.type
+                || travelResult?.original?.classification?.type
+                || travelResult?.classification?.type
+                || 'shell'
+            )
+            : null;
+        const artificialCore = isArtificial
+            ? (
+                travelResult?.merged?.classification?.core
+                || travelResult?.original?.merged?.classification?.core
+                || travelResult?.original?.classification?.core
+                || travelResult?.classification?.core
+                || 'unknown'
+            )
+            : null;
         const targetType = isArtificial ? 'artificial' : 'random';
         this._updateWorldCacheForStatusMutation(targetType, s, (status, map, key) => {
             if (!status) {
@@ -2232,6 +2300,8 @@ class SpaceManager extends EffectableEntity {
                     naturalMagnetosphere: false,
                     artificial: artificialWorld,
                     cachedArchetype,
+                    type: artificialType,
+                    core: artificialCore,
                     terraformedValue,
                     landHa,
                     cachedLandHa: landHa,
@@ -2256,6 +2326,10 @@ class SpaceManager extends EffectableEntity {
             if (isArtificial && landHa > 0) {
                 status.landHa = landHa;
                 status.cachedLandHa = landHa;
+            }
+            if (isArtificial) {
+                status.type = artificialType || status.type || this._resolveArtificialWorldType(status);
+                status.core = artificialCore || status.core || this._resolveArtificialWorldCore(status, status.type);
             }
             if (!status.name) {
                 status.name = this.currentRandomName;
@@ -2619,6 +2693,8 @@ class SpaceManager extends EffectableEntity {
                 }
                 entry.foundryLandFactor = entry.foundryLandFactor || 0;
                 entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
+                entry.type = this._resolveArtificialWorldType(entry);
+                entry.core = this._resolveArtificialWorldCore(entry, entry.type);
                 assignSector(entry);
                 sanitizeCachedHazards(entry);
             });
