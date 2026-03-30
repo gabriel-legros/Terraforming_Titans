@@ -25,6 +25,7 @@ const SPACE_HAZARD_KEY_SET = new Set(SPACE_HAZARD_KEYS);
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
 const MAX_REMEMBERED_RANDOM_WORLD_STATUSES = 10;
+const MAX_REMEMBERED_ARTIFICIAL_WORLD_STATUSES = 50;
 
 function buildSpaceHazardKeys() {
     const keys = new Set();
@@ -119,6 +120,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSummary = this._createEmptyRwgSummary();
         this.currentArtificialKey = null;
         this.artificialWorldStatuses = {};
+        this.artificialSummary = this._createEmptyArtificialSummary();
         this.extraTerraformedWorlds = 0;
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
@@ -303,6 +305,20 @@ class SpaceManager extends EffectableEntity {
         };
     }
 
+    _createEmptyArtificialSummary() {
+        return {
+            departedColonistsTotal: 0,
+            terraformedCount: 0,
+            sectorTerraformCounts: {},
+            sectorUnits: {},
+            terraformValueCounts: {},
+            sectorTerraformValueCounts: {},
+            specializationCounts: {},
+            foundryWorldCount: 0,
+            foundryWorldBonus: 0
+        };
+    }
+
     _resetWorldStatsCache() {
         this.worldStatsCache = this._createEmptyWorldStatsCache();
     }
@@ -399,6 +415,66 @@ class SpaceManager extends EffectableEntity {
             typeCounts: this._sanitizeCountMap(summary.typeCounts),
             typeHazardBonuses: this._sanitizeCountMap(summary.typeHazardBonuses),
             typeHazardCounts: this._sanitizeNestedCountMap(summary.typeHazardCounts),
+            specializationCounts: this._sanitizeCountMap(summary.specializationCounts),
+            foundryWorldCount: Math.max(0, Number(summary.foundryWorldCount) || 0),
+            foundryWorldBonus: Math.max(0, Number(summary.foundryWorldBonus) || 0)
+        };
+    }
+
+    _adjustArtificialSummaryNumber(field, delta) {
+        if (!delta) {
+            return;
+        }
+        const next = (this.artificialSummary[field] || 0) + delta;
+        this.artificialSummary[field] = next > 0 ? next : 0;
+    }
+
+    _adjustArtificialSummaryMapValue(mapName, key, delta) {
+        if (!delta || !key) {
+            return;
+        }
+        const map = this.artificialSummary[mapName];
+        if (!map) {
+            return;
+        }
+        const current = map[key] || 0;
+        const next = current + delta;
+        if (next > 0) {
+            map[key] = next;
+        } else {
+            delete map[key];
+        }
+    }
+
+    _adjustArtificialSummaryNestedMapValue(mapName, outerKey, innerKey, delta) {
+        if (!delta || !outerKey || !innerKey) {
+            return;
+        }
+        const map = this.artificialSummary[mapName];
+        if (!map) {
+            return;
+        }
+        const outer = map[outerKey] || (map[outerKey] = {});
+        const current = outer[innerKey] || 0;
+        const next = current + delta;
+        if (next > 0) {
+            outer[innerKey] = next;
+            return;
+        }
+        delete outer[innerKey];
+        if (!Object.keys(outer).length) {
+            delete map[outerKey];
+        }
+    }
+
+    _sanitizeArtificialSummary(summary = {}) {
+        return {
+            departedColonistsTotal: Math.max(0, Number(summary.departedColonistsTotal) || 0),
+            terraformedCount: Math.max(0, Number(summary.terraformedCount) || 0),
+            sectorTerraformCounts: this._sanitizeCountMap(summary.sectorTerraformCounts),
+            sectorUnits: this._sanitizeCountMap(summary.sectorUnits),
+            terraformValueCounts: this._sanitizeCountMap(summary.terraformValueCounts),
+            sectorTerraformValueCounts: this._sanitizeNestedCountMap(summary.sectorTerraformValueCounts),
             specializationCounts: this._sanitizeCountMap(summary.specializationCounts),
             foundryWorldCount: Math.max(0, Number(summary.foundryWorldCount) || 0),
             foundryWorldBonus: Math.max(0, Number(summary.foundryWorldBonus) || 0)
@@ -552,6 +628,92 @@ class SpaceManager extends EffectableEntity {
         }
     }
 
+    _addArtificialWorldStatusToSummary(status) {
+        if (!status) {
+            return;
+        }
+
+        this._adjustArtificialSummaryNumber('departedColonistsTotal', Math.max(0, Number(status.colonists) || 0));
+
+        if (!status.terraformed) {
+            return;
+        }
+
+        this._adjustArtificialSummaryNumber('terraformedCount', 1);
+        const sector = normalizeSectorLabel(status.sector || resolveSectorFromSources(status, status.original));
+        const terraformedValue = this._deriveArtificialTerraformValue(status);
+        this._adjustArtificialSummaryMapValue('sectorTerraformCounts', sector, 1);
+        this._adjustArtificialSummaryMapValue('sectorUnits', sector, terraformedValue);
+        this._adjustArtificialSummaryMapValue('terraformValueCounts', String(terraformedValue), 1);
+        this._adjustArtificialSummaryNestedMapValue('sectorTerraformValueCounts', sector, String(terraformedValue), 1);
+
+        if (status.specialization) {
+            this._adjustArtificialSummaryMapValue('specializationCounts', status.specialization, 1);
+        }
+
+        if (status.foundryWorld) {
+            this._adjustArtificialSummaryNumber('foundryWorldCount', 1);
+            this._adjustArtificialSummaryNumber('foundryWorldBonus', (status.foundryLandFactor || 0) * 1e11);
+        }
+    }
+
+    _isRememberedArtificialWorldStatus(key, status, activeKey) {
+        return !!status
+            && key !== activeKey
+            && !status.stored
+            && (!!status.terraformed || !!status.abandoned);
+    }
+
+    _isPrunableArtificialWorldStatus(key, status, activeKey) {
+        return !!status
+            && key !== activeKey
+            && !!status.terraformed
+            && !status.stored
+            && !status.abandoned;
+    }
+
+    _stripCompactableArtificialStatus(status) {
+        if (!status) {
+            return;
+        }
+        delete status.original;
+        delete status.override;
+        delete status.merged;
+        delete status.artificialSnapshot;
+    }
+
+    _prepareCompactableArtificialStatus(status) {
+        if (!status) {
+            return status;
+        }
+        if (!status.sector) {
+            status.sector = normalizeSectorLabel(resolveSectorFromSources(status, status.original));
+        } else {
+            status.sector = normalizeSectorLabel(status.sector);
+        }
+        const landHa = status.cachedLandHa
+            || status.landHa
+            || status.original?.landHa
+            || getLandFromParams(status.original?.merged)
+            || getLandFromParams(status.original?.override)
+            || getLandFromParams(status.original);
+        if (Number.isFinite(landHa) && landHa > 0) {
+            if (!status.landHa) {
+                status.landHa = landHa;
+            }
+            if (!status.cachedLandHa) {
+                status.cachedLandHa = landHa;
+            }
+        }
+        if (!Number.isFinite(status.terraformedValue) || status.terraformedValue <= 0) {
+            status.terraformedValue = this._deriveArtificialTerraformValue(status);
+        }
+        if (!Number.isFinite(status.fleetCapacityValue) || status.fleetCapacityValue <= 0) {
+            status.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(status);
+        }
+        return status;
+    }
+
     _compactRandomWorldStatuses() {
         const activeKey = this.currentRandomSeed === null ? null : String(this.currentRandomSeed);
         const inactiveEntries = Object.entries(this.randomWorldStatuses)
@@ -596,8 +758,64 @@ class SpaceManager extends EffectableEntity {
         }
     }
 
+    _compactArtificialWorldStatuses() {
+        const activeKey = this.currentArtificialKey === null ? null : String(this.currentArtificialKey);
+        const rememberedEntries = Object.entries(this.artificialWorldStatuses)
+            .filter(([key, status]) => this._isRememberedArtificialWorldStatus(key, status, activeKey))
+            .sort((a, b) => (b[1].departedAt || 0) - (a[1].departedAt || 0));
+
+        const keepKeys = new Set(
+            rememberedEntries
+                .slice(0, MAX_REMEMBERED_ARTIFICIAL_WORLD_STATUSES)
+                .map(([key]) => key)
+        );
+
+        let changed = false;
+        Object.keys(this.artificialWorldStatuses).forEach((key) => {
+            const status = this.artificialWorldStatuses[key];
+            if (!status) {
+                delete this.artificialWorldStatuses[key];
+                changed = true;
+                return;
+            }
+            if (!this._isRememberedArtificialWorldStatus(key, status, activeKey)) {
+                return;
+            }
+            if (keepKeys.has(key)) {
+                if (this._isPrunableArtificialWorldStatus(key, status, activeKey)) {
+                    this._prepareCompactableArtificialStatus(status);
+                    const hadHeavyData = !!(status.original || status.override || status.merged || status.artificialSnapshot);
+                    this._stripCompactableArtificialStatus(status);
+                    if (hadHeavyData) {
+                        changed = true;
+                    }
+                }
+                return;
+            }
+            this._addArtificialWorldStatusToSummary(status);
+            delete this.artificialWorldStatuses[key];
+            changed = true;
+        });
+
+        if (changed) {
+            this._refreshWorldStatsCache();
+            this._refreshFoundryWorldBonusCache();
+        }
+    }
+
     _getTotalRandomTerraformedCount() {
         return (this.worldStatsCache.randomTerraformed || 0) + (this.rwgSummary.terraformedCount || 0);
+    }
+
+    _getTotalArtificialTerraformedCount() {
+        return (this.worldStatsCache.artificialTerraformed || 0) + (this.artificialSummary.terraformedCount || 0);
+    }
+
+    _getTotalArtificialTerraformBonus() {
+        const summaryUnits = Object.values(this.artificialSummary.sectorUnits || {})
+            .reduce((total, value) => total + (Number(value) || 0), 0);
+        return (this.worldStatsCache.artificialTerraformBonus || 0)
+            + Math.max(0, summaryUnits - (this.artificialSummary.terraformedCount || 0));
     }
 
     _getTotalRandomOrbitalRingCount() {
@@ -915,9 +1133,26 @@ class SpaceManager extends EffectableEntity {
         return Math.max(0, this.rwgSummary.departedColonistsTotal || 0);
     }
 
+    getArtificialWorldDepartedColonistsTotal() {
+        return Math.max(0, this.artificialSummary.departedColonistsTotal || 0);
+    }
+
+    getArtificialWorldSpecializationCounts() {
+        const counts = { ...(this.artificialSummary.specializationCounts || {}) };
+        Object.values(this.artificialWorldStatuses).forEach((status) => {
+            if (!status?.specialization || !status.terraformed) {
+                return;
+            }
+            counts[status.specialization] = (counts[status.specialization] || 0) + 1;
+        });
+        return counts;
+    }
+
     getWorldCountPerSector(sectorLabel) {
         const target = normalizeSectorLabel(sectorLabel);
-        return (this.worldStatsCache.sectorCounts[target] || 0) + (this.rwgSummary.sectorUnits[target] || 0);
+        return (this.worldStatsCache.sectorCounts[target] || 0)
+            + (this.rwgSummary.sectorUnits[target] || 0)
+            + (this.artificialSummary.sectorUnits[target] || 0);
     }
 
     currentWorldHasOrbitalRing() {
@@ -1096,7 +1331,7 @@ class SpaceManager extends EffectableEntity {
             total += this._getTotalRandomTerraformedCount();
         }
         if (countArtificial) {
-            total += this.worldStatsCache.artificialTerraformed || 0;
+            total += this._getTotalArtificialTerraformedCount();
         }
         return total;
     }
@@ -1168,6 +1403,8 @@ class SpaceManager extends EffectableEntity {
     _refreshFoundryWorldBonusCache() {
         let count = this.rwgSummary.foundryWorldCount || 0;
         let bonus = this.rwgSummary.foundryWorldBonus || 0;
+        count += this.artificialSummary.foundryWorldCount || 0;
+        bonus += this.artificialSummary.foundryWorldBonus || 0;
         Object.values(this.planetStatuses).forEach((status) => {
             if (!status?.foundryWorld) return;
             count += 1;
@@ -1221,7 +1458,7 @@ class SpaceManager extends EffectableEntity {
     getTerraformedPlanetCount() {
         const base = (this.worldStatsCache.storyTerraformed || 0)
             + this._getTotalRandomTerraformedCount()
-            + (this.worldStatsCache.artificialTerraformed || 0);
+            + this._getTotalArtificialTerraformedCount();
         const rings = (typeof projectManager !== 'undefined' && projectManager.projects && projectManager.projects.orbitalRing)
             ? projectManager.projects.orbitalRing.ringCount
             : 0;
@@ -1230,7 +1467,7 @@ class SpaceManager extends EffectableEntity {
             ? galaxyManager.getControlledSectorWorldCount()
             : 0;
         const sectorBonus = Number.isFinite(sectorWorlds) ? Math.max(0, sectorWorlds) : 0;
-        const artificialBonus = this.worldStatsCache.artificialTerraformBonus || 0;
+        const artificialBonus = this._getTotalArtificialTerraformBonus();
         const cylinders = this.getOneillCylinderCount();
         return base + rings + extra + sectorBonus + artificialBonus + cylinders;
     }
@@ -1241,7 +1478,10 @@ class SpaceManager extends EffectableEntity {
             return this.worldStatsCache.artificialFleetCapacityWorlds || 0;
         }
         let total = 0;
-        const counts = this.worldStatsCache.artificialTerraformValueCounts || {};
+        const counts = this._mergeCountMaps(
+            this.worldStatsCache.artificialTerraformValueCounts,
+            this.artificialSummary.terraformValueCounts
+        );
         Object.keys(counts).forEach((valueKey) => {
             const count = counts[valueKey];
             const terraformedValue = Number(valueKey);
@@ -1252,6 +1492,28 @@ class SpaceManager extends EffectableEntity {
         });
         this.worldStatsCache.artificialFleetCapacityWorlds = total;
         this.worldStatsCache.lastArtificialFleetCap = cap;
+        return total;
+    }
+
+    getArtificialFleetCapacityWorldsForSector(sectorLabel) {
+        const target = normalizeSectorLabel(sectorLabel);
+        const cap = this._getArtificialFleetCapacityCap();
+        let total = 0;
+        Object.values(this.artificialWorldStatuses).forEach((status) => {
+            if (!status?.terraformed || normalizeSectorLabel(status.sector) !== target) {
+                return;
+            }
+            total += Math.min(cap, this._deriveArtificialTerraformValue(status));
+        });
+        const counts = this.artificialSummary.sectorTerraformValueCounts[target] || {};
+        Object.keys(counts).forEach((valueKey) => {
+            const count = counts[valueKey];
+            const terraformedValue = Number(valueKey);
+            if (!count || !Number.isFinite(terraformedValue) || terraformedValue <= 0) {
+                return;
+            }
+            total += Math.min(cap, terraformedValue) * count;
+        });
         return total;
     }
 
@@ -1724,9 +1986,10 @@ class SpaceManager extends EffectableEntity {
             if (!st.name) st.name = this.currentRandomName || `Seed ${seed}`;
         } else if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
+            const landHa = this._getCurrentWorldLandHa();
             if (!this.artificialWorldStatuses[key]) {
                 const terraformedValue = this._deriveArtificialTerraformValue({
-                    landHa: this._getCurrentWorldLandHa(),
+                    landHa,
                     original: this.getCurrentWorldOriginal()
                 });
                 this.artificialWorldStatuses[key] = {
@@ -1745,6 +2008,8 @@ class SpaceManager extends EffectableEntity {
                     naturalMagnetosphere: false,
                     specialization: '',
                     artificial: true,
+                    landHa,
+                    cachedLandHa: landHa,
                     terraformedValue,
                     fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue })
                 };
@@ -1769,6 +2034,8 @@ class SpaceManager extends EffectableEntity {
             if (!Number.isFinite(st.fleetCapacityValue) || st.fleetCapacityValue <= 0) {
                 st.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(st);
             }
+            st.landHa = landHa;
+            st.cachedLandHa = landHa;
             st.artificialSnapshot = artificialManager.buildSnapshotFromParams(currentPlanetParameters);
             if (!st.name) st.name = this.currentRandomName || `Artificial ${key}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
@@ -1782,6 +2049,7 @@ class SpaceManager extends EffectableEntity {
             ps.specialization = specialization;
         }
         this._compactRandomWorldStatuses();
+        this._compactArtificialWorldStatuses();
         this._refreshFoundryWorldBonusCache();
     }
 
@@ -1868,6 +2136,7 @@ class SpaceManager extends EffectableEntity {
         const destinationTerraformed = this.isPlanetTerraformed(targetKey);
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
         this._compactRandomWorldStatuses();
+        this._compactArtificialWorldStatuses();
         const params = getPlanetParameters(targetKey);
         this._finalizeTravelInitialization({
             planetKey: targetKey,
@@ -1937,6 +2206,7 @@ class SpaceManager extends EffectableEntity {
                 original: travelResult
             })
             : 1;
+        const landHa = isArtificial ? getLandFromParams(travelResult?.merged) : 0;
         const sector = resolveSectorFromSources(travelResult);
         const targetType = isArtificial ? 'artificial' : 'random';
         this._updateWorldCacheForStatusMutation(targetType, s, (status, map, key) => {
@@ -1963,6 +2233,8 @@ class SpaceManager extends EffectableEntity {
                     artificial: artificialWorld,
                     cachedArchetype,
                     terraformedValue,
+                    landHa,
+                    cachedLandHa: landHa,
                     sector
                 };
                 return;
@@ -1981,6 +2253,10 @@ class SpaceManager extends EffectableEntity {
             if (isArtificial && !status.terraformedValue) {
                 status.terraformedValue = terraformedValue;
             }
+            if (isArtificial && landHa > 0) {
+                status.landHa = landHa;
+                status.cachedLandHa = landHa;
+            }
             if (!status.name) {
                 status.name = this.currentRandomName;
             }
@@ -1994,6 +2270,7 @@ class SpaceManager extends EffectableEntity {
         });
 
         this._compactRandomWorldStatuses();
+        this._compactArtificialWorldStatuses();
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
         const latest = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const mergedParams = travelResult?.merged || latest?.original?.merged || null;
@@ -2145,6 +2422,20 @@ class SpaceManager extends EffectableEntity {
                 return [key, copy];
             })
         );
+        const pruneArtificialStatuses = (statuses, activeKey) => Object.fromEntries(
+            Object.entries(statuses).map(([key, status]) => {
+                if (!status || key === activeKey || status.stored || status.abandoned) {
+                    return [key, status];
+                }
+                if (!this._isPrunableArtificialWorldStatus(key, status, activeKey)) {
+                    return [key, status];
+                }
+                const copy = { ...status };
+                this._prepareCompactableArtificialStatus(copy);
+                this._stripCompactableArtificialStatus(copy);
+                return [key, copy];
+            })
+        );
 
         return {
             currentPlanetKey: this.currentPlanetKey,
@@ -2152,7 +2443,8 @@ class SpaceManager extends EffectableEntity {
             currentRandomSeed: this.currentRandomSeed,
             currentRandomName: this.currentRandomName,
             currentArtificialKey: this.currentArtificialKey,
-            artificialWorldStatuses: pruneStatuses(this.artificialWorldStatuses, activeArtificialKey),
+            artificialWorldStatuses: pruneArtificialStatuses(this.artificialWorldStatuses, activeArtificialKey),
+            artificialSummary: this._sanitizeArtificialSummary(this.artificialSummary),
             randomWorldStatuses: pruneStatuses(this.randomWorldStatuses, activeRandomKey),
             rwgSummary: this._sanitizeRwgSummary(this.rwgSummary),
             randomTabEnabled: this.randomTabEnabled,
@@ -2173,6 +2465,7 @@ class SpaceManager extends EffectableEntity {
         this.randomWorldStatuses = {};
         this.rwgSummary = this._createEmptyRwgSummary();
         this.artificialWorldStatuses = {};
+        this.artificialSummary = this._createEmptyArtificialSummary();
         this.randomTabEnabled = false;
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
@@ -2331,6 +2624,8 @@ class SpaceManager extends EffectableEntity {
             });
         }
 
+        this.artificialSummary = this._sanitizeArtificialSummary(savedData.artificialSummary);
+
         if (savedData.randomWorldStatuses) {
             this.randomWorldStatuses = savedData.randomWorldStatuses;
             Object.values(this.randomWorldStatuses)
@@ -2397,6 +2692,7 @@ class SpaceManager extends EffectableEntity {
             this._syncFoundryLandFactor(this.artificialWorldStatuses[key], key);
         });
         this._compactRandomWorldStatuses();
+        this._compactArtificialWorldStatuses();
         this._refreshWorldStatsCache();
         this._refreshFoundryWorldBonusCache();
 

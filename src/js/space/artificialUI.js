@@ -1228,7 +1228,7 @@ function ensureArtificialLayout() {
   const historyHeader = document.createElement('div');
   historyHeader.className = 'artificial-history-header';
   const historyTitle = document.createElement('h3');
-  historyTitle.textContent = 'Constructed worlds';
+  historyTitle.textContent = 'Constructed Worlds (last 50)';
   historyHeader.appendChild(historyTitle);
   const pager = document.createElement('div');
   pager.className = 'artificial-history-pager';
@@ -1596,7 +1596,7 @@ function renderArtificialHistory(force = false) {
   const manager = artificialManager;
   if (!manager || !artificialUICache.historyList || !artificialUICache.historyPage) return;
   const entries = typeof manager.getHistoryEntries === 'function' ? manager.getHistoryEntries() : [];
-  const pageSize = 6;
+  const pageSize = 10;
   const maxPage = Math.max(0, Math.ceil(entries.length / pageSize) - 1);
   artificialHistoryPage = Math.min(artificialHistoryPage, maxPage);
   const start = artificialHistoryPage * pageSize;

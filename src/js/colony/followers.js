@@ -637,6 +637,9 @@ class FollowersManager extends EffectableEntity {
     let total = spaceManager.getRandomWorldDepartedColonistsTotal
       ? Math.max(0, spaceManager.getRandomWorldDepartedColonistsTotal())
       : 0;
+    total += spaceManager.getArtificialWorldDepartedColonistsTotal
+      ? Math.max(0, spaceManager.getArtificialWorldDepartedColonistsTotal())
+      : 0;
     const currentStoryKey = spaceManager.currentPlanetKey;
     const currentSeed = spaceManager.currentRandomSeed === null ? null : String(spaceManager.currentRandomSeed);
     const currentArtificialKey = spaceManager.currentArtificialKey === null ? null : String(spaceManager.currentArtificialKey);
