@@ -47,9 +47,10 @@
       this.generateCloudMap(w, h);
     }
     const cloudPct = Math.max(0, Math.min(100, this.viz.coverage?.cloud || 0));
-    const cov = cloudPct / 100;
+    const rawCov = cloudPct / 100;
+    const cov = rawCov * rawCov;
     const total = this.cloudHist.total || (w * h);
-    const target = Math.round((cloudPct / 100) * total);
+    const target = Math.round(cov * total);
     let thr = 256;
     if (target > 0 && target < total) {
       let acc = 0;
@@ -115,7 +116,7 @@
       this.cloudMaterial.opacity = 0.45 + 0.55 * Math.pow(cov, 1.15);
     }
     this.cloudMaterial.needsUpdate = true;
-    this._lastCloudCoverageKey = `${cloudPct.toFixed(2)}`;
+    this._lastCloudCoverageKey = `${cov.toFixed(4)}`;
   };
 
   PlanetVisualizer.prototype.generateCloudCanvas = function generateCloudCanvas() {
@@ -185,7 +186,8 @@
 
   PlanetVisualizer.prototype.updateCloudTexture = function updateCloudTexture(force = false) {
     if (!this.cloudMesh || !this.cloudMaterial) return;
-    const cov = Math.max(0, Math.min(1, (this.viz.coverage?.cloud || 0) / 100));
+    const rawCov = Math.max(0, Math.min(1, (this.viz.coverage?.cloud || 0) / 100));
+    const cov = rawCov * rawCov;
     if (!this.cloudMaterial.map || force) {
       const canvas = this.generateCloudCanvas();
       const tex = new THREE.CanvasTexture(canvas);
@@ -200,7 +202,8 @@
   PlanetVisualizer.prototype.updateCloudUniforms = function updateCloudUniforms() {
     if (this.cloudMesh) this.cloudMesh.visible = true;
     if (this.cloudMesh && this.cloudMaterial) {
-      const keyNow = `${Math.max(0, Math.min(100, this.viz.coverage?.cloud || 0)).toFixed(2)}`;
+      const rawCov = Math.max(0, Math.min(1, (this.viz.coverage?.cloud || 0) / 100));
+      const keyNow = `${(rawCov * rawCov).toFixed(4)}`;
       if (this._lastCloudCoverageKey !== keyNow) {
         this.updateCloudMeshTexture();
       }
