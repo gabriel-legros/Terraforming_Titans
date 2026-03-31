@@ -169,16 +169,69 @@ function getTemperatureUnit() {
     return (typeof gameSettings !== 'undefined' && gameSettings.useCelsius) ? '°C' : 'K';
   }
 
-  function formatPlayTime(days) {
-    const years = Math.floor(days / 365);
-    const remainingDays = Math.floor(days % 365);
-    const parts = [];
-    if (years > 0) {
-      parts.push(`${years} year${years !== 1 ? 's' : ''}`);
-    }
-    parts.push(`${remainingDays} day${remainingDays !== 1 ? 's' : ''}`);
-    return parts.join(' ');
+function formatPlayTimeUnit(value, label, displayValue) {
+  const renderedValue = displayValue === undefined ? value : displayValue;
+  return `${renderedValue}${label}`;
+}
+
+function formatPlayTimePaddedInteger(value) {
+  return String(value).padStart(2, '0');
+}
+
+function floorPlayTimeValue(value) {
+  return Math.floor(value + 1e-9);
+}
+
+function formatPlayTimeSeconds(seconds) {
+  let displaySeconds = floorToPrecision(Math.max(0, seconds) + 1e-9, 2);
+  if (seconds > 0 && displaySeconds < 0.01) {
+    displaySeconds = 0.01;
   }
+  let secondsText;
+  if (isNearlyWhole(displaySeconds)) {
+    const roundedSeconds = Math.round(displaySeconds);
+    secondsText = formatPlayTimePaddedInteger(roundedSeconds);
+    return formatPlayTimeUnit(roundedSeconds, 's', secondsText);
+  }
+  secondsText = displaySeconds.toFixed(2);
+  if (displaySeconds < 10) {
+    secondsText = `0${secondsText}`;
+  }
+  return formatPlayTimeUnit(displaySeconds, 's', secondsText);
+}
+
+function formatPlayTime(days) {
+  const totalDays = Number.isFinite(days) ? Math.max(0, days) : 0;
+
+  if (totalDays >= 365) {
+    const years = floorPlayTimeValue(totalDays / 365);
+    const remainingDays = floorPlayTimeValue(totalDays - years * 365);
+    return `${formatPlayTimeUnit(years, 'y')} ${formatPlayTimeUnit(remainingDays, 'd', formatPlayTimePaddedInteger(remainingDays))}`;
+  }
+
+  if (totalDays >= 1) {
+    const wholeDays = floorPlayTimeValue(totalDays);
+    const hours = floorPlayTimeValue((totalDays - wholeDays) * 24);
+    return `${formatPlayTimeUnit(wholeDays, 'd')} ${formatPlayTimeUnit(hours, 'h', formatPlayTimePaddedInteger(hours))}`;
+  }
+
+  const totalHours = totalDays * 24;
+  if (totalHours >= 1) {
+    const wholeHours = floorPlayTimeValue(totalHours);
+    const minutes = floorPlayTimeValue((totalHours - wholeHours) * 60);
+    return `${formatPlayTimeUnit(wholeHours, 'h')} ${formatPlayTimeUnit(minutes, 'm', formatPlayTimePaddedInteger(minutes))}`;
+  }
+
+  const totalMinutes = totalHours * 60;
+  if (totalMinutes >= 1) {
+    const wholeMinutes = floorPlayTimeValue(totalMinutes);
+    const seconds = (totalMinutes - wholeMinutes) * 60;
+    const secondsText = formatPlayTimeSeconds(seconds);
+    return `${formatPlayTimeUnit(wholeMinutes, 'm', formatPlayTimePaddedInteger(wholeMinutes))} ${secondsText}`;
+  }
+
+  return formatPlayTimeSeconds(totalMinutes * 60);
+}
 
 function formatDuration(seconds) {
   const yearSeconds = 365 * 24 * 3600;

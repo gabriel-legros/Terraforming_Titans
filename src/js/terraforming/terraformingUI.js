@@ -724,14 +724,23 @@ function createTerraformingSummaryUI() {
 
   const playTimeDisplay = document.createElement('div');
   playTimeDisplay.id = 'play-time-display';
-  const playTimeText = document.createElement('span');
-  playTimeText.classList.add('play-time-text');
-  playTimeText.textContent = 'Time since awakening : 0 days';
-  playTimeDisplay.appendChild(playTimeText);
+  const playTimeLabel = document.createElement('span');
+  playTimeLabel.classList.add('play-time-label');
+  playTimeLabel.textContent = t(
+    'ui.terraforming.playTimeLabel',
+    null,
+    'Time since awakening :'
+  );
+  const playTimeValue = document.createElement('span');
+  playTimeValue.classList.add('play-time-value');
+  playTimeValue.textContent = t('ui.terraforming.playTimeDefault', null, formatPlayTime(0));
+  playTimeDisplay.appendChild(playTimeLabel);
+  playTimeDisplay.appendChild(playTimeValue);
   terraformingGraphsManager.attachSummaryButton(playTimeDisplay);
   terraformingContainer.appendChild(playTimeDisplay);
   summaryCache.playTimeDisplay = playTimeDisplay;
-  summaryCache.playTimeText = playTimeText;
+  summaryCache.playTimeLabel = playTimeLabel;
+  summaryCache.playTimeValue = playTimeValue;
 
   const grid = document.createElement('div');
   grid.classList.add('terraforming-grid');
@@ -766,7 +775,7 @@ function updateTerraformingUI(deltaSeconds, options = {}) {
 
   function updatePlayTimeDisplay() {
     const summaryCache = terraformingUICache.summary;
-    summaryCache.playTimeText.textContent = `Time since awakening : ${formatPlayTime(playTimeSeconds)}`;
+    summaryCache.playTimeValue.textContent = formatPlayTime(playTimeSeconds);
   }
 
 // Functions to create and update each terraforming aspect box
