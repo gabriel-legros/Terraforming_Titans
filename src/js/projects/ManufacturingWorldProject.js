@@ -37,9 +37,9 @@
     graphene: {
       label: getManufacturingText('catalogs.specializations.manufacturing.recipes.graphene.label'),
       outputStorageKey: 'metal',
-      complexity: 5,
-      baseOutput: 10,
-      inputs: { graphite: 10 },
+      complexity: 25,
+      baseOutput: 50,
+      inputs: { graphite: 50 },
       shopId: 'grapheneEfficiency',
       wgcUpgradeId: null,
     },
