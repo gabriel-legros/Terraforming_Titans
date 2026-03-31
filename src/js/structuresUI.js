@@ -2333,8 +2333,8 @@ function updateDecreaseButtonText(button, buildCount) {
       if (desiredChange > 0) {
         desiredChange = Math.min(desiredChange, structure.landAffordCount());
       }
-      if (desiredChange !== 0) {
-        structure.adjustLand(desiredChange);
+      if (desiredChange !== 0 && !structure.adjustLand(desiredChange)) {
+        return;
       }
     }
 

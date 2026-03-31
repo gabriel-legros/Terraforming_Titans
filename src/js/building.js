@@ -1069,14 +1069,38 @@ class Building extends EffectableEntity {
     }
 
     const normalizedChange = Number.isFinite(amount) ? amount : 0;
-    const currentActive = Number.isFinite(this.active) ? this.active : 0;
-    const targetActive = Math.max(0, currentActive + normalizedChange);
-    const targetReserved = targetActive * this.requiresLand;
     const sourceKey = `building:${this.name}`;
 
     if (!landResource.setReservedAmountForSource) {
       return false;
     }
+
+    if (
+      typeof landResource.getExactReservedAmountForSource === 'function' &&
+      typeof landResource.getExactLandAvailable === 'function'
+    ) {
+      const currentReservedForSource = landResource.getExactReservedAmountForSource(sourceKey);
+      const exactChange = numberToExactLandAmount(Math.abs(normalizedChange)) * BigInt(this.requiresLand);
+      let targetReserved = normalizedChange >= 0
+        ? currentReservedForSource + exactChange
+        : currentReservedForSource - exactChange;
+
+      if (targetReserved < 0n) {
+        targetReserved = 0n;
+      }
+
+      const additionalRequired = targetReserved - currentReservedForSource;
+      if (additionalRequired > 0n && landResource.getExactLandAvailable() < additionalRequired) {
+        return false;
+      }
+
+      landResource.setReservedAmountForSource(sourceKey, targetReserved);
+      return true;
+    }
+
+    const currentActive = Number.isFinite(this.active) ? this.active : 0;
+    const targetActive = Math.max(0, currentActive + normalizedChange);
+    const targetReserved = targetActive * this.requiresLand;
 
     const currentReservedForSource = landResource.getReservedAmountForSource
       ? landResource.getReservedAmountForSource(sourceKey)
@@ -1136,6 +1160,9 @@ class Building extends EffectableEntity {
 
   build(buildCount = 1, activate = true) {
     if (this.canAfford(buildCount)) {
+      if (this.requiresLand && activate && !this.adjustLand(buildCount)) {
+        return false;
+      }
       const baseCost = this.getBaseEffectiveCost(buildCount);
       const multiplier = this.getKesslerCostMultiplier();
       const effectiveCost = this._applyKesslerCostMultiplier(baseCost, multiplier);
@@ -1148,9 +1175,6 @@ class Building extends EffectableEntity {
         for (const deposit in this.requiresDeposit.underground) {
           resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]*buildCount);
         }
-      }
-      if(this.requiresLand && activate){
-        this.adjustLand(buildCount);
       }
       const oldActive = this.active;
       const oldProductivity = this.productivity;

@@ -525,7 +525,9 @@ class Resource extends EffectableEntity {
   setReservedAmountForSource(source, amount) {
     if (this.ensureExactLandState()) {
       const key = source || 'default';
-      const sanitized = numberToExactLandAmount(amount);
+      const sanitized = typeof amount === 'bigint'
+        ? (amount > 0n ? amount : 0n)
+        : numberToExactLandAmount(amount);
       const existing = this.exactReservedSources[key] || 0n;
       let tracked = 0n;
 
