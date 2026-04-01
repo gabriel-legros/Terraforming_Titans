@@ -47,6 +47,21 @@ let travelWarningHintToggle = null;
 let travelWarningHintTitleEl = null;
 let travelWarningHintBodyEl = null;
 
+function getSpaceUIText(path, fallback, vars) {
+    try {
+        return t(`ui.space.${path}`, vars, fallback);
+    } catch (error) {
+        if (!vars) {
+            return fallback;
+        }
+        let text = fallback;
+        Object.keys(vars).forEach((key) => {
+            text = text.replaceAll(`{${key}}`, String(vars[key]));
+        });
+        return text;
+    }
+}
+
 function setTravelWarningHintVisibility(isOpen) {
     if (!travelWarningHintContainer) return;
     travelWarningHintContainer.dataset.open = isOpen ? 'true' : 'false';
@@ -54,7 +69,9 @@ function setTravelWarningHintVisibility(isOpen) {
         travelWarningHintBodyEl.style.display = isOpen ? 'block' : 'none';
     }
     if (travelWarningHintToggle) {
-        travelWarningHintToggle.textContent = isOpen ? 'Hide Hint' : 'Show Hint';
+        travelWarningHintToggle.textContent = isOpen
+            ? getSpaceUIText('travelWarning.hideHint', 'Hide Hint')
+            : getSpaceUIText('travelWarning.showHint', 'Show Hint');
         travelWarningHintToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     }
 }
@@ -154,11 +171,13 @@ function setSpaceIncomingAttackWarning(isActive, isThreat = true) {
         warning.setAttribute('aria-hidden', 'false');
         warning.setAttribute('role', 'img');
         if (isThreat) {
-            warning.setAttribute('aria-label', 'Incoming attack detected in UHF sector');
-            warning.title = 'Incoming attack detected in UHF sector';
+            const warningText = getSpaceUIText('alerts.incomingAttackThreat', 'Incoming attack detected in UHF sector');
+            warning.setAttribute('aria-label', warningText);
+            warning.title = warningText;
         } else {
-            warning.setAttribute('aria-label', 'Incoming attack detected in UHF sector with no current success chance');
-            warning.title = 'Incoming attack detected in UHF sector with no current success chance';
+            const warningText = getSpaceUIText('alerts.incomingAttackNoChance', 'Incoming attack detected in UHF sector with no current success chance');
+            warning.setAttribute('aria-label', warningText);
+            warning.title = warningText;
         }
         return;
     }
@@ -239,13 +258,13 @@ function showTravelWarningPopup(warningData, onConfirm) {
 
         travelWarningHintTitleEl = document.createElement('span');
         travelWarningHintTitleEl.className = 'travel-warning-hint-title';
-        travelWarningHintTitleEl.textContent = 'Hint';
+        travelWarningHintTitleEl.textContent = getSpaceUIText('travelWarning.hint', 'Hint');
         hintHeader.appendChild(travelWarningHintTitleEl);
 
         travelWarningHintToggle = document.createElement('button');
         travelWarningHintToggle.type = 'button';
         travelWarningHintToggle.className = 'travel-warning-hint-toggle';
-        travelWarningHintToggle.textContent = 'Show Hint';
+        travelWarningHintToggle.textContent = getSpaceUIText('travelWarning.showHint', 'Show Hint');
 
         travelWarningHintBodyEl = document.createElement('div');
         travelWarningHintBodyEl.id = 'travel-warning-hint-body';
@@ -273,12 +292,12 @@ function showTravelWarningPopup(warningData, onConfirm) {
 
         travelWarningConfirmBtn = document.createElement('button');
         travelWarningConfirmBtn.id = 'travel-warning-confirm';
-        travelWarningConfirmBtn.textContent = 'Travel';
+        travelWarningConfirmBtn.textContent = getSpaceUIText('travelWarning.travel', 'Travel');
         btnRow.appendChild(travelWarningConfirmBtn);
 
         travelWarningCancelBtn = document.createElement('button');
         travelWarningCancelBtn.id = 'travel-warning-cancel';
-        travelWarningCancelBtn.textContent = 'Cancel Travel';
+        travelWarningCancelBtn.textContent = getSpaceUIText('travelWarning.cancelTravel', 'Cancel Travel');
         btnRow.appendChild(travelWarningCancelBtn);
 
         win.appendChild(btnRow);
@@ -287,12 +306,12 @@ function showTravelWarningPopup(warningData, onConfirm) {
     }
     const warning = warningData || { message: '' };
     travelWarningMessageEl.textContent = warning.message || '';
-    travelWarningConfirmBtn.textContent = warning.confirmLabel || 'Travel';
-    travelWarningCancelBtn.textContent = warning.cancelLabel || 'Cancel Travel';
+    travelWarningConfirmBtn.textContent = warning.confirmLabel || getSpaceUIText('travelWarning.travel', 'Travel');
+    travelWarningCancelBtn.textContent = warning.cancelLabel || getSpaceUIText('travelWarning.cancelTravel', 'Cancel Travel');
 
     if (warning.hint && warning.hint.body) {
         travelWarningHintContainer.style.display = 'block';
-        travelWarningHintTitleEl.textContent = warning.hint.title || 'Hint';
+        travelWarningHintTitleEl.textContent = warning.hint.title || getSpaceUIText('travelWarning.hint', 'Hint');
         travelWarningHintBodyEl.textContent = warning.hint.body;
         setTravelWarningHintVisibility(false);
     } else if (travelWarningHintContainer) {
@@ -315,7 +334,10 @@ function handleUnterraformedTravelWarning(onConfirm) {
         return false;
     }
     showTravelWarningPopup({
-        message: 'This world is not yet fully terraformed. Leaving now will abandon its progress.',
+        message: getSpaceUIText(
+            'travelWarning.unterraformedMessage',
+            'This world is not yet fully terraformed. Leaving now will abandon its progress.'
+        ),
     }, onConfirm);
     return true;
 }
@@ -339,7 +361,11 @@ function getActiveSpecializationProject() {
 function handleSpecializationTravelWarning(onConfirm) {
     const project = getActiveSpecializationProject();
     return project && (showTravelWarningPopup({
-        message: `${project.displayName} is still in progress. Leaving now will abandon its progress.`,
+        message: getSpaceUIText(
+            'travelWarning.specializationInProgress',
+            '{name} is still in progress. Leaving now will abandon its progress.',
+            { name: project.displayName }
+        ),
     }, onConfirm), true);
 }
 
@@ -466,7 +492,10 @@ function initializeSpaceUI(spaceManager) {
 
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
     if (!allPlanetData) {
-        optionsContainer.innerHTML = '<p style="color: red;">Error: Planet data unavailable.</p>';
+        const error = document.createElement('p');
+        error.style.color = 'red';
+        error.textContent = getSpaceUIText('storyUi.planetDataUnavailable', 'Error: Planet data unavailable.');
+        optionsContainer.replaceChildren(error);
         return;
     }
 
@@ -485,10 +514,10 @@ function initializeSpaceUI(spaceManager) {
         const statsDiv = document.createElement('div');
         statsDiv.classList.add('planet-stats');
         statsDiv.innerHTML = `
-            <p><strong>Distance:</strong><span>${formatNumber(celestial.distanceFromSun, false, 2)} AU</span></p>
-            <p><strong>Gravity:</strong><span>${formatNumber(celestial.gravity, false, 2)} m/s²</span></p>
-            <p><strong>Radius:</strong><span>${format(celestial.radius)} km</span></p>
-            <p><strong>Status:</strong><span class="planet-status"></span></p>
+            <p><strong>${getSpaceUIText('storyUi.distance', 'Distance:')}</strong><span>${formatNumber(celestial.distanceFromSun, false, 2)} AU</span></p>
+            <p><strong>${getSpaceUIText('storyUi.gravity', 'Gravity:')}</strong><span>${formatNumber(celestial.gravity, false, 2)} m/s²</span></p>
+            <p><strong>${getSpaceUIText('storyUi.radius', 'Radius:')}</strong><span>${format(celestial.radius)} km</span></p>
+            <p><strong>${getSpaceUIText('storyUi.status', 'Status:')}</strong><span class="planet-status"></span></p>
         `;
         planetDiv.appendChild(statsDiv);
 
@@ -550,7 +579,9 @@ function updateSpaceUI() {
         const showWarning = !isTerraformed;
         statusContainer.style.display = showWarning ? 'flex' : 'none';
         statusContainer.classList.toggle('hidden', !showWarning);
-        statusContainer.textContent = showWarning ? 'Terraform this world before charting a new course.' : '';
+        statusContainer.textContent = showWarning
+            ? getSpaceUIText('storyUi.terraformBeforeTravel', 'Terraform this world before charting a new course.')
+            : '';
     }
 
     Object.entries(allPlanetData).forEach(([key, data]) => {
@@ -569,20 +600,22 @@ function updateSpaceUI() {
         ui.container.classList.toggle('disabled', cardLocked);
 
         ui.nameHeading.textContent = data.name;
-        ui.statusSpan.textContent = cardTerraformed ? 'Terraforming Complete' : 'Terraforming pending';
+        ui.statusSpan.textContent = cardTerraformed
+            ? getSpaceUIText('storyUi.terraformingComplete', 'Terraforming Complete')
+            : getSpaceUIText('storyUi.terraformingPending', 'Terraforming pending');
 
         if (cardIsCurrent) {
-            ui.button.textContent = 'Current Location';
+            ui.button.textContent = getSpaceUIText('storyUi.currentLocation', 'Current Location');
             ui.button.disabled = true;
-            ui.button.title = `You are currently at ${data.name}.`;
+            ui.button.title = getSpaceUIText('storyUi.currentLocationTitle', 'You are currently at {name}.', { name: data.name });
         } else if (cardTerraformed) {
-            ui.button.textContent = 'Already Terraformed';
+            ui.button.textContent = getSpaceUIText('storyUi.alreadyTerraformed', 'Already Terraformed');
             ui.button.disabled = true;
-            ui.button.title = `${data.name} has already been terraformed.`;
+            ui.button.title = getSpaceUIText('storyUi.alreadyTerraformedTitle', '{name} has already been terraformed.', { name: data.name });
         } else {
-            ui.button.textContent = `Select ${data.name}`;
+            ui.button.textContent = getSpaceUIText('storyUi.selectPlanet', 'Select {name}', { name: data.name });
             ui.button.disabled = false;
-            ui.button.title = `Travel to ${data.name}`;
+            ui.button.title = getSpaceUIText('storyUi.travelTo', 'Travel to {name}', { name: data.name });
         }
     });
 }
@@ -597,7 +630,10 @@ function updateSpaceStatsUI() {
     spaceStatEffectiveValueEl.textContent = formatGroupedNumber(effectiveCount, 2, 0);
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
-        const uniqueBase = 'Counts every distinct story world and terraformed random world you have completed. Ignores all other bonuses.';
+        const uniqueBase = getSpaceUIText(
+            'stats.uniqueTooltip',
+            'Counts every distinct story world and terraformed random world you have completed. Ignores all other bonuses.'
+        );
         if (spaceStatUniqueTooltipContentEl) {
             spaceStatUniqueTooltipContentEl.textContent = uniqueBase;
         } else {
@@ -605,9 +641,18 @@ function updateSpaceStatsUI() {
         }
     }
     if (spaceStatEffectiveTooltipEl) {
-        const effectiveBase = 'Includes worlds from other sources. This value influence advanced research, Solis rewards, mega structure expansion speed, and export caps.';
+        const effectiveBase = getSpaceUIText(
+            'stats.effectiveTooltip',
+            'Includes worlds from other sources. This value influences advanced research, Solis rewards, mega structure expansion speed, and export caps.'
+        );
         const artificialFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 5;
-        const effectiveGalaxy = galaxyUnlocked ? ` With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to ${artificialFleetCap} and O'Neill cylinders are ignored).` : '';
+        const effectiveGalaxy = galaxyUnlocked
+            ? ` ${getSpaceUIText(
+                'stats.effectiveTooltipGalaxy',
+                "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to {value} and O'Neill cylinders are ignored).",
+                { value: artificialFleetCap }
+            )}`
+            : '';
         const effectiveTooltipText = `${effectiveBase}${effectiveGalaxy}`;
         if (spaceStatEffectiveTooltipContentEl) {
             spaceStatEffectiveTooltipContentEl.textContent = effectiveTooltipText;

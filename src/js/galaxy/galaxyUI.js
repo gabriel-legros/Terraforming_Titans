@@ -97,6 +97,21 @@ const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
 const operationsAutoStates = new Map();
 
+function getGalaxyText(path, fallback, vars) {
+    try {
+        return t(`ui.galaxy.${path}`, vars, fallback);
+    } catch (error) {
+        if (!vars) {
+            return fallback;
+        }
+        let text = fallback;
+        Object.keys(vars).forEach((key) => {
+            text = text.replaceAll(`{${key}}`, String(vars[key]));
+        });
+        return text;
+    }
+}
+
 function getDevicePixelRatioSafe() {
     const ratio = globalThis?.devicePixelRatio;
     return Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
@@ -458,7 +473,9 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     hex.dataset.q = q;
     hex.dataset.r = r;
     const sectorName = displayName || formatSectorName(q, r);
-    hex.setAttribute('aria-label', sectorName === 'Core' ? 'Core sector' : `Sector ${sectorName}`);
+    hex.setAttribute('aria-label', sectorName === 'Core'
+        ? getGalaxyText('map.coreSector', 'Core sector')
+        : getGalaxyText('map.sectorAria', 'Sector {value}', { value: sectorName }));
     hex.dataset.displayName = sectorName;
     hex.style.width = `${displayWidth}px`;
     hex.style.height = `${displayHeight}px`;
@@ -626,13 +643,13 @@ function updateDefenseStepDisplay(step) {
         buttons.zero.textContent = '0';
     }
     if (buttons.max) {
-        buttons.max.textContent = 'Max';
+        buttons.max.textContent = getGalaxyText('common.max', 'Max');
     }
     if (buttons.divide) {
         buttons.divide.textContent = '/10';
     }
     if (buttons.multiply) {
-        buttons.multiply.textContent = 'x10';
+        buttons.multiply.textContent = getGalaxyText('common.timesTen', 'x10');
     }
 }
 
@@ -727,7 +744,7 @@ function updateHexStoryRequirement(hex, sector) {
         storyIcon.removeAttribute('title');
         return;
     }
-    storyIcon.title = `Conquest of this sector is required to progress to World ${requiredWorld}.`;
+    storyIcon.title = getGalaxyText('sector.requirementNotice', 'Conquest of this sector is required to progress to World {value}.', { value: requiredWorld });
     storyIcon.classList.remove('is-hidden');
 }
 
@@ -872,7 +889,7 @@ function renderSelectedSectorDetails() {
 
         const subtitle = doc.createElement('div');
         subtitle.className = 'galaxy-sector-panel__subtitle';
-        subtitle.textContent = 'Faction Control';
+        subtitle.textContent = getGalaxyText('sector.factionControl', 'Faction Control');
         container.appendChild(subtitle);
 
         const requirementNotice = doc.createElement('p');
@@ -885,7 +902,7 @@ function renderSelectedSectorDetails() {
 
         const empty = doc.createElement('p');
         empty.className = 'galaxy-sector-panel__empty';
-        empty.textContent = 'No factions currently control this sector.';
+        empty.textContent = getGalaxyText('sector.noFactionControl', 'No factions currently control this sector.');
         container.appendChild(empty);
 
         const managementSection = doc.createElement('div');
@@ -893,7 +910,7 @@ function renderSelectedSectorDetails() {
 
         const managementSubtitle = doc.createElement('div');
         managementSubtitle.className = 'galaxy-sector-panel__subtitle';
-        managementSubtitle.textContent = 'Sector Management';
+        managementSubtitle.textContent = getGalaxyText('sector.management', 'Sector Management');
         managementSection.appendChild(managementSubtitle);
 
         const createStatRow = (label) => {
@@ -908,7 +925,7 @@ function renderSelectedSectorDetails() {
             return { stat, statLabel, statValue };
         };
 
-        const rewardRow = createStatRow('Reward');
+        const rewardRow = createStatRow(getGalaxyText('sector.reward', 'Reward'));
         rewardRow.stat.classList.add('galaxy-sector-panel__reward');
         rewardRow.statValue.textContent = '—';
         const rewardTooltipIcon = doc.createElement('span');
@@ -916,7 +933,7 @@ function renderSelectedSectorDetails() {
         rewardTooltipIcon.innerHTML = '&#9432;';
         const rewardTooltip = attachDynamicInfoTooltip(
             rewardTooltipIcon,
-            'Fully controlled sectors grant already habitable worlds.  Each count as a normal terraformed world, but unlike regular terraformed worlds, will be lost if the sector is lost.'
+            getGalaxyText('sector.rewardTooltip', 'Fully controlled sectors grant already habitable worlds.  Each count as a normal terraformed world, but unlike regular terraformed worlds, will be lost if the sector is lost.')
         );
         doc.body.appendChild(rewardTooltip);
         rewardRow.statLabel.appendChild(doc.createTextNode(' '));
@@ -928,23 +945,23 @@ function renderSelectedSectorDetails() {
 
         const resourceSubtitle = doc.createElement('div');
         resourceSubtitle.className = 'galaxy-sector-panel__subtitle';
-        resourceSubtitle.textContent = 'Resource Bias';
+        resourceSubtitle.textContent = getGalaxyText('sector.resourceBias', 'Resource Bias');
         resourceSection.appendChild(resourceSubtitle);
 
-        const richResourceRow = createStatRow('Rich');
+        const richResourceRow = createStatRow(getGalaxyText('sector.rich', 'Rich'));
         richResourceRow.statValue.classList.add('galaxy-sector-panel__resource-value--rich');
         richResourceRow.statValue.textContent = '—';
 
-        const poorResourceRow = createStatRow('Poor');
+        const poorResourceRow = createStatRow(getGalaxyText('sector.poor', 'Poor'));
         poorResourceRow.statValue.classList.add('galaxy-sector-panel__resource-value--poor');
         poorResourceRow.statValue.textContent = '—';
 
         resourceSection.append(richResourceRow.stat, poorResourceRow.stat);
         container.appendChild(resourceSection);
 
-        const worldRow = createStatRow('Worlds');
-        const fleetDefenseRow = createStatRow('Fleet Defense');
-        const totalDefenseRow = createStatRow('Total Defense');
+        const worldRow = createStatRow(getGalaxyText('sector.worlds', 'Worlds'));
+        const fleetDefenseRow = createStatRow(getGalaxyText('sector.fleetDefense', 'Fleet Defense'));
+        const totalDefenseRow = createStatRow(getGalaxyText('sector.totalDefense', 'Total Defense'));
 
         const warpGateRow = doc.createElement('div');
         warpGateRow.className = 'galaxy-sector-panel__warp-gate';
@@ -954,13 +971,13 @@ function renderSelectedSectorDetails() {
 
         const warpGateLabel = doc.createElement('span');
         warpGateLabel.className = 'galaxy-sector-panel__stat-label';
-        warpGateLabel.textContent = 'Warp Gate Network';
+        warpGateLabel.textContent = getGalaxyText('sector.warpGateNetwork', 'Warp Gate Network');
         const warpGateInfo = doc.createElement('span');
         warpGateInfo.className = 'info-tooltip-icon';
         warpGateInfo.innerHTML = '&#9432;';
         const warpGateTooltip = attachDynamicInfoTooltip(
             warpGateInfo,
-            'Unlocked by Warp Gate Fabrication.\nEach terraformed world in this fully controlled sector adds 1 progress per hour.\nProgress to the next level requires Level + 1.  Higher Warp Gate Network levels increase import caps for space resources.'
+            getGalaxyText('sector.warpGateTooltip', 'Unlocked by Warp Gate Fabrication.\nEach terraformed world in this fully controlled sector adds 1 progress per hour.\nProgress to the next level requires Level + 1.  Higher Warp Gate Network levels increase import caps for space resources.')
         );
         doc.body.appendChild(warpGateTooltip);
         warpGateLabel.appendChild(doc.createTextNode(' '));
@@ -968,7 +985,7 @@ function renderSelectedSectorDetails() {
 
         const warpGateValue = doc.createElement('span');
         warpGateValue.className = 'galaxy-sector-panel__stat-value';
-        warpGateValue.textContent = 'Level 0';
+        warpGateValue.textContent = getGalaxyText('sector.levelValue', 'Level {value}', { value: 0 });
 
         warpGateHeader.append(warpGateLabel, warpGateValue);
 
@@ -993,14 +1010,14 @@ function renderSelectedSectorDetails() {
 
         const lockText = doc.createElement('span');
         lockText.className = 'galaxy-sector-panel__lock-label';
-        lockText.textContent = 'Restrict RWG here';
+        lockText.textContent = getGalaxyText('sector.restrictRwgHere', 'Restrict RWG here');
 
         const lockInfo = doc.createElement('span');
         lockInfo.className = 'info-tooltip-icon';
         lockInfo.innerHTML = '&#9432;';
         const lockTooltip = attachDynamicInfoTooltip(
             lockInfo,
-            'When checked, all Random World Generator worlds will be generated in this sector.'
+            getGalaxyText('sector.restrictRwgTooltip', 'When checked, all Random World Generator worlds will be generated in this sector.')
         );
         doc.body.appendChild(lockTooltip);
         lockText.appendChild(doc.createTextNode(' '));
@@ -1018,12 +1035,12 @@ function renderSelectedSectorDetails() {
 
         const enemySubtitle = doc.createElement('div');
         enemySubtitle.className = 'galaxy-sector-panel__subtitle';
-        enemySubtitle.textContent = 'Enemy Strength';
+        enemySubtitle.textContent = getGalaxyText('sector.enemyStrength', 'Enemy Strength');
         enemySection.appendChild(enemySubtitle);
 
-        const enemySectorRow = createStatRow('Sector Defense');
-        const enemyFleetRow = createStatRow('Fleet Defense');
-        const enemyTotalRow = createStatRow('Total Defense');
+        const enemySectorRow = createStatRow(getGalaxyText('sector.sectorDefense', 'Sector Defense'));
+        const enemyFleetRow = createStatRow(getGalaxyText('sector.fleetDefense', 'Fleet Defense'));
+        const enemyTotalRow = createStatRow(getGalaxyText('sector.totalDefense', 'Total Defense'));
 
         enemySection.append(enemySectorRow.stat, enemyFleetRow.stat, enemyTotalRow.stat);
 
@@ -1071,8 +1088,8 @@ function renderSelectedSectorDetails() {
     }
 
     details.title.textContent = selection.displayName === 'Core'
-        ? 'Core Sector'
-        : `Sector ${selection.displayName}`;
+        ? getGalaxyText('sector.coreSector', 'Core Sector')
+        : getGalaxyText('sector.sectorValue', 'Sector {value}', { value: selection.displayName });
 
     const spaceManagerInstance = globalThis.spaceManager;
     const worldCount = spaceManagerInstance?.getWorldCountPerSector
@@ -1100,7 +1117,7 @@ function renderSelectedSectorDetails() {
 
     if (details.requirementNotice) {
         if (requiredWorld && !uhfHasFullControl) {
-            details.requirementNotice.textContent = `Conquest of this sector is required to progress to World ${requiredWorld}.`;
+            details.requirementNotice.textContent = getGalaxyText('sector.requirementNotice', 'Conquest of this sector is required to progress to World {value}.', { value: requiredWorld });
             details.requirementNotice.classList.remove('is-hidden');
         } else {
             details.requirementNotice.textContent = '';
@@ -1170,7 +1187,7 @@ function renderSelectedSectorDetails() {
     if (details.reward) {
         if (rewardWorlds > 0) {
             const roundedWorlds = Math.max(0, Math.round(rewardWorlds));
-            const worldLabel = roundedWorlds === 1 ? 'World' : 'Worlds';
+            const worldLabel = roundedWorlds === 1 ? getGalaxyText('sector.world', 'World') : getGalaxyText('sector.worlds', 'Worlds');
             details.reward.value.textContent = `${roundedWorlds} ${worldLabel}`;
             details.reward.row.classList.remove('is-hidden');
         } else {
@@ -1214,7 +1231,7 @@ function renderSelectedSectorDetails() {
         Math.min(WARP_GATE_NETWORK_MAX_LEVEL, Math.floor(Number(sector.warpGateNetworkLevel) || 0))
     );
     const warpGateProgress = Math.max(0, Number(sector.warpGateNetworkProgress) || 0);
-    details.management.warpGateValue.textContent = `Level ${formatNumber(warpGateLevel, true)}`;
+        details.management.warpGateValue.textContent = getGalaxyText('sector.levelValue', 'Level {value}', { value: formatNumber(warpGateLevel, true) });
     const warpGateRatio = warpGateLevel >= WARP_GATE_NETWORK_MAX_LEVEL
         ? 1
         : Math.min(1, Math.max(0, warpGateProgress / (warpGateLevel + 1)));
@@ -1328,7 +1345,7 @@ function updateSectorDefenseSection() {
     const sector = manager?.getSector?.(selection.q, selection.r);
     if (!sector) {
         if (cache.defenseWarning) {
-            cache.defenseWarning.textContent = 'Sector data unavailable.';
+            cache.defenseWarning.textContent = getGalaxyText('defense.sectorDataUnavailable', 'Sector data unavailable.');
             cache.defenseWarning.classList.remove('is-hidden');
         }
         setDefenseControlsVisibility(false);
@@ -1339,7 +1356,7 @@ function updateSectorDefenseSection() {
     const uhfControl = Number(sector.getControlValue ? sector.getControlValue(UHF_FACTION_KEY) : 0);
     if (!(uhfControl > 0)) {
         if (cache.defenseWarning) {
-            cache.defenseWarning.textContent = 'UHF must control this sector to station defensive fleets.';
+            cache.defenseWarning.textContent = getGalaxyText('defense.uhfMustControl', 'UHF must control this sector to station defensive fleets.');
             cache.defenseWarning.classList.remove('is-hidden');
         }
         setDefenseControlsVisibility(false);
@@ -1349,7 +1366,7 @@ function updateSectorDefenseSection() {
     const capacity = manager.getDefenseCapacity ? manager.getDefenseCapacity(UHF_FACTION_KEY) : 0;
     if (!(capacity > 0)) {
         if (cache.defenseWarning) {
-            cache.defenseWarning.textContent = 'Expand fleet logistics to unlock defensive deployments.';
+            cache.defenseWarning.textContent = getGalaxyText('defense.expandFleetLogistics', 'Expand fleet logistics to unlock defensive deployments.');
             cache.defenseWarning.classList.remove('is-hidden');
         }
         setDefenseControlsVisibility(false);
@@ -1367,19 +1384,19 @@ function updateSectorDefenseSection() {
 
     if (cache.defenseSectorLabel) {
         cache.defenseSectorLabel.textContent = sectorName === 'Core'
-            ? 'Sector: Core'
-            : `Sector: ${sectorName}`;
+            ? getGalaxyText('defense.sectorCore', 'Sector: Core')
+            : getGalaxyText('defense.sectorValue', 'Sector: {value}', { value: sectorName });
     }
 
     if (cache.defenseCapacityValue) {
-        cache.defenseCapacityValue.textContent = `Defense Pool: ${formatDefenseInteger(capacity)}`;
+        cache.defenseCapacityValue.textContent = getGalaxyText('defense.poolValue', 'Defense Pool: {value}', { value: formatDefenseInteger(capacity) });
     }
 
     const operational = faction?.getOperationalFleetPower
         ? faction.getOperationalFleetPower(manager)
         : Math.max(0, faction?.fleetPower || 0);
     if (cache.defenseReservationValue) {
-        cache.defenseReservationValue.textContent = `Ops Pool: ${formatDefenseInteger(operational)}`;
+        cache.defenseReservationValue.textContent = getGalaxyText('defense.opsPoolValue', 'Ops Pool: {value}', { value: formatDefenseInteger(operational) });
     }
 
     const manualAssigned = manager.getManualDefenseAssignment
@@ -1398,13 +1415,13 @@ function updateSectorDefenseSection() {
     updateDefenseStepDisplay(step);
 
     if (cache.defenseAssignedValue) {
-        cache.defenseAssignedValue.textContent = `Assigned: ${formatDefenseInteger(manualAssigned)}`;
+        cache.defenseAssignedValue.textContent = getGalaxyText('defense.assignedValue', 'Assigned: {value}', { value: formatDefenseInteger(manualAssigned) });
     }
     if (cache.defenseEffectiveValue) {
-        cache.defenseEffectiveValue.textContent = `Effective: ${formatDefenseInteger(effective)}`;
+        cache.defenseEffectiveValue.textContent = getGalaxyText('defense.effectiveValue', 'Effective: {value}', { value: formatDefenseInteger(effective) });
     }
     if (cache.defenseRemainingValue) {
-        cache.defenseRemainingValue.textContent = `Remaining: ${formatDefenseInteger(remaining)}`;
+        cache.defenseRemainingValue.textContent = getGalaxyText('defense.remainingValue', 'Remaining: {value}', { value: formatDefenseInteger(remaining) });
     }
     if (cache.defenseClearButton) {
         cache.defenseClearButton.disabled = !(manualTotal > 0);
@@ -2143,12 +2160,12 @@ function updateFleetCapacityTooltip(manager, cache) {
     tooltip.innerHTML = '';
     const header = doc.createElement('div');
     header.className = 'resource-tooltip-header';
-    header.textContent = 'Fleet capacity sources';
+    header.textContent = getGalaxyText('logistics.fleetCapacitySources', 'Fleet capacity sources');
     tooltip.appendChild(header);
 
     const summary = doc.createElement('div');
     summary.className = 'resource-tooltip-row';
-    summary.textContent = 'Base capacity = 100 per world.';
+    summary.textContent = getGalaxyText('logistics.baseCapacity', 'Base capacity = 100 per world.');
     tooltip.appendChild(summary);
 
     const addRow = (label, value) => {
@@ -2166,16 +2183,16 @@ function updateFleetCapacityTooltip(manager, cache) {
         tooltip.appendChild(row);
     };
 
-    addRow('Terraformed worlds', baseWorlds);
-    addRow('Orbital rings', ringWorlds);
-    addRow('Conquered sector rewards', sectorWorlds);
-    addRow('Artificial worlds', artificialWorlds);
-    addRow('Other bonuses', bonusWorlds);
+    addRow(getGalaxyText('logistics.terraformedWorlds', 'Terraformed worlds'), baseWorlds);
+    addRow(getGalaxyText('logistics.orbitalRings', 'Orbital rings'), ringWorlds);
+    addRow(getGalaxyText('logistics.conqueredSectorRewards', 'Conquered sector rewards'), sectorWorlds);
+    addRow(getGalaxyText('logistics.artificialWorlds', 'Artificial worlds'), artificialWorlds);
+    addRow(getGalaxyText('logistics.otherBonuses', 'Other bonuses'), bonusWorlds);
 
     const totalRow = doc.createElement('div');
     totalRow.className = 'resource-tooltip-row';
     const totalLabel = doc.createElement('span');
-    totalLabel.textContent = 'Total worlds for fleet capacity';
+    totalLabel.textContent = getGalaxyText('logistics.totalWorldsForFleetCapacity', 'Total worlds for fleet capacity');
     const totalValue = doc.createElement('span');
     totalValue.textContent = ` ${format(totalWorlds)}`;
     totalRow.appendChild(totalLabel);
@@ -2232,15 +2249,15 @@ function cacheGalaxyElements() {
     const firstRow = doc.createElement('div');
     firstRow.className = 'galaxy-row galaxy-row--primary';
 
-    const sectorDetails = createGalaxySection(doc, 'Sector Details', '');
+    const sectorDetails = createGalaxySection(doc, getGalaxyText('sections.sectorDetails', 'Sector Details'), '');
     sectorDetails.section.classList.add('galaxy-section--sector');
     const sectorContent = doc.createElement('div');
     sectorContent.className = 'galaxy-sector-panel';
-    sectorContent.dataset.emptyMessage = 'No sector selected.';
+    sectorContent.dataset.emptyMessage = getGalaxyText('sections.noSectorSelected', 'No sector selected.');
     sectorContent.textContent = sectorContent.dataset.emptyMessage;
     sectorDetails.body.appendChild(sectorContent);
 
-    const overviewSection = createGalaxySection(doc, 'Galactic Overview');
+    const overviewSection = createGalaxySection(doc, getGalaxyText('sections.galacticOverview', 'Galactic Overview'));
     overviewSection.section.classList.add('galaxy-section--overview');
     overviewSection.header.classList.add('galaxy-section__header--with-icon');
     const overviewTooltipIcon = doc.createElement('span');
@@ -2248,7 +2265,7 @@ function cacheGalaxyElements() {
     overviewTooltipIcon.innerHTML = '&#9432;';
     const overviewTooltip = attachDynamicInfoTooltip(
         overviewTooltipIcon,
-        'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  The UHF starts with a 10% control of sector R5-07.  Conquering certain sectors will be required to advance the story.'
+        getGalaxyText('sections.galacticOverviewTooltip', 'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  The UHF starts with a 10% control of sector R5-07.  Conquering certain sectors will be required to advance the story.')
     );
     doc.body.appendChild(overviewTooltip);
     overviewSection.header.appendChild(overviewTooltipIcon);
@@ -2292,13 +2309,13 @@ function cacheGalaxyElements() {
     zoomIn.type = 'button';
     zoomIn.className = 'galaxy-map-zoom__button';
     zoomIn.textContent = '+';
-    zoomIn.setAttribute('aria-label', 'Zoom in');
+    zoomIn.setAttribute('aria-label', getGalaxyText('map.zoomIn', 'Zoom in'));
 
     const zoomOut = doc.createElement('button');
     zoomOut.type = 'button';
     zoomOut.className = 'galaxy-map-zoom__button';
     zoomOut.textContent = '-';
-    zoomOut.setAttribute('aria-label', 'Zoom out');
+    zoomOut.setAttribute('aria-label', getGalaxyText('map.zoomOut', 'Zoom out'));
 
     zoomControls.appendChild(zoomIn);
     zoomControls.appendChild(zoomOut);
@@ -2374,7 +2391,7 @@ function cacheGalaxyElements() {
     const secondRow = doc.createElement('div');
     secondRow.className = 'galaxy-row galaxy-row--secondary';
 
-    const operations = createGalaxySection(doc, 'Operations', '');
+    const operations = createGalaxySection(doc, getGalaxyText('sections.operations', 'Operations'), '');
     operations.section.classList.add('galaxy-section--operations');
     const operationsCache = galaxyOperationUI.populateSection({
         doc,
@@ -2382,11 +2399,11 @@ function cacheGalaxyElements() {
         createInfoTooltip
     });
 
-    const incomingAttacks = createGalaxySection(doc, 'Incoming Attacks', '');
+    const incomingAttacks = createGalaxySection(doc, getGalaxyText('sections.incomingAttacks', 'Incoming Attacks'), '');
     incomingAttacks.section.classList.add('galaxy-section--attacks');
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
-    attackContent.dataset.emptyMessage = 'No hostiles detected.';
+    attackContent.dataset.emptyMessage = getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
     const attackPlaceholder = doc.createElement('p');
     attackPlaceholder.className = 'galaxy-attack-panel__placeholder';
     attackPlaceholder.textContent = attackContent.dataset.emptyMessage;
@@ -2399,12 +2416,12 @@ function cacheGalaxyElements() {
     defenseSection.className = 'galaxy-defense-section is-hidden';
     const defenseTitle = doc.createElement('div');
     defenseTitle.className = 'galaxy-defense-section__title';
-    defenseTitle.textContent = 'Sector Defense';
+    defenseTitle.textContent = getGalaxyText('defense.title', 'Sector Defense');
     defenseSection.appendChild(defenseTitle);
 
     const defenseWarning = doc.createElement('p');
     defenseWarning.className = 'galaxy-defense-section__warning is-hidden';
-    defenseWarning.textContent = 'Select a UHF-controlled sector to allocate defenses.';
+    defenseWarning.textContent = getGalaxyText('defense.selectControlledSector', 'Select a UHF-controlled sector to allocate defenses.');
     defenseSection.appendChild(defenseWarning);
 
     const defenseForm = doc.createElement('div');
@@ -2415,26 +2432,26 @@ function cacheGalaxyElements() {
     defenseMeta.className = 'galaxy-defense-form__meta';
     const defenseSectorLabel = doc.createElement('span');
     defenseSectorLabel.className = 'galaxy-defense-form__sector';
-    defenseSectorLabel.textContent = 'Sector: —';
+    defenseSectorLabel.textContent = getGalaxyText('defense.sectorBlank', 'Sector: —');
     const defenseCapacityValue = doc.createElement('span');
     defenseCapacityValue.className = 'galaxy-defense-form__capacity';
-    defenseCapacityValue.textContent = 'Defense Pool: 0';
+    defenseCapacityValue.textContent = getGalaxyText('defense.poolValue', 'Defense Pool: {value}', { value: 0 });
     const defenseReservationValue = doc.createElement('span');
     defenseReservationValue.className = 'galaxy-defense-form__reservation';
-    defenseReservationValue.textContent = 'Ops Pool: 0';
+    defenseReservationValue.textContent = getGalaxyText('defense.opsPoolValue', 'Ops Pool: {value}', { value: 0 });
     defenseMeta.append(defenseSectorLabel, defenseCapacityValue, defenseReservationValue);
 
     const defenseSummary = doc.createElement('div');
     defenseSummary.className = 'galaxy-defense-form__summary';
     const defenseAssignedValue = doc.createElement('span');
     defenseAssignedValue.className = 'galaxy-defense-form__summary-item';
-    defenseAssignedValue.textContent = 'Assigned: 0';
+    defenseAssignedValue.textContent = getGalaxyText('defense.assignedValue', 'Assigned: {value}', { value: 0 });
     const defenseEffectiveValue = doc.createElement('span');
     defenseEffectiveValue.className = 'galaxy-defense-form__summary-item';
-    defenseEffectiveValue.textContent = 'Effective: 0';
+    defenseEffectiveValue.textContent = getGalaxyText('defense.effectiveValue', 'Effective: {value}', { value: 0 });
     const defenseRemainingValue = doc.createElement('span');
     defenseRemainingValue.className = 'galaxy-defense-form__summary-item';
-    defenseRemainingValue.textContent = 'Remaining: 0';
+    defenseRemainingValue.textContent = getGalaxyText('defense.remainingValue', 'Remaining: {value}', { value: 0 });
     defenseSummary.append(defenseAssignedValue, defenseEffectiveValue, defenseRemainingValue);
 
     const defenseRow = doc.createElement('div');
@@ -2477,7 +2494,7 @@ function cacheGalaxyElements() {
     const defenseClearButton = doc.createElement('button');
     defenseClearButton.type = 'button';
     defenseClearButton.className = 'galaxy-defense-form__button galaxy-defense-section__clear-button';
-    defenseClearButton.textContent = 'Unassign all defensive assignments';
+    defenseClearButton.textContent = getGalaxyText('defense.clearAll', 'Unassign all defensive assignments');
     defenseClearButton.hidden = true;
     defenseSection.appendChild(defenseClearButton);
 
@@ -2485,11 +2502,16 @@ function cacheGalaxyElements() {
     defenseHistory.className = 'galaxy-defense-history';
     const defenseHistoryTitle = doc.createElement('div');
     defenseHistoryTitle.className = 'galaxy-defense-history__title';
-    defenseHistoryTitle.textContent = 'Last 5 Attacks';
+    defenseHistoryTitle.textContent = getGalaxyText('defense.lastFiveAttacks', 'Last 5 Attacks');
 
     const defenseHistoryHeader = doc.createElement('div');
     defenseHistoryHeader.className = 'galaxy-defense-history__row galaxy-defense-history__row--header';
-    ['Enemy', 'Enemy Power', 'Result', 'UHF Losses'].forEach((label) => {
+    [
+        getGalaxyText('defense.historyEnemy', 'Enemy'),
+        getGalaxyText('defense.historyEnemyPower', 'Enemy Power'),
+        getGalaxyText('defense.historyResult', 'Result'),
+        getGalaxyText('defense.historyUhfLosses', 'UHF Losses')
+    ].forEach((label) => {
         const cell = doc.createElement('span');
         cell.className = 'galaxy-defense-history__cell';
         cell.textContent = label;
@@ -2515,7 +2537,7 @@ function cacheGalaxyElements() {
 
     const defenseHistoryEmpty = doc.createElement('p');
     defenseHistoryEmpty.className = 'galaxy-defense-history__empty';
-    defenseHistoryEmpty.textContent = 'No attacks recorded yet.';
+    defenseHistoryEmpty.textContent = getGalaxyText('defense.noAttacksRecorded', 'No attacks recorded yet.');
 
     defenseHistory.appendChild(defenseHistoryTitle);
     defenseHistory.appendChild(defenseHistoryHeader);
@@ -2537,7 +2559,7 @@ function cacheGalaxyElements() {
     const thirdRow = doc.createElement('div');
     thirdRow.className = 'galaxy-row galaxy-row--tertiary';
 
-    const logistics = createGalaxySection(doc, 'Logistics & Statistics');
+    const logistics = createGalaxySection(doc, getGalaxyText('sections.logisticsAndStatistics', 'Logistics & Statistics'));
     logistics.section.classList.add('galaxy-section--logistics');
     const logisticsStats = doc.createElement('div');
     logisticsStats.className = 'galaxy-logistics-stats';
@@ -2545,13 +2567,13 @@ function cacheGalaxyElements() {
     logisticsPowerRow.className = 'galaxy-logistics-stat';
     const logisticsPowerLabel = doc.createElement('span');
     logisticsPowerLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
-    logisticsPowerLabel.textContent = 'Fleet Power';
+    logisticsPowerLabel.textContent = getGalaxyText('logistics.fleetPower', 'Fleet Power');
     const logisticsPowerInfo = doc.createElement('span');
     logisticsPowerInfo.className = 'info-tooltip-icon';
     logisticsPowerInfo.innerHTML = '&#9432;';
     const logisticsPowerTooltip = attachDynamicInfoTooltip(
         logisticsPowerInfo,
-        'Total UHF fleet strength currently ready to deploy in operations or defenses.  This value grows proportionally to fleet capacity over time, but suffers exponential growth penalty after it reaches 50% of fleet capacity.'
+        getGalaxyText('logistics.fleetPowerTooltip', 'Total UHF fleet strength currently ready to deploy in operations or defenses.  This value grows proportionally to fleet capacity over time, but suffers exponential growth penalty after it reaches 50% of fleet capacity.')
     );
     doc.body.appendChild(logisticsPowerTooltip);
     logisticsPowerLabel.appendChild(doc.createTextNode(' '));
@@ -2565,7 +2587,7 @@ function cacheGalaxyElements() {
     logisticsCapacityRow.className = 'galaxy-logistics-stat';
     const logisticsCapacityLabel = doc.createElement('span');
     logisticsCapacityLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
-    logisticsCapacityLabel.textContent = 'Fleet Capacity';
+    logisticsCapacityLabel.textContent = getGalaxyText('logistics.fleetCapacity', 'Fleet Capacity');
     const capacityTooltip = createResourceStyleTooltip(doc);
     doc.body.appendChild(capacityTooltip.tooltip);
     logisticsCapacityLabel.appendChild(capacityTooltip.icon);
@@ -2579,13 +2601,13 @@ function cacheGalaxyElements() {
     storyMultiplierRow.className = 'galaxy-logistics-stat';
     const storyMultiplierLabel = doc.createElement('span');
     storyMultiplierLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
-    storyMultiplierLabel.textContent = 'Story Multiplier';
+    storyMultiplierLabel.textContent = getGalaxyText('logistics.storyMultiplier', 'Story Multiplier');
     const storyMultiplierInfo = doc.createElement('span');
     storyMultiplierInfo.className = 'info-tooltip-icon';
     storyMultiplierInfo.innerHTML = '&#9432;';
     const storyMultiplierTooltip = attachDynamicInfoTooltip(
         storyMultiplierInfo,
-        'Fleet capacity bonus granted by completed story chapters.'
+        getGalaxyText('logistics.storyMultiplierTooltip', 'Fleet capacity bonus granted by completed story chapters.')
     );
     doc.body.appendChild(storyMultiplierTooltip);
     storyMultiplierLabel.appendChild(doc.createTextNode(' '));
@@ -2604,13 +2626,13 @@ function cacheGalaxyElements() {
     const threatLabel = doc.createElement('span');
     threatLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     const threatLabelText = doc.createElement('span');
-    threatLabelText.textContent = 'Threat Level';
+    threatLabelText.textContent = getGalaxyText('logistics.threatLevel', 'Threat Level');
     const threatTooltipIcon = doc.createElement('span');
     threatTooltipIcon.className = 'info-tooltip-icon';
     threatTooltipIcon.innerHTML = '&#9432;';
     const threatTooltip = attachDynamicInfoTooltip(
         threatTooltipIcon,
-        'Threat is a measure of how seriously the rest of the galaxy views your faction.  The duchies also have a threat factor.  When choosing a target, factions will prioritize higher threat enemies.  At 0 threat, a faction is considered to be not worth targeting.  Any faction that fully controls 40 or more sectors becomes a priority threat, and the galaxy will unite against them until they fall below 40 again.'
+        getGalaxyText('logistics.threatLevelTooltip', 'Threat is a measure of how seriously the rest of the galaxy views your faction.  The duchies also have a threat factor.  When choosing a target, factions will prioritize higher threat enemies.  At 0 threat, a faction is considered to be not worth targeting.  Any faction that fully controls 40 or more sectors becomes a priority threat, and the galaxy will unite against them until they fall below 40 again.')
     );
     doc.body.appendChild(threatTooltip);
     threatLabel.appendChild(threatLabelText);
@@ -2626,7 +2648,7 @@ function cacheGalaxyElements() {
     operationsRow.className = 'galaxy-logistics-stat';
     const operationsLabel = doc.createElement('span');
     operationsLabel.className = 'galaxy-logistics-stat__label';
-    operationsLabel.textContent = 'Successful Operations';
+    operationsLabel.textContent = getGalaxyText('logistics.successfulOperations', 'Successful Operations');
     const operationsValue = doc.createElement('span');
     operationsValue.className = 'galaxy-logistics-stat__value';
     operationsValue.textContent = '0';
@@ -2636,7 +2658,7 @@ function cacheGalaxyElements() {
 
     logistics.body.appendChild(logisticsStats);
 
-    const upgrades = createGalaxySection(doc, 'Upgrades', '');
+    const upgrades = createGalaxySection(doc, getGalaxyText('sections.upgrades', 'Upgrades'), '');
     upgrades.section.classList.add('galaxy-section--upgrades');
 
     const upgradesShop = doc.createElement('div');
@@ -2646,10 +2668,10 @@ function cacheGalaxyElements() {
     shopHeader.className = 'galaxy-upgrades-shop__header';
     const shopTitle = doc.createElement('span');
     shopTitle.className = 'galaxy-upgrades-shop__title';
-    shopTitle.textContent = 'Fleet Logistics Shop';
+    shopTitle.textContent = getGalaxyText('shop.title', 'Fleet Logistics Shop');
     const shopTotal = doc.createElement('span');
     shopTotal.className = 'galaxy-upgrades-shop__total';
-    shopTotal.textContent = 'Total Multiplier';
+    shopTotal.textContent = getGalaxyText('shop.totalMultiplier', 'Total Multiplier');
     const shopTotalValue = doc.createElement('span');
     shopTotalValue.className = 'galaxy-upgrades-shop__total-value';
     shopTotalValue.textContent = `${formatFleetMultiplier(1)}x`;
@@ -2683,7 +2705,7 @@ function cacheGalaxyElements() {
         multiplierValue.textContent = `${formatFleetMultiplier(1)}x`;
         const purchasesValue = doc.createElement('span');
         purchasesValue.className = 'galaxy-upgrades-shop__purchases';
-        purchasesValue.textContent = '0 purchases';
+        purchasesValue.textContent = getGalaxyText('shop.zeroPurchases', '0 purchases');
         statsRow.appendChild(multiplierValue);
         statsRow.appendChild(purchasesValue);
 
@@ -2691,14 +2713,14 @@ function cacheGalaxyElements() {
         button.type = 'button';
         button.className = 'galaxy-upgrades-shop__button';
         button.dataset.upgrade = entry.key;
-        button.textContent = `+${Number(entry.increment || 0.1).toFixed(2)}x Capacity`;
+        button.textContent = getGalaxyText('shop.capacityButton', '+{value}x Capacity', { value: Number(entry.increment || 0.1).toFixed(2) });
         button.addEventListener('click', handleFleetUpgradePurchase);
 
         const costRow = doc.createElement('div');
         costRow.className = 'galaxy-upgrades-shop__cost';
         const costLabel = doc.createElement('span');
         costLabel.className = 'galaxy-upgrades-shop__cost-label';
-        costLabel.textContent = 'Cost';
+        costLabel.textContent = getGalaxyText('shop.cost', 'Cost');
         const costValue = doc.createElement('span');
         costValue.className = 'galaxy-upgrades-shop__cost-value';
         costValue.textContent = '0';
@@ -2837,13 +2859,13 @@ function refreshEmptyStates() {
         const hasEntries = effectiveLength > 0;
         placeholder.textContent = hasEntries
             ? ''
-            : list.dataset.emptyMessage || 'Nothing to display.';
+            : list.dataset.emptyMessage || getGalaxyText('sections.nothingToDisplay', 'Nothing to display.');
         placeholder.classList.toggle('is-hidden', hasEntries);
     });
 
     const sectorPanel = galaxyUICache.sectorContent;
     if (sectorPanel && !sectorPanel.textContent) {
-        sectorPanel.textContent = sectorPanel.dataset.emptyMessage || 'Stand by.';
+        sectorPanel.textContent = sectorPanel.dataset.emptyMessage || getGalaxyText('sections.standBy', 'Stand by.');
     }
 }
 
@@ -2871,12 +2893,12 @@ function updateFleetShopDisplay(manager, cache) {
             nodes.multiplier.textContent = `${formatFleetMultiplier(multiplierValue)}x`;
         }
         if (nodes.purchases) {
-            const suffix = purchaseCount === 1 ? 'purchase' : 'purchases';
+            const suffix = purchaseCount === 1 ? getGalaxyText('shop.purchase', 'purchase') : getGalaxyText('shop.purchases', 'purchases');
             nodes.purchases.textContent = `${purchaseCount} ${suffix}`;
         }
         if (nodes.button) {
             const buttonIncrement = Number.isFinite(increment) && increment > 0 ? increment : 0.1;
-            nodes.button.textContent = `+${buttonIncrement.toFixed(2)}x Capacity`;
+            nodes.button.textContent = getGalaxyText('shop.capacityButton', '+{value}x Capacity', { value: buttonIncrement.toFixed(2) });
         }
         if (nodes.costValue) {
             nodes.costValue.textContent = formatFleetUpgradeCost(entry?.cost);
@@ -2901,7 +2923,7 @@ function clearIncomingAttackPanel(cache) {
         panel.classList.remove('is-populated');
     }
     if (placeholder) {
-        const message = panel?.dataset?.emptyMessage || 'No hostiles detected.';
+        const message = panel?.dataset?.emptyMessage || getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
         placeholder.textContent = message;
         placeholder.classList.remove('is-hidden');
     }
@@ -2980,7 +3002,7 @@ function ensureAttackCard(cache, attack) {
     sectorNode.className = 'galaxy-attack-card__sector';
     const sectorLabel = doc.createElement('span');
     sectorLabel.className = 'galaxy-attack-card__sector-label';
-    sectorLabel.textContent = 'Target: ';
+    sectorLabel.textContent = getGalaxyText('attacks.target', 'Target: ');
     const sectorButton = doc.createElement('button');
     sectorButton.type = 'button';
     sectorButton.className = 'galaxy-attack-card__sector-button';
@@ -3025,7 +3047,9 @@ function updateRecentAttackHistory(manager, cache) {
         }
         rowEntry.enemyCell.textContent = `${entry.attackerName} @ ${entry.sectorName}`;
         rowEntry.powerCell.textContent = formatFleetValue(entry.enemyPower);
-        rowEntry.resultCell.textContent = entry.successfulDefense ? 'Successful Defense' : 'Defense Failed';
+        rowEntry.resultCell.textContent = entry.successfulDefense
+            ? getGalaxyText('defense.successfulDefense', 'Successful Defense')
+            : getGalaxyText('defense.defenseFailed', 'Defense Failed');
         rowEntry.lossCell.textContent = formatFleetValue(entry.uhfLosses);
     });
 }
@@ -3047,7 +3071,7 @@ function updateIncomingAttackPanel(manager, cache) {
         record.factionNode.textContent = attack.attackerName;
         record.timerNode.textContent = formatAttackCountdown(attack.remainingMs);
         const formattedPower = formatFleetValue(attack.power);
-        record.powerNode.textContent = `Power: ${formattedPower}`;
+        record.powerNode.textContent = getGalaxyText('attacks.powerValue', 'Power: {value}', { value: formattedPower });
         const estimate = manager.operationManager.getOperationLossEstimate({
             sectorKey: attack.sectorKey,
             factionId: attack.attackerId,
@@ -3057,19 +3081,19 @@ function updateIncomingAttackPanel(manager, cache) {
             targetFactionId: attack.targetFactionId
         });
         const successChance = estimate?.successChance || 0;
-        record.chanceNode.textContent = `Enemy success: ${formatPercentDisplay(successChance)}`;
+        record.chanceNode.textContent = getGalaxyText('attacks.enemySuccess', 'Enemy success: {value}', { value: formatPercentDisplay(successChance) });
         const displayPercent = Math.max(0, Math.min(100, Math.round(successChance * 100)));
         if (displayPercent > 0) {
             hasThreat = true;
         }
         if (record.sectorButton) {
             const sectorKey = attack.sectorKey || '';
-            const sectorName = attack.sectorName || 'Unknown sector';
+            const sectorName = attack.sectorName || getGalaxyText('attacks.unknownSector', 'Unknown sector');
             record.sectorButton.textContent = sectorName;
             record.sectorButton.dataset.sectorKey = sectorKey;
             record.sectorButton.disabled = sectorKey === '';
             if (sectorKey) {
-                record.sectorButton.setAttribute('aria-label', `View sector ${sectorName}`);
+                record.sectorButton.setAttribute('aria-label', getGalaxyText('attacks.viewSector', 'View sector {value}', { value: sectorName }));
             } else {
                 record.sectorButton.removeAttribute('aria-label');
             }
@@ -3109,7 +3133,7 @@ function updateIncomingAttackPanel(manager, cache) {
             cache.attackPlaceholder.textContent = '';
             cache.attackPlaceholder.classList.add('is-hidden');
         } else {
-            const message = cache.attackContent?.dataset?.emptyMessage || 'No hostiles detected.';
+            const message = cache.attackContent?.dataset?.emptyMessage || getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
             cache.attackPlaceholder.textContent = message;
             cache.attackPlaceholder.classList.remove('is-hidden');
         }
@@ -3204,7 +3228,7 @@ function updateGalaxyUI(options = {}) {
 
     if (cache.mapCanvas.dataset.ready !== 'true') {
         cache.mapCanvas.dataset.ready = 'true';
-        cache.mapOverlay.textContent = 'Initializing galactic coordinates...';
+        cache.mapOverlay.textContent = getGalaxyText('map.initializing', 'Initializing galactic coordinates...');
         cache.mapOverlay.classList.add('is-visible');
         if (!centerGalaxyMap(cache)) {
             scheduleGalaxyMapCenter(cache);

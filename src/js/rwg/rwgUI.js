@@ -79,14 +79,18 @@ if (!rwgGravityHelpers.createGravityWarning) {
     const happinessPenalty = Math.min((gravity - constants.linearThreshold) * 5, 100);
     const costMultiplier = rwgGravityHelpers.calculateGravityCostMultiplier(gravity);
     const costIncrease = Math.max(0, (costMultiplier - 1) * 100);
-    const flavor = includeFlavor ? 'Humans and their bodies are very sensitive to high gravity. ' : '';
-    const happinessLine = `${flavor}Every m/s² above 10 reduces happiness by 5%, up to a 100% reduction.`;
+    const flavor = includeFlavor ? getRwgUiText('gravity.flavor', 'Humans and their bodies are very sensitive to high gravity. ') : '';
+    const happinessLine = `${flavor}${getRwgUiText('gravity.happinessLine', 'Every m/s² above 10 reduces happiness by 5%, up to a 100% reduction.')}`;
     const costLine = gravity > constants.exponentialThreshold
-      ? 'Construction costs climb 10% per m/s² above 10 and gain an exponential surcharge that doubles every additional 10 m/s² beyond 20.'
-      : 'Construction costs climb 10% per m/s² above 10.';
+      ? getRwgUiText('gravity.costLineExponential', 'Construction costs climb 10% per m/s² above 10 and gain an exponential surcharge that doubles every additional 10 m/s² beyond 20.')
+      : getRwgUiText('gravity.costLineLinear', 'Construction costs climb 10% per m/s² above 10.');
     const happinessText = fmt(rwgGravityHelpers.roundTo(happinessPenalty, 2), false, 2);
     const costText = fmt(rwgGravityHelpers.roundTo(costIncrease, 2), false, 2);
-    const penaltyLine = `This world imposes a ${happinessText}% happiness penalty and adds ${costText}% to all building and colony costs.`;
+    const penaltyLine = getRwgUiText(
+      'gravity.penaltyLine',
+      'This world imposes a {happiness}% happiness penalty and adds {cost}% to all building and colony costs.',
+      { happiness: happinessText, cost: costText }
+    );
     const severityClass = gravity >= 20 ? 'rwg-gravity-warning-high' : 'rwg-gravity-warning-medium';
     return createAttachedTooltipIconMarkup(`${happinessLine} ${costLine} ${penaltyLine}`, `rwg-gravity-warning ${severityClass}`);
   };
@@ -96,21 +100,35 @@ var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMulti
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
 const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage', kessler: 'Kessler Skies', pulsar: 'Pulsar' };
-const pulsarRwgTooltip = 'The pulsar hazard is generated but does not replace the star.  On rogue worlds, a special "Rogue Pulsar" star is added instead, with low solar flux at the planet.';
-const dominionRwgTooltip = 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.';
 const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', klishy: 'Klishy', kerati: 'Kerati', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
 const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 90;
-const RWG_EQUILIBRATE_TOOLTIP_TEXT = 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.';
 
 function getRwgText(path, fallback, vars) {
   try {
     return t(path, vars, fallback);
   } catch (error) {
-    return fallback;
+    if (!vars) return fallback;
+    let text = fallback;
+    Object.keys(vars).forEach((key) => {
+      text = text.replaceAll(`{${key}}`, String(vars[key]));
+    });
+    return text;
   }
+}
+
+function getRwgUiText(path, fallback, vars) {
+  return getRwgText(`ui.rwg.${path}`, fallback, vars);
+}
+
+function getRwgHazardDisplayName(id) {
+  return getRwgUiText(`hazards.names.${id}`, hazardDisplayNames[id] || id);
+}
+
+function getRwgDominionDisplayName(id) {
+  return getRwgUiText(`dominions.${id}`, dominionDisplayNames[id] || id);
 }
 
 function escapeTooltipAttribute(text) {
@@ -251,12 +269,12 @@ function refreshDominionSelect() {
     entries.forEach((entry) => {
       const opt = document.createElement('option');
       opt.value = entry.id;
-      const displayName = dominionDisplayNames[entry.id] || entry.id;
+      const displayName = getRwgDominionDisplayName(entry.id);
       const locked = !entry.unlocked;
       const label = locked && entry.requirementLabel
         ? `${displayName} (${entry.requirementLabel})`
         : displayName;
-      opt.textContent = `Dominion: ${label}`;
+      opt.textContent = getRwgUiText('controls.dominionOption', 'Dominion: {value}', { value: label });
       opt.disabled = locked;
       frag.appendChild(opt);
     });
@@ -346,7 +364,7 @@ function refreshDominionLoreList() {
     const unlocked = rwgManager.isDominionUnlocked(id);
     const requirementLabel = rwgManager.getDominionUnlockLabel(id);
     const requirement = terraformingRequirements[id];
-    const displayName = requirement ? requirement.displayName : (dominionDisplayNames[id] || id);
+    const displayName = requirement ? requirement.displayName : getRwgDominionDisplayName(id);
     entry.textContent = unlocked || !requirementLabel
       ? displayName
       : `${displayName} (${requirementLabel})`;
@@ -459,11 +477,11 @@ function refreshHazardSelect() {
     const frag = document.createDocumentFragment();
     const noneOpt = document.createElement('option');
     noneOpt.value = HAZARD_MODE_NONE;
-    noneOpt.textContent = 'Hazards: None';
+    noneOpt.textContent = getRwgUiText('controls.hazardsNone', 'Hazards: None');
     frag.appendChild(noneOpt);
     const hazardsOpt = document.createElement('option');
     hazardsOpt.value = HAZARD_MODE_ENABLED;
-    hazardsOpt.textContent = 'Hazards';
+    hazardsOpt.textContent = getRwgUiText('controls.hazards', 'Hazards');
     frag.appendChild(hazardsOpt);
     rwgHazardEl.innerHTML = '';
     rwgHazardEl.appendChild(frag);
@@ -484,12 +502,12 @@ function refreshHazardSelect() {
         syncEnabledHazards();
       });
       const text = document.createElement('span');
-      text.textContent = hazardDisplayNames[id] || id;
+      text.textContent = getRwgHazardDisplayName(id);
       if (id === 'pulsar') {
         const icon = document.createElement('span');
         icon.className = 'info-tooltip-icon';
         icon.innerHTML = '&#9432;';
-        attachDynamicInfoTooltip(icon, pulsarRwgTooltip);
+        attachDynamicInfoTooltip(icon, getRwgUiText('hazards.pulsarTooltip', 'The pulsar hazard is generated but does not replace the star.  On rogue worlds, a special "Rogue Pulsar" star is added instead, with low solar flux at the planet.'));
         text.appendChild(document.createTextNode(' '));
         text.appendChild(icon);
       }
@@ -545,7 +563,7 @@ function refreshTypeSelect() {
   const frag = document.createDocumentFragment();
   const autoOpt = document.createElement('option');
   autoOpt.value = 'auto';
-  autoOpt.textContent = 'Type: Auto';
+  autoOpt.textContent = getRwgUiText('controls.typeAuto', 'Type: Auto');
   autoOpt.selected = true;
   frag.appendChild(autoOpt);
 
@@ -553,13 +571,13 @@ function refreshTypeSelect() {
     const info = meta[t] || {};
     const opt = document.createElement('option');
     opt.value = t;
-    const base = `Type: ${info.displayName || t}`;
+    const base = getRwgUiText('controls.typeValue', 'Type: {value}', { value: info.displayName || t });
     opt.textContent = base;
     opt.dataset.baseText = base;
     const locked = mgr && typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(t) : false;
     if (locked) {
       opt.disabled = true;
-      opt.textContent = '???? (Locked)';
+      opt.textContent = getRwgUiText('controls.lockedUnknown', '???? (Locked)');
     }
     frag.appendChild(opt);
   });
@@ -601,7 +619,9 @@ function refreshOrbitSelectState(mgr) {
       value: opt.value,
       base,
       disabled: locked,
-      text: hardLocked ? '???? (Locked)' : (locked ? `${base} (Locked)` : base)
+      text: hardLocked
+        ? getRwgUiText('controls.lockedUnknown', '???? (Locked)')
+        : (locked ? getRwgUiText('controls.lockedSuffix', '{value} (Locked)', { value: base }) : base)
     };
   });
   const signature = JSON.stringify(optionStates.map((state) => ({
@@ -655,39 +675,39 @@ function initializeRandomWorldUI() {
 
   const header = document.createElement('div');
   header.className = 'rwg-header';
-  header.innerHTML = '<div class="rwg-title">Random Worlds</div>';
+  header.innerHTML = `<div class="rwg-title">${getRwgUiText('title', 'Random Worlds')}</div>`;
   container.appendChild(header);
 
   const controls = document.createElement('div');
   controls.className = 'rwg-controls';
   controls.innerHTML = `
     <div class="rwg-input">
-      <label for="rwg-seed">Seed</label>
-      <input id="rwg-seed" class="rwg-text" type="text" placeholder="Enter seed or leave blank" />
+      <label for="rwg-seed">${getRwgUiText('controls.seed', 'Seed')}</label>
+      <input id="rwg-seed" class="rwg-text" type="text" placeholder="${getRwgUiText('controls.seedPlaceholder', 'Enter seed or leave blank')}" />
     </div>
     <div class="rwg-select">
       <select id="rwg-target">
-        <option value="auto" selected>Target: Auto</option>
-        <option value="planet">Target: Planet</option>
-        <option value="moon">Target: Moon</option>
+        <option value="auto" selected>${getRwgUiText('controls.targetAuto', 'Target: Auto')}</option>
+        <option value="planet">${getRwgUiText('controls.targetPlanet', 'Target: Planet')}</option>
+        <option value="moon">${getRwgUiText('controls.targetMoon', 'Target: Moon')}</option>
       </select>
       <select id="rwg-type"></select>
       <select id="rwg-orbit">
-        <option value="auto" selected>Orbit: Auto</option>
-        <option value="hz-inner">Orbit: HZ Inner</option>
-        <option value="hz-mid">Orbit: HZ Mid</option>
-        <option value="hz-outer">Orbit: HZ Outer</option>
-        <option value="hot" disabled>Orbit: Hot (Locked)</option>
-        <option value="cold">Orbit: Cold</option>
-        <option value="very-cold">Orbit: Very Cold</option>
+        <option value="auto" selected>${getRwgUiText('controls.orbitAuto', 'Orbit: Auto')}</option>
+        <option value="hz-inner">${getRwgUiText('controls.orbitHzInner', 'Orbit: HZ Inner')}</option>
+        <option value="hz-mid">${getRwgUiText('controls.orbitHzMid', 'Orbit: HZ Mid')}</option>
+        <option value="hz-outer">${getRwgUiText('controls.orbitHzOuter', 'Orbit: HZ Outer')}</option>
+        <option value="hot" disabled>${getRwgUiText('controls.orbitHotLocked', 'Orbit: Hot (Locked)')}</option>
+        <option value="cold">${getRwgUiText('controls.orbitCold', 'Orbit: Cold')}</option>
+        <option value="very-cold">${getRwgUiText('controls.orbitVeryCold', 'Orbit: Very Cold')}</option>
       </select>
       <select id="rwg-hazard" style="display:none;">
-        <option value="none" selected>Hazards: None</option>
-        <option value="hazards">Hazards</option>
+        <option value="none" selected>${getRwgUiText('controls.hazardsNone', 'Hazards: None')}</option>
+        <option value="hazards">${getRwgUiText('controls.hazards', 'Hazards')}</option>
       </select>
     </div>
     <div>
-      <button id="rwg-generate-planet" class="rwg-btn primary">Generate World</button>
+      <button id="rwg-generate-planet" class="rwg-btn primary">${getRwgUiText('controls.generateWorld', 'Generate World')}</button>
     </div>
   `;
   container.appendChild(controls);
@@ -697,8 +717,8 @@ function initializeRandomWorldUI() {
   hazardList.className = 'rwg-hazard-list';
   hazardList.style.display = 'none';
   hazardList.innerHTML = `
-    <div class="rwg-hazard-title">Hazards</div>
-    <div class="rwg-hazard-note">Every hazard selected counts as +1 for Random World effects.</div>
+    <div class="rwg-hazard-title">${getRwgUiText('hazards.title', 'Hazards')}</div>
+    <div class="rwg-hazard-note">${getRwgUiText('hazards.note', 'Every hazard selected counts as +1 for Random World effects.')}</div>
     <div id="rwg-hazard-items" class="rwg-hazard-items"></div>
   `;
   container.appendChild(hazardList);
@@ -736,7 +756,7 @@ function initializeRandomWorldUI() {
   history.id = 'rwg-history';
   history.className = 'rwg-history';
   history.innerHTML = `
-    <h3>Visited Worlds (Last 10)</h3>
+    <h3>${getRwgUiText('history.title', 'Visited Worlds (Last 10)')}</h3>
     <div id="rwg-history-list"></div>`;
   container.appendChild(history);
 
@@ -746,7 +766,7 @@ function initializeRandomWorldUI() {
   const historyHeader = history.querySelector('h3');
   if (historyHeader) {
     historyHeader.classList.add('rwg-history-title');
-    historyHeader.innerHTML = '<span id="rwg-history-arrow" class="summary-arrow">▼</span> Visited Worlds (Last 10)';
+    historyHeader.innerHTML = `<span id="rwg-history-arrow" class="summary-arrow">▼</span> ${getRwgUiText('history.title', 'Visited Worlds (Last 10)')}`;
     const arrowEl = historyHeader.querySelector('#rwg-history-arrow');
     historyHeader.addEventListener('click', () => {
       historyCollapsed = !historyCollapsed;
@@ -853,16 +873,20 @@ function getRandomWorldEquilibrationState(seedUsed, canonicalSeed, specialSeed, 
 function getRandomWorldTravelEquilibrationWarning(state) {
   if (state.satisfied) return '';
   if (state.specialSeed && state.fastestBypassUnlocked) {
-    return 'Special seeds still require Equilibrate before traveling.';
+    return getRwgUiText('warnings.specialSeedNeedsEquilibrate', 'Special seeds still require Equilibrate before traveling.');
   }
-  return 'Press Equilibrate at least once before traveling.';
+  return getRwgUiText('warnings.pressEquilibrate', 'Press Equilibrate at least once before traveling.');
 }
 
 function buildEquilibrateTooltipText() {
   const fastestRecordText = fastestTerraformRealSeconds === null
-    ? 'none'
+    ? getRwgUiText('equilibrate.none', 'none')
     : `${fastestTerraformRealSeconds.toFixed(2)}s`;
-  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. Special seeds require Equilibrate unless the seed explicitly skips it.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.`;
+  return getRwgUiText(
+    'equilibrate.tooltip',
+    'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. Special seeds require Equilibrate unless the seed explicitly skips it.\nCurrent Fastest Terraform (real time): {value}.',
+    { value: fastestRecordText }
+  );
 }
 
 function updateRandomWorldUI() {
@@ -921,9 +945,9 @@ function updateRandomWorldUI() {
       travelBtn.disabled = travelDisabled;
 
       const warningMsg = lockedByStory
-        ? 'You must complete the story for the current world first'
+        ? getRwgUiText('warnings.completeCurrentStory', 'You must complete the story for the current world first')
         : ((!replayAllowed && alreadyTerraformed)
-          ? 'This world has already been terraformed.'
+          ? getRwgUiText('warnings.alreadyTerraformed', 'This world has already been terraformed.')
           : getRandomWorldTravelEquilibrationWarning(eqState));
       let warnEl = document.getElementById('rwg-travel-warning');
       if (warningMsg) {
@@ -933,7 +957,7 @@ function updateRandomWorldUI() {
           warnEl.className = 'rwg-inline-warning';
           travelBtn.parentElement?.appendChild(warnEl);
         }
-        warnEl.textContent = `⚠ ${warningMsg} ⚠`;
+        warnEl.textContent = getRwgUiText('warnings.inline', '⚠ {value} ⚠', { value: warningMsg });
       } else if (warnEl && warnEl.parentElement) {
         warnEl.parentElement.removeChild(warnEl);
       }
@@ -1088,7 +1112,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       const progressLabel = document.createElement('div');
       progressLabel.id = 'rwg-progress-label';
       progressLabel.style.marginBottom = '4px';
-      progressLabel.textContent = 'Minimum fast-forward (Game is paused)';
+      progressLabel.textContent = getRwgUiText('equilibrate.progressMinimum', 'Minimum fast-forward (Game is paused)');
 
       const barContainer = document.createElement('div');
       barContainer.style.width = '100%';
@@ -1105,29 +1129,29 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       const statsDiv = document.createElement('div');
       statsDiv.style.marginBottom = '12px';
       const stableRefText = document.createElement('div');
-      stableRefText.textContent = 'Number of refinements from stability: 0';
+      stableRefText.textContent = getRwgUiText('equilibrate.refinementsStability', 'Number of refinements from stability: {value}', { value: 0 });
       const unstableRefText = document.createElement('div');
-      unstableRefText.textContent = 'Number of refinements from instability: 0';
+      unstableRefText.textContent = getRwgUiText('equilibrate.refinementsInstability', 'Number of refinements from instability: {value}', { value: 0 });
       const timeSimText = document.createElement('div');
-      timeSimText.textContent = 'Time simulated: 0s';
+      timeSimText.textContent = getRwgUiText('equilibrate.timeSimulated', 'Time simulated: {value}', { value: '0s' });
       statsDiv.appendChild(stableRefText);
       statsDiv.appendChild(unstableRefText);
       statsDiv.appendChild(timeSimText);
 
       const endBtn = document.createElement('button');
       endBtn.id = 'rwg-end-early-btn';
-      endBtn.textContent = 'End Early';
+      endBtn.textContent = getRwgUiText('equilibrate.endEarly', 'End Early');
       endBtn.style.display = 'none';
       endBtn.onclick = () => { cancelToken.endEarly = true; };
 
       const addTimeBtn = document.createElement('button');
-      addTimeBtn.textContent = 'Add 10s';
+      addTimeBtn.textContent = getRwgUiText('equilibrate.addTime', 'Add 10s');
       addTimeBtn.onclick = () => {
         cancelToken.addTime = (cancelToken.addTime || 0) + 10000;
       };
 
       const cancelBtn = document.createElement('button');
-      cancelBtn.textContent = 'Cancel';
+      cancelBtn.textContent = getRwgUiText('equilibrate.cancel', 'Cancel');
       cancelBtn.onclick = () => { cancelToken.cancelled = true; };
 
       win.appendChild(progressLabel);
@@ -1149,14 +1173,22 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           if (label && info?.label) label.textContent = info.label;
           bar.style.width = `${(p * 100).toFixed(2)}%`;
           if (info) {
-            stableRefText.textContent = `Number of refinements from stability: ${info.refinementsFromStability || 0}/20`;
-            unstableRefText.textContent = `Number of refinements from instability: ${info.refinementsFromInstability || 0}`;
+            stableRefText.textContent = getRwgUiText(
+              'equilibrate.refinementsStabilityTarget',
+              'Number of refinements from stability: {value}/20',
+              { value: info.refinementsFromStability || 0 }
+            );
+            unstableRefText.textContent = getRwgUiText(
+              'equilibrate.refinementsInstability',
+              'Number of refinements from instability: {value}',
+              { value: info.refinementsFromInstability || 0 }
+            );
             if (typeof formatDuration === 'function') {
               const seconds = (info.simulatedMs || 0) / 1000 * 86400;
-              timeSimText.textContent = `Time simulated: ${formatDuration(seconds)}`;
+              timeSimText.textContent = getRwgUiText('equilibrate.timeSimulated', 'Time simulated: {value}', { value: formatDuration(seconds) });
             }
           }
-          if (info?.label === 'Additional fast-forward (Game is paused)') endBtn.style.display = '';
+          if (info?.label === getRwgUiText('equilibrate.progressAdditional', 'Additional fast-forward (Game is paused)')) endBtn.style.display = '';
         });
         const mergedAfterEq = deepMerge(defaultPlanetParameters, result.override);
         const newRes = { ...res, override: result.override, merged: mergedAfterEq };
@@ -1197,13 +1229,13 @@ function renderPlanetCard(p, index) {
   const gWarn = createGravityWarning(c.gravity, fmt);
   return `
     <div class="rwg-planet-card">
-      <div class="rwg-planet-title">${p.name || p.merged?.name || 'Planet ' + (index + 1)}</div>
+      <div class="rwg-planet-title">${p.name || p.merged?.name || getRwgUiText('cards.planetFallback', 'Planet {value}', { value: index + 1 })}</div>
       <div class="rwg-grid">
-        <div><strong>Orbit</strong><div>${(p.orbitAU ?? c.distanceFromSun)?.toFixed ? (p.orbitAU ?? c.distanceFromSun).toFixed(2) : (p.orbitAU ?? c.distanceFromSun)} AU</div></div>
-        <div><strong>Radius</strong><div>${fmt((c.radius ?? 0).toFixed ? c.radius.toFixed(0) : c.radius)} km</div></div>
-        <div><strong>Gravity</strong><div>${fmt((c.gravity ?? 0).toFixed ? c.gravity.toFixed(2) : c.gravity)} m/s²${gWarn}</div></div>
-        <div><strong>Albedo</strong><div>${(c.albedo ?? 0)}</div></div>
-        <div><strong>Type</strong><div>${cls?.archetype || '—'}</div></div>
+        <div><strong>${getRwgUiText('cards.orbit', 'Orbit')}</strong><div>${(p.orbitAU ?? c.distanceFromSun)?.toFixed ? (p.orbitAU ?? c.distanceFromSun).toFixed(2) : (p.orbitAU ?? c.distanceFromSun)} AU</div></div>
+        <div><strong>${getRwgUiText('cards.radius', 'Radius')}</strong><div>${fmt((c.radius ?? 0).toFixed ? c.radius.toFixed(0) : c.radius)} km</div></div>
+        <div><strong>${getRwgUiText('cards.gravity', 'Gravity')}</strong><div>${fmt((c.gravity ?? 0).toFixed ? c.gravity.toFixed(2) : c.gravity)} m/s²${gWarn}</div></div>
+        <div><strong>${getRwgUiText('cards.albedo', 'Albedo')}</strong><div>${(c.albedo ?? 0)}</div></div>
+        <div><strong>${getRwgUiText('cards.type', 'Type')}</strong><div>${cls?.archetype || '—'}</div></div>
       </div>
     </div>`;
 }
@@ -1213,7 +1245,7 @@ function resolveWorldStar(res) {
   const celestialLum = res?.override?.celestialParameters?.starLuminosity
     ?? res?.merged?.celestialParameters?.starLuminosity;
   return {
-    name: source.name || 'Unknown Star',
+    name: source.name || getRwgUiText('details.unknownStar', 'Unknown Star'),
     spectralType: source.spectralType || '—',
     luminositySolar: Number(source.luminositySolar ?? celestialLum ?? 1),
     massSolar: Number(source.massSolar ?? 1),
@@ -1269,22 +1301,22 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const tempUnit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
   const starPanel = `
     <div class="rwg-card">
-      <h3>Star: ${star.name}</h3>
+      <h3>${getRwgUiText('details.starTitle', 'Star: {value}', { value: star.name })}</h3>
       <div class="rwg-infobar">
-        <div class="rwg-chip"><div class="label">Spectral</div><div class="value">${star.spectralType}</div></div>
-        <div class="rwg-chip"><div class="label">Luminosity</div><div class="value">${(star.luminositySolar).toFixed(3)} L☉</div></div>
-        <div class="rwg-chip"><div class="label">Mass</div><div class="value">${(star.massSolar).toFixed(3)} M☉</div></div>
-        <div class="rwg-chip"><div class="label">Temp</div><div class="value">${fmt(toDisplayTemp(star.temperatureK))} ${tempUnit}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.spectral', 'Spectral')}</div><div class="value">${star.spectralType}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.luminosity', 'Luminosity')}</div><div class="value">${(star.luminositySolar).toFixed(3)} L☉</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.mass', 'Mass')}</div><div class="value">${(star.massSolar).toFixed(3)} M☉</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.temp', 'Temp')}</div><div class="value">${fmt(toDisplayTemp(star.temperatureK))} ${tempUnit}</div></div>
       </div>
     </div>`;
 
   const parent = c.parentBody ? `
     <div class="rwg-card">
-      <h3>Parent Body: ${c.parentBody.name}</h3>
+      <h3>${getRwgUiText('details.parentBodyTitle', 'Parent Body: {value}', { value: c.parentBody.name })}</h3>
       <div class="rwg-infobar">
-        <div class="rwg-chip"><div class="label">Mass</div><div class="value">${fmt(c.parentBody.mass)}</div></div>
-        <div class="rwg-chip"><div class="label">Radius</div><div class="value">${fmt(c.parentBody.radius)} km</div></div>
-        <div class="rwg-chip"><div class="label">Orbit Radius</div><div class="value">${fmt(c.parentBody.orbitRadius)} km</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.mass', 'Mass')}</div><div class="value">${fmt(c.parentBody.mass)}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.radius', 'Radius')}</div><div class="value">${fmt(c.parentBody.radius)} km</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.orbitRadius', 'Orbit Radius')}</div><div class="value">${fmt(c.parentBody.orbitRadius)} km</div></div>
       </div>
     </div>` : '';
   const specialSeedEffects = Array.isArray(res?.specialEffects)
@@ -1305,8 +1337,8 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   });
   const specialEffectsPanel = (specialSeedDesigner || uniqueSpecialSeedEffects.length) ? `
     <div class="rwg-card">
-      <h3>Special Seed Effects</h3>
-      ${specialSeedDesigner ? `<div class="rwg-row"><span>Designed by ${specialSeedDesigner}</span></div>` : ''}
+      <h3>${getRwgUiText('details.specialSeedEffects', 'Special Seed Effects')}</h3>
+      ${specialSeedDesigner ? `<div class="rwg-row"><span>${getRwgUiText('details.designedBy', 'Designed by {value}', { value: specialSeedDesigner })}</span></div>` : ''}
       ${uniqueSpecialSeedEffects.map((entry) => {
         return `<div class="rwg-row rwg-row-negative"><span>${entry.description}</span></div>`;
       }).join('')}
@@ -1334,12 +1366,12 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const galaxy = globalThis?.galaxyManager;
   const galaxyEnabled = Boolean(galaxy?.enabled);
   const sectorChip = (galaxyEnabled && c.sector)
-    ? `<div class="rwg-chip"><div class="label">Sector</div><div class="value">${c.sector}</div></div>`
+    ? `<div class="rwg-chip"><div class="label">${getRwgUiText('details.sector', 'Sector')}</div><div class="value">${c.sector}</div></div>`
     : '';
   const warningMsg = lockedByStory
-    ? 'You must complete the story for the current world first'
+    ? getRwgUiText('warnings.completeCurrentStory', 'You must complete the story for the current world first')
     : ((!replayAllowed && alreadyTerraformed)
-      ? 'This world has already been terraformed.'
+      ? getRwgUiText('warnings.alreadyTerraformed', 'This world has already been terraformed.')
       : getRandomWorldTravelEquilibrationWarning(eqState));
   const gWarn = gravityPenaltyEnabled ? createGravityWarning(c.gravity, fmt, { includeFlavor: true }) : '';
   const showDominionPanel = options.showDominion !== false;
@@ -1347,45 +1379,45 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     <div class="rwg-card">
       <div class="rwg-control-row">
         <select id="rwg-dominion" class="rwg-inline-select"></select>
-        <button id="rwg-dominion-lore-btn" class="rwg-btn">Lore</button>
-        <span id="rwg-dominion-info" class="info-tooltip-icon" data-rwg-tooltip="${escapeTooltipAttribute(dominionRwgTooltip)}">&#9432;</span>
+        <button id="rwg-dominion-lore-btn" class="rwg-btn">${getRwgUiText('controls.lore', 'Lore')}</button>
+        <span id="rwg-dominion-info" class="info-tooltip-icon" data-rwg-tooltip="${escapeTooltipAttribute(getRwgUiText('dominions.tooltip', 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.'))}">&#9432;</span>
       </div>
     </div>` : '';
   const worldPanel = `
     <div class="rwg-card">
-      <h3>${res.merged?.name || 'Generated World'}</h3>
+      <h3>${res.merged?.name || getRwgUiText('details.generatedWorld', 'Generated World')}</h3>
       <div class="rwg-control-row">
-        <button id="rwg-equilibrate-btn" class="rwg-btn" ${equilibrateDisabled ? 'disabled' : ''}>Equilibrate</button>
+        <button id="rwg-equilibrate-btn" class="rwg-btn" ${equilibrateDisabled ? 'disabled' : ''}>${getRwgUiText('controls.equilibrate', 'Equilibrate')}</button>
         <span id="rwg-equilibrate-info" class="info-tooltip-icon">&#9432;</span>
-        <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
+        <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>${getRwgUiText('controls.travel', 'Travel')}</button>
       </div>
-      ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span></div>` : ''}
+      ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">${getRwgUiText('warnings.inline', '⚠ {value} ⚠', { value: warningMsg })}</span></div>` : ''}
       <div class="rwg-infobar">
-        <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedString}</div></div>
-        <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>
-        <div class="rwg-chip"><div class="label">Radius</div><div class="value">${fmt(c.radius)} km</div></div>
-        <div class="rwg-chip"><div class="label">Gravity</div><div class="value">${fmt(c.gravity)} m/s²${gWarn}</div></div>
-        <div class="rwg-chip"><div class="label">Albedo</div><div class="value">${c.albedo}</div></div>
-        <div class="rwg-chip"><div class="label">Rotation</div><div class="value">${fmt(c.rotationPeriod)} h</div></div>
-        <div class="rwg-chip"><div class="label">Flux</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>
-        ${coreHeatFlux > 0 ? `<div class="rwg-chip"><div class="label">Core Heat</div><div class="value">${fmt(coreHeatFlux)} W/m²</div></div>` : ''}
-        <div class="rwg-chip"><div class="label">Magnetosphere</div><div class="value">${c.hasNaturalMagnetosphere ? 'Yes' : 'No'}</div></div>
-        <div class="rwg-chip"><div class="label">Geo (max)</div><div class="value">${geoMax > 0 ? fmt(geoMax) : '—'}</div></div>
-        <div class="rwg-chip"><div class="label">Type</div><div class="value">${forcedType && forcedType !== 'auto' ? (RWG_WORLD_TYPES[forcedType]?.displayName || forcedType) : (cls?.archetype ? (RWG_WORLD_TYPES[cls.archetype]?.displayName || cls.archetype) : '—')}</div></div>
-        <div class="rwg-chip"><div class="label">Teq</div><div class="value">${teqDisplay ? fmt(toDisplayTemp(teqDisplay)) + ' ' + tempUnit : '—'}</div></div>
-        <div class="rwg-chip"><div class="label">Mean T</div><div class="value">${meanTVal}</div></div>
-        <div class="rwg-chip"><div class="label">Day T</div><div class="value">${dayTVal}</div></div>
-        <div class="rwg-chip"><div class="label">Night T</div><div class="value">${nightTVal}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.seed', 'Seed')}</div><div class="value">${seedString}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.orbit', 'Orbit')}</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.radius', 'Radius')}</div><div class="value">${fmt(c.radius)} km</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.gravity', 'Gravity')}</div><div class="value">${fmt(c.gravity)} m/s²${gWarn}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.albedo', 'Albedo')}</div><div class="value">${c.albedo}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.rotation', 'Rotation')}</div><div class="value">${fmt(c.rotationPeriod)} h</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.flux', 'Flux')}</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>
+        ${coreHeatFlux > 0 ? `<div class="rwg-chip"><div class="label">${getRwgUiText('details.coreHeat', 'Core Heat')}</div><div class="value">${fmt(coreHeatFlux)} W/m²</div></div>` : ''}
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.magnetosphere', 'Magnetosphere')}</div><div class="value">${c.hasNaturalMagnetosphere ? getRwgUiText('common.yes', 'Yes') : getRwgUiText('common.no', 'No')}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.geoMax', 'Geo (max)')}</div><div class="value">${geoMax > 0 ? fmt(geoMax) : '—'}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.type', 'Type')}</div><div class="value">${forcedType && forcedType !== 'auto' ? (RWG_WORLD_TYPES[forcedType]?.displayName || forcedType) : (cls?.archetype ? (RWG_WORLD_TYPES[cls.archetype]?.displayName || cls.archetype) : '—')}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.teq', 'Teq')}</div><div class="value">${teqDisplay ? fmt(toDisplayTemp(teqDisplay)) + ' ' + tempUnit : '—'}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.meanT', 'Mean T')}</div><div class="value">${meanTVal}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.dayT', 'Day T')}</div><div class="value">${dayTVal}</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.nightT', 'Night T')}</div><div class="value">${nightTVal}</div></div>
         ${sectorChip}
       </div>
       <div class="rwg-columns" style="margin-top:10px;">
         <div>
-          <h4>Atmosphere</h4>
+          <h4>${getRwgUiText('details.atmosphere', 'Atmosphere')}</h4>
           ${renderAtmoTable(res)}
         </div>
         <div>
-          <h4>Surface</h4>
-          ${renderResourceRow('Land (ha)', surf.land)}
+          <h4>${getRwgUiText('details.surface', 'Surface')}</h4>
+          ${renderResourceRow(getRwgUiText('details.landHa', 'Land (ha)'), surf.land)}
           ${renderSurfaceResources(surf)}
         </div>
       </div>
@@ -1466,14 +1498,14 @@ function estimateGasPressure(res, gasKey) {
 
 function renderAtmoTable(res) {
   const rows = [
-    { label: 'CO₂', key: 'carbonDioxide' },
-    { label: 'N₂', key: 'inertGas' },
-    { label: 'O₂', key: 'oxygen' },
-    { label: 'Water Vap.', key: 'atmosphericWater' },
-    { label: 'Safe GHG', key: 'greenhouseGas' },
-    { label: 'CH₄', key: 'atmosphericMethane' },
-    { label: 'H₂', key: 'hydrogen' },
-    { label: 'H₂SO₄', key: 'sulfuricAcid' }
+    { label: getRwgUiText('atmo.co2', 'CO₂'), key: 'carbonDioxide' },
+    { label: getRwgUiText('atmo.n2', 'N₂'), key: 'inertGas' },
+    { label: getRwgUiText('atmo.o2', 'O₂'), key: 'oxygen' },
+    { label: getRwgUiText('atmo.waterVapor', 'Water Vap.'), key: 'atmosphericWater' },
+    { label: getRwgUiText('atmo.safeGhg', 'Safe GHG'), key: 'greenhouseGas' },
+    { label: getRwgUiText('atmo.ch4', 'CH₄'), key: 'atmosphericMethane' },
+    { label: getRwgUiText('atmo.h2', 'H₂'), key: 'hydrogen' },
+    { label: getRwgUiText('atmo.h2so4', 'H₂SO₄'), key: 'sulfuricAcid' }
   ];
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const defaults = globalThis.defaultPlanetParameters?.resources?.atmospheric || {};
@@ -1488,7 +1520,7 @@ function renderAtmoTable(res) {
     return `<div class="rwg-row"><span>${r.label}</span><span>${amtText}</span><span>${pText}</span></div>`;
   }).filter(Boolean).join('');
   // Header row
-  const header = `<div class="rwg-row"><span><strong>Gas</strong></span><span><strong>Amount</strong></span><span><strong>Pressure</strong></span></div>`;
+  const header = `<div class="rwg-row"><span><strong>${getRwgUiText('atmo.gas', 'Gas')}</strong></span><span><strong>${getRwgUiText('atmo.amount', 'Amount')}</strong></span><span><strong>${getRwgUiText('atmo.pressure', 'Pressure')}</strong></span></div>`;
   return `<div class="rwg-atmo-table">${header}${cells}</div>`;
 }
 
@@ -1499,7 +1531,7 @@ function renderHistory() {
   const entries = Object.entries(sm.randomWorldStatuses || {})
     .filter(([, st]) => st?.visited && !st?.artificial)
     .map(([seed, st]) => ({
-      name: st.name || `Seed ${seed}`,
+      name: st.name || getRwgUiText('history.seedName', 'Seed {value}', { value: seed }),
       // Prefer top-level archetype from RWG result; fall back to any embedded classification
       type: (st.cachedArchetype
             || st.archetype
@@ -1510,9 +1542,9 @@ function renderHistory() {
            ) || '—',
       seed,
       colonists: typeof st.colonists === 'number' ? st.colonists : 0,
-      state: (String(sm.currentRandomSeed ?? '') === String(seed))
-        ? 'Current'
-        : (st.terraformed ? 'Terraformed' : 'Abandoned'),
+      stateKey: (String(sm.currentRandomSeed ?? '') === String(seed))
+        ? 'current'
+        : (st.terraformed ? 'terraformed' : 'abandoned'),
       departedAt: st.departedAt || 0
     }))
     .sort((a, b) => {
@@ -1536,13 +1568,14 @@ function renderHistory() {
 function renderHistoryPage() {
   if (!historyListEl) return;
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
-  const header = `<div class="rwg-history-head"><span>Name</span><span>Type</span><span>Seed</span><span>Population</span><span>State</span><span>Departed</span></div>`;
+  const header = `<div class="rwg-history-head"><span>${getRwgUiText('history.name', 'Name')}</span><span>${getRwgUiText('history.type', 'Type')}</span><span>${getRwgUiText('history.seed', 'Seed')}</span><span>${getRwgUiText('history.population', 'Population')}</span><span>${getRwgUiText('history.state', 'State')}</span><span>${getRwgUiText('history.departed', 'Departed')}</span></div>`;
   const rows = historyData.map(r => {
     const displayType = RWG_WORLD_TYPES[r.type]?.displayName || r.type;
     const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
     const pop = fmt(r.colonists || 0);
-    const stateCls = r.state === 'Current' ? 'state-current' : '';
-    return `<div class="rwg-history-row"><span class="name">${r.name}</span><span>${displayType}</span><span class="seed">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
+    const stateCls = r.stateKey === 'current' ? 'state-current' : '';
+    const stateLabel = getRwgUiText(`history.${r.stateKey}`, r.stateKey);
+    return `<div class="rwg-history-row"><span class="name">${r.name}</span><span>${displayType}</span><span class="seed">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${stateLabel}</span><span>${d}</span></div>`;
   }).join('');
   historyListEl.innerHTML = header + rows;
 }

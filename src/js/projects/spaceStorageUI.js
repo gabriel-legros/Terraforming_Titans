@@ -18,24 +18,31 @@ function getSpaceStorageUIText(path, fallback, vars) {
 }
 
 const storageResourceOptions = [
-  { label: 'Metal', category: 'colony', resource: 'metal' },
-  { label: 'Silica', category: 'colony', resource: 'silicon' },
-  { label: 'Graphite', category: 'surface', resource: 'graphite', requiresProjectFlag: 'graphiteStorage' },
-  { label: 'Glass', category: 'colony', resource: 'glass' },
-  { label: 'Components', category: 'colony', resource: 'components' },
-  { label: 'Electronics', category: 'colony', resource: 'electronics' },
-  { label: 'Superconductors', category: 'colony', resource: 'superconductors' },
-  { label: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
-  { label: 'Water', category: 'surface', resource: 'liquidWater' },
-  { label: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' },
-  { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
-  { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
-  { label: 'Oxygen', category: 'atmospheric', resource: 'oxygen' },
-  { label: 'Methane', category: 'atmospheric', resource: 'atmosphericMethane', requiresProjectFlag: 'methaneAmmoniaStorage' },
-  { label: 'Ammonia', category: 'atmospheric', resource: 'atmosphericAmmonia', requiresProjectFlag: 'methaneAmmoniaStorage' },
-  { label: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' }
+  { labelKey: 'metal', fallbackLabel: 'Metal', category: 'colony', resource: 'metal' },
+  { labelKey: 'silica', fallbackLabel: 'Silica', category: 'colony', resource: 'silicon' },
+  { labelKey: 'graphite', fallbackLabel: 'Graphite', category: 'surface', resource: 'graphite', requiresProjectFlag: 'graphiteStorage' },
+  { labelKey: 'glass', fallbackLabel: 'Glass', category: 'colony', resource: 'glass' },
+  { labelKey: 'components', fallbackLabel: 'Components', category: 'colony', resource: 'components' },
+  { labelKey: 'electronics', fallbackLabel: 'Electronics', category: 'colony', resource: 'electronics' },
+  { labelKey: 'superconductors', fallbackLabel: 'Superconductors', category: 'colony', resource: 'superconductors' },
+  { labelKey: 'superalloys', fallbackLabel: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
+  { labelKey: 'water', fallbackLabel: 'Water', category: 'surface', resource: 'liquidWater' },
+  { labelKey: 'biomass', fallbackLabel: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' },
+  { labelKey: 'carbonDioxide', fallbackLabel: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
+  { labelKey: 'nitrogen', fallbackLabel: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
+  { labelKey: 'oxygen', fallbackLabel: 'Oxygen', category: 'atmospheric', resource: 'oxygen' },
+  { labelKey: 'methane', fallbackLabel: 'Methane', category: 'atmospheric', resource: 'atmosphericMethane', requiresProjectFlag: 'methaneAmmoniaStorage' },
+  { labelKey: 'ammonia', fallbackLabel: 'Ammonia', category: 'atmospheric', resource: 'atmosphericAmmonia', requiresProjectFlag: 'methaneAmmoniaStorage' },
+  { labelKey: 'hydrogen', fallbackLabel: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' }
 ];
 const SPACE_STORAGE_RESOURCE_DIVIDER_TOP = new Set(['components', 'liquidWater', 'carbonDioxide']);
+
+function getSpaceStorageResourceLabel(option) {
+  return getSpaceStorageUIText(
+    `ui.projects.spaceStorage.resources.${option.labelKey}`,
+    option.fallbackLabel
+  );
+}
 
 function getSpaceStorageCapLimitForDraft(project, resourceKey, mode, value) {
   if (!resourceKey) {
@@ -191,7 +198,7 @@ function renderSpaceStorageUI(project, container) {
   card.classList.add('info-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Space Storage</span>
+      <span class="card-title">${getSpaceStorageUIText('ui.projects.spaceStorage.title', 'Space Storage')}</span>
     </div>
     <div class="card-body">
       <div class="stats-grid two-col">
@@ -670,7 +677,7 @@ function renderSpaceStorageUI(project, container) {
     label.htmlFor = checkbox.id;
 
     const textSpan = document.createElement('span');
-    textSpan.textContent = opt.label;
+    textSpan.textContent = getSpaceStorageResourceLabel(opt);
 
     let biomassInfo;
     if (opt.resource === 'biomass') {
@@ -719,7 +726,7 @@ function renderSpaceStorageUI(project, container) {
     capButton.classList.add('storage-cap-button');
     capButton.innerHTML = '&#9881;&#xFE0E;';
     capButton.addEventListener('click', () => {
-      openCapWindow(opt.resource, opt.label);
+      openCapWindow(opt.resource, getSpaceStorageResourceLabel(opt));
     });
 
     let waterSelect;
@@ -1071,7 +1078,7 @@ function updateSpaceStorageUI(project) {
         button.classList.add('store');
         button.classList.remove('withdraw');
         tooltip.textContent = withdrawalDisabled
-          ? 'Withdrawal disabled on this world'
+          ? getSpaceStorageUIText('ui.projects.spaceStorage.withdrawalDisabled', 'Withdrawal disabled on this world')
           : getSpaceStorageUIText('ui.projects.spaceStorage.storeInSpaceStorage', 'Store in space storage');
       }
     });
