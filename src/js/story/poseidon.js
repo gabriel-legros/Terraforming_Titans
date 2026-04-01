@@ -421,6 +421,32 @@ progressPoseidon.chapters.push(
     objectives: [
     ],
     reward: []
+  },
+  {
+    id: 'poseidon.38.7',
+    type: 'journal',
+    chapter: 38,
+    activePlanet: 'poseidon',
+    narrative: 'Acquire full control of sector R1-02 to continue.',
+    prerequisites: ['impossible'],
+    objectives: [
+      { type: 'galaxySectorControl', sectorLabel: 'R1-02' }
+    ],
+    reward: [
+      { target: 'spaceManager', targetId: 'styx', type: 'enable' }
+    ]
+  },
+  {
+    id: 'poseidon.38.8',
+    type: 'journal',
+    chapter: 38,
+    activePlanet: 'poseidon',
+    narrative: "Text TBA \n Travel to Styx to continue.",
+    prerequisites: ['poseidon.38.7'],
+    objectives: [
+      { type: 'currentPlanet', planetId: 'styx' }
+    ],
+    reward: []
   }
 );
 

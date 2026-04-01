@@ -2672,6 +2672,10 @@ setLanguageData({
         name: 'Poseidon',
         star: { name: 'Nereid' },
       },
+      styx: {
+        name: 'Styx',
+        star: { name: 'Acheron' },
+      },
     },
     life: {
       lichen: {

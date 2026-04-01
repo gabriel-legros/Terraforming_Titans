@@ -1712,6 +1712,108 @@ const poseidonOverrides = {
   zonalTemperatures: null
 };
 
+const styxOverrides = {
+  name: '',
+  star: {
+    name: '',
+    spectralType: 'G2V',
+    luminositySolar: 1,
+    massSolar: 1,
+    temperatureK: 5778,
+    habitableZone: { inner: 0.95, outer: 1.4 }
+  },
+  celestialParameters: {
+    distanceFromSun: 0.895,
+    gravity: 9.0,
+    radius: 6200,
+    mass: 5.18e24,
+    albedo: 0.24,
+    rotationPeriod: 26,
+    spinPeriod: 26,
+    starLuminosity: 1,
+    sector: 'R5-11'
+  },
+  visualization: {
+    baseColor: '#466f73',
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 48_305_000_000 },
+      liquidWater: { initialValue: 4_040_537_798_301.499 },
+      ice: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 5, maxDeposits: 48305, areaTotal: 483050 },
+      geothermal: { initialValue: 3, maxDeposits: 483, areaTotal: 483050 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 536_723_651_573_296.1 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 8_050_854_773_599_442 },
+      hydrogen: { initialValue: 1_610_170_954_719_888.5 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 1_611_160_685_029.9868,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0
+    },
+    temperate: {
+      liquidWater: 2_094_255_208_836.291,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0
+    },
+    polar: {
+      liquidWater: 335_121_904_435.221,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0
+    }
+  },
+  zonalTemperatures: null
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -1726,7 +1828,8 @@ const planetSpecificOverrides = {
   gabbag: gabbagOverrides,
   tartarus: tartarusOverrides,
   hades: hadesOverrides,
-  poseidon: poseidonOverrides
+  poseidon: poseidonOverrides,
+  styx: styxOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -1776,6 +1879,7 @@ const planetParameters = {
     tartarus: getPlanetParameters('tartarus'),
     hades: getPlanetParameters('hades'),
     poseidon: getPlanetParameters('poseidon'),
+    styx: getPlanetParameters('styx'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
@@ -1783,7 +1887,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
 
 
 
