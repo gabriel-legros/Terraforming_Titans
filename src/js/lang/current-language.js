@@ -1398,6 +1398,8 @@ setLanguageData({
         h1: '1 hour',
         never: 'Never',
       },
+      terraformingSubsteps: 'Use 10ms terraforming substeps',
+      terraformingSubstepsTooltip: 'By default, the climate model runs on a 10ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.',
       celsius: 'Display temperature in Celsius',
       darkMode: 'Enable Dark Mode',
       showSpaceResources: 'Show space resources in default resource panel',

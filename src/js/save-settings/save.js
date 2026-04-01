@@ -602,6 +602,9 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageResources')) {
         gameSettings.showSpaceStorageResources = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'enableTerraformingSubsteps')) {
+        gameSettings.enableTerraformingSubsteps = true;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageInDefaultPanel')) {
         gameSettings.showSpaceStorageInDefaultPanel = false;
       }
@@ -612,6 +615,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       const cachedSettings = cacheSettingsElements();
       cachedSettings.autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
       cachedSettings.keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
+      cachedSettings.terraformingSubstepsToggle.checked = gameSettings.enableTerraformingSubsteps;
       cachedSettings.celsiusToggle.checked = gameSettings.useCelsius;
       const debugEnabled = !!gameSettings.planetVisualizerDebugEnabled;
       if (typeof globalThis !== 'undefined') {

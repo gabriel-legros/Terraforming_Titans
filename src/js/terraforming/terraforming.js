@@ -896,9 +896,15 @@ class Terraforming extends EffectableEntity{
     // ensuring calculations are based on the start-of-tick state.
     // Calculates and applies changes from atmospheric/surface processes for one tick,
     // using a global atmosphere model but zonal surface interactions.
-    getSubstepDurations(deltaTime = 0) {
+    getSubstepDurations(deltaTime = 0, options = {}) {
         if (deltaTime <= 0) {
             return [];
+        }
+        if (options.ignoreSubstepping) {
+            return [deltaTime];
+        }
+        if (!gameSettings.enableTerraformingSubsteps) {
+            return [deltaTime];
         }
         if (deltaTime <= this.resourceSubstepMilliseconds) {
             return [deltaTime];
@@ -1078,7 +1084,7 @@ class Terraforming extends EffectableEntity{
         if (options.refreshStandaloneRates) {
             this.resetStandaloneTerraformingRateState();
         }
-        const stepDurations = this.getSubstepDurations(deltaTime);
+        const stepDurations = this.getSubstepDurations(deltaTime, options);
         if (stepDurations.length === 0) {
             this.update(deltaTime, options, stepDurations);
             return;

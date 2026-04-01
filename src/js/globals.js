@@ -49,6 +49,7 @@ let gameSettings = {
   useCelsius: false,
   darkMode: false,
   keepTabRunningAudio: false,
+  enableTerraformingSubsteps: true,
   hideCompletedResearch: false,
   hiddenResearchIds: [],
   silenceSolisAlert: false,

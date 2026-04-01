@@ -8,6 +8,7 @@ function cacheSettingsElements() {
   settingsElements = {
     autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
+    terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
     celsiusToggle: document.getElementById('celsius-toggle'),
     silenceToggle: document.getElementById('solis-silence-toggle'),
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
@@ -26,6 +27,7 @@ function cacheSettingsElements() {
     suppressFaithToggle: document.getElementById('suppress-faith-toggle'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
+    terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
     startBackgroundSilenceButton: document.getElementById('start-background-silence-button'),
     pauseButton: document.getElementById('pause-button'),
   };
@@ -59,6 +61,24 @@ function addSettingsListeners() {
         stopBackgroundSilence();
       }
     });
+  }
+
+  if (cached.terraformingSubstepsToggle) {
+    cached.terraformingSubstepsToggle.checked = gameSettings.enableTerraformingSubsteps;
+    cached.terraformingSubstepsToggle.addEventListener('change', () => {
+      gameSettings.enableTerraformingSubsteps = cached.terraformingSubstepsToggle.checked;
+    });
+  }
+
+  if (cached.terraformingSubstepsTooltip) {
+    attachDynamicInfoTooltip(
+      cached.terraformingSubstepsTooltip,
+      t(
+        'ui.settings.terraformingSubstepsTooltip',
+        {},
+        'By default, the climate model runs on a 10ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.'
+      )
+    );
   }
 
   if (cached.celsiusToggle) {
