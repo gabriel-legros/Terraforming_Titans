@@ -984,6 +984,7 @@ function attachTravelHandler(res, sStr) {
             attachTravelHandler(res, sStr);
           }
           updateRandomWorldUI();
+          resetGameFrameClock(true);
         }
       }
     };

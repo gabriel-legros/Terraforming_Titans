@@ -21,6 +21,30 @@ if (typeof globalThis !== 'undefined') {
   globalThis.game = game;
 }
 let lastFrameTimeMs = 0;
+const LOGIC_DELTA_QUANTUM_MS = 10;
+let logicDeltaCarryMs = 0;
+
+function resetGameFrameClock(resetCarry = false) {
+  lastFrameTimeMs = performance.now();
+  if (resetCarry) {
+    logicDeltaCarryMs = 0;
+  }
+  updateRender.lastDelta = 0;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    resetGameFrameClock();
+  }
+});
+
+window.addEventListener('focus', () => {
+  resetGameFrameClock();
+});
+
+window.addEventListener('pageshow', () => {
+  resetGameFrameClock();
+});
 
 function preload() {
   // Load assets (images, sounds, etc.) here
@@ -28,7 +52,6 @@ function preload() {
 
 function create() {
   initializeDefaultGlobals();
-  lastFrameTimeMs = performance.now();
 
   // Initialize the Planet Visualizer (Terraforming -> World subtab)
   window.initializePlanetVisualizerUI();
@@ -41,6 +64,7 @@ function create() {
       if (typeof hideLoadingOverlay === 'function') {
         hideLoadingOverlay();
       }
+      resetGameFrameClock(true);
     }
     return;
 }
@@ -719,11 +743,13 @@ function update(time, delta) {
   const realIncrement = deltaMs / 1000;
   realPlayTimeSeconds += realIncrement;
   totalRealPlayTimeSeconds += realIncrement;
-  updateLogic(scaledDelta);   // Update game state
-  updateRender.lastDelta = scaledDelta;
+  const quantizedDelta = Math.floor((scaledDelta + logicDeltaCarryMs) / LOGIC_DELTA_QUANTUM_MS) * LOGIC_DELTA_QUANTUM_MS;
+  logicDeltaCarryMs = scaledDelta + logicDeltaCarryMs - quantizedDelta;
+  updateLogic(quantizedDelta);   // Update game state
+  updateRender.lastDelta = quantizedDelta;
   updateRender();             // Render updated game state
 
-  autosave(scaledDelta);      // Call the autosave function
+  autosave(quantizedDelta);      // Call the autosave function
 }
 
 function startNewGame() {

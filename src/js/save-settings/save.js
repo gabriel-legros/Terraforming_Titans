@@ -684,6 +684,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       } else if (gameState.totalPlayTimeSeconds !== undefined) {
         totalRealPlayTimeSeconds = gameState.totalPlayTimeSeconds;
       }
+      logicDeltaCarryMs = 0;
 
       if (gameState.fastestTerraformDays !== undefined) {
         fastestTerraformDays = gameState.fastestTerraformDays;
@@ -730,6 +731,7 @@ function loadGame(slotOrCustomString, recreate = true) {
   } finally {
     globalGameIsLoadingFromSave = false;
     hideLoadingOverlay();
+    resetGameFrameClock(true);
   }
 }
 

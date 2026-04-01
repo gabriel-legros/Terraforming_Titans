@@ -191,7 +191,8 @@ function runAtmosphericChemistry(resources, params = {}) {
     gravity = 0,
     solarFlux = 0,
     atmosphericPressurePa = 0,
-    hydrogenEscapeMultiplier = 1
+    hydrogenEscapeMultiplier = 1,
+    applyRates = true
   } = params;
 
   let combustionMethaneAmount = 0;
@@ -271,7 +272,64 @@ function runAtmosphericChemistry(resources, params = {}) {
   const acidRainRate = realSeconds > 0 ? sulfuricAcidDecayAmount / realSeconds : 0;
   const hydrogenRate = realSeconds > 0 ? hydrogenDecayAmount / realSeconds : 0;
 
+  if (applyRates) {
+    applyAtmosphericChemistryRates(resources, {
+      atmosphericMethane: -combustionMethaneAmount,
+      oxygen: -combustionOxygenAmount,
+      atmosphericWater: combustionWaterAmount,
+      liquidWater: acidRainWaterAmount,
+      carbonDioxide: combustionCO2Amount,
+      calciteAerosol: -calciteDecayAmount,
+      sulfuricAcid: -sulfuricAcidDecayAmount,
+      hydrogen: -hydrogenDecayAmount,
+    }, realSeconds);
+  }
+
+  return {
+    changes: {
+      atmosphericMethane: -combustionMethaneAmount,
+      oxygen: -combustionOxygenAmount,
+      atmosphericWater: combustionWaterAmount,
+      liquidWater: acidRainWaterAmount,
+      carbonDioxide: combustionCO2Amount,
+      calciteAerosol: -calciteDecayAmount,
+      sulfuricAcid: -sulfuricAcidDecayAmount,
+      hydrogen: -hydrogenDecayAmount,
+    },
+    rates: {
+      methane: methaneRate,
+      oxygen: oxygenRate,
+      water: waterRate,
+      acidRainWater: acidRainWaterRate,
+      co2: co2Rate,
+      calcite: calciteRate,
+      acidRain: acidRainRate,
+      hydrogen: hydrogenRate,
+    },
+  };
+}
+
+function applyAtmosphericChemistryRates(resources, changes = {}, realSeconds = 0) {
+  const seconds = realSeconds > 0 ? realSeconds : 0;
+  const methaneAmount = -(changes.atmosphericMethane || 0);
+  const oxygenAmount = -(changes.oxygen || 0);
+  const waterAmount = changes.atmosphericWater || 0;
+  const acidRainWaterAmount = changes.liquidWater || 0;
+  const co2Amount = changes.carbonDioxide || 0;
+  const calciteAmount = -(changes.calciteAerosol || 0);
+  const acidRainAmount = -(changes.sulfuricAcid || 0);
+  const hydrogenAmount = -(changes.hydrogen || 0);
+
+  const methaneRate = seconds > 0 ? methaneAmount / seconds : 0;
+  const oxygenRate = seconds > 0 ? oxygenAmount / seconds : 0;
+  const waterRate = seconds > 0 ? waterAmount / seconds : 0;
+  const acidRainWaterRate = seconds > 0 ? acidRainWaterAmount / seconds : 0;
+  const co2Rate = seconds > 0 ? co2Amount / seconds : 0;
+  const calciteRate = seconds > 0 ? calciteAmount / seconds : 0;
+  const acidRainRate = seconds > 0 ? acidRainAmount / seconds : 0;
+  const hydrogenRate = seconds > 0 ? hydrogenAmount / seconds : 0;
   const rateType = 'terraforming';
+
   resources?.atmospheric?.atmosphericWater?.modifyRate?.(
     waterRate,
     'Methane Combustion',
@@ -312,34 +370,12 @@ function runAtmosphericChemistry(resources, params = {}) {
     'Hydrogen Escape',
     rateType
   );
-
-  return {
-    changes: {
-      atmosphericMethane: -combustionMethaneAmount,
-      oxygen: -combustionOxygenAmount,
-      atmosphericWater: combustionWaterAmount,
-      liquidWater: acidRainWaterAmount,
-      carbonDioxide: combustionCO2Amount,
-      calciteAerosol: -calciteDecayAmount,
-      sulfuricAcid: -sulfuricAcidDecayAmount,
-      hydrogen: -hydrogenDecayAmount,
-    },
-    rates: {
-      methane: methaneRate,
-      oxygen: oxygenRate,
-      water: waterRate,
-      acidRainWater: acidRainWaterRate,
-      co2: co2Rate,
-      calcite: calciteRate,
-      acidRain: acidRainRate,
-      hydrogen: hydrogenRate,
-    },
-  };
 }
 
 if (isNodeChem) {
   module.exports = {
     runAtmosphericChemistry,
+    applyAtmosphericChemistryRates,
     METHANE_COMBUSTION_PARAMETER,
     OXYGEN_COMBUSTION_THRESHOLD,
     METHANE_COMBUSTION_THRESHOLD,
@@ -356,6 +392,7 @@ if (isNodeChem) {
   };
 } else {
   window.runAtmosphericChemistry = runAtmosphericChemistry;
+  window.applyAtmosphericChemistryRates = applyAtmosphericChemistryRates;
   window.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER;
   window.OXYGEN_COMBUSTION_THRESHOLD = OXYGEN_COMBUSTION_THRESHOLD;
   window.METHANE_COMBUSTION_THRESHOLD = METHANE_COMBUSTION_THRESHOLD;

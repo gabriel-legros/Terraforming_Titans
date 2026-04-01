@@ -94,6 +94,18 @@
   }
 
   const ZONE_KEYS = ['tropical', 'temperate', 'polar'];
+  const MIN_TERRAFORMING_SUBSTEP_MS = 10;
+
+  function quantizeEquilibrationStepMs(stepMs) {
+    const numericStep = Number(stepMs) || 0;
+    if (numericStep <= MIN_TERRAFORMING_SUBSTEP_MS) {
+      return MIN_TERRAFORMING_SUBSTEP_MS;
+    }
+    return Math.max(
+      MIN_TERRAFORMING_SUBSTEP_MS,
+      Math.round(numericStep / MIN_TERRAFORMING_SUBSTEP_MS) * MIN_TERRAFORMING_SUBSTEP_MS
+    );
+  }
 
   function ensureEquilibrationZones(terra) {
     const zonalSurface = terra.zonalSurface || (terra.zonalSurface = {});
@@ -272,6 +284,9 @@
 
     return new Promise((resolve, reject) => {
       const prevLum = typeof getStarLuminosity === 'function' ? getStarLuminosity() : 1;
+      let terra = null;
+      let previousResourceSubstepMs = null;
+      let previousMaxResourceSubsteps = null;
       try {
         isEquilibrating = true;
         const TF = TerraformingCtor || (typeof Terraforming === 'function' ? Terraforming : undefined);
@@ -293,7 +308,7 @@
         const prevFacilityFn = globalThis.calculateZoneSolarFluxWithFacility;
         globalThis.calculateZoneSolarFluxWithFacility = undefined;
 
-        const terra = new TF(sandboxResources, fullParams.celestialParameters || {});
+        terra = new TF(sandboxResources, fullParams.celestialParameters || {});
         if (typeof terra.calculateInitialValues === 'function') {
           terra.calculateInitialValues(fullParams);
           ensureEquilibrationZones(terra);
@@ -306,13 +321,24 @@
         let refinementsFromInstability = 0;
         let lastUnstableCheckTime = 0;
         let totalSimulatedMs = 0;
+        previousResourceSubstepMs = terra.resourceSubstepMilliseconds;
+        previousMaxResourceSubsteps = terra.maxResourceSubsteps;
+        function applyEquilibrationStep(nextStepMs) {
+          const quantizedStepMs = quantizeEquilibrationStepMs(nextStepMs);
+          stepDays = quantizedStepMs / 1000;
+          terra.resourceSubstepMilliseconds = quantizedStepMs;
+          terra.maxResourceSubsteps = Math.max(1, Math.ceil(quantizedStepMs / MIN_TERRAFORMING_SUBSTEP_MS));
+          return quantizedStepMs;
+        }
 
-        let stepMs = 1000 * stepDays; // 1 day per 1000 ms
+        let stepMs = applyEquilibrationStep(1000 * stepDays); // 1 day per 1000 ms
         let timedOut = false;
         let timeoutHandle = setTimeout(() => { timedOut = true; }, timeoutMs);
         const startTime = Date.now();
 
         function finalize(ok) {
+          terra.resourceSubstepMilliseconds = previousResourceSubstepMs;
+          terra.maxResourceSubsteps = previousMaxResourceSubsteps;
           terra._updateZonalCoverageCache();
           terra.updateLuminosity();
           terra.updateSurfaceTemperature();
@@ -367,8 +393,9 @@
             terra.synchronizeGlobalResources();
             terra._updateZonalCoverageCache();
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
-            const noisyStepMs = stepMs * (0.95 + Math.random() * 0.1);
+            const noisyStepMs = quantizeEquilibrationStepMs(stepMs * (0.95 + Math.random() * 0.1));
             terra.updateResources(noisyStepMs, {
+              refreshStandaloneRates: true,
               skipTerraformingEffects: true,
               skipHazardUpdates: true
             });
@@ -387,7 +414,7 @@
                   refinementCount++;
                   stepDays /= 2;
                   relTol /= 4;
-                  stepMs = 1000 * stepDays;
+                  stepMs = applyEquilibrationStep(1000 * stepDays);
                   lastUnstableCheckTime = elapsedNow;
                   stableCount = 0; // Reset for next level of stability
                   console.log(`RWG_LOG: Stable for 100 steps. Reducing stepDays to ${stepDays}`);
@@ -399,7 +426,7 @@
                 // Alternative refinement: If it's been 10s since the last unstable check
                 // and we're still not stable, reduce the time step.
                 stepDays /= 2;
-                stepMs = 1000 * stepDays;
+                stepMs = applyEquilibrationStep(1000 * stepDays);
                 lastUnstableCheckTime = elapsedNow; // Reset the timer
                 refinementsFromInstability++;
                 console.log(`RWG_LOG: Unstable for 10s. Reducing stepDays to ${stepDays}`);
@@ -438,6 +465,10 @@
         isEquilibrating = false;
         if (typeof setStarLuminosity === 'function') {
           setStarLuminosity(prevLum);
+        }
+        if (terra && previousResourceSubstepMs !== null && previousMaxResourceSubsteps !== null) {
+          terra.resourceSubstepMilliseconds = previousResourceSubstepMs;
+          terra.maxResourceSubsteps = previousMaxResourceSubsteps;
         }
         reject(e);
       }

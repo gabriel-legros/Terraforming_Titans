@@ -255,8 +255,6 @@ class WaterCycle extends ResourceCycleClass {
     }
   }
 
-  // Delegate to base for flow + zonal changes
-  runCycle(terraforming, zones, options = {}) { return super.runCycle(terraforming, zones, options); }
   // Override only to add focused-melt and water-specific aliases
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
     // Apply base rates and resource changes from mappings

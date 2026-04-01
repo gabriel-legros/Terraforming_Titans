@@ -1756,7 +1756,7 @@ const styxOverrides = {
         "initialValue": 536723651573296.1
       },
       "atmosphericWater": {
-        "initialValue": 20990307335143.98
+        "initialValue": 20990303514848.77
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -1768,7 +1768,7 @@ const styxOverrides = {
         "initialValue": 8050854773599442
       },
       "hydrogen": {
-        "initialValue": 1610165732946453.8
+        "initialValue": 1610164149561893.2
       },
       "sulfuricAcid": {
         "initialValue": 0
@@ -1777,7 +1777,7 @@ const styxOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 16084889827318676,
+      "liquidWater": 16084881945396264,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1796,7 +1796,7 @@ const styxOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 20920167388792620,
+      "liquidWater": 20920169853945800,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1815,8 +1815,8 @@ const styxOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 511.556377180578,
-      "ice": 3379330459552689,
+      "liquidWater": 0.04504606481693552,
+      "ice": 3379335880144068.5,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
@@ -1836,21 +1836,21 @@ const styxOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 307.580868319646,
-      "day": 308.2934116921165,
-      "night": 306.86832494717555
+      "value": 307.58086558610773,
+      "day": 308.2934091464967,
+      "night": 306.8683220257188
     },
     "temperate": {
-      "value": 293.9951089058813,
-      "day": 294.58749687521487,
-      "night": 293.4027209365477
+      "value": 293.9951066042917,
+      "day": 294.5874945799522,
+      "night": 293.40271862863125
     },
     "polar": {
-      "value": 229.45588354664451,
-      "day": 229.9911948033741,
-      "night": 228.92057228991493
+      "value": 229.45587117664635,
+      "day": 229.99118254137215,
+      "night": 228.92055981192055
     }
-  },
+  }
 };
 
 // --- Parameter Retrieval Logic ---

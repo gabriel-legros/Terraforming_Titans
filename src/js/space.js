@@ -2156,6 +2156,7 @@ class SpaceManager extends EffectableEntity {
             currentPlanetParameters = JSON.parse(JSON.stringify(params));
         }
         initializeGameState({ preserveManagers: true, preserveJournal: true });
+        resetGameFrameClock(true);
     }
 
     travelToStoryPlanet(targetKey) {

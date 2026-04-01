@@ -657,6 +657,7 @@ function selectPlanet(planetKey, force, skipCurrentWorldWarnings){
     if (typeof openTerraformingWorldTab === 'function') {
       openTerraformingWorldTab();
     }
+    resetGameFrameClock(true);
 }
 
 function updateCurrentWorldUI() {

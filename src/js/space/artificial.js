@@ -1491,6 +1491,7 @@ class ArtificialManager extends EffectableEntity {
         this.recordHistoryEntry('traveled');
         this.activeProject = null;
         this.updateUI(true);
+        resetGameFrameClock(true);
         return true;
     }
 
@@ -1521,7 +1522,11 @@ class ArtificialManager extends EffectableEntity {
             },
             artificial: true
         };
-        return spaceManager.travelToRandomWorld(res, seed);
+        const traveled = spaceManager.travelToRandomWorld(res, seed);
+        if (traveled) {
+            resetGameFrameClock(true);
+        }
+        return traveled;
     }
 
     discardStoredWorld(key) {

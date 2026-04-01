@@ -221,6 +221,8 @@ const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
 const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
+const TERRAFORMING_RESOURCE_SUBSTEP_MS = 10;
+const TERRAFORMING_RESOURCE_MAX_SUBSTEPS = 24;
 let surfaceLiquidHeatCapacityConfigs = [];
 
 // Load utility functions when running under Node for tests
@@ -278,6 +280,7 @@ function getEffectiveLifeFraction(terraforming) {
 }
 
 var runAtmosphericChemistry;
+var applyAtmosphericChemistryRates;
 var METHANE_COMBUSTION_PARAMETER_CONST;
 var estimateExosphereHeightMetersHelper = () => 0;
 var estimateExobaseTemperatureKHelper = () => 0;
@@ -309,8 +312,22 @@ try {
 }
 
 try {
-  ({ estimateExosphereTemperatureK: estimateExosphereTemperatureKHelper } = require('./atmospheric-chemistry.js'));
+  ({
+    runAtmosphericChemistry,
+    applyAtmosphericChemistryRates,
+    estimateExosphereTemperatureK: estimateExosphereTemperatureKHelper
+  } = require('./atmospheric-chemistry.js'));
 } catch (error) {
+  try {
+    runAtmosphericChemistry = window.runAtmosphericChemistry;
+  } catch (innerError) {
+    // fallback stays
+  }
+  try {
+    applyAtmosphericChemistryRates = window.applyAtmosphericChemistryRates;
+  } catch (innerError) {
+    // fallback stays
+  }
   try {
     estimateExosphereTemperatureKHelper = estimateExosphereTemperatureK;
   } catch (innerError) {
@@ -426,6 +443,8 @@ class Terraforming extends EffectableEntity{
     };
     this.heatCapacityCache = null;
     this.exosphereHeightMeters = 0;
+    this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
+    this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
 
     this.initialValuesCalculated = false;
     this.completed = false;
@@ -877,13 +896,108 @@ class Terraforming extends EffectableEntity{
     // ensuring calculations are based on the start-of-tick state.
     // Calculates and applies changes from atmospheric/surface processes for one tick,
     // using a global atmosphere model but zonal surface interactions.
-    updateResources(deltaTime, options = {}) {
-        this.update(deltaTime, options);
+    getSubstepDurations(deltaTime = 0) {
+        if (deltaTime <= 0) {
+            return [];
+        }
+        if (deltaTime <= this.resourceSubstepMilliseconds) {
+            return [deltaTime];
+        }
 
+        const durations = [];
+        let remaining = deltaTime;
+        while (
+            remaining > this.resourceSubstepMilliseconds &&
+            durations.length + 1 < this.maxResourceSubsteps
+        ) {
+            durations.push(this.resourceSubstepMilliseconds);
+            remaining -= this.resourceSubstepMilliseconds;
+        }
+        durations.push(remaining);
+        return durations;
+    }
+
+    runUpdateStep(deltaTime = 0, options = {}) {
+      this.synchronizeGlobalResources();
+      this._updateZonalCoverageCache();
+      this._updateAtmosphericPressureCache();
+      this._updateHeatCapacityCache();
+
+      this.updateLuminosity();
+      this._updateExosphereHeightCache();
+      this.updateSurfaceTemperature(deltaTime, options);
+
+      this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
+
+      if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
+        hazardManager.update(deltaTime, this);
+      }
+    }
+
+    finalizeUpdate(options = {}) {
+      if (!options.skipTerraformingEffects) {
+        this.applyTerraformingEffects();
+      }
+
+      this.readyForCompletion = this.getTerraformingStatus();
+      this.updateSurfaceRadiation();
+    }
+
+    recalculateResourceRateTotals() {
+        for (const category in this.resources) {
+            const categoryResources = this.resources[category];
+            for (const resourceName in categoryResources) {
+                const resource = categoryResources[resourceName];
+                if (resource && typeof resource.recalculateTotalRates === 'function') {
+                    resource.recalculateTotalRates();
+                }
+            }
+        }
+    }
+
+    resetStandaloneTerraformingRateState() {
+        for (const category in this.resources) {
+            const categoryResources = this.resources[category];
+            for (const resourceName in categoryResources) {
+                const resource = categoryResources[resourceName];
+                if (!resource) {
+                    continue;
+                }
+                if (resource.productionRateByType?.terraforming) {
+                    delete resource.productionRateByType.terraforming;
+                }
+                if (resource.consumptionRateByType?.terraforming) {
+                    delete resource.consumptionRateByType.terraforming;
+                }
+            }
+        }
+
+        for (const key in this) {
+            if (typeof this[key] !== 'number') {
+                continue;
+            }
+            if (
+                (key.startsWith('total') || key.startsWith('flow') || key.startsWith('focus'))
+                && key.endsWith('Rate')
+            ) {
+                this[key] = 0;
+            }
+        }
+
+        this.recalculateResourceRateTotals();
+    }
+
+    runResourceUpdateStep(deltaTime) {
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         const realSeconds = deltaTime / 1000;
-        if (durationSeconds <= 0) return;
-        if (this.isBooleanFlagSet('ringworldLowGravityTerraforming')) return;
+        if (durationSeconds <= 0 || this.isBooleanFlagSet('ringworldLowGravityTerraforming')) {
+            return {
+                durationSeconds,
+                realSeconds,
+                cycleResults: [],
+                chemTotals: { changes: {} },
+            };
+        }
 
 
         const zones = getZones();
@@ -902,6 +1016,7 @@ class Terraforming extends EffectableEntity{
             this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance];
         }
 
+        const cycleResults = [];
         for (const cycle of this.cycles) {
             const params = {
                 atmPressure: globalTotalPressurePa,
@@ -916,9 +1031,7 @@ class Terraforming extends EffectableEntity{
             if (atmRes) {
                 atmRes.value = Math.max(0, atmRes.value + delta);
             }
-            if (typeof cycle.updateResourceRates === 'function') {
-                cycle.updateResourceRates(this, totals, durationSeconds);
-            }
+            cycleResults.push({ cycle, totals });
         }
         const chemTotals = runAtmosphericChemistry(this.resources, {
             globalOxygenPressurePa,
@@ -932,7 +1045,8 @@ class Terraforming extends EffectableEntity{
             gravity,
             solarFlux: this.luminosity.modifiedSolarFlux,
             atmosphericPressurePa : this.atmosphericPressureCache.totalPressure,
-            hydrogenEscapeMultiplier: projectManager?.projects?.artificialSky?.isCompleted ? 0 : 1
+            hydrogenEscapeMultiplier: projectManager?.projects?.artificialSky?.isCompleted ? 0 : 1,
+            applyRates: false
         });
 
         for (const [key, delta] of Object.entries(chemTotals.changes)) {
@@ -949,7 +1063,71 @@ class Terraforming extends EffectableEntity{
         }
 
         this.synchronizeGlobalResources();
+        this._updateZonalCoverageCache();
         this._updateAtmosphericPressureCache();
+        this.updateLuminosity();
+        return {
+            durationSeconds,
+            realSeconds,
+            cycleResults,
+            chemTotals,
+        };
+      }
+
+    updateResources(deltaTime, options = {}) {
+        if (options.refreshStandaloneRates) {
+            this.resetStandaloneTerraformingRateState();
+        }
+        const stepDurations = this.getSubstepDurations(deltaTime);
+        if (stepDurations.length === 0) {
+            this.update(deltaTime, options, stepDurations);
+            return;
+        }
+
+        const combinedCycleTotals = [];
+        const combinedChemChanges = {};
+        let totalDurationSeconds = 0;
+        let totalRealSeconds = 0;
+
+        for (const stepDuration of stepDurations) {
+            this.runUpdateStep(stepDuration, options);
+            const stepResult = this.runResourceUpdateStep(stepDuration);
+            totalDurationSeconds += stepResult.durationSeconds || 0;
+            totalRealSeconds += stepResult.realSeconds || 0;
+
+            for (let index = 0; index < stepResult.cycleResults.length; index += 1) {
+                const stepCycle = stepResult.cycleResults[index];
+                let combined = combinedCycleTotals[index];
+                if (!combined) {
+                    combined = {
+                        cycle: stepCycle.cycle,
+                        totals: {},
+                    };
+                    combinedCycleTotals[index] = combined;
+                }
+                for (const key in stepCycle.totals) {
+                    combined.totals[key] = (combined.totals[key] || 0) + stepCycle.totals[key];
+                }
+            }
+
+            const chemChanges = stepResult.chemTotals?.changes || {};
+            for (const key in chemChanges) {
+                combinedChemChanges[key] = (combinedChemChanges[key] || 0) + chemChanges[key];
+            }
+        }
+
+        this.finalizeUpdate(options);
+
+        for (const combined of combinedCycleTotals) {
+            if (combined && typeof combined.cycle.updateResourceRates === 'function') {
+                combined.cycle.updateResourceRates(this, combined.totals, totalDurationSeconds);
+            }
+        }
+
+        applyAtmosphericChemistryRates(this.resources, combinedChemChanges, totalRealSeconds);
+        if (options.refreshStandaloneRates) {
+            this.recalculateResourceRateTotals();
+        }
       }
 
     // Function to update luminosity properties
@@ -1692,49 +1870,22 @@ class Terraforming extends EffectableEntity{
         });
     }
 
-    update(deltaTime = 0, options = {}) {
-      this.synchronizeGlobalResources();
-      this._updateZonalCoverageCache(); // New call at the start of the update tick
-      this._updateAtmosphericPressureCache();
-      this._updateHeatCapacityCache();
+    update(deltaTime = 0, options = {}, stepDurations = null) {
+      const durations = Array.isArray(stepDurations) && stepDurations.length > 0
+        ? stepDurations
+        : this.getSubstepDurations(deltaTime);
 
-      //First update luminosity
-      this.updateLuminosity();
-      this._updateExosphereHeightCache();
-
-      // Update temperature with the new heat-capacity-aware integration
-      this.updateSurfaceTemperature(deltaTime, options);
-
-      this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
-
-      // Update Resources will be called by resources.js
-      //this.updateResources(deltaTime);
-
-      // Update total atmospheric pressure (based on updated zonal amounts via synchronization later)
-      // Note: synchronizeGlobalResources now calculates this.atmosphere.value
-      // this.atmosphere.value = this.calculateTotalPressure(); // No longer needed here
-
-      // Coverage is now calculated on-demand using calculateAverageCoverage from
-      // terraforming-utils.js. Removed redundant calls to the old
-      // calculateCoverage function.
-
-      if (!options.skipTerraformingEffects) {
-        this.applyTerraformingEffects();
+      if (durations.length === 0) {
+        this.runUpdateStep(0, options);
+        this.finalizeUpdate(options);
+        return;
       }
 
-      // --- Check and Update Overall Status ---
-      // Determine if all parameters meet completion conditions
-      // This value is used by the UI to enable the "Complete Terraforming" button
-      this.readyForCompletion = this.getTerraformingStatus();
-
-      // --- End of Status Update Logic ---
-
-      this.updateSurfaceRadiation();
-
-      if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
-        hazardManager.update(deltaTime, this);
+      for (const stepDuration of durations) {
+        this.runUpdateStep(stepDuration, options);
       }
 
+      this.finalizeUpdate(options);
     } // <-- Correct closing brace for the 'update' method
 
 
@@ -2598,6 +2749,8 @@ synchronizeGlobalResources() {
       // Load Temperature (including zonal)
       if (terraformingState.temperature) {
           this.temperature.value = terraformingState.temperature.value || 0;
+          this.temperature.trendValue = terraformingState.temperature.trendValue ?? this.temperature.value;
+          this.temperature.equilibriumTemperature = terraformingState.temperature.equilibriumTemperature ?? this.temperature.value;
           this.temperature.emissivity = terraformingState.temperature.emissivity || 0;
           this.temperature.effectiveTempNoAtmosphere = terraformingState.temperature.effectiveTempNoAtmosphere || 0;
           this.temperature.opticalDepth = terraformingState.temperature.opticalDepth || 0;
@@ -2609,6 +2762,8 @@ synchronizeGlobalResources() {
                   this.temperature.zones[zone].value = terraformingState.temperature.zones[zone]?.value || 0;
                   this.temperature.zones[zone].day = terraformingState.temperature.zones[zone]?.day || 0;
                   this.temperature.zones[zone].night = terraformingState.temperature.zones[zone]?.night || 0;
+                  this.temperature.zones[zone].trendValue = terraformingState.temperature.zones[zone]?.trendValue ?? this.temperature.zones[zone].value;
+                  this.temperature.zones[zone].equilibriumTemperature = terraformingState.temperature.zones[zone]?.equilibriumTemperature ?? this.temperature.zones[zone].value;
               }
           }
       }
