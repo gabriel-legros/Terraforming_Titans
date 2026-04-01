@@ -19,12 +19,28 @@ const pulsarHazardUICache = {
   effectsItems: []
 };
 
-const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, Mega Heat Sink, and Magnetic Shield are disabled until the pulsar hazard is fully cleared.';
-const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction cost is multiplied by x100, and Tractor Beams is disabled.';
-const PULSAR_CLEAR_TEXT = 'Build all Artificial Sky segments or go rogue.';
+function getPulsarHazardText(path, fallback, vars) {
+  return t(`ui.terraforming.hazardsUi.pulsar.${path}`, vars, fallback);
+}
+
+const PULSAR_DISABLED_PROJECTS_TEXT = getPulsarHazardText(
+  'disabledProjects',
+  'Space Mirror Facility, Space Elevator, Mega Heat Sink, and Magnetic Shield are disabled until the pulsar hazard is fully cleared.'
+);
+const PULSAR_THRUSTER_COST_TEXT = getPulsarHazardText(
+  'thrusterCost',
+  'Planetary Thrusters construction cost is multiplied by x100, and Tractor Beams is disabled.'
+);
+const PULSAR_CLEAR_TEXT = getPulsarHazardText(
+  'clearText',
+  'Build all Artificial Sky segments or go rogue.'
+);
 const PULSAR_UI_STORM_PERIOD_SECONDS = 100;
 const PULSAR_UI_STORM_DEFAULT_DURATION_SECONDS = 5;
-const PULSAR_DISTANCE_SCALING_TEXT = 'All pulsar effects are multiplied by (initial distance / current distance)^2 (capped at x1).';
+const PULSAR_DISTANCE_SCALING_TEXT = getPulsarHazardText(
+  'distanceScaling',
+  'All pulsar effects are multiplied by (initial distance / current distance)^2 (capped at x1).'
+);
 const PULSAR_BASE_STORM_ATTRITION_PERCENT = 3;
 
 function getPulsarStormDurationSeconds(pulsarParameters) {
@@ -36,7 +52,14 @@ function getPulsarStormDurationSeconds(pulsarParameters) {
 
 function getPulsarStormProjectText(pulsarParameters) {
   const durationSeconds = getPulsarStormDurationSeconds(pulsarParameters);
-  return `Electromagnetic storms repeat every ${formatNumber(PULSAR_UI_STORM_PERIOD_SECONDS, false, 0)}s for ${formatNumber(durationSeconds, false, 2)}s and pause spaceship projects while active.`;
+  return getPulsarHazardText(
+    'stormProjects',
+    'Electromagnetic storms repeat every {period}s for {duration}s and pause spaceship projects while active.',
+    {
+      period: formatNumber(PULSAR_UI_STORM_PERIOD_SECONDS, false, 0),
+      duration: formatNumber(durationSeconds, false, 2),
+    }
+  );
 }
 
 function getPulsarDocument() {
@@ -231,7 +254,7 @@ function ensurePulsarLayout() {
 
   const titleRow = doc.createElement('div');
   titleRow.className = 'hazard-card__title';
-  titleRow.textContent = 'Pulsar';
+  titleRow.textContent = getPulsarHazardText('title', 'Pulsar');
   attachHazardCardCollapse(card, titleRow);
   card.appendChild(titleRow);
 
@@ -242,7 +265,7 @@ function ensurePulsarLayout() {
   summaryStatus.className = 'hazard-summary hazard-summary--left';
   const summaryStatusHeader = doc.createElement('div');
   summaryStatusHeader.className = 'hazard-summary__header';
-  summaryStatusHeader.textContent = 'Status';
+  summaryStatusHeader.textContent = getPulsarHazardText('status', 'Status');
   const summaryStatusBody = doc.createElement('div');
   summaryStatusBody.className = 'hazard-summary__body';
   summaryStatus.appendChild(summaryStatusHeader);
@@ -252,7 +275,7 @@ function ensurePulsarLayout() {
   summaryRadiation.className = 'hazard-summary hazard-summary--right';
   const summaryRadiationHeader = doc.createElement('div');
   summaryRadiationHeader.className = 'hazard-summary__header';
-  summaryRadiationHeader.textContent = 'Added Radiation';
+  summaryRadiationHeader.textContent = getPulsarHazardText('addedRadiation', 'Added Radiation');
   const summaryRadiationBody = doc.createElement('div');
   summaryRadiationBody.className = 'hazard-summary__body';
   summaryRadiation.appendChild(summaryRadiationHeader);
@@ -322,7 +345,7 @@ function ensurePulsarLayout() {
   scalingHeader.className = 'hazard-factors__header';
   const scalingTitle = doc.createElement('span');
   scalingTitle.className = 'hazard-factors__title';
-  scalingTitle.textContent = 'Scaling Effects';
+  scalingTitle.textContent = getPulsarHazardText('scalingEffects', 'Scaling Effects');
   scalingHeader.appendChild(scalingTitle);
 
   const scalingGrid = doc.createElement('div');
@@ -330,23 +353,23 @@ function ensurePulsarLayout() {
 
   const radiationRow = createPulsarScalingRow(
     doc,
-    'Added Orbital Radiation',
-    'Surface dose is reduced by atmospheric attenuation.'
+    getPulsarHazardText('scalingRows.addedOrbitalRadiation', 'Added Orbital Radiation'),
+    getPulsarHazardText('scalingRows.addedOrbitalRadiationInfo', 'Surface dose is reduced by atmospheric attenuation.')
   );
   const landRow = createPulsarScalingRow(
     doc,
-    'Hazard Land Lock',
-    'Reserved share of initial land.'
+    getPulsarHazardText('scalingRows.hazardLandLock', 'Hazard Land Lock'),
+    getPulsarHazardText('scalingRows.hazardLandLockInfo', 'Reserved share of initial land.')
   );
   const stormRow = createPulsarScalingRow(
     doc,
-    'Storm Attrition',
-    'Only during active storms; affects worker androids, electronics, and nanobots.'
+    getPulsarHazardText('scalingRows.stormAttrition', 'Storm Attrition'),
+    getPulsarHazardText('scalingRows.stormAttritionInfo', 'Only during active storms; affects worker androids, electronics, and nanobots.')
   );
   const nanobotRow = createPulsarScalingRow(
     doc,
-    'Nanobot Cap',
-    'Uses max(Underground Expansion ratio, net pulsar mitigation).'
+    getPulsarHazardText('scalingRows.nanobotCap', 'Nanobot Cap'),
+    getPulsarHazardText('scalingRows.nanobotCapInfo', 'Uses max(Underground Expansion ratio, net pulsar mitigation).')
   );
 
   scalingGrid.appendChild(radiationRow.row);
@@ -362,7 +385,7 @@ function ensurePulsarLayout() {
 
   const effectsHeader = doc.createElement('div');
   effectsHeader.className = 'hazard-effects__header';
-  effectsHeader.textContent = 'Other Effects';
+  effectsHeader.textContent = getPulsarHazardText('otherEffects', 'Other Effects');
 
   const effectsList = doc.createElement('ul');
   effectsList.className = 'hazard-effects__list';
@@ -392,7 +415,7 @@ function ensurePulsarLayout() {
 
   const clearHeader = doc.createElement('div');
   clearHeader.className = 'hazard-effects__header';
-  clearHeader.textContent = 'How to Clear';
+  clearHeader.textContent = getPulsarHazardText('howToClear', 'How to Clear');
 
   const clearList = doc.createElement('ul');
   clearList.className = 'hazard-effects__list';
@@ -454,7 +477,7 @@ function updatePulsarHazardUI(pulsarParameters) {
     return;
   }
 
-  const description = pulsarParameters.description || 'Pulsar hazard detected.';
+  const description = pulsarParameters.description || getPulsarHazardText('detected', 'Pulsar hazard detected.');
   const baseOrbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
     ? pulsarParameters.orbitalDoseBoost_mSvPerDay
     : 0;
@@ -492,8 +515,11 @@ function updatePulsarHazardUI(pulsarParameters) {
 
   if (!isActive) {
     if (pulsarHazardUICache.summaryStatusBody) {
-      pulsarHazardUICache.summaryStatusBody.textContent =
-        `${description}\nStatus: Cleared.\nPulsar effects are disabled on this world.`;
+      pulsarHazardUICache.summaryStatusBody.textContent = getPulsarHazardText(
+        'summary.cleared',
+        '{description}\nStatus: Cleared.\nPulsar effects are disabled on this world.',
+        { description }
+      );
     }
     if (pulsarHazardUICache.viz) {
       pulsarHazardUICache.viz.classList.remove('pulsar-viz--storm');
@@ -505,31 +531,58 @@ function updatePulsarHazardUI(pulsarParameters) {
       pulsarHazardUICache.barHazard.style.flexBasis = '0%';
     }
     if (pulsarHazardUICache.barSafeLabel) {
-      pulsarHazardUICache.barSafeLabel.textContent = '100.0% Shielded';
+      pulsarHazardUICache.barSafeLabel.textContent = getPulsarHazardText(
+        'shielded',
+        '{value}% Shielded',
+        { value: '100.0' }
+      );
     }
     if (pulsarHazardUICache.barHazardLabel) {
       pulsarHazardUICache.barHazardLabel.textContent = '';
     }
     if (pulsarHazardUICache.barDetails) {
-      pulsarHazardUICache.barDetails.textContent =
-        `Artificial Sky Segments: ${formatNumber(skyProgress.builtSegments, false, 2)} / ${formatNumber(skyProgress.maxSegments, false, 2)} | Hazard Intensity: 0.00%`;
+      pulsarHazardUICache.barDetails.textContent = getPulsarHazardText(
+        'summary.barDetailsCleared',
+        'Artificial Sky Segments: {built} / {max} | Hazard Intensity: 0.00%',
+        {
+          built: formatNumber(skyProgress.builtSegments, false, 2),
+          max: formatNumber(skyProgress.maxSegments, false, 2),
+        }
+      );
     }
     if (pulsarHazardUICache.summaryRadiationBody) {
-      pulsarHazardUICache.summaryRadiationBody.textContent = '+0.00 mSv/day orbital dose';
+      pulsarHazardUICache.summaryRadiationBody.textContent = getPulsarHazardText(
+        'orbitalDose',
+        '+{value} mSv/day orbital dose',
+        { value: '0.00' }
+      );
     }
     if (pulsarHazardUICache.scalingRadiationValue) {
-      pulsarHazardUICache.scalingRadiationValue.textContent =
-        `Current: +0.00 mSv/day (base ${formatNumber(baseOrbitalBoost, false, 2)} × x0.000)`;
+      pulsarHazardUICache.scalingRadiationValue.textContent = getPulsarHazardText(
+        'summary.radiationCurrent',
+        'Current: +{current} mSv/day (base {base} × x{multiplier})',
+        {
+          current: '0.00',
+          base: formatNumber(baseOrbitalBoost, false, 2),
+          multiplier: '0.000',
+        }
+      );
     }
     if (pulsarHazardUICache.scalingLandValue) {
-      pulsarHazardUICache.scalingLandValue.textContent = 'Current: 0.00%';
+      pulsarHazardUICache.scalingLandValue.textContent = getPulsarHazardText('currentPercent', 'Current: {value}%', { value: '0.00' });
     }
     if (pulsarHazardUICache.scalingStormValue) {
-      pulsarHazardUICache.scalingStormValue.textContent = 'Current: 0.00%/s';
+      pulsarHazardUICache.scalingStormValue.textContent = getPulsarHazardText('currentPercentPerSecond', 'Current: {value}%/s', { value: '0.00' });
     }
     if (pulsarHazardUICache.scalingNanobotValue) {
-      pulsarHazardUICache.scalingNanobotValue.textContent =
-        `Current Cap: x${formatNumber(currentNanobotMultiplier, false, 3)}\nUnderground ${formatNumber(undergroundCompletionRatio * 100, false, 2)}% | Net mitigation 100.00%`;
+      pulsarHazardUICache.scalingNanobotValue.textContent = getPulsarHazardText(
+        'summary.nanobotCurrentCleared',
+        'Current Cap: x{current}\nUnderground {underground}% | Net mitigation 100.00%',
+        {
+          current: formatNumber(currentNanobotMultiplier, false, 3),
+          underground: formatNumber(undergroundCompletionRatio * 100, false, 2),
+        }
+      );
     }
     if (pulsarHazardUICache.effectsItems[0]) {
       pulsarHazardUICache.effectsItems[0].textContent = PULSAR_DISABLED_PROJECTS_TEXT;
@@ -548,9 +601,17 @@ function updatePulsarHazardUI(pulsarParameters) {
 
   if (pulsarHazardUICache.summaryStatusBody) {
     const stormLine = stormActive
-      ? `Electromagnetic storm active (${stormRemaining.toFixed(1)}s left).`
-      : `Next electromagnetic storm in ${stormNext.toFixed(1)}s.`;
-    const scalingLine = `Net multiplier: x${formatNumber(hazardStrength, false, 3)} (Sky x${formatNumber(skyExposureMultiplier, false, 3)} × Distance x${formatNumber(distanceMultiplier, false, 3)}).`;
+      ? getPulsarHazardText('summary.stormActive', 'Electromagnetic storm active ({value}s left).', { value: stormRemaining.toFixed(1) })
+      : getPulsarHazardText('summary.stormNext', 'Next electromagnetic storm in {value}s.', { value: stormNext.toFixed(1) });
+    const scalingLine = getPulsarHazardText(
+      'summary.netMultiplier',
+      'Net multiplier: x{strength} (Sky x{sky} × Distance x{distance}).',
+      {
+        strength: formatNumber(hazardStrength, false, 3),
+        sky: formatNumber(skyExposureMultiplier, false, 3),
+        distance: formatNumber(distanceMultiplier, false, 3),
+      }
+    );
     pulsarHazardUICache.summaryStatusBody.textContent = `${description}\n${stormLine}\n${scalingLine}`;
   }
   if (pulsarHazardUICache.viz) {
@@ -567,38 +628,68 @@ function updatePulsarHazardUI(pulsarParameters) {
   }
   if (pulsarHazardUICache.barSafeLabel) {
     pulsarHazardUICache.barSafeLabel.textContent = mitigationPercent > 10
-      ? `${formatNumber(mitigationPercent, false, 1)}% Shielded`
+      ? getPulsarHazardText('shielded', '{value}% Shielded', { value: formatNumber(mitigationPercent, false, 1) })
       : '';
   }
   if (pulsarHazardUICache.barHazardLabel) {
     pulsarHazardUICache.barHazardLabel.textContent = hazardPercent > 10
-      ? `${formatNumber(hazardPercent, false, 1)}% Exposed`
+      ? getPulsarHazardText('exposed', '{value}% Exposed', { value: formatNumber(hazardPercent, false, 1) })
       : '';
   }
   if (pulsarHazardUICache.barDetails) {
-    pulsarHazardUICache.barDetails.textContent =
-      `Artificial Sky Segments: ${formatNumber(skyProgress.builtSegments, false, 2)} / ${formatNumber(skyProgress.maxSegments, false, 2)} | Hazard Intensity: ${formatNumber(hazardPercent, false, 2)}%`;
+    pulsarHazardUICache.barDetails.textContent = getPulsarHazardText(
+      'summary.barDetails',
+      'Artificial Sky Segments: {built} / {max} | Hazard Intensity: {hazard}%',
+      {
+        built: formatNumber(skyProgress.builtSegments, false, 2),
+        max: formatNumber(skyProgress.maxSegments, false, 2),
+        hazard: formatNumber(hazardPercent, false, 2),
+      }
+    );
   }
 
   if (pulsarHazardUICache.summaryRadiationBody) {
-    pulsarHazardUICache.summaryRadiationBody.textContent =
-      `+${formatNumber(effectiveOrbitalBoost, false, 2)} mSv/day orbital dose`;
+    pulsarHazardUICache.summaryRadiationBody.textContent = getPulsarHazardText(
+      'orbitalDose',
+      '+{value} mSv/day orbital dose',
+      { value: formatNumber(effectiveOrbitalBoost, false, 2) }
+    );
   }
   if (pulsarHazardUICache.scalingRadiationValue) {
-    pulsarHazardUICache.scalingRadiationValue.textContent =
-      `Current: +${formatNumber(effectiveOrbitalBoost, false, 2)} mSv/day (base ${formatNumber(baseOrbitalBoost, false, 2)} × x${formatNumber(hazardStrength, false, 3)})`;
+    pulsarHazardUICache.scalingRadiationValue.textContent = getPulsarHazardText(
+      'summary.radiationCurrent',
+      'Current: +{current} mSv/day (base {base} × x{multiplier})',
+      {
+        current: formatNumber(effectiveOrbitalBoost, false, 2),
+        base: formatNumber(baseOrbitalBoost, false, 2),
+        multiplier: formatNumber(hazardStrength, false, 3),
+      }
+    );
   }
   if (pulsarHazardUICache.scalingLandValue) {
-    pulsarHazardUICache.scalingLandValue.textContent =
-      `Current: ${formatNumber(currentLandLockPercent, false, 2)}%`;
+    pulsarHazardUICache.scalingLandValue.textContent = getPulsarHazardText(
+      'currentPercent',
+      'Current: {value}%',
+      { value: formatNumber(currentLandLockPercent, false, 2) }
+    );
   }
   if (pulsarHazardUICache.scalingStormValue) {
-    pulsarHazardUICache.scalingStormValue.textContent =
-      `Current: ${formatNumber(stormAttritionPercent, false, 2)}%/s`;
+    pulsarHazardUICache.scalingStormValue.textContent = getPulsarHazardText(
+      'currentPercentPerSecond',
+      'Current: {value}%/s',
+      { value: formatNumber(stormAttritionPercent, false, 2) }
+    );
   }
   if (pulsarHazardUICache.scalingNanobotValue) {
-    pulsarHazardUICache.scalingNanobotValue.textContent =
-      `Current Floor: x${formatNumber(currentNanobotMultiplier, false, 3)}\nUnderground ${formatNumber(undergroundCompletionRatio * 100, false, 2)}% | Net mitigation ${formatNumber((1 - hazardStrength) * 100, false, 2)}%`;
+    pulsarHazardUICache.scalingNanobotValue.textContent = getPulsarHazardText(
+      'summary.nanobotCurrent',
+      'Current Floor: x{current}\nUnderground {underground}% | Net mitigation {mitigation}%',
+      {
+        current: formatNumber(currentNanobotMultiplier, false, 3),
+        underground: formatNumber(undergroundCompletionRatio * 100, false, 2),
+        mitigation: formatNumber((1 - hazardStrength) * 100, false, 2),
+      }
+    );
   }
 
   if (pulsarHazardUICache.effectsItems[0]) {

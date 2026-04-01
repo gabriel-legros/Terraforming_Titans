@@ -3,6 +3,14 @@ const TERRAFORMING_GRAPH_YEAR_UNITS = 365;
 const TERRAFORMING_GRAPH_WINDOW_YEARS = 500;
 const TERRAFORMING_GRAPH_MIN_LOG = 1e-6;
 
+function getTerraformingGraphText(path, fallback, vars) {
+  return t(`ui.terraforming.graphs.${path}`, vars, fallback);
+}
+
+function getTerraformingGraphZoneLabel(zone) {
+  return t(`ui.terraforming.summaryUi.zones.${zone}`, null, zone);
+}
+
 const TERRAFORMING_GRAPH_ORDER = [
   'temperature',
   'atmosphere',
@@ -14,9 +22,9 @@ const TERRAFORMING_GRAPH_ORDER = [
 ];
 
 const TERRAFORMING_GRAPH_ZONE_LABELS = {
-  tropical: 'Tropical',
-  temperate: 'Temperate',
-  polar: 'Polar'
+  tropical: getTerraformingGraphZoneLabel('tropical'),
+  temperate: getTerraformingGraphZoneLabel('temperate'),
+  polar: getTerraformingGraphZoneLabel('polar')
 };
 
 const TERRAFORMING_GRAPH_ZONE_COLORS = {
@@ -50,37 +58,37 @@ const TERRAFORMING_PHASE_DIAGRAM_ORDER = [
 const TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS = {
   water: {
     id: 'water',
-    label: 'Water',
+    label: getTerraformingGraphText('phaseLabels.water', 'Water'),
     cycle: waterCycle,
     atmosphereKey: 'atmosphericWater'
   },
   carbonDioxide: {
     id: 'carbonDioxide',
-    label: 'CO2',
+    label: getTerraformingGraphText('phaseLabels.carbonDioxide', 'CO2'),
     cycle: co2Cycle,
     atmosphereKey: 'carbonDioxide'
   },
   methane: {
     id: 'methane',
-    label: 'Methane',
+    label: getTerraformingGraphText('phaseLabels.methane', 'Methane'),
     cycle: methaneCycle,
     atmosphereKey: 'atmosphericMethane'
   },
   ammonia: {
     id: 'ammonia',
-    label: 'Ammonia',
+    label: getTerraformingGraphText('phaseLabels.ammonia', 'Ammonia'),
     cycle: ammoniaCycle,
     atmosphereKey: 'atmosphericAmmonia'
   },
   oxygen: {
     id: 'oxygen',
-    label: 'O2',
+    label: getTerraformingGraphText('phaseLabels.oxygen', 'O2'),
     cycle: oxygenCycle,
     atmosphereKey: 'oxygen'
   },
   nitrogen: {
     id: 'nitrogen',
-    label: 'N2',
+    label: getTerraformingGraphText('phaseLabels.nitrogen', 'N2'),
     cycle: nitrogenCycle,
     atmosphereKey: 'inertGas'
   }
@@ -189,15 +197,15 @@ function buildLogTicks(min, max) {
 const TERRAFORMING_GRAPH_DEFINITIONS = {
   temperature: {
     id: 'temperature',
-    label: 'Temperature',
-    axisLabel: () => `Temperature (${getTemperatureUnit()})`,
-    note: () => 'Yearly snapshots. Rolling 500 years.',
+    label: getTerraformingGraphText('labels.temperature', 'Temperature'),
+    axisLabel: () => getTerraformingGraphText('axis.temperature', 'Temperature ({unit})', { unit: getTemperatureUnit() }),
+    note: () => getTerraformingGraphText('notes.yearlyRolling', 'Yearly snapshots. Rolling 500 years.'),
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => {
       const series = [
         {
-          label: 'Global',
+          label: getTerraformingGraphText('labels.global', 'Global'),
           values: history.temperature.global,
           color: '#e74c3c',
           transform: toDisplayTemperature
@@ -217,29 +225,29 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
   },
   atmosphere: {
     id: 'atmosphere',
-    label: 'Atmosphere',
-    axisLabel: () => 'Pressure (Pa)',
-    note: () => 'Log scale pressure. Rolling 500 years.',
+    label: getTerraformingGraphText('labels.atmosphere', 'Atmosphere'),
+    axisLabel: () => getTerraformingGraphText('axis.pressure', 'Pressure (Pa)'),
+    note: () => getTerraformingGraphText('notes.logPressureRolling', 'Log scale pressure. Rolling 500 years.'),
     logScale: true,
     formatTick: (value) => formatNumber(value, false, 2, true),
     buildSeries: (manager, history) => manager.buildAtmosphereSeries(history)
   },
   water: {
     id: 'water',
-    label: 'Water',
-    axisLabel: () => 'Coverage (%)',
-    note: () => 'Yearly snapshots. Rolling 500 years.',
+    label: getTerraformingGraphText('labels.water', 'Water'),
+    axisLabel: () => getTerraformingGraphText('axis.coverage', 'Coverage (%)'),
+    note: () => getTerraformingGraphText('notes.yearlyRolling', 'Yearly snapshots. Rolling 500 years.'),
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => ([
       {
-        label: 'Water',
+        label: getTerraformingGraphText('labels.waterCoverage', 'Water'),
         values: history.water.liquid,
         color: '#3498db',
         transform: (value) => value
       },
       {
-        label: 'Ice',
+        label: getTerraformingGraphText('labels.iceCoverage', 'Ice'),
         values: history.water.ice,
         color: '#95a5a6',
         transform: (value) => value
@@ -248,26 +256,26 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
   },
   albedo: {
     id: 'albedo',
-    label: 'Albedo',
-    axisLabel: () => 'Albedo',
-    note: () => 'Yearly snapshots. Rolling 500 years.',
+    label: getTerraformingGraphText('labels.albedo', 'Albedo'),
+    axisLabel: () => getTerraformingGraphText('axis.albedo', 'Albedo'),
+    note: () => getTerraformingGraphText('notes.yearlyRolling', 'Yearly snapshots. Rolling 500 years.'),
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 3),
     buildSeries: (manager, history) => ([
       {
-        label: 'Ground',
+        label: getTerraformingGraphText('labels.ground', 'Ground'),
         values: history.albedo.ground,
         color: '#7f8c8d',
         transform: (value) => value
       },
       {
-        label: 'Surface',
+        label: getTerraformingGraphText('labels.surface', 'Surface'),
         values: history.albedo.surface,
         color: '#f1c40f',
         transform: (value) => value
       },
       {
-        label: 'Actual',
+        label: getTerraformingGraphText('labels.actual', 'Actual'),
         values: history.albedo.actual,
         color: '#16a085',
         transform: (value) => value
@@ -276,14 +284,14 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
   },
   luminosity: {
     id: 'luminosity',
-    label: 'Luminosity',
-    axisLabel: () => 'Surface Flux (W/m^2)',
-    note: () => 'Yearly snapshots. Rolling 500 years.',
+    label: getTerraformingGraphText('labels.luminosity', 'Luminosity'),
+    axisLabel: () => getTerraformingGraphText('axis.surfaceFlux', 'Surface Flux (W/m^2)'),
+    note: () => getTerraformingGraphText('notes.yearlyRolling', 'Yearly snapshots. Rolling 500 years.'),
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => ([
       {
-        label: 'Surface Flux',
+        label: getTerraformingGraphText('labels.surfaceFlux', 'Surface Flux'),
         values: history.luminosity.flux,
         color: '#e67e22',
         transform: (value) => value
@@ -292,15 +300,15 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
   },
   life: {
     id: 'life',
-    label: 'Life Coverage',
-    axisLabel: () => 'Coverage (%)',
-    note: () => 'Yearly snapshots. Rolling 500 years.',
+    label: getTerraformingGraphText('labels.life', 'Life Coverage'),
+    axisLabel: () => getTerraformingGraphText('axis.coverage', 'Coverage (%)'),
+    note: () => getTerraformingGraphText('notes.yearlyRolling', 'Yearly snapshots. Rolling 500 years.'),
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => {
       const series = [
         {
-          label: 'Global',
+          label: getTerraformingGraphText('labels.global', 'Global'),
           values: history.life.global,
           color: '#2ecc71',
           transform: (value) => value
@@ -320,7 +328,7 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
   },
   phase: {
     id: 'phase',
-    label: 'Phase Diagrams',
+    label: getTerraformingGraphText('labels.phase', 'Phase Diagrams'),
     axisLabel: () => '',
     note: () => '',
     logScale: false,
@@ -397,8 +405,8 @@ class TerraformingGraphsManager {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'terraforming-graphs-button';
-    button.title = 'Open terraforming history charts';
-    button.setAttribute('aria-label', 'Open terraforming history charts');
+    button.title = getTerraformingGraphText('openHistory', 'Open terraforming history charts');
+    button.setAttribute('aria-label', getTerraformingGraphText('openHistory', 'Open terraforming history charts'));
     const icon = document.createElement('span');
     icon.className = 'terraforming-graphs-icon';
     icon.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><polyline points="2,14 7,9 11,12 17,5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline><line x1="2" y1="16" x2="18" y2="16" stroke="currentColor" stroke-width="1"></line></svg>';
@@ -421,11 +429,11 @@ class TerraformingGraphsManager {
     header.className = 'terraforming-graphs-header';
     const title = document.createElement('div');
     title.className = 'terraforming-graphs-title';
-    title.textContent = 'Terraforming History';
+    title.textContent = getTerraformingGraphText('title', 'Terraforming History');
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
     closeButton.className = 'terraforming-graphs-close';
-    closeButton.textContent = 'Close';
+    closeButton.textContent = getTerraformingGraphText('close', 'Close');
     header.appendChild(title);
     header.appendChild(closeButton);
     windowEl.appendChild(header);
@@ -448,7 +456,7 @@ class TerraformingGraphsManager {
     phaseTitle.className = 'terraforming-graphs-phase-title';
     const phaseDisclaimer = document.createElement('div');
     phaseDisclaimer.className = 'terraforming-graphs-phase-disclaimer';
-    phaseDisclaimer.textContent = 'Phase diagrams in Terraforming Titans are very simplified versions of the real ones.  Pressure is typically used as saturation pressure, not total pressure.';
+    phaseDisclaimer.textContent = getTerraformingGraphText('phaseDisclaimer', 'Phase diagrams in Terraforming Titans are very simplified versions of the real ones. Pressure is typically used as saturation pressure, not total pressure.');
     const phaseCanvas = document.createElement('canvas');
     phaseCanvas.className = 'terraforming-graphs-phase-canvas';
     const phaseNote = document.createElement('div');
@@ -715,7 +723,11 @@ class TerraformingGraphsManager {
       this.updateLegend(series);
       this.legendSignature = signature;
     }
-    this.ui.title.textContent = `Terraforming History - ${definition.label}`;
+    this.ui.title.textContent = getTerraformingGraphText(
+      'titleWithGraph',
+      'Terraforming History - {label}',
+      { label: definition.label }
+    );
     this.ui.note.textContent = definition.note();
 
     const canvas = this.ui.canvas;
@@ -808,7 +820,7 @@ class TerraformingGraphsManager {
     }
 
     ctx.fillText(definition.axisLabel(), padding.left, 16);
-    ctx.fillText('Years', width - padding.right - 38, padding.top + plotHeight + 28);
+    ctx.fillText(getTerraformingGraphText('years', 'Years'), width - padding.right - 38, padding.top + plotHeight + 28);
 
     for (const entry of series) {
       const values = entry.values;
@@ -865,9 +877,21 @@ class TerraformingGraphsManager {
     this.phaseSignature = signature;
     this.phaseNeedsRedraw = false;
 
-    this.ui.phaseTitle.textContent = `Phase Diagram - ${definition.label}`;
+    this.ui.phaseTitle.textContent = getTerraformingGraphText(
+      'phaseTitle',
+      'Phase Diagram - {label}',
+      { label: definition.label }
+    );
     this.ui.phaseNote.textContent =
-      `Current global mean: ${formatNumber(toDisplayTemperature(currentTemp), false, 1)} ${displayTempUnit} | Partial pressure: ${formatNumber(currentPressure, false, 2, true)} Pa`;
+      getTerraformingGraphText(
+        'currentGlobalMean',
+        'Current global mean: {temperature} {unit} | Partial pressure: {pressure} Pa',
+        {
+          temperature: formatNumber(toDisplayTemperature(currentTemp), false, 1),
+          unit: displayTempUnit,
+          pressure: formatNumber(currentPressure, false, 2, true),
+        }
+      );
 
     const canvas = this.ui.phaseCanvas;
     const rect = canvas.getBoundingClientRect();
@@ -977,9 +1001,9 @@ class TerraformingGraphsManager {
       ctx.fillText(formatNumber(toDisplayTemperature(tickValue), false, 0), x - 10, padding.top + plotHeight + 20);
     });
 
-    ctx.fillText(`Temperature (${displayTempUnit})`, padding.left, padding.top - 12);
+    ctx.fillText(getTerraformingGraphText('axis.temperature', 'Temperature ({unit})', { unit: displayTempUnit }), padding.left, padding.top - 12);
     const pressureLabelX = Math.max(padding.left, width - padding.right - 130);
-    ctx.fillText('Pressure (Pa, log)', pressureLabelX, padding.top - 12);
+    ctx.fillText(getTerraformingGraphText('pressureLog', 'Pressure (Pa, log)'), pressureLabelX, padding.top - 12);
 
     const clampedTemp = Math.max(minTemp, Math.min(maxTemp, currentTemp));
     const clampedPressure = Math.max(minPressure, Math.min(maxPressure, currentPressure));

@@ -44,11 +44,15 @@ const kesslerHazardUICache = {
   pendingTransitionReset: false
 };
 
+function getKesslerHazardText(path, fallback, vars) {
+  return t(`ui.terraforming.hazardsUi.kessler.${path}`, vars, fallback);
+}
+
 const KESSLER_EFFECTS = [
-  'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected). Solis storage bonuses cap at 1,000 per resource.',
-  'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.',
-  'Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains.',
-  'Debris decay scales with local atmospheric density at each periapsis bin.'
+  getKesslerHazardText('effectsList.solisDrop', 'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected). Solis storage bonuses cap at 1,000 per resource.'),
+  getKesslerHazardText('effectsList.marketCap', 'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.'),
+  getKesslerHazardText('effectsList.disabledProjects', 'Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains.'),
+  getKesslerHazardText('effectsList.debrisDecay', 'Debris decay scales with local atmospheric density at each periapsis bin.')
 ];
 const KESSLER_CHART_BINS = 64;
 let kesslerDecayConstants = null;
@@ -63,15 +67,15 @@ try {
 }
 const KESSLER_DEBRIS_SOURCES = {
   small: [
-    'Space Mirror construction.',
-    'Ore satellite deployments.',
-    'Geothermal satellite deployments.'
+    getKesslerHazardText('debrisSourcesList.smallMirror', 'Space Mirror construction.'),
+    getKesslerHazardText('debrisSourcesList.smallOre', 'Ore satellite deployments.'),
+    getKesslerHazardText('debrisSourcesList.smallGeothermal', 'Geothermal satellite deployments.')
   ],
   large: [
-    'Space Mirror Facility construction.',
-    'Dyson Receiver construction.',
-    'Hyperion Lantern construction.',
-    'Spaceship shipments (imports, exports, and space storage transfers).'
+    getKesslerHazardText('debrisSourcesList.largeFacility', 'Space Mirror Facility construction.'),
+    getKesslerHazardText('debrisSourcesList.largeReceiver', 'Dyson Receiver construction.'),
+    getKesslerHazardText('debrisSourcesList.largeLantern', 'Hyperion Lantern construction.'),
+    getKesslerHazardText('debrisSourcesList.largeShips', 'Spaceship shipments (imports, exports, and space storage transfers).')
   ]
 };
 
@@ -199,10 +203,17 @@ function formatDensityWithUnit(value) {
 }
 
 function buildKesslerBinDetailText(entry) {
-  return `Bin @ ${formatNumeric(entry.altitudeKm, 1)} km: `
-    + `${formatNumeric(entry.current, 2)} / ${formatNumeric(entry.baseline, 2)} t, `
-    + `${formatNumeric(entry.decayRate, 2, true)} t/s, `
-    + `${formatDensityWithUnit(entry.density)}`;
+  return getKesslerHazardText(
+    'chart.binDetail',
+    'Bin @ {altitude} km: {current} / {baseline} t, {decay} t/s, {density}',
+    {
+      altitude: formatNumeric(entry.altitudeKm, 1),
+      current: formatNumeric(entry.current, 2),
+      baseline: formatNumeric(entry.baseline, 2),
+      decay: formatNumeric(entry.decayRate, 2, true),
+      density: formatDensityWithUnit(entry.density),
+    }
+  );
 }
 
 function getTerraforming() {
@@ -292,7 +303,7 @@ function buildKesslerLayout() {
 
     const title = doc.createElement('h3');
     title.className = 'hazard-card__title';
-    title.textContent = 'Kessler Skies';
+    title.textContent = getKesslerHazardText('title', 'Kessler Skies');
     attachHazardCardCollapse(card, title);
     card.appendChild(title);
 
@@ -303,7 +314,7 @@ function buildKesslerLayout() {
     summaryLeft.className = 'hazard-summary hazard-summary--left';
     const summaryLeftHeader = doc.createElement('div');
     summaryLeftHeader.className = 'hazard-summary__header';
-    summaryLeftHeader.textContent = 'Debris Field';
+    summaryLeftHeader.textContent = getKesslerHazardText('debrisField', 'Debris Field');
     const summaryLeftBody = doc.createElement('div');
     summaryLeftBody.className = 'hazard-summary__body';
     summaryLeft.appendChild(summaryLeftHeader);
@@ -313,14 +324,17 @@ function buildKesslerLayout() {
     summaryCenter.className = 'hazard-summary hazard-summary--growth';
     const summaryCenterHeader = doc.createElement('div');
     summaryCenterHeader.className = 'hazard-summary__header';
-    summaryCenterHeader.textContent = 'Project Failure';
+    summaryCenterHeader.textContent = getKesslerHazardText('projectFailure', 'Project Failure');
     const summaryCenterInfoIcon = doc.createElement('span');
     summaryCenterInfoIcon.className = 'info-tooltip-icon';
     summaryCenterInfoIcon.innerHTML = '&#9432;';
     try {
       attachDynamicInfoTooltip(
         summaryCenterInfoIcon,
-        'Projects roll failure after 1s/on completion if they have a duration, or continuously for continuous projects.  Buildings have increased cost and the difference is converted to debris on construction.'
+        getKesslerHazardText(
+          'projectFailureTooltip',
+          'Projects roll failure after 1s or on completion if they have a duration, or continuously for continuous projects. Buildings have increased cost and the difference is converted to debris on construction.'
+        )
       );
     } catch (error) {
       // ignore missing UI helpers in tests
@@ -335,19 +349,17 @@ function buildKesslerLayout() {
     summaryRight.className = 'hazard-summary hazard-summary--right';
     const summaryRightHeader = doc.createElement('div');
     summaryRightHeader.className = 'hazard-summary__header';
-    summaryRightHeader.textContent = 'Debris Decay';
+    summaryRightHeader.textContent = getKesslerHazardText('debrisDecay', 'Debris Decay');
     const summaryRightInfoIcon = doc.createElement('span');
     summaryRightInfoIcon.className = 'info-tooltip-icon';
     summaryRightInfoIcon.innerHTML = '&#9432;';
     try {
       attachDynamicInfoTooltip(
         summaryRightInfoIcon,
-        'Drag line marks the altitude where the air density reaches about 1 ng/m^3. '
-          + 'Atmospheric density depends on total gas in the atmosphere (pressure), the gas mix, '
-          + 'temperature, gravity, planet size, and upper-atmosphere heating from solar flux. '
-          + 'To push the drag line higher, add atmosphere to raise pressure, warm the air, increase solar flux '
-          + 'or shift the mix toward lighter gases (especially hydrogen) so density falls off more slowly. '
-          + 'Cooling the air, adding heavy gases or removing atmosphere lowers the drag line. \n \n Note : While water vapor is relatively light, it easily condenses and therefore has very limited impact.'
+        getKesslerHazardText(
+          'debrisDecayTooltip',
+          'Drag line marks the altitude where the air density reaches about 1 ng/m^3. Atmospheric density depends on total gas in the atmosphere, gas mix, temperature, gravity, planet size, and upper-atmosphere heating from solar flux. To push the drag line higher, add atmosphere to raise pressure, warm the air, increase solar flux, or shift the mix toward lighter gases. Cooling the air, adding heavy gases, or removing atmosphere lowers the drag line. Water vapor is relatively light, but it condenses easily and therefore has very limited impact.'
+        )
       );
     } catch (error) {
       // ignore missing UI helpers in tests
@@ -405,7 +417,7 @@ function buildKesslerLayout() {
 
     const densityLabel = doc.createElement('div');
     densityLabel.className = 'kessler-debris-density__label';
-    densityLabel.textContent = 'Atmospheric density';
+    densityLabel.textContent = getKesslerHazardText('atmosphericDensity', 'Atmospheric density');
 
     const densityBar = doc.createElement('div');
     densityBar.className = 'kessler-debris-density';
@@ -436,7 +448,7 @@ function buildKesslerLayout() {
 
     const effectsHeader = doc.createElement('div');
     effectsHeader.className = 'hazard-effects__header';
-    effectsHeader.textContent = 'Effects';
+    effectsHeader.textContent = getKesslerHazardText('effects', 'Effects');
 
     const effectsList = doc.createElement('ul');
     effectsList.className = 'hazard-effects__list';
@@ -459,7 +471,7 @@ function buildKesslerLayout() {
 
     const debrisSourcesHeader = doc.createElement('div');
     debrisSourcesHeader.className = 'hazard-debris-sources__header';
-    debrisSourcesHeader.textContent = 'Debris Sources';
+    debrisSourcesHeader.textContent = getKesslerHazardText('debrisSources', 'Debris Sources');
 
     const debrisSourcesGrid = doc.createElement('div');
     debrisSourcesGrid.className = 'hazard-debris-sources__grid';
@@ -483,8 +495,8 @@ function buildKesslerLayout() {
       return { column, list };
     };
 
-    const smallColumn = buildDebrisColumn('Small Chance', KESSLER_DEBRIS_SOURCES.small);
-    const largeColumn = buildDebrisColumn('Large Chance', KESSLER_DEBRIS_SOURCES.large);
+    const smallColumn = buildDebrisColumn(getKesslerHazardText('smallChance', 'Small Chance'), KESSLER_DEBRIS_SOURCES.small);
+    const largeColumn = buildDebrisColumn(getKesslerHazardText('largeChance', 'Large Chance'), KESSLER_DEBRIS_SOURCES.large);
     debrisSourcesGrid.appendChild(smallColumn.column);
     debrisSourcesGrid.appendChild(largeColumn.column);
 
@@ -558,8 +570,15 @@ function updateKesslerChartDetails(resource, isCleared) {
   const initialValue = resource.initialValue || 0;
   const currentValue = resource.value || 0;
   const detailText = isCleared
-    ? 'Orbital debris cleared.'
-    : `Orbital debris: ${formatNumeric(currentValue, 2)} / ${formatNumeric(initialValue, 2)} t`;
+    ? getKesslerHazardText('chart.orbitalDebrisCleared', 'Orbital debris cleared.')
+    : getKesslerHazardText(
+        'chart.orbitalDebris',
+        'Orbital debris: {current} / {initial} t',
+        {
+          current: formatNumeric(currentValue, 2),
+          initial: formatNumeric(initialValue, 2),
+        }
+      );
 
   kesslerHazardUICache.chartDetailsDefault = detailText;
   if (kesslerHazardUICache.hoveredBin < 0) {
@@ -693,8 +712,11 @@ function updateKesslerDebrisChart(
     kesslerHazardUICache.chartExobaseLabel.style.display = '';
     kesslerHazardUICache.chartExobase.style.left = `${dragPercent}%`;
     kesslerHazardUICache.chartExobaseLabel.style.left = `${dragPercent}%`;
-    kesslerHazardUICache.chartExobaseText.textContent =
-      `Drag ${formatDensityWithUnit(dragThresholdDensity)}`;
+    kesslerHazardUICache.chartExobaseText.textContent = getKesslerHazardText(
+      'chart.drag',
+      'Drag {value}',
+      { value: formatDensityWithUnit(dragThresholdDensity) }
+    );
   }
 
   const binCount = bars.length;
@@ -790,11 +812,38 @@ function updateKesslerHazardUI(kesslerParameters) {
     const decayRate = decaySummary.decayTonsPerSecond || 0;
 
     kesslerHazardUICache.summaryLeftBody.textContent =
-      `Debris: ${formatNumeric(currentValue, 2)} / ${formatNumeric(initialValue, 2)} t\nDensity: ${formatNumeric(density, 2)} t/land\nClearance: ${clearance}`;
+      getKesslerHazardText(
+        'summary.debrisField',
+        'Debris: {current} / {initial} t\nDensity: {density} t/land\nClearance: {clearance}',
+        {
+          current: formatNumeric(currentValue, 2),
+          initial: formatNumeric(initialValue, 2),
+          density: formatNumeric(density, 2),
+          clearance,
+        }
+      );
     kesslerHazardUICache.summaryCenterBody.textContent =
-      `Small projects: ${formatPercent(failureChances.smallFailure)} failure\nLarge projects: ${formatPercent(failureChances.largeFailure)} failure`;
+      getKesslerHazardText(
+        'summary.projectFailure',
+        'Small projects: {small} failure\nLarge projects: {large} failure',
+        {
+          small: formatPercent(failureChances.smallFailure),
+          large: formatPercent(failureChances.largeFailure),
+        }
+      );
     kesslerHazardUICache.summaryRightBody.textContent =
-      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensityWithUnit(dragDensity)} @ ${formatNumeric(dragKm, 1)} km\nDecay: ${formatNumeric(decayRate, 2, true)} t/s`;
+      getKesslerHazardText(
+        'summary.debrisDecay',
+        'Status: {status}\nDrag line: {density} @ {km} km\nDecay: {rate} t/s',
+        {
+          status: isCleared
+            ? getKesslerHazardText('summary.cleared', 'Cleared')
+            : getKesslerHazardText('summary.active', 'Active'),
+          density: formatDensityWithUnit(dragDensity),
+          km: formatNumeric(dragKm, 1),
+          rate: formatNumeric(decayRate, 2, true),
+        }
+      );
   } catch (error) {
     // ignore missing UI helpers in tests
   }

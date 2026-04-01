@@ -19,7 +19,7 @@ const garbageHazardUICache = {
   factorRows: {}
 };
 
-const GARBAGE_PENALTY_LABELS = {
+const GARBAGE_PENALTY_FALLBACK_LABELS = {
   sandHarvesterMultiplier: 'Sand Harvester',
   nanoColonyGrowthMultiplier: 'Nanocolony Growth',
   happiness: 'Happiness',
@@ -27,6 +27,18 @@ const GARBAGE_PENALTY_LABELS = {
   lifeGrowthMultiplier: 'Life Growth',
   androidAttrition: 'Android Attrition'
 };
+
+function getGarbageHazardText(path, fallback, vars) {
+  return t(`ui.terraforming.hazardsUi.garbage.${path}`, vars, fallback);
+}
+
+function getGarbageHazardLabel(path, fallback, vars) {
+  return getGarbageHazardText(`labels.${path}`, fallback, vars);
+}
+
+function getGarbagePenaltyLabel(key) {
+  return getGarbageHazardLabel(key, GARBAGE_PENALTY_FALLBACK_LABELS[key] || key);
+}
 
 function getDocument() {
   if (garbageHazardUICache.doc !== undefined) {
@@ -143,18 +155,19 @@ function createInfoIcon(text) {
   const icon = doc.createElement('span');
   icon.className = 'info-tooltip-icon';
   icon.innerHTML = '&#9432;';
-  icon.title = text;
+  attachDynamicInfoTooltip(icon, text);
   return icon;
 }
 
 function formatGarbageResourceName(key) {
   const manager = getHazardManager();
   if (manager && manager.formatGarbageResourceName) {
-    return manager.formatGarbageResourceName(key);
+    return t(`resources.surface.${key}.name`, null, manager.formatGarbageResourceName(key));
   }
 
   const withSpaces = `${key}`.replace(/([A-Z])/g, ' $1');
-  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+  const fallback = withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+  return t(`resources.surface.${key}.name`, null, fallback);
 }
 
 function computeGarbagePenaltyValues(penalties, ratio) {
@@ -200,35 +213,35 @@ function buildGarbagePenaltyLines(penaltyValues, attritionDelaySeconds = 0) {
   if (penaltyValues.sandHarvesterMultiplier !== undefined) {
     const delta = (penaltyValues.sandHarvesterMultiplier - 1) * 100;
     if (delta) {
-      lines.push(`${GARBAGE_PENALTY_LABELS.sandHarvesterMultiplier}: ${formatSignedPercentage(delta)}`);
+      lines.push(`${getGarbagePenaltyLabel('sandHarvesterMultiplier')}: ${formatSignedPercentage(delta)}`);
     }
   }
 
   if (penaltyValues.nanoColonyGrowthMultiplier !== undefined) {
     const delta = (penaltyValues.nanoColonyGrowthMultiplier - 1) * 100;
     if (delta) {
-      lines.push(`${GARBAGE_PENALTY_LABELS.nanoColonyGrowthMultiplier}: ${formatSignedPercentage(delta)}`);
+      lines.push(`${getGarbagePenaltyLabel('nanoColonyGrowthMultiplier')}: ${formatSignedPercentage(delta)}`);
     }
   }
 
   if (penaltyValues.happinessPenalty !== undefined) {
     const delta = -penaltyValues.happinessPenalty * 100;
     if (delta) {
-      lines.push(`${GARBAGE_PENALTY_LABELS.happiness}: ${formatSignedPercentage(delta)}`);
+      lines.push(`${getGarbagePenaltyLabel('happiness')}: ${formatSignedPercentage(delta)}`);
     }
   }
 
   if (penaltyValues.oreScanningSpeedMultiplier !== undefined) {
     const delta = (penaltyValues.oreScanningSpeedMultiplier - 1) * 100;
     if (delta) {
-      lines.push(`${GARBAGE_PENALTY_LABELS.oreScanningSpeedMultiplier}: ${formatSignedPercentage(delta)}`);
+      lines.push(`${getGarbagePenaltyLabel('oreScanningSpeedMultiplier')}: ${formatSignedPercentage(delta)}`);
     }
   }
 
   if (penaltyValues.lifeGrowthMultiplier !== undefined) {
     const delta = (penaltyValues.lifeGrowthMultiplier - 1) * 100;
     if (delta) {
-      lines.push(`${GARBAGE_PENALTY_LABELS.lifeGrowthMultiplier}: ${formatSignedPercentage(delta)}`);
+      lines.push(`${getGarbagePenaltyLabel('lifeGrowthMultiplier')}: ${formatSignedPercentage(delta)}`);
     }
   }
 
@@ -236,13 +249,15 @@ function buildGarbagePenaltyLines(penaltyValues, attritionDelaySeconds = 0) {
     const delta = -penaltyValues.androidAttrition * 100;
     if (delta) {
       const delayText = formatAttritionDelay(attritionDelaySeconds);
-      const suffix = delayText ? ` (starts in ${delayText})` : '';
-      lines.push(`${GARBAGE_PENALTY_LABELS.androidAttrition}: ${formatSignedPercentage(delta)}/s${suffix}`);
+      const suffix = delayText
+        ? getGarbageHazardLabel('startsIn', ` (starts in ${delayText})`, { value: delayText })
+        : '';
+      lines.push(`${getGarbagePenaltyLabel('androidAttrition')}: ${formatSignedPercentage(delta)}/s${suffix}`);
     }
   }
 
   if (!lines.length) {
-    lines.push('No active penalties');
+    lines.push(getGarbageHazardLabel('noActivePenalties', 'No active penalties'));
   }
 
   return lines;
@@ -333,15 +348,15 @@ function ensureGarbageHeaderRow() {
 
   const typeHead = doc.createElement('div');
   typeHead.className = 'hazard-factor-cell hazard-factor-cell--label';
-  typeHead.textContent = 'Garbage Type';
+  typeHead.textContent = getGarbageHazardLabel('garbageType', 'Garbage Type');
 
   const amountHead = doc.createElement('div');
   amountHead.className = 'hazard-factor-cell hazard-factor-cell--values';
-  amountHead.textContent = 'Remaining';
+  amountHead.textContent = getGarbageHazardLabel('remaining', 'Remaining');
 
   const impactHead = doc.createElement('div');
   impactHead.className = 'hazard-factor-cell hazard-factor-cell--penalty';
-  impactHead.textContent = 'Impact';
+  impactHead.textContent = getGarbageHazardLabel('impact', 'Impact');
 
   headerRow.appendChild(typeHead);
   headerRow.appendChild(amountHead);
@@ -417,10 +432,16 @@ function updateGarbageSummary(totals) {
 
   const statusLines = totalInitial > 0
     ? [
-        `Remaining: ${formatNumeric(totalCurrent, 2)} / ${formatNumeric(totalInitial, 2)} ton`,
-        `Cleared: ${formatNumeric(clearedAmount, 2)} ton (${formatNumeric(clearedPercent, 2)}%)`
+        getGarbageHazardLabel('remainingSummary', `Remaining: ${formatNumeric(totalCurrent, 2)} / ${formatNumeric(totalInitial, 2)} ton`, {
+          current: formatNumeric(totalCurrent, 2),
+          initial: formatNumeric(totalInitial, 2),
+        }),
+        getGarbageHazardLabel('clearedSummary', `Cleared: ${formatNumeric(clearedAmount, 2)} ton (${formatNumeric(clearedPercent, 2)}%)`, {
+          value: formatNumeric(clearedAmount, 2),
+          percent: formatNumeric(clearedPercent, 2),
+        })
       ]
-    : ['No garbage tracked yet.'];
+    : [getGarbageHazardLabel('noGarbageTracked', 'No garbage tracked yet.')];
   const statusText = statusLines.join('\n');
 
   if (garbageHazardUICache.summaryLeftBody && garbageHazardUICache.summaryLeftBody.textContent !== statusText) {
@@ -433,9 +454,13 @@ function updateGarbageSummary(totals) {
       .sort((a, b) => b.currentAmount - a.currentAmount)
       .map((entry) => {
         const share = totalCurrent > 0 ? (entry.currentAmount / totalCurrent) * 100 : 0;
-        return `${entry.label}: ${formatNumeric(share, 2)}% (${formatNumeric(entry.currentAmount, 2)} ton)`;
+        return getGarbageHazardLabel('mixEntry', `${entry.label}: ${formatNumeric(share, 2)}% (${formatNumeric(entry.currentAmount, 2)} ton)`, {
+          label: entry.label,
+          share: formatNumeric(share, 2),
+          amount: formatNumeric(entry.currentAmount, 2),
+        });
       })
-    : ['All waste cleared.'];
+    : [getGarbageHazardLabel('allWasteCleared', 'All waste cleared.')];
   const mixText = mixLines.join('\n');
 
   if (garbageHazardUICache.summaryCenterBody && garbageHazardUICache.summaryCenterBody.textContent !== mixText) {
@@ -463,11 +488,15 @@ function updateGarbageBar(totals) {
   garbageHazardUICache.barHazard.style.width = `${hazardPercent}%`;
 
   if (garbageHazardUICache.barSafeLabel) {
-    garbageHazardUICache.barSafeLabel.textContent = safePercent > 10 ? `${formatNumeric(safePercent, 0)}% Cleared` : '';
+    garbageHazardUICache.barSafeLabel.textContent = safePercent > 10
+      ? getGarbageHazardLabel('barCleared', `${formatNumeric(safePercent, 0)}% Cleared`, { value: formatNumeric(safePercent, 0) })
+      : '';
   }
 
   if (garbageHazardUICache.barHazardLabel) {
-    garbageHazardUICache.barHazardLabel.textContent = hazardPercent > 10 ? `${formatNumeric(hazardPercent, 0)}% Remaining` : '';
+    garbageHazardUICache.barHazardLabel.textContent = hazardPercent > 10
+      ? getGarbageHazardLabel('barRemaining', `${formatNumeric(hazardPercent, 0)}% Remaining`, { value: formatNumeric(hazardPercent, 0) })
+      : '';
   }
 
 }
@@ -491,8 +520,8 @@ function updateGarbageFactorGrid(entries, attritionDelaySeconds = 0) {
     }
 
     const infoText = entry.initialAmount > 0
-      ? `Initial Stockpile: ${formatNumeric(entry.initialAmount, 2)} ton`
-      : 'Initial Stockpile: 0 ton';
+      ? getGarbageHazardLabel('initialStockpile', `Initial Stockpile: ${formatNumeric(entry.initialAmount, 2)} ton`, { value: formatNumeric(entry.initialAmount, 2) })
+      : getGarbageHazardLabel('initialStockpile', 'Initial Stockpile: 0 ton', { value: '0' });
     if (record.labelInfo.textContent !== infoText) {
       record.labelInfo.textContent = infoText;
     }
@@ -534,7 +563,7 @@ function ensureGarbageLayout() {
 
   const title = doc.createElement('h3');
   title.className = 'hazard-card__title';
-  title.textContent = 'Garbage Hazard';
+  title.textContent = getGarbageHazardText('title', 'Garbage Hazard');
   attachHazardCardCollapse(card, title);
   card.appendChild(title);
 
@@ -545,8 +574,8 @@ function ensureGarbageLayout() {
   summaryLeft.className = 'hazard-summary hazard-summary--left';
   const summaryLeftHeader = doc.createElement('div');
   summaryLeftHeader.className = 'hazard-summary__header';
-  summaryLeftHeader.textContent = 'Cleanup Status';
-  summaryLeftHeader.appendChild(createInfoIcon('The hazard permanently clears once every garbage stream reaches 0 at the same time.'));
+  summaryLeftHeader.textContent = getGarbageHazardLabel('cleanupStatus', 'Cleanup Status');
+  summaryLeftHeader.appendChild(createInfoIcon(getGarbageHazardLabel('cleanupStatusTooltip', 'The hazard permanently clears once every garbage stream reaches 0 at the same time.')));
   const summaryLeftBody = doc.createElement('div');
   summaryLeftBody.className = 'hazard-summary__body';
   summaryLeft.appendChild(summaryLeftHeader);
@@ -556,8 +585,8 @@ function ensureGarbageLayout() {
   summaryCenter.className = 'hazard-summary hazard-summary--growth';
   const summaryCenterHeader = doc.createElement('div');
   summaryCenterHeader.className = 'hazard-summary__header';
-  summaryCenterHeader.textContent = 'Resource Mix';
-  summaryCenterHeader.appendChild(createInfoIcon('Share of the remaining garbage stockpile by stream.'));
+  summaryCenterHeader.textContent = getGarbageHazardLabel('resourceMix', 'Resource Mix');
+  summaryCenterHeader.appendChild(createInfoIcon(getGarbageHazardLabel('resourceMixTooltip', 'Share of the remaining garbage stockpile by stream.')));
   const summaryCenterBody = doc.createElement('div');
   summaryCenterBody.className = 'hazard-summary__body';
   summaryCenter.appendChild(summaryCenterHeader);
@@ -567,8 +596,8 @@ function ensureGarbageLayout() {
   summaryRight.className = 'hazard-summary hazard-summary--right';
   const summaryRightHeader = doc.createElement('div');
   summaryRightHeader.className = 'hazard-summary__header';
-  summaryRightHeader.textContent = 'Operational Impact';
-  summaryRightHeader.appendChild(createInfoIcon('Penalties scale with remaining waste and fade as cleanup progresses.  They do not return once every garbage stream reaches 0 at the same time.'));
+  summaryRightHeader.textContent = getGarbageHazardLabel('operationalImpact', 'Operational Impact');
+  summaryRightHeader.appendChild(createInfoIcon(getGarbageHazardLabel('operationalImpactTooltip', 'Penalties scale with remaining waste and fade as cleanup progresses. They do not return once every garbage stream reaches 0 at the same time.')));
   const summaryRightBody = doc.createElement('div');
   summaryRightBody.className = 'hazard-summary__body';
   summaryRight.appendChild(summaryRightHeader);
@@ -613,7 +642,7 @@ function ensureGarbageLayout() {
 
   const factorsHeaderLabel = doc.createElement('span');
   factorsHeaderLabel.className = 'hazard-factors__title';
-  factorsHeaderLabel.textContent = 'Cleanup Priorities';
+  factorsHeaderLabel.textContent = getGarbageHazardLabel('cleanupPriorities', 'Cleanup Priorities');
   factorsHeader.appendChild(factorsHeaderLabel);
 
   const factorGrid = doc.createElement('div');

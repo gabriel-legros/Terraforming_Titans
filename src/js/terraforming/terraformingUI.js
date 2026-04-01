@@ -15,12 +15,55 @@ if (typeof SubtabManager === 'undefined') {
 
 let terraformingSubtabManager = null;
 
+function getTerraformingText(path, fallback, vars) {
+  return t(path, vars, fallback);
+}
+
+function getTerraformingSummaryText(path, fallback, vars) {
+  return getTerraformingText(`ui.terraforming.summaryUi.${path}`, fallback, vars);
+}
+
+function getTerraformingZoneLabel(zone) {
+  return getTerraformingSummaryText(`zones.${zone}`, formatTerraformingSummaryLabel(zone, zone));
+}
+
+function getTerraformingWorldTypeLabel(type) {
+  return getTerraformingSummaryText(`worldTypes.${type}`, formatTerraformingSummaryLabel(type, type));
+}
+
+function getTerraformingRequirementLabel(requirementId) {
+  return getTerraformingText(
+    `catalogs.terraformingRequirements.${requirementId}.displayName`,
+    formatTerraformingSummaryLabel(requirementId, requirementId)
+  );
+}
+
+function formatTerraformingTargetText(value) {
+  return getTerraformingSummaryText('targetPrefix', 'Target : {value}', { value });
+}
+
+function getTerraformingStatusIcon(passed) {
+  return passed ? '✓' : '✗';
+}
+
+function getTerraformingSummaryResourceLabel(key, fallback) {
+  return getTerraformingSummaryText(`resources.${key}`, fallback || formatTerraformingSummaryLabel(key, key));
+}
+
 function getCoreHeatTooltipText() {
   const unit = getTemperatureUnit();
   const digits = unit === '°C' ? 0 : 2;
   const crustStart = formatNumber(toDisplayTemperature(1273.15), false, digits);
   const crustComplete = formatNumber(toDisplayTemperature(973.15), false, digits);
-  return `Planetary interior heat added directly to the surface as a flat global flux.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nIf temperature falls below ${crustStart}${unit}, a natural crust will start forming and will complete at ${crustComplete}${unit}.\n\nThis flux is not impacted by albedo or day-night averaging.`;
+  return getTerraformingSummaryText(
+    'temperature.coreHeatTooltip',
+    'Planetary interior heat added directly to the surface as a flat global flux.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nIf temperature falls below {crustStart}{unit}, a natural crust will start forming and will complete at {crustComplete}{unit}.\n\nThis flux is not impacted by albedo or day-night averaging.',
+    {
+      crustStart,
+      crustComplete,
+      unit,
+    }
+  );
 }
 
 function getTerraformingSubtabManager() {
@@ -114,9 +157,13 @@ function updateTerraformingSummaryWorldIdentity() {
     summaryCache.worldNameText.textContent = worldName;
   }
 
-  const worldType = formatTerraformingSummaryLabel(getTerraformingSummaryWorldType(), 'story');
-  const requirementName = formatTerraformingSummaryLabel(getTerraformingSummaryRequirementName(), 'human');
-  const worldMeta = `${worldType}, ${requirementName}`;
+  const worldType = getTerraformingWorldTypeLabel(getTerraformingSummaryWorldType());
+  const requirementName = getTerraformingRequirementLabel(getTerraformingSummaryRequirementName());
+  const worldMeta = getTerraformingSummaryText(
+    'worldMeta',
+    '{worldType}, {requirementName}',
+    { worldType, requirementName }
+  );
   if (summaryCache.worldMetaText && summaryCache.worldMetaText.textContent !== worldMeta) {
     summaryCache.worldMetaText.textContent = worldMeta;
   }
@@ -240,12 +287,15 @@ function ensureTemperatureInfographicOverlay() {
   const image = document.createElement('img');
   image.classList.add('terraforming-infographic-image');
   image.src = TEMPERATURE_INFOGRAPHIC_PATH;
-  image.alt = 'Terraforming temperature infographic';
+  image.alt = getTerraformingSummaryText(
+    'temperature.infographicAlt',
+    'Terraforming temperature infographic'
+  );
 
   const closeButton = document.createElement('button');
   closeButton.type = 'button';
   closeButton.classList.add('terraforming-infographic-close');
-  closeButton.textContent = 'Close';
+  closeButton.textContent = getTerraformingSummaryText('close', 'Close');
 
   windowElement.appendChild(image);
   windowElement.appendChild(closeButton);
@@ -276,23 +326,21 @@ function hideTemperatureInfographicOverlay() {
 }
 
 const CLOUD_AND_HAZE_TOOLTIP_TEXT = [
-  "Layered cloud, haze, and calcite brightness applied to the remaining surface headroom. This value also penalizes solar panel and life growth and is capped by the total albedo.",
-  "",
-  "Cloud coverage compares each condensable gas to a saturation mixing ratio. When vapor is plentiful, it condenses into cloud decks that scale with atmospheric pressure and cap at each species' coverage limit.",
-  "Each deck has its own brightness. Coverage blends those brightness values together and only brightens surfaces that are still darker than the deck, so clouds taper off once the surface reflects as much light as the clouds do.",
-  "Condensed clouds return vapor to the surface as rain, snow, or acid drizzle, while haze and calcite aerosols add their own reflective layers on top of the cloud contribution."
+  getTerraformingSummaryText(
+    'luminosity.cloudHazeTooltip',
+    'Layered cloud, haze, and calcite brightness applied to the remaining surface headroom. This value also penalizes solar panel and life growth and is capped by the total albedo.'
+  )
 ].join('\n');
 
-const EQUATORIAL_GRAVITY_TOOLTIP_TEXT = [
-  'Planetary rotation slightly reduces apparent gravity at the equator.',
-  'This value subtracts the centrifugal term (ω²R) so you see the effective pull felt on the surface.'
-].join('\n');
+const EQUATORIAL_GRAVITY_TOOLTIP_TEXT = getTerraformingSummaryText(
+  'magnetosphere.equatorialGravityTooltip',
+  'Planetary rotation slightly reduces apparent gravity at the equator.\nThis value subtracts the centrifugal term (ω²R) so you see the effective pull felt on the surface.'
+);
 
-const GRAVITY_PENALTY_TOOLTIP_TEXT = [
-  'Gravity penalties blend equatorial and surface gravity based on developed land.',
-  'The first 25% of used land applies the equatorial gravity penalty, with any additional land using the full surface gravity.',
-  'For example, using 30% of land applies (25/30)×equatorial penalty plus (5/30)×surface gravity penalty.'
-].join('\n');
+const GRAVITY_PENALTY_TOOLTIP_TEXT = getTerraformingSummaryText(
+  'magnetosphere.gravityPenaltyTooltip',
+  'Gravity penalties blend equatorial and surface gravity based on developed land.\nThe first 25% of used land applies the equatorial gravity penalty, with any additional land using the full surface gravity.\nFor example, using 30% of land applies (25/30)×equatorial penalty plus (5/30)×surface gravity penalty.'
+);
 
 function getTemperatureMaintenanceImmuneTooltip() {
   const buildingMap = globalThis?.buildings ?? {};
@@ -303,9 +351,20 @@ function getTemperatureMaintenanceImmuneTooltip() {
   const exponentialThreshold = formatNumber(toDisplayTemperature(973.15), false, 2);
   const doublingUnit = unit === '°C' ? '°C' : 'K';
   const description = [
-    `Temperature maintenance penalty: no penalty at or below ${noPenaltyThreshold}${unit}, +1% maintenance per degree above that, then exponential growth beginning at ${exponentialThreshold}${unit}.`,
-    `Above ${exponentialThreshold}${unit}, the multiplier doubles every 100 ${doublingUnit}, capped at 1B.`,
-    'This penalty can be mitigated by aerostats, but has a floor determined by a dry-adiabatic 1 atm temperature model.'
+    getTerraformingSummaryText(
+      'temperature.maintenanceTooltip.noPenalty',
+      'Temperature maintenance penalty: no penalty at or below {threshold}{unit}, +1% maintenance per degree above that, then exponential growth beginning at {exponentialThreshold}{unit}.',
+      { threshold: noPenaltyThreshold, unit, exponentialThreshold }
+    ),
+    getTerraformingSummaryText(
+      'temperature.maintenanceTooltip.aboveThreshold',
+      'Above {exponentialThreshold}{unit}, the multiplier doubles every 100 {doublingUnit}, capped at 1B.',
+      { exponentialThreshold, unit, doublingUnit }
+    ),
+    getTerraformingSummaryText(
+      'temperature.maintenanceTooltip.mitigationFloor',
+      'This penalty can be mitigated by aerostats, but has a floor determined by a dry-adiabatic 1 atm temperature model.'
+    )
   ];
 
   for (const key in buildingMap) {
@@ -321,19 +380,40 @@ function getTemperatureMaintenanceImmuneTooltip() {
   if (floorContext?.penalty > 1 && Number.isFinite(floorContext.temperatureK)) {
     const altitudeText = Number.isFinite(floorContext.altitudeKm)
       ? `${formatNumber(floorContext.altitudeKm, false, 2)} km`
-      : 'N/A';
+      : getTerraformingSummaryText('notAvailable', 'N/A');
     description.push(
-      `Current 1 atm estimate: ${formatNumber(floorContext.pressureKPa, false, 2)} kPa surface pressure, ${altitudeText} altitude, ${formatNumber(toDisplayTemperature(floorContext.temperatureK), false, 2)}${unit}, maintenance floor x${floorContext.penalty.toFixed(2)}.`
+      getTerraformingSummaryText(
+        'temperature.maintenanceTooltip.currentEstimate',
+        'Current 1 atm estimate: {pressure} kPa surface pressure, {altitude} altitude, {temperature}{unit}, maintenance floor x{penalty}.',
+        {
+          pressure: formatNumber(floorContext.pressureKPa, false, 2),
+          altitude: altitudeText,
+          temperature: formatNumber(toDisplayTemperature(floorContext.temperatureK), false, 2),
+          unit,
+          penalty: floorContext.penalty.toFixed(2),
+        }
+      )
     );
   }
 
   if (immuneNames.length === 0) {
-    description.push('No buildings are immune to this penalty.');
+    description.push(
+      getTerraformingSummaryText(
+        'temperature.maintenanceTooltip.noImmuneBuildings',
+        'No buildings are immune to this penalty.'
+      )
+    );
     return description.join(' ');
   }
 
   immuneNames.sort((a, b) => a.localeCompare(b));
-  description.push(`Buildings immune to this effect: ${immuneNames.join(', ')}.`);
+  description.push(
+    getTerraformingSummaryText(
+      'temperature.maintenanceTooltip.immuneBuildings',
+      'Buildings immune to this effect: {names}.',
+      { names: immuneNames.join(', ') }
+    )
+  );
   return description.join(' ');
 }
 
@@ -341,23 +421,42 @@ function getTemperatureMaintenanceFloorTooltip(floorContext) {
   const unit = getTemperatureUnit();
   const displayTemperature = Number.isFinite(floorContext?.temperatureK)
     ? formatNumber(toDisplayTemperature(floorContext.temperatureK), false, 2)
-    : 'N/A';
+    : getTerraformingSummaryText('notAvailable', 'N/A');
   const altitude = Number.isFinite(floorContext?.altitudeKm)
     ? `${formatNumber(floorContext.altitudeKm, false, 2)} km`
-    : 'N/A';
+    : getTerraformingSummaryText('notAvailable', 'N/A');
   const surfacePressure = Number.isFinite(floorContext?.pressureKPa)
     ? `${formatNumber(floorContext.pressureKPa, false, 2)} kPa`
-    : 'N/A';
+    : getTerraformingSummaryText('notAvailable', 'N/A');
   const floorPenalty = Number.isFinite(floorContext?.penalty)
     ? `x${floorContext.penalty.toFixed(2)}`
-    : 'N/A';
+    : getTerraformingSummaryText('notAvailable', 'N/A');
 
   return [
-    'Dry-adiabatic estimate for the altitude where the atmosphere falls to 1 atm.',
-    `Surface pressure: ${surfacePressure}.`,
-    `Estimated 1 atm altitude: ${altitude}.`,
-    `Estimated 1 atm temperature: ${displayTemperature}${unit}.`,
-    `This sets the minimum temperature maintenance multiplier for mitigated buildings: ${floorPenalty}.`
+    getTerraformingSummaryText(
+      'temperature.floorTooltip.intro',
+      'Dry-adiabatic estimate for the altitude where the atmosphere falls to 1 atm.'
+    ),
+    getTerraformingSummaryText(
+      'temperature.floorTooltip.surfacePressure',
+      'Surface pressure: {value}.',
+      { value: surfacePressure }
+    ),
+    getTerraformingSummaryText(
+      'temperature.floorTooltip.altitude',
+      'Estimated 1 atm altitude: {value}.',
+      { value: altitude }
+    ),
+    getTerraformingSummaryText(
+      'temperature.floorTooltip.temperature',
+      'Estimated 1 atm temperature: {value}{unit}.',
+      { value: displayTemperature, unit }
+    ),
+    getTerraformingSummaryText(
+      'temperature.floorTooltip.minimumMultiplier',
+      'This sets the minimum temperature maintenance multiplier for mitigated buildings: {value}.',
+      { value: floorPenalty }
+    )
   ].join(' ');
 }
 
@@ -786,38 +885,34 @@ function createTemperatureBox(row) {
     temperatureBox.id = 'temperature-box';
     const tempInfo = document.createElement('span');
     tempInfo.classList.add('info-tooltip-icon');
-    const tempTooltipText = [
-      "Temperature is a critical factor for terraforming. It's determined by a complex interplay of factors:",
-      "",
-      "- Key Equations: The model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere's optical depth, and the day-night temperature variation is calculated based on the planet's heat capacity and rotation speed.",
-      "- Solar Flux: The base energy received from the star, which can be augmented by structures like Space Mirrors.",
-      "- Albedo: The planet's reflectivity. A high albedo (from ice and clouds) reflects more light, cooling the planet. A low albedo (from oceans and dark rock) absorbs more light, warming it.",
-      "- Greenhouse Effect: Atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere's optical depth, which depends on the amount of each gas.",
-      "- Rotation Speed: A slower rotation leads to more extreme temperature differences between day and night.",
-      "- Heat Capacity: The planet's ability to store and release heat, influenced by its surface composition (rock, ocean, ice) and atmospheric density.  More surface liquids means more heat capacity and therefore reduced day-night differences.",
-      "- Meridional Winds: Energy moves between tropical, temperate, and polar zones.  The trend column shows the wind-smoothed target temperature that conserves total heat while evening out extremes.",
-      "- Thermal Inertia: The same heat capacity that moderates day/night swings also slows the march toward the trend temperature. Thick air and deep oceans respond sluggishly; thin atmospheres snap toward the trend quickly.",
-      "",
-      "Temperature directly impacts:",
-      "- Water Cycle: Driving evaporation, sublimation, melting, and freezing.",
-      "- Life: Each species has specific temperature ranges for survival and growth.",
-      "- Colonist Comfort: Extreme temperatures increase energy consumption for life support."
-    ].join('\n');
+    const tempTooltipText = getTerraformingSummaryText(
+      'temperature.tooltip',
+      'Temperature is a critical factor for terraforming.'
+    );
     const tempInfoTooltip = attachDynamicInfoTooltip(tempInfo, tempTooltipText);
     const tempInfographicButton = document.createElement('button');
     tempInfographicButton.type = 'button';
     tempInfographicButton.classList.add('terraforming-infographic-button');
-    tempInfographicButton.title = 'Open temperature infographic';
-    tempInfographicButton.setAttribute('aria-label', 'Open temperature infographic');
+    tempInfographicButton.title = getTerraformingSummaryText(
+      'temperature.openInfographic',
+      'Open temperature infographic'
+    );
+    tempInfographicButton.setAttribute(
+      'aria-label',
+      getTerraformingSummaryText(
+        'temperature.openInfographic',
+        'Open temperature infographic'
+      )
+    );
     const tempInfographicIcon = document.createElement('span');
     tempInfographicIcon.classList.add('terraforming-infographic-icon');
     tempInfographicIcon.innerHTML = '?';
     tempInfographicButton.appendChild(tempInfographicIcon);
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
-      <p>Global Mean Temp: <span id="temperature-current"></span><span class="temp-unit"></span></p>
-      <p>Equilibrium Temp: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
-      <p id="temperature-core-heat-line" style="display: none;">Net Core Heat Flux: <span id="temperature-core-heat"></span> W/m^2</p>
+      <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
+      <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
+      <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
       <table>
         <colgroup>
           <col class="gas-col">
@@ -828,17 +923,17 @@ function createTemperatureBox(row) {
         </colgroup>
         <thead>
           <tr>
-            <th>Zone</th>
-            <th>T (<span class="temp-unit"></span>)</th>
-            <th>T_trend</th>
-            <th>Delta</th>
-            <th>Day</th>
-            <th>Night</th>
+            <th>${getTerraformingSummaryText('temperature.labels.zone', 'Zone')}</th>
+            <th>${getTerraformingSummaryText('temperature.labels.temperature', 'T ({unit})', { unit: '<span class="temp-unit"></span>' })}</th>
+            <th>${getTerraformingSummaryText('temperature.labels.trend', 'T_trend')}</th>
+            <th>${getTerraformingSummaryText('temperature.labels.delta', 'Delta')}</th>
+            <th>${getTerraformingSummaryText('temperature.labels.day', 'Day')}</th>
+            <th>${getTerraformingSummaryText('temperature.labels.night', 'Night')}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Tropical</td>
+            <td>${getTerraformingZoneLabel('tropical')}</td>
             <td><span id="tropical-temp">${terraforming.temperature.zones.tropical.value.toFixed(2)}</span></td>
             <td><span id="tropical-trend-temp"></span></td>
             <td><span id="tropical-delta"></span></td>
@@ -846,7 +941,7 @@ function createTemperatureBox(row) {
             <td><span id="tropical-night">${terraforming.temperature.zones.tropical.night.toFixed(2)}</span></td>
           </tr>
           <tr>
-            <td>Temperate</td>
+            <td>${getTerraformingZoneLabel('temperate')}</td>
             <td><span id="temperate-temp">${terraforming.temperature.zones.temperate.value.toFixed(2)}</span></td>
             <td><span id="temperate-trend-temp"></span></td>
             <td><span id="temperate-delta"></span></td>
@@ -854,7 +949,7 @@ function createTemperatureBox(row) {
             <td><span id="temperate-night">${terraforming.temperature.zones.temperate.night.toFixed(2)}</span></td>
           </tr>
           <tr>
-            <td>Polar</td>
+            <td>${getTerraformingZoneLabel('polar')}</td>
             <td><span id="polar-temp">${terraforming.temperature.zones.polar.value.toFixed(2)}</span></td>
             <td><span id="polar-trend-temp"></span></td>
             <td><span id="polar-delta"></span></td>
@@ -886,13 +981,19 @@ function createTemperatureBox(row) {
 
     const energyPenaltySpan = document.createElement('p');
     energyPenaltySpan.id = 'temperature-energy-penalty';
-    energyPenaltySpan.textContent = "Colony energy cost multiplier from temperature :";
+    energyPenaltySpan.textContent = getTerraformingSummaryText(
+      'temperature.labels.colonyEnergyMultiplier',
+      'Colony energy cost multiplier from temperature :'
+    );
     temperatureBox.appendChild(energyPenaltySpan);
 
     const maintenancePenaltySpan = document.createElement('p');
     maintenancePenaltySpan.id = 'temperature-maintenance-penalty';
     maintenancePenaltySpan.style.display = 'none';
-    maintenancePenaltySpan.textContent = 'Maintenance cost multiplier from temperature : ';
+    maintenancePenaltySpan.textContent = getTerraformingSummaryText(
+      'temperature.labels.maintenanceMultiplier',
+      'Maintenance cost multiplier from temperature : '
+    );
     const maintenancePenaltyValue = document.createElement('span');
     maintenancePenaltyValue.id = 'temperature-maintenance-penalty-value';
     maintenancePenaltySpan.appendChild(maintenancePenaltyValue);
@@ -911,7 +1012,10 @@ function createTemperatureBox(row) {
     const maintenanceFloorSpan = document.createElement('p');
     maintenanceFloorSpan.id = 'temperature-maintenance-floor';
     maintenanceFloorSpan.style.display = 'none';
-    maintenanceFloorSpan.textContent = '1 atm temperature estimate : ';
+    maintenanceFloorSpan.textContent = getTerraformingSummaryText(
+      'temperature.labels.oneAtmEstimate',
+      '1 atm temperature estimate : '
+    );
     const maintenanceFloorValue = document.createElement('span');
     maintenanceFloorValue.id = 'temperature-maintenance-floor-value';
     maintenanceFloorSpan.appendChild(maintenanceFloorValue);
@@ -922,7 +1026,10 @@ function createTemperatureBox(row) {
     maintenanceFloorInfo.innerHTML = '&#9432;';
     const maintenanceFloorTooltip = attachDynamicInfoTooltip(
       maintenanceFloorInfo,
-      'Dry-adiabatic 1 atm estimate pending.'
+      getTerraformingSummaryText(
+        'temperature.maintenancePending',
+        'Dry-adiabatic 1 atm estimate pending.'
+      )
     );
     maintenanceFloorSpan.appendChild(maintenanceFloorInfo);
     temperatureBox.appendChild(maintenanceFloorSpan);
@@ -993,7 +1100,16 @@ function createTemperatureBox(row) {
     if (els.target) {
       const minTarget = terraforming.temperature.targetMin;
       const maxTarget = terraforming.temperature.targetMax;
-      els.target.textContent = `Target : Global mean between ${formatNumber(toDisplayTemperature(minTarget), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(maxTarget), false, 2)}${unit}.`;
+      const targetText = getTerraformingSummaryText(
+        'temperature.target',
+        'Global mean between {min}{unit} and {max}{unit}.',
+        {
+          min: formatNumber(toDisplayTemperature(minTarget), false, 2),
+          max: formatNumber(toDisplayTemperature(maxTarget), false, 2),
+          unit,
+        }
+      );
+      els.target.textContent = formatTerraformingTargetText(targetText);
     }
 
     els.current.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
@@ -1035,7 +1151,10 @@ function createTemperatureBox(row) {
     temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? 'green' : 'red';
 
     if (els.energyPenalty) {
-      els.energyPenalty.textContent = `Colony energy cost multiplier from temperature : ${terraforming.calculateColonyEnergyPenalty().toFixed(2)}`;
+      els.energyPenalty.textContent = `${getTerraformingSummaryText(
+        'temperature.labels.colonyEnergyMultiplier',
+        'Colony energy cost multiplier from temperature :'
+      )} ${terraforming.calculateColonyEnergyPenalty().toFixed(2)}`;
     }
     if (els.maintenancePenalty) {
       const penalty = terraforming.calculateMaintenancePenalty();
@@ -1044,7 +1163,10 @@ function createTemperatureBox(row) {
         if (els.maintenancePenaltyValue) {
           els.maintenancePenaltyValue.textContent = penalty.toFixed(2);
         } else {
-          els.maintenancePenalty.textContent = `Maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
+          els.maintenancePenalty.textContent = `${getTerraformingSummaryText(
+            'temperature.labels.maintenanceMultiplier',
+            'Maintenance cost multiplier from temperature : '
+          )}${penalty.toFixed(2)}`;
         }
         if (els.maintenancePenaltyTooltip) {
           setTooltipText(els.maintenancePenaltyTooltip, getTemperatureMaintenanceImmuneTooltip());
@@ -1067,7 +1189,10 @@ function createTemperatureBox(row) {
             `${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
         } else {
           els.maintenanceFloor.textContent =
-            `1 atm temperature estimate : ${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
+            `${getTerraformingSummaryText(
+              'temperature.labels.oneAtmEstimate',
+              '1 atm temperature estimate : '
+            )}${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
         }
         if (els.maintenanceFloorTooltip) {
           setTooltipText(
@@ -1087,18 +1212,10 @@ function createTemperatureBox(row) {
     atmosphereBox.id = 'atmosphere-box';
     const atmInfo = document.createElement('span');
     atmInfo.classList.add('info-tooltip-icon');
-    const atmTooltipText = [
-      "The atmosphere is the gaseous envelope of the planet, critical for life and climate.",
-      "",
-      "- Composition: The mix of gases (Nitrogen, Oxygen, CO2, etc.) determines its properties. Each gas has a partial pressure, and the sum is the total atmospheric pressure.",
-      "- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.",
-      "- Pressure & Density: Pressure is calculated from the column mass and surface gravity of the world.  Higher pressure increases the efficiency of wind turbines and the cost of colonies. It's also necessary to maintain liquid water on the surface and for colonists' life support.",
-      "- Circulation: Column mass and planetary rotation drive winds that transfer heat between climate bands. Heavier atmospheres smooth temperature differences.",
-      "- Cloud Formation: When condensable gases accumulate (water, methane, sulfuric acid), their mixing ratio is compared against a saturation curve. Sufficient vapor builds cloud decks that thicken with pressure up to each species' coverage limit.",
-      "- Cloud Brightness: Each cloud species has a characteristic albedo. Coverage blends together, brightening whatever surface remains darker than the deck. Clouds never darken the planet and plateau once the surface matches the deck brightness.",
-      "- Cloud Feedback: Thick clouds raise albedo, reflecting sunlight and lowering temperatures while returning vapor to surface stores through rain, snow, or acid drizzle.",
-      "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
-    ].join('\n');
+    const atmTooltipText = getTerraformingSummaryText(
+      'atmosphere.tooltip',
+      'The atmosphere is the gaseous envelope of the planet, critical for life and climate.'
+    );
     const atmTooltip = attachDynamicInfoTooltip(atmInfo, atmTooltipText);
     const gasTargets = terraforming.gasTargets || {};
     const targetGasKeys = Object.keys(gasTargets);
@@ -1116,8 +1233,8 @@ function createTemperatureBox(row) {
     const gasKeys = targetGasKeys.concat(resourceGasKeys.filter(key => !targetGasKeys.includes(key)));
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
-      <p>Current: <span id="atmosphere-current"></span></p>
-      <p id="atmosphere-target-line" style="display: none;">Target: <span id="atmosphere-target"></span> <span id="atmosphere-target-status"></span></p>
+      <p>${getTerraformingSummaryText('atmosphere.labels.current', 'Current')}: <span id="atmosphere-current"></span></p>
+      <p id="atmosphere-target-line" style="display: none;">${getTerraformingSummaryText('atmosphere.labels.target', 'Target')}: <span id="atmosphere-target"></span> <span id="atmosphere-target-status"></span></p>
       <table>
         <colgroup>
           <col class="gas-col">
@@ -1128,10 +1245,10 @@ function createTemperatureBox(row) {
         </colgroup>
         <thead>
           <tr>
-            <th>Gas</th>
-            <th>P (Pa)</th>
-            <th>Delta (Pa)</th>
-            <th>Target (Pa)</th>
+            <th>${getTerraformingSummaryText('atmosphere.labels.gas', 'Gas')}</th>
+            <th>${getTerraformingSummaryText('atmosphere.labels.pressure', 'P (Pa)')}</th>
+            <th>${getTerraformingSummaryText('atmosphere.labels.delta', 'Delta (Pa)')}</th>
+            <th>${getTerraformingSummaryText('atmosphere.labels.targetPressure', 'Target (Pa)')}</th>
             <th></th>
           </tr>
         </thead>
@@ -1158,8 +1275,8 @@ function createTemperatureBox(row) {
     innerHTML += `
         </tbody>
       </table>
-      <p class="no-margin">Optical depth: <span id="optical-depth"></span><span id="optical-depth-warning" class="optical-depth-warning"></span> <span id="optical-depth-info" class="info-tooltip-icon">&#9432;<span id="optical-depth-tooltip" class="resource-tooltip"></span></span></p>
-      <p class="no-margin">Wind turbine multiplier: <span id="wind-turbine-multiplier">${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}</span>%</p>
+      <p class="no-margin">${getTerraformingSummaryText('atmosphere.labels.opticalDepth', 'Optical depth')}: <span id="optical-depth"></span><span id="optical-depth-warning" class="optical-depth-warning"></span> <span id="optical-depth-info" class="info-tooltip-icon">&#9432;<span id="optical-depth-tooltip" class="resource-tooltip"></span></span></p>
+      <p class="no-margin">${getTerraformingSummaryText('atmosphere.labels.windMultiplier', 'Wind turbine multiplier')}: <span id="wind-turbine-multiplier">${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}</span>%</p>
     `;
   
     atmosphereBox.innerHTML = innerHTML;
@@ -1290,9 +1407,16 @@ function createTemperatureBox(row) {
       if (hasPressureTarget) {
         const minPa = pressureTarget.min * 1000;
         const maxPa = pressureTarget.max * 1000;
-        els.pressureTarget.textContent = `${formatNumber(minPa, false, 2)}Pa - ${formatNumber(maxPa, false, 2)}Pa`;
+        els.pressureTarget.textContent = getTerraformingSummaryText(
+          'atmosphere.targetRange',
+          '{min}Pa - {max}Pa',
+          {
+            min: formatNumber(minPa, false, 2),
+            max: formatNumber(maxPa, false, 2),
+          }
+        );
         const inRange = totalPressureKPa >= pressureTarget.min && totalPressureKPa <= pressureTarget.max;
-        els.pressureTargetStatus.textContent = inRange ? '✓' : '✗';
+        els.pressureTargetStatus.textContent = getTerraformingStatusIcon(inRange);
         els.pressureTargetStatus.classList.toggle('status-check', inRange);
         els.pressureTargetStatus.classList.toggle('status-cross', !inRange);
         els.pressureTargetLine.style.display = '';
@@ -1315,7 +1439,10 @@ function createTemperatureBox(row) {
     }
     if (els.opticalDepthInfo) {
       const contributions = terraforming.temperature.opticalDepthContributions || {};
-      const intro = 'Measures the effective Greenhouse Gas Effect. Higher value means more heat trapped. On very hot worlds, this value is reduced automatically as thermal emission shifts toward near-IR. To achieve both temperature and luminosity target, it is usually recommended (but not required) to keep this value below 3.';
+      const intro = getTerraformingSummaryText(
+        'atmosphere.opticalDepthTooltipIntro',
+        'Measures the effective Greenhouse Gas Effect. Higher value means more heat trapped. On very hot worlds, this value is reduced automatically as thermal emission shifts toward near-IR. To achieve both temperature and luminosity target, it is usually recommended, but not required, to keep this value below 3.'
+      );
       const lines = Object.entries(contributions)
         .map(([gas, val]) => {
           const mapping = {
@@ -1330,7 +1457,11 @@ function createTemperatureBox(row) {
           const displayName = resourceKey && resources.atmospheric[resourceKey]
             ? resources.atmospheric[resourceKey].displayName
             : gas.toUpperCase();
-          return `${displayName}: ${val.toFixed(3)}`;
+          return getTerraformingSummaryText(
+            'atmosphere.opticalDepthContribution',
+            '{name}: {value}',
+            { name: displayName, value: val.toFixed(3) }
+          );
         });
       lines.unshift(intro);
       setTooltipText(els.opticalDepthTooltip, lines.join('\n'), els.tooltipCache, 'opticalDepth');
@@ -1344,7 +1475,11 @@ function createTemperatureBox(row) {
       const penalty = terraforming.calculateColonyPressureCostPenalty();
       if (penalty > 1) {
         els.pressurePenalty.style.display = '';
-        els.pressurePenalty.textContent = `Colony cost multiplier from pressure : ${penalty.toFixed(2)}`;
+        els.pressurePenalty.textContent = getTerraformingSummaryText(
+          'atmosphere.labels.pressurePenalty',
+          'Colony cost multiplier from pressure : {value}',
+          { value: penalty.toFixed(2) }
+        );
       } else {
         els.pressurePenalty.style.display = 'none';
       }
@@ -1402,11 +1537,11 @@ function createTemperatureBox(row) {
                 gasEls.status.textContent = '';
                 gasEls.status.classList.remove('status-check', 'status-cross');
             } else if (!outsideTarget) {
-                gasEls.status.textContent = '✓';
+                gasEls.status.textContent = getTerraformingStatusIcon(true);
                 gasEls.status.classList.add('status-check');
                 gasEls.status.classList.remove('status-cross');
             } else {
-                gasEls.status.textContent = '✗';
+                gasEls.status.textContent = getTerraformingStatusIcon(false);
                 gasEls.status.classList.add('status-cross');
                 gasEls.status.classList.remove('status-check');
             }
@@ -1420,61 +1555,64 @@ function createWaterBox(row) {
     waterBox.id = 'water-box';
     const waterInfo = document.createElement('span');
     waterInfo.classList.add('info-tooltip-icon');
-    const waterTooltipText = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation, Boiling & Sublimation: Evaporation and sublimation are calculated using a modified Penman equation. Boiling is a rapid liquid-to-gas path when temperatures exceed the local boiling point.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point.\n- Surface Flow: A realistic fluid dynamics model where flow is proportional to the square root of the level difference between zones, adjusted for elevation and viscosity. Ice can also melt and flow from colder to warmer zones, but this is done via a custom-made model.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
+    const waterTooltipText = getTerraformingSummaryText(
+      'water.tooltip',
+      'The planetary water cycle is a dynamic system crucial for climate and life.'
+    );
     const waterTooltip = attachDynamicInfoTooltip(waterInfo, waterTooltipText);
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
-      <h3>Water</h3>
+      <h3>${getTerraformingSummaryResourceLabel('water', 'Water')}</h3>
       <table>
         <thead>
           <tr>
-            <th>Parameter</th>
-            <th>Value (t/s)</th>
-            <th>Rate (kg/m²/s)</th>
+            <th>${getTerraformingSummaryText('water.labels.parameter', 'Parameter')}</th>
+            <th>${getTerraformingSummaryText('water.labels.valueRate', 'Value (t/s)')}</th>
+            <th>${getTerraformingSummaryText('water.labels.areaRate', 'Rate (kg/m²/s)')}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Evaporation rate</td>
+            <td>${getTerraformingSummaryText('water.labels.evaporationRate', 'Evaporation rate')}</td>
             <td><span id="evaporation-rate">N/A</span></td>
             <td><span id="evaporation-rate-kg">N/A</span></td>
           </tr>
           <tr>
-            <td>Boiling rate</td>
+            <td>${getTerraformingSummaryText('water.labels.boilingRate', 'Boiling rate')}</td>
             <td><span id="boiling-rate">N/A</span></td>
             <td><span id="boiling-rate-kg">N/A</span></td>
           </tr>
           <tr>
-            <td>Sublimation rate</td>
+            <td>${getTerraformingSummaryText('water.labels.sublimationRate', 'Sublimation rate')}</td>
             <td><span id="sublimation-rate">N/A</span></td>
             <td><span id="sublimation-rate-kg">N/A</span></td>
           </tr>
           <tr>
-            <td>Rainfall rate</td>
+            <td>${getTerraformingSummaryText('water.labels.rainfallRate', 'Rainfall rate')}</td>
             <td><span id="rainfall-rate">N/A</span></td>
             <td><span id="rainfall-rate-kg">N/A</span></td>
           </tr>
           <tr>
-            <td>Snowfall rate</td>
+            <td>${getTerraformingSummaryText('water.labels.snowfallRate', 'Snowfall rate')}</td>
             <td><span id="snowfall-rate">N/A</span></td>
             <td><span id="snowfall-rate-kg">N/A</span></td>
           </tr>
           <tr>
-            <td>Melting rate</td>
+            <td>${getTerraformingSummaryText('water.labels.meltingRate', 'Melting rate')}</td>
             <td><span id="melting-rate">N/A</span></td>
             <td><span id="melting-rate-kg">N/A</span></td>
           </tr>
           <tr>
-            <td>Freezing rate</td>
+            <td>${getTerraformingSummaryText('water.labels.freezingRate', 'Freezing rate')}</td>
             <td><span id="freezing-rate">N/A</span></td>
             <td><span id="freezing-rate-kg">N/A</span></td>
           </tr>
         </tbody>
       </table>
-      <p class="no-margin">Water coverage: <span id="water-current">0.00</span>%</p>
-      <p class="no-margin">Ice coverage: <span id="ice-current">0.00</span>%</p>
-      <p class="no-margin" id="co2-liquid-row" style="display:none;">Liquid CO2 coverage: <span id="co2-liquid-current">0.00</span>%</p>
-      <p class="no-margin" id="co2-ice-row" style="display:none;">Dry ice coverage: <span id="co2-ice-current">0.00</span>%</p>
+      <p class="no-margin">${getTerraformingSummaryText('water.labels.waterCoverage', 'Water coverage')}: <span id="water-current">0.00</span>%</p>
+      <p class="no-margin">${getTerraformingSummaryText('water.labels.iceCoverage', 'Ice coverage')}: <span id="ice-current">0.00</span>%</p>
+      <p class="no-margin" id="co2-liquid-row" style="display:none;">${getTerraformingSummaryText('water.labels.liquidCo2Coverage', 'Liquid CO2 coverage')}: <span id="co2-liquid-current">0.00</span>%</p>
+      <p class="no-margin" id="co2-ice-row" style="display:none;">${getTerraformingSummaryText('water.labels.dryIceCoverage', 'Dry ice coverage')}: <span id="co2-ice-current">0.00</span>%</p>
     `;
 
     const waterHeading = waterBox.querySelector('h3');
@@ -1521,11 +1659,11 @@ function createWaterBox(row) {
   function getLiquidCoverageTargetLabel(entry) {
     switch (entry.liquidType) {
       case 'water':
-        return 'Water';
+        return getTerraformingSummaryResourceLabel('water', 'Water');
       case 'carbonDioxide':
-        return 'Liquid CO2';
+        return getTerraformingSummaryResourceLabel('liquidCarbonDioxide', 'Liquid CO2');
       default:
-        return entry.liquidType || entry.coverageKey || 'Liquid';
+        return entry.liquidType || entry.coverageKey || getTerraformingSummaryResourceLabel('liquid', 'Liquid');
     }
   }
 
@@ -1536,11 +1674,27 @@ function createWaterBox(row) {
       const targetAmount = getWaterTargetAmount(terraformingState, entry.coverageTarget) || 0;
       const targetAmountText = formatNumber(targetAmount, false, 1);
       if (entry.comparison === 'atMost') {
-        return `${label} coverage <= ${formatNumber(pct, false, 0)}% (${targetAmountText}).`;
+        return getTerraformingSummaryText(
+          'water.targetAtMost',
+          '{label} coverage <= {percent}% ({amount}).',
+          {
+            label,
+            percent: formatNumber(pct, false, 0),
+            amount: targetAmountText,
+          }
+        );
       }
-      return `${label} coverage >= ${formatNumber(pct, false, 0)}% (${targetAmountText}).`;
+      return getTerraformingSummaryText(
+        'water.targetAtLeast',
+        '{label} coverage >= {percent}% ({amount}).',
+        {
+          label,
+          percent: formatNumber(pct, false, 0),
+          amount: targetAmountText,
+        }
+      );
     });
-    return `Target : ${parts.join('<br>')}`;
+    return formatTerraformingTargetText(parts.join('<br>'));
   }
 
   function formatWaterRate(value) {
@@ -1643,27 +1797,33 @@ function createWaterBox(row) {
     lifeInfo.classList.add('info-tooltip-icon');
     const zoneLines = getZones().map(zone => {
       const pct = (getZonePercentage(zone) * 100).toFixed(1);
-      const label = zone.charAt(0).toUpperCase() + zone.slice(1);
-      return `- ${label}: ${pct}%`;
+      return getTerraformingSummaryText(
+        'lifeSummary.zoneDistribution',
+        '- {label}: {percent}%',
+        { label: getTerraformingZoneLabel(zone), percent: pct }
+      );
     });
-    const lifeTooltipText = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n' + zoneLines.join('\n');
+    const lifeTooltipText = `${getTerraformingSummaryText(
+      'lifeSummary.tooltipIntro',
+      'Life is the pinnacle of the terraforming process.'
+    )}\n${zoneLines.join('\n')}`;
     const lifeTooltip = attachDynamicInfoTooltip(lifeInfo, lifeTooltipText);
     // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `
-      <h3>Life</h3> <!-- Static name -->
+      <h3>${getTerraformingText('ui.terraforming.lifeTitle', 'Life')}</h3>
       <table id="life-coverage-table">
         <thead>
           <tr>
-            <th>Region</th>
-            <th>Coverage (%)</th>
-            <th>Photo Mult (%)</th>
+            <th>${getTerraformingSummaryText('lifeSummary.labels.region', 'Region')}</th>
+            <th>${getTerraformingSummaryText('lifeSummary.labels.coverage', 'Coverage (%)')}</th>
+            <th>${getTerraformingSummaryText('lifeSummary.labels.photoMultiplier', 'Photo Mult (%)')}</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>Overall</td><td id="life-coverage-overall">0.00</td><td id="life-photo-overall">-</td></tr>
-          <tr data-zone-row="polar"><td>Polar</td><td id="life-coverage-polar">0.00</td><td id="life-photo-polar">0.00</td></tr>
-          <tr data-zone-row="temperate"><td>Temperate</td><td id="life-coverage-temperate">0.00</td><td id="life-photo-temperate">0.00</td></tr>
-          <tr data-zone-row="tropical"><td>Tropical</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
+          <tr><td>${getTerraformingSummaryText('zones.overall', 'Overall')}</td><td id="life-coverage-overall">0.00</td><td id="life-photo-overall">-</td></tr>
+          <tr data-zone-row="polar"><td>${getTerraformingZoneLabel('polar')}</td><td id="life-coverage-polar">0.00</td><td id="life-photo-polar">0.00</td></tr>
+          <tr data-zone-row="temperate"><td>${getTerraformingZoneLabel('temperate')}</td><td id="life-coverage-temperate">0.00</td><td id="life-photo-temperate">0.00</td></tr>
+          <tr data-zone-row="tropical"><td>${getTerraformingZoneLabel('tropical')}</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
         </tbody>
       </table>
       `;
@@ -1674,7 +1834,13 @@ function createWaterBox(row) {
     }
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = `Target : Life coverage at least ${(terraforming.life.target * 100).toFixed(0)}%.`;
+    targetSpan.textContent = formatTerraformingTargetText(
+      getTerraformingSummaryText(
+        'lifeSummary.targetAtLeast',
+        'Life coverage at least {percent}%.',
+        { percent: (terraforming.life.target * 100).toFixed(0) }
+      )
+    );
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     lifeBox.appendChild(targetSpan);
@@ -1732,14 +1898,28 @@ function updateLifeBox() {
       : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
     const lifeTargetMet = avgBiomassCoverage >= effectiveTarget;
     lifeBox.style.borderColor = lifeTargetMet ? 'green' : 'red';
-    if (els.target) els.target.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
+    if (els.target) {
+      els.target.textContent = formatTerraformingTargetText(
+        getTerraformingSummaryText(
+          'lifeSummary.targetAbove',
+          'Life coverage above {percent}%.',
+          { percent: (effectiveTarget * 100).toFixed(0) }
+        )
+      );
+    }
 
     const zoneLines = zones.map(zone => {
       const pct = (getZonePercentage(zone) * 100).toFixed(1);
-      const label = zone.charAt(0).toUpperCase() + zone.slice(1);
-      return `- ${label}: ${pct}%`;
+      return getTerraformingSummaryText(
+        'lifeSummary.zoneDistribution',
+        '- {label}: {percent}%',
+        { label: getTerraformingZoneLabel(zone), percent: pct }
+      );
     });
-    const tooltipText = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n' + zoneLines.join('\n');
+    const tooltipText = `${getTerraformingSummaryText(
+      'lifeSummary.tooltipIntro',
+      'Life is the pinnacle of the terraforming process.'
+    )}\n${zoneLines.join('\n')}`;
     els.infoTooltip.textContent = tooltipText;
 
     const hazardByZone = {
@@ -1762,13 +1942,20 @@ function updateLifeBox() {
 
     if (els.hazardTarget) {
       if (hazardsCleared) {
-        els.hazardTarget.textContent = 'Hazardous biomass cleared in all zones.';
+        els.hazardTarget.textContent = getTerraformingSummaryText(
+          'lifeSummary.hazardsCleared',
+          'Hazardous biomass cleared in all zones.'
+        );
         els.hazardTarget.style.color = '';
       } else {
         const remainingZones = zones
           .filter(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) > hazardTolerance)
-          .map(zone => zone.charAt(0).toUpperCase() + zone.slice(1));
-        els.hazardTarget.textContent = `Remove hazardous biomass from: ${remainingZones.join(', ')}.`;
+          .map(zone => getTerraformingZoneLabel(zone));
+        els.hazardTarget.textContent = getTerraformingSummaryText(
+          'lifeSummary.removeHazards',
+          'Remove hazardous biomass from: {zones}.',
+          { zones: remainingZones.join(', ') }
+        );
         els.hazardTarget.style.color = 'red';
       }
     }
@@ -1814,7 +2001,15 @@ function updateLifeBox() {
     statuses.forEach((status) => {
       const line = document.createElement('p');
       line.classList.add('no-margin');
-      line.textContent = `${status.label}: ${status.passed ? '✓' : '✗'} ${status.targetText}`;
+      line.textContent = getTerraformingSummaryText(
+        'statusLine',
+        '{label}: {status} {targetText}',
+        {
+          label: status.label,
+          status: getTerraformingStatusIcon(status.passed),
+          targetText: status.targetText,
+        }
+      );
       if (!status.passed) {
         line.style.color = 'red';
       }
@@ -1829,33 +2024,43 @@ function updateLifeBox() {
     magnetosphereBox.id = 'magnetosphere-box';
     const magInfo = document.createElement('span');
     magInfo.classList.add('info-tooltip-icon');
-    const magTooltipText = [
-      "The magnetosphere is a planet's magnetic shield against harmful solar wind and cosmic radiation.",
-      "",
-      "Radiation calculation:",
-      "- Galactic cosmic rays: deep-space particles (~1.3 mSv/day on an airless world).",
-      "- Parent belts: trapped radiation from the host planet, falling off with distance.",
-      "- Solar energetic particles: averaged daily storm dose (usually 0).",
-      "",
-      "Each component is exponentially reduced by atmospheric column mass (D = D0 * e^(-column/L)). Orbital radiation uses no atmosphere, while surface radiation uses the current column mass.",
-      "",
-      "Protection: A strong magnetosphere prevents the solar wind from stripping away the planet's atmosphere over time and shields surface life from damaging radiation, making it a key terraforming objective."
-    ].join('\n');
+    const magTooltipText = getTerraformingSummaryText(
+      'magnetosphere.tooltip',
+      'The magnetosphere is a planet\'s magnetic shield against harmful solar wind and cosmic radiation.'
+    );
     const magTooltip = attachDynamicInfoTooltip(magInfo, magTooltipText);
 
-    const protectedText = 'The planet is sufficiently protected, providing a 50% boost to life growth';
-    const artificialSkyProtectedText = 'The planet is sufficiently protected by the Artificial Sky';
+    const protectedText = getTerraformingSummaryText(
+      'magnetosphere.protectedText',
+      'The planet is sufficiently protected, providing a 50% boost to life growth'
+    );
+    const artificialSkyProtectedText = getTerraformingSummaryText(
+      'magnetosphere.artificialSkyProtectedText',
+      'The planet is sufficiently protected by the Artificial Sky'
+    );
     const hasArtificialSkyShield = projectManager?.projects?.artificialSky?.isCompleted;
     const hasMagnetosphere = terraforming.celestialParameters.hasNaturalMagnetosphere
       || terraforming.isBooleanFlagSet('magneticShield')
       || hasArtificialSkyShield;
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
-      ? `Natural magnetosphere: ${protectedText}`
+      ? getTerraformingSummaryText(
+          'magnetosphere.statuses.naturalProtected',
+          'Natural magnetosphere: {text}',
+          { text: protectedText }
+        )
       : terraforming.isBooleanFlagSet('magneticShield')
-        ? `Artificial magnetosphere: ${protectedText}`
+        ? getTerraformingSummaryText(
+            'magnetosphere.statuses.artificialProtected',
+            'Artificial magnetosphere: {text}',
+            { text: protectedText }
+          )
         : hasArtificialSkyShield
-          ? `Artificial Sky shield: ${artificialSkyProtectedText}`
-        : 'No magnetosphere';
+          ? getTerraformingSummaryText(
+              'magnetosphere.statuses.artificialSkyProtected',
+              'Artificial Sky shield: {text}',
+              { text: artificialSkyProtectedText }
+            )
+        : getTerraformingSummaryText('magnetosphere.statuses.none', 'No magnetosphere');
 
       const orbRad = terraforming.orbitalRadiation || 0;
       const rad = terraforming.surfaceRadiation || 0;
@@ -1874,18 +2079,22 @@ function updateLifeBox() {
         : 1;
       const gravityPenaltyPercent = (gravityPenaltyMultiplier - 1) * 100;
       const gravityPenaltyText = gravityPenaltyMultiplier > 1
-        ? `+${formatNumber(gravityPenaltyPercent, false, 2)}% build cost`
+        ? getTerraformingSummaryText(
+            'magnetosphere.labels.gravityBuildCost',
+            '+{value}% build cost',
+            { value: formatNumber(gravityPenaltyPercent, false, 2) }
+          )
         : '';
 
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
-      <p>Magnetosphere: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
-        <p>Orbital radiation: <span id="orbital-radiation">${formatRadiation(orbRad)}</span> mSv/day</p>
-        <p>Surface radiation: <span id="surface-radiation">${formatRadiation(rad)}</span> mSv/day</p>
-        <p id="radiation-penalty-row">Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
-        <p>Gravity: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
-        <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>Equatorial gravity<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
-        <p id="gravity-penalty-row">Gravity penalty<span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
+      <p>${getTerraformingSummaryText('magnetosphere.labels.magnetosphere', 'Magnetosphere')}: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
+        <p>${getTerraformingSummaryText('magnetosphere.labels.orbitalRadiation', 'Orbital radiation')}: <span id="orbital-radiation">${formatRadiation(orbRad)}</span> mSv/day</p>
+        <p>${getTerraformingSummaryText('magnetosphere.labels.surfaceRadiation', 'Surface radiation')}: <span id="surface-radiation">${formatRadiation(rad)}</span> mSv/day</p>
+        <p id="radiation-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.radiationPenalty', 'Radiation penalty')}: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
+        <p>${getTerraformingSummaryText('magnetosphere.labels.gravity', 'Gravity')}: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
+        <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>${getTerraformingSummaryText('magnetosphere.labels.equatorialGravity', 'Equatorial gravity')}<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
+        <p id="gravity-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.gravityPenalty', 'Gravity penalty')}<span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
         <div id="others-extra-requirements"></div>
       `;
     if (!hasMagnetosphere && (radPenalty || 0) < 0.0001) {
@@ -1947,12 +2156,12 @@ function updateLifeBox() {
       || terraforming.isBooleanFlagSet('magneticShield')
       || hasArtificialSkyShield;
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
-      ? 'Natural magnetosphere'
+      ? getTerraformingSummaryText('magnetosphere.statuses.natural', 'Natural magnetosphere')
       : terraforming.isBooleanFlagSet('magneticShield')
-        ? 'Artificial magnetosphere'
+        ? getTerraformingSummaryText('magnetosphere.statuses.artificial', 'Artificial magnetosphere')
         : hasArtificialSkyShield
-          ? 'Artificial Sky shield'
-        : 'No magnetosphere';
+          ? getTerraformingSummaryText('magnetosphere.statuses.artificialSky', 'Artificial Sky shield')
+        : getTerraformingSummaryText('magnetosphere.statuses.none', 'No magnetosphere');
 
     if (magnetosphereStatus) {
       magnetosphereStatus.textContent = magnetosphereStatusText;
@@ -2005,7 +2214,11 @@ function updateLifeBox() {
       if (penaltyMultiplier > 1) {
         gravityPenaltyRow.style.display = '';
         const percent = (penaltyMultiplier - 1) * 100;
-        gravityPenaltyValue.textContent = `+${formatNumber(percent, false, 2)}% build cost`;
+        gravityPenaltyValue.textContent = getTerraformingSummaryText(
+          'magnetosphere.labels.gravityBuildCost',
+          '+{value}% build cost',
+          { value: formatNumber(percent, false, 2) }
+        );
       } else {
         gravityPenaltyRow.style.display = 'none';
         gravityPenaltyValue.textContent = '';
@@ -2027,24 +2240,29 @@ function updateLifeBox() {
       biomass: 0.20
     };
     return [
-      ['Surface', 'Albedo'],
-      ['Base rock', baseAlb.toFixed(2)],
-      ['Black dust', '0.05'],
-      ['Ocean', defaults.ocean.toFixed(2)],
-      ['Ice', defaults.ice.toFixed(2)],
-      ['Snow', defaults.snow.toFixed(2)],
-      ['Dry Ice', defaults.co2_ice.toFixed(2)],
-      ['Hydrocarbon', defaults.hydrocarbon.toFixed(2)],
-      ['Hydrocarbon Ice', defaults.hydrocarbonIce.toFixed(2)],
-      ['Biomass', defaults.biomass.toFixed(2)]
+      [
+        getTerraformingSummaryText('luminosity.albedoTable.surface', 'Surface'),
+        getTerraformingSummaryText('luminosity.albedoTable.albedo', 'Albedo')
+      ],
+      [getTerraformingSummaryText('luminosity.albedoTable.baseRock', 'Base rock'), baseAlb.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.blackDust', 'Black dust'), '0.05'],
+      [getTerraformingSummaryText('luminosity.albedoTable.ocean', 'Ocean'), defaults.ocean.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.ice', 'Ice'), defaults.ice.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.snow', 'Snow'), defaults.snow.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.dryIce', 'Dry Ice'), defaults.co2_ice.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbon', 'Hydrocarbon'), defaults.hydrocarbon.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbonIce', 'Hydrocarbon Ice'), defaults.hydrocarbonIce.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.biomass', 'Biomass'), defaults.biomass.toFixed(2)]
     ];
   }
 
   function getLuminosityTooltipText() {
     const table = buildAlbedoTable();
     const albLines = table.map(row => row.join(' | ')).join('\n');
-    return 'Luminosity measures the total solar energy (flux) reaching the planet\'s surface, which is the primary driver of its climate.\n\n- Solar Flux: The base energy is determined by the star\'s output and the planet\'s distance from it. This can be augmented by building orbital structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A portion of the incoming flux is reflected back into space. This is determined by the mix of surface types (rock, ocean, ice, biomass) and cloud cover. A lower albedo means more energy is absorbed.  The albedo of the ground is calculated first, and uses a mix of the planet base albedo and black dust.  Surface albedo is then calculated by adding the coverage from various surface resources. \n- Impact: The final modified solar flux directly determines the planet\'s temperature, the efficiency of solar panels, and the growth rate of photosynthetic life.\n- Minimum Flux: Flux by zone cannot go below 6 \u00B5W/m\u00B2.\n\n' +
-      'Albedo values:\n' + albLines;
+    return `${getTerraformingSummaryText(
+      'luminosity.tooltipIntro',
+      'Luminosity measures the total solar energy reaching the planet\'s surface, which is the primary driver of climate.\n\nAlbedo values:'
+    )}\n${albLines}`;
   }
 
   //Luminosity
@@ -2066,40 +2284,40 @@ function updateLifeBox() {
       <table>
         <thead>
           <tr>
-            <th>Parameter</th>
-            <th>Value</th>
-            <th>Delta</th>
+            <th>${getTerraformingSummaryText('luminosity.labels.parameter', 'Parameter')}</th>
+            <th>${getTerraformingSummaryText('luminosity.labels.value', 'Value')}</th>
+            <th>${getTerraformingSummaryText('luminosity.labels.delta', 'Delta')}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Ground Albedo <span id="ground-albedo-info" class="info-tooltip-icon">&#9432;<span id="ground-albedo-tooltip" class="resource-tooltip"></span></span></td>
+            <td>${getTerraformingSummaryText('luminosity.labels.groundAlbedo', 'Ground Albedo')} <span id="ground-albedo-info" class="info-tooltip-icon">&#9432;<span id="ground-albedo-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="ground-albedo">${(terraforming.luminosity.groundAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="ground-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Surface Albedo <span id="surface-albedo-info" class="info-tooltip-icon">&#9432;<span id="surface-albedo-tooltip" class="resource-tooltip"></span></span></td>
+            <td>${getTerraformingSummaryText('luminosity.labels.surfaceAlbedo', 'Surface Albedo')} <span id="surface-albedo-info" class="info-tooltip-icon">&#9432;<span id="surface-albedo-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Cloud &amp; Haze<span id="cloud-haze-info-placeholder"></span></td>
+            <td>${getTerraformingSummaryText('luminosity.labels.cloudHaze', 'Cloud & Haze')}<span id="cloud-haze-info-placeholder"></span></td>
             <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
             <td></td>
           </tr>
           <tr>
-            <td>Actual Albedo <span id="actual-albedo-info" class="info-tooltip-icon">&#9432;<span id="actual-albedo-tooltip" class="resource-tooltip"></span></span></td>
+            <td>${getTerraformingSummaryText('luminosity.labels.actualAlbedo', 'Actual Albedo')} <span id="actual-albedo-info" class="info-tooltip-icon">&#9432;<span id="actual-albedo-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="actual-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Surface Solar Flux (W/m²)</td>
+            <td>${getTerraformingSummaryText('luminosity.labels.surfaceSolarFlux', 'Surface Solar Flux (W/m²)')}</td>
             <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
         </tbody>
       </table>
-      <p>Solar panel multiplier: <span id="solar-panel-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
+      <p>${getTerraformingSummaryText('luminosity.labels.solarPanelMultiplier', 'Solar panel multiplier')}: <span id="solar-panel-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
     `;
     const luminosityHeading = luminosityBox.querySelector('h3');
     if (luminosityHeading) {
@@ -2112,7 +2330,16 @@ function updateLifeBox() {
     row.appendChild(luminosityBox);
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 1)} and ${formatNumber(terraforming.luminosity.targetMax, false, 1)}.`;
+    targetSpan.textContent = formatTerraformingTargetText(
+      getTerraformingSummaryText(
+        'luminosity.target',
+        'Surface solar flux between {min} and {max}.',
+        {
+          min: formatNumber(terraforming.luminosity.targetMin, false, 1),
+          max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+        }
+      )
+    );
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     luminosityBox.appendChild(targetSpan);
@@ -2166,7 +2393,16 @@ function updateLifeBox() {
     luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? 'green' : 'red';
 
     if (els.target) {
-      els.target.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 1)} and ${formatNumber(terraforming.luminosity.targetMax, false, 1)}.`;
+      els.target.textContent = formatTerraformingTargetText(
+        getTerraformingSummaryText(
+          'luminosity.target',
+          'Surface solar flux between {min} and {max}.',
+          {
+            min: formatNumber(terraforming.luminosity.targetMin, false, 1),
+            max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+          }
+        )
+      );
     }
 
     if (els.groundAlbedo) {
@@ -2199,16 +2435,16 @@ function updateLifeBox() {
       const blackAlbedo = dustFactorySettings.dustColorAlbedo;
       const whiteAlbedo = 0.8;
       const lines = [
-        `Base: ${base.toFixed(3)}`,
-        `Black dust albedo: ${blackAlbedo.toFixed(3)}`,
-        `Black dust color: ${dustFactorySettings.dustColor.toUpperCase()}`,
+        getTerraformingSummaryText('luminosity.groundTooltip.base', 'Base: {value}', { value: base.toFixed(3) }),
+        getTerraformingSummaryText('luminosity.groundTooltip.blackDustAlbedo', 'Black dust albedo: {value}', { value: blackAlbedo.toFixed(3) }),
+        getTerraformingSummaryText('luminosity.groundTooltip.blackDustColor', 'Black dust color: {value}', { value: dustFactorySettings.dustColor.toUpperCase() }),
       ];
       if (shareBlack > 0) {
-        lines.push(`Black dust coverage: ${(shareBlack * 100).toFixed(1)}%`);
+        lines.push(getTerraformingSummaryText('luminosity.groundTooltip.blackDustCoverage', 'Black dust coverage: {value}%', { value: (shareBlack * 100).toFixed(1) }));
       }
-      lines.push(`White dust albedo: ${whiteAlbedo.toFixed(3)}`);
+      lines.push(getTerraformingSummaryText('luminosity.groundTooltip.whiteDustAlbedo', 'White dust albedo: {value}', { value: whiteAlbedo.toFixed(3) }));
       if (shareWhite > 0) {
-        lines.push(`White dust coverage: ${(shareWhite * 100).toFixed(1)}%`);
+        lines.push(getTerraformingSummaryText('luminosity.groundTooltip.whiteDustCoverage', 'White dust coverage: {value}%', { value: (shareWhite * 100).toFixed(1) }));
       }
       setTooltipText(els.groundAlbedoTooltip, lines.join('\n'), els.tooltips, 'ground');
     }
@@ -2224,36 +2460,36 @@ function updateLifeBox() {
       els.surfaceAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 3)}`;
     }
     if (els.surfaceAlbedoTooltip) {
-      const lines = ['Surface composition by zone'];
+      const lines = [getTerraformingSummaryText('luminosity.surfaceTooltip.compositionByZone', 'Surface composition by zone')];
       const pct = v => (v * 100).toFixed(1);
       const isZeroPct = v => Math.abs(v * 100) < 0.05; // hide values that would display as 0.0%
 
       for (const z of getZones()) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
         const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.oxygen + fr.oxygenIce + fr.nitrogen + fr.nitrogenIce + fr.biomass), 0);
-        const name = z.charAt(0).toUpperCase() + z.slice(1);
-        lines.push(`${name}:`);
+        const name = getTerraformingZoneLabel(z);
+        lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.zoneHeader', '{name}:', { name }));
 
-        if (!isZeroPct(rock)) lines.push(`  Rock: ${pct(rock)}%`);
-        if (!isZeroPct(fr.ocean)) lines.push(`  Water: ${pct(fr.ocean)}%`);
-        if (!isZeroPct(fr.ice)) lines.push(`  Ice: ${pct(fr.ice)}%`);
-        if (!isZeroPct(fr.hydrocarbon)) lines.push(`  Hydrocarbons: ${pct(fr.hydrocarbon)}%`);
-        if (!isZeroPct(fr.hydrocarbonIce)) lines.push(`  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%`);
-        if (!isZeroPct(fr.co2_ice)) lines.push(`  Dry Ice: ${pct(fr.co2_ice)}%`);
-        if (!isZeroPct(fr.ammonia)) lines.push(`  Ammonia: ${pct(fr.ammonia)}%`);
-        if (!isZeroPct(fr.ammoniaIce)) lines.push(`  Ammonia Ice: ${pct(fr.ammoniaIce)}%`);
-        if (!isZeroPct(fr.oxygen)) lines.push(`  Oxygen: ${pct(fr.oxygen)}%`);
-        if (!isZeroPct(fr.oxygenIce)) lines.push(`  Oxygen Ice: ${pct(fr.oxygenIce)}%`);
-        if (!isZeroPct(fr.nitrogen)) lines.push(`  Nitrogen: ${pct(fr.nitrogen)}%`);
-        if (!isZeroPct(fr.nitrogenIce)) lines.push(`  Nitrogen Ice: ${pct(fr.nitrogenIce)}%`);
-        if (!isZeroPct(fr.biomass)) lines.push(`  Biomass: ${pct(fr.biomass)}%`);
+        if (!isZeroPct(rock)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('rock', 'Rock'), value: pct(rock) }));
+        if (!isZeroPct(fr.ocean)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('water', 'Water'), value: pct(fr.ocean) }));
+        if (!isZeroPct(fr.ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ice', 'Ice'), value: pct(fr.ice) }));
+        if (!isZeroPct(fr.hydrocarbon)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbon', 'Hydrocarbons'), value: pct(fr.hydrocarbon) }));
+        if (!isZeroPct(fr.hydrocarbonIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbonIce', 'Hydrocarbon Ice'), value: pct(fr.hydrocarbonIce) }));
+        if (!isZeroPct(fr.co2_ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('dryIce', 'Dry Ice'), value: pct(fr.co2_ice) }));
+        if (!isZeroPct(fr.ammonia)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ammonia', 'Ammonia'), value: pct(fr.ammonia) }));
+        if (!isZeroPct(fr.ammoniaIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ammoniaIce', 'Ammonia Ice'), value: pct(fr.ammoniaIce) }));
+        if (!isZeroPct(fr.oxygen)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('oxygen', 'Oxygen'), value: pct(fr.oxygen) }));
+        if (!isZeroPct(fr.oxygenIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('oxygenIce', 'Oxygen Ice'), value: pct(fr.oxygenIce) }));
+        if (!isZeroPct(fr.nitrogen)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('nitrogen', 'Nitrogen'), value: pct(fr.nitrogen) }));
+        if (!isZeroPct(fr.nitrogenIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('nitrogenIce', 'Nitrogen Ice'), value: pct(fr.nitrogenIce) }));
+        if (!isZeroPct(fr.biomass)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('biomass', 'Biomass'), value: pct(fr.biomass) }));
         lines.push('');
       }
 
       // Guidance text
-      lines.push('Liquids and ices split the available surface together, scaling proportionally if their total would overflow.');
-      lines.push('Biomass can then occupy up to 75% of the remaining area, limited by local biomass coverage.');
-      lines.push('Any unclaimed surface remains exposed rock or dust for albedo calculations.');
+      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.liquidsAndIces', 'Liquids and ices split the available surface together, scaling proportionally if their total would overflow.'));
+      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.biomassLimit', 'Biomass can then occupy up to 75% of the remaining area, limited by local biomass coverage.'));
+      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.unclaimedSurface', 'Any unclaimed surface remains exposed rock or dust for albedo calculations.'));
 
       // Append resulting surface albedo per zone
       const zoneAlbLines = [];
@@ -2262,14 +2498,13 @@ function updateLifeBox() {
           const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
             ? terraforming.calculateZonalSurfaceAlbedo(z)
             : terraforming.luminosity.surfaceAlbedo;
-          const name = z.charAt(0).toUpperCase() + z.slice(1);
-          zoneAlbLines.push(`${name}: ${zSurf.toFixed(3)}`);
+          zoneAlbLines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.zonalSurfaceAlbedoEntry', '{name}: {value}', { name: getTerraformingZoneLabel(z), value: zSurf.toFixed(3) }));
         } catch (_) {
           // Skip zone if calculation fails
         }
       }
       if (zoneAlbLines.length > 0) {
-        lines.push('', 'Zonal surface albedo:');
+        lines.push('', getTerraformingSummaryText('luminosity.surfaceTooltip.zonalSurfaceAlbedo', 'Zonal surface albedo:'));
         lines.push(...zoneAlbLines);
       }
 
@@ -2309,20 +2544,19 @@ function updateLifeBox() {
     if (els.solarFluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
       const isRingworld = currentPlanetParameters?.classification?.type === 'ring';
-      const lines = ['Average Solar Flux by zone'];
+      const lines = [getTerraformingSummaryText('luminosity.solarFluxTooltip.averageByZone', 'Average Solar Flux by zone')];
       getZones().forEach(zone => {
         const flux = isRingworld
           ? terraforming.luminosity.solarFlux * getZoneRatio(zone)
           : (z[zone] || 0) / 4;
-        const label = zone.charAt(0).toUpperCase() + zone.slice(1);
-        lines.push(`${label}: ${flux.toFixed(1)}`);
+        lines.push(getTerraformingSummaryText('luminosity.solarFluxTooltip.zoneFlux', '{label}: {value}', { label: getTerraformingZoneLabel(zone), value: flux.toFixed(1) }));
       });
       lines.push(
         '',
         isRingworld
-          ? 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.'
-          : 'Modified solar flux is 4× the average across all zones.',
-        'Surface Solar Flux is the solar energy that reaches the ground.  It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.'
+          ? getTerraformingSummaryText('luminosity.solarFluxTooltip.ringworldExplanation', 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.')
+          : getTerraformingSummaryText('luminosity.solarFluxTooltip.standardExplanation', 'Modified solar flux is 4× the average across all zones.'),
+        getTerraformingSummaryText('luminosity.solarFluxTooltip.surfaceFluxExplanation', 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.')
       );
       setTooltipText(els.solarFluxTooltip, lines.join('\n'), els.tooltips, 'solarFlux');
     }
@@ -2373,8 +2607,12 @@ function updateLifeBox() {
       const dCalc = typeof comps.dA_calcite === 'number' ? comps.dA_calcite : 0;
       const dCloud = typeof comps.dA_cloud === 'number' ? comps.dA_cloud : 0;
       const A_act = terraforming.luminosity.actualAlbedo;
-      const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(3)})` : '';
-      const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(3)})` : '';
+      const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6))
+        ? `\n${getTerraformingSummaryText('luminosity.actualTooltip.cappedAt', '(Capped at {value})', { value: maxCap.toFixed(3) })}`
+        : '';
+      const softCapNote = (typeof softCapThreshold === 'number')
+        ? `\n${getTerraformingSummaryText('luminosity.actualTooltip.softCap', '(Soft cap reduces additions above {value})', { value: softCapThreshold.toFixed(3) })}`
+        : '';
 
       const tauH = diags.tau_ch4_sw ?? 0;
       const tauC = diags.tau_calcite_sw ?? 0;
@@ -2385,14 +2623,14 @@ function updateLifeBox() {
       if (softCapNote) notes.push(softCapNote.slice(1));
 
       const parts = [];
-      parts.push('Actual albedo applies each layer to the remaining headroom: Surface → Clouds → Haze → Calcite');
+      parts.push(getTerraformingSummaryText('luminosity.actualTooltip.intro', 'Actual albedo applies each layer to the remaining headroom: Surface -> Clouds -> Haze -> Calcite'));
       parts.push('');
-      parts.push(`Surface (base): ${A_surf.toFixed(3)}`);
-      if (Math.abs(dCloud) >= eps) parts.push(`Clouds: ${(1 - A_surf) <= 0 ? '+0.000' : `+${dCloud.toFixed(3)}`}`);
+      parts.push(getTerraformingSummaryText('luminosity.actualTooltip.surfaceBase', 'Surface (base): {value}', { value: A_surf.toFixed(3) }));
+      if (Math.abs(dCloud) >= eps) parts.push(getTerraformingSummaryText('luminosity.actualTooltip.clouds', 'Clouds: {value}', { value: (1 - A_surf) <= 0 ? '+0.000' : `+${dCloud.toFixed(3)}` }));
       const afterClouds = A_surf + dCloud;
-      if (Math.abs(dHaze) >= eps) parts.push(`Haze (CH4): ${(1 - afterClouds) <= 0 ? '+0.000' : `+${dHaze.toFixed(3)}`}`);
+      if (Math.abs(dHaze) >= eps) parts.push(getTerraformingSummaryText('luminosity.actualTooltip.haze', 'Haze (CH4): {value}', { value: (1 - afterClouds) <= 0 ? '+0.000' : `+${dHaze.toFixed(3)}` }));
       const afterHaze = afterClouds + dHaze;
-      if (Math.abs(dCalc) >= eps) parts.push(`Calcite aerosol: ${(1 - afterHaze) <= 0 ? '+0.000' : `+${dCalc.toFixed(3)}`}`);
+      if (Math.abs(dCalc) >= eps) parts.push(getTerraformingSummaryText('luminosity.actualTooltip.calcite', 'Calcite aerosol: {value}', { value: (1 - afterHaze) <= 0 ? '+0.000' : `+${dCalc.toFixed(3)}` }));
       if (notes.length > 0) {
         parts.push('', ...notes);
       }
@@ -2405,22 +2643,21 @@ function updateLifeBox() {
             : surfAlb;
           const zRes = calculateActualAlbedoPhysics(zSurf, pressureBar, composition, gSurface, aerosolsSW) || {};
           const zAlb = typeof zRes.albedo === 'number' ? zRes.albedo : (A_act);
-          const name = z.charAt(0).toUpperCase() + z.slice(1);
-          zoneLines.push(`${name}: ${zAlb.toFixed(3)}`);
+          zoneLines.push(getTerraformingSummaryText('luminosity.actualTooltip.byZoneEntry', '{name}: {value}', { name: getTerraformingZoneLabel(z), value: zAlb.toFixed(3) }));
         } catch (err) {
           // Skip zone if calculation fails
         }
       }
       if (zoneLines.length > 0) {
-        parts.push('', 'By zone:');
+        parts.push('', getTerraformingSummaryText('luminosity.actualTooltip.byZone', 'By zone:'));
         parts.push(...zoneLines);
       }
 
       const diag = [];
-      if (Math.abs(tauH) >= eps) diag.push(`  CH4 haze tau: ${tauH.toFixed(3)}`);
-      if (Math.abs(tauC) >= eps) diag.push(`  Calcite tau: ${tauC.toFixed(3)}`);
+      if (Math.abs(tauH) >= eps) diag.push(getTerraformingSummaryText('luminosity.actualTooltip.methaneTau', '  CH4 haze tau: {value}', { value: tauH.toFixed(3) }));
+      if (Math.abs(tauC) >= eps) diag.push(getTerraformingSummaryText('luminosity.actualTooltip.calciteTau', '  Calcite tau: {value}', { value: tauC.toFixed(3) }));
       if (diag.length > 0) {
-        parts.push('', 'Shortwave optical depths (diagnostic)');
+        parts.push('', getTerraformingSummaryText('luminosity.actualTooltip.diagnosticHeader', 'Shortwave optical depths (diagnostic)'));
         parts.push(...diag);
       }
       setTooltipText(node, parts.join('\n'), els.tooltips, 'actual');
@@ -2434,7 +2671,10 @@ function updateLifeBox() {
     const doc = (container && container.ownerDocument) || document;
     const button = doc.createElement('button');
   button.id = 'complete-terraforming-button';
-  button.textContent = 'Complete Terraforming';
+  button.textContent = getTerraformingSummaryText(
+    'actions.completeTerraforming',
+    'Complete Terraforming'
+  );
   button.style.width = '100%';
   button.style.padding = '15px';
   button.style.marginTop = '20px';
@@ -2474,7 +2714,10 @@ function updateLifeBox() {
         updateCompleteTerraformingButton();
       }
       patienceManager.onTerraformingComplete();
-      button.textContent = 'ERROR : MTC not responding';
+      button.textContent = getTerraformingSummaryText(
+        'actions.errorMtcNotResponding',
+        'ERROR : MTC not responding'
+      );
     };
 }
 
@@ -2489,7 +2732,10 @@ function updateLifeBox() {
   if (isRingworld) {
       const ringProject = projectManager.projects.ringworldTerraforming;
       if (!ringProject.isCompleted) {
-          button.textContent = 'Spin Ringworld first';
+          button.textContent = getTerraformingSummaryText(
+            'actions.spinRingworldFirst',
+            'Spin Ringworld first'
+          );
           button.style.backgroundColor = 'red';
           button.style.cursor = 'not-allowed';
           button.disabled = true;
@@ -2502,7 +2748,10 @@ function updateLifeBox() {
     : true;
 
   if (!hazardsCleared) {
-      button.textContent = 'Remove all hazards first';
+      button.textContent = getTerraformingSummaryText(
+        'actions.removeAllHazardsFirst',
+        'Remove all hazards first'
+      );
       button.style.backgroundColor = 'red';
       button.style.cursor = 'not-allowed';
       button.disabled = true;
@@ -2515,7 +2764,10 @@ function updateLifeBox() {
     spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey()));
 
   if (planetTerraformed) {
-      button.textContent = 'ERROR : MTC not responding';
+      button.textContent = getTerraformingSummaryText(
+        'actions.errorMtcNotResponding',
+        'ERROR : MTC not responding'
+      );
       button.style.backgroundColor = 'gray';
       button.style.cursor = 'not-allowed';
       button.disabled = true;
@@ -2526,12 +2778,18 @@ function updateLifeBox() {
       button.style.backgroundColor = 'green';
       button.style.cursor = 'pointer';
       button.disabled = false; // Enable the button
-      button.textContent = 'Complete Terraforming';
+      button.textContent = getTerraformingSummaryText(
+        'actions.completeTerraforming',
+        'Complete Terraforming'
+      );
   } else {
       button.style.backgroundColor = 'red';
       button.style.cursor = 'not-allowed';
       button.disabled = true; // Disable the button
-      button.textContent = 'Complete Terraforming';
+      button.textContent = getTerraformingSummaryText(
+        'actions.completeTerraforming',
+        'Complete Terraforming'
+      );
   }
 }
 

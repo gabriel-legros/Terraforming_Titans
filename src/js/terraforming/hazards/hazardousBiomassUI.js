@@ -47,6 +47,33 @@ const hazardUICache = {
 const HAZARD_FALLBACK_ZONES = ['tropical', 'temperate', 'polar'];
 const CRUSADER_REMOVAL_FALLBACK = 1; // Keep in sync with HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER in hazard.js
 
+function getHazardousBiomassText(path, fallback, vars) {
+  return t(`ui.terraforming.hazardsUi.hazardousBiomass.${path}`, vars, fallback);
+}
+
+function getHazardousBiomassLabel(path, fallback, vars) {
+  return getHazardousBiomassText(`labels.${path}`, fallback, vars);
+}
+
+function getHazardousBiomassTooltip(path, fallback, vars) {
+  return getHazardousBiomassText(`tooltips.${path}`, fallback, vars);
+}
+
+function getHazardousBiomassZoneLabel(zone) {
+  return t(`ui.terraforming.summaryUi.zones.${zone}`, null, capitalize(zone));
+}
+
+function getHazardousBiomassPreferenceLabel(value) {
+  const normalized = `${value || ''}`.trim().toLowerCase();
+  if (!normalized) {
+    return getHazardousBiomassLabel('unknown', 'Unknown');
+  }
+  if (normalized === 'land') {
+    return t('resources.surface.land.name', null, capitalize(normalized));
+  }
+  return t(`resources.surface.${normalized}.name`, null, capitalize(normalized));
+}
+
 function getDocument() {
   if (hazardUICache.doc !== undefined) {
     return hazardUICache.doc;
@@ -181,7 +208,11 @@ function formatRange(entry) {
   const unit = entry.unit || '';
   const minText = minDefined ? formatValueWithUnit(entry.min, unit) : '—';
   const maxText = maxDefined ? formatValueWithUnit(entry.max, unit) : '—';
-  return `${minText} – ${maxText}`;
+  return getHazardousBiomassLabel('range', `Range ${minText}–${maxText}${unit ? ` ${unit}` : ''}`, {
+    min: minText,
+    max: maxText,
+    unit
+  }).trim();
 }
 
 function formatSeverityDetails(entry) {
@@ -192,15 +223,21 @@ function formatSeverityDetails(entry) {
   const details = [];
 
   if (Number.isFinite(entry.severityBelow)) {
-    details.push(`Severity Below ×${formatSeverityValue(entry.severityBelow)}`);
+    details.push(getHazardousBiomassLabel('severityBelow', `Severity Below ×${formatSeverityValue(entry.severityBelow)}`, {
+      value: formatSeverityValue(entry.severityBelow)
+    }));
   }
 
   if (Number.isFinite(entry.severityHigh)) {
-    details.push(`Severity Above ×${formatSeverityValue(entry.severityHigh)}`);
+    details.push(getHazardousBiomassLabel('severityAbove', `Severity Above ×${formatSeverityValue(entry.severityHigh)}`, {
+      value: formatSeverityValue(entry.severityHigh)
+    }));
   }
 
   if (!details.length && Number.isFinite(entry.severity)) {
-    details.push(`Severity ×${formatSeverityValue(entry.severity)}`);
+    details.push(getHazardousBiomassLabel('severity', `Severity ×${formatSeverityValue(entry.severity)}`, {
+      value: formatSeverityValue(entry.severity)
+    }));
   }
 
   return details.join('\n');
@@ -321,15 +358,15 @@ function ensureHeaderRow() {
 
   const factorHead = doc.createElement('div');
   factorHead.className = 'hazard-factor-cell hazard-factor-cell--label';
-  factorHead.textContent = 'Factor';
+  factorHead.textContent = getHazardousBiomassLabel('factor', 'Factor');
 
   const valueHead = doc.createElement('div');
   valueHead.className = 'hazard-factor-cell hazard-factor-cell--values';
-  valueHead.textContent = 'Current Values';
+  valueHead.textContent = getHazardousBiomassLabel('currentValues', 'Current Values');
 
   const penaltyHead = doc.createElement('div');
   penaltyHead.className = 'hazard-factor-cell hazard-factor-cell--penalty';
-  penaltyHead.textContent = 'Growth Penalty';
+  penaltyHead.textContent = getHazardousBiomassLabel('growthPenalty', 'Growth Penalty');
 
   headerRow.appendChild(factorHead);
   headerRow.appendChild(valueHead);
@@ -436,23 +473,25 @@ function formatCrusaderSummary(summary) {
   const removalText = formatNumeric(removalRate.total, 2);
 
   return [
-    `Crusaders Available: ${countText}`,
-    `Hazardous Biomass Removal: ${removalText} ton/s`
+    getHazardousBiomassLabel('crusadersAvailable', `Crusaders Available: ${countText}`, { value: countText }),
+    getHazardousBiomassLabel('removalRate', `Hazardous Biomass Removal: ${removalText} ton/s`, { value: removalText })
   ].join('\n');
 }
 
 function formatZoneSummary(zoneGrowth = []) {
   if (!zoneGrowth || zoneGrowth.length === 0) {
     return {
-      table: [
-        { zone: 'Zones stable', rate: '0 ton/s', percent: '0%/s' }
-      ],
-      text: 'Zones stable: 0 ton/s'
+      table: [{
+        zone: getHazardousBiomassLabel('zonesStable', 'Zones stable'),
+        rate: getHazardousBiomassLabel('zonesStableRate', '0 ton/s'),
+        percent: getHazardousBiomassLabel('zonesStablePercent', '0%/s')
+      }],
+      text: getHazardousBiomassLabel('zonesStableText', 'Zones stable: 0 ton/s')
     };
   }
 
   const rows = zoneGrowth.map((entry) => ({
-    zone: capitalize(entry.zone),
+    zone: getHazardousBiomassZoneLabel(entry.zone),
     rate: formatSignedValue(entry.growthPerSecond, 2, '/s'),
     percent: `${formatSignedPercentage(entry.percentPerSecond, 3)}/s`
   }));
@@ -579,7 +618,9 @@ function refreshCrusaderFocusSelect(zones = []) {
     optionKeys.forEach((key) => {
       const option = doc.createElement('option');
       option.value = key;
-      option.textContent = key === 'any' ? 'Any' : capitalize(key);
+      option.textContent = key === 'any'
+        ? getHazardousBiomassLabel('any', 'Any')
+        : getHazardousBiomassZoneLabel(key);
       select.appendChild(option);
     });
 
@@ -598,9 +639,15 @@ function computePenaltySummary(multipliers) {
   const populationDelta = multipliers.populationGrowth ? (multipliers.populationGrowth - 1) * 100 : 0;
 
   return [
-    `Build Cost: ${formatSignedPercentage(buildBoost, 1)}`,
-    `Maintenance: ${formatSignedPercentage(maintenanceBoost, 1)}`,
-    `Population Growth: ${formatSignedPercentage(populationDelta, 1)}`
+    getHazardousBiomassLabel('summaryBuildCost', `Build Cost: ${formatSignedPercentage(buildBoost, 1)}`, {
+      value: formatSignedPercentage(buildBoost, 1)
+    }),
+    getHazardousBiomassLabel('summaryMaintenance', `Maintenance: ${formatSignedPercentage(maintenanceBoost, 1)}`, {
+      value: formatSignedPercentage(maintenanceBoost, 1)
+    }),
+    getHazardousBiomassLabel('summaryPopulationGrowth', `Population Growth: ${formatSignedPercentage(populationDelta, 1)}`, {
+      value: formatSignedPercentage(populationDelta, 1)
+    })
   ].join('\n');
 }
 
@@ -646,8 +693,12 @@ function updateControlBar(controlShare, totals) {
   const safePercent = Math.max(0, (1 - controlShare) * 100);
   const hazardPercent = Math.max(0, controlShare * 100);
 
-  const safeLabel = `Secured Land ${formatNumeric(safePercent, 1)}%`;
-  const hazardLabel = `Hazardous Biomass ${formatNumeric(hazardPercent, 1)}%`;
+  const safeLabel = getHazardousBiomassLabel('securedLand', `Secured Land ${formatNumeric(safePercent, 1)}%`, {
+    value: formatNumeric(safePercent, 1)
+  });
+  const hazardLabel = getHazardousBiomassLabel('hazardousBiomass', `Hazardous Biomass ${formatNumeric(hazardPercent, 1)}%`, {
+    value: formatNumeric(hazardPercent, 1)
+  });
 
   if (safeLabel !== hazardUICache.barSafeLabel.textContent) {
     hazardUICache.barSafeLabel.textContent = safeLabel;
@@ -669,9 +720,16 @@ function updateControlBar(controlShare, totals) {
   const capacity = initialLand && maxDensity ? initialLand * maxDensity : 0;
 
   const detailText = [
-    `Hazardous Biomass: ${formatNumeric(biomass, 2)} ton`,
-    initialLand ? `Occupied Land: ${formatNumeric(reservedLand, 2)} / ${formatNumeric(initialLand, 2)} land` : '',
-    capacity ? `Carrying Capacity: ${formatNumeric(capacity, 2)} ton` : ''
+    getHazardousBiomassLabel('hazardousBiomassTons', `Hazardous Biomass: ${formatNumeric(biomass, 2)} ton`, {
+      value: formatNumeric(biomass, 2)
+    }),
+    initialLand ? getHazardousBiomassLabel('occupiedLand', `Occupied Land: ${formatNumeric(reservedLand, 2)} / ${formatNumeric(initialLand, 2)} land`, {
+      current: formatNumeric(reservedLand, 2),
+      initial: formatNumeric(initialLand, 2)
+    }) : '',
+    capacity ? getHazardousBiomassLabel('carryingCapacity', `Carrying Capacity: ${formatNumeric(capacity, 2)} ton`, {
+      value: formatNumeric(capacity, 2)
+    }) : ''
   ].filter(Boolean).join(' | ');
 
   if (detailText !== hazardUICache.barDetails.textContent) {
@@ -712,9 +770,10 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
     const rawPenalty = computePenalty(entry, converted);
     const displayValue = useDisplayConversion ? temperatureHelpers.converter(tempKelvin) : converted;
     const displayLabelUnit = useDisplayConversion ? displayUnit : unit;
+    const zoneLabel = getHazardousBiomassZoneLabel(zone);
     if (!rawPenalty) {
-      values.push(`${capitalize(zone)}: ${formatValueWithUnit(displayValue, displayLabelUnit, 2)}`);
-      penalties.push(`${capitalize(zone)}: 0%`);
+      values.push(`${zoneLabel}: ${formatValueWithUnit(displayValue, displayLabelUnit, 2)}`);
+      penalties.push(`${zoneLabel}: 0%`);
       return;
     }
 
@@ -722,8 +781,8 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
     const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
     const weightedPenalty = rawPenalty * normalizedWeight;
 
-    values.push(`${capitalize(zone)}: ${formatValueWithUnit(displayValue, displayLabelUnit, 2)}`);
-    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-rawPenalty, 3)}`);
+    values.push(`${zoneLabel}: ${formatValueWithUnit(displayValue, displayLabelUnit, 2)}`);
+    penalties.push(`${zoneLabel}: ${formatSignedPercentage(-rawPenalty, 3)}`);
     totalPenalty += weightedPenalty;
   });
 
@@ -739,7 +798,11 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
       const maxText = maxDefined && Number.isFinite(entry.max)
         ? formatValueWithUnit(temperatureHelpers.converter(entry.max), displayUnit, 2)
         : '—';
-      rangeText = `${minText} – ${maxText}`;
+      rangeText = getHazardousBiomassLabel('range', `Range ${minText}–${maxText} ${displayUnit}`, {
+        min: minText,
+        max: maxText,
+        unit: displayUnit
+      }).trim();
     }
   } else {
     rangeText = formatRange(entry);
@@ -754,7 +817,7 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
 
   return {
     key: 'temperaturePreference',
-    label: 'Temperature',
+    label: getHazardousBiomassLabel('temperature', 'Temperature'),
     info: infoParts.join('\n'),
     values,
     penalties,
@@ -810,8 +873,12 @@ function buildPressureFactor(hazard, manager, cache, fieldKey, label) {
     key: fieldKey,
     label,
     info: infoParts.join('\n'),
-    values: [`Current: ${formatValueWithUnit(converted, unit, 3)}`],
-    penalties: [`Penalty: ${formatSignedPercentage(-penalty, 3)}`],
+    values: [getHazardousBiomassLabel('current', `Current: ${formatValueWithUnit(converted, unit, 3)}`, {
+      value: formatValueWithUnit(converted, unit, 3)
+    })],
+    penalties: [getHazardousBiomassLabel('penalty', `Penalty: ${formatSignedPercentage(-penalty, 3)}`, {
+      value: formatSignedPercentage(-penalty, 3)
+    })],
     totalPenalty: penalty
   };
 }
@@ -834,7 +901,11 @@ function buildRadiationFactor(hazard, manager, terraformingState) {
   if (hasMin || hasMax) {
     const minText = hasMin ? formatNumeric(entry.min, 3) : '—';
     const maxText = hasMax ? formatNumeric(entry.max, 3) : '—';
-    infoParts.push(`Range ${minText}–${maxText} ${unit}`);
+    infoParts.push(getHazardousBiomassLabel('range', `Range ${minText}–${maxText} ${unit}`, {
+      min: minText,
+      max: maxText,
+      unit
+    }).trim());
   }
   const severityText = formatSeverityDetails(entry);
   if (severityText) {
@@ -847,10 +918,14 @@ function buildRadiationFactor(hazard, manager, terraformingState) {
 
   return {
     key: 'radiationPreference',
-    label: 'Radiation',
+    label: getHazardousBiomassLabel('radiation', 'Radiation'),
     info: infoParts.join('\n'),
-    values: [`Current: ${formatValueWithUnit(currentDose, unit, 3)}`],
-    penalties: [`Penalty: ${formatSignedPercentage(-penalty, 3)}`],
+    values: [getHazardousBiomassLabel('current', `Current: ${formatValueWithUnit(currentDose, unit, 3)}`, {
+      value: formatValueWithUnit(currentDose, unit, 3)
+    })],
+    penalties: [getHazardousBiomassLabel('penalty', `Penalty: ${formatSignedPercentage(-penalty, 3)}`, {
+      value: formatSignedPercentage(-penalty, 3)
+    })],
     totalPenalty: penalty
   };
 }
@@ -868,7 +943,7 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
 
   const preferenceRaw = entry.value ? `${entry.value}`.trim().toLowerCase() : '';
   const isLandPreference = preferenceRaw === 'land';
-  const preferenceLabel = preferenceRaw ? capitalize(preferenceRaw) : 'Unknown';
+  const preferenceLabel = getHazardousBiomassPreferenceLabel(preferenceRaw);
   const coverageCache = terraformingState.zonalCoverageCache;
   const zoneWeight = manager.getZoneWeight
     ? manager.getZoneWeight.bind(manager)
@@ -891,18 +966,22 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
     const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
     const weightedPenalty = zonePenalty * normalizedWeight;
 
-    values.push(`${capitalize(zone)}: ${formatPercentage(combined * 100, 2)}`);
-    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-zonePenalty, 3)}`);
+    const zoneLabel = getHazardousBiomassZoneLabel(zone);
+    values.push(`${zoneLabel}: ${formatPercentage(combined * 100, 2)}`);
+    penalties.push(`${zoneLabel}: ${formatSignedPercentage(-zonePenalty, 3)}`);
     totalPenalty += weightedPenalty;
   });
 
   return {
     key: 'landPreference',
-    label: `Preferred Terrain (${preferenceLabel})`,
-    info: `Preference ${preferenceLabel}\nSeverity ×${formatSeverityValue(severity)}`,
+    label: getHazardousBiomassLabel('preferredTerrain', `Preferred Terrain (${preferenceLabel})`, { value: preferenceLabel }),
+    info: [
+      getHazardousBiomassLabel('preference', `Preference ${preferenceLabel}`, { value: preferenceLabel }),
+      getHazardousBiomassLabel('severity', `Severity ×${formatSeverityValue(severity)}`, { value: formatSeverityValue(severity) })
+    ].join('\n'),
     tooltip: isLandPreference
-      ? 'Each zone adds (liquid water + liquid CO₂ + liquid methane coverage) × severity to the penalty. Zone penalties are averaged using zone surface share.'
-      : 'No growth penalty is currently applied for this preference.',
+      ? getHazardousBiomassTooltip('landPreference', 'Each zone adds (liquid water + liquid CO₂ + liquid methane coverage) × severity to the penalty. Zone penalties are averaged using zone surface share weighting.')
+      : getHazardousBiomassLabel('noGrowthPenalty', 'No growth penalty is currently applied for this preference.'),
     values,
     penalties,
     totalPenalty
@@ -936,16 +1015,22 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
   if (!difference) {
     return {
       key: 'invasivenessResistance',
-      label: 'Biomass Invasiveness',
-      tooltip: 'Zone growth uses life density × (current invasiveness − target) × severity. If invasiveness is below target, this provides a growth boost to hazardous biomass. Totals use zone surface share weighting.',
-      info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatSeverityValue(severity)}`,
-      values: [`Current Design: ${formatNumeric(currentInvasiveness, 2)}`],
-      penalties: [`Penalty: 0%`],
+      label: getHazardousBiomassLabel('biomassInvasiveness', 'Biomass Invasiveness'),
+      tooltip: getHazardousBiomassTooltip('invasiveness', 'Zone growth uses life density × (current invasiveness − target) × severity. If invasiveness is below target, this provides a growth boost to hazardous biomass. Totals use zone surface share weighting.'),
+      info: [
+        getHazardousBiomassLabel('target', `Target: ${formatNumeric(entry.value || 0, 2)}`, { value: formatNumeric(entry.value || 0, 2) }),
+        getHazardousBiomassLabel('severity', `Severity ×${formatSeverityValue(severity)}`, { value: formatSeverityValue(severity) })
+      ].join('\n'),
+      values: [getHazardousBiomassLabel('currentDesign', `Current Design: ${formatNumeric(currentInvasiveness, 2)}`, { value: formatNumeric(currentInvasiveness, 2) })],
+      penalties: [getHazardousBiomassLabel('penalty', 'Penalty: 0%', { value: '0%' })],
       totalPenalty: 0
     };
   }
 
-  const values = [`Current Design: ${formatNumeric(currentInvasiveness, 2)}`, `Target: ${formatNumeric(entry.value || 0, 2)}`];
+  const values = [
+    getHazardousBiomassLabel('currentDesign', `Current Design: ${formatNumeric(currentInvasiveness, 2)}`, { value: formatNumeric(currentInvasiveness, 2) }),
+    getHazardousBiomassLabel('target', `Target: ${formatNumeric(entry.value || 0, 2)}`, { value: formatNumeric(entry.value || 0, 2) })
+  ];
   const penalties = [];
   let totalPenalty = 0;
   const zoneCount = zones.length || 1;
@@ -954,22 +1039,25 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
     const density = densityCalculator(terraformingState, zone);
     const zonePenalty = density * difference * severity;
     if (!zonePenalty) {
-      penalties.push(`${capitalize(zone)}: 0%`);
+      penalties.push(`${getHazardousBiomassZoneLabel(zone)}: 0%`);
       return;
     }
 
     const weight = zoneWeight(zone, zoneCount);
     const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
     const weightedPenalty = zonePenalty * normalizedWeight;
-    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-zonePenalty, 3)}`);
+    penalties.push(`${getHazardousBiomassZoneLabel(zone)}: ${formatSignedPercentage(-zonePenalty, 3)}`);
     totalPenalty += weightedPenalty;
   });
 
   return {
     key: 'invasivenessResistance',
-    label: 'Biomass Invasiveness',
-    tooltip: 'Zone growth uses life density × (current invasiveness − target) × severity. If invasiveness is below target, this provides a growth boost to hazardous biomass. Totals use zone surface share weighting.',
-    info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatSeverityValue(severity)}`,
+    label: getHazardousBiomassLabel('biomassInvasiveness', 'Biomass Invasiveness'),
+    tooltip: getHazardousBiomassTooltip('invasiveness', 'Zone growth uses life density × (current invasiveness − target) × severity. If invasiveness is below target, this provides a growth boost to hazardous biomass. Totals use zone surface share weighting.'),
+    info: [
+      getHazardousBiomassLabel('target', `Target: ${formatNumeric(entry.value || 0, 2)}`, { value: formatNumeric(entry.value || 0, 2) }),
+      getHazardousBiomassLabel('severity', `Severity ×${formatSeverityValue(severity)}`, { value: formatSeverityValue(severity) })
+    ].join('\n'),
     values,
     penalties,
     totalPenalty
@@ -998,17 +1086,17 @@ function buildGrowthFactors(hazard, manager, terraformingState) {
 
   const cache = terraformingState ? terraformingState.atmosphericPressureCache : null;
   if (cache) {
-    const oxygenFactor = buildPressureFactor(hazard, manager, cache, 'oxygenPressure', 'Oxygen Pressure');
+    const oxygenFactor = buildPressureFactor(hazard, manager, cache, 'oxygenPressure', getHazardousBiomassLabel('oxygenPressure', 'Oxygen Pressure'));
     if (oxygenFactor) {
       factors.push(oxygenFactor);
     }
 
-    const co2Factor = buildPressureFactor(hazard, manager, cache, 'co2Pressure', 'CO₂ Pressure');
+    const co2Factor = buildPressureFactor(hazard, manager, cache, 'co2Pressure', getHazardousBiomassLabel('co2Pressure', 'CO₂ Pressure'));
     if (co2Factor) {
       factors.push(co2Factor);
     }
 
-    const atmoFactor = buildPressureFactor(hazard, manager, cache, 'atmosphericPressure', 'Atmospheric Pressure');
+    const atmoFactor = buildPressureFactor(hazard, manager, cache, 'atmosphericPressure', getHazardousBiomassLabel('atmosphericPressure', 'Atmospheric Pressure'));
     if (atmoFactor) {
       factors.push(atmoFactor);
     }
@@ -1106,7 +1194,7 @@ function ensureLayout() {
       hazardUICache.zoneGrowthTooltip = ensureAttachedInfoTooltip(
         hazardUICache.zoneGrowthInfoIcon,
         hazardUICache.zoneGrowthTooltip,
-        'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.'
+        getHazardousBiomassTooltip('zoneGrowth', 'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.')
       );
     }
     return;
@@ -1123,13 +1211,13 @@ function ensureLayout() {
 
   const title = doc.createElement('h3');
   title.className = 'hazard-card__title';
-  title.textContent = 'Hazardous Biomass';
+  title.textContent = getHazardousBiomassText('title', 'Hazardous Biomass');
   attachHazardCardCollapse(card, title);
   card.appendChild(title);
 
   const message = doc.createElement('p');
   message.className = 'hazard-card__message hidden';
-  message.textContent = 'No Hazards Detected';
+  message.textContent = getHazardousBiomassLabel('noHazardsDetected', 'No Hazards Detected');
   card.appendChild(message);
 
   const summaryRow = doc.createElement('div');
@@ -1139,7 +1227,7 @@ function ensureLayout() {
   summaryLeft.className = 'hazard-summary hazard-summary--left';
   const summaryLeftHeader = doc.createElement('div');
   summaryLeftHeader.className = 'hazard-summary__header';
-  summaryLeftHeader.textContent = 'Crusader Response';
+  summaryLeftHeader.textContent = getHazardousBiomassLabel('crusaderResponse', 'Crusader Response');
   const summaryLeftBody = doc.createElement('div');
   summaryLeftBody.className = 'hazard-summary__body';
   const crusaderSummaryText = doc.createElement('div');
@@ -1148,7 +1236,7 @@ function ensureLayout() {
   crusaderFocusControls.className = 'hazard-crusader-focus';
   const crusaderFocusLabel = doc.createElement('label');
   crusaderFocusLabel.className = 'hazard-crusader-focus__label';
-  crusaderFocusLabel.textContent = 'Focus Zone';
+  crusaderFocusLabel.textContent = getHazardousBiomassLabel('focusZone', 'Focus Zone');
   const crusaderFocusSelect = doc.createElement('select');
   crusaderFocusSelect.className = 'hazard-crusader-focus__select';
   crusaderFocusSelect.addEventListener('change', () => {
@@ -1168,7 +1256,7 @@ function ensureLayout() {
   summaryRight.className = 'hazard-summary hazard-summary--right';
   const summaryRightHeader = doc.createElement('div');
   summaryRightHeader.className = 'hazard-summary__header';
-  summaryRightHeader.textContent = 'Hazard Penalties';
+  summaryRightHeader.textContent = getHazardousBiomassLabel('hazardPenalties', 'Hazard Penalties');
   const summaryRightBody = doc.createElement('div');
   summaryRightBody.className = 'hazard-summary__body';
   summaryRight.appendChild(summaryRightHeader);
@@ -1179,10 +1267,10 @@ function ensureLayout() {
   const summaryCenterHeader = doc.createElement('div');
   summaryCenterHeader.className = 'hazard-summary__header';
   const summaryCenterHeaderLabel = doc.createElement('span');
-  summaryCenterHeaderLabel.textContent = 'Zone Growth';
+  summaryCenterHeaderLabel.textContent = getHazardousBiomassLabel('zoneGrowth', 'Zone Growth');
   summaryCenterHeader.appendChild(summaryCenterHeaderLabel);
   const zoneGrowthTooltip = createInfoIcon(
-    'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.'
+    getHazardousBiomassTooltip('zoneGrowth', 'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.')
   );
   summaryCenterHeader.appendChild(zoneGrowthTooltip);
   const summaryCenterBody = doc.createElement('div');
@@ -1197,15 +1285,15 @@ function ensureLayout() {
   const zoneHeadRow = doc.createElement('tr');
 
   const zoneHeadZone = doc.createElement('th');
-  zoneHeadZone.textContent = 'Zone';
+  zoneHeadZone.textContent = getHazardousBiomassLabel('zone', 'Zone');
 
   const zoneHeadGrowth = doc.createElement('th');
   zoneHeadGrowth.className = 'hazard-zone-table__head hazard-zone-table__head--value';
-  zoneHeadGrowth.textContent = 'Growth';
+  zoneHeadGrowth.textContent = getHazardousBiomassLabel('growth', 'Growth');
 
   const zoneHeadPercent = doc.createElement('th');
   zoneHeadPercent.className = 'hazard-zone-table__head hazard-zone-table__head--value';
-  zoneHeadPercent.textContent = 'Δ%/s';
+  zoneHeadPercent.textContent = getHazardousBiomassLabel('growthDelta', 'Δ%/s');
 
   zoneHeadRow.appendChild(zoneHeadZone);
   zoneHeadRow.appendChild(zoneHeadGrowth);
@@ -1263,7 +1351,7 @@ function ensureLayout() {
 
   const factorsHeaderLabel = doc.createElement('span');
   factorsHeaderLabel.className = 'hazard-factors__title';
-  factorsHeaderLabel.textContent = 'Growth Modifiers';
+  factorsHeaderLabel.textContent = getHazardousBiomassLabel('growthModifiers', 'Growth Modifiers');
   factorsHeader.appendChild(factorsHeaderLabel);
 
   const factorSummaryList = doc.createElement('div');
@@ -1273,7 +1361,7 @@ function ensureLayout() {
   baseSummary.className = 'hazard-factor-summary';
   const baseSummaryLabel = doc.createElement('span');
   baseSummaryLabel.className = 'hazard-factor-summary__label';
-  baseSummaryLabel.textContent = 'Base Growth';
+  baseSummaryLabel.textContent = getHazardousBiomassLabel('baseGrowth', 'Base Growth');
   const baseSummaryValue = doc.createElement('span');
   baseSummaryValue.className = 'hazard-factor-summary__value';
   baseSummary.appendChild(baseSummaryLabel);
@@ -1283,7 +1371,7 @@ function ensureLayout() {
   penaltySummary.className = 'hazard-factor-summary';
   const penaltySummaryLabel = doc.createElement('span');
   penaltySummaryLabel.className = 'hazard-factor-summary__label';
-  penaltySummaryLabel.textContent = 'Total Average Penalty';
+  penaltySummaryLabel.textContent = getHazardousBiomassLabel('totalAveragePenalty', 'Total Average Penalty');
   const penaltySummaryValue = doc.createElement('span');
   penaltySummaryValue.className = 'hazard-factor-summary__value';
   penaltySummary.appendChild(penaltySummaryLabel);
@@ -1465,9 +1553,16 @@ function updateHazardousBiomassUI(parameters = {}) {
   } else {
     const detailText = hazardUICache.barDetails.textContent;
     const newDetailText = [
-      `Hazardous Biomass: ${formatNumeric(totals.biomass, 2)} ton`,
-      totals.initialLand ? `Occupied Land: ${formatNumeric(totals.reservedLand, 2)} / ${formatNumeric(totals.initialLand, 2)} land` : '',
-      totals.initialLand && totals.maxDensity ? `Carrying Capacity: ${formatNumeric(totals.initialLand * totals.maxDensity, 2)} ton` : ''
+      getHazardousBiomassLabel('hazardousBiomassTons', `Hazardous Biomass: ${formatNumeric(totals.biomass, 2)} ton`, {
+        value: formatNumeric(totals.biomass, 2)
+      }),
+      totals.initialLand ? getHazardousBiomassLabel('occupiedLand', `Occupied Land: ${formatNumeric(totals.reservedLand, 2)} / ${formatNumeric(totals.initialLand, 2)} land`, {
+        current: formatNumeric(totals.reservedLand, 2),
+        initial: formatNumeric(totals.initialLand, 2)
+      }) : '',
+      totals.initialLand && totals.maxDensity ? getHazardousBiomassLabel('carryingCapacity', `Carrying Capacity: ${formatNumeric(totals.initialLand * totals.maxDensity, 2)} ton`, {
+        value: formatNumeric(totals.initialLand * totals.maxDensity, 2)
+      }) : ''
     ].filter(Boolean).join(' | ');
     if (detailText !== newDetailText) {
       updateControlBar(controlShare, totals);
