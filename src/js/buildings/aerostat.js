@@ -35,7 +35,7 @@ const AEROSTAT_LAND_LIMIT_TOOLTIP =
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
   getAerostatText(
     'ui.buildings.aerostat.temperatureTooltipIntro',
-    'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity. Eligible worker requirement is summed from active buildings using active buildings x worker need x effective worker multiplier. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.'
+    'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their total housing capacity. Eligible worker requirement is summed from active buildings using active buildings x worker need x effective worker multiplier. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.'
   );
 const AEROSTAT_TOTAL_CAPACITY = 10;
 const AEROSTAT_ANDROID_SPACE_TOOLTIP =
@@ -872,8 +872,7 @@ function getAerostatMaintenanceMitigation(context = {}) {
     return result;
   }
 
-  const aerostatCapacity =
-    aerostat.getStorageContribution?.('colony', 'colonists') ?? 0;
+  const aerostatCapacity = activeAerostats * AEROSTAT_TOTAL_CAPACITY;
   result.aerostatCapacity = aerostatCapacity;
   if (aerostatCapacity <= 0) {
     result.workerShare = 0;
@@ -1365,7 +1364,7 @@ function updateAerostatBuoyancySection(structure) {
         )}`;
         mitigationTitle += `\n${getAerostatText(
           'ui.buildings.aerostat.aerostatColonistCapacity',
-          'Aerostat colonist capacity: {value}.',
+          'Aerostat housing capacity: {value}.',
           { value: formatNumber(aerostatCapacity, false, 2) }
         )}`;
         mitigationTitle += `\n${getAerostatText(
@@ -1377,7 +1376,7 @@ function updateAerostatBuoyancySection(structure) {
           mitigationShare < 1
             ? `\n${getAerostatText(
                 'ui.buildings.aerostat.mitigationLimited',
-                'Mitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
+                'Mitigation is limited by available aerostat housing capacity compared to staffed worker requirements.'
               )}`
             : `\n${getAerostatText(
                 'ui.buildings.aerostat.mitigationMaxed',
