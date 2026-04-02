@@ -1833,7 +1833,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       let showDefaultTime = true;
       const unstableTimer = resourceUICache.unstableTimers[resourceKey] || 0;
       const rateUnstable = unstableTimer > 0;
-      const liquidTarget = terraforming.liquidCoverageTargets.find((entry) => entry.coverageKey === resource.name);
+      const liquidTarget = resource.category === 'surface'
+        ? terraforming.liquidCoverageTargets.find((entry) => entry.coverageKey === resource.name)
+        : null;
       if (liquidTarget) {
         const targetAmount = getLiquidCoverageTargetAmount(terraforming, liquidTarget.coverageTarget);
         const label = resource.displayName || resource.name;
