@@ -191,6 +191,7 @@ const classDescriptions = {
   'Social Scientist': 'Diplomatic specialist handling social science challenges, reducing conflict, and contributing 1.5x Wit to team Wits challenges.'
 };
 let activeDialog = null;
+let activeDialogKeydownHandler = null;
 
 function escapeWGCLogHTML(value) {
   if (value === null || value === undefined) return '';
@@ -612,6 +613,10 @@ function populateFacilityMenu() {
 
 function closeRecruitDialog() {
   if (!activeDialog) return;
+  if (activeDialogKeydownHandler) {
+    document.removeEventListener('keydown', activeDialogKeydownHandler);
+    activeDialogKeydownHandler = null;
+  }
   const editingMember = activeDialog._member;
   if (editingMember) {
     if (activeDialog._restoreStats && activeDialog._originalStats) {
@@ -985,6 +990,12 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   overlay.appendChild(win);
   overlay.addEventListener('click', e => { if (e.target === overlay) closeRecruitDialog(); });
   document.body.appendChild(overlay);
+  activeDialogKeydownHandler = e => {
+    if (e.key !== 'Escape' || activeDialog !== overlay) return;
+    e.preventDefault();
+    closeRecruitDialog();
+  };
+  document.addEventListener('keydown', activeDialogKeydownHandler);
   activeDialog = overlay;
   activeDialog._member = member;
   activeDialog._levelEl = level;
