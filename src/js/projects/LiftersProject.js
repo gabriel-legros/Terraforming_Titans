@@ -995,7 +995,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     let totalStored = 0;
     this.getRecipeOutputs(recipe).forEach(({ resourceKey, multiplier }) => {
       const amount = units * multiplier;
-      producedRatesByResource[resourceKey] = seconds > 0 ? amount / seconds : 0;
+      const producedRate = seconds > 0 ? amount / seconds : 0;
+      producedRatesByResource[resourceKey] = producedRate;
       const stored = this.storeHarvestedResourceForTick(
         storage,
         resourceKey,
@@ -1005,10 +1006,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       storedByResource[resourceKey] = stored;
       totalStored += stored;
 
-      if (stored > 0) {
-        const rate = seconds > 0 ? stored / seconds : 0;
+      if (producedRate > 0) {
         resources?.spaceStorage?.[resourceKey]?.modifyRate?.(
-          rate,
+          producedRate,
           'Lifting',
           'project'
         );
