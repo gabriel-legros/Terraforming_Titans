@@ -114,6 +114,13 @@ function getLandReservationSourceLabel(source) {
   if (source === 'hazardousBiomass') {
     return 'Hazardous Biomass';
   }
+  if (source === 'hazardousMachinery') {
+    try {
+      return t('resources.surface.hazardousMachinery.name', null, 'Hazardous Machinery');
+    } catch (error) {
+      return 'Hazardous Machinery';
+    }
+  }
   if (source === 'pulsar') {
     return 'Pulsar';
   }
@@ -145,7 +152,7 @@ class LandReservationReconciler {
       ...this.shares,
       ...(extraShares || {})
     };
-    const orderedSources = ['hazardousBiomass', 'pulsar', 'coreHeatFlux'];
+    const orderedSources = ['hazardousBiomass', 'hazardousMachinery', 'pulsar', 'coreHeatFlux'];
 
     orderedSources.forEach((source) => {
       const share = normalizeLandReservationShare(mergedShares[source]);
@@ -194,6 +201,7 @@ class LandReservationReconciler {
 
     landResource.setReservedAmountForSource('hazards', reservedLand);
     landResource.setReservedAmountForSource('hazardousBiomass', 0);
+    landResource.setReservedAmountForSource('hazardousMachinery', 0);
     landResource.worldEffectReservationSource = dominantSource;
     landResource.worldEffectReservationLabel = reservedLand > 0
       ? getLandReservationSourceLabel(dominantSource)

@@ -934,7 +934,9 @@ class Terraforming extends EffectableEntity{
       this.updateSurfaceTemperature(deltaTime, options);
 
       this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
+    }
 
+    runHazardUpdate(deltaTime = 0, options = {}) {
       if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
         hazardManager.update(deltaTime, this);
       }
@@ -1122,6 +1124,7 @@ class Terraforming extends EffectableEntity{
             }
         }
 
+        this.runHazardUpdate(deltaTime, options);
         this.finalizeUpdate(options);
 
         for (const combined of combinedCycleTotals) {
@@ -1883,6 +1886,7 @@ class Terraforming extends EffectableEntity{
 
       if (durations.length === 0) {
         this.runUpdateStep(0, options);
+        this.runHazardUpdate(0, options);
         this.finalizeUpdate(options);
         return;
       }
@@ -1891,6 +1895,7 @@ class Terraforming extends EffectableEntity{
         this.runUpdateStep(stepDuration, options);
       }
 
+      this.runHazardUpdate(deltaTime, options);
       this.finalizeUpdate(options);
     } // <-- Correct closing brace for the 'update' method
 

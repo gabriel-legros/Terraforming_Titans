@@ -224,6 +224,13 @@ class SpaceStorageProject extends SpaceshipProject {
     return 'Space storage expansion';
   }
 
+  getHazardousMachineryWorkerLoadActive() {
+    const hasShips = this.getActiveShipCount() > 0;
+    const expansionActive = this.isActive && !this.isCompleted && !this.isPaused && hasShips;
+    const transferActive = this.shipOperationIsActive && !this.shipOperationIsPaused && hasShips;
+    return expansionActive || transferActive;
+  }
+
   getSpaceStorageResource(resourceKey) {
     return resources?.spaceStorage?.[resourceKey] || null;
   }
@@ -942,13 +949,15 @@ class SpaceStorageProject extends SpaceshipProject {
 
   updateShipOperation(deltaTime) {
     if (!this.shipOperationIsActive || this.shipOperationIsPaused) return;
+    const workerRatio = this.getHazardousMachineryWorkerAvailabilityRatio();
+    const effectiveDeltaTime = deltaTime * workerRatio;
     if (this.shipOperationAutoStart) {
       const durationSeconds = this.shipOperationStartingDuration / 1000;
       if (durationSeconds > 0) {
         this.applyShipOperationRateTooltip(durationSeconds, true);
       }
     }
-    const activeTime = Math.min(deltaTime, this.shipOperationRemainingTime);
+    const activeTime = Math.min(effectiveDeltaTime, this.shipOperationRemainingTime);
     if (this.shipOperationKesslerPending) {
       this.shipOperationKesslerElapsed += activeTime;
       if (this.shipOperationKesslerElapsed >= 1000 || this.shipOperationRemainingTime <= activeTime) {
@@ -960,7 +969,7 @@ class SpaceStorageProject extends SpaceshipProject {
         this.shipOperationKesslerCost = null;
       }
     }
-    this.shipOperationRemainingTime -= deltaTime;
+    this.shipOperationRemainingTime -= effectiveDeltaTime;
     if (this.shipOperationRemainingTime <= 0) {
       this.completeShipOperation();
     }
@@ -968,6 +977,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
+    const effectiveProductivity = productivity * this.getHazardousMachineryWorkerAvailabilityRatio();
 
     const tick = this.getContinuousExpansionTickState(deltaTime);
     if (!tick.duration || tick.duration === Infinity) {
@@ -979,7 +989,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
 
     const result = this.applyRequestedExpansionProgress(
-      tick.requestedProgress,
+      tick.requestedProgress * effectiveProductivity,
       this.getScaledCost(),
       accumulatedChanges,
       {
@@ -1001,7 +1011,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerElapsed = 0;
     this.shipOperationKesslerCost = null;
     const duration = this.getShipOperationDuration();
-    const fraction = deltaTime / duration;
+    const fraction = (deltaTime / duration) * this.getHazardousMachineryWorkerAvailabilityRatio();
     const seconds = deltaTime / 1000;
     const successChance = this.getKesslerSuccessChance();
     const failureChance = 1 - successChance;
@@ -1141,9 +1151,11 @@ class SpaceStorageProject extends SpaceshipProject {
 
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
+    const workerRatio = this.getHazardousMachineryWorkerAvailabilityRatio();
+    const effectiveProductivity = productivity * workerRatio;
     if (this.isActive) {
       const duration = this.getEffectiveDuration();
-      const fraction = deltaTime / duration;
+      const fraction = (deltaTime / duration) * workerRatio;
       const cost = this.getScaledCost();
       const storageState = this.createExpansionStorageState(accumulatedChanges);
       const effectiveFraction = this.isContinuous()
@@ -1170,7 +1182,7 @@ class SpaceStorageProject extends SpaceshipProject {
         for (const category in perSecondCost) {
           if (!totals.cost[category]) totals.cost[category] = {};
           for (const resource in perSecondCost[category]) {
-            const rateValue = perSecondCost[category][resource] * (applyRates ? productivity : 1);
+            const rateValue = perSecondCost[category][resource] * (applyRates ? effectiveProductivity : 1);
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
@@ -1179,18 +1191,18 @@ class SpaceStorageProject extends SpaceshipProject {
               );
             }
             totals.cost[category][resource] =
-              (totals.cost[category][resource] || 0) + perSecondCost[category][resource] * deltaTime / 1000;
+              (totals.cost[category][resource] || 0) + perSecondCost[category][resource] * deltaTime * effectiveProductivity / 1000;
           }
         }
       } else {
         const duration = this.shipOperationStartingDuration || this.getShipOperationDuration();
         const rate = 1000 / duration;
-        const fraction = deltaTime / duration;
+        const fraction = (deltaTime / duration) * workerRatio;
         const cost = this.calculateSpaceshipTotalCost();
         for (const category in cost) {
           if (!totals.cost[category]) totals.cost[category] = {};
           for (const resource in cost[category]) {
-            const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
+            const rateValue = cost[category][resource] * rate * (applyRates ? effectiveProductivity : 1);
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,

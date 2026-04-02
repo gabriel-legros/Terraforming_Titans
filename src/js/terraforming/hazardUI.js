@@ -10,6 +10,17 @@ function initializeHazardUI() {
     initializeHazardous();
   }
 
+  let initializeHazardousMachinery = null;
+  try {
+    initializeHazardousMachinery = initializeHazardousMachineryUI;
+  } catch (error) {
+    initializeHazardousMachinery = null;
+  }
+
+  if (initializeHazardousMachinery && initializeHazardousMachinery.call) {
+    initializeHazardousMachinery();
+  }
+
   let initializeGarbage = null;
   try {
     initializeGarbage = initializeGarbageHazardUI;
@@ -76,6 +87,17 @@ function updateHazardUI(parameters = {}) {
 
   if (updatePulsar && updatePulsar.call) {
     updatePulsar(parameters.pulsar);
+  }
+
+  let updateHazardousMachinery = null;
+  try {
+    updateHazardousMachinery = updateHazardousMachineryUI;
+  } catch (error) {
+    updateHazardousMachinery = null;
+  }
+
+  if (updateHazardousMachinery && updateHazardousMachinery.call) {
+    updateHazardousMachinery(parameters.hazardousMachinery);
   }
 
   let updateHazardous = null;

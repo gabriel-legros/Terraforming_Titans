@@ -79,6 +79,10 @@
   color: #d7e4ff;
 }
 
+.hazard-summary__text-block {
+  margin-bottom: 12px;
+}
+
 .hazard-crusader-summary {
   margin: 0;
   white-space: inherit;
@@ -246,6 +250,50 @@
 
 .hazard-effects__item {
   list-style: disc;
+}
+
+.hazard-machinery-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.hazard-machinery-controls__button {
+  background: linear-gradient(135deg, rgba(54, 98, 173, 0.95), rgba(24, 45, 84, 0.95));
+  color: #f4f8ff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.28);
+}
+
+.hazard-machinery-controls__button:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+}
+
+.hazard-machinery-hacking {
+  flex: 0 0 auto;
+  width: 100%;
+  align-self: stretch;
+}
+
+.hazard-machinery-hacking__text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hazard-machinery-hacking__cost {
+  color: #c5ddff;
+  font-weight: 600;
+}
+
+.hazard-machinery-hacking__cost--insufficient {
+  color: #ff7d7d;
 }
 
 .hazard-debris-sources {
@@ -530,6 +578,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.hazard-machinery-status-factors {
+  margin-bottom: 12px;
 }
 
 .hazard-factor-row {

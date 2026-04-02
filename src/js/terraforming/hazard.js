@@ -1,6 +1,7 @@
 let hazardManager = null;
 
 let HazardousBiomassHazardCtor = null;
+let HazardousMachineryHazardCtor = null;
 let GarbageHazardCtor = null;
 let KesslerHazardCtor = null;
 let PulsarHazardCtor = null;
@@ -34,6 +35,16 @@ try {
     HazardousBiomassHazardCtor = HazardousBiomassHazard;
   } catch (innerError) {
     HazardousBiomassHazardCtor = null;
+  }
+}
+
+try {
+  ({ HazardousMachineryHazard: HazardousMachineryHazardCtor } = require('./hazards/hazardousMachineryHazard.js'));
+} catch (error) {
+  try {
+    HazardousMachineryHazardCtor = HazardousMachineryHazard;
+  } catch (innerError) {
+    HazardousMachineryHazardCtor = null;
   }
 }
 
@@ -162,10 +173,12 @@ class HazardManager {
       maintenance: false,
       population: false,
       garbage: false,
+      machinery: false,
     };
     this.crusaderTargetZone = 'any';
     this.hazardLandReservationShares = {
       hazardousBiomass: 0,
+      hazardousMachinery: 0,
       pulsar: 0
     };
     this.landReservationReconciler = LandReservationReconcilerCtor
@@ -173,6 +186,7 @@ class HazardManager {
       : null;
 
     this.hazardousBiomassHazard = HazardousBiomassHazardCtor ? new HazardousBiomassHazardCtor(this) : null;
+    this.hazardousMachineryHazard = HazardousMachineryHazardCtor ? new HazardousMachineryHazardCtor(this) : null;
     this.garbageHazard = GarbageHazardCtor ? new GarbageHazardCtor(this) : null;
     KesslerHazardCtor = resolveKesslerCtor(KesslerHazardCtor);
     this.kesslerHazard = KesslerHazardCtor ? new KesslerHazardCtor(this) : null;
@@ -200,6 +214,7 @@ class HazardManager {
       this.updateHazardousBiomassControl(0, true);
     }
     this.setHazardLandReservationShare('hazardousBiomass', 0);
+    this.setHazardLandReservationShare('hazardousMachinery', 0);
     this.setHazardLandReservationShare('pulsar', 0);
     this.updateUI();
   }
@@ -212,6 +227,11 @@ class HazardManager {
     Object.keys(cloned).forEach((key) => {
       if (key === 'hazardousBiomass' && this.hazardousBiomassHazard) {
         normalized.hazardousBiomass = this.hazardousBiomassHazard.normalize(cloned.hazardousBiomass);
+        return;
+      }
+
+      if (key === 'hazardousMachinery' && this.hazardousMachineryHazard) {
+        normalized.hazardousMachinery = this.hazardousMachineryHazard.normalize(cloned.hazardousMachinery);
         return;
       }
 
@@ -239,30 +259,49 @@ class HazardManager {
     this.parameters = normalized;
     this.lastSerializedParameters = serialized;
     this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
+    const hazardousBiomass = this.hasHazardParameters('hazardousBiomass') ? this.parameters.hazardousBiomass : null;
+    const hazardousMachinery = this.hasHazardParameters('hazardousMachinery') ? this.parameters.hazardousMachinery : null;
+    const garbage = this.hasHazardParameters('garbage') ? this.parameters.garbage : null;
+    const kessler = this.hasHazardParameters('kessler') ? this.parameters.kessler : null;
+    const pulsar = this.hasHazardParameters('pulsar') ? this.parameters.pulsar : null;
+
     if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.syncPendingTravelTuning) {
-      this.hazardousBiomassHazard.syncPendingTravelTuning(this.parameters.hazardousBiomass, options);
+      this.hazardousBiomassHazard.syncPendingTravelTuning(hazardousBiomass, options);
     }
 
     const activeTerraforming = getTerraforming();
     if (this.hazardousBiomassHazard) {
-      this.hazardousBiomassHazard.updateHazardousLandReservation(activeTerraforming, this.parameters.hazardousBiomass);
+      this.hazardousBiomassHazard.updateHazardousLandReservation(activeTerraforming, hazardousBiomass);
     }
 
-    if (this.garbageHazard) {
-      this.garbageHazard.initializeResources(activeTerraforming, this.parameters.garbage, options);
+    if (this.hazardousMachineryHazard && hazardousMachinery) {
+      this.hazardousMachineryHazard.initialize(activeTerraforming, hazardousMachinery, options);
+    } else {
+      this.setHazardLandReservationShare('hazardousMachinery', 0);
     }
 
-    if (this.kesslerHazard && this.parameters.kessler) {
-      this.kesslerHazard.initializeResources(activeTerraforming, this.parameters.kessler, options);
+    if (this.garbageHazard && garbage) {
+      this.garbageHazard.initializeResources(activeTerraforming, garbage, options);
+    } else if (this.garbageHazard) {
+      this.garbageHazard.androidAttritionRates = {};
     }
 
-    if (this.pulsarHazard) {
-      this.pulsarHazard.initialize(activeTerraforming, this.parameters.pulsar, options);
+    if (this.kesslerHazard && kessler) {
+      this.kesslerHazard.initializeResources(activeTerraforming, kessler, options);
+    }
+
+    if (this.pulsarHazard && pulsar) {
+      this.pulsarHazard.initialize(activeTerraforming, pulsar, options);
+      if (activeTerraforming && activeTerraforming.updateSurfaceRadiation) {
+        activeTerraforming.updateSurfaceRadiation();
+      }
+    } else if (this.pulsarHazard) {
+      this.pulsarHazard.clearEffectsOnTravel(activeTerraforming);
       if (activeTerraforming && activeTerraforming.updateSurfaceRadiation) {
         activeTerraforming.updateSurfaceRadiation();
       }
     }
-    if (this.parameters.pulsar) {
+    if (pulsar) {
       addEffect({
         target: 'project',
         targetId: 'artificialSky',
@@ -318,6 +357,13 @@ class HazardManager {
     }
   }
 
+  hasHazardParameters(key) {
+    if (!key || !this.parameters) {
+      return false;
+    }
+    return !!this.parameters[key];
+  }
+
   getCrusaderTargetZone() {
     return this.crusaderTargetZone || 'any';
   }
@@ -356,6 +402,7 @@ class HazardManager {
   save() {
     let kesslerState = null;
     let pulsarState = null;
+    let hazardousMachineryState = null;
     try {
       kesslerState = this.kesslerHazard.save();
     } catch (error) {
@@ -366,9 +413,17 @@ class HazardManager {
     } catch (error) {
       pulsarState = null;
     }
+    try {
+      hazardousMachineryState = this.hazardousMachineryHazard && this.hazardousMachineryHazard.save
+        ? this.hazardousMachineryHazard.save()
+        : null;
+    } catch (error) {
+      hazardousMachineryState = null;
+    }
     return {
       parameters: cloneHazardParameters(this.parameters),
       crusaderTargetZone: this.getCrusaderTargetZone(),
+      hazardousMachineryHazard: hazardousMachineryState,
       garbageHazard: this.garbageHazard && this.garbageHazard.save ? this.garbageHazard.save() : null,
       kesslerHazard: kesslerState,
       pulsarHazard: pulsarState
@@ -391,6 +446,8 @@ class HazardManager {
       ? data.crusaderTargetZone
       : 'any';
     this.setCrusaderTargetZone(storedTarget);
+    (this.hazardousMachineryHazard && this.hazardousMachineryHazard.load)
+      && this.hazardousMachineryHazard.load(data && data.hazardousMachineryHazard ? data.hazardousMachineryHazard : null);
     (this.garbageHazard && this.garbageHazard.load)
       && this.garbageHazard.load(data && data.garbageHazard ? data.garbageHazard : null);
     try {
@@ -414,14 +471,20 @@ class HazardManager {
 
     // Pulsar modifies active radiation. Apply it before hazardous biomass so
     // hazardous growth/decay uses the same effective dose shown in UI.
-    if (this.pulsarHazard) {
-      this.pulsarHazard.update(deltaSeconds, terraformingState, this.parameters.pulsar);
+    const pulsar = this.hasHazardParameters('pulsar') ? this.parameters.pulsar : null;
+    if (this.pulsarHazard && pulsar) {
+      this.pulsarHazard.update(deltaSeconds, terraformingState, pulsar);
+      if (terraformingState.updateSurfaceRadiation) {
+        terraformingState.updateSurfaceRadiation();
+      }
+    } else if (this.pulsarHazard) {
+      this.pulsarHazard.clearEffectsOnTravel(terraformingState);
       if (terraformingState.updateSurfaceRadiation) {
         terraformingState.updateSurfaceRadiation();
       }
     }
 
-    const hazardous = this.parameters.hazardousBiomass;
+    const hazardous = this.hasHazardParameters('hazardousBiomass') ? this.parameters.hazardousBiomass : null;
     if (this.hazardousBiomassHazard && hazardous) {
       this.hazardousBiomassHazard.update(deltaTime, terraformingState, hazardous);
     } else if (this.hazardousBiomassHazard) {
@@ -430,10 +493,21 @@ class HazardManager {
       this.updateHazardousBiomassControl(0);
     }
 
-    if (this.garbageHazard) {
-      this.garbageHazard.update(deltaSeconds);
+    const hazardousMachinery = this.hasHazardParameters('hazardousMachinery') ? this.parameters.hazardousMachinery : null;
+    if (this.hazardousMachineryHazard && hazardousMachinery) {
+      this.hazardousMachineryHazard.update(deltaTime, terraformingState, hazardousMachinery);
+    } else if (this.hazardousMachineryHazard) {
+      this.setHazardLandReservationShare('hazardousMachinery', 0);
     }
-    this.kesslerHazard.update(deltaSeconds, terraformingState, this.parameters.kessler);
+
+    if (this.garbageHazard && this.hasHazardParameters('garbage')) {
+      this.garbageHazard.update(deltaSeconds);
+    } else if (this.garbageHazard) {
+      this.garbageHazard.androidAttritionRates = {};
+    }
+    if (this.kesslerHazard && this.hasHazardParameters('kessler')) {
+      this.kesslerHazard.update(deltaSeconds, terraformingState, this.parameters.kessler);
+    }
     this.syncHazardLandReservation(terraformingState);
   }
 
@@ -518,9 +592,10 @@ class HazardManager {
       });
     }
     const biomassShare = this.hazardLandReservationShares.hazardousBiomass || 0;
+    const machineryShare = this.hazardLandReservationShares.hazardousMachinery || 0;
     const pulsarShare = this.hazardLandReservationShares.pulsar || 0;
     const coreFluxShare = this.getCoreFluxLandReservationShare(terraformingState);
-    return Math.max(biomassShare, pulsarShare, coreFluxShare);
+    return Math.max(biomassShare, machineryShare, pulsarShare, coreFluxShare);
   }
 
   syncHazardLandReservation(terraformingState = null) {
@@ -550,11 +625,13 @@ class HazardManager {
 
     landResource.setReservedAmountForSource('hazards', reservedLand);
     landResource.setReservedAmountForSource('hazardousBiomass', 0);
+    landResource.setReservedAmountForSource('hazardousMachinery', 0);
   }
 
   getTravelHazards() {
     return [
       { key: 'hazardousBiomass', hazard: this.hazardousBiomassHazard },
+      { key: 'hazardousMachinery', hazard: this.hazardousMachineryHazard },
       { key: 'garbage', hazard: this.garbageHazard },
       { key: 'kessler', hazard: this.kesslerHazard },
       { key: 'pulsar', hazard: this.pulsarHazard },
@@ -574,6 +651,7 @@ class HazardManager {
 
     this.updateHazardousBiomassControl(0, true);
     this.setHazardLandReservationShare('hazardousBiomass', 0);
+    this.setHazardLandReservationShare('hazardousMachinery', 0);
     this.setHazardLandReservationShare('pulsar', 0);
     this.syncHazardLandReservation(activeTerraforming);
   }
@@ -595,12 +673,38 @@ class HazardManager {
   }
 
   ensureCrusaderPresence(terraformingState) {
-    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.ensureCrusaderPresence) {
+    if (
+      this.hasHazardParameters('hazardousBiomass') &&
+      this.hazardousBiomassHazard &&
+      this.hazardousBiomassHazard.ensureCrusaderPresence
+    ) {
       this.hazardousBiomassHazard.ensureCrusaderPresence(terraformingState);
+    }
+    if (
+      this.hasHazardParameters('hazardousMachinery') &&
+      this.hazardousMachineryHazard &&
+      this.hazardousMachineryHazard.ensureCrusaderPresence
+    ) {
+      this.hazardousMachineryHazard.ensureCrusaderPresence(terraformingState);
     }
   }
 
+  getAdditionalWorkerRequirements() {
+    if (
+      !this.hasHazardParameters('hazardousMachinery') ||
+      !this.hazardousMachineryHazard ||
+      !this.hazardousMachineryHazard.getAdditionalWorkerRequirements
+    ) {
+      return null;
+    }
+    return this.hazardousMachineryHazard.getAdditionalWorkerRequirements();
+  }
+
   hasHazardousBiomass(terraformingState) {
+    if (!this.hasHazardParameters('hazardousBiomass')) {
+      return false;
+    }
+
     if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.hasHazard) {
       return this.hazardousBiomassHazard.hasHazard(terraformingState);
     }
@@ -628,6 +732,11 @@ class HazardManager {
       switch (hazardKey) {
         case 'hazardousBiomass':
           if (!this.hazardousBiomassHazard.isCleared(terraformingState, this.parameters.hazardousBiomass)) {
+            return false;
+          }
+          break;
+        case 'hazardousMachinery':
+          if (this.hazardousMachineryHazard && !this.hazardousMachineryHazard.isCleared(terraformingState, this.parameters.hazardousMachinery)) {
             return false;
           }
           break;
@@ -958,12 +1067,20 @@ class HazardManager {
       maintenance: false,
       population: false,
       garbage: false,
+      machinery: false,
     };
+    const machineryCanApply = !!(
+      this.hazardousMachineryHazard &&
+      this.parameters.hazardousMachinery &&
+      this.hazardousMachineryHazard.hasHazard &&
+      this.hazardousMachineryHazard.hasHazard()
+    );
 
     const noPenaltyChannelsActive = !applyBuildCostPenalty
       && !applyMaintenancePenalty
       && !applyPopulationPenalty
-      && !garbageCanApply;
+      && !garbageCanApply
+      && !machineryCanApply;
     if (noPenaltyChannelsActive) {
       if (this.hazardPenaltyEffectsApplied) {
         this.clearHazardPenaltyEffects(context);
@@ -977,6 +1094,7 @@ class HazardManager {
         maintenance: false,
         population: false,
         garbage: false,
+        machinery: false,
       };
       return;
     }
@@ -985,7 +1103,8 @@ class HazardManager {
       (previousModes.buildCost && !applyBuildCostPenalty) ||
       (previousModes.maintenance && !applyMaintenancePenalty) ||
       (previousModes.population && !applyPopulationPenalty) ||
-      (previousModes.garbage && !garbageCanApply);
+      (previousModes.garbage && !garbageCanApply) ||
+      (previousModes.machinery && !machineryCanApply);
     if (this.hazardPenaltyEffectsApplied && channelDisabledSinceLastTick) {
       this.clearHazardPenaltyEffects(context);
       this.hazardPenaltyEffectsApplied = false;
@@ -1075,8 +1194,13 @@ class HazardManager {
     applyBasePenaltyEffects();
     const hasBasePenaltyEffects = appliedEffectCount > 0;
     let garbageApplied = false;
+    let machineryApplied = false;
 
-    if (this.garbageHazard && this.garbageHazard.applyEffects) {
+    if (
+      this.hasHazardParameters('garbage') &&
+      this.garbageHazard &&
+      this.garbageHazard.applyEffects
+    ) {
       garbageApplied = this.garbageHazard.applyEffects(
         { addEffect: applyTrackedEffect, buildings, colonies },
         this.parameters.garbage
@@ -1084,15 +1208,50 @@ class HazardManager {
     }
 
     if (
+      this.parameters.hazardousMachinery &&
+      this.hazardousMachineryHazard &&
+      this.hazardousMachineryHazard.applyEffects
+    ) {
+      machineryApplied = this.hazardousMachineryHazard.applyEffects(
+        { addEffect: applyTrackedEffect, buildings, colonies },
+        this.parameters.hazardousMachinery
+      ) === true;
+    }
+
+    if (
       this.hazardPenaltyEffectsApplied &&
-      previousModes.garbage &&
-      !garbageApplied &&
-      hasBasePenaltyEffects
+      (
+        (previousModes.garbage && !garbageApplied) ||
+        (previousModes.machinery && !machineryApplied)
+      ) &&
+      (hasBasePenaltyEffects || garbageApplied || machineryApplied)
     ) {
       this.clearHazardPenaltyEffects(context);
       this.hazardPenaltyEffectsApplied = false;
       appliedEffectCount = 0;
       applyBasePenaltyEffects();
+      if (
+        garbageApplied &&
+        this.hasHazardParameters('garbage') &&
+        this.garbageHazard &&
+        this.garbageHazard.applyEffects
+      ) {
+        this.garbageHazard.applyEffects(
+          { addEffect: applyTrackedEffect, buildings, colonies },
+          this.parameters.garbage
+        );
+      }
+      if (
+        machineryApplied &&
+        this.parameters.hazardousMachinery &&
+        this.hazardousMachineryHazard &&
+        this.hazardousMachineryHazard.applyEffects
+      ) {
+        this.hazardousMachineryHazard.applyEffects(
+          { addEffect: applyTrackedEffect, buildings, colonies },
+          this.parameters.hazardousMachinery
+        );
+      }
     }
 
     if (appliedEffectCount <= 0) {
@@ -1105,6 +1264,7 @@ class HazardManager {
         maintenance: false,
         population: false,
         garbage: false,
+        machinery: false,
       };
       return;
     }
@@ -1115,6 +1275,7 @@ class HazardManager {
       maintenance: applyMaintenancePenalty,
       population: applyPopulationPenalty,
       garbage: garbageApplied,
+      machinery: machineryApplied,
     };
   }
 }

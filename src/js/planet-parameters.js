@@ -1745,7 +1745,8 @@ const styxOverrides = {
       liquidMethane: { initialValue: 0 },
       hydrocarbonIce: { initialValue: 0 },
       biomass: { initialValue: 0 },
-      hazardousBiomass: { initialValue: 0 }
+      hazardousBiomass: { initialValue: 0 },
+      hazardousMachinery: { initialValue: 0 }
     },
     underground: {
       ore: { initialValue: 5, maxDeposits: 48305, areaTotal: 483050 },
@@ -1772,6 +1773,25 @@ const styxOverrides = {
       },
       "sulfuricAcid": {
         "initialValue": 0
+      }
+    }
+  },
+  hazards: {
+    hazardousMachinery: {
+      initialCoverage: 1,
+      maxCoverageBase: 1,
+      waterCoveragePenalty: 0.5,
+      oxygenDecayCoefficient: 1e-24,
+      temperatureDecayThresholdC: 500,
+      temperatureDecayCoefficient: 5e-6,
+      crusaderRemovalPerSecond: 0.5,
+      electronicsToAndroidCost: 1000,
+      penalties: {
+        availableAndroidDecayRate: 0.05,
+        nanoColonyGrowthMultiplier: 0,
+        researchMultiplier: 0.1,
+        electronicsMaintenanceMultiplier: 100,
+        shipWorkersPerAssignedShip: 5
       }
     }
   },
@@ -1926,9 +1946,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
-
-
 
 
 

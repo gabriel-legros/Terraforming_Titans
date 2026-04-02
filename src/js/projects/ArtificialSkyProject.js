@@ -354,7 +354,8 @@ class ArtificialSkyProject extends SpaceshipProject {
       return;
     }
 
-    const requestedProgress = Math.min((deltaTime / duration) * productivity, remainingSegments);
+    const effectiveProductivity = productivity * this.getHazardousMachineryWorkerAvailabilityRatio();
+    const requestedProgress = Math.min((deltaTime / duration) * effectiveProductivity, remainingSegments);
     if (requestedProgress <= 0) {
       return;
     }
@@ -431,7 +432,8 @@ class ArtificialSkyProject extends SpaceshipProject {
       return totals;
     }
 
-    const requestedProgress = Math.min((deltaTime / duration) * productivity, remainingSegments);
+    const effectiveProductivity = productivity * this.getHazardousMachineryWorkerAvailabilityRatio();
+    const requestedProgress = Math.min((deltaTime / duration) * effectiveProductivity, remainingSegments);
     if (requestedProgress <= 0) {
       return totals;
     }

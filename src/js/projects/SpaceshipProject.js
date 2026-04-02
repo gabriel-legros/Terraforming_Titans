@@ -34,6 +34,45 @@ class SpaceshipProject extends Project {
     return this.assignedSpaceships ?? 0;
   }
 
+  getHazardousMachineryWorkerLoadActive() {
+    return this.isActive && !this.isCompleted && !this.isPaused && this.getActiveShipCount() > 0;
+  }
+
+  getHazardousMachineryActiveShipCount() {
+    return this.getHazardousMachineryWorkerLoadActive() ? this.getActiveShipCount() : 0;
+  }
+
+  getHazardousMachineryWorkerRequirement() {
+    const activeShips = this.getHazardousMachineryActiveShipCount();
+    if (activeShips <= 0) {
+      return 0;
+    }
+
+    try {
+      if (!hazardManager?.hazardousMachineryHazard?.hasHazard?.()) {
+        return 0;
+      }
+      const penalty = hazardManager?.parameters?.hazardousMachinery?.penalties;
+      const workersPerShip = Math.max(0, penalty?.shipWorkersPerAssignedShip || 0);
+      return activeShips * workersPerShip;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  getHazardousMachineryWorkerAvailabilityRatio() {
+    const workerRequirement = this.getHazardousMachineryWorkerRequirement();
+    if (workerRequirement <= 0) {
+      return 1;
+    }
+
+    try {
+      return hazardManager?.hazardousMachineryHazard?.getProjectWorkerAvailabilityRatio?.(this) ?? 1;
+    } catch (error) {
+      return 1;
+    }
+  }
+
   isBlockedByPulsarStorm() {
     try {
       return hazardManager.parameters.pulsar && hazardManager.pulsarHazard && hazardManager.pulsarHazard.isStormActive();
@@ -1036,14 +1075,16 @@ class SpaceshipProject extends Project {
       this.lastActiveTime = 0;
       return;
     }
+    const workerRatio = this.isContinuous() ? 1 : this.getHazardousMachineryWorkerAvailabilityRatio();
+    const effectiveDeltaTime = this.isContinuous() ? deltaTime : (deltaTime * workerRatio);
     const wasActive = this.isActive && !this.isCompleted && !this.isPaused;
     const startRemaining = this.remainingTime;
-    const activeTime = wasActive ? Math.min(deltaTime, startRemaining) : 0;
+    const activeTime = wasActive ? Math.min(effectiveDeltaTime, startRemaining) : 0;
     if (wasActive && this.checkKesslerShipFailure(activeTime, startRemaining)) {
       this.lastActiveTime = 0;
       return;
     }
-    super.update(deltaTime);
+    super.update(effectiveDeltaTime);
     this.lastActiveTime = this.isContinuous() ? activeTime : 0;
   }
 
@@ -1115,12 +1156,14 @@ class SpaceshipProject extends Project {
     const auxiliaryCount = 0;
     const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
     const failureChance = shipCount > 0 ? (1 - successChance) : 0;
+    const workerRatio = this.getHazardousMachineryWorkerAvailabilityRatio();
     return {
       deltaTime,
       duration,
       fraction,
       seconds: deltaTime / 1000,
-      productivity,
+      productivity: Math.max(0, productivity * workerRatio),
+      workerRatio,
       shipCount,
       auxiliaryCount,
       totalTransportCount,

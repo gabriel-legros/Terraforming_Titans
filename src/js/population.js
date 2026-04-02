@@ -299,6 +299,23 @@ class PopulationModule extends EffectableEntity {
       }
     }
 
+    let hazardWorkerRequirements = null;
+    try {
+      hazardWorkerRequirements = hazardManager?.getAdditionalWorkerRequirements?.();
+    } catch (error) {
+      hazardWorkerRequirements = null;
+    }
+
+    if (hazardWorkerRequirements) {
+      const high = Math.max(0, hazardWorkerRequirements.high || 0);
+      const normal = Math.max(0, hazardWorkerRequirements.normal || 0);
+      const low = Math.max(0, hazardWorkerRequirements.low || 0);
+      totals.high += high;
+      totals.normal += normal;
+      totals.low += low;
+      totalWorkersRequired += high + normal + low;
+    }
+
     this.totalWorkersRequired = totalWorkersRequired; // Store the total workers required
     this.totalWorkersRequiredHigh = totals.high;
     this.totalWorkersRequiredNormal = totals.normal;
