@@ -2460,6 +2460,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'artificial_ecosystems',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 750_000_000 },
+        prerequisites: ['biostorage'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'artificialEcosystems',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'bioships',
         name: '',
         description: '',

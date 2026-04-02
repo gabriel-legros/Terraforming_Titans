@@ -1375,6 +1375,12 @@ setLanguageData({
         reservePercent: 'Reserve %:',
         weight: 'Weight:',
         biomassTooltip: 'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.',
+        artificialEcosystems: 'Artificial Ecosystems',
+        artificialEcosystemsTooltip: 'When enabled, biomass already stored in space storage grows at 0.5%/s with a logistic ceiling based on the biomass cap set here. Growth only runs when biomass has a cap, consumes stored carbon dioxide and water using the normal photosynthesis stoichiometry, and produces oxygen as a byproduct.',
+        artificialEcosystemsSource: 'Artificial Ecosystems',
+        currentConsumption: 'Consumption:',
+        currentProduction: 'Production:',
+        none: 'None',
         colonyStorageFull: 'Colony storage full',
         surfaceStorageFull: 'Surface storage full',
         colony: 'Colony',
@@ -3520,6 +3526,10 @@ setLanguageData({
         nuclear_alchemy: {
           name: 'Nuclear Alchemy',
           description: 'Alchemy has always been possible... with the right knowledge and extreme infrastructure.',
+        },
+        artificial_ecosystems: {
+          name: 'Artificial Ecosystems',
+          description: 'Turns space storage into a living orbital greenhouse. Unlocks a persisted Space Storage operations toggle that grows stored biomass toward its configured cap by consuming stored carbon dioxide and water.',
         },
         gigafoundries: {
           name: 'Gigafoundries',

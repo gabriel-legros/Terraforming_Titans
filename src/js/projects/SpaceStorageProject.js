@@ -82,6 +82,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     this.megaProjectSpaceOnlyOnTravel = false;
     this.waterWithdrawTarget = 'colony';
+    this.artificialEcosystemsEnabled = false;
     this.resourceStrategicReserves = {};
     this.usedStorageResyncTimer = 0;
     this.shipOperationKesslerElapsed = 0;
@@ -1370,6 +1371,7 @@ class SpaceStorageProject extends SpaceshipProject {
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel === true,
       waterWithdrawTarget: this.waterWithdrawTarget,
+      artificialEcosystemsEnabled: this.artificialEcosystemsEnabled === true,
       ...capsAndReserveSettings
     };
   }
@@ -1428,6 +1430,9 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget')) {
       this.waterWithdrawTarget = settings.waterWithdrawTarget || 'colony';
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'artificialEcosystemsEnabled')) {
+      this.artificialEcosystemsEnabled = settings.artificialEcosystemsEnabled === true;
     }
     this.loadCapsAndReserveAutomationSettings(settings);
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
@@ -1506,6 +1511,7 @@ class SpaceStorageProject extends SpaceshipProject {
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
       resourceStrategicReserves: this.resourceStrategicReserves,
       waterWithdrawTarget: this.waterWithdrawTarget,
+      artificialEcosystemsEnabled: this.artificialEcosystemsEnabled,
       resourceCaps: this.resourceCaps,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
@@ -1550,6 +1556,7 @@ class SpaceStorageProject extends SpaceshipProject {
       this.applyLegacyStrategicReserve(state.strategicReserve);
     }
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
+    this.artificialEcosystemsEnabled = state.artificialEcosystemsEnabled === true;
     this.resourceCaps = state.resourceCaps || {};
     this.sanitizeResourceCaps();
     this.resourceTransferModes = state.resourceTransferModes || {};
@@ -1589,6 +1596,7 @@ class SpaceStorageProject extends SpaceshipProject {
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
       resourceStrategicReserves: this.resourceStrategicReserves,
+      artificialEcosystemsEnabled: this.artificialEcosystemsEnabled,
       resourceCaps: this.resourceCaps,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
@@ -1607,6 +1615,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!state.resourceStrategicReserves && state.strategicReserve > 0) {
       this.applyLegacyStrategicReserve(state.strategicReserve);
     }
+    this.artificialEcosystemsEnabled = state.artificialEcosystemsEnabled === true;
     this.resourceCaps = state.resourceCaps || {};
     this.sanitizeResourceCaps();
     this.shipTransferMode = state.shipTransferMode || this.shipTransferMode;

@@ -58,6 +58,27 @@ function getSpaceStorageCapLimitForDraft(project, resourceKey, mode, value) {
   return Math.max(0, project.maxStorage);
 }
 
+function getSpaceStorageRateBySource(resourceKey, source, type) {
+  const resource = resources?.spaceStorage?.[resourceKey];
+  if (!resource || !source) {
+    return 0;
+  }
+  if (type === 'production') {
+    return resource.productionRateBySource?.[source] || 0;
+  }
+  return resource.consumptionRateBySource?.[source] || 0;
+}
+
+function formatArtificialEcosystemsRateLine(entries) {
+  const parts = entries
+    .filter(entry => entry.rate > 0)
+    .map(entry => `${entry.label}: ${formatNumber(entry.rate, true, 3)}/s`);
+  if (parts.length === 0) {
+    return getSpaceStorageUIText('ui.projects.spaceStorage.none', 'None');
+  }
+  return parts.join(', ');
+}
+
 if (typeof SpaceStorageProject !== 'undefined') {
   SpaceStorageProject.prototype.createShipAutoStartCheckbox = function () {
     const els = projectElements[this.name] || {};
@@ -262,9 +283,37 @@ function renderSpaceStorageUI(project, container) {
 
   cardBody.appendChild(topSection);
 
+  const artificialEcosystemsCard = document.createElement('div');
+  artificialEcosystemsCard.classList.add('info-card');
+  artificialEcosystemsCard.style.marginTop = '2px';
+  artificialEcosystemsCard.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">${getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystems', 'Artificial Ecosystems')}</span>
+    </div>
+    <div class="card-body">
+      <div class="project-details-grid">
+        <div class="checkbox-container" id="ss-artificial-ecosystems-toggle-row"></div>
+        <div class="stats-grid two-col">
+          <div class="stat-item">
+            <span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.currentConsumption', 'Current Consumption:')}</span>
+            <span class="stat-value" id="ss-artificial-ecosystems-consumption"></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.currentProduction', 'Current Production:')}</span>
+            <span class="stat-value" id="ss-artificial-ecosystems-production"></span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  if (typeof makeCollapsibleCard === 'function') {
+    makeCollapsibleCard(artificialEcosystemsCard);
+  }
   const expansionCostDisplay = expansionCostRow.querySelector('.expansion-cost');
   const expansionRateDisplay = expansionRateRow.querySelector('.expansion-rate');
   const resourceGrid = card.querySelector('#ss-resource-grid');
+  const artificialEcosystemsToggleRow = artificialEcosystemsCard.querySelector('#ss-artificial-ecosystems-toggle-row');
+  const artificialEcosystemsConsumptionDisplay = artificialEcosystemsCard.querySelector('#ss-artificial-ecosystems-consumption');
+  const artificialEcosystemsProductionDisplay = artificialEcosystemsCard.querySelector('#ss-artificial-ecosystems-production');
 
   const getVisibleResourceKeys = () => storageResourceOptions
     .filter(opt => project.isResourceUnlocked(opt.resource, opt.requiresFlag, opt.requiresProjectFlag))
@@ -814,6 +863,34 @@ function renderSpaceStorageUI(project, container) {
     };
   });
 
+  const artificialEcosystemsContainer = document.createElement('div');
+  artificialEcosystemsContainer.classList.add('checkbox-container');
+  const artificialEcosystemsCheckbox = document.createElement('input');
+  artificialEcosystemsCheckbox.type = 'checkbox';
+  artificialEcosystemsCheckbox.id = `${project.name}-artificial-ecosystems`;
+  artificialEcosystemsCheckbox.addEventListener('change', (event) => {
+    project.artificialEcosystemsEnabled = event.target.checked;
+  });
+  const artificialEcosystemsLabel = document.createElement('label');
+  artificialEcosystemsLabel.htmlFor = artificialEcosystemsCheckbox.id;
+  artificialEcosystemsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystems', 'Artificial Ecosystems');
+  const artificialEcosystemsInfo = document.createElement('span');
+  artificialEcosystemsInfo.classList.add('info-tooltip-icon');
+  artificialEcosystemsInfo.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(
+    artificialEcosystemsInfo,
+    getSpaceStorageUIText(
+      'ui.projects.spaceStorage.artificialEcosystemsTooltip',
+      'When enabled, biomass already stored in space storage grows at 0.5%/s with a logistic ceiling based on the biomass cap set here. Growth only runs when biomass has a cap, consumes stored carbon dioxide and water using the normal photosynthesis stoichiometry, and still grows even if oxygen is already capped.'
+    )
+  );
+  artificialEcosystemsContainer.append(
+    artificialEcosystemsCheckbox,
+    artificialEcosystemsLabel,
+    artificialEcosystemsInfo
+  );
+  artificialEcosystemsToggleRow.appendChild(artificialEcosystemsContainer);
+
   const shipFooter = document.createElement('div');
   shipFooter.classList.add('card-footer');
 
@@ -898,6 +975,7 @@ function renderSpaceStorageUI(project, container) {
 
   cardBody.appendChild(shipFooter);
   container.appendChild(card);
+  container.appendChild(artificialEcosystemsCard);
   projectElements[project.name] = {
     ...projectElements[project.name],
     storageCard: card,
@@ -925,6 +1003,12 @@ function renderSpaceStorageUI(project, container) {
     reserveDraft: projectElements[project.name].reserveDraft,
     reserveDraftDirty: projectElements[project.name].reserveDraftDirty,
     capHandlersBound: true,
+    artificialEcosystemsCard,
+    artificialEcosystemsContainer,
+    artificialEcosystemsCheckbox,
+    artificialEcosystemsLabel,
+    artificialEcosystemsConsumptionDisplay,
+    artificialEcosystemsProductionDisplay,
     shipProgressButton,
     withdrawButton,
     mixedButton,
@@ -948,6 +1032,9 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipAutoStartLabel) {
     els.shipAutoStartLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
+  }
+  if (els.artificialEcosystemsLabel) {
+    els.artificialEcosystemsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystems', 'Artificial Ecosystems');
   }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 2);
@@ -1112,6 +1199,31 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipAutoStartCheckbox) {
     els.shipAutoStartCheckbox.checked = project.shipOperationAutoStart;
+  }
+  if (els.artificialEcosystemsContainer && els.artificialEcosystemsCheckbox) {
+    const enabled = project.isBooleanFlagSet('artificialEcosystems');
+    if (els.artificialEcosystemsCard) {
+      els.artificialEcosystemsCard.style.display = enabled ? '' : 'none';
+    }
+    els.artificialEcosystemsContainer.style.display = enabled ? 'flex' : 'none';
+    els.artificialEcosystemsCheckbox.checked = project.artificialEcosystemsEnabled === true;
+  }
+  if (els.artificialEcosystemsConsumptionDisplay && els.artificialEcosystemsProductionDisplay) {
+    const source = getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystemsSource', 'Artificial Ecosystems');
+    const waterLabel = getSpaceStorageUIText('ui.projects.spaceStorage.resources.water', 'Water');
+    const carbonDioxideLabel = getSpaceStorageUIText('ui.projects.spaceStorage.resources.carbonDioxide', 'Carbon Dioxide');
+    const biomassLabel = getSpaceStorageUIText('ui.projects.spaceStorage.resources.biomass', 'Biomass');
+    const oxygenLabel = getSpaceStorageUIText('ui.projects.spaceStorage.resources.oxygen', 'Oxygen');
+    const consumptionText = formatArtificialEcosystemsRateLine([
+      { label: waterLabel, rate: getSpaceStorageRateBySource('liquidWater', source, 'consumption') },
+      { label: carbonDioxideLabel, rate: getSpaceStorageRateBySource('carbonDioxide', source, 'consumption') },
+    ]);
+    const productionText = formatArtificialEcosystemsRateLine([
+      { label: biomassLabel, rate: getSpaceStorageRateBySource('biomass', source, 'production') },
+      { label: oxygenLabel, rate: getSpaceStorageRateBySource('oxygen', source, 'production') },
+    ]);
+    els.artificialEcosystemsConsumptionDisplay.textContent = consumptionText;
+    els.artificialEcosystemsProductionDisplay.textContent = productionText;
   }
   if (els.megaProjectModeSelect) {
     const mode = MEGA_PROJECT_RESOURCE_MODE_MAP[project.megaProjectResourceMode]

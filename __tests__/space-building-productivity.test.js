@@ -470,6 +470,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('lifeManager', null, originalGlobals);
   setGlobal('researchManager', null, originalGlobals);
   setGlobal('globalEffects', {}, originalGlobals);
+  setGlobal('updateArtificialEcosystems', () => {}, originalGlobals);
   setGlobal('updateAntimatterStorageCap', () => {}, originalGlobals);
   setGlobal('produceAntimatter', null, originalGlobals);
   setGlobal('updateSpaceStorageUI', () => {}, originalGlobals);

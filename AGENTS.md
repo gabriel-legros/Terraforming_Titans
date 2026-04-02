@@ -15,6 +15,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Keep tooltip copy browser-safe and readable; the attached dynamic tooltip is the default for both short and long help text.
 - Keep the Warp Gate Command Teams tooltip updated when special rules change.
 - Do not use `typeof` checks, null-guard boilerplate for objects that should exist, or numeric-type validation boilerplate.
+- Do not add try/catch or fallback shim code just to probe required globals/functions from ordered script includes. If a function is required by load order, call it directly and fix tests/harnesses instead of weakening the runtime code.
 - Cache and reuse UI elements. Do not repeatedly query the DOM with new selectors.
 - Building-specific logic belongs in dedicated subclasses under `src/js/buildings/` and must be registered in `initializeBuildings`.
 - Do not use `globalThis`; use the actual global variable directly.
@@ -191,6 +192,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Land reservation now uses a shared combined `hazards` source; world land usage takes the max share across Hazardous Biomass, Pulsar, and core-flux molten surface, while molten-surface reservation uses the lower of the Artificial Crust share vs the global-temperature share (`100%` reserved at `1000°C`, `0%` reserved at `700°C`).
 - Styx now uses hazard `Hazardous Machinery`: coverage is capped by `1 - water coverage / 2`, occupied land joins the shared hazard-reservation max rule, oxygen and Crusaders can clear it, dangerous hacking can spend electronics to recover androids from it, unassigned worker-androids decay into it, nanocolony growth and electronics maintenance scale with remaining machinery, and active assigned ships add a fixed worker requirement per ship while the hazard remains.
 - Space storage resources are canonical under `resources.spaceStorage` (no parallel runtime usage map), support additional resource types, and keep per-resource cap controls.
+- Advanced research `Artificial Ecosystems` (750M) requires `Biostorage`, adds a persisted Space Storage operations toggle, and lets stored biomass grow at `0.5%/s` toward its configured biomass cap by consuming stored water and carbon dioxide with the standard photosynthesis stoichiometry; oxygen output can overflow into the normal clamp.
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.
 - Dyson Swarm/Receiver/Sphere, Lifters, mega/giga projects, and continuous ops gained stronger persistence and UI clarity.
 - Lifters now use per-recipe assignment controls (including Strip Atmosphere/Hydrogen/Methane/Ammonia/Star Lifting), with per-recipe complexity, auto-assignment weights, and per-recipe productivity/throughput handling so mixed allocations run simultaneously; `Star Lifting` also unlocks a saved/preset-aware supercharge slider (`x1` to `x10`) that scales lifter throughput linearly and energy per lifter cubically.

@@ -1429,6 +1429,8 @@ function produceResources(deltaTime, buildings) {
     nanotechManager.produceResources(deltaTime, accumulatedChanges);
   }
 
+  updateArtificialEcosystems(deltaTime, accumulatedChanges);
+
   // Apply funding rate to the accumulated changes
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
