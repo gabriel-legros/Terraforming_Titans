@@ -728,6 +728,14 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.refreshDisposalTargetSelects();
   }
 
+  rebuildDisposalTargetListIfRendered() {
+    const elements = projectElements[this.name];
+    if (!elements?.disposalTargetList) {
+      return;
+    }
+    this.rebuildDisposalTargetList();
+  }
+
   createDisposalTargetRow(target, index) {
     const card = document.createElement('div');
     card.classList.add('resource-disposal-target-card');
@@ -1651,6 +1659,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
     this.sanitizeDisposalTargets();
     this.clearContinuousExecutionPlanCache();
+    this.rebuildDisposalTargetListIfRendered();
   }
 
   saveState() {
@@ -1671,6 +1680,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
     this.sanitizeDisposalTargets();
     this.clearContinuousExecutionPlanCache();
+    this.rebuildDisposalTargetListIfRendered();
   }
 
   saveTravelState() {
@@ -1691,6 +1701,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
     this.sanitizeDisposalTargets();
     this.clearContinuousExecutionPlanCache();
+    this.rebuildDisposalTargetListIfRendered();
   }
 }
 

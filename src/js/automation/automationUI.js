@@ -608,6 +608,8 @@ function createAutomationPresetJsonDetails(extraClassName) {
 
   details._summaryNode = summary;
   details._contentNode = pre;
+  details._renderedSummaryText = '';
+  details._renderedPresetJson = '';
   details.style.display = 'none';
   return details;
 }
@@ -620,17 +622,33 @@ function updateAutomationPresetJsonDetails(details, preset) {
   if (!preset) {
     details.open = false;
     details.style.display = 'none';
-    details._contentNode.textContent = '';
+    if (details._renderedSummaryText) {
+      details._summaryNode.textContent = '';
+      details._renderedSummaryText = '';
+    }
+    if (details._renderedPresetJson) {
+      details._contentNode.textContent = '';
+      details._renderedPresetJson = '';
+    }
     return;
   }
 
   details.style.display = '';
-  details._summaryNode.textContent = getAutomationCardText(
+  const summaryText = getAutomationCardText(
     'selectedPresetJsonSummary',
     { name: preset.name || `Preset ${preset.id}` },
     'Selected preset JSON'
   );
-  details._contentNode.textContent = JSON.stringify(preset, null, 2);
+  if (details._renderedSummaryText !== summaryText) {
+    details._summaryNode.textContent = summaryText;
+    details._renderedSummaryText = summaryText;
+  }
+
+  const presetJson = JSON.stringify(preset, null, 2);
+  if (details._renderedPresetJson !== presetJson) {
+    details._contentNode.textContent = presetJson;
+    details._renderedPresetJson = presetJson;
+  }
 }
 
 function createAutomationPresetRow(body) {
