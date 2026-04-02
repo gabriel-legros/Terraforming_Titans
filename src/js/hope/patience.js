@@ -115,9 +115,16 @@ class PatienceManager extends EffectableEntity {
             advancedResearchGain,
             metalGain,
             oneillGain,
-            oneillCapacity
+            oneillCapacity,
+            faithGains
         } = this.calculateSpendGains(hours);
-        const noGains = superalloyGain <= 0 && superconductorGain <= 0 && advancedResearchGain <= 0 && metalGain <= 0 && oneillGain <= 0;
+        const noGains = superalloyGain <= 0
+            && superconductorGain <= 0
+            && advancedResearchGain <= 0
+            && metalGain <= 0
+            && oneillGain <= 0
+            && faithGains.worldBelieverGain <= 0
+            && faithGains.galacticBelieverGain <= 0;
         if (noGains) {
             return false;
         }
@@ -151,6 +158,10 @@ class PatienceManager extends EffectableEntity {
             });
         }
 
+        if (faithGains.worldBelieverGain > 0 || faithGains.galacticBelieverGain > 0) {
+            followersManager.applyPatienceFaithSpend(hours);
+        }
+
         this.advanceWarpGateCommand(hours * 3600);
         this.advanceWarpGateNetwork(hours * 3600);
         return true;
@@ -170,7 +181,8 @@ class PatienceManager extends EffectableEntity {
                 advancedResearchGain: 0,
                 metalGain: 0,
                 oneillGain: 0,
-                oneillCapacity: 0
+                oneillCapacity: 0,
+                faithGains: followersManager.getEmptyPatienceFaithSpendGains()
             };
         }
 
@@ -210,6 +222,7 @@ class PatienceManager extends EffectableEntity {
             : { capacity: 0, gain: 0 };
         const oneillCapacity = oneillDelta.capacity || 0;
         const oneillGain = oneillDelta.gain || 0;
+        const faithGains = followersManager.getPatienceFaithSpendGains(hours);
 
         return {
             superalloyGain,
@@ -217,7 +230,8 @@ class PatienceManager extends EffectableEntity {
             advancedResearchGain,
             metalGain,
             oneillGain,
-            oneillCapacity
+            oneillCapacity,
+            faithGains
         };
     }
 

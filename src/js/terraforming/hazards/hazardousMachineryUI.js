@@ -11,7 +11,6 @@ const hazardousMachineryUICache = {
   summaryHackingText: null,
   summaryHackingCost: null,
   summaryHackingInfo: null,
-  summaryHackingNote: null,
   summaryHacking: null,
   barSafe: null,
   barHazard: null,
@@ -288,10 +287,8 @@ function ensureHazardousMachineryLayout() {
   const hackingCost = doc.createElement('div');
   hackingCost.className = 'hazard-machinery-hacking__cost';
   const hackingInfo = doc.createElement('div');
-  const hackingNote = doc.createElement('div');
   hackingText.appendChild(hackingCost);
   hackingText.appendChild(hackingInfo);
-  hackingText.appendChild(hackingNote);
   hackingBody.appendChild(hackingText);
   hackingBox.appendChild(hackingHeader);
   hackingBox.appendChild(hackingBody);
@@ -299,7 +296,6 @@ function ensureHazardousMachineryLayout() {
   hazardousMachineryUICache.summaryHackingText = hackingText;
   hazardousMachineryUICache.summaryHackingCost = hackingCost;
   hazardousMachineryUICache.summaryHackingInfo = hackingInfo;
-  hazardousMachineryUICache.summaryHackingNote = hackingNote;
 
   const factorGrid = doc.createElement('div');
   factorGrid.className = 'hazard-factor-grid';
@@ -569,7 +565,6 @@ function updateHazardousMachineryUI(parameters) {
   hazardousMachineryUICache.summaryHackingInfo.textContent = getHazardousMachineryUiText('labels.convertInfo', 'Each hack spends {cost} electronics to turn 1 hazardous machinery into 1 android instantly.', {
     cost: formatMachineryNumber(costPerHack, 0)
   });
-  hazardousMachineryUICache.summaryHackingNote.textContent = getHazardousMachineryUiText('labels.convertAutoScale', 'If less machinery is available than the selected amount, electronics spending scales down automatically.');
 
   const safePercent = Math.max(0, (1 - status.hazardStrength) * 100);
   const hazardPercent = Math.max(0, status.hazardStrength * 100);

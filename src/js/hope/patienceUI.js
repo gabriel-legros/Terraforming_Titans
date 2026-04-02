@@ -3,6 +3,14 @@
  * Handles UI rendering and updates for patience mechanics
  */
 
+function getPatienceText(path, fallback, vars) {
+    try {
+        return t(path, vars, fallback);
+    } catch (error) {
+        return fallback;
+    }
+}
+
 const PatienceUI = {
     // Cached DOM elements
     subtab: null,
@@ -184,7 +192,10 @@ const PatienceUI = {
 
         const spendHeader = document.createElement('div');
         spendHeader.className = 'patience-card-label';
-        spendHeader.textContent = 'Convert patience into net metal, superalloys, superconductors, advanced research, O\'Neill cylinders, and Warp Gate Command/Network progress based on current production.';
+        spendHeader.textContent = getPatienceText(
+            'ui.hope.patiencePanel.spendDescription',
+            'Convert patience into net metal, superalloys, superconductors, advanced research, O\'Neill cylinders, faith conversion, and Warp Gate Command/Network progress based on current production.'
+        );
         spendCard.appendChild(spendHeader);
 
         const spendRow = document.createElement('div');
@@ -303,7 +314,14 @@ const PatienceUI = {
         if (!this.spendPreviewEl || !this.spendInputEl || !patienceManager) return;
         
         const hours = parseFloat(this.spendInputEl.value) || 0;
-        const { superalloyGain, superconductorGain, advancedResearchGain, metalGain, oneillGain } = patienceManager.calculateSpendGains(hours);
+        const {
+            superalloyGain,
+            superconductorGain,
+            advancedResearchGain,
+            metalGain,
+            oneillGain,
+            faithGains
+        } = patienceManager.calculateSpendGains(hours);
         const wgcAdvance = this.getWgcAdvancePreview(hours);
         const lines = [];
 
@@ -347,13 +365,40 @@ const PatienceUI = {
         if (oneillGain > 0) {
             lines.push(`${oneillGain.toFixed(2)} O'Neill cylinders`);
         }
+        if (faithGains.worldBelieverGain > 0) {
+            const faithKey = faithGains.fillsWorldCap
+                ? 'ui.hope.patiencePanel.preview.worldFaithCapped'
+                : 'ui.hope.patiencePanel.preview.worldFaith';
+            lines.push(getPatienceText(
+                faithKey,
+                faithGains.fillsWorldCap
+                    ? '+{count} world believers (+{percent}%, reaches current cap)'
+                    : '+{count} world believers (+{percent}%)',
+                {
+                    count: formatNumber(faithGains.worldBelieverGain, true),
+                    percent: formatNumber(faithGains.worldPercentGain * 100, false, 4)
+                }
+            ));
+        }
+        if (faithGains.galacticBelieverGain > 0) {
+            lines.push(getPatienceText(
+                'ui.hope.patiencePanel.preview.galacticFaith',
+                '+{count} galactic believers (+{percent}%)',
+                {
+                    count: formatNumber(faithGains.galacticBelieverGain, true),
+                    percent: formatNumber(faithGains.galacticPercentGain * 100, false, 4)
+                }
+            ));
+        }
 
         if (lines.length === 0 && !wgcAdvance) {
-            this.spendPreviewEl.textContent = 'No gains available';
+            this.spendPreviewEl.textContent = getPatienceText('ui.hope.patiencePanel.noGains', 'No gains available');
             return;
         }
 
-        const header = lines.length > 0 ? ['Gain:'] : [];
+        const header = lines.length > 0
+            ? [getPatienceText('ui.hope.patiencePanel.gainHeader', 'Gain:')]
+            : [];
         const footer = wgcAdvance ? [wgcAdvance] : [];
         this.spendPreviewEl.innerHTML = header.concat(lines, footer).join('<br>');
     },
@@ -454,7 +499,9 @@ const PatienceUI = {
                 gains.superalloyGain > 0 ||
                 gains.superconductorGain > 0 ||
                 gains.advancedResearchGain > 0 ||
-                gains.oneillGain > 0
+                gains.oneillGain > 0 ||
+                gains.faithGains.worldBelieverGain > 0 ||
+                gains.faithGains.galacticBelieverGain > 0
             );
             this.spendButtonEl.disabled = !canSpend;
         }
@@ -482,12 +529,18 @@ PatienceUI.getWgcAdvancePreview = function(hours) {
     if (!wgcAdvance && !wgnAdvance) return '';
 
     if (wgcAdvance && wgnAdvance) {
-        return 'WGC operations and Warp Gate Network progress will advance.';
+        return getPatienceText(
+            'ui.hope.patiencePanel.wgcPreview.both',
+            'WGC operations and Warp Gate Network progress will advance.'
+        );
     }
     if (wgcAdvance) {
-        return 'WGC operations will advance.';
+        return getPatienceText('ui.hope.patiencePanel.wgcPreview.wgc', 'WGC operations will advance.');
     }
-    return 'Warp Gate Network progress will advance.';
+    return getPatienceText(
+        'ui.hope.patiencePanel.wgcPreview.network',
+        'Warp Gate Network progress will advance.'
+    );
 };
 
 /**

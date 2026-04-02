@@ -633,6 +633,101 @@ class FollowersManager extends EffectableEntity {
     };
   }
 
+  getEmptyPatienceFaithSpendGains() {
+    return {
+      worldBelieverGain: 0,
+      galacticBelieverGain: 0,
+      worldPercentGain: 0,
+      galacticPercentGain: 0,
+      worldCapPercent: 0,
+      fillsWorldCap: false
+    };
+  }
+
+  getPatienceFaithSpendGains(hours) {
+    const empty = this.getEmptyPatienceFaithSpendGains();
+    if (!this.enabled || this.isFaithSuppressed() || hours <= 0) {
+      return empty;
+    }
+
+    this.initializeFaithIfNeeded();
+    const worldPopulation = this.getCurrentWorldPopulation();
+    const galacticPopulation = this.galacticPopulation;
+    if (worldPopulation <= 0) {
+      return empty;
+    }
+
+    let remainingSeconds = hours * 3600;
+    let worldPercent = this.getWorldBelieverPercent();
+    const galacticPercent = this.getGalacticBelieverPercent();
+    const worldCapPercent = this.getCurrentWorldBelieverCap();
+    const worldRate = this.getFaithConversionRatePerSecond()
+      * worldPercent
+      * this.getCrusadersWorldConversionMultiplier();
+    let worldPercentGain = 0;
+    let fillsWorldCap = false;
+    let reachesWorldCap = worldPercent >= worldCapPercent - 1e-12;
+
+    if (!reachesWorldCap && worldRate > 0) {
+      const secondsToWorldCap = (worldCapPercent - worldPercent) / worldRate;
+      const worldSeconds = Math.min(remainingSeconds, secondsToWorldCap);
+      const directWorldGain = Math.min(worldCapPercent - worldPercent, worldRate * worldSeconds);
+      worldPercent += directWorldGain;
+      worldPercentGain += directWorldGain;
+      remainingSeconds -= worldSeconds;
+      reachesWorldCap = worldPercent >= worldCapPercent - 1e-12;
+      fillsWorldCap = reachesWorldCap;
+    }
+
+    let galacticPercentGain = 0;
+    if (remainingSeconds > 0 && reachesWorldCap && galacticPopulation > 0 && galacticPercent < 1) {
+      const baseWorldConversionRate = this.getFaithConversionRatePerSecond() * worldPercent;
+      const galacticRate = (baseWorldConversionRate / 250) * this.getMissionaryGalacticConversionMultiplier();
+      if (galacticRate > 0) {
+        galacticPercentGain = Math.min(1 - galacticPercent, galacticRate * remainingSeconds);
+        worldPercentGain += Math.min(1 - worldPercent, galacticPercentGain);
+      }
+    }
+
+    return {
+      worldBelieverGain: worldPercentGain * worldPopulation,
+      galacticBelieverGain: galacticPercentGain * galacticPopulation,
+      worldPercentGain,
+      galacticPercentGain,
+      worldCapPercent,
+      fillsWorldCap
+    };
+  }
+
+  applyPatienceFaithSpend(hours) {
+    const gains = this.getPatienceFaithSpendGains(hours);
+    if (gains.worldPercentGain <= 0 && gains.galacticPercentGain <= 0) {
+      return gains;
+    }
+
+    if (gains.worldPercentGain > 0) {
+      this.setWorldBelieverPercent(this.getWorldBelieverPercent() + gains.worldPercentGain);
+    }
+
+    if (gains.galacticPercentGain > 0 && this.galacticPopulation > 0) {
+      const galacticPercent = Math.min(1, this.getGalacticBelieverPercent() + gains.galacticPercentGain);
+      this.galacticBelievers = galacticPercent * this.galacticPopulation;
+      this.galacticBelieverPercentFallback = galacticPercent;
+    }
+
+    const worldPercent = this.getWorldBelieverPercent();
+    const galacticPercent = this.getGalacticBelieverPercent();
+    const baseWorldConversionRate = this.getFaithConversionRatePerSecond() * worldPercent;
+    this.lastFaithWorldConversionRate = baseWorldConversionRate * this.getCrusadersWorldConversionMultiplier();
+    this.lastFaithGalacticConversionRate = 0;
+    if (worldPercent >= Math.min(1, galacticPercent + 0.05) - 1e-12 && this.galacticPopulation > 0 && galacticPercent < 1) {
+      this.lastFaithGalacticConversionRate = (baseWorldConversionRate / 250) * this.getMissionaryGalacticConversionMultiplier();
+    }
+    this.lastFaithWorldCap = this.getCurrentWorldBelieverCap();
+    this.updateUI();
+    return gains;
+  }
+
   recalculateGalacticPopulation() {
     let total = spaceManager.getRandomWorldDepartedColonistsTotal
       ? Math.max(0, spaceManager.getRandomWorldDepartedColonistsTotal())
