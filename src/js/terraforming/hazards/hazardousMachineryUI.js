@@ -25,6 +25,9 @@ const hazardousMachineryUICache = {
   hackTimesButton: null,
   statusFactorRows: {},
   factorsSection: null,
+  factorSummaryList: null,
+  baseGrowthValue: null,
+  totalPenaltyValue: null,
   factorGrid: null,
   temperatureHelpers: undefined,
 };
@@ -94,6 +97,18 @@ function formatMachineryNumber(value, decimals = 2) {
   } catch (error) {
     return Number(value || 0).toFixed(decimals);
   }
+}
+
+function formatMachineryPercent(value, decimals = 2) {
+  return `${formatMachineryNumber((value || 0) * 100, decimals)}%`;
+}
+
+function formatSignedMachineryPercent(value, decimals = 2) {
+  const numeric = Number.isFinite(value) ? value : 0;
+  if (!numeric) {
+    return '0%';
+  }
+  return `${numeric > 0 ? '+' : '-'}${formatMachineryNumber(Math.abs(numeric), decimals)}%`;
 }
 
 function getHazardousMachineryTemperatureHelpers() {
@@ -267,9 +282,36 @@ function ensureHazardousMachineryLayout() {
   factorsHeader.className = 'hazard-factors__header';
   const factorsHeaderLabel = doc.createElement('span');
   factorsHeaderLabel.className = 'hazard-factors__title';
-  factorsHeaderLabel.textContent = getHazardousMachineryUiText('labels.modifiers', 'Machinery Modifiers');
+  factorsHeaderLabel.textContent = getHazardousMachineryUiText('labels.modifiers', 'Growth Modifiers');
   factorsHeader.appendChild(factorsHeaderLabel);
   factorsSection.appendChild(factorsHeader);
+
+  const factorSummaryList = doc.createElement('div');
+  factorSummaryList.className = 'hazard-factor-summary-list';
+
+  const baseSummary = doc.createElement('div');
+  baseSummary.className = 'hazard-factor-summary';
+  const baseSummaryLabel = doc.createElement('span');
+  baseSummaryLabel.className = 'hazard-factor-summary__label';
+  baseSummaryLabel.textContent = getHazardousMachineryUiText('labels.baseGrowth', 'Base Growth');
+  const baseSummaryValue = doc.createElement('span');
+  baseSummaryValue.className = 'hazard-factor-summary__value';
+  baseSummary.appendChild(baseSummaryLabel);
+  baseSummary.appendChild(baseSummaryValue);
+
+  const penaltySummary = doc.createElement('div');
+  penaltySummary.className = 'hazard-factor-summary';
+  const penaltySummaryLabel = doc.createElement('span');
+  penaltySummaryLabel.className = 'hazard-factor-summary__label';
+  penaltySummaryLabel.textContent = getHazardousMachineryUiText('labels.totalPenalty', 'Total Average Penalty');
+  const penaltySummaryValue = doc.createElement('span');
+  penaltySummaryValue.className = 'hazard-factor-summary__value';
+  penaltySummary.appendChild(penaltySummaryLabel);
+  penaltySummary.appendChild(penaltySummaryValue);
+
+  factorSummaryList.appendChild(baseSummary);
+  factorSummaryList.appendChild(penaltySummary);
+  factorsSection.appendChild(factorSummaryList);
 
   const hackingBox = doc.createElement('div');
   hackingBox.className = 'hazard-summary hazard-summary--left hazard-machinery-hacking';
@@ -343,6 +385,7 @@ function ensureHazardousMachineryLayout() {
   };
 
   createFactorRow('water', getMachineryResourceLabel('resources.surface.liquidWater.name', 'Water'));
+  createFactorRow('invasiveness', getHazardousMachineryUiText('labels.invasiveness', 'Life Invasiveness'));
   createFactorRow('temperature', getHazardousMachineryUiText('labels.temperature', 'Temperature'));
   createFactorRow('oxygen', getMachineryResourceLabel('resources.atmospheric.oxygen.name', 'Oxygen'));
 
@@ -445,6 +488,9 @@ function ensureHazardousMachineryLayout() {
   hazardousMachineryUICache.hackDivideButton = divideButton;
   hazardousMachineryUICache.hackTimesButton = timesButton;
   hazardousMachineryUICache.factorsSection = factorsSection;
+  hazardousMachineryUICache.factorSummaryList = factorSummaryList;
+  hazardousMachineryUICache.baseGrowthValue = baseSummaryValue;
+  hazardousMachineryUICache.totalPenaltyValue = penaltySummaryValue;
   hazardousMachineryUICache.factorGrid = factorGrid;
   return card;
 }
@@ -499,23 +545,46 @@ function updateHazardousMachineryUI(parameters) {
   hazardousMachineryUICache.statusFactorRows.water.effectCell.textContent = getHazardousMachineryUiText('labels.waterEffect', 'Max Coverage {value}%', {
     value: formatMachineryNumber(status.maxCoverageShare * 100, 2)
   });
+  hazardousMachineryUICache.statusFactorRows.invasiveness.valueCell.textContent = getHazardousMachineryUiText('labels.invasivenessFactor', '{current} vs threshold {threshold} | density {density}', {
+    current: formatMachineryNumber(status.invasivenessValue, 2),
+    threshold: formatMachineryNumber(status.invasivenessThreshold, 2),
+    density: formatMachineryNumber(status.lifeDensity, 4)
+  });
+  hazardousMachineryUICache.statusFactorRows.invasiveness.effectCell.textContent = getHazardousMachineryUiText('labels.invasivenessEffect', 'Decay {value}/s', {
+    value: formatMachineryPercent(status.invasivenessDecayPercentPerSecond, 3)
+  });
   hazardousMachineryUICache.statusFactorRows.temperature.valueCell.textContent = getHazardousMachineryUiText('labels.temperatureFactor', '{value}{unit} (threshold {threshold}{unit})', {
     value: formatHazardousMachineryTemperature(status.temperatureC + 273.15, 2),
     threshold: formatHazardousMachineryTemperature(temperatureThresholdK, 2),
     unit: temperatureUnit
   });
   hazardousMachineryUICache.statusFactorRows.temperature.effectCell.textContent = getHazardousMachineryUiText('labels.temperatureEffect', 'Heat Decay {value}/s', {
-    value: formatMachineryNumber(status.temperatureDecayRatePerSecond, 2)
+    value: formatMachineryPercent(status.temperatureDecayPercentPerSecond, 2)
   });
   hazardousMachineryUICache.statusFactorRows.oxygen.valueCell.textContent = getHazardousMachineryUiText('labels.oxygenFactor', '{value}{unit}', {
     value: formatMachineryNumber(oxygenResource?.value || 0, 2),
     unit: oxygenUnit
   });
   hazardousMachineryUICache.statusFactorRows.oxygen.effectCell.textContent = getHazardousMachineryUiText('labels.oxygenEffect', 'Oxidation {value}/s', {
-    value: formatMachineryNumber(status.oxygenDecayRatePerSecond, 2)
+    value: formatMachineryPercent(status.oxygenDecayPercentPerSecond, 2)
   });
 
+  if (hazardousMachineryUICache.baseGrowthValue) {
+    hazardousMachineryUICache.baseGrowthValue.textContent = formatMachineryPercent(status.baseGrowthPercentPerSecond, 2);
+  }
+  if (hazardousMachineryUICache.totalPenaltyValue) {
+    hazardousMachineryUICache.totalPenaltyValue.textContent = formatMachineryPercent(status.totalPenaltyPercentPerSecond, 2);
+  }
+
   const decayLines = [];
+  decayLines.push(getHazardousMachineryUiText('labels.baseGrowthDecay', 'Base Growth: {value}/s', {
+    value: formatMachineryPercent(status.baseGrowthPercentPerSecond, 2)
+  }));
+  decayLines.push(getHazardousMachineryUiText(
+    status.netNaturalGrowthPercentPerSecond >= 0 ? 'labels.netGrowth' : 'labels.netDecay',
+    status.netNaturalGrowthPercentPerSecond >= 0 ? 'Net Growth: {value}/s' : 'Net Decay: {value}/s',
+    { value: formatMachineryPercent(Math.abs(status.netNaturalGrowthPercentPerSecond), 2) }
+  ));
   if (status.availableAndroids > 0 || status.androidDecayRatePerSecond > 0) {
     decayLines.push(getHazardousMachineryUiText('labels.availableAndroids', 'Available Androids: {value}', {
       value: formatMachineryNumber(status.availableAndroids, 2)
@@ -524,14 +593,19 @@ function updateHazardousMachineryUI(parameters) {
       value: formatMachineryNumber(status.androidDecayRatePerSecond, 2)
     }));
   }
+  if (status.invasivenessDecayRatePerSecond > 0) {
+    decayLines.push(getHazardousMachineryUiText('labels.invasivenessDecay', 'Life Invasiveness: {value}/s', {
+      value: formatMachineryPercent(status.invasivenessDecayPercentPerSecond, 3)
+    }));
+  }
   if (status.temperatureDecayRatePerSecond > 0) {
     decayLines.push(getHazardousMachineryUiText('labels.temperatureDecay', 'Heat Damage: {value}/s', {
-      value: formatMachineryNumber(status.temperatureDecayRatePerSecond, 2)
+      value: formatMachineryPercent(status.temperatureDecayPercentPerSecond, 2)
     }));
   }
   if (status.oxygenDecayRatePerSecond > 0) {
     decayLines.push(getHazardousMachineryUiText('labels.oxygenDecay', 'Oxidation: {value}/s', {
-      value: formatMachineryNumber(status.oxygenDecayRatePerSecond, 2)
+      value: formatMachineryPercent(status.oxygenDecayPercentPerSecond, 2)
     }));
   }
   if (status.crusaderDecayRatePerSecond > 0) {
@@ -544,6 +618,9 @@ function updateHazardousMachineryUI(parameters) {
     : getHazardousMachineryUiText('labels.noDecay', 'No active decay or growth.');
 
   hazardousMachineryUICache.summaryPenalties.textContent = [
+    getHazardousMachineryUiText('labels.buildCost', 'Build Cost: {value}', {
+      value: formatSignedMachineryPercent((status.buildCostMultiplier - 1) * 100, 1)
+    }),
     getHazardousMachineryUiText('labels.nanocolony', 'Nanocolony Growth: {value}', {
       value: `x${formatMachineryNumber(status.nanoColonyGrowthMultiplier, 2)}`
     }),

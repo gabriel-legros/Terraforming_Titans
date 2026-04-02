@@ -1781,6 +1781,8 @@ const styxOverrides = {
       initialCoverage: 1,
       maxCoverageBase: 1,
       waterCoveragePenalty: 0.5,
+      baseGrowth: 0.01,
+      invasivenessDecay: { value: 30, severity: 0.005 },
       oxygenDecayCoefficient: 1e-24,
       temperatureDecayThresholdC: 500,
       temperatureDecayCoefficient: 5e-6,
@@ -1790,6 +1792,7 @@ const styxOverrides = {
         availableAndroidDecayRate: 0.05,
         nanoColonyGrowthMultiplier: 0,
         researchMultiplier: 0.1,
+        buildCostMultiplier: 2,
         electronicsMaintenanceMultiplier: 100,
         shipWorkersPerAssignedShip: 5
       }
@@ -1946,8 +1949,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
-
 
 
 
