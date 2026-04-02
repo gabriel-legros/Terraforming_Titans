@@ -134,11 +134,16 @@ class Aerostat extends BaseColony {
   }
 
   getBuildLimit() {
-    const limit = this._getBuildLimit();
-    if (limit <= 0) {
+    const baseLimit = this._getBuildLimit();
+    if (baseLimit <= 0) {
       return 0;
     }
-    return this.hasCollisionAvoidance() ? Infinity : limit;
+
+    const researchLimit = this.getResearchSelfFundingBuildLimit();
+    if (!this.hasCollisionAvoidance()) {
+      return Math.min(baseLimit, researchLimit);
+    }
+    return researchLimit;
   }
 
   _getRemainingBuildCapacity() {
@@ -220,6 +225,96 @@ class Aerostat extends BaseColony {
     ) / baseLimit;
   }
 
+  getResearchOutputPerAerostat() {
+    const baseResearchOutput = this.production?.colony?.research || 0;
+    if (baseResearchOutput <= 0) {
+      return 0;
+    }
+
+    return (
+      baseResearchOutput *
+      this.getEffectiveProductionMultiplier() *
+      this.getEffectiveResourceProductionMultiplier('colony', 'research')
+    );
+  }
+
+  getResearchMaintenancePerAerostatForCount(count) {
+    const normalizedCount = Math.max(0, Math.floor(count));
+    if (normalizedCount <= 0) {
+      return 0;
+    }
+
+    const researchMultiplier = this.getEffectiveCostMultiplier(
+      'colony',
+      'research'
+    );
+    const baseResearchCost = (this.cost?.colony?.research || 0) * researchMultiplier;
+    const nextUnitSurcharge =
+      this.getCollisionAvoidanceNextUnitResearchSurchargeForCount(
+        normalizedCount
+      );
+    const effectiveResearchCost =
+      normalizedCount > 0 ? baseResearchCost + nextUnitSurcharge : 0;
+
+    if (effectiveResearchCost <= 0) {
+      return 0;
+    }
+
+    const multiplier = this.getEffectiveMaintenanceCostMultiplier(
+      'colony',
+      'research'
+    );
+    return (
+      effectiveResearchCost *
+      maintenanceFraction *
+      this.maintenanceFactor *
+      multiplier
+    );
+  }
+
+  getResearchSelfFundingBuildLimit() {
+    const baseLimit = this._getBuildLimit();
+    if (baseLimit <= 0) {
+      return 0;
+    }
+
+    const outputPerAerostat = this.getResearchOutputPerAerostat();
+    const baseMaintenancePerAerostat =
+      this.getResearchMaintenancePerAerostatForCount(1);
+    if (outputPerAerostat < baseMaintenancePerAerostat) {
+      return 0;
+    }
+
+    if (!this.hasCollisionAvoidance()) {
+      return baseLimit;
+    }
+
+    const maintenanceMultiplier =
+      maintenanceFraction *
+      this.maintenanceFactor *
+      this.getEffectiveMaintenanceCostMultiplier('colony', 'research');
+    if (maintenanceMultiplier <= 0) {
+      return Infinity;
+    }
+
+    const researchMultiplier = this.getEffectiveCostMultiplier(
+      'colony',
+      'research'
+    );
+    const baseResearchCost = (this.cost?.colony?.research || 0) * researchMultiplier;
+    const maintenanceBudget =
+      outputPerAerostat / maintenanceMultiplier - baseResearchCost;
+    if (maintenanceBudget < 0) {
+      return 0;
+    }
+
+    const maxOverCap = Math.floor(
+      (maintenanceBudget * baseLimit) /
+      AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP
+    );
+    return Math.max(baseLimit, baseLimit + maxOverCap);
+  }
+
   getBaseEffectiveCost(buildCount = 1) {
     const effectiveCost = super.getBaseEffectiveCost(buildCount);
     const surcharge = this.getCollisionAvoidanceResearchSurcharge(buildCount);
@@ -244,31 +339,34 @@ class Aerostat extends BaseColony {
   calculateMaintenanceCost() {
     const maintenanceCost = super.calculateMaintenanceCost();
     const activeCount = Math.max(0, Math.floor(this.active || 0));
-    const researchMultiplier = this.getEffectiveCostMultiplier('colony', 'research');
-    const baseResearchCost = (this.cost?.colony?.research || 0) * researchMultiplier;
-    const nextUnitSurcharge =
-      this.getCollisionAvoidanceNextUnitResearchSurchargeForCount(
-      activeCount
-    );
     const effectiveResearchCost =
-      activeCount > 0 ? baseResearchCost + nextUnitSurcharge : 0;
+      this.getResearchMaintenancePerAerostatForCount(activeCount);
 
     if (effectiveResearchCost <= 0) {
       delete maintenanceCost.research;
       return maintenanceCost;
     }
-
-    const multiplier = this.getEffectiveMaintenanceCostMultiplier(
-      'colony',
-      'research'
-    );
-    maintenanceCost.research =
-      effectiveResearchCost *
-      maintenanceFraction *
-      this.maintenanceFactor *
-      multiplier;
+    maintenanceCost.research = effectiveResearchCost;
 
     return maintenanceCost;
+  }
+
+  canAfford(buildCount = 1, reservePercent = 0, additionalReserves = null) {
+    const requested = Math.max(0, Math.floor(buildCount));
+    if (requested <= 0) {
+      return false;
+    }
+
+    if (this.isLiftBelowThreshold(undefined, this.getCurrentSurfacePressure())) {
+      return false;
+    }
+
+    const remaining = this._getRemainingBuildCapacity();
+    if (requested > remaining) {
+      return false;
+    }
+
+    return super.canAfford(buildCount, reservePercent, additionalReserves);
   }
 
   applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime) {
@@ -574,6 +672,14 @@ class Aerostat extends BaseColony {
     const sanitized = Math.trunc(change);
     if (sanitized > 0 && this.isLiftBelowThreshold()) {
       return 0;
+    }
+    if (sanitized > 0) {
+      const maxActive = this.getResearchSelfFundingBuildLimit();
+      if (Number.isFinite(maxActive)) {
+        const currentActive = Math.max(0, Math.floor(this.active || 0));
+        const allowedIncrease = Math.max(0, Math.floor(maxActive) - currentActive);
+        return Math.min(sanitized, allowedIncrease);
+      }
     }
     return sanitized;
   }
@@ -957,6 +1063,16 @@ function formatAerostatResearchCost(value) {
   return formatNumber(value, false, 3, true);
 }
 
+function formatAerostatLimit(value) {
+  if (value === Infinity) {
+    return '∞';
+  }
+  if (!Number.isFinite(value)) {
+    return getAerostatText('ui.buildings.aerostat.notAvailable', 'N/A');
+  }
+  return formatNumber(value, false, 2);
+}
+
 function attachAerostatBuoyancySection(container, structure) {
   if (!(structure instanceof Aerostat)) {
     return;
@@ -1235,18 +1351,38 @@ function updateAerostatBuoyancySection(structure) {
   const liftAvailable =
     Number.isFinite(pressure) && pressure < minPressure ? null : lift;
 
-  const buildLimitRaw = structure._getBuildLimit?.() ?? null;
-  const buildLimit = Number.isFinite(buildLimitRaw)
-    ? Math.max(0, Math.floor(buildLimitRaw))
+  const baseBuildLimitRaw = structure._getBuildLimit?.() ?? null;
+  const baseBuildLimit = Number.isFinite(baseBuildLimitRaw)
+    ? Math.max(0, Math.floor(baseBuildLimitRaw))
     : null;
+  const buildLimitRaw = structure.getBuildLimit?.() ?? baseBuildLimitRaw;
+  const buildLimit = buildLimitRaw === Infinity
+    ? Infinity
+    : Number.isFinite(buildLimitRaw)
+      ? Math.max(0, Math.floor(buildLimitRaw))
+      : null;
 
   const currentAerostats = Number.isFinite(structure?.count)
     ? Math.max(0, Math.floor(structure.count))
     : null;
   const remainingCapacity =
-    buildLimit !== null && currentAerostats !== null
+    Number.isFinite(buildLimit) && currentAerostats !== null
       ? Math.max(0, buildLimit - currentAerostats)
       : null;
+  const researchLimitRaw = structure.getResearchSelfFundingBuildLimit?.() ?? null;
+  const researchLimit = researchLimitRaw === Infinity
+    ? Infinity
+    : Number.isFinite(researchLimitRaw)
+      ? Math.max(0, Math.floor(researchLimitRaw))
+      : null;
+  const nextCount =
+    currentAerostats === null ? null : currentAerostats + 1;
+  const researchOutputPerAerostat =
+    structure.getResearchOutputPerAerostat?.() ?? null;
+  const nextResearchMaintenance =
+    nextCount === null
+      ? null
+      : structure.getResearchMaintenancePerAerostatForCount?.(nextCount) ?? null;
 
   const mitigationDetails = Aerostat.getAerostatMaintenanceMitigation?.() ?? null;
   const mitigationShareRaw = mitigationDetails?.workerShare ?? null;
@@ -1421,20 +1557,36 @@ function updateAerostatBuoyancySection(structure) {
     ui.limitValue.textContent =
       buildLimit === null
         ? getAerostatText('ui.buildings.aerostat.notAvailable', 'N/A')
-        : formatNumber(buildLimit, false, 2);
+        : structure.hasCollisionAvoidance?.() && baseBuildLimit !== null
+          ? getAerostatText(
+              'ui.buildings.aerostat.maximumAerostatsWithBase',
+              '{value} ({base} base)',
+              {
+                value: formatAerostatLimit(buildLimit),
+                base: formatAerostatLimit(baseBuildLimit)
+              }
+            )
+          : formatAerostatLimit(buildLimit);
   }
 
   if (ui.limitInfo) {
     let limitTitle = AEROSTAT_LAND_LIMIT_TOOLTIP;
+    if (baseBuildLimit !== null) {
+      limitTitle += `\n${getAerostatText(
+        'ui.buildings.aerostat.baseMaximumAerostats',
+        'Base land cap: {value}.',
+        { value: formatAerostatLimit(baseBuildLimit) }
+      )}`;
+    }
     if (remainingCapacity !== null) {
       limitTitle += `\n${getAerostatText(
         'ui.buildings.aerostat.remainingCapacity',
         'Remaining aerostat capacity: {value}.',
-        { value: formatNumber(remainingCapacity, false, 2) }
+        { value: formatAerostatLimit(remainingCapacity) }
       )}`;
     }
     if (structure.hasCollisionAvoidance?.()) {
-      const overCap = Math.max(0, (structure.count || 0) - (buildLimit || 0));
+      const overCap = Math.max(0, (structure.count || 0) - (baseBuildLimit || 0));
       const nextSurcharge =
         structure.getCollisionAvoidanceResearchSurcharge?.(1) || 0;
       limitTitle +=
@@ -1459,6 +1611,27 @@ function updateAerostatBuoyancySection(structure) {
         'Current surcharge per new aerostat: {value} research.',
         { value: formatAerostatResearchCost(nextSurcharge) }
       )}`;
+      if (researchLimit !== null) {
+        limitTitle += `\n${getAerostatText(
+          'ui.buildings.aerostat.researchMaximumAerostats',
+          'Research self-funding cap: {value}.',
+          { value: formatAerostatLimit(researchLimit) }
+        )}`;
+      }
+      if (Number.isFinite(researchOutputPerAerostat)) {
+        limitTitle += `\n${getAerostatText(
+          'ui.buildings.aerostat.researchOutputPerAerostat',
+          'Per-aerostat research output at 100% productivity: {value}.',
+          { value: formatAerostatResearchCost(researchOutputPerAerostat) }
+        )}`;
+      }
+      if (Number.isFinite(nextResearchMaintenance)) {
+        limitTitle += `\n${getAerostatText(
+          'ui.buildings.aerostat.nextResearchMaintenancePerAerostat',
+          'Per-aerostat research maintenance for the next aerostat: {value}.',
+          { value: formatAerostatResearchCost(nextResearchMaintenance) }
+        )}`;
+      }
     }
     setTooltipText(ui.limitTooltip, limitTitle, ui, 'limitTooltipText');
   }
