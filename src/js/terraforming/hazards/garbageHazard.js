@@ -229,7 +229,7 @@ class GarbageHazard {
       if (resourcesObj.surface[resourceKey]) {
         const existingResource = resourcesObj.surface[resourceKey];
         existingResource.unlocked = true;
-        if (!unlockOnly && existingResource.value === 0 && resourceValue > 0) {
+        if (!unlockOnly && (options.resetValue === true || existingResource.value === 0) && resourceValue > 0) {
           existingResource.value = resourceValue;
         }
         existingResource.initialValue = calculatedValue || existingResource.initialValue || 0;

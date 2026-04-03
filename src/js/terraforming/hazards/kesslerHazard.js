@@ -140,7 +140,7 @@ class KesslerHazard {
 
     resource.unlocked = true;
     resource.initialValue = calculatedValue;
-    if (!unlockOnly && resource.value === 0 && calculatedValue > 0) {
+    if (!unlockOnly && (options.resetValue === true || resource.value === 0) && calculatedValue > 0) {
       resource.value = calculatedValue;
     }
 

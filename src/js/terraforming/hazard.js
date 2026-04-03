@@ -193,6 +193,109 @@ class HazardManager {
     this.pulsarHazard = PulsarHazardCtor ? new PulsarHazardCtor(this) : null;
   }
 
+  normalizeHazardParametersForKey(key, value) {
+    if (key === 'hazardousBiomass' && this.hazardousBiomassHazard) {
+      return this.hazardousBiomassHazard.normalize(value);
+    }
+
+    if (key === 'hazardousMachinery' && this.hazardousMachineryHazard) {
+      return this.hazardousMachineryHazard.normalize(value);
+    }
+
+    if (key === 'garbage' && this.garbageHazard) {
+      return this.garbageHazard.normalize(value);
+    }
+
+    if (key === 'kessler' && this.kesslerHazard) {
+      return this.kesslerHazard.normalize(value);
+    }
+
+    if (key === 'pulsar' && this.pulsarHazard) {
+      return this.pulsarHazard.normalize(value);
+    }
+
+    return value;
+  }
+
+  normalizeHazardParameters(parameters = {}) {
+    const normalized = {};
+    Object.keys(parameters).forEach((key) => {
+      normalized[key] = this.normalizeHazardParametersForKey(key, parameters[key]);
+    });
+    return normalized;
+  }
+
+  applyParameters(parameters = {}) {
+    const serialized = JSON.stringify(parameters);
+    const changed = serialized !== this.lastSerializedParameters;
+    this.parameters = parameters;
+    this.lastSerializedParameters = serialized;
+    return changed;
+  }
+
+  initializeHazardState(key, terraformingState = null, options = {}) {
+    const activeTerraforming = terraformingState || getTerraforming();
+    const hazardParameters = this.hasHazardParameters(key) ? this.parameters[key] : null;
+
+    if (key === 'hazardousBiomass') {
+      if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.syncPendingTravelTuning) {
+        this.hazardousBiomassHazard.syncPendingTravelTuning(hazardParameters, options);
+      }
+      if (this.hazardousBiomassHazard) {
+        this.hazardousBiomassHazard.updateHazardousLandReservation(activeTerraforming, hazardParameters);
+      }
+      return;
+    }
+
+    if (key === 'hazardousMachinery') {
+      if (this.hazardousMachineryHazard && hazardParameters) {
+        this.hazardousMachineryHazard.initialize(activeTerraforming, hazardParameters, options);
+      } else {
+        this.setHazardLandReservationShare('hazardousMachinery', 0);
+      }
+      return;
+    }
+
+    if (key === 'garbage') {
+      if (this.garbageHazard && hazardParameters) {
+        this.garbageHazard.initializeResources(activeTerraforming, hazardParameters, options);
+      } else if (this.garbageHazard) {
+        this.garbageHazard.androidAttritionRates = {};
+      }
+      return;
+    }
+
+    if (key === 'kessler') {
+      if (this.kesslerHazard && hazardParameters) {
+        this.kesslerHazard.initializeResources(activeTerraforming, hazardParameters, options);
+      }
+      return;
+    }
+
+    if (key === 'pulsar') {
+      if (this.pulsarHazard && hazardParameters) {
+        this.pulsarHazard.initialize(activeTerraforming, hazardParameters, options);
+        if (activeTerraforming && activeTerraforming.updateSurfaceRadiation) {
+          activeTerraforming.updateSurfaceRadiation();
+        }
+      } else if (this.pulsarHazard) {
+        this.pulsarHazard.clearEffectsOnTravel(activeTerraforming);
+        if (activeTerraforming && activeTerraforming.updateSurfaceRadiation) {
+          activeTerraforming.updateSurfaceRadiation();
+        }
+      }
+      if (hazardParameters) {
+        addEffect({
+          target: 'project',
+          targetId: 'artificialSky',
+          type: 'enable',
+          effectId: 'pulsar-hazard-artificial-sky-enable',
+          sourceId: 'pulsar-hazard'
+        });
+      }
+    }
+  }
+
   enable() {
     if (this.enabled) {
       return;
@@ -222,94 +325,15 @@ class HazardManager {
   initialize(parameters = null, options = {}) {
     const planetHazards = getPlanetHazards(parameters);
     const cloned = cloneHazardParameters(planetHazards);
-    const normalized = {};
-
-    Object.keys(cloned).forEach((key) => {
-      if (key === 'hazardousBiomass' && this.hazardousBiomassHazard) {
-        normalized.hazardousBiomass = this.hazardousBiomassHazard.normalize(cloned.hazardousBiomass);
-        return;
-      }
-
-      if (key === 'hazardousMachinery' && this.hazardousMachineryHazard) {
-        normalized.hazardousMachinery = this.hazardousMachineryHazard.normalize(cloned.hazardousMachinery);
-        return;
-      }
-
-      if (key === 'garbage' && this.garbageHazard) {
-        normalized.garbage = this.garbageHazard.normalize(cloned.garbage);
-        return;
-      }
-
-      if (key === 'kessler' && this.kesslerHazard) {
-        normalized.kessler = this.kesslerHazard.normalize(cloned.kessler);
-        return;
-      }
-
-      if (key === 'pulsar' && this.pulsarHazard) {
-        normalized.pulsar = this.pulsarHazard.normalize(cloned.pulsar);
-        return;
-      }
-
-      normalized[key] = cloned[key];
-    });
-
-    const serialized = JSON.stringify(normalized);
-    const changed = serialized !== this.lastSerializedParameters;
-
-    this.parameters = normalized;
-    this.lastSerializedParameters = serialized;
+    const normalized = this.normalizeHazardParameters(cloned);
+    const changed = this.applyParameters(normalized);
     this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
-    const hazardousBiomass = this.hasHazardParameters('hazardousBiomass') ? this.parameters.hazardousBiomass : null;
-    const hazardousMachinery = this.hasHazardParameters('hazardousMachinery') ? this.parameters.hazardousMachinery : null;
-    const garbage = this.hasHazardParameters('garbage') ? this.parameters.garbage : null;
-    const kessler = this.hasHazardParameters('kessler') ? this.parameters.kessler : null;
-    const pulsar = this.hasHazardParameters('pulsar') ? this.parameters.pulsar : null;
-
-    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.syncPendingTravelTuning) {
-      this.hazardousBiomassHazard.syncPendingTravelTuning(hazardousBiomass, options);
-    }
-
     const activeTerraforming = getTerraforming();
-    if (this.hazardousBiomassHazard) {
-      this.hazardousBiomassHazard.updateHazardousLandReservation(activeTerraforming, hazardousBiomass);
-    }
-
-    if (this.hazardousMachineryHazard && hazardousMachinery) {
-      this.hazardousMachineryHazard.initialize(activeTerraforming, hazardousMachinery, options);
-    } else {
-      this.setHazardLandReservationShare('hazardousMachinery', 0);
-    }
-
-    if (this.garbageHazard && garbage) {
-      this.garbageHazard.initializeResources(activeTerraforming, garbage, options);
-    } else if (this.garbageHazard) {
-      this.garbageHazard.androidAttritionRates = {};
-    }
-
-    if (this.kesslerHazard && kessler) {
-      this.kesslerHazard.initializeResources(activeTerraforming, kessler, options);
-    }
-
-    if (this.pulsarHazard && pulsar) {
-      this.pulsarHazard.initialize(activeTerraforming, pulsar, options);
-      if (activeTerraforming && activeTerraforming.updateSurfaceRadiation) {
-        activeTerraforming.updateSurfaceRadiation();
-      }
-    } else if (this.pulsarHazard) {
-      this.pulsarHazard.clearEffectsOnTravel(activeTerraforming);
-      if (activeTerraforming && activeTerraforming.updateSurfaceRadiation) {
-        activeTerraforming.updateSurfaceRadiation();
-      }
-    }
-    if (pulsar) {
-      addEffect({
-        target: 'project',
-        targetId: 'artificialSky',
-        type: 'enable',
-        effectId: 'pulsar-hazard-artificial-sky-enable',
-        sourceId: 'pulsar-hazard'
-      });
-    }
+    this.initializeHazardState('hazardousBiomass', activeTerraforming, options);
+    this.initializeHazardState('hazardousMachinery', activeTerraforming, options);
+    this.initializeHazardState('garbage', activeTerraforming, options);
+    this.initializeHazardState('kessler', activeTerraforming, options);
+    this.initializeHazardState('pulsar', activeTerraforming, options);
 
     this.syncHazardLandReservation(activeTerraforming);
 
@@ -460,6 +484,37 @@ class HazardManager {
     } catch (error) {
       // no-op
     }
+  }
+
+  resetHazardFromParameters(key, options = {}) {
+    const normalizedKey = key && key.trim ? key.trim() : key;
+    if (!normalizedKey) {
+      return false;
+    }
+
+    const planetHazards = getPlanetHazards();
+    const nextParameters = cloneHazardParameters(this.parameters);
+    if (planetHazards && Object.prototype.hasOwnProperty.call(planetHazards, normalizedKey)) {
+      nextParameters[normalizedKey] = this.normalizeHazardParametersForKey(normalizedKey, cloneHazardParameters(planetHazards[normalizedKey]));
+    } else {
+      delete nextParameters[normalizedKey];
+    }
+
+    this.applyParameters(nextParameters);
+    this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
+
+    const activeTerraforming = getTerraforming();
+    this.initializeHazardState(normalizedKey, activeTerraforming, {
+      ...options,
+      resetValue: options.resetValue !== false
+    });
+    this.syncHazardLandReservation(activeTerraforming);
+
+    if (this.enabled) {
+      this.updateUI();
+    }
+
+    return true;
   }
 
   update(deltaTime = 0, terraformingState = null) {

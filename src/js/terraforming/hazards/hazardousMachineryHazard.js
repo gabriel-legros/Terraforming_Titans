@@ -44,6 +44,17 @@ function clampRatio(value) {
   return value;
 }
 
+function interpolateDivisorMultiplier(minMultiplier, hazardStrength) {
+  const minimum = Math.max(0, minMultiplier);
+  if (!(minimum > 0) || minimum >= 1) {
+    return minimum >= 1 ? 1 : 0;
+  }
+
+  const divisorAtFullHazard = 1 / minimum;
+  const divisor = 1 + (divisorAtFullHazard - 1) * clampRatio(hazardStrength);
+  return 1 / divisor;
+}
+
 function normalizeHazardousMachineryParameters(parameters = {}) {
   const source = isPlainObject(parameters) ? parameters : {};
   const penalties = isPlainObject(source.penalties) ? source.penalties : {};
@@ -207,7 +218,7 @@ class HazardousMachineryHazard {
 
     resource.initialValue = this.getInitialAmount(terraforming, parameters);
 
-    if (!options.unlockOnly && !options.preserveValue && !(resource.value > 0)) {
+    if (!options.unlockOnly && !options.preserveValue && (options.resetValue === true || !(resource.value > 0))) {
       resource.value = resource.initialValue;
     }
 
@@ -352,7 +363,10 @@ class HazardousMachineryHazard {
     const baseGrowthPercentPerSecond = Math.max(0, parameters?.baseGrowth ?? 0);
     const penalties = parameters?.penalties || {};
     const nanoColonyGrowthMultiplier = 1 - hazardStrength * (1 - Math.max(0, penalties.nanoColonyGrowthMultiplier || 0));
-    const researchMultiplier = 1 - hazardStrength * (1 - Math.max(0, penalties.researchMultiplier ?? 0.1));
+    const researchMultiplier = interpolateDivisorMultiplier(
+      Math.max(0, penalties.researchMultiplier ?? 0.1),
+      hazardStrength
+    );
     const buildCostMultiplier = 1 + hazardStrength * (Math.max(1, penalties.buildCostMultiplier || 1) - 1);
     const electronicsMaintenanceMultiplier = 1 + hazardStrength * (Math.max(1, penalties.electronicsMaintenanceMultiplier || 1) - 1);
     const shipWorkersPerAssignedShip = Math.max(0, penalties.shipWorkersPerAssignedShip || 0);
