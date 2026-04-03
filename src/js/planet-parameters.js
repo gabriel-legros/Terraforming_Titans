@@ -1793,7 +1793,7 @@ const styxOverrides = {
         nanoColonyGrowthMultiplier: 0,
         researchMultiplier: 0.1,
         buildCostMultiplier: 2,
-        electronicsMaintenanceMultiplier: 100,
+        electronicsMaintenanceMultiplier: 10,
         shipWorkersPerAssignedShip: 5
       }
     }

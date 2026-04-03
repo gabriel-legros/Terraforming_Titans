@@ -288,6 +288,9 @@ function applyRWGEffects() {
         type: eff.type,
         target: eff.target,
         targetId: eff.targetId,
+        resourceCategory: eff.resourceCategory,
+        resourceTarget: eff.resourceTarget,
+        resourceId: eff.resourceId,
         excludeSpaceships: eff.excludeSpaceships,
         value,
       });
