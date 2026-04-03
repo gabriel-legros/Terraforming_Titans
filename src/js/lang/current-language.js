@@ -471,7 +471,7 @@ setLanguageData({
         sandQuarryGlassAndElectronics: '% of G.S. + 4*E.F.',
       },
       solarPanel: {
-        limitTooltip: 'Solar panels are limited to 10x the initial land amount.',
+        limitTooltip: 'Solar panels are limited to 2.5x the initial land amount.',
       },
       windTurbine: {
         limitTooltip: 'Wind turbine arrays are limited to 1 per 50 units of initial land.',
