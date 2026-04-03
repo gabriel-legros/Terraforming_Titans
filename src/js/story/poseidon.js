@@ -441,7 +441,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Text TBA \n Travel to Styx to continue.",
+    narrative: "Pete : '... And you need HOPE for this?'  \n Mary : 'Yes, there are Promethean defenses on this world... just like the others.'  \n Pete : '...  You have my full support.  Once you get the Gabbagian, put him to work.  We have countless imperial defectors but they don't integrate well in our military structure.  We need someone like Ghost to command them.'  \n Mary : 'You... are not opposed?'  \n Pete : 'Why not?  Zeus is located in core Okoth territory.  This is a good use of your time.  The Empire already hates us anyway.  Invading their doorstep was bound to happen eventually.'  \n Mary : 'Alright then...  Thanks.' \n Travel to Styx to continue.",
     prerequisites: ['poseidon.38.7'],
     objectives: [
       { type: 'currentPlanet', planetId: 'styx' }

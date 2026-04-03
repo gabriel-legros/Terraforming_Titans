@@ -577,9 +577,6 @@ function updateHazardousMachineryUI(parameters) {
   }
 
   const decayLines = [];
-  decayLines.push(getHazardousMachineryUiText('labels.baseGrowthDecay', 'Base Growth: {value}/s', {
-    value: formatMachineryPercent(status.baseGrowthPercentPerSecond, 2)
-  }));
   decayLines.push(getHazardousMachineryUiText(
     status.netNaturalGrowthPercentPerSecond >= 0 ? 'labels.netGrowth' : 'labels.netDecay',
     status.netNaturalGrowthPercentPerSecond >= 0 ? 'Net Growth: {value}/s' : 'Net Decay: {value}/s',
@@ -589,7 +586,7 @@ function updateHazardousMachineryUI(parameters) {
     decayLines.push(getHazardousMachineryUiText('labels.availableAndroids', 'Available Androids: {value}', {
       value: formatMachineryNumber(status.availableAndroids, 2)
     }));
-    decayLines.push(getHazardousMachineryUiText('labels.androidDecay', 'Android Decay: {value}/s', {
+    decayLines.push(getHazardousMachineryUiText('labels.androidDecay', 'Android Hacking: {value}/s', {
       value: formatMachineryNumber(status.androidDecayRatePerSecond, 2)
     }));
   }

@@ -2311,7 +2311,7 @@ setLanguageData({
             activeShips: 'Active Assigned Ships: {value}',
             shipWorkers: 'Ship Worker Tax: {value}',
             availableAndroids: 'Available Androids: {value}',
-            androidDecay: 'Android Decay: {value}/s',
+            androidDecay: 'Android Hacking: {value}/s',
             baseGrowthDecay: 'Base Growth: {value}/s',
             netGrowth: 'Net Growth: {value}/s',
             netDecay: 'Net Decay: {value}/s',
