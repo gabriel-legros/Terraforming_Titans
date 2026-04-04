@@ -4,6 +4,7 @@ const kesslerHazardUICache = {
   rootResolved: false,
   card: null,
   title: null,
+  titleStatus: null,
   chartWrapper: null,
   chart: null,
   chartBars: null,
@@ -46,6 +47,22 @@ const kesslerHazardUICache = {
 
 function getKesslerHazardText(path, fallback, vars) {
   return t(`ui.terraforming.hazardsUi.kessler.${path}`, vars, fallback);
+}
+
+function getKesslerStatusText(isCleared) {
+  return t(
+    `ui.terraforming.hazardsUi.statusLabels.${isCleared ? 'cleared' : 'active'}`,
+    null,
+    isCleared ? 'Cleared' : 'Active'
+  );
+}
+
+function setKesslerTitleStatus(isCleared) {
+  if (!kesslerHazardUICache.titleStatus) {
+    return;
+  }
+  kesslerHazardUICache.titleStatus.textContent = ` (${getKesslerStatusText(isCleared)})`;
+  kesslerHazardUICache.titleStatus.className = `hazard-card__status hazard-card__status--${isCleared ? 'cleared' : 'active'}`;
 }
 
 const KESSLER_EFFECTS = [
@@ -303,7 +320,13 @@ function buildKesslerLayout() {
 
     const title = doc.createElement('h3');
     title.className = 'hazard-card__title';
-    title.textContent = getKesslerHazardText('title', 'Kessler Skies');
+    const titleLabel = doc.createElement('span');
+    titleLabel.textContent = getKesslerHazardText('title', 'Kessler Skies');
+    const titleStatus = doc.createElement('span');
+    titleStatus.className = 'hazard-card__status hazard-card__status--cleared';
+    titleStatus.textContent = ` (${getKesslerStatusText(true)})`;
+    title.appendChild(titleLabel);
+    title.appendChild(titleStatus);
     attachHazardCardCollapse(card, title);
     card.appendChild(title);
 
@@ -507,6 +530,7 @@ function buildKesslerLayout() {
 
     kesslerHazardUICache.card = card;
     kesslerHazardUICache.title = title;
+    kesslerHazardUICache.titleStatus = titleStatus;
     kesslerHazardUICache.chartWrapper = chartWrapper;
     kesslerHazardUICache.chart = chart;
     kesslerHazardUICache.chartBars = chartBars;
@@ -763,6 +787,7 @@ function updateKesslerHazardUI(kesslerParameters) {
     const manager = getHazardManager();
     const debris = resourcesState.special.orbitalDebris;
     const isCleared = manager.kesslerHazard.isCleared();
+    setKesslerTitleStatus(isCleared);
     const decaySummary = manager.kesslerHazard.getDecaySummary();
     const baseline = manager.kesslerHazard.getPeriapsisBaseline();
     const distribution = manager.kesslerHazard.getPeriapsisDistribution();

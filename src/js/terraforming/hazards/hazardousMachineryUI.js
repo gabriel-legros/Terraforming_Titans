@@ -4,6 +4,7 @@ const hazardousMachineryUICache = {
   rootResolved: false,
   card: null,
   title: null,
+  titleStatus: null,
   summaryStatusText: null,
   summaryStatus: null,
   summaryDecay: null,
@@ -38,6 +39,22 @@ function getHazardousMachineryUiText(path, fallback, vars) {
   } catch (error) {
     return fallback;
   }
+}
+
+function getHazardousMachineryStatusText(isCleared) {
+  return t(
+    `ui.terraforming.hazardsUi.statusLabels.${isCleared ? 'cleared' : 'active'}`,
+    null,
+    isCleared ? 'Cleared' : 'Active'
+  );
+}
+
+function setHazardousMachineryTitleStatus(isCleared) {
+  if (!hazardousMachineryUICache.titleStatus) {
+    return;
+  }
+  hazardousMachineryUICache.titleStatus.textContent = ` (${getHazardousMachineryStatusText(isCleared)})`;
+  hazardousMachineryUICache.titleStatus.className = `hazard-card__status hazard-card__status--${isCleared ? 'cleared' : 'active'}`;
 }
 
 function getHazardousMachineryDocument() {
@@ -426,7 +443,13 @@ function ensureHazardousMachineryLayout() {
 
   const title = doc.createElement('h3');
   title.className = 'hazard-card__title';
-  title.textContent = getHazardousMachineryUiText('title', 'Hazardous Machinery');
+  const titleLabel = doc.createElement('span');
+  titleLabel.textContent = getHazardousMachineryUiText('title', 'Hazardous Machinery');
+  const titleStatus = doc.createElement('span');
+  titleStatus.className = 'hazard-card__status hazard-card__status--cleared';
+  titleStatus.textContent = ` (${getHazardousMachineryStatusText(true)})`;
+  title.appendChild(titleLabel);
+  title.appendChild(titleStatus);
   attachHazardousMachineryCardCollapse(card, title);
   card.appendChild(title);
 
@@ -650,6 +673,7 @@ function ensureHazardousMachineryLayout() {
 
   hazardousMachineryUICache.card = card;
   hazardousMachineryUICache.title = title;
+  hazardousMachineryUICache.titleStatus = titleStatus;
   hazardousMachineryUICache.barSafe = safe;
   hazardousMachineryUICache.barHazard = hazard;
   hazardousMachineryUICache.barSafeLabel = safeLabel;
@@ -678,6 +702,7 @@ function updateHazardousMachineryUI(parameters) {
   const terraformingState = getHazardousMachineryTerraforming();
   if (!card || !hazardInstance || !terraformingState || !parameters) {
     if (card) {
+      setHazardousMachineryTitleStatus(true);
       card.style.display = 'none';
     }
     return;
@@ -694,6 +719,7 @@ function updateHazardousMachineryUI(parameters) {
   const hasEnoughElectronicsForBatch = (electronics?.value || 0) >= requestedCost;
 
   card.style.display = '';
+  setHazardousMachineryTitleStatus(hazardInstance.isCleared());
 
   hazardousMachineryUICache.summaryStatusText.textContent = [
     getHazardousMachineryUiText('labels.currentCoverage', 'Current Coverage: {value}%', {

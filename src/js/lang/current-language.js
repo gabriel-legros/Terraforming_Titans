@@ -2106,6 +2106,10 @@ setLanguageData({
         },
       },
       hazardsUi: {
+        statusLabels: {
+          active: 'Active',
+          cleared: 'Cleared',
+        },
         pulsar: {
           title: 'Pulsar',
           detected: 'Pulsar hazard detected.',

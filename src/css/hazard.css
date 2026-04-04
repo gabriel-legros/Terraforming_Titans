@@ -26,6 +26,19 @@
   user-select: none;
 }
 
+.hazard-card__status {
+  font-size: 0.85em;
+  font-weight: 700;
+}
+
+.hazard-card__status--active {
+  color: #ff7b7b;
+}
+
+.hazard-card__status--cleared {
+  color: #67d787;
+}
+
 .hazard-card__collapse-arrow {
   font-size: 14px;
   line-height: 1;

@@ -4,6 +4,7 @@ const pulsarHazardUICache = {
   rootResolved: false,
   card: null,
   title: null,
+  titleStatus: null,
   barSafe: null,
   barHazard: null,
   barSafeLabel: null,
@@ -21,6 +22,22 @@ const pulsarHazardUICache = {
 
 function getPulsarHazardText(path, fallback, vars) {
   return t(`ui.terraforming.hazardsUi.pulsar.${path}`, vars, fallback);
+}
+
+function getPulsarStatusText(isCleared) {
+  return t(
+    `ui.terraforming.hazardsUi.statusLabels.${isCleared ? 'cleared' : 'active'}`,
+    null,
+    isCleared ? 'Cleared' : 'Active'
+  );
+}
+
+function setPulsarTitleStatus(isCleared) {
+  if (!pulsarHazardUICache.titleStatus) {
+    return;
+  }
+  pulsarHazardUICache.titleStatus.textContent = ` (${getPulsarStatusText(isCleared)})`;
+  pulsarHazardUICache.titleStatus.className = `hazard-card__status hazard-card__status--${isCleared ? 'cleared' : 'active'}`;
 }
 
 const PULSAR_DISABLED_PROJECTS_TEXT = getPulsarHazardText(
@@ -254,7 +271,13 @@ function ensurePulsarLayout() {
 
   const titleRow = doc.createElement('div');
   titleRow.className = 'hazard-card__title';
-  titleRow.textContent = getPulsarHazardText('title', 'Pulsar');
+  const titleLabel = doc.createElement('span');
+  titleLabel.textContent = getPulsarHazardText('title', 'Pulsar');
+  const titleStatus = doc.createElement('span');
+  titleStatus.className = 'hazard-card__status hazard-card__status--cleared';
+  titleStatus.textContent = ` (${getPulsarStatusText(true)})`;
+  titleRow.appendChild(titleLabel);
+  titleRow.appendChild(titleStatus);
   attachHazardCardCollapse(card, titleRow);
   card.appendChild(titleRow);
 
@@ -431,6 +454,7 @@ function ensurePulsarLayout() {
   root.appendChild(card);
   pulsarHazardUICache.card = card;
   pulsarHazardUICache.title = titleRow;
+  pulsarHazardUICache.titleStatus = titleStatus;
   pulsarHazardUICache.barSafe = safeFill;
   pulsarHazardUICache.barHazard = hazardFill;
   pulsarHazardUICache.barSafeLabel = safeLabel;
@@ -470,6 +494,7 @@ function updatePulsarHazardUI(pulsarParameters) {
   const isActive = hasPulsarHazard && !cleared;
   card.style.display = hasPulsarHazard ? '' : 'none';
   card.classList.toggle('hazard-card--active', isActive);
+  setPulsarTitleStatus(!isActive);
   if (!hasPulsarHazard) {
     if (pulsarHazardUICache.viz) {
       pulsarHazardUICache.viz.classList.remove('pulsar-viz--storm');

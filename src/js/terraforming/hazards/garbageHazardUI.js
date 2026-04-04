@@ -4,6 +4,7 @@ const garbageHazardUICache = {
   rootResolved: false,
   card: null,
   title: null,
+  titleStatus: null,
   summaryLeftBody: null,
   summaryCenterBody: null,
   summaryRightBody: null,
@@ -34,6 +35,22 @@ function getGarbageHazardText(path, fallback, vars) {
 
 function getGarbageHazardLabel(path, fallback, vars) {
   return getGarbageHazardText(`labels.${path}`, fallback, vars);
+}
+
+function getGarbageStatusText(isCleared) {
+  return t(
+    `ui.terraforming.hazardsUi.statusLabels.${isCleared ? 'cleared' : 'active'}`,
+    null,
+    isCleared ? 'Cleared' : 'Active'
+  );
+}
+
+function setGarbageTitleStatus(isCleared) {
+  if (!garbageHazardUICache.titleStatus) {
+    return;
+  }
+  garbageHazardUICache.titleStatus.textContent = ` (${getGarbageStatusText(isCleared)})`;
+  garbageHazardUICache.titleStatus.className = `hazard-card__status hazard-card__status--${isCleared ? 'cleared' : 'active'}`;
 }
 
 function getGarbagePenaltyLabel(key) {
@@ -563,7 +580,13 @@ function ensureGarbageLayout() {
 
   const title = doc.createElement('h3');
   title.className = 'hazard-card__title';
-  title.textContent = getGarbageHazardText('title', 'Garbage Hazard');
+  const titleLabel = doc.createElement('span');
+  titleLabel.textContent = getGarbageHazardText('title', 'Garbage Hazard');
+  const titleStatus = doc.createElement('span');
+  titleStatus.className = 'hazard-card__status hazard-card__status--cleared';
+  titleStatus.textContent = ` (${getGarbageStatusText(true)})`;
+  title.appendChild(titleLabel);
+  title.appendChild(titleStatus);
   attachHazardCardCollapse(card, title);
   card.appendChild(title);
 
@@ -656,6 +679,7 @@ function ensureGarbageLayout() {
 
   garbageHazardUICache.card = card;
   garbageHazardUICache.title = title;
+  garbageHazardUICache.titleStatus = titleStatus;
   garbageHazardUICache.summaryLeftBody = summaryLeftBody;
   garbageHazardUICache.summaryCenterBody = summaryCenterBody;
   garbageHazardUICache.summaryRightBody = summaryRightBody;
@@ -680,10 +704,13 @@ function updateGarbageHazardUI(garbageParameters) {
 
   garbageHazardUICache.card.style.display = garbageParameters ? '' : 'none';
   if (!garbageParameters) {
+    setGarbageTitleStatus(true);
     return;
   }
 
   const manager = getHazardManager();
+  const isCleared = !!(manager && manager.garbageHazard && manager.garbageHazard.isCleared(null, garbageParameters));
+  setGarbageTitleStatus(isCleared);
   const attritionDelaySeconds = manager && manager.getGarbageAndroidAttritionDelaySeconds
     ? manager.getGarbageAndroidAttritionDelaySeconds()
     : 0;

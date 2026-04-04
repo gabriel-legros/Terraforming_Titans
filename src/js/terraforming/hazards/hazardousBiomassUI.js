@@ -4,6 +4,7 @@ const hazardUICache = {
   rootResolved: false,
   card: null,
   title: null,
+  titleStatus: null,
   message: null,
   summaryRow: null,
   summaryLeft: null,
@@ -57,6 +58,22 @@ function getHazardousBiomassLabel(path, fallback, vars) {
 
 function getHazardousBiomassTooltip(path, fallback, vars) {
   return getHazardousBiomassText(`tooltips.${path}`, fallback, vars);
+}
+
+function getHazardCardStatusText(isCleared) {
+  return t(
+    `ui.terraforming.hazardsUi.statusLabels.${isCleared ? 'cleared' : 'active'}`,
+    null,
+    isCleared ? 'Cleared' : 'Active'
+  );
+}
+
+function setHazardousBiomassTitleStatus(isCleared) {
+  if (!hazardUICache.titleStatus) {
+    return;
+  }
+  hazardUICache.titleStatus.textContent = ` (${getHazardCardStatusText(isCleared)})`;
+  hazardUICache.titleStatus.className = `hazard-card__status hazard-card__status--${isCleared ? 'cleared' : 'active'}`;
 }
 
 function getHazardousBiomassZoneLabel(zone) {
@@ -1211,7 +1228,13 @@ function ensureLayout() {
 
   const title = doc.createElement('h3');
   title.className = 'hazard-card__title';
-  title.textContent = getHazardousBiomassText('title', 'Hazardous Biomass');
+  const titleLabel = doc.createElement('span');
+  titleLabel.textContent = getHazardousBiomassText('title', 'Hazardous Biomass');
+  const titleStatus = doc.createElement('span');
+  titleStatus.className = 'hazard-card__status hazard-card__status--cleared';
+  titleStatus.textContent = ` (${getHazardCardStatusText(true)})`;
+  title.appendChild(titleLabel);
+  title.appendChild(titleStatus);
   attachHazardCardCollapse(card, title);
   card.appendChild(title);
 
@@ -1392,6 +1415,7 @@ function ensureLayout() {
 
   hazardUICache.card = card;
   hazardUICache.title = title;
+  hazardUICache.titleStatus = titleStatus;
   hazardUICache.message = message;
   hazardUICache.summaryLeft = summaryLeft;
   hazardUICache.summaryLeftHeader = summaryLeftHeader;
@@ -1522,6 +1546,7 @@ function updateHazardousBiomassUI(parameters = {}) {
   const hasAnyHazard = hazardKeys.length > 0;
   
   if (!hazard) {
+    setHazardousBiomassTitleStatus(true);
     // Hide the hazardous biomass card if no hazardousBiomass hazard
     // but don't show "No Hazards Detected" if other hazards exist
     if (!hasAnyHazard) {
@@ -1540,6 +1565,9 @@ function updateHazardousBiomassUI(parameters = {}) {
   const manager = getHazardManager();
   const terraformingState = getTerraforming();
   const resourcesState = getResources();
+  const isCleared = !(manager && manager.hazardousBiomassHazard && !manager.hazardousBiomassHazard.isCleared(terraformingState));
+
+  setHazardousBiomassTitleStatus(isCleared);
 
   const controlShare = manager && manager.getHazardousBiomassControl
     ? manager.getHazardousBiomassControl()
