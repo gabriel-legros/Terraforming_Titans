@@ -551,7 +551,8 @@ class HazardousMachineryHazard {
     const electronicsMaintenanceMultiplier = 1 + hazardStrength * (Math.max(1, penalties.electronicsMaintenanceMultiplier || 1) - 1);
     const shipWorkersPerAssignedShip = Math.max(0, penalties.shipWorkersPerAssignedShip || 0);
     const availableAndroids = this.getAvailableAndroids();
-    const androidDecayRatePerSecond = availableAndroids * Math.max(0, penalties.availableAndroidDecayRate || 0) * hazardStrength;
+    const decayEligibleAndroids = availableAndroids >= 10 ? availableAndroids : 0;
+    const androidDecayRatePerSecond = decayEligibleAndroids * Math.max(0, penalties.availableAndroidDecayRate || 0) * hazardStrength;
     const lifeDensity = this.getLifeBiomassDensity(terraforming);
     const invasivenessEntry = parameters?.invasivenessPreference || null;
     const invasivenessValue = this.getLifeDesignInvasiveness();

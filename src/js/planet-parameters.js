@@ -1782,7 +1782,7 @@ const styxOverrides = {
       maxCoverageBase: 1,
       waterCoveragePenalty: 0.5,
       baseGrowth: { value: 0.01 },
-      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.005 },
+      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.0001 },
       oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.0001 },
       temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.002 },
       crusaderRemovalPerSecond: 0.5,
@@ -1793,7 +1793,7 @@ const styxOverrides = {
         researchMultiplier: 0.1,
         buildCostMultiplier: 2,
         electronicsMaintenanceMultiplier: 10,
-        shipWorkersPerAssignedShip: 5
+        shipWorkersPerAssignedShip: 50
       }
     }
   },

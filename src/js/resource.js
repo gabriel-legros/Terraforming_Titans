@@ -1586,6 +1586,9 @@ function calculateProjectProductivities(resources, deltaTime, projectData = {}) 
         }
       }
     }
+    if (project?.getHazardousMachineryWorkerAvailabilityRatio) {
+      productivity = Math.min(productivity, project.getHazardousMachineryWorkerAvailabilityRatio());
+    }
     productivityMap[name] = Math.max(0, Math.min(1, productivity));
   }
 

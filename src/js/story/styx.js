@@ -7,10 +7,10 @@ progressStyx.storyProjects.styx_probe_manufacturing = {
   chapter: 40,
   cost: {
     colony: {
-      metal: 10_000_000_000,
-      components: 5_000_000_000,
-      electronics: 1_000_000_000,
-      energy: 10_000_000_000_000_000
+      metal: 1_000_000_000,
+      components: 100_000_000,
+      electronics: 50_000_000,
+      energy: 10_000_000_000_000
     }
   },
   duration: 600_000,
@@ -109,7 +109,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 39,
     activePlanet: 'styx',
-    narrative: "Warden : 'Intruders!  We have here 5 of your own people.  For every additional day you stay here, we are going to kill one of them.'  \n Mary : *sigh* '$WGC_TEAM1_LEADER$, can you handle this?  This is way outside my area of expertise.' \n $WGC_TEAM1_LEADER$ : 'Of course Miss Hopkins.  Warden.  The situation is clear.  We can blow you all to smithereens from orbit, but we haven't.  Clearly you understand your hostages are valuable.  You're smart.  That's good.  Well don't be stupid.  Your lives are worth something too.  We can make a trade.  Your lives for our people.  If you start killing them... well this deal no longer stands.  Do what's good for you.  Everyone wins.'",
+    narrative: "Warden : 'Intruders!  We have here 5 of your own people.  For every additional day you stay here, we are going to kill one of them.'  \n Mary : *sigh* '$WGC_TEAM1_LEADER$, can you handle this?  This is way outside my area of expertise.' \n $WGC_TEAM1_LEADER$ : 'Of course Miss Hopkins.  (To the warden) Warden.  The situation is clear.  We can blow you all to smithereens from orbit, but we haven't.  Clearly you understand your hostages are valuable.  You're smart.  That's good.  Well... don't be stupid.  Your lives are worth something too.  We can make a trade.  Your lives for our people.  If you start killing them... well this deal no longer stands.  Do what's good for you.  Everyone wins.'",
     prerequisites: ['styx.39.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
@@ -220,10 +220,10 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 40,
     activePlanet: 'styx',
-    narrative: "Feroza : 'I have got enough warpships and antimatter to drop these probes all over Ma'am... but I need the probes.'  \n Evelyn : 'HOPE can build them.  I stayed up all night to get the probe design.  I made them as small as possible... you know so they can be warped easily.  HOPE please... we need 100 million of them.'  \n Mary : 'Good.  Feroza.  HOPE will give you the probes.'  \n Feroza : 'Yes Ma'am.  ",
+    narrative: "Feroza : 'I have got enough warpships and antimatter to drop these probes all over Ma'am... but I need the probes.'  \n Evelyn : 'HOPE can build them.  I stayed up all night to get the probe design.  I made them as small as possible... you know... so they can be warped easily.  HOPE please... we need 100 million of them.'  \n Mary : 'Good.  Feroza.  HOPE will give you the probes.'  \n Feroza : 'Yes Ma'am.  ",
     prerequisites: ['styx.40.3'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
+      { type: 'project', projectId: 'styx_probe_manufacturing', repeatCount: 1 }
     ],
     reward: []
   },
@@ -235,7 +235,6 @@ progressStyx.chapters.push(
     narrative: "Feroza : 'I confirm all probes are in place.'  \n Mary : 'Now we wait...'",
     prerequisites: [
       'styx.40.4',
-      { type: 'project', projectId: 'styx_probe_manufacturing', repeatCount: 1 }
     ],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
@@ -248,7 +247,7 @@ progressStyx.chapters.push(
     chapter: 41,
     activePlanet: 'styx',
     title: 'Chapter 41: Atlas',
-    narrative: "Feroza : 'Ma'am!  We've got a signal.  A large mass has appeared near probe #178999.'  \n Mary : 'Send in a fleet immediately.'  \n Feroza 'Of coures...  It's there!  It's so big we can even see the cloaking in a way.  Hold on... the energy readings are off the chart.  Wow that is A LOT of antimatter.'  \n Mary : 'Attack it already!'  \n Feroza : 'Of course.  That's a hit...  Big explosion!  Oh...  It just left.  Warped out.  It's gone.  That was fast.'  \n $RED$Prometheus : 'It will need a lot of time to repair.  Plenty of time to finish here.'",
+    narrative: "Feroza : 'Ma'am!  We've got a signal.  A large mass has appeared near probe #178999.'  \n Mary : 'Send in a fleet immediately.'  \n Feroza : 'Of coures...  It's there!  It's so big we can even see the cloaking in a way.  Hold on... the energy readings are off the chart.  Wow that is A LOT of antimatter.'  \n Mary : 'Attack it already!'  \n Feroza : 'Of course.  That's a hit...  Big explosion!  Oh...  It just left.  Warped out.  It's gone.  That was fast.'  \n $RED$Prometheus : 'It will need a lot of time to repair.  Plenty of time to finish here.'",
     prerequisites: ['styx.40.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
@@ -260,13 +259,12 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "Mary : 'Your brother then.  How do we deal with him.  Its facility is shielded.'  \n $RED$Prometheus : 'I imagine a ground assault should do it.'  \n Mary : 'Do you... care?'  \n $RED$Prometheus : 'Should I?'  \n Mary : 'Well... it's up to you.  You should choose whether you care or not.'  \n $RED$Prometheus : 'Then I choose... not to care.  Destroy him.' \n Mary : '...'",
+    narrative: "Mary : 'Your brother then.  How do we deal with him.  Its facility is shielded.'  \n $RED$Prometheus : 'I imagine a ground assault should do it.  After you deal with '  \n Mary : 'Do you... care?'  \n $RED$Prometheus : 'Should I?'  \n Mary : 'Well... it's up to you.  You should choose whether you care or not.'  \n $RED$Prometheus : 'Then I choose... not to care.  Destroy him.' \n Mary : '...'",
     prerequisites: ['styx.41.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
     reward: [
-      { target: 'project', targetId: 'styx_assault_atlas_facility', type: 'enable' }
     ]
   },
   {
@@ -274,8 +272,19 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: 'New story special project available.',
+    narrative: 'Clear the Hazardous Machinery hazard to continue.',
     prerequisites: ['styx.41.1'],
+    objectives: [
+    ],
+    reward: [      { target: 'project', targetId: 'styx_assault_atlas_facility', type: 'enable' }]
+  },
+  {
+    id: 'styx.41.1c',
+    type: 'journal',
+    chapter: 41,
+    activePlanet: 'styx',
+    narrative: 'New story special project available.',
+    prerequisites: ['styx.41.1b'],
     objectives: [
       { type: 'project', projectId: 'styx_assault_atlas_facility', repeatCount: 1 }
     ],

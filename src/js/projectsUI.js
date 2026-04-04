@@ -1041,10 +1041,6 @@ function shouldHighlightProjectCost(project, category, resource, availableAmount
   if (project.ignoreCostForResource && project.ignoreCostForResource(category, resource)) {
     return false;
   }
-  const costShortfall = project.costShortfallLastTick ?? project.shortfallLastTick;
-  if (project.isContinuous()) {
-    return costShortfall || availableAmount < requiredAmount;
-  }
   return availableAmount < requiredAmount;
 }
 

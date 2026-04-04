@@ -1001,6 +1001,10 @@ function updateWorkerAssignments(assignmentsDiv) {
       }
     }
   }
+  const shipWorkers = Math.max(0, hazardManager?.getAdditionalWorkerRequirements?.()?.normal || 0);
+  if (shipWorkers > 0) {
+    assignments.push([getResourceUIText('workers.ships', 'Ships'), shipWorkers]);
+  }
   assignments.sort((a, b) => b[1] - a[1]);
 
   let tableContainer = assignmentsDiv._tableContainer;

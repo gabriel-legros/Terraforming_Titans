@@ -825,14 +825,12 @@ function updateHazardousMachineryUI(parameters) {
     status.netNaturalGrowthPercentPerSecond >= 0 ? 'Net Growth: {value}/s' : 'Net Decay: {value}/s',
     { value: formatMachineryPercent(Math.abs(status.netNaturalGrowthPercentPerSecond), 2) }
   ));
-  if (status.availableAndroids > 0 || status.androidDecayRatePerSecond > 0) {
-    decayLines.push(getHazardousMachineryUiText('labels.availableAndroids', 'Available Androids: {value}', {
-      value: formatMachineryNumber(status.availableAndroids, 2)
-    }));
-    decayLines.push(getHazardousMachineryUiText('labels.androidDecay', 'Android Hacking: {value}/s', {
-      value: formatMachineryNumber(status.androidDecayRatePerSecond, 2)
-    }));
-  }
+  decayLines.push(getHazardousMachineryUiText('labels.availableAndroids', 'Available Androids: {value}', {
+    value: formatMachineryNumber(status.availableAndroids, 2)
+  }));
+  decayLines.push(getHazardousMachineryUiText('labels.androidDecay', 'Android Hacking: {value}/s', {
+    value: formatMachineryNumber(status.androidDecayRatePerSecond, 2)
+  }));
   if (status.invasivenessDecayRatePerSecond > 0) {
     decayLines.push(getHazardousMachineryUiText('labels.invasivenessDecay', 'Life Invasiveness: {value}/s', {
       value: formatMachineryPercent(status.invasivenessDecayPercentPerSecond, 3)

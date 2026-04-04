@@ -447,6 +447,7 @@ setLanguageData({
         keratiHive: '{value} from Kerati Hive',
         androids: '{value} from androids',
         bioworkers: '{value} from bioworkers',
+        ships: 'Ships',
       },
     },
     lifeDesigner: {
@@ -2327,7 +2328,7 @@ setLanguageData({
             activeShips: 'Active Assigned Ships: {value}',
             shipWorkers: 'Ship Worker Tax: {value}',
             availableAndroids: 'Available Androids: {value}',
-            androidDecay: 'Android Hacking: {value}/s',
+            androidDecay: 'Android Hacking Conversion: {value}/s',
             baseGrowthDecay: 'Base Growth: {value}/s',
             netGrowth: 'Net Growth: {value}/s',
             netDecay: 'Net Decay: {value}/s',
@@ -2358,7 +2359,7 @@ setLanguageData({
             temperature: 'Heat Damage',
             oxidation: 'Oxidation',
             crusaders: 'Crusader Patrols',
-            androidDecay: 'Hazardous Machinery',
+            androidDecay: 'Android Hacking',
           },
           values: {
             blocked: 'Blocked',
