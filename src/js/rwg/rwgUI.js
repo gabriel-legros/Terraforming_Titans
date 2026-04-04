@@ -99,7 +99,12 @@ if (!rwgGravityHelpers.createGravityWarning) {
 var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMultiplier;
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
-const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage', kessler: 'Kessler Skies', pulsar: 'Pulsar' };
+const hazardDisplayNames = {
+  hazardousBiomass: 'Hazardous Biomass',
+  garbage: 'Garbage',
+  kessler: 'Kessler Skies',
+  pulsar: 'Pulsar'
+};
 const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', klishy: 'Klishy', kerati: 'Kerati', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
@@ -124,7 +129,8 @@ function getRwgUiText(path, fallback, vars) {
 }
 
 function getRwgHazardDisplayName(id) {
-  return getRwgUiText(`hazards.names.${id}`, hazardDisplayNames[id] || id);
+  const fallback = hazardDisplayNames[id] || getRwgText(`resources.surface.${id}.name`, id);
+  return getRwgUiText(`hazards.names.${id}`, fallback);
 }
 
 function getRwgDominionDisplayName(id) {
@@ -989,9 +995,14 @@ function attachTravelHandler(res, sStr) {
             || override?.rwgMeta?.selectedHazards
             || res?.merged?.rwgMeta?.selectedHazards
           );
-          if (selectedHazards.includes('hazardousBiomass')) {
+          if (selectedHazards.includes('hazardousBiomass') || selectedHazards.includes('hazardousMachinery')) {
             const special = override.specialAttributes || (override.specialAttributes = {});
-            special.deferHazardousBiomassTravelTuning = true;
+            if (selectedHazards.includes('hazardousBiomass')) {
+              special.deferHazardousBiomassTravelTuning = true;
+            }
+            if (selectedHazards.includes('hazardousMachinery')) {
+              special.deferHazardousMachineryTravelTuning = true;
+            }
           }
           res.merged = deepMerge(defaultPlanetParameters, override);
           syncResultStarData(res);

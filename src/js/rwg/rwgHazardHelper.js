@@ -359,6 +359,35 @@
     };
   }
 
+  function tuneHazardousMachineryForWorld(hazardOverride, context) {
+    if (!hazardOverride || !hazardOverride.hazards) {
+      return;
+    }
+
+    const hazardousMachinery = hazardOverride.hazards.hazardousMachinery;
+    if (!hazardousMachinery) {
+      return;
+    }
+
+    const meanTemperatureK = Number.isFinite(context?.meanTemperatureK)
+      ? Math.max(0, context.meanTemperatureK)
+      : null;
+    const maxTemperatureK = Number.isFinite(meanTemperatureK)
+      ? Math.max(773.15, meanTemperatureK * 1.1)
+      : 773.15;
+    const severityHigh = 0.4 / Math.max(maxTemperatureK, 1);
+    const entry = hazardousMachinery.temperaturePreference || {};
+
+    hazardousMachinery.temperaturePreference = {
+      ...entry,
+      min: 0,
+      max: maxTemperatureK,
+      unit: 'K',
+      severityBelow: 0,
+      severityHigh
+    };
+  }
+
   let HazardManagerCtor = typeof HazardManager === 'function'
     ? HazardManager
     : null;
@@ -370,7 +399,7 @@
   }
 
   function applyPostEquilibrationHazardTuning(override, terra) {
-    if (!override || !override.hazards || !override.hazards.hazardousBiomass) {
+    if (!override || !override.hazards) {
       return;
     }
     const context = buildHazardEquilibrationContext(override, terra);
@@ -378,8 +407,12 @@
       return;
     }
     tuneHazardousBiomassForWorld({ hazards: override.hazards }, context);
+    tuneHazardousMachineryForWorld({ hazards: override.hazards }, context);
 
     const hazardous = override.hazards.hazardousBiomass;
+    if (!hazardous) {
+      return;
+    }
     const hazardManagerInstance = HazardManagerCtor ? new HazardManagerCtor() : null;
     const penaltyDetails = hazardManagerInstance
       ? hazardManagerInstance.calculateHazardousBiomassGrowthPenaltyDetails(hazardous, terra)
@@ -489,12 +522,14 @@
       clamp01,
       buildHazardEquilibrationContext,
       applyPostEquilibrationHazardTuning,
-      tuneHazardousBiomassForWorld
+      tuneHazardousBiomassForWorld,
+      tuneHazardousMachineryForWorld
     };
   } else {
     globalThis.clamp01 = clamp01;
     globalThis.buildHazardEquilibrationContext = buildHazardEquilibrationContext;
     globalThis.applyPostEquilibrationHazardTuning = applyPostEquilibrationHazardTuning;
     globalThis.tuneHazardousBiomassForWorld = tuneHazardousBiomassForWorld;
+    globalThis.tuneHazardousMachineryForWorld = tuneHazardousMachineryForWorld;
   }
 })();

@@ -1,4 +1,5 @@
 let calculateAverageCoverageHelper;
+let applyPostEquilibrationHazardTuningForMachineryHelper;
 
 try {
   ({ calculateAverageCoverage: calculateAverageCoverageHelper } = require('../terraforming-utils.js'));
@@ -7,6 +8,16 @@ try {
     calculateAverageCoverageHelper = calculateAverageCoverage;
   } catch (innerError) {
     calculateAverageCoverageHelper = null;
+  }
+}
+
+try {
+  ({ applyPostEquilibrationHazardTuning: applyPostEquilibrationHazardTuningForMachineryHelper } = require('../../rwg/rwgHazardHelper.js'));
+} catch (error) {
+  try {
+    applyPostEquilibrationHazardTuningForMachineryHelper = applyPostEquilibrationHazardTuning;
+  } catch (innerError) {
+    applyPostEquilibrationHazardTuningForMachineryHelper = null;
   }
 }
 
@@ -188,6 +199,7 @@ function normalizeHazardousMachineryParameters(parameters = {}) {
 class HazardousMachineryHazard {
   constructor(manager) {
     this.manager = manager;
+    this.pendingTravelTuning = false;
   }
 
   normalize(parameters) {
@@ -349,6 +361,44 @@ class HazardousMachineryHazard {
       return;
     }
     this.syncResource(terraforming, parameters, options);
+  }
+
+  syncPendingTravelTuning(hazardParameters, options = {}) {
+    if (options.skipPendingTravelTuning) {
+      this.pendingTravelTuning = false;
+      return;
+    }
+
+    let specialAttributes = null;
+    try {
+      specialAttributes = currentPlanetParameters.specialAttributes;
+    } catch (error) {
+      specialAttributes = null;
+    }
+
+    this.pendingTravelTuning = !!(
+      hazardParameters
+      && specialAttributes
+      && specialAttributes.deferHazardousMachineryTravelTuning === true
+    );
+  }
+
+  applyPendingTravelTuning(terraforming) {
+    if (!this.pendingTravelTuning || !terraforming || !applyPostEquilibrationHazardTuningForMachineryHelper) {
+      return this.manager.parameters.hazardousMachinery;
+    }
+
+    this.pendingTravelTuning = false;
+
+    if (currentPlanetParameters.specialAttributes) {
+      delete currentPlanetParameters.specialAttributes.deferHazardousMachineryTravelTuning;
+    }
+
+    applyPostEquilibrationHazardTuningForMachineryHelper(currentPlanetParameters, terraforming);
+    const tuned = this.normalize(currentPlanetParameters.hazards.hazardousMachinery);
+    this.manager.parameters.hazardousMachinery = tuned;
+    this.manager.lastSerializedParameters = JSON.stringify(this.manager.parameters);
+    return tuned;
   }
 
   clearEffectsOnTravel() {
@@ -817,9 +867,15 @@ class HazardousMachineryHazard {
     return {};
   }
 
-  load() {}
+  load() {
+    this.pendingTravelTuning = false;
+  }
 
   update(deltaTime, terraforming, parameters) {
+    if (this.pendingTravelTuning && deltaTime > 0) {
+      parameters = this.applyPendingTravelTuning(terraforming);
+    }
+
     if (!this.hasConfiguredHazard(parameters)) {
       this.manager.setHazardLandReservationShare('hazardousMachinery', 0);
       return;

@@ -277,7 +277,9 @@ progressStyx.chapters.push(
     objectives: [
       { type: 'hazardCleared', hazardKey: 'hazardousMachinery' }
     ],
-    reward: [      { target: 'project', targetId: 'styx_assault_atlas_facility', type: 'enable' }]
+    reward: [
+      { target: 'project', targetId: 'styx_assault_atlas_facility', type: 'enable' }
+    ]
   },
   {
     id: 'styx.41.1c',
@@ -330,7 +332,8 @@ progressStyx.chapters.push(
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'styx', value: true },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'neutron-star' },
-      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'f-dwarf' }
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'f-dwarf' },
+      { target: 'rwgManager', type: 'allowHazard', targetId: 'hazardousMachinery' }
     ]
   },
   {

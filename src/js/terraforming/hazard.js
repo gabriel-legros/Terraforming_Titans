@@ -248,6 +248,9 @@ class HazardManager {
     }
 
     if (key === 'hazardousMachinery') {
+      if (this.hazardousMachineryHazard && this.hazardousMachineryHazard.syncPendingTravelTuning) {
+        this.hazardousMachineryHazard.syncPendingTravelTuning(hazardParameters, options);
+      }
       if (this.hazardousMachineryHazard && hazardParameters) {
         this.hazardousMachineryHazard.initialize(activeTerraforming, hazardParameters, options);
       } else {

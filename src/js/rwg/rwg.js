@@ -223,13 +223,16 @@ try {
 } catch (_) {}
 
 let tuneHazardousBiomassForWorld = (typeof window !== 'undefined' && window.tuneHazardousBiomassForWorld) || null;
+let tuneHazardousMachineryForWorld = (typeof window !== 'undefined' && window.tuneHazardousMachineryForWorld) || null;
 if (!tuneHazardousBiomassForWorld && typeof module !== 'undefined' && module.exports) {
   try {
     const hazardHelper = require('./rwgHazardHelper.js');
     tuneHazardousBiomassForWorld = hazardHelper.tuneHazardousBiomassForWorld || tuneHazardousBiomassForWorld;
+    tuneHazardousMachineryForWorld = hazardHelper.tuneHazardousMachineryForWorld || tuneHazardousMachineryForWorld;
   } catch (_) {}
 }
 tuneHazardousBiomassForWorld = tuneHazardousBiomassForWorld || function noopHazardTuning() {};
+tuneHazardousMachineryForWorld = tuneHazardousMachineryForWorld || function noopHazardTuning() {};
 
 // World type metadata
 globalThis.RWG_WORLD_TYPES = {
@@ -715,12 +718,13 @@ const RWG_HAZARD_PRESETS = {
       populationGrowth: 1
     }
   },
+  hazardousMachinery: planetParameters.styx.hazards.hazardousMachinery,
   garbage: planetParameters.gabbag.hazards.garbage,
   kessler: planetParameters.tartarus.hazards.kessler,
   pulsar: planetParameters.hades.hazards.pulsar
 };
 
-const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar'];
+const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery'];
 const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
@@ -1229,7 +1233,7 @@ function buildVolatiles(archetype, temperatureK, landHa, params, atmosphere, gra
     'liquidAmmonia', 'ammoniaIce', 'buriedAmmoniaIce',
     'liquidOxygen', 'oxygenIce', 'buriedOxygenIce',
     'liquidNitrogen', 'nitrogenIce', 'buriedNitrogenIce',
-    'scrapMetal', 'biomass', 'hazardousBiomass'
+    'scrapMetal', 'biomass', 'hazardousBiomass', 'hazardousMachinery'
   ];
   surfaceKeys.forEach((key) => {
     const resource = cloneDefaultSurfaceResource(key);
@@ -1481,23 +1485,36 @@ function applyHazardPresets(hazardKeys, { landHa, params, surface, zonalSurface 
     if (!preset) return;
     const hazardConfig = JSON.parse(JSON.stringify(preset));
     hazards[hazardKey] = hazardConfig;
-    if (hazardKey !== 'hazardousBiomass') return;
-    const density = Number.isFinite(hazardConfig?.baseGrowth?.maxDensity)
-      ? hazardConfig.baseGrowth.maxDensity
-      : 0;
-    const fractions = getZoneFractionsSafe(params);
-    const zones = ['tropical', 'temperate', 'polar'];
-    let totalBiomass = 0;
-    zones.forEach((zone) => {
-      const share = fractions[zone] || 0;
-      const amount = density > 0 ? landHa * share * density : 0;
-      if (!zonalSurface[zone]) zonalSurface[zone] = {};
-      zonalSurface[zone].hazardousBiomass = amount;
-      totalBiomass += amount;
-    });
-    const resource = surface.hazardousBiomass || cloneDefaultSurfaceResource('hazardousBiomass');
-    resource.initialValue = totalBiomass;
-    surface.hazardousBiomass = resource;
+    if (hazardKey === 'hazardousBiomass') {
+      const density = Number.isFinite(hazardConfig?.baseGrowth?.maxDensity)
+        ? hazardConfig.baseGrowth.maxDensity
+        : 0;
+      const fractions = getZoneFractionsSafe(params);
+      const zones = ['tropical', 'temperate', 'polar'];
+      let totalBiomass = 0;
+      zones.forEach((zone) => {
+        const share = fractions[zone] || 0;
+        const amount = density > 0 ? landHa * share * density : 0;
+        if (!zonalSurface[zone]) zonalSurface[zone] = {};
+        zonalSurface[zone].hazardousBiomass = amount;
+        totalBiomass += amount;
+      });
+      const resource = surface.hazardousBiomass || cloneDefaultSurfaceResource('hazardousBiomass');
+      resource.initialValue = totalBiomass;
+      surface.hazardousBiomass = resource;
+      return;
+    }
+
+    if (hazardKey === 'hazardousMachinery') {
+      const initialCoverage = clamp(hazardConfig?.initialCoverage ?? 1, 0, 1);
+      const maxCoverageBase = clamp(hazardConfig?.maxCoverageBase ?? 1, 0, 1);
+      const waterCoveragePenalty = Math.max(0, hazardConfig?.waterCoveragePenalty ?? 0.5);
+      const waterCoverage = calculateAverageCoverageLocal(zonalSurface, 'liquidWater', params);
+      const maxCoverageShare = clamp(maxCoverageBase - waterCoverage * waterCoveragePenalty, 0, 1);
+      const resource = surface.hazardousMachinery || cloneDefaultSurfaceResource('hazardousMachinery');
+      resource.initialValue = landHa * Math.min(initialCoverage, maxCoverageShare);
+      surface.hazardousMachinery = resource;
+    }
   });
   return Object.keys(hazards).length ? { hazards } : null;
 }
@@ -1631,6 +1648,9 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
       surfacePressureKPa,
       co2PressureKPa,
       isLiquidWorld: liquidFraction > 0.5
+    });
+    tuneHazardousMachineryForWorld(hazardOverride, {
+      meanTemperatureK: temps.mean
     });
   }
 
@@ -1837,7 +1857,7 @@ class RwgManager extends EffectableEntity {
     this.lockedOrbits = new Set(["hot"]);
     this.lockedTypes = new Set(["venus-like", "molten", "rogue", "ammonia-rich"]);
     this.lockedFeatures = new Set(['hazards', 'dominions']);
-    this.lockedHazards = new Set(['hazardousBiomass', 'garbage', 'kessler', 'pulsar']);
+    this.lockedHazards = new Set(['hazardousBiomass', 'hazardousMachinery', 'garbage', 'kessler', 'pulsar']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
       RWG_DOMINION_ORDER.filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
     );

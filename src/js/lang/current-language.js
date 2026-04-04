@@ -66,6 +66,7 @@ setLanguageData({
         pulsarTooltip: 'The pulsar hazard is generated but does not replace the star.  On rogue worlds, a special "Rogue Pulsar" star is added instead, with low solar flux at the planet.',
         names: {
           hazardousBiomass: 'Hazardous Biomass',
+          hazardousMachinery: 'Hazardous Machinery',
           garbage: 'Garbage',
           kessler: 'Kessler Skies',
           pulsar: 'Pulsar',
