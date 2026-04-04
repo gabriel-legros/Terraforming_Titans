@@ -1118,6 +1118,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return super.getActiveShipCount() + this.getMassDriverContribution();
   }
 
+  getHazardousMachineryActiveShipCount() {
+    return this.getHazardousMachineryWorkerLoadActive() ? this.getSpaceshipOnlyCount() : 0;
+  }
+
   getContinuousOperationContext(deltaTime = 1000, productivity = 1) {
     const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
     const fraction = duration > 0 ? deltaTime / duration : 0;

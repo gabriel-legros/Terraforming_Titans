@@ -191,6 +191,14 @@ class Colony extends Building {
     return this.getConsumptionRatio();
   }
 
+  isLuxuryResourceTemporarilyDisabled(resource) {
+    return resource === 'androids' && this.isBooleanFlagSet('hazardousMachineryDisablesAndroidConsumption');
+  }
+
+  isLuxuryResourceActive(resource) {
+    return !!this.luxuryResourcesEnabled[resource] && !this.isLuxuryResourceTemporarilyDisabled(resource);
+  }
+
   getModifiedConsumption() {
     const modifiedConsumption = {};
     const consumption = this.getConsumption();
@@ -199,7 +207,7 @@ class Colony extends Building {
       modifiedConsumption[category] = {};
       for (const resource in consumption[category]) {
         const isLuxuryResource = luxuryResources[resource] !== undefined;
-        if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
+        if (isLuxuryResource && !this.isLuxuryResourceActive(resource)) {
           modifiedConsumption[category][resource] = 0;
           continue;
         }
@@ -243,7 +251,7 @@ class Colony extends Building {
       for (const resource in consumption[category]) {
         const isLuxuryResource = luxuryResources[resource] !== undefined;
 
-        if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
+        if (isLuxuryResource && !this.isLuxuryResourceActive(resource)) {
           // If the luxury resource is not enabled, set the filledNeeds value to 0
           this.filledNeeds[resource] = 0;
           continue;
@@ -288,7 +296,7 @@ class Colony extends Building {
       for (const resource in consumption[category]) {
         const isLuxuryResource = luxuryResources[resource] !== undefined;
   
-        if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
+        if (isLuxuryResource && !this.isLuxuryResourceActive(resource)) {
           // If the luxury resource is not enabled, skip consumption
           continue;
         }

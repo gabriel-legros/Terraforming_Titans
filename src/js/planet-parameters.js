@@ -1781,19 +1781,18 @@ const styxOverrides = {
       initialCoverage: 1,
       maxCoverageBase: 1,
       waterCoveragePenalty: 0.5,
-      baseGrowth: { value: 0.01 },
-      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.0001 },
-      oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.0001 },
+      baseGrowth: { value: 1 },
+      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.005 },
+      oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.001 },
       temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.002 },
       crusaderRemovalPerSecond: 0.5,
-      electronicsToAndroidCost: 1000,
       penalties: {
         availableAndroidDecayRate: 0.05,
         nanoColonyGrowthMultiplier: 0,
         researchMultiplier: 0.1,
         buildCostMultiplier: 2,
         electronicsMaintenanceMultiplier: 10,
-        shipWorkersPerAssignedShip: 50
+        shipWorkersPerAssignedShip: 100
       }
     }
   },
@@ -1948,8 +1947,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
-
 
 
 

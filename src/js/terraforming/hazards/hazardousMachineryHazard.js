@@ -174,7 +174,6 @@ function normalizeHazardousMachineryParameters(parameters = {}) {
     oxygenPreference: normalizeOxygenPreference(source),
     temperaturePreference: normalizeTemperaturePreference(source),
     crusaderRemovalPerSecond: Math.max(0, source.crusaderRemovalPerSecond ?? 0.5),
-    electronicsToAndroidCost: Math.max(1, source.electronicsToAndroidCost ?? 1000),
     penalties: {
       availableAndroidDecayRate: Math.max(0, penalties.availableAndroidDecayRate ?? 0.05),
       nanoColonyGrowthMultiplier: Math.max(0, penalties.nanoColonyGrowthMultiplier ?? 0),
@@ -189,7 +188,6 @@ function normalizeHazardousMachineryParameters(parameters = {}) {
 class HazardousMachineryHazard {
   constructor(manager) {
     this.manager = manager;
-    this.hackBatchSize = 1;
   }
 
   normalize(parameters) {
@@ -502,9 +500,9 @@ class HazardousMachineryHazard {
         waterCoverage: this.getWaterCoverage(terraforming),
         hazardStrength: 0,
         baseGrowthEntry: parameters?.baseGrowth || { value: 0, severity: 1 },
-        baseGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth?.value ?? 0),
+        baseGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth?.value ?? 0) / 100,
         totalPenaltyPercentPerSecond: 0,
-        netNaturalGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth?.value ?? 0),
+        netNaturalGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth?.value ?? 0) / 100,
         naturalGrowthRatePerSecond: 0,
         nanoColonyGrowthMultiplier: 1,
         researchMultiplier: 1,
@@ -540,7 +538,7 @@ class HazardousMachineryHazard {
     const hazardStrength = this.getHazardStrength(terraforming, parameters, currentAmount);
     const maxAmount = this.getMaxAmount(terraforming, parameters);
     const baseGrowthEntry = parameters?.baseGrowth || { value: 0, severity: 1 };
-    const baseGrowthPercentPerSecond = Math.max(0, baseGrowthEntry.value ?? 0);
+    const baseGrowthPercentPerSecond = Math.max(0, baseGrowthEntry.value ?? 0) / 100;
     const penalties = parameters?.penalties || {};
     const nanoColonyGrowthMultiplier = 1 - hazardStrength * (1 - Math.max(0, penalties.nanoColonyGrowthMultiplier || 0));
     const researchMultiplier = interpolateDivisorMultiplier(
@@ -557,7 +555,7 @@ class HazardousMachineryHazard {
     const invasivenessEntry = parameters?.invasivenessPreference || null;
     const invasivenessValue = this.getLifeDesignInvasiveness();
     const invasivenessRangePenalty = this.computeRangePenalty(invasivenessEntry, invasivenessValue);
-    const invasivenessDecayPercentPerSecond = Math.max(0, lifeDensity * invasivenessRangePenalty);
+    const invasivenessDecayPercentPerSecond = Math.max(0, lifeDensity * invasivenessRangePenalty) / 100;
     const invasivenessDecayRatePerSecond = Math.min(
       currentAmount,
       currentAmount * invasivenessDecayPercentPerSecond
@@ -568,7 +566,7 @@ class HazardousMachineryHazard {
     const temperatureUnit = temperatureEntry?.unit || 'C';
     const temperatureValue = this.convertTemperatureFromKelvin(temperatureK, temperatureUnit);
     const temperatureRangePenalty = this.computeRangePenalty(temperatureEntry, temperatureValue);
-    const rawTemperatureDecayPercentPerSecond = Math.max(0, temperatureRangePenalty);
+    const rawTemperatureDecayPercentPerSecond = Math.max(0, temperatureRangePenalty) / 100;
     const temperatureDecayRatePerSecond = Math.min(
       currentAmount,
       currentAmount * rawTemperatureDecayPercentPerSecond
@@ -589,7 +587,7 @@ class HazardousMachineryHazard {
     const oxygenUnit = oxygenEntry?.unit || 'kPa';
     const oxygenPressureValue = this.convertPressureFromPa(oxygenPressurePa, oxygenUnit);
     const oxygenRangePenalty = this.computeRangePenalty(oxygenEntry, oxygenPressureValue);
-    const rawOxygenDecayPercentPerSecond = Math.max(0, oxygenRangePenalty);
+    const rawOxygenDecayPercentPerSecond = Math.max(0, oxygenRangePenalty) / 100;
     const oxygenDecayRatePerSecond = Math.min(
       currentAmount,
       oxygenAmount,
@@ -797,55 +795,29 @@ class HazardousMachineryHazard {
       });
     }
 
+    Object.keys(colonies).forEach((id) => {
+      if (colonies[id]) {
+        applyTrackedEffect({
+          effectId: `hazardousMachinery-disableAndroidConsumption-${id}`,
+          target: 'colony',
+          targetId: id,
+          type: 'booleanFlag',
+          flagId: 'hazardousMachineryDisablesAndroidConsumption',
+          value: true,
+          sourceId: 'hazardPenalties',
+          name: getHazardousMachineryText('title', 'Hazardous Machinery')
+        });
+      }
+    });
+
     return applied > 0;
   }
 
-  performDangerousHack(terraforming, parameters, batchCount = 1) {
-    if (!this.hasConfiguredHazard(parameters)) {
-      return 0;
-    }
-
-    const resource = this.getResource();
-    if (!resource || !(batchCount > 0)) {
-      return 0;
-    }
-
-    const costPerHack = Math.max(1, parameters?.electronicsToAndroidCost || 1000);
-    const electronics = resources?.colony?.electronics;
-    const androids = resources?.colony?.androids;
-    if (!electronics || !androids) {
-      return 0;
-    }
-
-    const maxByElectronics = Math.floor((electronics.value || 0) / costPerHack);
-    const maxByMachinery = Math.floor(resource.value || 0);
-    const actual = Math.max(0, Math.min(batchCount, maxByElectronics, maxByMachinery));
-
-    if (!(actual > 0)) {
-      return 0;
-    }
-
-    electronics.decrease(actual * costPerHack);
-    androids.increase(actual);
-    resource.decrease(actual);
-    this.syncResource(terraforming, parameters, { preserveValue: true });
-    return actual;
-  }
-
   save() {
-    return {
-      hackBatchSize: this.hackBatchSize
-    };
+    return {};
   }
 
-  setHackBatchSize(value) {
-    this.hackBatchSize = Math.max(1, Math.floor(value || 1));
-    return this.hackBatchSize;
-  }
-
-  load(data) {
-    this.setHackBatchSize(data?.hackBatchSize || 1);
-  }
+  load() {}
 
   update(deltaTime, terraforming, parameters) {
     if (!this.hasConfiguredHazard(parameters)) {
@@ -882,7 +854,7 @@ class HazardousMachineryHazard {
         resource.decrease(naturalDecay);
         resource.modifyRate?.(
           -Math.abs(penaltyValues.naturalGrowthRatePerSecond),
-          getHazardousMachineryText('rateLabels.baseGrowth', 'Self-Replication'),
+          getHazardousMachineryText('rateLabels.baseDecay', 'Natural Decay'),
           'hazard'
         );
         currentAmount -= naturalDecay;
@@ -890,53 +862,17 @@ class HazardousMachineryHazard {
     }
 
     const oxygenResource = resources?.atmospheric?.oxygen || null;
-    const invasivenessDecay = Math.min(
-      currentAmount,
-      penaltyValues.invasivenessDecayRatePerSecond * deltaSeconds
-    );
-    if (invasivenessDecay > 0) {
-      resource.decrease(invasivenessDecay);
-      resource.modifyRate?.(
-        -penaltyValues.invasivenessDecayRatePerSecond,
-        getHazardousMachineryText('rateLabels.invasiveness', 'Life Invasiveness'),
-        'hazard'
-      );
-      currentAmount -= invasivenessDecay;
-    }
-
-    const temperatureDecay = Math.min(
-      currentAmount,
-      penaltyValues.temperatureDecayRatePerSecond * deltaSeconds
-    );
-    if (temperatureDecay > 0) {
-      resource.decrease(temperatureDecay);
-      resource.modifyRate?.(
-        -penaltyValues.temperatureDecayRatePerSecond,
-        getHazardousMachineryText('rateLabels.temperature', 'Heat Damage'),
-        'hazard'
-      );
-      currentAmount -= temperatureDecay;
-    }
-
     const oxygenDecay = Math.min(
-      currentAmount,
       oxygenResource?.value || 0,
       penaltyValues.oxygenDecayRatePerSecond * deltaSeconds
     );
     if (oxygenDecay > 0) {
       oxygenResource.decrease(oxygenDecay);
-      resource.decrease(oxygenDecay);
       oxygenResource.modifyRate?.(
         -penaltyValues.oxygenDecayRatePerSecond,
         getHazardousMachineryText('rateLabels.oxidation', 'Oxidation'),
         'hazard'
       );
-      resource.modifyRate?.(
-        -penaltyValues.oxygenDecayRatePerSecond,
-        getHazardousMachineryText('rateLabels.oxidation', 'Oxidation'),
-        'hazard'
-      );
-      currentAmount -= oxygenDecay;
     }
 
     const crusaderDecay = Math.min(

@@ -9,21 +9,12 @@ const hazardousMachineryUICache = {
   summaryStatus: null,
   summaryDecay: null,
   summaryPenalties: null,
-  summaryHackingText: null,
-  summaryHackingCost: null,
-  summaryHackingInfo: null,
-  summaryHacking: null,
   barSafe: null,
   barHazard: null,
   barSafeLabel: null,
   barHazardLabel: null,
   barDetails: null,
   maxCoverageTooltip: null,
-  hackingTooltip: null,
-  hackButton: null,
-  hackMaxButton: null,
-  hackDivideButton: null,
-  hackTimesButton: null,
   factorRows: {},
   factorHeaderRow: null,
   factorsSection: null,
@@ -238,6 +229,36 @@ function ensureMachineryAttachedInfoTooltip(iconElement, cachedTooltip, text) {
     existing.style.whiteSpace = 'pre-line';
   }
   return existing;
+}
+
+function setMachinerySummaryLines(container, lines) {
+  if (!container) {
+    return;
+  }
+
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
+
+  const doc = getHazardousMachineryDocument();
+  if (!doc || !lines.length) {
+    return;
+  }
+
+  lines.forEach((line) => {
+    const row = doc.createElement('div');
+    row.className = 'hazard-summary__line';
+
+    const text = typeof line === 'string' ? line : line.text;
+    row.textContent = text || '';
+
+    if (line && line.tooltip) {
+      row.appendChild(doc.createTextNode(' '));
+      row.appendChild(createMachineryInfoIcon(line.tooltip));
+    }
+
+    container.appendChild(row);
+  });
 }
 
 function ensureMachineryHeaderRow() {
@@ -555,120 +576,11 @@ function ensureHazardousMachineryLayout() {
   factorSummaryList.appendChild(penaltySummary);
   factorsSection.appendChild(factorSummaryList);
 
-  const hackingBox = doc.createElement('div');
-  hackingBox.className = 'hazard-summary hazard-summary--left hazard-machinery-hacking';
-  const hackingHeader = doc.createElement('div');
-  hackingHeader.className = 'hazard-summary__header';
-  hackingHeader.textContent = getHazardousMachineryUiText('labels.hacking', 'Counter-Hacking');
-  const hackingTooltip = createMachineryInfoIcon(
-    getHazardousMachineryUiText('tooltips.hacking', 'Counter-hacking spends electronics to reclaim hostile machinery as functional androids. The action is instant, limited by electronics and available machinery, and automatically spends less if less machinery is available than the selected amount.')
-  );
-  hackingHeader.appendChild(hackingTooltip);
-  const hackingBody = doc.createElement('div');
-  hackingBody.className = 'hazard-summary__body';
-  const hackingText = doc.createElement('div');
-  hackingText.className = 'hazard-machinery-hacking__text';
-  const hackingCost = doc.createElement('div');
-  hackingCost.className = 'hazard-machinery-hacking__cost';
-  const hackingInfo = doc.createElement('div');
-  hackingText.appendChild(hackingCost);
-  hackingText.appendChild(hackingInfo);
-  hackingBody.appendChild(hackingText);
-  hackingBox.appendChild(hackingHeader);
-  hackingBox.appendChild(hackingBody);
-  hazardousMachineryUICache.summaryHacking = hackingBody;
-  hazardousMachineryUICache.summaryHackingText = hackingText;
-  hazardousMachineryUICache.summaryHackingCost = hackingCost;
-  hazardousMachineryUICache.summaryHackingInfo = hackingInfo;
-
   const factorGrid = doc.createElement('div');
   factorGrid.className = 'hazard-factor-grid';
 
   factorsSection.appendChild(factorGrid);
   card.appendChild(factorsSection);
-  card.appendChild(hackingBox);
-
-  const controls = doc.createElement('div');
-  controls.className = 'hazard-machinery-controls';
-
-  const maxButton = doc.createElement('button');
-  maxButton.type = 'button';
-  maxButton.className = 'hazard-machinery-controls__button';
-  maxButton.textContent = t('ui.projects.common.max', null, 'Max');
-  maxButton.addEventListener('click', () => {
-    const hazardInstance = getHazardousMachineryHazard();
-    const parameters = getHazardousMachineryParameters();
-    const terraformingState = getHazardousMachineryTerraforming();
-    if (!hazardInstance || !parameters || !terraformingState) {
-      return;
-    }
-    const electronics = resources?.colony?.electronics;
-    const machinery = resources?.surface?.hazardousMachinery;
-    const maxByElectronics = Math.floor((electronics?.value || 0) / Math.max(1, parameters.electronicsToAndroidCost || 1000));
-    const maxByMachinery = Math.floor(machinery?.value || 0);
-    const amount = Math.max(0, Math.min(maxByElectronics, maxByMachinery));
-    hazardInstance.performDangerousHack(terraformingState, parameters, amount);
-    try {
-      updateResourceUI(resources);
-      updateResourceDisplay(resources, 0);
-    } catch (error) {
-      // UI may not be ready yet
-    }
-    updateHazardousMachineryUI(parameters);
-  });
-  controls.appendChild(maxButton);
-
-  const divideButton = doc.createElement('button');
-  divideButton.type = 'button';
-  divideButton.className = 'hazard-machinery-controls__button';
-  divideButton.textContent = t('ui.projects.common.divideTen', null, '/10');
-  divideButton.addEventListener('click', () => {
-    const hazardInstance = getHazardousMachineryHazard();
-    if (!hazardInstance) {
-      return;
-    }
-    hazardInstance.setHackBatchSize(Math.max(1, Math.floor((hazardInstance.hackBatchSize || 1) / 10)));
-    updateHazardousMachineryUI(getHazardousMachineryParameters());
-  });
-  controls.appendChild(divideButton);
-
-  const timesButton = doc.createElement('button');
-  timesButton.type = 'button';
-  timesButton.className = 'hazard-machinery-controls__button';
-  timesButton.textContent = t('ui.projects.common.timesTen', null, 'x10');
-  timesButton.addEventListener('click', () => {
-    const hazardInstance = getHazardousMachineryHazard();
-    if (!hazardInstance) {
-      return;
-    }
-    hazardInstance.setHackBatchSize(Math.min(1e12, Math.max(1, hazardInstance.hackBatchSize || 1) * 10));
-    updateHazardousMachineryUI(getHazardousMachineryParameters());
-  });
-  controls.appendChild(timesButton);
-
-  const hackButton = doc.createElement('button');
-  hackButton.type = 'button';
-  hackButton.className = 'hazard-machinery-controls__button';
-  hackButton.addEventListener('click', () => {
-    const hazardInstance = getHazardousMachineryHazard();
-    const parameters = getHazardousMachineryParameters();
-    const terraformingState = getHazardousMachineryTerraforming();
-    if (!hazardInstance || !parameters || !terraformingState) {
-      return;
-    }
-    const batchSize = Math.max(1, hazardInstance.hackBatchSize || 1);
-    hazardInstance.performDangerousHack(terraformingState, parameters, batchSize);
-    try {
-      updateResourceUI(resources);
-      updateResourceDisplay(resources, 0);
-    } catch (error) {
-      // UI may not be ready yet
-    }
-    updateHazardousMachineryUI(parameters);
-  });
-  controls.appendChild(hackButton);
-
-  hackingBody.appendChild(controls);
   root.appendChild(card);
 
   hazardousMachineryUICache.card = card;
@@ -679,10 +591,6 @@ function ensureHazardousMachineryLayout() {
   hazardousMachineryUICache.barSafeLabel = safeLabel;
   hazardousMachineryUICache.barHazardLabel = hazardLabel;
   hazardousMachineryUICache.barDetails = barDetails;
-  hazardousMachineryUICache.hackButton = hackButton;
-  hazardousMachineryUICache.hackMaxButton = maxButton;
-  hazardousMachineryUICache.hackDivideButton = divideButton;
-  hazardousMachineryUICache.hackTimesButton = timesButton;
   hazardousMachineryUICache.factorsSection = factorsSection;
   hazardousMachineryUICache.factorSummaryList = factorSummaryList;
   hazardousMachineryUICache.baseGrowthValue = baseSummaryValue;
@@ -709,14 +617,6 @@ function updateHazardousMachineryUI(parameters) {
   }
 
   const status = hazardInstance.getCurrentPenaltyValues(terraformingState, parameters);
-  const batchSize = Math.max(1, hazardInstance.hackBatchSize || 1);
-  const electronics = resources?.colony?.electronics;
-  const costPerHack = Math.max(1, parameters.electronicsToAndroidCost || 1000);
-  const maxByElectronics = Math.floor((electronics?.value || 0) / costPerHack);
-  const maxByMachinery = Math.floor(status.currentAmount || 0);
-  const maxHackCount = Math.max(0, Math.min(maxByElectronics, maxByMachinery));
-  const requestedCost = batchSize * costPerHack;
-  const hasEnoughElectronicsForBatch = (electronics?.value || 0) >= requestedCost;
 
   card.style.display = '';
   setHazardousMachineryTitleStatus(hazardInstance.isCleared());
@@ -828,32 +728,26 @@ function updateHazardousMachineryUI(parameters) {
   decayLines.push(getHazardousMachineryUiText('labels.availableAndroids', 'Available Androids: {value}', {
     value: formatMachineryNumber(status.availableAndroids, 2)
   }));
-  decayLines.push(getHazardousMachineryUiText('labels.androidDecay', 'Android Hacking: {value}/s', {
-    value: formatMachineryNumber(status.androidDecayRatePerSecond, 2)
-  }));
-  if (status.invasivenessDecayRatePerSecond > 0) {
-    decayLines.push(getHazardousMachineryUiText('labels.invasivenessDecay', 'Life Invasiveness: {value}/s', {
-      value: formatMachineryPercent(status.invasivenessDecayPercentPerSecond, 3)
-    }));
-  }
-  if (status.temperatureDecayRatePerSecond > 0) {
-    decayLines.push(getHazardousMachineryUiText('labels.temperatureDecay', 'Heat Damage: {value}/s', {
-      value: formatMachineryPercent(status.temperatureDecayPercentPerSecond, 2)
-    }));
-  }
-  if (status.oxygenDecayRatePerSecond > 0) {
-    decayLines.push(getHazardousMachineryUiText('labels.oxygenDecay', 'Oxidation: {value}/s', {
-      value: formatMachineryPercent(status.oxygenDecayPercentPerSecond, 2)
-    }));
-  }
+  decayLines.push({
+    text: getHazardousMachineryUiText('labels.androidDecay', 'Android Hacking: {value}/s', {
+      value: formatMachineryNumber(status.androidDecayRatePerSecond, 2)
+    }),
+    tooltip: getHazardousMachineryUiText(
+      'tooltips.androidDecay',
+      'The Hazardous Machinery is capable of hacking autonomous androids. This does not impact androids assigned away from signals, such as assigned to underground mining or land expansion projects.'
+    )
+  });
   if (status.crusaderDecayRatePerSecond > 0) {
     decayLines.push(getHazardousMachineryUiText('labels.crusaderDecay', 'Crusaders: {value}/s', {
       value: formatMachineryNumber(-status.crusaderDecayRatePerSecond, 2)
     }));
   }
-  hazardousMachineryUICache.summaryDecay.textContent = decayLines.length
-    ? decayLines.join('\n')
-    : getHazardousMachineryUiText('labels.noDecay', 'No active decay or growth.');
+  setMachinerySummaryLines(
+    hazardousMachineryUICache.summaryDecay,
+    decayLines.length
+      ? decayLines
+      : [getHazardousMachineryUiText('labels.noDecay', 'No active decay or growth.')]
+  );
 
   hazardousMachineryUICache.summaryPenalties.textContent = [
     getHazardousMachineryUiText('labels.buildCost', 'Build Cost: {value}', {
@@ -868,18 +762,11 @@ function updateHazardousMachineryUI(parameters) {
     getHazardousMachineryUiText('labels.electronicsMaintenance', 'Electronics Maintenance: {value}', {
       value: `x${formatMachineryNumber(status.electronicsMaintenanceMultiplier, 2)}`
     }),
+    getHazardousMachineryUiText('labels.androidConsumption', 'Colony Android Consumption: Disabled'),
     getHazardousMachineryUiText('labels.shipPenalty', 'Assigned Ships: +{value} workers each', {
       value: formatMachineryNumber(status.shipWorkersPerAssignedShip, 0)
     })
   ].join('\n');
-
-  hazardousMachineryUICache.summaryHackingCost.textContent = getHazardousMachineryUiText('labels.convertCost', 'Electronics Cost: {value}', {
-    value: formatMachineryNumber(requestedCost, 0)
-  });
-  hazardousMachineryUICache.summaryHackingCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughElectronicsForBatch);
-  hazardousMachineryUICache.summaryHackingInfo.textContent = getHazardousMachineryUiText('labels.convertInfo', 'Each hack spends {cost} electronics to turn 1 hazardous machinery into 1 android instantly.', {
-    cost: formatMachineryNumber(costPerHack, 0)
-  });
 
   const safePercent = Math.max(0, (1 - status.hazardStrength) * 100);
   const hazardPercent = Math.max(0, status.hazardStrength * 100);
@@ -897,12 +784,6 @@ function updateHazardousMachineryUI(parameters) {
     current: formatMachineryNumber(status.currentAmount, 2),
     max: formatMachineryNumber(status.fullCoverageAmount, 2)
   });
-
-  hazardousMachineryUICache.hackButton.textContent = getHazardousMachineryUiText('labels.convertAction', 'Hack +{value}', {
-    value: formatMachineryNumber(batchSize, 0)
-  });
-  hazardousMachineryUICache.hackButton.disabled = maxHackCount <= 0;
-  hazardousMachineryUICache.hackMaxButton.disabled = maxHackCount <= 0;
 }
 
 try {

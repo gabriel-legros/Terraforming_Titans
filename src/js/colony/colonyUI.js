@@ -365,7 +365,8 @@ function createNeedBox(needKey, displayName, value, isLuxury, structure) {
     checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.id = `${structure.name}-${needKey}-checkbox`;
-    checkbox.checked = structure.luxuryResourcesEnabled[needKey];
+    checkbox.checked = structure.isLuxuryResourceActive(needKey);
+    checkbox.disabled = structure.isLuxuryResourceTemporarilyDisabled(needKey);
     checkbox.addEventListener('change', () => {
       structure.luxuryResourcesEnabled[needKey] = checkbox.checked;
       updateNeedBox(structure.needBoxCache[needKey], displayName, needKey, structure.filledNeeds[needKey], isLuxury, structure);
@@ -414,7 +415,8 @@ function updateNeedBox(cacheEntry, displayName, needKey, value, isLuxury, struct
     cacheEntry.text.style.color = isDarkMode ? 'white' : 'black';
 
     if (isLuxury && cacheEntry.checkbox) {
-      cacheEntry.checkbox.checked = structure.luxuryResourcesEnabled[needKey];
+      cacheEntry.checkbox.checked = structure.isLuxuryResourceActive(needKey);
+      cacheEntry.checkbox.disabled = structure.isLuxuryResourceTemporarilyDisabled(needKey);
     }
   }
 }

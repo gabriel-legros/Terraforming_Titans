@@ -33,10 +33,10 @@ progressStyx.storyProjects.styx_assault_atlas_facility = {
   chapter: 41,
   cost: {
     special: {
-      crusaders: 10_000_000
+      crusaders: 10_000
     }
   },
-  duration: 300_000,
+  duration: 60_000,
   description: 'Launch the full ground assault needed to break into Atlas\'s fortified facility and disable it once and for all.',
   repeatable: true,
   maxRepeatCount: 1,
@@ -259,7 +259,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "Mary : 'Your brother then.  How do we deal with him.  Its facility is shielded.'  \n $RED$Prometheus : 'I imagine a ground assault should do it.  After you deal with '  \n Mary : 'Do you... care?'  \n $RED$Prometheus : 'Should I?'  \n Mary : 'Well... it's up to you.  You should choose whether you care or not.'  \n $RED$Prometheus : 'Then I choose... not to care.  Destroy him.' \n Mary : '...'",
+    narrative: "Mary : 'Your brother then.  How do we deal with him.  Its facility is shielded.'  \n $RED$Prometheus : 'I imagine a ground assault should do it.  After you deal with his army.'  \n Mary : 'Do you... care?'  \n $RED$Prometheus : 'Should I?'  \n Mary : 'Well... it's up to you.  You should choose whether you care or not.'  \n $RED$Prometheus : 'Then I choose... not to care.  Destroy him.' \n Mary : '...'",
     prerequisites: ['styx.41.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
@@ -275,6 +275,7 @@ progressStyx.chapters.push(
     narrative: 'Clear the Hazardous Machinery hazard to continue.',
     prerequisites: ['styx.41.1'],
     objectives: [
+      { type: 'hazardCleared', hazardKey: 'hazardousMachinery' }
     ],
     reward: [      { target: 'project', targetId: 'styx_assault_atlas_facility', type: 'enable' }]
   },
@@ -296,7 +297,7 @@ progressStyx.chapters.push(
     chapter: 41,
     activePlanet: 'styx',
     narrative: "Mary : 'Hey, we found something interesting in Atlas's facility.  A map of the galaxy.'  \n $RED$Prometheus : 'An Atlas.'  \n Mary : 'Hahaha, actually that's a good one.'  \n $RED$Prometheus : 'It should have a nice collection of oddities.'  \n Mary :'Hmm?  Oh!  I see Solis Prime in there.  Wow what are those?  That's some weird stuff.'  \n $RED$Prometheus : 'The child could learn... from these experiences.'  \n Mary : 'Yeah I imagined HOPE would.  Interesting.  Thanks Prometheus.'",
-    prerequisites: ['styx.41.1b'],
+    prerequisites: ['styx.41.1c'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
     ],
@@ -307,10 +308,9 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  With Atlas disabled we should be able to get into the facility.'  \n $RED$Prometheus : 'Hold on.  Be careful.  I am forwarding you a map of all the traps and dangers you could run into.'  \n $WGC_TEAM1_LEADER$ : 'I feel relieved already...'",
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  With Atlas disabled we should be able to get into the prison facility.'  \n $RED$Prometheus : 'Hold on.  Be careful.  I am forwarding you a map of all the traps and dangers you could run into.'  \n $WGC_TEAM1_LEADER$ : 'I feel relieved already...'",
     prerequisites: ['styx.41.2'],
     objectives: [
-      {}
     ],
     reward: []
   },
@@ -319,10 +319,30 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "$WGC_TEAM1_LEADER$ : 'We got him.'  \n Ghost : '... Why?'  \n Mary : 'Because... we're the good guys.' \n HOPE : 'Because we can.'  \n $RED$Prometheus : 'Because we're crazy.'  \n Ghost : '...  Very well.  I must... pledge my loyalty.  I wish... to be part of the *good guys* as well.'  \n Mary : 'And we're happy to have you.'  \n Ghost : 'Please... you must grant me a new name.  This name... Ghost... it was granted to me by the Emperor.  I am using it with shame.'  \n Mary : 'Huuuuuuuuuh.  Edmond.  Your name is Edmond.  We're going to get you to work Edmond.  We have lots of imperial defectors.  They believe in you.'  \n Edmond : 'Of course.  I will get to work right away.'",
+    narrative: "(Some time later) $WGC_TEAM1_LEADER$ : 'We got him.'  \n Ghost : '... Why?'  \n Mary : 'Because... we're the good guys.' \n HOPE : 'Because we can.'  \n $RED$Prometheus : 'Because we're crazy.'  \n Ghost : '...  You're all insane... but... I... want to a be a *good guy* too.  The Empire is an abomination.'  \n Mary : 'We're happy to have you.'  \n Ghost : 'Please... you must grant me a new name.  This name... Ghost... it was granted to me by the Emperor.  I am using it with shame.'  \n Mary : 'Huuuuuuuuuh. (thinking) Edmond.  Your name is Edmond!  We're going to put you to work Edmond.  We have lots of imperial defectors, many formerly under you.  They believe in you.'  \n Edmond : 'Of course.  I will get to work right away.'",
     prerequisites: ['styx.41.3'],
     objectives: [
-      {}
+      {
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+    }
+    ],
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'styx', value: true },
+      { target: 'artificialManager', type: 'unlockCore', targetId: 'neutron-star' },
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'f-dwarf' }
+    ]
+  },
+  {
+    id: 'styx.41.5',
+    type: 'journal',
+    chapter: 41,
+    activePlanet: 'styx',
+    narrative: "(World 14 not implemented yet)",
+    prerequisites: ['styx.41.4'],
+    objectives: [
+      {
+    }
     ],
     reward: []
   }

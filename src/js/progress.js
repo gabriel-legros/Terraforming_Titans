@@ -124,6 +124,52 @@ function isTabActive(tabId) {
     return !!(tabContent && tabContent.classList.contains('active'));
 }
 
+function getHazardObjectiveKey(objective) {
+    return objective.hazardKey || objective.hazardId || objective.hazard;
+}
+
+function getHazardObjectivePlanetId(objective, event) {
+    return objective.planetId || (event && event.activePlanet) || spaceManager.getCurrentPlanetKey();
+}
+
+function isHazardObjectiveComplete(objective, event) {
+    const targetPlanetId = getHazardObjectivePlanetId(objective, event);
+    if (targetPlanetId !== spaceManager.getCurrentPlanetKey()) {
+        return false;
+    }
+
+    switch (getHazardObjectiveKey(objective)) {
+        case 'all':
+            return hazardManager.getHazardClearanceStatus(terraforming);
+        case 'hazardousBiomass':
+            return hazardManager.hazardousBiomassHazard.isCleared(terraforming, hazardManager.parameters.hazardousBiomass);
+        case 'hazardousMachinery':
+            return hazardManager.hazardousMachineryHazard.isCleared(terraforming, hazardManager.parameters.hazardousMachinery);
+        case 'garbage':
+            return hazardManager.garbageHazard.isCleared(terraforming, hazardManager.parameters.garbage);
+        case 'kessler':
+            return hazardManager.kesslerHazard.isCleared(terraforming, hazardManager.parameters.kessler);
+        case 'pulsar':
+            return hazardManager.pulsarHazard.isCleared(terraforming, hazardManager.parameters.pulsar);
+        default:
+            return false;
+    }
+}
+
+function describeHazardObjective(objective) {
+    const hazardKey = getHazardObjectiveKey(objective);
+    const hazardNames = {
+        all: 'all hazards',
+        hazardousBiomass: resources?.surface?.hazardousBiomass?.displayName || 'Hazardous Biomass',
+        hazardousMachinery: resources?.surface?.hazardousMachinery?.displayName || 'Hazardous Machinery',
+        garbage: 'Garbage',
+        kessler: resources?.special?.orbitalDebris?.displayName || 'Orbital Debris',
+        pulsar: 'Pulsar hazard'
+    };
+    const hazardName = objective.description || hazardNames[hazardKey] || hazardKey || 'hazard';
+    return objective.description || `Clear ${hazardName}`;
+}
+
 class StoryManager {
     constructor(progressData) {
         this.progressData = progressData;
@@ -451,6 +497,8 @@ class StoryManager {
                const epsilon = typeof FULL_CONTROL_EPSILON === 'number' ? FULL_CONTROL_EPSILON : 1e-6;
                return Math.abs(factionControl - totalControl) <= epsilon;
           }
+          case 'hazardCleared':
+               return isHazardObjectiveComplete(objective, event);
           case 'condition': {
                const fn = globalThis[objective.conditionId];
                if (typeof fn === 'function') {
@@ -630,6 +678,8 @@ class StoryManager {
                const status = ratio >= 1 ? 'Secure' : `${factionLabel} control ${percent}%`;
                return `Conquer sector ${name} (${status})`;
           }
+          case 'hazardCleared':
+               return describeHazardObjective(objective);
           default:
                return '';
        }
