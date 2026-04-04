@@ -2914,7 +2914,7 @@ setLanguageData({
     },
     terraformingRequirements: {
       human: {
-        displayName: 'Ribosa (Human)',
+        displayName: 'Human',
         lore: [
           'The Ribosa are a carbon-water dominion that originated on Earth. Their name comes from a shared biological root: the ribosome and the ribose backbone at the heart of genetic chemistry.',
           'Ribosan metabolism is built around light-driven chemistry, including photosynthesis and its descendants. Across deep time, repeated oxygenation crises and mass extinctions pushed Earth life toward increasingly oxygen-tolerant and often oxygen-dependent biochemistry. As a result, Ribosan ecosystems thrive in high-oxygen atmospheres and treat oxygen as a stable baseline condition their biology assumes, to the horror of most of the galactic community.',
