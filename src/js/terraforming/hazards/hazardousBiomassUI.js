@@ -225,7 +225,7 @@ function formatRange(entry) {
   const unit = entry.unit || '';
   const minText = minDefined ? formatValueWithUnit(entry.min, unit) : '—';
   const maxText = maxDefined ? formatValueWithUnit(entry.max, unit) : '—';
-  return getHazardousBiomassLabel('range', `Range ${minText}–${maxText}${unit ? ` ${unit}` : ''}`, {
+  return getHazardousBiomassLabel('range', `Range ${minText}–${maxText}`, {
     min: minText,
     max: maxText,
     unit
@@ -815,7 +815,7 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
       const maxText = maxDefined && Number.isFinite(entry.max)
         ? formatValueWithUnit(temperatureHelpers.converter(entry.max), displayUnit, 2)
         : '—';
-      rangeText = getHazardousBiomassLabel('range', `Range ${minText}–${maxText} ${displayUnit}`, {
+      rangeText = getHazardousBiomassLabel('range', `Range ${minText}–${maxText}`, {
         min: minText,
         max: maxText,
         unit: displayUnit
