@@ -86,14 +86,59 @@ function normalizeTemperaturePreference(source) {
 
 function normalizeOxygenPreference(source) {
   if (isPlainObject(source.oxygenPreference)) {
-    return normalizeHazardRangeEntry(source.oxygenPreference, 'ton');
+    const entry = normalizeHazardRangeEntry(source.oxygenPreference, 'kPa');
+    const unit = `${entry.unit || 'kPa'}`.trim().toLowerCase();
+    if (unit !== 'ton') {
+      return entry;
+    }
+
+    const pressurePerTonKPa = getCurrentPlanetPressurePerTonKPa();
+    if (!(pressurePerTonKPa > 0)) {
+      return normalizeHazardRangeEntry({
+        ...entry,
+        unit: 'kPa'
+      }, 'kPa');
+    }
+
+    const converted = {
+      ...entry,
+      unit: 'kPa'
+    };
+    if (Number.isFinite(converted.min)) {
+      converted.min *= pressurePerTonKPa;
+    }
+    if (Number.isFinite(converted.max)) {
+      converted.max *= pressurePerTonKPa;
+    }
+    if (Number.isFinite(converted.severity)) {
+      converted.severity /= pressurePerTonKPa;
+    }
+    if (Number.isFinite(converted.severityBelow)) {
+      converted.severityBelow /= pressurePerTonKPa;
+    }
+    if (Number.isFinite(converted.severityHigh)) {
+      converted.severityHigh /= pressurePerTonKPa;
+    }
+    return converted;
   }
 
+  const pressurePerTonKPa = getCurrentPlanetPressurePerTonKPa();
+  const legacySeverity = Math.max(0, source.oxygenDecayCoefficient ?? 1e-24);
   return normalizeHazardRangeEntry({
     max: 0,
-    unit: 'ton',
-    severityHigh: Math.max(0, source.oxygenDecayCoefficient ?? 1e-24)
-  }, 'ton');
+    unit: 'kPa',
+    severityHigh: pressurePerTonKPa > 0 ? legacySeverity / pressurePerTonKPa : legacySeverity
+  }, 'kPa');
+}
+
+function getCurrentPlanetPressurePerTonKPa() {
+  const gravity = currentPlanetParameters?.celestialParameters?.gravity;
+  const radius = currentPlanetParameters?.celestialParameters?.radius;
+  if (!(gravity > 0) || !(radius > 0)) {
+    return 0;
+  }
+
+  return (1000 * gravity) / (4 * Math.PI * Math.pow(radius * 1e3, 2) * 1000);
 }
 
 function clampRatio(value) {
@@ -423,6 +468,28 @@ class HazardousMachineryHazard {
     }
   }
 
+  convertPressureFromPa(value, unit) {
+    const normalizedValue = Number.isFinite(value) ? value : 0;
+    const normalizedUnit = `${unit || 'kPa'}`.trim().toLowerCase();
+
+    switch (normalizedUnit) {
+      case 'pa':
+        return normalizedValue;
+      case 'kpa':
+        return normalizedValue / 1000;
+      case 'mpa':
+        return normalizedValue / 1_000_000;
+      case 'bar':
+        return normalizedValue / 100000;
+      case 'mbar':
+        return normalizedValue / 100;
+      case 'atm':
+        return normalizedValue / 101325;
+      default:
+        return normalizedValue / 1000;
+    }
+  }
+
   getCurrentPenaltyValues(terraforming, parameters) {
     if (!this.hasConfiguredHazard(parameters)) {
       return {
@@ -459,7 +526,8 @@ class HazardousMachineryHazard {
         temperatureDecayPercentPerSecond: 0,
         temperatureDecayRatePerSecond: 0,
         oxygenEntry: parameters?.oxygenPreference || null,
-        oxygenAmount: 0,
+        oxygenPressurePa: 0,
+        oxygenPressureValue: 0,
         oxygenRangePenalty: 0,
         oxygenDecayPercentPerSecond: 0,
         oxygenDecayRatePerSecond: 0,
@@ -516,7 +584,10 @@ class HazardousMachineryHazard {
     }
     const oxygenEntry = parameters?.oxygenPreference || null;
     const oxygenAmount = Math.max(0, oxygenResource?.value || 0);
-    const oxygenRangePenalty = this.computeRangePenalty(oxygenEntry, oxygenAmount);
+    const oxygenPressurePa = Math.max(0, terraforming?.atmosphericPressureCache?.pressureByKey?.oxygen || 0);
+    const oxygenUnit = oxygenEntry?.unit || 'kPa';
+    const oxygenPressureValue = this.convertPressureFromPa(oxygenPressurePa, oxygenUnit);
+    const oxygenRangePenalty = this.computeRangePenalty(oxygenEntry, oxygenPressureValue);
     const rawOxygenDecayPercentPerSecond = Math.max(0, oxygenRangePenalty);
     const oxygenDecayRatePerSecond = Math.min(
       currentAmount,
@@ -571,7 +642,8 @@ class HazardousMachineryHazard {
       temperatureDecayPercentPerSecond,
       temperatureDecayRatePerSecond,
       oxygenEntry,
-      oxygenAmount,
+      oxygenPressurePa,
+      oxygenPressureValue,
       oxygenRangePenalty,
       oxygenDecayPercentPerSecond,
       oxygenDecayRatePerSecond,

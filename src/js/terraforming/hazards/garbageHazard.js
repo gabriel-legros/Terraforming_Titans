@@ -70,6 +70,8 @@ function normalizeGarbageParameters(parameters) {
   return normalized;
 }
 
+const HIDE_WHEN_SMALL_THRESHOLD = 1e-4;
+
 class GarbageHazard {
   constructor(manager) {
     this.manager = manager;
@@ -90,8 +92,15 @@ class GarbageHazard {
     this.clearedCategories = {};
   }
 
-  markCategoryCleared(key, currentAmount, initialAmount) {
-    if (currentAmount <= 0 || initialAmount <= 0) {
+  isResourceCleared(currentAmount, initialAmount, resource) {
+    if (initialAmount <= 0 || currentAmount <= 0) {
+      return true;
+    }
+    return !!(resource && resource.hideWhenSmall && currentAmount < HIDE_WHEN_SMALL_THRESHOLD);
+  }
+
+  markCategoryCleared(key, currentAmount, initialAmount, resource) {
+    if (this.isResourceCleared(currentAmount, initialAmount, resource)) {
       this.clearedCategories[key] = true;
     }
   }
@@ -161,8 +170,9 @@ class GarbageHazard {
       const garbageResource = resourcesObj.surface[resourceKey];
       const currentAmount = Number.isFinite(garbageResource?.value) ? garbageResource.value : 0;
       const initialAmount = Number.isFinite(garbageResource?.initialValue) ? garbageResource.initialValue : 0;
-      this.markCategoryCleared(resourceKey, currentAmount, initialAmount);
-      if (initialAmount > 0 && currentAmount > 0) {
+      const resourceCleared = this.isResourceCleared(currentAmount, initialAmount, garbageResource);
+      this.markCategoryCleared(resourceKey, currentAmount, initialAmount, garbageResource);
+      if (!resourceCleared) {
         return false;
       }
     }
@@ -378,8 +388,12 @@ class GarbageHazard {
 
       const currentAmount = Number.isFinite(garbageResource.value) ? garbageResource.value : 0;
       const initialAmount = Number.isFinite(garbageResource.initialValue) ? garbageResource.initialValue : 1;
-      if (initialAmount > 0 && currentAmount > 0) {
+      const resourceCleared = this.isResourceCleared(currentAmount, initialAmount, garbageResource);
+      this.markCategoryCleared(garbageResourceKey, currentAmount, initialAmount, garbageResource);
+      if (!resourceCleared) {
         allCleared = false;
+      } else {
+        return;
       }
 
       const penalties = garbageParameters.penalties[garbageResourceKey];

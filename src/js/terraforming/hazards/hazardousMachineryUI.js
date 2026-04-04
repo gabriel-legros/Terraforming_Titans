@@ -733,14 +733,13 @@ function updateHazardousMachineryUI(parameters) {
     })
   ].join('\n');
 
-  const oxygenResource = resources?.atmospheric?.oxygen;
-  const oxygenUnit = oxygenResource?.unit ? ` ${oxygenResource.unit}` : ' ton';
+  const oxygenUnit = status.oxygenEntry?.unit || 'kPa';
   const invasivenessRangeText = formatHazardousMachineryRange(status.invasivenessEntry);
   const invasivenessSeverityText = formatHazardousMachinerySeverity(status.invasivenessEntry);
   const temperatureUnit = status.temperatureEntry?.unit || 'C';
   const temperatureRangeText = formatHazardousMachineryRange(status.temperatureEntry, temperatureUnit);
   const temperatureSeverityText = formatHazardousMachinerySeverity(status.temperatureEntry);
-  const oxygenRangeText = formatHazardousMachineryRange(status.oxygenEntry, oxygenUnit.trim());
+  const oxygenRangeText = formatHazardousMachineryRange(status.oxygenEntry, oxygenUnit);
   const oxygenSeverityText = formatHazardousMachinerySeverity(status.oxygenEntry);
   renderMachineryFactorRows([
     {
@@ -801,7 +800,7 @@ function updateHazardousMachineryUI(parameters) {
       info: [oxygenRangeText, oxygenSeverityText].filter(Boolean).join('\n'),
       values: [
         getHazardousMachineryUiText('labels.current', 'Current: {value}{unit}', {
-          value: formatMachineryNumber(status.oxygenAmount, 2),
+          value: formatMachineryNumber(status.oxygenPressureValue, 2),
           unit: oxygenUnit
         })
       ],
@@ -851,7 +850,7 @@ function updateHazardousMachineryUI(parameters) {
   }
   if (status.crusaderDecayRatePerSecond > 0) {
     decayLines.push(getHazardousMachineryUiText('labels.crusaderDecay', 'Crusaders: {value}/s', {
-      value: formatMachineryNumber(status.crusaderDecayRatePerSecond, 2)
+      value: formatMachineryNumber(-status.crusaderDecayRatePerSecond, 2)
     }));
   }
   hazardousMachineryUICache.summaryDecay.textContent = decayLines.length
