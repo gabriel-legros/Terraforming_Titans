@@ -2916,7 +2916,7 @@ setLanguageData({
       human: {
         displayName: 'Human',
         lore: [
-          'The Ribosa are a carbon-water dominion that originated on Earth. Their name comes from a shared biological root: the ribosome and the ribose backbone at the heart of genetic chemistry.',
+          'The Ribosa (Humans) are a carbon-water dominion that originated on Earth. Their name comes from a shared biological root: the ribosome and the ribose backbone at the heart of genetic chemistry.',
           'Ribosan metabolism is built around light-driven chemistry, including photosynthesis and its descendants. Across deep time, repeated oxygenation crises and mass extinctions pushed Earth life toward increasingly oxygen-tolerant and often oxygen-dependent biochemistry. As a result, Ribosan ecosystems thrive in high-oxygen atmospheres and treat oxygen as a stable baseline condition their biology assumes, to the horror of most of the galactic community.',
           'Humans are the dominant sapient lineage of Ribosa. In the era immediately preceding the Great Imperial Civil War, the dominion underwent sweeping genetic refactoring. This purity movement did not mean simplicity; it meant control: genomes scrubbed of inherited disease, aging mechanisms rewritten, and redundant repair pathways layered into every organ system.',
           'Modern humans are exceptionally resilient: they resist infection, do not meaningfully senesce, and can regenerate from injuries that would kill most species. Not long before the Civil War, Ribosa lost Earth. From this catastrophe, the dominion became a people without a cradle, biologically engineered for survival yet culturally defined by a homeworld they can no longer return to.',
