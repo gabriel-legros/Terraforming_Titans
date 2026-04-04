@@ -23,13 +23,13 @@ const hazardousMachineryUICache = {
   hackMaxButton: null,
   hackDivideButton: null,
   hackTimesButton: null,
-  statusFactorRows: {},
+  factorRows: {},
+  factorHeaderRow: null,
   factorsSection: null,
   factorSummaryList: null,
   baseGrowthValue: null,
   totalPenaltyValue: null,
   factorGrid: null,
-  temperatureHelpers: undefined,
 };
 
 function getHazardousMachineryUiText(path, fallback, vars) {
@@ -111,39 +111,79 @@ function formatSignedMachineryPercent(value, decimals = 2) {
   return `${numeric > 0 ? '+' : '-'}${formatMachineryNumber(Math.abs(numeric), decimals)}%`;
 }
 
-function getHazardousMachineryTemperatureHelpers() {
-  if (hazardousMachineryUICache.temperatureHelpers !== undefined) {
-    return hazardousMachineryUICache.temperatureHelpers;
+function formatMachinerySeverityValue(value) {
+  const numeric = Number.isFinite(value) ? Math.abs(value) : 0;
+  if (!numeric) {
+    return '0';
   }
-
-  let converter = null;
-  let unitResolver = null;
-
-  try {
-    converter = toDisplayTemperature;
-  } catch (error) {
-    converter = null;
+  if (numeric < 0.001 || numeric >= 1000) {
+    return numeric.toExponential(2);
   }
-
-  try {
-    unitResolver = getTemperatureUnit;
-  } catch (error) {
-    unitResolver = null;
-  }
-
-  hazardousMachineryUICache.temperatureHelpers = { converter, unitResolver };
-  return hazardousMachineryUICache.temperatureHelpers;
+  return formatMachineryNumber(numeric, numeric < 0.01 ? 4 : 2);
 }
 
-function formatHazardousMachineryTemperature(kelvin, decimals = 2) {
-  const helpers = getHazardousMachineryTemperatureHelpers();
-  const value = helpers.converter ? helpers.converter(kelvin) : kelvin;
-  return formatMachineryNumber(value, decimals);
+function formatHazardousMachineryRange(entry, fallbackUnit = '') {
+  if (!entry) {
+    return getHazardousMachineryUiText('labels.unbounded', 'Unbounded');
+  }
+
+  const unit = entry.unit || fallbackUnit;
+  const hasMin = Number.isFinite(entry.min);
+  const hasMax = Number.isFinite(entry.max);
+  const minText = formatMachineryNumber(entry.min, 2);
+  const maxText = formatMachineryNumber(entry.max, 2);
+
+  if (hasMin && hasMax) {
+    return getHazardousMachineryUiText('labels.range', 'Range {min}-{max} {unit}', {
+      min: minText,
+      max: maxText,
+      unit
+    });
+  }
+
+  if (hasMin) {
+    return getHazardousMachineryUiText('labels.minimum', 'Min {value} {unit}', {
+      value: minText,
+      unit
+    });
+  }
+
+  if (hasMax) {
+    return getHazardousMachineryUiText('labels.maximum', 'Max {value} {unit}', {
+      value: maxText,
+      unit
+    });
+  }
+
+  return getHazardousMachineryUiText('labels.unbounded', 'Unbounded');
 }
 
-function getHazardousMachineryTemperatureUnit() {
-  const helpers = getHazardousMachineryTemperatureHelpers();
-  return helpers.unitResolver ? helpers.unitResolver() : 'K';
+function formatHazardousMachinerySeverity(entry) {
+  if (!entry) {
+    return '';
+  }
+
+  const details = [];
+
+  if (Number.isFinite(entry.severityBelow)) {
+    details.push(getHazardousMachineryUiText('labels.severityBelow', 'Severity Below x{value}', {
+      value: formatMachinerySeverityValue(entry.severityBelow)
+    }));
+  }
+
+  if (Number.isFinite(entry.severityHigh)) {
+    details.push(getHazardousMachineryUiText('labels.severityAbove', 'Severity Above x{value}', {
+      value: formatMachinerySeverityValue(entry.severityHigh)
+    }));
+  }
+
+  if (!details.length && Number.isFinite(entry.severity)) {
+    details.push(getHazardousMachineryUiText('labels.severity', 'Severity x{value}', {
+      value: formatMachinerySeverityValue(entry.severity)
+    }));
+  }
+
+  return details.join(' | ');
 }
 
 function getMachineryResourceLabel(path, fallback) {
@@ -161,6 +201,185 @@ function createMachineryInfoIcon(text) {
   icon.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(icon, text);
   return icon;
+}
+
+function ensureMachineryAttachedInfoTooltip(iconElement, cachedTooltip, text) {
+  if (!iconElement) {
+    return null;
+  }
+
+  iconElement.removeAttribute('title');
+  const existing = cachedTooltip || iconElement.querySelector('.resource-tooltip.dynamic-tooltip');
+  if (!existing) {
+    return attachDynamicInfoTooltip(iconElement, text);
+  }
+
+  if (existing.textContent !== text) {
+    existing.textContent = text;
+  }
+  if (existing.style && existing.style.whiteSpace !== 'pre-line') {
+    existing.style.whiteSpace = 'pre-line';
+  }
+  return existing;
+}
+
+function ensureMachineryHeaderRow() {
+  if (hazardousMachineryUICache.factorHeaderRow) {
+    return;
+  }
+
+  const doc = getHazardousMachineryDocument();
+  const headerRow = doc.createElement('div');
+  headerRow.className = 'hazard-factor-row hazard-factor-row--header';
+
+  const factorHead = doc.createElement('div');
+  factorHead.className = 'hazard-factor-cell hazard-factor-cell--label';
+  factorHead.textContent = getHazardousMachineryUiText('labels.factor', 'Factor');
+
+  const valueHead = doc.createElement('div');
+  valueHead.className = 'hazard-factor-cell hazard-factor-cell--values';
+  valueHead.textContent = getHazardousMachineryUiText('labels.currentValues', 'Current Values');
+
+  const effectHead = doc.createElement('div');
+  effectHead.className = 'hazard-factor-cell hazard-factor-cell--penalty';
+  effectHead.textContent = getHazardousMachineryUiText('labels.effect', 'Effect');
+
+  headerRow.appendChild(factorHead);
+  headerRow.appendChild(valueHead);
+  headerRow.appendChild(effectHead);
+  hazardousMachineryUICache.factorGrid.appendChild(headerRow);
+  hazardousMachineryUICache.factorHeaderRow = headerRow;
+}
+
+function ensureMachineryFactorRow(key) {
+  const cached = hazardousMachineryUICache.factorRows[key];
+  if (cached) {
+    return cached;
+  }
+
+  const doc = getHazardousMachineryDocument();
+  const row = doc.createElement('div');
+  row.className = 'hazard-factor-row';
+
+  const labelCell = doc.createElement('div');
+  labelCell.className = 'hazard-factor-cell hazard-factor-cell--label';
+
+  const labelTitle = doc.createElement('div');
+  labelTitle.className = 'hazard-factor-label';
+
+  const labelText = doc.createElement('span');
+  labelText.className = 'hazard-factor-label__text';
+  labelTitle.appendChild(labelText);
+
+  const labelInfo = doc.createElement('div');
+  labelInfo.className = 'hazard-factor-info';
+
+  labelCell.appendChild(labelTitle);
+  labelCell.appendChild(labelInfo);
+
+  const valueCell = doc.createElement('div');
+  valueCell.className = 'hazard-factor-cell hazard-factor-cell--values';
+
+  const effectCell = doc.createElement('div');
+  effectCell.className = 'hazard-factor-cell hazard-factor-cell--penalty';
+
+  row.appendChild(labelCell);
+  row.appendChild(valueCell);
+  row.appendChild(effectCell);
+
+  const record = {
+    row,
+    labelTitle,
+    labelText,
+    labelInfo,
+    valueCell,
+    effectCell,
+    labelIcon: null,
+    labelTooltip: null
+  };
+
+  hazardousMachineryUICache.factorRows[key] = record;
+  return record;
+}
+
+function clearUnusedMachineryFactorRows(activeKeys) {
+  Object.keys(hazardousMachineryUICache.factorRows).forEach((key) => {
+    const record = hazardousMachineryUICache.factorRows[key];
+    if (!record) {
+      return;
+    }
+
+    if (activeKeys[key]) {
+      if (!record.row.parentNode) {
+        hazardousMachineryUICache.factorGrid.appendChild(record.row);
+      }
+      return;
+    }
+
+    if (record.row.parentNode) {
+      record.row.parentNode.removeChild(record.row);
+    }
+  });
+}
+
+function renderMachineryFactorRows(factors) {
+  if (!hazardousMachineryUICache.factorGrid) {
+    return;
+  }
+
+  ensureMachineryHeaderRow();
+  const activeKeys = {};
+
+  factors.forEach((factor) => {
+    const record = ensureMachineryFactorRow(factor.key);
+    activeKeys[factor.key] = true;
+
+    const desiredLabel = factor.label || '';
+    const desiredTooltip = factor.tooltip || '';
+    const currentLabel = record.labelTitle.dataset ? record.labelTitle.dataset.label || '' : '';
+    const currentTooltip = record.labelTitle.dataset ? record.labelTitle.dataset.tooltip || '' : '';
+
+    if (desiredLabel !== currentLabel || desiredTooltip !== currentTooltip) {
+      record.labelText.textContent = desiredLabel;
+      if (record.labelTitle.dataset) {
+        record.labelTitle.dataset.label = desiredLabel;
+        record.labelTitle.dataset.tooltip = desiredTooltip;
+      }
+    }
+
+    if (desiredTooltip) {
+      if (!record.labelIcon) {
+        record.labelIcon = createMachineryInfoIcon(desiredTooltip);
+        record.labelTitle.appendChild(record.labelIcon);
+      }
+      record.labelTooltip = ensureMachineryAttachedInfoTooltip(record.labelIcon, record.labelTooltip, desiredTooltip);
+    } else if (record.labelIcon) {
+      record.labelIcon.remove();
+      record.labelIcon = null;
+      record.labelTooltip = null;
+    }
+
+    const infoText = factor.info || '';
+    if (record.labelInfo.textContent !== infoText) {
+      record.labelInfo.textContent = infoText;
+    }
+
+    const valueText = (factor.values || []).join('\n');
+    if (record.valueCell.textContent !== valueText) {
+      record.valueCell.textContent = valueText;
+    }
+
+    const effectText = (factor.effects || []).join('\n');
+    if (record.effectCell.textContent !== effectText) {
+      record.effectCell.textContent = effectText;
+    }
+
+    if (!record.row.parentNode) {
+      hazardousMachineryUICache.factorGrid.appendChild(record.row);
+    }
+  });
+
+  clearUnusedMachineryFactorRows(activeKeys);
 }
 
 function attachHazardousMachineryCardCollapse(card, title) {
@@ -341,53 +560,6 @@ function ensureHazardousMachineryLayout() {
 
   const factorGrid = doc.createElement('div');
   factorGrid.className = 'hazard-factor-grid';
-  const factorHeader = doc.createElement('div');
-  factorHeader.className = 'hazard-factor-row hazard-factor-row--header';
-  [
-    getHazardousMachineryUiText('labels.factor', 'Factor'),
-    getHazardousMachineryUiText('labels.currentValues', 'Current Values'),
-    getHazardousMachineryUiText('labels.effect', 'Effect')
-  ].forEach((label, index) => {
-    const cell = doc.createElement('div');
-    cell.className = index === 0
-      ? 'hazard-factor-cell hazard-factor-cell--label'
-      : index === 1
-        ? 'hazard-factor-cell hazard-factor-cell--values'
-        : 'hazard-factor-cell hazard-factor-cell--penalty';
-    cell.textContent = label;
-    factorHeader.appendChild(cell);
-  });
-  factorGrid.appendChild(factorHeader);
-
-  const createFactorRow = (key, labelText) => {
-    const row = doc.createElement('div');
-    row.className = 'hazard-factor-row';
-
-    const labelCell = doc.createElement('div');
-    labelCell.className = 'hazard-factor-cell hazard-factor-cell--label';
-    const label = doc.createElement('div');
-    label.className = 'hazard-factor-label';
-    label.textContent = labelText;
-    labelCell.appendChild(label);
-
-    const valueCell = doc.createElement('div');
-    valueCell.className = 'hazard-factor-cell hazard-factor-cell--values';
-
-    const effectCell = doc.createElement('div');
-    effectCell.className = 'hazard-factor-cell hazard-factor-cell--penalty';
-
-    row.appendChild(labelCell);
-    row.appendChild(valueCell);
-    row.appendChild(effectCell);
-    factorGrid.appendChild(row);
-
-    hazardousMachineryUICache.statusFactorRows[key] = { valueCell, effectCell };
-  };
-
-  createFactorRow('water', getMachineryResourceLabel('resources.surface.liquidWater.name', 'Water'));
-  createFactorRow('invasiveness', getHazardousMachineryUiText('labels.invasiveness', 'Life Invasiveness'));
-  createFactorRow('temperature', getHazardousMachineryUiText('labels.temperature', 'Temperature'));
-  createFactorRow('oxygen', getMachineryResourceLabel('resources.atmospheric.oxygen.name', 'Oxygen'));
 
   factorsSection.appendChild(factorGrid);
   card.appendChild(factorsSection);
@@ -537,37 +709,83 @@ function updateHazardousMachineryUI(parameters) {
 
   const oxygenResource = resources?.atmospheric?.oxygen;
   const oxygenUnit = oxygenResource?.unit ? ` ${oxygenResource.unit}` : ' ton';
-  const temperatureUnit = getHazardousMachineryTemperatureUnit();
-  const temperatureThresholdK = (status.temperatureThresholdC || 0) + 273.15;
-  hazardousMachineryUICache.statusFactorRows.water.valueCell.textContent = getHazardousMachineryUiText('labels.waterCoverageFactor', '{value}% coverage', {
-    value: formatMachineryNumber(status.waterCoverage * 100, 2)
-  });
-  hazardousMachineryUICache.statusFactorRows.water.effectCell.textContent = getHazardousMachineryUiText('labels.waterEffect', 'Max Coverage {value}%', {
-    value: formatMachineryNumber(status.maxCoverageShare * 100, 2)
-  });
-  hazardousMachineryUICache.statusFactorRows.invasiveness.valueCell.textContent = getHazardousMachineryUiText('labels.invasivenessFactor', '{current} vs threshold {threshold} | density {density}', {
-    current: formatMachineryNumber(status.invasivenessValue, 2),
-    threshold: formatMachineryNumber(status.invasivenessThreshold, 2),
-    density: formatMachineryNumber(status.lifeDensity, 4)
-  });
-  hazardousMachineryUICache.statusFactorRows.invasiveness.effectCell.textContent = getHazardousMachineryUiText('labels.invasivenessEffect', 'Decay {value}/s', {
-    value: formatMachineryPercent(status.invasivenessDecayPercentPerSecond, 3)
-  });
-  hazardousMachineryUICache.statusFactorRows.temperature.valueCell.textContent = getHazardousMachineryUiText('labels.temperatureFactor', '{value}{unit} (threshold {threshold}{unit})', {
-    value: formatHazardousMachineryTemperature(status.temperatureC + 273.15, 2),
-    threshold: formatHazardousMachineryTemperature(temperatureThresholdK, 2),
-    unit: temperatureUnit
-  });
-  hazardousMachineryUICache.statusFactorRows.temperature.effectCell.textContent = getHazardousMachineryUiText('labels.temperatureEffect', 'Heat Decay {value}/s', {
-    value: formatMachineryPercent(status.temperatureDecayPercentPerSecond, 2)
-  });
-  hazardousMachineryUICache.statusFactorRows.oxygen.valueCell.textContent = getHazardousMachineryUiText('labels.oxygenFactor', '{value}{unit}', {
-    value: formatMachineryNumber(oxygenResource?.value || 0, 2),
-    unit: oxygenUnit
-  });
-  hazardousMachineryUICache.statusFactorRows.oxygen.effectCell.textContent = getHazardousMachineryUiText('labels.oxygenEffect', 'Oxidation {value}/s', {
-    value: formatMachineryPercent(status.oxygenDecayPercentPerSecond, 2)
-  });
+  const invasivenessRangeText = formatHazardousMachineryRange(status.invasivenessEntry);
+  const invasivenessSeverityText = formatHazardousMachinerySeverity(status.invasivenessEntry);
+  const temperatureUnit = status.temperatureEntry?.unit || 'C';
+  const temperatureRangeText = formatHazardousMachineryRange(status.temperatureEntry, temperatureUnit);
+  const temperatureSeverityText = formatHazardousMachinerySeverity(status.temperatureEntry);
+  const oxygenRangeText = formatHazardousMachineryRange(status.oxygenEntry, oxygenUnit.trim());
+  const oxygenSeverityText = formatHazardousMachinerySeverity(status.oxygenEntry);
+  renderMachineryFactorRows([
+    {
+      key: 'water',
+      label: getMachineryResourceLabel('resources.surface.liquidWater.name', 'Water'),
+      info: getHazardousMachineryUiText('labels.waterRule', 'Max Coverage = Base Coverage - Water Coverage x {value}', {
+        value: formatMachineryNumber(parameters.waterCoveragePenalty || 0, 2)
+      }),
+      tooltip: getHazardousMachineryUiText('tooltips.maxCoverage', 'Maximum machinery coverage is 100% minus half the current water coverage.'),
+      values: [
+        getHazardousMachineryUiText('labels.waterCurrent', 'Current: {value}% coverage', {
+          value: formatMachineryNumber(status.waterCoverage * 100, 2)
+        })
+      ],
+      effects: [
+        getHazardousMachineryUiText('labels.waterEffect', 'Max Coverage {value}%', {
+          value: formatMachineryNumber(status.maxCoverageShare * 100, 2)
+        })
+      ]
+    },
+    {
+      key: 'invasiveness',
+      label: getHazardousMachineryUiText('labels.invasiveness', 'Life Invasiveness'),
+      info: [invasivenessRangeText, invasivenessSeverityText].filter(Boolean).join('\n'),
+      values: [
+        getHazardousMachineryUiText('labels.currentDesign', 'Current Design: {value}', {
+          value: formatMachineryNumber(status.invasivenessValue, 2)
+        }),
+        getHazardousMachineryUiText('labels.lifeDensity', 'Density: {value}', {
+          value: formatMachineryNumber(status.lifeDensity, 4)
+        })
+      ],
+      effects: [
+        getHazardousMachineryUiText('labels.invasivenessEffect', 'Decay {value}/s', {
+          value: formatMachineryPercent(status.invasivenessDecayPercentPerSecond, 3)
+        })
+      ]
+    },
+    {
+      key: 'temperature',
+      label: getHazardousMachineryUiText('labels.temperature', 'Temperature'),
+      info: [temperatureRangeText, temperatureSeverityText].filter(Boolean).join('\n'),
+      values: [
+        getHazardousMachineryUiText('labels.current', 'Current: {value}{unit}', {
+          value: formatMachineryNumber(status.temperatureValue, 2),
+          unit: temperatureUnit
+        })
+      ],
+      effects: [
+        getHazardousMachineryUiText('labels.temperatureEffect', 'Heat Decay {value}/s', {
+          value: formatMachineryPercent(status.temperatureDecayPercentPerSecond, 2)
+        })
+      ]
+    },
+    {
+      key: 'oxygen',
+      label: getMachineryResourceLabel('resources.atmospheric.oxygen.name', 'Oxygen'),
+      info: [oxygenRangeText, oxygenSeverityText].filter(Boolean).join('\n'),
+      values: [
+        getHazardousMachineryUiText('labels.current', 'Current: {value}{unit}', {
+          value: formatMachineryNumber(status.oxygenAmount, 2),
+          unit: oxygenUnit
+        })
+      ],
+      effects: [
+        getHazardousMachineryUiText('labels.oxygenEffect', 'Oxidation {value}/s', {
+          value: formatMachineryPercent(status.oxygenDecayPercentPerSecond, 2)
+        })
+      ]
+    }
+  ]);
 
   if (hazardousMachineryUICache.baseGrowthValue) {
     hazardousMachineryUICache.baseGrowthValue.textContent = formatMachineryPercent(status.baseGrowthPercentPerSecond, 2);

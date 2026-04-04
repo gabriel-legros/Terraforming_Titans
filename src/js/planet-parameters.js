@@ -1781,11 +1781,10 @@ const styxOverrides = {
       initialCoverage: 1,
       maxCoverageBase: 1,
       waterCoveragePenalty: 0.5,
-      baseGrowth: 0.01,
-      invasivenessDecay: { value: 30, severity: 0.005 },
-      oxygenDecayCoefficient: 1e-24,
-      temperatureDecayThresholdC: 500,
-      temperatureDecayCoefficient: 5e-6,
+      baseGrowth: { value: 0.01 },
+      invasivenessPreference: { min: 0, max: 30, severityHigh: 0.005 },
+      oxygenPreference: { min: 0, max: 0, unit: 'ton', severityHigh: 1e-24 },
+      temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 5e-6 },
       crusaderRemovalPerSecond: 0.5,
       electronicsToAndroidCost: 1000,
       penalties: {
@@ -1949,7 +1948,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
 
 
 

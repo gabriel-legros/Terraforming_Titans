@@ -34,6 +34,68 @@ function withHazardSeverity(entry, defaultSeverity = 0) {
   return result;
 }
 
+function normalizeHazardRangeEntry(entry, defaultUnit = '') {
+  if (!isPlainObject(entry)) {
+    return { unit: defaultUnit, severity: 0 };
+  }
+
+  const result = { ...entry };
+  if (!Object.prototype.hasOwnProperty.call(result, 'unit') && defaultUnit) {
+    result.unit = defaultUnit;
+  }
+  if (
+    !Object.prototype.hasOwnProperty.call(result, 'severity') &&
+    !Object.prototype.hasOwnProperty.call(result, 'severityBelow') &&
+    !Object.prototype.hasOwnProperty.call(result, 'severityHigh')
+  ) {
+    result.severity = 0;
+  }
+  return result;
+}
+
+function normalizeBaseGrowthEntry(entry) {
+  const normalized = withHazardSeverity(entry ?? { value: 0 }, 1);
+  normalized.value = Math.max(0, normalized.value ?? 0);
+  return normalized;
+}
+
+function normalizeInvasivenessPreference(source) {
+  if (isPlainObject(source.invasivenessPreference)) {
+    return normalizeHazardRangeEntry(source.invasivenessPreference);
+  }
+
+  const legacy = withHazardSeverity(source.invasivenessDecay ?? { value: 30, severity: 0 }, 0);
+  return normalizeHazardRangeEntry({
+    min: 0,
+    max: Number.isFinite(legacy.value) ? legacy.value : 30,
+    severityHigh: Number.isFinite(legacy.severity) ? legacy.severity : 0
+  });
+}
+
+function normalizeTemperaturePreference(source) {
+  if (isPlainObject(source.temperaturePreference)) {
+    return normalizeHazardRangeEntry(source.temperaturePreference, 'C');
+  }
+
+  return normalizeHazardRangeEntry({
+    max: Number.isFinite(source.temperatureDecayThresholdC) ? source.temperatureDecayThresholdC : 500,
+    unit: 'C',
+    severityHigh: Math.max(0, source.temperatureDecayCoefficient ?? 0)
+  }, 'C');
+}
+
+function normalizeOxygenPreference(source) {
+  if (isPlainObject(source.oxygenPreference)) {
+    return normalizeHazardRangeEntry(source.oxygenPreference, 'ton');
+  }
+
+  return normalizeHazardRangeEntry({
+    max: 0,
+    unit: 'ton',
+    severityHigh: Math.max(0, source.oxygenDecayCoefficient ?? 1e-24)
+  }, 'ton');
+}
+
 function clampRatio(value) {
   if (!Number.isFinite(value) || value <= 0) {
     return 0;
@@ -62,11 +124,10 @@ function normalizeHazardousMachineryParameters(parameters = {}) {
     initialCoverage: clampRatio(source.initialCoverage ?? 1),
     maxCoverageBase: clampRatio(source.maxCoverageBase ?? 1),
     waterCoveragePenalty: Math.max(0, source.waterCoveragePenalty ?? 0.5),
-    baseGrowth: Math.max(0, source.baseGrowth ?? 0),
-    invasivenessDecay: withHazardSeverity(source.invasivenessDecay ?? { value: 30, severity: 0 }),
-    oxygenDecayCoefficient: Math.max(0, source.oxygenDecayCoefficient ?? 1e-24),
-    temperatureDecayThresholdC: Number.isFinite(source.temperatureDecayThresholdC) ? source.temperatureDecayThresholdC : 500,
-    temperatureDecayCoefficient: Math.max(0, source.temperatureDecayCoefficient ?? 0),
+    baseGrowth: normalizeBaseGrowthEntry(source.baseGrowth),
+    invasivenessPreference: normalizeInvasivenessPreference(source),
+    oxygenPreference: normalizeOxygenPreference(source),
+    temperaturePreference: normalizeTemperaturePreference(source),
     crusaderRemovalPerSecond: Math.max(0, source.crusaderRemovalPerSecond ?? 0.5),
     electronicsToAndroidCost: Math.max(1, source.electronicsToAndroidCost ?? 1000),
     penalties: {
@@ -319,6 +380,49 @@ class HazardousMachineryHazard {
     return Number.isFinite(value) ? value : 0;
   }
 
+  computeRangePenalty(entry, currentValue) {
+    if (!entry) {
+      return 0;
+    }
+
+    const defaultSeverity = Number.isFinite(entry.severity) ? entry.severity : 0;
+    const severityBelow = Number.isFinite(entry.severityBelow) ? entry.severityBelow : defaultSeverity;
+    const severityHigh = Number.isFinite(entry.severityHigh) ? entry.severityHigh : defaultSeverity;
+    const hasMin = Number.isFinite(entry.min);
+    const hasMax = Number.isFinite(entry.max);
+    const value = Number.isFinite(currentValue) ? currentValue : 0;
+
+    if (hasMin && value < entry.min) {
+      return severityBelow > 0 ? (entry.min - value) * severityBelow : 0;
+    }
+
+    if (hasMax && value > entry.max) {
+      return severityHigh > 0 ? (value - entry.max) * severityHigh : 0;
+    }
+
+    return 0;
+  }
+
+  convertTemperatureFromKelvin(value, unit) {
+    const normalizedUnit = unit ? `${unit}`.trim().toLowerCase() : 'k';
+    const kelvin = Number.isFinite(value) ? value : 0;
+
+    switch (normalizedUnit) {
+      case 'c':
+      case '°c':
+      case 'celsius':
+        return kelvin - 273.15;
+      case 'f':
+      case '°f':
+      case 'fahrenheit':
+        return (kelvin - 273.15) * 9 / 5 + 32;
+      case 'k':
+      case 'kelvin':
+      default:
+        return kelvin;
+    }
+  }
+
   getCurrentPenaltyValues(terraforming, parameters) {
     if (!this.hasConfiguredHazard(parameters)) {
       return {
@@ -330,9 +434,10 @@ class HazardousMachineryHazard {
         maxCoverageShare: 0,
         waterCoverage: this.getWaterCoverage(terraforming),
         hazardStrength: 0,
-        baseGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth ?? 0),
+        baseGrowthEntry: parameters?.baseGrowth || { value: 0, severity: 1 },
+        baseGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth?.value ?? 0),
         totalPenaltyPercentPerSecond: 0,
-        netNaturalGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth ?? 0),
+        netNaturalGrowthPercentPerSecond: Math.max(0, parameters?.baseGrowth?.value ?? 0),
         naturalGrowthRatePerSecond: 0,
         nanoColonyGrowthMultiplier: 1,
         researchMultiplier: 1,
@@ -342,14 +447,20 @@ class HazardousMachineryHazard {
         availableAndroids: this.getAvailableAndroids(),
         androidDecayRatePerSecond: 0,
         lifeDensity: 0,
+        invasivenessEntry: parameters?.invasivenessPreference || null,
         invasivenessValue: this.getLifeDesignInvasiveness(),
-        invasivenessThreshold: Number.isFinite(parameters?.invasivenessDecay?.value) ? parameters.invasivenessDecay.value : 30,
+        invasivenessRangePenalty: 0,
         invasivenessDecayPercentPerSecond: 0,
         invasivenessDecayRatePerSecond: 0,
+        temperatureEntry: parameters?.temperaturePreference || null,
         temperatureC: 0,
-        temperatureThresholdC: Number.isFinite(parameters?.temperatureDecayThresholdC) ? parameters.temperatureDecayThresholdC : 500,
+        temperatureValue: 0,
+        temperatureRangePenalty: 0,
         temperatureDecayPercentPerSecond: 0,
         temperatureDecayRatePerSecond: 0,
+        oxygenEntry: parameters?.oxygenPreference || null,
+        oxygenAmount: 0,
+        oxygenRangePenalty: 0,
         oxygenDecayPercentPerSecond: 0,
         oxygenDecayRatePerSecond: 0,
         crusaderDecayRatePerSecond: 0
@@ -360,7 +471,8 @@ class HazardousMachineryHazard {
     const currentAmount = Math.max(0, resource?.value || 0);
     const hazardStrength = this.getHazardStrength(terraforming, parameters, currentAmount);
     const maxAmount = this.getMaxAmount(terraforming, parameters);
-    const baseGrowthPercentPerSecond = Math.max(0, parameters?.baseGrowth ?? 0);
+    const baseGrowthEntry = parameters?.baseGrowth || { value: 0, severity: 1 };
+    const baseGrowthPercentPerSecond = Math.max(0, baseGrowthEntry.value ?? 0);
     const penalties = parameters?.penalties || {};
     const nanoColonyGrowthMultiplier = 1 - hazardStrength * (1 - Math.max(0, penalties.nanoColonyGrowthMultiplier || 0));
     const researchMultiplier = interpolateDivisorMultiplier(
@@ -373,23 +485,21 @@ class HazardousMachineryHazard {
     const availableAndroids = this.getAvailableAndroids();
     const androidDecayRatePerSecond = availableAndroids * Math.max(0, penalties.availableAndroidDecayRate || 0) * hazardStrength;
     const lifeDensity = this.getLifeBiomassDensity(terraforming);
+    const invasivenessEntry = parameters?.invasivenessPreference || null;
     const invasivenessValue = this.getLifeDesignInvasiveness();
-    const invasivenessEntry = parameters?.invasivenessDecay || {};
-    const invasivenessThreshold = Number.isFinite(invasivenessEntry.value) ? invasivenessEntry.value : 30;
-    const invasivenessSeverity = Number.isFinite(invasivenessEntry.severity) ? invasivenessEntry.severity : 0;
-    const invasivenessDifference = Math.max(0, invasivenessValue - invasivenessThreshold);
-    const invasivenessDecayPercentPerSecond = Math.max(0, lifeDensity * invasivenessDifference * invasivenessSeverity);
+    const invasivenessRangePenalty = this.computeRangePenalty(invasivenessEntry, invasivenessValue);
+    const invasivenessDecayPercentPerSecond = Math.max(0, lifeDensity * invasivenessRangePenalty);
     const invasivenessDecayRatePerSecond = Math.min(
       currentAmount,
       currentAmount * invasivenessDecayPercentPerSecond
     );
     const temperatureK = Math.max(0, terraforming?.temperature?.value || 0);
     const temperatureC = temperatureK - 273.15;
-    const temperatureThresholdC = Number.isFinite(parameters?.temperatureDecayThresholdC)
-      ? parameters.temperatureDecayThresholdC
-      : 500;
-    const temperatureExcessC = Math.max(0, temperatureC - temperatureThresholdC);
-    const rawTemperatureDecayPercentPerSecond = temperatureExcessC * Math.max(0, parameters?.temperatureDecayCoefficient || 0);
+    const temperatureEntry = parameters?.temperaturePreference || null;
+    const temperatureUnit = temperatureEntry?.unit || 'C';
+    const temperatureValue = this.convertTemperatureFromKelvin(temperatureK, temperatureUnit);
+    const temperatureRangePenalty = this.computeRangePenalty(temperatureEntry, temperatureValue);
+    const rawTemperatureDecayPercentPerSecond = Math.max(0, temperatureRangePenalty);
     const temperatureDecayRatePerSecond = Math.min(
       currentAmount,
       currentAmount * rawTemperatureDecayPercentPerSecond
@@ -404,8 +514,10 @@ class HazardousMachineryHazard {
     } catch (error) {
       oxygenResource = null;
     }
+    const oxygenEntry = parameters?.oxygenPreference || null;
     const oxygenAmount = Math.max(0, oxygenResource?.value || 0);
-    const rawOxygenDecayPercentPerSecond = oxygenAmount * Math.max(0, parameters?.oxygenDecayCoefficient || 0);
+    const oxygenRangePenalty = this.computeRangePenalty(oxygenEntry, oxygenAmount);
+    const rawOxygenDecayPercentPerSecond = Math.max(0, oxygenRangePenalty);
     const oxygenDecayRatePerSecond = Math.min(
       currentAmount,
       oxygenAmount,
@@ -434,6 +546,7 @@ class HazardousMachineryHazard {
       maxCoverageShare: this.getMaxCoverageShare(terraforming, parameters),
       waterCoverage: this.getWaterCoverage(terraforming),
       hazardStrength,
+      baseGrowthEntry,
       baseGrowthPercentPerSecond,
       totalPenaltyPercentPerSecond,
       netNaturalGrowthPercentPerSecond,
@@ -446,14 +559,20 @@ class HazardousMachineryHazard {
       availableAndroids,
       androidDecayRatePerSecond,
       lifeDensity,
+      invasivenessEntry,
       invasivenessValue,
-      invasivenessThreshold,
+      invasivenessRangePenalty,
       invasivenessDecayPercentPerSecond,
       invasivenessDecayRatePerSecond,
+      temperatureEntry,
       temperatureC,
-      temperatureThresholdC,
+      temperatureValue,
+      temperatureRangePenalty,
       temperatureDecayPercentPerSecond,
       temperatureDecayRatePerSecond,
+      oxygenEntry,
+      oxygenAmount,
+      oxygenRangePenalty,
       oxygenDecayPercentPerSecond,
       oxygenDecayRatePerSecond,
       crusaderDecayRatePerSecond: this.getCrusaderDecayPerSecond(parameters)
