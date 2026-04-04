@@ -22,6 +22,7 @@ const hazardousMachineryUICache = {
   baseGrowthValue: null,
   totalPenaltyValue: null,
   factorGrid: null,
+  temperatureHelpers: undefined,
 };
 
 function getHazardousMachineryUiText(path, fallback, vars) {
@@ -130,6 +131,66 @@ function formatMachinerySeverityValue(value) {
   return formatMachineryNumber(numeric, numeric < 0.01 ? 4 : 2);
 }
 
+function getHazardousMachineryTemperatureHelpers() {
+  if (hazardousMachineryUICache.temperatureHelpers !== undefined) {
+    return hazardousMachineryUICache.temperatureHelpers;
+  }
+
+  let converter = null;
+  let unitResolver = null;
+
+  try {
+    converter = toDisplayTemperature;
+  } catch (error) {
+    converter = null;
+  }
+
+  try {
+    unitResolver = getTemperatureUnit;
+  } catch (error) {
+    unitResolver = null;
+  }
+
+  hazardousMachineryUICache.temperatureHelpers = { converter, unitResolver };
+  return hazardousMachineryUICache.temperatureHelpers;
+}
+
+function convertMachineryTemperatureToKelvin(value, unit) {
+  const normalizedUnit = `${unit || 'K'}`.trim().toLowerCase();
+  const numericValue = Number.isFinite(value) ? value : 0;
+
+  switch (normalizedUnit) {
+    case 'c':
+    case '°c':
+    case 'celsius':
+      return numericValue + 273.15;
+    case 'f':
+    case '°f':
+    case 'fahrenheit':
+      return (numericValue - 32) * 5 / 9 + 273.15;
+    case 'k':
+    case 'kelvin':
+    default:
+      return numericValue;
+  }
+}
+
+function getHazardousMachineryDisplayTemperature(value, unit) {
+  const helpers = getHazardousMachineryTemperatureHelpers();
+  if (!helpers.converter || !helpers.unitResolver) {
+    return {
+      value: Number.isFinite(value) ? value : 0,
+      unit: unit || 'K'
+    };
+  }
+
+  const kelvin = convertMachineryTemperatureToKelvin(value, unit);
+  return {
+    value: helpers.converter(kelvin),
+    unit: helpers.unitResolver()
+  };
+}
+
 function formatHazardousMachineryRange(entry, fallbackUnit = '') {
   if (!entry) {
     return getHazardousMachineryUiText('labels.unbounded', 'Unbounded');
@@ -192,6 +253,44 @@ function formatHazardousMachinerySeverity(entry) {
   }
 
   return details.join(' | ');
+}
+
+function formatHazardousMachineryTemperatureRange(entry, fallbackUnit = 'K') {
+  if (!entry) {
+    return getHazardousMachineryUiText('labels.unbounded', 'Unbounded');
+  }
+
+  const unit = entry.unit || fallbackUnit;
+  const hasMin = Number.isFinite(entry.min);
+  const hasMax = Number.isFinite(entry.max);
+
+  if (!hasMin && !hasMax) {
+    return getHazardousMachineryUiText('labels.unbounded', 'Unbounded');
+  }
+
+  const minDisplay = hasMin ? getHazardousMachineryDisplayTemperature(entry.min, unit) : null;
+  const maxDisplay = hasMax ? getHazardousMachineryDisplayTemperature(entry.max, unit) : null;
+  const displayUnit = minDisplay?.unit || maxDisplay?.unit || unit;
+
+  if (hasMin && hasMax) {
+    return getHazardousMachineryUiText('labels.range', 'Range {min}-{max} {unit}', {
+      min: formatMachineryNumber(minDisplay.value, 2),
+      max: formatMachineryNumber(maxDisplay.value, 2),
+      unit: displayUnit
+    });
+  }
+
+  if (hasMin) {
+    return getHazardousMachineryUiText('labels.minimum', 'Min {value} {unit}', {
+      value: formatMachineryNumber(minDisplay.value, 2),
+      unit: displayUnit
+    });
+  }
+
+  return getHazardousMachineryUiText('labels.maximum', 'Max {value} {unit}', {
+    value: formatMachineryNumber(maxDisplay.value, 2),
+    unit: displayUnit
+  });
 }
 
 function getMachineryResourceLabel(path, fallback) {
@@ -636,8 +735,10 @@ function updateHazardousMachineryUI(parameters) {
   const oxygenUnit = status.oxygenEntry?.unit || 'kPa';
   const invasivenessRangeText = formatHazardousMachineryRange(status.invasivenessEntry);
   const invasivenessSeverityText = formatHazardousMachinerySeverity(status.invasivenessEntry);
-  const temperatureUnit = status.temperatureEntry?.unit || 'C';
-  const temperatureRangeText = formatHazardousMachineryRange(status.temperatureEntry, temperatureUnit);
+  const temperatureSourceUnit = status.temperatureEntry?.unit || 'C';
+  const temperatureDisplay = getHazardousMachineryDisplayTemperature(status.temperatureValue, temperatureSourceUnit);
+  const temperatureUnit = temperatureDisplay.unit;
+  const temperatureRangeText = formatHazardousMachineryTemperatureRange(status.temperatureEntry, temperatureSourceUnit);
   const temperatureSeverityText = formatHazardousMachinerySeverity(status.temperatureEntry);
   const oxygenRangeText = formatHazardousMachineryRange(status.oxygenEntry, oxygenUnit);
   const oxygenSeverityText = formatHazardousMachinerySeverity(status.oxygenEntry);
@@ -684,7 +785,7 @@ function updateHazardousMachineryUI(parameters) {
       info: [temperatureRangeText, temperatureSeverityText].filter(Boolean).join('\n'),
       values: [
         getHazardousMachineryUiText('labels.current', 'Current: {value}{unit}', {
-          value: formatMachineryNumber(status.temperatureValue, 2),
+          value: formatMachineryNumber(temperatureDisplay.value, 2),
           unit: temperatureUnit
         })
       ],
