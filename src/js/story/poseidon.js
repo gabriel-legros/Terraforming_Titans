@@ -428,7 +428,7 @@ progressPoseidon.chapters.push(
     chapter: 38,
     activePlanet: 'poseidon',
     narrative: 'Acquire full control of sector R1-02 to continue.',
-    prerequisites: ['poseidon.38.6'],
+    prerequisites: ['impossible'],
     objectives: [
       { type: 'galaxySectorControl', sectorLabel: 'R1-02' }
     ],

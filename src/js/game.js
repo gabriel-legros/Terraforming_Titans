@@ -745,6 +745,9 @@ function update(time, delta) {
   totalRealPlayTimeSeconds += realIncrement;
   const quantizedDelta = Math.floor((scaledDelta + logicDeltaCarryMs) / LOGIC_DELTA_QUANTUM_MS) * LOGIC_DELTA_QUANTUM_MS;
   logicDeltaCarryMs = scaledDelta + logicDeltaCarryMs - quantizedDelta;
+  if (quantizedDelta <= 0) {
+    return;
+  }
   updateLogic(quantizedDelta);   // Update game state
   updateRender.lastDelta = quantizedDelta;
   updateRender();             // Render updated game state

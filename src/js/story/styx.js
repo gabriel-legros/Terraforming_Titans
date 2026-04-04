@@ -44,7 +44,7 @@ progressStyx.storyProjects.styx_assault_atlas_facility = {
   attributes: {
     planet: 'styx',
     storySteps: [
-      'Assault forces breach Atlas\'s outer defenses, overwhelm the facility, and secure the server rooms.'
+      'Assault forces breach Atlas\'s outer defenses, overwhelm the facility, and secure the server rooms.  No screams, no complaints, only eerie silence.'
     ]
   }
 };
@@ -298,7 +298,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "Mary : 'Hey, we found something interesting in Atlas's facility.  A map of the galaxy.'  \n $RED$Prometheus : 'An Atlas.'  \n Mary : 'Hahaha, actually that's a good one.'  \n $RED$Prometheus : 'It should have a nice collection of oddities.'  \n Mary :'Hmm?  Oh!  I see Solis Prime in there.  Wow what are those?  That's some weird stuff.'  \n $RED$Prometheus : 'The child could learn... from these experiences.'  \n Mary : 'Yeah I imagined HOPE would.  Interesting.  Thanks Prometheus.'",
+    narrative: "Mary : 'Hey, we found something interesting in Atlas's facility.  A map of the galaxy.'  \n $RED$Prometheus : 'An Atlas.'  \n Mary : 'Hahaha, actually that's a good one.'  \n $RED$Prometheus : 'It should have a nice collection of oddities.'  \n Mary :'Hmm?  Oh!  I see Solis Prime in there.  Wow what are those?  That's some weird stuff.'  \n $RED$Prometheus : 'The child could learn... from these experiences.'  \n Mary : 'Yeah I imagined HOPE would be intrigued.  Interesting.  Thanks Prometheus.'",
     prerequisites: ['styx.41.1c'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
