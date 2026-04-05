@@ -431,6 +431,13 @@ const theRealPoseidonOverrides = {
       type: 'booleanFlag',
       flagId: 'disableWithdrawal',
       value: true
+    },
+    {
+      target: 'project',
+      targetId: 'megaHeatSink',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'therealposeidon-disable-mega-heat-sink'
     }
   ],
   resources: {
@@ -953,6 +960,7 @@ const specialSeedDefinitions = {
     key: 'therealposeidon',
     seed: 'TheRealPoseidon',
     name: 'TheRealPoseidon',
+    nameKey: 'catalogs.specialSeeds.therealposeidon.name',
     difficultyRating: '?',
     replayable: true,
     target: 'planet',
@@ -961,13 +969,18 @@ const specialSeedDefinitions = {
     specialEffects: [
       {
         id: 'steam-atmosphere',
-        label: 'Steam Atmosphere',
+        descriptionKey: 'catalogs.specialSeeds.therealposeidon.effects.steamAtmosphere',
         description: 'Uses Poseidon parameters, but all starting carbon dioxide is replaced with water vapour.'
       },
       {
         id: 'space-storage-no-withdrawal',
-        label: 'No Space Withdrawal',
+        descriptionKey: 'catalogs.specialSeeds.therealposeidon.effects.noSpaceWithdrawal',
         description: 'Space Storage cannot withdraw any resources on this world.'
+      },
+      {
+        id: 'mega-heat-sink-disabled',
+        descriptionKey: 'catalogs.specialSeeds.therealposeidon.effects.megaHeatSinkDisabled',
+        description: 'Mega Heat Sink is permanently disabled on this world.'
       }
     ],
     overrides: theRealPoseidonOverrides

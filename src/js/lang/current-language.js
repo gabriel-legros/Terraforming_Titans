@@ -2602,6 +2602,14 @@ setLanguageData({
           enableDynamicMass: 'Allows the generation of worlds with dynamic mass in the Random World Generator.',
         },
       },
+      therealposeidon: {
+        name: 'TheRealPoseidon',
+        effects: {
+          steamAtmosphere: 'Uses Poseidon parameters, but all starting carbon dioxide is replaced with water vapour.',
+          noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
+          megaHeatSinkDisabled: 'Mega Heat Sink is permanently disabled on this world.',
+        },
+      },
     },
     buildings: {
       oreMine: {
