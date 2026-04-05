@@ -291,7 +291,20 @@ progressStyx.chapters.push(
     objectives: [
       { type: 'project', projectId: 'styx_assault_atlas_facility', repeatCount: 1 }
     ],
-    reward: []
+    reward: [
+      { target: 'atlasManager', type: 'enable', targetId: 'space-atlas' },
+      { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false, onTravel: false },
+      {
+        target: 'global',
+        type: 'activateSubtab',
+        subtabClass: 'space-subtab',
+        contentClass: 'space-subtab-content',
+        targetId: 'space-atlas',
+        unhide: true,
+        onLoad: false,
+        onTravel: false
+      }
+    ]
   },
   {
     id: 'styx.41.2',

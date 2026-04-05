@@ -722,6 +722,7 @@ function addOrRemoveEffect(effect, action) {
     'followersManager': typeof followersManager !== 'undefined' ? followersManager : undefined,
     'orbitalManager': typeof followersManager !== 'undefined' ? followersManager : undefined,
     'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,
+    'atlasManager': atlasManager,
     'artificialManager': typeof artificialManager !== 'undefined' ? artificialManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
     'patienceManager': typeof patienceManager !== 'undefined' ? patienceManager : undefined
