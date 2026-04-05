@@ -123,21 +123,21 @@ const wolfysNightmareOverrides = {
       buriedHydrocarbonIce: 0
     }
   },
-  zonalTemperatures: {
-    tropical: {
-      value: 737.2822669140444,
-      day: 738.5200836826394,
-      night: 736.0444501454493
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 1240.859476178724,
+      "day": 1241.075362447589,
+      "night": 1240.643589909859
     },
-    temperate: {
-      value: 737.2265085698976,
-      day: 738.2558491160473,
-      night: 736.197168023748
+    "temperate": {
+      "value": 1240.7701490684287,
+      "day": 1240.9487351173025,
+      "night": 1240.591563019555
     },
-    polar: {
-      value: 737.0664134185697,
-      day: 737.6198110655876,
-      night: 736.5130157715519
+    "polar": {
+      "value": 1240.5066376920938,
+      "day": 1240.6017215261663,
+      "night": 1240.4115538580213
     }
   },
   hazards: {
