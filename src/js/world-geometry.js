@@ -216,6 +216,14 @@ function getWorldGeometryResourceDeltaTons(resource) {
   return currentValue - initialValue;
 }
 
+function getWorldGeometryResourceCurrentTons(resource) {
+  if (!resource) {
+    return 0;
+  }
+  const currentValue = Number.isFinite(resource.value) ? resource.value : 0;
+  return currentValue > 0 ? currentValue : 0;
+}
+
 function calculateDynamicWorldMassDeltaKg(resourceSet) {
   if (!resourceSet) {
     return 0;
@@ -233,6 +241,22 @@ function calculateDynamicWorldMassDeltaKg(resourceSet) {
   for (let index = 0; index < DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS.length; index += 1) {
     const key = DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS[index];
     totalKg += getWorldGeometryResourceDeltaTons(atmospheric[key]) * 1000;
+  }
+
+  return totalKg;
+}
+
+function calculateDynamicWorldCurrentSurfaceMassKg(resourceSet) {
+  if (!resourceSet) {
+    return 0;
+  }
+
+  let totalKg = 0;
+  const surface = resourceSet.surface || {};
+
+  for (let index = 0; index < DYNAMIC_WORLD_SURFACE_MASS_KEYS.length; index += 1) {
+    const key = DYNAMIC_WORLD_SURFACE_MASS_KEYS[index];
+    totalKg += getWorldGeometryResourceCurrentTons(surface[key]) * 1000;
   }
 
   return totalKg;
@@ -331,7 +355,10 @@ function getDynamicWorldCurrentVolumeM3(terraformingState, celestialParameters) 
 }
 
 function getDynamicWorldPlanetaryMassAvailableTons(terraformingState, celestialParameters) {
-  return getDynamicWorldCurrentMassKg(terraformingState, celestialParameters) / 1000;
+  const activeTerraforming = terraformingState || null;
+  const currentMassKg = getDynamicWorldCurrentMassKg(activeTerraforming, celestialParameters);
+  const currentSurfaceMassKg = calculateDynamicWorldCurrentSurfaceMassKg(activeTerraforming?.resources);
+  return Math.max(0, currentMassKg - currentSurfaceMassKg) / 1000;
 }
 
 function addDynamicWorldPlanetaryMaterial(terraformingState, materialKey, amountTons) {
@@ -356,11 +383,12 @@ function disposeDynamicWorldPlanetaryMass(terraformingState, amountTons) {
   }
 
   const currentMassKg = getDynamicWorldCurrentMassKg(activeTerraforming);
-  if (currentMassKg <= 0) {
+  const availablePlanetaryMassKg = getDynamicWorldPlanetaryMassAvailableTons(activeTerraforming) * 1000;
+  if (currentMassKg <= 0 || availablePlanetaryMassKg <= 0) {
     return 0;
   }
 
-  const removableKg = Math.min(amountTons * 1000, currentMassKg);
+  const removableKg = Math.min(amountTons * 1000, availablePlanetaryMassKg);
   const currentVolumeM3 = getDynamicWorldCurrentVolumeM3(activeTerraforming);
   const removalDensity = calculateAverageDensityKgM3(currentMassKg, currentVolumeM3);
   const removedVolumeM3 = removableKg / removalDensity;
@@ -479,6 +507,7 @@ try {
     calculateCrossSectionAreaM2FromRadius,
     calculateAverageDensityKgM3,
     calculateDynamicWorldMassDeltaKg,
+    calculateDynamicWorldCurrentSurfaceMassKg,
     calculateDynamicWorldSurfaceVolumeDeltaM3,
     addDynamicWorldPlanetaryMaterial,
     calculateGravityFromMassRadius,
