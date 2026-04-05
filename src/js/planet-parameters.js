@@ -1786,6 +1786,7 @@ const styxOverrides = {
       oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.001 },
       temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.003 },
       crusaderRemovalPerSecond: 0.5,
+      researchToDisableCost: 10000,
       penalties: {
         availableAndroidDecayRate: 0.05,
         nanoColonyGrowthMultiplier: 0,
@@ -1947,7 +1948,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
 
 
 

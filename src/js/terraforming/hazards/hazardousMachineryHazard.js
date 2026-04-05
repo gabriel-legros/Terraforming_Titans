@@ -185,6 +185,7 @@ function normalizeHazardousMachineryParameters(parameters = {}) {
     oxygenPreference: normalizeOxygenPreference(source),
     temperaturePreference: normalizeTemperaturePreference(source),
     crusaderRemovalPerSecond: Math.max(0, source.crusaderRemovalPerSecond ?? 0.5),
+    researchToDisableCost: Math.max(1, source.researchToDisableCost ?? 10000),
     penalties: {
       availableAndroidDecayRate: Math.max(0, penalties.availableAndroidDecayRate ?? 0.05),
       nanoColonyGrowthMultiplier: Math.max(0, penalties.nanoColonyGrowthMultiplier ?? 0),
@@ -200,6 +201,8 @@ class HazardousMachineryHazard {
   constructor(manager) {
     this.manager = manager;
     this.pendingTravelTuning = false;
+    this.hackBatchSize = 1;
+    this.autoSpendIfClear = false;
   }
 
   normalize(parameters) {
@@ -416,6 +419,64 @@ class HazardousMachineryHazard {
       return 0;
     }
     return Math.max(0, crusaders.value || 0) * Math.max(0, parameters?.crusaderRemovalPerSecond || 0);
+  }
+
+  getCounterHackCostPerMachinery(parameters) {
+    return Math.max(1, parameters?.researchToDisableCost || 10000);
+  }
+
+  performCounterHack(terraforming, parameters, batchCount = 1) {
+    if (!this.hasConfiguredHazard(parameters)) {
+      return 0;
+    }
+
+    const resource = this.getResource();
+    const research = resources?.colony?.research;
+    if (!resource || !research || !(batchCount > 0)) {
+      return 0;
+    }
+
+    const costPerMachinery = this.getCounterHackCostPerMachinery(parameters);
+    const maxByResearch = Math.max(0, (research.value || 0) / costPerMachinery);
+    const maxByMachinery = Math.max(0, resource.value || 0);
+    const actual = Math.max(0, Math.min(batchCount, maxByResearch, maxByMachinery));
+    if (!(actual > 0)) {
+      return 0;
+    }
+
+    research.decrease(actual * costPerMachinery);
+    resource.decrease(actual);
+    this.syncResource(terraforming, parameters, { preserveValue: true });
+    return actual;
+  }
+
+  autoSpendWouldClear(terraforming, parameters) {
+    if (!this.autoSpendIfClear) {
+      return 0;
+    }
+
+    const resource = this.getResource();
+    const research = resources?.colony?.research;
+    if (!resource || !research || !((resource.value || 0) > 0)) {
+      return 0;
+    }
+
+    const requiredResearch = (resource.value || 0) * this.getCounterHackCostPerMachinery(parameters);
+    if ((research.value || 0) + 1e-9 < requiredResearch) {
+      return 0;
+    }
+
+    return this.performCounterHack(terraforming, parameters, resource.value || 0);
+  }
+
+  setHackBatchSize(value) {
+    this.hackBatchSize = Math.max(1, Math.floor(value || 1));
+    return this.hackBatchSize;
+  }
+
+  setAutoSpendIfClear(enabled) {
+    this.autoSpendIfClear = enabled === true;
+    return this.autoSpendIfClear;
   }
 
   getAvailableAndroids() {
@@ -864,11 +925,16 @@ class HazardousMachineryHazard {
   }
 
   save() {
-    return {};
+    return {
+      hackBatchSize: this.hackBatchSize,
+      autoSpendIfClear: this.autoSpendIfClear === true
+    };
   }
 
-  load() {
+  load(data) {
     this.pendingTravelTuning = false;
+    this.setHackBatchSize(data?.hackBatchSize || 1);
+    this.setAutoSpendIfClear(data?.autoSpendIfClear === true);
   }
 
   update(deltaTime, terraforming, parameters) {
@@ -886,6 +952,7 @@ class HazardousMachineryHazard {
       return;
     }
 
+    this.autoSpendWouldClear(terraforming, parameters);
     const resource = syncState.resource;
     if (!(resource.value > 0) || !(deltaTime > 0)) {
       return;

@@ -222,6 +222,7 @@ function initializeGameState(options = {}) {
   let savedConstructionOffice = null;
   let savedLifeDesignerTravelState = null;
   let savedFollowersTravelState = null;
+  let savedHazardousMachineryTravelState = null;
   if (!preserveManagers && !globalGameIsLoadingFromSave) {
     resetStructureDisplayState();
     resetProjectDisplayState();
@@ -235,6 +236,9 @@ function initializeGameState(options = {}) {
     preparedTravelState = null;
     savedProjectTravelState = travelState.projects;
     savedFollowersTravelState = travelState.followers;
+    savedHazardousMachineryTravelState = hazardManager?.hazardousMachineryHazard?.save
+      ? hazardManager.hazardousMachineryHazard.save()
+      : null;
   }
   if (preserveManagers && typeof captureAutoBuildSettings === 'function' && typeof structures !== 'undefined') {
     captureAutoBuildSettings(structures);
@@ -452,6 +456,9 @@ function initializeGameState(options = {}) {
     ? currentPlanetParameters.hazards
     : {};
   hazardManager.initialize(planetHazards);
+  if (preserveManagers && savedHazardousMachineryTravelState && hazardManager?.hazardousMachineryHazard?.load) {
+    hazardManager.hazardousMachineryHazard.load(savedHazardousMachineryTravelState);
+  }
 
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display

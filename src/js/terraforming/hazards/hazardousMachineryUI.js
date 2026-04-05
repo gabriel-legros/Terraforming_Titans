@@ -9,12 +9,21 @@ const hazardousMachineryUICache = {
   summaryStatus: null,
   summaryDecay: null,
   summaryPenalties: null,
+  summaryHackingText: null,
+  summaryHackingCost: null,
+  summaryHackingInfo: null,
+  summaryHacking: null,
   barSafe: null,
   barHazard: null,
   barSafeLabel: null,
   barHazardLabel: null,
   barDetails: null,
   maxCoverageTooltip: null,
+  hackButton: null,
+  hackMaxButton: null,
+  hackDivideButton: null,
+  hackTimesButton: null,
+  autoSpendCheckbox: null,
   factorRows: {},
   factorHeaderRow: null,
   factorsSection: null,
@@ -308,6 +317,16 @@ function createMachineryInfoIcon(text) {
   icon.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(icon, text);
   return icon;
+}
+
+function refreshHazardousMachineryResourceUI(parameters) {
+  try {
+    updateResourceUI(resources);
+    updateResourceDisplay(resources, 0);
+  } catch (error) {
+    // UI may not be ready yet
+  }
+  updateHazardousMachineryUI(parameters);
 }
 
 function ensureMachineryAttachedInfoTooltip(iconElement, cachedTooltip, text) {
@@ -675,11 +694,138 @@ function ensureHazardousMachineryLayout() {
   factorSummaryList.appendChild(penaltySummary);
   factorsSection.appendChild(factorSummaryList);
 
+  const hackingBox = doc.createElement('div');
+  hackingBox.className = 'hazard-summary hazard-summary--left hazard-machinery-hacking';
+  const hackingHeader = doc.createElement('div');
+  hackingHeader.className = 'hazard-summary__header';
+  hackingHeader.textContent = getHazardousMachineryUiText('labels.hacking', 'Counter-Hacking');
+  hackingHeader.appendChild(createMachineryInfoIcon(
+    getHazardousMachineryUiText(
+      'tooltips.hacking',
+      'Counter-hacking spends research to disable hazardous machinery directly. Auto spend clears the hazard automatically once current research can pay the full remaining cost.'
+    )
+  ));
+  const hackingBody = doc.createElement('div');
+  hackingBody.className = 'hazard-summary__body';
+  const hackingText = doc.createElement('div');
+  hackingText.className = 'hazard-machinery-hacking__text';
+  const hackingCost = doc.createElement('div');
+  hackingCost.className = 'hazard-machinery-hacking__cost';
+  const hackingInfo = doc.createElement('div');
+  hackingText.appendChild(hackingCost);
+  hackingText.appendChild(hackingInfo);
+  hackingBody.appendChild(hackingText);
+
+  const controls = doc.createElement('div');
+  controls.className = 'hazard-machinery-controls';
+
+  const maxButton = doc.createElement('button');
+  maxButton.type = 'button';
+  maxButton.className = 'hazard-machinery-controls__button';
+  maxButton.textContent = t('ui.projects.common.max', null, 'Max');
+  maxButton.addEventListener('click', () => {
+    const hazardInstance = getHazardousMachineryHazard();
+    const parameters = getHazardousMachineryParameters();
+    const terraformingState = getHazardousMachineryTerraforming();
+    if (!hazardInstance || !parameters || !terraformingState) {
+      return;
+    }
+    const research = resources?.colony?.research;
+    const machinery = resources?.surface?.hazardousMachinery;
+    const costPerHack = hazardInstance.getCounterHackCostPerMachinery(parameters);
+    const amount = Math.max(0, Math.min((research?.value || 0) / costPerHack, machinery?.value || 0));
+    hazardInstance.performCounterHack(terraformingState, parameters, amount);
+    refreshHazardousMachineryResourceUI(parameters);
+  });
+  controls.appendChild(maxButton);
+
+  const divideButton = doc.createElement('button');
+  divideButton.type = 'button';
+  divideButton.className = 'hazard-machinery-controls__button';
+  divideButton.textContent = t('ui.projects.common.divideTen', null, '/10');
+  divideButton.addEventListener('click', () => {
+    const hazardInstance = getHazardousMachineryHazard();
+    if (!hazardInstance) {
+      return;
+    }
+    hazardInstance.setHackBatchSize(Math.max(1, Math.floor((hazardInstance.hackBatchSize || 1) / 10)));
+    updateHazardousMachineryUI(getHazardousMachineryParameters());
+  });
+  controls.appendChild(divideButton);
+
+  const timesButton = doc.createElement('button');
+  timesButton.type = 'button';
+  timesButton.className = 'hazard-machinery-controls__button';
+  timesButton.textContent = t('ui.projects.common.timesTen', null, 'x10');
+  timesButton.addEventListener('click', () => {
+    const hazardInstance = getHazardousMachineryHazard();
+    if (!hazardInstance) {
+      return;
+    }
+    hazardInstance.setHackBatchSize(Math.min(1e12, Math.max(1, hazardInstance.hackBatchSize || 1) * 10));
+    updateHazardousMachineryUI(getHazardousMachineryParameters());
+  });
+  controls.appendChild(timesButton);
+
+  const hackButton = doc.createElement('button');
+  hackButton.type = 'button';
+  hackButton.className = 'hazard-machinery-controls__button';
+  hackButton.addEventListener('click', () => {
+    const hazardInstance = getHazardousMachineryHazard();
+    const parameters = getHazardousMachineryParameters();
+    const terraformingState = getHazardousMachineryTerraforming();
+    if (!hazardInstance || !parameters || !terraformingState) {
+      return;
+    }
+    const batchSize = Math.max(1, hazardInstance.hackBatchSize || 1);
+    hazardInstance.performCounterHack(terraformingState, parameters, batchSize);
+    refreshHazardousMachineryResourceUI(parameters);
+  });
+  controls.appendChild(hackButton);
+  hackingBody.appendChild(controls);
+
+  const autoSpendContainer = doc.createElement('div');
+  autoSpendContainer.className = 'checkbox-container';
+  const autoSpendCheckbox = doc.createElement('input');
+  autoSpendCheckbox.type = 'checkbox';
+  autoSpendCheckbox.id = 'hazardous-machinery-auto-spend-if-clear';
+  autoSpendCheckbox.addEventListener('change', () => {
+    const hazardInstance = getHazardousMachineryHazard();
+    const parameters = getHazardousMachineryParameters();
+    const terraformingState = getHazardousMachineryTerraforming();
+    if (!hazardInstance || !parameters || !terraformingState) {
+      return;
+    }
+    hazardInstance.setAutoSpendIfClear(autoSpendCheckbox.checked === true);
+    hazardInstance.autoSpendWouldClear(terraformingState, parameters);
+    refreshHazardousMachineryResourceUI(parameters);
+  });
+  autoSpendContainer.appendChild(autoSpendCheckbox);
+  const autoSpendLabel = doc.createElement('label');
+  autoSpendLabel.htmlFor = autoSpendCheckbox.id;
+  autoSpendLabel.textContent = getHazardousMachineryUiText(
+    'labels.autoSpendIfClear',
+    'Auto spend if spending would clear the hazard'
+  );
+  autoSpendContainer.appendChild(autoSpendLabel);
+  autoSpendContainer.appendChild(doc.createTextNode(' '));
+  autoSpendContainer.appendChild(createMachineryInfoIcon(
+    getHazardousMachineryUiText(
+      'tooltips.autoSpendIfClear',
+      'When enabled, counter-hacking automatically spends research only if the current research stock can clear all remaining hazardous machinery at once.'
+    )
+  ));
+  controls.appendChild(autoSpendContainer);
+
+  hackingBox.appendChild(hackingHeader);
+  hackingBox.appendChild(hackingBody);
+
   const factorGrid = doc.createElement('div');
   factorGrid.className = 'hazard-factor-grid';
 
   factorsSection.appendChild(factorGrid);
   card.appendChild(factorsSection);
+  card.appendChild(hackingBox);
   root.appendChild(card);
 
   hazardousMachineryUICache.card = card;
@@ -690,6 +836,15 @@ function ensureHazardousMachineryLayout() {
   hazardousMachineryUICache.barSafeLabel = safeLabel;
   hazardousMachineryUICache.barHazardLabel = hazardLabel;
   hazardousMachineryUICache.barDetails = barDetails;
+  hazardousMachineryUICache.summaryHacking = hackingBody;
+  hazardousMachineryUICache.summaryHackingText = hackingText;
+  hazardousMachineryUICache.summaryHackingCost = hackingCost;
+  hazardousMachineryUICache.summaryHackingInfo = hackingInfo;
+  hazardousMachineryUICache.hackButton = hackButton;
+  hazardousMachineryUICache.hackMaxButton = maxButton;
+  hazardousMachineryUICache.hackDivideButton = divideButton;
+  hazardousMachineryUICache.hackTimesButton = timesButton;
+  hazardousMachineryUICache.autoSpendCheckbox = autoSpendCheckbox;
   hazardousMachineryUICache.factorsSection = factorsSection;
   hazardousMachineryUICache.factorSummaryList = factorSummaryList;
   hazardousMachineryUICache.baseGrowthValue = baseSummaryValue;
@@ -716,6 +871,12 @@ function updateHazardousMachineryUI(parameters) {
   }
 
   const status = hazardInstance.getCurrentPenaltyValues(terraformingState, parameters);
+  const batchSize = Math.max(1, hazardInstance.hackBatchSize || 1);
+  const research = resources?.colony?.research;
+  const costPerHack = hazardInstance.getCounterHackCostPerMachinery(parameters);
+  const maxHackAmount = Math.max(0, Math.min((research?.value || 0) / costPerHack, status.currentAmount || 0));
+  const requestedCost = batchSize * costPerHack;
+  const hasEnoughResearchForBatch = (research?.value || 0) + 1e-9 >= requestedCost;
 
   card.style.display = '';
   setHazardousMachineryTitleStatus(hazardInstance.isCleared());
@@ -868,6 +1029,22 @@ function updateHazardousMachineryUI(parameters) {
       value: formatMachineryNumber(status.shipWorkersPerAssignedShip, 0)
     })
   ].join('\n');
+
+  hazardousMachineryUICache.summaryHackingCost.textContent = getHazardousMachineryUiText('labels.convertCost', 'Research Cost: {value}', {
+    value: formatMachineryNumber(requestedCost, 0)
+  });
+  hazardousMachineryUICache.summaryHackingCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughResearchForBatch);
+  hazardousMachineryUICache.summaryHackingInfo.textContent = getHazardousMachineryUiText(
+    'labels.convertInfo',
+    'Each hack spends {cost} research to disable 1 hazardous machinery.',
+    { cost: formatMachineryNumber(costPerHack, 0) }
+  );
+  hazardousMachineryUICache.hackButton.textContent = getHazardousMachineryUiText('labels.convertAction', 'Hack +{value}', {
+    value: formatMachineryNumber(batchSize, 0)
+  });
+  hazardousMachineryUICache.hackButton.disabled = maxHackAmount <= 0;
+  hazardousMachineryUICache.hackMaxButton.disabled = maxHackAmount <= 0;
+  hazardousMachineryUICache.autoSpendCheckbox.checked = hazardInstance.autoSpendIfClear === true;
 
   const safePercent = Math.max(0, (1 - status.hazardStrength) * 100);
   const hazardPercent = Math.max(0, status.hazardStrength * 100);
