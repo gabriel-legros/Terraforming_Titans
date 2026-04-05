@@ -198,7 +198,8 @@ function buildAtlasWorldCard(definition, category) {
     card.className = 'planet-option atlas-world-card';
     if (isCurrent) {
         card.classList.add('current');
-    } else if (isCompleted) {
+    }
+    if (isCompleted) {
         card.classList.add('terraformed');
     }
 
@@ -220,9 +221,9 @@ function buildAtlasWorldCard(definition, category) {
 
     const status = document.createElement('div');
     status.className = 'planet-status';
-    status.textContent = isCurrent
-        ? getAtlasText('current', 'Current')
-        : (isCompleted ? getAtlasText('completed', 'Completed') : getAtlasText('available', 'Available'));
+    status.textContent = isCompleted
+        ? getAtlasText('completed', 'Completed')
+        : (isCurrent ? getAtlasText('current', 'Current') : getAtlasText('available', 'Available'));
     card.appendChild(status);
 
     const stats = document.createElement('div');

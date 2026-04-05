@@ -228,6 +228,15 @@
   color: var(--space-accent);
 }
 
+.planet-option.current.terraformed {
+  box-shadow: 0 14px 32px rgba(92, 227, 161, 0.25);
+}
+
+.planet-option.current.terraformed .planet-status {
+  background: rgba(92, 227, 161, 0.15);
+  color: var(--space-success);
+}
+
 .select-planet-button {
   margin-top: auto;
   padding: 10px 14px;
