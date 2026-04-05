@@ -48,10 +48,24 @@ class UndergroundExpansionProject extends AndroidProject {
     return 1;
   }
 
-  getMaxRepeats() {
+  syncCompletionState() {
     const maxRepeats = Math.max(Math.floor(this.getCapLand()), 0);
     this.maxRepeatCount = maxRepeats;
+
+    if (this.repeatCount < maxRepeats) {
+      this.isCompleted = false;
+      return maxRepeats;
+    }
+
+    if (this.repeatCount >= maxRepeats && maxRepeats > 0) {
+      this.isCompleted = true;
+    }
+
     return maxRepeats;
+  }
+
+  getMaxRepeats() {
+    return this.syncCompletionState();
   }
 
   getEffectiveDuration() {
@@ -263,6 +277,7 @@ class UndergroundExpansionProject extends AndroidProject {
     this.fractionalRepeatCount = 0;
     this.prepaidPortion = 0;
     super.complete();
+    this.syncCompletionState();
   }
 
   saveState() {
@@ -277,6 +292,17 @@ class UndergroundExpansionProject extends AndroidProject {
     super.loadState(state);
     this.fractionalRepeatCount = state.fractionalRepeatCount || 0;
     this.prepaidPortion = state.prepaidPortion || 0;
+    this.syncCompletionState();
+  }
+
+  autoAssign() {
+    this.syncCompletionState();
+    super.autoAssign();
+  }
+
+  update(deltaTime) {
+    this.syncCompletionState();
+    super.update(deltaTime);
   }
 }
 
