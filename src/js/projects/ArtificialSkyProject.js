@@ -27,11 +27,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   getInitialLand() {
-    try {
-      return Math.max(terraforming.initialLand || 0, 0);
-    } catch (error) {
-      return 0;
-    }
+    return Math.max(resolveWorldGeometricLand(terraforming, resources?.surface?.land), 0);
   }
 
   getMaxRepeats() {

@@ -201,9 +201,6 @@ class GarbageHazard {
       return;
     }
 
-    const initialLand = terraforming?.initialLand || 0;
-    const unlockOnly = options.unlockOnly === true;
-
     let resourcesState = null;
     try {
       resourcesState = resources;
@@ -215,6 +212,8 @@ class GarbageHazard {
     if (!resourcesObj) {
       return;
     }
+    const initialLand = resolveWorldBaseLand(terraforming, resourcesObj.surface.land);
+    const unlockOnly = options.unlockOnly === true;
 
     let ResourceClass = null;
     try {

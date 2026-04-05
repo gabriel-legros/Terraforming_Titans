@@ -101,7 +101,7 @@
       if (spaceManager.currentArtificialKey !== null) {
         return 0;
       }
-      const basePoints = this.getFoundryPointGain(terraforming.initialLand);
+      const basePoints = this.getFoundryPointGain(resolveWorldBaseLand(terraforming));
       return this.applyHazardPointBonus(basePoints);
     }
 

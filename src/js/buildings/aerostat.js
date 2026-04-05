@@ -114,14 +114,7 @@ class Aerostat extends BaseColony {
   }
 
   _getInitialLand() {
-    if (typeof terraforming === 'undefined') {
-      return 0;
-    }
-
-    const { initialLand } = terraforming;
-    return typeof initialLand === 'number' && isFinite(initialLand) && initialLand > 0
-      ? initialLand
-      : 0;
+    return resolveWorldBaseLand(terraforming);
   }
 
   _getBuildLimit() {

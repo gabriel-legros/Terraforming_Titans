@@ -12,19 +12,7 @@ function normalizeLandReservationShare(share) {
 }
 
 function resolveLandReservationInitialLand(terraformingState, landResource) {
-  const candidates = [
-    terraformingState?.initialLand,
-    landResource?.initialValue
-  ];
-
-  for (let index = 0; index < candidates.length; index += 1) {
-    const candidate = candidates[index];
-    if (Number.isFinite(candidate) && candidate > 0) {
-      return candidate;
-    }
-  }
-
-  return 0;
+  return resolveWorldGeometricLand(terraformingState, landResource);
 }
 
 function getProjectManagerForLandReservation() {

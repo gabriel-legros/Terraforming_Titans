@@ -1680,8 +1680,9 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
   const pressureSuffix = `Pa${suffix}`;
   for (const category in totalResourceGain) {
     for (const resource in totalResourceGain[category]) {
-      const resourceDisplayName = resources[category][resource].displayName ||
-        resource.charAt(0).toUpperCase() + resource.slice(1);
+      const resourceDisplayName = category === 'special'
+        ? getProjectsUIText('ui.projects.special.planetaryMass', 'Planetary Mass')
+        : (resources[category][resource].displayName || resource.charAt(0).toUpperCase() + resource.slice(1));
       const amount = totalResourceGain[category][resource];
       let entry = `${resourceDisplayName}: ${formatNumber(amount, true, 2)}${suffix}`;
       if (category === 'atmospheric' && ATMOSPHERIC_GAS_IMPORTS.has(resource)) {

@@ -219,6 +219,22 @@
   padding: 14px;
 }
 
+.rwg-settings-card {
+  margin-top: 14px;
+}
+
+.rwg-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rwg-fg);
+  font-weight: 600;
+}
+
+.rwg-checkbox-row input {
+  accent-color: var(--rwg-accent);
+}
+
 .rwg-card .card-header {
   display: flex;
   align-items: center;

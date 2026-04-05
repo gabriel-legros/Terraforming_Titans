@@ -21,6 +21,14 @@ const MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL = 100; // K
 const MAINTENANCE_PENALTY_MAX_MULTIPLIER = 1e9;
 const KPA_PER_ATM = 101.325;
 var resourcePhaseGroups;
+let syncDynamicWorldGeometryHelper = null;
+if (typeof module !== 'undefined' && module.exports) {
+  ({ syncDynamicWorldGeometry: syncDynamicWorldGeometryHelper } = require('../world-geometry.js'));
+}
+
+function getSyncDynamicWorldGeometryHelper() {
+  return syncDynamicWorldGeometryHelper || syncDynamicWorldGeometry;
+}
 
 function calculateMaintenancePenaltyForTemperature(temp) {
   if (!Number.isFinite(temp) || temp <= MAINTENANCE_PENALTY_THRESHOLD) {
@@ -377,7 +385,6 @@ class Terraforming extends EffectableEntity{
     this.lifeDesignerUnlocked = false;
     this.milestonesUnlocked = false;
     this.hazardsUnlocked = false;
-    this.initialLand = resources.surface?.land?.value || 0;
     this.zonalSurfaceResourceConfigs = buildZonalSurfaceResourceConfigs();
     this.zoneKeys = getZones();
     this.zoneWeights = {};
@@ -397,22 +404,15 @@ class Terraforming extends EffectableEntity{
     // Clone so config values remain immutable
     this.celestialParameters = structuredClone(celestialParameters);
     this.initialCelestialParameters = structuredClone(celestialParameters);
+    this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land, this.celestialParameters);
+    this.initialLand = this.baseLand;
 
-    const radiusMeters = this.celestialParameters.radius * 1000;
-    if (!this.celestialParameters.surfaceArea) {
-        this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
+    if (this.resources.surface?.land) {
+      this.resources.surface.land.baseLand = this.baseLand;
     }
-    if (!this.celestialParameters.crossSectionArea) {
-        this.celestialParameters.crossSectionArea = Math.PI * Math.pow(radiusMeters, 2);
-    }
-
-    const initRadiusMeters = this.initialCelestialParameters.radius * 1000;
-    if (!this.initialCelestialParameters.surfaceArea) {
-        this.initialCelestialParameters.surfaceArea = 4 * Math.PI * Math.pow(initRadiusMeters, 2);
-    }
-    if (!this.initialCelestialParameters.crossSectionArea) {
-        this.initialCelestialParameters.crossSectionArea = Math.PI * Math.pow(initRadiusMeters, 2);
-    }
+    this.celestialParameters.baseLand = this.baseLand;
+    this.initialCelestialParameters.baseLand = this.baseLand;
+    this.refreshDynamicWorldGeometry();
 
     const isRogueWorld = this.celestialParameters.rogue === true;
     const starLuminosity = isRogueWorld
@@ -923,8 +923,13 @@ class Terraforming extends EffectableEntity{
         return durations;
     }
 
+    refreshDynamicWorldGeometry(planetParameters = currentPlanetParameters) {
+      return getSyncDynamicWorldGeometryHelper()(this, planetParameters);
+    }
+
     runUpdateStep(deltaTime = 0, options = {}) {
       this.synchronizeGlobalResources();
+      this.refreshDynamicWorldGeometry();
       this._updateZonalCoverageCache();
       this._updateAtmosphericPressureCache();
       this._updateHeatCapacityCache();
@@ -1071,6 +1076,7 @@ class Terraforming extends EffectableEntity{
         }
 
         this.synchronizeGlobalResources();
+        this.refreshDynamicWorldGeometry();
         this._updateZonalCoverageCache();
         this._updateAtmosphericPressureCache();
         this.updateLuminosity();
@@ -2721,6 +2727,10 @@ synchronizeGlobalResources() {
       this.celestialParameters = structuredClone(currentPlanetParameters.celestialParameters);
       this.initialCelestialParameters = structuredClone(currentPlanetParameters.celestialParameters);
 
+      if (terraformingState.initialCelestialParameters) {
+          Object.assign(this.initialCelestialParameters, terraformingState.initialCelestialParameters);
+      }
+
       if (terraformingState.celestialParameters) {
           Object.assign(this.celestialParameters, terraformingState.celestialParameters);
       }
@@ -2738,21 +2748,12 @@ synchronizeGlobalResources() {
             }
           }
       }
-
-      const radiusMeters = this.celestialParameters.radius * 1000;
-      if (!this.celestialParameters.surfaceArea) {
-          this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
+      this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land, this.celestialParameters);
+      this.initialLand = this.baseLand;
+      if (this.resources.surface?.land) {
+          this.resources.surface.land.baseLand = this.baseLand;
       }
-      if (!this.celestialParameters.crossSectionArea) {
-          this.celestialParameters.crossSectionArea = Math.PI * Math.pow(radiusMeters, 2);
-      }
-      const initRadiusMeters = this.initialCelestialParameters.radius * 1000;
-      if (!this.initialCelestialParameters.surfaceArea) {
-          this.initialCelestialParameters.surfaceArea = 4 * Math.PI * Math.pow(initRadiusMeters, 2);
-      }
-      if (!this.initialCelestialParameters.crossSectionArea) {
-          this.initialCelestialParameters.crossSectionArea = Math.PI * Math.pow(initRadiusMeters, 2);
-      }
+      this.refreshDynamicWorldGeometry();
 
       this.completed = terraformingState.completed || false;
       this.initialValuesCalculated = terraformingState.initialValuesCalculated || false;

@@ -2,6 +2,31 @@
 var debug_production = {};
 var debug_consumption = {};
 const EXACT_LAND_SCALE_DIGITS = 15;
+let resolveWorldGeometricLandHelper = null;
+let getDynamicWorldPlanetaryMassAvailableTonsHelper = null;
+let hasDynamicMassEnabledHelper = null;
+if (typeof module !== 'undefined' && module.exports) {
+  ({
+    resolveWorldGeometricLand: resolveWorldGeometricLandHelper,
+    getDynamicWorldPlanetaryMassAvailableTons: getDynamicWorldPlanetaryMassAvailableTonsHelper,
+    hasDynamicMassEnabled: hasDynamicMassEnabledHelper
+  } = require('./world-geometry.js'));
+}
+
+function getResolveWorldGeometricLandHelper() {
+  return resolveWorldGeometricLandHelper || resolveWorldGeometricLand;
+}
+
+function getDynamicWorldPlanetaryMassAvailableTonsSafe(terraformingState, celestialParameters) {
+  return (getDynamicWorldPlanetaryMassAvailableTonsHelper || getDynamicWorldPlanetaryMassAvailableTons)(
+    terraformingState,
+    celestialParameters
+  );
+}
+
+function hasDynamicMassEnabledSafe(terraformingState, planetParameters) {
+  return (hasDynamicMassEnabledHelper || hasDynamicMassEnabled)(terraformingState, planetParameters);
+}
 
 function isExactLandResource(resource) {
   return resource && resource.category === 'surface' && resource.name === 'land';
@@ -113,6 +138,7 @@ class Resource extends EffectableEntity {
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
     this.hideRate = resourceData.hideRate || false; // Flag to hide rate display in UI
+    this.showUndergroundRate = resourceData.showUndergroundRate === true;
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
     this.rateHistory = []; // Keep history of recent net rates
     this.marginTop = resourceData.marginTop || 0;
@@ -176,6 +202,9 @@ class Resource extends EffectableEntity {
     }
     if (config.hideRate !== undefined) {
       this.hideRate = config.hideRate;
+    }
+    if (config.showUndergroundRate !== undefined) {
+      this.showUndergroundRate = config.showUndergroundRate === true;
     }
     if (config.reverseColor !== undefined) {
       this.reverseColor = config.reverseColor;
@@ -973,6 +1002,7 @@ function restorePreservedTravelResourceState(resourceSet, preservedState) {
 }
 
 function reconcileLandResourceValue() {
+  reconcilePlanetaryMassResourceValue();
   const landResource = resources?.surface?.land;
   if (!landResource) {
     return;
@@ -983,10 +1013,22 @@ function reconcileLandResourceValue() {
     ? currentPlanetParameters
     : (typeof globalThis !== 'undefined' ? globalThis.currentPlanetParameters : null);
 
+  const derivedLandFromRadius = (() => {
+    const radiusKm = params?.celestialParameters?.radius;
+    if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
+      return 0;
+    }
+    return 4 * Math.PI * radiusKm * radiusKm * 100;
+  })();
+
   const baseCandidates = [
+    tf?.baseLand,
     tf?.initialLand,
+    landResource.baseLand,
+    params?.celestialParameters?.baseLand,
     landResource.initialValue,
     params?.resources?.surface?.land?.initialValue,
+    derivedLandFromRadius,
   ];
 
   let baseLand = 0;
@@ -1007,7 +1049,11 @@ function reconcileLandResourceValue() {
     return;
   }
 
-  let totalLand = baseLand;
+  const geometricLand = getResolveWorldGeometricLandHelper()(tf, landResource, params?.celestialParameters);
+  const hasDynamicMassEnabled = params?.specialAttributes?.dynamicMass === true;
+  const liveLandBase = hasDynamicMassEnabled && geometricLand > 0 ? geometricLand : baseLand;
+  let totalLand = liveLandBase;
+  landResource.baseLand = baseLand;
 
   const manager =
     typeof spaceManager !== 'undefined'
@@ -1049,6 +1095,30 @@ function reconcileLandResourceValue() {
     landResource.setExactLandValue(totalLand);
   } else {
     landResource.value = totalLand;
+  }
+}
+
+function reconcilePlanetaryMassResourceValue() {
+  const massResource = resources?.underground?.planetaryMass;
+  if (!massResource) {
+    return;
+  }
+
+  const tf = typeof terraforming !== 'undefined' ? terraforming : null;
+  const params = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
+  const dynamicMassEnabled = hasDynamicMassEnabledSafe(tf, params);
+  const currentMassTons = dynamicMassEnabled
+    ? getDynamicWorldPlanetaryMassAvailableTonsSafe(tf, params?.celestialParameters)
+    : 0;
+
+  massResource.value = Math.max(0, currentMassTons);
+  massResource.reserved = 0;
+
+  if (massResource.unlocked !== dynamicMassEnabled) {
+    massResource.unlocked = dynamicMassEnabled;
+    if (dynamicMassEnabled && typeof unlockResource === 'function') {
+      unlockResource(massResource);
+    }
   }
 }
 
@@ -1213,6 +1283,7 @@ function produceResources(deltaTime, buildings) {
   let spaceEnergyProducerOperations = [];
   let otherSpaceBuildingOperations = [];
 
+  terraforming?.refreshDynamicWorldGeometry?.(currentPlanetParameters);
   reconcileLandResourceValue();
   if (typeof recalculateLandUsage === 'function') {
     recalculateLandUsage();

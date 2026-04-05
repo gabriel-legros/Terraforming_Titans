@@ -1241,6 +1241,7 @@ function buildVolatiles(archetype, temperatureK, landHa, params, atmosphere, gra
     surface[key] = resource;
   });
   surface.land.initialValue = landHa;
+  surface.land.baseLand = landHa;
 
   const landScale = landHa / params.volatiles.referenceLandHa;
   const waterTotal = (params.volatiles.H2O_total[archetype] ?? 5e14) * landScale;
@@ -1776,7 +1777,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
-    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod, spinPeriod, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isStarlessRogueWorld, roguePulsar: isRoguePulsarWorld, coreHeatFlux },
+    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, baseGravity: bulk.gravity, baseRadius: bulk.radius_km, baseMass: bulk.mass, baseLand: landHa, albedo, rotationPeriod, spinPeriod, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isStarlessRogueWorld, roguePulsar: isRoguePulsarWorld, coreHeatFlux },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },

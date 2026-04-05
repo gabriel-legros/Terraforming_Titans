@@ -314,19 +314,7 @@ class HazardousBiomassHazard {
       });
     }
 
-    const landCandidates = [
-      terraforming?.initialLand,
-      landResource.initialValue,
-    ];
-
-    let initialLand = 0;
-    for (let index = 0; index < landCandidates.length; index += 1) {
-      const candidate = landCandidates[index];
-      if (Number.isFinite(candidate) && candidate > 0) {
-        initialLand = candidate;
-        break;
-      }
-    }
+    const initialLand = resolveWorldGeometricLand(terraforming, landResource);
 
     const carryingCapacity = maxDensity > 0 && initialLand > 0
       ? initialLand * maxDensity
@@ -365,7 +353,7 @@ class HazardousBiomassHazard {
     if (deltaTime && hazardParameters && growth && getZonePercentageHelper && zoneEntries.length) {
       const growthPercent = Number.isFinite(growth.value) ? growth.value : 0;
       const maxDensity = Number.isFinite(growth.maxDensity) ? growth.maxDensity : 0;
-      const landArea = terraforming.initialLand;
+      const landArea = resolveWorldGeometricLand(terraforming);
 
       if (growthPercent && maxDensity > 0) {
         const penaltyDetails = this.calculateGrowthPenaltyDetails(hazardParameters, terraforming);

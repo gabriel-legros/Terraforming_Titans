@@ -344,8 +344,6 @@ progressStyx.chapters.push(
     narrative: "(World 14 not implemented yet)",
     prerequisites: ['styx.41.4'],
     objectives: [
-      {
-    }
     ],
     reward: []
   }

@@ -16,6 +16,10 @@ class ArtificialCrustProject extends ArtificialSkyProject {
     return this.getBaseCoreHeatFlux() > 0;
   }
 
+  getInitialLand() {
+    return Math.max(resolveWorldBaseLand(terraforming, resources?.surface?.land), 0);
+  }
+
   getMaxRepeats() {
     const initialLand = this.getInitialLand();
     const segments = Math.max(1, Math.ceil(initialLand));

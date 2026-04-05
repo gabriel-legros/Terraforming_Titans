@@ -1,14 +1,16 @@
 function getEcumenopolisLandFraction(terraforming) {
-  const eco = typeof colonies !== 'undefined' ? colonies?.t7_colony : globalThis.colonies?.t7_colony;
-  if (!eco || !terraforming?.initialLand) return 0;
-  return (eco.active * eco.requiresLand) / terraforming.initialLand;
+  const eco = colonies?.t7_colony;
+  const baseLand = resolveWorldBaseLand(terraforming);
+  if (!eco || !baseLand) return 0;
+  return (eco.active * eco.requiresLand) / baseLand;
 }
 
 function getBiodomeLandFraction(terraforming) {
-  if (!terraforming?.initialLand) return 0;
+  const baseLand = resolveWorldBaseLand(terraforming);
+  if (!baseLand) return 0;
   try {
     const biodome = buildings.biodome;
-    const fraction = (biodome.active * biodome.requiresLand) / terraforming.initialLand;
+    const fraction = (biodome.active * biodome.requiresLand) / baseLand;
     return Math.max(0, Math.min(1, fraction));
   } catch (error) {
     return 0;

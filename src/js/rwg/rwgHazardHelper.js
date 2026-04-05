@@ -432,11 +432,20 @@
     const zoneKeys = Array.from(new Set(zoneKeysSource));
     const zoneCount = zoneKeys.length || 1;
 
+    const radiusKm = override.celestialParameters && Number.isFinite(override.celestialParameters.radius)
+      ? override.celestialParameters.radius
+      : (terra && terra.celestialParameters && Number.isFinite(terra.celestialParameters.radius)
+        ? terra.celestialParameters.radius
+        : 0);
+    const derivedLandFromRadius = radiusKm > 0 ? (4 * Math.PI * radiusKm * radiusKm * 100) : 0;
     const landCandidates = [
+      terra ? terra.baseLand : null,
+      override.celestialParameters ? override.celestialParameters.baseLand : null,
       terra ? terra.initialLand : null,
       override.resources && override.resources.surface && override.resources.surface.land
-        ? override.resources.surface.land.initialValue
+        ? (override.resources.surface.land.baseLand || override.resources.surface.land.initialValue)
         : null,
+      derivedLandFromRadius,
     ];
     let landArea = 0;
     for (let index = 0; index < landCandidates.length; index += 1) {

@@ -1415,7 +1415,7 @@ function updateLifeStatusTable() {
                     const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
                     lines.push(`Ecumenopolis: x${formatNumber(ecumenopolisLandMult, false, 2)} (-${ecumenopolisReduction.toFixed(2)}%)`);
                     if (landMult > ecumenopolisLandMult) {
-                        lines.push(`Biodome protection floor: x${formatNumber(landMult, false, 2)} (${formatNumber(biodomeFraction * 100, false, 2)}% initial land)`);
+                        lines.push(`Biodome protection floor: x${formatNumber(landMult, false, 2)} (${formatNumber(biodomeFraction * 100, false, 2)}% base land)`);
                     }
                 }
                 const process = getActiveLifeMetabolismProcessForUI();

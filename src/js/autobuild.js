@@ -134,7 +134,7 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
         return workerCap;
     }
     if (basis === 'initialLand') {
-        return terraforming?.initialLand || 0;
+        return resolveWorldBaseLand(terraforming);
     }
 
     if (basis.startsWith('building:')) {

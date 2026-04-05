@@ -17,6 +17,63 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.ensureDisposalTargets();
   }
 
+  isPlanetaryMassSelection(selection) {
+    return selection?.category === 'special' && selection?.resource === 'planetaryMass';
+  }
+
+  canUsePlanetaryMassDisposal() {
+    return hasDynamicMassEnabled(terraforming, currentPlanetParameters);
+  }
+
+  getSelectionAvailableAmount(selection, accumulatedChanges = null) {
+    if (!selection) {
+      return 0;
+    }
+    if (this.isPlanetaryMassSelection(selection)) {
+      return getDynamicWorldPlanetaryMassAvailableTons(terraforming);
+    }
+    return this.getEffectiveAvailableAmount(selection.category, selection.resource, accumulatedChanges);
+  }
+
+  disposeSelectionAmount(selection, amount) {
+    if (!selection || amount <= 0) {
+      return 0;
+    }
+    if (this.isPlanetaryMassSelection(selection)) {
+      return disposeDynamicWorldPlanetaryMass(terraforming, amount);
+    }
+    resources[selection.category][selection.resource].decrease(amount);
+    this.removeZonalResource(selection.category, selection.resource, amount);
+    return amount;
+  }
+
+  buildDisposalGroupData() {
+    const disposalGroupData = super.buildDisposalGroupData();
+    if (!this.canUsePlanetaryMassDisposal()) {
+      return disposalGroupData;
+    }
+
+    const option = {
+      category: 'special',
+      resource: 'planetaryMass',
+      label: this.getSpaceDisposalText('ui.projects.spaceDisposal.planetaryMass', 'Planetary Mass'),
+    };
+    const groupKey = 'specialPlanetaryMass';
+    const resourceKey = `${option.category}:${option.resource}`;
+    disposalGroupData.groupList.push({
+      key: groupKey,
+      label: option.label,
+      options: [option],
+    });
+    disposalGroupData.groupMap[groupKey] = disposalGroupData.groupList[disposalGroupData.groupList.length - 1];
+    disposalGroupData.resourceGroupLookup[resourceKey] = groupKey;
+    disposalGroupData.resourceMetaLookup[resourceKey] = {
+      groupKey,
+      phaseType: null,
+    };
+    return disposalGroupData;
+  }
+
   getAutomationTemperatureReading() {
     const trend = terraforming.temperature.trendValue;
     if (Number.isFinite(trend)) {
@@ -222,7 +279,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
 
     const selection = target.selectedDisposalResource;
-    const available = resources[selection.category][selection.resource].value;
+    const available = this.getSelectionAvailableAmount(selection);
     if (target.waitForCapacity) {
       const key = `${selection.category}:${selection.resource}`;
       const requirements = this.getTargetWaitRequirementMap([target], 1);
@@ -407,6 +464,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     for (const key in requirements) {
       const [category, resource] = key.split(':');
+      if (category === 'special') {
+        continue;
+      }
       requirements[key] += shipCost[category]?.[resource] || 0;
       requirements[key] += projectCost[category]?.[resource] || 0;
     }
@@ -1254,6 +1314,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     );
   }
 
+  getEffectiveAvailableAmount(category, resource, accumulatedChanges = null) {
+    if (category === 'special' && resource === 'planetaryMass') {
+      return getDynamicWorldPlanetaryMassAvailableTons(terraforming);
+    }
+    return super.getEffectiveAvailableAmount(category, resource, accumulatedChanges);
+  }
+
   getTargetClampedDisposalAmount(target, requestedAmount, category, resource, availableAmount) {
     const maxByAvailable = Math.max(0, Math.min(requestedAmount, availableAmount));
     if (maxByAvailable <= 0) {
@@ -1428,7 +1495,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       const requirements = this.getTargetWaitRequirementMap(activeTargets, this.getActiveShipCount());
       for (const key in requirements) {
         const [category, resource] = key.split(':');
-        if (resources[category][resource].value < requirements[key]) {
+        const selection = { category, resource };
+        if (this.getSelectionAvailableAmount(selection) < requirements[key]) {
           return false;
         }
       }
@@ -1450,12 +1518,217 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const requirements = this.getTargetWaitRequirementMap(activeTargets, this.getActiveShipCount());
     for (const key in requirements) {
       const [category, resource] = key.split(':');
-      if (resources[category][resource].value < requirements[key]) {
+      const selection = { category, resource };
+      if (this.getSelectionAvailableAmount(selection) < requirements[key]) {
         return false;
       }
     }
 
     return true;
+  }
+
+  deductResources(resources) {
+    Project.prototype.deductResources.call(this, resources);
+    let shortfall = false;
+    let costShortfall = false;
+    let disposalShortfall = false;
+    if (this.isContinuous()) {
+      this.shortfallLastTick = shortfall;
+      this.costShortfallLastTick = false;
+      this.disposalShortfallLastTick = false;
+      return;
+    }
+
+    if (this.attributes.spaceMining || this.attributes.spaceExport) {
+      const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
+      for (const category in totalSpaceshipCost) {
+        for (const resource in totalSpaceshipCost[category]) {
+          if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+            continue;
+          }
+          const required = totalSpaceshipCost[category][resource];
+          const available = resources[category][resource].value;
+          const spend = Math.min(required, available);
+          if (spend < required) {
+            shortfall = shortfall || required > 0;
+            costShortfall = costShortfall || required > 0;
+          }
+          resources[category][resource].decrease(spend);
+        }
+      }
+    }
+
+    if (!this.attributes.spaceExport) {
+      this.shortfallLastTick = shortfall;
+      this.costShortfallLastTick = costShortfall;
+      this.disposalShortfallLastTick = disposalShortfall;
+      return;
+    }
+
+    const disposalEntries = this.getDiscreteDisposalEntries();
+    let totalDisposed = 0;
+
+    for (let i = 0; i < disposalEntries.length; i += 1) {
+      const entry = disposalEntries[i];
+      const available = this.getSelectionAvailableAmount(entry);
+      const actualAmount = this.getClampedDisposalAmountForEntry(entry, available);
+      if (actualAmount < entry.requestedAmount) {
+        shortfall = shortfall || entry.requestedAmount > 0;
+        disposalShortfall = disposalShortfall || entry.requestedAmount > 0;
+      }
+      totalDisposed += this.disposeSelectionAmount(entry, actualAmount);
+    }
+
+    if (totalDisposed > 0) {
+      if (this.attributes.fundingGainAmount > 0) {
+        this.pendingGain = {
+          colony: {
+            funding: totalDisposed * this.attributes.fundingGainAmount
+          }
+        };
+      } else {
+        this.pendingGain = null;
+      }
+      terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+      reconcileLandResourceValue();
+    } else {
+      this.pendingGain = null;
+    }
+
+    this.shortfallLastTick = shortfall;
+    this.costShortfallLastTick = costShortfall;
+    this.disposalShortfallLastTick = disposalShortfall;
+  }
+
+  applyContinuousPlanRates(plan, applyRates = true) {
+    if (!applyRates || !plan.context || plan.context.deltaTime <= 0) {
+      return;
+    }
+    const rateFactor = 1000 / plan.context.deltaTime;
+
+    for (const category in plan.cost) {
+      for (const resource in plan.cost[category]) {
+        const amount = plan.cost[category][resource];
+        if (amount <= 0) {
+          continue;
+        }
+        resources[category][resource].modifyRate(-amount * rateFactor, plan.costRateLabel, 'project');
+      }
+    }
+
+    for (let i = 0; i < plan.disposalEntries.length; i += 1) {
+      const entry = plan.disposalEntries[i];
+      if (this.isPlanetaryMassSelection(entry)) {
+        modifyPlanetaryMassRate(-(entry.appliedAmount || 0) * rateFactor, plan.exportRateLabel);
+        continue;
+      }
+      resources[entry.category][entry.resource].modifyRate(
+        -(entry.appliedAmount || 0) * rateFactor,
+        plan.exportRateLabel,
+        'project'
+      );
+    }
+
+    for (const category in plan.resourceGain) {
+      for (const resource in plan.resourceGain[category]) {
+        const amount = plan.resourceGain[category][resource];
+        if (amount <= 0) {
+          continue;
+        }
+        if (isSpecialProjectResource(category, resource)) {
+          continue;
+        }
+        resources[category][resource].modifyRate(amount * rateFactor, plan.gainRateLabel, 'project');
+      }
+    }
+
+    if (plan.fundingGain > 0) {
+      resources.colony.funding.modifyRate(plan.fundingGain * rateFactor, plan.exportRateLabel, 'project');
+    }
+  }
+
+  applyContinuousPlan(plan, accumulatedChanges = null) {
+    if (!plan.context || !plan.hasContinuousWork) {
+      return;
+    }
+
+    for (const category in plan.cost) {
+      for (const resource in plan.cost[category]) {
+        const amount = plan.cost[category][resource];
+        if (amount <= 0) {
+          continue;
+        }
+        if (accumulatedChanges) {
+          if (!accumulatedChanges[category]) {
+            accumulatedChanges[category] = {};
+          }
+          if (accumulatedChanges[category][resource] === undefined) {
+            accumulatedChanges[category][resource] = 0;
+          }
+          accumulatedChanges[category][resource] -= amount;
+        } else {
+          resources[category][resource].decrease(amount);
+        }
+      }
+    }
+
+    let planetaryMassDisposed = 0;
+    for (let i = 0; i < plan.disposalEntries.length; i += 1) {
+      const entry = plan.disposalEntries[i];
+      const amount = entry.appliedAmount || 0;
+      if (amount <= 0) {
+        continue;
+      }
+      if (this.isPlanetaryMassSelection(entry)) {
+        planetaryMassDisposed += this.disposeSelectionAmount(entry, amount);
+        continue;
+      }
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[entry.category]) {
+          accumulatedChanges[entry.category] = {};
+        }
+        if (accumulatedChanges[entry.category][entry.resource] === undefined) {
+          accumulatedChanges[entry.category][entry.resource] = 0;
+        }
+        accumulatedChanges[entry.category][entry.resource] -= amount;
+      } else {
+        resources[entry.category][entry.resource].decrease(amount);
+      }
+      this.removeZonalResource(entry.category, entry.resource, amount);
+    }
+
+    if (plan.gainFraction > 0) {
+      this.applyingContinuousPlanGain = true;
+      try {
+        this.applySpaceshipResourceGain(
+          plan.gainBase,
+          plan.gainFraction,
+          accumulatedChanges,
+          plan.context.productivity
+        );
+      } finally {
+        this.applyingContinuousPlanGain = false;
+      }
+    }
+
+    if (plan.fundingGain > 0) {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges.colony) {
+          accumulatedChanges.colony = {};
+        }
+        if (accumulatedChanges.colony.funding === undefined) {
+          accumulatedChanges.colony.funding = 0;
+        }
+        accumulatedChanges.colony.funding += plan.fundingGain;
+      } else {
+        resources.colony.funding.increase(plan.fundingGain);
+      }
+    }
+
+    if (planetaryMassDisposed > 0) {
+      terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+      reconcileLandResourceValue();
+    }
   }
 
   updateUI() {

@@ -149,7 +149,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getHolyWorldEcumenopolisCoverage() {
-    const initialLand = Math.max(0, terraforming.initialLand || 0);
+    const initialLand = Math.max(0, resolveWorldBaseLand(terraforming));
     if (initialLand <= 0) {
       return 0;
     }

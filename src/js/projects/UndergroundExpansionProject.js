@@ -40,8 +40,8 @@ class UndergroundExpansionProject extends AndroidProject {
     return this.repeatCount < this.getMaxRepeats();
   }
 
-  getBaseLand() {
-    return terraforming.initialLand || 0;
+  getCapLand() {
+    return resolveWorldGeometricLand(terraforming, resources?.surface?.land);
   }
 
   getPerCompletionLand() {
@@ -49,7 +49,7 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getMaxRepeats() {
-    const maxRepeats = Math.max(Math.floor(this.getBaseLand()), 0);
+    const maxRepeats = Math.max(Math.floor(this.getCapLand()), 0);
     this.maxRepeatCount = maxRepeats;
     return maxRepeats;
   }
@@ -252,7 +252,7 @@ class UndergroundExpansionProject extends AndroidProject {
     super.updateUI();
     const elements = projectElements[this.name];
     if (elements?.repeatCountElement) {
-      const maxLand = this.getBaseLand();
+      const maxLand = this.getCapLand();
       const perCompletion = this.getPerCompletionLand();
       const expanded = Math.min(this.getTotalProgress() * perCompletion, maxLand);
       elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, true, 3)} / ${formatNumber(maxLand, true, 3)}`;

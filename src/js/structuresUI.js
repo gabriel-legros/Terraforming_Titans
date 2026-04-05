@@ -395,7 +395,7 @@ function getAutoBuildBaseValue(structure, population, workerCap, collection) {
     return workerCap;
   }
   if (basis === 'initialLand') {
-    return terraforming?.initialLand || 0;
+    return resolveWorldBaseLand(terraforming);
   }
 
   if (basis.startsWith('building:')) {
@@ -771,7 +771,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   }
   const initialLandOption = document.createElement('option');
   initialLandOption.value = 'initialLand';
-  initialLandOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.initialLand', '% initial land');
+  initialLandOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.initialLand', '% base land');
   autoBuildBasisSelect.appendChild(initialLandOption);
   const fixedOption = document.createElement('option');
   fixedOption.value = 'fixed';

@@ -8,6 +8,50 @@ function getSpaceshipProjectText(path, fallback, vars) {
   }
 }
 
+function isSpecialProjectResource(category, resource) {
+  return category === 'special' && (
+    resource === 'planetaryMass' ||
+    resource === 'planetaryMassMetal' ||
+    resource === 'planetaryMassSilicon'
+  );
+}
+
+function getSpaceshipProjectResourceDisplayName(category, resource) {
+  if (category === 'special' && resource === 'planetaryMass') {
+    return getSpaceshipProjectText('ui.projects.special.planetaryMass', 'Planetary Mass');
+  }
+  if (category === 'special' && resource === 'planetaryMassMetal') {
+    return getSpaceshipProjectText('ui.projects.special.planetaryMass', 'Planetary Mass');
+  }
+  if (category === 'special' && resource === 'planetaryMassSilicon') {
+    return getSpaceshipProjectText('ui.projects.special.planetaryMass', 'Planetary Mass');
+  }
+  return resources[category][resource].displayName || resource.charAt(0).toUpperCase() + resource.slice(1);
+}
+
+function applySpecialProjectResourceGain(category, resource, amount) {
+  if (amount <= 0 || category !== 'special') {
+    return false;
+  }
+  if (resource === 'planetaryMassMetal') {
+    addDynamicWorldPlanetaryMaterial(terraforming, 'metal', amount);
+  } else if (resource === 'planetaryMassSilicon') {
+    addDynamicWorldPlanetaryMaterial(terraforming, 'silicon', amount);
+  } else {
+    return false;
+  }
+  terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+  reconcileLandResourceValue();
+  return true;
+}
+
+function modifyPlanetaryMassRate(amount, source) {
+  if (!amount) {
+    return;
+  }
+  resources.underground?.planetaryMass?.modifyRate?.(amount, source, 'project');
+}
+
 class SpaceshipProject extends Project {
 
   constructor(config, name) {
@@ -430,9 +474,11 @@ class SpaceshipProject extends Project {
           Object.entries(resourcesList)
             .filter(([, amount]) => amount > 0)
             .map(([resource, amount]) => {
-              const resourceDisplayName = resources[category][resource].displayName ||
-                resource.charAt(0).toUpperCase() + resource.slice(1);
-              return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
+              const displayName = isSpecialProjectResource(category, resource)
+                ? getSpaceshipProjectResourceDisplayName(category, resource)
+                : (resources[category][resource].displayName ||
+                  resource.charAt(0).toUpperCase() + resource.slice(1));
+              return `${displayName}: ${formatNumber(amount, true)}`;
             })
         ).join(', ');
       elements.resourceGainPerShipElement.textContent = getSpaceshipProjectText(
@@ -1100,6 +1146,10 @@ class SpaceshipProject extends Project {
     for (const category in gain) {
       for (const resource in gain[category]) {
         const amount = gain[category][resource] * fraction * productivity;
+        if (isSpecialProjectResource(category, resource)) {
+          applySpecialProjectResourceGain(category, resource, amount);
+          continue;
+        }
         if (accumulatedChanges) {
           if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
           if (accumulatedChanges[category][resource] === undefined) {
@@ -1521,6 +1571,10 @@ class SpaceshipProject extends Project {
         if (amount <= 0) {
           continue;
         }
+        if (isSpecialProjectResource(category, resource)) {
+          modifyPlanetaryMassRate(amount * rateFactor, plan.gainRateLabel);
+          continue;
+        }
         resources[category][resource].modifyRate(amount * rateFactor, plan.gainRateLabel, 'project');
       }
     }
@@ -1648,11 +1702,15 @@ class SpaceshipProject extends Project {
           for (const resource in totalDisposal[category]) {
             const rateValue = totalDisposal[category][resource] * rate * (applyRates ? productivity : 1);
             if (applyRates) {
-              resources[category][resource].modifyRate(
-                -rateValue,
-                exportLabel,
-                'project'
-              );
+              if (isSpecialProjectResource(category, resource)) {
+                modifyPlanetaryMassRate(-rateValue, exportLabel);
+              } else {
+                resources[category][resource].modifyRate(
+                  -rateValue,
+                  exportLabel,
+                  'project'
+                );
+              }
             }
             totals.cost[category][resource] =
               (totals.cost[category][resource] || 0) + totalDisposal[category][resource] * fraction;
@@ -1666,14 +1724,18 @@ class SpaceshipProject extends Project {
         const label = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
         for (const category in totalGain) {
           if (!totals.gain[category]) totals.gain[category] = {};
-          for (const resource in totalGain[category]) {
-            const rateValue = totalGain[category][resource] * rate * (applyRates ? productivity : 1);
-            if (applyRates) {
+        for (const resource in totalGain[category]) {
+          const rateValue = totalGain[category][resource] * rate * (applyRates ? productivity : 1);
+          if (applyRates) {
+            if (isSpecialProjectResource(category, resource)) {
+              modifyPlanetaryMassRate(rateValue, label);
+            } else {
               resources[category][resource].modifyRate(
                 rateValue,
                 label,
-                'project'
-              );
+                  'project'
+                );
+            }
             }
             totals.gain[category][resource] =
               (totals.gain[category][resource] || 0) + totalGain[category][resource] * fraction;

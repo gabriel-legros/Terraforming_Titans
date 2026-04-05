@@ -167,7 +167,7 @@ function clampRatio(value) {
 
 function getUndergroundCompletionRatio() {
   const terraformingState = getPulsarTerraforming();
-  const initialLand = Math.max(terraformingState && terraformingState.initialLand ? terraformingState.initialLand : 0, 0);
+  const initialLand = Math.max(resolveWorldBaseLand(terraformingState), 0);
   if (initialLand <= 0) {
     return 0;
   }

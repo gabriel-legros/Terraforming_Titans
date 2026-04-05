@@ -8,12 +8,12 @@ function getSolarPanelText(path, fallback, vars) {
 
 class SolarPanel extends Building {
   getBuildLimit() {
-    const initialLand = terraforming.initialLand || 0;
+    const initialLand = resolveWorldBaseLand(terraforming);
     return Math.floor(initialLand * 2.5);
   }
 
   build(buildCount = 1, activate = true) {
-    const initialLand = (typeof terraforming !== 'undefined' && terraforming.initialLand) ? terraforming.initialLand : 0;
+    const initialLand = resolveWorldBaseLand(terraforming);
     const cap = Math.floor(initialLand * 2.5);
     const remaining = cap - this.count;
     if (remaining <= 0) {
@@ -46,7 +46,7 @@ class SolarPanel extends Building {
         tooltip,
         getSolarPanelText(
           'ui.buildings.solarPanel.limitTooltip',
-          'Solar panels are limited to 2.5x the initial land amount.'
+          'Solar panels are limited to 2.5x the base land amount.'
         )
       );
       cache.countTooltip = tooltip;

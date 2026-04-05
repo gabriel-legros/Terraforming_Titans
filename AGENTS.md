@@ -147,6 +147,10 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Random World Generator
 - Seeded world generation with lockable options and equilibration requirement before travel.
 - Random worlds that bypass equilibration now delay Hazardous Biomass tuning/allocation until after travel and the first live terraforming update tick, so the hazard calibrates against the world's actual post-travel temperature state instead of placeholder generation temperatures.
+- Live dynamic geometry now uses explicit celestial baselines (`baseMass`, `baseRadius`, `baseGravity`, `baseLand`) and is gated by `specialAttributes.dynamicMass`; RWG worlds set it on generation, while story/artificial worlds stay fixed unless a world-specific override opts in.
+- Dynamic-mass worlds now also maintain a direct planetary-mass ledger beyond normal resource deltas: Resource Disposal can target `Planetary Mass` and remove total mass all the way to zero, while ore/silica space mining can route imports directly into planetary mass instead of colony storage. These direct mass changes affect both gravity and radius; metal imports use metal density, silica imports use silica density, and planetary-mass disposal removes volume using the world's current bulk density.
+- Dynamic-mass worlds now expose `Planetary Mass` as an underground resource. It stays hidden unless `specialAttributes.dynamicMass` is enabled on that world, its value is synced from the live dynamic-mass ledger, and spaceship import/disposal flows can write visible rate changes onto it.
+- RWG UI exposes a `Dynamic Mass` checkbox between the seed controls and dominion panel; it writes `specialAttributes.dynamicMass` onto the generated override and should stay seed-option reproducible.
 - Preserve compatibility: append new generation logic at the end only.
 - Supports dominion selector and dominion-specific terraforming requirements.
 - Some dominions/world types are story/sector gated.
@@ -161,6 +165,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## Major Feature Updates (Consolidated)
 ### Atmosphere, Physics, and Terraforming
+- World-land semantics now have explicit helper support for immutable `baseLand` versus live geometric land derived from radius; RWG persists generated `baseLand`, `initialLand` remains a compatibility alias during migration, and systems can move case-by-case onto the correct land basis instead of assuming one meaning everywhere.
+- Whole-world scaling now splits by system: hazard initialization can use `baseLand`; `Artificial Sky`, `Underground Expansion`, and Foundry World mining-cap scaling follow current world land; `Artificial Crust`, fixed base-land building caps, and Foundry World travel-point rewards stay on `baseLand`.
 - Atmospheric density/exobase/drag heuristics now use bulk non-heavy-trace mass/pressure to avoid nonphysical Kessler-line behavior.
 - Atmospheric layer boundaries now use exobase-relative heights for monotonic drag behavior.
 - Water vapor saturation effects now reduce effective pressure, with cold trapping on cold worlds.

@@ -25,6 +25,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = 'surface';
+    this.materialImportTarget = 'colony';
     const maxPressure = config.attributes?.maxPressure;
     if (Number.isFinite(maxPressure)) {
       this.disablePressureThreshold = maxPressure;
@@ -62,11 +63,14 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   ignoreCostForResource(category, resource) {
-    return category === 'colony' && resource === 'metal' && this.shouldPenalizeMetalProduction();
+    return category === 'colony'
+      && resource === 'metal'
+      && this.shouldPenalizeMetalProduction()
+      && !this.isPlanetaryMassImportSelected();
   }
 
   applyMetalCostPenalty(gain, metalCostOverride) {
-    if (!this.shouldPenalizeMetalProduction()) return;
+    if (!this.shouldPenalizeMetalProduction() || this.isPlanetaryMassImportSelected()) return;
     let deduction = metalCostOverride;
     if (deduction === undefined) {
       const cost = this.calculateSpaceshipCost();
@@ -379,6 +383,72 @@ class SpaceMiningProject extends SpaceshipProject {
     return control;
   }
 
+  getPlanetaryMassImportResource() {
+    if (this.attributes.resourceGainPerShip?.colony?.metal) {
+      return 'metal';
+    }
+    if (this.attributes.resourceGainPerShip?.colony?.silicon) {
+      return 'silicon';
+    }
+    return null;
+  }
+
+  canImportToPlanetaryMass() {
+    return this.getPlanetaryMassImportResource() && hasDynamicMassEnabled(terraforming, currentPlanetParameters);
+  }
+
+  isPlanetaryMassImportSelected() {
+    return this.canImportToPlanetaryMass() && this.materialImportTarget === 'planetaryMass';
+  }
+
+  getPlanetaryMassGainResourceKey() {
+    const resource = this.getPlanetaryMassImportResource();
+    if (resource === 'metal') {
+      return 'planetaryMassMetal';
+    }
+    if (resource === 'silicon') {
+      return 'planetaryMassSilicon';
+    }
+    return null;
+  }
+
+  createMaterialImportTargetControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'material-import-target-control');
+    control.id = `${this.name}-material-import-target-control`;
+    control.style.display = this.canImportToPlanetaryMass() ? 'flex' : 'none';
+
+    const label = document.createElement('label');
+    label.textContent = getSpaceMiningText('ui.projects.spaceMining.target', 'Target ');
+    control.appendChild(label);
+
+    const select = document.createElement('select');
+    select.classList.add('material-import-target-select');
+    [
+      { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') },
+      { value: 'planetaryMass', text: getSpaceMiningText('ui.projects.spaceMining.planetaryMass', 'Planetary Mass') }
+    ].forEach(optionData => {
+      const option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.text;
+      select.appendChild(option);
+    });
+    select.value = this.materialImportTarget;
+    select.addEventListener('change', () => {
+      this.materialImportTarget = select.value === 'planetaryMass' ? 'planetaryMass' : 'colony';
+    });
+    control.appendChild(select);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      materialImportTargetControl: control,
+      materialImportTargetLabel: label,
+      materialImportTargetSelect: select,
+    };
+
+    return control;
+  }
+
   renderAutomationUI(container) {
     if (!projectElements[this.name]?.pressureControl) {
       const gas = this.getTargetAtmosphericResource();
@@ -392,6 +462,9 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.attributes.dynamicWaterImport && !projectElements[this.name]?.waterCoverageControl) {
       container.appendChild(this.createWaterCoverageControl());
+    }
+    if (this.getPlanetaryMassImportResource() && !projectElements[this.name]?.materialImportTargetControl) {
+      container.appendChild(this.createMaterialImportTargetControl());
     }
     if (this.getTargetAtmosphericResource() === 'carbonDioxide' && !projectElements[this.name]?.co2CoverageControl) {
       container.appendChild(this.createCo2CoverageControl());
@@ -459,6 +532,12 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (elements.waterImportTargetSelect) {
       elements.waterImportTargetSelect.value = this.waterImportTarget;
+    }
+    if (elements.materialImportTargetControl) {
+      elements.materialImportTargetControl.style.display = this.canImportToPlanetaryMass() ? 'flex' : 'none';
+    }
+    if (elements.materialImportTargetSelect) {
+      elements.materialImportTargetSelect.value = this.materialImportTarget;
     }
     if (elements.oxygenPressureControl) {
       elements.oxygenPressureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
@@ -650,6 +729,7 @@ class SpaceMiningProject extends SpaceshipProject {
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
       waterImportTarget: this.waterImportTarget,
+      materialImportTarget: this.materialImportTarget,
     };
   }
 
@@ -688,6 +768,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (Object.prototype.hasOwnProperty.call(settings, 'waterImportTarget')) {
       this.waterImportTarget = settings.waterImportTarget === 'colony' ? 'colony' : 'surface';
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'materialImportTarget')) {
+      this.materialImportTarget = settings.materialImportTarget === 'planetaryMass' ? 'planetaryMass' : 'colony';
+    }
   }
 
   saveState() {
@@ -706,6 +789,7 @@ class SpaceMiningProject extends SpaceshipProject {
       pressureUnit: 'Pa',
       oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
+      materialImportTarget: this.materialImportTarget,
     };
   }
 
@@ -728,6 +812,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
+    this.materialImportTarget = state.materialImportTarget || this.materialImportTarget;
   }
 
   saveTravelState() {
@@ -748,6 +833,7 @@ class SpaceMiningProject extends SpaceshipProject {
       pressureUnit: 'Pa',
       oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
+      materialImportTarget: this.materialImportTarget,
     };
   }
 
@@ -768,9 +854,16 @@ class SpaceMiningProject extends SpaceshipProject {
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
+    this.materialImportTarget = state.materialImportTarget || this.materialImportTarget;
   }
 
   calculateSpaceshipGainPerShip() {
+    if (this.isPlanetaryMassImportSelected()) {
+      const resourceKey = this.getPlanetaryMassGainResourceKey();
+      const resourceAmount = this.attributes.resourceGainPerShip?.colony?.metal || this.attributes.resourceGainPerShip?.colony?.silicon || 0;
+      const capacity = this.getShipCapacity(resourceAmount);
+      return resourceKey ? { special: { [resourceKey]: capacity } } : {};
+    }
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
       if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony') {

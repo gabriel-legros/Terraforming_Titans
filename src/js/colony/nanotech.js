@@ -110,7 +110,7 @@ class NanotechManager extends EffectableEntity {
     }
 
     const pulsar = hazardManager.parameters.pulsar;
-    const initialLand = Math.max(terraforming.initialLand || 0, 0);
+    const initialLand = Math.max(resolveWorldBaseLand(terraforming), 0);
     if (initialLand <= 0) {
       return 0;
     }

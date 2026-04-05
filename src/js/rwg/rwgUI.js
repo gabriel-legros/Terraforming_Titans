@@ -23,6 +23,7 @@ let rwgDominionEl;
 let rwgDominionLoreBtnEl;
 let rwgDominionInfoEl;
 let rwgEquilibrateInfoEl;
+let rwgDynamicMassEl;
 let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
 let rwgDominionLoreTextEl;
@@ -452,8 +453,21 @@ function applyDominionSelection(res) {
     ? dominions[Math.floor(Math.random() * dominions.length)]
     : rwgSelectedDominion;
   special.terraformingRequirementId = selection;
-  res.merged.specialAttributes = { ...(res.merged.specialAttributes || {}) };
-  res.merged.specialAttributes.terraformingRequirementId = selection;
+  res.merged.specialAttributes = {
+    ...(res.merged.specialAttributes || {}),
+    ...special
+  };
+}
+
+function applyDynamicMassSelection(res, enabled) {
+  const override = res.override || (res.override = {});
+  const special = { ...(override.specialAttributes || {}) };
+  special.dynamicMass = enabled === true;
+  override.specialAttributes = special;
+  res.merged.specialAttributes = {
+    ...(res.merged.specialAttributes || {}),
+    ...special
+  };
 }
 
 function updateHazardListVisibility() {
@@ -656,7 +670,8 @@ function encodeSeedOptions(seed, opts = {}) {
   const ty = opts.type ?? 'auto';
   const o = opts.orbitPreset ?? 'auto';
   const h = formatHazardList(opts.hazards ?? opts.hazard) || 'none';
-  return `${seed}|${t}|${ty}|${o}|${h}`;
+  const dm = opts.dynamicMass ? '1' : '0';
+  return `${seed}|${t}|${ty}|${o}|${h}|${dm}`;
 }
 
 function decodeSeedOptions(str) {
@@ -666,8 +681,9 @@ function decodeSeedOptions(str) {
   const ty = parts[2] ?? 'auto';
   const o = parts[3] ?? 'auto';
   const h = parts[4] ?? 'auto';
+  const dm = parts[5] === '1';
   const hazards = normalizeHazardList(h);
-  return { seed, options: { target: t, type: ty, orbitPreset: o, hazards } };
+  return { seed, options: { target: t, type: ty, orbitPreset: o, hazards, dynamicMass: dm } };
 }
 
 function initializeRandomWorldUI() {
@@ -718,6 +734,19 @@ function initializeRandomWorldUI() {
   `;
   container.appendChild(controls);
 
+  const settingsCard = document.createElement('div');
+  settingsCard.className = 'rwg-card rwg-settings-card';
+  settingsCard.innerHTML = `
+    <div class="rwg-control-row">
+      <label class="rwg-checkbox-row" for="rwg-dynamic-mass">
+        <input id="rwg-dynamic-mass" type="checkbox" />
+        <span>${getRwgUiText('controls.dynamicMass', 'Dynamic Mass')}</span>
+      </label>
+      <span id="rwg-dynamic-mass-info" class="info-tooltip-icon">&#9432;</span>
+    </div>
+  `;
+  container.appendChild(settingsCard);
+
   const hazardList = document.createElement('div');
   hazardList.id = 'rwg-hazard-list';
   hazardList.className = 'rwg-hazard-list';
@@ -735,8 +764,22 @@ function initializeRandomWorldUI() {
   rwgOrbitEl = container.querySelector('#rwg-orbit');
   rwgOrbitStateSignature = '';
   rwgHazardEl = container.querySelector('#rwg-hazard');
+  rwgDynamicMassEl = container.querySelector('#rwg-dynamic-mass');
   rwgHazardListEl = hazardList;
   rwgHazardItemsEl = hazardList.querySelector('#rwg-hazard-items');
+  const rwgDynamicMassInfoEl = container.querySelector('#rwg-dynamic-mass-info');
+  if (rwgDynamicMassEl) {
+    rwgDynamicMassEl.checked = false;
+  }
+  if (rwgDynamicMassInfoEl) {
+    attachDynamicInfoTooltip(
+      rwgDynamicMassInfoEl,
+      getRwgUiText(
+        'controls.dynamicMassTooltip',
+        'When enabled, this world recalculates planetary mass, radius, gravity, and live land from tracked resource deltas. When disabled, world geometry stays fixed.'
+      )
+    );
+  }
   if (rwgHazardEl) {
     if (rwgHazardItemsEl) rwgHazardItemsEl.dataset.lastHazardList = '[]';
     refreshHazardSelect();
@@ -801,19 +844,21 @@ function initializeRandomWorldUI() {
       if (targetSel) targetSel.value = options.target;
       if (orbitSel) orbitSel.value = options.orbitPreset;
       if (typeSel) typeSel.value = options.type;
+      if (rwgDynamicMassEl) rwgDynamicMassEl.checked = options.dynamicMass === true;
       const hazards = normalizeHazardList(options.hazards);
       if (rwgHazardEl) {
         rwgHazardEl.value = hazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
         setSelectedHazards(hazards);
         updateHazardListVisibility();
       }
-      drawSingle(seed, { ...options, hazards });
+      drawSingle(seed, { ...options, hazards, dynamicMass: options.dynamicMass === true });
     } else {
       const target = targetSel.value;
       const orbit = orbitSel.value;
       const type = typeSel.value;
       const hazards = getSelectedHazards();
-      drawSingle(undefined, { target, orbitPreset: orbit, type, hazards });
+      const dynamicMass = rwgDynamicMassEl?.checked === true;
+      drawSingle(undefined, { target, orbitPreset: orbit, type, hazards, dynamicMass });
     }
   });
 
@@ -1042,7 +1087,8 @@ function drawSingle(seed, options) {
     target: options?.target,
     orbitPreset: options?.orbitPreset,
     type: options?.type,
-    hazards: normalizedHazards
+    hazards: normalizedHazards,
+    dynamicMass: options?.dynamicMass === true
   };
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
 
@@ -1068,6 +1114,7 @@ function drawSingle(seed, options) {
     availableTypes: typeOptions,
     hazards: normalizedHazards
   });
+  applyDynamicMassSelection(res, resolvedOptions.dynamicMass);
   const appliedHazards = normalizeHazardList(res?.hazards ?? res?.hazard ?? normalizedHazards);
   hazardSelect.value = normalizedHazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
   if (normalizedHazards.length) {

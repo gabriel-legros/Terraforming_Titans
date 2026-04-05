@@ -133,7 +133,7 @@ class KesslerHazard {
 
   initializeResources(terraforming, kesslerParameters, options = {}) {
     const perLand = kesslerParameters.orbitalDebrisPerLand;
-    const initialLand = terraforming.initialLand;
+    const initialLand = resolveWorldBaseLand(terraforming, resources?.surface?.land);
     const calculatedValue = initialLand * perLand;
     const resource = resources.special.orbitalDebris;
     const unlockOnly = options.unlockOnly === true;

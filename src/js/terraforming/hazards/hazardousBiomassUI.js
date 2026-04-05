@@ -683,14 +683,9 @@ function computeHazardTotals(terraformingState, hazardParameters, manager) {
   const baseGrowth = hazardParameters && hazardParameters.baseGrowth;
   const maxDensity = baseGrowth && Number.isFinite(baseGrowth.maxDensity) ? baseGrowth.maxDensity : 0;
 
-  const terraformingLand = terraformingState && Number.isFinite(terraformingState.initialLand)
-    ? terraformingState.initialLand
-    : 0;
-
   const resourcesState = getResources();
   const landResource = resourcesState && resourcesState.surface && resourcesState.surface.land;
-  const fallbackInitial = landResource && Number.isFinite(landResource.initialValue) ? landResource.initialValue : 0;
-  const initialLand = terraformingLand || fallbackInitial || 0;
+  const initialLand = resolveWorldGeometricLand(terraformingState, landResource);
 
   const reservedLand = maxDensity ? biomass / maxDensity : 0;
 
@@ -1678,9 +1673,7 @@ function computeZoneGrowth(terraformingState, hazardParameters, manager, zones) 
 
   const resourcesState = getResources();
   const landResource = resourcesState && resourcesState.surface && resourcesState.surface.land;
-  const terraformingLand = Number.isFinite(terraformingState.initialLand) ? terraformingState.initialLand : 0;
-  const fallbackLand = landResource && Number.isFinite(landResource.initialValue) ? landResource.initialValue : 0;
-  const initialLand = terraformingLand || fallbackLand || 0;
+  const initialLand = resolveWorldGeometricLand(terraformingState, landResource);
 
   const shareResolver = (() => {
     if (manager && typeof manager.getZoneWeight === 'function') {

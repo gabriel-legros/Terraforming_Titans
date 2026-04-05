@@ -1231,6 +1231,9 @@ function createResourceElement(category, resourceObj, resourceName) {
     const availableAmount = resourceObj.getAvailableAmount
       ? resourceObj.getAvailableAmount()
       : (resourceObj.value - resourceObj.reserved);
+    const undergroundRateMarkup = resourceObj.showUndergroundRate
+      ? `<div class="resource-pps" id="${domPrefix}-pps-resources-container">+0/s</div>`
+      : (showRate ? '<div class="resource-pps"></div>' : '');
     // Display for deposits
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
@@ -1240,7 +1243,7 @@ function createResourceElement(category, resourceObj, resourceName) {
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${domPrefix}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
         ` : ''}
-        ${showRate ? '<div class="resource-pps"></div>' : ''}
+        ${undergroundRateMarkup}
       </div>
     `;
     if (resourceObj.name === 'land') {
@@ -1626,7 +1629,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         } else if (scanningProgressElement) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
-        if (resourceObj.name === 'land') {
+        if (resourceObj.name === 'land' || resourceObj.showUndergroundRate) {
           updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
         }
       } else {

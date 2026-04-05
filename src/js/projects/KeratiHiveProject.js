@@ -170,7 +170,7 @@ class KeratiHiveProject extends Project {
   }
 
   getInitialLand() {
-    return terraforming.initialLand;
+    return resolveWorldBaseLand(terraforming);
   }
 
   getCompletedWorkerContribution() {

@@ -606,7 +606,9 @@ class HazardManager {
       return resolveLandReservationInitialLandHelper(terraformingState, landResource);
     }
     const candidates = [
+      terraformingState?.baseLand,
       terraformingState?.initialLand,
+      landResource?.baseLand,
       landResource?.initialValue
     ];
     for (let index = 0; index < candidates.length; index += 1) {
@@ -615,7 +617,7 @@ class HazardManager {
         return candidate;
       }
     }
-    return 0;
+    return resolveWorldGeometricLand(terraformingState, landResource);
   }
 
   getCoreFluxLandReservationShare(terraformingState = null) {

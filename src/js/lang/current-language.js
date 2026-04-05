@@ -46,6 +46,8 @@ setLanguageData({
         lockedUnknown: '???? (Locked)',
         lockedSuffix: '{value} (Locked)',
         generateWorld: 'Generate World',
+        dynamicMass: 'Dynamic Mass',
+        dynamicMassTooltip: 'When enabled, this world recalculates planetary mass, radius, gravity, and live land from tracked resource deltas. When disabled, world geometry stays fixed.',
         lore: 'Lore',
         equilibrate: 'Equilibrate',
         travel: 'Travel',
@@ -473,13 +475,13 @@ setLanguageData({
         sandQuarryGlassAndElectronics: '% of G.S. + 4*E.F.',
       },
       solarPanel: {
-        limitTooltip: 'Solar panels are limited to 2.5x the initial land amount.',
+        limitTooltip: 'Solar panels are limited to 2.5x the base land amount.',
       },
       windTurbine: {
-        limitTooltip: 'Wind turbine arrays are limited to 1 per 50 units of initial land.',
+        limitTooltip: 'Wind turbine arrays are limited to 1 per 50 units of base land.',
       },
       foundry: {
-        limitTooltip: 'Foundries are limited to 1 per unit of initial land on the current world.',
+        limitTooltip: 'Foundries are limited to 1 per unit of base land on the current world.',
       },
       waterTank: {
         emptyAboveCap: 'Empty above Cap',
@@ -611,7 +613,7 @@ setLanguageData({
           workers: '% of workers',
           workerShare: '% worker share',
           landShare: '% land share',
-          initialLand: '% initial land',
+          initialLand: '% base land',
           fixed: 'Fixed',
           storageDepots: '% of Storage Depots',
           percentOf: '% of {name}',
@@ -1114,6 +1116,7 @@ setLanguageData({
         target: 'Target ',
         surface: 'Surface',
         colony: 'Colony',
+        planetaryMass: 'Planetary Mass',
         pa: 'Pa',
         percent: '%',
       },
@@ -1228,6 +1231,7 @@ setLanguageData({
       spaceDisposal: {
         resourceDisposal: 'Resource Disposal',
         export: 'Export',
+        planetaryMass: 'Planetary Mass',
         massDrivers: 'Mass Drivers',
         active: 'Active: ',
         built: 'Built: ',
@@ -1262,6 +1266,9 @@ setLanguageData({
           coverageBelow: 'Coverage below {value}%.',
           unavailable: 'Unavailable.',
         },
+      },
+      special: {
+        planetaryMass: 'Planetary Mass',
       },
       kessler: {
         importColonistsCap: 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.',
@@ -2848,15 +2855,15 @@ setLanguageData({
       },
       keratiHive: {
         name: 'Kerati Hive',
-        description: 'Construct a planet-scale Kerati hive complex with brood basins, condensers, gas-exchange towers, and communal chambers suitable for a permanent Kerati settlement. Once complete, it provides 50 workers per initial land on that world.',
+        description: 'Construct a planet-scale Kerati hive complex with brood basins, condensers, gas-exchange towers, and communal chambers suitable for a permanent Kerati settlement. Once complete, it provides 50 workers per base land on that world.',
       },
       artificialSky: {
         name: 'Artificial Sky',
-        description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count is based on initial land, and assigned spaceships (required) accelerate construction. Partial completion proportionally reduces pulsar hazard intensity and solar flux. Full completion clears the pulsar hazard, counts as magnetic shielding for terraforming requirements, removes all solar flux, disables space mirrors (lanterns can still be used), and permanently disables Magnetic Shield.',
+        description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count and total cost scale with current world land, and assigned spaceships (required) accelerate construction. Partial completion proportionally reduces pulsar hazard intensity and solar flux. Full completion clears the pulsar hazard, counts as magnetic shielding for terraforming requirements, removes all solar flux, disables space mirrors (lanterns can still be used), and permanently disables Magnetic Shield.',
       },
       artificialCrust: {
         name: 'Artificial Crust',
-        description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale directly with planetary initial land, while assigned spaceships accelerate construction. Completion proportionally reduces both core heat flux and molten-surface land reservation, reaching zero when the shell is finished.',
+        description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale directly with planetary base land, while assigned spaceships accelerate construction. Completion proportionally reduces both core heat flux and molten-surface land reservation, reaching zero when the shell is finished.',
       },
       planetaryThruster: {
         name: 'Planetary Thrusters',
@@ -2931,7 +2938,7 @@ setLanguageData({
       },
       foundryWorld: {
         name: 'Foundry World',
-        description: 'Tap into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(initial land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
+        description: 'Tap into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(current world land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(base land / 50B) when travelling.',
       },
       manufacturingWorld: {
         name: 'Manufacturing World',
@@ -3642,6 +3649,7 @@ setLanguageData({
       underground: {
         ore: { name: 'Ore deposits' },
         geothermal: { name: 'Geo. vent' },
+        planetaryMass: { name: 'Planetary Mass' },
       },
       atmospheric: {
         carbonDioxide: { name: 'CO2' },
@@ -3896,7 +3904,7 @@ setLanguageData({
       foundry: {
         pointsLabel: 'Metallurgy Points:',
         shopTitle: 'Metallurgy Shop',
-        shopTooltip: 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project, then +10% per hazard on this world.',
+        shopTooltip: 'You gain 10 metallurgy points times sqrt(base land / 50B) when travelling after completing this project, then +10% per hazard on this world.',
         emptyShopText: 'No foundry upgrades available yet.',
         lockedByHolyWorld: 'Blocked by Holy World',
         requirements: {
