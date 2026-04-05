@@ -345,6 +345,12 @@ class MilestonesManager {
         this.startCountdown(30000 + getGlobalFestivalDurationBonusMs());
     }
 
+    completeAllMilestones() {
+        const completableMilestones = this.getCompletableMilestones().slice();
+        completableMilestones.forEach(milestone => this.completeMilestone(milestone.name));
+        return completableMilestones.length;
+    }
+
     // Get milestones that can be completed
     getCompletableMilestones() {
         return this.milestones.filter(milestone => milestone.canBeCompleted);

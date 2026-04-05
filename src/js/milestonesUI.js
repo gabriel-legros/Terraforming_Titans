@@ -2,41 +2,39 @@ let milestoneAlertNeeded = false;
 let lastCompletableCount = 0;
 let festivalContainerElement = null;
 let festivalCountdownElement = null;
+let totalHappinessBonusElement = null;
+let claimAllMilestonesButton = null;
+let milestoneButtons = [];
 
 function getMilestoneSettings() {
-    if (typeof gameSettings !== 'undefined') {
-        return gameSettings;
-    }
-    return globalThis.gameSettings;
+    return gameSettings;
 }
 
 function isMilestoneSubtabUnlocked() {
-    const doc = globalThis.document;
-    if (!doc || !doc.querySelector) {
-        return true;
-    }
-    const button = doc.querySelector('.terraforming-subtab[data-subtab="milestone-terraforming"]');
-    if (!button) {
-        return false;
-    }
-    if (!button.classList) {
-        return true;
-    }
+    const button = document.querySelector('.terraforming-subtab[data-subtab="milestone-terraforming"]');
     return !button.classList.contains('hidden');
+}
+
+function getMilestonesUiText(path, fallback, vars) {
+    return t(`ui.terraforming.milestonesUi.${path}`, vars, fallback);
 }
 
 function createMilestonesUI() {
     const milestonesContainer = document.getElementById('milestone-terraforming');
     milestonesContainer.innerHTML = ''; // Clear any existing content
+    milestoneButtons = [];
 
     // Add the Milestones header
     const header = document.createElement('h2');
-    header.textContent = 'Milestones';
+    header.textContent = t('ui.terraforming.milestonesTitle', null, 'Milestones');
     milestonesContainer.appendChild(header);
 
     // Add a short description below the header
     const description = document.createElement('p');
-    description.textContent = 'Track your progress and unlock up to 10% colony happiness as you achieve these terraforming milestones.  Each milestone completed (click to claim) will also start a festival.';
+    description.textContent = getMilestonesUiText(
+        'description',
+        'Track your progress and unlock up to 10% colony happiness as you achieve these terraforming milestones. Each milestone completed (click to claim) will also start a festival.'
+    );
     milestonesContainer.appendChild(description);
 
     const silenceDiv = document.createElement('div');
@@ -56,16 +54,30 @@ function createMilestonesUI() {
         updateMilestoneAlert();
     });
     silenceLabel.appendChild(silenceToggle);
-    silenceLabel.appendChild(document.createTextNode(' Silence milestone alert'));
+    silenceLabel.appendChild(document.createTextNode(` ${t('ui.terraforming.silenceMilestoneAlert', null, 'Silence milestone alert')}`));
     silenceDiv.appendChild(silenceLabel);
     milestonesContainer.appendChild(silenceDiv);
 
     // Add total bonuses display
     const totalBonuses = document.createElement('div');
     totalBonuses.id = 'total-bonuses';
-    totalBonuses.innerHTML = `
-        <p>Total Happiness Bonus: <span id="total-happiness-bonus">0</span></p>
-    `;
+    totalBonuses.className = 'milestone-summary-row';
+
+    totalHappinessBonusElement = document.createElement('div');
+    totalHappinessBonusElement.id = 'total-happiness-bonus';
+    totalHappinessBonusElement.className = 'milestone-total-happiness';
+
+    claimAllMilestonesButton = document.createElement('button');
+    claimAllMilestonesButton.id = 'claim-all-milestones-button';
+    claimAllMilestonesButton.className = 'milestone-claim-all-button';
+    claimAllMilestonesButton.textContent = getMilestonesUiText('claimAll', 'Claim All');
+    claimAllMilestonesButton.addEventListener('click', () => {
+        milestonesManager.completeAllMilestones();
+        updateMilestonesUI();
+    });
+
+    totalBonuses.appendChild(totalHappinessBonusElement);
+    totalBonuses.appendChild(claimAllMilestonesButton);
     milestonesContainer.appendChild(totalBonuses);
 
     const rows = [];
@@ -93,10 +105,11 @@ function createMilestonesUI() {
         // Attach click event to complete the milestone
         button.addEventListener('click', () => {
             milestonesManager.completeMilestone(milestone.name);
-            updateMilestonesUI(milestonesManager);
+            updateMilestonesUI();
         });
 
         currentRow.appendChild(button);
+        milestoneButtons.push(button);
     });
 
     festivalContainerElement = document.getElementById('festival-container');
@@ -111,9 +124,10 @@ function createMilestonesUI() {
 function updateMilestonesUI() {
     let totalFundingBonus = 0;
     let completedMilestones = 0;
+    const completableMilestones = milestonesManager.getCompletableMilestones();
 
     milestonesManager.milestones.forEach((milestone, index) => {
-        const button = document.getElementById(`milestone-button-${index}`);
+        const button = milestoneButtons[index];
         if (!button) return;
 
         // Update the button's state
@@ -136,21 +150,32 @@ function updateMilestonesUI() {
 
     // Update the total bonuses
     const totalFundingBonusElement = document.getElementById('total-funding-bonus');
-    const totalHappinessBonusElement = document.getElementById('total-happiness-bonus');
 
     if (totalFundingBonusElement) {
         totalFundingBonusElement.textContent = totalFundingBonus;
     }
 
     if (totalHappinessBonusElement) {
-        totalHappinessBonusElement.textContent = `${(milestonesManager.getHappinessBonus()).toFixed(2)}%`;
+        totalHappinessBonusElement.textContent = getMilestonesUiText(
+            'totalHappinessBonus',
+            'Total Happiness Bonus: {value}',
+            { value: `${(milestonesManager.getHappinessBonus()).toFixed(2)}%` }
+        );
+    }
+
+    if (claimAllMilestonesButton) {
+        claimAllMilestonesButton.disabled = completableMilestones.length === 0;
     }
 
     milestonesManager.countdownElement = festivalCountdownElement;
     festivalCountdownElement.isConnected || festivalContainerElement.appendChild(festivalCountdownElement);
     if (milestonesManager.countdownActive) {
         const seconds = Math.ceil(milestonesManager.countdownRemainingTime / 1000);
-        festivalCountdownElement.textContent = `Festival 3x multiplier! ${seconds}s`;
+        festivalCountdownElement.textContent = getMilestonesUiText(
+            'festivalCountdown',
+            'Festival 3x multiplier! {seconds}s',
+            { seconds }
+        );
         festivalCountdownElement.hidden = false;
     } else {
         festivalCountdownElement.textContent = '';
@@ -172,12 +197,8 @@ function checkMilestoneAlert() {
 }
 
 function updateMilestoneAlert() {
-    const doc = globalThis.document;
-    if (!doc) {
-        return;
-    }
-    const alertEl = doc.getElementById ? doc.getElementById('terraforming-alert') : null;
-    const subtabEl = doc.getElementById ? doc.getElementById('milestone-subtab-alert') : null;
+    const alertEl = document.getElementById('terraforming-alert');
+    const subtabEl = document.getElementById('milestone-subtab-alert');
     if (!alertEl && !subtabEl) return;
     const settings = getMilestoneSettings();
     if (settings && settings.silenceMilestoneAlert) {

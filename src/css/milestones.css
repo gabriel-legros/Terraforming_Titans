@@ -70,8 +70,33 @@
     color: #333;
 }
 
-#total-bonuses p {
+.milestone-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.milestone-total-happiness {
     margin: 5px 0;
+}
+
+.milestone-claim-all-button {
+    padding: 6px 14px;
+    border: 1px solid #2b7cff;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.milestone-claim-all-button:disabled {
+    background-color: #b0b0b0;
+    border-color: #b0b0b0;
+    color: #333;
+    cursor: not-allowed;
 }
 
 .festival-countdown {

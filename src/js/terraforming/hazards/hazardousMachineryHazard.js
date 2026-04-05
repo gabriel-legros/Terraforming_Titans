@@ -619,6 +619,7 @@ class HazardousMachineryHazard {
         researchMultiplier: 1,
         buildCostMultiplier: 1,
         electronicsMaintenanceMultiplier: 1,
+        androidConsumptionDisabled: false,
         shipWorkersPerAssignedShip: 0,
         availableAndroids: this.getAvailableAndroids(),
         androidDecayRatePerSecond: 0,
@@ -658,7 +659,10 @@ class HazardousMachineryHazard {
     );
     const buildCostMultiplier = 1 + hazardStrength * (Math.max(1, penalties.buildCostMultiplier || 1) - 1);
     const electronicsMaintenanceMultiplier = 1 + hazardStrength * (Math.max(1, penalties.electronicsMaintenanceMultiplier || 1) - 1);
-    const shipWorkersPerAssignedShip = Math.max(0, penalties.shipWorkersPerAssignedShip || 0);
+    const androidConsumptionDisabled = hazardStrength > 0;
+    const shipWorkersPerAssignedShip = hazardStrength > 0
+      ? Math.max(0, penalties.shipWorkersPerAssignedShip || 0)
+      : 0;
     const availableAndroids = this.getAvailableAndroids();
     const decayEligibleAndroids = availableAndroids >= 10 ? availableAndroids : 0;
     const androidDecayRatePerSecond = decayEligibleAndroids * Math.max(0, penalties.availableAndroidDecayRate || 0) * hazardStrength;
@@ -736,6 +740,7 @@ class HazardousMachineryHazard {
       researchMultiplier,
       buildCostMultiplier,
       electronicsMaintenanceMultiplier,
+      androidConsumptionDisabled,
       shipWorkersPerAssignedShip,
       availableAndroids,
       androidDecayRatePerSecond,

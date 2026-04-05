@@ -1024,7 +1024,12 @@ function updateHazardousMachineryUI(parameters) {
     getHazardousMachineryUiText('labels.electronicsMaintenance', 'Electronics Maintenance: {value}', {
       value: `x${formatMachineryNumber(status.electronicsMaintenanceMultiplier, 2)}`
     }),
-    getHazardousMachineryUiText('labels.androidConsumption', 'Colony Android Consumption: Disabled'),
+    getHazardousMachineryUiText(
+      status.androidConsumptionDisabled ? 'labels.androidConsumptionDisabled' : 'labels.androidConsumptionEnabled',
+      status.androidConsumptionDisabled
+        ? 'Colony Android Consumption: Disabled'
+        : 'Colony Android Consumption: Enabled'
+    ),
     getHazardousMachineryUiText('labels.shipPenalty', 'Assigned Ships: +{value} workers each', {
       value: formatMachineryNumber(status.shipWorkersPerAssignedShip, 0)
     })

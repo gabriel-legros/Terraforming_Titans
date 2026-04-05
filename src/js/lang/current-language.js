@@ -1752,6 +1752,12 @@ setLanguageData({
       lifeTitle: 'Life',
       milestonesTitle: 'Milestones',
       silenceMilestoneAlert: 'Silence milestone alert',
+      milestonesUi: {
+        description: 'Track your progress and unlock up to 10% colony happiness as you achieve these terraforming milestones. Each milestone completed (click to claim) will also start a festival.',
+        totalHappinessBonus: 'Total Happiness Bonus: {value}',
+        claimAll: 'Claim All',
+        festivalCountdown: 'Festival 3x multiplier! {seconds}s',
+      },
       summaryUi: {
         worldMeta: '{worldType}, {requirementName}',
         close: 'Close',
@@ -2342,7 +2348,8 @@ setLanguageData({
             nanocolony: 'Nanocolony Growth: {value}',
             research: 'Research: {value}',
             electronicsMaintenance: 'Electronics Maintenance: {value}',
-            androidConsumption: 'Colony Android Consumption: Disabled',
+            androidConsumptionDisabled: 'Colony Android Consumption: Disabled',
+            androidConsumptionEnabled: 'Colony Android Consumption: Enabled',
             shipPenalty: 'Assigned Ships: +{value} workers each',
             convertCost: 'Research Cost: {value}',
             convertAction: 'Hack +{value}',
@@ -2356,7 +2363,7 @@ setLanguageData({
             maxCoverage: 'Maximum machinery coverage is 100% minus half the current water coverage.',
             hacking: 'Counter-hacking spends research to disable hazardous machinery directly. Auto spend clears the hazard automatically once current research can pay the full remaining cost.  This setting persists on travel.',
             autoSpendIfClear: 'When enabled, counter-hacking automatically spends research only if the current research stock can clear all remaining hazardous machinery at once.',
-            androidDecay: 'The Hazardous Machinery is capable of hacking autonomous androids. This does not impact androids assigned away from signals, such as assigned to underground mining or land expansion projects.',
+            androidDecay: 'The Hazardous Machinery is capable of hacking autonomous androids, up to 5% of worker androids per second. This does not impact androids assigned away from signals, such as assigned to underground mining or land expansion projects.',
           },
           rateLabels: {
             baseGrowth: 'Self-Replication',
