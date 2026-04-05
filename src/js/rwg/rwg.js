@@ -1962,10 +1962,6 @@ class RwgManager extends EffectableEntity {
   generateRandomPlanet(seed, opts = {}) {
     const P = resolveParams(this.params, opts.params);
     const { seedInt: S, baseSeed, ann: seedAnn } = parseSeedSpec(seed);
-    const specialSeedResult = buildSpecialSeedWorldResult(baseSeed, S);
-    if (specialSeedResult) {
-      return specialSeedResult;
-    }
 
     // Star
     let star = opts.star ?? generateStar(S ^ 0x1234, P);

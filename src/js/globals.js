@@ -41,6 +41,7 @@ let fundingModule;
 let spaceManager;
 let automationManager;
 let artificialManager;
+let atlasManager;
 let warpGateNetworkManager;
 let isEquilibrating = false;
 
@@ -108,6 +109,12 @@ Object.defineProperty(globalThis, 'galaxyManager', {
 Object.defineProperty(globalThis, 'artificialManager', {
   get: () => artificialManager,
   set: (value) => { artificialManager = value; },
+  configurable: true,
+});
+
+Object.defineProperty(globalThis, 'atlasManager', {
+  get: () => atlasManager,
+  set: (value) => { atlasManager = value; },
   configurable: true,
 });
 

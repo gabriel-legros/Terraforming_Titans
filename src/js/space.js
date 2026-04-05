@@ -87,6 +87,18 @@ function getLandFromParams(source) {
         || 0;
 }
 
+function getSpecialSeedKeyFromWorldData(source) {
+    if (!source) {
+        return null;
+    }
+    return source.specialSeedKey
+        || source.rwgMeta?.specialSeedKey
+        || source.merged?.rwgMeta?.specialSeedKey
+        || source.override?.rwgMeta?.specialSeedKey
+        || source.original?.merged?.rwgMeta?.specialSeedKey
+        || null;
+}
+
 function cloneSpaceWorldData(data) {
     if (!data) {
         return null;
@@ -1815,6 +1827,12 @@ class SpaceManager extends EffectableEntity {
                     console.log(`SpaceManager: Terraformed status for seed ${seed} updated to ${isComplete}`);
                 }
             });
+            if (isComplete && atlasManager) {
+                const seedKey = getSpecialSeedKeyFromWorldData(this.getCurrentWorldOriginal());
+                if (seedKey && atlasManager.isChallengeSeedKey(seedKey)) {
+                    atlasManager.markCompleted(seedKey);
+                }
+            }
             return;
         }
         if (this.currentArtificialKey !== null) {
@@ -2219,14 +2237,13 @@ class SpaceManager extends EffectableEntity {
 
         const existing = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const revisitingRandomSeed = !isArtificial && !!existing?.visited;
+        const specialSeedKey = getSpecialSeedKeyFromWorldData(res) || getSpecialSeedKeyFromWorldData(existing);
         let travelResult = res;
         if (revisitingRandomSeed) {
-            if (typeof generateRandomPlanet !== 'function') {
-                console.warn(`SpaceManager: Cannot regenerate seed ${s} for replay.`);
-                return false;
-            }
             try {
-                const regenerated = generateRandomPlanet(s);
+                const regenerated = specialSeedKey
+                    ? buildSpecialSeedWorldResult(getSpecialSeedDefinition(specialSeedKey)?.seed || specialSeedKey, 0)
+                    : generateRandomPlanet(s);
                 if (!regenerated || !regenerated.merged) {
                     console.warn(`SpaceManager: Failed to regenerate seed ${s} for replay.`);
                     return false;

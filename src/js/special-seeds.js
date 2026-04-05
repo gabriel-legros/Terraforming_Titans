@@ -682,7 +682,7 @@ const earthOverrunOverrides = {
     albedo: 0.05,
     rotationPeriod: 24,
     spinPeriod: 24,
-    starLuminosity: 1361,
+    starLuminosity: 1,
     surfaceArea: 510072000000000
   },
   star: {
@@ -808,10 +808,15 @@ function getSpecialSeedParameters(seedInput) {
   return mergeSpecialSeedData(base, definition.overrides || {});
 }
 
+function getAllSpecialSeedDefinitions() {
+  return Object.values(specialSeedDefinitions).map((definition) => cloneSpecialSeedValue(definition));
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     getSpecialSeedDefinition,
     getSpecialSeedParameters,
+    getAllSpecialSeedDefinitions,
     specialSeedDefinitions
   };
 }

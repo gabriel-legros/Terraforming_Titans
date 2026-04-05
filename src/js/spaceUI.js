@@ -15,6 +15,7 @@ if (typeof SubtabManager === 'undefined') {
 let spaceUIInitialized = false;
 // Track visibility of the Random subtab
 let spaceRandomTabVisible = false;
+let spaceAtlasTabVisible = false;
 let spaceGalaxyTabVisible = false;
 let spaceSubtabManager = null;
 // Cache the last rendered world so we can skip redundant updates
@@ -32,6 +33,7 @@ let spaceStatOneillTooltipEl = null;
 let spaceStatOneillRateEl = null;
 let spaceStatOneillTooltipContentEl = null;
 
+const atlasTabElements = { button: null, content: null };
 const galaxyTabElements = { button: null, content: null };
 const spaceTabAlertElements = { button: null, warning: null, alert: null, storyAlert: null };
 let spaceTabAlertNeeded = false;
@@ -98,6 +100,25 @@ function hideSpaceRandomTab() {
         if (tab) tab.classList.add('hidden');
         if (content) content.classList.add('hidden');
     }
+}
+
+function cacheAtlasTabElements() {
+    if (typeof document === 'undefined') {
+        return atlasTabElements;
+    }
+    if (!atlasTabElements.button || !atlasTabElements.button.isConnected) {
+        const button = document.querySelector('[data-subtab="space-atlas"]');
+        if (button) {
+            atlasTabElements.button = button;
+        }
+    }
+    if (!atlasTabElements.content || !atlasTabElements.content.isConnected) {
+        const content = document.getElementById('space-atlas');
+        if (content) {
+            atlasTabElements.content = content;
+        }
+    }
+    return atlasTabElements;
 }
 
 function cacheGalaxyTabElements() {
@@ -189,6 +210,28 @@ function setSpaceIncomingAttackWarning(isActive, isThreat = true) {
     warning.removeAttribute('title');
 }
 
+function showSpaceAtlasTab() {
+    spaceAtlasTabVisible = true;
+    const { button, content } = cacheAtlasTabElements();
+    if (spaceSubtabManager) {
+        spaceSubtabManager.show('space-atlas');
+    } else {
+        if (button) button.classList.remove('hidden');
+        if (content) content.classList.remove('hidden');
+    }
+}
+
+function hideSpaceAtlasTab() {
+    spaceAtlasTabVisible = false;
+    const { button, content } = cacheAtlasTabElements();
+    if (spaceSubtabManager) {
+        spaceSubtabManager.hide('space-atlas');
+    } else {
+        if (button) button.classList.add('hidden');
+        if (content) content.classList.add('hidden');
+    }
+}
+
 function showSpaceGalaxyTab() {
     spaceGalaxyTabVisible = true;
     const { button, content } = cacheGalaxyTabElements();
@@ -218,6 +261,9 @@ function hideSpaceGalaxyTab() {
 }
 
 function showTravelWarningPopup(warningData, onConfirm) {
+    if (globalGameIsTraveling || globalGameIsLoadingFromSave) {
+        return;
+    }
     if (!travelWarningOverlay) {
         travelWarningOverlay = document.createElement('div');
         travelWarningOverlay.id = 'travel-warning-popup';
@@ -329,19 +375,6 @@ function showTravelWarningPopup(warningData, onConfirm) {
     travelWarningOverlay.style.display = 'flex';
 }
 
-function handleUnterraformedTravelWarning(onConfirm) {
-    if (!_spaceManagerInstance || _spaceManagerInstance.isCurrentWorldTerraformed()) {
-        return false;
-    }
-    showTravelWarningPopup({
-        message: getSpaceUIText(
-            'travelWarning.unterraformedMessage',
-            'This world is not yet fully terraformed. Leaving now will abandon its progress.'
-        ),
-    }, onConfirm);
-    return true;
-}
-
 function getActiveSpecializationProject() {
     const bioworld = projectManager.projects.bioworld;
     if (bioworld.isActive && !bioworld.isCompleted) {
@@ -358,28 +391,40 @@ function getActiveSpecializationProject() {
     return null;
 }
 
-function handleSpecializationTravelWarning(onConfirm) {
+function getSpecializationTravelWarningMessage() {
     const project = getActiveSpecializationProject();
-    return project && (showTravelWarningPopup({
-        message: getSpaceUIText(
-            'travelWarning.specializationInProgress',
-            '{name} is still in progress. Leaving now will abandon its progress.',
-            { name: project.displayName }
-        ),
-    }, onConfirm), true);
+    if (!project) {
+        return '';
+    }
+    return getSpaceUIText(
+        'travelWarning.specializationInProgress',
+        '{name} is still in progress. Leaving now will abandon its progress.',
+        { name: project.displayName }
+    );
 }
 
 function handleCurrentWorldTravelWarnings(onConfirm) {
-    const continueTravel = () => {
-        if (handleSpecializationTravelWarning(onConfirm)) {
-            return;
-        }
-        onConfirm();
-    };
-    if (handleUnterraformedTravelWarning(continueTravel)) {
-        return true;
+    if (globalGameIsTraveling || globalGameIsLoadingFromSave) {
+        return false;
     }
-    return handleSpecializationTravelWarning(onConfirm);
+    const messages = [];
+    if (_spaceManagerInstance && !_spaceManagerInstance.isCurrentWorldTerraformed()) {
+        messages.push(getSpaceUIText(
+            'travelWarning.unterraformedMessage',
+            'This world is not yet fully terraformed. Leaving now will abandon its progress.'
+        ));
+    }
+    const specializationMessage = getSpecializationTravelWarningMessage();
+    if (specializationMessage) {
+        messages.push(specializationMessage);
+    }
+    if (!messages.length) {
+        return false;
+    }
+    showTravelWarningPopup({
+        message: messages.join('\n\n'),
+    }, onConfirm);
+    return true;
 }
 
 function updateSpaceRandomVisibility() {
@@ -397,6 +442,9 @@ function initializeSpaceTabs() {
     if (typeof SubtabManager !== 'function') return;
     spaceSubtabManager = new SubtabManager('.space-subtab', '.space-subtab-content', true);
     spaceSubtabManager.onActivate((id) => {
+        if (id === 'space-atlas' && typeof updateAtlasUI === 'function') {
+            updateAtlasUI({ force: true });
+        }
         if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
             updateGalaxyUI({ force: true });
         }
@@ -436,6 +484,8 @@ function initializeSpaceUI(spaceManager) {
     console.log("Initializing Space UI with SpaceManager reference.");
     initializeSpaceTabs();
     hideSpaceRandomTab();
+    hideSpaceAtlasTab();
+    cacheAtlasTabElements();
     cacheGalaxyTabElements();
     if (typeof updateArtificialUI === 'function') {
         updateArtificialUI({ force: true });
@@ -449,6 +499,11 @@ function initializeSpaceUI(spaceManager) {
         showSpaceGalaxyTab();
     } else {
         hideSpaceGalaxyTab();
+    }
+    if (typeof atlasManager !== 'undefined' && atlasManager && atlasManager.enabled) {
+        showSpaceAtlasTab();
+    } else {
+        hideSpaceAtlasTab();
     }
 
     // If the UI has already been generated, just update with the new instance
@@ -671,9 +726,8 @@ function updateSpaceStatsUI() {
 // Handle click events for selecting planets
 document.addEventListener('click', function(evt){
     const btn = evt.target.closest('.select-planet-button');
-    if(btn){
-        const key = btn.dataset.planetKey;
-        selectPlanet(key);
+    if(btn && btn.dataset.planetKey){
+        selectPlanet(btn.dataset.planetKey);
     }
 });
 

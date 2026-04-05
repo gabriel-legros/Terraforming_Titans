@@ -10,7 +10,8 @@
   --space-warning: #ffd064;
 }
 
-#space-story {
+#space-story,
+#space-atlas {
   background: var(--rwg-bg);
   border-radius: 10px;
   padding: 18px;
@@ -247,6 +248,76 @@
 .select-planet-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.atlas-status {
+  min-height: 20px;
+  color: var(--space-fg-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.atlas-status-warning {
+  color: var(--space-warning);
+}
+
+.atlas-world-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.atlas-world-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.atlas-world-tag {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.atlas-world-tag-featured {
+  background: rgba(93, 178, 255, 0.15);
+  color: var(--space-accent);
+}
+
+.atlas-world-tag-community {
+  background: rgba(255, 208, 100, 0.12);
+  color: var(--space-warning);
+}
+
+.atlas-world-tag-completed {
+  background: rgba(92, 227, 161, 0.15);
+  color: var(--space-success);
+}
+
+.atlas-world-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--space-fg-muted);
+}
+
+.atlas-world-effects-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--space-fg);
+}
+
+.atlas-world-effect {
+  padding-left: 10px;
+  border-left: 2px solid rgba(255, 255, 255, 0.12);
 }
 
 .space-stats-card {

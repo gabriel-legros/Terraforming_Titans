@@ -162,6 +162,7 @@ function getGameState() {
     patienceManager: (typeof patienceManager !== 'undefined' && typeof patienceManager.saveState === 'function') ? patienceManager.saveState() : undefined,
     followersManager: (typeof followersManager !== 'undefined' && typeof followersManager.saveState === 'function') ? followersManager.saveState() : undefined,
     artificialManager: (typeof artificialManager !== 'undefined' && typeof artificialManager.saveState === 'function') ? artificialManager.saveState() : undefined,
+    atlasManager: (typeof atlasManager !== 'undefined' && typeof atlasManager.saveState === 'function') ? atlasManager.saveState() : undefined,
     lifeDesigner: (typeof lifeDesigner !== 'undefined' && typeof lifeDesigner.saveState === 'function') ? lifeDesigner.saveState() : undefined,
     milestonesManager: (typeof milestonesManager !== 'undefined' && typeof milestonesManager.saveState === 'function') ? milestonesManager.saveState() : undefined,
     skills: (typeof skillManager !== 'undefined' && typeof skillManager.saveState === 'function') ? skillManager.saveState() : undefined,
@@ -552,6 +553,9 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if (gameState.artificialManager && artificialManager && artificialManager.loadState) {
       artificialManager.loadState(gameState.artificialManager);
+    }
+    if (gameState.atlasManager && atlasManager && atlasManager.loadState) {
+      atlasManager.loadState(gameState.atlasManager);
     }
     
     if (gameState.hazardManager && typeof hazardManager !== 'undefined' && typeof hazardManager.load === 'function') {

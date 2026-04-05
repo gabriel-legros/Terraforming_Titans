@@ -10,6 +10,70 @@ let skillRedrawQueued = false;
 let awakeningAlertPending = false;
 let skillWindowResizeBound = false;
 
+function getSkillsUIText(path, fallback, vars) {
+    try {
+        return t(`ui.skills.${path}`, vars, fallback);
+    } catch (error) {
+        if (!vars) {
+            return fallback;
+        }
+        let text = fallback;
+        Object.keys(vars).forEach((key) => {
+            text = text.replaceAll(`{${key}}`, String(vars[key]));
+        });
+        return text;
+    }
+}
+
+function formatSkillPercent(value, decimals = 2) {
+    return `${formatNumber((value || 0) * 100, false, decimals)}%`;
+}
+
+function getSkillPreviewValue(skill, rank) {
+    const safeRank = Math.max(0, rank || 0);
+    switch (skill.id) {
+        case 'build_cost':
+        case 'worker_reduction':
+        case 'maintenance_reduction':
+        case 'project_speed':
+            return formatSkillPercent(skillManager.getReductionSkillValue(skill, { baseValue: skill.effect?.baseValue || 0 }));
+        case 'pop_growth':
+            return formatSkillPercent(0.2 * safeRank);
+        case 'research_boost':
+            return formatSkillPercent(0.5 * safeRank);
+        case 'android_efficiency':
+            return formatSkillPercent(0.4 * safeRank);
+        case 'ship_efficiency':
+            return getSkillsUIText(
+                'common.shipEfficiencyValue',
+                '+{value} ship/trade',
+                { value: formatSkillPercent(0.3 * safeRank) }
+            );
+        case 'life_design_points':
+            return getSkillsUIText(
+                'common.lifeDesignValue',
+                '+{points} pts, +{percent}% gains',
+                {
+                    points: formatNumber(20 * safeRank, true),
+                    percent: formatNumber(20 * safeRank, false, 0)
+                }
+            );
+        default:
+            return formatNumber(safeRank, true);
+    }
+}
+
+function getSkillCurrentPreviewValue(skill) {
+    const previewSkill = { ...skill, rank: skill.rank || 0 };
+    return getSkillPreviewValue(previewSkill, previewSkill.rank);
+}
+
+function getSkillNextPreviewValue(skill) {
+    const nextRank = Math.min(skill.maxRank, (skill.rank || 0) + 1);
+    const previewSkill = { ...skill, rank: nextRank };
+    return getSkillPreviewValue(previewSkill, nextRank);
+}
+
 function queueSkillRedraw() {
     if (skillRedrawQueued) return;
     skillRedrawQueued = true;
@@ -44,6 +108,9 @@ function canUnlockSkill(id) {
 function canPurchaseAnySkill() {
     if (Object.keys(skillPrereqs).length === 0) {
         buildSkillPrereqs();
+    }
+    if (skillManager && typeof skillManager.refreshMaxRanks === 'function') {
+        skillManager.refreshMaxRanks();
     }
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
@@ -124,13 +191,32 @@ function updateSkillButton(skill) {
         els.desc.textContent = skill.description;
     }
 
-    const rankText = `Rank ${skill.rank}/${skill.maxRank}`;
+    const previewText = getSkillsUIText(
+        'common.valueProgress',
+        '{current} -> {next}',
+        {
+            current: getSkillCurrentPreviewValue(skill),
+            next: skill.rank < skill.maxRank
+                ? getSkillNextPreviewValue(skill)
+                : getSkillsUIText('common.max', 'Max')
+        }
+    );
+    if (els.preview.textContent !== previewText) {
+        els.preview.textContent = previewText;
+    }
+
+    const rankText = getSkillsUIText('common.rank', 'Rank {current}/{max}', {
+        current: skill.rank,
+        max: skill.maxRank
+    });
     if (els.rank.textContent !== rankText) {
         els.rank.textContent = rankText;
     }
 
     const cost = skillManager.getUpgradeCost(skill.id);
-    const costText = skill.rank < skill.maxRank ? `Cost: ${cost}` : 'Max';
+    const costText = skill.rank < skill.maxRank
+        ? getSkillsUIText('common.cost', 'Cost: {value}', { value: cost })
+        : getSkillsUIText('common.max', 'Max');
     if (els.cost.textContent !== costText) {
         els.cost.textContent = costText;
     }
@@ -179,15 +265,17 @@ function createSkillTree() {
 
         const nameEl = document.createElement('strong');
         const descEl = document.createElement('span');
+        const previewEl = document.createElement('span');
         const rankEl = document.createElement('span');
         const costEl = document.createElement('span');
 
         button.appendChild(nameEl);
         button.appendChild(descEl);
+        button.appendChild(previewEl);
         button.appendChild(rankEl);
         button.appendChild(costEl);
 
-        button._skillEls = { name: nameEl, desc: descEl, rank: rankEl, cost: costEl };
+        button._skillEls = { name: nameEl, desc: descEl, preview: previewEl, rank: rankEl, cost: costEl };
 
         button.addEventListener('click', () => purchaseSkill(id));
         container.appendChild(button);
@@ -303,6 +391,9 @@ function purchaseSkill(id) {
 }
 
 function updateSkillTreeUI() {
+    if (skillManager && typeof skillManager.refreshMaxRanks === 'function') {
+        skillManager.refreshMaxRanks();
+    }
     updateSkillPointDisplay();
     for (const id in skillManager.skills) {
         updateSkillButton(skillManager.skills[id]);
@@ -313,6 +404,9 @@ function updateSkillTreeUI() {
 }
 
 function initializeSkillsUI() {
+    if (skillManager && typeof skillManager.refreshMaxRanks === 'function') {
+        skillManager.refreshMaxRanks();
+    }
     updateSkillPointDisplay();
     createSkillTree();
 }

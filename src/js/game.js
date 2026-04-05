@@ -171,8 +171,10 @@ function initializeDefaultGlobals(){
   globalThis.spaceManager = spaceManager;
   galaxyManager = new GalaxyManager();
   artificialManager = setArtificialManager(new ArtificialManager());
+  atlasManager = new AtlasManager();
   initializeHopeUI();
   initializeSpaceUI(spaceManager);
+  atlasManager.refreshUIVisibility();
   if (typeof galaxyManager.initialize === 'function') {
     galaxyManager.initialize();
   }
@@ -430,6 +432,12 @@ function initializeGameState(options = {}) {
   } else if (artificialManager && typeof artificialManager.updateUI === 'function') {
     artificialManager.updateUI({ force: true });
   }
+  if (!preserveManagers || !atlasManager) {
+    atlasManager = new AtlasManager();
+  } else {
+    atlasManager.refreshUIVisibility();
+    atlasManager.updateUI({ force: true });
+  }
 
   milestonesManager = new MilestonesManager();
   if (preserveManagers) {
@@ -489,6 +497,9 @@ function initializeGameState(options = {}) {
   } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
     initializeSpaceUI(spaceManager);
   }
+  if (atlasManager) {
+    atlasManager.refreshUIVisibility();
+  }
   if (typeof galaxyManager?.refreshUIVisibility === 'function') {
     galaxyManager.refreshUIVisibility();
   } else if (typeof updateGalaxyUI === 'function') {
@@ -519,6 +530,9 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && followersManager && typeof followersManager.reapplyEffects === 'function') {
     followersManager.reapplyEffects();
+  }
+  if (preserveManagers && atlasManager && typeof atlasManager.reapplyEffects === 'function') {
+    atlasManager.reapplyEffects();
   }
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
@@ -586,6 +600,9 @@ function updateLogic(delta) {
   }
   if (artificialManager) {
     artificialManager.update(delta);
+  }
+  if (atlasManager) {
+    atlasManager.update(delta);
   }
 
   lifeDesigner.update(delta);
