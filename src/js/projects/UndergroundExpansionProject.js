@@ -4,6 +4,7 @@ class UndergroundExpansionProject extends AndroidProject {
     // Track fractional progress for continuous mode
     this.fractionalRepeatCount = 0;
     this.prepaidPortion = 0;
+    this.dynamicMassGraceBase = -1;
   }
 
   getScaledCost() {
@@ -48,19 +49,37 @@ class UndergroundExpansionProject extends AndroidProject {
     return 1;
   }
 
+  shouldShowMaxRepeatState() {
+    return false;
+  }
+
+  isDynamicMassEnabled() {
+    return currentPlanetParameters.specialAttributes?.dynamicMass === true;
+  }
+
+  getRawMaxRepeats() {
+    return Math.max(Math.floor(this.getCapLand()), 0);
+  }
+
   syncCompletionState() {
-    const maxRepeats = Math.max(Math.floor(this.getCapLand()), 0);
-    this.maxRepeatCount = maxRepeats;
-
-    if (this.repeatCount < maxRepeats) {
+    const rawMaxRepeats = this.getRawMaxRepeats();
+    if (!this.isDynamicMassEnabled()) {
+      this.dynamicMassGraceBase = -1;
+      this.maxRepeatCount = rawMaxRepeats;
       this.isCompleted = false;
-      return maxRepeats;
+      return rawMaxRepeats;
     }
 
-    if (this.repeatCount >= maxRepeats && maxRepeats > 0) {
-      this.isCompleted = true;
+    if (rawMaxRepeats > this.dynamicMassGraceBase) {
+      this.dynamicMassGraceBase = rawMaxRepeats;
     }
 
+    const maxRepeats =
+      rawMaxRepeats === this.dynamicMassGraceBase && this.repeatCount >= rawMaxRepeats
+        ? rawMaxRepeats + 1
+        : rawMaxRepeats;
+    this.maxRepeatCount = maxRepeats;
+    this.isCompleted = false;
     return maxRepeats;
   }
 
@@ -94,7 +113,6 @@ class UndergroundExpansionProject extends AndroidProject {
     const remainingRepeats = this.getRemainingRepeats();
     if (!remainingRepeats) {
       this.isActive = false;
-      this.isCompleted = true;
       this.fractionalRepeatCount = 0;
       this.prepaidPortion = 0;
       return;
@@ -114,7 +132,6 @@ class UndergroundExpansionProject extends AndroidProject {
     const remainingRepeats = this.getRemainingRepeats();
     if (!remainingRepeats) {
       this.isActive = false;
-      this.isCompleted = true;
       this.fractionalRepeatCount = 0;
       this.prepaidPortion = 0;
       return 0;
@@ -134,7 +151,6 @@ class UndergroundExpansionProject extends AndroidProject {
 
     if (!remainingAfter) {
       this.isActive = false;
-      this.isCompleted = true;
       this.fractionalRepeatCount = 0;
       this.prepaidPortion = 0;
     }
@@ -158,7 +174,6 @@ class UndergroundExpansionProject extends AndroidProject {
     const remainingRepeats = this.getRemainingRepeats();
     if (!remainingRepeats) {
       this.isActive = false;
-      this.isCompleted = true;
       return;
     }
 
@@ -276,8 +291,12 @@ class UndergroundExpansionProject extends AndroidProject {
   complete() {
     this.fractionalRepeatCount = 0;
     this.prepaidPortion = 0;
-    super.complete();
-    this.syncCompletionState();
+    this.isActive = false;
+    this.isPaused = false;
+
+    if (this.repeatCount < this.getMaxRepeats()) {
+      this.repeatCount++;
+    }
   }
 
   saveState() {
@@ -285,6 +304,7 @@ class UndergroundExpansionProject extends AndroidProject {
       ...super.saveState(),
       fractionalRepeatCount: this.fractionalRepeatCount,
       prepaidPortion: this.prepaidPortion,
+      dynamicMassGraceBase: this.dynamicMassGraceBase,
     };
   }
 
@@ -292,6 +312,7 @@ class UndergroundExpansionProject extends AndroidProject {
     super.loadState(state);
     this.fractionalRepeatCount = state.fractionalRepeatCount || 0;
     this.prepaidPortion = state.prepaidPortion || 0;
+    this.dynamicMassGraceBase = state.dynamicMassGraceBase ?? -1;
     this.syncCompletionState();
   }
 

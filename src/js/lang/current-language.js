@@ -2595,7 +2595,7 @@ setLanguageData({
         otherRequirements: {
           gravityMinimum: {
             label: 'Gravity',
-            targetText: 'Reach at least {value} m/s² gravity.',
+            targetText: 'Reach at least {value} m/s² gravity for terraforming.',
           },
         },
         rewards: {
