@@ -6,6 +6,7 @@ function calculateSurfaceAreaHectaresFromRadius(radiusKm) {
 }
 
 const WORLD_GEOMETRY_G = 6.6743e-11;
+const WORLD_GEOMETRY_MIN_GRAVITY = 1e-12;
 const WORLD_GEOMETRY_MIN_VOLUME_FRACTION = 0.01;
 const WORLD_GEOMETRY_FALLBACK_DENSITY = 1000;
 const WORLD_GEOMETRY_MIN_DENSITY = 1;
@@ -108,11 +109,14 @@ function calculateRadiusKmFromVolume(volumeM3) {
 }
 
 function calculateGravityFromMassRadius(massKg, radiusKm) {
-  if (!Number.isFinite(massKg) || massKg <= 0 || !Number.isFinite(radiusKm) || radiusKm <= 0) {
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
     return 0;
   }
+  if (!Number.isFinite(massKg) || massKg <= 0) {
+    return WORLD_GEOMETRY_MIN_GRAVITY;
+  }
   const radiusM = radiusKm * 1000;
-  return (WORLD_GEOMETRY_G * massKg) / (radiusM * radiusM);
+  return Math.max(WORLD_GEOMETRY_MIN_GRAVITY, (WORLD_GEOMETRY_G * massKg) / (radiusM * radiusM));
 }
 
 function calculateAverageDensityKgM3(massKg, volumeM3) {
