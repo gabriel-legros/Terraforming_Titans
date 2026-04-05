@@ -409,6 +409,7 @@ const theRealPoseidonOverrides = {
     hasNaturalMagnetosphere: true,
     radius: 7600,
     mass: 1.31e25,
+    baseLand: 72_500_000_000,
     albedo: 0.08,
     rotationPeriod: 21.8,
     spinPeriod: 21.8,
@@ -442,7 +443,7 @@ const theRealPoseidonOverrides = {
   ],
   resources: {
     surface: {
-      land: { initialValue: 72_500_000_000 },
+      land: { initialValue: 72_500_000_000, baseLand: 72_500_000_000 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
