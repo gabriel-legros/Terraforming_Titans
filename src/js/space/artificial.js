@@ -1205,7 +1205,9 @@ class ArtificialManager extends EffectableEntity {
         const radiusKm = params.celestialParameters.radius;
         const radiusEarth = radiusKm / EARTH_RADIUS_KM;
         const landHa = params.resources.surface.land.initialValue
+            || params.resources.surface.land.baseLand
             || params.resources.surface.land.baseCap
+            || params.celestialParameters.baseLand
             || this.calculateAreaHectares(radiusEarth);
         const type = params.classification?.type || 'shell';
         const core = params.classification?.core || (type === 'ring' ? RINGWORLD_STAR_CORES[0].value : 'super-earth');
@@ -1381,8 +1383,10 @@ class ArtificialManager extends EffectableEntity {
         base.resources.surface.land = {
             ...(base.resources.surface.land || {}),
             initialValue: project.landHa,
+            baseLand: project.landHa,
             baseCap: project.landHa
         };
+        base.celestialParameters.baseLand = project.landHa;
         base.resources.surface.ice = { ...(base.resources.surface.ice || {}), initialValue: 0 };
         base.resources.surface.liquidWater = { ...(base.resources.surface.liquidWater || {}), initialValue: 0 };
         base.resources.surface.dryIce = { ...(base.resources.surface.dryIce || {}), initialValue: 0 };

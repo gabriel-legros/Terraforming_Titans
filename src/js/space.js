@@ -81,7 +81,9 @@ function resolveSectorFromSources(...sources) {
 
 function getLandFromParams(source) {
     return source?.resources?.surface?.land?.initialValue
+        || source?.resources?.surface?.land?.baseLand
         || source?.resources?.surface?.land?.baseCap
+        || source?.celestialParameters?.baseLand
         || 0;
 }
 

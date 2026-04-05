@@ -1027,7 +1027,9 @@ function reconcileLandResourceValue() {
     landResource.baseLand,
     params?.celestialParameters?.baseLand,
     landResource.initialValue,
+    landResource.baseCap,
     params?.resources?.surface?.land?.initialValue,
+    params?.resources?.surface?.land?.baseCap,
     derivedLandFromRadius,
   ];
 

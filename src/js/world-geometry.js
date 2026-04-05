@@ -131,7 +131,8 @@ function resolveWorldBaseLand(terraformingState, landResource, celestialParamete
     activeCelestialParameters?.baseLand,
     activeLandResource?.baseLand,
     activeTerraforming?.initialLand,
-    activeLandResource?.initialValue
+    activeLandResource?.initialValue,
+    activeLandResource?.baseCap
   ];
 
   for (let index = 0; index < candidates.length; index += 1) {
