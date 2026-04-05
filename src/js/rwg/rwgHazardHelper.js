@@ -375,8 +375,10 @@
     const maxTemperatureK = Number.isFinite(meanTemperatureK)
       ? Math.max(773.15, meanTemperatureK * 1.1)
       : 773.15;
-    const severityHigh = 0.4 / Math.max(maxTemperatureK, 1);
     const entry = hazardousMachinery.temperaturePreference || {};
+    const severityHigh = Number.isFinite(entry.severityHigh)
+      ? entry.severityHigh
+      : (Number.isFinite(entry.severity) ? entry.severity : 0.003);
 
     hazardousMachinery.temperaturePreference = {
       ...entry,
