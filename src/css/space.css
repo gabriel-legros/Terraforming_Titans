@@ -261,6 +261,15 @@
   color: var(--space-warning);
 }
 
+.atlas-community-note {
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.atlas-community-list {
+  margin-top: 0;
+}
+
 .atlas-world-header {
   display: flex;
   justify-content: space-between;

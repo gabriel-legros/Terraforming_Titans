@@ -2456,6 +2456,7 @@ setLanguageData({
       featuredTag: 'Challenge',
       communityTag: 'Community',
       communityTitle: 'Community Challenges',
+      communityRewardNote: 'These do not grant awakening bonus, but grant 1000 alien artifacts on first completion.',
       type: 'Type',
       difficulty: 'Difficulty',
       hazardsLabel: 'Hazards',

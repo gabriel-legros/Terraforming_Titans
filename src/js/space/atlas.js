@@ -1,4 +1,5 @@
 const ATLAS_FEATURED_SEED_KEYS = ['titania', 'wolfysnightmare', 'therealposeidon'];
+const ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD = 1000;
 
 function getAtlasSpecialSeedKey(source) {
     if (!source) {
@@ -52,6 +53,14 @@ class AtlasManager extends EffectableEntity {
         return this.getChallengeDefinitions().filter((definition) => !ATLAS_FEATURED_SEED_KEYS.includes(definition.key) && definition.designer);
     }
 
+    isCommunityChallengeSeedKey(seedKey) {
+        if (!seedKey) {
+            return false;
+        }
+        const resolved = String(seedKey).trim().toLowerCase();
+        return this.getCommunityDefinitions().some((definition) => definition.key === resolved);
+    }
+
     isChallengeSeedKey(seedKey) {
         if (!seedKey) {
             return false;
@@ -102,6 +111,21 @@ class AtlasManager extends EffectableEntity {
         }
     }
 
+    grantCommunityCompletionArtifactReward(seedKey) {
+        const resolved = String(seedKey || '').trim().toLowerCase();
+        if (!resolved || !this.isCommunityChallengeSeedKey(resolved)) {
+            return 0;
+        }
+        const existing = this.getCompletion(resolved);
+        if (existing.communityArtifactRewardGranted) {
+            return 0;
+        }
+        resources.special.alienArtifact.increase(ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD);
+        existing.communityArtifactRewardGranted = true;
+        this.atlasWorldCompletions[resolved] = existing;
+        return ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD;
+    }
+
     markCompleted(seedKey) {
         const resolved = String(seedKey || '').trim().toLowerCase();
         if (!resolved) {
@@ -115,6 +139,7 @@ class AtlasManager extends EffectableEntity {
             completed: true,
             completedAt: Date.now()
         };
+        this.grantCommunityCompletionArtifactReward(resolved);
         this.applyCompletionRewards();
         if (skillManager && typeof skillManager.handleAtlasCompletionChange === 'function') {
             skillManager.handleAtlasCompletionChange();
@@ -251,6 +276,12 @@ class AtlasManager extends EffectableEntity {
             }
         });
         this.syncCompletionsFromSpaceState();
+        Object.keys(this.atlasWorldCompletions).forEach((seedKey) => {
+            const completion = this.atlasWorldCompletions[seedKey];
+            if (completion?.completed) {
+                this.grantCommunityCompletionArtifactReward(seedKey);
+            }
+        });
         this.reapplyEffects();
     }
 }

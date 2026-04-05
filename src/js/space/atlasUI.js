@@ -337,8 +337,15 @@ function updateAtlasUI(options = {}) {
     communitySection.style.display = community.length ? '' : 'none';
     if (community.length) {
         communityContent.replaceChildren();
+        const rewardNote = document.createElement('p');
+        rewardNote.className = 'space-card-subtitle atlas-community-note';
+        rewardNote.textContent = getAtlasText('communityRewardNote', 'These do not grant awakening bonus, but grant 1000 alien artifacts on first completion.');
+        const communityList = document.createElement('div');
+        communityList.className = 'planet-grid atlas-community-list';
+        communityContent.appendChild(rewardNote);
+        communityContent.appendChild(communityList);
         community.forEach((definition) => {
-            communityContent.appendChild(buildAtlasWorldCard(definition, 'community'));
+            communityList.appendChild(buildAtlasWorldCard(definition, 'community'));
         });
     }
     setAtlasCommunityVisibility();
