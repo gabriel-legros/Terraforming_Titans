@@ -204,6 +204,195 @@ const wolfysNightmareOverrides = {
   }
 };
 
+const titaniaOverrides = {
+  name: '',
+  specialAttributes: {
+    dynamicMass: true,
+    otherRequirements: [
+      {
+        type: 'gravityMinimum',
+        minimum: 2,
+        labelKey: 'catalogs.specialSeeds.titania.otherRequirements.gravityMinimum.label',
+        targetTextKey: 'catalogs.specialSeeds.titania.otherRequirements.gravityMinimum.targetText'
+      }
+    ]
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 781_000_000 },
+    },
+ "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 0
+      },
+      "atmosphericWater": {
+        "initialValue": 6.673998878081245e-8
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 0
+      },
+      "inertGas": {
+        "initialValue": 0
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 0,
+      "ice": 9879.437360999556,
+      "buriedIce": 450000000000000,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "temperate": {
+      "liquidWater": 0,
+      "ice": 12716.873650810385,
+      "buriedIce": 4050000000000000,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "polar": {
+      "liquidWater": 0,
+      "ice": 28349999999977096,
+      "buriedIce": 12150000000000000,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 61.9407723636663,
+      "day": 63.58396551780543,
+      "night": 60.297579209527164
+    },
+    "temperate": {
+      "value": 57.53574008353115,
+      "day": 58.90218250184512,
+      "night": 56.16929766521719
+    },
+    "polar": {
+      "value": 37.35212301190944,
+      "day": 38.49194428247549,
+      "night": 36.212301741343396
+    }
+  },
+  celestialParameters: {
+    distanceFromSun: 19.2,
+    gravity: 0.367,
+    baseGravity: 0.367,
+    radius: 788.9,
+    baseRadius: 788.9,
+    mass: 3.422191062284e21,
+    baseMass: 3.422191062284e21,
+    basePlanetaryMass: null,
+    basePlanetaryVolumeM3: null,
+    albedo: 0.27,
+    rotationPeriod: 209.0,
+    spinPeriod: 209.0,
+    starLuminosity: 1,
+    sector: 'R5-07',
+    parentBody: {
+      name: 'Uranus',
+      radius: 25_362,
+      mass: 8.681e25,
+      orbitRadius: 435_910,
+      refDistance_Rp: 17.2,
+      parentBeltAtRef_mSvPerDay: 2.5,
+      beltFalloffExp: 6
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 450_000_000_000_000,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    temperate: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 4_050_000_000_000_000,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    polar: {
+      liquidWater: 0,
+      ice: 28_350_000_000_000_000,
+      buriedIce: 12_150_000_000_000_000,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    }
+  },
+  zonalTemperatures: null,
+  visualization: {
+    baseColor: '#b7a994'
+  }
+};
+
 const theRealPoseidonOverrides = {
   name: 'TheRealPoseidon',
   star: {
@@ -703,10 +892,45 @@ const earthOverrunOverrides = {
 };
 
 const specialSeedDefinitions = {
+  titania: {
+    key: 'titania',
+    seed: 'Titania',
+    name: 'Titania',
+    nameKey: 'catalogs.specialSeeds.titania.name',
+    difficultyRating: '?',
+    replayable: true,
+    target: 'moon',
+    archetype: 'icy-moon',
+    orbitPreset: 'very-cold',
+    specialEffects: [
+      {
+        id: 'dynamic-mass-low-gravity',
+        descriptionKey: 'catalogs.specialSeeds.titania.effects.dynamicMassLowGravity',
+        description: 'Gravity is low, but can be increased by adding mass.'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'enable-rwg-dynamic-mass',
+        descriptionKey: 'catalogs.specialSeeds.titania.rewards.enableDynamicMass',
+        description: 'Allows the generation of worlds with dynamic mass in the RWG.',
+        effects: [
+          {
+            target: 'rwgManager',
+            type: 'booleanFlag',
+            flagId: 'enableDynamicMass',
+            value: true
+          }
+        ]
+      }
+    ],
+    overrides: titaniaOverrides
+  },
   wolfysnightmare: {
     key: 'wolfysnightmare',
     seed: 'WolfysNightmare',
     name: 'WolfysNightmare',
+    difficultyRating: '?',
     replayable: true,
     target: 'planet',
     archetype: 'venus-like',
@@ -729,6 +953,7 @@ const specialSeedDefinitions = {
     key: 'therealposeidon',
     seed: 'TheRealPoseidon',
     name: 'TheRealPoseidon',
+    difficultyRating: '?',
     replayable: true,
     target: 'planet',
     archetype: 'molten',

@@ -1,4 +1,4 @@
-const ATLAS_FEATURED_SEED_KEYS = ['wolfysnightmare', 'therealposeidon'];
+const ATLAS_FEATURED_SEED_KEYS = ['titania', 'wolfysnightmare', 'therealposeidon'];
 
 function getAtlasSpecialSeedKey(source) {
     if (!source) {
@@ -69,6 +69,39 @@ class AtlasManager extends EffectableEntity {
         return this.getCompletion(seedKey).completed === true;
     }
 
+    getCompletionRewards(seedKey) {
+        const definition = getSpecialSeedDefinition(seedKey);
+        const rewards = Array.isArray(definition?.completionRewards) ? definition.completionRewards : [];
+        return rewards.filter((reward) => reward && reward.id);
+    }
+
+    applyCompletionRewards() {
+        this.getChallengeDefinitions().forEach((definition) => {
+            const seedKey = definition?.key;
+            if (!seedKey) {
+                return;
+            }
+            const sourceId = `atlas-reward-${seedKey}`;
+            this.getCompletionRewards(seedKey).forEach((reward, rewardIndex) => {
+                const effects = Array.isArray(reward.effects) ? reward.effects : [];
+                effects.forEach((effect, effectIndex) => {
+                    const rewardEffect = {
+                        ...effect,
+                        effectId: effect.effectId || `${sourceId}-${reward.id}-${effectIndex}`,
+                        sourceId
+                    };
+                    removeEffect(rewardEffect);
+                    if (this.isCompleted(seedKey)) {
+                        addEffect(rewardEffect);
+                    }
+                });
+            });
+        });
+        if (typeof updateRandomWorldUI === 'function') {
+            updateRandomWorldUI();
+        }
+    }
+
     markCompleted(seedKey) {
         const resolved = String(seedKey || '').trim().toLowerCase();
         if (!resolved) {
@@ -82,6 +115,7 @@ class AtlasManager extends EffectableEntity {
             completed: true,
             completedAt: Date.now()
         };
+        this.applyCompletionRewards();
         if (skillManager && typeof skillManager.handleAtlasCompletionChange === 'function') {
             skillManager.handleAtlasCompletionChange();
         }
@@ -180,6 +214,7 @@ class AtlasManager extends EffectableEntity {
     update() {}
 
     reapplyEffects() {
+        this.applyCompletionRewards();
         this.refreshUIVisibility();
     }
 
@@ -216,7 +251,7 @@ class AtlasManager extends EffectableEntity {
             }
         });
         this.syncCompletionsFromSpaceState();
-        this.refreshUIVisibility();
+        this.reapplyEffects();
     }
 }
 

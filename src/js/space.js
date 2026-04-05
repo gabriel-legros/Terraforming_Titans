@@ -2268,7 +2268,9 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomSeed = isArtificial ? null : s;
         this.currentArtificialKey = isArtificial ? s : null;
         this.currentPlanetKey = s;
-        this.currentRandomName = travelResult?.merged?.name || (isArtificial ? `Artificial ${s}` : `Seed ${s}`);
+        this.currentRandomName = travelResult?.merged?.name
+            || travelResult?.merged?.rwgMeta?.specialSeedName
+            || (isArtificial ? `Artificial ${s}` : `Seed ${s}`);
         const terraformedValue = isArtificial
             ? this._deriveArtificialTerraformValue({
                 terraformedValue: travelResult?.terraformedValue,

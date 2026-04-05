@@ -101,8 +101,44 @@ function resolveAtlasHazardLabel(result) {
     }).join(', ');
 }
 
+function getAtlasSpecialSeedName(definition) {
+    const fallback = definition?.name || definition?.seed || definition?.key || '';
+    return definition?.nameKey ? t(definition.nameKey, null, fallback) : fallback;
+}
+
+function getAtlasSpecialSeedEffectText(effect) {
+    const fallback = effect?.description || effect?.label || effect?.id || '';
+    if (effect?.descriptionKey) {
+        return t(effect.descriptionKey, null, fallback);
+    }
+    if (effect?.labelKey) {
+        return t(effect.labelKey, null, fallback);
+    }
+    return fallback;
+}
+
+function buildAtlasOtherRequirementEffects(definition) {
+    const requirements = Array.isArray(definition?.overrides?.specialAttributes?.otherRequirements)
+        ? definition.overrides.specialAttributes.otherRequirements
+        : [];
+    return requirements.map((requirement, index) => {
+        const fallback = requirement?.targetText || requirement?.label || requirement?.type || '';
+        let description = fallback;
+        if (requirement?.targetTextKey) {
+            const minimum = Number.isFinite(requirement?.minimum) ? requirement.minimum : undefined;
+            const vars = minimum === undefined ? null : { value: minimum };
+            description = t(requirement.targetTextKey, vars, fallback);
+        }
+        return {
+            id: requirement?.id || `other-requirement-${index}`,
+            description
+        };
+    }).filter((effect) => effect.description);
+}
+
 function buildAtlasEffectsList(definition) {
-    const effects = Array.isArray(definition.specialEffects) ? definition.specialEffects : [];
+    const effects = (Array.isArray(definition.specialEffects) ? definition.specialEffects : [])
+        .concat(buildAtlasOtherRequirementEffects(definition));
     if (!effects.length) {
         return null;
     }
@@ -115,7 +151,37 @@ function buildAtlasEffectsList(definition) {
     effects.forEach((effect) => {
         const item = document.createElement('div');
         item.className = 'atlas-world-effect';
-        item.textContent = effect.description || effect.label || effect.id || '';
+        item.textContent = getAtlasSpecialSeedEffectText(effect);
+        wrapper.appendChild(item);
+    });
+    return wrapper;
+}
+
+function getAtlasRewardText(reward) {
+    if (!reward) {
+        return '';
+    }
+    if (reward.descriptionKey) {
+        return t(reward.descriptionKey, null, reward.description || '');
+    }
+    return reward.description || '';
+}
+
+function buildAtlasRewardsList(definition) {
+    const rewards = Array.isArray(definition.completionRewards) ? definition.completionRewards : [];
+    if (!rewards.length) {
+        return null;
+    }
+    const wrapper = document.createElement('div');
+    wrapper.className = 'atlas-world-effects';
+    const title = document.createElement('div');
+    title.className = 'atlas-world-effects-title';
+    title.textContent = getAtlasText('rewardsTitle', 'Completion Reward');
+    wrapper.appendChild(title);
+    rewards.forEach((reward) => {
+        const item = document.createElement('div');
+        item.className = 'atlas-world-effect';
+        item.textContent = getAtlasRewardText(reward);
         wrapper.appendChild(item);
     });
     return wrapper;
@@ -139,7 +205,7 @@ function buildAtlasWorldCard(definition, category) {
     const header = document.createElement('div');
     header.className = 'atlas-world-header';
     const title = document.createElement('h3');
-    title.textContent = definition.name || definition.seed || definition.key;
+    title.textContent = getAtlasSpecialSeedName(definition);
     header.appendChild(title);
 
     const tags = document.createElement('div');
@@ -148,9 +214,6 @@ function buildAtlasWorldCard(definition, category) {
         tags.appendChild(buildAtlasTag(getAtlasText('communityTag', 'Community'), 'atlas-world-tag-community'));
     } else {
         tags.appendChild(buildAtlasTag(getAtlasText('featuredTag', 'Challenge'), 'atlas-world-tag-featured'));
-    }
-    if (isCompleted) {
-        tags.appendChild(buildAtlasTag(getAtlasText('completed', 'Completed'), 'atlas-world-tag-completed'));
     }
     header.appendChild(tags);
     card.appendChild(header);
@@ -165,6 +228,7 @@ function buildAtlasWorldCard(definition, category) {
     const stats = document.createElement('div');
     stats.className = 'planet-stats';
     stats.appendChild(buildAtlasStat(getAtlasText('type', 'Type'), resolveAtlasWorldTypeLabel(result)));
+    stats.appendChild(buildAtlasStat(getAtlasText('difficulty', 'Difficulty'), definition.difficultyRating || '?'));
     stats.appendChild(buildAtlasStat(getAtlasText('hazardsLabel', 'Hazards'), resolveAtlasHazardLabel(result)));
     stats.appendChild(buildAtlasStat(getAtlasText('sector', 'Sector'), result?.merged?.celestialParameters?.sector || '—'));
     if (definition.designer) {
@@ -175,6 +239,11 @@ function buildAtlasWorldCard(definition, category) {
     const effects = buildAtlasEffectsList(definition);
     if (effects) {
         card.appendChild(effects);
+    }
+
+    const rewards = buildAtlasRewardsList(definition);
+    if (rewards) {
+        card.appendChild(rewards);
     }
 
     const button = document.createElement('button');

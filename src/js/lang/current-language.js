@@ -1771,6 +1771,7 @@ setLanguageData({
         notAvailable: 'N/A',
         targetPrefix: 'Target : {value}',
         statusLine: '{label}: {status} {targetText}',
+        statusLineWithCurrent: '{label}: {status} {targetText} Current: {currentText}',
         actions: {
           completeTerraforming: 'Complete Terraforming',
           errorMtcNotResponding: 'ERROR : MTC not responding',
@@ -2445,7 +2446,7 @@ setLanguageData({
     },
     atlas: {
       title: 'Challenge Worlds',
-      subtitle: 'Travel directly to strange and interesting worlds mapped by Atlas.  Each completion increases your maximum skill levels in the awakening tree, with a different formula.',
+      subtitle: 'Travel directly to one of the worlds mapped by Atlas.  Some are strange, some are simply of interest to HOPE.  Each completion increases your maximum skill levels in the awakening tree, with different formulas.',
       ready: 'Challenge worlds can always be revisited after completion.',
       locked: 'You must complete the current world before traveling to Atlas challenges.',
       travel: 'Travel',
@@ -2456,10 +2457,12 @@ setLanguageData({
       communityTag: 'Community',
       communityTitle: 'Community Challenges',
       type: 'Type',
+      difficulty: 'Difficulty',
       hazardsLabel: 'Hazards',
       sector: 'Sector',
       designedBy: 'Designed by',
       effectsTitle: 'Challenge Rules',
+      rewardsTitle: 'Completion Reward',
       stats: {
         none: 'None',
       },
@@ -2583,6 +2586,23 @@ setLanguageData({
     },
   },
   catalogs: {
+    specialSeeds: {
+      titania: {
+        name: 'Titania',
+        effects: {
+          dynamicMassLowGravity: 'Gravity is low, but planetary mass can be increased.',
+        },
+        otherRequirements: {
+          gravityMinimum: {
+            label: 'Gravity',
+            targetText: 'Reach at least {value} m/s² gravity.',
+          },
+        },
+        rewards: {
+          enableDynamicMass: 'Allows the generation of worlds with dynamic mass in the RWG.',
+        },
+      },
+    },
     buildings: {
       oreMine: {
         name: 'Ore Mine',

@@ -225,6 +225,18 @@ function resolveTerraformingRequirement(requirementId = defaultTerraformingRequi
   };
 }
 
+function mergeExtraTerraformingRequirements(baseRequirements, extraRequirements) {
+  const merged = { ...(baseRequirements || {}) };
+  const baseOtherRequirements = Array.isArray(baseRequirements?.otherRequirements)
+    ? baseRequirements.otherRequirements
+    : [];
+  const extraOtherRequirements = Array.isArray(extraRequirements)
+    ? extraRequirements.filter((requirement) => requirement)
+    : [];
+  merged.otherRequirements = baseOtherRequirements.concat(extraOtherRequirements);
+  return merged;
+}
+
 const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
@@ -427,7 +439,10 @@ class Terraforming extends EffectableEntity{
     this.requirementId = specialAttributes.terraformingRequirementId
       || this.celestialParameters.terraformingRequirementId
       || defaultTerraformingRequirementId;
-    this.requirements = resolveTerraformingRequirement(this.requirementId);
+    this.requirements = mergeExtraTerraformingRequirements(
+      resolveTerraformingRequirement(this.requirementId),
+      specialAttributes.otherRequirements
+    );
     this.gasTargets = this.requirements.gasTargetsPa;
     this.applyRequirementEffects();
 
@@ -717,13 +732,17 @@ class Terraforming extends EffectableEntity{
       if (requirement.type === 'projectCompletion') {
         const projectId = requirement.projectId;
         const project = projectManager && projectManager.projects ? projectManager.projects[projectId] : null;
-        const label = requirement.label || project?.displayName || projectId || 'Project';
+        const label = requirement.labelKey
+          ? t(requirement.labelKey, null, requirement.label || project?.displayName || projectId || 'Project')
+          : (requirement.label || project?.displayName || projectId || 'Project');
         const complete = !!(project && project.isCompleted);
         statuses.push({
           key: `project:${projectId}`,
           label,
           passed: complete,
-          targetText: requirement.targetText || `Complete ${label}.`,
+          targetText: requirement.targetTextKey
+            ? t(requirement.targetTextKey, null, requirement.targetText || `Complete ${label}.`)
+            : (requirement.targetText || `Complete ${label}.`),
           currentText: complete ? 'Completed' : 'Not completed'
         });
         continue;
@@ -733,10 +752,32 @@ class Terraforming extends EffectableEntity{
         const controlled = galaxyManager?.getUhfControlledSectors?.()?.length || 0;
         statuses.push({
           key: 'sectors',
-          label: requirement.label || 'Controlled Sectors',
+          label: requirement.labelKey
+            ? t(requirement.labelKey, null, requirement.label || 'Controlled Sectors')
+            : (requirement.label || 'Controlled Sectors'),
           passed: controlled >= required,
-          targetText: requirement.targetText || `Reach ${required} fully controlled sectors.`,
+          targetText: requirement.targetTextKey
+            ? t(requirement.targetTextKey, { value: required }, requirement.targetText || `Reach ${required} fully controlled sectors.`)
+            : (requirement.targetText || `Reach ${required} fully controlled sectors.`),
           currentText: `${controlled}/${required}`
+        });
+        continue;
+      }
+      if (requirement.type === 'gravityMinimum') {
+        const minimum = Math.max(0, requirement.minimum || 0);
+        const gravity = Number.isFinite(this.celestialParameters?.gravity)
+          ? this.celestialParameters.gravity
+          : 0;
+        statuses.push({
+          key: `gravityMinimum:${minimum}`,
+          label: requirement.labelKey
+            ? t(requirement.labelKey, null, requirement.label || 'Gravity')
+            : (requirement.label || 'Gravity'),
+          passed: gravity >= minimum,
+          targetText: requirement.targetTextKey
+            ? t(requirement.targetTextKey, { value: minimum }, requirement.targetText || `Reach at least ${minimum} m/s² gravity.`)
+            : (requirement.targetText || `Reach at least ${minimum} m/s² gravity.`),
+          currentText: `${gravity.toFixed(2)}/${minimum.toFixed(2)} m/s²`
         });
       }
     }

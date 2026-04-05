@@ -24,6 +24,7 @@ let rwgDominionLoreBtnEl;
 let rwgDominionInfoEl;
 let rwgEquilibrateInfoEl;
 let rwgDynamicMassEl;
+let rwgSettingsCardEl;
 let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
 let rwgDominionLoreTextEl;
@@ -127,6 +128,30 @@ function getRwgText(path, fallback, vars) {
 
 function getRwgUiText(path, fallback, vars) {
   return getRwgText(`ui.rwg.${path}`, fallback, vars);
+}
+
+function getSpecialSeedLocalizationText(path, fallback, vars) {
+  if (!path) {
+    return fallback;
+  }
+  return t(path, vars, fallback);
+}
+
+function getSpecialSeedDisplayName(result) {
+  const seedKey = result?.specialSeedKey || result?.merged?.rwgMeta?.specialSeedKey || '';
+  const fallback = result?.merged?.name || result?.name || getRwgUiText('details.generatedWorld', 'Generated World');
+  return seedKey ? getSpecialSeedLocalizationText(`catalogs.specialSeeds.${seedKey}.name`, fallback) : fallback;
+}
+
+function getSpecialSeedEffectDescription(entry) {
+  const fallback = entry?.description || entry?.label || entry?.name || entry?.id || '';
+  if (entry?.descriptionKey) {
+    return getSpecialSeedLocalizationText(entry.descriptionKey, fallback);
+  }
+  if (entry?.labelKey) {
+    return getSpecialSeedLocalizationText(entry.labelKey, fallback);
+  }
+  return fallback;
 }
 
 function getRwgHazardDisplayName(id) {
@@ -470,6 +495,27 @@ function applyDynamicMassSelection(res, enabled) {
   };
 }
 
+function isDynamicMassRwgControlUnlocked() {
+  const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
+  if (!mgr) {
+    return false;
+  }
+  if (typeof mgr.isDynamicMassUnlocked === 'function') {
+    return mgr.isDynamicMassUnlocked();
+  }
+  return mgr.enableDynamicMass === true || mgr.isBooleanFlagSet?.('enableDynamicMass') === true;
+}
+
+function refreshRwgSettingsVisibility() {
+  const dynamicMassUnlocked = isDynamicMassRwgControlUnlocked();
+  if (rwgDynamicMassEl && !dynamicMassUnlocked) {
+    rwgDynamicMassEl.checked = false;
+  }
+  if (rwgSettingsCardEl) {
+    rwgSettingsCardEl.style.display = dynamicMassUnlocked ? '' : 'none';
+  }
+}
+
 function updateHazardListVisibility() {
   rwgHazardListEl.style.display = rwgHazardEl.value === HAZARD_MODE_ENABLED ? '' : 'none';
 }
@@ -765,12 +811,14 @@ function initializeRandomWorldUI() {
   rwgOrbitStateSignature = '';
   rwgHazardEl = container.querySelector('#rwg-hazard');
   rwgDynamicMassEl = container.querySelector('#rwg-dynamic-mass');
+  rwgSettingsCardEl = settingsCard;
   rwgHazardListEl = hazardList;
   rwgHazardItemsEl = hazardList.querySelector('#rwg-hazard-items');
   const rwgDynamicMassInfoEl = container.querySelector('#rwg-dynamic-mass-info');
   if (rwgDynamicMassEl) {
     rwgDynamicMassEl.checked = false;
   }
+  refreshRwgSettingsVisibility();
   if (rwgDynamicMassInfoEl) {
     attachDynamicInfoTooltip(
       rwgDynamicMassInfoEl,
@@ -844,7 +892,7 @@ function initializeRandomWorldUI() {
       if (targetSel) targetSel.value = options.target;
       if (orbitSel) orbitSel.value = options.orbitPreset;
       if (typeSel) typeSel.value = options.type;
-      if (rwgDynamicMassEl) rwgDynamicMassEl.checked = options.dynamicMass === true;
+      if (rwgDynamicMassEl) rwgDynamicMassEl.checked = isDynamicMassRwgControlUnlocked() && options.dynamicMass === true;
       const hazards = normalizeHazardList(options.hazards);
       if (rwgHazardEl) {
         rwgHazardEl.value = hazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
@@ -944,6 +992,7 @@ function updateRandomWorldUI() {
   const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
   if (!mgr) return;
 
+  refreshRwgSettingsVisibility();
   refreshHazardSelect();
   refreshTypeSelect();
   rwgDominionEl && refreshDominionSelect();
@@ -1088,7 +1137,7 @@ function drawSingle(seed, options) {
     orbitPreset: options?.orbitPreset,
     type: options?.type,
     hazards: normalizedHazards,
-    dynamicMass: options?.dynamicMass === true
+    dynamicMass: isDynamicMassRwgControlUnlocked() && options?.dynamicMass === true
   };
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
 
@@ -1385,7 +1434,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const seenSpecialSeedEffects = new Set();
   specialSeedEffects.forEach((entry) => {
     const id = entry?.id || '';
-    const description = entry?.description || entry?.label || entry?.name || id;
+    const description = getSpecialSeedEffectDescription(entry) || id;
     const dedupeKey = `${id}::${description}`;
     if (seenSpecialSeedEffects.has(dedupeKey)) {
       return;
@@ -1443,7 +1492,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     </div>` : '';
   const worldPanel = `
     <div class="rwg-card">
-      <h3>${res.merged?.name || getRwgUiText('details.generatedWorld', 'Generated World')}</h3>
+      <h3>${getSpecialSeedDisplayName(res)}</h3>
       <div class="rwg-control-row">
         <button id="rwg-equilibrate-btn" class="rwg-btn" ${equilibrateDisabled ? 'disabled' : ''}>${getRwgUiText('controls.equilibrate', 'Equilibrate')}</button>
         <span id="rwg-equilibrate-info" class="info-tooltip-icon">&#9432;</span>

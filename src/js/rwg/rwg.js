@@ -1855,6 +1855,7 @@ class RwgManager extends EffectableEntity {
   constructor(paramsOverride) {
     super({ description: "Random World Generator Manager" });
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
+    this.enableDynamicMass = false;
     this.lockedOrbits = new Set(["hot"]);
     this.lockedTypes = new Set(["venus-like", "molten", "rogue", "ammonia-rich"]);
     this.lockedFeatures = new Set(['hazards', 'dominions']);
@@ -1886,6 +1887,10 @@ class RwgManager extends EffectableEntity {
       : ["mars-like", "cold-desert", "titan-like", "venus-like",
         "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian", "molten"];
     return base.filter((t) => !this.lockedTypes.has(t));
+  }
+
+  isDynamicMassUnlocked() {
+    return this.enableDynamicMass === true || this.isBooleanFlagSet('enableDynamicMass');
   }
 
   isFeatureUnlocked(feature) { return !this.lockedFeatures.has(feature); }
@@ -1956,6 +1961,8 @@ class RwgManager extends EffectableEntity {
     } else if (effect.type === 'enable' && effect.type2 === 'orbit') {
       // Backward compatibility for older save effects
       this.unlockOrbit(effect.targetId);
+    } else {
+      super.applyEffect(effect);
     }
   }
 
