@@ -1246,7 +1246,7 @@ function createResourceElement(category, resourceObj, resourceName) {
         ${undergroundRateMarkup}
       </div>
     `;
-    if (resourceObj.name === 'land') {
+    if (resourceObj.name === 'land' || resourceObj.showUndergroundRate) {
       const tooltip = createTooltipElement(category, resourceName);
       resourceElement.appendChild(tooltip);
       if (typeof addTooltipHover === 'function') {
