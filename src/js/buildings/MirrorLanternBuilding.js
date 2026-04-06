@@ -22,25 +22,19 @@ class MirrorLanternBuilding extends MirrorBase {
     this._allowFullProductivity = false;
   }
 
-  isPulsarHazardBlocking() {
-    try {
-      const pulsar = hazardManager.parameters.pulsar;
-      if (!pulsar) return false;
-      return !hazardManager.pulsarHazard.isCleared(terraforming, pulsar);
-    } catch (error) {
-      return false;
-    }
+  isMirrorFacilityActivationBlocked() {
+    return this.isBooleanFlagSet && this.isBooleanFlagSet('disableMirrorFacilityActivation');
   }
 
   filterActivationChange(change) {
-    if (change > 0 && this.isPulsarHazardBlocking()) {
+    if (change > 0 && this.isMirrorFacilityActivationBlocked()) {
       return 0;
     }
     return change;
   }
 
   build(buildCount = 1, activate = true) {
-    const canActivate = activate && !this.isPulsarHazardBlocking();
+    const canActivate = activate && !this.isMirrorFacilityActivationBlocked();
     return super.build(buildCount, canActivate);
   }
 
@@ -112,7 +106,7 @@ class MirrorLanternBuilding extends MirrorBase {
   }
 
   updateProductivity(resources, deltaTime) {
-    if (this.isPulsarHazardBlocking()) {
+    if (this.isMirrorFacilityActivationBlocked()) {
       if (this.active > 0) {
         this.active = 0;
         this.autoActiveEnabled = false;

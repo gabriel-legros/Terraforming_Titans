@@ -267,6 +267,7 @@ const RWG_TYPE_BASE_COLORS = {
 };
 
 const ORBIT_PRESET_TO_FLUX_KEY = {
+  "very-hot": "veryHotFluxWm2",
   "hz-inner": "hzInnerFluxWm2",
   "hz-mid": "hzMidFluxWm2",
   "hz-outer": "hzOuterFluxWm2",
@@ -411,6 +412,7 @@ const DEFAULT_PARAMS = {
   orbit: {
     logAU: { min: 0.2, max: 30, outwardIndexScale: 0.25 },
     presets: {
+      veryHotFluxWm2: [4000, 9000],
       hotFluxWm2: [1500, 4000],
       hzInnerFluxWm2: [1200, 1500],
       hzMidFluxWm2:   [800, 1200],
@@ -422,10 +424,10 @@ const DEFAULT_PARAMS = {
     moonTypeBlacklist: ["super-earth", "chthonian", "molten"],
     typeOrbitLocks: {
       "icy-moon": {
-        excludedPresets: ["hot"]
+        excludedPresets: ["very-hot", "hot"]
       },
       "venus-like": {
-        presets: ["hot"],
+        presets: ["very-hot", "hot"],
         fluxRangeKey: "hotFluxWm2"
       },
       "ammonia-rich": {
@@ -1856,7 +1858,7 @@ class RwgManager extends EffectableEntity {
     super({ description: "Random World Generator Manager" });
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
     this.enableDynamicMass = false;
-    this.lockedOrbits = new Set(["hot"]);
+    this.lockedOrbits = new Set(["very-hot", "hot"]);
     this.lockedTypes = new Set(["venus-like", "molten", "rogue", "ammonia-rich"]);
     this.lockedFeatures = new Set(['hazards', 'dominions']);
     this.lockedHazards = new Set(['hazardousBiomass', 'hazardousMachinery', 'garbage', 'kessler', 'pulsar']);
@@ -1880,7 +1882,7 @@ class RwgManager extends EffectableEntity {
   isTypeLocked(t) { return this.lockedTypes.has(t); }
   lockType(t) { this.lockedTypes.add(t); }
   unlockType(t) { this.lockedTypes.delete(t); }
-  getAvailableOrbits() { return ["hz-inner", "hz-mid", "hz-outer", "hot", "cold", "very-cold"].filter((o) => !this.lockedOrbits.has(o)); }
+  getAvailableOrbits() { return ["hz-inner", "hz-mid", "hz-outer", "hot", "cold", "very-cold", "very-hot"].filter((o) => !this.lockedOrbits.has(o)); }
   getAvailableTypes(isMoon) {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
@@ -2003,7 +2005,8 @@ class RwgManager extends EffectableEntity {
         const band = (name) => P.orbit.presets[name];
 
         let lo, hi;
-        if      (usedPreset === "hz-inner") [lo, hi] = band("hzInnerFluxWm2");
+        if      (usedPreset === "very-hot") [lo, hi] = band("veryHotFluxWm2");
+        else if (usedPreset === "hz-inner") [lo, hi] = band("hzInnerFluxWm2");
         else if (usedPreset === "hz-mid")   [lo, hi] = band("hzMidFluxWm2");
         else if (usedPreset === "hz-outer") [lo, hi] = band("hzOuterFluxWm2");
         else if (usedPreset === "hot")      [lo, hi] = band("hotFluxWm2");

@@ -1816,16 +1816,13 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorOversightSettings = this.mirrorOversightSettings;
   }
 
-  enforcePulsarMirrorLockout() {
-    if (this.getActiveDisableHazard() !== 'pulsar') {
-      return;
-    }
+  enforceMirrorLockout() {
     const mirrorBuilding = buildings?.spaceMirror;
-    if (mirrorBuilding && mirrorBuilding.active > 0) {
+    if (mirrorBuilding && mirrorBuilding.isBooleanFlagSet && mirrorBuilding.isBooleanFlagSet('disableMirrorFacilityActivation') && mirrorBuilding.active > 0) {
       applyFacilityActivationChange(mirrorBuilding, -mirrorBuilding.active);
     }
     const lanternBuilding = buildings?.hyperionLantern;
-    if (lanternBuilding && lanternBuilding.active > 0) {
+    if (lanternBuilding && lanternBuilding.isBooleanFlagSet && lanternBuilding.isBooleanFlagSet('disableMirrorFacilityActivation') && lanternBuilding.active > 0) {
       applyFacilityActivationChange(lanternBuilding, -lanternBuilding.active);
     }
   }
@@ -1838,7 +1835,7 @@ class SpaceMirrorFacilityProject extends Project {
   }
 
   update(deltaTime) {
-    this.enforcePulsarMirrorLockout();
+    this.enforceMirrorLockout();
     sanitizeMirrorDistribution();
     try {
       if (mirrorOversightSettings.advancedOversight) {

@@ -6,6 +6,8 @@ const PULSAR_STORM_NANOBOT_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_EFFECT_LABEL = 'Electromagnetic Storm';
 const PULSAR_RADIATION_EFFECT_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_RADIATION_EFFECT_SOURCE_ID = 'pulsar-hazard-radiation-dose';
+const PULSAR_MIRROR_LOCKOUT_SOURCE_ID = 'pulsar-hazard-mirror-lockout';
+const PULSAR_TRACTOR_BEAMS_SOURCE_ID = 'pulsar-hazard-tractor-beams';
 
 function normalizePulsarParameters(parameters = {}) {
   const severity = Number.isFinite(parameters.severity) ? Math.max(0, parameters.severity) : 1;
@@ -204,6 +206,46 @@ class PulsarHazard {
     });
   }
 
+  clearSpecialLockoutEffects() {
+    removeEffect({ target: 'building', targetId: 'spaceMirror', sourceId: PULSAR_MIRROR_LOCKOUT_SOURCE_ID });
+    removeEffect({ target: 'building', targetId: 'hyperionLantern', sourceId: PULSAR_MIRROR_LOCKOUT_SOURCE_ID });
+    removeEffect({ target: 'project', targetId: 'planetaryThruster', sourceId: PULSAR_TRACTOR_BEAMS_SOURCE_ID });
+  }
+
+  syncSpecialLockoutEffects(hazardStrength = 0) {
+    this.clearSpecialLockoutEffects();
+    if (!(hazardStrength > 0)) {
+      return;
+    }
+    addEffect({
+      target: 'building',
+      targetId: 'spaceMirror',
+      type: 'booleanFlag',
+      flagId: 'disableMirrorFacilityActivation',
+      value: true,
+      effectId: 'pulsar-disable-space-mirror-activation',
+      sourceId: PULSAR_MIRROR_LOCKOUT_SOURCE_ID
+    });
+    addEffect({
+      target: 'building',
+      targetId: 'hyperionLantern',
+      type: 'booleanFlag',
+      flagId: 'disableMirrorFacilityActivation',
+      value: true,
+      effectId: 'pulsar-disable-hyperion-lantern-activation',
+      sourceId: PULSAR_MIRROR_LOCKOUT_SOURCE_ID
+    });
+    addEffect({
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'booleanFlag',
+      flagId: 'disableTractorBeams',
+      value: true,
+      effectId: 'pulsar-disable-tractor-beams',
+      sourceId: PULSAR_TRACTOR_BEAMS_SOURCE_ID
+    });
+  }
+
   syncRadiationEffect(terraforming, pulsarParameters, hazardStrength = 0) {
     if (!terraforming || !terraforming.addAndReplace) {
       return;
@@ -244,6 +286,7 @@ class PulsarHazard {
     this.artificialSkyCompletion = 1 - skyShare;
     this.manager.setHazardLandReservationShare('pulsar', share);
     this.syncRadiationEffect(terraforming, pulsarParameters, share);
+    this.syncSpecialLockoutEffects(share);
     if (share > 0) {
       return;
     }
@@ -252,6 +295,7 @@ class PulsarHazard {
 
   clearEffectsOnTravel(terraforming) {
     this.clearRadiationEffect(terraforming);
+    this.clearSpecialLockoutEffects();
     this.resetStormState();
     this.hazardStrength = 0;
     this.artificialSkyCompletion = 0;
@@ -277,6 +321,7 @@ class PulsarHazard {
     this.artificialSkyCompletion = 1 - skyShare;
     this.manager.setHazardLandReservationShare('pulsar', share);
     this.syncRadiationEffect(terraforming, pulsarParameters, share);
+    this.syncSpecialLockoutEffects(share);
     if (share > 0) {
       this.advanceStormState(deltaSeconds, pulsarParameters);
     } else {

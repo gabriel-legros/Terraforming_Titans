@@ -83,11 +83,6 @@ function buildAtlasTag(label, className) {
     return tag;
 }
 
-function resolveAtlasWorldTypeLabel(result) {
-    const archetype = result?.merged?.classification?.archetype || result?.archetype || '';
-    return RWG_WORLD_TYPES[archetype]?.displayName || archetype || '—';
-}
-
 function resolveAtlasHazardLabel(result) {
     const hazards = Array.isArray(result?.hazards) ? result.hazards : [];
     if (!hazards.length) {
@@ -228,7 +223,6 @@ function buildAtlasWorldCard(definition, category) {
 
     const stats = document.createElement('div');
     stats.className = 'planet-stats';
-    stats.appendChild(buildAtlasStat(getAtlasText('type', 'Type'), resolveAtlasWorldTypeLabel(result)));
     stats.appendChild(buildAtlasStat(getAtlasText('difficulty', 'Difficulty'), definition.difficultyRating || '?'));
     stats.appendChild(buildAtlasStat(getAtlasText('hazardsLabel', 'Hazards'), resolveAtlasHazardLabel(result)));
     stats.appendChild(buildAtlasStat(getAtlasText('sector', 'Sector'), result?.merged?.celestialParameters?.sector || '—'));

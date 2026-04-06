@@ -393,6 +393,107 @@ const titaniaOverrides = {
   }
 };
 
+const hermesOverrides = {
+  name: 'Hermes',
+  resources: {
+    surface: {
+      land: { initialValue: 7_480_000_000, baseLand: 7_480_000_000 },
+      liquidWater: { initialValue: 0, unlocked: true },
+      ice: { initialValue: 0, unlocked: true },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 4, maxDeposits: 7480, areaTotal: 74800 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 0 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalTemperatures: {
+    tropical: { value: 440, day: 700, night: 110 },
+    temperate: { value: 340, day: 520, night: 100 },
+    polar: { value: 180, day: 250, night: 90 }
+  },
+  celestialParameters: {
+    distanceFromSun: 0.387098,
+    gravity: 3.7,
+    radius: 2439.7,
+    mass: 3.3011e23,
+    baseLand: 7_480_000_000,
+    albedo: 0.088,
+    rotationPeriod: 4222.6,
+    spinPeriod: 1407.6,
+    starLuminosity: 1,
+    surfaceArea: 74_800_000_000_000
+  },
+  star: {
+    name: 'Helios',
+    spectralType: 'G2V',
+    luminositySolar: 1,
+    massSolar: 1,
+    radiusSolar: 1,
+    temperatureK: 5772,
+    habitableZone: {
+      inner: 0.82,
+      outer: 1.17
+    }
+  },
+  visualization: {
+    baseColor: '#8c8277'
+  },
+  effects: [
+    {
+      target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'hermes-disable-space-mirror-facility'
+    },
+    {
+      target: 'building',
+      targetId: 'spaceMirror',
+      type: 'booleanFlag',
+      flagId: 'disableMirrorFacilityActivation',
+      value: true,
+      effectId: 'hermes-disable-space-mirror-activation'
+    },
+    {
+      target: 'building',
+      targetId: 'hyperionLantern',
+      type: 'booleanFlag',
+      flagId: 'disableMirrorFacilityActivation',
+      value: true,
+      effectId: 'hermes-disable-hyperion-lantern-activation'
+    },
+    {
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'booleanFlag',
+      flagId: 'disableTractorBeams',
+      value: true,
+      effectId: 'hermes-disable-tractor-beams'
+    },
+    {
+      target: 'building',
+      targetId: 'ghgFactory',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'hermes-disable-calcite-factory'
+    }
+  ]
+};
+
 const theRealPoseidonOverrides = {
   name: 'TheRealPoseidon',
   star: {
@@ -933,6 +1034,49 @@ const specialSeedDefinitions = {
       }
     ],
     overrides: titaniaOverrides
+  },
+  hermes: {
+    key: 'hermes',
+    seed: 'Hermes',
+    name: 'Hermes',
+    nameKey: 'catalogs.specialSeeds.hermes.name',
+    difficultyRating: '?',
+    replayable: true,
+    target: 'planet',
+    archetype: 'barren',
+    orbitPreset: 'inner',
+    specialEffects: [
+      {
+        id: 'star-proximity-disables-systems',
+        descriptionKey: 'catalogs.specialSeeds.hermes.effects.starProximityDisablesSystems',
+        description: 'Space Mirror Facility and Tractor Beams are disabled on this world due to star proximity.'
+      },
+      {
+        id: 'calcite-factories-disabled',
+        descriptionKey: 'catalogs.specialSeeds.hermes.effects.calciteFactoriesDisabled',
+        description: 'Calcite Factories are also disabled because HOPE is stubborn about certain things.'
+      },
+      {
+        id: 'resembles-mercury',
+        descriptionKey: 'catalogs.specialSeeds.hermes.effects.resemblesMercury',
+        description: 'May resemble Mercury.'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'unlock-very-hot-orbit',
+        descriptionKey: 'catalogs.specialSeeds.hermes.rewards.unlockVeryHotOrbit',
+        description: 'Unlocks Very Hot orbits in the Random World Generator.',
+        effects: [
+          {
+            target: 'rwgManager',
+            type: 'unlockOrbit',
+            targetId: 'very-hot'
+          }
+        ]
+      }
+    ],
+    overrides: hermesOverrides
   },
   wolfysnightmare: {
     key: 'wolfysnightmare',

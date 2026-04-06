@@ -189,7 +189,9 @@ class PlanetaryThrustersProject extends Project{
   }
 
   hasTractorBeams(){
-    return this.isBooleanFlagSet && this.isBooleanFlagSet('tractorBeams') && !this.isPulsarHazardActive();
+    return this.isBooleanFlagSet
+      && this.isBooleanFlagSet('tractorBeams')
+      && !this.isBooleanFlagSet('disableTractorBeams');
   }
 
   isPulsarHazardActive() {

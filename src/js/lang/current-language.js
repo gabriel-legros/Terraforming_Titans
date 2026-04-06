@@ -34,6 +34,7 @@ setLanguageData({
         typeAuto: 'Type: Auto',
         typeValue: 'Type: {value}',
         orbitAuto: 'Orbit: Auto',
+        orbitVeryHotLocked: 'Orbit: Very Hot (Locked)',
         orbitHzInner: 'Orbit: HZ Inner',
         orbitHzMid: 'Orbit: HZ Mid',
         orbitHzOuter: 'Orbit: HZ Outer',
@@ -2603,6 +2604,17 @@ setLanguageData({
           enableDynamicMass: 'Allows the generation of worlds with dynamic mass in the Random World Generator.',
         },
       },
+      hermes: {
+        name: 'Hermes',
+        effects: {
+          starProximityDisablesSystems: 'Space Mirror Facility and Tractor Beams are disabled on this world due to star proximity.',
+          calciteFactoriesDisabled: 'Calcite Factories are also disabled because HOPE is stubborn about certain things.',
+          resemblesMercury: 'May resemble Mercury.',
+        },
+        rewards: {
+          unlockVeryHotOrbit: 'Unlocks Very Hot orbits in the Random World Generator.',
+        },
+      },
       therealposeidon: {
         name: 'TheRealPoseidon',
         effects: {
@@ -2869,7 +2881,7 @@ setLanguageData({
       },
       deeperMining: {
         name: 'Deeper mining',
-        description: 'Deepen all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.',
+        description: 'Deepen all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.  Completion of these challenges is not required to beat the game.',
       },
       undergroundExpansion: {
         name: 'Underground Land Expansion',

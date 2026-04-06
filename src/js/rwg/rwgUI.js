@@ -768,6 +768,7 @@ function initializeRandomWorldUI() {
         <option value="hot" disabled>${getRwgUiText('controls.orbitHotLocked', 'Orbit: Hot (Locked)')}</option>
         <option value="cold">${getRwgUiText('controls.orbitCold', 'Orbit: Cold')}</option>
         <option value="very-cold">${getRwgUiText('controls.orbitVeryCold', 'Orbit: Very Cold')}</option>
+        <option value="very-hot" disabled>${getRwgUiText('controls.orbitVeryHotLocked', 'Orbit: Very Hot (Locked)')}</option>
       </select>
       <select id="rwg-hazard" style="display:none;">
         <option value="none" selected>${getRwgUiText('controls.hazardsNone', 'Hazards: None')}</option>

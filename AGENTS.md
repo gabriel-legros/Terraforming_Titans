@@ -184,6 +184,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Hydrology, phase transitions, and zonal resource synchronization were refactored for stability and consistency.
 
 ### Space, Projects, and Hazards
+- Atlas featured challenge world `Hermes` now occupies the second featured slot and uses Mercury-accurate orbital/body data around star `Helios`; it disables Space Mirror Facility and Tractor Beams through reusable target effects rather than Pulsar-only hardcoding, and its completion reward unlocks RWG `Very Hot` orbits. RWG `Very Hot` is a distinct locked orbit preset above `Hot`.
 - Kessler Skies gained richer failure/debris modeling, warnings/tooltips, and capped Solis storage bonuses.
 - Kessler cost multipliers and decay behaviors were tuned; hazard charts and bin diagnostics expanded.
 - While Kessler Skies is active, Followers Orbitals are limited to `research`; non-research orbital outputs are disabled and the Orbitals card shows a warning banner.
