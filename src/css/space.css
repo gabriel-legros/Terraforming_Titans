@@ -279,6 +279,11 @@
   margin-top: 0;
 }
 
+#atlas-featured-list,
+.atlas-community-list {
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
 .atlas-world-header {
   display: flex;
   justify-content: space-between;
