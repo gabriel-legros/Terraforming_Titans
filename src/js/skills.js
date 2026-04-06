@@ -61,7 +61,7 @@ class SkillManager {
       return baseTotal;
     }
 
-    const targetTotal = skill.id === 'project_speed' ? 0.75 : 0.625;
+    const targetTotal = skill.id === 'project_speed' ? 0.83 : 0.66;
     const originalGap = Math.max(0, targetTotal - baseValue * (skill.baseMaxRank || 5));
     if (originalGap <= 0) {
       return Math.min(targetTotal, baseTotal);
