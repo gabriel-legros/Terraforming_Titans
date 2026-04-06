@@ -1436,6 +1436,7 @@ class LifeManager extends EffectableEntity {
       process,
       growthPerBiomass,
       decayPerBiomass,
+      sterileDecayWithoutOxygen,
       growthReason,
       decayReason,
       usesLuminosity,
@@ -1526,6 +1527,7 @@ class LifeManager extends EffectableEntity {
     const plan = this.buildAtmosphericPlan(deltaTime, accumulatedChanges);
     const {
       design,
+      sterileDecayWithoutOxygen,
       growthReason,
       decayReason,
       secondsMultiplier,
@@ -1544,6 +1546,7 @@ class LifeManager extends EffectableEntity {
 
     terraforming.biomassDyingZones = {};
     const netBiomassChangeByZone = {};
+    let planetaryMassAdded = 0;
     zones.forEach(zoneName => {
       terraforming.biomassDyingZones[zoneName] = false;
       netBiomassChangeByZone[zoneName] = 0;
@@ -1607,6 +1610,11 @@ class LifeManager extends EffectableEntity {
       terraforming.zonalSurface[zoneName].biomass = Math.max(0, terraforming.zonalSurface[zoneName].biomass);
       netBiomassChangeByZone[zoneName] -= supportedDecay;
       resources.surface.biomass.modifyRate(-supportedDecay / secondsMultiplier, decayReason, 'life');
+      if (sterileDecayWithoutOxygen && supportedDecay > 1e-9) {
+        addDynamicWorldPlanetaryMaterial(terraforming, 'organic', supportedDecay);
+        resources.underground?.planetaryMass?.modifyRate(supportedDecay / secondsMultiplier, decayReason, 'life');
+        planetaryMassAdded += supportedDecay;
+      }
 
       const decaySurfaceDeltas = decaySurfaceDeltasByZone[zoneName] || {};
       Object.entries(decaySurfaceDeltas).forEach(([resourceKey, delta]) => {
@@ -1691,10 +1699,13 @@ class LifeManager extends EffectableEntity {
             }
             addDynamicWorldPlanetaryMaterial(terraforming, 'organic', burialAmount);
             resources.underground?.planetaryMass?.modifyRate(burialAmount / secondsMultiplier, 'Geological Burial', 'life');
+            planetaryMassAdded += burialAmount;
           }
         }
       });
+    }
 
+    if (planetaryMassAdded > 1e-9) {
       terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
       reconcileLandResourceValue();
     }
