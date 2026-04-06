@@ -1689,9 +1689,14 @@ class LifeManager extends EffectableEntity {
             if (resources.surface.biomass) {
               resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, 'Geological Burial', 'life');
             }
+            addDynamicWorldPlanetaryMaterial(terraforming, 'organic', burialAmount);
+            resources.underground?.planetaryMass?.modifyRate(burialAmount / secondsMultiplier, 'Geological Burial', 'life');
           }
         }
       });
+
+      terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+      reconcileLandResourceValue();
     }
 
     if (this.isBooleanFlagSet('surfaceFoodProduction')) {

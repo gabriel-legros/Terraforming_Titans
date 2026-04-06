@@ -29,7 +29,7 @@ function getSpaceshipProjectResourceDisplayName(category, resource) {
   return resources[category][resource].displayName || resource.charAt(0).toUpperCase() + resource.slice(1);
 }
 
-function applySpecialProjectResourceGain(category, resource, amount) {
+function applySpecialProjectResourceGain(category, resource, amount, source) {
   if (amount <= 0 || category !== 'special') {
     return false;
   }
@@ -40,6 +40,7 @@ function applySpecialProjectResourceGain(category, resource, amount) {
   } else {
     return false;
   }
+  modifyPlanetaryMassRate(amount, source || getSpaceshipProjectText('ui.projects.export', 'Spaceship Export'));
   terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
   reconcileLandResourceValue();
   return true;
@@ -1143,11 +1144,12 @@ class SpaceshipProject extends Project {
   }
 
   applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
+    const sourceLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
     for (const category in gain) {
       for (const resource in gain[category]) {
         const amount = gain[category][resource] * fraction * productivity;
         if (isSpecialProjectResource(category, resource)) {
-          applySpecialProjectResourceGain(category, resource, amount);
+          applySpecialProjectResourceGain(category, resource, amount, sourceLabel);
           continue;
         }
         if (accumulatedChanges) {
