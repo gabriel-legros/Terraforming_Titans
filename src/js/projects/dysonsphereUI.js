@@ -176,7 +176,7 @@ function updateDysonSphereUI(project) {
   els.totalPowerDisplay.textContent = formatNumber(total, false, 2);
   if (els.sphereCountDisplay) {
     const count = typeof project.getDysonSphereCount === 'function' ? project.getDysonSphereCount() : 0;
-    els.sphereCountDisplay.textContent = formatNumber(count, false, 2);
+    els.sphereCountDisplay.textContent = formatNumber(count, true);
   }
   if (els.maxSpheresDisplay) {
     const maxSpheres = typeof project.getAllowedMaxSphereCount === 'function'
