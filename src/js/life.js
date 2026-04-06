@@ -1079,13 +1079,6 @@ class LifeManager extends EffectableEntity {
     const process = getActiveLifeMetabolismProcess();
     const growthPerBiomass = process.growth.perBiomass;
     const decayPerBiomass = process.decay.perBiomass;
-    const processName = process.displayName || 'Photosynthesis';
-    const growthReason = processName;
-    const decayReason = `${processName} Decay`;
-    const usesLuminosity = process.growth.usesLuminosity === true;
-    const secondsMultiplier = deltaTime / 1000;
-    const landMultiplier = getLifeLandMultiplier(terraforming);
-    const zones = getZones();
     const getAtmosphericAvailable = (resourceKey) => {
       const pending = accumulatedChanges ? (accumulatedChanges.atmospheric[resourceKey] || 0) : 0;
       return Math.max(0, resources.atmospheric[resourceKey].value + pending);
@@ -1098,6 +1091,16 @@ class LifeManager extends EffectableEntity {
       const pending = accumulatedChanges ? (accumulatedChanges.colony[resourceKey] || 0) : 0;
       return Math.max(0, resource.value + pending);
     };
+    const sterileDecayWithoutOxygen = process.decay.allowSterileDecayWithoutOxygen === true
+      && (decayPerBiomass.atmospheric?.oxygen || 0) < 0
+      && getAtmosphericAvailable('oxygen') <= 0;
+    const processName = process.displayName || 'Photosynthesis';
+    const growthReason = processName;
+    const decayReason = `${processName} Decay`;
+    const usesLuminosity = process.growth.usesLuminosity === true;
+    const secondsMultiplier = deltaTime / 1000;
+    const landMultiplier = getLifeLandMultiplier(terraforming);
+    const zones = getZones();
 
     const biomassByZone = {};
     const waterByZone = {};
@@ -1389,13 +1392,15 @@ class LifeManager extends EffectableEntity {
     });
 
     let maxSupportedDecayByAtmosphere = totalPotentialDecay;
-    decayAtmosphericInputsPerBiomass.forEach(([resourceKey, coef]) => {
-      const requiredPerBiomass = -coef;
-      const available = getAtmosphericAvailable(resourceKey);
-      if (requiredPerBiomass > 0) {
-        maxSupportedDecayByAtmosphere = Math.min(maxSupportedDecayByAtmosphere, available / requiredPerBiomass);
-      }
-    });
+    if (!sterileDecayWithoutOxygen) {
+      decayAtmosphericInputsPerBiomass.forEach(([resourceKey, coef]) => {
+        const requiredPerBiomass = -coef;
+        const available = getAtmosphericAvailable(resourceKey);
+        if (requiredPerBiomass > 0) {
+          maxSupportedDecayByAtmosphere = Math.min(maxSupportedDecayByAtmosphere, available / requiredPerBiomass);
+        }
+      });
+    }
 
     const supportedDecayTotal = Math.max(0, Math.min(totalPotentialDecay, maxSupportedDecayByAtmosphere));
     const decayAtmosphericDeltas = {};
@@ -1412,15 +1417,17 @@ class LifeManager extends EffectableEntity {
         ? supportedDecayTotal * (potentialDecayByZone[zoneName] / totalPotentialDecay)
         : 0;
       supportedDecayByZone[zoneName] = supportedDecay;
-      Object.entries(decayPerBiomass.surface || {}).forEach(([resourceKey, coef]) => {
-        if (resourceKey === 'biomass' || !coef) return;
-        decaySurfaceDeltasByZone[zoneName][resourceKey] =
-          (decaySurfaceDeltasByZone[zoneName][resourceKey] || 0) + supportedDecay * coef;
-      });
-      Object.entries(decayPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
-        decayAtmosphericDeltas[resourceKey] =
-          (decayAtmosphericDeltas[resourceKey] || 0) + supportedDecay * coef;
-      });
+      if (!sterileDecayWithoutOxygen) {
+        Object.entries(decayPerBiomass.surface || {}).forEach(([resourceKey, coef]) => {
+          if (resourceKey === 'biomass' || !coef) return;
+          decaySurfaceDeltasByZone[zoneName][resourceKey] =
+            (decaySurfaceDeltasByZone[zoneName][resourceKey] || 0) + supportedDecay * coef;
+        });
+        Object.entries(decayPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
+          decayAtmosphericDeltas[resourceKey] =
+            (decayAtmosphericDeltas[resourceKey] || 0) + supportedDecay * coef;
+        });
+      }
     });
 
     return {

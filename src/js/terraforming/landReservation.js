@@ -12,7 +12,7 @@ function normalizeLandReservationShare(share) {
 }
 
 function resolveLandReservationInitialLand(terraformingState, landResource) {
-  return resolveWorldGeometricLand(terraformingState, landResource);
+  return resolveWorldBaseLand(terraformingState, landResource);
 }
 
 function getProjectManagerForLandReservation() {

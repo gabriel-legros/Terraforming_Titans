@@ -237,4 +237,34 @@ describe('exact land reservations', () => {
 
     dom.window.close();
   });
+
+  it('rebuilds stale base land from geometry so pulsar still leaves underground expansion land available', async () => {
+    const dom = await createGameDom();
+    const { window } = dom;
+
+    loadSave(window, 'wolfy_no_expansion_land.json');
+
+    const result = window.eval(`(() => {
+      const land = resources.surface.land;
+      const project = projectManager.projects.undergroundExpansion;
+      const pulsar = hazardManager.parameters.pulsar;
+      return {
+        baseLand: terraforming.baseLand,
+        geometricLand: resolveWorldGeometricLand(terraforming, land),
+        totalLand: land.value,
+        reservedLand: land.reserved,
+        availableLand: land.getAvailableAmount(),
+        expansionProgress: project.getTotalProgress(),
+        pulsarStrength: hazardManager.pulsarHazard.getHazardStrength(terraforming, pulsar)
+      };
+    })()`);
+
+    expect(result.pulsarStrength).toBeCloseTo(1, 10);
+    expect(result.baseLand).toBeCloseTo(result.geometricLand, 6);
+    expect(result.reservedLand).toBeCloseTo(result.baseLand, 6);
+    expect(result.totalLand).toBeCloseTo(result.geometricLand + result.expansionProgress, 6);
+    expect(result.availableLand).toBeCloseTo(result.expansionProgress, 6);
+
+    dom.window.close();
+  });
 });

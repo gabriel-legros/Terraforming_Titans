@@ -130,6 +130,21 @@ function resolveWorldBaseLand(terraformingState, landResource, celestialParamete
   const activeTerraforming = terraformingState || null;
   const activeLandResource = landResource || activeTerraforming?.resources?.surface?.land || null;
   const activeCelestialParameters = celestialParameters || activeTerraforming?.celestialParameters || null;
+  const geometricLand = calculateSurfaceAreaHectaresFromRadius(activeCelestialParameters?.radius);
+  const dynamicMassWorld = !!(
+    activeCelestialParameters?.dynamicMassDeltaKg
+    || activeCelestialParameters?.dynamicSurfaceVolumeDeltaM3
+    || activeCelestialParameters?.dynamicDirectMassDeltaKg
+    || activeCelestialParameters?.dynamicDirectVolumeDeltaM3
+    || activeCelestialParameters?.currentPlanetaryMassKg
+    || activeCelestialParameters?.currentSurfaceMassKg
+    || activeCelestialParameters?.currentAtmosphericMassKg
+    || activeCelestialParameters?.currentPlanetaryVolumeM3
+    || activeCelestialParameters?.currentSurfaceVolumeM3
+  );
+  if (geometricLand > 0 && !dynamicMassWorld) {
+    return geometricLand;
+  }
   const candidates = [
     activeTerraforming?.baseLand,
     activeCelestialParameters?.baseLand,

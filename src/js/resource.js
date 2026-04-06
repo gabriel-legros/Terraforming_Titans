@@ -1013,33 +1013,7 @@ function reconcileLandResourceValue() {
     ? currentPlanetParameters
     : (typeof globalThis !== 'undefined' ? globalThis.currentPlanetParameters : null);
 
-  const derivedLandFromRadius = (() => {
-    const radiusKm = params?.celestialParameters?.radius;
-    if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
-      return 0;
-    }
-    return 4 * Math.PI * radiusKm * radiusKm * 100;
-  })();
-
-  const baseCandidates = [
-    tf?.baseLand,
-    tf?.initialLand,
-    landResource.baseLand,
-    params?.celestialParameters?.baseLand,
-    landResource.initialValue,
-    landResource.baseCap,
-    params?.resources?.surface?.land?.initialValue,
-    params?.resources?.surface?.land?.baseCap,
-    derivedLandFromRadius,
-  ];
-
-  let baseLand = 0;
-  for (const candidate of baseCandidates) {
-    if (typeof candidate === 'number' && isFinite(candidate) && candidate > 0) {
-      baseLand = candidate;
-      break;
-    }
-  }
+  const baseLand = resolveWorldBaseLand(tf, landResource, params?.celestialParameters);
 
   if (!(baseLand > 0)) {
     const reserved = Math.max(0, landResource.reserved || 0);

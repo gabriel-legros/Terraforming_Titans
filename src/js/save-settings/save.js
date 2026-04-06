@@ -562,6 +562,11 @@ function loadGame(slotOrCustomString, recreate = true) {
       hazardManager.load(gameState.hazardManager);
     }
 
+    terraforming?.refreshDynamicWorldGeometry?.(currentPlanetParameters);
+    reconcileLandResourceValue();
+    hazardManager?.syncHazardLandReservation?.(terraforming);
+    recalculateLandUsage();
+
     if (gameState.galaxyManager && typeof galaxyManager !== 'undefined' && galaxyManager) {
       galaxyManager.loadState(gameState.galaxyManager);
     }
