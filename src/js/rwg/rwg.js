@@ -1882,7 +1882,7 @@ class RwgManager extends EffectableEntity {
   isTypeLocked(t) { return this.lockedTypes.has(t); }
   lockType(t) { this.lockedTypes.add(t); }
   unlockType(t) { this.lockedTypes.delete(t); }
-  getAvailableOrbits() { return ["hz-inner", "hz-mid", "hz-outer", "hot", "cold", "very-cold", "very-hot"].filter((o) => !this.lockedOrbits.has(o)); }
+  getAvailableOrbits() { return ["very-cold", "cold", "hz-inner", "hz-mid", "hz-outer", "hot", "very-hot"].filter((o) => !this.lockedOrbits.has(o)); }
   getAvailableTypes(isMoon) {
     const base = isMoon
       ? ["icy-moon", "titan-like"]

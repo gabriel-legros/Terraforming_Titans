@@ -762,12 +762,12 @@ function initializeRandomWorldUI() {
       <select id="rwg-type"></select>
       <select id="rwg-orbit">
         <option value="auto" selected>${getRwgUiText('controls.orbitAuto', 'Orbit: Auto')}</option>
+        <option value="very-cold">${getRwgUiText('controls.orbitVeryCold', 'Orbit: Very Cold')}</option>
+        <option value="cold">${getRwgUiText('controls.orbitCold', 'Orbit: Cold')}</option>
         <option value="hz-inner">${getRwgUiText('controls.orbitHzInner', 'Orbit: HZ Inner')}</option>
         <option value="hz-mid">${getRwgUiText('controls.orbitHzMid', 'Orbit: HZ Mid')}</option>
         <option value="hz-outer">${getRwgUiText('controls.orbitHzOuter', 'Orbit: HZ Outer')}</option>
         <option value="hot" disabled>${getRwgUiText('controls.orbitHotLocked', 'Orbit: Hot (Locked)')}</option>
-        <option value="cold">${getRwgUiText('controls.orbitCold', 'Orbit: Cold')}</option>
-        <option value="very-cold">${getRwgUiText('controls.orbitVeryCold', 'Orbit: Very Cold')}</option>
         <option value="very-hot" disabled>${getRwgUiText('controls.orbitVeryHotLocked', 'Orbit: Very Hot (Locked)')}</option>
       </select>
       <select id="rwg-hazard" style="display:none;">
