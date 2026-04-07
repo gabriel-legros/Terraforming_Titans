@@ -95,7 +95,11 @@ function recalculateLandUsage() {
     for (const name in collection) {
       const entity = collection[name];
       if (!entity || !entity.requiresLand) continue;
-      const active = Number.isFinite(entity.active) ? entity.active : 0;
+      const active = Number.isFinite(entity.activeNumber)
+        ? entity.activeNumber
+        : (typeof buildingCountToNumber === 'function'
+          ? buildingCountToNumber(entity.active)
+          : Math.max(0, Math.floor(Number(entity.active) || 0)));
       const amount = active > 0 ? active * entity.requiresLand : 0;
       landResource.setReservedAmountForSource(`building:${name}`, amount);
     }

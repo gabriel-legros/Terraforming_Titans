@@ -59,7 +59,11 @@ class DysonManager {
     const perBuilding = receiver?.consumption?.space?.energy
       || receiver?.production?.colony?.energy
       || 0;
-    const activeCount = receiver?.active || 0;
+    const activeCount = Number.isFinite(receiver?.activeNumber)
+      ? receiver.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(receiver?.active)
+        : Math.max(0, Math.floor(Number(receiver?.active) || 0)));
     const productivity = receiver?.productivity ?? 0;
     return Math.max(perBuilding * activeCount * Math.max(productivity, 0), 0);
   }

@@ -1127,7 +1127,12 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   setMassDriverActive(target) {
     const structure = this.getMassDriverStructure();
-    this.applyMassDriverChange(target - structure.active);
+    const activeCount = Number.isFinite(structure?.activeNumber)
+      ? structure.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(structure?.active)
+        : Math.max(0, Math.floor(Number(structure?.active) || 0)));
+    this.applyMassDriverChange(target - activeCount);
   }
 
   adjustMassDriverActive(direction) {

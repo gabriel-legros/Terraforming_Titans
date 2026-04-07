@@ -215,7 +215,7 @@ class Building extends EffectableEntity {
   getAutoBuildBase(population, workerCap, collection) {
     const basis = `${this.autoBuildBasis || 'population'}`;
     if (basis === 'aerostatCapacity') {
-      return Math.max(0, colonies.aerostat_colony.active * this.aerostatReduction);
+      return Math.max(0, colonies.aerostat_colony.activeNumber * this.aerostatReduction);
     }
     if (basis === 'workers') {
       return workerCap;

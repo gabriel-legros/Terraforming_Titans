@@ -513,8 +513,16 @@ function distributeAssignmentsFromSliders(type) {
   if (typeof buildings === 'undefined') return;
   const dist = mirrorOversightSettings.distribution || {};
   const total = type === 'mirrors'
-    ? (buildings.spaceMirror?.active || 0)
-    : (buildings.hyperionLantern?.active || 0);
+    ? (Number.isFinite(buildings.spaceMirror?.activeNumber)
+      ? buildings.spaceMirror.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(buildings.spaceMirror?.active)
+        : Math.max(0, Math.floor(Number(buildings.spaceMirror?.active) || 0))))
+    : (Number.isFinite(buildings.hyperionLantern?.activeNumber)
+      ? buildings.hyperionLantern.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(buildings.hyperionLantern?.active)
+        : Math.max(0, Math.floor(Number(buildings.hyperionLantern?.active) || 0))));
   const sliderZones = getMirrorZonesWithFocusUnassigned();
   const assignmentZones = getMirrorZonesWithFocus();
   const raw = assignmentZones.map(z => ({ zone: z, value: total * Math.max(0, dist[z] || 0) }));
@@ -547,8 +555,16 @@ function distributeAutoAssignments(type) {
   const zones = getMirrorZonesWithFocus();
   if (!mirrorOversightSettings.advancedOversight) zones.push('any');
   const total = type === 'mirrors'
-    ? (buildings.spaceMirror?.active || 0)
-    : (buildings.hyperionLantern?.active || 0);
+    ? (Number.isFinite(buildings.spaceMirror?.activeNumber)
+      ? buildings.spaceMirror.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(buildings.spaceMirror?.active)
+        : Math.max(0, Math.floor(Number(buildings.spaceMirror?.active) || 0))))
+    : (Number.isFinite(buildings.hyperionLantern?.activeNumber)
+      ? buildings.hyperionLantern.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(buildings.hyperionLantern?.active)
+        : Math.max(0, Math.floor(Number(buildings.hyperionLantern?.active) || 0))));
   const assignments = mirrorOversightSettings.assignments[type];
   zones.forEach(z => {
     if (mirrorOversightSettings.autoAssign[z]) assignments[z] = 0;
@@ -664,8 +680,16 @@ function updateAssignmentDisplays() {
     const availableEl = document.getElementById(`available-${type}`);
     if (availableEl) {
       const total = type === 'mirrors'
-        ? (buildings?.spaceMirror?.active || 0)
-        : (buildings?.hyperionLantern?.active || 0);
+        ? (Number.isFinite(buildings?.spaceMirror?.activeNumber)
+          ? buildings.spaceMirror.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(buildings?.spaceMirror?.active)
+            : Math.max(0, Math.floor(Number(buildings?.spaceMirror?.active) || 0))))
+        : (Number.isFinite(buildings?.hyperionLantern?.activeNumber)
+          ? buildings.hyperionLantern.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(buildings?.hyperionLantern?.active)
+            : Math.max(0, Math.floor(Number(buildings?.hyperionLantern?.active) || 0))));
       const assigned = zones.reduce((s, z) => s + (
         type === 'mirrors'
           ? getMirrorAssignmentCount(mirrorOversightSettings, z)
@@ -1215,7 +1239,17 @@ function initializeMirrorOversightUI(container) {
     btn.addEventListener('click', () => {
       const zone = btn.dataset.zone;
       const type = btn.dataset.type;
-      const getTotal = () => type === 'mirrors' ? (buildings?.spaceMirror?.active || 0) : (buildings?.hyperionLantern?.active || 0);
+      const getTotal = () => type === 'mirrors'
+        ? (Number.isFinite(buildings?.spaceMirror?.activeNumber)
+          ? buildings.spaceMirror.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(buildings?.spaceMirror?.active)
+            : Math.max(0, Math.floor(Number(buildings?.spaceMirror?.active) || 0))))
+        : (Number.isFinite(buildings?.hyperionLantern?.activeNumber)
+          ? buildings.hyperionLantern.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(buildings?.hyperionLantern?.active)
+            : Math.max(0, Math.floor(Number(buildings?.hyperionLantern?.active) || 0))));
       const assignments = mirrorOversightSettings.assignments[type];
       const step = mirrorOversightSettings.assignmentStep?.[type] || 1;
       const current = assignments[zone] || 0;
@@ -2134,7 +2168,11 @@ class SpaceMirrorFacilityProject extends Project {
     const elements = projectElements[this.name];
     if (!elements || !elements.mirrorDetails) return;
     const mirrorBuilding = buildings['spaceMirror'];
-    const numMirrors = mirrorBuilding.active;
+    const numMirrors = Number.isFinite(mirrorBuilding?.activeNumber)
+      ? mirrorBuilding.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(mirrorBuilding?.active)
+        : Math.max(0, Math.floor(Number(mirrorBuilding?.active) || 0)));
     const mirrorEffect = terraforming.calculateMirrorEffect();
     const mirrorResourceFactor = getFacilityResourceFactor(mirrorBuilding);
     const mirrorAssignmentShare = mirrorBuilding._allowFullProductivity
@@ -2216,7 +2254,11 @@ class SpaceMirrorFacilityProject extends Project {
       
       if (showLantern) {
         const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
-        const numLanterns = lantern.active || 0;
+        const numLanterns = Number.isFinite(lantern?.activeNumber)
+          ? lantern.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(lantern?.active)
+            : Math.max(0, Math.floor(Number(lantern?.active) || 0)));
         const lanternResourceFactor = getFacilityResourceFactor(lantern);
         const lanternAssignmentShare = lantern._allowFullProductivity
           ? 1

@@ -94,8 +94,24 @@ class SpaceMirrorAdvancedOversight {
         assignL.focus = 0;
       }
 
-      const totalMirrors = Math.max(0, buildings.spaceMirror?.active || 0);
-      const totalLanterns = settings.applyToLantern ? Math.max(0, buildings.hyperionLantern?.active || 0) : 0;
+      const totalMirrors = Math.max(
+        0,
+        Number.isFinite(buildings.spaceMirror?.activeNumber)
+          ? buildings.spaceMirror.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(buildings.spaceMirror?.active)
+            : Math.max(0, Math.floor(Number(buildings.spaceMirror?.active) || 0)))
+      );
+      const totalLanterns = settings.applyToLantern
+        ? Math.max(
+            0,
+            Number.isFinite(buildings.hyperionLantern?.activeNumber)
+              ? buildings.hyperionLantern.activeNumber
+              : (typeof buildingCountToNumber === 'function'
+                ? buildingCountToNumber(buildings.hyperionLantern?.active)
+                : Math.max(0, Math.floor(Number(buildings.hyperionLantern?.active) || 0)))
+          )
+        : 0;
 
       const usedMirrors = () => getMirrorCount('tropical') + getMirrorCount('temperate') + getMirrorCount('polar') + getMirrorCount('focus');
       const usedLanterns = () => (assignL.tropical)+(assignL.temperate)+(assignL.polar)+(assignL.focus);

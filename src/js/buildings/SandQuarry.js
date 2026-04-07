@@ -49,8 +49,16 @@ class SandQuarry extends Building {
   getAutoBuildBase(population, workerCap, collection) {
     if (this.autoBuildBasis === 'sandQuarry:glassSmelterPlus4ElectronicsFactory') {
       const targetCollection = collection || {};
-      const glassSmelterActive = targetCollection.glassSmelter?.active || 0;
-      const electronicsFactoryActive = targetCollection.electronicsFactory?.active || 0;
+      const glassSmelterActive = Number.isFinite(targetCollection.glassSmelter?.activeNumber)
+        ? targetCollection.glassSmelter.activeNumber
+        : (typeof buildingCountToNumber === 'function'
+          ? buildingCountToNumber(targetCollection.glassSmelter?.active)
+          : Math.max(0, Math.floor(Number(targetCollection.glassSmelter?.active) || 0)));
+      const electronicsFactoryActive = Number.isFinite(targetCollection.electronicsFactory?.activeNumber)
+        ? targetCollection.electronicsFactory.activeNumber
+        : (typeof buildingCountToNumber === 'function'
+          ? buildingCountToNumber(targetCollection.electronicsFactory?.active)
+          : Math.max(0, Math.floor(Number(targetCollection.electronicsFactory?.active) || 0)));
       return glassSmelterActive + (4 * electronicsFactoryActive);
     }
 

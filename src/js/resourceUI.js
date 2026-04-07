@@ -1133,7 +1133,11 @@ function getAerostatLiftAlert() {
     return { severity: null, message: null, lift: null, active: 0 };
   }
 
-  const active = typeof aerostat.active === 'number' ? aerostat.active : 0;
+  const active = Number.isFinite(aerostat?.activeNumber)
+    ? aerostat.activeNumber
+    : (typeof buildingCountToNumber === 'function'
+      ? buildingCountToNumber(aerostat?.active)
+      : Math.max(0, Math.floor(Number(aerostat?.active) || 0)));
   if (active <= 0) {
     return { severity: null, message: null, lift: null, active };
   }

@@ -139,7 +139,11 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
 
     if (basis.startsWith('building:')) {
         const target = collection?.[basis.slice(9)];
-        return target?.active || 0;
+        return Number.isFinite(target?.activeNumber)
+            ? target.activeNumber
+            : (typeof buildingCountToNumber === 'function'
+                ? buildingCountToNumber(target?.active)
+                : Math.max(0, Math.floor(Number(target?.active) || 0)));
     }
 
     return population;
