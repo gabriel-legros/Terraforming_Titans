@@ -65,7 +65,7 @@ class Biodome extends Building {
   }
 
   updateWorkerProductivity() {
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.workerProductivity = 0;
       return;
     }

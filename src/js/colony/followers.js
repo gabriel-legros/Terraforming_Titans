@@ -154,7 +154,12 @@ class FollowersManager extends EffectableEntity {
       return 0;
     }
     const ecumenopolis = colonies.t7_colony;
-    return (Math.max(0, ecumenopolis.active) * ecumenopolis.requiresLand) / initialLand;
+    const activeCount = Number.isFinite(ecumenopolis?.activeNumber)
+      ? ecumenopolis.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(ecumenopolis?.active)
+        : Math.max(0, Math.floor(Number(ecumenopolis?.active) || 0)));
+    return (activeCount * ecumenopolis.requiresLand) / initialLand;
   }
 
   getHolyWorldRequirements() {

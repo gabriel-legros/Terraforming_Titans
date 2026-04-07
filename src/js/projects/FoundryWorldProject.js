@@ -187,15 +187,15 @@
       const metropolis = colonies.t6_colony;
       const totalCount = ecumenopolis.count;
       const activeCount = ecumenopolis.active;
-      if (activeCount > 0) {
-        ecumenopolis.adjustLand(-activeCount);
-        metropolis.adjustLand(activeCount);
+      if (activeCount > 0n) {
+        ecumenopolis.adjustLand(-ecumenopolis.activeNumber);
+        metropolis.adjustLand(ecumenopolis.activeNumber);
       }
       metropolis.count += totalCount;
       metropolis.active += activeCount;
       metropolis.isHidden = false;
-      ecumenopolis.count = 0;
-      ecumenopolis.active = 0;
+      ecumenopolis.count = 0n;
+      ecumenopolis.active = 0n;
       ecumenopolis.updateResourceStorage();
       metropolis.updateResourceStorage();
     }

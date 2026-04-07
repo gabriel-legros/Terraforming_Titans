@@ -993,8 +993,8 @@ function updateWorkerAssignments(assignmentsDiv) {
   if (typeof buildings !== 'undefined') {
     for (const name in buildings) {
       const b = buildings[name];
-      if (b.active > 0 && b.getTotalWorkerNeed && b.getTotalWorkerNeed() > 0) {
-        const assigned = b.active * b.getTotalWorkerNeed() * (b.getEffectiveWorkerMultiplier ? b.getEffectiveWorkerMultiplier() : 1);
+      if (b.active > 0n && b.getTotalWorkerNeed && b.getTotalWorkerNeed() > 0) {
+        const assigned = b.activeNumber * b.getTotalWorkerNeed() * (b.getEffectiveWorkerMultiplier ? b.getEffectiveWorkerMultiplier() : 1);
         if (assigned > 0) {
           assignments.push([b.displayName || name, assigned]);
         }
@@ -1022,8 +1022,8 @@ function updateLandAssignments(assignmentsDiv) {
   if (typeof buildings !== 'undefined') {
     for (const name in buildings) {
       const b = buildings[name];
-      if (b.active > 0 && b.requiresLand) {
-        const used = b.active * b.requiresLand;
+      if (b.active > 0n && b.requiresLand) {
+        const used = b.activeNumber * b.requiresLand;
         if (used > 0) assignments.push([b.displayName || name, used]);
       }
     }
@@ -1031,8 +1031,8 @@ function updateLandAssignments(assignmentsDiv) {
   if (typeof colonies !== 'undefined') {
     for (const name in colonies) {
       const c = colonies[name];
-      if (c.active > 0 && c.requiresLand) {
-        const used = c.active * c.requiresLand;
+      if (c.active > 0n && c.requiresLand) {
+        const used = c.activeNumber * c.requiresLand;
         if (used > 0) assignments.push([c.displayName || name, used]);
       }
     }
@@ -1678,10 +1678,10 @@ function getDisplayConsumptionRates(resource) {
       continue;
     }
     const { amount, ignoreProductivity } = building.getConsumptionResource(resource.category, resource.name);
-    if (amount <= 0 || building.active <= 0) {
+    if (amount <= 0 || building.active <= 0n) {
       continue;
     }
-    const baseRate = building.active * amount * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name);
+    const baseRate = building.activeNumber * amount * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name);
     const sourceName = building.displayName || name;
     const current = adjustedBySource[sourceName] || 0;
     const displayFactor = building.ignoreResourceForProductivityResourceDisplay

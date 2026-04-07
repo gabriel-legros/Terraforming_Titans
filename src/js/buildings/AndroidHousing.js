@@ -60,7 +60,7 @@ class AndroidHousing extends Building {
     const freeStorage = androidsResource.getEffectiveBaseStorageCap();
     const usedStorage = Math.max(0, androidsResource.value - freeStorage);
     const perBuilding = this.storage.colony.androids;
-    const capacity = this.active * perBuilding * this.getEffectiveStorageMultiplier();
+    const capacity = this.activeNumber * perBuilding * this.getEffectiveStorageMultiplier();
     const rawProductivity = capacity > 0 ? usedStorage / capacity : 0;
 
     return Math.max(0, Math.min(1, rawProductivity));
@@ -70,7 +70,7 @@ class AndroidHousing extends Building {
     this.setAutomationActivityMultiplier(1);
     const targetProductivity = this.getUsageProductivity(resources);
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this.displayProductivity = 0;

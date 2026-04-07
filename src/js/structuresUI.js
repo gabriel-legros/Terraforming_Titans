@@ -11,6 +11,12 @@ function getStructuresUIText(path, fallback, vars) {
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+function getStructureCountNumber(value) {
+  return typeof buildingCountToNumber === 'function'
+    ? buildingCountToNumber(value)
+    : Number(value || 0);
+}
+
 function getManualBuildCount(structure, buildCount) {
   if (!gameSettings.roundBuildingConstruction || structure.autoBuildEnabled) {
     return buildCount;
@@ -184,6 +190,7 @@ function refreshAutoBuildTarget(structure) {
   const autoBuildUsesAndroidCount = structure.autoBuildBasis === 'androidCount';
   const autoBuildUsesAndroidCapacityShare = structure.autoBuildBasis === 'androidCapacityShare';
   const fixedTarget = Math.max(0, Math.floor(structure.autoBuildFixed || 0));
+  const structureCount = getStructureCountNumber(structure.count);
   const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed || autoBuildUsesWorkerShare || autoBuildUsesLandShare || autoBuildUsesAndroidCount || autoBuildUsesAndroidCapacityShare
     ? 0
     : getAutoBuildBaseValue(structure, pop, workerCap, collection);
@@ -856,7 +863,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       updateBuildingDisplay(buildings);
     }
   });
-  hideButton.disabled = structure.active > 0;
+  hideButton.disabled = structure.active > 0n;
   controlActionRow.appendChild(hideButton);
   cached.hideButton = hideButton;
 
@@ -1144,10 +1151,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const base = (usesFillMode || usesMaxMode || usesFixedMode || usesWorkerShareMode || usesLandShareMode || usesAndroidCountMode || usesAndroidCapacityShareMode)
       ? 0
       : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
+    const structureCount = getStructureCountNumber(structure.count);
+    const structureActive = getStructureCountNumber(structure.active);
     const targetCount = usesFillMode
-      ? structure.count
+      ? structureCount
       : usesMaxMode
-        ? structure.count
+        ? structureCount
         : usesFixedMode
           ? Math.max(0, Math.floor(structure.autoBuildFixed || 0))
           : usesWorkerShareMode
@@ -1159,8 +1168,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
               : usesAndroidCapacityShareMode
                 ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
               : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
-    const desiredActive = Math.min(targetCount, structure.count);
-    const change = desiredActive - structure.active;
+    const desiredActive = Math.min(targetCount, structureCount);
+    const change = desiredActive - structureActive;
     adjustStructureActivation(structure, change);
     updateBuildingDisplay(buildings);
   });
@@ -1209,7 +1218,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
 
     if (usesFixedMode) {
-      structure.autoBuildFixed = Math.max(0, Math.floor(structure.active || 0));
+      structure.autoBuildFixed = Math.max(0, getStructureCountNumber(structure.active));
       if (cached.autoBuildInput) {
         cached.autoBuildInput.value = formatAutoBuildFixedValue(structure.autoBuildFixed);
       }
@@ -1222,7 +1231,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       if (perBuildingNeed <= 0 || workerCap <= 0) {
         return;
       }
-      const activeCount = structure.active;
+      const activeCount = getStructureCountNumber(structure.active);
       const rawPercent = (activeCount * perBuildingNeed * 100) / workerCap;
       const targetFromPercent = (percent) => {
         const shareWorkers = (percent * workerCap) / 100;
@@ -1256,7 +1265,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       if (perBuildingLand <= 0 || totalLand <= 0) {
         return;
       }
-      const activeCount = structure.active;
+      const activeCount = getStructureCountNumber(structure.active);
       const rawPercent = (activeCount * perBuildingLand * 100) / totalLand;
       const targetFromPercent = (percent) => {
         const landBudget = (percent * totalLand) / 100;
@@ -1291,7 +1300,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       if (perBuildingCapacity <= 0 || totalAndroids <= 0) {
         return;
       }
-      const activeCount = structure.active;
+      const activeCount = getStructureCountNumber(structure.active);
       const rawPercent = (activeCount * perBuildingCapacity * 100) / totalAndroids;
       const targetFromPercent = (percent) => {
         const androidBudget = (percent * totalAndroids) / 100;
@@ -1326,7 +1335,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       if (perBuildingCapacity <= 0 || totalAndroidCapacity <= 0) {
         return;
       }
-      const activeCount = structure.active;
+      const activeCount = getStructureCountNumber(structure.active);
       const rawPercent = (activeCount * perBuildingCapacity * 100) / totalAndroidCapacity;
       const targetFromPercent = (percent) => {
         const capacityBudget = (percent * totalAndroidCapacity) / 100;
@@ -1361,7 +1370,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
     
     // Calculate the percentage needed for target to match active
-    const activeCount = structure.active;
+    const activeCount = getStructureCountNumber(structure.active);
     const rawPercent = (activeCount * 100) / base;
     
     // Start with 6 decimals (rounded up)
@@ -1572,7 +1581,7 @@ function createStructureControls(structure, toggleCallback) {
     zeroButton.id = `${structure.name}-zero-button`;
     zeroButton.textContent = getStructuresUIText('ui.structures.common.zero', '0');
     zeroButton.addEventListener('click', function () {
-      toggleCallback(structure, -structure.active);
+      toggleCallback(structure, -getStructureCountNumber(structure.active));
       disableAutoActive(structure);
     });
     structureControls.appendChild(zeroButton);
@@ -1601,7 +1610,10 @@ function createStructureControls(structure, toggleCallback) {
     maxButton = document.createElement('button');
     maxButton.textContent = getStructuresUIText('ui.common.max', 'Max');
     maxButton.addEventListener('click', function () {
-      toggleCallback(structure, structure.count - structure.active);
+      toggleCallback(
+        structure,
+        getStructureCountNumber(structure.count) - getStructureCountNumber(structure.active)
+      );
       disableAutoActive(structure);
     });
     structureControls.appendChild(maxButton);
@@ -1671,7 +1683,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const upgradeCount = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
-    const amount = Math.min(upgradeCount * 10, structure.count);
+    const amount = Math.min(upgradeCount * 10, getStructureCountNumber(structure.count));
     const cost = structure.getUpgradeCost(upgradeCount);
     if (!cost) {
       button.style.display = 'none';
@@ -2312,8 +2324,8 @@ function updateDecreaseButtonText(button, buildCount) {
     if (typeof structure.filterActivationChange === 'function') {
       const context = {
         change: desiredChange,
-        currentActive: structure.active,
-        desiredActive: structure.active + desiredChange,
+        currentActive: getStructureCountNumber(structure.active),
+        desiredActive: getStructureCountNumber(structure.active) + desiredChange,
         structure
       };
       const filtered = structure.filterActivationChange(desiredChange, context);
@@ -2342,17 +2354,17 @@ function updateDecreaseButtonText(button, buildCount) {
       return;
     }
 
-    const oldActive = structure.active;
+    const oldActive = getStructureCountNumber(structure.active);
     const newActive = Math.max(
       0,
-      Math.min(oldActive + desiredChange, structure.count)
+      Math.min(oldActive + desiredChange, getStructureCountNumber(structure.count))
     );
 
     if (newActive === oldActive) {
       return;
     }
 
-    structure.active = newActive;
+    structure.active = BigInt(newActive);
     if (newActive === 0) {
       structure.productivity = 0;
       structure.displayProductivity = 0;
@@ -2475,7 +2487,7 @@ function updateDecreaseButtonText(button, buildCount) {
 
       if (hideButton) {
         hideButton.style.display = 'inline-block';
-        hideButton.disabled = structure.active > 0;
+        hideButton.disabled = structure.active > 0n;
       }
 
       const reverseBtn = els.reverseButton;
@@ -2740,12 +2752,12 @@ function updateDecreaseButtonText(button, buildCount) {
       const area = (terraforming && terraforming.celestialParameters)
         ? (terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea)
         : 1;
-      const flux = (structure.powerPerBuilding * structure.active * structure.productivity) / area;
+      const flux = (structure.powerPerBuilding * getStructureCountNumber(structure.active) * structure.productivity) / area;
       providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
     if (structure.name === 'spaceMirror' && terraforming && typeof terraforming.calculateMirrorEffect === 'function') {
       const mirrorFluxPerMirror = terraforming.calculateMirrorEffect().powerPerUnitArea;
-      const flux = mirrorFluxPerMirror * structure.active;
+      const flux = mirrorFluxPerMirror * getStructureCountNumber(structure.active);
       providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
     if (providesParts.length > 0) {

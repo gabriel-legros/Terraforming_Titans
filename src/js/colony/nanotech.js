@@ -617,12 +617,17 @@ class NanotechManager extends EffectableEntity {
       const s = structures[name];
       if (!s || !s.maintenanceCost) continue;
       const prod = s.productivity !== undefined ? s.productivity : 1;
-      totals.metal += (s.maintenanceCost.metal || 0) * (s.active || 0) * prod;
-      totals.glass += (s.maintenanceCost.glass || 0) * (s.active || 0) * prod;
-      totals.water += (s.maintenanceCost.water || 0) * (s.active || 0) * prod;
-      totals.components += (s.maintenanceCost.components || 0) * (s.active || 0) * prod;
-      totals.superconductors += (s.maintenanceCost.superconductors || 0) * (s.active || 0) * prod;
-      totals.electronics += (s.maintenanceCost.electronics || 0) * (s.active || 0) * prod;
+      const activeCount = Number.isFinite(s.activeNumber)
+        ? s.activeNumber
+        : (typeof buildingCountToNumber === 'function'
+          ? buildingCountToNumber(s.active)
+          : Math.max(0, Math.floor(Number(s.active) || 0)));
+      totals.metal += (s.maintenanceCost.metal || 0) * activeCount * prod;
+      totals.glass += (s.maintenanceCost.glass || 0) * activeCount * prod;
+      totals.water += (s.maintenanceCost.water || 0) * activeCount * prod;
+      totals.components += (s.maintenanceCost.components || 0) * activeCount * prod;
+      totals.superconductors += (s.maintenanceCost.superconductors || 0) * activeCount * prod;
+      totals.electronics += (s.maintenanceCost.electronics || 0) * activeCount * prod;
     }
     const total = totals.metal + totals.glass + totals.water;
     const coveragePerBot = 1e-18;

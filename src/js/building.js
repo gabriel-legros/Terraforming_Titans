@@ -1,3 +1,21 @@
+function normalizeBuildingCount(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0n;
+  }
+  if (typeof value === 'bigint') {
+    return value < 0n ? 0n : value;
+  }
+  const numeric = Number(value) || 0;
+  if (numeric <= 0) {
+    return 0n;
+  }
+  return BigInt(Math.floor(numeric));
+}
+
+function buildingCountToNumber(value) {
+  return Number(normalizeBuildingCount(value));
+}
+
 // Building Class (Core Game Logic)
 class Building extends EffectableEntity {
   constructor(config, buildingName) {
@@ -8,8 +26,30 @@ class Building extends EffectableEntity {
 
     //Everything above can change through updates
 
-    this.count = 0;
-    this.active = 0;
+    this._count = 0n;
+    this._active = 0n;
+    this.countNumber = 0;
+    this.activeNumber = 0;
+    Object.defineProperty(this, 'count', {
+      configurable: true,
+      enumerable: true,
+      get: () => this._count,
+      set: value => {
+        this._count = normalizeBuildingCount(value);
+        this.countNumber = Number(this._count);
+      }
+    });
+    Object.defineProperty(this, 'active', {
+      configurable: true,
+      enumerable: true,
+      get: () => this._active,
+      set: value => {
+        this._active = normalizeBuildingCount(value);
+        this.activeNumber = Number(this._active);
+      }
+    });
+    this.count = 0n;
+    this.active = 0n;
     this.productivity = 0;
     this.displayProductivity = 0;
     this.isHidden = false; // track whether the building is hidden in the UI
@@ -157,14 +197,14 @@ class Building extends EffectableEntity {
   }
 
   getBuildLimitRemaining() {
-    return Math.max(this.getBuildLimit() - this.count, 0);
+    return Math.max(this.getBuildLimit() - this.countNumber, 0);
   }
 
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
     let maxBuildable = this.maxBuildable(reservePercent, additionalReserves);
 
     if (this.requiresLand && typeof this.landAffordCount === 'function') {
-      const inactiveCount = Math.max(0, this.count - this.active);
+      const inactiveCount = Math.max(0, this.countNumber - this.activeNumber);
       const remainingLandBackedBuilds = Math.max(0, this.landAffordCount() - inactiveCount);
       maxBuildable = Math.min(maxBuildable, remainingLandBackedBuilds);
     }
@@ -186,7 +226,7 @@ class Building extends EffectableEntity {
     if (basis.startsWith('building:')) {
       const targetCollection = collection || {};
       const target = targetCollection[basis.slice(9)];
-      return target ? target.active : 0;
+      return target ? target.activeNumber : 0;
     }
     return population;
   }
@@ -240,8 +280,8 @@ class Building extends EffectableEntity {
   saveState() {
     return {
       unlocked: this.unlocked,
-      count: this.count,
-      active: this.active,
+      count: this.countNumber,
+      active: this.activeNumber,
       productivity: this.productivity,
       isHidden: this.isHidden,
       alertedWhenUnlocked: this.alertedWhenUnlocked,
@@ -352,7 +392,7 @@ class Building extends EffectableEntity {
     // If no structures have been built yet, use the reverse button to
     // swap the active recipe instead so players can pre-select the desired
     // direction before construction (e.g. dust and GHG factories).
-    if (this.count === 0 && typeof this._toggleRecipe === 'function') {
+    if (this.count === 0n && typeof this._toggleRecipe === 'function') {
       this._toggleRecipe();
       return;
     }
@@ -862,11 +902,11 @@ class Building extends EffectableEntity {
   }
 
   getStorageContribution(category, resource) {
-    if (this.active <= 0) {
+    if (this.active <= 0n) {
       return 0;
     }
 
-    return this.active * this.getStorageAmount(category, resource);
+    return this.activeNumber * this.getStorageAmount(category, resource);
   }
 
   getKesslerCostMultiplier() {
@@ -1098,7 +1138,7 @@ class Building extends EffectableEntity {
       return true;
     }
 
-    const currentActive = Number.isFinite(this.active) ? this.active : 0;
+    const currentActive = this.activeNumber;
     const targetActive = Math.max(0, currentActive + normalizedChange);
     const targetReserved = targetActive * this.requiresLand;
 
@@ -1176,14 +1216,15 @@ class Building extends EffectableEntity {
           resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]*buildCount);
         }
       }
-      const oldActive = this.active;
+      const oldActive = this.activeNumber;
       const oldProductivity = this.productivity;
-      this.count += buildCount;
+      const buildCountBigInt = normalizeBuildingCount(buildCount);
+      this.count += buildCountBigInt;
       if (activate) {
-        this.active += buildCount;
+        this.active += buildCountBigInt;
       }
-      if(this.active > 0){
-        this.productivity = oldProductivity * (oldActive / this.active);
+      if(this.active > 0n){
+        this.productivity = oldProductivity * (this.activeNumber > 0 ? (oldActive / this.activeNumber) : 0);
       } else {
         this.productivity = 0;
       }
@@ -1246,7 +1287,7 @@ class Building extends EffectableEntity {
 
   computeBaseProductivity(resources, deltaTime) {
     let targetProductivity = 0;
-    if (this.active > 0) {
+    if (this.active > 0n) {
       targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
     }
 
@@ -1261,7 +1302,7 @@ class Building extends EffectableEntity {
       const effectiveMultiplier =
         this.getEffectiveProductionMultiplier() *
         this.getEffectiveResourceProductionMultiplier(category, resource);
-      return this.active * base * effectiveMultiplier * (deltaTime / 1000);
+      return this.activeNumber * base * effectiveMultiplier * (deltaTime / 1000);
     };
 
     const solveRequired = (f, maxProduction, maxResult = maxProduction) => {
@@ -1297,7 +1338,7 @@ class Building extends EffectableEntity {
   }
 
   getTargetProductivity(resources, deltaTime) {
-    if (this.active === 0) {
+    if (this.active === 0n) {
       return 0;
     }
 
@@ -1326,7 +1367,7 @@ class Building extends EffectableEntity {
       )
     );
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this.displayProductivity = 0;
@@ -1361,7 +1402,7 @@ class Building extends EffectableEntity {
       }
 
       for (const resource in this.production[category]) {
-        const baseProduction = this.active * this.production[category][resource] * effectiveMultiplier * this.getEffectiveResourceProductionMultiplier(category, resource);
+        const baseProduction = this.activeNumber * this.production[category][resource] * effectiveMultiplier * this.getEffectiveResourceProductionMultiplier(category, resource);
         const scaledProduction = baseProduction * this.productivity * (deltaTime / 1000);
         const displayProduction = baseProduction * displayProductivity * (deltaTime / 1000);
 
@@ -1400,7 +1441,7 @@ class Building extends EffectableEntity {
         const prodPerSec = (recipe.production?.[target.category]?.[target.resource]) || 0;
         if (!this.currentConsumption[target.category]) this.currentConsumption[target.category] = {};
         // Use PRODUCTION multipliers for reversal (boosts that normally increase output should increase reverse consumption)
-        const baseConsumption = this.active * prodPerSec * this.getEffectiveResourceProductionMultiplier(target.category, target.resource);
+        const baseConsumption = this.activeNumber * prodPerSec * this.getEffectiveResourceProductionMultiplier(target.category, target.resource);
         const scaled = baseConsumption * this.productivity * (deltaTime / 1000) * effectiveProductionMultiplier;
         const displayScaled = baseConsumption * displayProductivity * (deltaTime / 1000) * effectiveProductionMultiplier;
 
@@ -1419,7 +1460,7 @@ class Building extends EffectableEntity {
         if (before > 0 && after <= 0) {
           this._toggleRecipe();
           if (this.shouldDeactivateOnReverseEmpty()) {
-            this.active = 0;
+            this.active = 0n;
           }
         }
       }
@@ -1434,7 +1475,7 @@ class Building extends EffectableEntity {
 
       for (const resource in consumption[category]) {
         const { amount, ignoreProductivity } = this.getConsumptionResource(category, resource);
-        const baseConsumption = this.active * amount * effectiveConsumptionMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const baseConsumption = this.activeNumber * amount * effectiveConsumptionMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const productFactor = ignoreProductivity ? 1 : this.productivity;
         const scaledConsumption = baseConsumption * productFactor * (deltaTime / 1000);
         const displayFactor = ignoreProductivity ? 1 : displayProductivity;
@@ -1466,7 +1507,7 @@ class Building extends EffectableEntity {
     // Calculate maintenance and accumulate changes
     for (const resource in this.maintenanceCost) {
       if (resources.colony[resource]) {
-        const baseMaintenanceCost = this.maintenanceCost[resource] * this.active;
+        const baseMaintenanceCost = this.maintenanceCost[resource] * this.activeNumber;
         const maintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * this.productivity;
         const displayMaintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * displayProductivity;
         const availableForMaintenance =
@@ -1551,8 +1592,8 @@ class Building extends EffectableEntity {
     if (shouldDisable) {
       this.unlocked = false;
       this.isHidden = true;
-      this.count = 0;
-      this.active = 0;
+      this.count = 0n;
+      this.active = 0n;
       this.productivity = 0;
       this.displayProductivity = 0;
     }

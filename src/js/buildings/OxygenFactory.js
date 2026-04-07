@@ -30,7 +30,7 @@ class OxygenFactory extends MultiRecipesBuilding {
       computeMaxProduction
     } = this.computeBaseProductivity(resources, deltaTime);
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       return;

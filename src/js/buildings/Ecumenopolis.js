@@ -37,18 +37,18 @@ class Ecumenopolis extends Colony {
   getAndroidHousingCapacity() {
     const androidHousing = buildings.androidHousing;
     const perBuilding = androidHousing.storage.colony.androids;
-    return androidHousing.active * perBuilding * androidHousing.getEffectiveStorageMultiplier();
+    return androidHousing.activeNumber * perBuilding * androidHousing.getEffectiveStorageMultiplier();
   }
 
   getEcumenopolisCapacity(resourceKey) {
     const perBuilding = this.storage.colony[resourceKey];
-    return this.active * perBuilding * this.getEffectiveStorageMultiplier();
+    return this.activeNumber * perBuilding * this.getEffectiveStorageMultiplier();
   }
 
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this.displayProductivity = 0;

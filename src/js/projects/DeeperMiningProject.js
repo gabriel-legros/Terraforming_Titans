@@ -32,7 +32,7 @@ class DeeperMiningProject extends AndroidProject {
 
   registerMine() {
     let current = this.oreMineCount;
-    const built = buildings.oreMine.count;
+    const built = buildings.oreMine.countNumber;
     const delta = built - current;
     if (delta > 0) {
       const totalDepth = (this.averageDepth || 1) * current;
@@ -58,7 +58,7 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   canStart() {
-    if (buildings.oreMine.count <= 0) {
+    if (buildings.oreMine.count <= 0n) {
       return false;
     }
     if (this.averageDepth >= this.maxDepth) {
@@ -688,7 +688,11 @@ class DeeperMiningProject extends AndroidProject {
 
   loadState(state) {
     super.loadState(state);
-    const built = buildings.oreMine.count;
+    const built = Number.isFinite(buildings?.oreMine?.countNumber)
+      ? buildings.oreMine.countNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(buildings?.oreMine?.count)
+        : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
     this.oreMineCount = state.oreMineCount || built;
     this.averageDepth = state.averageDepth || (this.repeatCount || 0) + 1;
     this.underworldMiningLevel = state.underworldMiningLevel || 0;

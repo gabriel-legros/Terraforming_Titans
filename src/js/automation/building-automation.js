@@ -516,7 +516,7 @@ class BuildingAutomation {
       changed = true;
     }
     if ('hidden' in control) {
-      const shouldHide = control.hidden === true && building.active <= 0;
+      const shouldHide = control.hidden === true && building.active <= 0n;
       if (building.isHidden !== shouldHide) {
         building.isHidden = shouldHide;
         updateStructureHiddenPreference(building.name, shouldHide);

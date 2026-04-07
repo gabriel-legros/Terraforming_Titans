@@ -221,6 +221,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
+- Runtime building and colony `count`/`active` state now use `BigInt` internally; convert through the shared numeric cache (`countNumber`/`activeNumber`) when a system needs JS number math for rates, UI percentages, or other fractional calculations, while keeping save data numeric.
 - Localization scaffold now loads a swappable language script through `index.html`; static shell text can use `data-i18n` attributes, and catalog/story localization is applied centrally before globals initialize. No in-game language selector exists yet.
 - Travel now warns before leaving an unfinished world, using the same confirmation flow across story, random-world, and artificial-world travel.
 - Atlas featured challenge completions (not community completions) now increase the max rank of every skill by 1 each; additive skills continue linearly past rank 5, while build cost, worker reduction, maintenance reduction, and project speed switch after rank 5 to asymptotic reduction curves that preserve the old rank-5 values and trend toward 62.5% / 75% caps.

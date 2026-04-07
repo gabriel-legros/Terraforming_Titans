@@ -15,7 +15,7 @@ class WindTurbine extends Building {
   build(buildCount = 1, activate = true) {
     const initialLand = resolveWorldBaseLand(terraforming);
     const cap = Math.floor(initialLand / 50);
-    const remaining = cap - this.count;
+    const remaining = cap - this.countNumber;
     if (remaining <= 0) {
       return false;
     }

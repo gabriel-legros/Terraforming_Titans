@@ -140,7 +140,7 @@ class ChemicalReactor extends MultiRecipesBuilding {
       )
     );
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this.displayProductivity = 0;
@@ -189,7 +189,7 @@ class ChemicalReactor extends MultiRecipesBuilding {
       return;
     }
 
-    const activeCount = this.active;
+    const activeCount = this.activeNumber;
     if (activeCount <= 0) {
       return;
     }

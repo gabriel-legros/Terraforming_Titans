@@ -94,7 +94,14 @@ class AndroidProject extends Project {
   }
 
   getAndroidSpeedMultiplier() {
-    const mineCount = Math.max((buildings?.oreMine?.count || 0), 1);
+    const mineCount = Math.max(
+      Number.isFinite(buildings?.oreMine?.countNumber)
+        ? buildings.oreMine.countNumber
+        : (typeof buildingCountToNumber === 'function'
+          ? buildingCountToNumber(buildings?.oreMine?.count)
+          : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0))),
+      1
+    );
     return 1 + Math.sqrt(this.assignedAndroids / mineCount);
   }
 

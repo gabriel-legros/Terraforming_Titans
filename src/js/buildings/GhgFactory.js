@@ -30,7 +30,7 @@ class GhgFactory extends Building {
   }
 
   setReverseEnabled(value) {
-    if (this.count === 0) {
+    if (this.count === 0n) {
       this._toggleRecipe();
       return;
     }
@@ -128,7 +128,7 @@ class GhgFactory extends Building {
       return resolved;
     };
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       return;

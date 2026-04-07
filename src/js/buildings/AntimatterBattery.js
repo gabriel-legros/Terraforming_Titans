@@ -72,7 +72,7 @@ class AntimatterBattery extends Building {
     const missingEnergy = energy ? Math.max(0, energy.cap - energy.value) : 0;
     const energyPerAntimatter = this.getEnergyPerAntimatter();
     const hasResources = antimatter && energy;
-    const hasActiveBattery = this.active > 0;
+    const hasActiveBattery = this.active > 0n;
 
     button.disabled =
       !hasResources ||
@@ -109,7 +109,7 @@ class AntimatterBattery extends Building {
     if (!antimatter || !energy) {
       return;
     }
-    if (this.active <= 0) {
+    if (this.active <= 0n) {
       return;
     }
 

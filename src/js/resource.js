@@ -731,7 +731,7 @@ class Resource extends EffectableEntity {
 
     for (const structureName in structures) {
       const structure = structures[structureName];
-      if (!structure.storage || structure.active <= 0) continue;
+      if (!structure.storage || structure.active <= 0n) continue;
 
       const storageByCategory = structure.storage[this.category];
       if (!storageByCategory || storageByCategory[this.name] === undefined) continue;
@@ -1172,7 +1172,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     // Calculate scaled production rates
     for (const category in building.production) {
       for (const resource in building.production[category]) {
-        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource) * automationMultiplier * workerRatio * productivityScale;
+        const actualProduction = (building.production[category][resource] || 0) * building.activeNumber * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource) * automationMultiplier * workerRatio * productivityScale;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(actualProduction, building.displayName, 'building');
         if (actualProduction) {
@@ -1187,7 +1187,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       for (const resource in consumption[category]) {
         const entry = building.getConsumptionResource ? building.getConsumptionResource(category, resource) : { amount: building.consumption[category][resource] };
         const amount = entry.amount || 0;
-        const actualConsumption = amount * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource) * automationMultiplier * workerRatio;
+        const actualConsumption = amount * building.activeNumber * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource) * automationMultiplier * workerRatio;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
         if (actualConsumption) {
@@ -1201,7 +1201,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     for (const resource in maintenanceCost) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.active * automationMultiplier * (useProductivity ? productivityValue : 1);
+      const base = maintenanceCost[resource] * building.activeNumber * automationMultiplier * (useProductivity ? productivityValue : 1);
       const conversionValue = sourceData.conversionValue || 1;
       for (const targetCategory in sourceData.maintenanceConversion) {
         const targetResource = sourceData.maintenanceConversion[targetCategory];

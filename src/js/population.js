@@ -291,8 +291,8 @@ class PopulationModule extends EffectableEntity {
     // Calculate total workers required based on active buildings
     for (const buildingName in buildings) {
       const building = buildings[buildingName];
-      if (building.active > 0 && building.getTotalWorkerNeed() > 0) {
-        const req = building.active * (building.getTotalWorkerNeed()) * building.getEffectiveWorkerMultiplier();
+      if (building.active > 0n && building.getTotalWorkerNeed() > 0) {
+        const req = building.activeNumber * (building.getTotalWorkerNeed()) * building.getEffectiveWorkerMultiplier();
         totalWorkersRequired += req;
         const level = building.workerPriority > 0 ? 'high' : building.workerPriority < 0 ? 'low' : 'normal';
         totals[level] += req;

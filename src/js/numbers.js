@@ -284,10 +284,16 @@ function formatDurationDetailed(seconds) {
 }
 
 function formatBuildingCount(value) {
-  if (Math.abs(value) > 1e6) {
-    return formatNumber(value, false, 3);
+  const normalized = typeof value === 'bigint'
+    ? value
+    : (typeof normalizeBuildingCount === 'function'
+      ? normalizeBuildingCount(value)
+      : BigInt(Math.max(0, Math.floor(Number(value) || 0))));
+  const absValue = normalized < 0n ? -normalized : normalized;
+  if (absValue > 1000000n) {
+    return formatNumber(Number(normalized), false, 3);
   }
-  return formatBigInteger(value);
+  return formatBigInteger(normalized);
 }
 
 function formatScientific(value, precision = 1) {

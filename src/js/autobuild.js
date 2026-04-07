@@ -631,8 +631,8 @@ function autoUpgradeColonies(buildings) {
         const next = buildings[nextName];
         if (!next || !next.unlocked || next.isHidden) continue;
 
-        while (structure.count >= 10) {
-            const maxByCount = Math.floor(structure.count / 10);
+        while (structure.count >= 10n) {
+            const maxByCount = Math.floor(structure.countNumber / 10);
             if (maxByCount <= 0) break;
             const upgradeCount = getAffordableUpgradeCount(structure, maxByCount);
             if (!upgradeCount) break;
@@ -641,7 +641,7 @@ function autoUpgradeColonies(buildings) {
             if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);
         }
 
-        if (structure.count > 0) {
+        if (structure.count > 0n) {
             const upgradeCount = getAffordableUpgradeCount(structure, 1);
             if (!upgradeCount) continue;
             const cost = structure.getUpgradeCost(upgradeCount);
@@ -686,7 +686,7 @@ function autoBuild(buildings, delta = 0) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {
                 const fillData = getAutoBuildFillData(building);
-                const targetCount = building.count + fillData.requiredAmount;
+                const targetCount = building.countNumber + fillData.requiredAmount;
                 buildingInfos.push({ building, targetCount });
                 if (building.autoBuildEnabled && fillData.requiredAmount > 0) {
                     buildableBuildings.push({
@@ -725,8 +725,8 @@ function autoBuild(buildings, delta = 0) {
             buildingInfos.push({ building, targetCount });
 
             if (building.autoBuildEnabled) {
-                const currentRatio = usesMaxBasis ? 0 : (targetCount > 0 ? building.count / targetCount : 0);
-                const requiredAmount = usesMaxBasis ? 1 : targetCount - building.count;
+                const currentRatio = usesMaxBasis ? 0 : (targetCount > 0 ? building.countNumber / targetCount : 0);
+                const requiredAmount = usesMaxBasis ? 1 : targetCount - building.countNumber;
 
                 if (requiredAmount > 0) {
                     buildableBuildings.push({
@@ -781,8 +781,8 @@ function autoBuild(buildings, delta = 0) {
                 ? building.getAutoBuildMaxTargetCount()
                 : buildLimit;
             const desiredAmount = maxMode
-                ? maxTargetCount - building.count
-                : Math.min(requiredAmount, buildLimit - building.count);
+                ? maxTargetCount - building.countNumber
+                : Math.min(requiredAmount, buildLimit - building.countNumber);
             if (desiredAmount <= 0) {
                 return;
             }
@@ -800,7 +800,7 @@ function autoBuild(buildings, delta = 0) {
             }
 
             if (buildCount > 0) {
-                const previousCount = building.count;
+                const previousCount = building.countNumber;
                 const plannedEffectiveCost = building.getEffectiveCost(buildCount);
                 const plannedBaseCost = building.getBaseEffectiveCost(buildCount);
                 const activateImmediately = canApplyAutoActiveTarget(building);
@@ -808,7 +808,7 @@ function autoBuild(buildings, delta = 0) {
                 if (typeof building.build === 'function') {
                     built = building.build(buildCount, activateImmediately);
                 }
-                const actualBuilt = built ? Math.max(0, building.count - previousCount) : 0;
+                const actualBuilt = built ? Math.max(0, building.countNumber - previousCount) : 0;
                 if (built && actualBuilt > 0) {
                     const effectiveCost = actualBuilt === buildCount
                         ? plannedEffectiveCost
@@ -852,13 +852,15 @@ function autoBuild(buildings, delta = 0) {
         if (!canApplyAutoActiveTarget(building)) {
             return;
         }
-        const desiredActive = Math.min(targetCount, building.count);
-        const change = desiredActive - building.active;
+        const desiredActive = Math.min(targetCount, building.countNumber);
+        const change = desiredActive - building.activeNumber;
         if (change !== 0) {
             if (typeof adjustStructureActivation === 'function') {
                 adjustStructureActivation(building, change);
             } else {
-                building.active = Math.max(0, Math.min(building.active + change, building.count));
+                building.active = BigInt(
+                    Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
+                );
             }
         }
     });

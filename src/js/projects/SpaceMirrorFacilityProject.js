@@ -1638,11 +1638,11 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       const focusPerc = dist.focus || 0;
       if (focusPerc > 0) {
         const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
-        const mirrorPowerTotal = mirrorPowerPer * (buildings['spaceMirror']?.active || 0);
+        const mirrorPowerTotal = mirrorPowerPer * (buildings['spaceMirror']?.activeNumber || 0);
         const lantern = buildings?.hyperionLantern;
         const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
         const lanternPowerTotal = mirrorOversightSettings.applyToLantern
-          ? lanternPowerPer * (lantern?.active || 0)
+          ? lanternPowerPer * (lantern?.activeNumber || 0)
           : 0;
         focusPower = (mirrorPowerTotal + lanternPowerTotal) * focusPerc;
       }
@@ -1701,8 +1701,8 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
   const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
   const lantern = buildings?.hyperionLantern;
   const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
-  const totalMirrorPower = mirrorPowerPer * (buildings?.spaceMirror?.active || 0);
-  const totalLanternPower = lanternPowerPer * (lantern?.active || 0);
+  const totalMirrorPower = mirrorPowerPer * (buildings?.spaceMirror?.activeNumber || 0);
+  const totalLanternPower = lanternPowerPer * (lantern?.activeNumber || 0);
 
   let distributedMirrorPower = totalMirrorPower;
   let focusedMirrorPower = 0;
@@ -1818,12 +1818,12 @@ class SpaceMirrorFacilityProject extends Project {
 
   enforceMirrorLockout() {
     const mirrorBuilding = buildings?.spaceMirror;
-    if (mirrorBuilding && mirrorBuilding.isBooleanFlagSet && mirrorBuilding.isBooleanFlagSet('disableMirrorFacilityActivation') && mirrorBuilding.active > 0) {
-      applyFacilityActivationChange(mirrorBuilding, -mirrorBuilding.active);
+    if (mirrorBuilding && mirrorBuilding.isBooleanFlagSet && mirrorBuilding.isBooleanFlagSet('disableMirrorFacilityActivation') && mirrorBuilding.active > 0n) {
+      applyFacilityActivationChange(mirrorBuilding, -mirrorBuilding.activeNumber);
     }
     const lanternBuilding = buildings?.hyperionLantern;
-    if (lanternBuilding && lanternBuilding.isBooleanFlagSet && lanternBuilding.isBooleanFlagSet('disableMirrorFacilityActivation') && lanternBuilding.active > 0) {
-      applyFacilityActivationChange(lanternBuilding, -lanternBuilding.active);
+    if (lanternBuilding && lanternBuilding.isBooleanFlagSet && lanternBuilding.isBooleanFlagSet('disableMirrorFacilityActivation') && lanternBuilding.active > 0n) {
+      applyFacilityActivationChange(lanternBuilding, -lanternBuilding.activeNumber);
     }
   }
 
@@ -2066,12 +2066,12 @@ class SpaceMirrorFacilityProject extends Project {
     });
     els.quickBuild.mirror.zero.addEventListener('click', () => {
       const building = buildings.spaceMirror;
-      applyFacilityActivationChange(building, -building.active);
+      applyFacilityActivationChange(building, -building.activeNumber);
       this.updateUI();
     });
     els.quickBuild.mirror.max.addEventListener('click', () => {
       const building = buildings.spaceMirror;
-      applyFacilityActivationChange(building, building.count - building.active);
+      applyFacilityActivationChange(building, building.countNumber - building.activeNumber);
       this.updateUI();
     });
     els.quickBuild.lantern.button.addEventListener('click', () => {
@@ -2095,12 +2095,12 @@ class SpaceMirrorFacilityProject extends Project {
     });
     els.quickBuild.lantern.zero.addEventListener('click', () => {
       const building = buildings.hyperionLantern;
-      applyFacilityActivationChange(building, -building.active);
+      applyFacilityActivationChange(building, -building.activeNumber);
       this.updateUI();
     });
     els.quickBuild.lantern.max.addEventListener('click', () => {
       const building = buildings.hyperionLantern;
-      applyFacilityActivationChange(building, building.count - building.active);
+      applyFacilityActivationChange(building, building.countNumber - building.activeNumber);
       this.updateUI();
     });
     

@@ -2176,14 +2176,14 @@ class Terraforming extends EffectableEntity{
 
     calculateLanternFlux(){
       const lantern = (typeof buildings !== 'undefined') ? buildings['hyperionLantern'] : null;
-      if(lantern && lantern.active > 0){
+      if(lantern && lantern.active > 0n){
         const resourceFactor = Number.isFinite(lantern._baseProductivity)
           ? lantern._baseProductivity
           : (Number.isFinite(lantern.productivity) ? lantern.productivity : 1);
         const assignmentFactor = lantern._allowFullProductivity
           ? 1
           : (Number.isFinite(lantern._assignmentShare) ? lantern._assignmentShare : 1);
-        const power = (lantern.powerPerBuilding || 0) * lantern.active * resourceFactor * assignmentFactor;
+        const power = (lantern.powerPerBuilding || 0) * lantern.activeNumber * resourceFactor * assignmentFactor;
         const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
         return power / area;
       }

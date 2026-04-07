@@ -124,7 +124,7 @@ class DustFactory extends Building {
       solveRequired
     } = this.computeBaseProductivity(resources, deltaTime);
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       return;
@@ -199,7 +199,7 @@ class DustFactory extends Building {
       const effectiveMultiplier =
         this.getEffectiveProductionMultiplier() *
         this.getEffectiveResourceProductionMultiplier('special', resourceId);
-      const maxChange = this.active * baseProduction * effectiveMultiplier * (deltaTime / 1000);
+      const maxChange = this.activeNumber * baseProduction * effectiveMultiplier * (deltaTime / 1000);
       const allowedChange = reverse ? Math.min(maxChange, resource.value) : maxChange;
 
       const original = resource.value;

@@ -54,7 +54,7 @@ class MirrorLanternBuilding extends MirrorBase {
     const isMirror = this.name === 'spaceMirror';
     const isLantern = this.name === 'hyperionLantern';
     if (!isMirror && !isLantern) return null;
-    if (this.active <= 0) {
+    if (this.active <= 0n) {
       return { cap: 0, share: 0, allowFull: false };
     }
 
@@ -67,7 +67,7 @@ class MirrorLanternBuilding extends MirrorBase {
     const typeKey = isMirror ? 'mirrors' : 'lanterns';
     const useAssignments = settings.advancedOversight || settings.useFinerControls;
     let assignedCount = 0;
-    const total = this.active;
+    const total = this.activeNumber;
 
     if (useAssignments) {
       // When applyToLantern is false, lanterns are treated as "Any Zone" (full productivity)
@@ -107,8 +107,8 @@ class MirrorLanternBuilding extends MirrorBase {
 
   updateProductivity(resources, deltaTime) {
     if (this.isMirrorFacilityActivationBlocked()) {
-      if (this.active > 0) {
-        this.active = 0;
+      if (this.active > 0n) {
+        this.active = 0n;
         this.autoActiveEnabled = false;
         this.updateResourceStorage(resources);
       }
@@ -128,7 +128,7 @@ class MirrorLanternBuilding extends MirrorBase {
     );
     this._baseProductivity = baseTarget;
 
-    if (this.active === 0) {
+    if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this._assignmentShare = 0;

@@ -182,11 +182,11 @@
     complete() {
       super.complete();
       const ecumenopolis = colonies.t7_colony;
-      if (ecumenopolis.active > 0) {
-        ecumenopolis.adjustLand(-ecumenopolis.active);
+      if (ecumenopolis.active > 0n) {
+        ecumenopolis.adjustLand(-ecumenopolis.activeNumber);
       }
-      ecumenopolis.count = 0;
-      ecumenopolis.active = 0;
+      ecumenopolis.count = 0n;
+      ecumenopolis.active = 0n;
       ecumenopolis.updateResourceStorage();
       this.ecumenopolisDisabled = true;
       this.applyEcumenopolisDisable();

@@ -105,7 +105,11 @@ class ColonySlidersManager extends EffectableEntity {
       const valueSpan = document.getElementById('ore-worker-slider-value');
       const effectSpan = document.getElementById('ore-worker-slider-effect');
       if (valueSpan && effectSpan) {
-        const minesBuilt = buildings?.oreMine?.count ?? 0;
+        const minesBuilt = Number.isFinite(buildings?.oreMine?.countNumber)
+          ? buildings.oreMine.countNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(buildings?.oreMine?.count)
+            : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
         const workers = value * 10 * minesBuilt;
         valueSpan.textContent = `${workers}`;
         const mult = value === 0 ? 0 : value;

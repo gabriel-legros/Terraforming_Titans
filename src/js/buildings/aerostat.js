@@ -145,7 +145,7 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    return Math.max(0, limit - this.count);
+    return Math.max(0, limit - this.countNumber);
   }
 
   getCollisionAvoidanceResearchSurchargeForCount(count) {
@@ -177,7 +177,7 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    const startCount = Math.max(0, Math.floor(this.count || 0));
+    const startCount = this.countNumber;
     const baseLimit = this._getBuildLimit();
     if (baseLimit <= 0) {
       return 0;
@@ -331,7 +331,7 @@ class Aerostat extends BaseColony {
 
   calculateMaintenanceCost() {
     const maintenanceCost = super.calculateMaintenanceCost();
-    const activeCount = Math.max(0, Math.floor(this.active || 0));
+    const activeCount = this.activeNumber;
     const effectiveResearchCost =
       this.getResearchMaintenancePerAerostatForCount(activeCount);
 
@@ -370,7 +370,7 @@ class Aerostat extends BaseColony {
     }
 
     const researchMaintenanceCost = this.maintenanceCost.research || 0;
-    const activeCount = Math.max(0, Math.floor(this.active || 0));
+    const activeCount = this.activeNumber;
     if (researchMaintenanceCost <= 0 || activeCount <= 0) {
       return;
     }
@@ -669,7 +669,7 @@ class Aerostat extends BaseColony {
     if (sanitized > 0) {
       const maxActive = this.getResearchSelfFundingBuildLimit();
       if (Number.isFinite(maxActive)) {
-        const currentActive = Math.max(0, Math.floor(this.active || 0));
+        const currentActive = this.activeNumber;
         const allowedIncrease = Math.max(0, Math.floor(maxActive) - currentActive);
         return Math.min(sanitized, allowedIncrease);
       }
@@ -691,13 +691,13 @@ class Aerostat extends BaseColony {
       return;
     }
 
-    const totalBuilt = typeof this.count === 'number' ? this.count : 0;
+    const totalBuilt = this.countNumber;
     if (totalBuilt <= 0) {
       this._liftDisableAccumulator = 0;
       return;
     }
 
-    const currentlyActive = typeof this.active === 'number' ? this.active : 0;
+    const currentlyActive = this.activeNumber;
     if (currentlyActive <= 0) {
       this._liftDisableAccumulator = 0;
       return;
@@ -735,7 +735,7 @@ class Aerostat extends BaseColony {
     }
 
     const change = newActive - currentlyActive;
-    this.active = newActive;
+    this.active = BigInt(newActive);
 
     if (this.requiresLand && typeof this.adjustLand === 'function') {
       this.adjustLand(change);
@@ -756,8 +756,8 @@ class Aerostat extends BaseColony {
           : landRoomRaw;
         const convertible = Math.min(disabledCount, landRoom);
         if (convertible > 0) {
-          const newCount = Math.max(0, this.count - convertible);
-          this.count = newCount;
+          const newCount = Math.max(0, this.countNumber - convertible);
+          this.count = BigInt(newCount);
           if (this.active > this.count) {
             this.active = this.count;
           }
@@ -768,8 +768,8 @@ class Aerostat extends BaseColony {
           ) {
             researchOutpost.adjustLand(convertible);
           }
-          researchOutpost.count += convertible;
-          researchOutpost.active += convertible;
+          researchOutpost.count += BigInt(convertible);
+          researchOutpost.active += BigInt(convertible);
 
           if (typeof researchOutpost.updateResourceStorage === 'function') {
             if (typeof resources !== 'undefined') {
@@ -884,13 +884,10 @@ function getAerostatMaintenanceMitigation(context = {}) {
       : undefined;
 
   const aerostat = colonyCollection?.aerostat_colony ?? null;
-  const activeAerostatsRaw =
-    Number.isFinite(aerostat?.active)
-      ? aerostat.active
-      : Number.isFinite(aerostat?.count)
-        ? aerostat.count
-        : 0;
-  const activeAerostats = Math.max(0, activeAerostatsRaw);
+  const activeAerostats = Math.max(
+    0,
+    aerostat?.activeNumber ?? aerostat?.countNumber ?? 0
+  );
   result.aerostatCount = activeAerostats;
 
   let totalWorkerRequirement = 0;
@@ -909,12 +906,10 @@ function getAerostatMaintenanceMitigation(context = {}) {
         : 0;
 
       if (perBuildingNeed > 0) {
-        const activeCountRaw = Number.isFinite(building.active)
-          ? building.active
-          : Number.isFinite(building.count)
-            ? building.count
-            : 0;
-        const activeCount = Math.max(0, activeCountRaw);
+        const activeCount = Math.max(
+          0,
+          building.activeNumber ?? building.countNumber ?? 0
+        );
         if (activeCount > 0) {
           const workerMultiplierValue = building.getEffectiveWorkerMultiplier?.();
           const workerMultiplier = Number.isFinite(workerMultiplierValue)
@@ -932,12 +927,10 @@ function getAerostatMaintenanceMitigation(context = {}) {
       continue;
     }
 
-    const activeCountRaw = Number.isFinite(building.active)
-      ? building.active
-      : Number.isFinite(building.count)
-        ? building.count
-        : 0;
-    const activeCount = Math.max(0, activeCountRaw);
+    const activeCount = Math.max(
+      0,
+      building.activeNumber ?? building.countNumber ?? 0
+    );
     const maxSupported = Math.max(0, activeAerostats * reduction);
     const supported = Math.min(activeCount, maxSupported);
     const coverage = activeCount > 0 ? Math.min(1, supported / activeCount) : 0;
@@ -1355,8 +1348,8 @@ function updateAerostatBuoyancySection(structure) {
       ? Math.max(0, Math.floor(buildLimitRaw))
       : null;
 
-  const currentAerostats = Number.isFinite(structure?.count)
-    ? Math.max(0, Math.floor(structure.count))
+  const currentAerostats = structure
+    ? Math.max(0, structure.countNumber ?? 0)
     : null;
   const remainingCapacity =
     Number.isFinite(buildLimit) && currentAerostats !== null
@@ -1579,7 +1572,7 @@ function updateAerostatBuoyancySection(structure) {
       )}`;
     }
     if (structure.hasCollisionAvoidance?.()) {
-      const overCap = Math.max(0, (structure.count || 0) - (baseBuildLimit || 0));
+      const overCap = Math.max(0, (structure.countNumber || 0) - (baseBuildLimit || 0));
       const nextSurcharge =
         structure.getCollisionAvoidanceResearchSurcharge?.(1) || 0;
       limitTitle +=

@@ -49,8 +49,8 @@ function recalculateLandUsage() {
     if (typeof buildings !== 'undefined') {
       for (const name in buildings) {
         const b = buildings[name];
-        if (b.requiresLand && b.active > 0) {
-          reserved += b.active * b.requiresLand;
+        if (b.requiresLand && b.active > 0n) {
+          reserved += b.activeNumber * b.requiresLand;
         }
       }
     }
@@ -58,8 +58,8 @@ function recalculateLandUsage() {
     if (typeof colonies !== 'undefined') {
       for (const name in colonies) {
         const c = colonies[name];
-        if (c.requiresLand && c.active > 0) {
-          reserved += c.active * c.requiresLand;
+        if (c.requiresLand && c.active > 0n) {
+          reserved += c.activeNumber * c.requiresLand;
         }
       }
     }

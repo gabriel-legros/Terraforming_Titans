@@ -1,4 +1,19 @@
 class SpaceshipAutomation {
+  getStructureCountValue(structure, key) {
+    if (!structure) {
+      return 0;
+    }
+    const numericKey = key === 'active' ? 'activeNumber' : 'countNumber';
+    const cached = structure[numericKey];
+    if (Number.isFinite(cached)) {
+      return cached;
+    }
+    if (typeof buildingCountToNumber === 'function') {
+      return buildingCountToNumber(structure[key]);
+    }
+    return Math.max(0, Math.floor(Number(structure[key]) || 0));
+  }
+
   static getMassDriverAutoActiveLockEffect() {
     return {
       type: 'booleanFlag',
@@ -55,7 +70,7 @@ class SpaceshipAutomation {
       return 0;
     }
     const structure = project.getMassDriverStructure();
-    return structure.count * this.getMassDriverEquivalency(project);
+    return this.getStructureCountValue(structure, 'count') * this.getMassDriverEquivalency(project);
   }
 
   getMassDriverActiveEquivalency(project) {
@@ -63,7 +78,7 @@ class SpaceshipAutomation {
       return 0;
     }
     const structure = project.getMassDriverStructure();
-    return structure.active * this.getMassDriverEquivalency(project);
+    return this.getStructureCountValue(structure, 'active') * this.getMassDriverEquivalency(project);
   }
 
   sanitizeShipCount(value) {

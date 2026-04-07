@@ -562,7 +562,11 @@ function initializeColonySlidersUI() {
 
   const updateOreValue = (val) => {
     if (oreValue && oreEffect) {
-      const minesBuilt = buildings?.oreMine?.count ?? 0;
+      const minesBuilt = Number.isFinite(buildings?.oreMine?.countNumber)
+        ? buildings.oreMine.countNumber
+        : (typeof buildingCountToNumber === 'function'
+          ? buildingCountToNumber(buildings?.oreMine?.count)
+          : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
       const workers = val * 10 * minesBuilt;
       oreValue.textContent = `${workers}`;
       const mult = val === 0 ? 0 : val;

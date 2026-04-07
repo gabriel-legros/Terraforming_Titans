@@ -609,7 +609,7 @@ class ColonyAutomation {
       changed = true;
     }
     if ('hidden' in control) {
-      const shouldHide = control.hidden === true && colony.active <= 0;
+      const shouldHide = control.hidden === true && colony.active <= 0n;
       if (colony.isHidden !== shouldHide) {
         colony.isHidden = shouldHide;
         updateStructureHiddenPreference(colony.name, shouldHide);

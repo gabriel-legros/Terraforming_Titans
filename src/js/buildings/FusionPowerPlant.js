@@ -23,7 +23,7 @@ class FusionPowerPlant extends MultiRecipesBuilding {
   }
 
   canAffordUpgrade(upgradeCount = 1) {
-    const maxUpgrades = Math.floor(this.count / 10);
+    const maxUpgrades = Math.floor(this.countNumber / 10);
     if (maxUpgrades <= 0 || upgradeCount > maxUpgrades) return false;
     const cost = this.getUpgradeCost(upgradeCount);
 
@@ -44,7 +44,7 @@ class FusionPowerPlant extends MultiRecipesBuilding {
     if (!this.canAffordUpgrade(upgradeCount)) return false;
     const cost = this.getUpgradeCost(upgradeCount);
     const amount = upgradeCount * 10;
-    const activeToRemove = Math.min(amount, this.active);
+    const activeToRemove = Math.min(amount, this.activeNumber);
 
     for (const category in cost) {
       for (const resource in cost[category]) {
@@ -52,13 +52,13 @@ class FusionPowerPlant extends MultiRecipesBuilding {
       }
     }
 
-    this.count -= amount;
-    this.active -= activeToRemove;
-    if (this.active < 0) this.active = 0;
+    this.count -= BigInt(amount);
+    this.active -= BigInt(activeToRemove);
+    if (this.active < 0n) this.active = 0n;
     this.updateResourceStorage();
 
-    next.count += upgradeCount;
-    next.active += upgradeCount;
+    next.count += BigInt(upgradeCount);
+    next.active += BigInt(upgradeCount);
     next.updateResourceStorage();
     return true;
   }

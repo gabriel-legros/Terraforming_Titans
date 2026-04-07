@@ -1163,7 +1163,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (!this.isBooleanFlagSet('massDriverEnabled')) {
       return 0;
     }
-    return buildings.massDriver.active * this.massDriverShipEquivalency;
+    const structure = buildings.massDriver;
+    const activeCount = Number.isFinite(structure?.activeNumber)
+      ? structure.activeNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(structure?.active)
+        : Math.max(0, Math.floor(Number(structure?.active) || 0)));
+    return activeCount * this.massDriverShipEquivalency;
   }
 
   getSpaceshipOnlyCount() {

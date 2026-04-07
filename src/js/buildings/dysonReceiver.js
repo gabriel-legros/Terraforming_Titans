@@ -53,7 +53,7 @@ class DysonReceiver extends Building {
       return 0;
     }
 
-    const remaining = Math.max(cap - this.count, 0);
+    const remaining = Math.max(cap - this.countNumber, 0);
     return Math.min(base, remaining);
   }
 }

@@ -259,7 +259,7 @@ class Colony extends Building {
   
         const consumptionRatio = this.getConsumptionRatioForResource(category, resource);
         const { amount } = this.getConsumptionResource(category, resource);
-        const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const baseConsumption = this.activeNumber * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
   
         const availableAmount = resources[category][resource].value;
@@ -303,7 +303,7 @@ class Colony extends Building {
   
         const consumptionRatio = this.getConsumptionRatioForResource(category, resource);
         const { amount } = this.getConsumptionResource(category, resource);
-        const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const baseConsumption = this.activeNumber * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
   
         // Track actual consumption in the building
@@ -446,8 +446,10 @@ class Colony extends Building {
     const nextCost = next.getEffectiveCost(1);
     const cost = {};
     const amount = upgradeCount * 10;
-    const activeToRemove = Math.min(amount, this.active);
-    const inactiveToRemove = Math.min(amount - activeToRemove, this.count - this.active);
+    const currentActive = this.activeNumber;
+    const currentCount = this.countNumber;
+    const activeToRemove = Math.min(amount, currentActive);
+    const inactiveToRemove = Math.min(amount - activeToRemove, currentCount - currentActive);
     const removeCount = activeToRemove + inactiveToRemove;
     const missingRatio = (amount - removeCount) / amount;
 
@@ -479,7 +481,7 @@ class Colony extends Building {
   }
 
   canAffordUpgrade(upgradeCount = 1) {
-    const maxUpgrades = Math.ceil(this.count / 10);
+    const maxUpgrades = Math.ceil(this.countNumber / 10);
     if (maxUpgrades === 0 || upgradeCount > maxUpgrades) return false;
     const cost = this.getUpgradeCost(upgradeCount);
     if (!cost) return false;
@@ -511,8 +513,10 @@ class Colony extends Building {
     const amount = upgradeCount * 10;
 
     // Determine how many colonies to remove, prioritizing active ones
-    const activeToRemove = Math.min(amount, this.active);
-    const inactiveToRemove = Math.min(amount - activeToRemove, this.count - this.active);
+    const currentActive = this.activeNumber;
+    const currentCount = this.countNumber;
+    const activeToRemove = Math.min(amount, currentActive);
+    const inactiveToRemove = Math.min(amount - activeToRemove, currentCount - currentActive);
     const removeCount = activeToRemove + inactiveToRemove;
 
     // Pay cost
@@ -528,14 +532,14 @@ class Colony extends Building {
     if (next.requiresLand) next.adjustLand(upgradeCount);
 
     // Remove lower tier buildings
-    this.count -= removeCount;
-    this.active -= activeToRemove;
-    if (this.active < 0) this.active = 0;
+    this.count -= BigInt(removeCount);
+    this.active -= BigInt(activeToRemove);
+    if (this.active < 0n) this.active = 0n;
     this.updateResourceStorage();
 
     // Add upgraded building
-    next.count += upgradeCount;
-    next.active += upgradeCount;
+    next.count += BigInt(upgradeCount);
+    next.active += BigInt(upgradeCount);
     next.updateResourceStorage();
 
     return true;
