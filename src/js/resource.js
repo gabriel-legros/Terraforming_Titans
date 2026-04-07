@@ -1652,22 +1652,33 @@ function recalculateTotalRates(){
 }
 
 function calculateResourceAvailabilityRatio(resource, deltaTime) {
+  return calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, 0);
+}
+
+function calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, extraReserve) {
   const seconds = deltaTime / 1000;
   const requiredAmount = resource.consumptionRate * seconds;
   if (requiredAmount <= 0) {
     return 0;
   }
   const producedAmount = Math.max(0, resource.productionRate * seconds);
-  const storedAmount = Math.max(0, resource.value - (resource.reserved || 0));
+  const storedAmount = Math.max(0, resource.value - (resource.reserved || 0) - (extraReserve || 0));
   const availableAmount = producedAmount + storedAmount;
   return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
 }
 
 function updateResourceAvailabilityRatios(resources, deltaTime) {
+  const spaceStorageProj = projectManager?.projects?.spaceStorage;
+  const hasReserveMethod = spaceStorageProj && spaceStorageProj.getResourceStrategicReserveAmount;
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
-      resource.availabilityRatio = calculateResourceAvailabilityRatio(resource, deltaTime);
+      if (category === 'spaceStorage' && hasReserveMethod) {
+        const consumptionReserve = spaceStorageProj.getResourceStrategicReserveAmount(resourceName, 'consumption');
+        resource.availabilityRatio = calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, consumptionReserve);
+      } else {
+        resource.availabilityRatio = calculateResourceAvailabilityRatio(resource, deltaTime);
+      }
     }
   }
 }

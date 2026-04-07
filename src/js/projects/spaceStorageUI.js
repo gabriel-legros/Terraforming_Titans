@@ -329,6 +329,9 @@ function renderSpaceStorageUI(project, container) {
   let reserveModeSelect = cachedCaps.reserveModeSelect;
   let reserveValueInput = cachedCaps.reserveValueInput;
   let reserveValueLabel = cachedCaps.reserveValueLabel;
+  let scopeExpansionsCheckbox = cachedCaps.scopeExpansionsCheckbox;
+  let scopeTransfersCheckbox = cachedCaps.scopeTransfersCheckbox;
+  let scopeConsumptionCheckbox = cachedCaps.scopeConsumptionCheckbox;
   let capClose = cachedCaps.capClose;
   let capClampButton = cachedCaps.capClampButton;
 
@@ -507,12 +510,66 @@ function renderSpaceStorageUI(project, container) {
           updateCapResourceValue();
           return;
         }
-        projectElements[project.name].reserveDraft = { mode, value: parsed };
+        projectElements[project.name].reserveDraft = { mode, value: parsed, scope: getScopeDraft() };
         projectElements[project.name].reserveDraftDirty = true;
         updateCapResourceValue();
       },
     });
     reserveValueRow.append(reserveValueLabel, reserveValueInput);
+
+    const reserveScopeRow = document.createElement('div');
+    reserveScopeRow.classList.add('space-storage-settings-row');
+    reserveScopeRow.style.alignItems = 'flex-start';
+    const reserveScopeLabel = document.createElement('label');
+    reserveScopeLabel.classList.add('space-storage-settings-label');
+    reserveScopeLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.reserveAppliesTo', 'Applies to:');
+    const reserveScopeInfo = document.createElement('span');
+    reserveScopeInfo.classList.add('info-tooltip-icon');
+    reserveScopeInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      reserveScopeInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.reserveAppliesToTooltip', 'Choose which systems respect this reserve. Unchecked systems ignore it.')
+    );
+    reserveScopeLabel.appendChild(reserveScopeInfo);
+    const reserveScopeControls = document.createElement('div');
+    reserveScopeControls.style.display = 'flex';
+    reserveScopeControls.style.flexDirection = 'column';
+    reserveScopeControls.style.gap = '4px';
+    scopeExpansionsCheckbox = document.createElement('input');
+    scopeExpansionsCheckbox.type = 'checkbox';
+    scopeExpansionsCheckbox.id = 'scope-expansions';
+    const scopeExpansionsLabel = document.createElement('label');
+    scopeExpansionsLabel.htmlFor = 'scope-expansions';
+    scopeExpansionsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.reserveScopeExpansions', 'Expansions');
+    scopeExpansionsLabel.style.cursor = 'pointer';
+    scopeTransfersCheckbox = document.createElement('input');
+    scopeTransfersCheckbox.type = 'checkbox';
+    scopeTransfersCheckbox.id = 'scope-transfers';
+    const scopeTransfersLabel = document.createElement('label');
+    scopeTransfersLabel.htmlFor = 'scope-transfers';
+    scopeTransfersLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.reserveScopeTransfers', 'Transfers');
+    scopeTransfersLabel.style.cursor = 'pointer';
+    scopeConsumptionCheckbox = document.createElement('input');
+    scopeConsumptionCheckbox.type = 'checkbox';
+    scopeConsumptionCheckbox.id = 'scope-consumption';
+    const scopeConsumptionLabel = document.createElement('label');
+    scopeConsumptionLabel.htmlFor = 'scope-consumption';
+    scopeConsumptionLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.reserveScopeConsumption', 'Consumption');
+    scopeConsumptionLabel.style.cursor = 'pointer';
+    const makeRow = (cb, lbl) => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '4px';
+      row.append(cb, lbl);
+      return row;
+    };
+    reserveScopeControls.append(
+      makeRow(scopeExpansionsCheckbox, scopeExpansionsLabel),
+      makeRow(scopeTransfersCheckbox, scopeTransfersLabel),
+      makeRow(scopeConsumptionCheckbox, scopeConsumptionLabel)
+    );
+    reserveScopeRow.append(reserveScopeLabel, reserveScopeControls);
 
     const capClampRow = document.createElement('div');
     capClampRow.classList.add('space-storage-settings-row', 'space-storage-settings-button-row');
@@ -534,6 +591,7 @@ function renderSpaceStorageUI(project, container) {
       capValueRow,
       reserveModeRow,
       reserveValueRow,
+      reserveScopeRow,
       capClampRow,
       capConfirm
     );
@@ -583,15 +641,35 @@ function renderSpaceStorageUI(project, container) {
 
   const updateReserveInputState = () => {
     const mode = reserveModeSelect.value;
-    reserveValueInput.disabled = mode === 'none';
+    const isNone = mode === 'none';
+    reserveValueInput.disabled = isNone;
+    scopeExpansionsCheckbox.disabled = isNone;
+    scopeTransfersCheckbox.disabled = isNone;
+    scopeConsumptionCheckbox.disabled = isNone;
     reserveValueLabel.firstChild.textContent = mode === 'percentCap' || mode === 'percentTotal'
       ? getSpaceStorageUIText('ui.projects.spaceStorage.reservePercent', 'Reserve %:')
       : getSpaceStorageUIText('ui.projects.spaceStorage.reserveValue', 'Reserve value:');
-    if (mode === 'none') {
+    if (isNone) {
       reserveValueInput.value = '';
       reserveValueInput.dataset.spaceStorageReserve = '0';
     }
     updateCapResourceValue();
+  };
+
+  const getScopeDraft = () => {
+    return {
+      expansions: scopeExpansionsCheckbox.checked,
+      transfers: scopeTransfersCheckbox.checked,
+      consumption: scopeConsumptionCheckbox.checked,
+    };
+  };
+
+  const updateScopeOnDraft = () => {
+    const draft = projectElements[project.name].reserveDraft;
+    if (draft) {
+      draft.scope = getScopeDraft();
+    }
+    projectElements[project.name].reserveDraftDirty = true;
   };
 
   if (!cachedCaps.capHandlersBound || newOverlay) {
@@ -613,7 +691,8 @@ function renderSpaceStorageUI(project, container) {
       if (reserveDraft.mode === 'none') {
         delete project.resourceStrategicReserves[key];
       } else {
-        project.resourceStrategicReserves[key] = { mode: reserveDraft.mode, value: reserveDraft.value || 0 };
+        const scope = reserveDraft.scope || { expansions: true, transfers: false, consumption: false };
+        project.resourceStrategicReserves[key] = { mode: reserveDraft.mode, value: reserveDraft.value || 0, scope };
       }
       projectElements[project.name].capDraftDirty = false;
       projectElements[project.name].reserveDraftDirty = false;
@@ -664,7 +743,7 @@ function renderSpaceStorageUI(project, container) {
         : Math.max(0, parsed);
       projectElements[project.name].reserveDraft = mode === 'none'
         ? { mode: 'none', value: 0 }
-        : { mode, value: normalized };
+        : { mode, value: normalized, scope: getScopeDraft() };
       projectElements[project.name].reserveDraftDirty = true;
       reserveValueInput.dataset.spaceStorageReserve = String(normalized);
       reserveValueInput.value = mode === 'percentCap' || mode === 'percentTotal'
@@ -672,6 +751,9 @@ function renderSpaceStorageUI(project, container) {
         : (normalized >= 1e6 ? formatNumber(normalized, true, 3) : String(normalized));
       updateReserveInputState();
     });
+    scopeExpansionsCheckbox.addEventListener('change', updateScopeOnDraft);
+    scopeTransfersCheckbox.addEventListener('change', updateScopeOnDraft);
+    scopeConsumptionCheckbox.addEventListener('change', updateScopeOnDraft);
   }
 
   const openCapWindow = (resourceKey, label) => {
@@ -682,7 +764,8 @@ function renderSpaceStorageUI(project, container) {
     const reserveSetting = project.getResourceStrategicReserveSetting(resourceKey);
     projectElements[project.name].capDraft = { mode: capSetting.mode, value: capSetting.value || 0 };
     projectElements[project.name].capDraftDirty = false;
-    projectElements[project.name].reserveDraft = { mode: reserveSetting.mode, value: reserveSetting.value || 0 };
+    const scope = reserveSetting.scope || { expansions: true, transfers: false, consumption: false };
+    projectElements[project.name].reserveDraft = { mode: reserveSetting.mode, value: reserveSetting.value || 0, scope };
     projectElements[project.name].reserveDraftDirty = false;
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
@@ -698,6 +781,9 @@ function renderSpaceStorageUI(project, container) {
       : ((reserveSetting.value || 0) >= 1e6
         ? formatNumber(reserveSetting.value || 0, true, 3)
         : String(reserveSetting.value || 0));
+    scopeExpansionsCheckbox.checked = scope.expansions !== false;
+    scopeTransfersCheckbox.checked = scope.transfers === true;
+    scopeConsumptionCheckbox.checked = scope.consumption === true;
     updateCapInputState();
     updateReserveInputState();
     updateCapResourceValue();
@@ -995,6 +1081,9 @@ function renderSpaceStorageUI(project, container) {
     reserveModeSelect,
     reserveValueInput,
     reserveValueLabel,
+    scopeExpansionsCheckbox,
+    scopeTransfersCheckbox,
+    scopeConsumptionCheckbox,
     capClose,
     capClampButton,
     capConfirmButton: projectElements[project.name].capConfirmButton,
@@ -1232,7 +1321,7 @@ function updateSpaceStorageUI(project) {
     els.megaProjectModeSelect.value = mode;
     els.megaProjectTravelModeCheckbox.checked = project.megaProjectSpaceOnlyOnTravel === true;
   }
-  if (els.capOverlay.classList.contains('is-visible')) {
+  if (els.capOverlay && els.capOverlay.classList.contains('is-visible')) {
     const capSetting = els.capDraft || { mode: 'none', value: 0 };
     const reserveSetting = els.reserveDraft || { mode: 'none', value: 0 };
     if (els.capModeSelect.value !== capSetting.mode) {
@@ -1256,7 +1345,13 @@ function updateSpaceStorageUI(project) {
         : (reserveValue >= 1e6 ? formatNumber(reserveValue, true, 3) : String(reserveValue));
     }
     els.capValueInput.disabled = els.capModeSelect.value === 'none';
-    els.reserveValueInput.disabled = els.reserveModeSelect.value === 'none';
+    const reserveIsNone = els.reserveModeSelect.value === 'none';
+    els.reserveValueInput.disabled = reserveIsNone;
+    if (els.scopeExpansionsCheckbox) {
+      els.scopeExpansionsCheckbox.disabled = reserveIsNone;
+      els.scopeTransfersCheckbox.disabled = reserveIsNone;
+      els.scopeConsumptionCheckbox.disabled = reserveIsNone;
+    }
     if (els.reserveValueLabel) {
       els.reserveValueLabel.firstChild.textContent = els.reserveModeSelect.value === 'percentCap' || els.reserveModeSelect.value === 'percentTotal'
         ? getSpaceStorageUIText('ui.projects.spaceStorage.reservePercent', 'Reserve %:')

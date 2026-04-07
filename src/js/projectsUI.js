@@ -1566,13 +1566,12 @@ function updateProjectUI(projectName) {
       }
     }
     // Show the auto-start checkbox if the project can be repeated
-    if (elements.autoStartCheckboxContainer && projectManager.isBooleanFlagSet('automateSpecialProjects') && !shouldHideStartBar) {
-      elements.autoStartCheckboxContainer.style.display = 'flex';
-      // Wait capacity visibility handled by project subclass
-    }
-    else {
-      elements.autoStartCheckboxContainer.style.display = 'none';
-      // Wait capacity visibility handled by project subclass
+    if (elements.autoStartCheckboxContainer) {
+      if (projectManager.isBooleanFlagSet('automateSpecialProjects') && !shouldHideStartBar) {
+        elements.autoStartCheckboxContainer.style.display = 'flex';
+      } else {
+        elements.autoStartCheckboxContainer.style.display = 'none';
+      }
     }
   }
   if (typeof project.updateUI === 'function') {

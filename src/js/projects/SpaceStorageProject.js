@@ -268,10 +268,10 @@ class SpaceStorageProject extends SpaceshipProject {
     return used;
   }
 
-  spendStoredResource(resourceKey, amount) {
+  spendStoredResource(resourceKey, amount, scopeFilter = null) {
     const spend = Number(amount);
     if (!Number.isFinite(spend) || spend <= 0) return 0;
-    const available = this.getAvailableStoredResource(resourceKey);
+    const available = this.getAvailableStoredResource(resourceKey, scopeFilter);
     const used = Math.min(available, spend);
     if (used > 0) {
       this.removeStoredResource(resourceKey, used);
@@ -422,12 +422,19 @@ class SpaceStorageProject extends SpaceshipProject {
     } else {
       value = Math.max(0, value);
     }
-    return { mode, value };
+    const rawScope = setting.scope || {};
+    const scope = {
+      expansions: rawScope.expansions !== false,
+      transfers: rawScope.transfers === true,
+      consumption: rawScope.consumption === true,
+    };
+    return { mode, value, scope };
   }
 
-  getResourceStrategicReserveAmount(resourceKey) {
+  getResourceStrategicReserveAmount(resourceKey, scopeFilter = null) {
     const setting = this.getResourceStrategicReserveSetting(resourceKey);
     if (setting.mode === 'none') return 0;
+    if (scopeFilter && !setting.scope[scopeFilter]) return 0;
     if (setting.mode === 'amount') {
       return Math.max(0, setting.value || 0);
     }
@@ -452,7 +459,11 @@ class SpaceStorageProject extends SpaceshipProject {
       if (normalized.mode === 'none') {
         delete this.resourceStrategicReserves[resourceKey];
       } else {
-        this.resourceStrategicReserves[resourceKey] = normalized;
+        this.resourceStrategicReserves[resourceKey] = {
+          mode: normalized.mode,
+          value: normalized.value,
+          scope: normalized.scope,
+        };
       }
     }
   }
@@ -610,9 +621,9 @@ class SpaceStorageProject extends SpaceshipProject {
     return perShip * scalingFactor;
   }
 
-  getAvailableStoredResource(resourceKey) {
+  getAvailableStoredResource(resourceKey, scopeFilter = null) {
     const stored = this.getStoredResourceValue(resourceKey);
-    const reserve = this.getResourceStrategicReserveAmount(resourceKey);
+    const reserve = this.getResourceStrategicReserveAmount(resourceKey, scopeFilter);
     return Math.max(0, stored - reserve);
   }
 
@@ -783,7 +794,7 @@ class SpaceStorageProject extends SpaceshipProject {
     };
 
     const applyWithdrawForResource = (entry) => {
-      const stored = this.getStoredResourceValue(entry.resource);
+      const stored = this.getAvailableStoredResource(entry.resource, 'transfers');
       if (stored <= 0) return;
       const target = entry.resource === 'liquidWater'
         ? (this.waterWithdrawTarget === 'surface'
