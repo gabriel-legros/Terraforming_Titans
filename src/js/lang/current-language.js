@@ -2447,7 +2447,7 @@ setLanguageData({
     },
     atlas: {
       title: 'Challenge Worlds',
-      subtitle: 'Travel directly to one of the worlds mapped by Atlas.  Some are strange, some are simply of interest to HOPE.  Each completion increases your maximum skill levels in the awakening tree, with different formulas for their effects after rank 5.',
+      subtitle: 'Travel directly to one of the worlds mapped by Atlas.  Some are strange, some are simply of interest to HOPE.  Each completion increases your maximum skill level in the awakening tree, with different formulas for their effects after rank 5.',
       ready: 'Challenge worlds can always be revisited after completion.',
       locked: 'You must complete the current world before traveling to Atlas challenges.',
       travel: 'Travel',
