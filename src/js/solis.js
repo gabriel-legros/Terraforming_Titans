@@ -62,6 +62,7 @@ class SolisManager extends EffectableEntity {
       advancedOversight: { baseCost: 1000, purchases: 0, max: 1 },
       researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length },
       autoResearch: { baseCost: 1000, purchases: 0, max: 1, enabled: false },
+      researchAutomation: { baseCost: 1500, purchases: 0, max: 1, enabled: false },
       shipAssignment: { baseCost: 500, purchases: 0, max: 1, enabled: false },
       lifeAutomation: { baseCost: 750, purchases: 0, max: 1, enabled: false },
       buildingsAutomation: { baseCost: 1000, purchases: 0, max: 1, enabled: false },
@@ -94,6 +95,8 @@ class SolisManager extends EffectableEntity {
     super.applyBooleanFlag(effect);
     if (effect.flagId === 'solisAutoResearch') {
       this.setUpgradeEnabled('autoResearch', !!effect.value);
+    } else if (effect.flagId === 'solisResearchAutomation') {
+      this.setUpgradeEnabled('researchAutomation', !!effect.value);
     } else if (effect.flagId === 'solisShipAssignment') {
       this.setUpgradeEnabled('shipAssignment', !!effect.value);
     } else if (effect.flagId === 'solisLifeAutomation') {
@@ -356,6 +359,21 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisAutoResearch',
         sourceId: 'solisShop'
       });
+    } else if (key === 'researchAutomation' && typeof addEffect === 'function') {
+      addEffect({
+        target: 'automationManager',
+        type: 'enable',
+        effectId: 'solisAutomationEnable',
+        sourceId: 'solisShop'
+      });
+      addEffect({
+        target: 'automationManager',
+        type: 'booleanFlag',
+        flagId: 'automationResearch',
+        value: true,
+        effectId: 'solisAutomationResearch',
+        sourceId: 'solisShop'
+      });
     } else if (key === 'shipAssignment' && typeof addEffect === 'function') {
       addEffect({
         target: 'automationManager',
@@ -565,6 +583,7 @@ class SolisManager extends EffectableEntity {
     this.applyTerraformingMeasurementUpgrade();
     this.applyAndroidsPermanentResearch();
 
+    this.setUpgradeEnabled('researchAutomation', this.isBooleanFlagSet('solisResearchAutomation'));
     const autoResearchUpgrade = this.shopUpgrades.autoResearch;
     if (autoResearchUpgrade && autoResearchUpgrade.purchases > 0 && typeof addEffect === 'function') {
       addEffect({
@@ -573,6 +592,23 @@ class SolisManager extends EffectableEntity {
         flagId: 'autoResearchEnabled',
         value: true,
         effectId: 'solisAutoResearch',
+        sourceId: 'solisShop'
+      });
+    }
+    const researchAutomationUpgrade = this.shopUpgrades.researchAutomation;
+    if (researchAutomationUpgrade && researchAutomationUpgrade.purchases > 0 && typeof addEffect === 'function') {
+      addEffect({
+        target: 'automationManager',
+        type: 'enable',
+        effectId: 'solisAutomationEnable',
+        sourceId: 'solisShop'
+      });
+      addEffect({
+        target: 'automationManager',
+        type: 'booleanFlag',
+        flagId: 'automationResearch',
+        value: true,
+        effectId: 'solisAutomationResearch',
         sourceId: 'solisShop'
       });
     }

@@ -603,6 +603,9 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
+      if (researchManager && researchManager.applyCurrentAutoResearchPresetState) {
+        researchManager.applyCurrentAutoResearchPresetState();
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autosaveIntervalSeconds')) {
         gameSettings.autosaveIntervalSeconds = gameState.settings.disableAutosave ? 0 : 300;
       }

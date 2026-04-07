@@ -44,6 +44,7 @@ class AutomationManager extends EffectableEntity {
     this.features = {
       automationShipAssignment: false,
       automationLifeDesign: false,
+      automationResearch: false,
       automationBuildings: false,
       automationProjects: false,
       automationColony: false
@@ -66,6 +67,8 @@ class AutomationManager extends EffectableEntity {
       this.setFeature('automationShipAssignment', !!effect.value);
     } else if (effect.flagId === 'automationLifeDesign') {
       this.setFeature('automationLifeDesign', !!effect.value);
+    } else if (effect.flagId === 'automationResearch') {
+      this.setFeature('automationResearch', !!effect.value);
     } else if (effect.flagId === 'automationBuildings') {
       this.setFeature('automationBuildings', !!effect.value);
     } else if (effect.flagId === 'automationProjects') {
@@ -98,6 +101,7 @@ class AutomationManager extends EffectableEntity {
   reapplyEffects() {
     this.setFeature('automationShipAssignment', this.isBooleanFlagSet('automationShipAssignment'));
     this.setFeature('automationLifeDesign', this.isBooleanFlagSet('automationLifeDesign'));
+    this.setFeature('automationResearch', this.isBooleanFlagSet('automationResearch'));
     this.setFeature('automationBuildings', this.isBooleanFlagSet('automationBuildings'));
     this.setFeature('automationProjects', this.isBooleanFlagSet('automationProjects'));
     this.setFeature('automationColony', this.isBooleanFlagSet('automationColony'));
@@ -136,9 +140,17 @@ class AutomationManager extends EffectableEntity {
       appliedTravelAutomation = true;
     }
 
+    if (typeof researchManager !== 'undefined' && researchManager && researchManager.applyTravelAutoResearchPreset) {
+      const appliedResearchPreset = researchManager.applyTravelAutoResearchPreset();
+      appliedTravelAutomation = appliedTravelAutomation || appliedResearchPreset;
+    }
+
     if (appliedTravelAutomation) {
       queueAutomationUIRefresh();
       updateAutomationUI();
+      if (typeof updateResearchUI === 'function') {
+        updateResearchUI();
+      }
     }
 
     return appliedTravelAutomation;
@@ -162,6 +174,7 @@ class AutomationManager extends EffectableEntity {
     this.features = Object.assign({
       automationShipAssignment: false,
       automationLifeDesign: false,
+      automationResearch: false,
       automationBuildings: false,
       automationProjects: false,
       automationColony: false

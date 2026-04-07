@@ -37,7 +37,13 @@ class Research {
       this.advancedResearchUnlocked = false;
       this.orderDirty = false;
       this.autoResearchPresets = [];
+      this.nextAutoResearchPresetId = 1;
       this.currentAutoResearchPreset = 1;
+      this.currentAutoResearchState = {};
+      this.currentAutoResearchHiddenIds = [];
+      this.nextTravelAutoResearchPresetId = null;
+      this.nextTravelAutoResearchPresetPersistent = false;
+      this.autoResearchAutomationCollapsed = false;
       this.autoResearchEnabled = false;
       this.pendingConditionalEffects = new Map();
 
@@ -110,11 +116,12 @@ class Research {
       this.orderDirty = true;
     }
 
-    createAutoResearchPreset() {
-      const preset = {};
-      this.populateAutoResearchPreset(preset);
+    createAutoResearchPreset(name, presetData) {
+      const preset = this.normalizeAutoResearchPreset(presetData || { name });
       this.autoResearchPresets.push(preset);
-      return this.autoResearchPresets.length;
+      this.currentAutoResearchPreset = preset.id;
+      this.applyCurrentAutoResearchPresetState();
+      return preset.id;
     }
 
     populateAutoResearchPreset(target) {
@@ -123,6 +130,48 @@ class Research {
           target[research.id] = this.normalizeAutoResearchEntry(target[research.id]);
         });
       }
+    }
+
+    normalizeAutoResearchHiddenIds(hiddenResearchIds) {
+      if (!Array.isArray(hiddenResearchIds)) {
+        return [];
+      }
+      const uniqueIds = new Set();
+      hiddenResearchIds.forEach((researchId) => {
+        if (this.getResearchById(researchId)) {
+          uniqueIds.add(researchId);
+        }
+      });
+      return Array.from(uniqueIds);
+    }
+
+    normalizeAutoResearchPreset(preset, idOverride) {
+      const explicitId = Number.isInteger(idOverride)
+        ? idOverride
+        : Number.isInteger(preset && preset.id)
+          ? preset.id
+          : this.nextAutoResearchPresetId;
+      const nextId = Math.max(1, explicitId);
+      if (nextId >= this.nextAutoResearchPresetId) {
+        this.nextAutoResearchPresetId = nextId + 1;
+      }
+
+      const presetResearches = preset && preset.researches ? preset.researches : preset;
+      const normalized = {
+        id: nextId,
+        name: (preset && preset.name) || `Preset ${nextId}`,
+        researches: {},
+        hiddenResearchIds: this.normalizeAutoResearchHiddenIds(preset && preset.hiddenResearchIds),
+      };
+
+      this.populateAutoResearchPreset(normalized.researches);
+      if (presetResearches) {
+        for (const researchId in presetResearches) {
+          normalized.researches[researchId] = this.normalizeAutoResearchEntry(presetResearches[researchId]);
+        }
+      }
+
+      return normalized;
     }
 
     normalizeAutoResearchEntry(entry) {
@@ -148,71 +197,221 @@ class Research {
     }
 
     ensureAutoResearchPresetsAreComplete() {
-      this.autoResearchPresets.forEach((preset) => {
-        this.populateAutoResearchPreset(preset);
-      });
+      this.autoResearchPresets = this.autoResearchPresets.map((preset) =>
+        this.normalizeAutoResearchPreset(preset, preset.id)
+      );
     }
 
-    getAutoResearchPreset(presetIndex) {
-      if (!Number.isInteger(presetIndex)) {
+    getAutoResearchPresetObject(presetId) {
+      if (!Number.isInteger(presetId)) {
         return null;
       }
-      const index = presetIndex - 1;
-      if (index < 0 || index >= this.autoResearchPresets.length) {
+      return this.autoResearchPresets.find((preset) => preset.id === presetId) || null;
+    }
+
+    getAutoResearchPreset(presetId) {
+      const preset = this.getAutoResearchPresetObject(presetId);
+      return preset ? preset.researches : null;
+    }
+
+    getSelectedAutoResearchPreset() {
+      const preset = this.getAutoResearchPresetObject(this.currentAutoResearchPreset);
+      if (preset) {
+        return preset;
+      }
+      if (this.autoResearchPresets.length === 0) {
+        this.createAutoResearchPreset();
+      }
+      return this.autoResearchPresets[0] || null;
+    }
+
+    populateCurrentAutoResearchState() {
+      this.populateAutoResearchPreset(this.currentAutoResearchState);
+    }
+
+    normalizeCurrentAutoResearchState() {
+      const normalized = {};
+      this.populateAutoResearchPreset(normalized);
+      for (const researchId in this.currentAutoResearchState) {
+        normalized[researchId] = this.normalizeAutoResearchEntry(this.currentAutoResearchState[researchId]);
+      }
+      this.currentAutoResearchState = normalized;
+    }
+
+    applyCurrentAutoResearchPresetState() {
+      const preset = this.getSelectedAutoResearchPreset();
+      if (!preset) {
+        return;
+      }
+
+      this.currentAutoResearchState = {};
+      for (const researchId in preset.researches) {
+        this.currentAutoResearchState[researchId] = this.normalizeAutoResearchEntry(preset.researches[researchId]);
+      }
+      this.populateCurrentAutoResearchState();
+      this.currentAutoResearchHiddenIds = this.normalizeAutoResearchHiddenIds(preset.hiddenResearchIds);
+
+      const hiddenSet = new Set(this.currentAutoResearchHiddenIds);
+      for (const category in this.researches) {
+        this.researches[category].forEach((research) => {
+          research.hiddenByUser = hiddenSet.has(research.id);
+        });
+      }
+
+      if (typeof gameSettings !== 'undefined') {
+        gameSettings.hiddenResearchIds = this.currentAutoResearchHiddenIds.slice();
+      }
+    }
+
+    saveCurrentAutoResearchPreset() {
+      const preset = this.getSelectedAutoResearchPreset();
+      if (!preset) {
+        return false;
+      }
+      this.normalizeCurrentAutoResearchState();
+      preset.researches = {};
+      for (const researchId in this.currentAutoResearchState) {
+        preset.researches[researchId] = this.normalizeAutoResearchEntry(this.currentAutoResearchState[researchId]);
+      }
+      preset.hiddenResearchIds = this.normalizeAutoResearchHiddenIds(this.currentAutoResearchHiddenIds);
+      return true;
+    }
+
+    setCurrentAutoResearchPreset(presetId) {
+      const preset = this.getAutoResearchPresetObject(Number(presetId));
+      if (!preset) {
         return null;
       }
-      return this.autoResearchPresets[index];
+      this.currentAutoResearchPreset = preset.id;
+      this.applyCurrentAutoResearchPresetState();
+      return preset;
+    }
+
+    applyAutoResearchPresetOnce(presetId) {
+      const preset = this.getAutoResearchPresetObject(Number(presetId));
+      if (!preset) {
+        return false;
+      }
+      this.currentAutoResearchPreset = preset.id;
+      this.applyCurrentAutoResearchPresetState();
+      return true;
+    }
+
+    renameAutoResearchPreset(presetId, name) {
+      const preset = this.getAutoResearchPresetObject(Number(presetId));
+      if (!preset) {
+        return false;
+      }
+      preset.name = name || `Preset ${preset.id}`;
+      return true;
+    }
+
+    setAutoResearchAutomationCollapsed(collapsed) {
+      this.autoResearchAutomationCollapsed = !!collapsed;
+    }
+
+    moveAutoResearchPreset(presetId, direction) {
+      const index = this.autoResearchPresets.findIndex((preset) => preset.id === presetId);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= this.autoResearchPresets.length) {
+        return false;
+      }
+      const [preset] = this.autoResearchPresets.splice(index, 1);
+      this.autoResearchPresets.splice(nextIndex, 0, preset);
+      return true;
+    }
+
+    deleteAutoResearchPreset(presetId) {
+      const index = this.autoResearchPresets.findIndex((preset) => preset.id === presetId);
+      if (index < 0) {
+        return false;
+      }
+      this.autoResearchPresets.splice(index, 1);
+      if (this.autoResearchPresets.length === 0) {
+        this.createAutoResearchPreset();
+        return true;
+      }
+      if (this.currentAutoResearchPreset === presetId) {
+        const nextPreset = this.autoResearchPresets[Math.max(0, index - 1)] || this.autoResearchPresets[0];
+        this.currentAutoResearchPreset = nextPreset.id;
+      }
+      if (this.nextTravelAutoResearchPresetId === presetId) {
+        this.nextTravelAutoResearchPresetId = null;
+        this.nextTravelAutoResearchPresetPersistent = false;
+      }
+      this.applyCurrentAutoResearchPresetState();
+      return true;
+    }
+
+    applyTravelAutoResearchPreset() {
+      const preset = this.getAutoResearchPresetObject(this.nextTravelAutoResearchPresetId);
+      if (!preset) {
+        this.nextTravelAutoResearchPresetId = null;
+        this.nextTravelAutoResearchPresetPersistent = false;
+        return false;
+      }
+      this.setCurrentAutoResearchPreset(preset.id);
+      if (!this.nextTravelAutoResearchPresetPersistent) {
+        this.nextTravelAutoResearchPresetId = null;
+      }
+      return true;
+    }
+
+    setResearchHiddenInCurrentPreset(researchId, hidden) {
+      const hiddenIds = new Set(this.currentAutoResearchHiddenIds);
+      if (hidden) {
+        hiddenIds.add(researchId);
+      } else {
+        hiddenIds.delete(researchId);
+      }
+      this.currentAutoResearchHiddenIds = this.normalizeAutoResearchHiddenIds(Array.from(hiddenIds));
+      if (typeof gameSettings !== 'undefined') {
+        gameSettings.hiddenResearchIds = this.currentAutoResearchHiddenIds.slice();
+      }
+      return true;
     }
 
     isAutoResearchEnabled(presetIndex, researchId) {
-      const preset = this.getAutoResearchPreset(presetIndex);
-      if (!preset || !Object.prototype.hasOwnProperty.call(preset, researchId)) {
+      this.normalizeCurrentAutoResearchState();
+      if (!Object.prototype.hasOwnProperty.call(this.currentAutoResearchState, researchId)) {
         return false;
       }
-      const entry = this.normalizeAutoResearchEntry(preset[researchId]);
-      preset[researchId] = entry;
+      const entry = this.normalizeAutoResearchEntry(this.currentAutoResearchState[researchId]);
+      this.currentAutoResearchState[researchId] = entry;
       return Boolean(entry.enabled);
     }
 
     setAutoResearchEnabled(presetIndex, researchId, enabled) {
-      const preset = this.getAutoResearchPreset(presetIndex);
-      if (!preset) {
+      this.normalizeCurrentAutoResearchState();
+      if (!Object.prototype.hasOwnProperty.call(this.currentAutoResearchState, researchId)) {
         return false;
       }
-      this.populateAutoResearchPreset(preset);
-      if (!Object.prototype.hasOwnProperty.call(preset, researchId)) {
-        return false;
-      }
-      preset[researchId] = this.normalizeAutoResearchEntry({
-        ...preset[researchId],
+      this.currentAutoResearchState[researchId] = this.normalizeAutoResearchEntry({
+        ...this.currentAutoResearchState[researchId],
         enabled,
       });
       return true;
     }
 
     setAutoResearchPriority(presetIndex, researchId, priority) {
-      const preset = this.getAutoResearchPreset(presetIndex);
-      if (!preset) {
+      this.normalizeCurrentAutoResearchState();
+      if (!Object.prototype.hasOwnProperty.call(this.currentAutoResearchState, researchId)) {
         return false;
       }
-      this.populateAutoResearchPreset(preset);
-      if (!Object.prototype.hasOwnProperty.call(preset, researchId)) {
-        return false;
-      }
-      preset[researchId] = this.normalizeAutoResearchEntry({
-        ...preset[researchId],
+      this.currentAutoResearchState[researchId] = this.normalizeAutoResearchEntry({
+        ...this.currentAutoResearchState[researchId],
         priority,
       });
       return true;
     }
 
     getAutoResearchPriority(presetIndex, researchId) {
-      const preset = this.getAutoResearchPreset(presetIndex);
-      if (!preset || !Object.prototype.hasOwnProperty.call(preset, researchId)) {
+      this.normalizeCurrentAutoResearchState();
+      if (!Object.prototype.hasOwnProperty.call(this.currentAutoResearchState, researchId)) {
         return 4;
       }
-      const entry = this.normalizeAutoResearchEntry(preset[researchId]);
-      preset[researchId] = entry;
+      const entry = this.normalizeAutoResearchEntry(this.currentAutoResearchState[researchId]);
+      this.currentAutoResearchState[researchId] = entry;
       return entry.priority;
     }
 
@@ -222,10 +421,7 @@ class Research {
         return;
       }
 
-      const preset = this.getAutoResearchPreset(this.currentAutoResearchPreset);
-      if (!preset) {
-        return;
-      }
+      this.normalizeCurrentAutoResearchState();
 
       const candidates = [];
       for (const category in this.researches) {
@@ -239,8 +435,8 @@ class Research {
           if (research.isResearched && !research.repeatable) {
             continue;
           }
-          const entry = this.normalizeAutoResearchEntry(preset[research.id]);
-          preset[research.id] = entry;
+          const entry = this.normalizeAutoResearchEntry(this.currentAutoResearchState[research.id]);
+          this.currentAutoResearchState[research.id] = entry;
           if (!entry.enabled) {
             continue;
           }
@@ -375,20 +571,38 @@ class Research {
       return {
         researches: researchState,
         autoResearchPresets: this.autoResearchPresets.map((preset) => {
-          const presetCopy = {};
-          for (const key in preset) {
-            const entry = this.normalizeAutoResearchEntry(preset[key]);
-            presetCopy[key] = { ...entry };
+          const presetCopy = {
+            id: preset.id,
+            name: preset.name,
+            hiddenResearchIds: preset.hiddenResearchIds.slice(),
+            researches: {},
+          };
+          for (const key in preset.researches) {
+            const entry = this.normalizeAutoResearchEntry(preset.researches[key]);
+            presetCopy.researches[key] = { ...entry };
           }
           return presetCopy;
         }),
         currentAutoResearchPreset: this.currentAutoResearchPreset,
+        currentAutoResearchState: (() => {
+          this.normalizeCurrentAutoResearchState();
+          const currentState = {};
+          for (const researchId in this.currentAutoResearchState) {
+            currentState[researchId] = this.normalizeAutoResearchEntry(this.currentAutoResearchState[researchId]);
+          }
+          return currentState;
+        })(),
+        currentAutoResearchHiddenIds: this.normalizeAutoResearchHiddenIds(this.currentAutoResearchHiddenIds),
+        nextTravelAutoResearchPresetId: this.nextTravelAutoResearchPresetId,
+        nextTravelAutoResearchPresetPersistent: this.nextTravelAutoResearchPresetPersistent,
+        autoResearchAutomationCollapsed: this.autoResearchAutomationCollapsed,
       };
     }
 
     loadState(researchState) {
       if (!researchState) {
         this.autoResearchPresets = [];
+        this.nextAutoResearchPresetId = 1;
         this.createAutoResearchPreset();
         return;
       }
@@ -418,14 +632,10 @@ class Research {
 
       const savedPresets = researchState.autoResearchPresets;
       this.autoResearchPresets = [];
+      this.nextAutoResearchPresetId = 1;
       if (Array.isArray(savedPresets) && savedPresets.length > 0) {
         savedPresets.forEach((preset) => {
-          const copy = {};
-          for (const key in preset) {
-            copy[key] = this.normalizeAutoResearchEntry(preset[key]);
-          }
-          this.populateAutoResearchPreset(copy);
-          this.autoResearchPresets.push(copy);
+          this.autoResearchPresets.push(this.normalizeAutoResearchPreset(preset));
         });
       } else {
         this.createAutoResearchPreset();
@@ -433,10 +643,43 @@ class Research {
       this.ensureAutoResearchPresetsAreComplete();
 
       const selectedPreset = researchState.currentAutoResearchPreset;
-      if (Number.isInteger(selectedPreset) && selectedPreset >= 1 && selectedPreset <= this.autoResearchPresets.length) {
+      if (this.getAutoResearchPresetObject(selectedPreset)) {
         this.currentAutoResearchPreset = selectedPreset;
       } else {
-        this.currentAutoResearchPreset = 1;
+        this.currentAutoResearchPreset = this.autoResearchPresets[0].id;
+      }
+      const savedCurrentState = researchState.currentAutoResearchState;
+      if (savedCurrentState) {
+        this.currentAutoResearchState = {};
+        for (const researchId in savedCurrentState) {
+          this.currentAutoResearchState[researchId] = this.normalizeAutoResearchEntry(savedCurrentState[researchId]);
+        }
+        this.populateCurrentAutoResearchState();
+      } else {
+        this.currentAutoResearchState = {};
+      }
+      this.currentAutoResearchHiddenIds = this.normalizeAutoResearchHiddenIds(researchState.currentAutoResearchHiddenIds);
+      this.nextTravelAutoResearchPresetId = researchState.nextTravelAutoResearchPresetId
+        ? Number(researchState.nextTravelAutoResearchPresetId)
+        : null;
+      if (!this.getAutoResearchPresetObject(this.nextTravelAutoResearchPresetId)) {
+        this.nextTravelAutoResearchPresetId = null;
+      }
+      this.nextTravelAutoResearchPresetPersistent = researchState.nextTravelAutoResearchPresetPersistent === true
+        && !!this.nextTravelAutoResearchPresetId;
+      this.autoResearchAutomationCollapsed = !!researchState.autoResearchAutomationCollapsed;
+      if (Object.keys(this.currentAutoResearchState).length === 0 && this.currentAutoResearchHiddenIds.length === 0) {
+        this.applyCurrentAutoResearchPresetState();
+      } else {
+        const hiddenSet = new Set(this.currentAutoResearchHiddenIds);
+        for (const category in this.researches) {
+          this.researches[category].forEach((research) => {
+            research.hiddenByUser = hiddenSet.has(research.id);
+          });
+        }
+        if (typeof gameSettings !== 'undefined') {
+          gameSettings.hiddenResearchIds = this.currentAutoResearchHiddenIds.slice();
+        }
       }
     }
   

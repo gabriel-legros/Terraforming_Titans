@@ -39,6 +39,22 @@ const automationElements = {
   lifeSeedButton: null,
   lifeDesignEnableCheckbox: null,
   lifeDeployNowButton: null,
+  researchAutomation: null,
+  researchAutomationStatus: null,
+  researchAutomationDescription: null,
+  researchCollapseButton: null,
+  researchPanelBody: null,
+  researchPresetSelect: null,
+  researchPresetMoveUpButton: null,
+  researchPresetMoveDownButton: null,
+  researchPresetNameInput: null,
+  researchNewPresetButton: null,
+  researchSavePresetButton: null,
+  researchDeletePresetButton: null,
+  researchApplyOnceButton: null,
+  researchApplyNextTravelSelect: null,
+  researchApplyNextTravelPersistToggle: null,
+  researchPresetJsonDetails: null,
   buildingsAutomation: null,
   buildingsAutomationStatus: null,
   buildingsAutomationDescription: null,
@@ -262,6 +278,54 @@ function cacheAutomationElements() {
   }
   if (!automationElements.lifeDeployNowButton && automationElements.lifeDesign) {
     automationElements.lifeDeployNowButton = automationElements.lifeDesign.querySelector('.life-automation-deploy-now');
+  }
+  if (!automationElements.researchAutomation) {
+    automationElements.researchAutomation = document.getElementById('automation-research');
+  }
+  if (!automationElements.researchAutomationStatus) {
+    automationElements.researchAutomationStatus = document.getElementById('automation-research-status');
+  }
+  if (!automationElements.researchAutomationDescription) {
+    automationElements.researchAutomationDescription = document.getElementById('automation-research-description');
+  }
+  if (!automationElements.researchCollapseButton && automationElements.researchAutomation) {
+    automationElements.researchCollapseButton = automationElements.researchAutomation.querySelector('.automation-collapse');
+  }
+  if (!automationElements.researchPanelBody && automationElements.researchAutomation) {
+    automationElements.researchPanelBody = automationElements.researchAutomation.querySelector('.automation-body');
+  }
+  if (!automationElements.researchPresetSelect && automationElements.researchAutomation) {
+    automationElements.researchPresetSelect = automationElements.researchAutomation.querySelector('.research-automation-preset-select');
+  }
+  if (!automationElements.researchPresetMoveUpButton && automationElements.researchAutomation) {
+    automationElements.researchPresetMoveUpButton = automationElements.researchAutomation.querySelector('.research-automation-preset-move-up');
+  }
+  if (!automationElements.researchPresetMoveDownButton && automationElements.researchAutomation) {
+    automationElements.researchPresetMoveDownButton = automationElements.researchAutomation.querySelector('.research-automation-preset-move-down');
+  }
+  if (!automationElements.researchPresetNameInput && automationElements.researchAutomation) {
+    automationElements.researchPresetNameInput = automationElements.researchAutomation.querySelector('.research-automation-preset-name');
+  }
+  if (!automationElements.researchNewPresetButton && automationElements.researchAutomation) {
+    automationElements.researchNewPresetButton = automationElements.researchAutomation.querySelector('.research-automation-preset-new');
+  }
+  if (!automationElements.researchSavePresetButton && automationElements.researchAutomation) {
+    automationElements.researchSavePresetButton = automationElements.researchAutomation.querySelector('.research-automation-preset-save');
+  }
+  if (!automationElements.researchDeletePresetButton && automationElements.researchAutomation) {
+    automationElements.researchDeletePresetButton = automationElements.researchAutomation.querySelector('.research-automation-preset-delete');
+  }
+  if (!automationElements.researchApplyOnceButton && automationElements.researchAutomation) {
+    automationElements.researchApplyOnceButton = automationElements.researchAutomation.querySelector('.research-automation-preset-apply-once');
+  }
+  if (!automationElements.researchApplyNextTravelSelect && automationElements.researchAutomation) {
+    automationElements.researchApplyNextTravelSelect = automationElements.researchAutomation.querySelector('.research-automation-next-travel-select');
+  }
+  if (!automationElements.researchApplyNextTravelPersistToggle && automationElements.researchAutomation) {
+    automationElements.researchApplyNextTravelPersistToggle = automationElements.researchAutomation.querySelector('.research-automation-next-travel-persist-toggle');
+  }
+  if (!automationElements.researchPresetJsonDetails && automationElements.researchAutomation) {
+    automationElements.researchPresetJsonDetails = automationElements.researchAutomation.querySelector('.research-automation-preset-json-details');
   }
   if (!automationElements.buildingsAutomation) {
     automationElements.buildingsAutomation = document.getElementById('automation-buildings');
@@ -770,6 +834,7 @@ function initializeAutomationUI() {
   cacheAutomationElements();
   buildAutomationShipUI();
   buildAutomationLifeUI();
+  buildAutomationResearchUI();
   buildAutomationBuildingsUI();
   buildAutomationProjectsUI();
   buildAutomationColonyUI();
@@ -808,6 +873,7 @@ function updateAutomationUI() {
   if (panelActive) {
     updateShipAutomationUI();
     updateLifeAutomationUI();
+    updateResearchAutomationUI();
     updateBuildingsAutomationUI();
     updateProjectsAutomationUI();
     updateColonyAutomationUI();

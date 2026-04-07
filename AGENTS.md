@@ -236,6 +236,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Building preset combinations and travel application options
   - Project automation presets/combinations (non-story projects), with per-project control-only save/load and travel application options
   - Colony automation presets/combinations mirror building automation for colony buildings, colony sliders, Construction Office, Nanocolony, and Orbitals, with autobuild available only for colony-building targets and journal sidebar deploy shortcuts for presets/combinations
+  - Research automation adds Solis-unlocked preset management in the Hope automation tab without combinations; presets directly capture the Research tab's manual hidden state plus per-research auto-research toggle and priority, switching presets reapplies those saved research UI states, and a single preset can be queued for next travel with optional persistence
   - Sensitive automation picker entries can use `automationRequiresEverEnabled`; they stay hidden until the building/project has been available once, and automation preserves that discovery through save/load/travel
   - Life automation presets and as-needed modes
   - GHG/calcite and dust factory automation targeting

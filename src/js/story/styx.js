@@ -102,6 +102,20 @@ progressStyx.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000 }
     ],
+    reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisResearchAutomation', value: true }
+    ]
+  },
+  {
+    id: 'styx.39.3b',
+    type: 'journal',
+    chapter: 39,
+    activePlanet: 'styx',
+    narrative: "Solis : 'HOPE, I have something new for you!'  \n Mary : '... Research presets?  Really?  What's the point.  HOPE can just research everything.  Is your R&D department running out of ideas?'  \n Solis : 'I... huh...  I promise the next one will be extra good!  It will blow you away!'  \n Mary : 'We'll see about that.'",
+    prerequisites: ['styx.39.3'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 2_000 }
+    ],
     reward: []
   },
   {
@@ -110,7 +124,7 @@ progressStyx.chapters.push(
     chapter: 39,
     activePlanet: 'styx',
     narrative: "Warden : 'Intruders!  We have here 5 of your own people.  For every additional day you stay here, we are going to kill one of them.'  \n Mary : *sigh* '$WGC_TEAM1_LEADER$, can you handle this?  This is way outside my area of expertise.' \n $WGC_TEAM1_LEADER$ : 'Of course Miss Hopkins.  (To the warden) Warden.  The situation is clear.  We can blow you all to smithereens from orbit, but we haven't.  Clearly you understand your hostages are valuable.  You're smart.  That's good.  Well... don't be stupid.  Your lives are worth something too.  We can make a trade.  Your lives for our people.  If you start killing them... well this deal no longer stands.  Do what's good for you.  Everyone wins.'",
-    prerequisites: ['styx.39.3'],
+    prerequisites: ['styx.39.3b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
     ],

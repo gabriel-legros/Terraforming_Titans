@@ -18,6 +18,7 @@ const shopDescriptions = {
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase',
   autoResearch: 'Enable automatic research assignment for unlocked technologies',
+  researchAutomation: 'Provides HOPE with software for managing research presets',
   shipAssignment: 'Provides HOPE with software for easier spaceship management',
   lifeAutomation: 'Provides HOPE with software for easier biomass management',
   buildingsAutomation: 'Provides HOPE with software for easier buildings management',
@@ -25,7 +26,7 @@ const shopDescriptions = {
   colonyAutomation: 'Provides HOPE with software for easier colony management'
 };
 
-const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation', 'buildingsAutomation', 'projectsAutomation', 'colonyAutomation'];
+const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation', 'buildingsAutomation', 'projectsAutomation', 'colonyAutomation', 'researchAutomation'];
 const solisShopRepeatableKeys = [
   'funding',
   'metal',
@@ -118,7 +119,8 @@ function createShopItem(key) {
 
   const label = document.createElement('span');
   label.classList.add('solis-shop-item-label');
-  label.innerHTML = `${shopDescriptions[key]} <span class="solis-shop-item-cost">(Cost: <span id="solis-shop-${key}-cost"></span>)</span>`;
+  const description = t(`ui.hope.solisShopDescriptions.${key}`, {}, shopDescriptions[key] || key);
+  label.innerHTML = `${description} <span class="solis-shop-item-cost">(Cost: <span id="solis-shop-${key}-cost"></span>)</span>`;
   item.appendChild(label);
 
   const actions = document.createElement('div');

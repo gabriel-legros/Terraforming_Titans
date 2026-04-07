@@ -20,6 +20,10 @@ const sidebarAutomationElements = {
   lifePresetToggle: null,
   lifePurchaseToggle: null,
   lifeDesignToggle: null,
+  researchSection: null,
+  researchStatus: null,
+  researchPresetSelect: null,
+  researchPresetDeploy: null,
   buildingsSection: null,
   buildingsStatus: null,
   buildingsPresetSelect: null,
@@ -266,6 +270,28 @@ function buildSidebarAutomationUI() {
   elements.colonyPresetDeploy = colonyPresetDeploy;
   elements.colonyCombinationSelect = colonyComboSelect;
   elements.colonyCombinationDeploy = colonyComboDeploy;
+
+  const research = createSidebarSection('Research');
+  const researchRow = createSidebarRow();
+  researchRow.classList.add('journal-automation-row-stacked');
+  const researchPresetLabel = document.createElement('span');
+  researchPresetLabel.classList.add('journal-automation-row-label');
+  researchPresetLabel.textContent = 'Preset';
+  const researchPresetControls = createSidebarRow();
+  const researchPresetSelect = document.createElement('select');
+  researchPresetSelect.classList.add('journal-automation-select');
+  const researchPresetDeploy = document.createElement('button');
+  researchPresetDeploy.type = 'button';
+  researchPresetDeploy.textContent = 'Deploy';
+  researchPresetDeploy.classList.add('journal-automation-action');
+  researchPresetControls.append(researchPresetSelect, researchPresetDeploy);
+  researchRow.append(researchPresetLabel, researchPresetControls);
+  research.section.appendChild(researchRow);
+  panel.appendChild(research.section);
+  elements.researchSection = research.section;
+  elements.researchStatus = research.status;
+  elements.researchPresetSelect = researchPresetSelect;
+  elements.researchPresetDeploy = researchPresetDeploy;
 }
 
 function setJournalAutomationMode(enabled) {
@@ -296,6 +322,7 @@ function updateSidebarAutomationToggleVisibility() {
   const hasAnyAutomation = !!(manager
     && (manager.hasFeature('automationShipAssignment')
       || manager.hasFeature('automationLifeDesign')
+      || manager.hasFeature('automationResearch')
       || manager.hasFeature('automationBuildings')
       || manager.hasFeature('automationProjects')
       || manager.hasFeature('automationColony')));
@@ -374,6 +401,23 @@ function initializeSidebarAutomationUI() {
     automationManager.lifeAutomation.setDesignAutomationEnabled(preset.id, !preset.designEnabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
+  });
+
+  sidebarAutomationElements.researchPresetSelect.addEventListener('change', (event) => {
+    researchManager.setCurrentAutoResearchPreset(Number(event.target.value));
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+    updateResearchUI();
+  });
+  sidebarAutomationElements.researchPresetDeploy.addEventListener('click', () => {
+    const preset = researchManager.getSelectedAutoResearchPreset();
+    if (!preset) {
+      return;
+    }
+    researchManager.applyAutoResearchPresetOnce(preset.id);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+    updateResearchUI();
   });
 
   sidebarAutomationElements.buildingsPresetSelect.addEventListener('change', (event) => {
@@ -509,6 +553,21 @@ function updateSidebarAutomationUI() {
     setToggleButtonState(elements.lifePresetToggle, !!activePreset.enabled);
     setToggleButtonState(elements.lifePurchaseToggle, activePreset.purchaseEnabled !== false);
     setToggleButtonState(elements.lifeDesignToggle, activePreset.designEnabled !== false);
+  }
+
+  const researchUnlocked = manager.hasFeature('automationResearch');
+  elements.researchSection.style.display = researchUnlocked ? '' : 'none';
+  elements.researchSection.classList.toggle('journal-automation-locked', !researchUnlocked);
+  elements.researchStatus.textContent = researchUnlocked ? '' : 'Locked';
+  elements.researchPresetSelect.disabled = !researchUnlocked;
+  elements.researchPresetDeploy.disabled = !researchUnlocked;
+  if (researchUnlocked) {
+    fillSelect(
+      elements.researchPresetSelect,
+      researchManager.autoResearchPresets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      researchManager.currentAutoResearchPreset
+    );
+    elements.researchPresetDeploy.disabled = !researchManager.getSelectedAutoResearchPreset();
   }
 
   const buildingAutomation = manager.buildingsAutomation;

@@ -53,6 +53,9 @@ function setResearchHiddenByUser(researchItem, hidden) {
     if (!hidden && index !== -1) {
         hiddenResearchIds.splice(index, 1);
     }
+    if (researchManager && researchManager.setResearchHiddenInCurrentPreset) {
+        researchManager.setResearchHiddenInCurrentPreset(researchItem.id, hidden);
+    }
 }
 
 function isResearchHidden(researchItem) {
