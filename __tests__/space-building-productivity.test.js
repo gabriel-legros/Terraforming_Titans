@@ -480,6 +480,10 @@ function setupHarness(initialStorage = {}) {
   setGlobal('getZones', () => [], originalGlobals);
   setGlobal('getZonePercentage', () => 0, originalGlobals);
   setGlobal('buildings', {}, originalGlobals);
+  setGlobal('resolveWorldBaseLand', () => 0, originalGlobals);
+  setGlobal('resolveWorldGeometricLand', () => 0, originalGlobals);
+  setGlobal('getDynamicWorldPlanetaryMassAvailableTons', () => 0, originalGlobals);
+  setGlobal('hasDynamicMassEnabled', () => false, originalGlobals);
 
   const projectManager = {
     projects: {},

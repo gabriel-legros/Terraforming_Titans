@@ -146,6 +146,23 @@ class SolisManager extends EffectableEntity {
     this.currentQuest.quantity = baseQuantity * Math.pow(10, this.rewardMultiplier - 1);
   }
 
+  normalizeQuestCooldowns() {
+    if (!(this.questCooldownRemaining > 0) || this.questCooldownRemaining > this.questInterval) {
+      this.questCooldownRemaining = 0;
+    }
+    if (!(this.refreshCooldownRemaining > 0) || this.refreshCooldownRemaining > this.refreshCooldown) {
+      this.refreshCooldownRemaining = 0;
+    }
+  }
+
+  reconcileQuestState() {
+    this.normalizeQuestCooldowns();
+    if (!this.currentQuest && this.questCooldownRemaining === 0) {
+      this.generateQuest();
+      this.normalizeQuestCooldowns();
+    }
+  }
+
   availableResources() {
     const list = [];
     for (const name in this.resourceValues) {
@@ -681,9 +698,7 @@ class SolisManager extends EffectableEntity {
     if (this.refreshCooldownRemaining > 0) {
       this.refreshCooldownRemaining = Math.max(0, this.refreshCooldownRemaining - elapsed);
     }
-    if (!this.currentQuest && this.questCooldownRemaining <= 0) {
-      this.generateQuest();
-    }
+    this.reconcileQuestState();
   }
 
   saveState() {
@@ -739,8 +754,7 @@ class SolisManager extends EffectableEntity {
     if (data.lastQuestTime > 0 || this.currentQuest || this.questCooldownRemaining > 0) {
       this.hasGeneratedQuest = true;
     }
-    this.questCooldownRemaining = Math.max(0, this.questCooldownRemaining);
-    this.refreshCooldownRemaining = Math.max(0, this.refreshCooldownRemaining);
+    this.reconcileQuestState();
     if (data.upgrades) {
       for (const k in data.upgrades) {
         if (this.shopUpgrades[k]) {
