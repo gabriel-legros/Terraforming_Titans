@@ -186,17 +186,48 @@ function updateLifeAutomationUI() {
   const purchaseHasFocus = lifePurchaseContainer.contains(document.activeElement) &&
     document.activeElement.tagName === 'INPUT';
   if (!purchaseHasFocus) {
-    lifePurchaseContainer.textContent = '';
-    renderLifeAutomationPurchases(automation, activePreset, lifePurchaseContainer);
+    const purchaseSignature = JSON.stringify(lifeShopCategories.map(category => {
+      const settings = activePreset.purchaseSettings[category.name];
+      return {
+        category: category.name,
+        unlocked: isLifeShopCategoryUnlocked(category),
+        enabled: !!settings.enabled,
+        threshold: settings.threshold,
+        maxCost: settings.maxCost || 0
+      };
+    }));
+    if (lifePurchaseContainer._renderSignature !== purchaseSignature) {
+      lifePurchaseContainer.textContent = '';
+      renderLifeAutomationPurchases(automation, activePreset, lifePurchaseContainer);
+      lifePurchaseContainer._renderSignature = purchaseSignature;
+    }
   }
 
   // Only rebuild steps if no dropdown/input within is focused
   const stepsHasFocus = lifeDesignStepsContainer.contains(document.activeElement) &&
     (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT');
   if (!stepsHasFocus) {
-    lifeDesignStepsContainer.textContent = '';
-    normalizeLifeAutomationStepAttributes(automation, activePreset);
-    renderLifeAutomationSteps(automation, activePreset, lifeDesignStepsContainer);
+    const stepSpends = automation.getDesignStepSpends(activePreset);
+    const stepsSignature = JSON.stringify({
+      presetId: activePreset.id,
+      designEnabled: activePreset.designEnabled !== false,
+      maxSteps: automation.maxSteps,
+      lifeDesignerEnabled: !!lifeDesigner.enabled,
+      stepSpends,
+      designSteps: activePreset.designSteps.map(step => ({
+        id: step.id,
+        attribute: step.attribute,
+        amount: step.amount,
+        mode: step.mode,
+        zones: step.zones
+      }))
+    });
+    if (lifeDesignStepsContainer._renderSignature !== stepsSignature) {
+      lifeDesignStepsContainer.textContent = '';
+      normalizeLifeAutomationStepAttributes(automation, activePreset);
+      renderLifeAutomationSteps(automation, activePreset, lifeDesignStepsContainer);
+      lifeDesignStepsContainer._renderSignature = stepsSignature;
+    }
   }
 
   lifeAddStepButton.disabled = activePreset.designSteps.length >= automation.maxSteps;

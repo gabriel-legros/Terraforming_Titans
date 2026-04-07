@@ -550,100 +550,118 @@ function updateBuildingsAutomationUI() {
   const applyHasFocus = buildingsApplyList.contains(document.activeElement)
     && document.activeElement.tagName === 'SELECT';
   if (!applyHasFocus) {
-    buildingsApplyList.textContent = '';
     const assignments = automation.getAssignments();
-    assignments.forEach((assignment, index) => {
-      const row = document.createElement('div');
-      row.classList.add('building-automation-apply-row');
-      const primary = document.createElement('div');
-      primary.classList.add('building-automation-apply-primary');
-      const toggle = createToggleButton({ onLabel: 'Apply On', offLabel: 'Apply Off', isOn: assignment.enabled });
-      toggle.classList.add('building-automation-apply-toggle');
-      toggle.addEventListener('click', () => {
-        automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      const select = document.createElement('select');
-      presets.forEach(preset => {
-        const option = document.createElement('option');
-        option.value = String(preset.id);
-        option.textContent = preset.name || `Preset ${preset.id}`;
-        if (assignment.presetId === preset.id) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
-      if (!presets.length) {
-        const empty = document.createElement('option');
-        empty.textContent = 'No presets saved';
-        empty.disabled = true;
-        empty.selected = true;
-        select.appendChild(empty);
-      }
-      const detail = document.createElement('span');
-      detail.classList.add('building-automation-apply-detail');
-      const updateDetail = (presetId) => {
-        const preset = automation.getPresetById(presetId);
-        const detailText = preset
-          ? preset.includeControl && preset.includeAutomation
-            ? 'Control + Autobuild'
-            : preset.includeControl
-              ? 'Control only'
-              : 'Autobuild only'
-          : 'Select a preset';
-        const buildingList = preset
-          ? preset.scopeAll
-            ? 'All available buildings'
-            : Object.keys(preset.buildings).map(id => {
-                const building = buildings[id];
-                return building.displayName || id;
-              }).join(', ')
-          : '';
-        detail.textContent = buildingList ? `${detailText} / ${buildingList}` : detailText;
-      };
-      updateDetail(assignment.presetId);
-      select.addEventListener('change', (event) => {
-        const presetId = Number(event.target.value);
-        automation.setAssignmentPreset(assignment.id, presetId);
-        updateDetail(presetId);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-
-      const controls = document.createElement('div');
-      controls.classList.add('building-automation-apply-controls');
-      const moveUp = document.createElement('button');
-      moveUp.textContent = '↑';
-      moveUp.title = 'Move up';
-      moveUp.disabled = index === 0;
-      moveUp.addEventListener('click', () => {
-        automation.moveAssignment(assignment.id, -1);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      const moveDown = document.createElement('button');
-      moveDown.textContent = '↓';
-      moveDown.title = 'Move down';
-      moveDown.disabled = index === assignments.length - 1;
-      moveDown.addEventListener('click', () => {
-        automation.moveAssignment(assignment.id, 1);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      const remove = document.createElement('button');
-      remove.textContent = '✕';
-      remove.title = 'Remove preset';
-      remove.addEventListener('click', () => {
-        automation.removeAssignment(assignment.id);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      controls.append(moveUp, moveDown, remove);
-      primary.append(toggle, select);
-      row.append(primary, detail, controls);
-      buildingsApplyList.appendChild(row);
+    const applySignature = JSON.stringify({
+      presets: presets.map(preset => ({
+        id: preset.id,
+        name: preset.name,
+        includeControl: preset.includeControl,
+        includeAutomation: preset.includeAutomation,
+        scopeAll: preset.scopeAll,
+        buildings: Object.keys(preset.buildings)
+      })),
+      assignments: assignments.map(assignment => ({
+        id: assignment.id,
+        presetId: assignment.presetId,
+        enabled: assignment.enabled
+      }))
     });
+    if (buildingsApplyList._renderSignature !== applySignature) {
+      buildingsApplyList.textContent = '';
+      assignments.forEach((assignment, index) => {
+        const row = document.createElement('div');
+        row.classList.add('building-automation-apply-row');
+        const primary = document.createElement('div');
+        primary.classList.add('building-automation-apply-primary');
+        const toggle = createToggleButton({ onLabel: 'Apply On', offLabel: 'Apply Off', isOn: assignment.enabled });
+        toggle.classList.add('building-automation-apply-toggle');
+        toggle.addEventListener('click', () => {
+          automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        const select = document.createElement('select');
+        presets.forEach(preset => {
+          const option = document.createElement('option');
+          option.value = String(preset.id);
+          option.textContent = preset.name || `Preset ${preset.id}`;
+          if (assignment.presetId === preset.id) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+        if (!presets.length) {
+          const empty = document.createElement('option');
+          empty.textContent = 'No presets saved';
+          empty.disabled = true;
+          empty.selected = true;
+          select.appendChild(empty);
+        }
+        const detail = document.createElement('span');
+        detail.classList.add('building-automation-apply-detail');
+        const updateDetail = (presetId) => {
+          const preset = automation.getPresetById(presetId);
+          const detailText = preset
+            ? preset.includeControl && preset.includeAutomation
+              ? 'Control + Autobuild'
+              : preset.includeControl
+                ? 'Control only'
+                : 'Autobuild only'
+            : 'Select a preset';
+          const buildingList = preset
+            ? preset.scopeAll
+              ? 'All available buildings'
+              : Object.keys(preset.buildings).map(id => {
+                  const building = buildings[id];
+                  return building.displayName || id;
+                }).join(', ')
+            : '';
+          detail.textContent = buildingList ? `${detailText} / ${buildingList}` : detailText;
+        };
+        updateDetail(assignment.presetId);
+        select.addEventListener('change', (event) => {
+          const presetId = Number(event.target.value);
+          automation.setAssignmentPreset(assignment.id, presetId);
+          updateDetail(presetId);
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+
+        const controls = document.createElement('div');
+        controls.classList.add('building-automation-apply-controls');
+        const moveUp = document.createElement('button');
+        moveUp.textContent = '↑';
+        moveUp.title = 'Move up';
+        moveUp.disabled = index === 0;
+        moveUp.addEventListener('click', () => {
+          automation.moveAssignment(assignment.id, -1);
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        const moveDown = document.createElement('button');
+        moveDown.textContent = '↓';
+        moveDown.title = 'Move down';
+        moveDown.disabled = index === assignments.length - 1;
+        moveDown.addEventListener('click', () => {
+          automation.moveAssignment(assignment.id, 1);
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        const remove = document.createElement('button');
+        remove.textContent = '✕';
+        remove.title = 'Remove preset';
+        remove.addEventListener('click', () => {
+          automation.removeAssignment(assignment.id);
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        controls.append(moveUp, moveDown, remove);
+        primary.append(toggle, select);
+        row.append(primary, detail, controls);
+        buildingsApplyList.appendChild(row);
+      });
+      buildingsApplyList._renderSignature = applySignature;
+    }
   }
 
   buildingsAddApplyButton.disabled = presets.length === 0;
