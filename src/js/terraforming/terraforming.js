@@ -1395,12 +1395,27 @@ class Terraforming extends EffectableEntity{
     if (allowAvailableHeating) {
       const mirrorEffect = this.calculateMirrorEffect();
       const mirrorPowerPer = mirrorEffect?.interceptedPower || 0;
-      const totalMirrors = Math.max(0, buildings?.spaceMirror?.active || 0);
+      const totalMirrors = Math.max(
+        0,
+        Number.isFinite(buildings?.spaceMirror?.activeNumber)
+          ? buildings.spaceMirror.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(buildings?.spaceMirror?.active)
+            : Math.max(0, Math.floor(Number(buildings?.spaceMirror?.active) || 0)))
+      );
       const lantern = buildings?.hyperionLantern;
       const lanternBaseProductivity = Number.isFinite(lantern?._baseProductivity)
         ? lantern._baseProductivity
         : (Number.isFinite(lantern?.productivity) ? lantern.productivity : 1);
       const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternBaseProductivity : 0;
+      const totalLanterns = Math.max(
+        0,
+        Number.isFinite(lantern?.activeNumber)
+          ? lantern.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(lantern?.active)
+            : Math.max(0, Math.floor(Number(lantern?.active) || 0)))
+      );
       const assignM = mirrorOversightSettings.assignments?.mirrors || {};
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
       const assignedMirrors =
@@ -1413,7 +1428,7 @@ class Terraforming extends EffectableEntity{
         : 0;
       const availableMirrors = Math.max(0, totalMirrors - assignedMirrors);
       const availableLanterns = mirrorOversightSettings.applyToLantern
-        ? Math.max(0, (lantern?.active || 0) - assignedLanterns)
+        ? Math.max(0, totalLanterns - assignedLanterns)
         : 0;
       availableAdvancedHeatingPower =
         (availableMirrors * mirrorPowerPer) +
@@ -2143,7 +2158,15 @@ class Terraforming extends EffectableEntity{
       const mirrorEffect = this.calculateMirrorEffect();
       const mirrorFlux = mirrorEffect.powerPerUnitArea;
       const lanternFlux = this.calculateLanternFlux();
-      const mirrors = (typeof buildings !== 'undefined' && buildings['spaceMirror']) ? buildings['spaceMirror'].active : 0;
+      const mirrors = (typeof buildings !== 'undefined' && buildings['spaceMirror'])
+        ? (
+          Number.isFinite(buildings.spaceMirror.activeNumber)
+            ? buildings.spaceMirror.activeNumber
+            : (typeof buildingCountToNumber === 'function'
+              ? buildingCountToNumber(buildings.spaceMirror.active)
+              : Math.max(0, Math.floor(Number(buildings.spaceMirror.active) || 0)))
+        )
+        : 0;
       const mirrorProductivity = Number.isFinite(buildings?.spaceMirror?.productivity) ? buildings.spaceMirror.productivity : 1;
       let reverseFactor = 1;
       if (typeof mirrorOversightSettings !== 'undefined') {
