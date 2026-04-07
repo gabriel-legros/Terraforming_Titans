@@ -2199,10 +2199,18 @@ class SpaceMirrorFacilityProject extends Project {
         elements.lanternDetails.rogueDayNightControl.style.display = (showLantern && canControlDayNight) ? 'flex' : 'none';
       }
       if (elements.lanternDetails.rogueDayNightInput && canControlDayNight && typeof terraforming !== 'undefined') {
-        const currentPeriod = terraforming.celestialParameters.rotationPeriod || 24;
+        const rawPeriod = terraforming.celestialParameters.rotationPeriod || 24;
+        const clampedPeriod = Math.max(1, Math.min(1000, rawPeriod));
+        if (clampedPeriod !== rawPeriod) {
+          terraforming.celestialParameters.rotationPeriod = clampedPeriod;
+          const durationData = rotationPeriodToDuration(clampedPeriod);
+          dayNightCycle.dayDuration = durationData.duration;
+          dayNightCycle.nightDuration = durationData.duration;
+          dayNightCycle.rotationDirection = durationData.direction;
+        }
         const dayNightInput = elements.lanternDetails.rogueDayNightInput;
         if (document.activeElement !== dayNightInput && dayNightInput.dataset.editing !== 'true') {
-          dayNightInput.value = currentPeriod;
+          dayNightInput.value = clampedPeriod;
         }
       }
       
