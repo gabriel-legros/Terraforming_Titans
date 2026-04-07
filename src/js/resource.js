@@ -1072,6 +1072,16 @@ function reconcileLandResourceValue() {
   } else {
     landResource.value = totalLand;
   }
+
+  if (hasDynamicMassEnabled) {
+    const dustCap = Math.max(0, totalLand * 10000);
+    if (resources.special.albedoUpgrades) {
+      resources.special.albedoUpgrades.baseCap = dustCap;
+    }
+    if (resources.special.whiteDust) {
+      resources.special.whiteDust.baseCap = dustCap;
+    }
+  }
 }
 
 function reconcilePlanetaryMassResourceValue() {
