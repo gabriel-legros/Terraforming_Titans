@@ -74,6 +74,35 @@ class AtlasManager extends EffectableEntity {
         return this.atlasWorldCompletions[resolved] || { completed: false };
     }
 
+    updateFastestCompletion(seedKey, playSeconds, realSeconds) {
+        const resolved = String(seedKey || '').trim().toLowerCase();
+        if (!resolved) {
+            return false;
+        }
+        const completion = this.getCompletion(resolved);
+        const bestPlaySeconds = Number(completion.fastestCompletionDays);
+        const bestRealSeconds = Number(completion.fastestCompletionRealSeconds);
+        const nextPlaySeconds = Number(playSeconds);
+        const nextRealSeconds = Number(realSeconds);
+        if (!Number.isFinite(nextPlaySeconds) || nextPlaySeconds < 0) {
+            return false;
+        }
+        const hasExistingBest = Number.isFinite(bestPlaySeconds) && bestPlaySeconds >= 0;
+        const missingExistingReal = !Number.isFinite(bestRealSeconds) || bestRealSeconds < 0;
+        const hasNextReal = Number.isFinite(nextRealSeconds) && nextRealSeconds >= 0;
+        const shouldUpdate = !hasExistingBest
+            || nextPlaySeconds < bestPlaySeconds
+            || (nextPlaySeconds === bestPlaySeconds && missingExistingReal && hasNextReal)
+            || (nextPlaySeconds === bestPlaySeconds && hasNextReal && nextRealSeconds < bestRealSeconds);
+        if (!shouldUpdate) {
+            return false;
+        }
+        completion.fastestCompletionDays = nextPlaySeconds;
+        completion.fastestCompletionRealSeconds = hasNextReal ? nextRealSeconds : null;
+        this.atlasWorldCompletions[resolved] = completion;
+        return true;
+    }
+
     isCompleted(seedKey) {
         return this.getCompletion(seedKey).completed === true;
     }
@@ -126,25 +155,31 @@ class AtlasManager extends EffectableEntity {
         return ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD;
     }
 
-    markCompleted(seedKey) {
+    markCompleted(seedKey, options = {}) {
         const resolved = String(seedKey || '').trim().toLowerCase();
         if (!resolved) {
             return;
         }
         const existing = this.getCompletion(resolved);
-        if (existing.completed) {
-            return;
+        const shouldUpdateFastest = options.skipFastestUpdate !== true;
+        let changed = false;
+        if (shouldUpdateFastest) {
+            changed = this.updateFastestCompletion(resolved, playTimeSeconds, realPlayTimeSeconds) || changed;
         }
-        this.atlasWorldCompletions[resolved] = {
-            completed: true,
-            completedAt: Date.now()
-        };
-        this.grantCommunityCompletionArtifactReward(resolved);
-        this.applyCompletionRewards();
-        if (skillManager && typeof skillManager.handleAtlasCompletionChange === 'function') {
-            skillManager.handleAtlasCompletionChange();
+        if (!existing.completed) {
+            existing.completed = true;
+            existing.completedAt = Date.now();
+            this.atlasWorldCompletions[resolved] = existing;
+            this.grantCommunityCompletionArtifactReward(resolved);
+            this.applyCompletionRewards();
+            if (skillManager && typeof skillManager.handleAtlasCompletionChange === 'function') {
+                skillManager.handleAtlasCompletionChange();
+            }
+            changed = true;
         }
-        this.updateUI({ force: true });
+        if (changed) {
+            this.updateUI({ force: true });
+        }
     }
 
     getCurrentChallengeSeedKey() {
@@ -159,12 +194,12 @@ class AtlasManager extends EffectableEntity {
             const status = statuses[seed];
             const seedKey = getAtlasSpecialSeedKey(status) || getAtlasSpecialSeedKey(status?.original);
             if (status?.terraformed && this.isChallengeSeedKey(seedKey)) {
-                this.markCompleted(seedKey);
+                this.markCompleted(seedKey, { skipFastestUpdate: true });
             }
         });
         const currentSeedKey = this.getCurrentChallengeSeedKey();
         if (currentSeedKey && spaceManager.isCurrentWorldTerraformed()) {
-            this.markCompleted(currentSeedKey);
+            this.markCompleted(currentSeedKey, { skipFastestUpdate: true });
         }
     }
 
@@ -272,7 +307,20 @@ class AtlasManager extends EffectableEntity {
         Object.keys(savedCompletions).forEach((seedKey) => {
             const normalized = String(seedKey).trim().toLowerCase();
             if (normalized) {
-                this.atlasWorldCompletions[normalized] = savedCompletions[seedKey];
+                const savedCompletion = savedCompletions[seedKey] || {};
+                const normalizedCompletion = {
+                    ...savedCompletion,
+                    completed: savedCompletion.completed === true
+                };
+                const fastestCompletionDays = Number(savedCompletion.fastestCompletionDays);
+                normalizedCompletion.fastestCompletionDays = Number.isFinite(fastestCompletionDays) && fastestCompletionDays >= 0
+                    ? fastestCompletionDays
+                    : null;
+                const fastestCompletionRealSeconds = Number(savedCompletion.fastestCompletionRealSeconds);
+                normalizedCompletion.fastestCompletionRealSeconds = Number.isFinite(fastestCompletionRealSeconds) && fastestCompletionRealSeconds >= 0
+                    ? fastestCompletionRealSeconds
+                    : null;
+                this.atlasWorldCompletions[normalized] = normalizedCompletion;
             }
         });
         this.syncCompletionsFromSpaceState();

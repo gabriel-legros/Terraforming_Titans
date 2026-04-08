@@ -229,13 +229,19 @@ function setTooltipText(node, text, cache, key) {
 
 function attachDynamicInfoTooltip(iconElement, text, clickToPin = true) {
   if (!iconElement) return null;
-  const tooltip = document.createElement('span');
-  tooltip.classList.add('resource-tooltip', 'dynamic-tooltip');
+  let tooltip = iconElement.querySelector('.resource-tooltip.dynamic-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('span');
+    tooltip.classList.add('resource-tooltip', 'dynamic-tooltip');
+    iconElement.appendChild(tooltip);
+  }
   setTooltipText(tooltip, text);
   iconElement.removeAttribute('title');
   if (!iconElement.innerHTML) iconElement.innerHTML = '&#9432;';
-  if (!tooltip.parentNode) iconElement.appendChild(tooltip);
-  addTooltipHover(iconElement, tooltip, { dynamicPlacement: true, clickToPin });
+  if (!tooltip._dynamicHoverAttached) {
+    addTooltipHover(iconElement, tooltip, { dynamicPlacement: true, clickToPin });
+    tooltip._dynamicHoverAttached = true;
+  }
   return tooltip;
 }
 

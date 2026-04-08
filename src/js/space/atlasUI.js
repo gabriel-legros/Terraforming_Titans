@@ -76,6 +76,34 @@ function buildAtlasStat(label, value) {
     return row;
 }
 
+function getAtlasFastestCompletionText(completion) {
+    const fastestCompletionDaysValue = completion?.fastestCompletionDays;
+    if (fastestCompletionDaysValue === null || fastestCompletionDaysValue === undefined || fastestCompletionDaysValue === '') {
+        return getAtlasText('noRecordYet', 'No record yet');
+    }
+    const fastestCompletionDays = Number(fastestCompletionDaysValue);
+    if (!Number.isFinite(fastestCompletionDays) || fastestCompletionDays < 0) {
+        return getAtlasText('noRecordYet', 'No record yet');
+    }
+    const gameTime = formatPlayTime(fastestCompletionDays);
+    const fastestCompletionRealSecondsValue = completion?.fastestCompletionRealSeconds;
+    if (fastestCompletionRealSecondsValue === null || fastestCompletionRealSecondsValue === undefined || fastestCompletionRealSecondsValue === '') {
+        return getAtlasText('fastestCompletionValue', '{game}', { game: gameTime });
+    }
+    const fastestCompletionRealSeconds = Number(fastestCompletionRealSecondsValue);
+    if (!Number.isFinite(fastestCompletionRealSeconds) || fastestCompletionRealSeconds < 0) {
+        return getAtlasText('fastestCompletionValue', '{game}', { game: gameTime });
+    }
+    return getAtlasText(
+        'fastestCompletionValueWithReal',
+        '{game} ({real} real time)',
+        {
+            game: gameTime,
+            real: formatDurationDetailed(fastestCompletionRealSeconds)
+        }
+    );
+}
+
 function buildAtlasTag(label, className) {
     const tag = document.createElement('span');
     tag.className = `atlas-world-tag ${className}`;
@@ -226,6 +254,7 @@ function buildAtlasWorldCard(definition, category) {
     stats.appendChild(buildAtlasStat(getAtlasText('difficulty', 'Difficulty'), definition.difficultyRating || '?'));
     stats.appendChild(buildAtlasStat(getAtlasText('hazardsLabel', 'Hazards'), resolveAtlasHazardLabel(result)));
     stats.appendChild(buildAtlasStat(getAtlasText('sector', 'Sector'), result?.merged?.celestialParameters?.sector || '—'));
+    stats.appendChild(buildAtlasStat(getAtlasText('fastestCompletion', 'Fastest completion'), getAtlasFastestCompletionText(completion)));
     if (definition.designer) {
         stats.appendChild(buildAtlasStat(getAtlasText('designedBy', 'Designed by'), definition.designer));
     }
