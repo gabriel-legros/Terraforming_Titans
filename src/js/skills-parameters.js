@@ -184,14 +184,14 @@ const skillParameters = {
     effects: [
       {
         target: 'building',
-        targetId: 'chemicalReactor',
+        targetId: 'boschReactor',
         type: 'productionMultiplier',
         baseValue: 0.2,
         perRank: true
       },
       {
         target: 'building',
-        targetId: 'chemicalReactor',
+        targetId: 'boschReactor',
         type: 'consumptionMultiplier',
         baseValue: 0.2,
         perRank: true
