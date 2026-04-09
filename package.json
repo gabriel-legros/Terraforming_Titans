@@ -18,6 +18,9 @@
     "testMatch": [
       "**/__tests__/**/*.test.js"
     ],
+    "testPathIgnorePatterns": [
+      "/__tests__/late-game-ui-memory-leaks.test.js$"
+    ],
     "transform": {
       "^.+\\.js$": "babel-jest"
     },

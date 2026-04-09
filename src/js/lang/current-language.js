@@ -498,14 +498,16 @@ setLanguageData({
         mode: {
           temperature: 'avg T',
           opticalDepth: 'optical depth',
+          pressure: 'pressure',
         },
         and: ' and ',
-        tooltip: 'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. When the trend leaves the band, both greenhouse gas and calcite correction aim for the midpoint, then stop again once the trend returns inside the band. Optical depth automation is GHG-only and never runs calcite aerosol mode. It may take some time to converge as the factories may need to build up or remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.',
+        tooltip: 'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature, active gas partial pressure, or optical depth and a solver will attempt to set the trend inside this range. When the trend leaves the band, both greenhouse gas and calcite correction aim for the midpoint, then stop again once the trend returns inside the band. Optical depth automation is GHG-only and never runs calcite aerosol mode. It may take some time to converge as the factories may need to build up or remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.',
         labelPrefixAutomate: 'Automate ',
         labelPrefixDisableIf: 'Disable if ',
         labelSuffixBetween: ' between ',
         labelSuffixGreaterThan: ' > ',
         opticalDepthUnit: 'tau',
+        pressureUnit: 'Pa',
       },
       chemicalReactor: {
         chemistryOfScaleName: 'Chemistry of Scale',
