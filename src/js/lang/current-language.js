@@ -4274,7 +4274,7 @@ setLanguageData({
       },
       nanotech_efficiency: {
         name: 'Nanotech Efficiency',
-        description: 'Improves nanotechnology consumption, production, growth and maintenance renduction by 20% per rank',
+        description: 'Improves nanotechnology consumption, production, growth and maintenance reduction by 20% per rank',
       },
       chemistry_mastery: {
         name: 'Chemistry Mastery',
