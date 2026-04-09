@@ -742,15 +742,6 @@ class TerraformingGraphsManager {
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
-    const padding = {
-      left: 60,
-      right: 16,
-      top: 24,
-      bottom: 36
-    };
-    const plotWidth = width - padding.left - padding.right;
-    const plotHeight = height - padding.top - padding.bottom;
-
     const years = this.history.years;
     const maxIndex = Math.max(0, years.length - 1);
     const minYear = years.length ? years[0] : 0;
@@ -784,27 +775,49 @@ class TerraformingGraphsManager {
     ctx.lineWidth = 1;
     ctx.fillStyle = darkMode ? 'rgba(255, 255, 255, 0.75)' : 'rgba(0, 0, 0, 0.65)';
     ctx.font = '12px "Segoe UI", Arial, sans-serif';
+    const yAxisLabel = definition.axisLabel();
+    const yTicks = definition.logScale
+      ? buildLogTicks(minValue, maxValue)
+      : buildLinearTicks(minValue, maxValue, 4);
+    const yTickLabels = yTicks.map((tickValue) => {
+      const labelValue = definition.logScale ? Math.pow(10, tickValue) : tickValue;
+      return definition.formatTick(labelValue);
+    });
+    const maxYTickLabelWidth = yTickLabels.reduce((maxWidth, label) => {
+      return Math.max(maxWidth, ctx.measureText(label).width);
+    }, 0);
+    const yAxisLabelWidth = ctx.measureText(yAxisLabel).width;
+    const padding = {
+      left: Math.max(64, Math.ceil(Math.max(maxYTickLabelWidth + 16, yAxisLabelWidth + 16))),
+      right: 20,
+      top: 32,
+      bottom: 40
+    };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+    const chartBottom = padding.top + plotHeight;
 
     if (definition.logScale) {
-      const ticks = buildLogTicks(minValue, maxValue);
-      ticks.forEach((exp) => {
+      yTicks.forEach((exp, index) => {
         const y = padding.top + (1 - (exp - minValue) / range) * plotHeight;
         ctx.beginPath();
         ctx.moveTo(padding.left, y);
         ctx.lineTo(width - padding.right, y);
         ctx.stroke();
-        const labelValue = Math.pow(10, exp);
-        ctx.fillText(definition.formatTick(labelValue), 6, y + 4);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(yTickLabels[index], padding.left - 8, y);
       });
     } else {
-      const ticks = buildLinearTicks(minValue, maxValue, 4);
-      ticks.forEach((tickValue) => {
+      yTicks.forEach((tickValue, index) => {
         const y = padding.top + (1 - (tickValue - minValue) / range) * plotHeight;
         ctx.beginPath();
         ctx.moveTo(padding.left, y);
         ctx.lineTo(width - padding.right, y);
         ctx.stroke();
-        ctx.fillText(definition.formatTick(tickValue), 6, y + 4);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(yTickLabels[index], padding.left - 8, y);
       });
     }
 
@@ -813,14 +826,19 @@ class TerraformingGraphsManager {
       const yearValue = Math.round(minYear + (xSpan / xTicks) * i);
       const x = padding.left + ((yearValue - minYear) / xSpan) * plotWidth;
       ctx.beginPath();
-      ctx.moveTo(x, padding.top + plotHeight);
-      ctx.lineTo(x, padding.top + plotHeight + 6);
+      ctx.moveTo(x, chartBottom);
+      ctx.lineTo(x, chartBottom + 6);
       ctx.stroke();
-      ctx.fillText(String(yearValue), x - 6, padding.top + plotHeight + 20);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(String(yearValue), x, chartBottom + 8);
     }
 
-    ctx.fillText(definition.axisLabel(), padding.left, 16);
-    ctx.fillText(getTerraformingGraphText('years', 'Years'), width - padding.right - 38, padding.top + plotHeight + 28);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(yAxisLabel, 8, 16);
+    ctx.textAlign = 'right';
+    ctx.fillText(getTerraformingGraphText('years', 'Years'), width - padding.right, chartBottom + 26);
 
     for (const entry of series) {
       const values = entry.values;
@@ -905,15 +923,6 @@ class TerraformingGraphsManager {
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
-    const padding = {
-      left: 60,
-      right: 28,
-      top: 30,
-      bottom: 36
-    };
-    const plotWidth = width - padding.left - padding.right;
-    const plotHeight = height - padding.top - padding.bottom;
-
     const colorMap = {
       gas: '#f4f4f4',
       liquid: '#3b82c4',
@@ -925,6 +934,27 @@ class TerraformingGraphsManager {
     const rows = 70;
     const tempSpan = maxTemp - minTemp;
     const logSpan = logMax - logMin;
+    const darkMode = document.body.classList.contains('dark-mode');
+    ctx.strokeStyle = darkMode ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.12)';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)';
+    ctx.font = '12px "Segoe UI", Arial, sans-serif';
+
+    const pressureTicks = buildLogTicks(logMin, logMax);
+    const pressureTickLabels = pressureTicks.map((exp) => formatNumber(Math.pow(10, exp), false, 2, true));
+    const maxPressureTickLabelWidth = pressureTickLabels.reduce((maxWidth, label) => {
+      return Math.max(maxWidth, ctx.measureText(label).width);
+    }, 0);
+    const padding = {
+      left: Math.max(64, Math.ceil(maxPressureTickLabelWidth) + 16),
+      right: 20,
+      top: 48,
+      bottom: 40
+    };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+    const chartBottom = padding.top + plotHeight;
+
     for (let row = 0; row < rows; row += 1) {
       const rowT = row / rows;
       const logP = logMax - rowT * logSpan;
@@ -950,11 +980,6 @@ class TerraformingGraphsManager {
       }
     }
 
-    const darkMode = document.body.classList.contains('dark-mode');
-    ctx.strokeStyle = darkMode ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.12)';
-    ctx.lineWidth = 1;
-
-    const pressureTicks = buildLogTicks(logMin, logMax);
     pressureTicks.forEach((exp) => {
       const y = padding.top + (1 - (exp - logMin) / logSpan) * plotHeight;
       ctx.beginPath();
@@ -967,8 +992,8 @@ class TerraformingGraphsManager {
     tempTicksKelvin.forEach((tickValue) => {
       const x = padding.left + ((tickValue - minTemp) / tempSpan) * plotWidth;
       ctx.beginPath();
-      ctx.moveTo(x, padding.top + plotHeight);
-      ctx.lineTo(x, padding.top + plotHeight + 6);
+      ctx.moveTo(x, chartBottom);
+      ctx.lineTo(x, chartBottom + 6);
       ctx.stroke();
     });
 
@@ -989,21 +1014,28 @@ class TerraformingGraphsManager {
     }
     ctx.stroke();
 
-    ctx.fillStyle = darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)';
-    ctx.font = '12px "Segoe UI", Arial, sans-serif';
-    pressureTicks.forEach((exp) => {
+    pressureTicks.forEach((exp, index) => {
       const y = padding.top + (1 - (exp - logMin) / logSpan) * plotHeight;
-      const labelValue = Math.pow(10, exp);
-      ctx.fillText(formatNumber(labelValue, false, 2, true), 6, y + 4);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pressureTickLabels[index], padding.left - 8, y);
     });
     tempTicksKelvin.forEach((tickValue) => {
       const x = padding.left + ((tickValue - minTemp) / tempSpan) * plotWidth;
-      ctx.fillText(formatNumber(toDisplayTemperature(tickValue), false, 0), x - 10, padding.top + plotHeight + 20);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(formatNumber(toDisplayTemperature(tickValue), false, 0), x, chartBottom + 8);
     });
 
-    ctx.fillText(getTerraformingGraphText('axis.temperature', 'Temperature ({unit})', { unit: displayTempUnit }), padding.left, padding.top - 12);
-    const pressureLabelX = Math.max(padding.left, width - padding.right - 130);
-    ctx.fillText(getTerraformingGraphText('pressureLog', 'Pressure (Pa, log)'), pressureLabelX, padding.top - 12);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(getTerraformingGraphText('pressureLog', 'Pressure (Pa, log)'), 8, 16);
+    ctx.textAlign = 'right';
+    ctx.fillText(
+      getTerraformingGraphText('axis.temperature', 'Temperature ({unit})', { unit: displayTempUnit }),
+      width - padding.right,
+      chartBottom + 26
+    );
 
     const clampedTemp = Math.max(minTemp, Math.min(maxTemp, currentTemp));
     const clampedPressure = Math.max(minPressure, Math.min(maxPressure, currentPressure));
