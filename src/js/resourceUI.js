@@ -1833,6 +1833,40 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (used.textContent !== usedText) used.textContent = usedText;
       if (hazard.textContent !== '') hazard.textContent = '';
       hazard.style.display = 'none';
+    } else if (resource.name === 'planetaryMass' && resource.category === 'underground') {
+      let planetaryDiv = valueDiv._planetary;
+      let worldshellDiv = valueDiv._worldshell;
+      let breathingWorldDiv = valueDiv._breathingWorld;
+      if (!planetaryDiv || !worldshellDiv || !breathingWorldDiv) {
+        clearElement(valueDiv);
+        planetaryDiv = document.createElement('div');
+        worldshellDiv = document.createElement('div');
+        breathingWorldDiv = document.createElement('div');
+        valueDiv.appendChild(planetaryDiv);
+        valueDiv.appendChild(worldshellDiv);
+        valueDiv.appendChild(breathingWorldDiv);
+        valueDiv._planetary = planetaryDiv;
+        valueDiv._worldshell = worldshellDiv;
+        valueDiv._breathingWorld = breathingWorldDiv;
+      }
+      const unitSuffix = resource.unit ? ` ${resource.unit}` : '';
+      const planetaryText = getResourceUIText('planetaryMass.planetary', 'Planetary Mass {value}{unit}', {
+        value: formatNumber(resource.value, false, 3),
+        unit: unitSuffix,
+      });
+      const surfaceMassTons = (terraforming?.celestialParameters?.currentSurfaceMassKg || 0) / 1000;
+      const atmosphericMassTons = (terraforming?.celestialParameters?.currentAtmosphericMassKg || 0) / 1000;
+      const worldshellText = getResourceUIText('planetaryMass.worldshell', 'Worldshell Mass {value}{unit}', {
+        value: formatNumber(resource.value + surfaceMassTons, false, 3),
+        unit: unitSuffix,
+      });
+      const breathingWorldText = getResourceUIText('planetaryMass.breathingWorld', 'Breathing World Mass {value}{unit}', {
+        value: formatNumber(resource.value + surfaceMassTons + atmosphericMassTons, false, 3),
+        unit: unitSuffix,
+      });
+      if (planetaryDiv.textContent !== planetaryText) planetaryDiv.textContent = planetaryText;
+      if (worldshellDiv.textContent !== worldshellText) worldshellDiv.textContent = worldshellText;
+      if (breathingWorldDiv.textContent !== breathingWorldText) breathingWorldDiv.textContent = breathingWorldText;
     } else {
       const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
       if (valueDiv.textContent !== text) valueDiv.textContent = text;

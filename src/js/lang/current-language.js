@@ -445,6 +445,11 @@ setLanguageData({
         worldEffects: 'World Effects',
         keratiTerritory: 'Kerati Territory',
       },
+      planetaryMass: {
+        planetary: 'Planetary Mass {value}{unit}',
+        worldshell: '+ Surface Mass {value}{unit}',
+        breathingWorld: '+ Atmospheric Mass {value}{unit}',
+      },
       workers: {
         ratio: '{value}% of colonists provide workers',
         colonists: '{value} from colonists',
