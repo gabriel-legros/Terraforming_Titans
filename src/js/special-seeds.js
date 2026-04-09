@@ -420,10 +420,22 @@ const hermesOverrides = {
       sulfuricAcid: { initialValue: 0 }
     }
   },
-  zonalTemperatures: {
-    tropical: { value: 440, day: 700, night: 110 },
-    temperate: { value: 340, day: 520, night: 100 },
-    polar: { value: 180, day: 250, night: 90 }
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 461.19518202407806,
+      "day": 988.2034079760015,
+      "night": 115.29879550601952
+    },
+    "temperate": {
+      "value": 428.39643595092133,
+      "day": 866.6446071583973,
+      "night": 107.09910898773033
+    },
+    "polar": {
+      "value": 334.2236211677123,
+      "day": 569.8361282852608,
+      "night": 98.61111405016379
+    }
   },
   celestialParameters: {
     distanceFromSun: 0.387098,
@@ -1089,12 +1101,19 @@ const specialSeedDefinitions = {
     orbitPreset: 'hot',
     specialEffects: [
       {
+        id: 'all-hazards-increased-difficulty',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.allHazardsIncreasedDifficulty',
+        description: 'All hazards have increased difficulty.'
+      },
+      {
         id: 'lifters-no-strip',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip',
         label: 'Lifters Strip Mode Disabled',
         description: 'Lifters cannot use Atmosphere Strip mode.'
       },
       {
         id: 'incinerator-no-hazardous-biomass',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.incineratorNoHazardousBiomass',
         label: 'Incinerator Recipe Disabled',
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }

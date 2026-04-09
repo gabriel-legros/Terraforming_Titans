@@ -2651,6 +2651,14 @@ setLanguageData({
           megaHeatSinkDisabled: 'Mega Heat Sink is permanently disabled on this world.',
         },
       },
+      wolfysnightmare: {
+        name: 'WolfysNightmare',
+        effects: {
+          allHazardsIncreasedDifficulty: 'All hazards have increased difficulty.',
+          liftersNoStrip: 'Lifters cannot use Atmosphere Strip mode.',
+          incineratorNoHazardousBiomass: 'Trash Incinerator cannot run the Hazardous Biomass recipe.',
+        },
+      },
     },
     buildings: {
       oreMine: {
