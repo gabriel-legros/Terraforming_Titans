@@ -158,6 +158,78 @@ const skillParameters = {
       }
     ],
     requires: ['pop_growth']
+  },
+  nanotech_efficiency: {
+    id: 'nanotech_efficiency',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effect: {
+      target: 'nanotechManager',
+      type: 'nanotechEfficiencyMultiplier',
+      baseValue: 0.2,
+      perRank: true
+    },
+    requires: []
+  },
+  chemistry_mastery: {
+    id: 'chemistry_mastery',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effects: [
+      {
+        target: 'building',
+        targetId: 'chemicalReactor',
+        type: 'productionMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'building',
+        targetId: 'chemicalReactor',
+        type: 'consumptionMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      }
+    ],
+    requires: []
+  },
+  optimized_heat_sinks: {
+    id: 'optimized_heat_sinks',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effect: {
+      target: 'project',
+      targetId: 'megaHeatSink',
+      type: 'heatSinkPowerMultiplier',
+      baseValue: 0.5,
+      perRank: true
+    },
+    requires: []
+  },
+  cloning_expertise: {
+    id: 'cloning_expertise',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effect: {
+      target: 'building',
+      targetId: 'cloningFacility',
+      type: 'productionMultiplier',
+      baseValue: 0.4,
+      perRank: true
+    },
+    requires: []
   }
 };
 

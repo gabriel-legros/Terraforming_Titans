@@ -9,6 +9,7 @@ class Skill {
     this.effect = config.effect || null;
     this.effects = config.effects || null;
     this.requires = config.requires || [];
+    this.hiddenUntilRevealed = config.hiddenUntilRevealed === true;
     this.rank = 0;
     this.unlocked = false;
   }
@@ -23,6 +24,7 @@ class SkillManager {
   constructor(skillData) {
     this.skills = {};
     this.skillPoints = 0;
+    this.activeEffects = [];
     if (skillData) {
       for (const key in skillData) {
         this.skills[key] = new Skill(skillData[key]);
@@ -85,7 +87,16 @@ class SkillManager {
     if (skill.id === 'scanning_speed' && effectConfig.type === 'scanningSpeedMultiplier') {
       return Math.pow(effectConfig.baseValue, skill.rank);
     }
-    if (skill.id === 'android_efficiency' && effectConfig.type === 'productionMultiplier') {
+    if (
+      (skill.id === 'android_efficiency' && effectConfig.type === 'productionMultiplier') ||
+      (skill.id === 'chemistry_mastery' && (
+        effectConfig.type === 'productionMultiplier' ||
+        effectConfig.type === 'consumptionMultiplier'
+      )) ||
+      (skill.id === 'cloning_expertise' && effectConfig.type === 'productionMultiplier') ||
+      (skill.id === 'nanotech_efficiency' && effectConfig.type === 'nanotechEfficiencyMultiplier') ||
+      (skill.id === 'optimized_heat_sinks' && effectConfig.type === 'heatSinkPowerMultiplier')
+    ) {
       return 1 + effectConfig.baseValue * skill.rank;
     }
     if (
@@ -99,9 +110,40 @@ class SkillManager {
     return effectConfig.baseValue * skill.rank;
   }
 
+  addEffect(effect) {
+    this.activeEffects.push(effect);
+  }
+
+  addAndReplace(effect) {
+    const existingEffectIndex = this.activeEffects.findIndex(
+      (activeEffect) => activeEffect.effectId === effect.effectId
+    );
+    if (existingEffectIndex !== -1) {
+      this.activeEffects[existingEffectIndex] = effect;
+      return;
+    }
+    this.addEffect(effect);
+  }
+
+  removeEffect(effect) {
+    const sourceId = effect.sourceId;
+    if (!sourceId) {
+      return this;
+    }
+    this.activeEffects = this.activeEffects.filter((activeEffect) => activeEffect.sourceId !== sourceId);
+    return this;
+  }
+
+  isSkillVisible(id) {
+    const skill = this.skills[id];
+    if (!skill) return false;
+    if (!skill.hiddenUntilRevealed) return true;
+    return this.activeEffects.some((effect) => effect.type === 'skillReveal' && effect.targetId === id && effect.value !== false);
+  }
+
   unlockSkill(id) {
     const skill = this.skills[id];
-    if (skill && !skill.unlocked) {
+    if (skill && !skill.unlocked && this.isSkillVisible(id)) {
       this.refreshMaxRanks();
       skill.unlocked = true;
       skill.rank = 1;

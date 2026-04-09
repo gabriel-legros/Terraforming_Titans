@@ -43,12 +43,20 @@ function getSkillPreviewValue(skill, rank) {
             return formatSkillPercent(0.5 * safeRank);
         case 'android_efficiency':
             return formatSkillPercent(0.4 * safeRank);
+        case 'nanotech_efficiency':
+            return formatSkillPercent(0.2 * safeRank);
+        case 'chemistry_mastery':
+            return formatSkillPercent(0.2 * safeRank);
         case 'ship_efficiency':
             return getSkillsUIText(
                 'common.shipEfficiencyValue',
                 '+{value} ship/trade',
                 { value: formatSkillPercent(0.3 * safeRank) }
             );
+        case 'optimized_heat_sinks':
+            return formatSkillPercent(0.5 * safeRank);
+        case 'cloning_expertise':
+            return formatSkillPercent(0.4 * safeRank);
         case 'life_design_points':
             return getSkillsUIText(
                 'common.lifeDesignValue',
@@ -100,6 +108,7 @@ function buildSkillPrereqs() {
 }
 
 function canUnlockSkill(id) {
+    if (!skillManager.isSkillVisible(id)) return false;
     const prereqs = skillPrereqs[id];
     if (!prereqs || prereqs.length === 0) return true;
     return prereqs.every(p => skillManager.skills[p] && skillManager.skills[p].unlocked);
@@ -114,6 +123,7 @@ function canPurchaseAnySkill() {
     }
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
+        if (!skillManager.isSkillVisible(id)) continue;
         const cost = skillManager.getUpgradeCost(id);
         const canAfford = skillManager.skillPoints >= cost;
         const isMaxRank = skill.rank >= skill.maxRank;
@@ -132,7 +142,11 @@ const skillLayout = {
     android_efficiency: { row: 3, col: 0 },
     ship_efficiency: { row: 3, col: 2 },
     project_speed: { row: 2, col: 2 },
-    life_design_points: { row: 3, col: 6 }
+    life_design_points: { row: 3, col: 6 },
+    nanotech_efficiency: { row: 4, col: 0 },
+    optimized_heat_sinks: { row: 4, col: 2 },
+    cloning_expertise: { row: 4, col: 4 },
+    chemistry_mastery: { row: 4, col: 6 }
 };
 
 function updateSkillPointDisplay() {
@@ -181,6 +195,9 @@ function consumePendingAwakeningAlert() {
 function updateSkillButton(skill) {
     const button = document.getElementById(`skill-${skill.id}`);
     if (!button) return;
+    const isVisible = skillManager.isSkillVisible(skill.id);
+    button.style.display = isVisible ? '' : 'none';
+    if (!isVisible) return;
     const els = button._skillEls;
     if (!els) return;
 
@@ -332,6 +349,7 @@ function drawSkillConnections() {
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
         if (!skill.requires || skill.requires.length === 0) continue;
+        if (!skillManager.isSkillVisible(id)) continue;
 
         const toButton = skillButtonEls[id] || document.getElementById(`skill-${id}`);
         if (!toButton) continue;
@@ -340,6 +358,7 @@ function drawSkillConnections() {
         const toY = Math.round(toButton.offsetTop);
 
         for (const prereqId of skill.requires) {
+            if (!skillManager.isSkillVisible(prereqId)) continue;
             const fromButton = skillButtonEls[prereqId] || document.getElementById(`skill-${prereqId}`);
             if (!fromButton) continue;
 
@@ -379,6 +398,7 @@ function purchaseSkill(id) {
     const cost = skillManager.getUpgradeCost(id);
     if (skillManager.skillPoints < cost) return;
     const skill = skillManager.skills[id];
+    if (!skillManager.isSkillVisible(id)) return;
     if (!skill.unlocked) {
         if (!canUnlockSkill(id)) return;
         skillManager.unlockSkill(id);

@@ -275,6 +275,9 @@ class AtlasManager extends EffectableEntity {
 
     reapplyEffects() {
         this.applyCompletionRewards();
+        if (skillManager && typeof skillManager.handleAtlasCompletionChange === 'function') {
+            skillManager.handleAtlasCompletionChange();
+        }
         this.refreshUIVisibility();
     }
 

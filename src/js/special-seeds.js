@@ -1043,6 +1043,19 @@ const specialSeedDefinitions = {
             value: true
           }
         ]
+      },
+      {
+        id: 'reveal-nanotech-efficiency',
+        descriptionKey: 'catalogs.specialSeeds.titania.rewards.revealNanotechEfficiency',
+        description: 'Reveals the Nanotech Efficiency awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'nanotech_efficiency',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
       }
     ],
     overrides: titaniaOverrides
@@ -1086,6 +1099,19 @@ const specialSeedDefinitions = {
             targetId: 'very-hot'
           }
         ]
+      },
+      {
+        id: 'reveal-optimized-heat-sinks',
+        descriptionKey: 'catalogs.specialSeeds.hermes.rewards.revealOptimizedHeatSinks',
+        description: 'Reveals the Optimized Heat Sinks awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'optimized_heat_sinks',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
       }
     ],
     overrides: hermesOverrides
@@ -1118,6 +1144,21 @@ const specialSeedDefinitions = {
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }
     ],
+    completionRewards: [
+      {
+        id: 'reveal-chemistry-mastery',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.rewards.revealChemistryMastery',
+        description: 'Reveals the Chemistry Mastery awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'chemistry_mastery',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
+      }
+    ],
     overrides: wolfysNightmareOverrides
   },
   therealposeidon: {
@@ -1145,6 +1186,21 @@ const specialSeedDefinitions = {
         id: 'mega-heat-sink-disabled',
         descriptionKey: 'catalogs.specialSeeds.therealposeidon.effects.megaHeatSinkDisabled',
         description: 'Mega Heat Sink is permanently disabled on this world.'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'reveal-cloning-expertise',
+        descriptionKey: 'catalogs.specialSeeds.therealposeidon.rewards.revealCloningExpertise',
+        description: 'Reveals the Cloning Expertise awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'cloning_expertise',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
       }
     ],
     overrides: theRealPoseidonOverrides

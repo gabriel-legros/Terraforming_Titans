@@ -93,6 +93,16 @@ class NanotechManager extends EffectableEntity {
     return Math.max(1, floor);
   }
 
+  getNanotechEfficiencyMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'nanotechEfficiencyMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
   isPulsarHazardActive() {
     if (!hazardManager || !hazardManager.parameters || !hazardManager.pulsarHazard) {
       return false;
@@ -209,6 +219,7 @@ class NanotechManager extends EffectableEntity {
     const baseRate = 0.0025 * Math.pow(2, extraStages);
     const stage2Enabled = this.isBooleanFlagSet('stage2_enabled');
     const stage3Enabled = this.isBooleanFlagSet('stage3_enabled');
+    const efficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
     const siliconAllocation = 10;
     const metalAllocation = stage2Enabled ? 10 : 0;
     const biomassAllocation = stage3Enabled ? 10 : 0;
@@ -245,12 +256,12 @@ class NanotechManager extends EffectableEntity {
     let metalProvided = 0;
     this.resetActivityState();
     this.optimalEnergyConsumption = this.nanobots * 1e-12;
-    this.optimalSiliconConsumption = this.nanobots * 1e-18 * (siliconAllocation / 10);
+    this.optimalSiliconConsumption = this.nanobots * 1e-18 * (siliconAllocation / 10) * efficiencyMultiplier;
     this.optimalMetalConsumption = stage2Enabled
-      ? this.nanobots * 1e-18 * (metalAllocation / 10)
+      ? this.nanobots * 1e-18 * (metalAllocation / 10) * efficiencyMultiplier
       : 0;
     this.optimalBiomassConsumption = stage3Enabled
-      ? this.nanobots * 1e-18 * (biomassAllocation / 10)
+      ? this.nanobots * 1e-18 * (biomassAllocation / 10) * efficiencyMultiplier
       : 0;
     if (typeof resources !== 'undefined') {
       const recyclingEnabled = this.isBooleanFlagSet('nanotechRecycling');
@@ -452,7 +463,7 @@ class NanotechManager extends EffectableEntity {
       const junkRes = recyclingEnabled ? resources.surface?.junk : null;
       
       if (glassRes && accumulatedChanges?.colony) {
-        const glassRate = this.nanobots * 1e-18 * (this.glassSlider / 10);
+        const glassRate = this.nanobots * 1e-18 * (this.glassSlider / 10) * efficiencyMultiplier;
         const glassAmount = isArtificialWorld
           ? Math.min(glassRate * (deltaTime / 1000), siliconProvided)
           : glassRate * (deltaTime / 1000);
@@ -470,7 +481,7 @@ class NanotechManager extends EffectableEntity {
 
       const componentsRes = resources.colony?.components;
       if (componentsRes && accumulatedChanges?.colony && stage2Enabled) {
-        const componentsRate = this.nanobots * 1e-19 * (this.componentsSlider / 10);
+        const componentsRate = this.nanobots * 1e-19 * (this.componentsSlider / 10) * efficiencyMultiplier;
         const componentsAmount = isArtificialWorld
           ? Math.min(componentsRate * (deltaTime / 1000), metalProvided)
           : componentsRate * (deltaTime / 1000);
@@ -484,7 +495,7 @@ class NanotechManager extends EffectableEntity {
 
       const electronicsRes = resources.colony?.electronics;
       if (electronicsRes && accumulatedChanges?.colony && stage3Enabled) {
-        const electronicsRate = this.nanobots * 1e-19 * (this.electronicsSlider / 10);
+        const electronicsRate = this.nanobots * 1e-19 * (this.electronicsSlider / 10) * efficiencyMultiplier;
         const biomassConsumed = this.currentBiomassConsumption * (deltaTime / 1000);
         const electronicsAmount = isArtificialWorld
           ? Math.min(electronicsRate * (deltaTime / 1000), biomassConsumed)
@@ -550,7 +561,7 @@ class NanotechManager extends EffectableEntity {
 
     // Apply growth multiplier from effects (e.g., garbage hazard)
     const growthMultiplier = this.getEffectiveGrowthMultiplier();
-    const effectiveRate = (baseRate * this.powerFraction + siliconRate + metalRate + biomassRate - penalty) * growthMultiplier;
+    const effectiveRate = (((baseRate * this.powerFraction) + siliconRate + metalRate + biomassRate) * efficiencyMultiplier - penalty) * growthMultiplier;
     this.effectiveGrowthRate = effectiveRate;
     const max = this.getMaxNanobots();
     if (effectiveRate !== 0 && !isNaN(effectiveRate)) {
@@ -630,7 +641,7 @@ class NanotechManager extends EffectableEntity {
       totals.electronics += (s.maintenanceCost.electronics || 0) * activeCount * prod;
     }
     const total = totals.metal + totals.glass + totals.water;
-    const coveragePerBot = 1e-18;
+    const coveragePerBot = 1e-18 * this.getNanotechEfficiencyMultiplier();
     let coverage = total > 0 ? (this.nanobots * coveragePerBot) / total : 0;
     coverage = Math.min(coverage, 0.5);
     const reduction = coverage * (this.maintenanceSlider / 10);

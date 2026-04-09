@@ -1726,9 +1726,9 @@ setLanguageData({
           electronicsDescription: 'Diverts growth to fabricate electronics.',
         },
         warnings: {
-          noSand: '⚠️ No sand deposits; glass capped to silica.',
-          noOre: '⚠️ No ore deposits; components capped to metal.',
-          noResources: '⚠️ No resources; electronics capped to biomass.',
+          noSand: '⚠️ No sand deposits; glass capped to silica allocation.',
+          noOre: '⚠️ No ore deposits; components capped to metal allocation.',
+          noResources: '⚠️ No resources; electronics capped to biomass allocation.',
         },
         status: {
           disabled: 'Disabled',
@@ -2635,6 +2635,7 @@ setLanguageData({
         },
         rewards: {
           enableDynamicMass: 'Allows the generation of worlds with dynamic mass in the Random World Generator.',
+          revealNanotechEfficiency: 'Reveals a new Awakening skill',
         },
       },
       hermes: {
@@ -2646,6 +2647,7 @@ setLanguageData({
         },
         rewards: {
           unlockVeryHotOrbit: 'Unlocks Very Hot orbits in the Random World Generator.',
+          revealOptimizedHeatSinks: 'Reveals a new Awakening skill',
         },
       },
       therealposeidon: {
@@ -2655,6 +2657,9 @@ setLanguageData({
           noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
           megaHeatSinkDisabled: 'Mega Heat Sink is permanently disabled on this world.',
         },
+        rewards: {
+          revealCloningExpertise: 'Reveals a new Awakening skill',
+        },
       },
       wolfysnightmare: {
         name: 'WolfysNightmare',
@@ -2662,6 +2667,9 @@ setLanguageData({
           allHazardsIncreasedDifficulty: 'All hazards have increased difficulty.',
           liftersNoStrip: 'Lifters cannot use Atmosphere Strip mode.',
           incineratorNoHazardousBiomass: 'Trash Incinerator cannot run the Hazardous Biomass recipe.',
+        },
+        rewards: {
+          revealChemistryMastery: 'Reveals a new Awakening skill',
         },
       },
     },
@@ -4263,9 +4271,25 @@ setLanguageData({
         name: 'Androids Efficiency',
         description: 'Increases android factory production by 40% per rank',
       },
+      nanotech_efficiency: {
+        name: 'Nanotech Efficiency',
+        description: 'Improves nanotechnology by 20% per rank',
+      },
+      chemistry_mastery: {
+        name: 'Chemistry Mastery',
+        description: 'Increases both chemical reactor production and consumption by 20% per rank',
+      },
       ship_efficiency: {
         name: 'Advanced Logistics',
         description: 'Ships import and export 30% more per rank, energy use rises by 30% per rank, and trade caps increase by 30% per rank',
+      },
+      optimized_heat_sinks: {
+        name: 'Optimized Heat Sinks',
+        description: 'Makes each Mega Heat Sink 50% stronger per rank',
+      },
+      cloning_expertise: {
+        name: 'Cloning Expertise',
+        description: 'Increases cloning facility production by 40% per rank',
       },
       project_speed: {
         name: 'Faster Projects',

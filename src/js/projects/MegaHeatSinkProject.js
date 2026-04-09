@@ -151,7 +151,7 @@
     }
 
     calculateCoolingPerSecond() {
-      const effectiveCount = Math.max(1, this.repeatCount || 0);
+      const effectiveCount = Math.max(1, this.getEffectiveHeatSinkCount());
       const terra = terraforming;
       const area = terra?.celestialParameters?.surfaceArea;
       if (!terra || !Number.isFinite(area) || area <= 0) {
@@ -180,6 +180,20 @@
       }
 
       return totalWeight > 0 ? weightedCooling / totalWeight : 0;
+    }
+
+    getHeatSinkPowerMultiplier() {
+      let multiplier = 1;
+      this.activeEffects.forEach((effect) => {
+        if (effect.type === 'heatSinkPowerMultiplier') {
+          multiplier *= effect.value;
+        }
+      });
+      return multiplier;
+    }
+
+    getEffectiveHeatSinkCount() {
+      return (this.repeatCount || 0) * this.getHeatSinkPowerMultiplier();
     }
 
     complete() {

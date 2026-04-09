@@ -715,6 +715,7 @@ function addOrRemoveEffect(effect, action) {
     'solisManager' : solisManager,
     'spaceManager' : spaceManager,
     'automationManager': automationManager,
+    'skillManager': skillManager,
     'warpGateCommand' : warpGateCommand,
     'warpGateNetworkManager': warpGateNetworkManager,
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,

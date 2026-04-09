@@ -298,6 +298,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Planet visualizer modularized (core/lighting/surfaces/clouds/ships/environment/debug).
 - Planet visualizer surface now transitions into a lava-world palette and molten glow between `900 K` and `1400 K` global mean surface temperature.
 - Ringworld rendering, cloud wrapping/noise, shoreline and terrain blending were improved.
+- Awakening supports hidden standalone bottom-row skills that stay invisible until Atlas completion rewards apply `skillManager` reveal effects; revealed nodes do not use prerequisite connectors.
 - Multiple UI performance improvements reduce unnecessary DOM rebuilds and preserve subtab scroll/context.
 
 ## Maintenance Notes

@@ -629,7 +629,7 @@ class Terraforming extends EffectableEntity{
     const megaHeatSinkCount =
       megaHeatSinkProject?.heatSinksActive === false
         ? 0
-        : (megaHeatSinkProject?.repeatCount ?? 0);
+        : (megaHeatSinkProject?.getEffectiveHeatSinkCount?.() ?? megaHeatSinkProject?.repeatCount ?? 0);
     const surfaceArea = this.celestialParameters.surfaceArea
       || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
     return megaHeatSinkCount > 0 && surfaceArea > 0
