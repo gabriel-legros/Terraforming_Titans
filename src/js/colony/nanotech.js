@@ -1101,6 +1101,7 @@ class NanotechManager extends EffectableEntity {
         this.effectiveGrowthRate = 0;
       } else {
         const extraStages = this.getExtraNanotechStages();
+        const efficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
         const baseOpt = 0.0025 * Math.pow(2, extraStages);
         const siliconOpt = (siliconAllocation / 10) * 0.0015;
         const metalOpt = stage2Active ? (metalAllocation / 10) * 0.0015 : 0;
@@ -1113,10 +1114,12 @@ class NanotechManager extends EffectableEntity {
           (stage3Active ? (this.maintenance3Slider / 10) * 0.0015 : 0) +
           (stage3Active ? (this.electronicsSlider / 10) * 0.0015 : 0);
         const effectiveRate =
-          baseOpt * this.powerFraction +
-          siliconOpt * this.siliconFraction +
-          (stage2Active ? metalOpt * this.metalFraction : 0) +
-          (stage3Active ? biomassOpt * this.biomassFraction : 0) -
+          (
+            baseOpt * this.powerFraction +
+            siliconOpt * this.siliconFraction +
+            (stage2Active ? metalOpt * this.metalFraction : 0) +
+            (stage3Active ? biomassOpt * this.biomassFraction : 0)
+          ) * efficiencyMultiplier -
           penalty;
         const growthMultiplier = this.getEffectiveGrowthMultiplier();
         actualRate = effectiveRate * growthMultiplier;
@@ -1262,25 +1265,29 @@ class NanotechManager extends EffectableEntity {
 
     if (C.growthImpactEl) {
       const extraStages = this.getExtraNanotechStages();
-      const optimal = 0.25 * Math.pow(2, extraStages);
+      const efficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
+      const optimal = 0.25 * Math.pow(2, extraStages) * efficiencyMultiplier;
       const effective = temperatureDisabled ? 0 : optimal * this.powerFraction;
       C.growthImpactEl.textContent = `+${effective.toFixed(3)}%`;
       C.growthImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughEnergy ? 'orange' : '');
     }
     if (C.siliconImpactEl) {
-      const optimal = (siliconAllocation / 10) * 0.15;
+      const efficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
+      const optimal = (siliconAllocation / 10) * 0.15 * efficiencyMultiplier;
       const effective = temperatureDisabled ? 0 : optimal * this.siliconFraction;
       C.siliconImpactEl.textContent = `+${effective.toFixed(3)}%`;
       C.siliconImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughSilicon ? 'orange' : '');
     }
     if (C.metalImpactEl) {
-      const optimal = stage2Active ? (metalAllocation / 10) * 0.15 : 0;
+      const efficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
+      const optimal = stage2Active ? (metalAllocation / 10) * 0.15 * efficiencyMultiplier : 0;
       const effective = temperatureDisabled ? 0 : (stage2Active ? optimal * this.metalFraction : 0);
       C.metalImpactEl.textContent = `+${effective.toFixed(3)}%`;
       C.metalImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughMetal ? 'orange' : '');
     }
     if (C.biomassImpactEl) {
-      const optimal = stage3Active ? (biomassAllocation / 10) * 0.15 : 0;
+      const efficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
+      const optimal = stage3Active ? (biomassAllocation / 10) * 0.15 * efficiencyMultiplier : 0;
       const effective = temperatureDisabled ? 0 : (stage3Active ? optimal * this.biomassFraction : 0);
       C.biomassImpactEl.textContent = `+${effective.toFixed(3)}%`;
       C.biomassImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughBiomass ? 'orange' : '');
