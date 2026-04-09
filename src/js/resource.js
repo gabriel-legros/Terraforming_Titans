@@ -1007,64 +1007,47 @@ function reconcileLandResourceValue() {
   if (!landResource) {
     return;
   }
+  const tf = typeof terraforming !== 'undefined' ? terraforming : null;
+  const params = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
+  const activeProjectManager = typeof projectManager !== 'undefined' ? projectManager : null;
+  const activeSpaceManager = typeof spaceManager !== 'undefined' ? spaceManager : null;
 
-  const tf = typeof terraforming !== 'undefined' ? terraforming : (typeof globalThis !== 'undefined' ? globalThis.terraforming : null);
-  const params = typeof currentPlanetParameters !== 'undefined'
-    ? currentPlanetParameters
-    : (typeof globalThis !== 'undefined' ? globalThis.currentPlanetParameters : null);
-
-  const baseLand = resolveWorldBaseLand(tf, landResource, params?.celestialParameters);
-
-  if (!(baseLand > 0)) {
-    const reserved = Math.max(0, landResource.reserved || 0);
-    if (landResource.setExactLandValue) {
-      landResource.setExactLandValue(Math.max(landResource.value, reserved));
-    } else {
-      landResource.value = Math.max(landResource.value, reserved);
-    }
-    return;
-  }
-
-  const geometricLand = getResolveWorldGeometricLandHelper()(tf, landResource, params?.celestialParameters);
-  const hasDynamicMassEnabled = params?.specialAttributes?.dynamicMass === true;
-  const liveLandBase = hasDynamicMassEnabled && geometricLand > 0 ? geometricLand : baseLand;
-  let totalLand = liveLandBase;
+  const geometricLand = Math.max(
+    0,
+    getResolveWorldGeometricLandHelper()(tf, landResource, params?.celestialParameters) || 0
+  );
+  const baseLand = Math.max(
+    0,
+    resolveWorldBaseLand(tf, landResource, params?.celestialParameters) || geometricLand
+  );
   landResource.baseLand = baseLand;
 
-  const manager =
-    typeof spaceManager !== 'undefined'
-      ? spaceManager
-      : (typeof globalThis !== 'undefined' ? globalThis.spaceManager : null);
-  const projectMgr =
-    typeof projectManager !== 'undefined'
-      ? projectManager
-      : (typeof globalThis !== 'undefined' ? globalThis.projectManager : null);
-  const ringProject = projectMgr?.projects?.orbitalRing;
-  const hasRingFromManager = typeof manager?.currentWorldHasOrbitalRing === 'function'
-    ? manager.currentWorldHasOrbitalRing()
-    : false;
-  const hasRing = hasRingFromManager || !!(ringProject && ringProject.currentWorldHasRing);
+  let totalLand = geometricLand;
+
+  const ringProject = activeProjectManager?.projects?.orbitalRing;
+  const hasRing = !!(
+    activeSpaceManager?.currentWorldHasOrbitalRing?.()
+    || ringProject?.currentWorldHasRing
+  );
   if (hasRing) {
-    totalLand += baseLand;
+    totalLand += geometricLand;
   }
 
-  const undergroundProject = projectMgr?.projects?.undergroundExpansion;
+  const undergroundProject = activeProjectManager?.projects?.undergroundExpansion;
   if (undergroundProject) {
-    const perCompletion = undergroundProject.getPerCompletionLand
-      ? undergroundProject.getPerCompletionLand()
-      : (baseLand / 10000);
-    if (perCompletion > 0) {
-      const maxRepeats = undergroundProject.getMaxRepeats
-        ? undergroundProject.getMaxRepeats()
-        : (Number.isFinite(undergroundProject.maxRepeatCount)
-          ? undergroundProject.maxRepeatCount
-          : Infinity);
-      const fractional = Math.max(0, undergroundProject.fractionalRepeatCount || 0);
-      const progress = Math.max(0, (undergroundProject.repeatCount || 0) + fractional);
-      const cappedProgress = Number.isFinite(maxRepeats) ? Math.min(progress, maxRepeats) : progress;
-      const extraLand = Math.min(cappedProgress * perCompletion, baseLand);
-      totalLand += extraLand;
-    }
+    const perCompletion = Math.max(0, undergroundProject.getPerCompletionLand?.() || 0);
+    const maxRepeats = undergroundProject.getMaxRepeats?.() ?? undergroundProject.maxRepeatCount ?? Infinity;
+    const progress = Math.max(
+      0,
+      (undergroundProject.repeatCount || 0) + (undergroundProject.fractionalRepeatCount || 0)
+    );
+    const cappedProgress = Number.isFinite(maxRepeats) ? Math.min(progress, maxRepeats) : progress;
+    totalLand += cappedProgress * perCompletion;
+  }
+
+  if (!(totalLand > 0)) {
+    const reserved = Math.max(0, landResource.reserved || 0);
+    totalLand = Math.max(landResource.value || 0, reserved);
   }
 
   if (landResource.setExactLandValue) {
@@ -1073,7 +1056,7 @@ function reconcileLandResourceValue() {
     landResource.value = totalLand;
   }
 
-  if (hasDynamicMassEnabled) {
+  if (params?.specialAttributes?.dynamicMass === true) {
     const dustCap = Math.max(0, totalLand * 10000);
     if (resources.special.albedoUpgrades) {
       resources.special.albedoUpgrades.baseCap = dustCap;
