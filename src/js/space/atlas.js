@@ -316,11 +316,11 @@ class AtlasManager extends EffectableEntity {
                     completed: savedCompletion.completed === true
                 };
                 const fastestCompletionDays = Number(savedCompletion.fastestCompletionDays);
-                normalizedCompletion.fastestCompletionDays = Number.isFinite(fastestCompletionDays) && fastestCompletionDays >= 0
+                normalizedCompletion.fastestCompletionDays = Number.isFinite(fastestCompletionDays) && fastestCompletionDays > 0
                     ? fastestCompletionDays
                     : null;
                 const fastestCompletionRealSeconds = Number(savedCompletion.fastestCompletionRealSeconds);
-                normalizedCompletion.fastestCompletionRealSeconds = Number.isFinite(fastestCompletionRealSeconds) && fastestCompletionRealSeconds >= 0
+                normalizedCompletion.fastestCompletionRealSeconds = Number.isFinite(fastestCompletionRealSeconds) && fastestCompletionRealSeconds > 0
                     ? fastestCompletionRealSeconds
                     : null;
                 this.atlasWorldCompletions[normalized] = normalizedCompletion;

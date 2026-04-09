@@ -82,7 +82,7 @@ function getAtlasFastestCompletionText(completion) {
         return getAtlasText('noRecordYet', 'No record yet');
     }
     const fastestCompletionDays = Number(fastestCompletionDaysValue);
-    if (!Number.isFinite(fastestCompletionDays) || fastestCompletionDays < 0) {
+    if (!Number.isFinite(fastestCompletionDays) || fastestCompletionDays <= 0) {
         return getAtlasText('noRecordYet', 'No record yet');
     }
     const gameTime = formatPlayTime(fastestCompletionDays);
@@ -91,7 +91,7 @@ function getAtlasFastestCompletionText(completion) {
         return getAtlasText('fastestCompletionValue', '{game}', { game: gameTime });
     }
     const fastestCompletionRealSeconds = Number(fastestCompletionRealSecondsValue);
-    if (!Number.isFinite(fastestCompletionRealSeconds) || fastestCompletionRealSeconds < 0) {
+    if (!Number.isFinite(fastestCompletionRealSeconds) || fastestCompletionRealSeconds <= 0) {
         return getAtlasText('fastestCompletionValue', '{game}', { game: gameTime });
     }
     return getAtlasText(
