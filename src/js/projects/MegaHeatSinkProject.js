@@ -69,7 +69,8 @@
       };
 
       const countElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.heatSinksBuilt', 'Heat Sinks Built'));
-      const fluxMitigationElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.fluxMitigation', 'Flux mitigation'));
+      const coolingPerHeatSinkElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.coolingPerHeatSink', 'Cooling per Heat Sink'));
+      const fluxMitigationElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.fluxMitigation', 'Total Flux mitigation'));
       const coolingElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.coolingPerSecond', 'Cooling per Second'));
       const controlElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.control', 'Control'));
       const coolingToggle = createToggleButton({
@@ -87,6 +88,7 @@
       this.summaryElements = {
         card,
         countValue: countElements.value,
+        coolingPerHeatSinkValue: coolingPerHeatSinkElements.value,
         fluxMitigationValue: fluxMitigationElements.value,
         coolingValue: coolingElements.value,
         coolingToggle
@@ -120,9 +122,19 @@
       elements.countValue.textContent = formatValue(heatSinkCount, true);
 
       const fluxMitigation = this.calculateFluxMitigation();
+      const coolingPerHeatSink = this.calculateCoolingPerHeatSink();
       const coolingPerSecond = this.calculateCoolingPerSecond();
       const coolingActive = this.heatSinksActive;
       setToggleButtonState(elements.coolingToggle, coolingActive);
+      if (!coolingActive) {
+        elements.coolingPerHeatSinkValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
+      } else if (Number.isFinite(coolingPerHeatSink) && coolingPerHeatSink > 0) {
+        elements.coolingPerHeatSinkValue.textContent = `${formatValue(coolingPerHeatSink, false, 2)} W`;
+      } else if (heatSinkCount > 0) {
+        elements.coolingPerHeatSinkValue.textContent = '0 W';
+      } else {
+        elements.coolingPerHeatSinkValue.textContent = '—';
+      }
       if (!coolingActive) {
         elements.fluxMitigationValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
       } else if (Number.isFinite(fluxMitigation) && fluxMitigation > 0) {
@@ -180,6 +192,10 @@
       }
 
       return totalWeight > 0 ? weightedCooling / totalWeight : 0;
+    }
+
+    calculateCoolingPerHeatSink() {
+      return MEGA_HEAT_SINK_POWER_W * this.getHeatSinkPowerMultiplier();
     }
 
     getHeatSinkPowerMultiplier() {

@@ -1317,7 +1317,8 @@ setLanguageData({
         buildAmountTooltip: 'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.',
         summaryTitle: 'Heat Sink Summary',
         heatSinksBuilt: 'Heat Sinks Built',
-        fluxMitigation: 'Flux mitigation',
+        coolingPerHeatSink: 'Cooling per Heat Sink',
+        fluxMitigation: 'Total Flux mitigation',
         coolingPerSecond: 'Cooling per Second',
         control: 'Control',
       },
@@ -4273,7 +4274,7 @@ setLanguageData({
       },
       nanotech_efficiency: {
         name: 'Nanotech Efficiency',
-        description: 'Improves nanotechnology by 20% per rank',
+        description: 'Improves nanotechnology consumption, production, growth and maintenance renduction by 20% per rank',
       },
       chemistry_mastery: {
         name: 'Chemistry Mastery',
