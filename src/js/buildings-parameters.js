@@ -13,6 +13,7 @@ const buildingsParameters = {
     requiresDeposit: { underground: { ore: 1 } },
     requiresWorker: 0,
     maintenanceFactor: 1,
+    planetaryMassChange: { category: 'colony', resource: 'metal', mode: 'drainOnProduction' },
     unlocked: false,
     autoBuildMaxOption: true
   },
@@ -45,6 +46,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    planetaryMassChange: { category: 'colony', resource: 'silicon', mode: 'drainOnProduction' },
     automationBuildingsDropDown: ['glassSmelter', 'electronicsFactory'],
     unlocked: false
   },

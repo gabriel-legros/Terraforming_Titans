@@ -118,6 +118,7 @@ class Building extends EffectableEntity {
         temperatureMaintenanceImmune,
         aerostatReduction,
         automationBuildingsDropDown,
+        planetaryMassChange,
         autoBuildMaxOption,
         snapProductivity,
         displayConsumptionAtMaxProductivity,
@@ -171,6 +172,7 @@ class Building extends EffectableEntity {
       this.automationBuildingsDropDown = Array.isArray(automationBuildingsDropDown)
         ? automationBuildingsDropDown.slice()
         : null;
+      this.planetaryMassChange = planetaryMassChange || null;
 
       this.autoBuildMaxOption = !!autoBuildMaxOption;
       this.autoBuildFillEnabled = !!config.autoBuildFillEnabled;
@@ -1423,7 +1425,7 @@ class Building extends EffectableEntity {
   }
 
   // Updated consume function to track consumption rates
-  consume(accumulatedChanges, deltaTime) {
+  consume(accumulatedChanges, deltaTime, accumulatedSpecialChanges) {
     const effectiveConsumptionMultiplier = this.getEffectiveConsumptionMultiplier();
     const effectiveProductionMultiplier = this.getEffectiveProductionMultiplier();
     const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
@@ -1493,6 +1495,18 @@ class Building extends EffectableEntity {
           this.displayName,
           'building'
         );
+      }
+    }
+
+    const planetaryMassChange = this.planetaryMassChange;
+    if (accumulatedSpecialChanges?.planetaryMass && planetaryMassChange?.mode === 'drainOnProduction') {
+      const amount = Math.max(
+        0,
+        this.currentProduction?.[planetaryMassChange.category]?.[planetaryMassChange.resource] || 0
+      );
+      if (amount > 0) {
+        accumulatedSpecialChanges.planetaryMass[this.displayName] =
+          (accumulatedSpecialChanges.planetaryMass[this.displayName] || 0) + amount;
       }
     }
   }

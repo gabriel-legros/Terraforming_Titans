@@ -204,7 +204,7 @@ class NanotechManager extends EffectableEntity {
     this.effectiveGrowthRate = 0;
   }
 
-  produceResources(deltaTime, accumulatedChanges) {
+  produceResources(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
     if(deltaTime == 0){
       return;
     }
@@ -575,6 +575,24 @@ class NanotechManager extends EffectableEntity {
       }
     }
     this.nanobots = Math.max(1, this.nanobots);
+    if (accumulatedSpecialChanges?.planetaryMass) {
+      const seconds = deltaTime / 1000;
+      const totalConsumed = (
+        Math.max(0, this.currentSiliconConsumption || 0)
+        + Math.max(0, this.currentMetalConsumption || 0)
+        + Math.max(0, this.currentBiomassConsumption || 0)
+      ) * seconds;
+      const totalProduced = (
+        Math.max(0, this.currentGlassProduction || 0)
+        + Math.max(0, this.currentComponentsProduction || 0)
+        + Math.max(0, this.currentElectronicsProduction || 0)
+      ) * seconds;
+      const planetaryMassDrain = Math.max(0, totalProduced - totalConsumed);
+      if (planetaryMassDrain > 0) {
+        accumulatedSpecialChanges.planetaryMass.Nanocolony =
+          (accumulatedSpecialChanges.planetaryMass.Nanocolony || 0) + planetaryMassDrain;
+      }
+    }
     this.applyMaintenanceEffects();
     this.updateUI();
   }

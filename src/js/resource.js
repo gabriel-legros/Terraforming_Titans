@@ -5,11 +5,13 @@ const EXACT_LAND_SCALE_DIGITS = 15;
 let resolveWorldGeometricLandHelper = null;
 let getDynamicWorldPlanetaryMassAvailableTonsHelper = null;
 let hasDynamicMassEnabledHelper = null;
+let disposeDynamicWorldPlanetaryMassHelper = null;
 if (typeof module !== 'undefined' && module.exports) {
   ({
     resolveWorldGeometricLand: resolveWorldGeometricLandHelper,
     getDynamicWorldPlanetaryMassAvailableTons: getDynamicWorldPlanetaryMassAvailableTonsHelper,
-    hasDynamicMassEnabled: hasDynamicMassEnabledHelper
+    hasDynamicMassEnabled: hasDynamicMassEnabledHelper,
+    disposeDynamicWorldPlanetaryMass: disposeDynamicWorldPlanetaryMassHelper
   } = require('./world-geometry.js'));
 }
 
@@ -26,6 +28,24 @@ function getDynamicWorldPlanetaryMassAvailableTonsSafe(terraformingState, celest
 
 function hasDynamicMassEnabledSafe(terraformingState, planetParameters) {
   return (hasDynamicMassEnabledHelper || hasDynamicMassEnabled)(terraformingState, planetParameters);
+}
+
+function disposeDynamicWorldPlanetaryMassSafe(terraformingState, amountTons) {
+  return (disposeDynamicWorldPlanetaryMassHelper || disposeDynamicWorldPlanetaryMass)(terraformingState, amountTons);
+}
+
+function initializeAccumulatedSpecialChanges() {
+  return {
+    planetaryMass: {}
+  };
+}
+
+function accumulateSpecialPlanetaryMassChange(accumulatedSpecialChanges, source, amount) {
+  if (!(amount > 0)) {
+    return;
+  }
+  accumulatedSpecialChanges.planetaryMass[source] =
+    (accumulatedSpecialChanges.planetaryMass[source] || 0) + amount;
 }
 
 function isExactLandResource(resource) {
@@ -1091,6 +1111,41 @@ function reconcilePlanetaryMassResourceValue() {
   }
 }
 
+function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges) {
+  const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
+  if (!hasDynamicMassEnabledSafe(terraforming, planetParameters)) {
+    return;
+  }
+
+  const seconds = deltaTime / 1000;
+  if (!(seconds > 0)) {
+    return;
+  }
+
+  const massResource = resources?.underground?.planetaryMass;
+  if (!massResource) {
+    return;
+  }
+
+  for (const source in accumulatedSpecialChanges.planetaryMass) {
+    const amount = accumulatedSpecialChanges.planetaryMass[source];
+    if (!(amount > 0)) {
+      continue;
+    }
+
+    const removedAmount = disposeDynamicWorldPlanetaryMassSafe(terraforming, amount);
+    if (!(removedAmount > 0)) {
+      continue;
+    }
+
+    massResource.modifyRate(
+      -(removedAmount / seconds),
+      source,
+      source === 'Nanocolony' ? 'nanotech' : 'building'
+    );
+  }
+}
+
 if (typeof globalThis !== 'undefined') {
   globalThis.reconcileLandResourceValue = reconcileLandResourceValue;
 }
@@ -1384,6 +1439,7 @@ function produceResources(deltaTime, buildings) {
   // Temporary object to store changes
   const accumulatedChanges = {};
   const accumulatedMaintenance = {}; // Object to store accumulated maintenance costs
+  const accumulatedSpecialChanges = initializeAccumulatedSpecialChanges();
     // Initialize accumulated changes and maintenance
   for (const category in resources) {
     accumulatedChanges[category] = {};
@@ -1414,7 +1470,7 @@ function produceResources(deltaTime, buildings) {
     const building = buildings[buildingName];
     // Accumulate production and consumption changes
     building.produce(accumulatedChanges, deltaTime);
-    building.consume(accumulatedChanges, deltaTime);
+    building.consume(accumulatedChanges, deltaTime, accumulatedSpecialChanges);
   }
 
   for(const buildingName in buildings){
@@ -1466,7 +1522,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.produceResources === 'function') {
-    nanotechManager.produceResources(deltaTime, accumulatedChanges);
+    nanotechManager.produceResources(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
   }
 
   updateArtificialEcosystems(deltaTime, accumulatedChanges);
@@ -1597,6 +1653,13 @@ function produceResources(deltaTime, buildings) {
         }
       }
     }
+  }
+
+  const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
+  applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges);
+  if (hasDynamicMassEnabledSafe(terraforming, planetParameters)) {
+    terraforming?.refreshDynamicWorldGeometry?.(planetParameters);
+    reconcileLandResourceValue();
   }
 
   for (const buildingName in buildings) {
