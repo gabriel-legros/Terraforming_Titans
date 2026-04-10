@@ -129,6 +129,11 @@ function getAtlasSpecialSeedName(definition) {
     return definition?.nameKey ? t(definition.nameKey, null, fallback) : fallback;
 }
 
+function getAtlasSpecialSeedDifficulty(definition) {
+    const fallback = definition?.difficultyRating || '?';
+    return definition?.difficultyKey ? t(definition.difficultyKey, null, fallback) : fallback;
+}
+
 function getAtlasSpecialSeedEffectText(effect) {
     const fallback = effect?.description || effect?.label || effect?.id || '';
     if (effect?.descriptionKey) {
@@ -251,7 +256,7 @@ function buildAtlasWorldCard(definition, category) {
 
     const stats = document.createElement('div');
     stats.className = 'planet-stats';
-    stats.appendChild(buildAtlasStat(getAtlasText('difficulty', 'Difficulty'), definition.difficultyRating || '?'));
+    stats.appendChild(buildAtlasStat(getAtlasText('difficulty', 'Difficulty'), getAtlasSpecialSeedDifficulty(definition)));
     stats.appendChild(buildAtlasStat(getAtlasText('hazardsLabel', 'Hazards'), resolveAtlasHazardLabel(result)));
     stats.appendChild(buildAtlasStat(getAtlasText('sector', 'Sector'), result?.merged?.celestialParameters?.sector || '—'));
     stats.appendChild(buildAtlasStat(getAtlasText('fastestCompletion', 'Fastest completion'), getAtlasFastestCompletionText(completion)));

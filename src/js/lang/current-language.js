@@ -2625,6 +2625,7 @@ setLanguageData({
     specialSeeds: {
       titania: {
         name: 'Titania',
+        difficulty: 'Hard',
         effects: {
           dynamicMassLowGravity: 'Gravity is low, but planetary mass can be increased.',
         },
@@ -2641,6 +2642,7 @@ setLanguageData({
       },
       hermes: {
         name: 'Hermes',
+        difficulty: 'Hard+',
         effects: {
           starProximityDisablesSystems: 'Space Mirror Facility and Tractor Beams are disabled on this world due to star proximity.',
           calciteFactoriesDisabled: 'Calcite Factories are also disabled because HOPE is stubborn about certain things.',
@@ -2653,6 +2655,7 @@ setLanguageData({
       },
       therealposeidon: {
         name: 'TheRealPoseidon',
+        difficulty: 'Very Hard',
         effects: {
           steamAtmosphere: 'Uses Poseidon parameters, but all starting carbon dioxide is replaced with water vapour.',
           noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
@@ -2664,6 +2667,7 @@ setLanguageData({
       },
       wolfysnightmare: {
         name: 'WolfysNightmare',
+        difficulty: 'Extreme',
         effects: {
           allHazardsIncreasedDifficulty: 'All hazards have increased difficulty.',
           liftersNoStrip: 'Lifters cannot use Atmosphere Strip mode.',
