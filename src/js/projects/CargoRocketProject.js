@@ -127,6 +127,7 @@ class CargoRocketProject extends Project {
           label.textContent = resource.displayName;
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
+          tooltip.innerHTML = '&#9432;';
           attachDynamicInfoTooltip(
             tooltip,
             this.getCargoRocketText(
@@ -134,7 +135,6 @@ class CargoRocketProject extends Project {
               'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by progressing further in the game.'
             )
           );
-          tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         } else {
           label.textContent = resource.displayName;
