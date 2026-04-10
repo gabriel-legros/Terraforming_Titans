@@ -28,7 +28,64 @@ function formatScientificWithRounding(value, precision, roundDown) {
   return `${formatWithRounding(mantissa, precision, true)}e${exponent}`;
 }
 
+function formatBigIntWithSuffix(absValue, divisor, suffix) {
+  const whole = absValue / divisor;
+  const remainder = absValue % divisor;
+  if (remainder === 0n) {
+    return `${whole}${suffix}`;
+  }
+
+  const decimalDivisor = divisor / 10n;
+  const tenths = decimalDivisor > 0n ? remainder / decimalDivisor : 0n;
+  return `${whole}.${tenths}${suffix}`;
+}
+
+function formatBigIntValue(value, precision, roundDown) {
+  const absValue = value < 0n ? -value : value;
+  let formatted;
+
+  if (absValue >= 1000000000000000000000000000000n) {
+    formatted = formatScientificWithRounding(Number(absValue), precision, roundDown);
+  } else if (absValue >= 1000000000000000000000000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000000000000000000000n, 'Dd');
+  } else if (absValue >= 1000000000000000000000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000000000000000000n, 'Ud');
+  } else if (absValue >= 1000000000000000000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000000000000000n, 'De');
+  } else if (absValue >= 1000000000000000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000000000000n, 'No');
+  } else if (absValue >= 1000000000000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000000000n, 'Oc');
+  } else if (absValue >= 1000000000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000000n, 'Sp');
+  } else if (absValue >= 1000000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000n, 'Sx');
+  } else if (absValue >= 1000000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000000n, 'Qi');
+  } else if (absValue >= 1000000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000000n, 'Q');
+  } else if (absValue >= 1000000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000000n, 'T');
+  } else if (absValue >= 1000000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000000n, 'B');
+  } else if (absValue >= 1000000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000000n, 'M');
+  } else if (absValue >= 1000n) {
+    formatted = formatBigIntWithSuffix(absValue, 1000n, 'k');
+  } else {
+    formatted = absValue.toString();
+  }
+
+  return value < 0n ? `-${formatted}` : formatted;
+}
+
 function formatNumber(value, integer = false, precision = 1, allowSmall = false, roundDown = false) {
+    if (value === Infinity) return '∞';
+    if (value === -Infinity) return '-∞';
+    if (value !== value) return '0';
+    if (Object.prototype.toString.call(value) === '[object BigInt]') {
+      return formatBigIntValue(value, precision, roundDown);
+    }
     const absValue = Math.abs(value);
     let formatted;
     let scientificThreshold = 1e30;
