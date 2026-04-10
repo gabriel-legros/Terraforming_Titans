@@ -88,7 +88,7 @@ progressCallisto.storyProjects.sidestep_operation = {
     colony: { energy: 250_000_000_000_000_000 }
   },
   duration: 600_000,               // 10 min
-  description: 'Execute a years-long sequence of pseudo-random, coordinated burns from Mars, Titan, and Callisto to introduce an unpredictable drift into their orbital mechanics, scrambling enemy targeting solutions. The energy required is immense, drawing from the entire system\'s power grid.',
+  description: 'Execute a years-long sequence of pseudo-random, coordinated burns from Mars, Titan, and Callisto to introduce an unpredictable drift into their orbital mechanics, scrambling enemy targeting solutions. The energy required is immense.  (You must have sufficient energy storage for this project to progress).',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
