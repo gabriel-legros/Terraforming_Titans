@@ -240,10 +240,23 @@ function runAdvancedOversight(window, iterations) {
   }
 }
 
+function advanceGameTicks(window, tickCount, deltaMs) {
+  for (let index = 0; index < tickCount; index += 1) {
+    window.updateLogic(deltaMs);
+    window.updateRender.lastDelta = deltaMs;
+    window.updateRender(false, { forceAllSubtabs: false });
+  }
+}
+
 const DEBUG_SAVES = [
   'oversight1.json',
   'oversight2.json',
   'oversight3.json',
+];
+
+const OVERSIGHT4_TICK_CASES = [
+  { deltaMs: 100, ticks: 20 },
+  { deltaMs: 1000, ticks: 20 },
 ];
 
 describe('Space Mirror advanced oversight debug saves', () => {
@@ -269,4 +282,31 @@ describe('Space Mirror advanced oversight debug saves', () => {
       dom.window.close();
     }
   }, 60000);
+
+  runIt.each(OVERSIGHT4_TICK_CASES)(
+    'oversight4 stays stable across $deltaMs ms live ticks',
+    async ({ deltaMs, ticks }) => {
+      const dom = await createGameDom();
+      try {
+        const { window } = dom;
+        loadSave(window, 'oversight4.json');
+
+        const settings = getGlobal(window, 'mirrorOversightSettings');
+        expect(settings.advancedOversight).toBe(true);
+
+        advanceGameTicks(window, ticks, deltaMs);
+        const after = computeOversightMetric(window);
+        const assignments = getGlobal(window, 'mirrorOversightSettings.assignments.mirrors');
+
+        expect(after.tempError).toBeLessThan(0.2);
+        expect(after.maxTempError).toBeLessThan(0.1);
+        expect(assignments.tropical || 0).toBeGreaterThanOrEqual(0);
+        expect(assignments.temperate || 0).toBeGreaterThanOrEqual(0);
+        expect(assignments.polar || 0).toBeGreaterThanOrEqual(0);
+      } finally {
+        dom.window.close();
+      }
+    },
+    60000
+  );
 });

@@ -17,7 +17,8 @@ class SpaceMirrorAdvancedOversight {
       const FLUX_TOL = 0.01;       // Flux tolerance (W/m^2) for zones
       const WATER_REL_TOL = 0.00001; // Relative tol (1%) for water melt target
       const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
-      const MAX_PRUNE_ACTIONS = 12; // Final cleanup only; pruning every pass is too expensive
+      const MAX_PRUNE_ACTIONS = 0; // Pruning stable solutions causes tick-size-dependent oscillation on small worlds
+      const REVERSE_ENTRY_TEMP_DELTA = 0.5; // Do not enter reverse mode from zero for tiny over-target noise
       const MIN_ZONE_FLUX = 2.4e-5; // Floor used by calculateZoneSolarFluxWithFacility
       const NEAR_MIN_FLUX = MIN_ZONE_FLUX * 1.05;
       // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
@@ -162,15 +163,17 @@ class SpaceMirrorAdvancedOversight {
         return meanTrend;
       };
 
+      const getSolverZoneTemp = (z) => getZoneTrendTemp(z);
+
       const updateTemps = () => {
         if (typeof terraforming.updateSurfaceTemperature === 'function') {
           terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
         }
       };
 
-      const readTemps = () => {
+      const readTemps = (reader = getZoneTemp) => {
         const out = {};
-        for (const z of ZONES) out[z] = getZoneTemp(z);
+        for (const z of ZONES) out[z] = reader(z);
         return out;
       };
 
@@ -335,7 +338,7 @@ class SpaceMirrorAdvancedOversight {
       };
 
       const objective = (passLevel) => {
-        const temps = readTemps();
+        const temps = readTemps(getSolverZoneTemp);
         let sum = 0;
         for (const z of ZONES) {
           const tgt = targets[z] || 0;
@@ -394,7 +397,7 @@ class SpaceMirrorAdvancedOversight {
       // Build batched candidates for this pass
       const buildCandidates = (passLevel) => {
         const cands = [];
-        const temps = readTemps();
+        const temps = readTemps(getSolverZoneTemp);
         const baseScore = objective(passLevel);
 
         // Mirror/lantern add candidates (batched)
@@ -403,12 +406,25 @@ class SpaceMirrorAdvancedOversight {
           const tgt = targets[z] || 0; if (!(tgt > 0)) continue;
           const addMirrorDirectionCandidate = (direction) => {
             if (direction < 0 && !REVERSAL_AVAILABLE) return;
-            const capacity = mirrorDeltaCapacity(z, direction);
+            let capacity = mirrorDeltaCapacity(z, direction);
+            if (direction < 0) {
+              const currentSignedMirrors = getMirrorValue(z);
+              const currentOverTarget = (temps[z] || 0) - (targets[z] || 0);
+              const canEnterReverseFromZero =
+                currentSignedMirrors < 0 ||
+                currentOverTarget > REVERSE_ENTRY_TEMP_DELTA;
+              if (!canEnterReverseFromZero) {
+                if (currentSignedMirrors <= 0) {
+                  return;
+                }
+                capacity = Math.min(capacity, currentSignedMirrors);
+              }
+            }
             if (!(capacity > 0)) return;
-            const probe = 1;
+            const probe = Math.max(1, Math.min(capacity, MIRROR_PROBE_MIN));
             const probeResult = withTempChange(() => { adjustMirrorCount(z, direction * probe); }, () => ({
               score: objective(passLevel),
-              temp: getZoneTemp(z),
+              temp: getSolverZoneTemp(z),
             }));
             const dPerUnit = (baseScore - probeResult.score) / probe;
             const dT = (isFinite(probeResult.temp) && isFinite(temps[z])) ? (probeResult.temp - temps[z]) : 0;
@@ -441,7 +457,7 @@ class SpaceMirrorAdvancedOversight {
             const k = LANTERN_PROBE_MIN;
             const probe = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => ({
               score: objective(passLevel),
-              temp: getZoneTemp(z),
+              temp: getSolverZoneTemp(z),
             }));
             const dPerUnit = (baseScore - probe.score) / k;
             const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0;
@@ -459,7 +475,7 @@ class SpaceMirrorAdvancedOversight {
             const k = Math.max(1, Math.min(current, LANTERN_PROBE_MIN));
             const probe = withTempChange(() => { assignL[z] = current - k; }, () => ({
               score: objective(passLevel),
-              temp: getZoneTemp(z),
+              temp: getSolverZoneTemp(z),
             }));
             const dPerUnit = (baseScore - probe.score) / k;
             const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0; // expected < 0
@@ -478,7 +494,7 @@ class SpaceMirrorAdvancedOversight {
           const wantMore = baseMelt < waterTarget * (1 - WATER_REL_TOL);
           if (wantMore) {
             if (mirrorsLeft() > 0) {
-              const k = 1;
+              const k = Math.max(1, Math.min(mirrorsLeft(), MIRROR_PROBE_MIN));
               const probe = withTempChange(() => { addMirrorCount('focus', k, false); }, () => ({
                 score: objective(passLevel),
                 melt: computeFocusMeltRate(),
@@ -510,7 +526,7 @@ class SpaceMirrorAdvancedOversight {
           if (wantLess) {
             if (getMirrorCount('focus') > 0) {
               const current = getMirrorCount('focus');
-              const k = 1;
+              const k = Math.max(1, Math.min(current, MIRROR_PROBE_MIN));
               const probe = withTempChange(() => { setMirrorCount('focus', current - k, false); }, () => ({
                 score: objective(passLevel),
                 melt: computeFocusMeltRate(),
@@ -568,7 +584,7 @@ class SpaceMirrorAdvancedOversight {
             const receivers = [...ZONES, 'focus'].filter(rz => {
               if (rz === 'focus') return FOCUS_FLAG && (targets.water)>0 && (prio.focus||5) <= passLevel;
               if (isMirrorReverse(rz)) return false;
-              const t = getZoneTemp(rz);
+              const t = getSolverZoneTemp(rz);
               return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel && isFinite(t) && t < (targets[rz] - getZoneTolerance(rz));
             });
             const baseScoreR = objective(passLevel);
@@ -583,7 +599,7 @@ class SpaceMirrorAdvancedOversight {
               }, evaluator);
               const probeResult = applyProbe(probe, () => ({
                 score: objective(passLevel),
-                temp: rz === 'focus' ? NaN : getZoneTemp(rz),
+                temp: rz === 'focus' ? NaN : getSolverZoneTemp(rz),
                 melt: rz === 'focus' ? computeFocusMeltRate() : NaN,
               }));
               const dPerUnit = (baseScoreR - probeResult.score) / probe;
@@ -745,7 +761,7 @@ class SpaceMirrorAdvancedOversight {
       };
 
       const withinPassTolerance = (passLevel) => {
-        const t = readTemps();
+        const t = readTemps(getSolverZoneTemp);
         for (const z of ZONES) {
           const tgt = targets[z] || 0;
           if (!(tgt > 0)) continue;

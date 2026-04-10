@@ -346,6 +346,18 @@ const titaniaOverrides = {
       beltFalloffExp: 6
     }
   },
+  star: {
+    name: 'Sol',
+    spectralType: 'G2V',
+    luminositySolar: 1,
+    massSolar: 1,
+    radiusSolar: 1,
+    temperatureK: 5778,
+    habitableZone: {
+      inner: 0.95,
+      outer: 1.4
+    }
+  },
   zonalSurface: {
     tropical: {
       liquidWater: 0,
