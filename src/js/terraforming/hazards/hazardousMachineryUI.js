@@ -11,6 +11,7 @@ const hazardousMachineryUICache = {
   summaryPenalties: null,
   summaryHackingText: null,
   summaryHackingCost: null,
+  summaryHackingClearCost: null,
   summaryHackingInfo: null,
   summaryHacking: null,
   barSafe: null,
@@ -711,8 +712,11 @@ function ensureHazardousMachineryLayout() {
   hackingText.className = 'hazard-machinery-hacking__text';
   const hackingCost = doc.createElement('div');
   hackingCost.className = 'hazard-machinery-hacking__cost';
+  const hackingClearCost = doc.createElement('div');
+  hackingClearCost.className = 'hazard-machinery-hacking__cost';
   const hackingInfo = doc.createElement('div');
   hackingText.appendChild(hackingCost);
+  hackingText.appendChild(hackingClearCost);
   hackingText.appendChild(hackingInfo);
   hackingBody.appendChild(hackingText);
 
@@ -839,6 +843,7 @@ function ensureHazardousMachineryLayout() {
   hazardousMachineryUICache.summaryHacking = hackingBody;
   hazardousMachineryUICache.summaryHackingText = hackingText;
   hazardousMachineryUICache.summaryHackingCost = hackingCost;
+  hazardousMachineryUICache.summaryHackingClearCost = hackingClearCost;
   hazardousMachineryUICache.summaryHackingInfo = hackingInfo;
   hazardousMachineryUICache.hackButton = hackButton;
   hazardousMachineryUICache.hackMaxButton = maxButton;
@@ -876,7 +881,9 @@ function updateHazardousMachineryUI(parameters) {
   const costPerHack = hazardInstance.getCounterHackCostPerMachinery(parameters);
   const maxHackAmount = Math.max(0, Math.min((research?.value || 0) / costPerHack, status.currentAmount || 0));
   const requestedCost = batchSize * costPerHack;
+  const clearCost = Math.max(0, (status.currentAmount || 0) * costPerHack);
   const hasEnoughResearchForBatch = (research?.value || 0) + 1e-9 >= requestedCost;
+  const hasEnoughResearchToClear = (research?.value || 0) + 1e-9 >= clearCost;
 
   card.style.display = '';
   setHazardousMachineryTitleStatus(hazardInstance.isCleared());
@@ -1039,6 +1046,10 @@ function updateHazardousMachineryUI(parameters) {
     value: formatMachineryNumber(requestedCost, 0)
   });
   hazardousMachineryUICache.summaryHackingCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughResearchForBatch);
+  hazardousMachineryUICache.summaryHackingClearCost.textContent = getHazardousMachineryUiText('labels.clearCost', 'Clear All Cost: {value}', {
+    value: formatMachineryNumber(clearCost, 0)
+  });
+  hazardousMachineryUICache.summaryHackingClearCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughResearchToClear);
   hazardousMachineryUICache.summaryHackingInfo.textContent = getHazardousMachineryUiText(
     'labels.convertInfo',
     'Each hack spends {cost} research to disable 1 hazardous machinery.',

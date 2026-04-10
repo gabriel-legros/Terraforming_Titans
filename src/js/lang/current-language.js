@@ -2375,6 +2375,7 @@ setLanguageData({
             androidConsumptionEnabled: 'Colony Android Consumption: Enabled',
             shipPenalty: 'Assigned Ships: +{value} workers each',
             convertCost: 'Research Cost: {value}',
+            clearCost: 'Clear All Cost: {value}',
             convertAction: 'Hack +{value}',
             convertInfo: 'Each hack spends {cost} research to disable 1 hazardous machinery.',
             autoSpendIfClear: 'Auto spend if spending would clear the hazard',
