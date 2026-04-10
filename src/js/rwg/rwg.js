@@ -251,6 +251,11 @@ globalThis.RWG_WORLD_TYPES = {
 };
 const RWG_WORLD_TYPES = globalThis.RWG_WORLD_TYPES;
 
+function normalizeRwgArchetype(archetype) {
+  if (!archetype || archetype === 'auto') return archetype;
+  return RWG_WORLD_TYPES[archetype] ? archetype : 'mars-like';
+}
+
 const RWG_TYPE_BASE_COLORS = {
   "mars-like": "#8a2a2a",
   "cold-desert": "#b38c61",
@@ -971,7 +976,7 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
     : [];
   const specialSeedDesigner = definition.designer || null;
   const target = definition.target || 'planet';
-  const archetype = definition.archetype || merged?.classification?.archetype || 'venus-like';
+  const archetype = normalizeRwgArchetype(definition.archetype || merged?.classification?.archetype || 'venus-like');
   const orbitPreset = definition.orbitPreset || 'hot';
   const canonicalParts = [definition.seed || definition.key || String(seedValue || ''), target, archetype, orbitPreset];
   const hazardText = formatHazardList(hazards);
@@ -2035,6 +2040,7 @@ class RwgManager extends EffectableEntity {
 
     // Type — derived
     let forcedType = opts.archetype || opts.type; if ((!forcedType || forcedType === "auto") && seedAnn?.type) { forcedType = seedAnn.type; }
+    forcedType = normalizeRwgArchetype(forcedType);
     if (!forcedType || forcedType === "auto") {
       const rngType = mulberry32(S ^ 0xC0FFEE);
       let candidates = Array.isArray(opts.availableTypes) ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
