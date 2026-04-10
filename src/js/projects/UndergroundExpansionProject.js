@@ -66,7 +66,7 @@ class UndergroundExpansionProject extends AndroidProject {
     if (!this.isDynamicMassEnabled()) {
       this.dynamicMassGraceBase = -1;
       this.maxRepeatCount = rawMaxRepeats;
-      this.isCompleted = false;
+      this.isCompleted = this.repeatCount >= rawMaxRepeats;
       return rawMaxRepeats;
     }
 
@@ -79,7 +79,7 @@ class UndergroundExpansionProject extends AndroidProject {
         ? rawMaxRepeats + 1
         : rawMaxRepeats;
     this.maxRepeatCount = maxRepeats;
-    this.isCompleted = false;
+    this.isCompleted = this.repeatCount >= maxRepeats;
     return maxRepeats;
   }
 
@@ -297,6 +297,7 @@ class UndergroundExpansionProject extends AndroidProject {
     if (this.repeatCount < this.getMaxRepeats()) {
       this.repeatCount++;
     }
+    this.isCompleted = this.repeatCount >= this.getMaxRepeats();
   }
 
   saveState() {

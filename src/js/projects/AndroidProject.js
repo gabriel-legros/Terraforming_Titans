@@ -12,6 +12,7 @@ class AndroidProject extends Project {
     this.assignedAndroids = 0;
     this.autoAssignAndroids = false;
     this.autoAssignAndroidPercent = 100;
+    this.releaseAndroidsOnComplete = true;
     this.assignmentMultiplier = 1;
     this.continuousThreshold = config.continuousThreshold || 1000; // Duration threshold in ms below which project becomes continuous
     this.shortfallLastTick = false;
@@ -143,7 +144,7 @@ class AndroidProject extends Project {
   }
 
   update(deltaTime) {
-    if (this.isCompleted && this.assignedAndroids > 0) {
+    if (this.isCompleted && this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
       this.releaseAndroidAssignments();
     }
     if (this.isPermanentlyDisabled()) {
@@ -324,6 +325,8 @@ class AndroidProject extends Project {
 
     const autoAssignContainer = document.createElement('div');
     autoAssignContainer.classList.add('android-auto-assign-container');
+    const autoAssignRow = document.createElement('div');
+    autoAssignRow.classList.add('android-auto-assign-row');
     const autoAssignCheckbox = document.createElement('input');
     autoAssignCheckbox.type = 'checkbox';
     autoAssignCheckbox.id = `${this.name}-auto-assign-androids`;
@@ -342,7 +345,20 @@ class AndroidProject extends Project {
     autoAssignInput.classList.add('android-auto-assign-input');
     const autoAssignSuffix = document.createElement('span');
     autoAssignSuffix.textContent = this.getAndroidProjectText('ui.projects.android.percentOfAndroids', '% of androids');
-    autoAssignContainer.append(autoAssignCheckbox, autoAssignLabel, autoAssignInput, autoAssignSuffix);
+    autoAssignRow.append(autoAssignCheckbox, autoAssignLabel, autoAssignInput, autoAssignSuffix);
+
+    const releaseOnCompleteRow = document.createElement('div');
+    releaseOnCompleteRow.classList.add('android-auto-assign-row');
+    const releaseOnCompleteCheckbox = document.createElement('input');
+    releaseOnCompleteCheckbox.type = 'checkbox';
+    releaseOnCompleteCheckbox.id = `${this.name}-release-androids-on-complete`;
+    releaseOnCompleteCheckbox.checked = this.releaseAndroidsOnComplete !== false;
+    const releaseOnCompleteLabel = document.createElement('label');
+    releaseOnCompleteLabel.htmlFor = releaseOnCompleteCheckbox.id;
+    releaseOnCompleteLabel.textContent = this.getAndroidProjectText('ui.projects.android.releaseIfComplete', 'Release if complete');
+    releaseOnCompleteRow.append(releaseOnCompleteCheckbox, releaseOnCompleteLabel);
+
+    autoAssignContainer.append(autoAssignRow, releaseOnCompleteRow);
 
     const speedContainer = document.createElement('div');
     speedContainer.classList.add('android-speed-container');
@@ -368,12 +384,20 @@ class AndroidProject extends Project {
       androidAssignmentContainer: sectionContainer,
       autoAssignAndroidCheckbox: autoAssignCheckbox,
       autoAssignAndroidInput: autoAssignInput,
+      releaseOnCompleteCheckbox,
       androidSpeedDisplay: speedDisplay,
     };
 
     autoAssignCheckbox.addEventListener('change', () => {
       this.autoAssignAndroids = autoAssignCheckbox.checked;
       this.autoAssign();
+      updateProjectUI(this.name);
+    });
+    releaseOnCompleteCheckbox.addEventListener('change', () => {
+      this.releaseAndroidsOnComplete = releaseOnCompleteCheckbox.checked;
+      if (this.releaseAndroidsOnComplete && this.isCompleted) {
+        this.releaseAndroidAssignments();
+      }
       updateProjectUI(this.name);
     });
     wireStringNumberInput(autoAssignInput, {
@@ -414,6 +438,7 @@ class AndroidProject extends Project {
     if (document.activeElement !== elements.autoAssignAndroidInput) {
       elements.autoAssignAndroidInput.value = String(percent);
     }
+    elements.releaseOnCompleteCheckbox.checked = this.releaseAndroidsOnComplete !== false;
     elements.androidSpeedDisplay.title = this.getAndroidSpeedTooltip();
     elements.androidSpeedDisplay.textContent = this.getAndroidSpeedDisplayText();
   }
@@ -425,7 +450,9 @@ class AndroidProject extends Project {
     }
     if (!this.autoAssignAndroids) return;
     if (this.isCompleted) {
-      this.releaseAndroidAssignments();
+      if (this.releaseAndroidsOnComplete !== false) {
+        this.releaseAndroidAssignments();
+      }
       return;
     }
     const isRunning = this.isActive && !this.isPaused;
@@ -448,6 +475,7 @@ class AndroidProject extends Project {
       ...super.saveAutomationSettings(),
       autoAssignAndroids: this.autoAssignAndroids === true,
       autoAssignAndroidPercent: this.autoAssignAndroidPercent,
+      releaseAndroidsOnComplete: this.releaseAndroidsOnComplete !== false,
       assignmentMultiplier: this.assignmentMultiplier
     };
   }
@@ -461,8 +489,14 @@ class AndroidProject extends Project {
       const percent = Number(settings.autoAssignAndroidPercent ?? this.autoAssignAndroidPercent);
       this.autoAssignAndroidPercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'releaseAndroidsOnComplete')) {
+      this.releaseAndroidsOnComplete = settings.releaseAndroidsOnComplete !== false;
+    }
     if (Object.prototype.hasOwnProperty.call(settings, 'assignmentMultiplier')) {
       this.assignmentMultiplier = Math.max(1, Math.round(settings.assignmentMultiplier || 1));
+    }
+    if (this.isCompleted && this.releaseAndroidsOnComplete !== false) {
+      this.releaseAndroidAssignments();
     }
     if (this.autoAssignAndroids) {
       this.autoAssign();
@@ -475,6 +509,7 @@ class AndroidProject extends Project {
       assignedAndroids: this.assignedAndroids,
       autoAssignAndroids: this.autoAssignAndroids,
       autoAssignAndroidPercent: this.autoAssignAndroidPercent,
+      releaseAndroidsOnComplete: this.releaseAndroidsOnComplete,
     };
   }
 
@@ -483,6 +518,7 @@ class AndroidProject extends Project {
     this.assignedAndroids = state.assignedAndroids || 0;
     this.autoAssignAndroids = state.autoAssignAndroids || 0;
     this.autoAssignAndroidPercent = Number(state.autoAssignAndroidPercent ?? 100) || 0;
+    this.releaseAndroidsOnComplete = state.releaseAndroidsOnComplete !== false;
   }
 
   saveTravelState() {
@@ -492,6 +528,7 @@ class AndroidProject extends Project {
     return {
       autoAssignAndroids: this.autoAssignAndroids,
       autoAssignAndroidPercent: this.autoAssignAndroidPercent,
+      releaseAndroidsOnComplete: this.releaseAndroidsOnComplete,
       assignmentMultiplier: this.assignmentMultiplier,
     };
   }
@@ -502,6 +539,7 @@ class AndroidProject extends Project {
     }
     this.autoAssignAndroids = state.autoAssignAndroids === true;
     this.autoAssignAndroidPercent = state.autoAssignAndroidPercent ?? this.autoAssignAndroidPercent;
+    this.releaseAndroidsOnComplete = state.releaseAndroidsOnComplete !== false;
     this.assignmentMultiplier = state.assignmentMultiplier ?? this.assignmentMultiplier;
   }
 

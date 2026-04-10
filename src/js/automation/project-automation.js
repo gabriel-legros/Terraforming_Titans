@@ -19,6 +19,7 @@ const PROJECT_AUTOMATION_BASE_EXPANSION_KEYS = new Set([
 const PROJECT_AUTOMATION_EXPANSION_KEYS = new Set([
   'buildCount',
   'autoMax',
+  'releaseAndroidsOnComplete',
   'workerCapacityStep',
   'underworldMiningLevel',
   'superchargedMiningLevel',

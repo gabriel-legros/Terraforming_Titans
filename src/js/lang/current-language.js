@@ -886,6 +886,7 @@ setLanguageData({
         androids: 'Androids',
         controls: 'Controls',
         percentOfAndroids: '% of androids',
+        releaseIfComplete: 'Release if complete',
         speedTooltip: '1 + sqrt(androids assigned / ore mines built)',
         speedBoost: 'Speed boost',
       },

@@ -2032,10 +2032,17 @@
 .android-auto-assign-container {
     grid-area: auto;
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.85em;
+}
+
+.android-auto-assign-row {
+    display: flex;
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
-    font-size: 0.85em;
 }
 
 .android-auto-assign-input {
