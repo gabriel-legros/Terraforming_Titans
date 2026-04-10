@@ -1782,7 +1782,7 @@ const styxOverrides = {
       maxCoverageBase: 1,
       waterCoveragePenalty: 0.5,
       baseGrowth: { value: 1 },
-      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.005 },
+      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.001 },
       oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.001 },
       temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.003 },
       crusaderRemovalPerSecond: 0.5,
@@ -1948,7 +1948,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
 
 
 
