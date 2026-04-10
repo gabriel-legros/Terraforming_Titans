@@ -1070,7 +1070,7 @@ const specialSeedDefinitions = {
     difficultyRating: 'Hard+',
     replayable: true,
     target: 'planet',
-    archetype: 'barren',
+    archetype: 'mars-like',
     orbitPreset: 'inner',
     specialEffects: [
       {
