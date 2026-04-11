@@ -160,12 +160,12 @@ class AtlasManager extends EffectableEntity {
         if (!resolved) {
             return;
         }
-        const existing = this.getCompletion(resolved);
         const shouldUpdateFastest = options.skipFastestUpdate !== true;
         let changed = false;
         if (shouldUpdateFastest) {
             changed = this.updateFastestCompletion(resolved, playTimeSeconds, realPlayTimeSeconds) || changed;
         }
+        const existing = this.atlasWorldCompletions[resolved] || this.getCompletion(resolved);
         if (!existing.completed) {
             existing.completed = true;
             existing.completedAt = Date.now();
