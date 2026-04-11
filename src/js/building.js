@@ -175,6 +175,7 @@ class Building extends EffectableEntity {
       this.planetaryMassChange = planetaryMassChange || null;
 
       this.autoBuildMaxOption = !!autoBuildMaxOption;
+      this.autoBuildPercent = config.autoBuildPercent ?? this.autoBuildPercent;
       this.autoBuildFillEnabled = !!config.autoBuildFillEnabled;
       this.autoBuildFillPercent = config.autoBuildFillPercent ?? 95;
       this.autoBuildFillResourceFilters = !!config.autoBuildFillResourceFilters;
@@ -212,6 +213,10 @@ class Building extends EffectableEntity {
     }
 
     return Math.max(maxBuildable, 0);
+  }
+
+  hasAdjustableAutoBuildMaxTarget() {
+    return false;
   }
 
   getAutoBuildBase(population, workerCap, collection) {

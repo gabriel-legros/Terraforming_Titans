@@ -38,8 +38,17 @@ class DysonReceiver extends Building {
     return 'Dyson Capacity';
   }
 
+  hasAdjustableAutoBuildMaxTarget() {
+    return true;
+  }
+
   getAutoBuildMaxTargetCount() {
-    return this.getDysonCapacity();
+    const capacity = this.getDysonCapacity();
+    if (capacity <= 0) {
+      return 0;
+    }
+    const percent = Math.min(100, Math.max(0, this.autoBuildPercent || 0));
+    return Math.ceil(capacity * percent / 100);
   }
 
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
@@ -48,12 +57,12 @@ class DysonReceiver extends Building {
       return base;
     }
 
-    const cap = this.getDysonCapacity();
-    if (cap <= 0) {
+    const target = this.getAutoBuildMaxTargetCount();
+    if (target <= 0) {
       return 0;
     }
 
-    const remaining = Math.max(cap - this.countNumber, 0);
+    const remaining = Math.max(target - this.countNumber, 0);
     return Math.min(base, remaining);
   }
 }

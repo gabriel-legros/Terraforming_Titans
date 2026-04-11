@@ -703,6 +703,7 @@ function autoBuild(buildings, delta = 0) {
                 continue;
             }
             const usesMaxBasis = building.autoBuildBasis === 'max';
+            const usesAdjustableMaxBasis = usesMaxBasis && building.hasAdjustableAutoBuildMaxTarget();
             const usesFixedBasis = building.autoBuildBasis === 'fixed';
             const usesWorkerShareBasis = building.autoBuildBasis === 'workerShare';
             const usesLandShareBasis = building.autoBuildBasis === 'landShare';
@@ -713,7 +714,7 @@ function autoBuild(buildings, delta = 0) {
                 ? 0
                 : resolveAutoBuildBase(building, population, workerCap, buildings);
             const targetCount = usesMaxBasis
-                ? Infinity
+                ? (usesAdjustableMaxBasis ? building.getAutoBuildMaxTargetCount() : Infinity)
                 : usesFixedBasis
                     ? fixedTarget
                     : usesWorkerShareBasis
@@ -729,15 +730,15 @@ function autoBuild(buildings, delta = 0) {
             buildingInfos.push({ building, targetCount });
 
             if (building.autoBuildEnabled) {
-                const currentRatio = usesMaxBasis ? 0 : (targetCount > 0 ? building.countNumber / targetCount : 0);
-                const requiredAmount = usesMaxBasis ? 1 : targetCount - building.countNumber;
+                const currentRatio = usesMaxBasis && !usesAdjustableMaxBasis ? 0 : (targetCount > 0 ? building.countNumber / targetCount : 0);
+                const requiredAmount = usesMaxBasis && !usesAdjustableMaxBasis ? 1 : targetCount - building.countNumber;
 
                 if (requiredAmount > 0) {
                     buildableBuildings.push({
                         building,
                         currentRatio,
                         requiredAmount,
-                        maxMode: usesMaxBasis,
+                        maxMode: usesMaxBasis && !usesAdjustableMaxBasis,
                     });
                 }
             }

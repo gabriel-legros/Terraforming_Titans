@@ -345,6 +345,7 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
+    autoBuildPercent: 100,
     autoBuildMaxOption: true,
     temperatureMaintenanceImmune: true,
     kesslerDebrisSize: 'large'
