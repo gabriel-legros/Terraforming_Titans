@@ -1440,7 +1440,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
       if (showResource) {
         const activityRate = (resourceObj.productionRate || 0) + (resourceObj.consumptionRate || 0);
-        const isUndergroundDeposit = category === 'underground';
+        const isUndergroundDeposit = category === 'underground' && resourceName !== 'planetaryMass';
         const hideWhenSmall = resourceObj.hideWhenSmall || isUndergroundDeposit;
         const displayedAvailable = Math.floor(Math.max(0, resourceObj.getAvailableAmount ? resourceObj.getAvailableAmount() : (resourceObj.value - resourceObj.reserved)));
         const displayedTotal = Math.floor(Math.max(0, resourceObj.value));
