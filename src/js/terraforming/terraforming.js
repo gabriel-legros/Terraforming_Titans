@@ -1547,34 +1547,11 @@ class Terraforming extends EffectableEntity{
 
     const heatWeights = {};
     let totalHeatWeight = 0;
-    const advancedTargets = mirrorOversightSettings?.advancedOversight
-      ? (mirrorOversightSettings.targets || {})
-      : null;
-    const advancedTempModes = mirrorOversightSettings?.advancedOversight
-      ? (mirrorOversightSettings.tempMode || {})
-      : null;
     if (availableAdvancedHeatingPower > 0) {
         for (const zone of ORDER) {
+            const previousMean = this.temperature.zones[zone].value;
+            const desiredDelta = T[zone] - previousMean;
             const zoneArea = z[zone].area || 0;
-            let desiredDelta = 0;
-
-            if (advancedTargets && (advancedTargets[zone] || 0) > 0) {
-                const mode = advancedTempModes?.[zone] || 'average';
-                if (mode === 'average') {
-                    desiredDelta = advancedTargets[zone] - T[zone];
-                } else if (mode === 'day') {
-                    desiredDelta = advancedTargets[zone] - (T[zone] + (z[zone].day - z[zone].mean));
-                } else if (mode === 'night') {
-                    const modeledNight = Math.max(T[zone] - (z[zone].day - z[zone].mean), T[zone] / 4);
-                    desiredDelta = advancedTargets[zone] - modeledNight;
-                } else {
-                    desiredDelta = 0;
-                }
-            } else {
-                const previousMean = this.temperature.zones[zone].value;
-                desiredDelta = T[zone] - previousMean;
-            }
-
             const weight = desiredDelta > 0 ? desiredDelta * zoneArea : 0;
             heatWeights[zone] = weight;
             totalHeatWeight += weight;

@@ -702,7 +702,7 @@ class WarpGateCommand extends EffectableEntity {
     const injured = team.find(m => m && m.health <= 0);
     if (injured) {
       injured.health = 1;
-      this.recallTeam(teamIndex);
+      this.recallTeam(teamIndex, true);
       if (typeof addJournalEntry === 'function') {
         addJournalEntry(`Team ${teamIndex + 1} recalled after ${injured.firstName} was injured.`);
       }
@@ -1167,10 +1167,13 @@ class WarpGateCommand extends EffectableEntity {
     return true;
   }
 
-  recallTeam(teamIndex) {
+  recallTeam(teamIndex, clearAutoStart = false) {
     const op = this.operations[teamIndex];
     if (op) {
       this.addLog(teamIndex, `Team ${teamIndex + 1} - Recalled`);
+      if (clearAutoStart) {
+        op.autoStart = false;
+      }
       op.active = false;
       op.progress = 0;
       op.timer = 0;
