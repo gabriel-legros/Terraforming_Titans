@@ -80,14 +80,11 @@ class OxygenFactory extends MultiRecipesBuilding {
       }
     }
 
-    if (Math.abs(targetProductivity - this.productivity) < 0.001) {
-      this.productivity = targetProductivity;
-    } else {
-      const difference = Math.abs(targetProductivity - this.productivity);
-      const dampingFactor = difference < 0.01 ? 0.01 : 0.1;
-      this.productivity +=
-        dampingFactor * (targetProductivity - this.productivity);
-    }
+    this.productivity = this.applyProductivityDamping(
+      this.productivity,
+      targetProductivity,
+      deltaTime
+    );
   }
 
   initUI(autoBuildContainer, cache) {

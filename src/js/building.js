@@ -1330,12 +1330,27 @@ class Building extends EffectableEntity {
     return { targetProductivity, hasAtmosphericOversight, computeMaxProduction, solveRequired };
   }
 
-  applyProductivityDamping(current, target) {
+  static getScaledDampingFactor(baseFactor, deltaTime, baselineMs = 10) {
+    if (baseFactor <= 0) {
+      return 0;
+    }
+    if (baseFactor >= 1) {
+      return deltaTime > 0 ? 1 : 0;
+    }
+    const stepMs = Math.max(0, Number(deltaTime) || 0);
+    if (stepMs <= 0) {
+      return 0;
+    }
+    return 1 - Math.pow(1 - baseFactor, stepMs / baselineMs);
+  }
+
+  applyProductivityDamping(current, target, deltaTime, nearThreshold = 0.01, nearFactor = 0.01, farFactor = 0.1) {
     if (Math.abs(target - current) < 0.001) {
       return target;
     }
     const difference = Math.abs(target - current);
-    const dampingFactor = difference < 0.01 ? 0.01 : 0.1;
+    const baseFactor = difference < nearThreshold ? nearFactor : farFactor;
+    const dampingFactor = Building.getScaledDampingFactor(baseFactor, deltaTime);
     return current + dampingFactor * (target - current);
   }
 
@@ -1384,8 +1399,8 @@ class Building extends EffectableEntity {
       return;
     }
 
-    this.productivity = this.applyProductivityDamping(this.productivity, targetProductivity);
-    this.displayProductivity = this.applyProductivityDamping(this.displayProductivity, displayTarget);
+    this.productivity = this.applyProductivityDamping(this.productivity, targetProductivity, deltaTime);
+    this.displayProductivity = this.applyProductivityDamping(this.displayProductivity, displayTarget, deltaTime);
   }
 
   // Updated produce function to track production rates

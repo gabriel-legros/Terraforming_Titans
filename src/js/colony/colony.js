@@ -236,7 +236,8 @@ class Colony extends Building {
 
     const targetProductivity = Math.max(0, Math.min(1, minRatio));
     const difference = Math.abs(targetProductivity - this.productivity);
-    const dampingFactor = difference < 0.05 ? 0.01 : 1; // Use smaller damping if close to target
+    const baseFactor = difference < 0.05 ? 0.01 : 1;
+    const dampingFactor = Building.getScaledDampingFactor(baseFactor, deltaTime);
     this.productivity += dampingFactor * (targetProductivity - this.productivity);
   }
 

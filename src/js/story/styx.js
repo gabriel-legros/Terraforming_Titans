@@ -261,7 +261,7 @@ progressStyx.chapters.push(
     chapter: 41,
     activePlanet: 'styx',
     title: 'Chapter 41: Atlas',
-    narrative: "Feroza : 'Ma'am!  We've got a signal.  A large mass has appeared near probe #178999.'  \n Mary : 'Send in a fleet immediately.'  \n Feroza : 'Of coures...  It's there!  It's so big we can even see the cloaking in a way.  Hold on... the energy readings are off the chart.  Wow that is A LOT of antimatter.'  \n Mary : 'Attack it already!'  \n Feroza : 'Of course.  That's a hit...  Big explosion!  Oh...  It just left.  Warped out.  It's gone.  That was fast.'  \n $RED$Prometheus : 'It will need a lot of time to repair.  Plenty of time to finish here.'",
+    narrative: "Feroza : 'Ma'am!  We've got a signal.  A large mass has appeared near probe #178999.'  \n Mary : 'Send in a fleet immediately.'  \n Feroza : 'Of course...  It's there!  It's so big we can even see the cloaking in a way.  Hold on... the energy readings are off the chart.  Wow that is A LOT of antimatter.'  \n Mary : 'Attack it already!'  \n Feroza : 'Of course.  That's a hit...  Big explosion!  Oh...  It just left.  Warped out.  It's gone.  That was fast.'  \n $RED$Prometheus : 'It will need a lot of time to repair.  Plenty of time to finish here.'",
     prerequisites: ['styx.40.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
