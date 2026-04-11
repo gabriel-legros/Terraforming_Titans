@@ -1626,6 +1626,7 @@ function renderArtificialHistory(force = false) {
   const sig = JSON.stringify({
     page: artificialHistoryPage,
     total: entries.length,
+    scientificNotationThreshold: gameSettings.scientificNotationThreshold ?? 1e30,
     items: slice.map((entry) => [
       entry.id,
       entry.name,
