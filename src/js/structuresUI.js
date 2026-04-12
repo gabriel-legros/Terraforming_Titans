@@ -18,7 +18,7 @@ function getStructureCountNumber(value) {
 }
 
 function getManualBuildCount(structure, buildCount) {
-  if (!gameSettings.roundBuildingConstruction || structure.autoBuildEnabled) {
+  if (!gameSettings.roundBuildingConstruction) {
     return buildCount;
   }
   return getRoundedBuildCount(structure.count, buildCount);

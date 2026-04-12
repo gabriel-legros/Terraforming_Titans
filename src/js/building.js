@@ -5,6 +5,15 @@ function normalizeBuildingCount(value) {
   if (typeof value === 'bigint') {
     return value < 0n ? 0n : value;
   }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return 0n;
+    }
+    if (/^\d+$/.test(trimmed)) {
+      return BigInt(trimmed);
+    }
+  }
   const numeric = Number(value) || 0;
   if (numeric <= 0) {
     return 0n;
@@ -291,10 +300,16 @@ class Building extends EffectableEntity {
   }
 
   saveState() {
+    const serializeCount = value => {
+      const normalized = normalizeBuildingCount(value);
+      return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
+        ? Number(normalized)
+        : normalized.toString();
+    };
     return {
       unlocked: this.unlocked,
-      count: this.countNumber,
-      active: this.activeNumber,
+      count: serializeCount(this.count),
+      active: serializeCount(this.active),
       productivity: this.productivity,
       isHidden: this.isHidden,
       alertedWhenUnlocked: this.alertedWhenUnlocked,

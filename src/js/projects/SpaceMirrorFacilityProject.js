@@ -274,7 +274,7 @@ function buildMirrorOversightTravelSnapshot(settings) {
 
 function getQuickBuildCount(building, buildCount) {
   const count = buildCount || 1;
-  if (!gameSettings.roundBuildingConstruction || building.autoBuildEnabled) {
+  if (!gameSettings.roundBuildingConstruction) {
     return count;
   }
   return getRoundedBuildCount(building.count, count);

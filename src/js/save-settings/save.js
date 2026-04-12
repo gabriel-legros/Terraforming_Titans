@@ -39,6 +39,15 @@ function hideLoadingOverlay() {
   applyLoadingOverlayVisibility();
 }
 
+function serializeSavedBuildCount(value) {
+  const normalized = typeof normalizeBuildingCount === 'function'
+    ? normalizeBuildingCount(value)
+    : BigInt(Math.max(0, Math.floor(Number(value) || 0)));
+  return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
+    ? Number(normalized)
+    : normalized.toString();
+}
+
 function recalculateLandUsage() {
   const landResource = resources?.surface?.land;
   if (!landResource) return;
@@ -172,7 +181,11 @@ function getGameState() {
     skills: (typeof skillManager !== 'undefined' && typeof skillManager.saveState === 'function') ? skillManager.saveState() : undefined,
     spaceManager: (typeof spaceManager !== 'undefined' && typeof spaceManager.saveState === 'function') ? spaceManager.saveState() : undefined,
     galaxyManager: (typeof galaxyManager !== 'undefined' && typeof galaxyManager.saveState === 'function') ? galaxyManager.saveState() : undefined,
-    selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
+    selectedBuildCounts: typeof selectedBuildCounts !== 'undefined'
+      ? Object.fromEntries(
+          Object.entries(selectedBuildCounts).map(([key, value]) => [key, serializeSavedBuildCount(value)])
+        )
+      : undefined,
     projectDisplayState: typeof projectDisplayState !== 'undefined' ? projectDisplayState : undefined,
     structureDisplayState: typeof structureDisplayState !== 'undefined' ? structureDisplayState : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
@@ -456,7 +469,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (gameState.selectedBuildCounts) {
         for (const key in gameState.selectedBuildCounts) {
           if (selectedBuildCounts.hasOwnProperty(key)) {
-            selectedBuildCounts[key] = gameState.selectedBuildCounts[key];
+            selectedBuildCounts[key] = serializeSavedBuildCount(gameState.selectedBuildCounts[key]);
           }
         }
         if (typeof updateBuildingDisplay === 'function') {
