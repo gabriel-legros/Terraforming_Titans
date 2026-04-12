@@ -152,6 +152,9 @@ class AndroidProject extends Project {
       this.releaseAndroidAssignments();
     }
     if (this.isPermanentlyDisabled()) {
+      if (this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
+        this.releaseAndroidAssignments();
+      }
       this.isActive = false;
       this.isPaused = false;
       return;
@@ -359,7 +362,7 @@ class AndroidProject extends Project {
     releaseOnCompleteCheckbox.checked = this.releaseAndroidsOnComplete !== false;
     const releaseOnCompleteLabel = document.createElement('label');
     releaseOnCompleteLabel.htmlFor = releaseOnCompleteCheckbox.id;
-    releaseOnCompleteLabel.textContent = this.getAndroidProjectText('ui.projects.android.releaseIfComplete', 'Release if complete');
+    releaseOnCompleteLabel.textContent = this.getAndroidProjectText('ui.projects.android.releaseIfComplete', 'Release if complete/disabled');
     releaseOnCompleteRow.append(releaseOnCompleteCheckbox, releaseOnCompleteLabel);
 
     autoAssignContainer.append(autoAssignRow, releaseOnCompleteRow);
@@ -459,8 +462,14 @@ class AndroidProject extends Project {
       }
       return;
     }
+    if (this.isPermanentlyDisabled()) {
+      if (this.releaseAndroidsOnComplete !== false) {
+        this.releaseAndroidAssignments();
+      }
+      return;
+    }
     const isRunning = this.isActive && !this.isPaused;
-    if (!isRunning && !this.autoStart) {
+    if (!isRunning && !this.autoStart && this.releaseAndroidsOnComplete !== false) {
       this.releaseAndroidAssignments();
       return;
     }

@@ -8,6 +8,13 @@ function getSpaceMiningText(path, fallback, vars) {
   }
 }
 
+function normalizeWaterImportTarget(target) {
+  if (target === 'colony' || target === 'colonyOnly') {
+    return target;
+  }
+  return 'surface';
+}
+
 class SpaceMiningProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -360,7 +367,8 @@ class SpaceMiningProject extends SpaceshipProject {
     select.classList.add('water-import-target-select');
     [
       { value: 'surface', text: getSpaceMiningText('ui.projects.spaceMining.surface', 'Surface') },
-      { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') }
+      { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') },
+      { value: 'colonyOnly', text: getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only') }
     ].forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
@@ -369,7 +377,7 @@ class SpaceMiningProject extends SpaceshipProject {
     });
     select.value = this.waterImportTarget;
     select.addEventListener('change', () => {
-      this.waterImportTarget = select.value === 'colony' ? 'colony' : 'surface';
+      this.waterImportTarget = normalizeWaterImportTarget(select.value);
     });
     control.appendChild(select);
 
@@ -766,7 +774,7 @@ class SpaceMiningProject extends SpaceshipProject {
       this.co2CoverageDisableMode = settings.co2CoverageDisableMode || this.co2CoverageDisableMode;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'waterImportTarget')) {
-      this.waterImportTarget = settings.waterImportTarget === 'colony' ? 'colony' : 'surface';
+      this.waterImportTarget = normalizeWaterImportTarget(settings.waterImportTarget);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'materialImportTarget')) {
       this.materialImportTarget = settings.materialImportTarget === 'planetaryMass' ? 'planetaryMass' : 'colony';
@@ -811,7 +819,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
-    this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
+    this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = state.materialImportTarget || this.materialImportTarget;
   }
 
@@ -853,7 +861,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
-    this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
+    this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = state.materialImportTarget || this.materialImportTarget;
   }
 
@@ -866,7 +874,7 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
-      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony') {
+      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
         return { colony: { water: capacity } };
       }
       const zones = getZones();
@@ -959,9 +967,9 @@ class SpaceMiningProject extends SpaceshipProject {
         return;
       }
       let amount = entry[resourceName] * fraction * productivity;
-      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony') {
+      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
         amount = this.applyWaterImportToColony(amount, accumulatedChanges);
-        if (amount <= 0) {
+        if (this.waterImportTarget === 'colonyOnly' || amount <= 0) {
           return;
         }
       }
