@@ -9,12 +9,14 @@ function divideByTen(count) {
 }
 
 function getRoundedBuildCount(currentCount, buildCount) {
-  const normalizedBuildCount = Math.max(1, Math.floor(Number(buildCount || 0)));
-  const current = typeof normalizeBuildingCount === 'function'
-    ? normalizeBuildingCount(currentCount)
-    : BigInt(Math.max(0, Math.floor(Number(currentCount) || 0)));
-  const remainder = current % BigInt(normalizedBuildCount);
-  return remainder === 0n ? normalizedBuildCount : normalizedBuildCount - Number(remainder);
+  const normalizedBuildCount = normalizeBuildingCount(buildCount);
+  const step = normalizedBuildCount > 0n ? normalizedBuildCount : 1n;
+  const current = normalizeBuildingCount(currentCount);
+  const remainder = current % step;
+  const roundedBuildCount = remainder === 0n ? step : step - remainder;
+  return roundedBuildCount <= BigInt(Number.MAX_SAFE_INTEGER)
+    ? Number(roundedBuildCount)
+    : roundedBuildCount.toString();
 }
 
 if (typeof module !== 'undefined' && module.exports) {

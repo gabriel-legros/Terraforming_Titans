@@ -9,7 +9,13 @@ function normalizeBuildingCount(value) {
   if (numeric <= 0) {
     return 0n;
   }
-  return BigInt(Math.floor(numeric));
+  if (Number.isSafeInteger(numeric)) {
+    return BigInt(numeric);
+  }
+  return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
+    useGrouping: false,
+    maximumFractionDigits: 0
+  }));
 }
 
 function buildingCountToNumber(value) {
