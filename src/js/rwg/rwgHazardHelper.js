@@ -206,6 +206,7 @@
     if (zonalCoverage) {
       let liquidArea = 0;
       let totalArea = 0;
+      let waterArea = 0;
       for (const zone of ZONE_KEYS) {
         const zoneData = zonalCoverage[zone] || {};
         let zoneArea = Number.isFinite(zoneData.zoneArea) ? zoneData.zoneArea : 0;
@@ -226,10 +227,12 @@
         const liquidWater = clamp01(zoneData.liquidWater || 0);
         const liquidMethane = clamp01(zoneData.liquidMethane || 0);
         const liquidCO2 = clamp01(zoneData.liquidCO2 || 0);
+        waterArea += liquidWater * zoneArea;
         const coverage = Math.max(0, Math.min(1, liquidWater + liquidMethane + liquidCO2));
         liquidArea += coverage * zoneArea;
       }
       if (totalArea > 0) {
+        context.postEquilibrationWaterCoverage = waterArea / totalArea;
         context.isLiquidWorld = (liquidArea / totalArea) > 0.5;
       }
     }
@@ -388,6 +391,15 @@
       severityBelow: 0,
       severityHigh
     };
+
+    const waterCoverage = clamp01(context?.postEquilibrationWaterCoverage || 0);
+    const initialCoverage = clamp01(hazardousMachinery.initialCoverage ?? 1);
+    const maxCoverageBase = clamp01(hazardousMachinery.maxCoverageBase ?? 1);
+    const waterCoveragePenalty = Math.max(0, hazardousMachinery.waterCoveragePenalty ?? 0.5);
+    hazardousMachinery.targetCoverage = Math.min(
+      initialCoverage,
+      clamp01(maxCoverageBase - waterCoverage * waterCoveragePenalty)
+    );
   }
 
   let HazardManagerCtor = typeof HazardManager === 'function'
@@ -412,11 +424,9 @@
     tuneHazardousMachineryForWorld({ hazards: override.hazards }, context);
 
     const hazardous = override.hazards.hazardousBiomass;
-    if (!hazardous) {
-      return;
-    }
-    const hazardManagerInstance = HazardManagerCtor ? new HazardManagerCtor() : null;
-    const penaltyDetails = hazardManagerInstance
+    const hazardousMachinery = override.hazards.hazardousMachinery;
+    const hazardManagerInstance = hazardous && HazardManagerCtor ? new HazardManagerCtor() : null;
+    const penaltyDetails = hazardous && hazardManagerInstance
       ? hazardManagerInstance.calculateHazardousBiomassGrowthPenaltyDetails(hazardous, terra)
       : { globalPenalty: 0, zonePenalties: {} };
 
@@ -494,38 +504,50 @@
       return 0;
     };
 
-    const baseGrowth = hazardous.baseGrowth || {};
-    const baseGrowthPercent = Number.isFinite(baseGrowth.value) ? baseGrowth.value : 0;
-    const maxDensity = Number.isFinite(baseGrowth.maxDensity) && baseGrowth.maxDensity > 0
-      ? baseGrowth.maxDensity
-      : 0;
-
-    const globalPenalty = Number.isFinite(penaltyDetails.globalPenalty) ? penaltyDetails.globalPenalty : 0;
-    const zonePenaltyMap = penaltyDetails.zonePenalties || {};
-
     let totalBiomass = 0;
-    for (let index = 0; index < zoneKeys.length; index += 1) {
-      const zone = zoneKeys[index];
-      const zoneOutput = zoneSurface[zone] || (zoneSurface[zone] = {});
-      const zonePenalty = Number.isFinite(zonePenaltyMap[zone]) ? zonePenaltyMap[zone] : 0;
-      const zoneGrowthPercent = baseGrowthPercent - globalPenalty - zonePenalty;
-      const zoneArea = resolveZoneArea(zone);
-      const hasPositiveGrowth = zoneGrowthPercent > 0 && zoneArea > 0 && maxDensity > 0;
-      const zoneBiomass = hasPositiveGrowth ? zoneArea / 10000 * maxDensity : 0;
+    if (hazardous) {
+      const baseGrowth = hazardous.baseGrowth || {};
+      const baseGrowthPercent = Number.isFinite(baseGrowth.value) ? baseGrowth.value : 0;
+      const maxDensity = Number.isFinite(baseGrowth.maxDensity) && baseGrowth.maxDensity > 0
+        ? baseGrowth.maxDensity
+        : 0;
 
-      zoneOutput.hazardousBiomass = zoneBiomass;
-      if (terra && terra.zonalSurface && terra.zonalSurface[zone]) {
-        terra.zonalSurface[zone].hazardousBiomass = zoneBiomass;
+      const globalPenalty = Number.isFinite(penaltyDetails.globalPenalty) ? penaltyDetails.globalPenalty : 0;
+      const zonePenaltyMap = penaltyDetails.zonePenalties || {};
+
+      for (let index = 0; index < zoneKeys.length; index += 1) {
+        const zone = zoneKeys[index];
+        const zoneOutput = zoneSurface[zone] || (zoneSurface[zone] = {});
+        const zonePenalty = Number.isFinite(zonePenaltyMap[zone]) ? zonePenaltyMap[zone] : 0;
+        const zoneGrowthPercent = baseGrowthPercent - globalPenalty - zonePenalty;
+        const zoneArea = resolveZoneArea(zone);
+        const hasPositiveGrowth = zoneGrowthPercent > 0 && zoneArea > 0 && maxDensity > 0;
+        const zoneBiomass = hasPositiveGrowth ? zoneArea / 10000 * maxDensity : 0;
+
+        zoneOutput.hazardousBiomass = zoneBiomass;
+        if (terra && terra.zonalSurface && terra.zonalSurface[zone]) {
+          terra.zonalSurface[zone].hazardousBiomass = zoneBiomass;
+        }
+
+        totalBiomass += zoneBiomass;
       }
-
-      totalBiomass += zoneBiomass;
     }
 
     override.resources = override.resources || {};
     override.resources.surface = override.resources.surface || {};
-    const hazardousResource = override.resources.surface.hazardousBiomass
-      || (override.resources.surface.hazardousBiomass = {});
-    hazardousResource.initialValue = totalBiomass;
+    if (hazardous) {
+      const hazardousResource = override.resources.surface.hazardousBiomass
+        || (override.resources.surface.hazardousBiomass = {});
+      hazardousResource.initialValue = totalBiomass;
+    }
+
+    if (hazardousMachinery) {
+      const hazardousMachineryResource = override.resources.surface.hazardousMachinery
+        || (override.resources.surface.hazardousMachinery = {});
+      hazardousMachineryResource.initialValue = landArea > 0
+        ? landArea * clamp01(hazardousMachinery.targetCoverage ?? hazardousMachinery.initialCoverage ?? 0)
+        : 0;
+    }
   }
 
   if (typeof module !== 'undefined' && module.exports) {
