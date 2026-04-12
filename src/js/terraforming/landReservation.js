@@ -12,6 +12,23 @@ function normalizeLandReservationShare(share) {
 }
 
 function resolveLandReservationInitialLand(terraformingState, landResource) {
+  const activeTerraforming = terraformingState || null;
+  const activeCelestialParameters = activeTerraforming?.celestialParameters || null;
+  const activePlanetParameters = currentPlanetParameters || null;
+  if (
+    activePlanetParameters?.specialAttributes?.dynamicMass === true
+    || activeCelestialParameters?.dynamicMassDeltaKg
+    || activeCelestialParameters?.dynamicSurfaceVolumeDeltaM3
+    || activeCelestialParameters?.dynamicDirectMassDeltaKg
+    || activeCelestialParameters?.dynamicDirectVolumeDeltaM3
+    || activeCelestialParameters?.currentPlanetaryMassKg
+    || activeCelestialParameters?.currentSurfaceMassKg
+    || activeCelestialParameters?.currentAtmosphericMassKg
+    || activeCelestialParameters?.currentPlanetaryVolumeM3
+    || activeCelestialParameters?.currentSurfaceVolumeM3
+  ) {
+    return resolveWorldGeometricLand(activeTerraforming, landResource, activeCelestialParameters);
+  }
   return resolveWorldBaseLand(terraformingState, landResource);
 }
 

@@ -658,11 +658,22 @@ class Aerostat extends BaseColony {
   }
 
   filterActivationChange(change) {
-    if (!Number.isFinite(change)) {
+    const normalizedChange = typeof normalizeSignedStructureChange === 'function'
+      ? normalizeSignedStructureChange(change)
+      : BigInt(Math.trunc(Number(change) || 0));
+    if (normalizedChange <= BigInt(Number.MIN_SAFE_INTEGER) || normalizedChange >= BigInt(Number.MAX_SAFE_INTEGER)) {
+      if (normalizedChange > 0n && this.isLiftBelowThreshold()) {
+        return 0n;
+      }
+      return normalizedChange;
+    }
+
+    const numericChange = Number(normalizedChange);
+    if (!Number.isFinite(numericChange)) {
       return 0;
     }
 
-    const sanitized = Math.trunc(change);
+    const sanitized = Math.trunc(numericChange);
     if (sanitized > 0 && this.isLiftBelowThreshold()) {
       return 0;
     }

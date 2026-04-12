@@ -17,6 +17,37 @@ function getStructureCountNumber(value) {
     : Number(value || 0);
 }
 
+function normalizeSignedStructureChange(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0n;
+  }
+  if (typeof value === 'bigint') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return 0n;
+    }
+    if (/^-?\d+$/.test(trimmed)) {
+      return BigInt(trimmed);
+    }
+  }
+  const numeric = Number(value) || 0;
+  if (numeric === 0) {
+    return 0n;
+  }
+  if (Number.isSafeInteger(numeric)) {
+    return BigInt(numeric);
+  }
+  const sign = numeric < 0 ? -1n : 1n;
+  const absString = Math.floor(Math.abs(numeric)).toLocaleString('fullwide', {
+    useGrouping: false,
+    maximumFractionDigits: 0
+  });
+  return BigInt(absString) * sign;
+}
+
 function getManualBuildCount(structure, buildCount) {
   if (!gameSettings.roundBuildingConstruction) {
     return buildCount;
@@ -1620,7 +1651,7 @@ function createStructureControls(structure, toggleCallback) {
     zeroButton.id = `${structure.name}-zero-button`;
     zeroButton.textContent = getStructuresUIText('ui.structures.common.zero', '0');
     zeroButton.addEventListener('click', function () {
-      toggleCallback(structure, -getStructureCountNumber(structure.active));
+      toggleCallback(structure, (-normalizeBuildingCount(structure.active)).toString());
       disableAutoActive(structure);
     });
     structureControls.appendChild(zeroButton);
@@ -1629,7 +1660,7 @@ function createStructureControls(structure, toggleCallback) {
     decreaseButton.id = `${structure.name}-decrease-button`;
     decreaseButton.textContent = '-1';
     decreaseButton.addEventListener('click', function () {
-      toggleCallback(structure, -selectedBuildCounts[structure.name]);
+      toggleCallback(structure, `-${selectedBuildCounts[structure.name]}`);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
       disableAutoActive(structure);
     });
@@ -1649,10 +1680,7 @@ function createStructureControls(structure, toggleCallback) {
     maxButton = document.createElement('button');
     maxButton.textContent = getStructuresUIText('ui.common.max', 'Max');
     maxButton.addEventListener('click', function () {
-      toggleCallback(
-        structure,
-        getStructureCountNumber(structure.count) - getStructureCountNumber(structure.active)
-      );
+      toggleCallback(structure, (normalizeBuildingCount(structure.count) - normalizeBuildingCount(structure.active)).toString());
       disableAutoActive(structure);
     });
     structureControls.appendChild(maxButton);
@@ -2359,56 +2387,71 @@ function updateDecreaseButtonText(button, buildCount) {
   function adjustStructureActivation(structure, change) {
     if (!structure) return;
 
-    let desiredChange = Number.isFinite(change) ? change : 0;
+    let desiredChange = normalizeSignedStructureChange(change);
     if (typeof structure.filterActivationChange === 'function') {
+      const currentActive = normalizeBuildingCount(structure.active);
+      const desiredActive = currentActive + desiredChange;
       const context = {
-        change: desiredChange,
+        change: desiredChange <= BigInt(Number.MAX_SAFE_INTEGER) && desiredChange >= BigInt(Number.MIN_SAFE_INTEGER)
+          ? Number(desiredChange)
+          : desiredChange,
         currentActive: getStructureCountNumber(structure.active),
-        desiredActive: getStructureCountNumber(structure.active) + desiredChange,
+        desiredActive: desiredActive <= BigInt(Number.MAX_SAFE_INTEGER) && desiredActive >= 0n
+          ? Number(desiredActive)
+          : getStructureCountNumber(structure.active),
         structure
       };
       const filtered = structure.filterActivationChange(desiredChange, context);
       if (typeof filtered === 'number' && !Number.isNaN(filtered)) {
+        desiredChange = normalizeSignedStructureChange(filtered);
+      } else if (typeof filtered === 'bigint') {
         desiredChange = filtered;
+      } else if (typeof filtered === 'string' && filtered.trim()) {
+        desiredChange = normalizeSignedStructureChange(filtered);
       } else if (filtered === false || filtered === null) {
-        desiredChange = 0;
+        desiredChange = 0n;
       }
     }
 
-    desiredChange = Math.trunc(desiredChange);
-    if (desiredChange === 0) {
+    if (desiredChange === 0n) {
       return;
     }
 
     if (structure.requiresLand) {
-      if (desiredChange > 0) {
-        desiredChange = Math.min(desiredChange, structure.landAffordCount());
+      if (desiredChange > 0n) {
+        const landLimited = BigInt(Math.max(0, Math.floor(structure.landAffordCount())));
+        if (desiredChange > landLimited) {
+          desiredChange = landLimited;
+        }
       }
-      if (desiredChange !== 0 && !structure.adjustLand(desiredChange)) {
+      if (desiredChange !== 0n && !structure.adjustLand(Number(desiredChange))) {
         return;
       }
     }
 
-    if (desiredChange === 0) {
+    if (desiredChange === 0n) {
       return;
     }
 
-    const oldActive = getStructureCountNumber(structure.active);
-    const newActive = Math.max(
-      0,
-      Math.min(oldActive + desiredChange, getStructureCountNumber(structure.count))
-    );
+    const oldActive = normalizeBuildingCount(structure.active);
+    const totalCount = normalizeBuildingCount(structure.count);
+    let newActive = oldActive + desiredChange;
+    if (newActive < 0n) {
+      newActive = 0n;
+    } else if (newActive > totalCount) {
+      newActive = totalCount;
+    }
 
     if (newActive === oldActive) {
       return;
     }
 
-    structure.active = BigInt(newActive);
-    if (newActive === 0) {
+    structure.active = newActive;
+    if (newActive === 0n) {
       structure.productivity = 0;
       structure.displayProductivity = 0;
     } else if (newActive > oldActive) {
-      const ratio = oldActive > 0 ? oldActive / newActive : 0;
+      const ratio = oldActive > 0n ? Number(oldActive) / Number(newActive) : 0;
       structure.productivity *= ratio;
       structure.displayProductivity *= ratio;
     }
