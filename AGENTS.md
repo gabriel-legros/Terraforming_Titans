@@ -165,6 +165,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Ringworld support includes custom controls, spin protocol, and low-gravity lock behavior.
 - Construction supports prepay, 5-hour hard cap, persistence, resume/discard, rename.
 - Artificial naming auto-increments by type.
+- Stored and abandoned artificial worlds now persist as compact `artificialSnapshot` records plus top-level metadata; travel/load regenerates full planet parameters from the snapshot, reuses saved ringworld star data, and no longer keeps duplicated `original.override` / `original.merged` payloads for inactive artificial worlds.
 
 ## Major Feature Updates (Consolidated)
 ### Atmosphere, Physics, and Terraforming

@@ -681,9 +681,7 @@ class SpaceManager extends EffectableEntity {
     _isPrunableArtificialWorldStatus(key, status, activeKey) {
         return !!status
             && key !== activeKey
-            && !!status.terraformed
-            && !status.stored
-            && !status.abandoned;
+            && !!status.artificialSnapshot;
     }
 
     _stripCompactableArtificialStatus(status) {
@@ -693,7 +691,72 @@ class SpaceManager extends EffectableEntity {
         delete status.original;
         delete status.override;
         delete status.merged;
-        delete status.artificialSnapshot;
+    }
+
+    _getArtificialWorldParams(status) {
+        if (!status) {
+            return null;
+        }
+        return status.original?.merged
+            || status.original?.override
+            || (status.original?.celestialParameters && status.original?.resources ? status.original : null)
+            || status.merged
+            || status.override
+            || (status.artificialSnapshot ? artificialManager.buildOverride(status.artificialSnapshot) : null)
+            || null;
+    }
+
+    _ensureArtificialWorldSnapshot(status) {
+        if (!status) {
+            return null;
+        }
+        if (status.artificialSnapshot) {
+            return status.artificialSnapshot;
+        }
+        const params = this._getArtificialWorldParams(status);
+        if (!params?.celestialParameters || !params?.resources) {
+            return null;
+        }
+        status.artificialSnapshot = artificialManager.buildSnapshotFromParams(params);
+        return status.artificialSnapshot;
+    }
+
+    _migrateArtificialWorldStatus(key, status, activeKey) {
+        if (!status) {
+            return;
+        }
+        const snapshot = this._ensureArtificialWorldSnapshot(status);
+        if (snapshot) {
+            if (!status.name) {
+                status.name = snapshot.name || `Artificial ${key}`;
+            }
+            if (!status.type) {
+                status.type = snapshot.type || 'shell';
+            }
+            if (!status.core) {
+                status.core = snapshot.core || 'unknown';
+            }
+            if (!status.sector) {
+                status.sector = normalizeSectorLabel(snapshot.sector);
+            }
+            if (!status.landHa && Number.isFinite(snapshot.landHa) && snapshot.landHa > 0) {
+                status.landHa = snapshot.landHa;
+            }
+            if (!status.cachedLandHa && Number.isFinite(status.landHa) && status.landHa > 0) {
+                status.cachedLandHa = status.landHa;
+            }
+        }
+        if (status.original?.merged && status.original?.override) {
+            const mergedJson = JSON.stringify(status.original.merged);
+            const overrideJson = JSON.stringify(status.original.override);
+            if (mergedJson === overrideJson) {
+                delete status.original.override;
+            }
+        }
+        if (this._isPrunableArtificialWorldStatus(key, status, activeKey)) {
+            this._prepareCompactableArtificialStatus(status);
+            this._stripCompactableArtificialStatus(status);
+        }
     }
 
     _inferArtificialWorldTypeFromName(name) {
@@ -742,17 +805,24 @@ class SpaceManager extends EffectableEntity {
         }
         status.type = this._resolveArtificialWorldType(status);
         status.core = this._resolveArtificialWorldCore(status, status.type);
+        const snapshot = this._ensureArtificialWorldSnapshot(status);
         if (!status.sector) {
-            status.sector = normalizeSectorLabel(resolveSectorFromSources(status, status.original));
+            status.sector = normalizeSectorLabel(
+                status.sector
+                || snapshot?.sector
+                || resolveSectorFromSources(status, status.original)
+            );
         } else {
             status.sector = normalizeSectorLabel(status.sector);
         }
         const landHa = status.cachedLandHa
             || status.landHa
+            || snapshot?.landHa
             || status.original?.landHa
             || getLandFromParams(status.original?.merged)
             || getLandFromParams(status.original?.override)
-            || getLandFromParams(status.original);
+            || getLandFromParams(status.original)
+            || getLandFromParams(this._getArtificialWorldParams(status));
         if (Number.isFinite(landHa) && landHa > 0) {
             if (!status.landHa) {
                 status.landHa = landHa;
@@ -840,7 +910,7 @@ class SpaceManager extends EffectableEntity {
             if (keepKeys.has(key)) {
                 if (this._isPrunableArtificialWorldStatus(key, status, activeKey)) {
                     this._prepareCompactableArtificialStatus(status);
-                    const hadHeavyData = !!(status.original || status.override || status.merged || status.artificialSnapshot);
+                    const hadHeavyData = !!(status.original || status.override || status.merged);
                     this._stripCompactableArtificialStatus(status);
                     if (hadHeavyData) {
                         changed = true;
@@ -1397,12 +1467,16 @@ class SpaceManager extends EffectableEntity {
         if (Number.isFinite(status.terraformedValue) && status.terraformedValue > 0) {
             return Math.max(1, Math.floor(status.terraformedValue));
         }
+        const snapshot = status.artificialSnapshot || null;
+        const params = this._getArtificialWorldParams(status);
         const landSources = [
             status.landHa,
+            snapshot?.landHa,
             getLandFromParams(status.original?.merged),
             getLandFromParams(status.original?.override),
             getLandFromParams(status.original),
-            status.original?.merged?.resources?.surface?.land?.value
+            params?.resources?.surface?.land?.value,
+            getLandFromParams(params)
         ];
         const land = landSources.find((val) => Number.isFinite(val) && val > 0) || 0;
         const derived = Math.max(1, Math.floor(land / ARTIFICIAL_TERRAFORM_DIVISOR));
@@ -1427,14 +1501,17 @@ class SpaceManager extends EffectableEntity {
     }
 
     _getFoundryLandValue(status, planetKey) {
+        const params = this._getArtificialWorldParams(status);
         return status?.cachedLandHa
             || status?.landHa
+            || status?.artificialSnapshot?.landHa
             || status?.original?.landHa
             || getLandFromParams(status?.original?.merged)
             || getLandFromParams(status?.original?.override)
             || getLandFromParams(status?.original)
             || getLandFromParams(status?.merged)
             || getLandFromParams(status?.override)
+            || getLandFromParams(params)
             || getLandFromParams(this.allPlanetsData[planetKey])
             || 0;
     }
@@ -1673,6 +1750,12 @@ class SpaceManager extends EffectableEntity {
         const natural = status.naturalMagnetosphere;
         if (status.original?.merged?.celestialParameters) {
             status.original.merged.celestialParameters.hasNaturalMagnetosphere = natural;
+        }
+        if (!status.artificialSnapshot) {
+            this._ensureArtificialWorldSnapshot(status);
+        }
+        if (status.artificialSnapshot && !status.artificialSnapshot.celestialParameters) {
+            status.artificialSnapshot.celestialParameters = {};
         }
         if (status.artificialSnapshot?.celestialParameters) {
             status.artificialSnapshot.celestialParameters.hasNaturalMagnetosphere = natural;
@@ -2399,6 +2482,7 @@ class SpaceManager extends EffectableEntity {
             const sources = [
                 status.cachedLandHa,
                 status.landHa,
+                status.artificialSnapshot?.landHa,
                 status.original?.landHa,
                 getLandFromParams(status.original?.merged),
                 getLandFromParams(status.original?.override),
@@ -2522,7 +2606,7 @@ class SpaceManager extends EffectableEntity {
         );
         const pruneArtificialStatuses = (statuses, activeKey) => Object.fromEntries(
             Object.entries(statuses).map(([key, status]) => {
-                if (!status || key === activeKey || status.stored || status.abandoned) {
+                if (!status || key === activeKey) {
                     return [key, status];
                 }
                 if (!this._isPrunableArtificialWorldStatus(key, status, activeKey)) {
@@ -2701,11 +2785,13 @@ class SpaceManager extends EffectableEntity {
 
         if (savedData.artificialWorldStatuses) {
             this.artificialWorldStatuses = savedData.artificialWorldStatuses;
+            const activeArtificialKey = savedData.currentArtificialKey === null ? null : String(savedData.currentArtificialKey);
             Object.keys(this.artificialWorldStatuses).forEach((key) => {
                 const entry = this.artificialWorldStatuses[key];
                 if (!entry) {
                     return;
                 }
+                this._migrateArtificialWorldStatus(key, entry, activeArtificialKey);
                 if (entry.orbitalRing) {
                     entry.orbitalRing = false;
                 }

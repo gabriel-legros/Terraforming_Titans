@@ -1109,16 +1109,7 @@ class ArtificialManager extends EffectableEntity {
         status.constructedAt = project.startedAt || null;
         status.completedAt = project.completedAt || now;
         status.artificialSnapshot = snapshot;
-        status.original = {
-            merged: override,
-            override,
-            star: override.star,
-            artificial: true,
-            archetype: override.classification?.archetype,
-            builtFrom: status.builtFrom,
-            constructedAt: status.constructedAt,
-            completedAt: status.completedAt
-        };
+        delete status.original;
 
         spaceManager.artificialWorldStatuses[seed] = status;
         this.recordHistoryEntry('stored');
@@ -1230,6 +1221,9 @@ class ArtificialManager extends EffectableEntity {
             hasStar,
             orbitRadiusAU: params.celestialParameters?.distanceFromSun,
             widthKm: params.specialAttributes?.ringWidthKm || params.specialAttributes?.ring?.widthKm || undefined,
+            celestialParameters: {
+                hasNaturalMagnetosphere: params.celestialParameters?.hasNaturalMagnetosphere === true
+            },
             stockpile: {
                 metal: params.resources.colony.metal?.initialValue || 0,
                 silicon: params.resources.colony.silicon?.initialValue || 0
@@ -1252,7 +1246,7 @@ class ArtificialManager extends EffectableEntity {
         const targetFluxWm2 = isRing
             ? clampRingTargetFluxWm2(project.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2)
             : project.targetFluxWm2;
-        if (isRing) {
+        if (isRing && !star) {
             const ringCore = getRingStarCoreConfig(project.starCore || project.core);
             const seed = (project.id || 1) * 0x517cc1b7;
             star = generateRingStar({
@@ -1298,7 +1292,8 @@ class ArtificialManager extends EffectableEntity {
             sector,
             distanceFromSun: distanceFromStarAU,
             rogue: isRogue,
-            targetFluxWm2
+            targetFluxWm2,
+            hasNaturalMagnetosphere: project.celestialParameters?.hasNaturalMagnetosphere === true
         };
         base.effects = isRing
             ? [
@@ -1449,9 +1444,6 @@ class ArtificialManager extends EffectableEntity {
         if (spaceManager && spaceManager.artificialWorldStatuses && spaceManager.artificialWorldStatuses[key]) {
             const status = spaceManager.artificialWorldStatuses[key];
             status.name = nextName;
-            if (status.original && status.original.merged) {
-                status.original.merged.name = nextName;
-            }
             if (status.artificialSnapshot) {
                 status.artificialSnapshot.name = nextName;
             }
@@ -1481,7 +1473,6 @@ class ArtificialManager extends EffectableEntity {
             seedString: this.activeProject.seed,
             original: {
                 merged: override,
-                override,
                 star: override.star,
                 artificial: true,
                 archetype: override.classification?.archetype
@@ -1506,7 +1497,7 @@ class ArtificialManager extends EffectableEntity {
         if (!status) return false;
         let snapshot = status.artificialSnapshot || null;
         if (!snapshot) {
-            const merged = status.original?.merged || status.original;
+            const merged = status.original?.merged || status.original?.override || status.original;
             if (merged?.celestialParameters && merged?.resources) {
                 snapshot = this.buildSnapshotFromParams(merged);
             }
@@ -1519,7 +1510,6 @@ class ArtificialManager extends EffectableEntity {
             terraformedValue: status.terraformedValue,
             original: {
                 merged: override,
-                override,
                 star: override.star,
                 artificial: true,
                 archetype: override.classification?.archetype
@@ -1585,9 +1575,9 @@ class ArtificialManager extends EffectableEntity {
         const pushEntry = (key, status, label) => {
             if (!status) return;
             const snapshot = status.artificialSnapshot;
-            const merged = status.original?.merged || status.original || null;
+            const merged = status.original?.merged || status.original?.override || status.original || null;
             const radiusKm = merged?.celestialParameters?.radius;
-            const radiusEarth = radiusKm ? (radiusKm / EARTH_RADIUS_KM) : status.radiusEarth;
+            const radiusEarth = radiusKm ? (radiusKm / EARTH_RADIUS_KM) : (snapshot?.radiusEarth || status.radiusEarth);
             const landHa = status.cachedLandHa
                 || status.landHa
                 || snapshot?.landHa
