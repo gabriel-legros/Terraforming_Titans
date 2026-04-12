@@ -175,7 +175,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       this.furnaceAssignments[key] = Math.max(0, Math.floor(this.furnaceAssignments[key] || 0));
       this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
       const weight = Number(this.autoAssignWeights[key]);
-      this.autoAssignWeights[key] = Number.isFinite(weight) && weight > 0 ? weight : 1;
+      this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
     });
 
     Object.keys(this.furnaceAssignments).forEach((key) => {
@@ -929,11 +929,13 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       weightInput.type = 'number';
       weightInput.min = '0';
       weightInput.step = '0.1';
-      weightInput.value = String(this.autoAssignWeights[key] || 1);
+      weightInput.value = String(
+        Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
+      );
       weightInput.classList.add('hephaestus-weight-input');
       weightInput.addEventListener('input', () => {
         const value = Number(weightInput.value);
-        this.autoAssignWeights[key] = Number.isFinite(value) && value > 0 ? value : 0;
+        this.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
         this.normalizeAssignments();
         this.updateUI();
       });
@@ -1041,7 +1043,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       row.autoAssign.checked = this.autoAssignFlags[key] === true;
       row.autoAssign.disabled = total <= 0;
       if (document.activeElement !== row.weightInput) {
-        row.weightInput.value = String(this.autoAssignWeights[key] || 1);
+        row.weightInput.value = String(
+          Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
+        );
       }
       row.weightInput.disabled = total <= 0;
       row.zeroButton.disabled = current <= 0 || this.autoAssignFlags[key];

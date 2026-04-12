@@ -286,7 +286,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.getRecipeKeys().forEach((key) => {
       this.lifterAssignments[key] = 0;
       this.autoAssignFlags[key] = false;
-      if (!(this.autoAssignWeights[key] > 0)) {
+      if (Number.isNaN(Number(this.autoAssignWeights[key]))) {
         this.autoAssignWeights[key] = 1;
       }
     });
@@ -410,7 +410,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       this.lifterAssignments[key] = Math.max(0, Math.floor(this.lifterAssignments[key] || 0));
       this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
       const weight = Number(this.autoAssignWeights[key]);
-      this.autoAssignWeights[key] = Number.isFinite(weight) && weight > 0 ? weight : 1;
+      this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
     });
 
     let usedManual = 0;

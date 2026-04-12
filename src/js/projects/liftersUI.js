@@ -237,11 +237,13 @@ function renderLiftersUI(project, container) {
     weightInput.type = 'number';
     weightInput.min = '0';
     weightInput.step = '0.1';
-    weightInput.value = String(project.autoAssignWeights[key] || 1);
+    weightInput.value = String(
+      Object.prototype.hasOwnProperty.call(project.autoAssignWeights, key) ? project.autoAssignWeights[key] : 1
+    );
     weightInput.classList.add('hephaestus-weight-input');
     weightInput.addEventListener('input', () => {
       const value = Number(weightInput.value);
-      project.autoAssignWeights[key] = Number.isFinite(value) && value > 0 ? value : 1;
+      project.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
       project.normalizeAssignments();
       project.updateUI();
     });
@@ -383,7 +385,9 @@ function updateLiftersUI(project) {
     row.autoAssign.checked = project.autoAssignFlags[key] === true;
     row.autoAssign.disabled = total <= 0;
     if (document.activeElement !== row.weightInput) {
-      row.weightInput.value = String(project.autoAssignWeights[key] || 1);
+      row.weightInput.value = String(
+        Object.prototype.hasOwnProperty.call(project.autoAssignWeights, key) ? project.autoAssignWeights[key] : 1
+      );
     }
     row.weightInput.disabled = total <= 0;
     row.zeroButton.disabled = current <= 0 || project.autoAssignFlags[key];

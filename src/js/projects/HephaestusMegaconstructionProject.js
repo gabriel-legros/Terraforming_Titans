@@ -580,7 +580,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       weightInput.type = 'number';
       weightInput.min = '0';
       weightInput.step = '0.1';
-      weightInput.value = String(this.autoAssignWeights[key] || 1);
+      weightInput.value = String(
+        Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
+      );
       weightInput.classList.add('hephaestus-weight-input');
       weightInput.addEventListener('input', () => {
         this.autoAssignWeights[key] = Number(weightInput.value || 0);
@@ -672,7 +674,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       row.autoAssign.checked = this.autoAssignFlags[key] === true;
       row.autoAssign.disabled = total === 0;
       if (document.activeElement !== row.weightInput) {
-        row.weightInput.value = String(this.autoAssignWeights[key] || 1);
+        row.weightInput.value = String(
+          Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
+        );
       }
       row.weightInput.disabled = total === 0;
       row.zeroButton.disabled = current <= 0 || this.autoAssignFlags[key];
