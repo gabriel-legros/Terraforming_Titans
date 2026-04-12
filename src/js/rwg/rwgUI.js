@@ -260,16 +260,19 @@ function syncEnabledHazards() {
 }
 
 function refreshDominionSelect() {
+  if (!rwgDominionEl || !rwgDominionLoreBtnEl || !rwgDominionLoreOverlayEl) {
+    return;
+  }
   const dominionsUnlocked = rwgManager.isFeatureUnlocked('dominions');
   if (!dominionsUnlocked) {
     rwgDominionEl.style.display = 'none';
     rwgDominionLoreBtnEl.style.display = 'none';
-    rwgDominionInfoEl.style.display = 'none';
+    if (rwgDominionInfoEl) rwgDominionInfoEl.style.display = 'none';
     rwgDominionLoreOverlayEl.style.display = 'none';
     return;
   }
   rwgDominionLoreBtnEl.style.display = '';
-  rwgDominionInfoEl.style.display = '';
+  if (rwgDominionInfoEl) rwgDominionInfoEl.style.display = '';
   const dominions = rwgManager.getAvailableDominions();
   const entries = rwgManager.getDominionOrder()
     .map((id) => {
@@ -507,12 +510,19 @@ function isDynamicMassRwgControlUnlocked() {
 }
 
 function refreshRwgSettingsVisibility() {
+  const dominionsUnlocked = rwgManager.isFeatureUnlocked('dominions');
   const dynamicMassUnlocked = isDynamicMassRwgControlUnlocked();
+  if (rwgDominionEl && rwgDominionLoreBtnEl) {
+    const dominionDisplay = dominionsUnlocked ? '' : 'none';
+    rwgDominionEl.style.display = dominionDisplay;
+    rwgDominionLoreBtnEl.style.display = dominionDisplay;
+    if (rwgDominionInfoEl) rwgDominionInfoEl.style.display = dominionDisplay;
+  }
   if (rwgDynamicMassEl && !dynamicMassUnlocked) {
     rwgDynamicMassEl.checked = false;
   }
   if (rwgSettingsCardEl) {
-    rwgSettingsCardEl.style.display = dynamicMassUnlocked ? '' : 'none';
+    rwgSettingsCardEl.style.display = (dominionsUnlocked || dynamicMassUnlocked) ? '' : 'none';
   }
 }
 
@@ -785,6 +795,8 @@ function initializeRandomWorldUI() {
   settingsCard.className = 'rwg-card rwg-settings-card';
   settingsCard.innerHTML = `
     <div class="rwg-control-row">
+      <select id="rwg-dominion" class="rwg-inline-select"></select>
+      <button id="rwg-dominion-lore-btn" class="rwg-btn">${getRwgUiText('controls.lore', 'Lore')}</button>
       <label class="rwg-checkbox-row" for="rwg-dynamic-mass">
         <input id="rwg-dynamic-mass" type="checkbox" />
         <span>${getRwgUiText('controls.dynamicMass', 'Dynamic Mass')}</span>
@@ -811,6 +823,9 @@ function initializeRandomWorldUI() {
   rwgOrbitEl = container.querySelector('#rwg-orbit');
   rwgOrbitStateSignature = '';
   rwgHazardEl = container.querySelector('#rwg-hazard');
+  rwgDominionEl = container.querySelector('#rwg-dominion');
+  rwgDominionLoreBtnEl = container.querySelector('#rwg-dominion-lore-btn');
+  rwgDominionInfoEl = container.querySelector('#rwg-dominion-info');
   rwgDynamicMassEl = container.querySelector('#rwg-dynamic-mass');
   rwgSettingsCardEl = settingsCard;
   rwgHazardListEl = hazardList;
@@ -820,6 +835,15 @@ function initializeRandomWorldUI() {
     rwgDynamicMassEl.checked = false;
   }
   refreshRwgSettingsVisibility();
+  if (rwgDominionEl) {
+    rwgDominionEl.onchange = () => {
+      rwgSelectedDominion = rwgDominionEl.value;
+    };
+    refreshDominionSelect();
+  }
+  if (rwgDominionLoreBtnEl) {
+    rwgDominionLoreBtnEl.onclick = () => openDominionLore();
+  }
   if (rwgDynamicMassInfoEl) {
     attachDynamicInfoTooltip(
       rwgDynamicMassInfoEl,
@@ -1482,15 +1506,6 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
       ? getRwgUiText('warnings.alreadyTerraformed', 'This world has already been terraformed.')
       : getRandomWorldTravelEquilibrationWarning(eqState));
   const gWarn = gravityPenaltyEnabled ? createGravityWarning(c.gravity, fmt, { includeFlavor: true }) : '';
-  const showDominionPanel = options.showDominion !== false;
-  const dominionPanel = showDominionPanel ? `
-    <div class="rwg-card">
-      <div class="rwg-control-row">
-        <select id="rwg-dominion" class="rwg-inline-select"></select>
-        <button id="rwg-dominion-lore-btn" class="rwg-btn">${getRwgUiText('controls.lore', 'Lore')}</button>
-        <span id="rwg-dominion-info" class="info-tooltip-icon" data-rwg-tooltip="${escapeTooltipAttribute(getRwgUiText('dominions.tooltip', 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.'))}">&#9432;</span>
-      </div>
-    </div>` : '';
   const worldPanel = `
     <div class="rwg-card">
       <h3>${getSpecialSeedDisplayName(res)}</h3>
@@ -1531,7 +1546,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
       </div>
     </div>`;
 
-  return `${dominionPanel}${specialEffectsPanel}${starPanel}${parent}${worldPanel}`;
+  return `${specialEffectsPanel}${starPanel}${parent}${worldPanel}`;
 }
 
 function estimateFlux(res) {
