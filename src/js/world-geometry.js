@@ -126,10 +126,10 @@ function calculateAverageDensityKgM3(massKg, volumeM3) {
   return Math.max(WORLD_GEOMETRY_MIN_DENSITY, massKg / volumeM3);
 }
 
-function resolveWorldBaseLand(terraformingState, landResource, celestialParameters) {
+function resolveWorldBaseLand(terraformingState, landResource) {
   const activeTerraforming = terraformingState || null;
   const activeLandResource = landResource || activeTerraforming?.resources?.surface?.land || null;
-  const activeCelestialParameters = celestialParameters || activeTerraforming?.celestialParameters || null;
+  const activeCelestialParameters = activeTerraforming?.celestialParameters || null;
   const geometricLand = calculateSurfaceAreaHectaresFromRadius(activeCelestialParameters?.radius);
   const dynamicMassWorld = !!(
     activeCelestialParameters?.dynamicMassDeltaKg
@@ -164,14 +164,13 @@ function resolveWorldBaseLand(terraformingState, landResource, celestialParamete
   return calculateSurfaceAreaHectaresFromRadius(activeCelestialParameters?.radius);
 }
 
-function resolveWorldGeometricLand(terraformingState, landResource, celestialParameters) {
+function resolveWorldGeometricLand(terraformingState, landResource) {
   const activeTerraforming = terraformingState || null;
-  const activeCelestialParameters = celestialParameters || activeTerraforming?.celestialParameters || null;
+  const activeCelestialParameters = activeTerraforming?.celestialParameters || null;
   const geometricLand = calculateSurfaceAreaHectaresFromRadius(activeCelestialParameters?.radius);
-  if (geometricLand > 0) {
-    return geometricLand;
-  }
-  return resolveWorldBaseLand(activeTerraforming, landResource, activeCelestialParameters);
+  return geometricLand > 0
+    ? geometricLand
+    : resolveWorldBaseLand(activeTerraforming, landResource);
 }
 
 function resolveWorldBaseRadius(terraformingState, celestialParameters) {
@@ -226,32 +225,7 @@ function resolveWorldBaseMass(terraformingState, celestialParameters) {
   return (gravity * radiusM * radiusM) / WORLD_GEOMETRY_G;
 }
 
-function getWorldGeometryResourceDeltaTons(resource) {
-  if (!resource) {
-    return 0;
-  }
-  const currentValue = Number.isFinite(resource.value) ? resource.value : 0;
-  const initialValue = Number.isFinite(resource.initialValue) ? resource.initialValue : 0;
-  return currentValue - initialValue;
-}
-
-function getWorldGeometryResourceCurrentTons(resource) {
-  if (!resource) {
-    return 0;
-  }
-  const currentValue = Number.isFinite(resource.value) ? resource.value : 0;
-  return currentValue > 0 ? currentValue : 0;
-}
-
-function getWorldGeometryResourceInitialTons(resource) {
-  if (!resource) {
-    return 0;
-  }
-  const initialValue = Number.isFinite(resource.initialValue) ? resource.initialValue : 0;
-  return initialValue > 0 ? initialValue : 0;
-}
-
-function calculateDynamicWorldMassKgForKeys(resourceBucket, keys, amountResolver) {
+function calculateDynamicWorldMassKgForKeys(resourceBucket, keys, useInitialValue = false) {
   if (!resourceBucket) {
     return 0;
   }
@@ -259,13 +233,22 @@ function calculateDynamicWorldMassKgForKeys(resourceBucket, keys, amountResolver
   let totalKg = 0;
   for (let index = 0; index < keys.length; index += 1) {
     const key = keys[index];
-    totalKg += amountResolver(resourceBucket[key]) * 1000;
+    const resource = resourceBucket[key];
+    if (!resource) {
+      continue;
+    }
+    const amountTons = useInitialValue
+      ? resource.initialValue
+      : resource.value;
+    if (Number.isFinite(amountTons) && amountTons > 0) {
+      totalKg += amountTons * 1000;
+    }
   }
 
   return totalKg;
 }
 
-function calculateDynamicWorldSurfaceVolumeM3ForKeys(surfaceResources, amountResolver) {
+function calculateDynamicWorldSurfaceVolumeM3ForKeys(surfaceResources, useInitialValue = false) {
   if (!surfaceResources) {
     return 0;
   }
@@ -273,8 +256,14 @@ function calculateDynamicWorldSurfaceVolumeM3ForKeys(surfaceResources, amountRes
   let totalVolume = 0;
   for (let index = 0; index < DYNAMIC_WORLD_SURFACE_MASS_KEYS.length; index += 1) {
     const key = DYNAMIC_WORLD_SURFACE_MASS_KEYS[index];
-    const amountTons = amountResolver(surfaceResources[key]);
-    if (!amountTons) {
+    const resource = surfaceResources[key];
+    if (!resource) {
+      continue;
+    }
+    const amountTons = useInitialValue
+      ? resource.initialValue
+      : resource.value;
+    if (!Number.isFinite(amountTons) || amountTons <= 0) {
       continue;
     }
     const density = DYNAMIC_WORLD_SURFACE_DENSITIES[key] || WORLD_GEOMETRY_FALLBACK_DENSITY;
@@ -299,8 +288,7 @@ function calculateDynamicWorldMassDeltaKg(resourceSet) {
 function calculateDynamicWorldCurrentSurfaceMassKg(resourceSet) {
   return calculateDynamicWorldMassKgForKeys(
     resourceSet?.surface || null,
-    DYNAMIC_WORLD_SURFACE_MASS_KEYS,
-    getWorldGeometryResourceCurrentTons
+    DYNAMIC_WORLD_SURFACE_MASS_KEYS
   );
 }
 
@@ -308,15 +296,14 @@ function calculateDynamicWorldInitialSurfaceMassKg(resourceSet) {
   return calculateDynamicWorldMassKgForKeys(
     resourceSet?.surface || null,
     DYNAMIC_WORLD_SURFACE_MASS_KEYS,
-    getWorldGeometryResourceInitialTons
+    true
   );
 }
 
 function calculateDynamicWorldCurrentAtmosphericMassKg(resourceSet) {
   return calculateDynamicWorldMassKgForKeys(
     resourceSet?.atmospheric || null,
-    DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS,
-    getWorldGeometryResourceCurrentTons
+    DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS
   );
 }
 
@@ -324,7 +311,7 @@ function calculateDynamicWorldInitialAtmosphericMassKg(resourceSet) {
   return calculateDynamicWorldMassKgForKeys(
     resourceSet?.atmospheric || null,
     DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS,
-    getWorldGeometryResourceInitialTons
+    true
   );
 }
 
@@ -338,15 +325,14 @@ function calculateDynamicWorldSurfaceVolumeDeltaM3(resourceSet) {
 
 function calculateDynamicWorldCurrentSurfaceVolumeM3(resourceSet) {
   return calculateDynamicWorldSurfaceVolumeM3ForKeys(
-    resourceSet?.surface || null,
-    getWorldGeometryResourceCurrentTons
+    resourceSet?.surface || null
   );
 }
 
 function calculateDynamicWorldInitialSurfaceVolumeM3(resourceSet) {
   return calculateDynamicWorldSurfaceVolumeM3ForKeys(
     resourceSet?.surface || null,
-    getWorldGeometryResourceInitialTons
+    true
   );
 }
 
@@ -540,8 +526,7 @@ function syncDynamicWorldGeometry(terraformingState, planetParameters) {
   const activePlanetParameters = planetParameters || null;
   const baseLand = resolveWorldBaseLand(
     activeTerraforming,
-    activeTerraforming.resources?.surface?.land,
-    activeCelestialParameters
+    activeTerraforming.resources?.surface?.land
   );
   const baseRadius = resolveWorldBaseRadius(activeTerraforming, activeCelestialParameters);
   const baseMass = resolveWorldBaseMass(activeTerraforming, activeCelestialParameters);
@@ -662,8 +647,8 @@ try {
     calculateCrossSectionAreaM2FromRadius,
     calculateAverageDensityKgM3,
     calculateDynamicWorldCurrentAtmosphericMassKg,
-    calculateDynamicWorldCurrentPlanetaryMassKg,
-    calculateDynamicWorldCurrentPlanetaryVolumeM3,
+    calculateDynamicWorldCurrentPlanetaryMassKg: getDynamicWorldCurrentPlanetaryMassKg,
+    calculateDynamicWorldCurrentPlanetaryVolumeM3: getDynamicWorldCurrentPlanetaryVolumeM3,
     calculateDynamicWorldMassDeltaKg,
     calculateDynamicWorldCurrentSurfaceMassKg,
     calculateDynamicWorldSurfaceVolumeDeltaM3,

@@ -19,7 +19,7 @@ function normalizeLandReservationShare(share) {
 
 function resolveLandReservationInitialLand(terraformingState, landResource) {
   if (currentPlanetParameters?.specialAttributes?.dynamicMass === true) {
-    return resolveWorldGeometricLand(terraformingState, landResource, terraformingState?.celestialParameters);
+    return resolveWorldGeometricLand(terraformingState, landResource);
   }
   return resolveWorldBaseLand(terraformingState, landResource);
 }

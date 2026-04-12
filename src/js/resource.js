@@ -15,10 +15,6 @@ if (typeof module !== 'undefined' && module.exports) {
   } = require('./world-geometry.js'));
 }
 
-function getResolveWorldGeometricLandHelper() {
-  return resolveWorldGeometricLandHelper || resolveWorldGeometricLand;
-}
-
 function getDynamicWorldPlanetaryMassAvailableTonsSafe(terraformingState, celestialParameters) {
   return (getDynamicWorldPlanetaryMassAvailableTonsHelper || getDynamicWorldPlanetaryMassAvailableTons)(
     terraformingState,
@@ -1031,14 +1027,15 @@ function reconcileLandResourceValue() {
   const params = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
   const activeProjectManager = typeof projectManager !== 'undefined' ? projectManager : null;
   const activeSpaceManager = typeof spaceManager !== 'undefined' ? spaceManager : null;
+  const resolveWorldGeometricLandFn = resolveWorldGeometricLandHelper || resolveWorldGeometricLand;
 
   const geometricLand = Math.max(
     0,
-    getResolveWorldGeometricLandHelper()(tf, landResource, params?.celestialParameters) || 0
+    resolveWorldGeometricLandFn(tf, landResource, params?.celestialParameters) || 0
   );
   const baseLand = Math.max(
     0,
-    resolveWorldBaseLand(tf, landResource, params?.celestialParameters) || geometricLand
+    resolveWorldBaseLand(tf, landResource) || geometricLand
   );
   landResource.baseLand = baseLand;
 

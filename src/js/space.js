@@ -2021,7 +2021,9 @@ class SpaceManager extends EffectableEntity {
             foundryCompleted = false;
         }
         const foundryLandFactor = foundryCompleted
-            ? this._getFoundryLandFactor(resolveWorldGeometricLand(terraforming, resources?.surface?.land))
+            ? this._getFoundryLandFactor(
+                resolveWorldGeometricLand(terraforming, resources?.surface?.land)
+              )
             : 0;
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);

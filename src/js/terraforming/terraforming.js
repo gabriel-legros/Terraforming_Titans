@@ -416,7 +416,7 @@ class Terraforming extends EffectableEntity{
     // Clone so config values remain immutable
     this.celestialParameters = structuredClone(celestialParameters);
     this.initialCelestialParameters = structuredClone(celestialParameters);
-    this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land, this.celestialParameters);
+    this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
     this.initialLand = this.baseLand;
 
     if (this.resources.surface?.land) {
@@ -2812,7 +2812,7 @@ synchronizeGlobalResources() {
             }
           }
       }
-      this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land, this.celestialParameters);
+      this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
       this.initialLand = this.baseLand;
       if (this.resources.surface?.land) {
           this.resources.surface.land.baseLand = this.baseLand;
