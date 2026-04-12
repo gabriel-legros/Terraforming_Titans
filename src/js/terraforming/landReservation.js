@@ -1,5 +1,11 @@
 const MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K = 1273.15;
 const MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K = 973.15;
+const LAND_RESERVATION_SOURCE_LABELS = {
+  hazardousBiomass: 'Hazardous Biomass',
+  pulsar: 'Pulsar',
+  coreHeatFlux: 'Lava'
+};
+const LAND_RESERVATION_SOURCE_ORDER = ['hazardousBiomass', 'hazardousMachinery', 'pulsar', 'coreHeatFlux'];
 
 function normalizeLandReservationShare(share) {
   if (!Number.isFinite(share) || share <= 0) {
@@ -12,127 +18,51 @@ function normalizeLandReservationShare(share) {
 }
 
 function resolveLandReservationInitialLand(terraformingState, landResource) {
-  const activeTerraforming = terraformingState || null;
-  const activeCelestialParameters = activeTerraforming?.celestialParameters || null;
-  const activePlanetParameters = currentPlanetParameters || null;
-  if (
-    activePlanetParameters?.specialAttributes?.dynamicMass === true
-    || activeCelestialParameters?.dynamicMassDeltaKg
-    || activeCelestialParameters?.dynamicSurfaceVolumeDeltaM3
-    || activeCelestialParameters?.dynamicDirectMassDeltaKg
-    || activeCelestialParameters?.dynamicDirectVolumeDeltaM3
-    || activeCelestialParameters?.currentPlanetaryMassKg
-    || activeCelestialParameters?.currentSurfaceMassKg
-    || activeCelestialParameters?.currentAtmosphericMassKg
-    || activeCelestialParameters?.currentPlanetaryVolumeM3
-    || activeCelestialParameters?.currentSurfaceVolumeM3
-  ) {
-    return resolveWorldGeometricLand(activeTerraforming, landResource, activeCelestialParameters);
+  if (currentPlanetParameters?.specialAttributes?.dynamicMass === true) {
+    return resolveWorldGeometricLand(terraformingState, landResource, terraformingState?.celestialParameters);
   }
   return resolveWorldBaseLand(terraformingState, landResource);
 }
 
-function getProjectManagerForLandReservation() {
-  try {
-    return projectManager;
-  } catch (error) {
-    return null;
-  }
-}
-
-function getTerraformingForLandReservation() {
-  try {
-    return terraforming;
-  } catch (error) {
-    return null;
-  }
-}
-
-function getPlanetCoreHeatFluxForLandReservation() {
-  try {
-    return Math.max(0, currentPlanetParameters?.celestialParameters?.coreHeatFlux || 0);
-  } catch (error) {
-    return 0;
-  }
-}
-
-function getArtificialCrustCompletionFraction() {
-  const artificialCrust = getProjectManagerForLandReservation()?.projects?.artificialCrust;
-  if (!artificialCrust) {
-    return 0;
-  }
-  if (artificialCrust.isCompleted) {
-    return 1;
-  }
-  if (artificialCrust.getCompletionFraction) {
-    return normalizeLandReservationShare(artificialCrust.getCompletionFraction());
-  }
-  return 0;
-}
-
-function getTemperatureDrivenCoreFluxLandReservationShare(terraformingState = null) {
-  const activeTerraforming = terraformingState || getTerraformingForLandReservation();
-  const temperature = activeTerraforming?.temperature?.value;
-  if (!Number.isFinite(temperature)) {
-    return 1;
-  }
-  if (temperature <= MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K) {
-    return 0;
-  }
-  if (temperature >= MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K) {
-    return 1;
-  }
-  return normalizeLandReservationShare(
-    (temperature - MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K)
-      / (MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K - MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K)
-  );
-}
-
-function getCoreFluxLandReservationShare(terraformingState = null) {
-  const activeTerraforming = terraformingState || getTerraformingForLandReservation();
+function getCoreFluxLandReservationShare(terraformingState = terraforming) {
+  const activeTerraforming = terraformingState;
   const baseFlux = Math.max(
     0,
-    activeTerraforming?.celestialParameters?.coreHeatFlux
-      || getPlanetCoreHeatFluxForLandReservation()
-      || 0
+    activeTerraforming?.celestialParameters?.coreHeatFlux || currentPlanetParameters?.celestialParameters?.coreHeatFlux || 0
   );
   if (!(baseFlux > 0)) {
     return 0;
   }
 
+  const temperature = activeTerraforming?.temperature?.value;
+  let temperatureShare = 1;
+  if (Number.isFinite(temperature)) {
+    if (temperature <= MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K) {
+      temperatureShare = 0;
+    } else if (temperature < MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K) {
+      temperatureShare =
+        (temperature - MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K)
+        / (MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K - MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K);
+    }
+  }
+
+  const artificialCrust = projectManager?.projects?.artificialCrust;
+  const crustCompletion = artificialCrust?.isCompleted
+    ? 1
+    : normalizeLandReservationShare(artificialCrust?.getCompletionFraction?.() || 0);
   const currentFlux = Math.max(
     0,
-    activeTerraforming?.getCoreHeatFlux
-      ? activeTerraforming.getCoreHeatFlux()
-      : (baseFlux * (1 - getArtificialCrustCompletionFraction()))
+    activeTerraforming?.getCoreHeatFlux ? activeTerraforming.getCoreHeatFlux() : baseFlux * (1 - crustCompletion)
   );
 
-  return normalizeLandReservationShare(
-    Math.min(
-      currentFlux / baseFlux,
-      getTemperatureDrivenCoreFluxLandReservationShare(activeTerraforming)
-    )
-  );
+  return normalizeLandReservationShare(Math.min(currentFlux / baseFlux, temperatureShare));
 }
 
 function getLandReservationSourceLabel(source) {
-  if (source === 'hazardousBiomass') {
-    return 'Hazardous Biomass';
-  }
   if (source === 'hazardousMachinery') {
-    try {
-      return t('resources.surface.hazardousMachinery.name', null, 'Hazardous Machinery');
-    } catch (error) {
-      return 'Hazardous Machinery';
-    }
+    return t('resources.surface.hazardousMachinery.name', null, 'Hazardous Machinery');
   }
-  if (source === 'pulsar') {
-    return 'Pulsar';
-  }
-  if (source === 'coreHeatFlux') {
-    return 'Lava';
-  }
-  return 'World Effects';
+  return LAND_RESERVATION_SOURCE_LABELS[source] || 'World Effects';
 }
 
 class LandReservationReconciler {
@@ -150,16 +80,23 @@ class LandReservationReconciler {
     return normalized;
   }
 
+  getCombinedShare(extraShares = null) {
+    let combinedShare = 0;
+    const mergedShares = { ...this.shares, ...(extraShares || {}) };
+
+    Object.keys(mergedShares).forEach((source) => {
+      combinedShare = Math.max(combinedShare, normalizeLandReservationShare(mergedShares[source]));
+    });
+
+    return combinedShare;
+  }
+
   getDominantSource(extraShares = null) {
     let dominantSource = '';
     let dominantShare = 0;
-    const mergedShares = {
-      ...this.shares,
-      ...(extraShares || {})
-    };
-    const orderedSources = ['hazardousBiomass', 'hazardousMachinery', 'pulsar', 'coreHeatFlux'];
+    const mergedShares = { ...this.shares, ...(extraShares || {}) };
 
-    orderedSources.forEach((source) => {
+    LAND_RESERVATION_SOURCE_ORDER.forEach((source) => {
       const share = normalizeLandReservationShare(mergedShares[source]);
       if (share > dominantShare) {
         dominantShare = share;
@@ -167,75 +104,34 @@ class LandReservationReconciler {
       }
     });
 
-    if (!dominantSource) {
-      Object.keys(mergedShares).forEach((source) => {
-        const share = normalizeLandReservationShare(mergedShares[source]);
-        if (share > dominantShare) {
-          dominantShare = share;
-          dominantSource = source;
-        }
-      });
-    }
-
     return dominantSource;
   }
 
-  getCombinedShare(extraShares = null) {
-    let combined = 0;
-
-    Object.keys(this.shares).forEach((key) => {
-      combined = Math.max(combined, normalizeLandReservationShare(this.shares[key]));
-    });
-
-    Object.keys(extraShares || {}).forEach((key) => {
-      combined = Math.max(combined, normalizeLandReservationShare(extraShares[key]));
-    });
-
-    return combined;
-  }
-
   syncToLandResource(landResource, terraformingState, extraShares = null) {
-    if (!landResource || !landResource.setReservedAmountForSource) {
+    if (!landResource?.setReservedAmountForSource) {
       return 0;
     }
 
-    const initialLand = resolveLandReservationInitialLand(terraformingState, landResource);
-    const combinedShare = this.getCombinedShare(extraShares);
+    const reservedLand = resolveLandReservationInitialLand(terraformingState, landResource) * this.getCombinedShare(extraShares);
     const dominantSource = this.getDominantSource(extraShares);
-    const reservedLand = initialLand > 0 ? initialLand * combinedShare : 0;
 
     landResource.setReservedAmountForSource('hazards', reservedLand);
     landResource.setReservedAmountForSource('hazardousBiomass', 0);
     landResource.setReservedAmountForSource('hazardousMachinery', 0);
     landResource.worldEffectReservationSource = dominantSource;
-    landResource.worldEffectReservationLabel = reservedLand > 0
-      ? getLandReservationSourceLabel(dominantSource)
-      : '';
+    landResource.worldEffectReservationLabel = reservedLand > 0 ? getLandReservationSourceLabel(dominantSource) : '';
 
     return reservedLand;
   }
 }
 
 try {
-  window.normalizeLandReservationShare = normalizeLandReservationShare;
-  window.resolveLandReservationInitialLand = resolveLandReservationInitialLand;
-  window.getTemperatureDrivenCoreFluxLandReservationShare = getTemperatureDrivenCoreFluxLandReservationShare;
-  window.getCoreFluxLandReservationShare = getCoreFluxLandReservationShare;
-  window.getLandReservationSourceLabel = getLandReservationSourceLabel;
-  window.LandReservationReconciler = LandReservationReconciler;
-} catch (error) {
-  // Window not available in tests
-}
-
-try {
   module.exports = {
     normalizeLandReservationShare,
     resolveLandReservationInitialLand,
-    getTemperatureDrivenCoreFluxLandReservationShare,
     getCoreFluxLandReservationShare,
-    getLandReservationSourceLabel,
     LandReservationReconciler
   };
 } catch (error) {
-  // Module system not available in browser
+  // Browser runtime has no CommonJS module.
 }

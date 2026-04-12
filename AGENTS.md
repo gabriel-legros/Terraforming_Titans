@@ -16,6 +16,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Keep the Warp Gate Command Teams tooltip updated when special rules change.
 - Do not use `typeof` checks, null-guard boilerplate for objects that should exist, or numeric-type validation boilerplate.
 - Do not add try/catch or fallback shim code just to probe required globals/functions from ordered script includes. If a function is required by load order, call it directly and fix tests/harnesses instead of weakening the runtime code.
+- Do not add trivial wrapper helpers that only rename, "resolve", "normalize", or "get" already-available values unless they contain real shared logic. Avoid helper chains where a module calls another tiny helper that just reads globals, clamps one value, or forwards arguments unchanged.
 - Cache and reuse UI elements. Do not repeatedly query the DOM with new selectors.
 - Building-specific logic belongs in dedicated subclasses under `src/js/buildings/` and must be registered in `initializeBuildings`.
 - Do not use `globalThis`; use the actual global variable directly.
