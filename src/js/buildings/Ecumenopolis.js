@@ -65,10 +65,15 @@ class Ecumenopolis extends Colony {
       return;
     }
 
-    this.productivity = this.applyProductivityDamping(this.productivity, targetProductivity);
+    this.productivity = this.applyProductivityDamping(
+      this.productivity,
+      targetProductivity,
+      deltaTime
+    );
     this.displayProductivity = this.applyProductivityDamping(
       this.displayProductivity,
-      targetProductivity
+      targetProductivity,
+      deltaTime
     );
   }
 }

@@ -175,11 +175,13 @@ class ChemicalReactor extends MultiRecipesBuilding {
 
     this.productivity = this.applyProductivityDamping(
       this.productivity,
-      targetProductivity
+      targetProductivity,
+      deltaTime
     );
     this.displayProductivity = this.applyProductivityDamping(
       this.displayProductivity,
-      displayTarget
+      displayTarget,
+      deltaTime
     );
   }
 

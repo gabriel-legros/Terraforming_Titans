@@ -230,7 +230,11 @@ class DustFactory extends Building {
       return;
     }
 
-    this.productivity = this.applyProductivityDamping(this.productivity, targetProductivity);
+    this.productivity = this.applyProductivityDamping(
+      this.productivity,
+      targetProductivity,
+      deltaTime
+    );
   }
 
   initUI(autoBuildContainer, cache) {
