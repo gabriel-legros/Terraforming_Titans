@@ -99,6 +99,38 @@ function getSpecialSeedKeyFromWorldData(source) {
         || null;
 }
 
+function getDominionIdFromWorldData(source) {
+    if (!source) {
+        return null;
+    }
+    return source.specialAttributes?.terraformingRequirementId
+        || source.override?.specialAttributes?.terraformingRequirementId
+        || source.merged?.specialAttributes?.terraformingRequirementId
+        || source.dominionId
+        || source.original?.specialAttributes?.terraformingRequirementId
+        || source.original?.override?.specialAttributes?.terraformingRequirementId
+        || source.original?.merged?.specialAttributes?.terraformingRequirementId
+        || source.original?.dominionId
+        || null;
+}
+
+function applyDominionIdToWorldData(source, dominionId) {
+    if (!source || !dominionId) {
+        return;
+    }
+    source.dominionId = dominionId;
+    source.specialAttributes = source.specialAttributes || {};
+    source.specialAttributes.terraformingRequirementId = dominionId;
+    if (source.override) {
+        source.override.specialAttributes = source.override.specialAttributes || {};
+        source.override.specialAttributes.terraformingRequirementId = dominionId;
+    }
+    if (source.merged) {
+        source.merged.specialAttributes = source.merged.specialAttributes || {};
+        source.merged.specialAttributes.terraformingRequirementId = dominionId;
+    }
+}
+
 function cloneSpaceWorldData(data) {
     if (!data) {
         return null;
@@ -1734,6 +1766,10 @@ class SpaceManager extends EffectableEntity {
 
         const resolvedKey = worldKey == null ? this.currentPlanetKey : String(worldKey);
         const status = this.getPlanetStatus(resolvedKey);
+        if (status?.dominionId) {
+            params.specialAttributes = params.specialAttributes || {};
+            params.specialAttributes.terraformingRequirementId = status.dominionId;
+        }
         if (status?.naturalMagnetosphere === true) {
             params.celestialParameters.hasNaturalMagnetosphere = true;
         }
@@ -2323,6 +2359,7 @@ class SpaceManager extends EffectableEntity {
         const existing = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const revisitingRandomSeed = !isArtificial && !!existing?.visited;
         const specialSeedKey = getSpecialSeedKeyFromWorldData(res) || getSpecialSeedKeyFromWorldData(existing);
+        const persistedDominionId = getDominionIdFromWorldData(res) || getDominionIdFromWorldData(existing);
         let travelResult = res;
         if (revisitingRandomSeed) {
             try {
@@ -2339,6 +2376,7 @@ class SpaceManager extends EffectableEntity {
                 return false;
             }
         }
+        applyDominionIdToWorldData(travelResult, persistedDominionId);
         const originalSnapshot = cloneSpaceWorldData(travelResult);
         const firstVisit = !existing?.visited;
         const destinationTerraformed = existing?.terraformed || false;
@@ -2407,6 +2445,7 @@ class SpaceManager extends EffectableEntity {
                     naturalMagnetosphere: false,
                     artificial: artificialWorld,
                     cachedArchetype,
+                    dominionId: persistedDominionId,
                     type: artificialType,
                     core: artificialCore,
                     terraformedValue,
@@ -2422,6 +2461,9 @@ class SpaceManager extends EffectableEntity {
                 status.original = status.original || originalSnapshot;
             }
             status.artificial = status.artificial || artificialWorld;
+            if (persistedDominionId) {
+                status.dominionId = persistedDominionId;
+            }
             status.visited = true;
             if (isArtificial) {
                 status.stored = false;
@@ -2582,6 +2624,7 @@ class SpaceManager extends EffectableEntity {
                 const cachedLandHa = pickLandHa(status);
                 const cachedSector = pickSector(status);
                 const cachedHazards = pickHazards(status);
+                const dominionId = getDominionIdFromWorldData(status);
                 const copy = { ...status };
                 if (cachedArchetype && !copy.cachedArchetype) {
                     copy.cachedArchetype = cachedArchetype;
@@ -2597,6 +2640,9 @@ class SpaceManager extends EffectableEntity {
                 }
                 if (cachedHazards && !copy.cachedHazards) {
                     copy.cachedHazards = cachedHazards;
+                }
+                if (dominionId && !copy.dominionId) {
+                    copy.dominionId = dominionId;
                 }
                 delete copy.override;
                 delete copy.merged;
@@ -2819,6 +2865,7 @@ class SpaceManager extends EffectableEntity {
                 .forEach((entry) => {
                     entry.foundryLandFactor = entry.foundryLandFactor || 0;
                     entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
+                    entry.dominionId = entry.dominionId || getDominionIdFromWorldData(entry);
                     assignSector(entry);
                     sanitizeCachedHazards(entry);
                 });

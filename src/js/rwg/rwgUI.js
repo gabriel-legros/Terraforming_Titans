@@ -480,7 +480,12 @@ function applyDominionSelection(res) {
   const selection = rwgSelectedDominion === RWG_DOMINION_RANDOM
     ? dominions[Math.floor(Math.random() * dominions.length)]
     : rwgSelectedDominion;
+  res.dominionId = selection;
+  res.specialAttributes = {
+    ...(res.specialAttributes || {})
+  };
   special.terraformingRequirementId = selection;
+  res.specialAttributes.terraformingRequirementId = selection;
   res.merged.specialAttributes = {
     ...(res.merged.specialAttributes || {}),
     ...special
