@@ -16,7 +16,7 @@ setLanguageData({
       locked: 'Locked',
       min: 'Min',
       max: 'Max',
-      pause: 'Pause',
+      pause: 'Pause (Spacebar)',
       refresh: 'Refresh',
     },
     rwg: {
