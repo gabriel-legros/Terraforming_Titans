@@ -6,12 +6,14 @@ let resolveWorldGeometricLandHelper = null;
 let getDynamicWorldPlanetaryMassAvailableTonsHelper = null;
 let hasDynamicMassEnabledHelper = null;
 let disposeDynamicWorldPlanetaryMassHelper = null;
+let addDynamicWorldPlanetaryMaterialHelper = null;
 if (typeof module !== 'undefined' && module.exports) {
   ({
     resolveWorldGeometricLand: resolveWorldGeometricLandHelper,
     getDynamicWorldPlanetaryMassAvailableTons: getDynamicWorldPlanetaryMassAvailableTonsHelper,
     hasDynamicMassEnabled: hasDynamicMassEnabledHelper,
-    disposeDynamicWorldPlanetaryMass: disposeDynamicWorldPlanetaryMassHelper
+    disposeDynamicWorldPlanetaryMass: disposeDynamicWorldPlanetaryMassHelper,
+    addDynamicWorldPlanetaryMaterial: addDynamicWorldPlanetaryMaterialHelper
   } = require('./world-geometry.js'));
 }
 
@@ -30,9 +32,18 @@ function disposeDynamicWorldPlanetaryMassSafe(terraformingState, amountTons) {
   return (disposeDynamicWorldPlanetaryMassHelper || disposeDynamicWorldPlanetaryMass)(terraformingState, amountTons);
 }
 
+function addDynamicWorldPlanetaryMaterialSafe(terraformingState, materialKey, amountTons) {
+  return (addDynamicWorldPlanetaryMaterialHelper || addDynamicWorldPlanetaryMaterial)(
+    terraformingState,
+    materialKey,
+    amountTons
+  );
+}
+
 function initializeAccumulatedSpecialChanges() {
   return {
-    planetaryMass: {}
+    planetaryMass: {},
+    planetaryMassImports: {}
   };
 }
 
@@ -42,6 +53,23 @@ function accumulateSpecialPlanetaryMassChange(accumulatedSpecialChanges, source,
   }
   accumulatedSpecialChanges.planetaryMass[source] =
     (accumulatedSpecialChanges.planetaryMass[source] || 0) + amount;
+}
+
+function accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source, materialKey, amount, reportRate = true, rateType = 'project') {
+  if (!(amount > 0) || !materialKey) {
+    return;
+  }
+  if (!accumulatedSpecialChanges.planetaryMassImports[source]) {
+    accumulatedSpecialChanges.planetaryMassImports[source] = {
+      materials: {},
+      reportRate,
+      rateType
+    };
+  }
+  const entry = accumulatedSpecialChanges.planetaryMassImports[source];
+  entry.reportRate = reportRate;
+  entry.rateType = rateType;
+  entry.materials[materialKey] = (entry.materials[materialKey] || 0) + amount;
 }
 
 function isExactLandResource(resource) {
@@ -1141,6 +1169,29 @@ function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChang
       source === 'Nanocolony' ? 'nanotech' : 'building'
     );
   }
+
+  for (const source in accumulatedSpecialChanges.planetaryMassImports) {
+    const importEntry = accumulatedSpecialChanges.planetaryMassImports[source];
+    const materialImports = importEntry.materials || {};
+    let totalAddedAmount = 0;
+    for (const materialKey in materialImports) {
+      const amount = materialImports[materialKey];
+      if (!(amount > 0)) {
+        continue;
+      }
+      totalAddedAmount += addDynamicWorldPlanetaryMaterialSafe(terraforming, materialKey, amount);
+    }
+    if (!(totalAddedAmount > 0)) {
+      continue;
+    }
+    if (importEntry.reportRate !== false) {
+      massResource.modifyRate(
+        totalAddedAmount / seconds,
+        source,
+        importEntry.rateType || (source === 'Nanocolony' ? 'nanotech' : 'project')
+      );
+    }
+  }
 }
 
 if (typeof globalThis !== 'undefined') {
@@ -1494,11 +1545,11 @@ function produceResources(deltaTime, buildings) {
         project.autoStart !== false ||
         isProjectAutoContinuousEnabled(project);
       if (!shouldEstimateContinuous) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
         continue;
       }
       project.estimateCostAndGain(deltaTime, true, productivity, accumulatedChanges);
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
     }
     for (const [, data] of projectEntries) {
       const { project } = data;
@@ -1510,11 +1561,11 @@ function produceResources(deltaTime, buildings) {
         project.autoStart !== false ||
         isProjectAutoContinuousEnabled(project);
       if (!shouldEstimate) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges);
+        project.applyCostAndGain(deltaTime, accumulatedChanges, 1, accumulatedSpecialChanges);
         continue;
       }
       project.estimateCostAndGain(deltaTime, true, 1, accumulatedChanges);
-      project.applyCostAndGain(deltaTime, accumulatedChanges);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, 1, accumulatedSpecialChanges);
     }
   }
 

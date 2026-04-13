@@ -46,6 +46,20 @@ function applySpecialProjectResourceGain(category, resource, amount, source) {
   return true;
 }
 
+function accumulateSpecialProjectResourceGain(accumulatedSpecialChanges, category, resource, amount, source) {
+  if (amount <= 0 || category !== 'special' || !accumulatedSpecialChanges) {
+    return false;
+  }
+  if (resource === 'planetaryMassMetal') {
+    accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source, 'metal', amount, false, 'project');
+  } else if (resource === 'planetaryMassSilicon') {
+    accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source, 'silicon', amount, false, 'project');
+  } else {
+    return false;
+  }
+  return true;
+}
+
 function modifyPlanetaryMassRate(amount, source) {
   if (!amount) {
     return;
@@ -1143,12 +1157,15 @@ class SpaceshipProject extends Project {
     }
   }
 
-  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
+  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1, accumulatedSpecialChanges = null) {
     const sourceLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
     for (const category in gain) {
       for (const resource in gain[category]) {
         const amount = gain[category][resource] * fraction * productivity;
         if (isSpecialProjectResource(category, resource)) {
+          if (accumulatedSpecialChanges && accumulateSpecialProjectResourceGain(accumulatedSpecialChanges, category, resource, amount, sourceLabel)) {
+            continue;
+          }
           applySpecialProjectResourceGain(category, resource, amount, sourceLabel);
           continue;
         }
@@ -1586,7 +1603,7 @@ class SpaceshipProject extends Project {
     }
   }
 
-  applyContinuousPlan(plan, accumulatedChanges = null) {
+  applyContinuousPlan(plan, accumulatedChanges = null, accumulatedSpecialChanges = null) {
     if (!plan.context || !plan.hasContinuousWork) {
       return;
     }
@@ -1638,7 +1655,8 @@ class SpaceshipProject extends Project {
           plan.gainBase,
           plan.gainFraction,
           accumulatedChanges,
-          plan.context.productivity
+          plan.context.productivity,
+          accumulatedSpecialChanges
         );
       } finally {
         this.applyingContinuousPlanGain = false;
@@ -1781,7 +1799,7 @@ class SpaceshipProject extends Project {
     return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1, accumulatedSpecialChanges = null) {
     if (!this.isContinuous() || !this.isActive) {
       this.clearContinuousExecutionPlanCache();
       return;
@@ -1800,7 +1818,7 @@ class SpaceshipProject extends Project {
       return;
     }
     const plan = this.getContinuousExecutionPlan(deltaTime, productivity, accumulatedChanges);
-    this.applyContinuousPlan(plan, accumulatedChanges);
+    this.applyContinuousPlan(plan, accumulatedChanges, accumulatedSpecialChanges);
     const gainDebrisFraction = this.attributes.kesslerDebrisFromGainFraction;
     if (gainDebrisFraction > 0 && plan.failedGainFraction > 0) {
       let gainDebris = 0;

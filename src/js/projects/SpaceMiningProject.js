@@ -949,7 +949,7 @@ class SpaceMiningProject extends SpaceshipProject {
     return ratio;
   }
 
-  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
+  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1, accumulatedSpecialChanges = null) {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.exceedsCo2CoverageLimit(hasMonitoring)) {
       resources.surface.liquidCO2.automationLimited = true;
@@ -1013,7 +1013,7 @@ class SpaceMiningProject extends SpaceshipProject {
         entry[gas] = scale > 0 ? applied / scale : 0;
       }
     }
-    super.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity);
+    super.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity, accumulatedSpecialChanges);
   }
 }
 
