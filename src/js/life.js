@@ -1524,7 +1524,7 @@ class LifeManager extends EffectableEntity {
   }
   // Method to update life growth/decay based on zonal environmental conditions
   // Now uses global atmospheric resources instead of zonal atmosphere
-  updateLife(deltaTime, accumulatedChanges = null) {
+  updateLife(deltaTime, accumulatedChanges = null, accumulatedSpecialChanges = null) {
     if (this.isBooleanFlagSet('ringworldLowGravityLife')) {
       return;
     }
@@ -1550,7 +1550,6 @@ class LifeManager extends EffectableEntity {
 
     terraforming.biomassDyingZones = {};
     const netBiomassChangeByZone = {};
-    let planetaryMassAdded = 0;
     zones.forEach(zoneName => {
       terraforming.biomassDyingZones[zoneName] = false;
       netBiomassChangeByZone[zoneName] = 0;
@@ -1615,9 +1614,14 @@ class LifeManager extends EffectableEntity {
       netBiomassChangeByZone[zoneName] -= supportedDecay;
       resources.surface.biomass.modifyRate(-supportedDecay / secondsMultiplier, decayReason, 'life');
       if (sterileDecayWithoutOxygen && supportedDecay > 1e-9) {
-        addDynamicWorldPlanetaryMaterial(terraforming, 'organic', supportedDecay);
-        resources.underground?.planetaryMass?.modifyRate(supportedDecay / secondsMultiplier, decayReason, 'life');
-        planetaryMassAdded += supportedDecay;
+        accumulateSpecialPlanetaryMassImport(
+          accumulatedSpecialChanges,
+          decayReason,
+          'organic',
+          supportedDecay,
+          true,
+          'life'
+        );
       }
 
       const decaySurfaceDeltas = decaySurfaceDeltasByZone[zoneName] || {};
@@ -1701,17 +1705,17 @@ class LifeManager extends EffectableEntity {
             if (resources.surface.biomass) {
               resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, 'Geological Burial', 'life');
             }
-            addDynamicWorldPlanetaryMaterial(terraforming, 'organic', burialAmount);
-            resources.underground?.planetaryMass?.modifyRate(burialAmount / secondsMultiplier, 'Geological Burial', 'life');
-            planetaryMassAdded += burialAmount;
+            accumulateSpecialPlanetaryMassImport(
+              accumulatedSpecialChanges,
+              'Geological Burial',
+              'organic',
+              burialAmount,
+              true,
+              'life'
+            );
           }
         }
       });
-    }
-
-    if (planetaryMassAdded > 1e-9) {
-      terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
-      reconcileLandResourceValue();
     }
 
     if (this.isBooleanFlagSet('surfaceFoodProduction')) {
