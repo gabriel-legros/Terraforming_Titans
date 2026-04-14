@@ -173,15 +173,20 @@ function renderLiftersUI(project, container) {
   assignmentGrid.appendChild(headerDivider);
 
   const rowElements = {};
-  project.getRecipeKeys().forEach((key) => {
-    const recipe = project.getRecipe(key);
+  const displayKeys = [project.getUnassignedAssignmentKey()].concat(project.getRecipeKeys());
+  displayKeys.forEach((key) => {
+    const isUnassigned = project.isUnassignedAssignmentKey(key);
+    const recipe = isUnassigned ? null : project.getRecipe(key);
     const row = document.createElement('div');
     row.classList.add('hephaestus-assignment-row', 'nuclear-alchemy-assignment-row');
+    if (isUnassigned) {
+      row.classList.add('assignment-divider-row');
+    }
 
     const nameWrap = document.createElement('span');
     nameWrap.classList.add('stat-label', 'lifters-recipe-name');
     const nameText = document.createElement('span');
-    nameText.textContent = recipe.label;
+    nameText.textContent = isUnassigned ? project.getUnassignedAssignmentLabelText() : recipe.label;
     nameWrap.appendChild(nameText);
     if (key === 'starLifting') {
       const infoIcon = document.createElement('span');
@@ -196,6 +201,7 @@ function renderLiftersUI(project, container) {
 
     const complexityEl = document.createElement('span');
     complexityEl.classList.add('stat-value');
+    complexityEl.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
 
     const amountEl = document.createElement('span');
     amountEl.classList.add('stat-value');
@@ -330,7 +336,6 @@ function updateLiftersUI(project) {
   const assigned = project.getAssignedTotal();
   const available = Math.max(0, total - assigned);
   const step = project.assignmentStep;
-  const activeKeys = project.getAssignmentKeys();
 
   elements.totalValue.textContent = formatNumber(total, true, 2);
   elements.assignedValue.textContent = formatNumber(assigned, true, 2);
@@ -353,33 +358,27 @@ function updateLiftersUI(project) {
   elements.stepDownButton.disabled = total <= 0;
   elements.stepUpButton.disabled = total <= 0;
 
-  project.getRecipeKeys().forEach((key) => {
-    const recipe = project.getRecipe(key);
+  const displayKeys = [project.getUnassignedAssignmentKey()].concat(project.getRecipeKeys());
+  displayKeys.forEach((key) => {
+    const isUnassigned = project.isUnassignedAssignmentKey(key);
+    const recipe = isUnassigned ? null : project.getRecipe(key);
     const row = elements.rowElements[key];
-    if (!row || !recipe) {
+    if (!row) {
       return;
     }
 
-    const isAvailable = project.isRecipeAvailable(key, recipe);
+    const isAvailable = isUnassigned || project.isRecipeAvailable(key, recipe);
     row.wrapper.style.display = isAvailable ? '' : 'none';
     if (!isAvailable) {
       return;
     }
 
-    const current = project.lifterAssignments[key] || 0;
-    const usedOther = activeKeys.reduce((sum, otherKey) => {
-      if (otherKey === key) {
-        return sum;
-      }
-      if (project.autoAssignFlags[otherKey]) {
-        return sum;
-      }
-      return sum + (project.lifterAssignments[otherKey] || 0);
-    }, 0);
-    const maxForKey = Math.max(0, total - usedOther);
+    const storedCurrent = project.getStoredAssignmentAmount(key);
+    const displayedCurrent = project.getDisplayedAssignmentAmount(key);
+    const maxForKey = project.getAssignmentMaxTarget(key);
 
-    row.complexity.textContent = formatNumber(project.getRecipeComplexity(recipe), true);
-    row.value.textContent = formatNumber(current, true);
+    row.complexity.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
+    row.value.textContent = formatNumber(displayedCurrent, true);
     row.minusButton.textContent = `-${formatNumber(step, true)}`;
     row.plusButton.textContent = `+${formatNumber(step, true)}`;
     row.autoAssign.checked = project.autoAssignFlags[key] === true;
@@ -390,15 +389,15 @@ function updateLiftersUI(project) {
       );
     }
     row.weightInput.disabled = total <= 0;
-    row.zeroButton.disabled = current <= 0 || project.autoAssignFlags[key];
-    row.maxButton.disabled = current >= maxForKey || total <= 0 || project.autoAssignFlags[key];
-    row.minusButton.disabled = current <= 0 || project.autoAssignFlags[key];
-    row.plusButton.disabled = current >= maxForKey || total <= 0 || project.autoAssignFlags[key];
+    row.zeroButton.disabled = storedCurrent <= 0 || project.autoAssignFlags[key];
+    row.maxButton.disabled = storedCurrent >= maxForKey || total <= 0 || project.autoAssignFlags[key];
+    row.minusButton.disabled = storedCurrent <= 0 || project.autoAssignFlags[key];
+    row.plusButton.disabled = storedCurrent >= maxForKey || total <= 0 || project.autoAssignFlags[key];
 
-    const rate = project.lastDisplayedRatesByRecipe?.[key] || 0;
-    row.rate.textContent = formatPerSecond(rate);
-    const productivity = project.getDisplayedRecipeProductivity(key);
-    const productivityLimited = project.isRunning && current > 0 && productivity < 1;
+    const rate = isUnassigned ? 0 : (project.lastDisplayedRatesByRecipe?.[key] || 0);
+    row.rate.textContent = isUnassigned ? '' : formatPerSecond(rate);
+    const productivity = isUnassigned ? 1 : project.getDisplayedRecipeProductivity(key);
+    const productivityLimited = !isUnassigned && project.isRunning && storedCurrent > 0 && productivity < 1;
     row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
   });
 

@@ -6,6 +6,8 @@ function getHephaestusText(path, fallback, vars) {
   }
 }
 
+const HEPHAESTUS_UNASSIGNED_KEY = 'idleUnassigned';
+
 let HephaestusContinuousExpansionBase = null;
 try {
   HephaestusContinuousExpansionBase = ContinuousExpansionProject;
@@ -31,7 +33,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     const dummyButton = { textContent: '', disabled: false };
     const dummyWrapper = { style: { display: '' } };
     const rowElements = {};
-    ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', name].forEach((key) => {
+    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', name].forEach((key) => {
       rowElements[key] = {
         wrapper: dummyWrapper,
         value: dummyText,
@@ -126,6 +128,18 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     return [this.getActiveDysonKey(), 'spaceStorage', 'lifters'].concat(this.getOptionalAssignmentKeys());
   }
 
+  getUnassignedAssignmentKey() {
+    return HEPHAESTUS_UNASSIGNED_KEY;
+  }
+
+  getManagedAssignmentKeys() {
+    return [this.getUnassignedAssignmentKey()].concat(this.getAssignmentKeys());
+  }
+
+  isUnassignedAssignmentKey(key) {
+    return key === this.getUnassignedAssignmentKey();
+  }
+
   normalizeAssignments() {
     const activeDyson = this.getActiveDysonKey();
     const inactiveDyson = this.getInactiveDysonKey();
@@ -135,7 +149,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     }
     this.yardAssignments[inactiveDyson] = 0;
 
-    const keys = this.getAssignmentKeys();
+    const keys = this.getManagedAssignmentKeys();
     // Keep assignments for temporarily hidden optional targets (for example,
     // Nuclear Alchemy during load/travel sequencing) so saved auto-assign
     // flags and yard allocations are restored once that target is visible.
@@ -198,6 +212,11 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
           this.yardAssignments[remainders[i].key] += 1;
           leftover -= 1;
         }
+        if (leftover > 0 && autoKeys.length > 0) {
+          const idleKey = this.getUnassignedAssignmentKey();
+          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
+          this.yardAssignments[targetKey] += leftover;
+        }
       }
     }
 
@@ -228,6 +247,28 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     return Math.max(0, total - assigned);
   }
 
+  getStoredAssignmentAmount(key) {
+    return this.yardAssignments[key] || 0;
+  }
+
+  getDisplayedAssignmentAmount(key) {
+    if (this.isUnassignedAssignmentKey(key)) {
+      return this.getAvailableYards();
+    }
+    return this.getStoredAssignmentAmount(key);
+  }
+
+  getAssignmentMaxTarget(key) {
+    const keys = this.getManagedAssignmentKeys();
+    const total = this.getTotalYards();
+    const usedOther = keys.reduce((sum, otherKey) => {
+      if (otherKey === key) return sum;
+      if (this.autoAssignFlags[otherKey]) return sum;
+      return sum + this.getStoredAssignmentAmount(otherKey);
+    }, 0);
+    return Math.max(0, total - usedOther);
+  }
+
   setAssignmentStep(step) {
     const next = Math.min(1e30, Math.max(1, Math.round(step)));
     this.assignmentStep = next;
@@ -246,17 +287,33 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       return;
     }
     this.normalizeAssignments();
-    const keys = this.getAssignmentKeys();
-    const total = this.getTotalYards();
-    const current = this.yardAssignments[key] || 0;
-    const usedOther = keys.reduce((sum, otherKey) => {
-      if (otherKey === key) return sum;
-      if (this.autoAssignFlags[otherKey]) return sum;
-      return sum + (this.yardAssignments[otherKey] || 0);
-    }, 0);
-    const maxForKey = Math.max(0, total - usedOther);
+    const current = this.getStoredAssignmentAmount(key);
+    const maxForKey = this.getAssignmentMaxTarget(key);
     const next = Math.min(maxForKey, Math.max(0, current + delta));
     this.yardAssignments[key] = next;
+    this.normalizeAssignments();
+    this.applyYardEffects();
+    this.updateUI();
+    this.refreshProjectUI();
+  }
+
+  clearAssignment(key) {
+    if (this.autoAssignFlags[key]) {
+      return;
+    }
+    this.yardAssignments[key] = 0;
+    this.normalizeAssignments();
+    this.applyYardEffects();
+    this.updateUI();
+    this.refreshProjectUI();
+  }
+
+  maximizeAssignment(key) {
+    if (this.autoAssignFlags[key]) {
+      return;
+    }
+    this.normalizeAssignments();
+    this.yardAssignments[key] = this.getAssignmentMaxTarget(key);
     this.normalizeAssignments();
     this.applyYardEffects();
     this.updateUI();
@@ -524,6 +581,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     const createAssignmentRow = (key, labelText) => {
       const row = document.createElement('div');
       row.classList.add('hephaestus-assignment-row');
+      if (this.isUnassignedAssignmentKey(key)) {
+        row.classList.add('assignment-divider-row');
+      }
 
       const nameEl = document.createElement('span');
       nameEl.classList.add('stat-label');
@@ -535,14 +595,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       const zeroButton = document.createElement('button');
       zeroButton.textContent = getHephaestusText('ui.projects.common.zero', '0');
       zeroButton.addEventListener('click', () => {
-        if (this.autoAssignFlags[key]) {
-          return;
-        }
-        this.yardAssignments[key] = 0;
-        this.normalizeAssignments();
-        this.applyYardEffects();
-        this.updateUI();
-        this.refreshProjectUI();
+        this.clearAssignment(key);
       });
 
       const minusButton = document.createElement('button');
@@ -553,23 +606,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       const maxButton = document.createElement('button');
       maxButton.textContent = getHephaestusText('ui.projects.common.max', 'Max');
       maxButton.addEventListener('click', () => {
-        if (this.autoAssignFlags[key]) {
-          return;
-        }
-        this.normalizeAssignments();
-        const keys = this.getAssignmentKeys();
-        const total = this.getTotalYards();
-        const usedOther = keys.reduce((sum, otherKey) => {
-          if (otherKey === key) return sum;
-          if (this.autoAssignFlags[otherKey]) return sum;
-          return sum + (this.yardAssignments[otherKey] || 0);
-        }, 0);
-        const target = Math.max(0, total - usedOther);
-        this.yardAssignments[key] = target;
-        this.normalizeAssignments();
-        this.applyYardEffects();
-        this.updateUI();
-        this.refreshProjectUI();
+        this.maximizeAssignment(key);
       });
 
       const autoAssignContainer = document.createElement('div');
@@ -626,6 +663,11 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       };
     };
 
+    createAssignmentRow(
+      this.getUnassignedAssignmentKey(),
+      getHephaestusText('ui.projects.common.idleUnassigned', 'Idle/Unassigned')
+    );
+
     const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
@@ -668,18 +710,14 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry'];
+    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
-      const current = this.yardAssignments[key] || 0;
-      const usedOther = keys.reduce((sum, otherKey) => {
-        if (otherKey === key) return sum;
-        if (this.autoAssignFlags[otherKey]) return sum;
-        return sum + (this.yardAssignments[otherKey] || 0);
-      }, 0);
-      const maxForKey = Math.max(0, total - usedOther);
+      const storedCurrent = this.getStoredAssignmentAmount(key);
+      const displayedCurrent = this.getDisplayedAssignmentAmount(key);
+      const maxForKey = this.getAssignmentMaxTarget(key);
 
-      row.value.textContent = formatNumber(current, true);
+      row.value.textContent = formatNumber(displayedCurrent, true);
       row.minusButton.textContent = `-${formatNumber(step, true)}`;
       row.plusButton.textContent = `+${formatNumber(step, true)}`;
       row.autoAssign.checked = this.autoAssignFlags[key] === true;
@@ -690,11 +728,13 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         );
       }
       row.weightInput.disabled = total === 0;
-      row.zeroButton.disabled = current <= 0 || this.autoAssignFlags[key];
-      row.maxButton.disabled = current >= maxForKey || total === 0 || this.autoAssignFlags[key];
-      row.minusButton.disabled = current <= 0 || this.autoAssignFlags[key];
-      row.plusButton.disabled = current >= maxForKey || total === 0 || this.autoAssignFlags[key];
-      if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
+      row.zeroButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
+      row.maxButton.disabled = storedCurrent >= maxForKey || total === 0 || this.autoAssignFlags[key];
+      row.minusButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
+      row.plusButton.disabled = storedCurrent >= maxForKey || total === 0 || this.autoAssignFlags[key];
+      if (this.isUnassignedAssignmentKey(key)) {
+        row.wrapper.style.display = '';
+      } else if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
         const display = key === activeDyson ? '' : 'none';
         row.wrapper.style.display = display;
       } else if (key === 'spaceChemistry') {

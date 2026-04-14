@@ -23,6 +23,7 @@
     'superconductors',
     'superalloys',
   ];
+  const MANUFACTURING_UNASSIGNED_KEY = 'idleUnassigned';
 
   const MANUFACTURING_RECIPES = {
     glass: {
@@ -222,6 +223,22 @@
       return MANUFACTURING_RECIPE_KEYS.slice();
     }
 
+    getUnassignedAssignmentKey() {
+      return MANUFACTURING_UNASSIGNED_KEY;
+    }
+
+    getManagedAssignmentKeys() {
+      return [this.getUnassignedAssignmentKey()].concat(this.getAssignmentKeys());
+    }
+
+    isUnassignedAssignmentKey(key) {
+      return key === this.getUnassignedAssignmentKey();
+    }
+
+    getUnassignedAssignmentLabel() {
+      return getManufacturingText('ui.projects.common.idleUnassigned') || 'Idle/Unassigned';
+    }
+
     getRecipe(key) {
       return MANUFACTURING_RECIPES[key];
     }
@@ -350,7 +367,7 @@
     applySpecializationEffects() {}
 
     normalizeAssignments() {
-      const keys = this.getAssignmentKeys();
+      const keys = this.getManagedAssignmentKeys();
       const keySet = new Set(keys);
       const total = this.getTotalPotentialPopulation();
 
@@ -403,9 +420,9 @@
           leftover -= 1;
         }
         if (leftover > 0 && autoKeys.length > 0) {
-          // At very large values, floating-point rounding can leave a larger residual.
-          // Force-assign the remaining residual so auto-allocation fully consumes budget.
-          this.manufacturingAssignments[autoKeys[0]] += leftover;
+          const idleKey = this.getUnassignedAssignmentKey();
+          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
+          this.manufacturingAssignments[targetKey] += leftover;
         }
       }
     }
@@ -433,6 +450,32 @@
       return Math.max(0, this.getTotalPotentialPopulation() - this.getAssignedTotal());
     }
 
+    getStoredAssignmentAmount(key) {
+      return this.manufacturingAssignments[key] || 0;
+    }
+
+    getDisplayedAssignmentAmount(key) {
+      if (this.isUnassignedAssignmentKey(key)) {
+        return this.getAvailablePopulation();
+      }
+      return this.getStoredAssignmentAmount(key);
+    }
+
+    getAssignmentMaxTarget(key) {
+      const keys = this.getManagedAssignmentKeys();
+      const total = this.getTotalPotentialPopulation();
+      const usedOther = keys.reduce((sum, otherKey) => {
+        if (otherKey === key) {
+          return sum;
+        }
+        if (this.autoAssignFlags[otherKey]) {
+          return sum;
+        }
+        return sum + this.getStoredAssignmentAmount(otherKey);
+      }, 0);
+      return Math.max(0, total - usedOther);
+    }
+
     setAssignmentStep(step) {
       this.assignmentStep = Math.min(1e50, Math.max(1, Math.round(step)));
     }
@@ -448,20 +491,28 @@
         return;
       }
       this.normalizeAssignments();
-      const keys = this.getAssignmentKeys();
-      const total = this.getTotalPotentialPopulation();
-      const current = this.manufacturingAssignments[key] || 0;
-      const usedOther = keys.reduce((sum, otherKey) => {
-        if (otherKey === key) {
-          return sum;
-        }
-        if (this.autoAssignFlags[otherKey]) {
-          return sum;
-        }
-        return sum + (this.manufacturingAssignments[otherKey] || 0);
-      }, 0);
-      const maxForKey = Math.max(0, total - usedOther);
+      const current = this.getStoredAssignmentAmount(key);
+      const maxForKey = this.getAssignmentMaxTarget(key);
       this.manufacturingAssignments[key] = Math.min(maxForKey, Math.max(0, current + delta));
+      this.normalizeAssignments();
+      this.updateUI();
+    }
+
+    clearAssignment(key) {
+      if (this.autoAssignFlags[key]) {
+        return;
+      }
+      this.manufacturingAssignments[key] = 0;
+      this.normalizeAssignments();
+      this.updateUI();
+    }
+
+    maximizeAssignment(key) {
+      if (this.autoAssignFlags[key]) {
+        return;
+      }
+      this.normalizeAssignments();
+      this.manufacturingAssignments[key] = this.getAssignmentMaxTarget(key);
       this.normalizeAssignments();
       this.updateUI();
     }
@@ -1012,24 +1063,34 @@
       assignmentGrid.appendChild(assignmentLayout);
 
       const rowElements = {};
-      this.getAssignmentKeys().forEach((key) => {
-        const recipe = this.getRecipe(key);
+      this.getManagedAssignmentKeys().forEach((key) => {
+        const isUnassigned = this.isUnassignedAssignmentKey(key);
+        const recipe = isUnassigned ? null : this.getRecipe(key);
         const rowA = document.createElement('div');
         rowA.classList.add('manufacturing-block-row', 'manufacturing-block-grid-a');
+        if (isUnassigned) {
+          rowA.classList.add('assignment-divider-row');
+        }
 
         const nameWrap = document.createElement('span');
         nameWrap.classList.add('stat-value', 'manufacturing-resource-name');
         const nameEl = document.createElement('span');
-        nameEl.textContent = recipe.label;
-        const nameInfo = document.createElement('span');
-        nameInfo.classList.add('info-tooltip-icon');
-        nameInfo.innerHTML = '&#9432;';
-        const recipeTooltip = attachDynamicInfoTooltip(nameInfo, '');
-        nameWrap.append(nameEl, nameInfo);
+        nameEl.textContent = isUnassigned ? this.getUnassignedAssignmentLabel() : recipe.label;
+        let recipeTooltip = null;
+        let recipeTooltipCache = null;
+        nameWrap.appendChild(nameEl);
+        if (!isUnassigned) {
+          const nameInfo = document.createElement('span');
+          nameInfo.classList.add('info-tooltip-icon');
+          nameInfo.innerHTML = '&#9432;';
+          recipeTooltip = attachDynamicInfoTooltip(nameInfo, '');
+          recipeTooltipCache = {};
+          nameWrap.appendChild(nameInfo);
+        }
 
         const complexityEl = document.createElement('span');
         complexityEl.classList.add('stat-value');
-        complexityEl.textContent = formatNumber(recipe.complexity, true);
+        complexityEl.textContent = isUnassigned ? '' : formatNumber(recipe.complexity, true);
 
         const unitProductionEl = document.createElement('span');
         unitProductionEl.classList.add('stat-value');
@@ -1041,12 +1102,7 @@
         const zeroButton = document.createElement('button');
         zeroButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.zero') || '0';
         zeroButton.addEventListener('click', () => {
-          if (this.autoAssignFlags[key]) {
-            return;
-          }
-          this.manufacturingAssignments[key] = 0;
-          this.normalizeAssignments();
-          this.updateUI();
+          this.clearAssignment(key);
         });
 
         const minusButton = document.createElement('button');
@@ -1058,24 +1114,7 @@
         const maxButton = document.createElement('button');
         maxButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.max') || 'Max';
         maxButton.addEventListener('click', () => {
-          if (this.autoAssignFlags[key]) {
-            return;
-          }
-          this.normalizeAssignments();
-          const keys = this.getAssignmentKeys();
-          const total = this.getTotalPotentialPopulation();
-          const usedOther = keys.reduce((sum, otherKey) => {
-            if (otherKey === key) {
-              return sum;
-            }
-            if (this.autoAssignFlags[otherKey]) {
-              return sum;
-            }
-            return sum + (this.manufacturingAssignments[otherKey] || 0);
-          }, 0);
-          this.manufacturingAssignments[key] = Math.max(0, total - usedOther);
-          this.normalizeAssignments();
-          this.updateUI();
+          this.maximizeAssignment(key);
         });
 
         const autoAssignContainer = document.createElement('div');
@@ -1120,10 +1159,16 @@
 
         const rowB = document.createElement('div');
         rowB.classList.add('manufacturing-block-row', 'manufacturing-block-grid-b');
+        if (isUnassigned) {
+          rowB.classList.add('assignment-divider-row');
+        }
         rowB.append(amountEl, controls);
 
         const rowC = document.createElement('div');
         rowC.classList.add('manufacturing-block-row', 'manufacturing-block-grid-c');
+        if (isUnassigned) {
+          rowC.classList.add('assignment-divider-row');
+        }
         rowC.append(weightInput, rateEl);
 
         blockABody.appendChild(rowA);
@@ -1144,7 +1189,7 @@
           weightInput,
           rate: rateEl,
           recipeTooltip,
-          recipeTooltipCache: {},
+          recipeTooltipCache,
         };
       });
 
@@ -1232,28 +1277,21 @@
       elements.stepUpButton.disabled = total <= 0;
       const productivityByRecipe = this.getOperationProductivityForTick();
 
-      this.getAssignmentKeys().forEach((key) => {
+      this.getManagedAssignmentKeys().forEach((key) => {
         const row = elements.rowElements[key];
         if (!row) {
           return;
         }
-        const current = this.manufacturingAssignments[key] || 0;
-        const keys = this.getAssignmentKeys();
-        const usedOther = keys.reduce((sum, otherKey) => {
-          if (otherKey === key) {
-            return sum;
-          }
-          if (this.autoAssignFlags[otherKey]) {
-            return sum;
-          }
-          return sum + (this.manufacturingAssignments[otherKey] || 0);
-        }, 0);
-        const maxForKey = Math.max(0, total - usedOther);
+        const storedCurrent = this.getStoredAssignmentAmount(key);
+        const displayedCurrent = this.getDisplayedAssignmentAmount(key);
+        const maxForKey = this.getAssignmentMaxTarget(key);
 
-        row.value.textContent = formatNumber(current, true);
-        const recipe = this.getRecipe(key);
-        const unitProduction = (recipe.baseOutput * this.getRecipeOutputMultiplier(key)) / recipe.complexity;
-        row.unitProduction.textContent = `${formatNumber(unitProduction, true, 3)}/s`;
+        row.value.textContent = formatNumber(displayedCurrent, true);
+        const recipe = this.isUnassignedAssignmentKey(key) ? null : this.getRecipe(key);
+        const unitProduction = recipe
+          ? (recipe.baseOutput * this.getRecipeOutputMultiplier(key)) / recipe.complexity
+          : 0;
+        row.unitProduction.textContent = recipe ? `${formatNumber(unitProduction, true, 3)}/s` : '';
         row.minusButton.textContent = `-${formatNumber(step, true)}`;
         row.plusButton.textContent = `+${formatNumber(step, true)}`;
         row.autoAssign.checked = this.autoAssignFlags[key] === true;
@@ -1264,20 +1302,22 @@
           );
         }
         row.weightInput.disabled = total <= 0;
-        row.zeroButton.disabled = current <= 0 || this.autoAssignFlags[key];
-        row.maxButton.disabled = current >= maxForKey || total <= 0 || this.autoAssignFlags[key];
-        row.minusButton.disabled = current <= 0 || this.autoAssignFlags[key];
-        row.plusButton.disabled = current >= maxForKey || total <= 0 || this.autoAssignFlags[key];
-        row.rate.textContent = `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s`;
-        const recipeProductivity = productivityByRecipe[key] ?? 1;
-        const productivityLimited = this.isRunning && current > 0 && recipeProductivity < 1;
+        row.zeroButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
+        row.maxButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
+        row.minusButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
+        row.plusButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
+        row.rate.textContent = recipe ? `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s` : '';
+        const recipeProductivity = recipe ? (productivityByRecipe[key] ?? 1) : 1;
+        const productivityLimited = !!recipe && this.isRunning && storedCurrent > 0 && recipeProductivity < 1;
         row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
-        setTooltipText(
-          row.recipeTooltip,
-          this.getRecipeTooltipText(key),
-          row.recipeTooltipCache,
-          'text'
-        );
+        if (row.recipeTooltip) {
+          setTooltipText(
+            row.recipeTooltip,
+            this.getRecipeTooltipText(key),
+            row.recipeTooltipCache,
+            'text'
+          );
+        }
       });
 
       this.syncAssignmentRowHeights();

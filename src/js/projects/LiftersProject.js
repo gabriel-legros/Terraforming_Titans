@@ -9,6 +9,7 @@ const LIFTER_RECIPE_TYPES = {
 };
 
 const LIFTER_STRIP_RECIPE_KEY = 'stripAtmosphere';
+const LIFTERS_UNASSIGNED_KEY = 'idleUnassigned';
 
 const DEFAULT_LIFTER_HARVEST_RECIPES = {
   hydrogen: {
@@ -237,6 +238,22 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return this.getAvailableRecipeKeys();
   }
 
+  getUnassignedAssignmentKey() {
+    return LIFTERS_UNASSIGNED_KEY;
+  }
+
+  getManagedAssignmentKeys() {
+    return [this.getUnassignedAssignmentKey()].concat(this.getAssignmentKeys());
+  }
+
+  isUnassignedAssignmentKey(key) {
+    return key === this.getUnassignedAssignmentKey();
+  }
+
+  getUnassignedAssignmentLabelText() {
+    return t('ui.projects.common.idleUnassigned', null, 'Idle/Unassigned');
+  }
+
   getDefaultHarvestRecipeKey() {
     const available = this.getAvailableHarvestRecipeKeys();
     const fallback = this.getHarvestRecipeKeys();
@@ -402,8 +419,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   normalizeAssignments() {
-    const allKeys = this.getRecipeKeys();
-    const availableKeys = this.getAssignmentKeys();
+    const idleKey = this.getUnassignedAssignmentKey();
+    const allKeys = [idleKey].concat(this.getRecipeKeys());
+    const availableKeys = this.getManagedAssignmentKeys();
     const total = this.repeatCount;
 
     allKeys.forEach((key) => {
@@ -449,6 +467,10 @@ class LiftersProject extends LiftersContinuousExpansionBase {
           this.lifterAssignments[remainders[i].key] += 1;
           leftover -= 1;
         }
+        if (leftover > 0 && autoKeys.length > 0) {
+          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
+          this.lifterAssignments[targetKey] += leftover;
+        }
       }
     }
 
@@ -475,6 +497,32 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return Math.max(0, this.repeatCount - this.getAssignedTotal());
   }
 
+  getStoredAssignmentAmount(key) {
+    return this.lifterAssignments[key] || 0;
+  }
+
+  getDisplayedAssignmentAmount(key) {
+    if (this.isUnassignedAssignmentKey(key)) {
+      return this.getAvailableLifters();
+    }
+    return this.getStoredAssignmentAmount(key);
+  }
+
+  getAssignmentMaxTarget(key) {
+    const keys = this.getManagedAssignmentKeys();
+    const total = this.repeatCount;
+    const usedOther = keys.reduce((sum, otherKey) => {
+      if (otherKey === key) {
+        return sum;
+      }
+      if (this.autoAssignFlags[otherKey]) {
+        return sum;
+      }
+      return sum + this.getStoredAssignmentAmount(otherKey);
+    }, 0);
+    return Math.max(0, total - usedOther);
+  }
+
   setAssignmentStep(step) {
     const next = Math.min(1_000_000_000_000_000, Math.max(1, Math.round(step)));
     this.assignmentStep = next;
@@ -491,19 +539,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return;
     }
     this.normalizeAssignments();
-    const keys = this.getAssignmentKeys();
-    const total = this.repeatCount;
-    const current = this.lifterAssignments[key] || 0;
-    const usedOther = keys.reduce((sum, otherKey) => {
-      if (otherKey === key) {
-        return sum;
-      }
-      if (this.autoAssignFlags[otherKey]) {
-        return sum;
-      }
-      return sum + (this.lifterAssignments[otherKey] || 0);
-    }, 0);
-    const maxForKey = Math.max(0, total - usedOther);
+    const current = this.getStoredAssignmentAmount(key);
+    const maxForKey = this.getAssignmentMaxTarget(key);
     this.lifterAssignments[key] = Math.min(maxForKey, Math.max(0, current + delta));
     this.normalizeAssignments();
     this.updateUI();
@@ -523,18 +560,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return;
     }
     this.normalizeAssignments();
-    const keys = this.getAssignmentKeys();
-    const total = this.repeatCount;
-    const usedOther = keys.reduce((sum, otherKey) => {
-      if (otherKey === key) {
-        return sum;
-      }
-      if (this.autoAssignFlags[otherKey]) {
-        return sum;
-      }
-      return sum + (this.lifterAssignments[otherKey] || 0);
-    }, 0);
-    this.lifterAssignments[key] = Math.max(0, total - usedOther);
+    this.lifterAssignments[key] = this.getAssignmentMaxTarget(key);
     this.normalizeAssignments();
     this.updateUI();
   }

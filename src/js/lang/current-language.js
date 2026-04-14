@@ -732,6 +732,7 @@ setLanguageData({
         timesTen: 'x10',
         assigned: 'Assigned',
         unassigned: 'Unassigned',
+        idleUnassigned: 'Idle/Unassigned',
         status: 'Status',
         weight: 'Weight',
         rate: 'Rate',
