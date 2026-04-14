@@ -778,6 +778,15 @@ const buildingsParameters = {
           colony: { water: 81.82 }
         }
       },
+      recipe4: {
+        shortName: '',
+        consumption: {
+          colony: { energy: 100_000 },
+          surface: { graphite: 27.27 },
+          atmospheric: { oxygen: 72.73 }
+        },
+        production: { atmospheric: { carbonDioxide: 100 } }
+      },
       haberBosch: {
         shortName: '',
         requiresBuildingFlag: 'gabbagAmmoniaChemistry',

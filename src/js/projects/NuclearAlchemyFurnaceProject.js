@@ -166,6 +166,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     );
   }
 
+  getRecipeTooltipText(key) {
+    return '';
+  }
+
   normalizeAssignments() {
     const keys = this.getAssignmentKeys();
     const keySet = new Set(keys);
@@ -863,6 +867,15 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       const nameEl = document.createElement('span');
       nameEl.classList.add('stat-label');
       nameEl.textContent = recipe.label;
+      const tooltipText = this.getRecipeTooltipText(key);
+      if (tooltipText) {
+        const icon = document.createElement('span');
+        icon.classList.add('info-tooltip-icon');
+        icon.innerHTML = '&#9432;';
+        attachDynamicInfoTooltip(icon, tooltipText);
+        nameEl.appendChild(document.createTextNode(' '));
+        nameEl.appendChild(icon);
+      }
 
       const complexityEl = document.createElement('span');
       complexityEl.classList.add('stat-value');

@@ -2446,6 +2446,34 @@ const researchParameters = {
         ]
       },
       {
+        id: 'space_chemistry',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 150_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'spaceChemistry',
+            type: 'enable'
+          },
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'graphiteStorage',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'methaneAmmoniaStorage',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'nuclear_alchemy',
         name: '',
         description: '',

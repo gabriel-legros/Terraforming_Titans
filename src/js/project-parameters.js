@@ -662,6 +662,29 @@ const projectParameters = {
       spaceEnergyProducer: true
     }
   },
+  spaceChemistry: {
+    type: 'SpaceChemistryProject',
+    name: '',
+    category: 'mega',
+    cost: {
+      colony: {
+        metal: 100_000_000,
+        glass: 10_000_000,
+        components: 2_000_000,
+        electronics: 1_000_000
+      }
+    },
+    duration: 60_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      alchemyParameter: 1_000_000,
+      spaceBuilding: true
+    }
+  },
   dysonSphere: {
     type: 'DysonSphereProject',
     name: '',

@@ -1363,6 +1363,40 @@ setLanguageData({
           running: 'Running',
         },
       },
+      spaceChemistry: {
+        recipe: 'Recipe',
+        title: 'Space Chemistry Controls',
+        totalArrays: 'Total Arrays',
+        runArrays: 'Run arrays',
+        inputUse: 'Input Use',
+        expansionRate: '{value} arrays/s',
+        operationNote: 'Runs recipes at Assigned x {value}/s using space energy and space-storage reagents.',
+        resourceAmount: '{amount} {resource}',
+        recipeJoiner: ' + ',
+        recipeTooltip: '{inputs} + {energy} -> {outputs}',
+        spaceEnergy: 'Space Energy',
+        rateLabels: {
+          energy: 'E',
+          hydrogen: 'H2',
+          carbonDioxide: 'CO2',
+          oxygen: 'O2',
+          inertGas: 'N2',
+          atmosphericAmmonia: 'NH3',
+          liquidWater: 'H2O',
+          graphite: 'C',
+          atmosphericMethane: 'CH4',
+        },
+        status: {
+          noSpaceInput: 'No space input',
+          insufficientSpaceInput: 'Insufficient space input',
+          idle: 'Idle',
+          completeAtLeastOne: 'Complete at least one array',
+          runDisabled: 'Run disabled',
+          noAssignments: 'No assignments',
+          buildSpaceStorage: 'Build space storage',
+          running: 'Running',
+        },
+      },
       spaceStorage: {
         title: 'Space Storage',
         usedStorage: 'Used Storage:',
@@ -2862,6 +2896,7 @@ setLanguageData({
           recipe1: { shortName: 'Bosch Reaction' },
           recipe2: { shortName: 'Water Synthesis' },
           recipe3: { shortName: 'Methane Synthesis' },
+          recipe4: { shortName: 'CO2 Synthesis' },
           haberBosch: { shortName: 'Haber-Bosch' },
           ammoniaCombustion: { shortName: 'Ammonia Combustion' },
         },
@@ -3007,6 +3042,10 @@ setLanguageData({
       hephaestusMegaconstruction: {
         name: 'Hephaestus Megaconstruction Yard',
         description: 'Assemble a legendary construction yard that accelerates repeatable mega and giga projects. Each completion adds a yard that can be assigned, counting as an extra world.  Project duration scales with terraformed worlds.',
+      },
+      spaceChemistry: {
+        name: 'Space Chemistry Array',
+        description: 'Build massive chemical reactors directly in space.',
       },
       nuclearAlchemyFurnace: {
         name: 'Nuclear Alchemical Furnace',
@@ -3703,6 +3742,10 @@ setLanguageData({
         warp_storage: {
           name: 'Warp Storage',
           description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode and Space Storage expansion mode.',
+        },
+        space_chemistry: {
+          name: 'Space Chemistry',
+          description: 'Larger and larger reactors.',
         },
         nuclear_alchemy: {
           name: 'Nuclear Alchemy',
