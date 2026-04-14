@@ -49,8 +49,6 @@ const DYNAMIC_WORLD_SURFACE_MASS_KEYS = [
   'liquidNitrogen',
   'nitrogenIce',
   'biomass',
-  'hazardousBiomass',
-  'hazardousMachinery',
   'graphite',
   'scrapMetal',
   'garbage',

@@ -322,9 +322,7 @@ class Resource extends EffectableEntity {
       return;
     }
 
-    const scaled = numberToExactLandAmount(amount);
-    const minimum = this.exactReserved > 0n ? this.exactReserved : 0n;
-    this.exactValue = scaled > minimum ? scaled : minimum;
+    this.exactValue = numberToExactLandAmount(amount);
     this.syncApproximateLandState();
   }
 
@@ -421,9 +419,6 @@ class Resource extends EffectableEntity {
       this.exactReserved = savedReserved && savedReserved > 0n
         ? savedReserved
         : numberToExactLandAmount(this.reserved);
-      if (this.exactReserved > this.exactValue) {
-        this.exactValue = this.exactReserved;
-      }
       this.syncApproximateLandState();
     }
   }
@@ -547,9 +542,6 @@ class Resource extends EffectableEntity {
     if (this.ensureExactLandState()) {
       const change = numberToExactLandAmount(amount);
       this.exactValue = this.exactValue > change ? this.exactValue - change : 0n;
-      if (this.exactReserved > this.exactValue) {
-        this.exactValue = this.exactReserved;
-      }
       this.syncApproximateLandState();
       return;
     }
@@ -688,9 +680,6 @@ class Resource extends EffectableEntity {
       }
 
       this.exactReserved = totalReserved;
-      if (this.exactReserved > this.exactValue) {
-        this.exactValue = this.exactReserved;
-      }
       this.syncApproximateLandState();
       return;
     }
@@ -1091,8 +1080,7 @@ function reconcileLandResourceValue() {
   }
 
   if (!(totalLand > 0)) {
-    const reserved = Math.max(0, landResource.reserved || 0);
-    totalLand = Math.max(landResource.value || 0, reserved);
+    totalLand = Math.max(0, landResource.value || 0);
   }
 
   if (landResource.setExactLandValue) {

@@ -4,8 +4,22 @@ function isObject(item) {
   return (item && typeof item === 'object' && !Array.isArray(item));
 }
 
+function cloneMergeValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(cloneMergeValue);
+  }
+  if (isObject(value)) {
+    const output = {};
+    Object.keys(value).forEach(key => {
+      output[key] = cloneMergeValue(value[key]);
+    });
+    return output;
+  }
+  return value;
+}
+
 function deepMerge(target, source) {
-  let output = { ...target }; // Start with a copy of the target
+  const output = cloneMergeValue(target);
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach(key => {
       const targetValue = target[key];
@@ -16,7 +30,7 @@ function deepMerge(target, source) {
         output[key] = deepMerge(targetValue, sourceValue);
       } else if (sourceValue !== undefined) {
         // Otherwise, if source has a defined value (could be null, 0, false), overwrite the target value
-        output[key] = sourceValue;
+        output[key] = cloneMergeValue(sourceValue);
       }
       // If sourceValue is undefined, the targetValue from the initial spread is kept
     });
@@ -88,7 +102,7 @@ const defaultPlanetParameters = {
   fundingRate: 0, // Default
   // Default host star information (for Solar System worlds)
   star: {
-    name: '',
+    name: 'Sun',
     spectralType: 'G2V',
     luminositySolar: 1,
     massSolar: 1,
@@ -1948,8 +1962,6 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
-
 
 
 
