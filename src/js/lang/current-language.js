@@ -48,7 +48,7 @@ setLanguageData({
         lockedSuffix: '{value} (Locked)',
         generateWorld: 'Generate World',
         dynamicMass: 'Dynamic Mass',
-        dynamicMassTooltip: 'When enabled, this world recalculates radius, gravity, and land from planetary core mass, surface resources and atmospheric resources. When disabled, world geometry stays fixed.  Planetary core mass can be increased with import projects and geological burial and decreased with resource disposal.',
+        dynamicMassTooltip: 'When enabled, this world recalculates radius, gravity, and land from planetary core mass, surface resources and atmospheric resources. When disabled, world geometry stays fixed.  Planetary core mass can be increased with import projects and geological burial and decreased with resource disposal, ore mines, sand harvesters and nanocolony net consumption.',
         lore: 'Lore',
         equilibrate: 'Equilibrate',
         travel: 'Travel',

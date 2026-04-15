@@ -48,6 +48,7 @@ class SpaceshipAutomation {
 
   getMassDriverAutomationTarget() {
     const disposalProject = this.getMassDriverDisposalProject();
+    const areMassDriversEnabled = () => disposalProject.isBooleanFlagSet('massDriverEnabled');
     return {
       name: this.getMassDriverAutomationId(),
       displayName: 'Resource Disposal (mass drivers included)',
@@ -56,7 +57,7 @@ class SpaceshipAutomation {
       isVisible: () => disposalProject.isVisible(),
       isPermanentlyDisabled: () => disposalProject.isPermanentlyDisabled(),
       isAutomationManuallyDisabled: () => disposalProject.isAutomationManuallyDisabled(),
-      shouldAutomationDisable: () => disposalProject.shouldAutomationDisable(),
+      shouldAutomationDisable: () => disposalProject.shouldAutomationDisable() || !areMassDriversEnabled(),
       getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity
     };
   }
@@ -859,7 +860,45 @@ class SpaceshipAutomation {
         };
 
         const mode = step.mode || 'fill';
-        if (mode !== 'cappedMin' && hasMassEntries && hasNonMassEntries) {
+        if (mode === 'cappedMin' && hasMassEntries && hasNonMassEntries) {
+          const shipEntries = weightedEntries.filter(item => !item.usesMassDrivers);
+          const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
+          const shipWeight = shipEntries.reduce((sum, item) => sum + item.entry.weight, 0);
+          const massWeight = massEntries.reduce((sum, item) => sum + item.entry.weight, 0);
+          const hasFiniteCap = weightedEntries.some(item => Number.isFinite(item.remainingCapacity));
+
+          if (!hasFiniteCap) {
+            break;
+          }
+
+          const capFactor = weightedEntries.reduce((min, item) => {
+            const val = item.remainingCapacity / item.entry.weight;
+            return Math.min(min, val);
+          }, Infinity);
+          const shipPoolFactor = shipWeight > 0 ? remainingShipsOnly / shipWeight : Infinity;
+          const massPoolFactor = massWeight > 0 ? remainingMassDriverEquivalency / massWeight : Infinity;
+          const factor = Math.min(capFactor, shipPoolFactor, massPoolFactor);
+
+          if (!Number.isFinite(factor) || factor <= 0) {
+            break;
+          }
+
+          const shipTarget = Math.floor(shipWeight * factor);
+          const massTarget = Math.floor(massWeight * factor);
+          const nonMassAllocated = allocateWeightedEntries(shipEntries, shipTarget);
+          const massAllocated = allocateWeightedEntries(massEntries, massTarget);
+          const allocatedInPass = nonMassAllocated + massAllocated;
+
+          if (allocatedInPass <= 0) {
+            break;
+          }
+
+          stepRemaining = Math.max(0, stepRemaining - allocatedInPass);
+          remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
+          break;
+        }
+
+        if (hasMassEntries && hasNonMassEntries) {
           const shipEntries = weightedEntries.filter(item => !item.usesMassDrivers);
           const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
           const shipWeight = shipEntries.reduce((sum, item) => sum + item.entry.weight, 0);
@@ -929,22 +968,6 @@ class SpaceshipAutomation {
               applied,
               fractional: (item.entry.weight * factor) - share
             });
-          }
-          let remainder = Math.max(0, distributableRemaining - allocatedInPass);
-          if (remainder > 0) {
-            allocations.sort((a, b) => b.fractional - a.fractional);
-            for (let allocIndex = 0; allocIndex < allocations.length && remainder > 0; allocIndex += 1) {
-              const allocation = allocations[allocIndex];
-              if (allocation.applied >= allocation.item.remainingCapacity) continue;
-              const poolAvailable = getPoolAvailable(allocation.item.usesMassDrivers);
-              if (poolAvailable <= 0) continue;
-              const applied = consumePool(allocation.item.usesMassDrivers, 1);
-              if (applied <= 0) continue;
-              desiredAssignments[allocation.item.project.name] = (desiredAssignments[allocation.item.project.name] || 0) + 1;
-              allocation.applied += 1;
-              allocatedInPass += 1;
-              remainder -= 1;
-            }
           }
           if (allocatedInPass <= 0) {
             break;
