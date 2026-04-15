@@ -24,6 +24,8 @@ let rwgDominionLoreBtnEl;
 let rwgDominionInfoEl;
 let rwgEquilibrateInfoEl;
 let rwgDynamicMassEl;
+let rwgDynamicMassRowEl;
+let rwgDynamicMassInfoEl;
 let rwgSettingsCardEl;
 let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
@@ -526,6 +528,12 @@ function refreshRwgSettingsVisibility() {
   if (rwgDynamicMassEl && !dynamicMassUnlocked) {
     rwgDynamicMassEl.checked = false;
   }
+  if (rwgDynamicMassRowEl) {
+    rwgDynamicMassRowEl.style.display = dynamicMassUnlocked ? '' : 'none';
+  }
+  if (rwgDynamicMassInfoEl) {
+    rwgDynamicMassInfoEl.style.display = dynamicMassUnlocked ? '' : 'none';
+  }
   if (rwgSettingsCardEl) {
     rwgSettingsCardEl.style.display = (dominionsUnlocked || dynamicMassUnlocked) ? '' : 'none';
   }
@@ -802,7 +810,7 @@ function initializeRandomWorldUI() {
     <div class="rwg-control-row">
       <select id="rwg-dominion" class="rwg-inline-select"></select>
       <button id="rwg-dominion-lore-btn" class="rwg-btn">${getRwgUiText('controls.lore', 'Lore')}</button>
-      <label class="rwg-checkbox-row" for="rwg-dynamic-mass">
+      <label id="rwg-dynamic-mass-row" class="rwg-checkbox-row" for="rwg-dynamic-mass">
         <input id="rwg-dynamic-mass" type="checkbox" />
         <span>${getRwgUiText('controls.dynamicMass', 'Dynamic Mass')}</span>
       </label>
@@ -831,11 +839,12 @@ function initializeRandomWorldUI() {
   rwgDominionEl = container.querySelector('#rwg-dominion');
   rwgDominionLoreBtnEl = container.querySelector('#rwg-dominion-lore-btn');
   rwgDominionInfoEl = container.querySelector('#rwg-dominion-info');
+  rwgDynamicMassRowEl = container.querySelector('#rwg-dynamic-mass-row');
   rwgDynamicMassEl = container.querySelector('#rwg-dynamic-mass');
   rwgSettingsCardEl = settingsCard;
   rwgHazardListEl = hazardList;
   rwgHazardItemsEl = hazardList.querySelector('#rwg-hazard-items');
-  const rwgDynamicMassInfoEl = container.querySelector('#rwg-dynamic-mass-info');
+  rwgDynamicMassInfoEl = container.querySelector('#rwg-dynamic-mass-info');
   if (rwgDynamicMassEl) {
     rwgDynamicMassEl.checked = false;
   }
