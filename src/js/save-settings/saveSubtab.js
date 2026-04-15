@@ -1,3 +1,7 @@
+function getSaveSlotLabel(slot) {
+  return t(`ui.settings.${slot}`, null, slot);
+}
+
 function addSaveSlotListeners() {
   const saveSlots = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 
@@ -13,7 +17,7 @@ function addSaveSlotListeners() {
     loadButton.addEventListener('click', () => loadGame(`gameState_${slot}`));
 
     deleteButton.addEventListener('click', () => {
-      if (confirm(`Are you sure you want to delete the save file in slot ${slot}? This action cannot be undone.`)) {
+      if (confirm(t('ui.settings.confirmDeleteSlot', { slot: getSaveSlotLabel(slot) }, `Are you sure you want to delete the save file in ${getSaveSlotLabel(slot)}? This action cannot be undone.`))) {
         deleteSaveFileFromSlot(slot);
       }
     });
@@ -22,7 +26,7 @@ function addSaveSlotListeners() {
 
 function addSaveLoadListeners() {
   document.getElementById('new-game-button').addEventListener('click', () => {
-    if (confirm('Are you sure you want to start a new game? Any unsaved progress will be lost.')) {
+    if (confirm(t('ui.settings.confirmNewGame', null, 'Are you sure you want to start a new game? Any unsaved progress will be lost.'))) {
       if (typeof startNewGame === 'function') {
         startNewGame();
       } else {

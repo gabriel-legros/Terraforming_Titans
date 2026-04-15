@@ -774,7 +774,7 @@ function setSaveSlotStatus(slot, text) {
 
 function saveGameToSlot(slot) {
   const gameState = getGameState();
-  const genericFailure = 'SAVE FAILED: Game needs cookies/local storage permission.';
+  const genericFailure = t('ui.settings.saveFailedLocalStorage', null, 'SAVE FAILED: Game needs cookies/local storage permission.');
   let saveFailedReason = '';
   try {
     localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
@@ -861,7 +861,7 @@ function loadGameFromFile(event) {
 }
 
 function loadGameFromString() {
-  const text = window.prompt('Paste save data to load:');
+  const text = window.prompt(t('ui.settings.pasteSaveData', null, 'Paste save data to load:'));
   if (text) {
     loadGame(text);
   }
@@ -877,7 +877,7 @@ function deleteSaveFileFromSlot(slot) {
   }
 
   // Clear the save date for the slot
-  document.getElementById(`${slot}-date`).textContent = 'Empty';
+  document.getElementById(`${slot}-date`).textContent = t('ui.common.empty', null, 'Empty');
 
   // Delete the save slot date
   deleteSaveSlotDate(slot);
@@ -1043,7 +1043,7 @@ function updateAutosaveText(overrideText) {
   }
   const intervalSeconds = getAutosaveIntervalSeconds();
   if (intervalSeconds <= 0) {
-    autosaveText.textContent = 'Autosave disabled';
+    autosaveText.textContent = t('ui.settings.autosaveDisabled', null, 'Autosave disabled');
     return;
   }
   autosaveTimer = Math.min(autosaveTimer, intervalSeconds);
@@ -1052,8 +1052,8 @@ function updateAutosaveText(overrideText) {
   const minutes = Math.floor((clampedTimer % 3600) / 60);
   const seconds = Math.floor(clampedTimer % 60);
   if (hours > 0) {
-    autosaveText.textContent = `Next autosave in ${hours}h ${minutes}m ${seconds}s`;
+    autosaveText.textContent = t('ui.settings.nextAutosaveLong', { hours, minutes, seconds }, `Next autosave in ${hours}h ${minutes}m ${seconds}s`);
     return;
   }
-  autosaveText.textContent = `Next autosave in ${minutes}m ${seconds}s`;
+  autosaveText.textContent = t('ui.settings.nextAutosaveShort', { minutes, seconds }, `Next autosave in ${minutes}m ${seconds}s`);
 }

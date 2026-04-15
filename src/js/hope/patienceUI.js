@@ -67,18 +67,27 @@ const PatienceUI = {
         titleRow.className = 'patience-title-row';
 
         const title = document.createElement('h2');
-        title.textContent = 'Patience';
+        title.textContent = getPatienceText('ui.hope.patience', 'Patience');
         titleRow.appendChild(title);
 
         const tooltip = document.createElement('span');
         tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.';
+        attachDynamicInfoTooltip(
+            tooltip,
+            getPatienceText(
+                'ui.hope.patiencePanel.titleTooltip',
+                'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
+            )
+        );
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
         const subtitle = document.createElement('p');
         subtitle.className = 'patience-subtitle';
-        subtitle.textContent = 'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.';
+        subtitle.textContent = getPatienceText(
+            'ui.hope.patiencePanel.subtitle',
+            'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
+        );
         header.appendChild(subtitle);
         shell.appendChild(header);
 
@@ -90,7 +99,7 @@ const PatienceUI = {
 
         const currentLabel = document.createElement('div');
         currentLabel.className = 'patience-card-label';
-        currentLabel.textContent = 'Available Patience';
+        currentLabel.textContent = getPatienceText('ui.hope.patiencePanel.availablePatience', 'Available Patience');
         currentCard.appendChild(currentLabel);
 
         const currentValue = document.createElement('div');
@@ -101,7 +110,12 @@ const PatienceUI = {
 
         const maxLine = document.createElement('div');
         maxLine.className = 'patience-card-meta';
-        maxLine.innerHTML = 'Capacity <span id="patience-max-value">12</span> points (hours)';
+        maxLine.appendChild(document.createTextNode(getPatienceText('ui.hope.patiencePanel.capacityPrefix', 'Capacity ')));
+        const maxValueSpan = document.createElement('span');
+        maxValueSpan.id = 'patience-max-value';
+        maxValueSpan.textContent = '12';
+        maxLine.appendChild(maxValueSpan);
+        maxLine.appendChild(document.createTextNode(getPatienceText('ui.hope.patiencePanel.capacitySuffix', ' points (hours)')));
         currentCard.appendChild(maxLine);
         statsRow.appendChild(currentCard);
 
@@ -110,7 +124,7 @@ const PatienceUI = {
 
         const gainLabel = document.createElement('div');
         gainLabel.className = 'patience-card-label';
-        gainLabel.textContent = 'Daily patience';
+        gainLabel.textContent = getPatienceText('ui.hope.patiencePanel.dailyPatience', 'Daily patience');
         gainCard.appendChild(gainLabel);
 
         const gainValue = document.createElement('div');
@@ -120,7 +134,7 @@ const PatienceUI = {
 
         const gainMeta = document.createElement('div');
         gainMeta.className = 'patience-card-meta';
-        gainMeta.textContent = 'Save/export daily';
+        gainMeta.textContent = getPatienceText('ui.hope.patiencePanel.dailyMeta', 'Save/export daily');
         gainCard.appendChild(gainMeta);
 
         statsRow.appendChild(gainCard);
@@ -130,7 +144,7 @@ const PatienceUI = {
 
         const timerLabel = document.createElement('div');
         timerLabel.className = 'patience-card-label';
-        timerLabel.textContent = 'Save bonus status';
+        timerLabel.textContent = getPatienceText('ui.hope.patiencePanel.saveBonusStatus', 'Save bonus status');
         timerCard.appendChild(timerLabel);
 
         const timerValue = document.createElement('div');
@@ -141,7 +155,7 @@ const PatienceUI = {
 
         const timerMeta = document.createElement('div');
         timerMeta.className = 'patience-card-meta';
-        timerMeta.textContent = 'Next reset in --:--:--';
+        timerMeta.textContent = getPatienceText('ui.hope.patiencePanel.nextResetIn', 'Next reset in {value}', { value: '--:--:--' });
         timerCard.appendChild(timerMeta);
         statsRow.appendChild(timerCard);
 
@@ -150,24 +164,33 @@ const PatienceUI = {
 
         const worldLabel = document.createElement('div');
         worldLabel.className = 'patience-card-label';
-        worldLabel.textContent = 'Terraforming patience';
+        worldLabel.textContent = getPatienceText('ui.hope.patiencePanel.terraformingPatience', 'Terraforming patience');
 
         const worldInfo = document.createElement('span');
         worldInfo.className = 'info-tooltip-icon';
         worldLabel.appendChild(worldInfo);
-        attachDynamicInfoTooltip(worldInfo, 'Bank patience at 2 seconds per second from world start. Completing terraforming claims the bank and keeps earning until the world cap (3 hours) is reached.');
+        attachDynamicInfoTooltip(
+            worldInfo,
+            getPatienceText(
+                'ui.hope.patiencePanel.terraformingTooltip',
+                'Bank patience at 2 seconds per second from world start. Completing terraforming claims the bank and keeps earning until the world cap (3 hours) is reached.'
+            )
+        );
 
         worldCard.appendChild(worldLabel);
 
         const worldValue = document.createElement('div');
         worldValue.id = 'patience-world-value';
         worldValue.className = 'patience-card-value';
-        worldValue.textContent = '0.00h banked';
+        worldValue.textContent = getPatienceText('ui.hope.patiencePanel.status.worldBanked', '{value}h banked', { value: '0.00' });
         worldCard.appendChild(worldValue);
 
         const worldMeta = document.createElement('div');
         worldMeta.className = 'patience-card-meta';
-        worldMeta.textContent = 'Banking 0.00 / 3.00h';
+        worldMeta.textContent = getPatienceText('ui.hope.patiencePanel.status.worldBanking', 'Banking {earned} / {cap}h (complete terraforming to claim)', {
+            earned: '0.00',
+            cap: '3.00'
+        });
         worldCard.appendChild(worldMeta);
 
         statsRow.appendChild(worldCard);
@@ -183,7 +206,7 @@ const PatienceUI = {
 
         const meterText = document.createElement('div');
         meterText.className = 'patience-meter-text';
-        meterText.textContent = 'Patience reserve';
+        meterText.textContent = getPatienceText('ui.hope.patiencePanel.patienceReserve', 'Patience reserve');
         meter.appendChild(meterText);
         shell.appendChild(meter);
 
@@ -212,7 +235,7 @@ const PatienceUI = {
 
         const spendButton = document.createElement('button');
         spendButton.id = 'patience-spend-button';
-        spendButton.textContent = 'Spend';
+        spendButton.textContent = getPatienceText('ui.hope.patiencePanel.spend', 'Spend');
         spendRow.appendChild(spendButton);
 
         spendCard.appendChild(spendRow);
@@ -229,12 +252,12 @@ const PatienceUI = {
 
         const saveFileButton = document.createElement('button');
         saveFileButton.id = 'patience-save-file-button';
-        saveFileButton.textContent = 'Save to file';
+        saveFileButton.textContent = getPatienceText('ui.hope.patiencePanel.saveToFile', 'Save to file');
         saveRow.appendChild(saveFileButton);
 
         const saveClipboardButton = document.createElement('button');
         saveClipboardButton.id = 'patience-save-clipboard-button';
-        saveClipboardButton.textContent = 'Export to clipboard';
+        saveClipboardButton.textContent = getPatienceText('ui.hope.patiencePanel.exportToClipboard', 'Export to clipboard');
         saveRow.appendChild(saveClipboardButton);
 
         shell.appendChild(saveRow);
@@ -243,7 +266,7 @@ const PatienceUI = {
 
         // Cache the newly created elements
         this.currentValueEl = currentValue;
-        this.maxValueEl = maxLine.querySelector('#patience-max-value');
+        this.maxValueEl = maxValueSpan;
         this.timerValueEl = timerValue;
         this.timerMetaEl = timerMeta;
         this.spendInputEl = spendInput;
@@ -330,40 +353,46 @@ const PatienceUI = {
         const superconductorResource = resources.colony.superconductors;
 
         if (metalGain > 0) {
-            let line = `${formatNumber(metalGain, true)} metal`;
+            let line = `${formatNumber(metalGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.metal', 'metal')}`;
             if (metalResource.hasCap) {
                 const metalOverflow = metalResource.value + metalGain - metalResource.cap;
                 if (metalOverflow > 0) {
-                    line += ` (<span class="patience-warning">warning: ${formatNumber(metalOverflow, true)} over storage</span>)`;
+                    line += ` (<span class="patience-warning">${getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
+                        value: formatNumber(metalOverflow, true)
+                    })}</span>)`;
                 }
             }
             lines.push(line);
         }
         if (superalloyGain > 0) {
-            let line = `${formatNumber(superalloyGain, true)} superalloys`;
+            let line = `${formatNumber(superalloyGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.superalloys', 'superalloys')}`;
             if (superalloyResource.hasCap) {
                 const superalloyOverflow = superalloyResource.value + superalloyGain - superalloyResource.cap;
                 if (superalloyOverflow > 0) {
-                    line += ` (<span class="patience-warning">warning: ${formatNumber(superalloyOverflow, true)} over storage</span>)`;
+                    line += ` (<span class="patience-warning">${getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
+                        value: formatNumber(superalloyOverflow, true)
+                    })}</span>)`;
                 }
             }
             lines.push(line);
         }
         if (superconductorGain > 0) {
-            let line = `${formatNumber(superconductorGain, true)} superconductors`;
+            let line = `${formatNumber(superconductorGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.superconductors', 'superconductors')}`;
             if (superconductorResource.hasCap) {
                 const superconductorOverflow = superconductorResource.value + superconductorGain - superconductorResource.cap;
                 if (superconductorOverflow > 0) {
-                    line += ` (<span class="patience-warning">warning: ${formatNumber(superconductorOverflow, true)} over storage</span>)`;
+                    line += ` (<span class="patience-warning">${getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
+                        value: formatNumber(superconductorOverflow, true)
+                    })}</span>)`;
                 }
             }
             lines.push(line);
         }
         if (advancedResearchGain > 0) {
-            lines.push(`${formatNumber(advancedResearchGain, true)} advanced research`);
+            lines.push(`${formatNumber(advancedResearchGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.advancedResearch', 'advanced research')}`);
         }
         if (oneillGain > 0) {
-            lines.push(`${oneillGain.toFixed(2)} O'Neill cylinders`);
+            lines.push(`${oneillGain.toFixed(2)} ${getPatienceText('ui.hope.patiencePanel.preview.oneillCylinders', 'O\'Neill cylinders')}`);
         }
         if (faithGains.worldBelieverGain > 0) {
             const faithKey = faithGains.fillsWorldCap
@@ -453,7 +482,9 @@ const PatienceUI = {
 
         if (this.timerValueEl) {
             const claimedToday = patienceManager.hasClaimedToday();
-            this.timerValueEl.textContent = claimedToday ? 'Claimed' : 'Ready';
+            this.timerValueEl.textContent = claimedToday
+                ? getPatienceText('ui.hope.patiencePanel.status.claimed', 'Claimed')
+                : getPatienceText('ui.hope.patiencePanel.status.ready', 'Ready');
         }
 
         if (this.gainValueEl) {
@@ -463,13 +494,15 @@ const PatienceUI = {
         if (this.gainMetaEl) {
             const claimedToday = patienceManager.hasClaimedToday();
             this.gainMetaEl.textContent = claimedToday
-                ? 'Claimed today via save/export'
-                : 'Save to file or export to claim';
+                ? getPatienceText('ui.hope.patiencePanel.status.claimedToday', 'Claimed today via save/export')
+                : getPatienceText('ui.hope.patiencePanel.status.claimViaSave', 'Save to file or export to claim');
         }
 
         if (this.timerMetaEl) {
             const msRemaining = patienceManager.getMillisecondsUntilNextDaily();
-            this.timerMetaEl.textContent = `Next reset in ${this.formatTimeRemaining(msRemaining)}`;
+            this.timerMetaEl.textContent = getPatienceText('ui.hope.patiencePanel.nextResetIn', 'Next reset in {value}', {
+                value: this.formatTimeRemaining(msRemaining)
+            });
         }
 
         if (this.worldValueEl && this.worldMetaEl) {
@@ -478,15 +511,26 @@ const PatienceUI = {
             const remaining = patienceManager.getWorldPatienceRemainingHours();
             if (patienceManager.worldTerraformingCompleted) {
                 if (remaining > 0) {
-                    this.worldValueEl.textContent = `${earned.toFixed(2)}h earned`;
-                    this.worldMetaEl.textContent = `Earning +2s/s until ${cap.toFixed(2)}h cap`;
+                    this.worldValueEl.textContent = getPatienceText('ui.hope.patiencePanel.status.worldEarned', '{value}h earned', {
+                        value: earned.toFixed(2)
+                    });
+                    this.worldMetaEl.textContent = getPatienceText('ui.hope.patiencePanel.status.worldEarningToCap', 'Earning +2s/s until {value}h cap', {
+                        value: cap.toFixed(2)
+                    });
                 } else {
-                    this.worldValueEl.textContent = `${cap.toFixed(2)}h earned`;
-                    this.worldMetaEl.textContent = 'World cap reached';
+                    this.worldValueEl.textContent = getPatienceText('ui.hope.patiencePanel.status.worldEarned', '{value}h earned', {
+                        value: cap.toFixed(2)
+                    });
+                    this.worldMetaEl.textContent = getPatienceText('ui.hope.patiencePanel.status.worldCapReached', 'World cap reached');
                 }
             } else {
-                this.worldValueEl.textContent = `${earned.toFixed(2)}h banked`;
-                this.worldMetaEl.textContent = `Banking ${earned.toFixed(2)} / ${cap.toFixed(2)}h (complete terraforming to claim)`;
+                this.worldValueEl.textContent = getPatienceText('ui.hope.patiencePanel.status.worldBanked', '{value}h banked', {
+                    value: earned.toFixed(2)
+                });
+                this.worldMetaEl.textContent = getPatienceText('ui.hope.patiencePanel.status.worldBanking', 'Banking {earned} / {cap}h (complete terraforming to claim)', {
+                    earned: earned.toFixed(2),
+                    cap: cap.toFixed(2)
+                });
             }
         }
 
