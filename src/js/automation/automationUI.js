@@ -728,32 +728,35 @@ function createAutomationPresetRow(body) {
   presetOrderButtons.classList.add('automation-order-buttons');
   const presetMoveUp = document.createElement('button');
   presetMoveUp.textContent = '↑';
-  presetMoveUp.title = 'Move preset up';
+  presetMoveUp.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
   presetMoveUp.classList.add('automation-preset-move-up');
   const presetMoveDown = document.createElement('button');
   presetMoveDown.textContent = '↓';
-  presetMoveDown.title = 'Move preset down';
+  presetMoveDown.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
   presetMoveDown.classList.add('automation-preset-move-down');
   presetOrderButtons.append(presetMoveUp, presetMoveDown);
   presetRow.appendChild(presetOrderButtons);
 
   const presetName = document.createElement('input');
   presetName.type = 'text';
-  presetName.placeholder = 'Preset name';
+  presetName.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
   presetName.classList.add('automation-preset-name');
   presetRow.appendChild(presetName);
 
-  const enableToggle = createAutomationToggle('Preset On', 'Preset Off');
+  const enableToggle = createAutomationToggle(
+    getAutomationCardText('presetOn', {}, 'Preset On'),
+    getAutomationCardText('presetOff', {}, 'Preset Off')
+  );
   enableToggle.classList.add('automation-preset-toggle');
   presetRow.appendChild(enableToggle);
 
   const presetButtons = document.createElement('div');
   presetButtons.classList.add('automation-preset-buttons');
   const newPreset = document.createElement('button');
-  newPreset.textContent = '+ Preset';
+  newPreset.textContent = getAutomationCardText('addPresetButton', {}, '+ Preset');
   newPreset.classList.add('automation-preset-new');
   const deletePreset = document.createElement('button');
-  deletePreset.textContent = 'Delete';
+  deletePreset.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deletePreset.classList.add('automation-preset-delete');
   presetButtons.append(newPreset, deletePreset);
   presetRow.appendChild(presetButtons);

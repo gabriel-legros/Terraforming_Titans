@@ -17,6 +17,29 @@ const PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCap
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
 
+function getProjectAutomationPresetLabel(preset) {
+  return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
+}
+
+function getProjectAutomationCombinationLabel(combination) {
+  return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
+}
+
+function formatProjectAutomationPresetType(preset) {
+  if (!preset) {
+    return getAutomationCardText('selectPreset', {}, 'Select a preset');
+  }
+  const includeExpansion = preset.includeExpansion !== false;
+  const includeOperations = preset.includeOperations !== false;
+  if (includeExpansion && includeOperations) {
+    return getAutomationCardText('expansionOperations', {}, 'Expansion + Operations');
+  }
+  if (includeExpansion) {
+    return getAutomationCardText('expansionOnly', {}, 'Expansion only');
+  }
+  return getAutomationCardText('operationsOnly', {}, 'Operations only');
+}
+
 function buildAutomationProjectsUI() {
   const card = automationElements.projectsAutomation || document.getElementById('automation-projects');
 
@@ -27,7 +50,11 @@ function buildAutomationProjectsUI() {
     updateAutomationUI();
   };
 
-  const header = createAutomationCardHeader(card, 'Projects Automation', toggleCollapsed);
+  const header = createAutomationCardHeader(
+    card,
+    getAutomationCardText('projectsAutomationTitle', {}, 'Projects Automation'),
+    toggleCollapsed
+  );
 
   const body = document.createElement('div');
   body.classList.add('automation-body');
@@ -38,7 +65,7 @@ function buildAutomationProjectsUI() {
   const builderHeader = document.createElement('div');
   builderHeader.classList.add('project-automation-section-title', 'building-automation-section-title');
   const builderTitle = document.createElement('span');
-  builderTitle.textContent = 'Preset Builder';
+  builderTitle.textContent = getAutomationCardText('researchAutomationPresetTitle', {}, 'Preset Builder');
   const builderDirty = document.createElement('span');
   builderDirty.classList.add('project-automation-builder-dirty', 'building-automation-builder-dirty');
   builderDirty.textContent = '*';
@@ -54,28 +81,28 @@ function buildAutomationProjectsUI() {
   presetMoveButtons.classList.add('automation-order-buttons');
   const presetMoveUpButton = document.createElement('button');
   presetMoveUpButton.textContent = '↑';
-  presetMoveUpButton.title = 'Move preset up';
+  presetMoveUpButton.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
   presetMoveUpButton.classList.add('project-automation-builder-move-up');
   const presetMoveDownButton = document.createElement('button');
   presetMoveDownButton.textContent = '↓';
-  presetMoveDownButton.title = 'Move preset down';
+  presetMoveDownButton.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
   presetMoveDownButton.classList.add('project-automation-builder-move-down');
   presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
   const presetNameInput = document.createElement('input');
   presetNameInput.type = 'text';
-  presetNameInput.placeholder = 'Preset name';
+  presetNameInput.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
   presetNameInput.classList.add('project-automation-builder-name');
   const newButton = document.createElement('button');
-  newButton.textContent = 'New';
+  newButton.textContent = getAutomationCardText('newPresetButton', {}, 'New');
   newButton.classList.add('project-automation-builder-new');
   const saveButton = document.createElement('button');
-  saveButton.textContent = 'Save';
+  saveButton.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
   saveButton.classList.add('project-automation-builder-save', 'building-automation-builder-save');
   const deleteButton = document.createElement('button');
-  deleteButton.textContent = 'Delete';
+  deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deleteButton.classList.add('project-automation-builder-delete');
   const applyOnceButton = document.createElement('button');
-  applyOnceButton.textContent = 'Apply Once Now';
+  applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('project-automation-builder-apply-once');
   builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
   builderSection.appendChild(builderRow);
@@ -86,29 +113,29 @@ function buildAutomationProjectsUI() {
   typeSelect.classList.add('project-automation-builder-type');
   const expansionOnlyOption = document.createElement('option');
   expansionOnlyOption.value = 'expansion';
-  expansionOnlyOption.textContent = 'Expansion only';
+  expansionOnlyOption.textContent = getAutomationCardText('expansionOnly', {}, 'Expansion only');
   const operationsOnlyOption = document.createElement('option');
   operationsOnlyOption.value = 'operations';
-  operationsOnlyOption.textContent = 'Operations only';
+  operationsOnlyOption.textContent = getAutomationCardText('operationsOnly', {}, 'Operations only');
   const bothTypesOption = document.createElement('option');
   bothTypesOption.value = 'both';
-  bothTypesOption.textContent = 'Expansion + Operations';
+  bothTypesOption.textContent = getAutomationCardText('expansionOperations', {}, 'Expansion + Operations');
   typeSelect.append(expansionOnlyOption, operationsOnlyOption, bothTypesOption);
   const scopeSelect = document.createElement('select');
   scopeSelect.classList.add('project-automation-builder-scope');
   const allScope = document.createElement('option');
   allScope.value = 'all';
-  allScope.textContent = 'All non-story projects';
+  allScope.textContent = getAutomationCardText('allNonStoryProjects', {}, 'All non-story projects');
   const manualScope = document.createElement('option');
   manualScope.value = 'manual';
-  manualScope.textContent = 'Choose projects';
+  manualScope.textContent = getAutomationCardText('chooseProjects', {}, 'Choose projects');
   scopeSelect.append(allScope, manualScope);
   builderModeRow.append(typeSelect, scopeSelect);
   builderSection.appendChild(builderModeRow);
 
   const builderHint = document.createElement('div');
   builderHint.classList.add('project-automation-hint', 'building-automation-hint');
-  builderHint.textContent = 'Expansion saves auto start and build scaling settings. Operations saves run-mode and behavior controls.';
+  builderHint.textContent = getAutomationCardText('projectsBuilderHint', {}, 'Expansion saves auto start and build scaling settings. Operations saves run-mode and behavior controls.');
   builderSection.appendChild(builderHint);
 
   const pickerRow = document.createElement('div');
@@ -118,13 +145,13 @@ function buildAutomationProjectsUI() {
   const projectSelect = document.createElement('select');
   projectSelect.classList.add('project-automation-builder-project');
   const addButton = document.createElement('button');
-  addButton.textContent = '+ Project';
+  addButton.textContent = getAutomationCardText('addProjectButton', {}, '+ Project');
   addButton.classList.add('project-automation-builder-add');
   const addCategoryButton = document.createElement('button');
-  addCategoryButton.textContent = '+ Category';
+  addCategoryButton.textContent = getAutomationCardText('addCategoryButton', {}, '+ Category');
   addCategoryButton.classList.add('project-automation-builder-add-category');
   const clearButton = document.createElement('button');
-  clearButton.textContent = '- All';
+  clearButton.textContent = getAutomationCardText('clearAllButton', {}, '- All');
   clearButton.classList.add('project-automation-builder-clear');
   pickerRow.append(categorySelect, projectSelect, addButton, addCategoryButton, clearButton);
   builderSection.appendChild(pickerRow);
@@ -143,18 +170,18 @@ function buildAutomationProjectsUI() {
   const applyHeader = document.createElement('div');
   applyHeader.classList.add('project-automation-section-title', 'building-automation-section-title');
   const applyTitle = document.createElement('span');
-  applyTitle.textContent = 'Preset Combination';
+  applyTitle.textContent = getAutomationCardText('presetCombinationTitle', {}, 'Preset Combination');
   const applyNextTravelLabel = document.createElement('label');
   applyNextTravelLabel.classList.add('project-automation-apply-next-travel-label', 'building-automation-apply-next-travel-label');
   const applyNextTravelText = document.createElement('span');
-  applyNextTravelText.textContent = 'Combination on Next Travel';
+  applyNextTravelText.textContent = getAutomationCardText('combinationOnNextTravelLabel', {}, 'Combination on Next Travel');
   const applyNextTravelSelect = document.createElement('select');
   applyNextTravelSelect.classList.add('project-automation-next-travel-select', 'building-automation-next-travel-select');
   const applyNextTravelPersistToggle = document.createElement('input');
   applyNextTravelPersistToggle.type = 'checkbox';
   applyNextTravelPersistToggle.classList.add('project-automation-next-travel-persist-toggle');
   const applyNextTravelPersistText = document.createElement('span');
-  applyNextTravelPersistText.textContent = 'All future travels';
+  applyNextTravelPersistText.textContent = getAutomationCardText('allFutureTravelsLabel', {}, 'All future travels');
   applyNextTravelPersistText.classList.add('project-automation-next-travel-persist-text', 'building-automation-next-travel-persist-text');
   applyNextTravelLabel.append(
     applyNextTravelText,
@@ -172,7 +199,7 @@ function buildAutomationProjectsUI() {
   const combinationRow = document.createElement('div');
   combinationRow.classList.add('project-automation-row', 'building-automation-row');
   const applyCombinationButton = document.createElement('button');
-  applyCombinationButton.textContent = 'Apply Combination';
+  applyCombinationButton.textContent = getAutomationCardText('applyCombinationButton', {}, 'Apply Combination');
   applyCombinationButton.classList.add('project-automation-apply-combination', 'building-automation-apply-combination');
   const combinationSelect = document.createElement('select');
   combinationSelect.classList.add('project-automation-combination-select');
@@ -180,25 +207,25 @@ function buildAutomationProjectsUI() {
   combinationMoveButtons.classList.add('automation-order-buttons');
   const combinationMoveUpButton = document.createElement('button');
   combinationMoveUpButton.textContent = '↑';
-  combinationMoveUpButton.title = 'Move combination up';
+  combinationMoveUpButton.title = getAutomationCardText('moveCombinationUp', {}, 'Move combination up');
   combinationMoveUpButton.classList.add('project-automation-combination-move-up');
   const combinationMoveDownButton = document.createElement('button');
   combinationMoveDownButton.textContent = '↓';
-  combinationMoveDownButton.title = 'Move combination down';
+  combinationMoveDownButton.title = getAutomationCardText('moveCombinationDown', {}, 'Move combination down');
   combinationMoveDownButton.classList.add('project-automation-combination-move-down');
   combinationMoveButtons.append(combinationMoveUpButton, combinationMoveDownButton);
   const combinationNameInput = document.createElement('input');
   combinationNameInput.type = 'text';
-  combinationNameInput.placeholder = 'Combination name';
+  combinationNameInput.placeholder = getAutomationCardText('combinationNamePlaceholder', {}, 'Combination name');
   combinationNameInput.classList.add('project-automation-combination-name');
   const combinationNewButton = document.createElement('button');
-  combinationNewButton.textContent = 'New';
+  combinationNewButton.textContent = getAutomationCardText('newCombinationButton', {}, 'New');
   combinationNewButton.classList.add('project-automation-combination-new');
   const combinationSaveButton = document.createElement('button');
-  combinationSaveButton.textContent = 'Save';
+  combinationSaveButton.textContent = getAutomationCardText('saveCombinationButton', {}, 'Save');
   combinationSaveButton.classList.add('project-automation-combination-save', 'building-automation-combination-save');
   const combinationDeleteButton = document.createElement('button');
-  combinationDeleteButton.textContent = 'Delete';
+  combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
   combinationDeleteButton.classList.add('project-automation-combination-delete');
   combinationRow.append(
     combinationSelect,
@@ -216,7 +243,7 @@ function buildAutomationProjectsUI() {
   applySection.appendChild(applyList);
 
   const addApplyButton = document.createElement('button');
-  addApplyButton.textContent = '+ Preset';
+  addApplyButton.textContent = getAutomationCardText('addPresetButton', {}, '+ Preset');
   addApplyButton.classList.add('project-automation-apply-add', 'building-automation-apply-add');
   applySection.appendChild(addApplyButton);
 
@@ -307,8 +334,8 @@ function updateProjectsAutomationUI() {
   projectsAutomation.style.display = unlocked ? '' : 'none';
   projectsAutomation.classList.toggle('automation-card-locked', !unlocked);
   projectsAutomationDescription.textContent = unlocked
-    ? 'Capture project expansion/operations settings and apply them in ordered presets.'
-    : 'Purchase the Solis Projects Automation upgrade to enable project presets.';
+    ? getAutomationCardText('projectsAutomationDescriptionUnlocked', {}, 'Capture project expansion/operations settings and apply them in ordered presets.')
+    : getAutomationCardText('projectsAutomationDescriptionLocked', {}, 'Purchase the Solis Projects Automation upgrade to enable project presets.');
   if (!unlocked) {
     return;
   }
@@ -328,12 +355,12 @@ function updateProjectsAutomationUI() {
     projectsBuilderPresetSelect.textContent = '';
     const newOption = document.createElement('option');
     newOption.value = '';
-    newOption.textContent = 'New preset';
+    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
     projectsBuilderPresetSelect.appendChild(newOption);
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
-      option.textContent = preset.name || `Preset ${preset.id}`;
+      option.textContent = getProjectAutomationPresetLabel(preset);
       projectsBuilderPresetSelect.appendChild(option);
     });
     projectsBuilderPresetSelect.value = automation.getSelectedPresetId() || '';
@@ -383,7 +410,7 @@ function updateProjectsAutomationUI() {
     projectsBuilderCategorySelect.textContent = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
-    allOption.textContent = 'All categories';
+    allOption.textContent = getAutomationCardText('allCategoriesOption', {}, 'All categories');
     projectsBuilderCategorySelect.appendChild(allOption);
     categories.forEach(category => {
       const option = document.createElement('option');
@@ -406,7 +433,7 @@ function updateProjectsAutomationUI() {
     projectsBuilderProjectSelect.textContent = '';
     if (available.length === 0) {
       const empty = document.createElement('option');
-      empty.textContent = 'No projects available';
+      empty.textContent = getAutomationCardText('noProjectsAvailable', {}, 'No projects available');
       empty.disabled = true;
       empty.selected = true;
       projectsBuilderProjectSelect.appendChild(empty);
@@ -451,12 +478,12 @@ function updateProjectsAutomationUI() {
     projectsApplyNextTravelSelect.textContent = '';
     const noneOption = document.createElement('option');
     noneOption.value = '';
-    noneOption.textContent = 'None';
+    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
     projectsApplyNextTravelSelect.appendChild(noneOption);
     combinations.forEach(combo => {
       const option = document.createElement('option');
       option.value = String(combo.id);
-      option.textContent = combo.name || `Combination ${combo.id}`;
+      option.textContent = getProjectAutomationCombinationLabel(combo);
       projectsApplyNextTravelSelect.appendChild(option);
     });
     projectsApplyNextTravelSelect.value = automation.nextTravelCombinationId
@@ -470,12 +497,12 @@ function updateProjectsAutomationUI() {
     projectsCombinationSelect.textContent = '';
     const newOption = document.createElement('option');
     newOption.value = '';
-    newOption.textContent = 'New combination';
+    newOption.textContent = getAutomationCardText('newCombinationOption', {}, 'New combination');
     projectsCombinationSelect.appendChild(newOption);
     combinations.forEach(combo => {
       const option = document.createElement('option');
       option.value = String(combo.id);
-      option.textContent = combo.name || `Combination ${combo.id}`;
+      option.textContent = getProjectAutomationCombinationLabel(combo);
       projectsCombinationSelect.appendChild(option);
     });
     projectsCombinationSelect.value = automation.getSelectedCombinationId() || '';
@@ -515,7 +542,7 @@ function updateProjectsAutomationUI() {
       label.textContent = getAutomatableProjectDisplayName(name, automatableProjectLookup);
       const remove = document.createElement('button');
       remove.textContent = '✕';
-      remove.title = 'Remove project';
+      remove.title = getAutomationCardText('removeProject', {}, 'Remove project');
       remove.addEventListener('click', () => {
         projectAutomationUIState.builderSelectedProjects = projectAutomationUIState.builderSelectedProjects.filter(id => id !== name);
         queueAutomationUIRefresh();
@@ -585,7 +612,11 @@ function updateProjectsAutomationUI() {
         row.classList.add('project-automation-apply-row', 'building-automation-apply-row');
         const primary = document.createElement('div');
         primary.classList.add('project-automation-apply-primary', 'building-automation-apply-primary');
-        const toggle = createToggleButton({ onLabel: 'Apply On', offLabel: 'Apply Off', isOn: assignment.enabled });
+        const toggle = createToggleButton({
+          onLabel: getAutomationCardText('applyOn', {}, 'Apply On'),
+          offLabel: getAutomationCardText('applyOff', {}, 'Apply Off'),
+          isOn: assignment.enabled
+        });
         toggle.classList.add('project-automation-apply-toggle', 'building-automation-apply-toggle');
         toggle.addEventListener('click', () => {
           automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
@@ -596,7 +627,7 @@ function updateProjectsAutomationUI() {
         presets.forEach(preset => {
           const option = document.createElement('option');
           option.value = String(preset.id);
-          option.textContent = preset.name || `Preset ${preset.id}`;
+          option.textContent = getProjectAutomationPresetLabel(preset);
           if (assignment.presetId === preset.id) {
             option.selected = true;
           }
@@ -604,28 +635,22 @@ function updateProjectsAutomationUI() {
         });
         if (!presets.length) {
           const empty = document.createElement('option');
-          empty.textContent = 'No presets saved';
+          empty.textContent = getAutomationCardText('noPresetsSaved', {}, 'No presets saved');
           empty.disabled = true;
           empty.selected = true;
           select.appendChild(empty);
         }
         const detail = document.createElement('span');
         detail.classList.add('project-automation-apply-detail', 'building-automation-apply-detail');
-        const updateDetail = (presetId) => {
+          const updateDetail = (presetId) => {
           const preset = automation.getPresetById(presetId);
           if (!preset) {
-            detail.textContent = 'Select a preset';
+            detail.textContent = getAutomationCardText('selectPreset', {}, 'Select a preset');
             return;
           }
-          const includeExpansion = preset.includeExpansion !== false;
-          const includeOperations = preset.includeOperations !== false;
-          const presetType = includeExpansion && includeOperations
-            ? 'Expansion + Operations'
-            : includeExpansion
-              ? 'Expansion only'
-              : 'Operations only';
+          const presetType = formatProjectAutomationPresetType(preset);
           const projectList = preset.scopeAll
-            ? 'All non-story projects'
+            ? getAutomationCardText('allNonStoryProjects', {}, 'All non-story projects')
             : Object.keys(preset.projects).map(id => getAutomatableProjectDisplayName(id, automatableProjectLookup)).join(', ');
           detail.textContent = projectList ? `${presetType} / ${projectList}` : presetType;
         };
@@ -642,7 +667,7 @@ function updateProjectsAutomationUI() {
         controls.classList.add('project-automation-apply-controls', 'building-automation-apply-controls');
         const moveUp = document.createElement('button');
         moveUp.textContent = '↑';
-        moveUp.title = 'Move up';
+        moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
         moveUp.disabled = index === 0;
         moveUp.addEventListener('click', () => {
           automation.moveAssignment(assignment.id, -1);
@@ -651,7 +676,7 @@ function updateProjectsAutomationUI() {
         });
         const moveDown = document.createElement('button');
         moveDown.textContent = '↓';
-        moveDown.title = 'Move down';
+        moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
         moveDown.disabled = index === assignments.length - 1;
         moveDown.addEventListener('click', () => {
           automation.moveAssignment(assignment.id, 1);
@@ -660,7 +685,7 @@ function updateProjectsAutomationUI() {
         });
         const remove = document.createElement('button');
         remove.textContent = '✕';
-        remove.title = 'Remove preset';
+        remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
         remove.addEventListener('click', () => {
           automation.removeAssignment(assignment.id);
           queueAutomationUIRefresh();
@@ -677,8 +702,8 @@ function updateProjectsAutomationUI() {
 
   projectsAddApplyButton.disabled = presets.length === 0;
   projectsApplyHint.textContent = presets.length === 0
-    ? 'Save a preset above to enable the Apply list.'
-    : 'Lower presets override higher presets when they target the same project and setting.';
+    ? getAutomationCardText('projectsApplyHintEmpty', {}, 'Save a preset above to enable the Apply list.')
+    : getAutomationCardText('projectsApplyHintRule', {}, 'Lower presets override higher presets when they target the same project and setting.');
 }
 
 function attachProjectsAutomationHandlers() {

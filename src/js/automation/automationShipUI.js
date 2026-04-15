@@ -2,6 +2,10 @@ let forceShipStepsRefresh = false;
 let shipPresetOptionsSignature = '';
 let shipStepsSignature = '';
 
+function getShipPresetLabel(preset) {
+  return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
+}
+
 function getShipPresetOptionsSignature(automation) {
   const parts = [String(automation.getSelectedPresetId() || '')];
   for (let index = 0; index < automation.presets.length; index += 1) {
@@ -57,7 +61,11 @@ function buildAutomationShipUI() {
     updateAutomationUI();
   };
 
-  const header = createAutomationCardHeader(card, 'Ship Assignment', toggleCollapsed);
+  const header = createAutomationCardHeader(
+    card,
+    getAutomationCardText('shipAssignmentTitle', {}, 'Ship Assignment'),
+    toggleCollapsed
+  );
 
   const body = document.createElement('div');
   body.classList.add('automation-body');
@@ -70,7 +78,7 @@ function buildAutomationShipUI() {
   body.appendChild(stepsContainer);
 
   const addStepButton = document.createElement('button');
-  addStepButton.textContent = '+ Step';
+  addStepButton.textContent = getAutomationCardText('addStepButton', {}, '+ Step');
   addStepButton.classList.add('automation-add-step');
   body.appendChild(addStepButton);
 
@@ -115,8 +123,8 @@ function updateShipAutomationUI() {
   shipAssignment.classList.toggle('automation-card-locked', !unlocked);
   shipAssignmentStatus.style.display = 'none';
   shipAssignmentDescription.textContent = unlocked
-    ? 'Automatically assigns cargo ships based on available routes.'
-    : 'Purchase the Solis Ship Assignment upgrade to enable ship automation.';
+    ? getAutomationCardText('shipAssignmentDescriptionUnlocked', {}, 'Automatically assigns cargo ships based on available routes.')
+    : getAutomationCardText('shipAssignmentDescriptionLocked', {}, 'Purchase the Solis Ship Assignment upgrade to enable ship automation.');
 
   if (!automation || !panelBody || !collapseButton || !presetSelect || !presetMoveUpButton || !presetMoveDownButton || !presetNameInput || !newPresetButton || !deletePresetButton || !enablePresetCheckbox || !stepsContainer || !addStepButton) {
     return;
@@ -132,7 +140,7 @@ function updateShipAutomationUI() {
     automation.presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = preset.id;
-      option.textContent = preset.name || `Preset ${preset.id}`;
+      option.textContent = getShipPresetLabel(preset);
       if (preset.id === automation.getSelectedPresetId()) {
         option.selected = true;
       }
@@ -277,7 +285,8 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
   const formatProjectOption = (option, project) => {
     const label = project.displayName || project.name;
     const disabled = project.isPermanentlyDisabled && project.isPermanentlyDisabled();
-    option.textContent = disabled ? `${label} (disabled)` : label;
+    const disabledLabel = getAutomationCardText('shipProjectDisabledSuffix', {}, 'disabled');
+    option.textContent = disabled ? `${label} (${disabledLabel})` : label;
     if (disabled) {
       option.style.color = 'red';
     }
@@ -294,21 +303,21 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     heading.classList.add('automation-step-heading');
     const title = document.createElement('span');
     title.classList.add('automation-step-badge');
-    title.textContent = `Step ${stepIndex + 1}`;
+    title.textContent = getAutomationCardText('stepWithIndex', { index: stepIndex + 1 }, `Step ${stepIndex + 1}`);
     const subtitle = document.createElement('span');
     subtitle.classList.add('automation-step-subtitle');
     const usingCappedMin = step.mode === 'cappedMin';
     const usingCappedMax = step.mode === 'cappedMax';
     const usingCapped = usingCappedMin || usingCappedMax;
     if (usingCappedMin) {
-      subtitle.textContent = 'Balance ships with the smallest max';
+      subtitle.textContent = getAutomationCardText('shipStepSubtitleSmallestMax', {}, 'Balance ships with the smallest max');
     } else if (usingCappedMax) {
-      subtitle.textContent = 'Balance ships with the largest max';
+      subtitle.textContent = getAutomationCardText('shipStepSubtitleLargestMax', {}, 'Balance ships with the largest max');
     } else if (step.limit !== null && step.limit !== undefined) {
       const limitText = Number(step.limit || 0).toLocaleString();
-      subtitle.textContent = `Assign up to ${limitText} ships`;
+      subtitle.textContent = getAutomationCardText('shipStepSubtitleAssignUpTo', { count: limitText }, `Assign up to ${limitText} ships`);
     } else {
-      subtitle.textContent = 'Distribute ships by weight';
+      subtitle.textContent = getAutomationCardText('shipStepSubtitleByWeight', {}, 'Distribute ships by weight');
     }
     heading.append(title, subtitle);
     header.appendChild(heading);
@@ -320,34 +329,26 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     limitInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       limitInfo,
-      'Assign Amount:\n' +
-      '- Distributes up to the entered amount by weight.\n\n' +
-      'Modes:\n' +
-      '- Capped by smallest max: balance by weight until the smallest max is reached.\n' +
-      '- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n\n' +
-      'Mass Drivers:\n' +
-      '- Each Mass Driver counts as 10 ships.\n' +
-      '- Counts toward assign amount limits.\n' +
-      '- Can only be assigned through "Resource Disposal (mass drivers included)".'
+      getAutomationCardText('shipLimitTooltip', {}, 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".')
     );
     const limitMode = document.createElement('select');
     const fixedOpt = document.createElement('option');
     fixedOpt.value = 'fixed';
-    fixedOpt.textContent = 'Assign Amount';
+    fixedOpt.textContent = getAutomationCardText('shipAssignAmount', {}, 'Assign Amount');
     limitMode.appendChild(fixedOpt);
     const cappedMinOpt = document.createElement('option');
     cappedMinOpt.value = 'cappedMin';
-    cappedMinOpt.textContent = 'Capped by smallest max';
+    cappedMinOpt.textContent = getAutomationCardText('shipCappedBySmallestMax', {}, 'Capped by smallest max');
     limitMode.appendChild(cappedMinOpt);
     const cappedMaxOpt = document.createElement('option');
     cappedMaxOpt.value = 'cappedMax';
-    cappedMaxOpt.textContent = 'Capped by largest max';
+    cappedMaxOpt.textContent = getAutomationCardText('shipCappedByLargestMax', {}, 'Capped by largest max');
     limitMode.appendChild(cappedMaxOpt);
     limitMode.value = usingCappedMin ? 'cappedMin' : usingCappedMax ? 'cappedMax' : 'fixed';
     const limitInput = document.createElement('input');
     limitInput.type = 'text';
     limitInput.min = '0';
-    limitInput.placeholder = 'Amount';
+    limitInput.placeholder = getAutomationCardText('shipAmountPlaceholder', {}, 'Amount');
     if (step.limit !== null && step.limit !== undefined && !usingCapped) {
       limitInput.value = formatNumber(step.limit, true, 3);
     } else {
@@ -391,7 +392,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     orderWrap.classList.add('automation-step-order');
     const moveUp = document.createElement('button');
     moveUp.textContent = '↑';
-    moveUp.title = 'Move step up';
+    moveUp.title = getAutomationCardText('moveStepUp', {}, 'Move step up');
     moveUp.disabled = stepIndex === 0;
     moveUp.addEventListener('click', () => {
       automation.moveStep(preset.id, step.id, -1);
@@ -401,7 +402,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     });
     const moveDown = document.createElement('button');
     moveDown.textContent = '↓';
-    moveDown.title = 'Move step down';
+    moveDown.title = getAutomationCardText('moveStepDown', {}, 'Move step down');
     moveDown.disabled = stepIndex === preset.steps.length - 1;
     moveDown.addEventListener('click', () => {
       automation.moveStep(preset.id, step.id, 1);
@@ -414,7 +415,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
 
     const removeStep = document.createElement('button');
     removeStep.textContent = '✕';
-    removeStep.title = 'Remove step';
+    removeStep.title = getAutomationCardText('removeStep', {}, 'Remove step');
     removeStep.addEventListener('click', () => {
       automation.removeStep(preset.id, step.id);
       forceShipStepsRefresh = true;
@@ -465,7 +466,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const weightWrapper = document.createElement('div');
       weightWrapper.classList.add('automation-weight');
       const weightLabel = document.createElement('span');
-      weightLabel.textContent = 'Weight';
+      weightLabel.textContent = getAutomationCardText('shipWeightLabel', {}, 'Weight');
       const weightInput = document.createElement('input');
       weightInput.type = 'text';
       weightInput.min = '0';
@@ -492,20 +493,20 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const maxMode = document.createElement('select');
       const absoluteOpt = document.createElement('option');
       absoluteOpt.value = 'absolute';
-      absoluteOpt.textContent = 'Max';
+      absoluteOpt.textContent = getAutomationCardText('shipMaxLabel', {}, 'Max');
       const populationOpt = document.createElement('option');
       populationOpt.value = 'population';
-      populationOpt.textContent = '% Population';
+      populationOpt.textContent = getAutomationCardText('shipPercentPopulation', {}, '% Population');
       const workerOpt = document.createElement('option');
       workerOpt.value = 'workers';
-      workerOpt.textContent = '% Workers';
+      workerOpt.textContent = getAutomationCardText('shipPercentWorkers', {}, '% Workers');
       maxMode.append(absoluteOpt, populationOpt, workerOpt);
       maxMode.value = entry.maxMode || 'absolute';
       const getMaxPrecision = () => (maxMode.value === 'population' || maxMode.value === 'workers' ? 5 : 3);
       const maxInput = document.createElement('input');
       maxInput.type = 'text';
       maxInput.min = '0';
-      maxInput.placeholder = 'Max';
+      maxInput.placeholder = getAutomationCardText('shipMaxLabel', {}, 'Max');
       maxInput.value = entry.max === null || entry.max === undefined ? '' : formatNumber(entry.max, true, getMaxPrecision());
       maxMode.addEventListener('change', (event) => {
         automation.updateEntry(preset.id, step.id, entry.projectId, { maxMode: event.target.value });
@@ -538,7 +539,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const exclude = document.createElement('input');
       exclude.type = 'checkbox';
       exclude.checked = automation.disabledProjects.has(entry.projectId);
-      excludeWrapper.append(exclude, 'Release if disabled');
+      excludeWrapper.append(exclude, getAutomationCardText('shipReleaseIfDisabled', {}, 'Release if disabled'));
       if (allowDisable) {
         exclude.addEventListener('change', (event) => {
           automation.toggleProjectDisabled(entry.projectId, event.target.checked);
@@ -553,7 +554,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
 
       const remove = document.createElement('button');
       remove.textContent = '✕';
-      remove.title = 'Remove project';
+      remove.title = getAutomationCardText('removeProject', {}, 'Remove project');
       remove.addEventListener('click', () => {
         automation.removeEntry(preset.id, step.id, entry.projectId);
         forceShipStepsRefresh = true;
@@ -579,11 +580,11 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const disabledOption = document.createElement('option');
       disabledOption.disabled = true;
       disabledOption.selected = true;
-      disabledOption.textContent = 'No projects available';
+      disabledOption.textContent = getAutomationCardText('shipNoProjectsAvailable', {}, 'No projects available');
       addSelect.appendChild(disabledOption);
     }
     const addEntryButton = document.createElement('button');
-    addEntryButton.textContent = '+ Project';
+    addEntryButton.textContent = getAutomationCardText('addProjectButton', {}, '+ Project');
     addEntryButton.disabled = availableProjects.length === 0;
     addEntryButton.addEventListener('click', () => {
       const selectedId = addSelect.value;

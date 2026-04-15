@@ -1,3 +1,7 @@
+function getLifeAutomationPresetLabel(preset) {
+  return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
+}
+
 function buildAutomationLifeUI() {
   const card = automationElements.lifeDesign || document.getElementById('automation-life-design');
 
@@ -8,7 +12,11 @@ function buildAutomationLifeUI() {
     updateAutomationUI();
   };
 
-  const header = createAutomationCardHeader(card, 'Life Automation', toggleCollapsed);
+  const header = createAutomationCardHeader(
+    card,
+    getAutomationCardText('lifeAutomationTitle', {}, 'Life Automation'),
+    toggleCollapsed
+  );
 
   const body = document.createElement('div');
   body.classList.add('automation-body');
@@ -20,7 +28,10 @@ function buildAutomationLifeUI() {
   purchaseSection.classList.add('life-automation-section');
   const purchaseHeader = document.createElement('div');
   purchaseHeader.classList.add('life-automation-section-title');
-  const purchaseEnable = createAutomationToggle('Auto purchase on', 'Auto purchase off');
+  const purchaseEnable = createAutomationToggle(
+    getAutomationCardText('lifeAutoPurchaseOn', {}, 'Auto purchase on'),
+    getAutomationCardText('lifeAutoPurchaseOff', {}, 'Auto purchase off')
+  );
   purchaseEnable.classList.add('life-automation-purchase-toggle');
   const purchaseTitle = document.createElement('span');
   purchaseTitle.classList.add('life-automation-section-title-text');
@@ -31,7 +42,7 @@ function buildAutomationLifeUI() {
   purchaseTitle.append(' ', purchaseInfo);
   attachDynamicInfoTooltip(
     purchaseInfo,
-    'When enabled, auto purchase checks each category every tick.\nSpending uses the % threshold of current resources, with an optional max cost cap.'
+    getAutomationCardText('lifeAutoPurchaseTooltip', {}, 'When enabled, auto purchase checks each category every tick.\nSpending uses the % threshold of current resources, with an optional max cost cap.')
   );
   purchaseHeader.append(purchaseEnable, purchaseTitle);
   purchaseSection.appendChild(purchaseHeader);
@@ -44,29 +55,35 @@ function buildAutomationLifeUI() {
   designSection.classList.add('life-automation-section');
   const designHeader = document.createElement('div');
   designHeader.classList.add('life-automation-section-title');
-  const designEnable = createAutomationToggle('Auto design on', 'Auto design off');
+  const designEnable = createAutomationToggle(
+    getAutomationCardText('lifeAutoDesignOn', {}, 'Auto design on'),
+    getAutomationCardText('lifeAutoDesignOff', {}, 'Auto design off')
+  );
   designEnable.classList.add('life-automation-design-toggle');
   const deployNowButton = document.createElement('button');
   deployNowButton.classList.add('life-automation-deploy-now');
-  deployNowButton.textContent = 'Deploy Now';
-  deployNowButton.title = 'Deploy the current auto design steps immediately.';
+  deployNowButton.textContent = getAutomationCardText('lifeDeployNowButton', {}, 'Deploy Now');
+  deployNowButton.title = getAutomationCardText('lifeDeployNowTitle', {}, 'Deploy the current auto design steps immediately.');
   designHeader.append(designEnable, deployNowButton);
   designSection.appendChild(designHeader);
 
   const deployRow = document.createElement('label');
   deployRow.classList.add('life-automation-deploy-row');
   const deployLabel = document.createElement('span');
-  deployLabel.textContent = 'Deploy only if design improves by';
+  deployLabel.textContent = getAutomationCardText('lifeDeployImproveLabel', {}, 'Deploy only if design improves by');
   const deployInput = document.createElement('input');
   deployInput.type = 'number';
   deployInput.min = '0';
   deployInput.classList.add('life-automation-deploy-input');
   const deploySuffix = document.createElement('span');
-  deploySuffix.textContent = 'points';
+  deploySuffix.textContent = getAutomationCardText('lifeDeployPointsSuffix', {}, 'points');
   const deployInfo = document.createElement('span');
   deployInfo.classList.add('info-tooltip-icon');
   deployInfo.innerHTML = '&#9432;';
-  deployInfo.title = 'Auto deployment will only trigger if it improves a design by the given number of points.';
+  attachDynamicInfoTooltip(
+    deployInfo,
+    getAutomationCardText('lifeDeployInfo', {}, 'Auto deployment will only trigger if it improves a design by the given number of points.')
+  );
   deployRow.append(deployLabel, deployInput, deploySuffix, deployInfo);
   designSection.appendChild(deployRow);
 
@@ -74,7 +91,7 @@ function buildAutomationLifeUI() {
   seedRow.classList.add('life-automation-seed-row');
   const seedButton = document.createElement('button');
   seedButton.classList.add('life-automation-seed-button');
-  seedButton.textContent = 'Create steps from current design';
+  seedButton.textContent = getAutomationCardText('lifeCreateStepsFromCurrentButton', {}, 'Create steps from current design');
   seedRow.appendChild(seedButton);
   designSection.appendChild(seedRow);
 
@@ -83,7 +100,7 @@ function buildAutomationLifeUI() {
   designSection.appendChild(stepsContainer);
 
   const addStepButton = document.createElement('button');
-  addStepButton.textContent = '+ Step';
+  addStepButton.textContent = getAutomationCardText('addStepButton', {}, '+ Step');
   addStepButton.classList.add('automation-add-step');
   designSection.appendChild(addStepButton);
 
@@ -139,8 +156,8 @@ function updateLifeAutomationUI() {
   lifeDesign.style.display = unlocked ? '' : 'none';
   lifeDesign.classList.toggle('automation-card-locked', !unlocked);
   lifeDesignDescription.textContent = unlocked
-    ? 'Automates life point purchases and life design deployments.'
-    : 'Purchase the Solis Life Automation upgrade to enable life automation.';
+    ? getAutomationCardText('lifeAutomationDescriptionUnlocked', {}, 'Automates life point purchases and life design deployments.')
+    : getAutomationCardText('lifeAutomationDescriptionLocked', {}, 'Purchase the Solis Life Automation upgrade to enable life automation.');
   if (!unlocked) {
     return;
   }
@@ -154,7 +171,7 @@ function updateLifeAutomationUI() {
     automation.presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = preset.id;
-      option.textContent = preset.name || `Preset ${preset.id}`;
+      option.textContent = getLifeAutomationPresetLabel(preset);
       if (preset.id === automation.getSelectedPresetId()) {
         option.selected = true;
       }
@@ -400,7 +417,7 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     const thresholdLabel = document.createElement('label');
     thresholdLabel.classList.add('life-automation-field');
     const thresholdText = document.createElement('span');
-    thresholdText.textContent = 'Spend at';
+    thresholdText.textContent = getAutomationCardText('lifeSpendAtLabel', {}, 'Spend at');
     const thresholdInput = document.createElement('input');
     thresholdInput.type = 'number';
     thresholdInput.min = '0';
@@ -416,11 +433,11 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     const maxLabel = document.createElement('label');
     maxLabel.classList.add('life-automation-field');
     const maxText = document.createElement('span');
-    maxText.textContent = 'Max cost';
+    maxText.textContent = getAutomationCardText('lifeMaxCostLabel', {}, 'Max cost');
     const maxInput = document.createElement('input');
     maxInput.type = 'text';
     maxInput.min = '0';
-    maxInput.placeholder = 'No max';
+    maxInput.placeholder = getAutomationCardText('lifeNoMaxPlaceholder', {}, 'No max');
     maxInput.value = settings.maxCost ? formatNumber(settings.maxCost, true, 3) : '';
     maxLabel.append(maxText, maxInput);
     row.appendChild(maxLabel);
@@ -471,17 +488,19 @@ function renderLifeAutomationSteps(automation, preset, container) {
     heading.classList.add('automation-step-heading');
     const title = document.createElement('span');
     title.classList.add('automation-step-badge');
-    title.textContent = `Step ${index + 1}`;
+    title.textContent = getAutomationCardText('stepWithIndex', { index: index + 1 }, `Step ${index + 1}`);
     const subtitle = document.createElement('span');
     subtitle.classList.add('automation-step-subtitle');
     const updateSubtitle = (isTempTolerance, isRadiationTolerance) => {
       subtitle.textContent = step.mode === 'remaining' && isLast
-        ? 'Spend all remaining points'
+        ? getAutomationCardText('lifeStepSubtitleRemaining', {}, 'Spend all remaining points')
         : step.mode === 'max'
-          ? 'Max out attribute'
+          ? getAutomationCardText('lifeStepSubtitleMax', {}, 'Max out attribute')
           : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
-            ? (isTempTolerance ? 'As needed for selected zones' : 'As needed for radiation dose')
-            : 'Spend fixed points';
+            ? (isTempTolerance
+              ? getAutomationCardText('lifeStepSubtitleNeededZones', {}, 'As needed for selected zones')
+              : getAutomationCardText('lifeStepSubtitleNeededRadiation', {}, 'As needed for radiation dose'))
+            : getAutomationCardText('lifeStepSubtitleFixed', {}, 'Spend fixed points');
     };
     let isTempTolerance = step.attribute === 'minTemperatureTolerance' || step.attribute === 'maxTemperatureTolerance';
     let isRadiationTolerance = step.attribute === 'radiationTolerance';
@@ -496,7 +515,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     const canInsert = preset.designSteps.length < automation.maxSteps;
     const insertAbove = document.createElement('button');
     insertAbove.textContent = '+';
-    insertAbove.title = 'Insert step above';
+    insertAbove.title = getAutomationCardText('lifeInsertStepAbove', {}, 'Insert step above');
     insertAbove.disabled = !canInsert;
     insertAbove.addEventListener('click', () => {
       automation.insertDesignStep(preset.id, step.id, -1);
@@ -505,7 +524,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     });
     const moveUp = document.createElement('button');
     moveUp.textContent = '↑';
-    moveUp.title = 'Move step up';
+    moveUp.title = getAutomationCardText('moveStepUp', {}, 'Move step up');
     moveUp.disabled = index === 0;
     moveUp.addEventListener('click', () => {
       automation.moveDesignStep(preset.id, step.id, -1);
@@ -514,7 +533,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     });
     const moveDown = document.createElement('button');
     moveDown.textContent = '↓';
-    moveDown.title = 'Move step down';
+    moveDown.title = getAutomationCardText('moveStepDown', {}, 'Move step down');
     moveDown.disabled = index === preset.designSteps.length - 1;
     moveDown.addEventListener('click', () => {
       automation.moveDesignStep(preset.id, step.id, 1);
@@ -523,7 +542,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     });
     const insertBelow = document.createElement('button');
     insertBelow.textContent = '+';
-    insertBelow.title = 'Insert step below';
+    insertBelow.title = getAutomationCardText('lifeInsertStepBelow', {}, 'Insert step below');
     insertBelow.disabled = !canInsert;
     insertBelow.addEventListener('click', () => {
       automation.insertDesignStep(preset.id, step.id, 1);
@@ -534,7 +553,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     controlWrap.appendChild(orderWrap);
     const removeButton = document.createElement('button');
     removeButton.textContent = '✕';
-    removeButton.title = 'Remove step';
+    removeButton.title = getAutomationCardText('removeStep', {}, 'Remove step');
     removeButton.addEventListener('click', () => {
       automation.removeDesignStep(preset.id, step.id);
       queueAutomationUIRefresh();
@@ -602,7 +621,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     const amountLabel = document.createElement('label');
     amountLabel.classList.add('life-automation-field');
     const amountText = document.createElement('span');
-    amountText.textContent = 'Points';
+    amountText.textContent = getAutomationCardText('lifePointsLabel', {}, 'Points');
     const amountInput = document.createElement('input');
     amountInput.type = 'number';
     let isOptimal = step.attribute === 'optimalGrowthTemperature';
@@ -613,7 +632,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     amountInput.value = step.amount;
     const minButton = document.createElement('button');
     minButton.classList.add('life-automation-max-button');
-    minButton.textContent = 'Min';
+    minButton.textContent = t('ui.common.min', {}, 'Min');
     minButton.style.display = isOptimal ? '' : 'none';
     minButton.addEventListener('click', () => {
       automation.updateDesignStep(preset.id, step.id, { amount: -maxUpgrades });
@@ -622,7 +641,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     });
     const maxButton = document.createElement('button');
     maxButton.classList.add('life-automation-max-button');
-    maxButton.textContent = 'Max';
+    maxButton.textContent = t('ui.common.max', {}, 'Max');
     maxButton.addEventListener('click', () => {
       automation.updateDesignStep(preset.id, step.id, { amount: maxUpgrades });
       queueAutomationUIRefresh();
@@ -634,20 +653,20 @@ function renderLifeAutomationSteps(automation, preset, container) {
     const modeLabel = document.createElement('label');
     modeLabel.classList.add('life-automation-field');
     const modeText = document.createElement('span');
-    modeText.textContent = 'Mode';
+    modeText.textContent = getAutomationCardText('lifeModeLabel', {}, 'Mode');
     const modeSelect = document.createElement('select');
     const fixedOpt = document.createElement('option');
     fixedOpt.value = 'fixed';
-    fixedOpt.textContent = 'Fixed points';
+    fixedOpt.textContent = getAutomationCardText('lifeModeFixedPoints', {}, 'Fixed points');
     const maxOpt = document.createElement('option');
     maxOpt.value = 'max';
-    maxOpt.textContent = 'Max out';
+    maxOpt.textContent = getAutomationCardText('lifeModeMaxOut', {}, 'Max out');
     const neededOpt = document.createElement('option');
     neededOpt.value = 'needed';
-    neededOpt.textContent = 'As needed';
+    neededOpt.textContent = getAutomationCardText('lifeModeAsNeeded', {}, 'As needed');
     const remainingOpt = document.createElement('option');
     remainingOpt.value = 'remaining';
-    remainingOpt.textContent = 'All remaining';
+    remainingOpt.textContent = getAutomationCardText('lifeModeAllRemaining', {}, 'All remaining');
     remainingOpt.disabled = !isLast;
     if (isTempTolerance || isRadiationTolerance) {
       modeSelect.append(fixedOpt, maxOpt, neededOpt, remainingOpt);
@@ -689,12 +708,12 @@ function renderLifeAutomationSteps(automation, preset, container) {
     const zoneRow = document.createElement('div');
     zoneRow.classList.add('life-automation-zone-row');
     const zoneLabel = document.createElement('span');
-    zoneLabel.textContent = 'Include zones';
+    zoneLabel.textContent = getAutomationCardText('lifeIncludeZonesLabel', {}, 'Include zones');
     zoneRow.appendChild(zoneLabel);
     const zoneOptions = [
-      { key: 'tropical', label: 'Tropical' },
-      { key: 'temperate', label: 'Temperate' },
-      { key: 'polar', label: 'Polar' }
+      { key: 'tropical', label: getAutomationCardText('lifeZoneTropical', {}, 'Tropical') },
+      { key: 'temperate', label: getAutomationCardText('lifeZoneTemperate', {}, 'Temperate') },
+      { key: 'polar', label: getAutomationCardText('lifeZonePolar', {}, 'Polar') }
     ];
     zoneOptions.forEach(option => {
       const label = document.createElement('label');

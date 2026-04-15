@@ -12,6 +12,27 @@ const buildingAutomationUIState = {
   combinationName: ''
 };
 
+function getAutomationPresetLabel(preset) {
+  return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
+}
+
+function getAutomationCombinationLabel(combination) {
+  return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
+}
+
+function formatBuildingAutomationPresetType(preset) {
+  if (!preset) {
+    return getAutomationCardText('selectPreset', {}, 'Select a preset');
+  }
+  if (preset.includeControl && preset.includeAutomation) {
+    return getAutomationCardText('controlAutobuild', {}, 'Control + Autobuild');
+  }
+  if (preset.includeControl) {
+    return getAutomationCardText('controlOnly', {}, 'Control only');
+  }
+  return getAutomationCardText('autobuildOnly', {}, 'Autobuild only');
+}
+
 function buildAutomationBuildingsUI() {
   const card = automationElements.buildingsAutomation || document.getElementById('automation-buildings');
 
@@ -22,7 +43,11 @@ function buildAutomationBuildingsUI() {
     updateAutomationUI();
   };
 
-  const header = createAutomationCardHeader(card, 'Buildings Automation', toggleCollapsed);
+  const header = createAutomationCardHeader(
+    card,
+    getAutomationCardText('buildingsAutomationTitle', {}, 'Buildings Automation'),
+    toggleCollapsed
+  );
 
   const body = document.createElement('div');
   body.classList.add('automation-body');
@@ -33,7 +58,7 @@ function buildAutomationBuildingsUI() {
   const builderHeader = document.createElement('div');
   builderHeader.classList.add('building-automation-section-title');
   const builderTitle = document.createElement('span');
-  builderTitle.textContent = 'Preset Builder';
+  builderTitle.textContent = getAutomationCardText('researchAutomationPresetTitle', {}, 'Preset Builder');
   const builderDirty = document.createElement('span');
   builderDirty.classList.add('building-automation-builder-dirty');
   builderDirty.textContent = '*';
@@ -49,28 +74,28 @@ function buildAutomationBuildingsUI() {
   presetMoveButtons.classList.add('automation-order-buttons');
   const presetMoveUpButton = document.createElement('button');
   presetMoveUpButton.textContent = '↑';
-  presetMoveUpButton.title = 'Move preset up';
+  presetMoveUpButton.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
   presetMoveUpButton.classList.add('building-automation-builder-move-up');
   const presetMoveDownButton = document.createElement('button');
   presetMoveDownButton.textContent = '↓';
-  presetMoveDownButton.title = 'Move preset down';
+  presetMoveDownButton.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
   presetMoveDownButton.classList.add('building-automation-builder-move-down');
   presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
   const presetNameInput = document.createElement('input');
   presetNameInput.type = 'text';
-  presetNameInput.placeholder = 'Preset name';
+  presetNameInput.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
   presetNameInput.classList.add('building-automation-builder-name');
   const newButton = document.createElement('button');
-  newButton.textContent = 'New';
+  newButton.textContent = getAutomationCardText('newPresetButton', {}, 'New');
   newButton.classList.add('building-automation-builder-new');
   const saveButton = document.createElement('button');
-  saveButton.textContent = 'Save';
+  saveButton.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
   saveButton.classList.add('building-automation-builder-save');
   const deleteButton = document.createElement('button');
-  deleteButton.textContent = 'Delete';
+  deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deleteButton.classList.add('building-automation-builder-delete');
   const applyOnceButton = document.createElement('button');
-  applyOnceButton.textContent = 'Apply Once Now';
+  applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('building-automation-builder-apply-once');
   builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
   builderSection.appendChild(builderRow);
@@ -81,29 +106,29 @@ function buildAutomationBuildingsUI() {
   typeSelect.classList.add('building-automation-builder-type');
   const controlOpt = document.createElement('option');
   controlOpt.value = 'control';
-  controlOpt.textContent = 'Control only';
+  controlOpt.textContent = getAutomationCardText('controlOnly', {}, 'Control only');
   const automationOpt = document.createElement('option');
   automationOpt.value = 'automation';
-  automationOpt.textContent = 'Autobuild only';
+  automationOpt.textContent = getAutomationCardText('autobuildOnly', {}, 'Autobuild only');
   const bothOpt = document.createElement('option');
   bothOpt.value = 'both';
-  bothOpt.textContent = 'Control + Autobuild';
+  bothOpt.textContent = getAutomationCardText('controlAutobuild', {}, 'Control + Autobuild');
   typeSelect.append(controlOpt, automationOpt, bothOpt);
   const scopeSelect = document.createElement('select');
   scopeSelect.classList.add('building-automation-builder-scope');
   const allScope = document.createElement('option');
   allScope.value = 'all';
-  allScope.textContent = 'All available buildings';
+  allScope.textContent = getAutomationCardText('allAvailableBuildings', {}, 'All available buildings');
   const manualScope = document.createElement('option');
   manualScope.value = 'manual';
-  manualScope.textContent = 'Choose buildings';
+  manualScope.textContent = getAutomationCardText('chooseBuildings', {}, 'Choose buildings');
   scopeSelect.append(allScope, manualScope);
   builderModeRow.append(typeSelect, scopeSelect);
   builderSection.appendChild(builderModeRow);
 
   const builderHint = document.createElement('div');
   builderHint.classList.add('building-automation-hint');
-  builderHint.textContent = 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.';
+  builderHint.textContent = getAutomationCardText('buildingsBuilderHint', {}, 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.');
   builderSection.appendChild(builderHint);
 
   const pickerRow = document.createElement('div');
@@ -113,13 +138,13 @@ function buildAutomationBuildingsUI() {
   const buildingSelect = document.createElement('select');
   buildingSelect.classList.add('building-automation-builder-building');
   const addButton = document.createElement('button');
-  addButton.textContent = '+ Building';
+  addButton.textContent = getAutomationCardText('addBuildingButton', {}, '+ Building');
   addButton.classList.add('building-automation-builder-add');
   const addCategoryButton = document.createElement('button');
-  addCategoryButton.textContent = '+ Category';
+  addCategoryButton.textContent = getAutomationCardText('addCategoryButton', {}, '+ Category');
   addCategoryButton.classList.add('building-automation-builder-add-category');
   const clearButton = document.createElement('button');
-  clearButton.textContent = '- All';
+  clearButton.textContent = getAutomationCardText('clearAllButton', {}, '- All');
   clearButton.classList.add('building-automation-builder-clear');
   pickerRow.append(categorySelect, buildingSelect, addButton, addCategoryButton, clearButton);
   builderSection.appendChild(pickerRow);
@@ -138,18 +163,18 @@ function buildAutomationBuildingsUI() {
   const applyHeader = document.createElement('div');
   applyHeader.classList.add('building-automation-section-title');
   const applyTitle = document.createElement('span');
-  applyTitle.textContent = 'Preset Combination';
+  applyTitle.textContent = getAutomationCardText('presetCombinationTitle', {}, 'Preset Combination');
   const applyNextTravelLabel = document.createElement('label');
   applyNextTravelLabel.classList.add('building-automation-apply-next-travel-label');
   const applyNextTravelText = document.createElement('span');
-  applyNextTravelText.textContent = 'Combination on Next Travel';
+  applyNextTravelText.textContent = getAutomationCardText('combinationOnNextTravelLabel', {}, 'Combination on Next Travel');
   const applyNextTravelSelect = document.createElement('select');
   applyNextTravelSelect.classList.add('building-automation-next-travel-select');
   const applyNextTravelPersistToggle = document.createElement('input');
   applyNextTravelPersistToggle.type = 'checkbox';
   applyNextTravelPersistToggle.classList.add('building-automation-next-travel-persist-toggle');
   const applyNextTravelPersistText = document.createElement('span');
-  applyNextTravelPersistText.textContent = 'All future travels';
+  applyNextTravelPersistText.textContent = getAutomationCardText('allFutureTravelsLabel', {}, 'All future travels');
   applyNextTravelPersistText.classList.add('building-automation-next-travel-persist-text');
   applyNextTravelLabel.append(
     applyNextTravelText,
@@ -167,7 +192,7 @@ function buildAutomationBuildingsUI() {
   const combinationRow = document.createElement('div');
   combinationRow.classList.add('building-automation-row');
   const applyCombinationButton = document.createElement('button');
-  applyCombinationButton.textContent = 'Apply Combination';
+  applyCombinationButton.textContent = getAutomationCardText('applyCombinationButton', {}, 'Apply Combination');
   applyCombinationButton.classList.add('building-automation-apply-combination');
   const combinationSelect = document.createElement('select');
   combinationSelect.classList.add('building-automation-combination-select');
@@ -175,25 +200,25 @@ function buildAutomationBuildingsUI() {
   combinationMoveButtons.classList.add('automation-order-buttons');
   const combinationMoveUpButton = document.createElement('button');
   combinationMoveUpButton.textContent = '↑';
-  combinationMoveUpButton.title = 'Move combination up';
+  combinationMoveUpButton.title = getAutomationCardText('moveCombinationUp', {}, 'Move combination up');
   combinationMoveUpButton.classList.add('building-automation-combination-move-up');
   const combinationMoveDownButton = document.createElement('button');
   combinationMoveDownButton.textContent = '↓';
-  combinationMoveDownButton.title = 'Move combination down';
+  combinationMoveDownButton.title = getAutomationCardText('moveCombinationDown', {}, 'Move combination down');
   combinationMoveDownButton.classList.add('building-automation-combination-move-down');
   combinationMoveButtons.append(combinationMoveUpButton, combinationMoveDownButton);
   const combinationNameInput = document.createElement('input');
   combinationNameInput.type = 'text';
-  combinationNameInput.placeholder = 'Combination name';
+  combinationNameInput.placeholder = getAutomationCardText('combinationNamePlaceholder', {}, 'Combination name');
   combinationNameInput.classList.add('building-automation-combination-name');
   const combinationNewButton = document.createElement('button');
-  combinationNewButton.textContent = 'New';
+  combinationNewButton.textContent = getAutomationCardText('newCombinationButton', {}, 'New');
   combinationNewButton.classList.add('building-automation-combination-new');
   const combinationSaveButton = document.createElement('button');
-  combinationSaveButton.textContent = 'Save';
+  combinationSaveButton.textContent = getAutomationCardText('saveCombinationButton', {}, 'Save');
   combinationSaveButton.classList.add('building-automation-combination-save');
   const combinationDeleteButton = document.createElement('button');
-  combinationDeleteButton.textContent = 'Delete';
+  combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
   combinationDeleteButton.classList.add('building-automation-combination-delete');
   combinationRow.append(
     combinationSelect,
@@ -211,7 +236,7 @@ function buildAutomationBuildingsUI() {
   applySection.appendChild(applyList);
 
   const addApplyButton = document.createElement('button');
-  addApplyButton.textContent = '+ Preset';
+  addApplyButton.textContent = getAutomationCardText('addPresetButton', {}, '+ Preset');
   addApplyButton.classList.add('building-automation-apply-add');
   applySection.appendChild(addApplyButton);
 
@@ -302,8 +327,8 @@ function updateBuildingsAutomationUI() {
   buildingsAutomation.style.display = unlocked ? '' : 'none';
   buildingsAutomation.classList.toggle('automation-card-locked', !unlocked);
   buildingsAutomationDescription.textContent = unlocked
-    ? 'Capture building control/autobuild settings and apply them in ordered presets.'
-    : 'Purchase the Solis Buildings Automation upgrade to enable building presets.';
+    ? getAutomationCardText('buildingsAutomationDescriptionUnlocked', {}, 'Capture building control/autobuild settings and apply them in ordered presets.')
+    : getAutomationCardText('buildingsAutomationDescriptionLocked', {}, 'Purchase the Solis Buildings Automation upgrade to enable building presets.');
   if (!unlocked) {
     return;
   }
@@ -319,12 +344,12 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderPresetSelect.textContent = '';
     const newOption = document.createElement('option');
     newOption.value = '';
-    newOption.textContent = 'New preset';
+    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
     buildingsBuilderPresetSelect.appendChild(newOption);
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
-      option.textContent = preset.name || `Preset ${preset.id}`;
+      option.textContent = getAutomationPresetLabel(preset);
       buildingsBuilderPresetSelect.appendChild(option);
     });
     buildingsBuilderPresetSelect.value = automation.getSelectedPresetId() || '';
@@ -372,7 +397,7 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderCategorySelect.textContent = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
-    allOption.textContent = 'All categories';
+    allOption.textContent = getAutomationCardText('allCategoriesOption', {}, 'All categories');
     buildingsBuilderCategorySelect.appendChild(allOption);
     categories.forEach(category => {
       const option = document.createElement('option');
@@ -395,7 +420,7 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderBuildingSelect.textContent = '';
     if (available.length === 0) {
       const empty = document.createElement('option');
-      empty.textContent = 'No buildings available';
+      empty.textContent = getAutomationCardText('noBuildingsAvailable', {}, 'No buildings available');
       empty.disabled = true;
       empty.selected = true;
       buildingsBuilderBuildingSelect.appendChild(empty);
@@ -438,12 +463,12 @@ function updateBuildingsAutomationUI() {
     buildingsApplyNextTravelSelect.textContent = '';
     const noneOption = document.createElement('option');
     noneOption.value = '';
-    noneOption.textContent = 'None';
+    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
     buildingsApplyNextTravelSelect.appendChild(noneOption);
     combinations.forEach(combo => {
       const option = document.createElement('option');
       option.value = String(combo.id);
-      option.textContent = combo.name || `Combination ${combo.id}`;
+      option.textContent = getAutomationCombinationLabel(combo);
       buildingsApplyNextTravelSelect.appendChild(option);
     });
     buildingsApplyNextTravelSelect.value = automation.nextTravelCombinationId
@@ -457,12 +482,12 @@ function updateBuildingsAutomationUI() {
     buildingsCombinationSelect.textContent = '';
     const newOption = document.createElement('option');
     newOption.value = '';
-    newOption.textContent = 'New combination';
+    newOption.textContent = getAutomationCardText('newCombinationOption', {}, 'New combination');
     buildingsCombinationSelect.appendChild(newOption);
     combinations.forEach(combo => {
       const option = document.createElement('option');
       option.value = String(combo.id);
-      option.textContent = combo.name || `Combination ${combo.id}`;
+      option.textContent = getAutomationCombinationLabel(combo);
       buildingsCombinationSelect.appendChild(option);
     });
     buildingsCombinationSelect.value = automation.getSelectedCombinationId() || '';
@@ -503,7 +528,7 @@ function updateBuildingsAutomationUI() {
       label.textContent = building.displayName || name;
       const remove = document.createElement('button');
       remove.textContent = '✕';
-      remove.title = 'Remove building';
+      remove.title = getAutomationCardText('removeBuilding', {}, 'Remove building');
       remove.addEventListener('click', () => {
         buildingAutomationUIState.builderSelectedBuildings = buildingAutomationUIState.builderSelectedBuildings.filter(id => id !== name);
         queueAutomationUIRefresh();
@@ -573,7 +598,11 @@ function updateBuildingsAutomationUI() {
         row.classList.add('building-automation-apply-row');
         const primary = document.createElement('div');
         primary.classList.add('building-automation-apply-primary');
-        const toggle = createToggleButton({ onLabel: 'Apply On', offLabel: 'Apply Off', isOn: assignment.enabled });
+        const toggle = createToggleButton({
+          onLabel: getAutomationCardText('applyOn', {}, 'Apply On'),
+          offLabel: getAutomationCardText('applyOff', {}, 'Apply Off'),
+          isOn: assignment.enabled
+        });
         toggle.classList.add('building-automation-apply-toggle');
         toggle.addEventListener('click', () => {
           automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
@@ -584,7 +613,7 @@ function updateBuildingsAutomationUI() {
         presets.forEach(preset => {
           const option = document.createElement('option');
           option.value = String(preset.id);
-          option.textContent = preset.name || `Preset ${preset.id}`;
+          option.textContent = getAutomationPresetLabel(preset);
           if (assignment.presetId === preset.id) {
             option.selected = true;
           }
@@ -592,7 +621,7 @@ function updateBuildingsAutomationUI() {
         });
         if (!presets.length) {
           const empty = document.createElement('option');
-          empty.textContent = 'No presets saved';
+          empty.textContent = getAutomationCardText('noPresetsSaved', {}, 'No presets saved');
           empty.disabled = true;
           empty.selected = true;
           select.appendChild(empty);
@@ -601,16 +630,10 @@ function updateBuildingsAutomationUI() {
         detail.classList.add('building-automation-apply-detail');
         const updateDetail = (presetId) => {
           const preset = automation.getPresetById(presetId);
-          const detailText = preset
-            ? preset.includeControl && preset.includeAutomation
-              ? 'Control + Autobuild'
-              : preset.includeControl
-                ? 'Control only'
-                : 'Autobuild only'
-            : 'Select a preset';
+          const detailText = formatBuildingAutomationPresetType(preset);
           const buildingList = preset
             ? preset.scopeAll
-              ? 'All available buildings'
+              ? getAutomationCardText('allAvailableBuildings', {}, 'All available buildings')
               : Object.keys(preset.buildings).map(id => {
                   const building = buildings[id];
                   return building.displayName || id;
@@ -631,7 +654,7 @@ function updateBuildingsAutomationUI() {
         controls.classList.add('building-automation-apply-controls');
         const moveUp = document.createElement('button');
         moveUp.textContent = '↑';
-        moveUp.title = 'Move up';
+        moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
         moveUp.disabled = index === 0;
         moveUp.addEventListener('click', () => {
           automation.moveAssignment(assignment.id, -1);
@@ -640,7 +663,7 @@ function updateBuildingsAutomationUI() {
         });
         const moveDown = document.createElement('button');
         moveDown.textContent = '↓';
-        moveDown.title = 'Move down';
+        moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
         moveDown.disabled = index === assignments.length - 1;
         moveDown.addEventListener('click', () => {
           automation.moveAssignment(assignment.id, 1);
@@ -649,7 +672,7 @@ function updateBuildingsAutomationUI() {
         });
         const remove = document.createElement('button');
         remove.textContent = '✕';
-        remove.title = 'Remove preset';
+        remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
         remove.addEventListener('click', () => {
           automation.removeAssignment(assignment.id);
           queueAutomationUIRefresh();
@@ -666,8 +689,8 @@ function updateBuildingsAutomationUI() {
 
   buildingsAddApplyButton.disabled = presets.length === 0;
   buildingsApplyHint.textContent = presets.length === 0
-    ? 'Save a preset above to enable the Apply list.'
-    : 'Lower presets override higher presets when they target the same building and setting type.';
+    ? getAutomationCardText('buildingsApplyHintEmpty', {}, 'Save a preset above to enable the Apply list.')
+    : getAutomationCardText('buildingsApplyHintRule', {}, 'Lower presets override higher presets when they target the same building and setting type.');
 }
 
 function attachBuildingsAutomationHandlers() {

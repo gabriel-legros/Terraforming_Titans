@@ -12,6 +12,14 @@ const colonyAutomationUIState = {
   combinationName: ''
 };
 
+function getColonyAutomationPresetLabel(preset) {
+  return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
+}
+
+function getColonyAutomationCombinationLabel(combination) {
+  return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
+}
+
 function buildAutomationColonyUI() {
   const card = automationElements.colonyAutomation || document.getElementById('automation-colony');
 
@@ -22,7 +30,11 @@ function buildAutomationColonyUI() {
     updateAutomationUI();
   };
 
-  const header = createAutomationCardHeader(card, 'Colony Automation', toggleCollapsed);
+  const header = createAutomationCardHeader(
+    card,
+    getAutomationCardText('colonyAutomationTitle', {}, 'Colony Automation'),
+    toggleCollapsed
+  );
 
   const body = document.createElement('div');
   body.classList.add('automation-body');
@@ -33,7 +45,7 @@ function buildAutomationColonyUI() {
   const builderHeader = document.createElement('div');
   builderHeader.classList.add('colony-automation-section-title', 'building-automation-section-title');
   const builderTitle = document.createElement('span');
-  builderTitle.textContent = 'Preset Builder';
+  builderTitle.textContent = getAutomationCardText('researchAutomationPresetTitle', {}, 'Preset Builder');
   const builderDirty = document.createElement('span');
   builderDirty.classList.add('colony-automation-builder-dirty', 'building-automation-builder-dirty');
   builderDirty.textContent = '*';
@@ -49,28 +61,28 @@ function buildAutomationColonyUI() {
   presetMoveButtons.classList.add('automation-order-buttons');
   const presetMoveUpButton = document.createElement('button');
   presetMoveUpButton.textContent = '↑';
-  presetMoveUpButton.title = 'Move preset up';
+  presetMoveUpButton.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
   presetMoveUpButton.classList.add('colony-automation-builder-move-up');
   const presetMoveDownButton = document.createElement('button');
   presetMoveDownButton.textContent = '↓';
-  presetMoveDownButton.title = 'Move preset down';
+  presetMoveDownButton.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
   presetMoveDownButton.classList.add('colony-automation-builder-move-down');
   presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
   const presetNameInput = document.createElement('input');
   presetNameInput.type = 'text';
-  presetNameInput.placeholder = 'Preset name';
+  presetNameInput.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
   presetNameInput.classList.add('colony-automation-builder-name');
   const newButton = document.createElement('button');
-  newButton.textContent = 'New';
+  newButton.textContent = getAutomationCardText('newPresetButton', {}, 'New');
   newButton.classList.add('colony-automation-builder-new');
   const saveButton = document.createElement('button');
-  saveButton.textContent = 'Save';
+  saveButton.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
   saveButton.classList.add('colony-automation-builder-save', 'building-automation-builder-save');
   const deleteButton = document.createElement('button');
-  deleteButton.textContent = 'Delete';
+  deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deleteButton.classList.add('colony-automation-builder-delete');
   const applyOnceButton = document.createElement('button');
-  applyOnceButton.textContent = 'Apply Once Now';
+  applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('colony-automation-builder-apply-once');
   builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
   builderSection.appendChild(builderRow);
@@ -81,29 +93,29 @@ function buildAutomationColonyUI() {
   typeSelect.classList.add('colony-automation-builder-type');
   const controlOpt = document.createElement('option');
   controlOpt.value = 'control';
-  controlOpt.textContent = 'Control only';
+  controlOpt.textContent = getAutomationCardText('controlOnly', {}, 'Control only');
   const automationOpt = document.createElement('option');
   automationOpt.value = 'automation';
-  automationOpt.textContent = 'Autobuild only';
+  automationOpt.textContent = getAutomationCardText('autobuildOnly', {}, 'Autobuild only');
   const bothOpt = document.createElement('option');
   bothOpt.value = 'both';
-  bothOpt.textContent = 'Control + Autobuild';
+  bothOpt.textContent = getAutomationCardText('controlAutobuild', {}, 'Control + Autobuild');
   typeSelect.append(controlOpt, automationOpt, bothOpt);
   const scopeSelect = document.createElement('select');
   scopeSelect.classList.add('colony-automation-builder-scope');
   const allScope = document.createElement('option');
   allScope.value = 'all';
-  allScope.textContent = 'All available targets';
+  allScope.textContent = getAutomationCardText('allAvailableTargets', {}, 'All available targets');
   const manualScope = document.createElement('option');
   manualScope.value = 'manual';
-  manualScope.textContent = 'Choose targets';
+  manualScope.textContent = getAutomationCardText('chooseTargets', {}, 'Choose targets');
   scopeSelect.append(allScope, manualScope);
   builderModeRow.append(typeSelect, scopeSelect);
   builderSection.appendChild(builderModeRow);
 
   const builderHint = document.createElement('div');
   builderHint.classList.add('colony-automation-hint', 'building-automation-hint');
-  builderHint.textContent = 'Colony Buildings capture colony controls and autobuild settings, including aerostat controls. Other categories capture control settings only.';
+  builderHint.textContent = getAutomationCardText('colonyBuilderHint', {}, 'Colony Buildings capture colony controls and autobuild settings, including aerostat controls. Other categories capture control settings only.');
   builderSection.appendChild(builderHint);
 
   const pickerRow = document.createElement('div');
@@ -113,13 +125,13 @@ function buildAutomationColonyUI() {
   const targetSelect = document.createElement('select');
   targetSelect.classList.add('colony-automation-builder-target');
   const addButton = document.createElement('button');
-  addButton.textContent = '+ Target';
+  addButton.textContent = getAutomationCardText('addTargetButton', {}, '+ Target');
   addButton.classList.add('colony-automation-builder-add');
   const addCategoryButton = document.createElement('button');
-  addCategoryButton.textContent = '+ Category';
+  addCategoryButton.textContent = getAutomationCardText('addCategoryButton', {}, '+ Category');
   addCategoryButton.classList.add('colony-automation-builder-add-category');
   const clearButton = document.createElement('button');
-  clearButton.textContent = '- All';
+  clearButton.textContent = getAutomationCardText('clearAllButton', {}, '- All');
   clearButton.classList.add('colony-automation-builder-clear');
   pickerRow.append(categorySelect, targetSelect, addButton, addCategoryButton, clearButton);
   builderSection.appendChild(pickerRow);
@@ -138,18 +150,18 @@ function buildAutomationColonyUI() {
   const applyHeader = document.createElement('div');
   applyHeader.classList.add('colony-automation-section-title', 'building-automation-section-title');
   const applyTitle = document.createElement('span');
-  applyTitle.textContent = 'Preset Combination';
+  applyTitle.textContent = getAutomationCardText('presetCombinationTitle', {}, 'Preset Combination');
   const applyNextTravelLabel = document.createElement('label');
   applyNextTravelLabel.classList.add('colony-automation-apply-next-travel-label', 'building-automation-apply-next-travel-label');
   const applyNextTravelText = document.createElement('span');
-  applyNextTravelText.textContent = 'Combination on Next Travel';
+  applyNextTravelText.textContent = getAutomationCardText('combinationOnNextTravelLabel', {}, 'Combination on Next Travel');
   const applyNextTravelSelect = document.createElement('select');
   applyNextTravelSelect.classList.add('colony-automation-next-travel-select', 'building-automation-next-travel-select');
   const applyNextTravelPersistToggle = document.createElement('input');
   applyNextTravelPersistToggle.type = 'checkbox';
   applyNextTravelPersistToggle.classList.add('colony-automation-next-travel-persist-toggle');
   const applyNextTravelPersistText = document.createElement('span');
-  applyNextTravelPersistText.textContent = 'All future travels';
+  applyNextTravelPersistText.textContent = getAutomationCardText('allFutureTravelsLabel', {}, 'All future travels');
   applyNextTravelPersistText.classList.add('colony-automation-next-travel-persist-text', 'building-automation-next-travel-persist-text');
   applyNextTravelLabel.append(
     applyNextTravelText,
@@ -167,7 +179,7 @@ function buildAutomationColonyUI() {
   const combinationRow = document.createElement('div');
   combinationRow.classList.add('colony-automation-row', 'building-automation-row');
   const applyCombinationButton = document.createElement('button');
-  applyCombinationButton.textContent = 'Apply Combination';
+  applyCombinationButton.textContent = getAutomationCardText('applyCombinationButton', {}, 'Apply Combination');
   applyCombinationButton.classList.add('colony-automation-apply-combination', 'building-automation-apply-combination');
   const combinationSelect = document.createElement('select');
   combinationSelect.classList.add('colony-automation-combination-select');
@@ -175,25 +187,25 @@ function buildAutomationColonyUI() {
   combinationMoveButtons.classList.add('automation-order-buttons');
   const combinationMoveUpButton = document.createElement('button');
   combinationMoveUpButton.textContent = '↑';
-  combinationMoveUpButton.title = 'Move combination up';
+  combinationMoveUpButton.title = getAutomationCardText('moveCombinationUp', {}, 'Move combination up');
   combinationMoveUpButton.classList.add('colony-automation-combination-move-up');
   const combinationMoveDownButton = document.createElement('button');
   combinationMoveDownButton.textContent = '↓';
-  combinationMoveDownButton.title = 'Move combination down';
+  combinationMoveDownButton.title = getAutomationCardText('moveCombinationDown', {}, 'Move combination down');
   combinationMoveDownButton.classList.add('colony-automation-combination-move-down');
   combinationMoveButtons.append(combinationMoveUpButton, combinationMoveDownButton);
   const combinationNameInput = document.createElement('input');
   combinationNameInput.type = 'text';
-  combinationNameInput.placeholder = 'Combination name';
+  combinationNameInput.placeholder = getAutomationCardText('combinationNamePlaceholder', {}, 'Combination name');
   combinationNameInput.classList.add('colony-automation-combination-name');
   const combinationNewButton = document.createElement('button');
-  combinationNewButton.textContent = 'New';
+  combinationNewButton.textContent = getAutomationCardText('newCombinationButton', {}, 'New');
   combinationNewButton.classList.add('colony-automation-combination-new');
   const combinationSaveButton = document.createElement('button');
-  combinationSaveButton.textContent = 'Save';
+  combinationSaveButton.textContent = getAutomationCardText('saveCombinationButton', {}, 'Save');
   combinationSaveButton.classList.add('colony-automation-combination-save', 'building-automation-combination-save');
   const combinationDeleteButton = document.createElement('button');
-  combinationDeleteButton.textContent = 'Delete';
+  combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
   combinationDeleteButton.classList.add('colony-automation-combination-delete');
   combinationRow.append(
     combinationSelect,
@@ -211,7 +223,7 @@ function buildAutomationColonyUI() {
   applySection.appendChild(applyList);
 
   const addApplyButton = document.createElement('button');
-  addApplyButton.textContent = '+ Preset';
+  addApplyButton.textContent = getAutomationCardText('addPresetButton', {}, '+ Preset');
   addApplyButton.classList.add('colony-automation-apply-add', 'building-automation-apply-add');
   applySection.appendChild(addApplyButton);
 
@@ -302,8 +314,8 @@ function updateColonyAutomationUI() {
   colonyAutomation.style.display = unlocked ? '' : 'none';
   colonyAutomation.classList.toggle('automation-card-locked', !unlocked);
   colonyAutomationDescription.textContent = unlocked
-    ? 'Capture colony controls, sliders, nanocolony settings, and orbital settings in ordered presets.'
-    : 'Purchase the Solis Colony Automation upgrade to enable colony presets.';
+    ? getAutomationCardText('colonyAutomationDescriptionUnlocked', {}, 'Capture colony controls, sliders, nanocolony settings, and orbital settings in ordered presets.')
+    : getAutomationCardText('colonyAutomationDescriptionLocked', {}, 'Purchase the Solis Colony Automation upgrade to enable colony presets.');
   if (!unlocked) {
     return;
   }
@@ -319,12 +331,12 @@ function updateColonyAutomationUI() {
     colonyBuilderPresetSelect.textContent = '';
     const newOption = document.createElement('option');
     newOption.value = '';
-    newOption.textContent = 'New preset';
+    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
     colonyBuilderPresetSelect.appendChild(newOption);
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
-      option.textContent = preset.name || `Preset ${preset.id}`;
+      option.textContent = getColonyAutomationPresetLabel(preset);
       colonyBuilderPresetSelect.appendChild(option);
     });
     colonyBuilderPresetSelect.value = automation.getSelectedPresetId() || '';
@@ -371,7 +383,7 @@ function updateColonyAutomationUI() {
     colonyBuilderCategorySelect.textContent = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
-    allOption.textContent = 'All categories';
+    allOption.textContent = getAutomationCardText('allCategoriesOption', {}, 'All categories');
     colonyBuilderCategorySelect.appendChild(allOption);
     categoryIds.forEach(categoryId => {
       const option = document.createElement('option');
@@ -394,7 +406,7 @@ function updateColonyAutomationUI() {
     colonyBuilderTargetSelect.textContent = '';
     if (!filteredTargets.length) {
       const empty = document.createElement('option');
-      empty.textContent = 'No targets available';
+      empty.textContent = getAutomationCardText('noTargetsAvailable', {}, 'No targets available');
       empty.disabled = true;
       empty.selected = true;
       colonyBuilderTargetSelect.appendChild(empty);
@@ -438,12 +450,12 @@ function updateColonyAutomationUI() {
     colonyApplyNextTravelSelect.textContent = '';
     const noneOption = document.createElement('option');
     noneOption.value = '';
-    noneOption.textContent = 'None';
+    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
     colonyApplyNextTravelSelect.appendChild(noneOption);
     combinations.forEach(combo => {
       const option = document.createElement('option');
       option.value = String(combo.id);
-      option.textContent = combo.name || `Combination ${combo.id}`;
+      option.textContent = getColonyAutomationCombinationLabel(combo);
       colonyApplyNextTravelSelect.appendChild(option);
     });
     colonyApplyNextTravelSelect.value = automation.nextTravelCombinationId
@@ -457,12 +469,12 @@ function updateColonyAutomationUI() {
     colonyCombinationSelect.textContent = '';
     const newOption = document.createElement('option');
     newOption.value = '';
-    newOption.textContent = 'New combination';
+    newOption.textContent = getAutomationCardText('newCombinationOption', {}, 'New combination');
     colonyCombinationSelect.appendChild(newOption);
     combinations.forEach(combo => {
       const option = document.createElement('option');
       option.value = String(combo.id);
-      option.textContent = combo.name || `Combination ${combo.id}`;
+      option.textContent = getColonyAutomationCombinationLabel(combo);
       colonyCombinationSelect.appendChild(option);
     });
     colonyCombinationSelect.value = automation.getSelectedCombinationId() || '';
@@ -499,7 +511,7 @@ function updateColonyAutomationUI() {
     label.textContent = automation.getTargetLabel(targetId);
     const remove = document.createElement('button');
     remove.textContent = '✕';
-    remove.title = 'Remove target';
+    remove.title = getAutomationCardText('removeTarget', {}, 'Remove target');
     remove.addEventListener('click', () => {
       colonyAutomationUIState.builderSelectedTargets = colonyAutomationUIState.builderSelectedTargets.filter(id => id !== targetId);
       queueAutomationUIRefresh();
@@ -552,7 +564,11 @@ function updateColonyAutomationUI() {
       row.classList.add('building-automation-apply-row');
       const primary = document.createElement('div');
       primary.classList.add('building-automation-apply-primary');
-      const toggle = createToggleButton({ onLabel: 'Apply On', offLabel: 'Apply Off', isOn: assignment.enabled });
+      const toggle = createToggleButton({
+        onLabel: getAutomationCardText('applyOn', {}, 'Apply On'),
+        offLabel: getAutomationCardText('applyOff', {}, 'Apply Off'),
+        isOn: assignment.enabled
+      });
       toggle.classList.add('building-automation-apply-toggle');
       toggle.addEventListener('click', () => {
         automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
@@ -563,7 +579,7 @@ function updateColonyAutomationUI() {
       presets.forEach(preset => {
         const option = document.createElement('option');
         option.value = String(preset.id);
-        option.textContent = preset.name || `Preset ${preset.id}`;
+        option.textContent = getColonyAutomationPresetLabel(preset);
         if (assignment.presetId === preset.id) {
           option.selected = true;
         }
@@ -571,7 +587,7 @@ function updateColonyAutomationUI() {
       });
       if (!presets.length) {
         const empty = document.createElement('option');
-        empty.textContent = 'No presets saved';
+        empty.textContent = getAutomationCardText('noPresetsSaved', {}, 'No presets saved');
         empty.disabled = true;
         empty.selected = true;
         select.appendChild(empty);
@@ -582,10 +598,10 @@ function updateColonyAutomationUI() {
         const preset = automation.getPresetById(presetId);
         const detailText = preset
           ? formatColonyAutomationPresetType(preset)
-          : 'Select a preset';
+          : getAutomationCardText('selectPreset', {}, 'Select a preset');
         const targetList = preset
           ? preset.scopeAll
-            ? 'All available targets'
+            ? getAutomationCardText('allAvailableTargets', {}, 'All available targets')
             : Object.keys(preset.targets).map(targetId => automation.getTargetLabel(targetId)).join(', ')
           : '';
         detail.textContent = targetList ? `${detailText} / ${targetList}` : detailText;
@@ -603,7 +619,7 @@ function updateColonyAutomationUI() {
       controls.classList.add('building-automation-apply-controls');
       const moveUp = document.createElement('button');
       moveUp.textContent = '↑';
-      moveUp.title = 'Move up';
+      moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
       moveUp.disabled = index === 0;
       moveUp.addEventListener('click', () => {
         automation.moveAssignment(assignment.id, -1);
@@ -612,7 +628,7 @@ function updateColonyAutomationUI() {
       });
       const moveDown = document.createElement('button');
       moveDown.textContent = '↓';
-      moveDown.title = 'Move down';
+      moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
       moveDown.disabled = index === assignments.length - 1;
       moveDown.addEventListener('click', () => {
         automation.moveAssignment(assignment.id, 1);
@@ -621,7 +637,7 @@ function updateColonyAutomationUI() {
       });
       const remove = document.createElement('button');
       remove.textContent = '✕';
-      remove.title = 'Remove preset';
+      remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
       remove.addEventListener('click', () => {
         automation.removeAssignment(assignment.id);
         queueAutomationUIRefresh();
@@ -636,8 +652,8 @@ function updateColonyAutomationUI() {
 
   colonyAddApplyButton.disabled = presets.length === 0;
   colonyApplyHint.textContent = presets.length === 0
-    ? 'Save a preset above to enable the Apply list.'
-    : 'Lower presets override higher presets when they target the same colony setting.';
+    ? getAutomationCardText('colonyApplyHintEmpty', {}, 'Save a preset above to enable the Apply list.')
+    : getAutomationCardText('colonyApplyHintRule', {}, 'Lower presets override higher presets when they target the same colony setting.');
 }
 
 function attachColonyAutomationHandlers() {
@@ -939,13 +955,13 @@ function getColonyAutomationTargets() {
 
 function formatColonyAutomationPresetType(preset) {
   if (!preset) {
-    return 'Select a preset';
+    return getAutomationCardText('selectPreset', {}, 'Select a preset');
   }
   if (preset.includeControl && preset.includeAutomation) {
-    return 'Control + Autobuild';
+    return getAutomationCardText('controlAutobuild', {}, 'Control + Autobuild');
   }
   if (preset.includeControl) {
-    return 'Control only';
+    return getAutomationCardText('controlOnly', {}, 'Control only');
   }
-  return 'Autobuild only';
+  return getAutomationCardText('autobuildOnly', {}, 'Autobuild only');
 }
