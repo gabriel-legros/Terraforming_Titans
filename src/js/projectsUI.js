@@ -1113,6 +1113,9 @@ function updateTotalCostDisplay(project) {
     let totalCost = 0;
 
     rowMeta.forEach((meta, index) => {
+      if (!project.isSelectionResourceUnlocked(meta.category, meta.resource)) {
+        return;
+      }
       const buyInput = elements.buyInputs?.[index];
       const sellInput = elements.sellInputs?.[index];
       const storedBuy = buyInput ? Number(buyInput.dataset.quantity) : NaN;

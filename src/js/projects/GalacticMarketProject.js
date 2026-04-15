@@ -125,6 +125,9 @@ class GalacticMarketProject extends Project {
     const getTotalCostFromInputs = () => {
       let totalCost = 0;
       (elements.rowMeta || []).forEach((meta, index) => {
+        if (!this.isSelectionResourceUnlocked(meta.category, meta.resource)) {
+          return;
+        }
         const buyInput = elements.buyInputs?.[index];
         const sellInput = elements.sellInputs?.[index];
         const storedBuy = buyInput ? Number(buyInput.dataset.quantity) : NaN;
@@ -527,14 +530,11 @@ class GalacticMarketProject extends Project {
     this.updateControlsHeaderWidth();
 
     rowMeta.forEach((meta, index) => {
-      const resourceData = resources[meta.category]?.[meta.resource];
       const leftRow = leftRows[index];
       const rightRow = rightRows[index];
-      if (resourceData) {
-        const displayValue = resourceData.unlocked ? 'grid' : 'none';
-        if (leftRow) leftRow.style.display = displayValue;
-        if (rightRow) rightRow.style.display = displayValue;
-      }
+      const displayValue = this.isSelectionResourceUnlocked(meta.category, meta.resource) ? 'grid' : 'none';
+      if (leftRow) leftRow.style.display = displayValue;
+      if (rightRow) rightRow.style.display = displayValue;
       if (buyPriceSpans[index]) {
         buyPriceSpans[index].textContent = `${formatNumber(this.getBuyPrice(meta.category, meta.resource), true)}`;
       }
@@ -577,14 +577,18 @@ class GalacticMarketProject extends Project {
     rowMeta.forEach((meta, index) => {
       const buyInput = buyInputs[index];
       const sellInput = sellInputs[index];
+      const isUnlocked = this.isSelectionResourceUnlocked(meta.category, meta.resource);
       const buyQuantity = buyInput ? getInputQuantity(buyInput) : 0;
       const sellQuantity = sellInput ? getInputQuantity(sellInput) : 0;
-      total += buyQuantity + sellQuantity;
+      if (isUnlocked) {
+        total += buyQuantity + sellQuantity;
+      }
       entries.push({
         meta,
         index,
         buyInput,
         sellInput,
+        isUnlocked,
         buyQuantity,
         sellQuantity
       });
@@ -597,7 +601,7 @@ class GalacticMarketProject extends Project {
     entries.forEach((entry) => {
       let buyQuantity = entry.buyQuantity;
       let sellQuantity = entry.sellQuantity;
-      if (scale < 1) {
+      if (entry.isUnlocked && scale < 1) {
         buyQuantity = setInputQuantity(entry.buyInput, buyQuantity * scale, true);
         sellQuantity = setInputQuantity(entry.sellInput, sellQuantity * scale, true);
       }
@@ -635,12 +639,14 @@ class GalacticMarketProject extends Project {
     if (!this.isActive || this.autoStart === false) return 0;
     let net = 0;
     this.buySelections.forEach((entry) => {
-      if (entry.category === category && entry.resource === resourceId) {
+      if (entry.category === category && entry.resource === resourceId
+        && this.isSelectionResourceUnlocked(entry.category, entry.resource)) {
         net += entry.quantity;
       }
     });
     this.sellSelections.forEach((entry) => {
-      if (entry.category === category && entry.resource === resourceId) {
+      if (entry.category === category && entry.resource === resourceId
+        && this.isSelectionResourceUnlocked(entry.category, entry.resource)) {
         net -= entry.quantity;
       }
     });
@@ -736,6 +742,11 @@ class GalacticMarketProject extends Project {
     return entry ? entry.quantity : 0;
   }
 
+  isSelectionResourceUnlocked(category, resourceId) {
+    const resourceData = resources[category]?.[resourceId];
+    return !!(resourceData && resourceData.unlocked);
+  }
+
   getSpaceshipPriceIncrease() {
     return this.spaceshipPriceIncrease;
   }
@@ -810,7 +821,8 @@ class GalacticMarketProject extends Project {
 
   canStart() {
     if (!super.canStart()) return false;
-    return this.buySelections.length > 0 || this.sellSelections.length > 0;
+    return this.buySelections.some((entry) => this.isSelectionResourceUnlocked(entry.category, entry.resource))
+      || this.sellSelections.some((entry) => this.isSelectionResourceUnlocked(entry.category, entry.resource));
   }
 
   update(deltaTime) {
@@ -838,10 +850,16 @@ class GalacticMarketProject extends Project {
     const limit = this.getKesslerTradeLimitPerSecond();
 
     let total = 0;
-    this.buySelections.forEach(({ quantity }) => {
+    this.buySelections.forEach(({ category, resource, quantity }) => {
+      if (!this.isSelectionResourceUnlocked(category, resource)) {
+        return;
+      }
       total += quantity;
     });
-    this.sellSelections.forEach(({ quantity }) => {
+    this.sellSelections.forEach(({ category, resource, quantity }) => {
+      if (!this.isSelectionResourceUnlocked(category, resource)) {
+        return;
+      }
       total += quantity;
     });
 
@@ -859,6 +877,9 @@ class GalacticMarketProject extends Project {
     const tradeScale = this.getKesslerTradeScale();
 
     this.buySelections.forEach(({ category, resource, quantity }) => {
+      if (!this.isSelectionResourceUnlocked(category, resource)) {
+        return;
+      }
       const scaledQuantity = quantity * tradeScale;
       const basePrice = this.getBasePrice(category, resource);
       const costPerSecond = resource === 'spaceships'
@@ -875,6 +896,9 @@ class GalacticMarketProject extends Project {
     });
 
     this.sellSelections.forEach(({ category, resource, quantity }) => {
+      if (!this.isSelectionResourceUnlocked(category, resource)) {
+        return;
+      }
       const scaledQuantity = quantity * tradeScale;
       const sellPrice = this.getSellPrice(category, resource, scaledQuantity);
       const revenuePerSecond = sellPrice * scaledQuantity;
@@ -905,6 +929,9 @@ class GalacticMarketProject extends Project {
     let buyCostPerSecond = 0;
 
     this.buySelections.forEach(({ category, resource, quantity }) => {
+      if (!this.isSelectionResourceUnlocked(category, resource)) {
+        return;
+      }
       const scaledQuantity = quantity * tradeScale;
       const basePrice = this.getBasePrice(category, resource);
       const perSecondCost = resource === 'spaceships'
@@ -917,6 +944,9 @@ class GalacticMarketProject extends Project {
     const sellTransactions = [];
 
     this.sellSelections.forEach(({ category, resource, quantity }) => {
+      if (!this.isSelectionResourceUnlocked(category, resource)) {
+        return;
+      }
       const scaledQuantity = quantity * tradeScale;
       sellTransactions.push({ category, resource, quantity: scaledQuantity });
     });
