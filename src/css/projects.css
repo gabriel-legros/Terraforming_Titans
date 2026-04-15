@@ -991,9 +991,33 @@
 }
 
 .manufacturing-block-row.assignment-divider-row {
+    position: relative;
     padding-bottom: 8px;
     margin-bottom: 4px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: none;
+}
+
+.manufacturing-block-row.assignment-divider-row::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background-color: #e9ecef;
+}
+
+.manufacturing-block-a .manufacturing-block-row.assignment-divider-row::after {
+    right: calc(var(--manufacturing-block-gap) * -0.5);
+}
+
+.manufacturing-block-b .manufacturing-block-row.assignment-divider-row::after {
+    left: calc(var(--manufacturing-block-gap) * -0.5);
+    right: calc(var(--manufacturing-block-gap) * -0.5);
+}
+
+.manufacturing-block-c .manufacturing-block-row.assignment-divider-row::after {
+    left: calc(var(--manufacturing-block-gap) * -0.5);
 }
 
 .manufacturing-block-header {

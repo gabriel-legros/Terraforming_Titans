@@ -44,6 +44,18 @@ const sidebarAutomationElements = {
   colonyCombinationDeploy: null
 };
 
+function getSidebarAutomationText(path, vars, fallback) {
+  return t(`ui.hope.automationCards.sidebar.${path}`, vars, fallback);
+}
+
+function getSidebarPresetLabel(preset) {
+  return preset.name || getSidebarAutomationText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
+}
+
+function getSidebarCombinationLabel(combination) {
+  return combination.name || getSidebarAutomationText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
+}
+
 function createJournalAutomationToggle(title) {
   if (!title) {
     return null;
@@ -51,7 +63,7 @@ function createJournalAutomationToggle(title) {
   const toggle = document.createElement('span');
   toggle.id = 'journal-automation-toggle';
   toggle.classList.add('journal-automation-toggle', 'hidden');
-  toggle.title = 'Automation shortcuts';
+  toggle.title = t('ui.journal.automationShortcuts', null, 'Automation shortcuts');
   toggle.innerHTML = '&#9881;';
   const indexIcon = document.getElementById('journal-index-icon');
   if (indexIcon && indexIcon.parentElement === title) {
@@ -114,13 +126,17 @@ function buildSidebarAutomationUI() {
     return;
   }
 
-  const ship = createSidebarSection('Ships');
+  const ship = createSidebarSection(getSidebarAutomationText('ships', null, 'Ships'));
   const shipRow = createSidebarRow();
   const shipPresetSelect = document.createElement('select');
   shipPresetSelect.classList.add('journal-automation-select');
-  const shipToggle = createToggleButton({ onLabel: 'On', offLabel: 'Off', isOn: false });
+  const shipToggle = createToggleButton({
+    onLabel: getSidebarAutomationText('on', null, 'On'),
+    offLabel: getSidebarAutomationText('off', null, 'Off'),
+    isOn: false
+  });
   shipToggle.classList.add('journal-automation-switch');
-  shipToggle.title = 'Toggle ship automation preset';
+  shipToggle.title = getSidebarAutomationText('toggleShipPreset', null, 'Toggle ship automation preset');
   ship.header.insertBefore(shipToggle, ship.status);
   shipRow.append(shipPresetSelect);
   ship.section.appendChild(shipRow);
@@ -130,23 +146,35 @@ function buildSidebarAutomationUI() {
   elements.shipPresetSelect = shipPresetSelect;
   elements.shipPresetToggle = shipToggle;
 
-  const life = createSidebarSection('Life');
+  const life = createSidebarSection(getSidebarAutomationText('life', null, 'Life'));
   const lifeRow = createSidebarRow();
   const lifePresetSelect = document.createElement('select');
   lifePresetSelect.classList.add('journal-automation-select');
-  const lifeToggle = createToggleButton({ onLabel: 'On', offLabel: 'Off', isOn: false });
+  const lifeToggle = createToggleButton({
+    onLabel: getSidebarAutomationText('on', null, 'On'),
+    offLabel: getSidebarAutomationText('off', null, 'Off'),
+    isOn: false
+  });
   lifeToggle.classList.add('journal-automation-switch');
-  lifeToggle.title = 'Toggle life automation preset';
+  lifeToggle.title = getSidebarAutomationText('toggleLifePreset', null, 'Toggle life automation preset');
   life.header.insertBefore(lifeToggle, life.status);
   lifeRow.append(lifePresetSelect);
   const lifeToggleRow = createSidebarRow();
   lifeToggleRow.classList.add('journal-automation-row-tight');
-  const purchaseToggle = createToggleButton({ onLabel: 'Purchase', offLabel: 'Purchase', isOn: false });
+  const purchaseToggle = createToggleButton({
+    onLabel: getSidebarAutomationText('purchase', null, 'Purchase'),
+    offLabel: getSidebarAutomationText('purchase', null, 'Purchase'),
+    isOn: false
+  });
   purchaseToggle.classList.add('journal-automation-switch');
-  purchaseToggle.title = 'Toggle auto purchase';
-  const designToggle = createToggleButton({ onLabel: 'Design', offLabel: 'Design', isOn: false });
+  purchaseToggle.title = getSidebarAutomationText('toggleAutoPurchase', null, 'Toggle auto purchase');
+  const designToggle = createToggleButton({
+    onLabel: getSidebarAutomationText('design', null, 'Design'),
+    offLabel: getSidebarAutomationText('design', null, 'Design'),
+    isOn: false
+  });
   designToggle.classList.add('journal-automation-switch');
-  designToggle.title = 'Toggle auto design';
+  designToggle.title = getSidebarAutomationText('toggleAutoDesign', null, 'Toggle auto design');
   lifeToggleRow.append(purchaseToggle, designToggle);
   life.section.append(lifeRow, lifeToggleRow);
   panel.appendChild(life.section);
@@ -157,18 +185,18 @@ function buildSidebarAutomationUI() {
   elements.lifePurchaseToggle = purchaseToggle;
   elements.lifeDesignToggle = designToggle;
 
-  const buildings = createSidebarSection('Buildings');
+  const buildings = createSidebarSection(getSidebarAutomationText('buildings', null, 'Buildings'));
   const buildingsPresetRow = createSidebarRow();
   buildingsPresetRow.classList.add('journal-automation-row-stacked');
   const buildingsPresetLabel = document.createElement('span');
   buildingsPresetLabel.classList.add('journal-automation-row-label');
-  buildingsPresetLabel.textContent = 'Preset';
+  buildingsPresetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
   const buildingsPresetControls = createSidebarRow();
   const buildingsPresetSelect = document.createElement('select');
   buildingsPresetSelect.classList.add('journal-automation-select');
   const buildingsPresetDeploy = document.createElement('button');
   buildingsPresetDeploy.type = 'button';
-  buildingsPresetDeploy.textContent = 'Deploy';
+  buildingsPresetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
   buildingsPresetDeploy.classList.add('journal-automation-action');
   buildingsPresetControls.append(buildingsPresetSelect, buildingsPresetDeploy);
   buildingsPresetRow.append(buildingsPresetLabel, buildingsPresetControls);
@@ -176,13 +204,13 @@ function buildSidebarAutomationUI() {
   buildingsComboRow.classList.add('journal-automation-row-stacked');
   const buildingsComboLabel = document.createElement('span');
   buildingsComboLabel.classList.add('journal-automation-row-label');
-  buildingsComboLabel.textContent = 'Combination';
+  buildingsComboLabel.textContent = getSidebarAutomationText('combination', null, 'Combination');
   const buildingsComboControls = createSidebarRow();
   const buildingsComboSelect = document.createElement('select');
   buildingsComboSelect.classList.add('journal-automation-select');
   const buildingsComboDeploy = document.createElement('button');
   buildingsComboDeploy.type = 'button';
-  buildingsComboDeploy.textContent = 'Deploy';
+  buildingsComboDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
   buildingsComboDeploy.classList.add('journal-automation-action');
   buildingsComboControls.append(buildingsComboSelect, buildingsComboDeploy);
   buildingsComboRow.append(buildingsComboLabel, buildingsComboControls);
@@ -195,18 +223,18 @@ function buildSidebarAutomationUI() {
   elements.buildingsCombinationSelect = buildingsComboSelect;
   elements.buildingsCombinationDeploy = buildingsComboDeploy;
 
-  const projects = createSidebarSection('Projects');
+  const projects = createSidebarSection(getSidebarAutomationText('projects', null, 'Projects'));
   const projectsPresetRow = createSidebarRow();
   projectsPresetRow.classList.add('journal-automation-row-stacked');
   const projectsPresetLabel = document.createElement('span');
   projectsPresetLabel.classList.add('journal-automation-row-label');
-  projectsPresetLabel.textContent = 'Preset';
+  projectsPresetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
   const projectsPresetControls = createSidebarRow();
   const projectsPresetSelect = document.createElement('select');
   projectsPresetSelect.classList.add('journal-automation-select');
   const projectsPresetDeploy = document.createElement('button');
   projectsPresetDeploy.type = 'button';
-  projectsPresetDeploy.textContent = 'Deploy';
+  projectsPresetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
   projectsPresetDeploy.classList.add('journal-automation-action');
   projectsPresetControls.append(projectsPresetSelect, projectsPresetDeploy);
   projectsPresetRow.append(projectsPresetLabel, projectsPresetControls);
@@ -214,13 +242,13 @@ function buildSidebarAutomationUI() {
   projectsComboRow.classList.add('journal-automation-row-stacked');
   const projectsComboLabel = document.createElement('span');
   projectsComboLabel.classList.add('journal-automation-row-label');
-  projectsComboLabel.textContent = 'Combination';
+  projectsComboLabel.textContent = getSidebarAutomationText('combination', null, 'Combination');
   const projectsComboControls = createSidebarRow();
   const projectsComboSelect = document.createElement('select');
   projectsComboSelect.classList.add('journal-automation-select');
   const projectsComboDeploy = document.createElement('button');
   projectsComboDeploy.type = 'button';
-  projectsComboDeploy.textContent = 'Deploy';
+  projectsComboDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
   projectsComboDeploy.classList.add('journal-automation-action');
   projectsComboControls.append(projectsComboSelect, projectsComboDeploy);
   projectsComboRow.append(projectsComboLabel, projectsComboControls);
@@ -233,18 +261,18 @@ function buildSidebarAutomationUI() {
   elements.projectsCombinationSelect = projectsComboSelect;
   elements.projectsCombinationDeploy = projectsComboDeploy;
 
-  const colony = createSidebarSection('Colony');
+  const colony = createSidebarSection(getSidebarAutomationText('colony', null, 'Colony'));
   const colonyPresetRow = createSidebarRow();
   colonyPresetRow.classList.add('journal-automation-row-stacked');
   const colonyPresetLabel = document.createElement('span');
   colonyPresetLabel.classList.add('journal-automation-row-label');
-  colonyPresetLabel.textContent = 'Preset';
+  colonyPresetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
   const colonyPresetControls = createSidebarRow();
   const colonyPresetSelect = document.createElement('select');
   colonyPresetSelect.classList.add('journal-automation-select');
   const colonyPresetDeploy = document.createElement('button');
   colonyPresetDeploy.type = 'button';
-  colonyPresetDeploy.textContent = 'Deploy';
+  colonyPresetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
   colonyPresetDeploy.classList.add('journal-automation-action');
   colonyPresetControls.append(colonyPresetSelect, colonyPresetDeploy);
   colonyPresetRow.append(colonyPresetLabel, colonyPresetControls);
@@ -252,13 +280,13 @@ function buildSidebarAutomationUI() {
   colonyComboRow.classList.add('journal-automation-row-stacked');
   const colonyComboLabel = document.createElement('span');
   colonyComboLabel.classList.add('journal-automation-row-label');
-  colonyComboLabel.textContent = 'Combination';
+  colonyComboLabel.textContent = getSidebarAutomationText('combination', null, 'Combination');
   const colonyComboControls = createSidebarRow();
   const colonyComboSelect = document.createElement('select');
   colonyComboSelect.classList.add('journal-automation-select');
   const colonyComboDeploy = document.createElement('button');
   colonyComboDeploy.type = 'button';
-  colonyComboDeploy.textContent = 'Deploy';
+  colonyComboDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
   colonyComboDeploy.classList.add('journal-automation-action');
   colonyComboControls.append(colonyComboSelect, colonyComboDeploy);
   colonyComboRow.append(colonyComboLabel, colonyComboControls);
@@ -271,18 +299,18 @@ function buildSidebarAutomationUI() {
   elements.colonyCombinationSelect = colonyComboSelect;
   elements.colonyCombinationDeploy = colonyComboDeploy;
 
-  const research = createSidebarSection('Research');
+  const research = createSidebarSection(getSidebarAutomationText('research', null, 'Research'));
   const researchRow = createSidebarRow();
   researchRow.classList.add('journal-automation-row-stacked');
   const researchPresetLabel = document.createElement('span');
   researchPresetLabel.classList.add('journal-automation-row-label');
-  researchPresetLabel.textContent = 'Preset';
+  researchPresetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
   const researchPresetControls = createSidebarRow();
   const researchPresetSelect = document.createElement('select');
   researchPresetSelect.classList.add('journal-automation-select');
   const researchPresetDeploy = document.createElement('button');
   researchPresetDeploy.type = 'button';
-  researchPresetDeploy.textContent = 'Deploy';
+  researchPresetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
   researchPresetDeploy.classList.add('journal-automation-action');
   researchPresetControls.append(researchPresetSelect, researchPresetDeploy);
   researchRow.append(researchPresetLabel, researchPresetControls);
@@ -301,7 +329,9 @@ function setJournalAutomationMode(enabled) {
   journal.classList.toggle('automation-mode', sidebarAutomationMode);
   elements.panel.classList.toggle('hidden', !sidebarAutomationMode);
   elements.toggle.innerHTML = sidebarAutomationMode ? '&#128214;' : '&#9881;';
-  elements.toggle.title = sidebarAutomationMode ? 'Return to journal' : 'Automation shortcuts';
+  elements.toggle.title = sidebarAutomationMode
+    ? t('ui.journal.returnToJournal', null, 'Return to journal')
+    : t('ui.journal.automationShortcuts', null, 'Automation shortcuts');
 }
 
 function toggleJournalAutomationMode() {
@@ -521,13 +551,13 @@ function updateSidebarAutomationUI() {
   const shipUnlocked = manager.hasFeature('automationShipAssignment');
   elements.shipSection.style.display = shipUnlocked ? '' : 'none';
   elements.shipSection.classList.toggle('journal-automation-locked', !shipUnlocked);
-  elements.shipStatus.textContent = shipUnlocked ? '' : 'Locked';
+  elements.shipStatus.textContent = shipUnlocked ? '' : t('ui.common.locked', null, 'Locked');
   elements.shipPresetSelect.disabled = !shipUnlocked;
   elements.shipPresetToggle.disabled = !shipUnlocked;
   if (shipUnlocked) {
     fillSelect(
       elements.shipPresetSelect,
-      shipAutomation.presets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      shipAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
       shipAutomation.getSelectedPresetId()
     );
     const activePreset = shipAutomation.getActivePreset();
@@ -538,7 +568,7 @@ function updateSidebarAutomationUI() {
   const lifeUnlocked = manager.hasFeature('automationLifeDesign');
   elements.lifeSection.style.display = lifeUnlocked ? '' : 'none';
   elements.lifeSection.classList.toggle('journal-automation-locked', !lifeUnlocked);
-  elements.lifeStatus.textContent = lifeUnlocked ? '' : 'Locked';
+  elements.lifeStatus.textContent = lifeUnlocked ? '' : t('ui.common.locked', null, 'Locked');
   elements.lifePresetSelect.disabled = !lifeUnlocked;
   elements.lifePresetToggle.disabled = !lifeUnlocked;
   elements.lifePurchaseToggle.disabled = !lifeUnlocked;
@@ -546,7 +576,7 @@ function updateSidebarAutomationUI() {
   if (lifeUnlocked) {
     fillSelect(
       elements.lifePresetSelect,
-      lifeAutomation.presets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      lifeAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
       lifeAutomation.getSelectedPresetId()
     );
     const activePreset = lifeAutomation.getActivePreset();
@@ -558,13 +588,13 @@ function updateSidebarAutomationUI() {
   const researchUnlocked = manager.hasFeature('automationResearch');
   elements.researchSection.style.display = researchUnlocked ? '' : 'none';
   elements.researchSection.classList.toggle('journal-automation-locked', !researchUnlocked);
-  elements.researchStatus.textContent = researchUnlocked ? '' : 'Locked';
+  elements.researchStatus.textContent = researchUnlocked ? '' : t('ui.common.locked', null, 'Locked');
   elements.researchPresetSelect.disabled = !researchUnlocked;
   elements.researchPresetDeploy.disabled = !researchUnlocked;
   if (researchUnlocked) {
     fillSelect(
       elements.researchPresetSelect,
-      researchManager.autoResearchPresets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      researchManager.autoResearchPresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
       researchManager.currentAutoResearchPreset
     );
     elements.researchPresetDeploy.disabled = !researchManager.getSelectedAutoResearchPreset();
@@ -574,7 +604,7 @@ function updateSidebarAutomationUI() {
   const buildingsUnlocked = manager.hasFeature('automationBuildings');
   elements.buildingsSection.style.display = buildingsUnlocked ? '' : 'none';
   elements.buildingsSection.classList.toggle('journal-automation-locked', !buildingsUnlocked);
-  elements.buildingsStatus.textContent = buildingsUnlocked ? '' : 'Locked';
+  elements.buildingsStatus.textContent = buildingsUnlocked ? '' : t('ui.common.locked', null, 'Locked');
   elements.buildingsPresetSelect.disabled = !buildingsUnlocked;
   elements.buildingsPresetDeploy.disabled = !buildingsUnlocked;
   elements.buildingsCombinationSelect.disabled = !buildingsUnlocked;
@@ -583,15 +613,15 @@ function updateSidebarAutomationUI() {
     const buildingCombinations = buildingAutomation.getCombinations();
     fillSelect(
       elements.buildingsPresetSelect,
-      buildingAutomation.presets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      buildingAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
       buildingAutomation.getSelectedPresetId() || '',
-      'Select preset'
+      getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     fillSelect(
       elements.buildingsCombinationSelect,
-      buildingCombinations.map(combo => ({ value: combo.id, label: combo.name || `Combination ${combo.id}` })),
+      buildingCombinations.map(combo => ({ value: combo.id, label: getSidebarCombinationLabel(combo) })),
       buildingAutomation.getSelectedCombinationId() || '',
-      'Select combination'
+      getSidebarAutomationText('selectCombination', null, 'Select combination')
     );
     elements.buildingsPresetDeploy.disabled = !buildingAutomation.getSelectedPresetId();
     elements.buildingsCombinationDeploy.disabled = !buildingAutomation.getSelectedCombinationId() || buildingAutomation.getAssignments().length === 0;
@@ -601,7 +631,7 @@ function updateSidebarAutomationUI() {
   const projectsUnlocked = manager.hasFeature('automationProjects');
   elements.projectsSection.style.display = projectsUnlocked ? '' : 'none';
   elements.projectsSection.classList.toggle('journal-automation-locked', !projectsUnlocked);
-  elements.projectsStatus.textContent = projectsUnlocked ? '' : 'Locked';
+  elements.projectsStatus.textContent = projectsUnlocked ? '' : t('ui.common.locked', null, 'Locked');
   elements.projectsPresetSelect.disabled = !projectsUnlocked;
   elements.projectsPresetDeploy.disabled = !projectsUnlocked;
   elements.projectsCombinationSelect.disabled = !projectsUnlocked;
@@ -610,15 +640,15 @@ function updateSidebarAutomationUI() {
     const projectCombinations = projectsAutomation.getCombinations();
     fillSelect(
       elements.projectsPresetSelect,
-      projectsAutomation.presets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      projectsAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
       projectsAutomation.getSelectedPresetId() || '',
-      'Select preset'
+      getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     fillSelect(
       elements.projectsCombinationSelect,
-      projectCombinations.map(combo => ({ value: combo.id, label: combo.name || `Combination ${combo.id}` })),
+      projectCombinations.map(combo => ({ value: combo.id, label: getSidebarCombinationLabel(combo) })),
       projectsAutomation.getSelectedCombinationId() || '',
-      'Select combination'
+      getSidebarAutomationText('selectCombination', null, 'Select combination')
     );
     elements.projectsPresetDeploy.disabled = !projectsAutomation.getSelectedPresetId();
     elements.projectsCombinationDeploy.disabled = !projectsAutomation.getSelectedCombinationId() || projectsAutomation.getAssignments().length === 0;
@@ -628,7 +658,7 @@ function updateSidebarAutomationUI() {
   const colonyUnlocked = manager.hasFeature('automationColony');
   elements.colonySection.style.display = colonyUnlocked ? '' : 'none';
   elements.colonySection.classList.toggle('journal-automation-locked', !colonyUnlocked);
-  elements.colonyStatus.textContent = colonyUnlocked ? '' : 'Locked';
+  elements.colonyStatus.textContent = colonyUnlocked ? '' : t('ui.common.locked', null, 'Locked');
   elements.colonyPresetSelect.disabled = !colonyUnlocked;
   elements.colonyPresetDeploy.disabled = !colonyUnlocked;
   elements.colonyCombinationSelect.disabled = !colonyUnlocked;
@@ -637,15 +667,15 @@ function updateSidebarAutomationUI() {
     const colonyCombinations = colonyAutomation.getCombinations();
     fillSelect(
       elements.colonyPresetSelect,
-      colonyAutomation.presets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      colonyAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
       colonyAutomation.getSelectedPresetId() || '',
-      'Select preset'
+      getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     fillSelect(
       elements.colonyCombinationSelect,
-      colonyCombinations.map(combo => ({ value: combo.id, label: combo.name || `Combination ${combo.id}` })),
+      colonyCombinations.map(combo => ({ value: combo.id, label: getSidebarCombinationLabel(combo) })),
       colonyAutomation.getSelectedCombinationId() || '',
-      'Select combination'
+      getSidebarAutomationText('selectCombination', null, 'Select combination')
     );
     elements.colonyPresetDeploy.disabled = !colonyAutomation.getSelectedPresetId();
     elements.colonyCombinationDeploy.disabled = !colonyAutomation.getSelectedCombinationId() || colonyAutomation.getAssignments().length === 0;

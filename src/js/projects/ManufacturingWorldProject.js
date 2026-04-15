@@ -539,7 +539,7 @@
       if (!elements || !elements.rowElements) {
         return;
       }
-      this.getAssignmentKeys().forEach((key) => {
+      this.getManagedAssignmentKeys().forEach((key) => {
         const row = elements.rowElements[key];
         if (!row || !row.rowA || !row.rowB || !row.rowC) {
           return;
@@ -548,7 +548,7 @@
         row.rowB.style.minHeight = '';
         row.rowC.style.minHeight = '';
       });
-      this.getAssignmentKeys().forEach((key) => {
+      this.getManagedAssignmentKeys().forEach((key) => {
         const row = elements.rowElements[key];
         if (!row || !row.rowA || !row.rowB || !row.rowC) {
           return;
