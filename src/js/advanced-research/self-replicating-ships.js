@@ -3,6 +3,10 @@ function updateShipReplication(deltaTime, resources, globalEffects, accumulatedC
     return;
   }
 
+  if (projectManager.projects.oreSpaceMining.spaceshipReplicationEnabled === false) {
+    return;
+  }
+
   const shipsResource = resources.special.spaceships;
   const metalImportAssigned = projectManager.projects.oreSpaceMining.assignedSpaceships;
   const baseReplicators = Math.max(0, warpGateNetworkManager.getCapForResource('metal') - metalImportAssigned);

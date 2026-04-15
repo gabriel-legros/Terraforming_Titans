@@ -1140,6 +1140,8 @@ setLanguageData({
       spaceMining: {
         disableIfGasPressureAbove: 'Disable if {gas} pressure above: ',
         disableIf: 'Disable if ',
+        spaceshipReplication: 'Spaceship replication',
+        spaceshipReplicationTooltip: 'Spaceships replicate using unused metal asteroid mining cap at a rate of 0.1%/s.',
         waterCoverageAbove: 'water coverage above',
         waterIceAboveTarget: 'water+ice above target',
         liquidCo2CoverageAbove: 'liquid CO2 coverage above',

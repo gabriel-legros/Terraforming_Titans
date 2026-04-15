@@ -18,6 +18,7 @@ function normalizeWaterImportTarget(target) {
 class SpaceMiningProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
+    this.spaceshipReplicationEnabled = true;
     this.disableAbovePressure = false;
     this.disablePressureThreshold = 0;
     this.disableAboveOxygenPressure = false;
@@ -91,6 +92,55 @@ class SpaceMiningProject extends SpaceshipProject {
   getGasAbbreviation(gas) {
     const map = { carbonDioxide: 'CO2', inertGas: 'N2', oxygen: 'O2' };
     return map[gas] || gas;
+  }
+
+  isSpaceshipReplicationUnlocked() {
+    return globalEffects.isBooleanFlagSet('selfReplicatingShips');
+  }
+
+  createSpaceshipReplicationControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'spaceship-replication-control');
+    control.id = `${this.name}-spaceship-replication-control`;
+    control.style.display = this.isSpaceshipReplicationUnlocked() ? 'flex' : 'none';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-spaceship-replication-checkbox`;
+    checkbox.classList.add('spaceship-replication-checkbox');
+    checkbox.checked = this.spaceshipReplicationEnabled !== false;
+    checkbox.addEventListener('change', () => {
+      this.spaceshipReplicationEnabled = checkbox.checked;
+    });
+    control.appendChild(checkbox);
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = getSpaceMiningText(
+      'ui.projects.spaceMining.spaceshipReplication',
+      'Spaceship replication'
+    );
+
+    const tooltip = document.createElement('span');
+    tooltip.className = 'info-tooltip-icon';
+    tooltip.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      tooltip,
+      getSpaceMiningText(
+        'ui.projects.spaceMining.spaceshipReplicationTooltip',
+        'Spaceships replicate using unused metal asteroid mining cap at a rate of 0.1%/s.'
+      )
+    );
+    label.appendChild(tooltip);
+    control.appendChild(label);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      spaceshipReplicationControl: control,
+      spaceshipReplicationCheckbox: checkbox,
+    };
+
+    return control;
   }
 
   createGasPressureControl(gas, checkedProp, thresholdProp, key) {
@@ -458,6 +508,12 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   renderAutomationUI(container) {
+    if (this.name === 'oreSpaceMining') {
+      const replicationControl = projectElements[this.name]?.spaceshipReplicationControl || this.createSpaceshipReplicationControl();
+      if (replicationControl.parentNode !== container) {
+        container.appendChild(replicationControl);
+      }
+    }
     if (!projectElements[this.name]?.pressureControl) {
       const gas = this.getTargetAtmosphericResource();
       const pressureControl = this.createGasPressureControl(gas, 'disableAbovePressure', 'disablePressureThreshold', 'pressure');
@@ -490,6 +546,18 @@ class SpaceMiningProject extends SpaceshipProject {
     super.updateUI();
     const elements = projectElements[this.name];
     if (!elements) return;
+    if (this.name === 'oreSpaceMining' && elements.spaceshipReplicationControl && elements.automationSettingsContainer) {
+      if (elements.spaceshipReplicationControl.parentNode !== elements.automationSettingsContainer) {
+        elements.automationSettingsContainer.appendChild(elements.spaceshipReplicationControl);
+        invalidateAutomationSettingsCache?.(this.name);
+      }
+    }
+    if (elements.spaceshipReplicationControl) {
+      elements.spaceshipReplicationControl.style.display = this.isSpaceshipReplicationUnlocked() ? 'flex' : 'none';
+    }
+    if (elements.spaceshipReplicationCheckbox) {
+      elements.spaceshipReplicationCheckbox.checked = this.spaceshipReplicationEnabled !== false;
+    }
     if (elements.pressureControl) {
       elements.pressureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
     }
@@ -724,7 +792,7 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   saveAutomationSettings() {
-    return {
+    const settings = {
       ...super.saveAutomationSettings(),
       disableAbovePressure: this.disableAbovePressure === true,
       disablePressureThreshold: this.disablePressureThreshold,
@@ -739,10 +807,17 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTarget: this.waterImportTarget,
       materialImportTarget: this.materialImportTarget,
     };
+    if (this.name === 'oreSpaceMining') {
+      settings.spaceshipReplicationEnabled = this.spaceshipReplicationEnabled !== false;
+    }
+    return settings;
   }
 
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
+    if (this.name === 'oreSpaceMining' && Object.prototype.hasOwnProperty.call(settings, 'spaceshipReplicationEnabled')) {
+      this.spaceshipReplicationEnabled = settings.spaceshipReplicationEnabled !== false;
+    }
     if (Object.prototype.hasOwnProperty.call(settings, 'disableAbovePressure')) {
       this.disableAbovePressure = settings.disableAbovePressure === true;
     }
@@ -782,7 +857,7 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   saveState() {
-    return {
+    const state = {
       ...super.saveState(),
       disableAbovePressure: this.disableAbovePressure,
       disablePressureThreshold: this.disablePressureThreshold,
@@ -799,10 +874,15 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTarget: this.waterImportTarget,
       materialImportTarget: this.materialImportTarget,
     };
+    if (this.name === 'oreSpaceMining') {
+      state.spaceshipReplicationEnabled = this.spaceshipReplicationEnabled !== false;
+    }
+    return state;
   }
 
   loadState(state) {
     super.loadState(state);
+    this.spaceshipReplicationEnabled = state.spaceshipReplicationEnabled !== false;
     this.disableAbovePressure = state.disableAbovePressure || false;
     this.disablePressureThreshold = state.disablePressureThreshold || 0;
     this.disableAboveOxygenPressure = state.disableAboveOxygenPressure || false;
@@ -827,7 +907,7 @@ class SpaceMiningProject extends SpaceshipProject {
     if (!gameSettings.preserveProjectSettingsOnTravel) {
       return {};
     }
-    return {
+    const state = {
       disableAbovePressure: this.disableAbovePressure,
       disablePressureThreshold: this.disablePressureThreshold,
       disableAboveOxygenPressure: this.disableAboveOxygenPressure,
@@ -843,12 +923,17 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTarget: this.waterImportTarget,
       materialImportTarget: this.materialImportTarget,
     };
+    if (this.name === 'oreSpaceMining') {
+      state.spaceshipReplicationEnabled = this.spaceshipReplicationEnabled !== false;
+    }
+    return state;
   }
 
   loadTravelState(state = {}) {
     if (!gameSettings.preserveProjectSettingsOnTravel) {
       return;
     }
+    this.spaceshipReplicationEnabled = state.spaceshipReplicationEnabled !== false;
     this.disableAbovePressure = !!state.disableAbovePressure;
     this.disablePressureThreshold = state.disablePressureThreshold ?? this.disablePressureThreshold;
     this.disableAboveOxygenPressure = !!state.disableAboveOxygenPressure;
