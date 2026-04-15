@@ -2562,6 +2562,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'artificial_stars',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 50_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'artificialStars',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: '',
         description: '',

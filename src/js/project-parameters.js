@@ -681,7 +681,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       canUseSpaceStorage: true,
-      alchemyParameter: 1_000_000,
+      alchemyParameter: 100_000,
       spaceBuilding: true
     }
   },
@@ -766,6 +766,29 @@ const projectParameters = {
       canUseSpaceStorage: true,
       alchemyParameter: 1,
       spaceBuilding: true
+    }
+  },
+  artificialStars: {
+    type: 'ArtificialStarsProject',
+    name: '',
+    category: 'giga',
+    cost: {
+      colony: {
+        superalloys: 5_000_000_000_000_000,
+        components: 500_000_000_000_000,
+        superconductors: 500_000_000_000_000
+      }
+    },
+    duration: 180_000_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      alchemyParameter: 1,
+      spaceBuilding: true,
+      spaceEnergyProducer: true
     }
   },
   apolloCoreSurgeryPlatform: {

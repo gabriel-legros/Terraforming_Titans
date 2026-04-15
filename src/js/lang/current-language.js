@@ -917,6 +917,27 @@ setLanguageData({
           insufficientHydrogen: 'Insufficient hydrogen in space storage',
         },
       },
+      artificialStars: {
+        recipeLabel: 'Space Energy',
+        output: 'Output',
+        title: 'Artificial Star Controls',
+        totalStars: 'Total Artificial Stars',
+        runStars: 'Run artificial stars',
+        inputUse: 'Input Use',
+        hydrogenRate: '{value} hydrogen/s',
+        expansionRate: '{value} stars/s',
+        operationNote: 'Runs artificial stars at Assigned x {parameter}/s. Each assignment consumes {hydrogen} hydrogen and produces {output} space energy, with both throughput and output multiplied by WGC superalloy fusion bonuses (x{wgcMultiplier}).',
+        status: {
+          noHydrogen: 'No hydrogen in space storage',
+          insufficientHydrogen: 'Insufficient hydrogen in space storage',
+          idle: 'Idle',
+          completeAtLeastOne: 'Complete at least one artificial star',
+          runDisabled: 'Run disabled',
+          noAssignments: 'No assignments',
+          buildSpaceStorage: 'Build space storage',
+          running: 'Running',
+        },
+      },
       galacticMarket: {
         totalCost: 'Total Cost: ',
         resource: 'Resource',
@@ -3056,6 +3077,10 @@ setLanguageData({
         name: 'Superalloy Gigafoundry',
         description: 'Build giga-scale foundries that convert metal and space energy into vast amounts of superalloys. Expansion scales with terraformed worlds.',
       },
+      artificialStars: {
+        name: 'Artificial Stars',
+        description: 'Build contained artificial stars that produces vast amount of energy from hydrogen.  The focus is on energy production from simple fusion pathways instead of resource production.',
+      },
       apolloCoreSurgeryPlatform: {
         name: 'Apollo Planetary Core Surgery Platform',
         description: 'Build a massive core surgery platform capable of creating an artificial natural magnetosphere.  Medicine for planets.  Project completion persists on travel.',
@@ -3764,13 +3789,17 @@ setLanguageData({
           name: 'Core Surgery',
           description: 'Enables a new gigastructure capable of creating artificial natural magnetospheres.',
         },
+        artificial_stars: {
+          name: 'Artificial Stars',
+          description: 'Regular stars are wasteful and inefficient.  Our engineers can do so much better.',
+        },
         tractor_beams: {
           name: 'Tractor Beams',
           description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
         },
         star_lifting: {
           name: 'Star Lifting',
-          description: 'Upgrades lifters for shallow stellar skimming, unlocking the Star Lifting recipe and a supercharge slider from x1 to x10. Throughput scales linearly with the selected multiplier while energy per lifter scales cubically.',
+          description: 'Upgrades lifters for shallow stellar harvesting, unlocking the Star Lifting recipe and a supercharge slider from x1 to x10.',
         },
       },
     },
