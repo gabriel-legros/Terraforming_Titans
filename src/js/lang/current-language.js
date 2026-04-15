@@ -3399,7 +3399,7 @@ setLanguageData({
         },
         self_replicating_ships: {
           name: 'Self Replicating Ships',
-          description: 'Unused spaceships duplicate themselves over time from unused metal mining cap.',
+          description: 'Allows HOPE to precisely control remote spaceships, allowing them to build their own factories at metal mining sites and enabling self-replication.  Can be controlled from the Metal Asteroid Mining project.',
         },
         robotics_3: {
           name: 'Precision Assembly Lines',
