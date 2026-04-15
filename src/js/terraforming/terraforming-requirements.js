@@ -229,7 +229,7 @@ const terraformingRequirements = {
     luminosityRange: { min: 0, max: 100 },
     totalPressureRangeKPa: { min: 6000, max: 11000 },
     gasTargetsPa: {
-      carbonDioxide: { min: 5_800_000, max: 9_500_000 },
+      carbonDioxide: { min: 4_000_000, max: 6_000_000 },
       inertGas: { min: 1_000_000, max: 2_000_000 },
       atmosphericAmmonia: { min: 0, max: 10 },
     },

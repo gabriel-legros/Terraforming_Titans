@@ -926,7 +926,7 @@ setLanguageData({
         inputUse: 'Input Use',
         hydrogenRate: '{value} hydrogen/s',
         expansionRate: '{value} stars/s',
-        operationNote: 'Runs artificial stars at Assigned x {parameter}/s. Each assignment consumes {hydrogen} hydrogen and produces {output} space energy, with both throughput and output multiplied by WGC superalloy fusion bonuses (x{wgcMultiplier}).',
+        operationNote: 'Runs artificial stars at Assigned x {parameter}/s. Each assignment consumes {hydrogen} hydrogen and produces {output} space energy, with both input and output multiplied by WGC superalloy fusion bonuses (x{wgcMultiplier}).',
         status: {
           noHydrogen: 'No hydrogen in space storage',
           insufficientHydrogen: 'Insufficient hydrogen in space storage',

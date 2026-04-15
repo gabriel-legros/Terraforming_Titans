@@ -935,9 +935,10 @@ class TerraformingGraphsManager {
     const tempSpan = maxTemp - minTemp;
     const logSpan = logMax - logMin;
     const darkMode = document.body.classList.contains('dark-mode');
+    const axisTextColor = darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.92)';
     ctx.strokeStyle = darkMode ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.12)';
     ctx.lineWidth = 1;
-    ctx.fillStyle = darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)';
+    ctx.fillStyle = axisTextColor;
     ctx.font = '12px "Segoe UI", Arial, sans-serif';
 
     const pressureTicks = buildLogTicks(logMin, logMax);
@@ -1014,6 +1015,7 @@ class TerraformingGraphsManager {
     }
     ctx.stroke();
 
+    ctx.fillStyle = axisTextColor;
     pressureTicks.forEach((exp, index) => {
       const y = padding.top + (1 - (exp - logMin) / logSpan) * plotHeight;
       ctx.textAlign = 'right';
