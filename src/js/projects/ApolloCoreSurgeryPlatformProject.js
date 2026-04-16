@@ -45,6 +45,10 @@
       return Math.max(1, this.applyDurationEffects(CORE_SURGERY_BASE_DURATION));
     }
 
+    canAffordCoreSurgeryEnergy() {
+      return resources.space.energy.value >= CORE_SURGERY_ACTION_COST;
+    }
+
     getActivationBlockedReason() {
       if (!this.isCompleted) {
         return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.completePlatformFirst', 'Complete the platform first');
@@ -64,7 +68,7 @@
       if (!this.isPulsarCleared()) {
         return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.clearPulsarFirst', 'Clear Pulsar first');
       }
-      if (resources.space.energy.value < CORE_SURGERY_ACTION_COST) {
+      if (!this.canAffordCoreSurgeryEnergy()) {
         return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.notEnoughSpaceEnergy', 'Not enough space energy');
       }
       return '';
@@ -296,7 +300,20 @@
           { value: formatNumber(CORE_SURGERY_ACTION_COST, true) }
         );
       }
-      this.uiElements.actionButton.disabled = !this.canStartCoreSurgery();
+      const blockedReason = this.getActivationBlockedReason();
+      const canStart = !blockedReason;
+      const canAfford = this.canAffordCoreSurgeryEnergy();
+      const energyBlockedOnly = this.isCompleted
+        && !this.coreSurgeryActive
+        && !this.isArtificialWorld()
+        && !this.hasNaturalMagnetosphere()
+        && this.isKesslerCleared()
+        && this.isPulsarCleared()
+        && !canAfford;
+
+      this.uiElements.actionButton.disabled = !canStart;
+      this.uiElements.actionButton.classList.toggle('apollo-core-surgery-button--ready', canStart);
+      this.uiElements.actionButton.classList.toggle('apollo-core-surgery-button--energy-blocked', energyBlockedOnly);
       this.uiElements.autoCheckbox.checked = this.coreSurgeryAutoStart === true;
     }
 

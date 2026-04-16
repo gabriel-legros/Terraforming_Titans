@@ -281,6 +281,20 @@
     cursor: not-allowed;
 }
 
+.apollo-core-surgery-button.apollo-core-surgery-button--ready {
+    background-color: #4caf50;
+    color: #ffffff;
+}
+
+.apollo-core-surgery-button.apollo-core-surgery-button--ready:hover {
+    background-color: #3f9442;
+}
+
+.apollo-core-surgery-button.apollo-core-surgery-button--energy-blocked:disabled {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
 .checkbox-row-container {
     display: flex;
     gap: 15px;
