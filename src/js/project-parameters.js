@@ -514,6 +514,26 @@ const projectParameters = {
     automationRequiresEverEnabled: true,
     attributes: {}
   },
+  shrilekHydrocarbonReserves: {
+    type: 'Project',
+    name: '',
+    category: 'infrastructure',
+    cost: {
+      atmospheric: {
+        atmosphericMethane: 25_000_000_000_000,
+        hydrogen: 7_500_000_000_000
+      },
+      colony: {
+        energy: 5_000_000_000_000_000
+      }
+    },
+    duration: 240000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    automationRequiresEverEnabled: true,
+    attributes: {}
+  },
   keratiHive: {
     type: 'KeratiHiveProject',
     name: '',

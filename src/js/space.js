@@ -1819,7 +1819,7 @@ class SpaceManager extends EffectableEntity {
         const merged = JSON.parse(JSON.stringify(base));
         const zones = getZones();
         let totalLiquidWater = 0, totalIce = 0, totalDryIce = 0,
-            totalBiomass = 0, totalLiquidCO2 = 0, totalLiquidMethane = 0, totalHydrocarbonIce = 0;
+            totalBiomass = 0, totalLiquidCO2 = 0, totalLiquidMethane = 0, totalHydrocarbonIce = 0, totalFineSand = 0;
 
         zones.forEach(z => {
             const zoneSurface = merged.zonalSurface?.[z] || {};
@@ -1833,6 +1833,7 @@ class SpaceManager extends EffectableEntity {
             totalBiomass += zoneSurface.biomass ?? 0;
             totalLiquidMethane += zoneSurface.liquidMethane ?? zh.liquid ?? 0;
             totalHydrocarbonIce += (zoneSurface.hydrocarbonIce ?? zh.ice ?? 0) + (zoneSurface.buriedHydrocarbonIce ?? zh.buriedIce ?? 0);
+            totalFineSand += zoneSurface.fineSand ?? 0;
         });
 
         if (!merged.resources) merged.resources = {};
@@ -1844,6 +1845,7 @@ class SpaceManager extends EffectableEntity {
         merged.resources.surface.biomass = merged.resources.surface.biomass || {};
         merged.resources.surface.liquidMethane = merged.resources.surface.liquidMethane || {};
         merged.resources.surface.hydrocarbonIce = merged.resources.surface.hydrocarbonIce || {};
+        merged.resources.surface.fineSand = merged.resources.surface.fineSand || {};
 
         merged.resources.surface.liquidWater.initialValue = totalLiquidWater;
         merged.resources.surface.ice.initialValue = totalIce;
@@ -1852,6 +1854,7 @@ class SpaceManager extends EffectableEntity {
         merged.resources.surface.biomass.initialValue = totalBiomass;
         merged.resources.surface.liquidMethane.initialValue = totalLiquidMethane;
         merged.resources.surface.hydrocarbonIce.initialValue = totalHydrocarbonIce;
+        merged.resources.surface.fineSand.initialValue = totalFineSand;
 
         const isRogue = merged.celestialParameters?.rogue;
         const starSource = override?.star || base?.star || (isRogue ? ROGUE_STAR : SOL_STAR);

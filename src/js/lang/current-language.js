@@ -60,6 +60,7 @@ setLanguageData({
         oommaa: 'Oommaa',
         klishy: 'Klishy',
         kerati: 'Kerati',
+        shrilek: 'Shrilek',
         random: 'Random',
         tooltip: 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.',
       },
@@ -1955,6 +1956,7 @@ setLanguageData({
           ice: 'Ice',
           hydrocarbon: 'Hydrocarbons',
           hydrocarbonIce: 'Hydrocarbon Ice',
+          fineSand: 'Fine Sand',
           dryIce: 'Dry Ice',
           ammonia: 'Ammonia',
           ammoniaIce: 'Ammonia Ice',
@@ -2054,6 +2056,7 @@ setLanguageData({
           opticalDepthContribution: '{name}: {value}',
         },
         water: {
+          title: 'Surface',
           tooltip: [
             'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:',
             '',
@@ -2078,6 +2081,7 @@ setLanguageData({
             iceCoverage: 'Ice coverage',
             liquidCo2Coverage: 'Liquid CO2 coverage',
             dryIceCoverage: 'Dry ice coverage',
+            fineSandCoverage: 'Fine sand coverage',
           },
           targetAtLeast: '{label} coverage >= {percent}% ({amount}).',
           targetAtMost: '{label} coverage <= {percent}% ({amount}).',
@@ -2188,6 +2192,7 @@ setLanguageData({
             dryIce: 'Dry Ice',
             hydrocarbon: 'Hydrocarbon',
             hydrocarbonIce: 'Hydrocarbon Ice',
+            fineSand: 'Fine Sand',
             biomass: 'Biomass',
           },
           groundTooltip: {
@@ -3331,6 +3336,10 @@ setLanguageData({
           white: { displayName: 'White Dust Factory' },
         },
       },
+      sandSeeder: {
+        name: 'Sand Seeder',
+        description: 'Crushes, grades, and spreads regolith into deep fields of migrating fine sand. Built for Shrilek desert-engineering, it slowly blankets the surface in dune-compatible substrate.',
+      },
       spaceMirror: {
         name: 'Space Mirror',
         description: 'Expands the space mirror facility.  Increases the effective luminosity.  Will cost only glass and energy after the space elevator is built.  May need billions to have any meaningful effect.',
@@ -3481,6 +3490,10 @@ setLanguageData({
       klishyWeb: {
         name: 'Klishy web',
         description: 'Construct a massive web of Klishy-compatible copper wires and fibre optics, suitable for a new Klishy community.',
+      },
+      shrilekHydrocarbonReserves: {
+        name: 'Deep Hydrocarbon Reserves',
+        description: 'Run planet-scale hydrocarbon synthesis and burial works, consuming methane, hydrogen, and immense energy to lay down deep petroleum-like reserves beneath the dunes for a permanent Shrilek biosphere.',
       },
       keratiHive: {
         name: 'Kerati Hive',
@@ -3696,6 +3709,36 @@ setLanguageData({
           keratiHive: {
             label: 'Kerati Hive',
             targetText: 'Complete Kerati Hive project.',
+          },
+        },
+      },
+      shrilek: {
+        displayName: 'Shrilek',
+        lore: [
+          'The Shrilek are a hydrocarbon dominion shaped by hot deserts, methane skies, and oceans of sand. Their home ecologies evolved in dune seas where loose mineral grains, organic dust, and buried hydrocarbons formed one continuous habitat.',
+          'Shrilek biology is not built around liquid water. Methane-rich air and deep carbon chemistry do the heavy work, while water is treated as a very dangerous contaminant. Their dominant sapient species takes the form of massive worms. Their primary communication methods involve precise rhythmic sounds. As a result, they were for the most part ignored by the Empire as mere animals... until it was finally discovered that one of their waste by-products is a potent psychedelic. After that, they were enslaved.',
+          'Their dominant organisms spend much of their lives within the sand itself. Fine-grained dunes are not decoration but infrastructure: spawning medium, thermal shield, and hunting ground. The Shrilek regularly migrate around their world, attempting to remain at a precise temperature. A barren rock plain can be habitable in theory, but without mature dune fields it is not truly a Shrilek world.',
+          'They also depend on buried hydrocarbon wealth. Ancient subsurface reservoirs stabilize their long biospheric cycles, feeding slow chemotrophic growth over spans that make faster dominions look frantic. To the Shrilek, a proper planet is warm, dry, methane-breathing, rich in hidden fuel, and patient enough to let life move with the desert.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            methaneChemotrophy: {
+              displayName: 'Methane Chemotrophy',
+            },
+          },
+        },
+        otherRequirements: {
+          fineSand: {
+            label: 'Fine Sand',
+            targetText: 'Fine sand coverage at least 100%.',
+          },
+          dayNight: {
+            label: 'Day-Night Cycle',
+            targetText: 'Day-night cycle at least 30 Earth days.',
+          },
+          shrilekHydrocarbonReserves: {
+            label: 'Deep Hydrocarbon Reserves',
+            targetText: 'Complete Deep Hydrocarbon Reserves project.',
           },
         },
       },
@@ -4275,6 +4318,7 @@ setLanguageData({
         liquidCO2: { name: 'Liquid CO2' },
         liquidMethane: { name: 'Liquid Methane' },
         hydrocarbonIce: { name: 'Methane Ice' },
+        fineSand: { name: 'Fine Sand' },
         liquidAmmonia: { name: 'Liquid Ammonia' },
         ammoniaIce: { name: 'Ammonia Ice' },
         liquidOxygen: { name: 'Liquid Oxygen' },

@@ -141,15 +141,16 @@ const LEGACY_ZONAL_SURFACE_MAPPINGS = phaseGroupMappings.legacyMappings;
 
 function buildLiquidCoverageTargets(requirements) {
   const fallbackLiquidType = requirements.liquidType || 'water';
-  const fallbackTarget = Number.isFinite(requirements.liquidCoverageTarget) ? requirements.liquidCoverageTarget : 0;
+  const hasFallbackTarget = Number.isFinite(requirements.liquidCoverageTarget);
+  const fallbackTarget = hasFallbackTarget ? requirements.liquidCoverageTarget : 0;
   const entries = Array.isArray(requirements.liquidCoverageTargets) && requirements.liquidCoverageTargets.length
     ? requirements.liquidCoverageTargets
-    : [{ liquidType: fallbackLiquidType, coverageTarget: fallbackTarget }];
+    : (hasFallbackTarget ? [{ liquidType: fallbackLiquidType, coverageTarget: fallbackTarget }] : []);
 
   const targets = [];
   for (const entry of entries) {
     const liquidType = entry.liquidType || fallbackLiquidType;
-    const coverageKey = LIQUID_COVERAGE_KEYS[liquidType] || LIQUID_COVERAGE_KEYS[fallbackLiquidType] || 'liquidWater';
+    const coverageKey = entry.coverageKey || LIQUID_COVERAGE_KEYS[liquidType] || LIQUID_COVERAGE_KEYS[fallbackLiquidType] || 'liquidWater';
     const rawTarget = Number.isFinite(entry.coverageTarget) ? entry.coverageTarget : fallbackTarget;
     const coverageTarget = Math.max(0, Math.min(rawTarget, 1));
     const comparison = entry.comparison === 'atMost' ? 'atMost' : 'atLeast';
@@ -473,7 +474,8 @@ class Terraforming extends EffectableEntity{
     // Global liquid targets (supports multi-liquid terraforming requirements)
     this.liquidCoverageTargets = buildLiquidCoverageTargets(this.requirements);
     const waterTargetEntry = this.liquidCoverageTargets.find((entry) => entry.liquidType === 'water')
-      || this.liquidCoverageTargets[0];
+      || this.liquidCoverageTargets[0]
+      || { coverageTarget: 0, coverageKey: 'liquidWater' };
     this.waterTarget = waterTargetEntry.coverageTarget;
     this.liquidCoverageKey = waterTargetEntry.coverageKey;
     this.waterUnlocked = false; // Global unlock status
@@ -779,6 +781,40 @@ class Terraforming extends EffectableEntity{
             : (requirement.targetText || `Reach at least ${minimum} m/s² gravity.`),
           currentText: `${gravity.toFixed(2)}/${minimum.toFixed(2)} m/s²`
         });
+        continue;
+      }
+      if (requirement.type === 'coverageMinimum') {
+        const minimum = Math.max(0, Math.min(requirement.minimum || 0, 1));
+        const coverageKey = requirement.coverageKey || '';
+        const coverage = calculateAverageCoverage(this, coverageKey) || 0;
+        statuses.push({
+          key: `coverageMinimum:${coverageKey}`,
+          label: requirement.labelKey
+            ? t(requirement.labelKey, null, requirement.label || coverageKey || 'Coverage')
+            : (requirement.label || coverageKey || 'Coverage'),
+          passed: coverage >= minimum,
+          targetText: requirement.targetTextKey
+            ? t(requirement.targetTextKey, null, requirement.targetText || `Reach at least ${(minimum * 100).toFixed(0)}% coverage.`)
+            : (requirement.targetText || `Reach at least ${(minimum * 100).toFixed(0)}% coverage.`),
+          currentText: `${(coverage * 100).toFixed(2)}%`
+        });
+        continue;
+      }
+      if (requirement.type === 'rotationPeriodMinimum') {
+        const minimumHours = Math.max(0, requirement.minimumHours || 0);
+        const rotationHours = Math.abs(this.celestialParameters?.rotationPeriod || 0);
+        statuses.push({
+          key: `rotationPeriodMinimum:${minimumHours}`,
+          label: requirement.labelKey
+            ? t(requirement.labelKey, null, requirement.label || 'Day-Night Cycle')
+            : (requirement.label || 'Day-Night Cycle'),
+          passed: rotationHours >= minimumHours,
+          targetText: requirement.targetTextKey
+            ? t(requirement.targetTextKey, null, requirement.targetText || `Reach a day-night cycle of at least ${(minimumHours / 24).toFixed(0)} days.`)
+            : (requirement.targetText || `Reach a day-night cycle of at least ${(minimumHours / 24).toFixed(0)} days.`),
+          currentText: `${(rotationHours / 24).toFixed(2)} days`
+        });
+        continue;
       }
     }
     return statuses;
@@ -871,8 +907,10 @@ class Terraforming extends EffectableEntity{
   
           const initialLiquidMethane = planetParameters.resources.surface.liquidMethane?.initialValue || 0;
           const initialHydrocarbonIce = planetParameters.resources.surface.hydrocarbonIce?.initialValue || 0;
+          const initialFineSand = planetParameters.resources.surface.fineSand?.initialValue || 0;
           this.zonalSurface[zone].liquidMethane = initialLiquidMethane * zoneRatio;
           this.zonalSurface[zone].hydrocarbonIce = initialHydrocarbonIce * zoneRatio;
+          this.zonalSurface[zone].fineSand = initialFineSand * zoneRatio;
       });
 
       applyZonalSurfaceFromLegacy(this.zonalSurface, planetParameters);
@@ -1761,7 +1799,7 @@ class Terraforming extends EffectableEntity{
         const groundAlbedo = this.calculateGroundAlbedo();
         const fractions = (typeof calculateZonalSurfaceFractions === 'function')
             ? calculateZonalSurfaceFractions(this, zone)
-            : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, ammonia: 0, ammoniaIce: 0, oxygen: 0, oxygenIce: 0, nitrogen: 0, nitrogenIce: 0, biomass: 0 };
+            : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, ammonia: 0, ammoniaIce: 0, oxygen: 0, oxygenIce: 0, nitrogen: 0, nitrogenIce: 0, fineSand: 0, biomass: 0 };
         return surfaceAlbedoMix(groundAlbedo, fractions);
     }
 

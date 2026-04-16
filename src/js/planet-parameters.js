@@ -54,6 +54,7 @@ const PLANET_ZONAL_SURFACE_RESOURCE_KEYS = [
   'liquidAmmonia',
   'ammoniaIce',
   'buriedAmmoniaIce',
+  'fineSand',
   'biomass',
   'hazardousBiomass'
 ];
@@ -1962,6 +1963,5 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
 
 

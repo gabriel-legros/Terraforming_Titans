@@ -50,6 +50,15 @@ function getTerraformingSummaryResourceLabel(key, fallback) {
   return getTerraformingSummaryText(`resources.${key}`, fallback || formatTerraformingSummaryLabel(key, key));
 }
 
+const LIQUID_COVERAGE_LABEL_TYPES = {
+  liquidWater: true,
+  liquidCO2: true,
+  liquidMethane: true,
+  liquidAmmonia: true,
+  liquidOxygen: true,
+  liquidNitrogen: true,
+};
+
 function getCoreHeatTooltipText() {
   const unit = getTemperatureUnit();
   const digits = unit === '°C' ? 0 : 2;
@@ -1562,7 +1571,7 @@ function createWaterBox(row) {
     const waterTooltip = attachDynamicInfoTooltip(waterInfo, waterTooltipText);
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
-      <h3>${getTerraformingSummaryResourceLabel('water', 'Water')}</h3>
+      <h3>${getTerraformingSummaryText('water.title', 'Surface')}</h3>
       <table>
         <thead>
           <tr>
@@ -1613,6 +1622,7 @@ function createWaterBox(row) {
       <p class="no-margin">${getTerraformingSummaryText('water.labels.iceCoverage', 'Ice coverage')}: <span id="ice-current">0.00</span>%</p>
       <p class="no-margin" id="co2-liquid-row" style="display:none;">${getTerraformingSummaryText('water.labels.liquidCo2Coverage', 'Liquid CO2 coverage')}: <span id="co2-liquid-current">0.00</span>%</p>
       <p class="no-margin" id="co2-ice-row" style="display:none;">${getTerraformingSummaryText('water.labels.dryIceCoverage', 'Dry ice coverage')}: <span id="co2-ice-current">0.00</span>%</p>
+      <p class="no-margin" id="fine-sand-row" style="display:none;">${getTerraformingSummaryText('water.labels.fineSandCoverage', 'Fine sand coverage')}: <span id="fine-sand-current">0.00</span>%</p>
     `;
 
     const waterHeading = waterBox.querySelector('h3');
@@ -1624,6 +1634,7 @@ function createWaterBox(row) {
     targetSpan.id = 'water-target';
     targetSpan.innerHTML = formatLiquidCoverageTargets(terraforming);
     targetSpan.style.marginTop = 'auto';
+    targetSpan.style.display = terraforming.liquidCoverageTargets.length ? '' : 'none';
     targetSpan.classList.add('terraforming-target')
     waterBox.appendChild(targetSpan);
 
@@ -1638,6 +1649,8 @@ function createWaterBox(row) {
       co2LiquidCurrent: waterBox.querySelector('#co2-liquid-current'),
       co2IceRow: waterBox.querySelector('#co2-ice-row'),
       co2IceCurrent: waterBox.querySelector('#co2-ice-current'),
+      fineSandRow: waterBox.querySelector('#fine-sand-row'),
+      fineSandCurrent: waterBox.querySelector('#fine-sand-current'),
       evaporationRate: waterBox.querySelector('#evaporation-rate'),
       boilingRate: waterBox.querySelector('#boiling-rate'),
       sublimationRate: waterBox.querySelector('#sublimation-rate'),
@@ -1657,6 +1670,9 @@ function createWaterBox(row) {
   }
 
   function getLiquidCoverageTargetLabel(entry) {
+    if (entry.coverageKey && !LIQUID_COVERAGE_LABEL_TYPES[entry.coverageKey]) {
+      return getTerraformingSummaryResourceLabel(entry.coverageKey, formatTerraformingSummaryLabel(entry.coverageKey, entry.coverageKey));
+    }
     switch (entry.liquidType) {
       case 'water':
         return getTerraformingSummaryResourceLabel('water', 'Water');
@@ -1668,9 +1684,14 @@ function createWaterBox(row) {
   }
 
   function formatLiquidCoverageTargets(terraformingState) {
+    if (!terraformingState.liquidCoverageTargets.length) {
+      return '';
+    }
     const parts = terraformingState.liquidCoverageTargets.map((entry) => {
       const label = getLiquidCoverageTargetLabel(entry);
       const pct = entry.coverageTarget * 100;
+      const roundedPct = Math.round(pct * 10) / 10;
+      const pctDigits = Math.abs(roundedPct - Math.round(roundedPct)) > 1e-9 ? 1 : 0;
       const targetAmount = getWaterTargetAmount(terraformingState, entry.coverageTarget) || 0;
       const targetAmountText = formatNumber(targetAmount, false, 1);
       if (entry.comparison === 'atMost') {
@@ -1679,7 +1700,7 @@ function createWaterBox(row) {
           '{label} coverage <= {percent}% ({amount}).',
           {
             label,
-            percent: formatNumber(pct, false, 0),
+            percent: formatNumber(roundedPct, false, pctDigits),
             amount: targetAmountText,
           }
         );
@@ -1689,7 +1710,7 @@ function createWaterBox(row) {
         '{label} coverage >= {percent}% ({amount}).',
         {
           label,
-          percent: formatNumber(pct, false, 0),
+          percent: formatNumber(roundedPct, false, pctDigits),
           amount: targetAmountText,
         }
       );
@@ -1741,10 +1762,13 @@ function createWaterBox(row) {
     const avgIceCoverage = calculateAverageCoverage(terraforming, 'ice') || 0;
     const avgCo2LiquidCoverage = calculateAverageCoverage(terraforming, 'liquidCO2') || 0;
     const avgDryIceCoverage = calculateAverageCoverage(terraforming, 'dryIce') || 0;
+    const avgFineSandCoverage = calculateAverageCoverage(terraforming, 'fineSand') || 0;
 
     const requiresCo2 = terraforming.liquidCoverageTargets.some((entry) => entry.liquidType === 'carbonDioxide');
+    const requiresFineSand = terraforming.liquidCoverageTargets.some((entry) => entry.coverageKey === 'fineSand');
     if (els.co2LiquidRow) els.co2LiquidRow.style.display = requiresCo2 ? '' : 'none';
     if (els.co2IceRow) els.co2IceRow.style.display = requiresCo2 ? '' : 'none';
+    if (els.fineSandRow) els.fineSandRow.style.display = requiresFineSand ? '' : 'none';
 
     let allTargetsMet = true;
     for (const entry of terraforming.liquidCoverageTargets) {
@@ -1758,7 +1782,9 @@ function createWaterBox(row) {
       }
     }
 
-    waterBox.style.borderColor = allTargetsMet ? 'green' : 'red';
+    waterBox.style.borderColor = terraforming.liquidCoverageTargets.length
+      ? (allTargetsMet ? 'green' : 'red')
+      : '';
 
     els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
     els.iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
@@ -1766,9 +1792,13 @@ function createWaterBox(row) {
       if (els.co2LiquidCurrent) els.co2LiquidCurrent.textContent = (avgCo2LiquidCoverage * 100).toFixed(2);
       if (els.co2IceCurrent) els.co2IceCurrent.textContent = (avgDryIceCoverage * 100).toFixed(2);
     }
+    if (requiresFineSand && els.fineSandCurrent) {
+      els.fineSandCurrent.textContent = (avgFineSandCoverage * 100).toFixed(2);
+    }
 
     if (els.target) {
       els.target.innerHTML = formatLiquidCoverageTargets(terraforming);
+      els.target.style.display = terraforming.liquidCoverageTargets.length ? '' : 'none';
     }
 
     els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate || 0);
@@ -2001,13 +2031,16 @@ function updateLifeBox() {
     statuses.forEach((status) => {
       const line = document.createElement('p');
       line.classList.add('no-margin');
+      const targetText = status.key && status.key.indexOf('rotationPeriodMinimum:') === 0 && status.currentText
+        ? `${status.targetText} (${status.currentText})`
+        : status.targetText;
       line.textContent = getTerraformingSummaryText(
         'statusLine',
         '{label}: {status} {targetText}',
         {
           label: status.label,
           status: getTerraformingStatusIcon(status.passed),
-          targetText: status.targetText,
+          targetText,
         }
       );
       if (!status.passed) {
@@ -2234,9 +2267,11 @@ function updateLifeBox() {
     const defaults = (typeof DEFAULT_SURFACE_ALBEDO !== 'undefined') ? DEFAULT_SURFACE_ALBEDO : {
       ocean: 0.06,
       ice: 0.65,
+      snow: 0.85,
       co2_ice: 0.50,
       hydrocarbon: 0.10,
       hydrocarbonIce: 0.50,
+      fineSand: 0.45,
       biomass: 0.20
     };
     return [
@@ -2252,6 +2287,7 @@ function updateLifeBox() {
       [getTerraformingSummaryText('luminosity.albedoTable.dryIce', 'Dry Ice'), defaults.co2_ice.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbon', 'Hydrocarbon'), defaults.hydrocarbon.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbonIce', 'Hydrocarbon Ice'), defaults.hydrocarbonIce.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.fineSand', 'Fine Sand'), defaults.fineSand.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.biomass', 'Biomass'), defaults.biomass.toFixed(2)]
     ];
   }
@@ -2466,7 +2502,7 @@ function updateLifeBox() {
 
       for (const z of getZones()) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
-        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.oxygen + fr.oxygenIce + fr.nitrogen + fr.nitrogenIce + fr.biomass), 0);
+        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.oxygen + fr.oxygenIce + fr.nitrogen + fr.nitrogenIce + fr.fineSand + fr.biomass), 0);
         const name = getTerraformingZoneLabel(z);
         lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.zoneHeader', '{name}:', { name }));
 
@@ -2475,6 +2511,7 @@ function updateLifeBox() {
         if (!isZeroPct(fr.ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ice', 'Ice'), value: pct(fr.ice) }));
         if (!isZeroPct(fr.hydrocarbon)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbon', 'Hydrocarbons'), value: pct(fr.hydrocarbon) }));
         if (!isZeroPct(fr.hydrocarbonIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbonIce', 'Hydrocarbon Ice'), value: pct(fr.hydrocarbonIce) }));
+        if (!isZeroPct(fr.fineSand)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('fineSand', 'Fine Sand'), value: pct(fr.fineSand) }));
         if (!isZeroPct(fr.co2_ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('dryIce', 'Dry Ice'), value: pct(fr.co2_ice) }));
         if (!isZeroPct(fr.ammonia)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ammonia', 'Ammonia'), value: pct(fr.ammonia) }));
         if (!isZeroPct(fr.ammoniaIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ammoniaIce', 'Ammonia Ice'), value: pct(fr.ammoniaIce) }));

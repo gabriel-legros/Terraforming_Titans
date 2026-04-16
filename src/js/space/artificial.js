@@ -1390,6 +1390,7 @@ class ArtificialManager extends EffectableEntity {
         base.resources.surface.liquidCO2 = { ...(base.resources.surface.liquidCO2 || {}), initialValue: 0 };
         base.resources.surface.liquidMethane = { ...(base.resources.surface.liquidMethane || {}), initialValue: 0 };
         base.resources.surface.hydrocarbonIce = { ...(base.resources.surface.hydrocarbonIce || {}), initialValue: 0 };
+        base.resources.surface.fineSand = { ...(base.resources.surface.fineSand || {}), initialValue: 0 };
         const metalCap = Math.max(base.resources.colony.metal?.baseCap || 0, stockpileMetal);
         const siliconCap = Math.max(base.resources.colony.silicon?.baseCap || 0, stockpileSilicon);
         base.resources.colony.metal = {
@@ -1403,9 +1404,9 @@ class ArtificialManager extends EffectableEntity {
             baseCap: siliconCap
         };
         base.zonalSurface = {
-            tropical: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 },
-            temperate: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 },
-            polar: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 }
+            tropical: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0, fineSand: 0 },
+            temperate: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0, fineSand: 0 },
+            polar: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0, fineSand: 0 }
         };
         base.visualization = { ...(base.visualization || {}), baseColor: '#2a3d4f' };
         return base;

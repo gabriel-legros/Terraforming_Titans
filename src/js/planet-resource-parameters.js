@@ -195,6 +195,20 @@
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
       },
+      fineSand: {
+        name: '',
+        initialValue: 0,
+        unlocked: false,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['fineSand'],
+          coverageKeys: ['fineSand'],
+          coverageScale: 0.1,
+          distributionKey: 'fineSand',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
       biomass: {
         name: '',
         hasCap: false,

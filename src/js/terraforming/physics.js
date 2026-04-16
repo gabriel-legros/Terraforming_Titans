@@ -266,6 +266,7 @@ const DEFAULT_SURFACE_ALBEDO = {
   oxygenIce: 0.80,
   nitrogen: 0.12,
   nitrogenIce: 0.80,
+  fineSand: 0.45,
   biomass: 0.20
 };
 

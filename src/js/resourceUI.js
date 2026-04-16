@@ -2186,6 +2186,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
           }
           break;
         }
+        case 'fineSand':
+          val = terraforming.zonalSurface?.[zone]?.fineSand;
+          break;
         default:
           val = undefined;
       }

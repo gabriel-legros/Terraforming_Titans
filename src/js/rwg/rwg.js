@@ -732,7 +732,7 @@ const RWG_HAZARD_PRESETS = {
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery'];
-const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati'];
+const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
 

@@ -155,6 +155,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - RWG UI exposes a `Dynamic Mass` checkbox between the seed controls and dominion panel only when `rwgManager` boolean flag `enableDynamicMass` is set; it writes `specialAttributes.dynamicMass` onto the generated override and should stay seed-option reproducible.
 - Preserve compatibility: append new generation logic at the end only.
 - Supports dominion selector and dominion-specific terraforming requirements.
+- RWG dominion `Shrilek` unlocks at 40 fully controlled sectors and uses a methane-desert terraforming profile: methane atmosphere, 100% fine sand coverage via the dominion-only `Sand Seeder`, a required `Deep Hydrocarbon Reserves` project, and a minimum 30-Earth-day day-night cycle.
 - Some dominions/world types are story/sector gated.
 - Special seeds can define world-specific effects (project/building flags), are replayable by seed, and surface effect descriptions in RWG world details.
 - RWG `Dynamic Mass` is no longer available by default; show that control only when `rwgManager` has boolean flag `enableDynamicMass`, and hide the RWG settings card when none of its controls are unlocked.

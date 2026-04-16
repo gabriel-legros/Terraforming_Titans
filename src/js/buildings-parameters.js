@@ -602,7 +602,22 @@ const buildingsParameters = {
     unlocked: false,
     requiresLand: 10
   },  
-    dustFactory: {
+  sandSeeder: {
+    name: '',
+    category: 'terraforming',
+    description: '',
+    cost: { colony: { metal: 500, components: 100, electronics: 20 } },
+    consumption: { colony: { energy: 10000000 } },
+    production: { surface: { fineSand: 10000 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
+  dustFactory: {
     name: '',
     category: 'terraforming',
     description: '',

@@ -459,6 +459,102 @@ const terraformingRequirements = {
       },
     },
   },
+  shrilek: {
+    id: 'shrilek',
+    displayName: '',
+    lore: '',
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 40 },
+    temperatureRangeK: { min: 308.15, max: 333.15 },
+    luminosityRange: { min: 400, max: 2600 },
+    totalPressureRangeKPa: { min: 90, max: 220 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 0, max: 2_000 },
+      oxygen: { min: 0, max: 50 },
+      inertGas: { min: 40_000, max: 150_000 },
+      atmosphericMethane: { min: 20_000, max: 70_000 },
+      atmosphericAmmonia: { min: 0, max: 20 },
+    },
+    liquidCoverageTargets: [
+      { liquidType: 'water', coverageKey: 'liquidWater', coverageTarget: 0.001, comparison: 'atMost' },
+      { liquidType: 'ice', coverageKey: 'ice', coverageTarget: 0.001, comparison: 'atMost' },
+      { liquidType: 'fineSand', coverageKey: 'fineSand', coverageTarget: 0.999 },
+    ],
+    lifeCoverageTarget: 0.01,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    appliedEffects: [
+      { target: 'project', targetId: 'shrilekHydrocarbonReserves', type: 'enable' },
+      { target: 'building', targetId: 'sandSeeder', type: 'enable' },
+      { target: 'resource', resourceType: 'surface', targetId: 'fineSand', type: 'enable' },
+    ],
+    otherRequirements: [
+      {
+        type: 'rotationPeriodMinimum',
+        key: 'dayNight',
+        minimumHours: 30 * 24,
+        label: '',
+        targetText: '',
+      },
+      {
+        type: 'projectCompletion',
+        projectId: 'shrilekHydrocarbonReserves',
+        label: '',
+        targetText: '',
+      },
+    ],
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 293.15, max: 343.15 },
+      optimalGrowthTemperatureBaseK: 320.15,
+      growthTemperatureToleranceBaseC: 1,
+      growthTemperatureTolerancePerPointC: 0.4,
+      photosynthesisRatePerPoint: 0.00001,
+      bioworkersPerBiomassPerPoint: 0.00001,
+      baseMaxBiomassDensityTPerM2: 0.03,
+      radiationToleranceThresholdPoints: 100,
+      minimumBiomassDecayRateTPerS: 1,
+      requiresLiquidWaterForGrowth: false,
+      metabolism: {
+        primaryProcessId: 'methaneChemotrophy',
+        processes: {
+          methaneChemotrophy: {
+            id: 'methaneChemotrophy',
+            displayName: '',
+            growth: {
+              usesLuminosity: false,
+              perBiomass: {
+                surface: { biomass: 1 },
+                atmospheric: {
+                  atmosphericMethane: -0.2,
+                },
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: {
+                  atmosphericMethane: 0.2,
+                },
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 100,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+        bioships: 1000,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {
