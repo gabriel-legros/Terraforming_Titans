@@ -3338,7 +3338,7 @@ setLanguageData({
       },
       sandSeeder: {
         name: 'Sand Seeder',
-        description: 'Crushes, grades, and spreads regolith into deep fields of migrating fine sand. Built for Shrilek desert-engineering, it slowly blankets the surface in dune-compatible substrate.',
+        description: 'Crushes regolith into fine sand, suitable for Shrilek ecosystems.',
       },
       spaceMirror: {
         name: 'Space Mirror',
