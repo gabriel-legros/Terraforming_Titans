@@ -349,6 +349,67 @@ class BuildingAutomation {
     preset.name = name;
   }
 
+  deepClone(value) {
+    if (Array.isArray(value)) {
+      return value.map(item => this.deepClone(item));
+    }
+    if (!value || value.constructor !== Object) {
+      return value;
+    }
+    const clone = {};
+    for (const key in value) {
+      clone[key] = this.deepClone(value[key]);
+    }
+    return clone;
+  }
+
+  exportPreset(presetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return null;
+    }
+    return {
+      name: preset.name,
+      includeControl: preset.includeControl !== false,
+      includeAutomation: preset.includeAutomation !== false,
+      scopeAll: preset.scopeAll === true,
+      buildings: Object.fromEntries(
+        Object.entries(preset.buildings || {}).map(([buildingId, entry]) => [
+          buildingId,
+          {
+            control: entry.control ? this.deepClone(entry.control) : null,
+            automation: entry.automation ? this.deepClone(entry.automation) : null
+          }
+        ])
+      )
+    };
+  }
+
+  importPreset(presetData = {}) {
+    const id = this.nextPresetId++;
+    const importedPreset = {
+      id,
+      name: presetData.name || `Preset ${id}`,
+      includeControl: presetData.includeControl !== false,
+      includeAutomation: presetData.includeAutomation !== false,
+      scopeAll: presetData.scopeAll === true,
+      buildings: {}
+    };
+    const importedBuildings = presetData.buildings || {};
+    for (const buildingId in importedBuildings) {
+      const entry = importedBuildings[buildingId] || {};
+      const control = entry.control ? this.deepClone(entry.control) : null;
+      const automation = entry.automation ? this.deepClone(entry.automation) : null;
+      if (!control && !automation) {
+        continue;
+      }
+      importedPreset.buildings[buildingId] = { control, automation };
+    }
+    this.presets.push(importedPreset);
+    this.selectedPresetId = importedPreset.id;
+    return importedPreset.id;
+  }
+
   buildPreset(name, buildingIds, options = {}, idOverride) {
     const includeControl = options.includeControl !== false;
     const includeAutomation = options.includeAutomation !== false;

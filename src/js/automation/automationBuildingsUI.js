@@ -94,10 +94,21 @@ function buildAutomationBuildingsUI() {
   const deleteButton = document.createElement('button');
   deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deleteButton.classList.add('building-automation-builder-delete');
+  const transferButtons = createAutomationPresetTransferButtons('building-automation-builder');
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('building-automation-builder-apply-once');
-  builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
+  builderRow.append(
+    presetSelect,
+    presetMoveButtons,
+    presetNameInput,
+    newButton,
+    saveButton,
+    deleteButton,
+    transferButtons.importButton,
+    transferButtons.exportButton,
+    applyOnceButton
+  );
   builderSection.appendChild(builderRow);
 
   const builderModeRow = document.createElement('div');
@@ -255,6 +266,8 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderNewButton = newButton;
   automationElements.buildingsBuilderSaveButton = saveButton;
   automationElements.buildingsBuilderDeleteButton = deleteButton;
+  automationElements.buildingsBuilderImportButton = transferButtons.importButton;
+  automationElements.buildingsBuilderExportButton = transferButtons.exportButton;
   automationElements.buildingsBuilderApplyOnceButton = applyOnceButton;
   automationElements.buildingsBuilderDirty = builderDirty;
   automationElements.buildingsBuilderTypeSelect = typeSelect;
@@ -296,6 +309,8 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderNewButton,
     buildingsBuilderSaveButton,
     buildingsBuilderDeleteButton,
+    buildingsBuilderImportButton,
+    buildingsBuilderExportButton,
     buildingsBuilderApplyOnceButton,
     buildingsBuilderDirty,
     buildingsBuilderTypeSelect,
@@ -447,6 +462,8 @@ function updateBuildingsAutomationUI() {
     || !automatableBuildings.length;
   buildingsBuilderClearButton.disabled = buildingAutomationUIState.builderSelectedBuildings.length === 0;
   buildingsBuilderDeleteButton.disabled = !activePreset;
+  buildingsBuilderImportButton.disabled = false;
+  buildingsBuilderExportButton.disabled = !activePreset;
   buildingsBuilderApplyOnceButton.disabled = !activePreset;
   buildingsBuilderMoveUpButton.disabled = activePresetIndex <= 0;
   buildingsBuilderMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
@@ -702,6 +719,8 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderNewButton,
     buildingsBuilderSaveButton,
     buildingsBuilderDeleteButton,
+    buildingsBuilderImportButton,
+    buildingsBuilderExportButton,
     buildingsBuilderTypeSelect,
     buildingsBuilderScopeSelect,
     buildingsBuilderCategorySelect,
@@ -870,6 +889,40 @@ function attachBuildingsAutomationHandlers() {
     buildingAutomationUIState.builderSelectedBuildings = [];
     queueAutomationUIRefresh();
     updateAutomationUI();
+  });
+
+  buildingsBuilderImportButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importBuildingsPresetTitle', {}, 'Import Buildings Preset'),
+      description: getAutomationCardText(
+        'importPresetDescription',
+        {},
+        'Paste an exported preset string below. Import adds it as a new preset.'
+      ),
+      onImport: (text) => {
+        const parsed = parseAutomationPresetTransferPayload(text, 'buildings');
+        if (!parsed.ok) {
+          return parsed;
+        }
+        automationManager.buildingsAutomation.importPreset(parsed.preset);
+        buildingAutomationUIState.syncedPresetId = null;
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
+
+  buildingsBuilderExportButton.addEventListener('click', () => {
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (!presetId) {
+      return;
+    }
+    exportAutomationPresetToClipboard(
+      'buildings',
+      automationManager.buildingsAutomation.exportPreset(presetId),
+      buildingsBuilderExportButton
+    );
   });
 
   buildingsBuilderApplyOnceButton.addEventListener('click', () => {

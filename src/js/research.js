@@ -306,6 +306,30 @@ class Research {
       return true;
     }
 
+    exportAutoResearchPreset(presetId) {
+      const preset = this.getAutoResearchPresetObject(Number(presetId));
+      if (!preset) {
+        return null;
+      }
+      const presetCopy = {
+        name: preset.name,
+        hiddenResearchIds: preset.hiddenResearchIds.slice(),
+        researches: {},
+      };
+      for (const researchId in preset.researches) {
+        presetCopy.researches[researchId] = this.normalizeAutoResearchEntry(preset.researches[researchId]);
+      }
+      return presetCopy;
+    }
+
+    importAutoResearchPreset(presetData) {
+      const preset = this.normalizeAutoResearchPreset(presetData || {});
+      this.autoResearchPresets.push(preset);
+      this.currentAutoResearchPreset = preset.id;
+      this.applyCurrentAutoResearchPresetState();
+      return preset.id;
+    }
+
     setAutoResearchAutomationCollapsed(collapsed) {
       this.autoResearchAutomationCollapsed = !!collapsed;
     }

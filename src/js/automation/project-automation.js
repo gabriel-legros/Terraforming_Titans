@@ -384,6 +384,35 @@ class ProjectAutomation {
     preset.name = name;
   }
 
+  exportPreset(presetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return null;
+    }
+    return {
+      name: preset.name,
+      includeExpansion: preset.includeExpansion !== false,
+      includeOperations: preset.includeOperations !== false,
+      scopeAll: preset.scopeAll === true,
+      projects: this.deepClone(preset.projects || {})
+    };
+  }
+
+  importPreset(presetData = {}) {
+    const id = this.nextPresetId++;
+    const importedPreset = {
+      id,
+      name: presetData.name || `Preset ${id}`,
+      includeExpansion: presetData.includeExpansion !== false,
+      includeOperations: presetData.includeOperations !== false,
+      scopeAll: presetData.scopeAll === true,
+      projects: this.normalizeLoadedPresetProjects(presetData.projects || {})
+    };
+    this.presets.push(importedPreset);
+    this.selectedPresetId = importedPreset.id;
+    return importedPreset.id;
+  }
+
   buildPreset(name, projectIds, options = {}, idOverride) {
     const includeExpansion = options.includeExpansion !== false;
     const includeOperations = options.includeOperations !== false;

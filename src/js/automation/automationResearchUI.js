@@ -53,10 +53,21 @@ function buildAutomationResearchUI() {
   const deleteButton = document.createElement('button');
   deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deleteButton.classList.add('research-automation-preset-delete');
+  const transferButtons = createAutomationPresetTransferButtons('research-automation-preset');
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('research-automation-preset-apply-once');
-  presetRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
+  presetRow.append(
+    presetSelect,
+    presetMoveButtons,
+    presetNameInput,
+    newButton,
+    saveButton,
+    deleteButton,
+    transferButtons.importButton,
+    transferButtons.exportButton,
+    applyOnceButton
+  );
   presetSection.appendChild(presetRow);
 
   const nextTravelRow = document.createElement('div');
@@ -96,6 +107,8 @@ function buildAutomationResearchUI() {
   automationElements.researchNewPresetButton = newButton;
   automationElements.researchSavePresetButton = saveButton;
   automationElements.researchDeletePresetButton = deleteButton;
+  automationElements.researchImportPresetButton = transferButtons.importButton;
+  automationElements.researchExportPresetButton = transferButtons.exportButton;
   automationElements.researchApplyOnceButton = applyOnceButton;
   automationElements.researchApplyNextTravelSelect = nextTravelSelect;
   automationElements.researchApplyNextTravelPersistToggle = nextTravelPersistToggle;
@@ -117,6 +130,8 @@ function updateResearchAutomationUI() {
     researchNewPresetButton,
     researchSavePresetButton,
     researchDeletePresetButton,
+    researchImportPresetButton,
+    researchExportPresetButton,
     researchApplyOnceButton,
     researchApplyNextTravelSelect,
     researchApplyNextTravelPersistToggle,
@@ -168,6 +183,8 @@ function updateResearchAutomationUI() {
   researchPresetMoveUpButton.disabled = activePresetIndex <= 0;
   researchPresetMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
   researchDeletePresetButton.disabled = presets.length <= 1 || !activePreset;
+  researchImportPresetButton.disabled = false;
+  researchExportPresetButton.disabled = !activePreset;
   researchNewPresetButton.disabled = false;
   researchSavePresetButton.disabled = !activePreset;
   researchApplyOnceButton.disabled = !activePreset;
@@ -212,6 +229,8 @@ function attachResearchAutomationHandlers() {
     researchNewPresetButton,
     researchSavePresetButton,
     researchDeletePresetButton,
+    researchImportPresetButton,
+    researchExportPresetButton,
     researchApplyOnceButton,
     researchApplyNextTravelSelect,
     researchApplyNextTravelPersistToggle,
@@ -265,6 +284,40 @@ function attachResearchAutomationHandlers() {
     researchManager.saveCurrentAutoResearchPreset();
     queueAutomationUIRefresh();
     updateAutomationUI();
+  });
+
+  researchImportPresetButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importResearchPresetTitle', {}, 'Import Research Preset'),
+      description: getAutomationCardText(
+        'importPresetDescription',
+        {},
+        'Paste an exported preset string below. Import adds it as a new preset.'
+      ),
+      onImport: (text) => {
+        const parsed = parseAutomationPresetTransferPayload(text, 'research');
+        if (!parsed.ok) {
+          return parsed;
+        }
+        researchManager.importAutoResearchPreset(parsed.preset);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        updateResearchUI();
+        return { ok: true };
+      }
+    });
+  });
+
+  researchExportPresetButton.addEventListener('click', () => {
+    const preset = researchManager.getSelectedAutoResearchPreset();
+    if (!preset) {
+      return;
+    }
+    exportAutomationPresetToClipboard(
+      'research',
+      researchManager.exportAutoResearchPreset(preset.id),
+      researchExportPresetButton
+    );
   });
 
   researchApplyOnceButton.addEventListener('click', () => {

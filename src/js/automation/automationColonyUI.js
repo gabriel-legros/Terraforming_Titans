@@ -81,10 +81,21 @@ function buildAutomationColonyUI() {
   const deleteButton = document.createElement('button');
   deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deleteButton.classList.add('colony-automation-builder-delete');
+  const transferButtons = createAutomationPresetTransferButtons('colony-automation-builder');
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('colony-automation-builder-apply-once');
-  builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
+  builderRow.append(
+    presetSelect,
+    presetMoveButtons,
+    presetNameInput,
+    newButton,
+    saveButton,
+    deleteButton,
+    transferButtons.importButton,
+    transferButtons.exportButton,
+    applyOnceButton
+  );
   builderSection.appendChild(builderRow);
 
   const builderModeRow = document.createElement('div');
@@ -242,6 +253,8 @@ function buildAutomationColonyUI() {
   automationElements.colonyBuilderNewButton = newButton;
   automationElements.colonyBuilderSaveButton = saveButton;
   automationElements.colonyBuilderDeleteButton = deleteButton;
+  automationElements.colonyBuilderImportButton = transferButtons.importButton;
+  automationElements.colonyBuilderExportButton = transferButtons.exportButton;
   automationElements.colonyBuilderApplyOnceButton = applyOnceButton;
   automationElements.colonyBuilderDirty = builderDirty;
   automationElements.colonyBuilderTypeSelect = typeSelect;
@@ -283,6 +296,8 @@ function updateColonyAutomationUI() {
     colonyBuilderNewButton,
     colonyBuilderSaveButton,
     colonyBuilderDeleteButton,
+    colonyBuilderImportButton,
+    colonyBuilderExportButton,
     colonyBuilderApplyOnceButton,
     colonyBuilderDirty,
     colonyBuilderTypeSelect,
@@ -433,6 +448,8 @@ function updateColonyAutomationUI() {
     || !availableTargets.length;
   colonyBuilderClearButton.disabled = colonyAutomationUIState.builderSelectedTargets.length === 0;
   colonyBuilderDeleteButton.disabled = !activePreset;
+  colonyBuilderImportButton.disabled = false;
+  colonyBuilderExportButton.disabled = !activePreset;
   colonyBuilderApplyOnceButton.disabled = !activePreset;
   colonyBuilderMoveUpButton.disabled = activePresetIndex <= 0;
   colonyBuilderMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
@@ -665,6 +682,8 @@ function attachColonyAutomationHandlers() {
     colonyBuilderNewButton,
     colonyBuilderSaveButton,
     colonyBuilderDeleteButton,
+    colonyBuilderImportButton,
+    colonyBuilderExportButton,
     colonyBuilderTypeSelect,
     colonyBuilderScopeSelect,
     colonyBuilderCategorySelect,
@@ -833,6 +852,40 @@ function attachColonyAutomationHandlers() {
     colonyAutomationUIState.builderSelectedTargets = [];
     queueAutomationUIRefresh();
     updateAutomationUI();
+  });
+
+  colonyBuilderImportButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importColonyPresetTitle', {}, 'Import Colony Preset'),
+      description: getAutomationCardText(
+        'importPresetDescription',
+        {},
+        'Paste an exported preset string below. Import adds it as a new preset.'
+      ),
+      onImport: (text) => {
+        const parsed = parseAutomationPresetTransferPayload(text, 'colony');
+        if (!parsed.ok) {
+          return parsed;
+        }
+        automationManager.colonyAutomation.importPreset(parsed.preset);
+        colonyAutomationUIState.syncedPresetId = null;
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
+
+  colonyBuilderExportButton.addEventListener('click', () => {
+    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (!presetId) {
+      return;
+    }
+    exportAutomationPresetToClipboard(
+      'colony',
+      automationManager.colonyAutomation.exportPreset(presetId),
+      colonyBuilderExportButton
+    );
   });
 
   colonyBuilderApplyOnceButton.addEventListener('click', () => {

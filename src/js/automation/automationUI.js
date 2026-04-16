@@ -51,6 +51,8 @@ const automationElements = {
   researchNewPresetButton: null,
   researchSavePresetButton: null,
   researchDeletePresetButton: null,
+  researchImportPresetButton: null,
+  researchExportPresetButton: null,
   researchApplyOnceButton: null,
   researchApplyNextTravelSelect: null,
   researchApplyNextTravelPersistToggle: null,
@@ -67,6 +69,8 @@ const automationElements = {
   buildingsBuilderNewButton: null,
   buildingsBuilderSaveButton: null,
   buildingsBuilderDeleteButton: null,
+  buildingsBuilderImportButton: null,
+  buildingsBuilderExportButton: null,
   buildingsBuilderApplyOnceButton: null,
   buildingsBuilderTypeSelect: null,
   buildingsBuilderScopeSelect: null,
@@ -102,6 +106,8 @@ const automationElements = {
   projectsBuilderNewButton: null,
   projectsBuilderSaveButton: null,
   projectsBuilderDeleteButton: null,
+  projectsBuilderImportButton: null,
+  projectsBuilderExportButton: null,
   projectsBuilderApplyOnceButton: null,
   projectsBuilderScopeSelect: null,
   projectsBuilderCategorySelect: null,
@@ -136,6 +142,8 @@ const automationElements = {
   colonyBuilderNewButton: null,
   colonyBuilderSaveButton: null,
   colonyBuilderDeleteButton: null,
+  colonyBuilderImportButton: null,
+  colonyBuilderExportButton: null,
   colonyBuilderApplyOnceButton: null,
   colonyBuilderDirty: null,
   colonyBuilderTypeSelect: null,
@@ -161,6 +169,10 @@ const automationElements = {
   colonyCombinationDeleteButton: null,
   colonyAddApplyButton: null
 };
+
+const AUTOMATION_PRESET_TRANSFER_FORMAT = 'terraforming-titans-automation-preset';
+const AUTOMATION_PRESET_TRANSFER_VERSION = 1;
+let automationPresetImportDialog = null;
 
 function queueAutomationUIRefresh() {
   automationUIStale = true;
@@ -713,6 +725,218 @@ function updateAutomationPresetJsonDetails(details, preset) {
     details._contentNode.textContent = presetJson;
     details._renderedPresetJson = presetJson;
   }
+}
+
+function createAutomationPresetTransferButtons(baseClassName) {
+  const importButton = document.createElement('button');
+  importButton.textContent = getAutomationCardText('importPresetButton', {}, 'Import');
+  importButton.classList.add(`${baseClassName}-import`);
+
+  const exportButton = document.createElement('button');
+  exportButton.textContent = getAutomationCardText('exportPresetButton', {}, 'Export to clipboard');
+  exportButton.classList.add(`${baseClassName}-export`);
+
+  return { importButton, exportButton };
+}
+
+function buildAutomationPresetTransferPayload(automationType, preset) {
+  return JSON.stringify({
+    format: AUTOMATION_PRESET_TRANSFER_FORMAT,
+    version: AUTOMATION_PRESET_TRANSFER_VERSION,
+    automationType,
+    preset
+  }, null, 2);
+}
+
+function parseAutomationPresetTransferPayload(text, expectedType) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed) {
+    return {
+      ok: false,
+      error: getAutomationCardText('importPresetEmptyError', {}, 'Paste a preset string first.')
+    };
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (error) {
+    return {
+      ok: false,
+      error: getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.')
+    };
+  }
+
+  if (parsed && parsed.format === AUTOMATION_PRESET_TRANSFER_FORMAT) {
+    if (parsed.automationType !== expectedType) {
+      return {
+        ok: false,
+        error: getAutomationCardText('importPresetWrongTypeError', {}, 'That preset belongs to a different automation system.')
+      };
+    }
+    return { ok: true, preset: parsed.preset || {} };
+  }
+
+  if (parsed && parsed.automationType && parsed.automationType !== expectedType) {
+    return {
+      ok: false,
+      error: getAutomationCardText('importPresetWrongTypeError', {}, 'That preset belongs to a different automation system.')
+    };
+  }
+
+  if (parsed && parsed.preset) {
+    return { ok: true, preset: parsed.preset };
+  }
+
+  return { ok: true, preset: parsed };
+}
+
+function setAutomationTransferButtonFeedback(button, text) {
+  if (!button) {
+    return;
+  }
+  if (!button.dataset.defaultText) {
+    button.dataset.defaultText = button.textContent || '';
+  }
+  button.textContent = text;
+  if (button._feedbackTimeoutId) {
+    window.clearTimeout(button._feedbackTimeoutId);
+  }
+  button._feedbackTimeoutId = window.setTimeout(() => {
+    button.textContent = button.dataset.defaultText || '';
+    button._feedbackTimeoutId = null;
+  }, 1500);
+}
+
+function exportAutomationPresetToClipboard(automationType, preset, button) {
+  if (!preset) {
+    return;
+  }
+  const payload = buildAutomationPresetTransferPayload(automationType, preset);
+  copyTextToClipboard(payload, {
+    promptLabel: getAutomationCardText('exportPresetPrompt', {}, 'Copy preset string:'),
+    onSuccess: () => {
+      setAutomationTransferButtonFeedback(
+        button,
+        getAutomationCardText('exportPresetCopied', {}, 'Copied')
+      );
+    }
+  });
+}
+
+function ensureAutomationPresetImportDialog() {
+  if (automationPresetImportDialog) {
+    return automationPresetImportDialog;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.background = 'rgba(0, 0, 0, 0.6)';
+  overlay.style.display = 'none';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = '6000';
+
+  const windowEl = document.createElement('div');
+  windowEl.style.width = 'min(720px, calc(100vw - 32px))';
+  windowEl.style.maxHeight = 'calc(100vh - 32px)';
+  windowEl.style.overflow = 'auto';
+  windowEl.style.background = '#1f1f1f';
+  windowEl.style.color = '#f0f0f0';
+  windowEl.style.border = '1px solid rgba(255, 255, 255, 0.18)';
+  windowEl.style.borderRadius = '10px';
+  windowEl.style.padding = '16px';
+  windowEl.style.boxShadow = '0 16px 40px rgba(0, 0, 0, 0.45)';
+
+  const title = document.createElement('h3');
+  title.style.margin = '0 0 8px';
+  title.style.fontSize = '18px';
+
+  const description = document.createElement('p');
+  description.style.margin = '0 0 12px';
+  description.style.whiteSpace = 'pre-line';
+
+  const textarea = document.createElement('textarea');
+  textarea.style.width = '100%';
+  textarea.style.minHeight = '240px';
+  textarea.style.resize = 'vertical';
+  textarea.style.boxSizing = 'border-box';
+  textarea.style.marginBottom = '8px';
+
+  const message = document.createElement('div');
+  message.style.minHeight = '20px';
+  message.style.marginBottom = '12px';
+  message.style.color = '#ff9a9a';
+
+  const actions = document.createElement('div');
+  actions.style.display = 'flex';
+  actions.style.justifyContent = 'flex-end';
+  actions.style.gap = '8px';
+
+  const cancelButton = document.createElement('button');
+  cancelButton.textContent = getAutomationCardText('cancelButton', {}, 'Cancel');
+
+  const importButton = document.createElement('button');
+  importButton.textContent = getAutomationCardText('importPresetButton', {}, 'Import');
+
+  actions.append(cancelButton, importButton);
+  windowEl.append(title, description, textarea, message, actions);
+  overlay.appendChild(windowEl);
+  document.body.appendChild(overlay);
+
+  automationPresetImportDialog = {
+    overlay,
+    title,
+    description,
+    textarea,
+    message,
+    importButton,
+    cancelButton,
+    onImport: null
+  };
+
+  const closeDialog = () => {
+    overlay.style.display = 'none';
+    message.textContent = '';
+    textarea.value = '';
+    automationPresetImportDialog.onImport = null;
+  };
+
+  cancelButton.addEventListener('click', closeDialog);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      closeDialog();
+    }
+  });
+  importButton.addEventListener('click', () => {
+    if (!automationPresetImportDialog.onImport) {
+      return;
+    }
+    const result = automationPresetImportDialog.onImport(textarea.value);
+    if (!result || result.ok === false) {
+      message.textContent = result && result.error
+        ? result.error
+        : getAutomationCardText('importPresetFailed', {}, 'Could not import that preset.');
+      return;
+    }
+    closeDialog();
+  });
+
+  return automationPresetImportDialog;
+}
+
+function openAutomationPresetImportDialog(options) {
+  const dialog = ensureAutomationPresetImportDialog();
+  dialog.title.textContent = options.title;
+  dialog.description.textContent = options.description;
+  dialog.importButton.textContent = options.importButtonText
+    || getAutomationCardText('importPresetButton', {}, 'Import');
+  dialog.message.textContent = '';
+  dialog.textarea.value = '';
+  dialog.onImport = options.onImport;
+  dialog.overlay.style.display = 'flex';
+  dialog.textarea.focus();
 }
 
 function createAutomationPresetRow(body) {

@@ -306,6 +306,58 @@ class ColonyAutomation {
     preset.name = name;
   }
 
+  exportPreset(presetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return null;
+    }
+    return {
+      name: preset.name,
+      includeControl: preset.includeControl !== false,
+      includeAutomation: preset.includeAutomation !== false,
+      scopeAll: preset.scopeAll === true,
+      targets: Object.fromEntries(
+        Object.entries(preset.targets || {}).map(([targetId, entry]) => [
+          targetId,
+          {
+            categoryId: entry.categoryId,
+            control: entry.control ? this.deepClone(entry.control) : null,
+            automation: entry.automation ? this.deepClone(entry.automation) : null
+          }
+        ])
+      )
+    };
+  }
+
+  importPreset(presetData = {}) {
+    const id = this.nextPresetId++;
+    const importedPreset = {
+      id,
+      name: presetData.name || `Preset ${id}`,
+      includeControl: presetData.includeControl !== false,
+      includeAutomation: presetData.includeAutomation !== false,
+      scopeAll: presetData.scopeAll === true,
+      targets: {}
+    };
+    const importedTargets = presetData.targets || {};
+    for (const targetId in importedTargets) {
+      const entry = importedTargets[targetId] || {};
+      const control = entry.control ? this.deepClone(entry.control) : null;
+      const automation = entry.automation ? this.deepClone(entry.automation) : null;
+      if (!control && !automation) {
+        continue;
+      }
+      importedPreset.targets[targetId] = {
+        categoryId: entry.categoryId || this.getTargetCategoryId(targetId),
+        control,
+        automation
+      };
+    }
+    this.presets.push(importedPreset);
+    this.selectedPresetId = importedPreset.id;
+    return importedPreset.id;
+  }
+
   buildPreset(name, targetIds, options = {}, idOverride) {
     const includeControl = options.includeControl !== false;
     const includeAutomation = options.includeAutomation !== false;

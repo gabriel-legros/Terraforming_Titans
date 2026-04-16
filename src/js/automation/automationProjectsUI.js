@@ -101,10 +101,21 @@ function buildAutomationProjectsUI() {
   const deleteButton = document.createElement('button');
   deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deleteButton.classList.add('project-automation-builder-delete');
+  const transferButtons = createAutomationPresetTransferButtons('project-automation-builder');
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('project-automation-builder-apply-once');
-  builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
+  builderRow.append(
+    presetSelect,
+    presetMoveButtons,
+    presetNameInput,
+    newButton,
+    saveButton,
+    deleteButton,
+    transferButtons.importButton,
+    transferButtons.exportButton,
+    applyOnceButton
+  );
   builderSection.appendChild(builderRow);
 
   const builderModeRow = document.createElement('div');
@@ -262,6 +273,8 @@ function buildAutomationProjectsUI() {
   automationElements.projectsBuilderNewButton = newButton;
   automationElements.projectsBuilderSaveButton = saveButton;
   automationElements.projectsBuilderDeleteButton = deleteButton;
+  automationElements.projectsBuilderImportButton = transferButtons.importButton;
+  automationElements.projectsBuilderExportButton = transferButtons.exportButton;
   automationElements.projectsBuilderApplyOnceButton = applyOnceButton;
   automationElements.projectsBuilderDirty = builderDirty;
   automationElements.projectsBuilderTypeSelect = typeSelect;
@@ -303,6 +316,8 @@ function updateProjectsAutomationUI() {
     projectsBuilderNewButton,
     projectsBuilderSaveButton,
     projectsBuilderDeleteButton,
+    projectsBuilderImportButton,
+    projectsBuilderExportButton,
     projectsBuilderApplyOnceButton,
     projectsBuilderDirty,
     projectsBuilderTypeSelect,
@@ -460,6 +475,8 @@ function updateProjectsAutomationUI() {
     || !automatableProjects.length;
   projectsBuilderClearButton.disabled = projectAutomationUIState.builderSelectedProjects.length === 0;
   projectsBuilderDeleteButton.disabled = !activePreset;
+  projectsBuilderImportButton.disabled = false;
+  projectsBuilderExportButton.disabled = !activePreset;
   projectsBuilderApplyOnceButton.disabled = !activePreset;
   projectsBuilderMoveUpButton.disabled = activePresetIndex <= 0;
   projectsBuilderMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
@@ -715,6 +732,8 @@ function attachProjectsAutomationHandlers() {
     projectsBuilderNewButton,
     projectsBuilderSaveButton,
     projectsBuilderDeleteButton,
+    projectsBuilderImportButton,
+    projectsBuilderExportButton,
     projectsBuilderTypeSelect,
     projectsBuilderScopeSelect,
     projectsBuilderCategorySelect,
@@ -883,6 +902,40 @@ function attachProjectsAutomationHandlers() {
     projectAutomationUIState.builderSelectedProjects = [];
     queueAutomationUIRefresh();
     updateAutomationUI();
+  });
+
+  projectsBuilderImportButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importProjectsPresetTitle', {}, 'Import Projects Preset'),
+      description: getAutomationCardText(
+        'importPresetDescription',
+        {},
+        'Paste an exported preset string below. Import adds it as a new preset.'
+      ),
+      onImport: (text) => {
+        const parsed = parseAutomationPresetTransferPayload(text, 'projects');
+        if (!parsed.ok) {
+          return parsed;
+        }
+        automationManager.projectsAutomation.importPreset(parsed.preset);
+        projectAutomationUIState.syncedPresetId = null;
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
+
+  projectsBuilderExportButton.addEventListener('click', () => {
+    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (!presetId) {
+      return;
+    }
+    exportAutomationPresetToClipboard(
+      'projects',
+      automationManager.projectsAutomation.exportPreset(presetId),
+      projectsBuilderExportButton
+    );
   });
 
   projectsBuilderApplyOnceButton.addEventListener('click', () => {
