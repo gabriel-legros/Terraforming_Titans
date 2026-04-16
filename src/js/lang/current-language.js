@@ -4400,15 +4400,18 @@ setLanguageData({
       },
       titan: {
         name: 'Titan',
-        star: { name: 'Saturn' },
+        star: { name: 'Sun' },
+        parentBody: { name: 'Saturn' },
       },
       callisto: {
         name: 'Callisto',
-        star: { name: 'Jupiter' },
+        star: { name: 'Sun' },
+        parentBody: { name: 'Jupiter' },
       },
       ganymede: {
         name: 'Ganymede',
-        star: { name: 'Jupiter' },
+        star: { name: 'Sun' },
+        parentBody: { name: 'Jupiter' },
       },
       vega2: {
         name: 'Vega-2',

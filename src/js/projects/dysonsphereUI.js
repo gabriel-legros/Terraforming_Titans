@@ -25,22 +25,22 @@ function renderDysonSphereUI(project, container) {
       <span class="card-title">${getDysonSphereText('ui.projects.dysonSphere.title', 'Dyson Sphere Collectors')}</span>
     </div>
     <div class="card-body">
-      <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.collectors', 'Collectors:')}</span><span id="dsph-collectors" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.powerPerCollector', 'Power/Collector:')}</span><span id="dsph-power-per" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.totalPower', 'Total Power:')}</span><span id="dsph-total-power" class="stat-value"></span></div>
+      <div class="stats-grid three-col project-summary-grid">
+        <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.collectors', 'Collectors:')}</span><span id="dsph-collectors" class="stat-value"></span></div>
+        <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.powerPerCollector', 'Power/Collector:')}</span><span id="dsph-power-per" class="stat-value"></span></div>
+        <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.totalPower', 'Total Power:')}</span><span id="dsph-total-power" class="stat-value"></span></div>
       </div>
-      <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.sphereCount', 'Sphere Count:')}</span><span id="dsph-sphere-count" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxSpheres', 'Max Spheres:')}</span><span id="dsph-max-spheres" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxPower', 'Max Power:')}</span><span id="dsph-max-power" class="stat-value"></span></div>
+      <div class="stats-grid three-col project-summary-grid">
+        <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.sphereCount', 'Sphere Count:')}</span><span id="dsph-sphere-count" class="stat-value"></span></div>
+        <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxSpheres', 'Max Spheres:')}</span><span id="dsph-max-spheres" class="stat-value"></span></div>
+        <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxPower', 'Max Power:')}</span><span id="dsph-max-power" class="stat-value"></span></div>
       </div>
-      <div class="stats-grid two-col collector-cost-container">
-        <div class="stat-item">
+      <div class="stats-grid two-col collector-cost-container project-summary-grid">
+        <div class="stat-item project-summary-box">
           <span class="stat-label" id="dsph-collector-cost-label">${getDysonSphereText('ui.projects.dysonSphere.collectorCost', 'Collector Cost:')}</span>
           <span id="dsph-collector-cost" class="stat-value"></span>
         </div>
-        <div class="stat-item">
+        <div class="stat-item project-summary-box">
           <span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.expansion', 'Expansion')}</span>
           <span id="dsph-expansion-rate" class="stat-value"></span>
         </div>

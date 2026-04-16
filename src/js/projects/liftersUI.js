@@ -8,7 +8,7 @@ function getLiftersUIText(path, fallback, vars) {
 
 function buildStat(label) {
   const wrapper = document.createElement('div');
-  wrapper.classList.add('stat-item');
+  wrapper.classList.add('stat-item', 'project-summary-box');
   const labelEl = document.createElement('span');
   labelEl.classList.add('stat-label');
   labelEl.textContent = label;

@@ -303,6 +303,17 @@ function applyLocalizedPlanetFields(localizedPlanets) {
           target.star.name = localizedPlanet.star.name;
         }
       }
+      if (localizedPlanet.parentBody) {
+        if (!target.celestialParameters) {
+          target.celestialParameters = {};
+        }
+        if (!target.celestialParameters.parentBody) {
+          target.celestialParameters.parentBody = {};
+        }
+        if (localizedPlanet.parentBody.name !== undefined) {
+          target.celestialParameters.parentBody.name = localizedPlanet.parentBody.name;
+        }
+      }
       if (localizedPlanet.hazards) {
         for (const hazardKey in localizedPlanet.hazards) {
           const localizedHazard = localizedPlanet.hazards[hazardKey];

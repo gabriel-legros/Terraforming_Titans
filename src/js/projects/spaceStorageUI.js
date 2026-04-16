@@ -222,9 +222,9 @@ function renderSpaceStorageUI(project, container) {
       <span class="card-title">${getSpaceStorageUIText('ui.projects.spaceStorage.title', 'Space Storage')}</span>
     </div>
     <div class="card-body">
-      <div class="stats-grid two-col">
-        <div class="stat-item"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.usedStorage', 'Used Storage:')}</span><span id="ss-used" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.maxStorage', 'Max Storage:')}</span><span id="ss-max" class="stat-value"></span></div>
+      <div class="stats-grid two-col project-summary-grid">
+        <div class="stat-item project-summary-box"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.usedStorage', 'Used Storage:')}</span><span id="ss-used" class="stat-value"></span></div>
+        <div class="stat-item project-summary-box"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.maxStorage', 'Max Storage:')}</span><span id="ss-max" class="stat-value"></span></div>
       </div>
       <div id="ss-resource-grid"></div>
     </div>`;
@@ -293,12 +293,12 @@ function renderSpaceStorageUI(project, container) {
     <div class="card-body">
       <div class="project-details-grid">
         <div class="checkbox-container" id="ss-artificial-ecosystems-toggle-row"></div>
-        <div class="stats-grid two-col">
-          <div class="stat-item">
+        <div class="stats-grid two-col project-summary-grid">
+          <div class="stat-item project-summary-box">
             <span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.currentConsumption', 'Current Consumption:')}</span>
             <span class="stat-value" id="ss-artificial-ecosystems-consumption"></span>
           </div>
-          <div class="stat-item">
+          <div class="stat-item project-summary-box">
             <span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.currentProduction', 'Current Production:')}</span>
             <span class="stat-value" id="ss-artificial-ecosystems-production"></span>
           </div>

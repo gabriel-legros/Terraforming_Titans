@@ -676,6 +676,10 @@
     gap: 4px;
 }
 
+.project-summary-box .stat-label {
+    color: #212529;
+}
+
 .project-summary-content {
     display: flex;
     align-items: center;
