@@ -1,6 +1,11 @@
 let solisTabVisible = false;
 let solisUIInitialized = false;
 const shopElements = {};
+const solisQuestElements = {
+  container: null,
+  message: null,
+  detail: null
+};
 function getSolisUIText(path, vars, fallback) {
   return t(`ui.hope.solisUi.${path}`, vars, fallback);
 }
@@ -66,6 +71,37 @@ function updateSolisShopMultiplierControls() {
 
 function getSolisShopPurchaseMultiplier() {
   return solisShopControls.multiplier;
+}
+
+function ensureSolisQuestElements() {
+  if (!solisQuestElements.container || !solisQuestElements.container.isConnected) {
+    solisQuestElements.container = document.getElementById('solis-quest-text');
+  }
+  const questText = solisQuestElements.container;
+  if (!questText) {
+    return null;
+  }
+
+  let messageSpan = document.getElementById('solis-quest-message');
+  let detailSpan = document.getElementById('solis-quest-detail');
+  if (!messageSpan || messageSpan.parentElement !== questText || !detailSpan || detailSpan.parentElement !== questText) {
+    questText.textContent = '';
+
+    messageSpan = document.createElement('span');
+    messageSpan.id = 'solis-quest-message';
+    messageSpan.textContent = t('ui.hope.noQuestAvailable', {}, 'No quest available');
+
+    detailSpan = document.createElement('span');
+    detailSpan.id = 'solis-quest-detail';
+    detailSpan.classList.add('hidden');
+    detailSpan.textContent = '';
+
+    questText.append(messageSpan, detailSpan);
+  }
+
+  solisQuestElements.message = messageSpan;
+  solisQuestElements.detail = detailSpan;
+  return solisQuestElements;
 }
 
 function showSolisTab() {
@@ -387,18 +423,7 @@ function initializeSolisUI() {
     parent.insertBefore(title, automationShopItems);
   }
 
-  const questText = document.getElementById('solis-quest-text');
-  if (questText) {
-    questText.textContent = '';
-    const messageSpan = document.createElement('span');
-    messageSpan.id = 'solis-quest-message';
-    messageSpan.textContent = t('ui.hope.noQuestAvailable', {}, 'No quest available');
-    const detailSpan = document.createElement('span');
-    detailSpan.id = 'solis-quest-detail';
-    detailSpan.classList.add('hidden');
-    detailSpan.textContent = '';
-    questText.append(messageSpan, detailSpan);
-  }
+  ensureSolisQuestElements();
 
   const cooldownDiv = document.getElementById('solis-cooldown');
   if (cooldownDiv) {
@@ -425,8 +450,9 @@ function initializeSolisUI() {
 }
 
 function updateSolisUI() {
-  const questMessage = document.getElementById('solis-quest-message');
-  const questDetail = document.getElementById('solis-quest-detail');
+  const questElements = ensureSolisQuestElements();
+  const questMessage = questElements ? questElements.message : null;
+  const questDetail = questElements ? questElements.detail : null;
   const refreshBtn = document.getElementById('solis-refresh-button');
   const completeBtn = document.getElementById('solis-complete-button');
   const pointsSpan = document.getElementById('solis-points-value');
