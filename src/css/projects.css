@@ -275,6 +275,12 @@
     transition: background-color 0.2s;
 }
 
+.apollo-core-surgery-button:disabled {
+    background-color: #e9ecef;
+    color: #495057;
+    cursor: not-allowed;
+}
+
 .checkbox-row-container {
     display: flex;
     gap: 15px;

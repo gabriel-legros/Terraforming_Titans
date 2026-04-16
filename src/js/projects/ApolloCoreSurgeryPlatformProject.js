@@ -183,7 +183,7 @@
       actionWrapper.style.marginTop = '10px';
 
       const actionButton = document.createElement('button');
-      actionButton.classList.add('progress-button');
+      actionButton.classList.add('progress-button', 'apollo-core-surgery-button');
       actionButton.style.width = '100%';
       actionButton.style.display = 'flex';
       actionButton.style.alignItems = 'center';
