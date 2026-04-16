@@ -1,5 +1,4 @@
 const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
-const wasteTooltipNoteText = 'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages.  The numbers here are not their actual consumption.';
 const SPACE_STORAGE_UI_ORDER = [
   'energy',
   'metal',
@@ -29,6 +28,21 @@ function getResourceUIText(path, fallback, vars) {
   } catch (error) {
     return fallback;
   }
+}
+
+function getResourceUICommonText(path, fallback, vars) {
+  return getResourceUIText(`common.${path}`, fallback, vars);
+}
+
+function getResourceUIWarningText(path, fallback, vars) {
+  return getResourceUIText(`warnings.${path}`, fallback, vars);
+}
+
+function getWasteTooltipNoteText() {
+  return getResourceUICommonText(
+    'wasteTooltipNote',
+    'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages. The numbers here are not their actual consumption.'
+  );
 }
 
 function showSpaceStorageInDefaultPanel() {
@@ -136,6 +150,7 @@ function updateSpaceStorageCapDisplay(entry, resourceKey) {
 }
 
 function createSpaceStorageTotalElement() {
+  const totalText = getResourceUICommonText('total', 'Total');
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
   resourceElement.classList.add('resource-divider-bottom');
@@ -144,7 +159,7 @@ function createSpaceStorageTotalElement() {
   resourceElement.style.setProperty('--divider-margin-bottom', '10px');
   resourceElement.innerHTML = `
       <div class="resource-row">
-        <div class="resource-name"><strong id="space-storage-total-name">Total</strong></div>
+        <div class="resource-name"><strong id="space-storage-total-name">${totalText}</strong></div>
         <div class="resource-value" id="space-storage-total-value-resources-container">0</div>
         <div class="resource-slash">/</div>
         <div class="resource-cap"><span id="space-storage-total-cap-resources-container">0</span></div>
@@ -332,9 +347,11 @@ function createResourceContainers(resourcesData) {
     const label = document.createElement('span');
     label.classList.add('resource-category-label');
     if (category === 'spaceStorage') {
-      label.textContent = 'Space Resources';
+      label.textContent = getResourceUICommonText('spaceResources', 'Space Resources');
     } else {
-      label.textContent = `${capitalizeFirstLetter(category)} Resources`;
+      label.textContent = getResourceUICommonText('categoryResources', '{name} Resources', {
+        name: capitalizeFirstLetter(category),
+      });
     }
     collapseTarget.appendChild(label);
     header.appendChild(collapseTarget);
@@ -348,8 +365,9 @@ function createResourceContainers(resourcesData) {
         isOn: isSpaceStorageViewActive()
       });
       toggle.classList.add('resource-view-toggle');
-      toggle.title = 'Toggle colony/space resource view';
-      toggle.setAttribute('aria-label', 'Toggle colony/space resource view');
+      const toggleLabel = getResourceUICommonText('toggleView', 'Toggle colony/space resource view');
+      toggle.title = toggleLabel;
+      toggle.setAttribute('aria-label', toggleLabel);
       toggle.addEventListener('click', (event) => {
         event.stopPropagation();
         setResourcePanelViewMode(!isSpaceStorageViewActive());
@@ -394,17 +412,13 @@ function createTooltipElement(category, resourceName) {
   if (resourceName === 'land') {
     noteDiv = document.createElement('div');
     noteDiv.id = getResourceDomId(category, resourceName, 'tooltip-note');
-    noteDiv.textContent = 'Land can be recovered by turning off the corresponding building';
+    noteDiv.textContent = getResourceUICommonText('landRecoverNote', 'Land can be recovered by turning off the corresponding building');
   }
   if (isWasteResource(resourceName)) {
+    const wasteTooltipNoteText = getWasteTooltipNoteText();
     wasteNoteDiv = document.createElement('div');
     wasteNoteDiv.id = getResourceDomId(category, resourceName, 'tooltip-waste-note');
-    const wasteNoteIcon = document.createElement('span');
-    wasteNoteIcon.classList.add('info-tooltip-icon');
-    wasteNoteIcon.innerHTML = '&#9432;';
-    wasteNoteIcon.title = wasteTooltipNoteText;
-    wasteNoteDiv.appendChild(wasteNoteIcon);
-    wasteNoteDiv.appendChild(document.createTextNode(` ${wasteTooltipNoteText}`));
+    wasteNoteDiv.textContent = wasteTooltipNoteText;
   }
 
   const assignmentsDiv = document.createElement('div');
@@ -415,7 +429,7 @@ function createTooltipElement(category, resourceName) {
   zonesDiv.style.display = 'none';
   zonesDiv.appendChild(document.createElement('br'));
   const zonesHeader = document.createElement('strong');
-  zonesHeader.textContent = 'Zonal Amounts:';
+  zonesHeader.textContent = getResourceUICommonText('zonalAmounts', 'Zonal Amounts:');
   zonesDiv.appendChild(zonesHeader);
   zonesDiv.appendChild(document.createElement('br'));
   zonesDiv._info = { lines: new Map() };
@@ -447,12 +461,13 @@ function createTooltipElement(category, resourceName) {
   const warningIcon = document.createElement('span');
   warningIcon.classList.add('info-tooltip-icon');
   warningIcon.innerHTML = '&#9432;';
+  const warningTooltip = attachDynamicInfoTooltip(warningIcon, '');
   warningDiv.appendChild(warningIcon);
   warningDiv.appendChild(document.createTextNode(' '));
   const warningText = document.createElement('span');
   warningText.classList.add('resource-tooltip-warning-text');
   warningDiv.appendChild(warningText);
-  warningDiv._info = { icon: warningIcon, text: warningText };
+  warningDiv._info = { icon: warningIcon, text: warningText, tooltip: warningTooltip, tooltipCache: {} };
 
   const headerDiv = document.createElement('div');
   headerDiv.appendChild(valueDiv);
@@ -469,7 +484,7 @@ function createTooltipElement(category, resourceName) {
   productionDiv.id = getResourceDomId(category, resourceName, 'tooltip-production');
   productionDiv.style.display = 'none';
   const prodHeader = document.createElement('strong');
-  prodHeader.textContent = 'Production:';
+  prodHeader.textContent = getResourceUICommonText('production', 'Production:');
   productionDiv.appendChild(prodHeader);
   productionDiv.appendChild(document.createElement('br'));
   const prodTable = document.createElement('div');
@@ -483,7 +498,7 @@ function createTooltipElement(category, resourceName) {
   prodTotalLeft.style.textAlign = 'left';
   prodTotalLeft.style.paddingRight = '10px';
   const prodTotalLeftStrong = document.createElement('strong');
-  prodTotalLeftStrong.textContent = 'Total :';
+  prodTotalLeftStrong.textContent = getResourceUICommonText('totalLabel', 'Total :');
   prodTotalLeft.appendChild(prodTotalLeftStrong);
   const prodTotalRight = document.createElement('div');
   prodTotalRight.style.display = 'table-cell';
@@ -502,7 +517,7 @@ function createTooltipElement(category, resourceName) {
   consumptionDiv.style.display = 'none';
   consumptionDiv.appendChild(document.createElement('br'));
   const consHeader = document.createElement('strong');
-  consHeader.textContent = 'Consumption and Maintenance:';
+  consHeader.textContent = getResourceUICommonText('consumptionAndMaintenance', 'Consumption and Maintenance:');
   consumptionDiv.appendChild(consHeader);
   consumptionDiv.appendChild(document.createElement('br'));
   const consTable = document.createElement('div');
@@ -516,7 +531,7 @@ function createTooltipElement(category, resourceName) {
   consTotalLeft.style.textAlign = 'left';
   consTotalLeft.style.paddingRight = '10px';
   const consTotalLeftStrong = document.createElement('strong');
-  consTotalLeftStrong.textContent = 'Total :';
+  consTotalLeftStrong.textContent = getResourceUICommonText('totalLabel', 'Total :');
   consTotalLeft.appendChild(consTotalLeftStrong);
   const consTotalRight = document.createElement('div');
   consTotalRight.style.display = 'table-cell';
@@ -535,7 +550,7 @@ function createTooltipElement(category, resourceName) {
   overflowDiv.style.display = 'none';
   overflowDiv.appendChild(document.createElement('br'));
   const overflowHeader = document.createElement('strong');
-  overflowHeader.textContent = 'Overflow:';
+  overflowHeader.textContent = getResourceUICommonText('overflow', 'Overflow:');
   overflowDiv.appendChild(overflowHeader);
   overflowDiv.appendChild(document.createElement('br'));
   const overflowTable = document.createElement('div');
@@ -549,7 +564,7 @@ function createTooltipElement(category, resourceName) {
   overflowTotalLeft.style.textAlign = 'left';
   overflowTotalLeft.style.paddingRight = '10px';
   const overflowTotalLeftStrong = document.createElement('strong');
-  overflowTotalLeftStrong.textContent = 'Total :';
+  overflowTotalLeftStrong.textContent = getResourceUICommonText('totalLabel', 'Total :');
   overflowTotalLeft.appendChild(overflowTotalLeftStrong);
   const overflowTotalRight = document.createElement('div');
   overflowTotalRight.style.display = 'table-cell';
@@ -568,7 +583,7 @@ function createTooltipElement(category, resourceName) {
   autobuildDiv.style.display = 'none';
   autobuildDiv.appendChild(document.createElement('br'));
   const autoHeader = document.createElement('strong');
-  autoHeader.textContent = 'Autobuild Cost (avg 10s):';
+  autoHeader.textContent = getResourceUICommonText('autobuildCost', 'Autobuild Cost (avg 10s):');
   autobuildDiv.appendChild(autoHeader);
   autobuildDiv.appendChild(document.createTextNode(' '));
   const autoValue = document.createElement('span');
@@ -867,7 +882,9 @@ function updateAssignmentTable(container, assignments, valueFormatter = null) {
       return;
     }
     const header = document.createElement('div');
-    header.innerHTML = '<strong>Assignments:</strong>';
+    const headerStrong = document.createElement('strong');
+    headerStrong.textContent = getResourceUICommonText('assignments', 'Assignments:');
+    header.appendChild(headerStrong);
     container.appendChild(header);
     const table = document.createElement('div');
     table.style.display = 'table';
@@ -1072,7 +1089,7 @@ function updateAndroidAssignments(assignmentsDiv) {
   const assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
   const workers = Math.max(effective - assigned, 0);
   const entries = [];
-  if (workers > 0) entries.push(['Workers', workers]);
+  if (workers > 0) entries.push([getResourceUICommonText('workers', 'Workers'), workers]);
   androidAssignments.forEach(([name, count]) => entries.push([name, count]));
   let tableContainer = assignmentsDiv._tableContainer;
   if (!tableContainer) {
@@ -1104,7 +1121,9 @@ function updateSpaceshipAssignments(assignmentsDiv) {
     assignmentsDiv.appendChild(totalDiv);
     assignmentsDiv._totalDiv = totalDiv;
   }
-  const totalText = `Total ${formatNumber(available + assignedTotal, true)}`;
+  const totalText = getResourceUICommonText('totalValue', 'Total {value}', {
+    value: formatNumber(available + assignedTotal, true),
+  });
   if (totalDiv.textContent !== totalText) totalDiv.textContent = totalText;
 
   let unassignedDiv = assignmentsDiv._unassignedDiv;
@@ -1113,7 +1132,9 @@ function updateSpaceshipAssignments(assignmentsDiv) {
     assignmentsDiv.appendChild(unassignedDiv);
     assignmentsDiv._unassignedDiv = unassignedDiv;
   }
-  const unassignedText = `Unassigned ${formatNumber(available, true)}`;
+  const unassignedText = getResourceUICommonText('unassignedValue', 'Unassigned {value}', {
+    value: formatNumber(available, true),
+  });
   if (unassignedDiv.textContent !== unassignedText) unassignedDiv.textContent = unassignedText;
 
   let tableContainer = assignmentsDiv._tableContainer;
@@ -1170,29 +1191,36 @@ function getAerostatLiftAlert() {
   if (Number.isFinite(pressure) && pressure < minPressure) {
     severity = 'critical';
     const pressureText = formatNumber(pressure, false, 1);
-    const pressureLine = `Active aerostats only have ${pressureText} kPa of surface pressure, below the ${formatNumber(
-      minPressure,
-      false,
-      0
-    )} kPa minimum needed to stay buoyant.`;
-    message = `▲ ${pressureLine} ▲`;
+    message = getResourceUIWarningText(
+      'aerostatPressureCritical',
+      '▲ Active aerostats only have {pressure} kPa of surface pressure, below the {minimum} kPa minimum needed to stay buoyant. ▲',
+      {
+        pressure: pressureText,
+        minimum: formatNumber(minPressure, false, 0),
+      }
+    );
   } else if (Number.isFinite(lift) && lift < minLift) {
     severity = 'critical';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
-    const liftLine = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
-      minLift,
-      false,
-      2
-    )} kg/m³ minimum needed to stay aloft.`;
-    message = `▲ ${liftLine} ▲`;
+    message = getResourceUIWarningText(
+      'aerostatLiftCritical',
+      '▲ Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ minimum needed to stay aloft. ▲',
+      {
+        lift: liftText,
+        minimum: formatNumber(minLift, false, 2),
+      }
+    );
   } else if (Number.isFinite(lift) && lift < warningLift) {
     severity = 'warning';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
-    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
-      warningLift,
-      false,
-      2
-    )} kg/m³ safety margin.`;
+    message = getResourceUIWarningText(
+      'aerostatLiftWarning',
+      'Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ safety margin.',
+      {
+        lift: liftText,
+        minimum: formatNumber(warningLift, false, 2),
+      }
+    );
   }
 
   return { severity, message, lift, active };
@@ -1202,7 +1230,11 @@ function getBiomassWarningMessage(zones) {
   const dyingZones = getZones().filter(zone => zones[zone]);
   if (dyingZones.length === 0) return '';
   const zoneText = dyingZones.map(zone => capitalizeFirstLetter(zone)).join(', ');
-  return `Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`;
+  return getResourceUIWarningText(
+    'biomassDying',
+    'Biomass is dying in the {zones} zone{s}.',
+    { zones: zoneText, s: dyingZones.length > 1 ? 's' : '' }
+  );
 }
 
 function createResourceElement(category, resourceObj, resourceName) {
@@ -1543,7 +1575,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
           land &&
           land.value > 0 &&
           land.reserved / land.value < 0.99;
-        const warningMessage = warn ? 'Android production has reached its current cap.' : '';
+        const warningMessage = warn
+          ? getResourceUIWarningText('androidCapReached', 'Android production has reached its current cap.')
+          : '';
         const icon = warn ? '⚠' : '';
         if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
         if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
@@ -1553,11 +1587,19 @@ function updateResourceDisplay(resources, deltaSeconds) {
         const limiter = lifeManager.biomassGrowthLimiters[resourceName];
         const limiterZones = limiter?.zones || [];
         const zoneText = limiterZones.length
-          ? ` in the ${limiterZones.map(capitalizeFirstLetter).join(', ')} zone${limiterZones.length > 1 ? 's' : ''}`
+          ? getResourceUIWarningText('scopeZones', ' in the {zones} zone{s}', {
+            zones: limiterZones.map(capitalizeFirstLetter).join(', '),
+            s: limiterZones.length > 1 ? 's' : '',
+          })
           : '';
-        const scopeSuffix = limiter?.scope === 'atmospheric' ? ' across the atmosphere' : zoneText;
+        const scopeSuffix = limiter?.scope === 'atmospheric'
+          ? getResourceUIWarningText('scopeAtmosphere', ' across the atmosphere')
+          : zoneText;
         const warningMessage = limiter
-          ? `Biomass growth is limited by ${resourceObj.displayName} availability${scopeSuffix}.`
+          ? getResourceUIWarningText('biomassLimited', 'Biomass growth is limited by {resource} availability{scope}.', {
+            resource: resourceObj.displayName,
+            scope: scopeSuffix,
+          })
           : '';
         const icon = warningMessage ? '⚠' : '';
         if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
@@ -1629,7 +1671,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
           scanningProgressElement
         ) {
           scanningProgressElement.style.display = 'block';
-          scanningProgressElement.textContent = `Scanning Progress: ${(scanData.currentScanProgress * 100).toFixed(2)}%`;
+          scanningProgressElement.textContent = getResourceUICommonText('scanningProgress', 'Scanning Progress: {value}%', {
+            value: (scanData.currentScanProgress * 100).toFixed(2),
+          });
         } else if (scanningProgressElement) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
@@ -1764,7 +1808,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       unstableTimers[resourceKey] = timer;
 
       if (baseUnstable || timer > 0) {
-        ppsElement.textContent = 'Unstable';
+        ppsElement.textContent = getResourceUICommonText('unstable', 'Unstable');
         ppsElement.style.color = '';
       } else {
         if (Math.abs(netRate) < 1e-3) {
@@ -1868,7 +1912,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (worldshellDiv.textContent !== worldshellText) worldshellDiv.textContent = worldshellText;
       if (breathingWorldDiv.textContent !== breathingWorldText) breathingWorldDiv.textContent = breathingWorldText;
     } else {
-      const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
+      const text = getResourceUICommonText('valueWithUnit', 'Value {value}{unit}', {
+        value: formatNumber(resource.value, false, 3),
+        unit: resource.unit ? ` ${resource.unit}` : '',
+      });
       if (valueDiv.textContent !== text) valueDiv.textContent = text;
     }
   }
@@ -1889,22 +1936,28 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
           const remaining = targetAmount - resource.value;
           if (remaining > 0) {
             const time = remaining / netRate;
-            timeDiv.textContent = `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`;
+            timeDiv.textContent = getResourceUICommonText('timeToTarget', 'Time to {label} terraforming target: {value}', {
+              label,
+              value: formatDuration(Math.max(time, 0)),
+            });
           } else {
-            timeDiv.textContent = `${label} terraforming target reached.`;
+            timeDiv.textContent = getResourceUICommonText('targetReached', '{label} terraforming target reached.', { label });
           }
           showDefaultTime = false;
         } else if (isAtMost && netRate < 0) {
           const remaining = resource.value - targetAmount;
           if (remaining > 0) {
             const time = remaining / Math.abs(netRate);
-            timeDiv.textContent = `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`;
+            timeDiv.textContent = getResourceUICommonText('timeToTarget', 'Time to {label} terraforming target: {value}', {
+              label,
+              value: formatDuration(Math.max(time, 0)),
+            });
           } else {
-            timeDiv.textContent = `${label} terraforming target reached.`;
+            timeDiv.textContent = getResourceUICommonText('targetReached', '{label} terraforming target reached.', { label });
           }
           showDefaultTime = false;
         } else if (isAtMost && resource.value <= targetAmount) {
-          timeDiv.textContent = `${label} terraforming target reached.`;
+          timeDiv.textContent = getResourceUICommonText('targetReached', '{label} terraforming target reached.', { label });
           showDefaultTime = false;
         }
       }
@@ -1922,9 +1975,11 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
             const remaining = targetMass - resource.value;
             if (remaining > 0) {
               const time = remaining / netRate;
-              timeDiv.textContent = `Time to target pressure: ${formatDuration(Math.max(time, 0))}`;
+              timeDiv.textContent = getResourceUICommonText('timeToTargetPressure', 'Time to target pressure: {value}', {
+                value: formatDuration(Math.max(time, 0)),
+              });
             } else {
-              timeDiv.textContent = 'Terraforming target reached.';
+              timeDiv.textContent = getResourceUICommonText('terraformingTargetReached', 'Terraforming target reached.');
             }
             showDefaultTime = false;
           }
@@ -1933,16 +1988,20 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (showDefaultTime) {
         const capForTime = getTooltipTimeCapForResource(resource);
         if (rateUnstable && netRate > 0 && Number.isFinite(capForTime)) {
-          timeDiv.textContent = 'Time to full: unstable.';
+          timeDiv.textContent = getResourceUICommonText('timeToFullUnstable', 'Time to full: unstable.');
         } else if (netRate > 0 && Number.isFinite(capForTime)) {
           const remaining = Math.max(capForTime - resource.value, 0);
           const time = remaining / netRate;
-          timeDiv.textContent = `Time to full: ${formatDuration(Math.max(time, 0))}`;
+          timeDiv.textContent = getResourceUICommonText('timeToFull', 'Time to full: {value}', {
+            value: formatDuration(Math.max(time, 0)),
+          });
         } else if (netRate > 0 && resource.category === 'spaceStorage') {
-          timeDiv.textContent = 'Time to full: no cap set.';
+          timeDiv.textContent = getResourceUICommonText('timeToFullNoCap', 'Time to full: no cap set.');
         } else if (netRate < 0) {
           const time = resource.value / Math.abs(netRate);
-          timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
+          timeDiv.textContent = getResourceUICommonText('timeToEmpty', 'Time to empty: {value}', {
+            value: formatDuration(Math.max(time, 0)),
+          });
         } else {
           timeDiv.innerHTML = '&nbsp;';
         }
@@ -1972,7 +2031,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     const allowRegularWarnings = resource.category !== 'spaceStorage';
 
     if (resource.autobuildShortage) {
-      warningMessages.push('Autobuild is short on required inputs for queued construction.');
+      warningMessages.push(getResourceUIWarningText('autobuildShortage', 'Autobuild is short on required inputs for queued construction.'));
     }
 
     if (allowRegularWarnings && resource.name === 'androids') {
@@ -1986,7 +2045,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         }
       }
       if (androidCapped) {
-        warningMessages.push('Android production has reached its current cap.');
+        warningMessages.push(getResourceUIWarningText('androidCapReached', 'Android production has reached its current cap.'));
       }
     }
 
@@ -1994,10 +2053,18 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     if (limiter) {
       const limiterZones = limiter.zones || [];
       const zoneText = limiterZones.length
-        ? ` in the ${limiterZones.map(capitalizeFirstLetter).join(', ')} zone${limiterZones.length > 1 ? 's' : ''}`
+        ? getResourceUIWarningText('scopeZones', ' in the {zones} zone{s}', {
+          zones: limiterZones.map(capitalizeFirstLetter).join(', '),
+          s: limiterZones.length > 1 ? 's' : '',
+        })
         : '';
-      const scopeSuffix = limiter.scope === 'atmospheric' ? ' across the atmosphere' : zoneText;
-      warningMessages.push(`Biomass growth is limited by ${resource.displayName} availability${scopeSuffix}.`);
+      const scopeSuffix = limiter.scope === 'atmospheric'
+        ? getResourceUIWarningText('scopeAtmosphere', ' across the atmosphere')
+        : zoneText;
+      warningMessages.push(getResourceUIWarningText('biomassLimited', 'Biomass growth is limited by {resource} availability{scope}.', {
+        resource: resource.displayName,
+        scope: scopeSuffix,
+      }));
     }
 
     if (allowRegularWarnings && resource.category === 'atmospheric' && resource.name === 'hydrogen') {
@@ -2007,24 +2074,33 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       const photodissociationFraction = Math.round(
         (globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION || 0) * 100
       );
-      let hydrogenMessage = `Hydrogen slowly escapes to space depending on solar flux and gravity.`;
-      hydrogenMessage += ` Stellar UV can photodissociate up to ${photodissociationFraction}% of that gas, creating atoms that escape about ${formatNumber(atomicSpeedup, false, 0)}× faster than molecules.`;
+      let hydrogenMessage = getResourceUIWarningText('hydrogenIntro', 'Hydrogen slowly escapes to space depending on solar flux and gravity.');
+      hydrogenMessage += ` ${getResourceUIWarningText('hydrogenPhoto', 'Stellar UV can photodissociate up to {percent}% of that gas, creating atoms that escape about {speed}x faster than molecules.', {
+        percent: photodissociationFraction,
+        speed: formatNumber(atomicSpeedup, false, 0),
+      })}`;
 
       const gravity = globalThis.terraforming?.celestialParameters?.gravity;
       if (Number.isFinite(gravity)) {
         const relationText = gravity < gravityThreshold
-          ? ', so expect ongoing decay.'
-          : ', so the atmosphere can retain hydrogen.';
-        hydrogenMessage += ` Current gravity is ${formatNumber(gravity, false, 2)} m/s²${relationText}`;
+          ? getResourceUIWarningText('hydrogenGravityDecay', ', so expect ongoing decay.')
+          : getResourceUIWarningText('hydrogenGravityRetain', ', so the atmosphere can retain hydrogen.');
+        hydrogenMessage += ` ${getResourceUIWarningText('hydrogenGravityLine', 'Current gravity is {value} m/s²{relation}', {
+          value: formatNumber(gravity, false, 2),
+          relation: relationText,
+        })}`;
       }
 
       const solarFlux = globalThis.terraforming?.luminosity?.solarFlux;
       const referenceFlux = globalThis.HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX || 0;
       if (Number.isFinite(solarFlux)) {
         const fluxText = solarFlux > referenceFlux
-          ? 'accelerating the photodissociation that feeds this loss'
-          : 'keeping most hydrogen molecular and slowing the loss';
-        hydrogenMessage += ` Solar flux is ${formatNumber(solarFlux, false, 0)} W/m², ${fluxText}.`;
+          ? getResourceUIWarningText('hydrogenFluxFast', 'accelerating the photodissociation that feeds this loss')
+          : getResourceUIWarningText('hydrogenFluxSlow', 'keeping most hydrogen molecular and slowing the loss');
+        hydrogenMessage += ` ${getResourceUIWarningText('hydrogenFluxLine', 'Solar flux is {value} W/m², {relation}.', {
+          value: formatNumber(solarFlux, false, 0),
+          relation: fluxText,
+        })}`;
       }
 
       warningMessages.push(hydrogenMessage);
@@ -2062,13 +2138,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (warningInfo.text && warningInfo.text.textContent !== joinedText) {
         warningInfo.text.textContent = joinedText;
       }
-      if (warningInfo.icon) {
+      if (warningInfo.tooltip) {
         const joinedTitle = warningMessages.length > 0 ? warningMessages.join('\n') : cachedText.title;
-        if (warningInfo.icon.title !== joinedTitle) warningInfo.icon.title = joinedTitle;
+        setTooltipText(warningInfo.tooltip, joinedTitle, warningInfo.tooltipCache, 'text');
       }
     } else {
       if (warningInfo.text && warningInfo.text.textContent !== '') warningInfo.text.textContent = '';
-      if (warningInfo.icon && warningInfo.icon.title) warningInfo.icon.title = '';
+      if (warningInfo.tooltip) setTooltipText(warningInfo.tooltip, '', warningInfo.tooltipCache, 'text');
       if (warningDiv.style.display !== 'none') warningDiv.style.display = 'none';
     }
   }
@@ -2124,10 +2200,17 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       getZones().forEach(zone => {
         const line = info.lines.get(zone);
         if (zoneValues[zone] !== undefined) {
-          let text = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;
+          let text = getResourceUICommonText('zoneAmount', '{zone}: {value}', {
+            zone: capitalizeFirstLetter(zone),
+            value: formatNumber(zoneValues[zone], false, 3),
+          });
           if (resource.name === 'ice' || resource.name === 'hydrocarbonIce') {
             const buried = zoneBuried[zone] || 0;
-            text += ` / ${formatNumber(buried, false, 3)} (surface/buried)`;
+            text = getResourceUICommonText('zoneAmountSurfaceBuried', '{zone}: {surface} / {buried} (surface/buried)', {
+              zone: capitalizeFirstLetter(zone),
+              surface: formatNumber(zoneValues[zone], false, 3),
+              buried: formatNumber(buried, false, 3),
+            });
           }
           line.style.display = 'block';
           if (line.textContent !== text) line.textContent = text;
@@ -2148,14 +2231,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     const netRateWithAutobuild = netRate - autobuildAvg;
     const displayNetRate = Math.abs(netRateWithAutobuild) < 1e-6 ? 0 : netRateWithAutobuild;
     const baseText = `${formatNumber(displayNetRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    const autoText = isAutobuildTrackedResource(resource) ? 'Net Change (including autobuild):' : '';
+    const autoText = isAutobuildTrackedResource(resource)
+      ? getResourceUICommonText('netIncludingAutobuild', 'Net Change (including autobuild):')
+      : '';
     if (autoLine && autoLine.textContent !== autoText) autoLine.textContent = autoText;
     if (baseLine && baseLine.textContent !== baseText) baseLine.textContent = baseText;
   }
 
   if (limitDiv) {
     if (resource.automationLimited) {
-      const text = 'Imports are being limited by automation settings';
+      const text = getResourceUICommonText('importsLimited', 'Imports are being limited by automation settings');
       if (limitDiv.textContent !== text) limitDiv.textContent = text;
       if (limitDiv.style.display !== 'block') limitDiv.style.display = 'block';
     } else {

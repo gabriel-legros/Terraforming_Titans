@@ -5,6 +5,10 @@ const GalaxyOperationUI = (() => {
     let cachedAutoLaunchThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
     let context = { manager: null, cache: null };
 
+    function getOperationsText(path, vars, fallback) {
+        return t(`ui.galaxy.operationsPanel.${path}`, vars, fallback);
+    }
+
 
     function getManager() {
         return galaxyManager;
@@ -296,7 +300,7 @@ const GalaxyOperationUI = (() => {
             buttons.decrement.textContent = `-${display}`;
         }
         if (buttons.multiply) {
-            buttons.multiply.textContent = 'x10';
+            buttons.multiply.textContent = t('ui.galaxy.common.timesTen', {}, 'x10');
         }
         if (buttons.divide) {
             buttons.divide.textContent = '/10';
@@ -488,7 +492,7 @@ const GalaxyOperationUI = (() => {
 
         const empty = doc.createElement('div');
         empty.className = 'galaxy-operations-panel__empty';
-        empty.textContent = 'Select a contested sector to assign fleet power.';
+        empty.textContent = getOperationsText('emptySelectSector', {}, 'Select a contested sector to assign fleet power.');
         panel.appendChild(empty);
 
         const form = doc.createElement('div');
@@ -501,13 +505,13 @@ const GalaxyOperationUI = (() => {
 
         const powerLabel = doc.createElement('span');
         powerLabel.className = 'galaxy-operations-form__label galaxy-operations-form__label--with-icon';
-        powerLabel.textContent = 'Fleet Power';
+        powerLabel.textContent = getOperationsText('fleetPowerLabel', {}, 'Fleet Power');
         const powerTooltipIcon = doc.createElement('span');
         powerTooltipIcon.className = 'info-tooltip-icon';
         powerTooltipIcon.innerHTML = '&#9432;';
         const powerTooltip = attachDynamicInfoTooltip(
             powerTooltipIcon,
-            'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control.  You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control.  The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.'
+            getOperationsText('fleetPowerTooltip', {}, 'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control. You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control. The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.')
         );
         doc.body.appendChild(powerTooltip);
         powerLabel.appendChild(doc.createTextNode(' '));
@@ -516,7 +520,7 @@ const GalaxyOperationUI = (() => {
 
         const powerAvailable = doc.createElement('span');
         powerAvailable.className = 'galaxy-operations-form__available';
-        powerAvailable.textContent = 'Available: 0';
+        powerAvailable.textContent = getOperationsText('availablePower', { value: 0 }, 'Available: 0');
         formHeader.appendChild(powerAvailable);
 
         const powerRow = doc.createElement('div');
@@ -538,7 +542,7 @@ const GalaxyOperationUI = (() => {
 
         const targetLabel = doc.createElement('span');
         targetLabel.className = 'galaxy-operations-form__target-label';
-        targetLabel.textContent = 'Target';
+        targetLabel.textContent = getOperationsText('targetLabel', {}, 'Target');
         targetRow.appendChild(targetLabel);
 
         const targetValue = doc.createElement('span');
@@ -548,7 +552,7 @@ const GalaxyOperationUI = (() => {
 
         const targetDefenseLabel = doc.createElement('span');
         targetDefenseLabel.className = 'galaxy-operations-form__target-defense-label';
-        targetDefenseLabel.textContent = 'Defense';
+        targetDefenseLabel.textContent = getOperationsText('defenseLabel', {}, 'Defense');
         targetRow.appendChild(targetDefenseLabel);
 
         const targetDefenseValue = doc.createElement('span');
@@ -565,9 +569,9 @@ const GalaxyOperationUI = (() => {
             { key: 'zero', label: '0' },
             { key: 'decrement', label: '-1' },
             { key: 'increment', label: '+1' },
-            { key: 'max', label: 'Max' },
+            { key: 'max', label: t('ui.galaxy.common.max', {}, 'Max') },
             { key: 'divide', label: '/10' },
-            { key: 'multiply', label: 'x10' }
+            { key: 'multiply', label: t('ui.galaxy.common.timesTen', {}, 'x10') }
         ].forEach(({ key, label }) => {
             const button = doc.createElement('button');
             button.type = 'button';
@@ -598,12 +602,12 @@ const GalaxyOperationUI = (() => {
 
         const autoLaunchText = doc.createElement('span');
         autoLaunchText.className = 'galaxy-operations-launch__auto-label';
-        autoLaunchText.textContent = 'Auto';
+        autoLaunchText.textContent = getOperationsText('autoLabel', {}, 'Auto');
         autoLaunchLabel.appendChild(autoLaunchText);
 
         const autoLaunchThresholdPrefix = doc.createElement('span');
         autoLaunchThresholdPrefix.className = 'galaxy-operations-launch__auto-prefix';
-        autoLaunchThresholdPrefix.textContent = ' with ';
+        autoLaunchThresholdPrefix.textContent = getOperationsText('autoWithPrefix', {}, ' with ');
         autoLaunchLabel.appendChild(autoLaunchThresholdPrefix);
 
         const autoLaunchThresholdInput = doc.createElement('input');
@@ -618,7 +622,7 @@ const GalaxyOperationUI = (() => {
 
         const autoLaunchThresholdSuffix = doc.createElement('span');
         autoLaunchThresholdSuffix.className = 'galaxy-operations-launch__auto-suffix';
-        autoLaunchThresholdSuffix.textContent = 'times enemy defense';
+        autoLaunchThresholdSuffix.textContent = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
         autoLaunchLabel.appendChild(autoLaunchThresholdSuffix);
 
         launchControls.appendChild(autoLaunchLabel);
@@ -626,7 +630,7 @@ const GalaxyOperationUI = (() => {
         const launchButton = doc.createElement('button');
         launchButton.type = 'button';
         launchButton.className = 'galaxy-operations-launch__button';
-        launchButton.textContent = 'Launch Operation';
+        launchButton.textContent = getOperationsText('launchOperationButton', {}, 'Launch Operation');
         launchButton.addEventListener('click', handleOperationsLaunch);
         launchContainer.appendChild(launchButton);
 
@@ -636,7 +640,7 @@ const GalaxyOperationUI = (() => {
 
         const costLabel = doc.createElement('span');
         costLabel.className = 'galaxy-operations-form__cost-label';
-        costLabel.textContent = 'Antimatter Cost';
+        costLabel.textContent = getOperationsText('antimatterCostLabel', {}, 'Antimatter Cost');
         costRow.appendChild(costLabel);
 
         const costValue = doc.createElement('span');
@@ -650,7 +654,7 @@ const GalaxyOperationUI = (() => {
 
         const durationLabel = doc.createElement('span');
         durationLabel.className = 'galaxy-operations-form__duration-label';
-        durationLabel.textContent = 'Duration';
+        durationLabel.textContent = getOperationsText('durationLabel', {}, 'Duration');
         durationRow.appendChild(durationLabel);
 
         const durationValue = doc.createElement('span');
@@ -680,9 +684,9 @@ const GalaxyOperationUI = (() => {
 
         const summaryItems = {};
         [
-            { key: 'success', label: 'Success Chance', value: '0%' },
-            { key: 'gain', label: 'Control Gain', value: '+0%' },
-            { key: 'loss', label: 'Projected Losses', value: '-0 power' }
+            { key: 'success', label: getOperationsText('successChanceLabel', {}, 'Success Chance'), value: '0%' },
+            { key: 'gain', label: getOperationsText('controlGainLabel', {}, 'Control Gain'), value: '+0%' },
+            { key: 'loss', label: getOperationsText('projectedLossesLabel', {}, 'Projected Losses'), value: '-0 power' }
         ].forEach(({ key, label, value }) => {
             const item = doc.createElement('div');
             item.className = 'galaxy-operations-summary__item';
@@ -748,7 +752,7 @@ const GalaxyOperationUI = (() => {
         targetRow.className = 'galaxy-operations-form__row galaxy-operations-form__row--target';
         const targetLabel = doc.createElement('span');
         targetLabel.className = 'galaxy-operations-form__target-label';
-        targetLabel.textContent = 'Target';
+        targetLabel.textContent = getOperationsText('targetLabel', {}, 'Target');
         targetRow.appendChild(targetLabel);
         const targetValue = doc.createElement('span');
         targetValue.className = 'galaxy-operations-form__target-value';
@@ -756,7 +760,7 @@ const GalaxyOperationUI = (() => {
         targetRow.appendChild(targetValue);
         const targetDefenseLabel = doc.createElement('span');
         targetDefenseLabel.className = 'galaxy-operations-form__target-defense-label';
-        targetDefenseLabel.textContent = 'Defense';
+        targetDefenseLabel.textContent = getOperationsText('defenseLabel', {}, 'Defense');
         targetRow.appendChild(targetDefenseLabel);
         const targetDefenseValue = doc.createElement('span');
         targetDefenseValue.className = 'galaxy-operations-form__target-defense-value';
@@ -824,7 +828,7 @@ const GalaxyOperationUI = (() => {
         updateOperationsStepDisplay(stepSize, formatNumber);
 
         if (operationsDurationLabel) {
-            operationsDurationLabel.textContent = 'Duration';
+            operationsDurationLabel.textContent = getOperationsText('durationLabel', {}, 'Duration');
         }
         if (operationsDurationRow) {
             operationsDurationRow.classList.remove('is-hidden');
@@ -864,7 +868,7 @@ const GalaxyOperationUI = (() => {
 
         if (!enabled) {
             operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = 'Galaxy operations are offline.';
+            operationsEmpty.textContent = getOperationsText('offline', {}, 'Galaxy operations are offline.');
             operationsForm.classList.add('is-hidden');
             operationsCostValue.textContent = '0';
             operationsStatusMessage.textContent = '';
@@ -886,7 +890,7 @@ const GalaxyOperationUI = (() => {
 
         if (!selection) {
             operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = 'Select a contested sector to assign fleet power.';
+            operationsEmpty.textContent = getOperationsText('emptySelectSector', {}, 'Select a contested sector to assign fleet power.');
             operationsForm.classList.add('is-hidden');
             operationsCostValue.textContent = '0';
             operationsStatusMessage.textContent = '';
@@ -909,7 +913,7 @@ const GalaxyOperationUI = (() => {
         const sector = manager.getSector(selection.q, selection.r);
         if (!sector) {
             operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = 'Sector data unavailable.';
+            operationsEmpty.textContent = getOperationsText('sectorDataUnavailable', {}, 'Sector data unavailable.');
             operationsForm.classList.add('is-hidden');
             operationsCostValue.textContent = '0';
             operationsStatusMessage.textContent = '';
@@ -936,7 +940,7 @@ const GalaxyOperationUI = (() => {
         const uhfFactionId = faction?.id || fallbackFactionId;
         if (GalaxySector.isFullyControlled(sector, faction)) {
             operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = 'Sector already fully controlled by the UHF.';
+            operationsEmpty.textContent = getOperationsText('sectorAlreadyControlled', {}, 'Sector already fully controlled by the UHF.');
             operationsForm.classList.add('is-hidden');
             operationsCostValue.textContent = '0';
             operationsStatusMessage.textContent = '';
@@ -962,7 +966,7 @@ const GalaxyOperationUI = (() => {
 
         operationsEmpty.classList.add('is-hidden');
         operationsForm.classList.remove('is-hidden');
-        operationsAvailable.textContent = `Available: ${formatNumber(availablePower, false, 2)}`;
+        operationsAvailable.textContent = getOperationsText('availablePower', { value: formatNumber(availablePower, false, 2) }, `Available: ${formatNumber(availablePower, false, 2)}`);
 
         const operation = manager.getOperationForSector(selection.key, uhfFactionId);
         const hasOperation = !!operation;
@@ -979,7 +983,7 @@ const GalaxyOperationUI = (() => {
             || manager.getOperationTargetFaction?.(selection.key, uhfFactionId)
             || null;
         const targetFaction = targetFactionId ? manager.getFaction(targetFactionId) : null;
-        const targetLabel = targetFaction ? (targetFaction.name || targetFaction.id) : 'No target';
+        const targetLabel = targetFaction ? (targetFaction.name || targetFaction.id) : getOperationsText('noTarget', {}, 'No target');
 
         const sectorPower = manager.getSectorDefensePower
             ? manager.getSectorDefensePower(selection.key, uhfFactionId, targetFactionId)
@@ -1041,7 +1045,7 @@ const GalaxyOperationUI = (() => {
             const lossDisplay = successChance > 0
                 ? (Number.isFinite(successLoss) ? successLoss : assignment)
                 : (Number.isFinite(failureLoss) ? failureLoss : assignment);
-            operationsSummaryItems.loss.textContent = `-${formatNumber(lossDisplay, false, 2)} power`;
+            operationsSummaryItems.loss.textContent = getOperationsText('projectedLossesValue', { value: formatNumber(lossDisplay, false, 2) }, `-${formatNumber(lossDisplay, false, 2)} power`);
         }
 
         const hasFleetPower = availablePower > 0;
@@ -1069,7 +1073,7 @@ const GalaxyOperationUI = (() => {
             const remainingMs = Math.max(0, duration - elapsed);
             const remainingLabel = formatOperationDurationDisplay(remainingMs);
             if (operationsDurationLabel) {
-                operationsDurationLabel.textContent = 'Time Remaining';
+                operationsDurationLabel.textContent = getOperationsText('timeRemainingLabel', {}, 'Time Remaining');
             }
             if (operationsDurationRow) {
                 operationsDurationRow.classList.remove('is-hidden');
@@ -1077,10 +1081,10 @@ const GalaxyOperationUI = (() => {
             if (operationsDurationValue) {
                 operationsDurationValue.textContent = remainingLabel;
             }
-            operationsProgressLabel.textContent = `Launch in progress — ${percent}% (${remainingLabel} remaining)`;
-            operationsStatusMessage.textContent = 'Deployment underway. Fleet power returns upon completion.';
+            operationsProgressLabel.textContent = getOperationsText('deploymentProgress', { percent, remaining: remainingLabel }, `Launch in progress - ${percent}% (${remainingLabel} remaining)`);
+            operationsStatusMessage.textContent = getOperationsText('deploymentUnderway', {}, 'Deployment underway. Fleet power returns upon completion.');
             launchBlocked = true;
-            statusMessage = 'Deployment underway. Fleet power returns upon completion.';
+            statusMessage = getOperationsText('deploymentUnderway', {}, 'Deployment underway. Fleet power returns upon completion.');
         } else {
             operationsLaunchButton.classList.remove('is-hidden');
             operationsProgress.classList.add('is-hidden');
@@ -1093,17 +1097,17 @@ const GalaxyOperationUI = (() => {
             });
 
             if (!hasFleetPower) {
-                statusMessage = 'No fleet power available for deployment.';
+                statusMessage = getOperationsText('noFleetPowerAvailable', {}, 'No fleet power available for deployment.');
             } else if (!hasAssignment) {
-                statusMessage = 'Assign fleet power to begin an operation.';
+                statusMessage = getOperationsText('assignFleetPower', {}, 'Assign fleet power to begin an operation.');
             } else if (!hasAntimatter) {
                 const deficit = antimatterCost - antimatterValue;
-                statusMessage = `Insufficient antimatter by ${formatNumber(deficit, true)}.`;
+                statusMessage = getOperationsText('insufficientAntimatter', { value: formatNumber(deficit, true) }, `Insufficient antimatter by ${formatNumber(deficit, true)}.`);
             } else if (!hasChance) {
-                statusMessage = `Assign more than ${formatNumber(sectorPower, false, 0)} power for a chance of success.`;
+                statusMessage = getOperationsText('assignMoreThan', { value: formatNumber(sectorPower, false, 0) }, `Assign more than ${formatNumber(sectorPower, false, 0)} power for a chance of success.`);
             }
             if (statusMessage === '' && storedAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
-                statusMessage = `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`;
+                statusMessage = getOperationsText('autoLaunchRequires', { value: formatNumber(requiredAutoPower, false, 2) }, `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`);
             }
         }
         operationsStatusMessage.textContent = statusMessage;

@@ -1,6 +1,10 @@
 let solisTabVisible = false;
 let solisUIInitialized = false;
 const shopElements = {};
+function getSolisUIText(path, vars, fallback) {
+  return t(`ui.hope.solisUi.${path}`, vars, fallback);
+}
+
 const shopDescriptions = {
   funding: 'Increase funding by 1',
   metal: 'Increase starting metal and base storage by 100',
@@ -120,7 +124,15 @@ function createShopItem(key) {
   const label = document.createElement('span');
   label.classList.add('solis-shop-item-label');
   const description = t(`ui.hope.solisShopDescriptions.${key}`, {}, shopDescriptions[key] || key);
-  label.innerHTML = `${description} <span class="solis-shop-item-cost">(Cost: <span id="solis-shop-${key}-cost"></span>)</span>`;
+  label.append(document.createTextNode(`${description} `));
+  const costWrapper = document.createElement('span');
+  costWrapper.classList.add('solis-shop-item-cost');
+  const costSpan = document.createElement('span');
+  costSpan.id = `solis-shop-${key}-cost`;
+  costWrapper.textContent = `(${getSolisUIText('costLabel', { value: '' }, 'Cost: ')}`;
+  costWrapper.appendChild(costSpan);
+  costWrapper.append(document.createTextNode(')'));
+  label.appendChild(costWrapper);
   item.appendChild(label);
 
   const actions = document.createElement('div');
@@ -129,7 +141,9 @@ function createShopItem(key) {
   const button = document.createElement('button');
   button.id = `solis-shop-${key}-button`;
   const repeatable = isRepeatableSolisShopUpgrade(key);
-  button.textContent = repeatable ? `Buy x${getSolisShopPurchaseMultiplier()}` : 'Buy';
+  button.textContent = repeatable
+    ? getSolisUIText('buyWithMultiplier', { value: getSolisShopPurchaseMultiplier() }, `Buy x${getSolisShopPurchaseMultiplier()}`)
+    : getSolisUIText('buyButton', {}, 'Buy');
   button.addEventListener('click', () => {
     if (repeatable) {
       solisManager.purchaseUpgradeMultiple(key, getSolisShopPurchaseMultiplier());
@@ -142,16 +156,13 @@ function createShopItem(key) {
 
   const purchased = document.createElement('span');
   purchased.classList.add('solis-shop-item-count');
-  purchased.textContent = 'Purchased: ';
+  purchased.textContent = getSolisUIText('purchasedLabel', {}, 'Purchased: ');
   const countSpan = document.createElement('span');
   countSpan.id = `solis-shop-${key}-count`;
   purchased.appendChild(countSpan);
   actions.appendChild(purchased);
 
   item.appendChild(actions);
-
-  const costWrapper = label.querySelector('.solis-shop-item-cost');
-  const costSpan = costWrapper.querySelector(`#solis-shop-${key}-cost`);
   const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, purchased, item, repeatable };
 
   if (key === 'researchUpgrade') {
@@ -249,7 +260,7 @@ function initializeSolisUI() {
     header.classList.add('solis-shop-header');
 
     const title = document.createElement('h3');
-    title.textContent = 'Solis Shop';
+    title.textContent = getSolisUIText('shopTitle', {}, 'Solis Shop');
     header.appendChild(title);
 
     const controls = document.createElement('div');
@@ -296,7 +307,7 @@ function initializeSolisUI() {
     const parent = donationContainer.parentElement;
     parent.classList.add('solis-shop-container', 'hidden');
     const title = document.createElement('h3');
-    title.textContent = 'Alien Artifact Donation';
+    title.textContent = getSolisUIText('donationTitle', {}, 'Alien Artifact Donation');
     parent.insertBefore(title, donationContainer);
 
     const item = document.createElement('div');
@@ -305,7 +316,7 @@ function initializeSolisUI() {
     const label = document.createElement('span');
     label.classList.add('solis-shop-item-label');
     label.id = 'solis-donation-label';
-    label.textContent = 'Donate artifacts for 10 Solis points each';
+    label.textContent = getSolisUIText('donationLabel', { value: 10 }, 'Donate artifacts for 10 Solis points each');
     item.appendChild(label);
 
     const actions = document.createElement('div');
@@ -328,7 +339,7 @@ function initializeSolisUI() {
 
     const button = document.createElement('button');
     button.id = 'solis-donation-button';
-    button.textContent = 'Donate';
+    button.textContent = getSolisUIText('donateButton', {}, 'Donate');
     button.addEventListener('click', () => {
       solisManager.donateArtifacts(solisShopControls.donationAmount || 0);
       updateSolisUI();
@@ -337,7 +348,11 @@ function initializeSolisUI() {
 
     const owned = document.createElement('span');
     owned.classList.add('solis-shop-item-count');
-    owned.innerHTML = `Owned: <span id="solis-donation-count">0</span>`;
+    owned.textContent = getSolisUIText('ownedLabel', {}, 'Owned: ');
+    const ownedCount = document.createElement('span');
+    ownedCount.id = 'solis-donation-count';
+    ownedCount.textContent = '0';
+    owned.appendChild(ownedCount);
     actions.appendChild(owned);
 
     item.appendChild(actions);
@@ -349,7 +364,7 @@ function initializeSolisUI() {
     const parent = researchShopItems.parentElement;
     parent.classList.add('solis-shop-container', 'hidden');
     const title = document.createElement('h3');
-    title.textContent = 'Research Upgrades';
+    title.textContent = getSolisUIText('researchUpgradesTitle', {}, 'Research Upgrades');
     parent.insertBefore(title, researchShopItems);
     researchShopItems.appendChild(createShopItem('researchUpgrade'));
     if (managerRef?.isBooleanFlagSet?.('solisTerraformingMeasurements')) {
@@ -368,7 +383,7 @@ function initializeSolisUI() {
     const parent = automationShopItems.parentElement;
     parent.classList.add('solis-shop-container', 'hidden');
     const title = document.createElement('h3');
-    title.textContent = 'Automation Upgrades';
+    title.textContent = getSolisUIText('automationUpgradesTitle', {}, 'Automation Upgrades');
     parent.insertBefore(title, automationShopItems);
   }
 
@@ -377,17 +392,11 @@ function initializeSolisUI() {
     questText.textContent = '';
     const messageSpan = document.createElement('span');
     messageSpan.id = 'solis-quest-message';
-    messageSpan.textContent = 'No quest available';
+    messageSpan.textContent = t('ui.hope.noQuestAvailable', {}, 'No quest available');
     const detailSpan = document.createElement('span');
     detailSpan.id = 'solis-quest-detail';
     detailSpan.classList.add('hidden');
-    const qtySpan = document.createElement('span');
-    qtySpan.id = 'solis-quest-quantity';
-    qtySpan.classList.add('solis-quest-quantity');
-    const resSpan = document.createElement('span');
-    resSpan.id = 'solis-quest-resource';
-    resSpan.classList.add('solis-quest-resource');
-    detailSpan.append('Deliver ', qtySpan, ' units of ', resSpan);
+    detailSpan.textContent = '';
     questText.append(messageSpan, detailSpan);
   }
 
@@ -409,8 +418,8 @@ function initializeSolisUI() {
   // New: Set initial button text
   if (multBtn) multBtn.textContent = '+';
   if (divBtn) divBtn.textContent = '-';
-  if (minBtn) minBtn.textContent = 'Min';
-  if (maxBtn) maxBtn.textContent = 'Max';
+  if (minBtn) minBtn.textContent = t('ui.common.min', {}, 'Min');
+  if (maxBtn) maxBtn.textContent = t('ui.common.max', {}, 'Max');
 
   solisUIInitialized = true;
 }
@@ -418,8 +427,6 @@ function initializeSolisUI() {
 function updateSolisUI() {
   const questMessage = document.getElementById('solis-quest-message');
   const questDetail = document.getElementById('solis-quest-detail');
-  const questQuantitySpan = document.getElementById('solis-quest-quantity');
-  const questResourceSpan = document.getElementById('solis-quest-resource');
   const refreshBtn = document.getElementById('solis-refresh-button');
   const completeBtn = document.getElementById('solis-complete-button');
   const pointsSpan = document.getElementById('solis-points-value');
@@ -533,16 +540,18 @@ function updateSolisUI() {
     rewardSpan.textContent = format(solisManager.getCurrentReward(), false, 2);
   }
   const quest = solisManager.currentQuest;
-  if (questMessage && questDetail && questQuantitySpan && questResourceSpan) {
+  if (questMessage && questDetail) {
     if (quest) {
       const format = typeof formatNumber === 'function' ? formatNumber : (n => n);
       const qty = format(quest.quantity, true);
-      questQuantitySpan.textContent = qty;
-      questResourceSpan.textContent = quest.resource;
+      questDetail.textContent = getSolisUIText('deliverQuest', {
+        quantity: qty,
+        resource: quest.resource
+      }, `Deliver ${qty} units of ${quest.resource}`);
       questMessage.classList.add('hidden');
       questDetail.classList.remove('hidden');
     } else {
-      questMessage.textContent = 'No new quest available at this time.';
+      questMessage.textContent = getSolisUIText('noQuestAvailableNow', {}, 'No new quest available at this time.');
       questMessage.classList.remove('hidden');
       questDetail.classList.add('hidden');
     }
@@ -553,10 +562,10 @@ function updateSolisUI() {
     const remaining = Math.max(remainingRefresh, remainingComplete);
     if (remaining > 0) {
       refreshBtn.disabled = true;
-      refreshBtn.textContent = `Refresh (${Math.ceil(remaining / 1000)}s)`;
+      refreshBtn.textContent = getSolisUIText('refreshWithSeconds', { value: Math.ceil(remaining / 1000) }, `Refresh (${Math.ceil(remaining / 1000)}s)`);
     } else {
       refreshBtn.disabled = false;
-      refreshBtn.textContent = 'Refresh';
+      refreshBtn.textContent = t('ui.common.refresh', {}, 'Refresh');
     }
   }
   if (completeBtn) {
@@ -572,7 +581,7 @@ function updateSolisUI() {
       cooldownDiv.classList.remove('hidden');
       const totalCooldown = solisManager.questInterval;
       const progress = Math.max(0, 1 - remainingComplete / totalCooldown);
-      cooldownText.textContent = `Next quest in ${Math.ceil(remainingComplete / 1000)}s`;
+      cooldownText.textContent = getSolisUIText('nextQuestIn', { value: Math.ceil(remainingComplete / 1000) }, `Next quest in ${Math.ceil(remainingComplete / 1000)}s`);
       cooldownBar.style.width = `${progress * 100}%`;
     } else {
       cooldownDiv.classList.add('hidden');
@@ -599,7 +608,7 @@ function updateSolisUI() {
       ? formatNumber
       : (n, _s, p = 2) => Number(n).toFixed(p);
     const per = 25;
-    donationLabel.textContent = `Donate artifacts for ${format(per, false, 2)} Solis points each`;
+    donationLabel.textContent = getSolisUIText('donationLabel', { value: format(per, false, 2) }, `Donate artifacts for ${format(per, false, 2)} Solis points each`);
   }
 
   for (const key in shopElements) {
@@ -616,9 +625,9 @@ function updateSolisUI() {
     const costText = repeatable ? formatNumber(totalCost, false, 0) : totalCost;
     if (el.purchased && el.count) {
       if (atMax) {
-        el.purchased.textContent = 'Purchased';
+        el.purchased.textContent = getSolisUIText('purchasedMaxed', {}, 'Purchased');
       } else {
-        el.purchased.textContent = 'Purchased: ';
+        el.purchased.textContent = getSolisUIText('purchasedLabel', {}, 'Purchased: ');
         el.purchased.appendChild(el.count);
         el.count.textContent = up.purchases;
       }
@@ -631,7 +640,9 @@ function updateSolisUI() {
       if (el.costWrapper) el.costWrapper.classList.remove('hidden');
       if (el.button) {
         el.button.classList.remove('hidden');
-        el.button.textContent = repeatable ? `Buy x${multiplier}` : 'Buy';
+        el.button.textContent = repeatable
+          ? getSolisUIText('buyWithMultiplier', { value: multiplier }, `Buy x${multiplier}`)
+          : getSolisUIText('buyButton', {}, 'Buy');
         el.button.disabled = solisManager.solisPoints < totalCost;
       }
     }

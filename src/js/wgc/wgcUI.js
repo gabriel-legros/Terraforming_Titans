@@ -6,6 +6,14 @@ let wgcCopyStatsButton = null;
 let wgcTeamRulesInfoIcon = null;
 const wgcPendingLogScroll = new Set();
 
+function getWGCText(path, fallback, vars) {
+  try {
+    return t(`ui.hope.wgcUi.${path}`, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function queueWGCRender(callback) {
   const scheduler = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
     ? window.requestAnimationFrame
@@ -40,7 +48,7 @@ function buildWGCTeamStatsForClipboard(manager) {
     const members = Array.isArray(roster[idx]) ? roster[idx] : [];
     const mappedMembers = members.filter(Boolean).map(member => ({
       name: member.lastName ? `${member.firstName} ${member.lastName}` : member.firstName,
-      role: member.classType,
+      role: classLabels[member.classType] || member.classType,
       level: member.level,
       health: member.health,
       maxHealth: member.maxHealth,
@@ -66,7 +74,9 @@ function copyWGCTeamStatsToClipboard() {
     teams: buildWGCTeamStatsForClipboard(manager)
   };
   const serialized = JSON.stringify(payload, null, 2);
-  copyTextToClipboard(serialized, { promptLabel: 'Copy Warp Gate Command team stats:' });
+  copyTextToClipboard(serialized, {
+    promptLabel: getWGCText('clipboardPrompt', 'Copy Warp Gate Command team stats:')
+  });
 }
 
 function updateWGCStoryToggleButton() {
@@ -76,7 +86,9 @@ function updateWGCStoryToggleButton() {
   wgcStoryToggleButton.classList.toggle('is-hidden', hidden);
   wgcStoryToggleButton.setAttribute('aria-pressed', hidden ? 'false' : 'true');
   if (wgcStoryToggleLabel) {
-    wgcStoryToggleLabel.textContent = hidden ? 'Hide Story' : 'Show Story';
+    wgcStoryToggleLabel.textContent = hidden
+      ? getWGCText('hideStory', 'Hide Story')
+      : getWGCText('showStory', 'Show Story');
   }
 }
 function queueWGCLogScroll(teamIndex) {
@@ -94,39 +106,44 @@ if (typeof globalThis.formatNumber === 'undefined') {
   }
 }
 const rdItems = {
-  wgtEquipment: 'Warpgate Teams Equipment',
-  componentsEfficiency: 'Components production efficiency',
-  electronicsEfficiency: 'Electronics production efficiency',
-  superconductorEfficiency: 'Superconductor production efficiency',
-  androidsEfficiency: 'Androids production efficiency',
-  superalloyEfficiency: 'Superalloy production efficiency',
-  superalloyFusionEfficiency: 'Superalloy Fusion efficiency',
-  foodProduction: 'Food production efficiency'
+  wgtEquipment: getWGCText('rdItems.wgtEquipment', 'Warpgate Teams Equipment'),
+  componentsEfficiency: getWGCText('rdItems.componentsEfficiency', 'Components production efficiency'),
+  electronicsEfficiency: getWGCText('rdItems.electronicsEfficiency', 'Electronics production efficiency'),
+  superconductorEfficiency: getWGCText('rdItems.superconductorEfficiency', 'Superconductor production efficiency'),
+  androidsEfficiency: getWGCText('rdItems.androidsEfficiency', 'Androids production efficiency'),
+  superalloyEfficiency: getWGCText('rdItems.superalloyEfficiency', 'Superalloy production efficiency'),
+  superalloyFusionEfficiency: getWGCText('rdItems.superalloyFusionEfficiency', 'Superalloy Fusion efficiency'),
+  foodProduction: getWGCText('rdItems.foodProduction', 'Food production efficiency')
 };
 const rdDescriptions = {
-  wgtEquipment: 'Each purchase increases artifact chance by 0.1% up to a +90% bonus (100% total).'
+  wgtEquipment: getWGCText('rdDescriptions.wgtEquipment', 'Each purchase increases artifact chance by 0.1% up to a +90% bonus (100% total).')
 };
 const rdElements = {};
 const wgcTooltipCache = {};
 var wgcRDPurchaseTooltip = null;
 const facilityItems = {
-  infirmary: 'Infirmary',
-  barracks: 'Barracks',
-  shootingRange: 'Shooting Range',
-  obstacleCourse: 'Obstacle Course',
-  library: 'Library'
+  infirmary: getWGCText('facilityItems.infirmary', 'Infirmary'),
+  barracks: getWGCText('facilityItems.barracks', 'Barracks'),
+  shootingRange: getWGCText('facilityItems.shootingRange', 'Shooting Range'),
+  obstacleCourse: getWGCText('facilityItems.obstacleCourse', 'Obstacle Course'),
+  library: getWGCText('facilityItems.library', 'Library')
 };
 const facilityDescriptions = {
-  infirmary: 'Increases team healing rate by 1% per level.\nEmergency triage heals the lowest-health teammate for 5% / 10% / 15% / 20% HP at 10 / 25 / 50 / 100 upgrades when operations conclude.',
-  barracks: 'Increases XP gained from operations by 1% per level.\nCritical successes in individual challenges multiply XP gains by 2 / 3 / 5 / 10 at 10 / 25 / 50 / 100.',
-  shootingRange: 'Boosts Power for challenges by 1% per level.\nProvides 1 / 2 / 3 rerolls at 10 / 25 / 50 for Power checks and Combat challenges (one per challenge). Level 100 converts one failure into a success per operation.',
-  obstacleCourse: 'Boosts Athletics for challenges by 1% per level.\nGrants 1 / 2 / 3 rerolls at 10 / 25 / 50 for individual or team Athletics checks (one per challenge). Level 100 converts one failure into a success per operation.',
-  library: 'Boosts Wit for challenges by 1% per level.\nSupplies 1 / 2 / 3 rerolls at 10 / 25 / 50 for team Wit and Science challenges (one per challenge). Level 100 converts one failure into a success per operation.'
+  infirmary: getWGCText('facilityDescriptions.infirmary', 'Increases team healing rate by 1% per level.\nEmergency triage heals the lowest-health teammate for 5% / 10% / 15% / 20% HP at 10 / 25 / 50 / 100 upgrades when operations conclude.'),
+  barracks: getWGCText('facilityDescriptions.barracks', 'Increases XP gained from operations by 1% per level.\nCritical successes in individual challenges multiply XP gains by 2 / 3 / 5 / 10 at 10 / 25 / 50 / 100.'),
+  shootingRange: getWGCText('facilityDescriptions.shootingRange', 'Boosts Power for challenges by 1% per level.\nProvides 1 / 2 / 3 rerolls at 10 / 25 / 50 for Power checks and Combat challenges (one per challenge). Level 100 converts one failure into a success per operation.'),
+  obstacleCourse: getWGCText('facilityDescriptions.obstacleCourse', 'Boosts Athletics for challenges by 1% per level.\nGrants 1 / 2 / 3 rerolls at 10 / 25 / 50 for individual or team Athletics checks (one per challenge). Level 100 converts one failure into a success per operation.'),
+  library: getWGCText('facilityDescriptions.library', 'Boosts Wit for challenges by 1% per level.\nSupplies 1 / 2 / 3 rerolls at 10 / 25 / 50 for team Wit and Science challenges (one per challenge). Level 100 converts one failure into a success per operation.')
 };
 const facilityElements = {};
 const teamElements = [];
-var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
-const teamRulesTooltip = [
+var teamNames = [
+  getWGCText('teamNames.alpha', 'Alpha'),
+  getWGCText('teamNames.beta', 'Beta'),
+  getWGCText('teamNames.gamma', 'Gamma'),
+  getWGCText('teamNames.delta', 'Delta')
+];
+const teamRulesTooltip = getWGCText('teamRulesTooltip', [
   'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.',
   'Operations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules. Operations stop after completion unless Auto-start is checked for that team.',
   'Special rules:',
@@ -140,19 +157,19 @@ const teamRulesTooltip = [
   '- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.',
   '- Science challenges never deal damage on failure.',
   '- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.'
-].join('\n');
-const wgcHazardousBiomassTooltip = [
+].join('\n'));
+const wgcHazardousBiomassTooltip = getWGCText('hazardousBiomassTooltip', [
   'Neutral: No modifiers.',
   'Negotiation: Social science checks about 10% easier, combat about 10% tougher.',
   'Aggressive: Social science checks roughly 25% harder, combat about 15% easier.',
   'Recon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures add 60 seconds to next step.'
-].join('\n');
-const wgcArtifactStanceTooltip = [
+].join('\n'));
+const wgcArtifactStanceTooltip = getWGCText('artifactTooltip', [
   'Neutral: Standard artifact chances and timing.',
   'Careful: Doubles Natural Science artifact chance but delays the next event by triple time.',
   'Rapid Extraction: Halves downtime but reduces artifact finds by 75%.'
-].join('\n');
-const wgcDifficultyTooltip = 'Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.';
+].join('\n'));
+const wgcDifficultyTooltip = getWGCText('difficultyTooltip', 'Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.');
 const wgcFirstNamePool = [
   'Aiden','Amelia','Andrew','Aria','Benjamin','Brielle','Caleb','Chloe','Daniel','Delilah',
   'Elijah','Emery','Ethan','Evelyn','Felix','Fiona','Gabriel','Gianna','Harper','Henry',
@@ -184,11 +201,28 @@ const classImages = {
   'Natural Scientist': 'assets/images/natural_scientist.webp',
   'Social Scientist': 'assets/images/social_scientist.webp'
 };
+const classLabels = {
+  'Team Leader': getWGCText('classes.teamLeader.label', 'Team Leader'),
+  'Soldier': getWGCText('classes.soldier.label', 'Soldier'),
+  'Natural Scientist': getWGCText('classes.naturalScientist.label', 'Natural Scientist'),
+  'Social Scientist': getWGCText('classes.socialScientist.label', 'Social Scientist')
+};
 const classDescriptions = {
-  'Team Leader': 'Balances all skills and lends half their skill to others.',
-  'Soldier': 'Combat expert whose Power counts double in combat challenges.',
-  'Natural Scientist': 'Researcher who excels at natural science challenges, doubles artifact rewards, and contributes 1.5x Wit to team Wits challenges.',
-  'Social Scientist': 'Diplomatic specialist handling social science challenges, reducing conflict, and contributing 1.5x Wit to team Wits challenges.'
+  'Team Leader': getWGCText('classes.teamLeader.description', 'Balances all skills and lends half their skill to others.'),
+  'Soldier': getWGCText('classes.soldier.description', 'Combat expert whose Power counts double in combat challenges.'),
+  'Natural Scientist': getWGCText('classes.naturalScientist.description', 'Researcher who excels at natural science challenges, doubles artifact rewards, and contributes 1.5x Wit to team Wits challenges.'),
+  'Social Scientist': getWGCText('classes.socialScientist.description', 'Diplomatic specialist handling social science challenges, reducing conflict, and contributing 1.5x Wit to team Wits challenges.')
+};
+const hazardousBiomassStanceLabels = {
+  Neutral: getWGCText('stances.neutral', 'Neutral'),
+  Negotiation: getWGCText('stances.negotiation', 'Negotiation'),
+  Aggressive: getWGCText('stances.aggressive', 'Aggressive'),
+  Recon: getWGCText('stances.recon', 'Recon')
+};
+const artifactStanceLabels = {
+  Neutral: getWGCText('stances.neutral', 'Neutral'),
+  Careful: getWGCText('stances.careful', 'Careful'),
+  'Rapid Extraction': getWGCText('stances.rapidExtraction', 'Rapid Extraction')
 };
 let activeDialog = null;
 let activeDialogKeydownHandler = null;
@@ -284,8 +318,11 @@ function generateWGCTeamCards() {
     const unlocked = totalOps >= threshold;
     const lockMarkup = unlocked ? '' :
       `<div class="wgc-team-locked" data-team="${tIdx}" data-threshold="${threshold}">
-        <div class="wgc-team-locked-title">LOCKED</div>
-        <div class="wgc-team-locked-detail">${Math.min(totalOps, threshold)} / ${threshold} Operations Completed</div>
+        <div class="wgc-team-locked-title">${getWGCText('teamLockedTitle', 'LOCKED')}</div>
+        <div class="wgc-team-locked-detail">${getWGCText('operationsCompletedProgress', '{value} / {threshold} Operations Completed', {
+          value: Math.min(totalOps, threshold),
+          threshold
+        })}</div>
       </div>`;
     const stanceVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
@@ -295,51 +332,51 @@ function generateWGCTeamCards() {
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="wgc-team-body">
           <div class="team-main">
-            <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span><button class="rename-team-icon" data-team="${tIdx}">&#9998;</button></div>
+            <div class="team-header">${getWGCText('teamHeader', 'Team')} <span class="team-name" data-team="${tIdx}">${name}</span><button class="rename-team-icon" data-team="${tIdx}">&#9998;</button></div>
             <div class="team-slots">${slotMarkup}</div>
           </div>
           <div class="team-controls">
             <div class="team-controls-left">
               <div class="team-stance">
-                <label>Hazardous Biomass <span class="info-tooltip-icon wgc-hbi-tooltip">&#9432;</span></label>
+                <label>${getWGCText('stances.hazardousBiomassLabel', 'Hazardous Biomass')} <span class="info-tooltip-icon wgc-hbi-tooltip">&#9432;</span></label>
                 <select class="hbi-select" data-team="${tIdx}">
-                  <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
-                  <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
-                  <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>Aggressive</option>
-                  <option value="Recon"${stanceVal === 'Recon' ? ' selected' : ''}>Recon</option>
+                  <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>${hazardousBiomassStanceLabels.Neutral}</option>
+                  <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>${hazardousBiomassStanceLabels.Negotiation}</option>
+                  <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>${hazardousBiomassStanceLabels.Aggressive}</option>
+                  <option value="Recon"${stanceVal === 'Recon' ? ' selected' : ''}>${hazardousBiomassStanceLabels.Recon}</option>
                 </select>
               </div>
               <div class="team-stance">
-                <label>Scientific Artifact <span class="info-tooltip-icon wgc-artifact-tooltip">&#9432;</span></label>
+                <label>${getWGCText('stances.scientificArtifactLabel', 'Scientific Artifact')} <span class="info-tooltip-icon wgc-artifact-tooltip">&#9432;</span></label>
                 <select class="artifact-select" data-team="${tIdx}">
-                  <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
-                  <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
-                  <option value="Rapid Extraction"${artVal === 'Rapid Extraction' ? ' selected' : ''}>Rapid Extraction</option>
+                  <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>${artifactStanceLabels.Neutral}</option>
+                  <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>${artifactStanceLabels.Careful}</option>
+                  <option value="Rapid Extraction"${artVal === 'Rapid Extraction' ? ' selected' : ''}>${artifactStanceLabels['Rapid Extraction']}</option>
                 </select>
               </div>
             </div>
             <div class="team-controls-right">
               <div class="difficulty-container">
                 <div class="difficulty-label">
-                  <span>Difficulty</span>
+                  <span>${getWGCText('difficultyLabel', 'Difficulty')}</span>
                   <span class="info-tooltip-icon wgc-difficulty-tooltip">&#9432;</span>
                 </div>
                 <div class="difficulty-control">
                   <input type="text" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" inputmode="numeric" />
                   <div class="difficulty-step-buttons">
-                    <button type="button" class="difficulty-step difficulty-step-plus" data-team="${tIdx}" aria-label="Increase difficulty">+</button>
-                    <button type="button" class="difficulty-step difficulty-step-minus" data-team="${tIdx}" aria-label="Decrease difficulty">-</button>
+                    <button type="button" class="difficulty-step difficulty-step-plus" data-team="${tIdx}" aria-label="${getWGCText('increaseDifficulty', 'Increase difficulty')}">+</button>
+                    <button type="button" class="difficulty-step difficulty-step-minus" data-team="${tIdx}" aria-label="${getWGCText('decreaseDifficulty', 'Decrease difficulty')}">-</button>
                   </div>
                 </div>
               </div>
               <button class="start-button" data-team="${tIdx}">
                 <label class="wgc-auto-start-toggle">
-                  <input type="checkbox" class="wgc-auto-start-checkbox" data-team="${tIdx}"${op.autoStart ? ' checked' : ''} aria-label="Auto-start operations for this team">
+                  <input type="checkbox" class="wgc-auto-start-checkbox" data-team="${tIdx}"${op.autoStart ? ' checked' : ''} aria-label="${getWGCText('autoStartAria', 'Auto-start operations for this team')}">
                 </label>
-                <span class="start-button-label">Start</span>
+                <span class="start-button-label">${getWGCText('start', 'Start')}</span>
               </button>
-              <button class="recall-button" data-team="${tIdx}">Recall</button>
-              <button class="log-toggle" data-team="${tIdx}">Log</button>
+              <button class="recall-button" data-team="${tIdx}">${getWGCText('recall', 'Recall')}</button>
+              <button class="log-toggle" data-team="${tIdx}">${getWGCText('log', 'Log')}</button>
             </div>
           </div>
         </div>
@@ -408,7 +445,7 @@ function invalidateWGCTeamCache() {
       attachDynamicInfoTooltip(entry.hazardInfo, wgcHazardousBiomassTooltip);
       attachDynamicInfoTooltip(entry.artifactInfo, wgcArtifactStanceTooltip);
       attachDynamicInfoTooltip(entry.difficultyInfo, wgcDifficultyTooltip);
-      attachDynamicInfoTooltip(entry.renameBtn, 'Rename Team', false);
+      attachDynamicInfoTooltip(entry.renameBtn, getWGCText('renameTeamTooltip', 'Rename Team'), false);
     }
     if (logContainer) {
       logContainer.dataset.teamIndex = `${tIdx}`;
@@ -445,7 +482,7 @@ function createRDItem(key, label) {
   const button = document.createElement('button');
   button.id = `wgc-${key}-button`;
   button.classList.add('wgc-rd-wide-button');
-  button.textContent = 'Buy';
+  button.textContent = getWGCText('buy', 'Buy');
   button.addEventListener('click', (event) => {
     const bulkCount = event.shiftKey ? getMaxBulkUpgradePurchases(key) : 1;
     for (let i = 0; i < bulkCount; i += 1) {
@@ -475,11 +512,11 @@ function createRDHeader() {
 
   const label = document.createElement('span');
   label.classList.add('wgc-rd-label');
-  label.textContent = 'Upgrade';
+  label.textContent = getWGCText('upgrade', 'Upgrade');
   div.appendChild(label);
 
   const purchase = document.createElement('span');
-  purchase.textContent = 'Purchase ';
+  purchase.textContent = getWGCText('purchase', 'Purchase ');
   const info = document.createElement('span');
   info.classList.add('info-tooltip-icon');
   info.innerHTML = '&#9432;';
@@ -499,13 +536,16 @@ function buildWGCRDPurchaseTooltipText() {
     }
     const up = warpGateCommand.rdUpgrades[key];
     const maxText = formatNumber(up.max);
-    upgrades.push(`- ${rdItems[key]} (Max ${maxText})`);
+    upgrades.push({
+      name: rdItems[key],
+      max: maxText
+    });
   }
   return [
-    'Hold shift and click to buy as many as possible.',
+    getWGCText('rdPurchaseTooltipIntro', 'Hold shift and click to buy as many as possible.'),
     '',
-    'Available R&D upgrades (max level):',
-    ...upgrades
+    getWGCText('rdPurchaseTooltipAvailable', 'Available R&D upgrades (max level):'),
+    ...upgrades.map(entry => getWGCText('rdPurchaseTooltipEntry', '- {name} (Max {max})', entry))
   ].join('\n');
 }
 
@@ -533,8 +573,10 @@ function getRDUpgradeCurrentAndNext(key, purchases, max) {
 
 function formatRDUpgradeBuyButtonText(key, purchases, max, cost) {
   const { current, next, isMaxed } = getRDUpgradeCurrentAndNext(key, purchases, max);
-  if (isMaxed) return `Maxed (${current})`;
-  return `Buy (${cost}) ${current} -> ${next}`;
+  if (isMaxed) {
+    return getWGCText('maxedButton', 'Maxed ({current})', { current });
+  }
+  return getWGCText('buyButton', 'Buy ({cost}) {current} -> {next}', { cost, current, next });
 }
 
 function populateRDMenu() {
@@ -568,7 +610,7 @@ function createFacilityItem(key, label) {
 
   const button = document.createElement('button');
   button.id = `wgc-${key}-upgrade`;
-  button.textContent = 'Upgrade';
+  button.textContent = getWGCText('upgrade', 'Upgrade');
   button.addEventListener('click', () => {
     warpGateCommand.upgradeFacility(key);
     if (typeof updateHopeAlert === 'function') updateHopeAlert();
@@ -644,7 +686,9 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   win.classList.add('wgc-popup-window');
 
   const title = document.createElement('h2');
-  title.textContent = member ? 'Edit Member' : 'Recruit Member';
+  title.textContent = member
+    ? getWGCText('editMember', 'Edit Member')
+    : getWGCText('recruitMember', 'Recruit Member');
   win.appendChild(title);
 
   const originalStats = member ? {
@@ -662,14 +706,14 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
 
   const firstNameField = document.createElement('input');
   firstNameField.type = 'text';
-  firstNameField.placeholder = 'First Name (required)';
+  firstNameField.placeholder = getWGCText('firstNamePlaceholder', 'First Name (required)');
   firstNameField.value = member ? member.firstName : '';
   firstNameField.classList.add('wgc-dialog-field');
   nameInputs.appendChild(firstNameField);
 
   const lastNameField = document.createElement('input');
   lastNameField.type = 'text';
-  lastNameField.placeholder = 'Last Name';
+  lastNameField.placeholder = getWGCText('lastNamePlaceholder', 'Last Name');
   lastNameField.value = member ? member.lastName : '';
   lastNameField.classList.add('wgc-dialog-field');
   nameInputs.appendChild(lastNameField);
@@ -679,8 +723,8 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const rollButton = document.createElement('button');
   rollButton.type = 'button';
   rollButton.classList.add('wgc-roll-name-button');
-  rollButton.textContent = 'Roll';
-  attachDynamicInfoTooltip(rollButton, 'Roll random names', false);
+  rollButton.textContent = getWGCText('roll', 'Roll');
+  attachDynamicInfoTooltip(rollButton, getWGCText('rollTooltip', 'Roll random names'), false);
   const assignRandomFirst = (focus = true) => {
     firstNameField.value = getRandomFromPool(wgcFirstNamePool);
     if (focus) {
@@ -718,7 +762,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   availableClasses.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c;
-    opt.textContent = c;
+    opt.textContent = classLabels[c] || c;
     classSelect.appendChild(opt);
   });
 
@@ -750,7 +794,13 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const hpMax = member ? member.maxHealth : 100;
   const level = document.createElement('div');
   level.classList.add('wgc-member-level');
-  level.textContent = `Level: ${lvl} | XP: ${xp} / ${formatNumber(xpReq, false, 2)} | HP: ${formatNumber(hp)} / ${hpMax}`;
+  level.textContent = getWGCText('memberLevelLine', 'Level: {level} | XP: {xp} / {xpReq} | HP: {hp} / {hpMax}', {
+    level: lvl,
+    xp,
+    xpReq: formatNumber(xpReq, false, 2),
+    hp: formatNumber(hp),
+    hpMax
+  });
 
   const metaRow = document.createElement('div');
   metaRow.classList.add('wgc-member-meta');
@@ -758,9 +808,9 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
 
   if (member) {
     const respecButton = document.createElement('button');
-    respecButton.textContent = 'Respec';
+    respecButton.textContent = getWGCText('respec', 'Respec');
     respecButton.classList.add('wgc-respec-button');
-    attachDynamicInfoTooltip(respecButton, 'Refund all allocated skill points.', false);
+    attachDynamicInfoTooltip(respecButton, getWGCText('respecTooltip', 'Refund all allocated skill points.'), false);
     respecButton.addEventListener('click', () => {
       member.respec();
       baseStats = WGCTeamMember.getBaseStats(member.classType);
@@ -803,10 +853,14 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
 
   const updateRemainingPoints = () => {
     if (member) {
-      remainingSpan.textContent = `Points left: ${member.getPointsToAllocate()}`;
+      remainingSpan.textContent = getWGCText('pointsLeft', 'Points left: {value}', {
+        value: member.getPointsToAllocate()
+      });
     } else {
       const totalAllocated = alloc.power + alloc.athletics + alloc.wit;
-      remainingSpan.textContent = `Points left: ${pointsBudget - totalAllocated}`;
+      remainingSpan.textContent = getWGCText('pointsLeft', 'Points left: {value}', {
+        value: pointsBudget - totalAllocated
+      });
     }
   };
 
@@ -817,12 +871,12 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   headerRow.classList.add('wgc-stat-container', 'wgc-stat-header-row');
 
   const headerSkill = document.createElement('span');
-  headerSkill.textContent = 'Skill';
+  headerSkill.textContent = getWGCText('skillHeader', 'Skill');
   headerRow.appendChild(headerSkill);
 
   const headerPoints = document.createElement('span');
   headerPoints.classList.add('wgc-stat-value');
-  headerPoints.textContent = 'Points';
+  headerPoints.textContent = getWGCText('pointsHeader', 'Points');
   headerRow.appendChild(headerPoints);
 
   const headerSpacer = document.createElement('span');
@@ -832,12 +886,12 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const autoToggle = document.createElement('label');
   autoToggle.classList.add('wgc-auto-toggle');
   const autoText = document.createElement('span');
-  autoText.textContent = 'Auto';
+  autoText.textContent = getWGCText('autoLabel', 'Auto');
   autoToggle.appendChild(autoText);
   const autoInfo = document.createElement('span');
   autoInfo.className = 'info-tooltip-icon';
   autoInfo.innerHTML = '&#9432;';
-  attachDynamicInfoTooltip(autoInfo, 'Automatically assigns points each update to match the ratios below. Ratios set to 0 are ignored.');
+  attachDynamicInfoTooltip(autoInfo, getWGCText('autoTooltip', 'Automatically assigns points each update to match the ratios below. Ratios set to 0 are ignored.'));
   autoToggle.appendChild(autoInfo);
   const autoCheckbox = document.createElement('input');
   autoCheckbox.type = 'checkbox';
@@ -856,7 +910,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     statContainer.classList.add('wgc-stat-container');
 
     const label = document.createElement('span');
-    label.textContent = stat.charAt(0).toUpperCase() + stat.slice(1);
+    label.textContent = getWGCText(stat, stat.charAt(0).toUpperCase() + stat.slice(1));
     statContainer.appendChild(label);
 
     const valueSpan = document.createElement('span');
@@ -888,7 +942,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     autoInput.step = '1';
     autoInput.classList.add('wgc-auto-input');
     autoInput.value = autoState.ratios[stat] || 0;
-    autoInput.placeholder = '0';
+    autoInput.placeholder = getWGCText('zero', '0');
     autoInput.addEventListener('input', () => {
       const parsed = Math.max(0, Math.floor(Number(autoInput.value) || 0));
       autoInput.value = parsed;
@@ -939,7 +993,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   buttonContainer.classList.add('wgc-dialog-buttons');
 
   const confirm = document.createElement('button');
-  confirm.textContent = 'Confirm';
+  confirm.textContent = getWGCText('confirm', 'Confirm');
   confirm.addEventListener('click', () => {
     const firstName = firstNameField.value.trim();
     const lastName = lastNameField.value.trim();
@@ -961,7 +1015,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   buttonContainer.appendChild(confirm);
 
   const cancel = document.createElement('button');
-  cancel.textContent = 'Cancel';
+  cancel.textContent = getWGCText('cancel', 'Cancel');
   cancel.addEventListener('click', closeRecruitDialog);
   buttonContainer.appendChild(cancel);
 
@@ -969,14 +1023,14 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
 
   if (member) {
     const dismiss = document.createElement('button');
-    dismiss.textContent = 'Dismiss';
+    dismiss.textContent = getWGCText('dismiss', 'Dismiss');
     const opActive = warpGateCommand && warpGateCommand.operations &&
       warpGateCommand.operations[teamIndex] && warpGateCommand.operations[teamIndex].active;
     dismiss.disabled = !!opActive;
     dismiss.addEventListener('click', () => {
       if (dismiss.disabled) return;
-      if (dismiss.textContent === 'Dismiss') {
-        dismiss.textContent = 'Are You Sure?';
+      if (dismiss.textContent === getWGCText('dismiss', 'Dismiss')) {
+        dismiss.textContent = getWGCText('dismissConfirm', 'Are You Sure?');
       } else {
         warpGateCommand.dismissMember(teamIndex, slotIndex);
         if (activeDialog) activeDialog._restoreStats = false;
@@ -1028,14 +1082,14 @@ function generateWGCLayout() {
           <div class="wgc-card" id="wgc-teams-section">
             <div class="wgc-card-header">
               <div class="wgc-card-title">
-                <h3>Teams <span id="wgc-team-rules-info" class="info-tooltip-icon">&#9432;</span></h3>
-                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="Copy Team Stats to Clipboard"></span>
+                <h3>${getWGCText('teamsSectionTitle', 'Teams')} <span id="wgc-team-rules-info" class="info-tooltip-icon">&#9432;</span></h3>
+                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy Team Stats to Clipboard')}"></span>
               </div>
               <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
                 <span class="wgc-story-toggle__track" aria-hidden="true">
                   <span class="wgc-story-toggle__thumb"></span>
                 </span>
-                <span class="wgc-story-toggle__label">Show Story</span>
+                <span class="wgc-story-toggle__label">${getWGCText('showStory', 'Show Story')}</span>
               </button>
             </div>
             <div id="wgc-team-cards"></div>
@@ -1043,16 +1097,16 @@ function generateWGCLayout() {
         </div>
         <div class="wgc-right">
           <div class="wgc-card" id="wgc-rd-section">
-            <h3>R&D</h3>
+            <h3>${getWGCText('rdTitle', 'R&D')}</h3>
             <div id="wgc-rd-menu"></div>
           </div>
           <div class="wgc-card" id="wgc-facilities-section">
-            <h3>Facilities<span id="wgc-facility-alert" class="hope-alert">!</span></h3>
+            <h3>${getWGCText('facilitiesTitle', 'Facilities')}<span id="wgc-facility-alert" class="hope-alert">!</span></h3>
             <div id="wgc-facility-cooldown"></div>
             <div id="wgc-facilities-menu"></div>
           </div>
           <div class="wgc-card" id="wgc-stats-section">
-            <h3>Statistics</h3>
+            <h3>${getWGCText('statisticsTitle', 'Statistics')}</h3>
             <div id="wgc-stat-operation"></div>
             <div id="wgc-stat-artifact"></div>
             <div id="wgc-stat-difficulty"></div>
@@ -1076,7 +1130,7 @@ function initializeWGCUI() {
     }
     wgcCopyStatsButton = container.querySelector('#wgc-copy-team-stats');
     if (wgcCopyStatsButton) {
-      attachDynamicInfoTooltip(wgcCopyStatsButton, 'Copy Team Stats to Clipboard', false);
+      attachDynamicInfoTooltip(wgcCopyStatsButton, getWGCText('copyTeamStatsTooltip', 'Copy Team Stats to Clipboard'), false);
       const triggerCopy = () => {
         copyWGCTeamStatsToClipboard();
       };
@@ -1160,7 +1214,7 @@ function initializeWGCUI() {
           input.dataset.team = t;
 
           const confirmBtn = document.createElement('button');
-          confirmBtn.textContent = 'OK';
+          confirmBtn.textContent = getWGCText('renameConfirm', 'OK');
           confirmBtn.classList.add('confirm-rename-btn');
           confirmBtn.dataset.team = t;
 
@@ -1308,25 +1362,33 @@ function updateWGCUI() {
   setTooltipText(wgcRDPurchaseTooltip, buildWGCRDPurchaseTooltipText(), wgcTooltipCache, 'wgcRDPurchase');
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
-    opEl.textContent = `Operations Completed: ${warpGateCommand.totalOperations}`;
+    opEl.textContent = getWGCText('operationStatsCompleted', 'Operations Completed: {value}', {
+      value: warpGateCommand.totalOperations
+    });
   }
   const artEl = document.getElementById('wgc-stat-artifact');
   if (artEl) {
-    artEl.textContent = `Artifacts Collected: ${formatNumber(warpGateCommand.totalArtifacts, false, 2)}`;
+    artEl.textContent = getWGCText('artifactStatsCollected', 'Artifacts Collected: {value}', {
+      value: formatNumber(warpGateCommand.totalArtifacts, false, 2)
+    });
   }
   const diffEl = document.getElementById('wgc-stat-difficulty');
   if (diffEl) {
     const val = warpGateCommand.highestDifficulty;
-    diffEl.textContent = `Highest Difficulty: ${val < 0 ? 'None' : val}`;
+    diffEl.textContent = getWGCText('highestDifficulty', 'Highest Difficulty: {value}', {
+      value: val < 0 ? getWGCText('none', 'None') : val
+    });
   }
   const cdEl = document.getElementById('wgc-facility-cooldown');
   const facilitiesMaxed = warpGateCommand.areFacilitiesMaxed();
   if (cdEl) {
     if (facilitiesMaxed) {
-      cdEl.textContent = 'Maxed';
+      cdEl.textContent = getWGCText('facilityCooldownMaxed', 'Maxed');
     } else {
       const sec = Math.ceil(warpGateCommand.facilityCooldown);
-      cdEl.textContent = sec > 0 ? `Cooldown: ${formatDuration(sec)}` : 'Ready';
+      cdEl.textContent = sec > 0
+        ? getWGCText('facilityCooldown', 'Cooldown: {value}', { value: formatDuration(sec) })
+        : getWGCText('facilityCooldownReady', 'Ready');
     }
   }
   const alertEl = document.getElementById('wgc-facility-alert');
@@ -1408,7 +1470,10 @@ function updateWGCUI() {
       }
     }
     if (lockDetail && !unlocked) {
-      lockDetail.textContent = `${Math.min(warpGateCommand.totalOperations, threshold)} / ${threshold} Operations Completed`;
+      lockDetail.textContent = getWGCText('operationsCompletedProgress', '{value} / {threshold} Operations Completed', {
+        value: Math.min(warpGateCommand.totalOperations, threshold),
+        threshold
+      });
     }
     if (startBtn) startBtn.disabled = !unlocked || !full;
     if (recallBtn) recallBtn.disabled = !unlocked || !op.active;
@@ -1508,10 +1573,18 @@ function updateWGCUI() {
     const syncAutoInputs = activeDialog._syncAutoInputs || null;
     if (lvlEl) {
       const xpReq = m.getXPForNextLevel();
-      lvlEl.textContent = `Level: ${m.level} | XP: ${Math.floor(m.xp || 0)} / ${formatNumber(xpReq, false, 2)} | HP: ${formatNumber(m.health)} / ${m.maxHealth}`;
+      lvlEl.textContent = getWGCText('memberLevelLine', 'Level: {level} | XP: {xp} / {xpReq} | HP: {hp} / {hpMax}', {
+        level: m.level,
+        xp: Math.floor(m.xp || 0),
+        xpReq: formatNumber(xpReq, false, 2),
+        hp: formatNumber(m.health),
+        hpMax: m.maxHealth
+      });
     }
     if (remSpan) {
-      remSpan.textContent = `Points left: ${m.getPointsToAllocate()}`;
+      remSpan.textContent = getWGCText('pointsLeft', 'Points left: {value}', {
+        value: m.getPointsToAllocate()
+      });
     }
     if (statValueEls && statValues) {
       ['power', 'athletics', 'wit'].forEach(stat => {
