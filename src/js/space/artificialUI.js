@@ -1437,7 +1437,8 @@ function ensureArtificialLayout() {
         core: artificialUICache.core.value,
         starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
         name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
+        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
+        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
       });
       return;
     }
@@ -1448,7 +1449,8 @@ function ensureArtificialLayout() {
         widthKm: selection.widthKm,
         targetFluxWm2: selection.targetFluxWm2,
         name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
+        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
+        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
       });
     }
   });

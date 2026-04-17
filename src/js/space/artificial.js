@@ -226,6 +226,31 @@ function clampRingTargetFluxWm2(value) {
     return Math.min(Math.max(next, RINGWORLD_FLUX_BOUNDS_WM2.min), RINGWORLD_FLUX_BOUNDS_WM2.max);
 }
 
+function getArtificialAutoSectorCandidates(filterValue = 'all') {
+    const manager = galaxyManager;
+    const sectors = Array.isArray(manager?.getSectors?.())
+        ? manager.getSectors().filter((sector) => {
+            const controlValue = sector.getControlValue ? sector.getControlValue('uhf') : 0;
+            return controlValue > 0;
+        })
+        : [];
+    const sortedSectors = sectors.slice().sort((left, right) => {
+        const leftName = left?.getDisplayName?.() || left?.key || `${left?.q},${left?.r}`;
+        const rightName = right?.getDisplayName?.() || right?.key || `${right?.q},${right?.r}`;
+        const nameCompare = leftName.localeCompare(rightName);
+        const leftKey = left?.key || `${left?.q},${left?.r}`;
+        const rightKey = right?.key || `${right?.q},${right?.r}`;
+        return nameCompare !== 0 ? nameCompare : leftKey.localeCompare(rightKey);
+    });
+    if (filterValue === 'all') {
+        return sortedSectors;
+    }
+    return sortedSectors.filter((sector) => {
+        const richResource = sector?.getRichResource?.() || sector?.richResource || '';
+        return richResource === filterValue;
+    });
+}
+
 function estimateRingRotationPeriodHours(orbitRadiusAU) {
     const radiusMeters = (Math.max(orbitRadiusAU || 0, 0) * AU_IN_KM) * 1000;
     const gravity = 9.81;
@@ -364,6 +389,26 @@ class ArtificialManager extends EffectableEntity {
             incoming[key] !== undefined && (merged[key] = incoming[key]);
         });
         this.draftSelection = this.normalizeDraftSelection(merged);
+    }
+
+    resolveAutoSector(filterValue = 'all') {
+        const candidates = getArtificialAutoSectorCandidates(filterValue);
+        let bestSector = null;
+        let bestCount = Infinity;
+        candidates.forEach((sector) => {
+            const count = Math.max(0, Math.round(galaxyManager?.getTerraformedWorldCountForSector?.(sector) || 0));
+            if (count < bestCount) {
+                bestSector = sector;
+                bestCount = count;
+            }
+        });
+        const sectorName = bestSector?.getDisplayName?.() || bestSector?.key || null;
+        if (sectorName) {
+            return sectorName;
+        }
+        return (spaceManager && spaceManager.getCurrentWorldOriginal)
+            ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
+            : null;
     }
 
     enable() {
@@ -903,9 +948,7 @@ class ArtificialManager extends EffectableEntity {
       const now = Date.now();
       let sector = options?.sector || 'auto';
       if (sector === 'auto') {
-        sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
-          ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
-          : null;
+        sector = this.resolveAutoSector(options?.sectorFilter || 'all');
       }
       const generationSeed = (this.nextId * 0x9e3779b9) >>> 0;
       const starContextDetails = buildArtificialStarContext({
@@ -990,9 +1033,7 @@ class ArtificialManager extends EffectableEntity {
 
       let sector = options?.sector || 'auto';
       if (sector === 'auto') {
-        sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
-          ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
-          : null;
+        sector = this.resolveAutoSector(options?.sectorFilter || 'all');
       }
 
       const now = Date.now();
