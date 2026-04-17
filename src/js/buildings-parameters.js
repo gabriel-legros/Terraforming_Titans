@@ -30,6 +30,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 50,
     maintenanceFactor: 1,
+    planetaryMassChange: { category: 'colony', resource: 'metal', mode: 'drainOnProduction' },
     unlocked: false,
     autoBuildMaxOption: true
   },
