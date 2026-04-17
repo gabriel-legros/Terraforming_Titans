@@ -227,7 +227,7 @@ const terraformingRequirements = {
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 10 },
     temperatureRangeK: { min: 283.15, max: 298.15 },
     luminosityRange: { min: 0, max: 100 },
-    totalPressureRangeKPa: { min: 6000, max: 11000 },
+    totalPressureRangeKPa: { min: 5000, max: 9000 },
     gasTargetsPa: {
       carbonDioxide: { min: 4_000_000, max: 6_000_000 },
       inertGas: { min: 1_000_000, max: 2_000_000 },
