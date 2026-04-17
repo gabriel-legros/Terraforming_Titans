@@ -204,7 +204,7 @@
         zonalConfig: {
           keys: ['fineSand'],
           coverageKeys: ['fineSand'],
-          coverageScale: 0.1,
+          coverageScale: 0.0001,
           distributionKey: 'fineSand',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },

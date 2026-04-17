@@ -307,7 +307,10 @@ function swapResourceRateColor(resource, color) {
   return color;
 }
 
-function getLiquidCoverageTargetAmount(terraformingState, targetCoverage) {
+function getLiquidCoverageTargetAmount(terraformingState, coverageKey, targetCoverage) {
+  if (typeof getCoverageTargetAmount === 'function') {
+    return getCoverageTargetAmount(terraformingState, coverageKey, targetCoverage);
+  }
   const surfaceArea = terraformingState.celestialParameters.surfaceArea;
   let total = 0;
   for (const zone of getZones()) {
@@ -1929,7 +1932,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         ? terraforming.liquidCoverageTargets.find((entry) => entry.coverageKey === resource.name)
         : null;
       if (liquidTarget) {
-        const targetAmount = getLiquidCoverageTargetAmount(terraforming, liquidTarget.coverageTarget);
+        const targetAmount = getLiquidCoverageTargetAmount(terraforming, liquidTarget.coverageKey, liquidTarget.coverageTarget);
         const label = resource.displayName || resource.name;
         const isAtMost = liquidTarget.comparison === 'atMost';
         if (!isAtMost && netRate > 0) {

@@ -61,6 +61,38 @@ function calculateAverageCoverage(terraforming, resourceType) {
   return Math.max(0, Math.min(weightedAverageCoverage, 1.0));
 }
 
+function getCoverageTargetAmount(terraforming, coverageKey, targetCoverage) {
+  if (!terraforming?.celestialParameters) {
+    return 0;
+  }
+
+  let coverageScale = 0.0001;
+  const configs = terraforming.zonalSurfaceResourceConfigs || [];
+  for (const config of configs) {
+    const coverageKeys = config.coverageKeys || [];
+    if (!coverageKeys.includes(coverageKey)) {
+      continue;
+    }
+    const coverageScales = config.coverageScales || {};
+    coverageScale = coverageScales[coverageKey] || config.coverageScale || coverageScale;
+    break;
+  }
+
+  const surfaceArea = terraforming.celestialParameters.surfaceArea;
+  let total = 0;
+  const zones = (terraforming && Array.isArray(terraforming.zoneKeys) && terraforming.zoneKeys.length)
+    ? terraforming.zoneKeys
+    : ZONES_LIST;
+  for (const zone of zones) {
+    const zonePct = terraforming && terraforming.getZoneWeight
+      ? terraforming.getZoneWeight(zone)
+      : getZonePercentageFn(zone);
+    const zoneArea = surfaceArea * zonePct;
+    total += estimateAmountForCoverage(targetCoverage, zoneArea, coverageScale);
+  }
+  return total;
+}
+
 // Derive surface fractions for albedo calculations. All liquids and ice types
 // split the available surface together, scaling proportionally if their total
 // would exceed the planet. Biomass then claims up to 75% of whatever area
@@ -146,11 +178,13 @@ if (!isNode) {
   window.calculateAverageCoverage = calculateAverageCoverage;
   window.calculateSurfaceFractions = calculateSurfaceFractions;
   window.calculateZonalSurfaceFractions = calculateZonalSurfaceFractions;
+  window.getCoverageTargetAmount = getCoverageTargetAmount;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     calculateAverageCoverage,
+    getCoverageTargetAmount,
     calculateSurfaceFractions,
     calculateZonalSurfaceFractions
   };

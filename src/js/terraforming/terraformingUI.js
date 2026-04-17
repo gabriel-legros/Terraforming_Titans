@@ -1692,7 +1692,7 @@ function createWaterBox(row) {
       const pct = entry.coverageTarget * 100;
       const roundedPct = Math.round(pct * 10) / 10;
       const pctDigits = Math.abs(roundedPct - Math.round(roundedPct)) > 1e-9 ? 1 : 0;
-      const targetAmount = getWaterTargetAmount(terraformingState, entry.coverageTarget) || 0;
+      const targetAmount = getWaterTargetAmount(terraformingState, entry.coverageKey, entry.coverageTarget) || 0;
       const targetAmountText = formatNumber(targetAmount, false, 1);
       if (entry.comparison === 'atMost') {
         return getTerraformingSummaryText(
@@ -1722,7 +1722,10 @@ function createWaterBox(row) {
     return formatNumber(Math.abs(value) < 1e-4 ? 0 : value);
   }
 
-  function getWaterTargetAmount(terraformingState, targetCoverage) {
+  function getWaterTargetAmount(terraformingState, coverageKey, targetCoverage) {
+    if (typeof getCoverageTargetAmount === 'function') {
+      return getCoverageTargetAmount(terraformingState, coverageKey, targetCoverage);
+    }
     const surfaceArea = terraformingState.celestialParameters.surfaceArea;
     let total = 0;
     for (const zone of getZones()) {

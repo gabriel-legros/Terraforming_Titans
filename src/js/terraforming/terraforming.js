@@ -126,7 +126,7 @@ function buildPhaseGroupMappings(groups) {
       },
     });
   }
-  surfaceKeys.push('biomass', 'hazardousBiomass');
+  surfaceKeys.push('fineSand', 'biomass', 'hazardousBiomass');
   return {
     surfaceKeys,
     liquidCoverageKeys,
