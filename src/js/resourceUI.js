@@ -2029,9 +2029,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     const warningInfo = warningDiv._info || {};
     const warningMessages = [];
     const allowRegularWarnings = resource.category !== 'spaceStorage';
+    const autobuildWarningText = getResourceUIWarningText('autobuildShortage', 'Autobuild is short on required inputs for queued construction.');
 
     if (resource.autobuildShortage) {
-      warningMessages.push(getResourceUIWarningText('autobuildShortage', 'Autobuild is short on required inputs for queued construction.'));
+      warningMessages.push(autobuildWarningText);
     }
 
     if (allowRegularWarnings && resource.name === 'androids') {
@@ -2138,13 +2139,18 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (warningInfo.text && warningInfo.text.textContent !== joinedText) {
         warningInfo.text.textContent = joinedText;
       }
+      const showTooltipIcon = joinedText !== autobuildWarningText;
+      if (warningInfo.icon) {
+        warningInfo.icon.style.display = showTooltipIcon ? 'inline-flex' : 'none';
+      }
       if (warningInfo.tooltip) {
         const joinedTitle = warningMessages.length > 0 ? warningMessages.join('\n') : cachedText.title;
-        setTooltipText(warningInfo.tooltip, joinedTitle, warningInfo.tooltipCache, 'text');
+        setTooltipText(warningInfo.tooltip, showTooltipIcon ? joinedTitle : '', warningInfo.tooltipCache, 'text');
       }
     } else {
       if (warningInfo.text && warningInfo.text.textContent !== '') warningInfo.text.textContent = '';
       if (warningInfo.tooltip) setTooltipText(warningInfo.tooltip, '', warningInfo.tooltipCache, 'text');
+      if (warningInfo.icon) warningInfo.icon.style.display = 'none';
       if (warningDiv.style.display !== 'none') warningDiv.style.display = 'none';
     }
   }

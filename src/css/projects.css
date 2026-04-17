@@ -89,6 +89,19 @@
     font-size: 0.9em;
 }
 
+.project-cost,
+.project-sustain-cost,
+.project-resource-gain {
+    font-size: 0.9em;
+    line-height: 1.3;
+}
+
+.project-cost strong,
+.project-sustain-cost strong,
+.project-resource-gain strong {
+    font-size: inherit;
+}
+
 /* --- Project Title Switcher --- */
 .project-title-switch {
     display: inline-flex;

@@ -2608,7 +2608,7 @@ setLanguageData({
     },
     atlas: {
       title: 'Challenge Worlds',
-      subtitle: 'Travel directly to one of the worlds mapped by Atlas.  Some are strange, some are simply of interest to HOPE.  Each completion increases your maximum skill level in the awakening tree, with different formulas for their effects after rank 5.',
+      subtitle: 'Travel directly to one of the worlds mapped by Atlas.  Some are strange, some are simply of interest to HOPE.  Each completion increases your maximum skill level in the awakening tree, with different formulas for their effects after rank 5.  Completion of these challenges is not required to beat the game.',
       ready: 'Challenge worlds can always be revisited after completion.',
       locked: 'You must complete the current world before traveling to Atlas challenges.',
       travel: 'Travel',
@@ -3449,7 +3449,7 @@ setLanguageData({
       },
       deeperMining: {
         name: 'Deeper mining',
-        description: 'Deepen all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.  Completion of these challenges is not required to beat the game.',
+        description: 'Deepen all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.',
       },
       undergroundExpansion: {
         name: 'Underground Land Expansion',

@@ -727,10 +727,21 @@ function updateSolisQuestArea(refs) {
   if (refs.questMessage && refs.questDetail) {
     if (quest) {
       const quantity = formatSolisValue(quest.quantity, true, 2);
-      refs.questDetail.textContent = getSolisUIText('deliverQuest', {
-        quantity,
-        resource: quest.resource
-      }, `Deliver ${quantity} units of ${quest.resource}`);
+      refs.questDetail.textContent = '';
+      refs.questDetail.append(document.createTextNode(`${getSolisUIText('deliverPrefix', {}, 'Deliver')} `));
+
+      const quantitySpan = document.createElement('span');
+      quantitySpan.classList.add('solis-quest-quantity');
+      quantitySpan.textContent = quantity;
+      refs.questDetail.appendChild(quantitySpan);
+
+      refs.questDetail.append(document.createTextNode(` ${getSolisUIText('deliverUnitsOf', {}, 'units of')} `));
+
+      const resourceSpan = document.createElement('span');
+      resourceSpan.classList.add('solis-quest-resource');
+      resourceSpan.textContent = quest.resource;
+      refs.questDetail.appendChild(resourceSpan);
+
       refs.questMessage.classList.add('hidden');
       refs.questDetail.classList.remove('hidden');
     } else {

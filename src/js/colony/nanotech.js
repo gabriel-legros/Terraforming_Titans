@@ -796,7 +796,7 @@ class NanotechManager extends EffectableEntity {
               </div>
             </div>
           </div>
-          <p class="nanotech-hint">${getNanotechText('ui.colony.nanotech.hint', 'The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide {travelCap} nanobots from the Dead Hand Protocol.', { travelCap: `<span id="nanotech-travel-cap">${formatNumber(this.getTravelPreserveCap())}</span>` })} <span class="info-tooltip-icon" id="nanotech-travel-tooltip"></span>.</p>
+          <p class="nanotech-hint">${getNanotechText('ui.colony.nanotech.hint', 'The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide {travelCap} nanobots from the Dead Hand Protocol.', { travelCap: `<span id="nanotech-travel-cap">${formatNumber(this.getTravelPreserveCap())}</span>` })}<span class="info-tooltip-icon" id="nanotech-travel-tooltip">&#9432;</span>.</p>
           <div class="nanotech-stage">
             <div class="nanotech-stage-header">
               <h4>${getNanotechText('ui.colony.nanotech.stages.stage1', 'Stage I')} <span id="nanotech-stage1-warning" class="nanotech-stage-warning"></span></h4>
