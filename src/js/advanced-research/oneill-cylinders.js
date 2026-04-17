@@ -113,9 +113,9 @@ function getOneillCylinderCapacity(galaxy, space) {
 
 function formatCylinderCount(value) {
   if (!Number.isFinite(value) || value <= 0) {
-    return '0';
+    return '0.00';
   }
-  return formatGroupedNumber(value, 2, 0);
+  return formatGroupedNumber(value, 2, 2);
 }
 
 function formatCapacity(value) {
@@ -179,9 +179,13 @@ function getOneillGrowthDelta(deltaTime, { space, galaxy } = {}) {
   };
 }
 
-function formatCylinderRate(value) {
-  const numeric = Number.isFinite(value) && value > 0 ? value : 0;
-  const rounded = numeric >= 1 ? numeric.toFixed(2) : numeric.toFixed(3);
+function formatCylinderRate(perSecond) {
+  const numeric = Number.isFinite(perSecond) && perSecond > 0 ? perSecond : 0;
+  if (numeric >= 1) {
+    return `+${numeric.toFixed(2)}/s`;
+  }
+  const perHour = numeric * 3600;
+  const rounded = perHour >= 1 ? perHour.toFixed(2) : perHour.toFixed(3);
   return `+${rounded}/hr`;
 }
 
@@ -248,12 +252,12 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
   const context = getOneillGrowthContext(space, galaxy);
   const count = context.current;
   const capacity = context.capacity;
-  const hourlyRate = context.perHour;
+  const perSecondRate = context.perSecond;
   if (value) {
     value.textContent = formatCylinderCount(count);
   }
   if (rate) {
-    rate.textContent = formatCylinderRate(hourlyRate);
+    rate.textContent = formatCylinderRate(perSecondRate);
   }
   setOneillTooltipText(getOneillTooltipText(space, capacity));
 }
