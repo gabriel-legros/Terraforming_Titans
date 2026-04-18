@@ -4512,6 +4512,10 @@ setLanguageData({
         name: 'Styx',
         star: { name: 'Acheron' },
       },
+      zeus: {
+        name: 'Zeus',
+        star: { name: 'Okoth' },
+      },
     },
     life: {
       lichen: {

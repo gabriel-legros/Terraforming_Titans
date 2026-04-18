@@ -372,7 +372,9 @@ progressStyx.chapters.push(
     prerequisites: ['styx.41.4'],
     objectives: [
     ],
-    reward: []
+    reward: [
+      { target: 'spaceManager', targetId: 'zeus', type: 'enable' }
+    ]
   }
 );
 

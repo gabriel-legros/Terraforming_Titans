@@ -3,6 +3,8 @@ var progressTartarus;
 var progressHades;
 var progressPoseidon;
 var progressStyx;
+var progressZeus;
+var progressZeusBattle;
 
 if (typeof progressMars === 'undefined') {
   if (typeof module !== 'undefined') {
@@ -57,6 +59,8 @@ if (typeof progressPoseidon === 'undefined') {
 try { progressTartarus = require('./story/tartarus.js'); } catch (e) {}
 try { progressHades = require('./story/hades.js'); } catch (e) {}
 try { progressStyx = require('./story/styx.js'); } catch (e) {}
+try { progressZeus = require('./story/zeus.js'); } catch (e) {}
+try { progressZeusBattle = require('./story/zeus-battle.js'); } catch (e) {}
 
 function mergeProgress(source) {
   if (!source) return;
@@ -81,6 +85,8 @@ mergeProgress(progressTartarus);
 mergeProgress(progressHades);
 mergeProgress(typeof progressPoseidon !== 'undefined' ? progressPoseidon : null);
 mergeProgress(progressStyx);
+mergeProgress(progressZeus);
+mergeProgress(progressZeusBattle);
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);

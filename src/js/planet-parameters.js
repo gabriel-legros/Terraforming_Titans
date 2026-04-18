@@ -1890,6 +1890,16 @@ const styxOverrides = {
   }
 };
 
+const zeusOverrides = deepMerge(styxOverrides, {
+  name: 'Zeus',
+  star: {
+    name: 'Okoth'
+  },
+  celestialParameters: {
+    sector: 'R6-11'
+  }
+});
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -1905,7 +1915,8 @@ const planetSpecificOverrides = {
   tartarus: tartarusOverrides,
   hades: hadesOverrides,
   poseidon: poseidonOverrides,
-  styx: styxOverrides
+  styx: styxOverrides,
+  zeus: zeusOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -1956,6 +1967,7 @@ const planetParameters = {
     hades: getPlanetParameters('hades'),
     poseidon: getPlanetParameters('poseidon'),
     styx: getPlanetParameters('styx'),
+    zeus: getPlanetParameters('zeus'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
@@ -1963,5 +1975,4 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-
 
