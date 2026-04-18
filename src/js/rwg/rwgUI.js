@@ -393,11 +393,20 @@ function refreshDominionLoreList() {
   if (rwgDominionLoreListEl.dataset.lastDominionLore === signature) return false;
   rwgDominionLoreListEl.textContent = '';
   rwgDominionLoreItems = {};
-  rwgDominionLoreOrder = order;
-  order.forEach((id) => {
+  rwgDominionLoreOrder = ['about', ...order];
+  rwgDominionLoreOrder.forEach((id) => {
     const entry = document.createElement('button');
     entry.type = 'button';
     entry.className = 'rwg-lore-item';
+    if (id === 'about') {
+      entry.textContent = getRwgText('ui.rwg.dominionLore.aboutTitle', 'About');
+      entry.addEventListener('click', () => {
+        selectDominionLore('about');
+      });
+      rwgDominionLoreItems[id] = entry;
+      rwgDominionLoreListEl.appendChild(entry);
+      return;
+    }
     const unlocked = rwgManager.isDominionUnlocked(id);
     const requirementLabel = rwgManager.getDominionUnlockLabel(id);
     const requirement = terraformingRequirements[id];
@@ -425,6 +434,16 @@ function selectDominionLore(id) {
     const item = rwgDominionLoreItems[entryId];
     item.classList.toggle('active', entryId === id);
   });
+  if (id === 'about') {
+    rwgDominionLoreRewardStatusEl.style.display = 'none';
+    rwgDominionLoreRewardStatusEl.textContent = '';
+    rwgDominionLoreRewardStatusEl.className = 'rwg-lore-reward-status';
+    rwgDominionLoreBodyTextEl.textContent = getRwgText(
+      'ui.rwg.dominionLore.aboutBody',
+      'Dominions are the major galactic biosphere lineages.'
+    );
+    return;
+  }
   if (id === 'human' || id === 'gabbagian') {
     rwgDominionLoreRewardStatusEl.style.display = 'none';
     rwgDominionLoreRewardStatusEl.textContent = '';

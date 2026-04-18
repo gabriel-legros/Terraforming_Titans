@@ -49,7 +49,7 @@ setLanguageData({
         generateWorld: 'Generate World',
         dynamicMass: 'Dynamic Mass',
         dynamicMassTooltip: 'When enabled, this world recalculates radius, gravity, and land from planetary core mass, surface resources and atmospheric resources. When disabled, world geometry stays fixed.  Planetary core mass can be increased with import projects and geological burial and decreased with resource disposal, ore mines, foundries, sand harvesters and nanocolony net consumption.',
-        lore: 'Lore',
+        lore: '?',
         equilibrate: 'Equilibrate',
         travel: 'Travel',
       },
@@ -170,10 +170,16 @@ setLanguageData({
         departed: 'Departed',
       },
       dominionLore: {
-        title: 'Dominion Lore',
+        title: 'Dominions',
         close: 'Close',
         rewardClaimed: 'Reward claimed',
         rewardUnclaimed: 'Reward unclaimed',
+        aboutTitle: 'About',
+        aboutBody: [
+          'Dominions are the galactic trees of life. Each one represents a broad evolutionary and chemical family with its own preferred atmosphere, surface conditions, and special terraforming requirements.',
+          'Picking a dominion in Random Worlds changes the completion target for that world. A world that is ideal for Humans can be completely wrong for a different dominion.',
+          'The first time you complete terraforming for each non-Human and non-Gabbagian dominion, you gain alien artifacts (2000, 4000, 6000, etc).',
+        ].join('\n\n'),
       },
     },
     artificial: {
