@@ -191,6 +191,8 @@
       this.operationPreRunThisTick = false;
       this.uiElements = null;
       this.shopCollapsed = false;
+      this.assignmentLayoutWidth = 0;
+      this.assignmentRowHeightsDirty = true;
     }
 
     createEmptyInputRates() {
@@ -536,9 +538,16 @@
 
     syncAssignmentRowHeights() {
       const elements = this.uiElements;
-      if (!elements || !elements.rowElements) {
+      if (!elements || !elements.rowElements || !elements.assignmentLayout) {
         return;
       }
+      const layoutWidth = elements.assignmentLayout.clientWidth || 0;
+      const shouldResync = this.assignmentRowHeightsDirty || this.assignmentLayoutWidth !== layoutWidth;
+      if (!shouldResync) {
+        return;
+      }
+      this.assignmentLayoutWidth = layoutWidth;
+      this.assignmentRowHeightsDirty = false;
       this.getManagedAssignmentKeys().forEach((key) => {
         const row = elements.rowElements[key];
         if (!row || !row.rowA || !row.rowB || !row.rowC) {
@@ -1223,6 +1232,7 @@
       }
 
       this.uiElements = {
+        assignmentLayout,
         cumulativeValue,
         assignedValue,
         freeValue,
