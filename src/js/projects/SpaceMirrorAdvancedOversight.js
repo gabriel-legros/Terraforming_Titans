@@ -337,6 +337,16 @@ class SpaceMirrorAdvancedOversight {
         return Math.max(0, meltKgPerSec / 1000)*86400; // tons/sec
       };
 
+      const crossesTarget = (baseValue, targetValue, nextValue) => {
+        if (!Number.isFinite(baseValue) || !Number.isFinite(targetValue) || !Number.isFinite(nextValue)) {
+          return false;
+        }
+        return (
+          (baseValue < targetValue && nextValue > targetValue) ||
+          (baseValue > targetValue && nextValue < targetValue)
+        );
+      };
+
       const objective = (passLevel) => {
         const temps = readTemps(getSolverZoneTemp);
         let sum = 0;
@@ -394,6 +404,80 @@ class SpaceMirrorAdvancedOversight {
         }
       };
 
+      const refineTemperatureOvershoot = (passLevel, zone, currentTemp, targetTemp, probeStep, probeResult, baseScore, applyStep) => {
+        if (!(probeStep > 1) || !crossesTarget(currentTemp, targetTemp, probeResult.temp)) {
+          return null;
+        }
+
+        const resultCache = new Map();
+        const evaluateStep = (step) => {
+          if (!(step > 0)) return null;
+          const key = Math.floor(step);
+          if (!resultCache.has(key)) {
+            resultCache.set(key, withTempChange(() => {
+              applyStep(key);
+            }, () => ({
+              score: objective(passLevel),
+              temp: getSolverZoneTemp(zone),
+            })));
+          }
+          return resultCache.get(key);
+        };
+
+        resultCache.set(Math.floor(probeStep), probeResult);
+
+        const sampledSteps = [];
+        let sampleStep = 1;
+        while (sampleStep < probeStep) {
+          sampledSteps.push(sampleStep);
+          const nextStep = sampleStep * 2;
+          if (nextStep === sampleStep) break;
+          sampleStep = nextStep;
+        }
+        sampledSteps.push(Math.floor(probeStep));
+
+        let best = null;
+        let bestIndex = -1;
+        const consider = (step, index) => {
+          const result = evaluateStep(step);
+          if (!result || !(result.score < baseScore)) return;
+          if (!best || result.score < best.score || (result.score === best.score && step < best.step)) {
+            best = { step, score: result.score, temp: result.temp };
+            bestIndex = index;
+          }
+        };
+
+        for (let index = 0; index < sampledSteps.length; index += 1) {
+          consider(sampledSteps[index], index);
+        }
+
+        if (!best) return null;
+
+        let low = bestIndex > 0 ? sampledSteps[bestIndex - 1] : 1;
+        let high = bestIndex < sampledSteps.length - 1 ? sampledSteps[bestIndex + 1] : Math.floor(probeStep);
+        if (best.step < low) low = best.step;
+        if (best.step > high) high = best.step;
+
+        while (high - low > 4 && hasSearchGap(low, high)) {
+          const left = low + Math.floor((high - low) / 3);
+          const right = high - Math.floor((high - low) / 3);
+          const leftResult = evaluateStep(left);
+          const rightResult = evaluateStep(right);
+
+          if (leftResult.score <= rightResult.score) {
+            high = right;
+          } else {
+            low = left;
+          }
+        }
+
+        for (let step = low; step <= high; step += 1) {
+          consider(step, bestIndex);
+        }
+
+        return best;
+      };
+
       // Build batched candidates for this pass
       const buildCandidates = (passLevel) => {
         const cands = [];
@@ -422,29 +506,49 @@ class SpaceMirrorAdvancedOversight {
             }
             if (!(capacity > 0)) return;
             const probe = Math.max(1, Math.min(capacity, MIRROR_PROBE_MIN));
-            const probeResult = withTempChange(() => { adjustMirrorCount(z, direction * probe); }, () => ({
+            const applyMirrorStep = (step) => {
+              adjustMirrorCount(z, direction * step);
+            };
+            const probeResult = withTempChange(() => { applyMirrorStep(probe); }, () => ({
               score: objective(passLevel),
               temp: getSolverZoneTemp(z),
             }));
-            const dPerUnit = (baseScore - probeResult.score) / probe;
             const dT = (isFinite(probeResult.temp) && isFinite(temps[z])) ? (probeResult.temp - temps[z]) : 0;
             const dtPerUnit = dT / probe;
+            const desiredDelta = (targets[z] || 0) - (temps[z] || 0);
             let unitsNeeded = 0;
-            if (dtPerUnit > 0) {
-              unitsNeeded = Math.ceil((targets[z] - temps[z]) / dtPerUnit);
-            } else if (dtPerUnit < 0) {
-              unitsNeeded = Math.ceil((temps[z] - targets[z]) / (-dtPerUnit));
+            if (desiredDelta * dtPerUnit > 0) {
+              unitsNeeded = Math.ceil(Math.abs(desiredDelta / dtPerUnit));
             }
             unitsNeeded = Math.max(0, Math.min(unitsNeeded, capacity));
-            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), capacity));
-            if (step > 0) {
+            let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), capacity));
+            let finalScore = probeResult.score;
+            let finalTemp = probeResult.temp;
+            const refined = refineTemperatureOvershoot(
+              passLevel,
+              z,
+              temps[z],
+              targets[z] || 0,
+              probe,
+              probeResult,
+              baseScore,
+              applyMirrorStep
+            );
+            if (refined) {
+              step = refined.step;
+              finalScore = refined.score;
+              finalTemp = refined.temp;
+            }
+            const gainPerUnit = step > 0 ? ((baseScore - finalScore) / step) : 0;
+            if (step > 0 && gainPerUnit > 0) {
               cands.push({
                 kind: 'mirror-adjust',
                 zone: z,
                 delta: direction * step,
                 kProbe: probe,
                 kStep: step,
-                gainPerUnit: dPerUnit
+                gainPerUnit,
+                temp: finalTemp
               });
             }
           };
@@ -455,17 +559,36 @@ class SpaceMirrorAdvancedOversight {
           // Lanterns (heating)
           if (lanternsLeft() > 0 && !isMirrorReverse(z)) {
             const k = LANTERN_PROBE_MIN;
-            const probe = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => ({
+            const applyLanternStep = (step) => {
+              assignL[z] = (assignL[z]) + step;
+            };
+            const probe = withTempChange(() => { applyLanternStep(k); }, () => ({
               score: objective(passLevel),
               temp: getSolverZoneTemp(z),
             }));
-            const dPerUnit = (baseScore - probe.score) / k;
             const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0;
             const dtPerUnit = dT / k;
-            let unitsNeeded = (dtPerUnit > 0) ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
+            const desiredDelta = (targets[z] || 0) - (temps[z] || 0);
+            let unitsNeeded = (desiredDelta * dtPerUnit > 0) ? Math.ceil(Math.abs(desiredDelta / dtPerUnit)) : 0;
             unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
-            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), lanternsLeft()));
-            if (step > 0) cands.push({ kind:'lantern', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+            let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), lanternsLeft()));
+            let finalScore = probe.score;
+            const refined = refineTemperatureOvershoot(
+              passLevel,
+              z,
+              temps[z],
+              targets[z] || 0,
+              k,
+              probe,
+              baseScore,
+              applyLanternStep
+            );
+            if (refined) {
+              step = refined.step;
+              finalScore = refined.score;
+            }
+            const gainPerUnit = step > 0 ? ((baseScore - finalScore) / step) : 0;
+            if (step > 0 && gainPerUnit > 0) cands.push({ kind:'lantern', zone:z, kProbe:k, kStep:step, gainPerUnit });
           }
 
           // Removal candidates when locked mode conflicts with need
@@ -473,17 +596,36 @@ class SpaceMirrorAdvancedOversight {
           if ((assignL[z] || 0) > 0) {
             const current = assignL[z] || 0;
             const k = Math.max(1, Math.min(current, LANTERN_PROBE_MIN));
-            const probe = withTempChange(() => { assignL[z] = current - k; }, () => ({
+            const applyLanternRemoval = (step) => {
+              assignL[z] = current - step;
+            };
+            const probe = withTempChange(() => { applyLanternRemoval(k); }, () => ({
               score: objective(passLevel),
               temp: getSolverZoneTemp(z),
             }));
-            const dPerUnit = (baseScore - probe.score) / k;
             const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0; // expected < 0
             const dtPerUnit = dT / k;
-            let unitsNeeded = (dtPerUnit < 0) ? Math.ceil((temps[z] - targets[z]) / (-dtPerUnit)) : 0;
+            const desiredDelta = (targets[z] || 0) - (temps[z] || 0);
+            let unitsNeeded = (desiredDelta * dtPerUnit > 0) ? Math.ceil(Math.abs(desiredDelta / dtPerUnit)) : 0;
             unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-            if (step > 0) cands.push({ kind:'lantern-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+            let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+            let finalScore = probe.score;
+            const refined = refineTemperatureOvershoot(
+              passLevel,
+              z,
+              temps[z],
+              targets[z] || 0,
+              k,
+              probe,
+              baseScore,
+              applyLanternRemoval
+            );
+            if (refined) {
+              step = refined.step;
+              finalScore = refined.score;
+            }
+            const gainPerUnit = step > 0 ? ((baseScore - finalScore) / step) : 0;
+            if (step > 0 && gainPerUnit > 0) cands.push({ kind:'lantern-remove', zone:z, kProbe:k, kStep:step, gainPerUnit });
           }
         }
 

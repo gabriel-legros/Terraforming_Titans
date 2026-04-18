@@ -252,6 +252,7 @@ const DEBUG_SAVES = [
   'oversight1.json',
   'oversight2.json',
   'oversight3.json',
+  'oversight5.json',
 ];
 
 const OVERSIGHT4_TICK_CASES = [
