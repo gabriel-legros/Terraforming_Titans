@@ -2,6 +2,8 @@ class ImportColonistsProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.importTarget = 'colonists';
+    this.continuousThreshold = config.continuousThreshold || 1000;
+    this.continuousCarryAmount = 0;
   }
 
   getText(path, vars, fallback = '') {
@@ -14,6 +16,111 @@ class ImportColonistsProject extends Project {
 
   canImportCrusaders() {
     return this.isBooleanFlagSet && this.isBooleanFlagSet('crusaderImportEnabled');
+  }
+
+  isContinuous() {
+    return this.getEffectiveDuration() < this.continuousThreshold;
+  }
+
+  getRawImportGain() {
+    const gain = super.getEffectiveResourceGain();
+    return gain.colony?.colonists ?? 0;
+  }
+
+  getContinuousImportAmount(deltaTime = 1000, productivity = 1, includeCarry = false) {
+    const duration = this.getEffectiveDuration();
+    if (!(duration > 0) || duration === Infinity) {
+      return 0;
+    }
+
+    const seconds = deltaTime / 1000;
+    const durationSeconds = duration / 1000;
+    const rawGain = this.getRawImportGain();
+    const limit = this.getKesslerImportLimit();
+    const importRate = limit === Infinity
+      ? rawGain / durationSeconds
+      : Math.min(rawGain / durationSeconds, limit);
+
+    return importRate * seconds * productivity + (includeCarry ? this.continuousCarryAmount : 0);
+  }
+
+  applyImportAmount(amount, target = this.getImportTarget()) {
+    if (!(amount > 0)) {
+      return 0;
+    }
+
+    if (target === 'crusaders') {
+      const crusaders = resources.special.crusaders;
+      if (crusaders.unlock) {
+        crusaders.unlock();
+      } else {
+        crusaders.unlocked = true;
+      }
+      const previousCrusaders = crusaders.value;
+      crusaders.increase(amount);
+      return Math.max(0, crusaders.value - previousCrusaders);
+    }
+
+    const previousColonists = resources.colony.colonists.value;
+    resources.colony.colonists.increase(amount);
+    const importedColonists = Math.max(0, resources.colony.colonists.value - previousColonists);
+    if (followersManager && followersManager.onColonistsImported) {
+      followersManager.onColonistsImported(importedColonists);
+    }
+    return importedColonists;
+  }
+
+  updateDurationFromEffects() {
+    const newDuration = this.applyDurationEffects(this.getBaseDuration());
+    const wasContinuous = this.startingDuration === Infinity || this.remainingTime === Infinity;
+    const nowContinuous = newDuration < this.continuousThreshold;
+
+    if (!this.isActive) {
+      this.startingDuration = newDuration;
+      return;
+    }
+
+    if (nowContinuous) {
+      if (!wasContinuous) {
+        const canCarryProgress =
+          Number.isFinite(this.startingDuration) &&
+          Number.isFinite(this.remainingTime) &&
+          this.startingDuration > 0;
+        if (canCarryProgress) {
+          const progressRatio =
+            (this.startingDuration - this.remainingTime) / this.startingDuration;
+          const target = this.getImportTarget();
+          const partialAmount =
+            this.getImportAmountFromGain(super.getEffectiveResourceGain(), target) * progressRatio;
+          this.continuousCarryAmount += partialAmount;
+        }
+      }
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+      return;
+    }
+
+    this.continuousCarryAmount = 0;
+    if (wasContinuous) {
+      this.startingDuration = newDuration;
+      this.remainingTime = newDuration;
+      return;
+    }
+
+    const canCarryProgress =
+      Number.isFinite(this.startingDuration) &&
+      Number.isFinite(this.remainingTime) &&
+      this.startingDuration > 0;
+    if (!canCarryProgress) {
+      this.startingDuration = newDuration;
+      this.remainingTime = newDuration;
+      return;
+    }
+
+    const progressRatio =
+      (this.startingDuration - this.remainingTime) / this.startingDuration;
+    this.startingDuration = newDuration;
+    this.remainingTime = newDuration * (1 - progressRatio);
   }
 
   getImportTarget() {
@@ -133,25 +240,7 @@ class ImportColonistsProject extends Project {
     const gain = this.getEffectiveResourceGain();
     const target = this.getImportTarget();
     const amount = this.getImportAmountFromGain(gain, target);
-    if (amount <= 0) {
-      return;
-    }
-    if (target === 'crusaders') {
-      const crusaders = resources.special.crusaders;
-      if (crusaders.unlock) {
-        crusaders.unlock();
-      } else {
-        crusaders.unlocked = true;
-      }
-      crusaders.increase(amount);
-    } else {
-      const previousColonists = resources.colony.colonists.value;
-      resources.colony.colonists.increase(amount);
-      const importedColonists = Math.max(0, resources.colony.colonists.value - previousColonists);
-      if (followersManager && followersManager.onColonistsImported) {
-        followersManager.onColonistsImported(importedColonists);
-      }
-    }
+    this.applyImportAmount(amount, target);
   }
 
   getImportAmountFromGain(gain, target = this.getImportTarget()) {
@@ -243,12 +332,79 @@ class ImportColonistsProject extends Project {
   saveState() {
     const state = super.saveState();
     state.importTarget = this.importTarget;
+    state.continuousCarryAmount = this.continuousCarryAmount;
     return state;
   }
 
   loadState(state) {
     super.loadState(state);
     this.setImportTarget(state?.importTarget);
+    this.continuousCarryAmount = state?.continuousCarryAmount || 0;
+  }
+
+  start(resources) {
+    const started = super.start(resources);
+    if (!started) {
+      return false;
+    }
+
+    if (this.isContinuous()) {
+      this.continuousCarryAmount = 0;
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+    }
+
+    return true;
+  }
+
+  update(deltaTime) {
+    if (!this.isActive || this.isCompleted || this.isPaused) {
+      return;
+    }
+
+    if (this.isContinuous()) {
+      return;
+    }
+
+    super.update(deltaTime);
+  }
+
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    if (!this.isContinuous() || !this.isActive) {
+      return super.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+    }
+
+    const totals = { cost: {}, gain: {} };
+    const target = this.getImportTarget();
+    const amount = this.getContinuousImportAmount(deltaTime, productivity, false);
+    if (!(amount > 0)) {
+      return totals;
+    }
+
+    if (target === 'crusaders') {
+      totals.special = { crusaders: amount };
+      if (applyRates && this.showsInResourcesRate()) {
+        resources.special.crusaders.modifyRate(amount / (deltaTime / 1000), this.displayName, 'project');
+      }
+      return totals;
+    }
+
+    totals.colony = { colonists: amount };
+    if (applyRates && this.showsInResourcesRate()) {
+      resources.colony.colonists.modifyRate(amount / (deltaTime / 1000), this.displayName, 'project');
+    }
+    return totals;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (!this.isContinuous() || !this.isActive) {
+      return;
+    }
+
+    const target = this.getImportTarget();
+    const amount = this.getContinuousImportAmount(deltaTime, productivity, true);
+    this.continuousCarryAmount = 0;
+    this.applyImportAmount(amount, target);
   }
 }
 
