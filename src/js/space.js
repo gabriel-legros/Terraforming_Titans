@@ -26,6 +26,7 @@ const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
 const MAX_REMEMBERED_RANDOM_WORLD_STATUSES = 10;
 const MAX_REMEMBERED_ARTIFICIAL_WORLD_STATUSES = 50;
+const MAX_TERRAFORM_HISTORY_ENTRIES = 10;
 
 function buildSpaceHazardKeys() {
     const keys = new Set();
@@ -171,6 +172,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
+        this.terraformHistory = [];
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
@@ -314,6 +316,55 @@ class SpaceManager extends EffectableEntity {
     clearRwgSectorLock() {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
+    }
+
+    getRecentTerraformHistory() {
+        return this.terraformHistory.slice();
+    }
+
+    _trimTerraformHistory() {
+        if (this.terraformHistory.length > MAX_TERRAFORM_HISTORY_ENTRIES) {
+            this.terraformHistory = this.terraformHistory.slice(-MAX_TERRAFORM_HISTORY_ENTRIES);
+        }
+    }
+
+    _getCurrentWorldDisplayName() {
+        if (this.currentRandomSeed !== null) {
+            const status = this.randomWorldStatuses[String(this.currentRandomSeed)];
+            return this.currentRandomName || status?.name || `Seed ${this.currentRandomSeed}`;
+        }
+        if (this.currentArtificialKey !== null) {
+            const status = this.artificialWorldStatuses[String(this.currentArtificialKey)];
+            return this.currentRandomName || status?.name || `Artificial ${this.currentArtificialKey}`;
+        }
+        return this.allPlanetsData[this.currentPlanetKey]?.name
+            || currentPlanetParameters?.name
+            || this.currentPlanetKey;
+    }
+
+    _buildCurrentTerraformHistoryEntry(playTime, realTime) {
+        let worldId = this.currentPlanetKey;
+        let worldType = 'story';
+        if (this.currentRandomSeed !== null) {
+            worldId = String(this.currentRandomSeed);
+            worldType = 'random';
+        } else if (this.currentArtificialKey !== null) {
+            worldId = String(this.currentArtificialKey);
+            worldType = 'artificial';
+        }
+        return {
+            worldId,
+            worldType,
+            name: this._getCurrentWorldDisplayName(),
+            playTimeSeconds: Math.max(0, Number(playTime) || 0),
+            realTimeSeconds: Math.max(0, Number(realTime) || 0),
+            completedAt: Date.now()
+        };
+    }
+
+    recordCurrentTerraformCompletion(playTime, realTime) {
+        this.terraformHistory.push(this._buildCurrentTerraformHistoryEntry(playTime, realTime));
+        this._trimTerraformHistory();
     }
 
     _createEmptyWorldStatsCache() {
@@ -1926,7 +1977,8 @@ class SpaceManager extends EffectableEntity {
      * This should be called by game.js based on the Terraforming module's state.
      * @param {boolean} isComplete - The terraforming completion status.
      */
-    updateCurrentPlanetTerraformedStatus(isComplete) {
+    updateCurrentPlanetTerraformedStatus(isComplete, completionStats = null) {
+        let statusChanged = false;
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             this._updateWorldCacheForStatusMutation('random', seed, (status, map, key) => {
@@ -1946,9 +1998,13 @@ class SpaceManager extends EffectableEntity {
                 }
                 if (target.terraformed !== isComplete) {
                     target.terraformed = isComplete;
+                    statusChanged = true;
                     console.log(`SpaceManager: Terraformed status for seed ${seed} updated to ${isComplete}`);
                 }
             });
+            if (isComplete && statusChanged && completionStats) {
+                this.recordCurrentTerraformCompletion(completionStats.playTimeSeconds, completionStats.realPlayTimeSeconds);
+            }
             if (isComplete && atlasManager) {
                 const seedKey = getSpecialSeedKeyFromWorldData(this.getCurrentWorldOriginal());
                 if (seedKey && atlasManager.isChallengeSeedKey(seedKey)) {
@@ -2000,6 +2056,7 @@ class SpaceManager extends EffectableEntity {
                 target.core = this._resolveArtificialWorldCore(target, target.type);
                 if (target.terraformed !== isComplete) {
                     target.terraformed = isComplete;
+                    statusChanged = true;
                     console.log(`SpaceManager: Terraformed status for artificial world ${resolvedKey} updated to ${isComplete}`);
                 }
                 if (isComplete) {
@@ -2007,6 +2064,9 @@ class SpaceManager extends EffectableEntity {
                     target.stored = false;
                 }
             });
+            if (isComplete && statusChanged && completionStats) {
+                this.recordCurrentTerraformCompletion(completionStats.playTimeSeconds, completionStats.realPlayTimeSeconds);
+            }
             return;
         }
         if (!this.planetStatuses[this.currentPlanetKey]) {
@@ -2016,9 +2076,13 @@ class SpaceManager extends EffectableEntity {
         this._updateWorldCacheForStatusMutation('story', this.currentPlanetKey, (status) => {
             if (status.terraformed !== isComplete) {
                 status.terraformed = isComplete;
+                statusChanged = true;
                 console.log(`SpaceManager: Terraformed status for ${this.currentPlanetKey} updated to ${isComplete}`);
             }
         });
+        if (isComplete && statusChanged && completionStats) {
+            this.recordCurrentTerraformCompletion(completionStats.playTimeSeconds, completionStats.realPlayTimeSeconds);
+        }
     }
 
 
@@ -2682,6 +2746,7 @@ class SpaceManager extends EffectableEntity {
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
             oneillCylinders: this.getOneillCylinderCount(),
+            terraformHistory: this.terraformHistory,
             dominionTerraformRewards: this.dominionTerraformRewards,
             dominionTerraformRewardCount: this.dominionTerraformRewardCount
         };
@@ -2701,6 +2766,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
+        this.terraformHistory = [];
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
         this._initializePlanetStatuses(); // Reset statuses to default structure
@@ -2914,6 +2980,20 @@ class SpaceManager extends EffectableEntity {
                     status.hazard = hazardList.length === 1 ? hazardList[0] : hazardList.slice();
                 }
             });
+        }
+
+        if (Array.isArray(savedData.terraformHistory)) {
+            this.terraformHistory = savedData.terraformHistory
+                .map((entry) => ({
+                    worldId: entry?.worldId == null ? '' : String(entry.worldId),
+                    worldType: entry?.worldType === 'random' || entry?.worldType === 'artificial' ? entry.worldType : 'story',
+                    name: entry?.name == null ? '' : String(entry.name),
+                    playTimeSeconds: Math.max(0, Number(entry?.playTimeSeconds) || 0),
+                    realTimeSeconds: Math.max(0, Number(entry?.realTimeSeconds) || 0),
+                    completedAt: Math.max(0, Number(entry?.completedAt) || 0)
+                }))
+                .filter((entry) => entry.name);
+            this._trimTerraformHistory();
         }
 
         this.rwgSummary = this._sanitizeRwgSummary(savedData.rwgSummary);

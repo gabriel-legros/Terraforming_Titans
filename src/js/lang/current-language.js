@@ -3122,6 +3122,9 @@ setLanguageData({
       creditsTitle: 'Credits',
       totalPlaytime: 'Total Playtime:',
       fastestTerraform: 'Fastest Terraform:',
+      recentTerraformHistoryTitle: 'Last {count} Terraformed Worlds',
+      recentTerraformHistoryEmpty: 'No terraformed worlds recorded yet.',
+      recentTerraformHistoryEntry: '{name}: {game} ({real} real time)',
     },
     journal: {
       title: 'Journal',

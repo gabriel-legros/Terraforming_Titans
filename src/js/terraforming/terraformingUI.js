@@ -2744,7 +2744,10 @@ function updateLifeBox() {
       }
       terraforming.completed = true;
       if (typeof spaceManager !== 'undefined') {
-        spaceManager.updateCurrentPlanetTerraformedStatus(true);
+        spaceManager.updateCurrentPlanetTerraformedStatus(true, {
+          playTimeSeconds,
+          realPlayTimeSeconds
+        });
         spaceManager.grantDominionTerraformReward(terraforming.requirementId);
       }
       if (typeof updateSpaceUI === 'function') {
