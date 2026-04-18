@@ -140,6 +140,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Space Mirror Facility
 - Zonal mirror/lantern assignment with advanced oversight and reversible mirror mode; advanced oversight now stores mirror assignments as signed counts (`negative = reverse/cooling`) and derives reverse mode from the solved assignments instead of tracking a separate reverse-state decision through the solver.
 - Advanced oversight binary searches must guard against JS number precision stalls at extreme mirror counts (for example `10Sp`), and should stop when the midpoint no longer changes instead of assuming `high - low > 1` guarantees progress.
+- Advanced oversight temperature probes that overshoot and worsen the objective should fall back to one much smaller probe step and use that cheaper result instead of running an expensive bracket search.
 - After advanced oversight solves assignments, restore the pre-solve current temperature state but keep the solved trend/equilibrium and zonal-flux fields so the oversight UI reflects the final solved direction instead of a stale pre-solve trend snapshot.
 - Starless worlds support day-night period control when lanterns are unlocked.
 - Focused melting, advanced auto-assignment, and quick-build integration are supported.

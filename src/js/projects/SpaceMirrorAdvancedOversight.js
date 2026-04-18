@@ -404,78 +404,27 @@ class SpaceMirrorAdvancedOversight {
         }
       };
 
-      const refineTemperatureOvershoot = (passLevel, zone, currentTemp, targetTemp, probeStep, probeResult, baseScore, applyStep) => {
-        if (!(probeStep > 1) || !crossesTarget(currentTemp, targetTemp, probeResult.temp)) {
+      const trySmallerOvershootProbe = (passLevel, zone, currentTemp, targetTemp, probeStep, probeResult, baseScore, applyStep) => {
+        if (!(probeStep > 1) || !crossesTarget(currentTemp, targetTemp, probeResult.temp) || !(probeResult.score >= baseScore)) {
           return null;
         }
 
-        const resultCache = new Map();
-        const evaluateStep = (step) => {
-          if (!(step > 0)) return null;
-          const key = Math.floor(step);
-          if (!resultCache.has(key)) {
-            resultCache.set(key, withTempChange(() => {
-              applyStep(key);
-            }, () => ({
-              score: objective(passLevel),
-              temp: getSolverZoneTemp(zone),
-            })));
-          }
-          return resultCache.get(key);
+        const smallerStep = Math.max(1, Math.min(probeStep - 1, Math.floor(Math.sqrt(probeStep))));
+        if (!(smallerStep > 0) || smallerStep === probeStep) return null;
+
+        const smallerResult = withTempChange(() => {
+          applyStep(smallerStep);
+        }, () => ({
+          score: objective(passLevel),
+          temp: getSolverZoneTemp(zone),
+        }));
+
+        if (!(smallerResult.score < baseScore)) return null;
+        return {
+          step: smallerStep,
+          score: smallerResult.score,
+          temp: smallerResult.temp,
         };
-
-        resultCache.set(Math.floor(probeStep), probeResult);
-
-        const sampledSteps = [];
-        let sampleStep = 1;
-        while (sampleStep < probeStep) {
-          sampledSteps.push(sampleStep);
-          const nextStep = sampleStep * 2;
-          if (nextStep === sampleStep) break;
-          sampleStep = nextStep;
-        }
-        sampledSteps.push(Math.floor(probeStep));
-
-        let best = null;
-        let bestIndex = -1;
-        const consider = (step, index) => {
-          const result = evaluateStep(step);
-          if (!result || !(result.score < baseScore)) return;
-          if (!best || result.score < best.score || (result.score === best.score && step < best.step)) {
-            best = { step, score: result.score, temp: result.temp };
-            bestIndex = index;
-          }
-        };
-
-        for (let index = 0; index < sampledSteps.length; index += 1) {
-          consider(sampledSteps[index], index);
-        }
-
-        if (!best) return null;
-
-        let low = bestIndex > 0 ? sampledSteps[bestIndex - 1] : 1;
-        let high = bestIndex < sampledSteps.length - 1 ? sampledSteps[bestIndex + 1] : Math.floor(probeStep);
-        if (best.step < low) low = best.step;
-        if (best.step > high) high = best.step;
-
-        while (high - low > 4 && hasSearchGap(low, high)) {
-          const left = low + Math.floor((high - low) / 3);
-          const right = high - Math.floor((high - low) / 3);
-          const leftResult = evaluateStep(left);
-          const rightResult = evaluateStep(right);
-
-          if (leftResult.score <= rightResult.score) {
-            high = right;
-          } else {
-            low = left;
-          }
-        }
-
-        for (let step = low; step <= high; step += 1) {
-          consider(step, bestIndex);
-        }
-
-        return best;
       };
 
       // Build batched candidates for this pass
@@ -524,7 +473,7 @@ class SpaceMirrorAdvancedOversight {
             let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), capacity));
             let finalScore = probeResult.score;
             let finalTemp = probeResult.temp;
-            const refined = refineTemperatureOvershoot(
+            const refined = trySmallerOvershootProbe(
               passLevel,
               z,
               temps[z],
@@ -573,7 +522,7 @@ class SpaceMirrorAdvancedOversight {
             unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
             let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), lanternsLeft()));
             let finalScore = probe.score;
-            const refined = refineTemperatureOvershoot(
+            const refined = trySmallerOvershootProbe(
               passLevel,
               z,
               temps[z],
@@ -610,7 +559,7 @@ class SpaceMirrorAdvancedOversight {
             unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
             let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
             let finalScore = probe.score;
-            const refined = refineTemperatureOvershoot(
+            const refined = trySmallerOvershootProbe(
               passLevel,
               z,
               temps[z],
