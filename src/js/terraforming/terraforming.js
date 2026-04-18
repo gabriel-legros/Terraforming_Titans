@@ -1424,9 +1424,12 @@ class Terraforming extends EffectableEntity{
 
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
+    const zonalFluxOverrides = options && options.zonalFluxOverrides;
+    const disableAvailableAdvancedHeating = !!(options && options.disableAvailableAdvancedHeating);
     const netSurfaceHeatFlux = this.getNetCoreHeatFlux();
     const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
     const allowAvailableHeating =
+        !disableAvailableAdvancedHeating &&
         !!(mirrorOversightSettings?.advancedOversight) &&
         mirrorOversightSettings.allowAvailableToHeat !== false;
     let availableAdvancedHeatingPower = 0;
@@ -1481,7 +1484,10 @@ class Terraforming extends EffectableEntity{
     const effectiveAtmosphereCapacity = suppressAtmosphere ? 0 : heatCapacityCache.atmosphericHeatCapacity;
     const baseSlabOptions = { atmosphereCapacity: effectiveAtmosphereCapacity };
     for (const zone of ORDER) {
-        const zoneFlux = this.calculateZoneSolarFlux(zone);
+        const overrideFlux = zonalFluxOverrides && zonalFluxOverrides[zone];
+        const zoneFlux = Number.isFinite(overrideFlux)
+            ? Math.max(overrideFlux, BACKGROUND_SOLAR_FLUX)
+            : this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
 
         const zoneCapacity = heatCapacityCache.zones[zone];

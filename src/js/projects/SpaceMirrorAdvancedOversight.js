@@ -1,50 +1,42 @@
 class SpaceMirrorAdvancedOversight {
   static advancedAssignmentInProgress = false;
+  static solverAlgorithm = 'newton';
 
   static runAssignments(project, settings) {
     if (!settings || !settings.advancedOversight) return;
     if (SpaceMirrorAdvancedOversight.advancedAssignmentInProgress) return;
+
     SpaceMirrorAdvancedOversight.advancedAssignmentInProgress = true;
-    const baselineAverageTemperature = terraforming?.temperature?.value;
-    let snapshot = terraforming.saveTemperatureState();
+    const snapshot = terraforming.saveTemperatureState();
     let solvedSnapshot = null;
 
     try {
-      if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
+      const K_TOL = 0.001;
+      const FLUX_TOL = 0.01;
+      const MIN_ZONE_FLUX = 2.4e-5;
+      const MAX_COORDINATE_PASSES = 12;
+      const MAX_BRACKET_STEPS = 24;
+      const MAX_BISECTION_STEPS = 32;
+      const POWER_EPSILON = 1e-9;
+      const COUNT_EPSILON = 1e-9;
 
-      // ---------------- Config knobs (tune as needed) ----------------
-      const K_TOL = 0.001;         // Temperature tolerance (K) for zones
-      const FLUX_TOL = 0.01;       // Flux tolerance (W/m^2) for zones
-      const WATER_REL_TOL = 0.00001; // Relative tol (1%) for water melt target
-      const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
-      const MAX_PRUNE_ACTIONS = 0; // Pruning stable solutions causes tick-size-dependent oscillation on small worlds
-      const REVERSE_ENTRY_TEMP_DELTA = 0.5; // Do not enter reverse mode from zero for tiny over-target noise
-      const MIN_ZONE_FLUX = 2.4e-5; // Floor used by calculateZoneSolarFluxWithFacility
-      const NEAR_MIN_FLUX = MIN_ZONE_FLUX * 1.05;
-      // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
-      const MIRROR_PROBE_BASE = 1;      // Minimum mirrors per probe (useful scale for "billions")
-      const LANTERN_PROBE_BASE = 1;     // Minimum lanterns per probe (useful scale for "billions")
-      const SAFETY_FRACTION = 1;        // Take only 50% of the "unitsNeeded" to reduce overshoot risk
-
-      // If no resources left, allow reallocation from strictly lower priority zones
-      const REALLOC_MIN = 1;           // At least this many units in a reallocation probe (mirrors/lanterns)
-
-      // ---------------- Capability / flags ----------------
       const ZONES = getZones();
+      const ZONES_WITH_FOCUS_ANY = ZONES.concat(['focus', 'any']);
 
       const FOCUS_FLAG =
-        (typeof projectManager !== 'undefined') &&
-        (
-          (projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
-          (projectManager.projects &&
-           projectManager.projects.spaceMirrorFacility &&
-           typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
-           projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing'))
-        );
+        (projectManager && projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
+        (projectManager &&
+          projectManager.projects &&
+          projectManager.projects.spaceMirrorFacility &&
+          projectManager.projects.spaceMirrorFacility.isBooleanFlagSet &&
+          projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing'));
 
       const REVERSAL_AVAILABLE = !!(project && project.reversalAvailable);
 
-      // ---------------- Short-hands / accessors ----------------
+      const prio = settings.priority || { tropical: 1, temperate: 1, polar: 1, focus: 1 };
+      const targets = settings.targets || { tropical: 0, temperate: 0, polar: 0, water: 0 };
+      const tempMode = settings.tempMode || { tropical: 'average', temperate: 'average', polar: 'average' };
+
       const assignM = settings.assignments.mirrors || (settings.assignments.mirrors = {});
       const assignL = settings.assignments.lanterns || (settings.assignments.lanterns = {});
       const reverse = settings.assignments.reversalMode || (
@@ -56,101 +48,80 @@ class SpaceMirrorAdvancedOversight {
           any: false,
         }
       );
-      const getMirrorValue = (zone) => Number(assignM[zone]) || 0;
-      const getMirrorCount = (zone) => Math.abs(getMirrorValue(zone));
-      const isMirrorReverse = (zone) => getMirrorValue(zone) < 0;
-      const setMirrorCount = (zone, count, reverseMode) => {
-        const nextCount = Math.max(0, count);
-        assignM[zone] = nextCount === 0 ? 0 : (reverseMode ? -nextCount : nextCount);
+
+      const getZoneMode = (zone) => tempMode[zone] || 'average';
+      const getZoneTolerance = (zone) => getZoneMode(zone) === 'flux' ? FLUX_TOL : K_TOL;
+      const getZonePriority = (zone) => zone === 'focus' ? (prio.focus || 5) : (prio[zone] || 5);
+      const getZoneObjectiveWeight = (zone) => Math.pow(4, 5 - Math.min(5, Math.max(1, getZonePriority(zone))));
+
+      const mirrorBuilding = buildings.spaceMirror;
+      const lanternBuilding = buildings.hyperionLantern;
+
+      const totalMirrors = Math.max(
+        0,
+        Number.isFinite(mirrorBuilding?.activeNumber)
+          ? mirrorBuilding.activeNumber
+          : (typeof buildingCountToNumber === 'function'
+            ? buildingCountToNumber(mirrorBuilding?.active)
+            : Math.max(0, Math.floor(Number(mirrorBuilding?.active) || 0)))
+      );
+      const totalLanterns = settings.applyToLantern
+        ? Math.max(
+            0,
+            Number.isFinite(lanternBuilding?.activeNumber)
+              ? lanternBuilding.activeNumber
+              : (typeof buildingCountToNumber === 'function'
+                ? buildingCountToNumber(lanternBuilding?.active)
+                : Math.max(0, Math.floor(Number(lanternBuilding?.active) || 0)))
+          )
+        : 0;
+
+      const mirrorPowerPer = Math.max(
+        0,
+        (terraforming.calculateMirrorEffect()?.interceptedPower || 0) * getFacilityResourceFactor(mirrorBuilding)
+      );
+      const lanternPowerPer = settings.applyToLantern
+        ? Math.max(0, (lanternBuilding?.powerPerBuilding || 0) * getFacilityResourceFactor(lanternBuilding))
+        : 0;
+
+      const totalSurfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
+      const zoneAreas = {};
+      const baseFluxes = {};
+      for (const zone of ZONES) {
+        zoneAreas[zone] = totalSurfaceArea * getZonePercentage(zone);
+        baseFluxes[zone] = Math.max(MIN_ZONE_FLUX, terraforming.calculateZoneSolarFlux(zone, false, true));
+      }
+
+      const clearAssignments = () => {
+        for (const zone of ZONES_WITH_FOCUS_ANY) {
+          assignM[zone] = 0;
+          assignL[zone] = 0;
+          reverse[zone] = false;
+        }
+        assignM.unassigned = 0;
+        assignL.unassigned = 0;
+        reverse.focus = false;
+        reverse.any = false;
       };
-      const addMirrorCount = (zone, count, reverseMode) => {
-        setMirrorCount(zone, getMirrorCount(zone) + count, reverseMode);
-      };
-      const adjustMirrorCount = (zone, delta) => {
-        assignM[zone] = (Number(assignM[zone]) || 0) + delta;
-        if (!assignM[zone]) assignM[zone] = 0;
-      };
-      const removeMirrorCount = (zone, count) => {
-        setMirrorCount(zone, Math.max(0, getMirrorCount(zone) - count), isMirrorReverse(zone));
-      };
-      const transferMirrorCount = (from, to, count) => {
-        const donorReverse = isMirrorReverse(from);
-        const receiverReverse = isMirrorReverse(to);
-        setMirrorCount(from, Math.max(0, getMirrorCount(from) - count), donorReverse);
-        setMirrorCount(to, getMirrorCount(to) + count, receiverReverse);
-      };
+
       const syncDerivedReverseState = () => {
         for (const zone of ZONES) {
-          reverse[zone] = REVERSAL_AVAILABLE && isMirrorReverse(zone);
+          reverse[zone] = REVERSAL_AVAILABLE && (Number(assignM[zone]) || 0) < 0;
         }
         reverse.focus = false;
         reverse.any = false;
       };
 
-      const prio = settings.priority || { tropical: 1, temperate: 1, polar: 1, focus: 1 };
-      const targets = settings.targets || { tropical: 0, temperate: 0, polar: 0, water: 0 };
-
-      if (!(targets.water > 0)) {
-        assignM.focus = 0;
-        assignL.focus = 0;
-      }
-
-      const totalMirrors = Math.max(
-        0,
-        Number.isFinite(buildings.spaceMirror?.activeNumber)
-          ? buildings.spaceMirror.activeNumber
-          : (typeof buildingCountToNumber === 'function'
-            ? buildingCountToNumber(buildings.spaceMirror?.active)
-            : Math.max(0, Math.floor(Number(buildings.spaceMirror?.active) || 0)))
-      );
-      const totalLanterns = settings.applyToLantern
-        ? Math.max(
-            0,
-            Number.isFinite(buildings.hyperionLantern?.activeNumber)
-              ? buildings.hyperionLantern.activeNumber
-              : (typeof buildingCountToNumber === 'function'
-                ? buildingCountToNumber(buildings.hyperionLantern?.active)
-                : Math.max(0, Math.floor(Number(buildings.hyperionLantern?.active) || 0)))
-          )
-        : 0;
-
-      const usedMirrors = () => getMirrorCount('tropical') + getMirrorCount('temperate') + getMirrorCount('polar') + getMirrorCount('focus');
-      const usedLanterns = () => (assignL.tropical)+(assignL.temperate)+(assignL.polar)+(assignL.focus);
-      const mirrorsLeft = () => Math.max(0, totalMirrors - usedMirrors());
-      const lanternsLeft = () => Math.max(0, totalLanterns - usedLanterns());
-      const mirrorDeltaCapacity = (zone, direction) => {
-        const current = getMirrorValue(zone);
-        const free = mirrorsLeft();
-        if (direction > 0) {
-          return current >= 0 ? free : Math.abs(current) + free;
-        }
-        if (direction < 0) {
-          return current <= 0 ? free : current + free;
-        }
-        return 0;
-      };
-
-      const getZoneMode = (z) => settings.tempMode?.[z] || 'average';
-      const getZoneTolerance = (z) => getZoneMode(z) === 'flux' ? FLUX_TOL : K_TOL;
-
-      const getZoneTemp = (z) => {
-        const mode = getZoneMode(z);
+      const getTrendMetric = (zone) => {
+        const mode = getZoneMode(zone);
         if (mode === 'flux') {
-          const flux = terraforming.calculateZoneSolarFlux(z);
+          const flux = terraforming.luminosity?.zonalFluxes?.[zone];
           return Number.isFinite(flux) ? flux / 4 : NaN;
         }
-        const data = terraforming?.temperature?.zones?.[z];
-        if (!data) return NaN;
-        if (mode === 'day') return data.day;
-        if (mode === 'night') return data.night;
-        return data.value;
-      };
 
-      const getZoneTrendTemp = (z) => {
-        const mode = getZoneMode(z);
-        if (mode === 'flux') return getZoneTemp(z);
-        const data = terraforming?.temperature?.zones?.[z];
+        const data = terraforming.temperature?.zones?.[zone];
         if (!data) return NaN;
+
         const meanTrend = Number.isFinite(data.trendValue) ? data.trendValue : data.value;
         if (mode === 'day') {
           const offset = (Number.isFinite(data.day) && Number.isFinite(data.value)) ? (data.day - data.value) : 0;
@@ -163,770 +134,637 @@ class SpaceMirrorAdvancedOversight {
         return meanTrend;
       };
 
-      const getSolverZoneTemp = (z) => getZoneTrendTemp(z);
-
-      const updateTemps = () => {
-        if (typeof terraforming.updateSurfaceTemperature === 'function') {
-          terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
-        }
-      };
-
-      const readTemps = (reader = getZoneTemp) => {
-        const out = {};
-        for (const z of ZONES) out[z] = reader(z);
-        return out;
-      };
-
-      const hasSearchGap = (low, high) => {
-        if (!(high > low)) return false;
-        const span = high - low;
-        if (!(span > 1)) return false;
-        const mid = Math.floor((low + high) / 2);
-        return mid > low && mid < high;
-      };
-
-      const allPriorities = [prio.tropical, prio.temperate, prio.polar, prio.focus].filter(x => typeof x === 'number');
-      const minP = Math.min(...allPriorities);
-      const maxP = Math.max(...allPriorities);
-
-      const mirrorPowerPer = terraforming.calculateMirrorEffect?.().interceptedPower || 0;
-      const lantern = typeof buildings !== 'undefined' ? buildings.hyperionLantern : null;
-      const lanternResourceFactor = Number.isFinite(lantern?._baseProductivity)
-        ? lantern._baseProductivity
-        : (Number.isFinite(lantern?.productivity) ? lantern.productivity : 1);
-      const lanternPowerPer = lantern
-        ? (lantern.powerPerBuilding || 0) * lanternResourceFactor
-        : 0;
-      const baseLand = resolveWorldBaseLand(terraforming);
-      const MIRROR_PROBE_MIN = mirrorPowerPer > 0 ? Math.max(MIRROR_PROBE_BASE * (baseLand / mirrorPowerPer),1) : 1;
-      const LANTERN_PROBE_MIN = lanternPowerPer > 0 ? Math.max(LANTERN_PROBE_BASE * (baseLand / lanternPowerPer),1) : 1;
-
-      // ---------------- Warm start ----------------
-      // If we have a saved lastSolution, restore it (clamped to current availability).
-      // Otherwise, keep whatever current assignments exist (they already reflect last tick).
-      const restoreFromLast = () => {
-        const last = settings.lastSolution;
-        if (!last) return;
-        const copy = (dst, src) => { for (const k of Object.keys(dst)) dst[k] = 0; for (const k of Object.keys(src)) dst[k] = Number(src[k]) || 0; };
-        copy(assignM, last.mirrors || {});
-        copy(assignL, last.lanterns || {});
-        if (last.reversalMode) {
-          for (const zone of ZONES) {
-            if (last.reversalMode[zone] && assignM[zone] > 0) {
-              assignM[zone] = -assignM[zone];
-            }
-          }
-        }
-        clampMirrorsTo(totalMirrors);
-        clampTo(assignL, totalLanterns);
-        syncDerivedReverseState();
-      };
-
-      const clampTo = (obj, max) => {
-        let sum = 0;
-        for (const k of Object.keys(obj)) sum += Math.max(0, obj[k]);
-        if (sum <= max) return;
-        // Reduce lowest priority first
-        const entries = Object.keys(obj)
-          .map(k => ({ k, v: Math.max(0, obj[k]), p: (k === 'focus' ? (prio.focus || 5) : (prio[k] || 5)) }))
-          .sort((a, b) => b.p - a.p);
-        let over = sum - max;
-        for (const e of entries) {
-          if (over <= 0) break;
-          const take = Math.min(e.v, over);
-          obj[e.k] = e.v - take;
-          over -= take;
-        }
-      };
-      const clampMirrorsTo = (max) => {
-        let sum = 0;
-        for (const k of Object.keys(assignM)) sum += Math.abs(assignM[k] || 0);
-        if (sum <= max) return;
-        const entries = Object.keys(assignM)
-          .map(k => ({
-            k,
-            v: Math.abs(assignM[k] || 0),
-            reverseMode: (assignM[k] || 0) < 0,
-            p: (k === 'focus' ? (prio.focus || 5) : (prio[k] || 5))
-          }))
-          .sort((a, b) => b.p - a.p);
-        let over = sum - max;
-        for (const e of entries) {
-          if (over <= 0) break;
-          const take = Math.min(e.v, over);
-          setMirrorCount(e.k, e.v - take, e.reverseMode);
-          over -= take;
-        }
-      };
-
-      // Apply warm start
-      //restoreFromLast();
-      // Make sure reversal is only used if available
-      if (!REVERSAL_AVAILABLE) {
+      const readCurrentMetrics = () => {
+        const metrics = {};
         for (const zone of ZONES) {
-          if (isMirrorReverse(zone)) {
-            setMirrorCount(zone, getMirrorCount(zone), false);
-          }
+          metrics[zone] = getTrendMetric(zone);
         }
-      }
-      syncDerivedReverseState();
+        return metrics;
+      };
 
-      const clearLanternsInReverseZones = () => {
-        let changed = false;
+      const computeMetricError = (metrics) => {
+        let totalError = 0;
         for (const zone of ZONES) {
-          if (!isMirrorReverse(zone)) continue;
-          if ((assignL[zone] || 0) > 0) {
-            assignL[zone] = 0;
-            changed = true;
-          }
+          const target = targets[zone] || 0;
+          if (!(target > 0)) continue;
+          const value = metrics[zone];
+          if (!Number.isFinite(value)) continue;
+          const error = value - target;
+          totalError += getZoneObjectiveWeight(zone) * error * error;
         }
-        if (changed) updateTemps();
+        return totalError;
       };
 
-      const trimReverseFloorOvershoot = () => {
+      const withinIdealTolerance = (metrics) => {
         for (const zone of ZONES) {
-          if (!isMirrorReverse(zone)) continue;
-          const current = getMirrorCount(zone);
-          if (!(current > 0)) continue;
-          const currentFlux = terraforming.calculateZoneSolarFlux(zone);
-          if (currentFlux > NEAR_MIN_FLUX) continue;
-
-          const fluxFor = (count) => {
-            const prior = assignM[zone] || 0;
-            setMirrorCount(zone, count, true);
-            const flux = terraforming.calculateZoneSolarFlux(zone);
-            assignM[zone] = prior;
-            return flux;
-          };
-
-          if (fluxFor(0) <= NEAR_MIN_FLUX) {
-            assignM[zone] = 0;
-            continue;
-          }
-
-          let low = 0;
-          let high = current;
-          while (hasSearchGap(low, high)) {
-            const mid = Math.floor((low + high) / 2);
-            if (fluxFor(mid) > NEAR_MIN_FLUX) {
-              low = mid;
-            } else {
-              high = mid;
-            }
-          }
-          setMirrorCount(zone, low, true);
-        }
-        syncDerivedReverseState();
-      };
-
-      // ---------------- Objective ----------------
-      const computeFocusMeltRate = () => {
-        if (!FOCUS_FLAG) return 0;
-        const m = getMirrorCount('focus');
-        const l = assignL.focus;
-        const focusPower = m * mirrorPowerPer + l * lanternPowerPer;
-
-        // Energy to bring ice to 0°C and melt
-        const C_P_ICE = 2100;    // J/kg·K
-        const L_F_WATER = 334000;// J/kg
-        const deltaT = Math.max(0, 273.15 - (baselineAverageTemperature ?? 0));
-        const energyPerKg = C_P_ICE * deltaT + L_F_WATER; // J/kg
-        if (energyPerKg <= 0) return 0;
-
-        const meltKgPerSec = focusPower / energyPerKg;
-        return Math.max(0, meltKgPerSec / 1000)*86400; // tons/sec
-      };
-
-      const crossesTarget = (baseValue, targetValue, nextValue) => {
-        if (!Number.isFinite(baseValue) || !Number.isFinite(targetValue) || !Number.isFinite(nextValue)) {
-          return false;
-        }
-        return (
-          (baseValue < targetValue && nextValue > targetValue) ||
-          (baseValue > targetValue && nextValue < targetValue)
-        );
-      };
-
-      const objective = (passLevel) => {
-        const temps = readTemps(getSolverZoneTemp);
-        let sum = 0;
-        for (const z of ZONES) {
-          const tgt = targets[z] || 0;
-          if (!(tgt > 0)) continue;
-          let w = 0;
-          if ((prio[z] || 5) <= passLevel) w = 1;
-          if ((prio[z] || 5) <  passLevel) w *= 32; // lock-in for higher priority
-          if (w > 0) {
-            const t = temps[z];
-            if (!isFinite(t)) continue;
-            const e = t - tgt;
-            sum += w * e * e;
-          }
-        }
-        if (FOCUS_FLAG && (targets.water || 0) > 0) {
-          const melt = computeFocusMeltRate();
-          const tgt = targets.water || 0;
-          const relErr = tgt > 0 ? (tgt - melt) / tgt : 0;
-          let w = 0;
-          if ((prio.focus || 5) <= passLevel) w = 1;
-          if ((prio.focus || 5) <  passLevel) w *= 32;
-          sum += w * relErr * relErr;
-        }
-        return sum;
-      };
-
-      // Utility: run a temporary change, eval, then rollback
-      const withTempChange = (changer, evaluator) => {
-        const snapM = { ...assignM };
-        const snapL = { ...assignL };
-        const shallowEqual = (a, b) => {
-          const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
-          for (const k of keys) {
-            if ((a[k] || 0) !== (b[k] || 0)) return false;
-          }
-          return true;
-        };
-        changer();
-        const changed = !(shallowEqual(assignM, snapM) && shallowEqual(assignL, snapL));
-        if (changed) {
-          // Only recompute temps when something actually changed
-          updateTemps();
-          const out = evaluator();
-          // Roll back and restore temps
-          Object.assign(assignM, snapM);
-          Object.assign(assignL, snapL);
-          syncDerivedReverseState();
-          updateTemps();
-          return out;
-        } else {
-          // No change; evaluate on current state without recomputing temps
-          return evaluator();
-        }
-      };
-
-      const trySmallerOvershootProbe = (passLevel, zone, currentTemp, targetTemp, probeStep, probeResult, baseScore, applyStep) => {
-        if (!(probeStep > 1) || !crossesTarget(currentTemp, targetTemp, probeResult.temp) || !(probeResult.score >= baseScore)) {
-          return null;
-        }
-
-        const smallerStep = Math.max(1, Math.min(probeStep - 1, Math.floor(Math.sqrt(probeStep))));
-        if (!(smallerStep > 0) || smallerStep === probeStep) return null;
-
-        const smallerResult = withTempChange(() => {
-          applyStep(smallerStep);
-        }, () => ({
-          score: objective(passLevel),
-          temp: getSolverZoneTemp(zone),
-        }));
-
-        if (!(smallerResult.score < baseScore)) return null;
-        return {
-          step: smallerStep,
-          score: smallerResult.score,
-          temp: smallerResult.temp,
-        };
-      };
-
-      // Build batched candidates for this pass
-      const buildCandidates = (passLevel) => {
-        const cands = [];
-        const temps = readTemps(getSolverZoneTemp);
-        const baseScore = objective(passLevel);
-
-        // Mirror/lantern add candidates (batched)
-        for (const z of ZONES) {
-          if ((prio[z] || 5) > passLevel) continue; // only optimize up to current pass
-          const tgt = targets[z] || 0; if (!(tgt > 0)) continue;
-          const addMirrorDirectionCandidate = (direction) => {
-            if (direction < 0 && !REVERSAL_AVAILABLE) return;
-            let capacity = mirrorDeltaCapacity(z, direction);
-            if (direction < 0) {
-              const currentSignedMirrors = getMirrorValue(z);
-              const currentOverTarget = (temps[z] || 0) - (targets[z] || 0);
-              const canEnterReverseFromZero =
-                currentSignedMirrors < 0 ||
-                currentOverTarget > REVERSE_ENTRY_TEMP_DELTA;
-              if (!canEnterReverseFromZero) {
-                if (currentSignedMirrors <= 0) {
-                  return;
-                }
-                capacity = Math.min(capacity, currentSignedMirrors);
-              }
-            }
-            if (!(capacity > 0)) return;
-            const probe = Math.max(1, Math.min(capacity, MIRROR_PROBE_MIN));
-            const applyMirrorStep = (step) => {
-              adjustMirrorCount(z, direction * step);
-            };
-            const probeResult = withTempChange(() => { applyMirrorStep(probe); }, () => ({
-              score: objective(passLevel),
-              temp: getSolverZoneTemp(z),
-            }));
-            const dT = (isFinite(probeResult.temp) && isFinite(temps[z])) ? (probeResult.temp - temps[z]) : 0;
-            const dtPerUnit = dT / probe;
-            const desiredDelta = (targets[z] || 0) - (temps[z] || 0);
-            let unitsNeeded = 0;
-            if (desiredDelta * dtPerUnit > 0) {
-              unitsNeeded = Math.ceil(Math.abs(desiredDelta / dtPerUnit));
-            }
-            unitsNeeded = Math.max(0, Math.min(unitsNeeded, capacity));
-            let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), capacity));
-            let finalScore = probeResult.score;
-            let finalTemp = probeResult.temp;
-            const refined = trySmallerOvershootProbe(
-              passLevel,
-              z,
-              temps[z],
-              targets[z] || 0,
-              probe,
-              probeResult,
-              baseScore,
-              applyMirrorStep
-            );
-            if (refined) {
-              step = refined.step;
-              finalScore = refined.score;
-              finalTemp = refined.temp;
-            }
-            const gainPerUnit = step > 0 ? ((baseScore - finalScore) / step) : 0;
-            if (step > 0 && gainPerUnit > 0) {
-              cands.push({
-                kind: 'mirror-adjust',
-                zone: z,
-                delta: direction * step,
-                kProbe: probe,
-                kStep: step,
-                gainPerUnit,
-                temp: finalTemp
-              });
-            }
-          };
-
-          addMirrorDirectionCandidate(1);
-          addMirrorDirectionCandidate(-1);
-
-          // Lanterns (heating)
-          if (lanternsLeft() > 0 && !isMirrorReverse(z)) {
-            const k = LANTERN_PROBE_MIN;
-            const applyLanternStep = (step) => {
-              assignL[z] = (assignL[z]) + step;
-            };
-            const probe = withTempChange(() => { applyLanternStep(k); }, () => ({
-              score: objective(passLevel),
-              temp: getSolverZoneTemp(z),
-            }));
-            const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0;
-            const dtPerUnit = dT / k;
-            const desiredDelta = (targets[z] || 0) - (temps[z] || 0);
-            let unitsNeeded = (desiredDelta * dtPerUnit > 0) ? Math.ceil(Math.abs(desiredDelta / dtPerUnit)) : 0;
-            unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
-            let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), lanternsLeft()));
-            let finalScore = probe.score;
-            const refined = trySmallerOvershootProbe(
-              passLevel,
-              z,
-              temps[z],
-              targets[z] || 0,
-              k,
-              probe,
-              baseScore,
-              applyLanternStep
-            );
-            if (refined) {
-              step = refined.step;
-              finalScore = refined.score;
-            }
-            const gainPerUnit = step > 0 ? ((baseScore - finalScore) / step) : 0;
-            if (step > 0 && gainPerUnit > 0) cands.push({ kind:'lantern', zone:z, kProbe:k, kStep:step, gainPerUnit });
-          }
-
-          // Removal candidates when locked mode conflicts with need
-          // - Lanterns only heat; if the zone needs cooling, try removing lanterns
-          if ((assignL[z] || 0) > 0) {
-            const current = assignL[z] || 0;
-            const k = Math.max(1, Math.min(current, LANTERN_PROBE_MIN));
-            const applyLanternRemoval = (step) => {
-              assignL[z] = current - step;
-            };
-            const probe = withTempChange(() => { applyLanternRemoval(k); }, () => ({
-              score: objective(passLevel),
-              temp: getSolverZoneTemp(z),
-            }));
-            const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0; // expected < 0
-            const dtPerUnit = dT / k;
-            const desiredDelta = (targets[z] || 0) - (temps[z] || 0);
-            let unitsNeeded = (desiredDelta * dtPerUnit > 0) ? Math.ceil(Math.abs(desiredDelta / dtPerUnit)) : 0;
-            unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-            let step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-            let finalScore = probe.score;
-            const refined = trySmallerOvershootProbe(
-              passLevel,
-              z,
-              temps[z],
-              targets[z] || 0,
-              k,
-              probe,
-              baseScore,
-              applyLanternRemoval
-            );
-            if (refined) {
-              step = refined.step;
-              finalScore = refined.score;
-            }
-            const gainPerUnit = step > 0 ? ((baseScore - finalScore) / step) : 0;
-            if (step > 0 && gainPerUnit > 0) cands.push({ kind:'lantern-remove', zone:z, kProbe:k, kStep:step, gainPerUnit });
-          }
-        }
-
-        // Focus water (tons/sec)
-        if (FOCUS_FLAG && (targets.water || 0) > 0 && (prio.focus || 5) <= passLevel) {
-          const waterTarget = targets.water || 0;
-          const baseMelt = computeFocusMeltRate();
-          const wantMore = baseMelt < waterTarget * (1 - WATER_REL_TOL);
-          if (wantMore) {
-            if (mirrorsLeft() > 0) {
-              const k = Math.max(1, Math.min(mirrorsLeft(), MIRROR_PROBE_MIN));
-              const probe = withTempChange(() => { addMirrorCount('focus', k, false); }, () => ({
-                score: objective(passLevel),
-                melt: computeFocusMeltRate(),
-              }));
-              const dPerUnit = (baseScore - probe.score) / k;
-              const dMelt = Math.max(0, probe.melt - baseMelt);
-              const dMeltPerUnit = dMelt / k;
-              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((waterTarget - baseMelt) / dMeltPerUnit) : 0;
-              unitsNeeded = Math.max(0, Math.min(unitsNeeded, mirrorsLeft()));
-              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), mirrorsLeft()));
-              if (step > 0) cands.push({ kind:'mirror-adjust', zone:'focus', delta: step, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-            }
-            if (lanternsLeft() > 0) {
-              const k = 1;
-              const probe = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => ({
-                score: objective(passLevel),
-                melt: computeFocusMeltRate(),
-              }));
-              const dPerUnit = (baseScore - probe.score) / k;
-              const dMelt = Math.max(0, probe.melt - baseMelt);
-              const dMeltPerUnit = dMelt / k;
-              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((waterTarget - baseMelt) / dMeltPerUnit) : 0;
-              unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
-              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), lanternsLeft()));
-              if (step > 0) cands.push({ kind:'lantern', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-            }
-          }
-          const wantLess = baseMelt > waterTarget * (1 + WATER_REL_TOL);
-          if (wantLess) {
-            if (getMirrorCount('focus') > 0) {
-              const current = getMirrorCount('focus');
-              const k = Math.max(1, Math.min(current, MIRROR_PROBE_MIN));
-              const probe = withTempChange(() => { setMirrorCount('focus', current - k, false); }, () => ({
-                score: objective(passLevel),
-                melt: computeFocusMeltRate(),
-              }));
-              const dPerUnit = (baseScore - probe.score) / k;
-              if (probe.melt >= waterTarget) {
-                const dMelt = Math.max(0, baseMelt - probe.melt);
-                const dMeltPerUnit = dMelt / k;
-                let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
-                unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-                const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-                if (step > 0) cands.push({ kind:'mirror-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-              }
-            }
-            if ((assignL.focus || 0) > 0) {
-              const current = assignL.focus || 0;
-              const k = 1;
-              const probe = withTempChange(() => { assignL.focus = current - k; }, () => ({
-                score: objective(passLevel),
-                melt: computeFocusMeltRate(),
-              }));
-              const dPerUnit = (baseScore - probe.score) / k;
-              if (probe.melt >= waterTarget) {
-                const dMelt = Math.max(0, baseMelt - probe.melt);
-                const dMeltPerUnit = dMelt / k;
-                let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
-                unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-                const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-                if (step > 0) cands.push({ kind:'lantern-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-              }
-            }
-          }
-        }
-
-        // Reallocation candidates if out of resources
-        const addReallocs = () => {
-          const focusTarget = FOCUS_FLAG && (targets.water || 0) > 0 ? (targets.water) : 0;
-          const baseFocusMelt = focusTarget > 0 ? computeFocusMeltRate() : 0;
-
-          const resolveStep = (baseValue, targetValue, afterValue, donorAvailable, probe) => {
-            if (!Number.isFinite(baseValue) || !Number.isFinite(afterValue)) return probe;
-            const delta = targetValue - baseValue;
-            const change = afterValue - baseValue;
-            if (!change || delta === 0) return probe;
-            if (delta * change <= 0) return probe;
-            const unitsNeeded = Math.ceil(Math.abs(delta / change));
-            if (!(unitsNeeded > 0)) return probe;
-            const scaled = Math.max(probe, Math.ceil(SAFETY_FRACTION * unitsNeeded));
-            return Math.min(donorAvailable, scaled);
-          };
-
-          if (lanternsLeft() <= 0) {
-            const donors = [...ZONES, 'focus'].filter(dz => (assignL[dz]) > 0)
-              .filter(dz => (dz === 'focus' ? (prio.focus||5) : (prio[dz]||5)) > passLevel);
-            const receivers = [...ZONES, 'focus'].filter(rz => {
-              if (rz === 'focus') return FOCUS_FLAG && (targets.water)>0 && (prio.focus||5) <= passLevel;
-              if (isMirrorReverse(rz)) return false;
-              const t = getSolverZoneTemp(rz);
-              return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel && isFinite(t) && t < (targets[rz] - getZoneTolerance(rz));
-            });
-            const baseScoreR = objective(passLevel);
-
-            donors.forEach(dz => receivers.forEach(rz => {
-              const donorHas = assignL[dz];
-              if (!(donorHas > 0)) return;
-              const probe = Math.max(1, Math.min(donorHas, REALLOC_MIN));
-              const applyProbe = (amount, evaluator) => withTempChange(() => {
-                assignL[dz] = donorHas - amount;
-                assignL[rz] = (assignL[rz]) + amount;
-              }, evaluator);
-              const probeResult = applyProbe(probe, () => ({
-                score: objective(passLevel),
-                temp: rz === 'focus' ? NaN : getSolverZoneTemp(rz),
-                melt: rz === 'focus' ? computeFocusMeltRate() : NaN,
-              }));
-              const dPerUnit = (baseScoreR - probeResult.score) / probe;
-              if (dPerUnit <= 0) return;
-              let step = probe;
-              if (rz === 'focus') {
-                if (focusTarget > 0) {
-                  step = resolveStep(baseFocusMelt, focusTarget, probeResult.melt, donorHas, probe);
-                }
-              } else {
-                const target = targets[rz] || 0;
-                if (target > 0) {
-                  step = resolveStep(temps[rz], target, probeResult.temp, donorHas, probe);
-                }
-              }
-              if (step <= 0) return;
-              cands.push({ kind:'lantern-realloc', from:dz, to:rz, kProbe:probe, kStep:step, gainPerUnit:dPerUnit });
-            }));
-          }
-        };
-        addReallocs();
-
-        // Rank by improvement per unit (descending)
-        cands.sort((a, b) => (b.gainPerUnit || 0) - (a.gainPerUnit || 0));
-        return cands;
-      };
-
-      const findMaxSafeRemovalStep = (current, initialProbe, applyRemoval, passLevel) => {
-        if (!(current > 0)) return 0;
-
-        const isSafe = (amount) => withTempChange(() => {
-          applyRemoval(amount);
-        }, () => withinPassTolerance(passLevel));
-
-        if (!isSafe(1)) return 0;
-
-        let safe = 1;
-        let probe = Math.max(1, Math.min(current, initialProbe));
-        if (probe < safe) probe = safe;
-
-        while (probe < current && isSafe(probe)) {
-          safe = probe;
-          const next = Math.min(current, probe * 10);
-          if (next === probe) break;
-          probe = next;
-        }
-
-        if (probe === current && isSafe(current)) {
-          return current;
-        }
-
-        let low = safe;
-        let high = Math.max(safe + 1, Math.min(current, probe));
-        while (high <= current && isSafe(high)) {
-          low = high;
-          if (high === current) return current;
-          const next = Math.min(current, high * 10);
-          if (next === high) break;
-          high = next;
-        }
-
-        while (hasSearchGap(low, high)) {
-          const mid = Math.floor((low + high) / 2);
-          if (isSafe(mid)) {
-            low = mid;
-          } else {
-            high = mid;
-          }
-        }
-        return low;
-      };
-
-      const buildPruneCandidates = (passLevel) => {
-        const cands = [];
-        if (mirrorsLeft() > 0 && lanternsLeft() > 0) return cands;
-        if (!withinPassTolerance(passLevel)) return cands;
-        const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
-        const mirrorForcingPerUnit = surfaceArea > 0 ? (4 * mirrorPowerPer) / surfaceArea : 0;
-        const lanternForcingPerUnit = surfaceArea > 0 ? (4 * lanternPowerPer) / surfaceArea : 0;
-
-        const addRemovalCandidate = (kind, zone, current, probe, unitForcing, applyRemoval) => {
-          const step = findMaxSafeRemovalStep(current, probe, applyRemoval, passLevel);
-          if (!(step > 0)) return;
-          const forcingReduction = unitForcing * step;
-          if (forcingReduction > 0 && unitForcing > 0) {
-            cands.push({ kind, zone, kStep: step, gainPerUnit: unitForcing, forcingReduction });
-          }
-        };
-
-        for (const z of ZONES) {
-          const mirrorCount = getMirrorCount(z);
-          if (mirrorCount > 0) {
-            const reverseMode = isMirrorReverse(z);
-            addRemovalCandidate('mirror-remove', z, mirrorCount, MIRROR_PROBE_MIN, mirrorForcingPerUnit, (amount) => {
-              setMirrorCount(z, mirrorCount - amount, reverseMode);
-            });
-          }
-
-          const lanternCount = assignL[z] || 0;
-          if (lanternCount > 0) {
-            addRemovalCandidate('lantern-remove', z, lanternCount, LANTERN_PROBE_MIN, lanternForcingPerUnit, (amount) => {
-              assignL[z] = lanternCount - amount;
-            });
-          }
-        }
-
-        const focusMirrors = getMirrorCount('focus');
-        if (focusMirrors > 0) {
-          addRemovalCandidate('mirror-remove', 'focus', focusMirrors, MIRROR_PROBE_MIN, mirrorForcingPerUnit, (amount) => {
-            setMirrorCount('focus', focusMirrors - amount, false);
-          });
-        }
-
-        const focusLanterns = assignL.focus || 0;
-        if (focusLanterns > 0) {
-          addRemovalCandidate('lantern-remove', 'focus', focusLanterns, LANTERN_PROBE_MIN, lanternForcingPerUnit, (amount) => {
-            assignL.focus = focusLanterns - amount;
-          });
-        }
-
-        cands.sort((a, b) => (b.forcingReduction || 0) - (a.forcingReduction || 0));
-        return cands;
-      };
-
-      const commitCandidate = (best) => {
-        if (best.kind === 'mirror-adjust') {
-          const capacity = mirrorDeltaCapacity(best.zone, Math.sign(best.delta));
-          const step = Math.min(Math.abs(best.delta), capacity);
-          if (step <= 0) return false;
-          adjustMirrorCount(best.zone, Math.sign(best.delta) * step);
-          return true;
-        }
-        if (best.kind === 'lantern') {
-          const step = Math.min(best.kStep, lanternsLeft());
-          if (step <= 0) return false;
-          assignL[best.zone] = (assignL[best.zone]) + step;
-          return true;
-        }
-        if (best.kind === 'lantern-realloc') {
-          const step = Math.min(best.kStep, assignL[best.from]);
-          if (step <= 0) return false;
-          assignL[best.from] = (assignL[best.from]) - step;
-          assignL[best.to] = (assignL[best.to]) + step;
-          return true;
-        }
-        if (best.kind === 'mirror-remove') {
-          const step = Math.min(best.kStep, getMirrorCount(best.zone));
-          if (step <= 0) return false;
-          removeMirrorCount(best.zone, step);
-          return true;
-        }
-        if (best.kind === 'lantern-remove') {
-          const step = Math.min(best.kStep, assignL[best.zone]);
-          if (step <= 0) return false;
-          assignL[best.zone] = (assignL[best.zone]) - step;
-          return true;
-        }
-        return false;
-      };
-
-      const withinPassTolerance = (passLevel) => {
-        const t = readTemps(getSolverZoneTemp);
-        for (const z of ZONES) {
-          const tgt = targets[z] || 0;
-          if (!(tgt > 0)) continue;
-          if ((prio[z] || 5) <= passLevel) {
-            if (!isFinite(t[z])) return false;
-            if (Math.abs(t[z] - tgt) > getZoneTolerance(z)) return false;
-          }
-        }
-        if (FOCUS_FLAG && (targets.water) > 0 && (prio.focus||5) <= passLevel) {
-          const melt = computeFocusMeltRate();
-          if (melt < (targets.water) || melt > (targets.water * (1 + WATER_REL_TOL))) return false;
+          const target = targets[zone] || 0;
+          if (!(target > 0)) continue;
+          const value = metrics[zone];
+          if (!Number.isFinite(value)) return false;
+          if (Math.abs(value - target) > getZoneTolerance(zone)) return false;
         }
         return true;
       };
 
-      // ---------------- Pass loop with batched actions ----------------
-      updateTemps();
+      const simulateFluxes = (zonalFluxes) => {
+        terraforming.restoreTemperatureState(snapshot);
+        terraforming.updateSurfaceTemperature(0, {
+          ignoreHeatCapacity: true,
+          zonalFluxOverrides: zonalFluxes,
+          disableAvailableAdvancedHeating: true,
+        });
+        const metrics = readCurrentMetrics();
+        return {
+          metrics,
+          error: computeMetricError(metrics),
+        };
+      };
 
-      for (let pass = minP; pass <= maxP; pass++) {
-        const hasActive =
-          ZONES.some(z => (targets[z]) > 0 && (prio[z]||5) <= pass) ||
-          (FOCUS_FLAG && (targets.water) > 0 && (prio.focus||5) <= pass);
-        if (!hasActive) continue;
+      const solveZoneFluxForTarget = (zone, idealFluxes, currentMetric) => {
+        const target = targets[zone] || 0;
+        const tolerance = getZoneTolerance(zone);
+        const currentFlux = Math.max(MIN_ZONE_FLUX, idealFluxes[zone] || MIN_ZONE_FLUX);
+        if (!(target > 0) || !Number.isFinite(currentMetric)) return currentFlux;
+        if (Math.abs(currentMetric - target) <= tolerance) return currentFlux;
 
-        trimReverseFloorOvershoot();
+        const evaluate = (flux) => {
+          const nextFlux = Math.max(MIN_ZONE_FLUX, flux);
+          const trialFluxes = { ...idealFluxes, [zone]: nextFlux };
+          const result = simulateFluxes(trialFluxes);
+          return {
+            flux: nextFlux,
+            metric: result.metrics[zone],
+            error: Number.isFinite(result.metrics[zone]) ? Math.abs(result.metrics[zone] - target) : Infinity,
+            objective: result.error,
+          };
+        };
 
-        let actions = 0;
+        let low = null;
+        let high = null;
+        let best = {
+          flux: currentFlux,
+          metric: currentMetric,
+          error: Math.abs(currentMetric - target),
+          objective: simulation.error,
+        };
 
-        while (actions < MAX_ACTIONS_PER_PASS) {
-          if (withinPassTolerance(pass)) break;
-          const cands = buildCandidates(pass);
-          if (!cands.length || (cands[0].gainPerUnit || 0) <= 0) break; // no improving move
+        const updateBest = (candidate) => {
+          if (
+            candidate.objective < best.objective - 1e-12 ||
+            (Math.abs(candidate.objective - best.objective) <= 1e-12 && candidate.error < best.error)
+          ) {
+            best = candidate;
+          }
+        };
 
-          const best = cands[0];
-          if (!commitCandidate(best)) break;
+        if (currentMetric < target) {
+          low = { flux: currentFlux, metric: currentMetric };
+          let candidate = evaluate(Math.max(currentFlux + 1, currentFlux * 2));
+          updateBest(candidate);
+          high = { flux: candidate.flux, metric: candidate.metric };
+          for (let step = 0; step < MAX_BRACKET_STEPS && high.metric < target; step++) {
+            const nextFlux = Math.max(high.flux + 1, high.flux * 2);
+            if (nextFlux === high.flux) break;
+            candidate = evaluate(nextFlux);
+            updateBest(candidate);
+            low = high;
+            high = { flux: candidate.flux, metric: candidate.metric };
+          }
+          if (high.metric < target) {
+            return best.flux;
+          }
+        } else {
+          high = { flux: currentFlux, metric: currentMetric };
+          let candidate = evaluate(Math.max(MIN_ZONE_FLUX, currentFlux / 2));
+          updateBest(candidate);
+          low = { flux: candidate.flux, metric: candidate.metric };
+          for (let step = 0; step < MAX_BRACKET_STEPS && low.metric > target; step++) {
+            const nextFlux = Math.max(MIN_ZONE_FLUX, low.flux / 2);
+            if (nextFlux === low.flux) break;
+            candidate = evaluate(nextFlux);
+            updateBest(candidate);
+            high = low;
+            low = { flux: candidate.flux, metric: candidate.metric };
+          }
+          if (low.metric > target) {
+            return best.flux;
+          }
+        }
 
-          actions++;
-          updateTemps();
+        for (let step = 0; step < MAX_BISECTION_STEPS; step++) {
+          const midFlux = (low.flux + high.flux) / 2;
+          if (!(midFlux > low.flux && midFlux < high.flux)) break;
+          const candidate = evaluate(midFlux);
+          updateBest(candidate);
+          if (Math.abs(candidate.metric - target) <= tolerance) {
+            return candidate.flux;
+          }
+          if (candidate.metric < target) {
+            low = { flux: candidate.flux, metric: candidate.metric };
+          } else {
+            high = { flux: candidate.flux, metric: candidate.metric };
+          }
+        }
+
+        return best.flux;
+      };
+
+      const solveLinearSystem = (matrix, vector) => {
+        const size = vector.length;
+        const augmented = matrix.map((row, index) => row.slice().concat(vector[index]));
+
+        for (let pivotIndex = 0; pivotIndex < size; pivotIndex++) {
+          let pivotRow = pivotIndex;
+          let pivotAbs = Math.abs(augmented[pivotRow][pivotIndex] || 0);
+          for (let rowIndex = pivotIndex + 1; rowIndex < size; rowIndex++) {
+            const candidateAbs = Math.abs(augmented[rowIndex][pivotIndex] || 0);
+            if (candidateAbs > pivotAbs) {
+              pivotAbs = candidateAbs;
+              pivotRow = rowIndex;
+            }
+          }
+
+          if (!(pivotAbs > 1e-12)) return null;
+          if (pivotRow !== pivotIndex) {
+            const tmp = augmented[pivotIndex];
+            augmented[pivotIndex] = augmented[pivotRow];
+            augmented[pivotRow] = tmp;
+          }
+
+          const pivotValue = augmented[pivotIndex][pivotIndex];
+          for (let columnIndex = pivotIndex; columnIndex <= size; columnIndex++) {
+            augmented[pivotIndex][columnIndex] /= pivotValue;
+          }
+
+          for (let rowIndex = 0; rowIndex < size; rowIndex++) {
+            if (rowIndex === pivotIndex) continue;
+            const factor = augmented[rowIndex][pivotIndex];
+            if (!factor) continue;
+            for (let columnIndex = pivotIndex; columnIndex <= size; columnIndex++) {
+              augmented[rowIndex][columnIndex] -= factor * augmented[pivotIndex][columnIndex];
+            }
+          }
+        }
+
+        return augmented.map((row) => row[size]);
+      };
+
+      const refineFluxesWithNewton = (idealFluxes, currentSimulation, activeZones) => {
+        if (activeZones.length === 0) return currentSimulation;
+
+        let damping = 1e-3;
+
+        for (let iteration = 0; iteration < 8; iteration++) {
+          const residual = [];
+          let withinTolerance = true;
+
+          for (const zone of activeZones) {
+            const metric = currentSimulation.metrics[zone];
+            const target = targets[zone] || 0;
+            const error = metric - target;
+            residual.push(error);
+            if (Math.abs(error) > getZoneTolerance(zone)) {
+              withinTolerance = false;
+            }
+          }
+
+          if (withinTolerance) break;
+
+          const jacobian = activeZones.map(() => []);
+          for (let columnIndex = 0; columnIndex < activeZones.length; columnIndex++) {
+            const zone = activeZones[columnIndex];
+            const baseFlux = idealFluxes[zone] || MIN_ZONE_FLUX;
+            const step = Math.max(1, Math.abs(baseFlux) * 0.01);
+            const probeFluxes = { ...idealFluxes, [zone]: Math.max(MIN_ZONE_FLUX, baseFlux + step) };
+            const probeSimulation = simulateFluxes(probeFluxes);
+
+            for (let rowIndex = 0; rowIndex < activeZones.length; rowIndex++) {
+              const rowZone = activeZones[rowIndex];
+              jacobian[rowIndex][columnIndex] =
+                (probeSimulation.metrics[rowZone] - currentSimulation.metrics[rowZone]) / step;
+            }
+          }
+
+          const hessian = activeZones.map(() => activeZones.map(() => 0));
+          const gradient = activeZones.map(() => 0);
+
+          for (let rowIndex = 0; rowIndex < activeZones.length; rowIndex++) {
+            const zone = activeZones[rowIndex];
+            const weight = getZoneObjectiveWeight(zone);
+            for (let columnIndex = 0; columnIndex < activeZones.length; columnIndex++) {
+              gradient[columnIndex] += jacobian[rowIndex][columnIndex] * weight * residual[rowIndex];
+              for (let innerIndex = 0; innerIndex < activeZones.length; innerIndex++) {
+                hessian[columnIndex][innerIndex] +=
+                  jacobian[rowIndex][columnIndex] * weight * jacobian[rowIndex][innerIndex];
+              }
+            }
+          }
+
+          let solved = false;
+          for (let attempt = 0; attempt < 5 && !solved; attempt++) {
+            const dampedHessian = hessian.map((row, rowIndex) => row.map((value, columnIndex) => {
+              if (rowIndex !== columnIndex) return value;
+              return value + damping;
+            }));
+            const stepVector = solveLinearSystem(dampedHessian, gradient.map((value) => -value));
+
+            if (!stepVector) {
+              damping *= 10;
+              continue;
+            }
+
+            let bestFluxes = null;
+            let bestSimulation = currentSimulation;
+            for (const scale of [1, 0.5, 0.25, 0.1, 0.05]) {
+              const trialFluxes = { ...idealFluxes };
+              let changed = false;
+
+              for (let index = 0; index < activeZones.length; index++) {
+                const zone = activeZones[index];
+                const nextFlux = Math.max(
+                  MIN_ZONE_FLUX,
+                  (idealFluxes[zone] || MIN_ZONE_FLUX) + (stepVector[index] * scale)
+                );
+                if (Math.abs(nextFlux - (idealFluxes[zone] || MIN_ZONE_FLUX)) > FLUX_TOL * 0.0001) {
+                  changed = true;
+                }
+                trialFluxes[zone] = nextFlux;
+              }
+
+              if (!changed) continue;
+              const trialSimulation = simulateFluxes(trialFluxes);
+              if (trialSimulation.error < bestSimulation.error - 1e-12) {
+                bestFluxes = trialFluxes;
+                bestSimulation = trialSimulation;
+              }
+            }
+
+            if (!bestFluxes) {
+              damping *= 10;
+              continue;
+            }
+
+            for (const zone of activeZones) {
+              idealFluxes[zone] = bestFluxes[zone];
+            }
+            currentSimulation = bestSimulation;
+            damping = Math.max(1e-6, damping / 4);
+            solved = true;
+          }
+
+          if (!solved) {
+            const maxGradient = gradient.reduce((maxValue, value) => Math.max(maxValue, Math.abs(value)), 0);
+            if (!(maxGradient > 1e-12)) break;
+
+            let bestFluxes = null;
+            let bestSimulation = currentSimulation;
+            for (const scale of [1, 0.5, 0.25, 0.1, 0.05, 0.01]) {
+              const trialFluxes = { ...idealFluxes };
+              let changed = false;
+
+              for (let index = 0; index < activeZones.length; index++) {
+                const zone = activeZones[index];
+                const baseFlux = idealFluxes[zone] || MIN_ZONE_FLUX;
+                const unitDirection = -gradient[index] / maxGradient;
+                const stepMagnitude = Math.max(1, Math.abs(baseFlux) * 0.1);
+                const nextFlux = Math.max(
+                  MIN_ZONE_FLUX,
+                  baseFlux + (unitDirection * stepMagnitude * scale)
+                );
+                if (Math.abs(nextFlux - baseFlux) > FLUX_TOL * 0.0001) {
+                  changed = true;
+                }
+                trialFluxes[zone] = nextFlux;
+              }
+
+              if (!changed) continue;
+              const trialSimulation = simulateFluxes(trialFluxes);
+              if (trialSimulation.error < bestSimulation.error - 1e-12) {
+                bestFluxes = trialFluxes;
+                bestSimulation = trialSimulation;
+              }
+            }
+
+            if (!bestFluxes) break;
+            for (const zone of activeZones) {
+              idealFluxes[zone] = bestFluxes[zone];
+            }
+            currentSimulation = bestSimulation;
+            damping *= 2;
+            solved = true;
+          }
+
+          if (!solved) break;
+        }
+
+        return currentSimulation;
+      };
+
+      const refineFluxesWithJacobian = (idealFluxes, currentSimulation, activeZones) => {
+        if (activeZones.length === 0) return currentSimulation;
+
+        for (let iteration = 0; iteration < 8; iteration++) {
+          const rhs = [];
+          let withinTolerance = true;
+
+          for (const zone of activeZones) {
+            const metric = currentSimulation.metrics[zone];
+            const target = targets[zone] || 0;
+            const error = target - metric;
+            rhs.push(error);
+            if (Math.abs(error) > getZoneTolerance(zone)) {
+              withinTolerance = false;
+            }
+          }
+
+          if (withinTolerance) break;
+
+          const jacobian = activeZones.map(() => []);
+          for (let columnIndex = 0; columnIndex < activeZones.length; columnIndex++) {
+            const zone = activeZones[columnIndex];
+            const baseFlux = idealFluxes[zone] || MIN_ZONE_FLUX;
+            const step = Math.max(1, Math.abs(baseFlux) * 0.01);
+            const probeFluxes = { ...idealFluxes, [zone]: Math.max(MIN_ZONE_FLUX, baseFlux + step) };
+            const probeSimulation = simulateFluxes(probeFluxes);
+
+            for (let rowIndex = 0; rowIndex < activeZones.length; rowIndex++) {
+              const rowZone = activeZones[rowIndex];
+              jacobian[rowIndex][columnIndex] =
+                (probeSimulation.metrics[rowZone] - currentSimulation.metrics[rowZone]) / step;
+            }
+          }
+
+          const delta = solveLinearSystem(jacobian, rhs);
+          if (!delta) break;
+
+          let bestFluxes = null;
+          let bestSimulation = currentSimulation;
+          for (const scale of [1, 0.5, 0.25, 0.1, 0.05]) {
+            const trialFluxes = { ...idealFluxes };
+            let changed = false;
+
+            for (let index = 0; index < activeZones.length; index++) {
+              const zone = activeZones[index];
+              const nextFlux = Math.max(MIN_ZONE_FLUX, (idealFluxes[zone] || MIN_ZONE_FLUX) + (delta[index] * scale));
+              if (Math.abs(nextFlux - (idealFluxes[zone] || MIN_ZONE_FLUX)) > FLUX_TOL * 0.0001) {
+                changed = true;
+              }
+              trialFluxes[zone] = nextFlux;
+            }
+
+            if (!changed) continue;
+            const trialSimulation = simulateFluxes(trialFluxes);
+            if (trialSimulation.error < bestSimulation.error - 1e-12) {
+              bestFluxes = trialFluxes;
+              bestSimulation = trialSimulation;
+            }
+          }
+
+          if (!bestFluxes) break;
+          for (const zone of activeZones) {
+            idealFluxes[zone] = bestFluxes[zone];
+          }
+          currentSimulation = bestSimulation;
+        }
+
+        return currentSimulation;
+      };
+
+      terraforming.restoreTemperatureState(snapshot);
+      terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+      const currentFluxes = {};
+      for (const zone of ZONES) {
+        currentFluxes[zone] = Math.max(
+          MIN_ZONE_FLUX,
+          Number(terraforming.luminosity?.zonalFluxes?.[zone]) || baseFluxes[zone]
+        );
+      }
+
+      const idealFluxes = { ...currentFluxes };
+      for (const zone of ZONES) {
+        if (!(targets[zone] > 0)) continue;
+        if (getZoneMode(zone) === 'flux') {
+          idealFluxes[zone] = Math.max(MIN_ZONE_FLUX, (targets[zone] || 0) * 4);
         }
       }
 
-      let pruneActions = 0;
-      while (pruneActions < MAX_PRUNE_ACTIONS) {
-        if (!withinPassTolerance(maxP)) break;
-        const pruneCands = buildPruneCandidates(maxP);
-        if (!pruneCands.length || (pruneCands[0].gainPerUnit || 0) <= 0) break;
-        if (!commitCandidate(pruneCands[0])) break;
-        pruneActions++;
-        updateTemps();
+      let simulation = simulateFluxes(idealFluxes);
+      const solveOrder = ZONES
+        .filter((zone) => (targets[zone] || 0) > 0 && getZoneMode(zone) !== 'flux')
+        .sort((a, b) => getZonePriority(a) - getZonePriority(b));
+
+      const solveIdealFluxesCurrent = () => {
+        for (let pass = 0; pass < MAX_COORDINATE_PASSES; pass++) {
+          let changed = false;
+          for (const zone of solveOrder) {
+            const nextFlux = solveZoneFluxForTarget(zone, idealFluxes, simulation.metrics[zone]);
+            if (Math.abs(nextFlux - idealFluxes[zone]) <= FLUX_TOL * 0.0001) continue;
+            idealFluxes[zone] = nextFlux;
+            simulation = simulateFluxes(idealFluxes);
+            changed = true;
+          }
+          if (!changed || withinIdealTolerance(simulation.metrics)) break;
+        }
+        simulation = refineFluxesWithJacobian(idealFluxes, simulation, solveOrder);
+      };
+
+      const solveIdealFluxesNewton = () => {
+        const startingError = simulation.error;
+        simulation = refineFluxesWithNewton(idealFluxes, simulation, solveOrder);
+        if (!(simulation.error < startingError * 0.95)) {
+          solveIdealFluxesCurrent();
+        }
+      };
+
+      if (SpaceMirrorAdvancedOversight.solverAlgorithm === 'newton') {
+        solveIdealFluxesNewton();
+      } else {
+        solveIdealFluxesCurrent();
       }
 
-      // Final clamping (defensive)
-      clampMirrorsTo(totalMirrors);
-      clampTo(assignL, totalLanterns);
-      clearLanternsInReverseZones();
-      syncDerivedReverseState();
+      const computeFocusPowerTarget = () => {
+        if (!FOCUS_FLAG || !(targets.water > 0)) return 0;
+        const averageTemperature = snapshot?.temperature?.value ?? terraforming.temperature?.value ?? 0;
+        const deltaT = Math.max(0, 273.15 - averageTemperature);
+        const energyPerKg = (2100 * deltaT) + 334000;
+        if (!(energyPerKg > 0)) return 0;
+        return ((targets.water || 0) * 1000 / 86400) * energyPerKg;
+      };
 
-      // Persist assignments (already in place) and save warm-start snapshot
+      const focusPowerTarget = computeFocusPowerTarget();
+
+      const demandBuckets = [];
+      for (const zone of ZONES) {
+        const target = targets[zone] || 0;
+        if (!(target > 0)) continue;
+        const zoneArea = zoneAreas[zone] || 0;
+        if (!(zoneArea > 0)) continue;
+        const deltaFlux = (idealFluxes[zone] || 0) - (baseFluxes[zone] || 0);
+        const deltaPower = (deltaFlux * zoneArea) / 4;
+        if (deltaPower > POWER_EPSILON) {
+          demandBuckets.push({
+            type: 'heating',
+            zone,
+            priority: getZonePriority(zone),
+            remainingPower: deltaPower,
+          });
+        } else if (deltaPower < -POWER_EPSILON) {
+          demandBuckets.push({
+            type: 'cooling',
+            zone,
+            priority: getZonePriority(zone),
+            remainingPower: -deltaPower,
+          });
+        }
+      }
+      if (focusPowerTarget > POWER_EPSILON) {
+        demandBuckets.push({
+          type: 'heating',
+          zone: 'focus',
+          priority: getZonePriority('focus'),
+          remainingPower: focusPowerTarget,
+        });
+      }
+
+      const allocateUnits = (availableUnits, buckets, perUnitPower, applyUnits, useAllAvailableWhenScarce) => {
+        if (!(availableUnits > 0) || !(perUnitPower > 0)) return 0;
+
+        const entries = buckets
+          .map((bucket) => ({
+            bucket,
+            demand: Math.max(0, bucket.remainingPower / perUnitPower),
+          }))
+          .filter((entry) => entry.demand > COUNT_EPSILON);
+
+        if (!entries.length) return 0;
+
+        let totalDemand = 0;
+        for (const entry of entries) {
+          totalDemand += entry.demand;
+        }
+
+        const scarce = totalDemand > availableUnits + COUNT_EPSILON;
+        const scale = scarce ? (availableUnits / totalDemand) : 1;
+        let used = 0;
+
+        for (const entry of entries) {
+          const scaledDemand = entry.demand * scale;
+          entry.units = Math.floor(scaledDemand);
+          entry.remainder = scaledDemand - entry.units;
+          used += entry.units;
+        }
+
+        entries.sort((a, b) => b.remainder - a.remainder);
+        let unitsLeft = Math.max(0, availableUnits - used);
+
+        if (scarce && useAllAvailableWhenScarce) {
+          for (const entry of entries) {
+            if (!(unitsLeft > 0)) break;
+            entry.units += 1;
+            unitsLeft -= 1;
+          }
+        } else {
+          for (const entry of entries) {
+            if (!(unitsLeft > 0)) break;
+            if (!(entry.remainder > 0.5)) break;
+            entry.units += 1;
+            unitsLeft -= 1;
+          }
+        }
+
+        let applied = 0;
+        for (const entry of entries) {
+          if (!(entry.units > 0)) continue;
+          applyUnits(entry.bucket, entry.units);
+          applied += entry.units;
+        }
+
+        return applied;
+      };
+
+      clearAssignments();
+
+      let mirrorsLeft = totalMirrors;
+      let lanternsLeft = totalLanterns;
+      const maxPriority = Math.max(
+        1,
+        ...demandBuckets.map((bucket) => bucket.priority)
+      );
+
+      for (let priorityLevel = 1; priorityLevel <= maxPriority; priorityLevel++) {
+        const coolingBuckets = demandBuckets.filter(
+          (bucket) => bucket.type === 'cooling' && bucket.priority === priorityLevel && bucket.remainingPower > POWER_EPSILON
+        );
+
+        if (REVERSAL_AVAILABLE && mirrorPowerPer > 0 && mirrorsLeft > 0 && coolingBuckets.length) {
+          const usedMirrors = allocateUnits(
+            mirrorsLeft,
+            coolingBuckets,
+            mirrorPowerPer,
+            (bucket, units) => {
+              assignM[bucket.zone] = -(Number(assignM[bucket.zone]) || 0) - units;
+              bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * mirrorPowerPer));
+            },
+            true
+          );
+          mirrorsLeft -= usedMirrors;
+        }
+
+        const heatingBuckets = demandBuckets.filter(
+          (bucket) => bucket.type === 'heating' && bucket.priority === priorityLevel && bucket.remainingPower > POWER_EPSILON
+        );
+
+        if (lanternPowerPer > 0 && lanternsLeft > 0 && heatingBuckets.length) {
+          const usedLanterns = allocateUnits(
+            lanternsLeft,
+            heatingBuckets,
+            lanternPowerPer,
+            (bucket, units) => {
+              assignL[bucket.zone] = (Number(assignL[bucket.zone]) || 0) + units;
+              bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * lanternPowerPer));
+            },
+            false
+          );
+          lanternsLeft -= usedLanterns;
+        }
+
+        if (mirrorPowerPer > 0 && mirrorsLeft > 0 && heatingBuckets.length) {
+          const usedMirrors = allocateUnits(
+            mirrorsLeft,
+            heatingBuckets,
+            mirrorPowerPer,
+            (bucket, units) => {
+              assignM[bucket.zone] = (Number(assignM[bucket.zone]) || 0) + units;
+              bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * mirrorPowerPer));
+            },
+            false
+          );
+          mirrorsLeft -= usedMirrors;
+        }
+      }
+
+      if (!(targets.water > 0)) {
+        assignM.focus = 0;
+        assignL.focus = 0;
+      }
+
+      syncDerivedReverseState();
       settings.assignments.mirrors = assignM;
       settings.assignments.lanterns = assignL;
       settings.assignments.reversalMode = reverse;
-
       settings.lastSolution = {
         mirrors: { ...assignM },
         lanterns: { ...assignL },
-        reversalMode: { ...reverse }
+        reversalMode: { ...reverse },
       };
 
-      updateTemps();
+      terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
       solvedSnapshot = terraforming.saveTemperatureState();
 
     } finally {
       SpaceMirrorAdvancedOversight.advancedAssignmentInProgress = false;
     }
+
     terraforming.restoreTemperatureState(snapshot);
     if (solvedSnapshot) {
       const solvedTemp = solvedSnapshot.temperature || {};
@@ -992,8 +830,8 @@ class SpaceMirrorAdvancedOversight {
   }
 }
 
-if (typeof globalThis !== 'undefined') {
-  globalThis.SpaceMirrorAdvancedOversight = SpaceMirrorAdvancedOversight;
+if (typeof window !== 'undefined') {
+  window.SpaceMirrorAdvancedOversight = SpaceMirrorAdvancedOversight;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
