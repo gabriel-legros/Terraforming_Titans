@@ -333,6 +333,64 @@
     gap: 4px;
 }
 
+.zeus-battle-board {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.zeus-battle-canvas-wrap {
+    position: relative;
+    border: 1px solid #2f435f;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #08111f;
+}
+
+.zeus-battle-canvas {
+    display: block;
+    width: 100%;
+    height: 280px;
+    background: transparent;
+}
+
+.zeus-battle-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+    display: flex;
+    gap: 6px;
+}
+
+.zeus-battle-control-button {
+    min-width: 34px;
+    padding: 4px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    background: rgba(7, 15, 28, 0.72);
+    color: #f8fbff;
+    cursor: pointer;
+}
+
+.zeus-battle-control-button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.zeus-battle-footer {
+    display: flex;
+    justify-content: flex-end;
+    color: #495057;
+    font-size: 0.9em;
+}
+
+@media (max-width: 720px) {
+    .zeus-battle-canvas {
+        height: 220px;
+    }
+}
+
 /* Space Storage resource table */
 .storage-usage-table {
     width: 100%;

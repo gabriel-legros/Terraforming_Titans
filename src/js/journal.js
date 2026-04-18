@@ -472,6 +472,7 @@ function stopJournalTyping(completeEvent) {
 
 function addJournalEntry(text, eventId = null, source = null) {
   let entryText = joinLines(text);
+  entryText = resolveStoryPlaceholders(entryText);
 
   let separator = false;
   if (source && source.type === 'project' &&

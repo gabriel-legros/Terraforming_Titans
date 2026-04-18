@@ -699,6 +699,7 @@ function createProjectItem(project) {
   // Checkboxes
   const automationSettingsContainer = document.createElement('div');
   automationSettingsContainer.classList.add('automation-settings-container');
+  const shouldHideAutoStart = project.attributes && project.attributes.hideAutoStart === true;
 
   const autoStartCheckboxContainer = document.createElement('div');
   autoStartCheckboxContainer.classList.add('checkbox-container');
@@ -711,6 +712,9 @@ function createProjectItem(project) {
   autoStartLabel.textContent = getProjectsUIText('ui.projects.autoStart', 'Auto start');
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
+  if (shouldHideAutoStart) {
+    autoStartCheckboxContainer.style.display = 'none';
+  }
   automationSettingsContainer.appendChild(autoStartCheckboxContainer);
 
   let extraSettingsCheckbox = null;
@@ -1405,7 +1409,11 @@ function updateProjectUI(projectName) {
     }
     // Hide the auto-start checkbox container if the project can't be repeated anymore
     if (elements.autoStartCheckboxContainer) {
-      elements.autoStartCheckboxContainer.style.display = keepStartBarVisible ? 'flex' : 'none';
+      if (project.attributes && project.attributes.hideAutoStart === true) {
+        elements.autoStartCheckboxContainer.style.display = 'none';
+      } else {
+        elements.autoStartCheckboxContainer.style.display = keepStartBarVisible ? 'flex' : 'none';
+      }
     }
     if (elements.automationSettingsContainer) {
       elements.automationSettingsContainer.style.display = keepStartBarVisible ? 'flex' : 'none';
@@ -1570,7 +1578,9 @@ function updateProjectUI(projectName) {
     }
     // Show the auto-start checkbox if the project can be repeated
     if (elements.autoStartCheckboxContainer) {
-      if (projectManager.isBooleanFlagSet('automateSpecialProjects') && !shouldHideStartBar) {
+      if (project.attributes && project.attributes.hideAutoStart === true) {
+        elements.autoStartCheckboxContainer.style.display = 'none';
+      } else if (projectManager.isBooleanFlagSet('automateSpecialProjects') && !shouldHideStartBar) {
         elements.autoStartCheckboxContainer.style.display = 'flex';
       } else {
         elements.autoStartCheckboxContainer.style.display = 'none';

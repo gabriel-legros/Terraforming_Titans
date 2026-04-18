@@ -791,6 +791,9 @@ setLanguageData({
       totalGain: 'Total Gain: {items}',
       sustainPauseTooltip: 'Project will pause if sustain cost is not met.',
       autoStart: 'Auto start',
+      zeusBattle: {
+        frameLabel: 'Frame {current} / {max}',
+      },
       run: 'Run',
       enableExtraSettings: 'Enable extra settings',
       uncheckOnTravel: 'Uncheck on travelling',
