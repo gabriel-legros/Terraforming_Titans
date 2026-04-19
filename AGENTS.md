@@ -58,7 +58,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Planet Travel
 - `selectPlanet(key)` performs soft reset with manager persistence.
 - Travel uses `initializeGameState({ preserveManagers: true, preserveJournal: true })`.
-- On first visit, travel grants 1 skill point.
+- Traveling out of a terraformed world grants 1 skill point once per world.
 - Persisted meta systems:
   - `ResearchManager` (with `resetRegularResearch()`)
   - `SkillManager`

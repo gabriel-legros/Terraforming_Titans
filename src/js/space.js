@@ -194,6 +194,7 @@ class SpaceManager extends EffectableEntity {
             this.planetStatuses[key] = {
                 terraformed: false,
                 visited: false,
+                departureSkillPointGranted: false,
                 enabled: false, // visible/selectable in UI
                 colonists: 0,
                 orbitalRing: false,
@@ -1405,6 +1406,7 @@ class SpaceManager extends EffectableEntity {
                 colonists: 0,
                 original: null,
                 visited: false,
+                departureSkillPointGranted: false,
                 orbitalRing: false,
                 departedAt: null,
                 ecumenopolisPercent: 0,
@@ -1991,6 +1993,7 @@ class SpaceManager extends EffectableEntity {
                         colonists: 0,
                         original,
                         visited: true,
+                        departureSkillPointGranted: false,
                         orbitalRing: false,
                         sector: resolveSectorFromSources(original)
                     };
@@ -2029,6 +2032,7 @@ class SpaceManager extends EffectableEntity {
                         colonists: 0,
                         original,
                         visited: true,
+                        departureSkillPointGranted: false,
                         orbitalRing: false,
                         abandoned: false,
                         stored: false,
@@ -2105,6 +2109,7 @@ class SpaceManager extends EffectableEntity {
                   this.planetStatuses[key] = {
                       terraformed: false,
                       visited: false,
+                      departureSkillPointGranted: false,
                       enabled: false,
                       colonists: 0,
                       orbitalRing: false,
@@ -2252,6 +2257,7 @@ class SpaceManager extends EffectableEntity {
                     colonists: 0,
                     original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
                     visited: true,
+                    departureSkillPointGranted: false,
                     orbitalRing: false,
                     departedAt: null,
                     ecumenopolisPercent: 0,
@@ -2347,11 +2353,15 @@ class SpaceManager extends EffectableEntity {
         return this.isPlanetTerraformed(this.currentPlanetKey);
     }
 
-    _applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed) {
-        if (firstVisit && departingTerraformed && !destinationTerraformed && skillManager) {
-            skillManager.skillPoints += 1;
-            notifySkillPointGained(1);
+    _grantDepartureSkillPoint() {
+        const status = this.getCurrentWorldStatus();
+        if (!status || status.departureSkillPointGranted || !this._isCurrentWorldTerraformed() || !skillManager) {
+            return false;
         }
+        status.departureSkillPointGranted = true;
+        skillManager.skillPoints += 1;
+        notifySkillPointGained(1);
+        return true;
     }
 
     _finalizeTravelInitialization(options) {
@@ -2381,7 +2391,7 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
-        const departingTerraformed = this._isCurrentWorldTerraformed();
+        this._grantDepartureSkillPoint();
         // prepareForTravel is now called within recordDepartureSnapshot via changeCurrentPlanet
         if (!this.changeCurrentPlanet(targetKey)) {
             return false;
@@ -2390,10 +2400,7 @@ class SpaceManager extends EffectableEntity {
 
         this.currentRandomSeed = null;
         this.currentRandomName = '';
-
-        const firstVisit = this.visitPlanet(targetKey);
-        const destinationTerraformed = this.isPlanetTerraformed(targetKey);
-        this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
+        this.visitPlanet(targetKey);
         this._compactRandomWorldStatuses();
         this._compactArtificialWorldStatuses();
         const params = getPlanetParameters(targetKey);
@@ -2421,7 +2428,7 @@ class SpaceManager extends EffectableEntity {
             }
         }
 
-        const departingTerraformed = this._isCurrentWorldTerraformed();
+        this._grantDepartureSkillPoint();
 
         const existing = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const revisitingRandomSeed = !isArtificial && !!existing?.visited;
@@ -2445,8 +2452,6 @@ class SpaceManager extends EffectableEntity {
         }
         applyDominionIdToWorldData(travelResult, persistedDominionId);
         const originalSnapshot = cloneSpaceWorldData(travelResult);
-        const firstVisit = !existing?.visited;
-        const destinationTerraformed = existing?.terraformed || false;
         const artificialWorld = isArtificial || existing?.artificial;
 
         // prepareForTravel is now called within recordDepartureSnapshot
@@ -2504,6 +2509,7 @@ class SpaceManager extends EffectableEntity {
                     colonists: 0,
                     original: originalSnapshot,
                     visited: true,
+                    departureSkillPointGranted: false,
                     orbitalRing: false,
                     abandoned: false,
                     stored: false,
@@ -2532,6 +2538,9 @@ class SpaceManager extends EffectableEntity {
                 status.dominionId = persistedDominionId;
             }
             status.visited = true;
+            if (status.departureSkillPointGranted !== true) {
+                status.departureSkillPointGranted = false;
+            }
             if (isArtificial) {
                 status.stored = false;
                 status.abandoned = false;
@@ -2561,7 +2570,6 @@ class SpaceManager extends EffectableEntity {
 
         this._compactRandomWorldStatuses();
         this._compactArtificialWorldStatuses();
-        this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
         const latest = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const mergedParams = travelResult?.merged || latest?.original?.merged || null;
         this._finalizeTravelInitialization({
@@ -2863,6 +2871,9 @@ class SpaceManager extends EffectableEntity {
                     if (typeof saved.visited === 'boolean') {
                         this.planetStatuses[planetKey].visited = saved.visited;
                     }
+                    if (saved.departureSkillPointGranted === true || saved.departureSkillPointGranted === false) {
+                        this.planetStatuses[planetKey].departureSkillPointGranted = saved.departureSkillPointGranted;
+                    }
                     if (typeof saved.enabled === 'boolean') {
                         this.planetStatuses[planetKey].enabled = saved.enabled;
                     }
@@ -2916,6 +2927,7 @@ class SpaceManager extends EffectableEntity {
                 if (!Number.isFinite(entry.fleetCapacityValue) || entry.fleetCapacityValue <= 0) {
                     entry.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(entry);
                 }
+                entry.departureSkillPointGranted = entry.departureSkillPointGranted === true;
                 entry.foundryLandFactor = entry.foundryLandFactor || 0;
                 entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
                 entry.type = this._resolveArtificialWorldType(entry);
@@ -2932,6 +2944,7 @@ class SpaceManager extends EffectableEntity {
             Object.values(this.randomWorldStatuses)
                 .filter(Boolean)
                 .forEach((entry) => {
+                    entry.departureSkillPointGranted = entry.departureSkillPointGranted === true;
                     entry.foundryLandFactor = entry.foundryLandFactor || 0;
                     entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
                     entry.dominionId = entry.dominionId || getDominionIdFromWorldData(entry);
