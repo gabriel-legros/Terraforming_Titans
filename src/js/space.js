@@ -1872,7 +1872,7 @@ class SpaceManager extends EffectableEntity {
         const merged = JSON.parse(JSON.stringify(base));
         const zones = getZones();
         let totalLiquidWater = 0, totalIce = 0, totalDryIce = 0,
-            totalBiomass = 0, totalLiquidCO2 = 0, totalLiquidMethane = 0, totalHydrocarbonIce = 0, totalFineSand = 0;
+            totalBiomass = 0, totalLiquidCO2 = 0, totalLiquidHydrogen = 0, totalLiquidMethane = 0, totalHydrocarbonIce = 0, totalFineSand = 0;
 
         zones.forEach(z => {
             const zoneSurface = merged.zonalSurface?.[z] || {};
@@ -1883,6 +1883,7 @@ class SpaceManager extends EffectableEntity {
             totalIce += (zoneSurface.ice ?? zw.ice ?? 0) + (zoneSurface.buriedIce ?? zw.buriedIce ?? 0);
             totalDryIce += (zoneSurface.dryIce ?? zc.ice ?? 0) + (zoneSurface.buriedDryIce ?? 0);
             totalLiquidCO2 += zoneSurface.liquidCO2 ?? zc.liquid ?? 0;
+            totalLiquidHydrogen += zoneSurface.liquidHydrogen ?? 0;
             totalBiomass += zoneSurface.biomass ?? 0;
             totalLiquidMethane += zoneSurface.liquidMethane ?? zh.liquid ?? 0;
             totalHydrocarbonIce += (zoneSurface.hydrocarbonIce ?? zh.ice ?? 0) + (zoneSurface.buriedHydrocarbonIce ?? zh.buriedIce ?? 0);
@@ -1895,6 +1896,7 @@ class SpaceManager extends EffectableEntity {
         merged.resources.surface.ice = merged.resources.surface.ice || {};
         merged.resources.surface.dryIce = merged.resources.surface.dryIce || {};
         merged.resources.surface.liquidCO2 = merged.resources.surface.liquidCO2 || {};
+        merged.resources.surface.liquidHydrogen = merged.resources.surface.liquidHydrogen || {};
         merged.resources.surface.biomass = merged.resources.surface.biomass || {};
         merged.resources.surface.liquidMethane = merged.resources.surface.liquidMethane || {};
         merged.resources.surface.hydrocarbonIce = merged.resources.surface.hydrocarbonIce || {};
@@ -1904,6 +1906,7 @@ class SpaceManager extends EffectableEntity {
         merged.resources.surface.ice.initialValue = totalIce;
         merged.resources.surface.dryIce.initialValue = totalDryIce;
         merged.resources.surface.liquidCO2.initialValue = totalLiquidCO2;
+        merged.resources.surface.liquidHydrogen.initialValue = totalLiquidHydrogen;
         merged.resources.surface.biomass.initialValue = totalBiomass;
         merged.resources.surface.liquidMethane.initialValue = totalLiquidMethane;
         merged.resources.surface.hydrocarbonIce.initialValue = totalHydrocarbonIce;

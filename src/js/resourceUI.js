@@ -2178,6 +2178,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         case 'dryIce':
           val = terraforming.zonalSurface?.[zone]?.dryIce;
           break;
+        case 'liquidHydrogen':
+          val = terraforming.zonalSurface?.[zone]?.liquidHydrogen;
+          break;
         case 'biomass':
           val = terraforming.zonalSurface?.[zone]?.biomass;
           break;

@@ -10,12 +10,18 @@ const WORLD_GEOMETRY_MIN_GRAVITY = 1e-12;
 const WORLD_GEOMETRY_MIN_VOLUME_FRACTION = 0.01;
 const WORLD_GEOMETRY_FALLBACK_DENSITY = 1000;
 const WORLD_GEOMETRY_MIN_DENSITY = 1;
+const LIQUID_HYDROGEN_BASE_DENSITY = 71;
+const LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY = 1200;
+const LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG = 1.2e27;
+const LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG = 20;
+const LIQUID_HYDROGEN_COMPRESSION_EXPONENT = 1.6;
 
 const DYNAMIC_WORLD_SURFACE_DENSITIES = {
   liquidWater: 1000,
   ice: 917,
   dryIce: 1560,
   liquidCO2: 1100,
+  liquidHydrogen: LIQUID_HYDROGEN_BASE_DENSITY,
   liquidMethane: 450,
   hydrocarbonIce: 500,
   fineSand: 1600,
@@ -41,6 +47,7 @@ const DYNAMIC_WORLD_SURFACE_MASS_KEYS = [
   'ice',
   'dryIce',
   'liquidCO2',
+  'liquidHydrogen',
   'liquidMethane',
   'hydrocarbonIce',
   'fineSand',
@@ -124,6 +131,37 @@ function calculateAverageDensityKgM3(massKg, volumeM3) {
     return WORLD_GEOMETRY_FALLBACK_DENSITY;
   }
   return Math.max(WORLD_GEOMETRY_MIN_DENSITY, massKg / volumeM3);
+}
+
+function getDynamicLiquidHydrogenDensity(amountTons) {
+  const massKg = Math.max(0, Number(amountTons) || 0) * 1000;
+  if (!(massKg > 0)) {
+    return LIQUID_HYDROGEN_BASE_DENSITY;
+  }
+
+  const denominator = Math.log10(LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG) - LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG;
+  if (!(denominator > 0)) {
+    return LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY;
+  }
+
+  const progress = Math.max(
+    0,
+    Math.min(
+      1,
+      (Math.log10(massKg) - LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG) / denominator
+    )
+  );
+
+  return LIQUID_HYDROGEN_BASE_DENSITY + (
+    LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY - LIQUID_HYDROGEN_BASE_DENSITY
+  ) * Math.pow(progress, LIQUID_HYDROGEN_COMPRESSION_EXPONENT);
+}
+
+function getDynamicWorldSurfaceDensity(key, amountTons) {
+  if (key === 'liquidHydrogen') {
+    return getDynamicLiquidHydrogenDensity(amountTons);
+  }
+  return DYNAMIC_WORLD_SURFACE_DENSITIES[key] || WORLD_GEOMETRY_FALLBACK_DENSITY;
 }
 
 function resolveWorldBaseLand(terraformingState, landResource) {
@@ -266,7 +304,7 @@ function calculateDynamicWorldSurfaceVolumeM3ForKeys(surfaceResources, useInitia
     if (!Number.isFinite(amountTons) || amountTons <= 0) {
       continue;
     }
-    const density = DYNAMIC_WORLD_SURFACE_DENSITIES[key] || WORLD_GEOMETRY_FALLBACK_DENSITY;
+    const density = getDynamicWorldSurfaceDensity(key, amountTons);
     totalVolume += (amountTons * 1000) / density;
   }
 
@@ -646,6 +684,8 @@ try {
   module.exports = {
     calculateCrossSectionAreaM2FromRadius,
     calculateAverageDensityKgM3,
+    getDynamicLiquidHydrogenDensity,
+    getDynamicWorldSurfaceDensity,
     calculateDynamicWorldCurrentAtmosphericMassKg,
     calculateDynamicWorldCurrentPlanetaryMassKg: getDynamicWorldCurrentPlanetaryMassKg,
     calculateDynamicWorldCurrentPlanetaryVolumeM3: getDynamicWorldCurrentPlanetaryVolumeM3,

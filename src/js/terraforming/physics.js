@@ -11,6 +11,11 @@ const WATER_DENSITY = 1000; // kg/m³
 const WATER_VOLUMETRIC_HEAT_CAPACITY = 4.2e6; // J/m³/K
 const EMPTY_LIQUID_CONFIGS = [];
 const DEFAULT_OCEAN_MIX_DEPTH = 50.0; // m
+const PHYSICS_LIQUID_HYDROGEN_BASE_DENSITY = 71;
+const PHYSICS_LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY = 1200;
+const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG = 1.2e27;
+const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG = 20;
+const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_EXPONENT = 1.6;
 const GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS = {
   attenuationStartK: 360,
   attenuationScaleK: 100,
@@ -260,6 +265,7 @@ const DEFAULT_SURFACE_ALBEDO = {
   co2_ice: 0.50,
   hydrocarbon: 0.10,
   hydrocarbonIce :0.50,
+  hydrogen: 0.08,
   ammonia: 0.12,
   ammoniaIce: 0.70,
   oxygen: 0.15,
@@ -269,6 +275,34 @@ const DEFAULT_SURFACE_ALBEDO = {
   fineSand: 0.45,
   biomass: 0.20
 };
+
+function getEffectiveLiquidDensity(config, liquidTon) {
+  if (config?.key === 'liquidHydrogen') {
+    const massKg = Math.max(0, Number(liquidTon) || 0) * 1000;
+    if (!(massKg > 0)) {
+      return PHYSICS_LIQUID_HYDROGEN_BASE_DENSITY;
+    }
+
+    const denominator = Math.log10(PHYSICS_LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG) - PHYSICS_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG;
+    if (!(denominator > 0)) {
+      return PHYSICS_LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY;
+    }
+
+    const progress = Math.max(
+      0,
+      Math.min(
+        1,
+        (Math.log10(massKg) - PHYSICS_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG) / denominator
+      )
+    );
+
+    return PHYSICS_LIQUID_HYDROGEN_BASE_DENSITY + (
+      PHYSICS_LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY - PHYSICS_LIQUID_HYDROGEN_BASE_DENSITY
+    ) * Math.pow(progress, PHYSICS_LIQUID_HYDROGEN_COMPRESSION_EXPONENT);
+  }
+
+  return config?.density || WATER_DENSITY;
+}
 
 // ===== IR optical depth for greenhouse (unchanged) ==================
 function opticalDepth(comp, pBar, gSurface) {
@@ -444,11 +478,11 @@ function liquidHeatCapacity(surfaceFractions, options) {
     }
     totalCoverageScaled += coverage;
 
-    const density = config.density || WATER_DENSITY;
+    const liquidTon = liquidMassByKey[config.key] || 0;
+    const density = getEffectiveLiquidDensity(config, liquidTon);
     const specificHeat = config.specificHeat || (WATER_VOLUMETRIC_HEAT_CAPACITY / WATER_DENSITY);
     const volumetricHeatCapacity = density * specificHeat;
     const fallbackDepth = config.fallbackDepth ?? DEFAULT_OCEAN_MIX_DEPTH;
-    const liquidTon = liquidMassByKey[config.key] || 0;
 
     let capacityPerArea = volumetricHeatCapacity * fallbackDepth;
     if (zoneArea > 0 && liquidTon > 0) {

@@ -64,6 +64,7 @@
       liquidWater: resources.surface.liquidWater?.value || 0,
       dryIce: resources.surface.dryIce?.value || 0,
       liquidCO2: resources.surface.liquidCO2?.value || 0,
+      liquidHydrogen: resources.surface.liquidHydrogen?.value || 0,
       liquidMethane: resources.surface.liquidMethane?.value || 0,
       hydrocarbonIce: resources.surface.hydrocarbonIce?.value || 0,
       liquidOxygen: resources.surface.liquidOxygen?.value || 0,
@@ -97,6 +98,7 @@
           dryIce: zoneSurface.dryIce ?? zoneCO2.ice ?? 0,
           buriedDryIce: zoneSurface.buriedDryIce ?? zoneCO2.buriedIce ?? 0,
           liquidCO2: zoneSurface.liquidCO2 ?? zoneCO2.liquid ?? 0,
+          liquidHydrogen: zoneSurface.liquidHydrogen ?? 0,
           biomass: zoneSurface.biomass ?? 0,
           hazardousBiomass: zoneSurface.hazardousBiomass ?? 0,
           liquidMethane: zoneSurface.liquidMethane ?? zoneHydro.liquid ?? 0,
@@ -123,12 +125,12 @@
   }
 
   function isStable(prev, cur, threshold) {
-    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','liquidOxygen','oxygenIce','liquidNitrogen','nitrogenIce','atmosphericMethane','oxygen','inertGas','hydrogen','sulfuricAcid'];
+    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','liquidHydrogen','co2','waterVapor','liquidMethane','hydrocarbonIce','liquidOxygen','oxygenIce','liquidNitrogen','nitrogenIce','atmosphericMethane','oxygen','inertGas','hydrogen','sulfuricAcid'];
     for (const k of keys) {
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
     for (const zone in cur.zones) {
-      for (const k of ['ice','buriedIce','liquidWater','dryIce','buriedDryIce','liquidCO2','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce','liquidOxygen','oxygenIce','buriedOxygenIce','liquidNitrogen','nitrogenIce','buriedNitrogenIce']) {
+      for (const k of ['ice','buriedIce','liquidWater','dryIce','buriedDryIce','liquidCO2','liquidHydrogen','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce','liquidOxygen','oxygenIce','buriedOxygenIce','liquidNitrogen','nitrogenIce','buriedNitrogenIce']) {
         if (Math.abs(cur.zones[zone][k] - prev.zones[zone][k]) > threshold) return false;
       }
     }
@@ -141,6 +143,7 @@
       liquidWater: { initialValue: values.global.liquidWater },
       dryIce: { initialValue: values.global.dryIce },
       liquidCO2: { initialValue: values.global.liquidCO2 },
+      liquidHydrogen: { initialValue: values.global.liquidHydrogen },
       liquidMethane: { initialValue: values.global.liquidMethane },
       hydrocarbonIce: { initialValue: values.global.hydrocarbonIce },
       liquidOxygen: { initialValue: values.global.liquidOxygen },
@@ -167,6 +170,7 @@
         dryIce: values.zones[zone].dryIce,
         buriedDryIce: values.zones[zone].buriedDryIce,
         liquidCO2: values.zones[zone].liquidCO2,
+        liquidHydrogen: values.zones[zone].liquidHydrogen,
         biomass: values.zones[zone].biomass,
         hazardousBiomass:  values.zones[zone].hazardousBiomass,
         liquidMethane: values.zones[zone].liquidMethane,

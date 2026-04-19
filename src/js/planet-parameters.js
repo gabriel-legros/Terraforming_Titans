@@ -48,6 +48,7 @@ const PLANET_ZONAL_SURFACE_RESOURCE_KEYS = [
   'dryIce',
   'buriedDryIce',
   'liquidCO2',
+  'liquidHydrogen',
   'liquidMethane',
   'hydrocarbonIce',
   'buriedHydrocarbonIce',
@@ -1890,15 +1891,145 @@ const styxOverrides = {
   }
 };
 
-const zeusOverrides = deepMerge(styxOverrides, {
+const zeusOverrides = {
   name: 'Zeus',
+  specialAttributes: {
+    hasSand: false,
+    dynamicMass: true,
+  },
   star: {
-    name: 'Okoth'
+    name: 'Okoth',
+    spectralType: 'K1V',
+    luminositySolar: 0.46,
+    massSolar: 0.84,
+    temperatureK: 5100,
+    habitableZone: { inner: 0.67, outer: 1.05 }
   },
   celestialParameters: {
-    sector: 'R6-11'
+    distanceFromSun: 3.5268115912251394,
+    gravity: 24.79,
+    hasNaturalMagnetosphere: true,
+    radius: 71485,
+    mass: 1.898e27,
+    albedo: 0.503,
+    rotationPeriod: 9.93,
+    spinPeriod: 9.93,
+    starLuminosity: 0.46,
+    coreHeatFlux: 1_432_339,
+    sector: 'R5-29'
+  },
+  visualization: {
+    baseColor: '#c28a52',
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 6_141_873_857_073 },
+      liquidWater: { initialValue: 0 },
+      ice: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidCO2: { initialValue: 0 },
+      liquidHydrogen: { initialValue: 1.2e24, unlocked: true },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      liquidAmmonia: { initialValue: 0 },
+      ammoniaIce: { initialValue: 0 },
+      liquidOxygen: { initialValue: 0 },
+      oxygenIce: { initialValue: 0 },
+      liquidNitrogen: { initialValue: 0 },
+      nitrogenIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 },
+      hazardousMachinery: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 2e17 },
+      atmosphericMethane: { initialValue: 8e17 },
+      atmosphericAmmonia: { initialValue: 6e17 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 5.5e19 },
+      hydrogen: { initialValue: 2.6e20 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 4.7849888271029546e23,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      fineSand: 0,
+      biomass: 0,
+      hazardousBiomass: 0
+    },
+    temperate: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 6.219732065518535e23,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      fineSand: 0,
+      biomass: 0,
+      hazardousBiomass: 0
+    },
+    polar: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 9.952791073785115e22,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      fineSand: 0,
+      biomass: 0,
+      hazardousBiomass: 0
+    }
+  },
+  zonalTemperatures: {
+    tropical: {
+      value: 2273.15,
+      day: 2273.15,
+      night: 2273.15
+    },
+    temperate: {
+      value: 2273.15,
+      day: 2273.15,
+      night: 2273.15
+    },
+    polar: {
+      value: 2273.15,
+      day: 2273.15,
+      night: 2273.15
+    }
   }
-});
+};
 
 // --- Parameter Retrieval Logic ---
 
@@ -1975,4 +2106,3 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
-

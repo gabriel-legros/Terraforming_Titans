@@ -876,9 +876,10 @@ class Terraforming extends EffectableEntity{
       // Get initial amounts directly from provided planetParameters
       const initialLiquidWater = planetParameters.resources.surface.liquidWater?.initialValue || 0;
       const initialIce = planetParameters.resources.surface.ice?.initialValue || 0;
-      const initialDryIce = planetParameters.resources.surface.dryIce?.initialValue || 0;
-      const initialBiomass = planetParameters.resources.surface.biomass?.initialValue || 0;
-      const initialLiquidCO2 = planetParameters.resources.surface.liquidCO2?.initialValue || 0;
+          const initialDryIce = planetParameters.resources.surface.dryIce?.initialValue || 0;
+          const initialBiomass = planetParameters.resources.surface.biomass?.initialValue || 0;
+          const initialLiquidCO2 = planetParameters.resources.surface.liquidCO2?.initialValue || 0;
+          const initialLiquidHydrogen = planetParameters.resources.surface.liquidHydrogen?.initialValue || 0;
 
       const singleZone = zones.length === 1;
       const iceZoneDistribution = singleZone ? null : { tropical: 0.01, temperate: 0.09, polar: 0.90 };
@@ -890,6 +891,7 @@ class Terraforming extends EffectableEntity{
           this.zonalSurface[zone].liquidWater = initialLiquidWater * zoneRatio;
           this.zonalSurface[zone].biomass = initialBiomass * zoneRatio;
           this.zonalSurface[zone].liquidCO2 = initialLiquidCO2 * zoneRatio;
+          this.zonalSurface[zone].liquidHydrogen = initialLiquidHydrogen * zoneRatio;
 
           if (singleZone) {
             this.zonalSurface[zone].ice = initialIce;

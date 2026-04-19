@@ -83,6 +83,20 @@
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
       },
+      liquidHydrogen: {
+        name: '',
+        initialValue: 0,
+        unlocked: true,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['liquidHydrogen'],
+          coverageKeys: ['liquidHydrogen'],
+          coverageScale: 0.0001,
+          distributionKey: 'liquidHydrogen',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
       liquidMethane: {
         name: '',
         initialValue: 0,
@@ -388,6 +402,13 @@
       coverageKey: 'liquidCO2',
       density: 1100,
       specificHeat: 2100,
+      fallbackDepth: 50,
+    },
+    {
+      key: 'liquidHydrogen',
+      coverageKey: 'liquidHydrogen',
+      density: 71,
+      specificHeat: 14300,
       fallbackDepth: 50,
     },
     {

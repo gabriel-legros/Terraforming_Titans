@@ -53,6 +53,7 @@ function getTerraformingSummaryResourceLabel(key, fallback) {
 const LIQUID_COVERAGE_LABEL_TYPES = {
   liquidWater: true,
   liquidCO2: true,
+  liquidHydrogen: true,
   liquidMethane: true,
   liquidAmmonia: true,
   liquidOxygen: true,
@@ -2274,6 +2275,7 @@ function updateLifeBox() {
       co2_ice: 0.50,
       hydrocarbon: 0.10,
       hydrocarbonIce: 0.50,
+      hydrogen: 0.08,
       fineSand: 0.45,
       biomass: 0.20
     };
@@ -2290,6 +2292,7 @@ function updateLifeBox() {
       [getTerraformingSummaryText('luminosity.albedoTable.dryIce', 'Dry Ice'), defaults.co2_ice.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbon', 'Hydrocarbon'), defaults.hydrocarbon.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbonIce', 'Hydrocarbon Ice'), defaults.hydrocarbonIce.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.hydrogen', 'Liquid Hydrogen'), defaults.hydrogen.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.fineSand', 'Fine Sand'), defaults.fineSand.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.biomass', 'Biomass'), defaults.biomass.toFixed(2)]
     ];
@@ -2505,7 +2508,7 @@ function updateLifeBox() {
 
       for (const z of getZones()) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
-        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.oxygen + fr.oxygenIce + fr.nitrogen + fr.nitrogenIce + fr.fineSand + fr.biomass), 0);
+        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.hydrogen + fr.ammonia + fr.ammoniaIce + fr.oxygen + fr.oxygenIce + fr.nitrogen + fr.nitrogenIce + fr.fineSand + fr.biomass), 0);
         const name = getTerraformingZoneLabel(z);
         lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.zoneHeader', '{name}:', { name }));
 
@@ -2514,6 +2517,7 @@ function updateLifeBox() {
         if (!isZeroPct(fr.ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ice', 'Ice'), value: pct(fr.ice) }));
         if (!isZeroPct(fr.hydrocarbon)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbon', 'Hydrocarbons'), value: pct(fr.hydrocarbon) }));
         if (!isZeroPct(fr.hydrocarbonIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbonIce', 'Hydrocarbon Ice'), value: pct(fr.hydrocarbonIce) }));
+        if (!isZeroPct(fr.hydrogen)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrogen', 'Liquid Hydrogen'), value: pct(fr.hydrogen) }));
         if (!isZeroPct(fr.fineSand)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('fineSand', 'Fine Sand'), value: pct(fr.fineSand) }));
         if (!isZeroPct(fr.co2_ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('dryIce', 'Dry Ice'), value: pct(fr.co2_ice) }));
         if (!isZeroPct(fr.ammonia)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ammonia', 'Ammonia'), value: pct(fr.ammonia) }));

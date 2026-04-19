@@ -32,6 +32,7 @@ function calculateAverageCoverage(terraforming, resourceType) {
     hydrocarbonIce: { cycle: terraformUtilsMethaneCycle, key: 'hydrocarbonIceCoverage' },
     dryIce: { cycle: terraformUtilsCo2Cycle, key: 'dryIceCoverage' },
     liquidCO2: { key: 'liquidCO2' },
+    liquidHydrogen: { key: 'liquidHydrogen' },
     liquidAmmonia: { cycle: terraformUtilsAmmoniaCycle, key: 'liquidAmmoniaCoverage' },
     ammoniaIce: { cycle: terraformUtilsAmmoniaCycle, key: 'ammoniaIceCoverage' },
     liquidOxygen: { cycle: terraformUtilsOxygenCycle, key: 'liquidOxygenCoverage' },
@@ -101,6 +102,7 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
                                    hydrocarbonCoverage = 0,
                                    methaneIceCoverage = 0,
                                    dryIceCoverage = 0,
+                                   hydrogenCoverage = 0,
                                    ammoniaCoverage = 0,
                                    ammoniaIceCoverage = 0,
                                    oxygenCoverage = 0,
@@ -113,6 +115,7 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
   let hydrocarbon = Math.max(0, hydrocarbonCoverage);
   let hydrocarbonIce = Math.max(0, methaneIceCoverage);
   let co2_ice = Math.max(0, dryIceCoverage);
+  let hydrogen = Math.max(0, hydrogenCoverage);
   let ammonia = Math.max(0, ammoniaCoverage);
   let ammoniaIce = Math.max(0, ammoniaIceCoverage);
   let oxygen = Math.max(0, oxygenCoverage);
@@ -121,7 +124,7 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
   let nitrogenIce = Math.max(0, nitrogenIceCoverage);
   let fineSand = Math.max(0, fineSandCoverage);
 
-  let combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
+  let combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + hydrogen + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
   if (combinedSurface > 1 && combinedSurface > 0) {
     const scale = 1 / combinedSurface;
     ocean *= scale;
@@ -129,6 +132,7 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
     hydrocarbon *= scale;
     hydrocarbonIce *= scale;
     co2_ice *= scale;
+    hydrogen *= scale;
     ammonia *= scale;
     ammoniaIce *= scale;
     oxygen *= scale;
@@ -136,7 +140,7 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
     nitrogen *= scale;
     nitrogenIce *= scale;
     fineSand *= scale;
-    combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
+    combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + hydrogen + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
   }
 
   const remaining = Math.max(0, 1 - combinedSurface);
@@ -149,6 +153,7 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
     hydrocarbon,
     hydrocarbonIce,
     co2_ice,
+    hydrogen,
     ammonia,
     ammoniaIce,
     oxygen,
@@ -165,12 +170,13 @@ function calculateZonalSurfaceFractions(terraforming, zone) {
   const { liquidWaterCoverage: water, iceCoverage: ice } = terraformUtilsWaterCycle.getCoverage(zone, terraforming.zonalCoverageCache);
   const { liquidMethaneCoverage: hydro, hydrocarbonIceCoverage: hydroIce } = terraformUtilsMethaneCycle.getCoverage(zone, terraforming.zonalCoverageCache);
   const { dryIceCoverage: dryIce } = terraformUtilsCo2Cycle.getCoverage(zone, terraforming.zonalCoverageCache);
+  const hydrogen = cache.liquidHydrogen ?? 0;
   const { liquidAmmoniaCoverage: ammonia, ammoniaIceCoverage: ammoniaIce } = terraformUtilsAmmoniaCycle.getCoverage(zone, terraforming.zonalCoverageCache);
   const { liquidOxygenCoverage: oxygen, oxygenIceCoverage: oxygenIce } = terraformUtilsOxygenCycle.getCoverage(zone, terraforming.zonalCoverageCache);
   const { liquidNitrogenCoverage: nitrogen, nitrogenIceCoverage: nitrogenIce } = terraformUtilsNitrogenCycle.getCoverage(zone, terraforming.zonalCoverageCache);
   const fineSand = cache.fineSand ?? 0;
   const bio = cache.biomass ?? 0;
-  return calculateSurfaceFractions(water, ice, bio, hydro, hydroIce, dryIce, ammonia, ammoniaIce, oxygen, oxygenIce, nitrogen, nitrogenIce, fineSand);
+  return calculateSurfaceFractions(water, ice, bio, hydro, hydroIce, dryIce, hydrogen, ammonia, ammoniaIce, oxygen, oxygenIce, nitrogen, nitrogenIce, fineSand);
 }
 
 if (!isNode) {
