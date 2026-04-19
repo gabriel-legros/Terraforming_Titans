@@ -1,5 +1,20 @@
 (function () {
   const KG_PER_TON = 1000;
+  let simulateSurfaceHydrogenFlow = null;
+
+  try {
+    simulateSurfaceHydrogenFlow = window.simulateSurfaceHydrogenFlow;
+  } catch (error) {
+    simulateSurfaceHydrogenFlow = null;
+  }
+
+  try {
+    if (!simulateSurfaceHydrogenFlow && typeof require === 'function') {
+      simulateSurfaceHydrogenFlow = require('./hydrology.js').simulateSurfaceHydrogenFlow;
+    }
+  } catch (error) {
+    // fall back to browser global if require fails
+  }
 
   const HYDROGEN_T_TRIPLE = 13.957;
   const HYDROGEN_P_TRIPLE = 7.04e3;
@@ -167,10 +182,16 @@
         return { evaporation: 0, condensation: 0, totalAtmosphericChange: 0 };
       }
 
+      const totals = {
+        evaporation: 0,
+        condensation: 0,
+        totalAtmosphericChange: 0,
+      };
       const pressureDelta = targetPressurePa - currentPressurePa;
       const tolerance = Math.max(HYDROGEN_P_CRIT, targetPressurePa) * HYDROGEN_PRESSURE_TOLERANCE_FRACTION;
       if (Math.abs(pressureDelta) <= tolerance) {
-        return { evaporation: 0, condensation: 0, totalAtmosphericChange: 0 };
+        this.applySurfaceFlow(terraforming, zones, durationSeconds, totals);
+        return totals;
       }
 
       const targetMassDelta = this.calculateMassForPressure(terraforming, Math.abs(pressureDelta), gravity);
@@ -179,20 +200,47 @@
       if (pressureDelta > 0) {
         const requested = Math.min(surfaceHydrogen, targetMassDelta * relaxationFraction);
         const released = this.distributeSurfaceHydrogen(terraforming, zones, requested);
-        return {
-          evaporation: released,
-          condensation: 0,
-          totalAtmosphericChange: released,
-        };
+        totals.evaporation = released;
+        totals.totalAtmosphericChange = released;
+        this.applySurfaceFlow(terraforming, zones, durationSeconds, totals);
+        return totals;
       }
 
       const requested = Math.min(atmosphericHydrogen, targetMassDelta * relaxationFraction);
       const absorbed = this.depositSurfaceHydrogen(terraforming, zones, requested);
-      return {
-        evaporation: 0,
-        condensation: absorbed,
-        totalAtmosphericChange: -absorbed,
-      };
+      totals.condensation = absorbed;
+      totals.totalAtmosphericChange = -absorbed;
+      this.applySurfaceFlow(terraforming, zones, durationSeconds, totals);
+      return totals;
+    }
+
+    applySurfaceFlow(terraforming, zones, durationSeconds, totals) {
+      if (!simulateSurfaceHydrogenFlow || !(durationSeconds > 0) || !terraforming?.zonalSurface) {
+        return;
+      }
+
+      const tempMap = {};
+      for (let index = 0; index < zones.length; index += 1) {
+        const zone = zones[index];
+        tempMap[zone] = terraforming.temperature.zones[zone]?.value;
+      }
+
+      const flow = simulateSurfaceHydrogenFlow(terraforming, durationSeconds, tempMap) || {};
+      const flowChanges = flow.changes || {};
+      const zonesList = zones || getZones();
+      for (let index = 0; index < zonesList.length; index += 1) {
+        const zone = zonesList[index];
+        const zoneChange = flowChanges[zone];
+        if (!zoneChange || !Number.isFinite(zoneChange.liquidHydrogen)) {
+          continue;
+        }
+        const zoneStore = terraforming.zonalSurface[zone];
+        zoneStore.liquidHydrogen = Math.max(
+          0,
+          (zoneStore.liquidHydrogen || 0) + zoneChange.liquidHydrogen
+        );
+      }
+      totals.flowShift = flow.totalShift || 0;
     }
 
     updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
@@ -205,9 +253,11 @@
       const condensationAmount = totals.condensation || 0;
       const evaporationRate = evaporationAmount / durationSeconds * 86400;
       const condensationRate = condensationAmount / durationSeconds * 86400;
+      const flowShiftRate = (totals.flowShift || 0) / durationSeconds * 86400;
 
       terraforming.totalHydrogenEvaporationRate = evaporationRate;
       terraforming.totalHydrogenCondensationRate = condensationRate;
+      terraforming.flowHydrogenShiftRate = flowShiftRate;
 
       if (evaporationRate > 0) {
         resources.atmospheric.hydrogen?.modifyRate(evaporationRate, 'Evaporation', 'terraforming');

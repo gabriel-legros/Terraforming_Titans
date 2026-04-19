@@ -1965,7 +1965,7 @@ setLanguageData({
           ice: 'Ice',
           hydrocarbon: 'Hydrocarbons',
           hydrocarbonIce: 'Hydrocarbon Ice',
-          hydrogen: 'Liquid Hydrogen',
+          hydrogen: 'L. Hydrogen',
           fineSand: 'Fine Sand',
           dryIce: 'Dry Ice',
           ammonia: 'Ammonia',

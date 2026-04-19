@@ -304,6 +304,116 @@ function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperature
     });
 }
 
+function simulateSurfaceHydrogenFlow(zonalHydrogenInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions = {}) {
+    const terraforming = zonalHydrogenInput?.zonalSurface ? zonalHydrogenInput : null;
+    const zonalData = terraforming ? terraforming.zonalSurface : zonalHydrogenInput;
+    const liquidProp = 'liquidHydrogen';
+    const viscosity = flowOptions.viscosity || 0.02;
+
+    const marsRadiusKm = 3389.5;
+    const planetRadiusKm = (terraforming && terraforming.celestialParameters && typeof terraforming.celestialParameters.radius === 'number')
+        ? terraforming.celestialParameters.radius
+        : marsRadiusKm;
+    const radiusScale = planetRadiusKm / marsRadiusKm;
+    const planetRadiusMeters = planetRadiusKm * 1000;
+
+    const zones = getZones();
+    const defaultElevations = { tropical: 0, temperate: 0, polar: 0 };
+    const zoneElevations = zoneElevationsInput || (typeof ZONE_ELEVATIONS !== 'undefined' ? ZONE_ELEVATIONS : defaultElevations);
+    const getZonePercentageFn = (typeof getZonePercentage !== 'undefined') ? getZonePercentage : (zonesModHydro && zonesModHydro.getZonePercentage);
+
+    const phiTropic = 23.5 * Math.PI / 180;
+    const phiPolar = 66.5 * Math.PI / 180;
+    const boundaryLengthTropicalTemperate = 4 * Math.PI * planetRadiusMeters * Math.cos(phiTropic);
+    const boundaryLengthTemperatePolar = 4 * Math.PI * planetRadiusMeters * Math.cos(phiPolar);
+    const referenceBoundaryLength = boundaryLengthTropicalTemperate || 1;
+    const getBoundaryScale = (minZoneIndex) => (minZoneIndex === 0 ? boundaryLengthTropicalTemperate : boundaryLengthTemperatePolar) / referenceBoundaryLength;
+
+    const baseFlowRate = 0.005 / 86400;
+    const flowRateCoefficient = (baseFlowRate * radiusScale) / viscosity;
+    const secondsMultiplier = durationSeconds;
+    const changes = {};
+    const outflow = {};
+    const flows = {};
+    const zoneAreas = {};
+    const liquidAreas = {};
+    const liquidDepths = {};
+    let totalShift = 0;
+
+    zones.forEach(zone => {
+        changes[zone] = { [liquidProp]: 0 };
+        outflow[zone] = 0;
+        flows[zone] = {};
+        const surfaceLiquid = zonalData?.[zone]?.[liquidProp] || 0;
+        let zoneArea = 1;
+        let liquidCoverage = 1;
+        if (terraforming && getZonePercentageFn) {
+            zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentageFn(zone);
+            const cacheLiquidCov = terraforming.zonalCoverageCache
+                ? terraforming.zonalCoverageCache[zone]?.liquidHydrogen
+                : undefined;
+            liquidCoverage = Number.isFinite(cacheLiquidCov)
+                ? cacheLiquidCov
+                : estimateCoverageFn(surfaceLiquid, zoneArea);
+        }
+        zoneAreas[zone] = zoneArea;
+        liquidAreas[zone] = Math.max(1, zoneArea * Math.max(0, liquidCoverage));
+        liquidDepths[zone] = surfaceLiquid > 0 ? surfaceLiquid / zoneArea : 0;
+    });
+
+    const liquidSurfaceElevations = {};
+    zones.forEach(zone => {
+        liquidSurfaceElevations[zone] = (zoneElevations[zone] || 0) + (liquidDepths[zone] || 0);
+    });
+
+    for (let i = 0; i < zones.length; i++) {
+        for (let j = 0; j < zones.length; j++) {
+            if (i === j || Math.abs(i - j) !== 1) continue;
+            const source = zones[i];
+            const target = zones[j];
+            const deltaElevation = (liquidSurfaceElevations[source] || 0) - (liquidSurfaceElevations[target] || 0);
+            if (deltaElevation <= 0) continue;
+
+            const boundaryScale = getBoundaryScale(Math.min(i, j));
+            const lowElevationPenalty = deltaElevation < 1 ? deltaElevation : 1;
+            const flowCoefficient = flowRateCoefficient * boundaryScale * Math.sqrt(deltaElevation) * lowElevationPenalty;
+            const availableLiquid = (zonalData[source][liquidProp] || 0) + changes[source][liquidProp];
+            const maxFlowToEqualize =
+                deltaElevation / (1 / (liquidAreas[source] || 1) + 1 / (liquidAreas[target] || 1));
+            const potentialFlow = Math.min(availableLiquid * flowCoefficient * secondsMultiplier, maxFlowToEqualize);
+            if (potentialFlow > 0) {
+                flows[source][target] = potentialFlow;
+                outflow[source] += potentialFlow;
+            }
+        }
+    }
+
+    zones.forEach(zone => {
+        const availableLiquid = (zonalData[zone][liquidProp] || 0) + changes[zone][liquidProp];
+        if (outflow[zone] > availableLiquid && outflow[zone] > 0) {
+            const scale = availableLiquid / outflow[zone];
+            for (const target of zones) {
+                if (flows[zone][target]) {
+                    flows[zone][target] *= scale;
+                }
+            }
+        }
+    });
+
+    for (const source of zones) {
+        for (const target of zones) {
+            const flow = flows[source][target] || 0;
+            if (flow > 0) {
+                changes[source][liquidProp] -= flow;
+                changes[target][liquidProp] += flow;
+                totalShift += flow;
+            }
+        }
+    }
+
+    return { changes, totalShift };
+}
+
 // Compute melting and freezing rates for a surface zone based on temperature
 function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1, iceCoverage = 1, liquidCoverage = 1) {
     return meltingFreezingRatesUtil({
@@ -336,6 +446,7 @@ if (typeof module !== 'undefined' && module.exports) {
         simulateSurfaceWaterFlow,
         calculateMeltingFreezingRates,
         simulateSurfaceHydrocarbonFlow,
+        simulateSurfaceHydrogenFlow,
         simulateSurfaceAmmoniaFlow,
         simulateSurfaceCO2Flow,
         calculateMethaneMeltingFreezingRates
@@ -345,6 +456,7 @@ if (typeof module !== 'undefined' && module.exports) {
     window.simulateSurfaceWaterFlow = simulateSurfaceWaterFlow;
     window.calculateMeltingFreezingRates = calculateMeltingFreezingRates;
     window.simulateSurfaceHydrocarbonFlow = simulateSurfaceHydrocarbonFlow;
+    window.simulateSurfaceHydrogenFlow = simulateSurfaceHydrogenFlow;
     window.simulateSurfaceAmmoniaFlow = simulateSurfaceAmmoniaFlow;
     window.simulateSurfaceCO2Flow = simulateSurfaceCO2Flow;
     window.calculateMethaneMeltingFreezingRates = calculateMethaneMeltingFreezingRates;
