@@ -1915,7 +1915,7 @@ const zeusOverrides = {
     rotationPeriod: 9.93,
     spinPeriod: 9.93,
     starLuminosity: 0.46,
-    coreHeatFlux: 1_432_339,
+    coreHeatFlux: 4_345_338,
     sector: 'R5-29'
   },
   visualization: {
@@ -1928,7 +1928,7 @@ const zeusOverrides = {
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
       liquidCO2: { initialValue: 0 },
-      liquidHydrogen: { initialValue: 1.2e24, unlocked: true },
+      liquidHydrogen: { initialValue: 1.1743559530636403e24, unlocked: true },
       liquidMethane: { initialValue: 0 },
       hydrocarbonIce: { initialValue: 0 },
       liquidAmmonia: { initialValue: 0 },
@@ -1952,7 +1952,7 @@ const zeusOverrides = {
       atmosphericAmmonia: { initialValue: 6e17 },
       oxygen: { initialValue: 0 },
       inertGas: { initialValue: 5.5e19 },
-      hydrogen: { initialValue: 2.6e20 },
+      hydrogen: { initialValue: 2.590404693635974e22 },
       sulfuricAcid: { initialValue: 0 }
     }
   },
@@ -1964,7 +1964,7 @@ const zeusOverrides = {
       dryIce: 0,
       buriedDryIce: 0,
       liquidCO2: 0,
-      liquidHydrogen: 4.7849888271029546e23,
+      liquidHydrogen: 4.682733428709467e23,
       liquidMethane: 0,
       hydrocarbonIce: 0,
       buriedHydrocarbonIce: 0,
@@ -1982,7 +1982,7 @@ const zeusOverrides = {
       dryIce: 0,
       buriedDryIce: 0,
       liquidCO2: 0,
-      liquidHydrogen: 6.219732065518535e23,
+      liquidHydrogen: 6.086816148002086e23,
       liquidMethane: 0,
       hydrocarbonIce: 0,
       buriedHydrocarbonIce: 0,
@@ -2000,7 +2000,7 @@ const zeusOverrides = {
       dryIce: 0,
       buriedDryIce: 0,
       liquidCO2: 0,
-      liquidHydrogen: 9.952791073785115e22,
+      liquidHydrogen: 9.740099539248508e22,
       liquidMethane: 0,
       hydrocarbonIce: 0,
       buriedHydrocarbonIce: 0,
@@ -2014,19 +2014,19 @@ const zeusOverrides = {
   },
   zonalTemperatures: {
     tropical: {
-      value: 2273.15,
-      day: 2273.15,
-      night: 2273.15
+      value: 3000,
+      day: 3000,
+      night: 3000
     },
     temperate: {
-      value: 2273.15,
-      day: 2273.15,
-      night: 2273.15
+      value: 3000,
+      day: 3000,
+      night: 3000
     },
     polar: {
-      value: 2273.15,
-      day: 2273.15,
-      night: 2273.15
+      value: 3000,
+      day: 3000,
+      night: 3000
     }
   }
 };

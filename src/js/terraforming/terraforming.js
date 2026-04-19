@@ -247,13 +247,14 @@ const TERRAFORMING_RESOURCE_MAX_SUBSTEPS = 24;
 let surfaceLiquidHeatCapacityConfigs = [];
 
 // Load utility functions when running under Node for tests
-var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance;
+var getZonePercentage, estimateCoverage, waterCycleInstance, hydrogenCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
 var getAerostatMaintenanceMitigationHelper;
 var isBuildingEligibleForFactoryMitigationHelper;
 calculateEffectiveAtmosphericHeatCapacityHelper = calculateEffectiveAtmosphericHeatCapacity;
 
 waterCycleInstance = waterCycle;
+hydrogenCycleInstance = hydrogenCycle;
 methaneCycleInstance = methaneCycle;
 co2CycleInstance = co2Cycle;
 ammoniaCycleInstance = ammoniaCycle;
@@ -1107,7 +1108,7 @@ class Terraforming extends EffectableEntity{
         const availableGlobalOxygenGas = availableByKey.oxygen || 0;
 
         if (!this.cycles) {
-            this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance];
+            this.cycles = [waterCycleInstance, hydrogenCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance];
         }
 
         const cycleResults = [];

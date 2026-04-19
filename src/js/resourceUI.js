@@ -2032,10 +2032,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     const warningInfo = warningDiv._info || {};
     const warningMessages = [];
     const allowRegularWarnings = resource.category !== 'spaceStorage';
-    const autobuildWarningText = getResourceUIWarningText('autobuildShortage', 'Autobuild is short on required inputs for queued construction.');
 
     if (resource.autobuildShortage) {
-      warningMessages.push(autobuildWarningText);
+      warningMessages.push(getResourceUIWarningText('autobuildShortage', 'Autobuild is short on required inputs for queued construction.'));
     }
 
     if (allowRegularWarnings && resource.name === 'androids') {
@@ -2138,16 +2137,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
     if (warningMessages.length > 0 || warningTimer > 0) {
       const joinedText = warningMessages.length > 0 ? warningMessages.join(' ') : cachedText.text;
+      const joinedTitle = warningMessages.length > 0 ? warningMessages.join('\n') : cachedText.title;
       if (warningDiv.style.display !== 'flex') warningDiv.style.display = 'flex';
       if (warningInfo.text && warningInfo.text.textContent !== joinedText) {
         warningInfo.text.textContent = joinedText;
       }
-      const showTooltipIcon = joinedText !== autobuildWarningText;
+      const showTooltipIcon = joinedTitle !== joinedText;
       if (warningInfo.icon) {
         warningInfo.icon.style.display = showTooltipIcon ? 'inline-flex' : 'none';
       }
       if (warningInfo.tooltip) {
-        const joinedTitle = warningMessages.length > 0 ? warningMessages.join('\n') : cachedText.title;
         setTooltipText(warningInfo.tooltip, showTooltipIcon ? joinedTitle : '', warningInfo.tooltipCache, 'text');
       }
     } else {
