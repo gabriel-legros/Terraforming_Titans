@@ -1611,8 +1611,11 @@ function produceResources(deltaTime, buildings) {
     produceAntimatter(deltaTime, resources, accumulatedChanges);
   }
 
-
   const spaceStorageProject = projectManager?.projects?.spaceStorage;
+  if (spaceStorageProject?.applyPostProjectShipOperation) {
+    spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
+  }
+
   const spaceStorageCapLimits = spaceStorageProject?.getResourceCapLimits?.() || null;
 
   // Apply accumulated changes to resources

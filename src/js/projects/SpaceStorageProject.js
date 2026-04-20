@@ -627,6 +627,84 @@ class SpaceStorageProject extends SpaceshipProject {
     return Math.max(0, stored - reserve);
   }
 
+  getPendingResourceDelta(accumulatedChanges, category, resourceKey) {
+    return accumulatedChanges?.[category]?.[resourceKey] || 0;
+  }
+
+  getResourceValueForTick(category, resourceKey, accumulatedChanges = null) {
+    const resource = resources?.[category]?.[resourceKey];
+    if (!resource) {
+      return 0;
+    }
+    return Math.max(0, resource.value + this.getPendingResourceDelta(accumulatedChanges, category, resourceKey));
+  }
+
+  getStoredResourceValueForTick(resourceKey, accumulatedChanges = null) {
+    return Math.max(0, this.getStoredResourceValue(resourceKey) + this.getPendingResourceDelta(accumulatedChanges, 'spaceStorage', resourceKey));
+  }
+
+  getAvailableStoredResourceForTick(resourceKey, scopeFilter = null, accumulatedChanges = null) {
+    const stored = this.getStoredResourceValueForTick(resourceKey, accumulatedChanges);
+    const reserve = this.getResourceStrategicReserveAmount(resourceKey, scopeFilter);
+    return Math.max(0, stored - reserve);
+  }
+
+  getUsedStorageForTick(accumulatedChanges = null) {
+    let used = this.usedStorage;
+    const pendingStorage = accumulatedChanges?.spaceStorage || null;
+    if (!pendingStorage) {
+      return used;
+    }
+    for (const resourceKey in pendingStorage) {
+      used += pendingStorage[resourceKey] || 0;
+    }
+    return Math.max(0, used);
+  }
+
+  getStorageFreeSpaceForTick(accumulatedChanges = null) {
+    return Math.max(0, this.maxStorage - this.getUsedStorageForTick(accumulatedChanges));
+  }
+
+  getStorageCapRemainingForTick(resourceKey, accumulatedChanges = null) {
+    const capLimit = this.getResourceCapLimit(resourceKey);
+    if (!Number.isFinite(capLimit)) {
+      return Infinity;
+    }
+    return Math.max(0, capLimit - this.getStoredResourceValueForTick(resourceKey, accumulatedChanges));
+  }
+
+  getTransferSourceAvailableForTick(entry, accumulatedChanges = null) {
+    if (entry.resource === 'biomass') {
+      return Math.max(0, resources.surface.biomass?.value || 0);
+    }
+    if (entry.resource === 'liquidWater') {
+      return Math.max(0, resources.surface.liquidWater?.value || 0);
+    }
+    return this.getResourceValueForTick(entry.category, entry.resource, accumulatedChanges);
+  }
+
+  getTransferDestinationFreeForTick(category, resourceKey, accumulatedChanges = null) {
+    const resource = resources?.[category]?.[resourceKey];
+    if (!resource) {
+      return 0;
+    }
+    if (!Number.isFinite(resource.cap)) {
+      return Infinity;
+    }
+    return Math.max(0, resource.cap - this.getResourceValueForTick(category, resourceKey, accumulatedChanges));
+  }
+
+  applyAccumulatedResourceDelta(category, resourceKey, amount, accumulatedChanges = null) {
+    if (!(amount !== 0) || !accumulatedChanges) {
+      return;
+    }
+    accumulatedChanges[category] ||= {};
+    if (accumulatedChanges[category][resourceKey] === undefined) {
+      accumulatedChanges[category][resourceKey] = 0;
+    }
+    accumulatedChanges[category][resourceKey] += amount;
+  }
+
   calculateSpaceshipAdjustedDuration() {
     const maxShipsForDurationReduction = 100;
     if (this.isShipOperationContinuous()) {
@@ -870,6 +948,68 @@ class SpaceStorageProject extends SpaceshipProject {
     return { transfers, total };
   }
 
+  calculateTransferPlanForTick(capacityOverride = null, accumulatedChanges = null, selections = null) {
+    const transfers = [];
+    let total = 0;
+    const selected = selections ?? this.getUnlockedSelectedResources();
+    if (selected.length === 0) return { transfers, total };
+    const capacity = capacityOverride != null ? capacityOverride : this.calculateTransferAmount();
+    if (!Number.isFinite(capacity) || capacity <= 0) return { transfers, total };
+
+    const perResourceCapacity = capacity / selected.length;
+    if (!Number.isFinite(perResourceCapacity) || perResourceCapacity <= 0) return { transfers, total };
+    let availableFreeSpace = this.getStorageFreeSpaceForTick(accumulatedChanges);
+
+    const resolveMode = (resourceKey) => {
+      if (this.shipTransferMode === 'mixed') {
+        return this.getResourceTransferMode(resourceKey);
+      }
+      return this.shipTransferMode;
+    };
+
+    const applyWithdrawForResource = (entry) => {
+      const stored = this.getAvailableStoredResourceForTick(entry.resource, 'transfers', accumulatedChanges);
+      if (stored <= 0) return;
+      const target = entry.resource === 'liquidWater'
+        ? (this.waterWithdrawTarget === 'surface'
+          ? { category: 'surface', resource: 'liquidWater' }
+          : { category: 'colony', resource: 'water' })
+        : { category: entry.category, resource: entry.resource };
+      const destFree = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
+      const amount = Math.min(perResourceCapacity, stored, destFree);
+      if (!Number.isFinite(amount) || amount <= 0) return;
+      transfers.push({ mode: 'withdraw', category: target.category, resource: target.resource, amount, storageKey: entry.resource });
+      total += amount;
+      availableFreeSpace += amount;
+    };
+
+    const applyStoreForResource = (entry) => {
+      if (!Number.isFinite(availableFreeSpace) || availableFreeSpace <= 0) return;
+      const capRemaining = this.getStorageCapRemainingForTick(entry.resource, accumulatedChanges);
+      if (capRemaining <= 0) return;
+      const available = this.getTransferSourceAvailableForTick(entry, accumulatedChanges);
+      const amount = Math.min(perResourceCapacity, available, capRemaining, availableFreeSpace);
+      if (!Number.isFinite(amount) || amount <= 0) return;
+      transfers.push({ mode: 'store', category: entry.category, resource: entry.resource, amount });
+      total += amount;
+      availableFreeSpace = Math.max(0, availableFreeSpace - amount);
+    };
+
+    selected.forEach(entry => {
+      if (resolveMode(entry.resource) === 'withdraw') {
+        applyWithdrawForResource(entry);
+      }
+    });
+
+    selected.forEach(entry => {
+      if (resolveMode(entry.resource) === 'store') {
+        applyStoreForResource(entry);
+      }
+    });
+
+    return { transfers, total };
+  }
+
   applyShipOperationRateTooltip(durationSeconds, includeWithdraw = false) {
     if (durationSeconds <= 0) return;
     this.pendingTransfers.forEach(t => {
@@ -914,13 +1054,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   startShipOperation() {
     if (!this.canStartShipOperation()) return false;
-    const totalCost = this.calculateSpaceshipTotalCost();
-    for (const category in totalCost) {
-      for (const resource in totalCost[category]) {
-        resources[category][resource].decrease(totalCost[category][resource]);
-      }
-    }
-    const plan = this.calculateTransferPlan(false);
+    const plan = this.calculateTransferPlan(true);
     this.pendingTransfers = plan.transfers;
     this.shipOperationRemainingTime = this.getShipOperationDuration();
     this.shipOperationStartingDuration = this.shipOperationRemainingTime;
@@ -983,7 +1117,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     this.shipOperationRemainingTime -= effectiveDeltaTime;
     if (this.shipOperationRemainingTime <= 0) {
-      this.completeShipOperation();
+      this.shipOperationRemainingTime = 0;
     }
   }
 
@@ -1017,50 +1151,10 @@ class SpaceStorageProject extends SpaceshipProject {
     this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
   }
 
-  applyContinuousShipOperation(deltaTime) {
-    this.reconcileUsedStorage();
-    this.shipOperationKesslerPending = false;
-    this.shipOperationKesslerElapsed = 0;
-    this.shipOperationKesslerCost = null;
-    const duration = this.getShipOperationDuration();
-    const fraction = (deltaTime / duration) * this.getHazardousMachineryWorkerAvailabilityRatio();
-    const seconds = deltaTime / 1000;
-    const successChance = this.getKesslerSuccessChance();
-    const failureChance = 1 - successChance;
-    const capacity = this.calculateTransferAmount() * fraction;
-    if (capacity <= 0) {
-      this.shipOperationIsActive = false;
+  applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance = 1, seconds = 0) {
+    if (!plan?.transfers?.length) {
       return;
     }
-
-    const totalCost = this.calculateSpaceshipTotalCost();
-    let nonEnergyCost = 0;
-    for (const category in totalCost) {
-      for (const resource in totalCost[category]) {
-        const amount = totalCost[category][resource] * this.assignedSpaceships * fraction;
-        if (resources[category][resource].value < amount) {
-          this.shipOperationIsActive = false;
-          return;
-        }
-        if (resource !== 'energy') {
-          nonEnergyCost += amount;
-        }
-      }
-    }
-
-    const plan = this.calculateTransferPlan(true, capacity);
-    if (plan.total <= 0) {
-      this.shipOperationIsActive = false;
-      return;
-    }
-
-    for (const category in totalCost) {
-      for (const resource in totalCost[category]) {
-        const amount = totalCost[category][resource] * this.assignedSpaceships * fraction;
-        resources[category][resource].decrease(amount);
-      }
-    }
-
     plan.transfers.forEach(t => {
       if (!Number.isFinite(t.amount) || t.amount <= 0) {
         return;
@@ -1070,7 +1164,7 @@ class SpaceStorageProject extends SpaceshipProject {
       const deliveredRate = seconds > 0 ? delivered / seconds : 0;
       const storageResource = this.getSpaceStorageResource(t.storageKey || t.resource);
       if (t.mode === 'withdraw') {
-        this.removeStoredResource(t.storageKey, t.amount);
+        this.applyAccumulatedResourceDelta('spaceStorage', t.storageKey, -t.amount, accumulatedChanges);
         if (t.resource === 'biomass') {
           this.addBiomassToZones(delivered);
           resources.surface.biomass?.modifyRate(deliveredRate, 'Space storage transfer', 'project');
@@ -1080,9 +1174,8 @@ class SpaceStorageProject extends SpaceshipProject {
           resources.surface.liquidWater.modifyRate(deliveredRate, 'Space storage transfer', 'project');
           storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
         } else {
-          const res = resources[t.category][t.resource];
-          res.increase(delivered);
-          res.modifyRate(deliveredRate, 'Space storage transfer', 'project');
+          this.applyAccumulatedResourceDelta(t.category, t.resource, delivered, accumulatedChanges);
+          resources[t.category][t.resource].modifyRate(deliveredRate, 'Space storage transfer', 'project');
           storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
         }
       } else if (t.mode === 'store') {
@@ -1091,7 +1184,7 @@ class SpaceStorageProject extends SpaceshipProject {
           if (removed > 0) {
             const deliveredRemoved = removed * successChance;
             resources.surface.biomass?.modifyRate(-removed / seconds, 'Space storage transfer', 'project');
-            this.addStoredResource(t.resource, deliveredRemoved);
+            this.applyAccumulatedResourceDelta('spaceStorage', t.resource, deliveredRemoved, accumulatedChanges);
             storageResource?.modifyRate?.(deliveredRate, 'Space storage transfer', 'project');
           }
         } else if (t.resource === 'liquidWater' && t.category === 'surface') {
@@ -1099,65 +1192,129 @@ class SpaceStorageProject extends SpaceshipProject {
           if (removed > 0) {
             const deliveredRemoved = removed * successChance;
             resources.surface.liquidWater.modifyRate(-removed / seconds, 'Space storage transfer', 'project');
-            this.addStoredResource(t.resource, deliveredRemoved);
+            this.applyAccumulatedResourceDelta('spaceStorage', t.resource, deliveredRemoved, accumulatedChanges);
             storageResource?.modifyRate?.(deliveredRate, 'Space storage transfer', 'project');
           }
         } else {
-          const res = resources[t.category][t.resource];
-          res.decrease(t.amount);
-          res.modifyRate(-rate, 'Space storage transfer', 'project');
-          this.addStoredResource(t.resource, delivered);
+          this.applyAccumulatedResourceDelta(t.category, t.resource, -t.amount, accumulatedChanges);
+          this.applyAccumulatedResourceDelta('spaceStorage', t.resource, delivered, accumulatedChanges);
+          resources[t.category][t.resource].modifyRate(-rate, 'Space storage transfer', 'project');
           storageResource?.modifyRate?.(deliveredRate, 'Space storage transfer', 'project');
         }
       }
     });
-    this.reconcileUsedStorage();
+  }
 
-    if (failureChance > 0) {
-      const shipLoss = this.assignedSpaceships * fraction * failureChance;
-      this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
+  canCoverShipOperationCostForTick(totalCost, accumulatedChanges, costScale = 1) {
+    for (const category in totalCost) {
+      for (const resource in totalCost[category]) {
+        const amount = totalCost[category][resource] * costScale;
+        if (this.getResourceValueForTick(category, resource, accumulatedChanges) < amount) {
+          return false;
+        }
+      }
     }
-    this.shipOperationIsActive = true;
+    return true;
+  }
+
+  applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale = 1, seconds = 0) {
+    let nonEnergyCost = 0;
+    for (const category in totalCost) {
+      for (const resource in totalCost[category]) {
+        const amount = totalCost[category][resource] * costScale;
+        if (!(amount > 0)) {
+          continue;
+        }
+        this.applyAccumulatedResourceDelta(category, resource, -amount, accumulatedChanges);
+        if (seconds > 0) {
+          resources[category][resource].modifyRate(-(amount / seconds), 'Space storage transfer', 'project');
+        }
+        if (resource !== 'energy') {
+          nonEnergyCost += amount;
+        }
+      }
+    }
+    return nonEnergyCost;
+  }
+
+  applyPostProjectShipOperation(deltaTime, accumulatedChanges) {
+    if (!this.shipOperationIsActive || this.shipOperationIsPaused || this.assignedSpaceships <= 0) {
+      return;
+    }
+    if (this.isShipOperationContinuous()) {
+      const duration = this.getShipOperationDuration();
+      const fraction = (deltaTime / duration) * this.getHazardousMachineryWorkerAvailabilityRatio();
+      const seconds = deltaTime / 1000;
+      const successChance = this.getKesslerSuccessChance();
+      const failureChance = 1 - successChance;
+      const capacity = this.calculateTransferAmount() * fraction;
+      if (capacity <= 0) {
+        this.shipOperationIsActive = false;
+        return;
+      }
+
+      const totalCost = this.calculateSpaceshipTotalCost();
+      if (!this.canCoverShipOperationCostForTick(totalCost, accumulatedChanges, this.assignedSpaceships * fraction)) {
+        this.shipOperationIsActive = false;
+        return;
+      }
+
+      const plan = this.calculateTransferPlanForTick(capacity, accumulatedChanges);
+      if (plan.total <= 0) {
+        this.shipOperationIsActive = false;
+        return;
+      }
+
+      const nonEnergyCost = this.applyShipOperationCostForTick(
+        totalCost,
+        accumulatedChanges,
+        this.assignedSpaceships * fraction,
+        seconds
+      );
+      this.applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance, seconds);
+      this.reconcileUsedStorage();
+
+      if (failureChance > 0) {
+        const shipLoss = this.assignedSpaceships * fraction * failureChance;
+        this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
+      }
+      this.shipOperationIsActive = true;
+      return;
+    }
+
+    const operationCompleted = this.shipOperationRemainingTime <= 0;
+    if (!operationCompleted) {
+      return;
+    }
+
+    const durationSeconds = this.shipOperationStartingDuration / 1000;
+    const totalCost = this.calculateSpaceshipTotalCost();
+    const plan = this.calculateTransferPlanForTick(null, accumulatedChanges);
+    this.pendingTransfers = plan.transfers;
+    if (!this.pendingTransfers?.length) {
+      this.shipOperationIsActive = false;
+      return;
+    }
+    if (!this.canCoverShipOperationCostForTick(totalCost, accumulatedChanges, 1)) {
+      this.shipOperationIsActive = false;
+      this.pendingTransfers = [];
+      return;
+    }
+
+    this.applyShipOperationCostForTick(totalCost, accumulatedChanges, 1, durationSeconds);
+    const reservePlan = { transfers: this.pendingTransfers };
+    this.applyTransferPlanToAccumulated(reservePlan, accumulatedChanges, 1, durationSeconds);
+    this.completeShipOperation();
   }
 
   completeShipOperation() {
     this.shipOperationIsActive = false;
-    const durationSeconds = this.shipOperationStartingDuration / 1000;
-    this.pendingTransfers.forEach(t => {
-      if (!Number.isFinite(t.amount) || t.amount <= 0) {
-        return;
-      }
-      if (t.mode === 'withdraw') {
-        const storageResource = this.getSpaceStorageResource(t.storageKey || t.resource);
-        this.removeStoredResource(t.storageKey, t.amount);
-        if (t.resource === 'biomass') {
-          this.addBiomassToZones(t.amount);
-          if (!this.shipOperationAutoStart && durationSeconds > 0) {
-            const rate = t.amount / durationSeconds;
-            resources.surface.biomass?.modifyRate(rate, 'Space storage transfer', 'project');
-            storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
-          }
-        } else if (t.resource === 'liquidWater' && t.category === 'surface') {
-          this.addLiquidWaterToZones(t.amount);
-          if (!this.shipOperationAutoStart && durationSeconds > 0) {
-            const rate = t.amount / durationSeconds;
-            resources.surface.liquidWater.modifyRate(rate, 'Space storage transfer', 'project');
-            storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
-          }
-        } else {
-          const res = resources[t.category][t.resource];
-          res.increase(t.amount);
-          if (!this.shipOperationAutoStart && durationSeconds > 0) {
-            const rate = t.amount / durationSeconds;
-            res.modifyRate(rate, 'Space storage transfer', 'project');
-            storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
-          }
-        }
-      } else if (t.mode === 'store') {
-        this.addStoredResource(t.resource, t.amount);
-      }
-    });
-    this.reconcileUsedStorage();
+    this.shipOperationRemainingTime = 0;
+    this.shipOperationStartingDuration = 0;
+    this.shipOperationIsPaused = false;
+    this.shipOperationKesslerElapsed = 0;
+    this.shipOperationKesslerPending = false;
+    this.shipOperationKesslerCost = null;
     this.pendingTransfers = [];
   }
 
@@ -1351,11 +1508,9 @@ class SpaceStorageProject extends SpaceshipProject {
       this.reconcileUsedStorage();
     }
     if (this.isShipOperationContinuous()) {
-      if (this.shipOperationAutoStart) {
-        this.applyContinuousShipOperation(deltaTime);
-      } else {
-        this.shipOperationIsActive = false;
-      }
+      this.shipOperationIsActive = this.shipOperationAutoStart === true;
+      this.shipOperationIsPaused = false;
+      this.pendingTransfers = [];
     } else if (this.shipOperationIsActive) {
       this.updateShipOperation(deltaTime);
     } else if (this.shipOperationAutoStart && this.canStartShipOperation()) {
