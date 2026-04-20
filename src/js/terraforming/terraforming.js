@@ -166,6 +166,31 @@ function isLiquidCoverageTargetMet(entry, currentCoverage) {
   return currentCoverage >= entry.coverageTarget;
 }
 
+const HYDROGEN_CAPPED_TERRAFORMING_COVERAGE_KEYS = {
+  liquidWater: true,
+  ice: true,
+  liquidMethane: true,
+  hydrocarbonIce: true,
+  dryIce: true,
+  liquidCO2: true,
+  liquidAmmonia: true,
+  ammoniaIce: true,
+  liquidOxygen: true,
+  oxygenIce: true,
+  liquidNitrogen: true,
+  nitrogenIce: true,
+  fineSand: true,
+};
+
+function calculateTerraformingTargetCoverage(terraforming, coverageKey) {
+  const rawCoverage = calculateAverageCoverage(terraforming, coverageKey) || 0;
+  if (!HYDROGEN_CAPPED_TERRAFORMING_COVERAGE_KEYS[coverageKey]) {
+    return rawCoverage;
+  }
+  const hydrogenCoverage = calculateAverageCoverage(terraforming, 'liquidHydrogen') || 0;
+  return Math.min(rawCoverage, Math.max(0, 1 - hydrogenCoverage));
+}
+
 function buildZonalSurfaceResourceConfigs() {
   const configs = [];
   const surfaceResources = defaultPlanetResources.surface;
@@ -689,7 +714,7 @@ class Terraforming extends EffectableEntity{
 
   getWaterStatus() {
     for (const entry of this.liquidCoverageTargets) {
-      const currentCoverage = calculateAverageCoverage(this, entry.coverageKey) || 0;
+      const currentCoverage = calculateTerraformingTargetCoverage(this, entry.coverageKey);
       if (!isLiquidCoverageTargetMet(entry, currentCoverage)) {
         return false;
       }
@@ -787,7 +812,7 @@ class Terraforming extends EffectableEntity{
       if (requirement.type === 'coverageMinimum') {
         const minimum = Math.max(0, Math.min(requirement.minimum || 0, 1));
         const coverageKey = requirement.coverageKey || '';
-        const coverage = calculateAverageCoverage(this, coverageKey) || 0;
+        const coverage = calculateTerraformingTargetCoverage(this, coverageKey);
         statuses.push({
           key: `coverageMinimum:${coverageKey}`,
           label: requirement.labelKey

@@ -94,10 +94,10 @@ function getCoverageTargetAmount(terraforming, coverageKey, targetCoverage) {
   return total;
 }
 
-// Derive surface fractions for albedo calculations. All liquids and ice types
-// split the available surface together, scaling proportionally if their total
-// would exceed the planet. Biomass then claims up to 75% of whatever area
-// remains after those surface coverings.
+// Derive surface fractions for albedo calculations. Liquid hydrogen claims its
+// full surface share first; all other liquids and ice types then split the
+// remaining area proportionally if needed. Biomass claims up to 75% of
+// whatever area remains after those surface coverings.
 function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
                                    hydrocarbonCoverage = 0,
                                    methaneIceCoverage = 0,
@@ -115,7 +115,7 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
   let hydrocarbon = Math.max(0, hydrocarbonCoverage);
   let hydrocarbonIce = Math.max(0, methaneIceCoverage);
   let co2_ice = Math.max(0, dryIceCoverage);
-  let hydrogen = Math.max(0, hydrogenCoverage);
+  let hydrogen = Math.max(0, Math.min(1, hydrogenCoverage));
   let ammonia = Math.max(0, ammoniaCoverage);
   let ammoniaIce = Math.max(0, ammoniaIceCoverage);
   let oxygen = Math.max(0, oxygenCoverage);
@@ -124,15 +124,15 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
   let nitrogenIce = Math.max(0, nitrogenIceCoverage);
   let fineSand = Math.max(0, fineSandCoverage);
 
-  let combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + hydrogen + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
-  if (combinedSurface > 1 && combinedSurface > 0) {
-    const scale = 1 / combinedSurface;
+  const remainingSurface = Math.max(0, 1 - hydrogen);
+  let combinedOtherSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
+  if (combinedOtherSurface > remainingSurface && combinedOtherSurface > 0) {
+    const scale = remainingSurface / combinedOtherSurface;
     ocean *= scale;
     ice *= scale;
     hydrocarbon *= scale;
     hydrocarbonIce *= scale;
     co2_ice *= scale;
-    hydrogen *= scale;
     ammonia *= scale;
     ammoniaIce *= scale;
     oxygen *= scale;
@@ -140,9 +140,10 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
     nitrogen *= scale;
     nitrogenIce *= scale;
     fineSand *= scale;
-    combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + hydrogen + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
+    combinedOtherSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice + ammonia + ammoniaIce + oxygen + oxygenIce + nitrogen + nitrogenIce + fineSand;
   }
 
+  const combinedSurface = hydrogen + combinedOtherSurface;
   const remaining = Math.max(0, 1 - combinedSurface);
   const biomassMax = Math.max(0, Math.min(biomassCoverage, 1));
   const biomass = Math.min(biomassMax, remaining * 0.75);

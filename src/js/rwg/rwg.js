@@ -1296,6 +1296,7 @@ function calculateZonalCoverageLocal(tf, zone, resourceType, params) {
     case "biomass": amount = zs.biomass || 0; break;
     case "dryIce": amount = zs.dryIce || 0; break;
     case "liquidCO2": amount = zs.liquidCO2 || 0; break;
+    case "liquidHydrogen": amount = zs.liquidHydrogen || 0; break;
     case "liquidMethane": amount = zs.liquidMethane || 0; break;
     case "hydrocarbonIce": amount = zs.hydrocarbonIce || 0; break;
     case "buriedHydrocarbonIce": amount = zs.buriedHydrocarbonIce || 0; break;
@@ -1315,15 +1316,15 @@ function calculateZonalCoverageLocal(tf, zone, resourceType, params) {
   return estimateCoverage(amount, zoneArea, scale);
 }
 function calculateAverageCoverageLocal(cache, resourceType, params) { const frac = getZoneFractionsSafe(params); const zones = ["tropical","temperate","polar"]; let total = 0; for (const z of zones) total += (cache[z]?.[resourceType] || 0) * (frac[z] || 0); return Math.max(0, Math.min(total, 1)); }
-function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0, ammonia = 0, ammoniaIce = 0, oxygen = 0, oxygenIce = 0, nitrogen = 0, nitrogenIce = 0) {
-  const bio = Math.min(biomass, 1);
-  const remaining = 1 - bio;
+function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0, hydrogen = 0, ammonia = 0, ammoniaIce = 0, oxygen = 0, oxygenIce = 0, nitrogen = 0, nitrogenIce = 0) {
+  const hydrogenShare = Math.max(0, Math.min(1, hydrogen));
   const surfaces = {
     ocean: Math.max(0, water),
     ice: Math.max(0, ice),
     hydrocarbon: Math.max(0, hydro),
     hydrocarbonIce: Math.max(0, hydroIce),
     co2_ice: Math.max(0, dryIce),
+    hydrogen: hydrogenShare,
     ammonia: Math.max(0, ammonia),
     ammoniaIce: Math.max(0, ammoniaIce),
     oxygen: Math.max(0, oxygen),
@@ -1331,10 +1332,16 @@ function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce
     nitrogen: Math.max(0, nitrogen),
     nitrogenIce: Math.max(0, nitrogenIce)
   };
-  const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0);
+  const remainingSurface = Math.max(0, 1 - hydrogenShare);
+  const totalOther = surfaces.ocean + surfaces.ice + surfaces.hydrocarbon + surfaces.hydrocarbonIce + surfaces.co2_ice + surfaces.ammonia + surfaces.ammoniaIce + surfaces.oxygen + surfaces.oxygenIce + surfaces.nitrogen + surfaces.nitrogenIce;
   let scale = 1;
-  if (totalOther > remaining && totalOther > 0) scale = remaining / totalOther;
-  for (const key in surfaces) surfaces[key] *= scale;
+  if (totalOther > remainingSurface && totalOther > 0) scale = remainingSurface / totalOther;
+  for (const key in surfaces) {
+    if (key === 'hydrogen') continue;
+    surfaces[key] *= scale;
+  }
+  const combinedSurface = hydrogenShare + surfaces.ocean + surfaces.ice + surfaces.hydrocarbon + surfaces.hydrocarbonIce + surfaces.co2_ice + surfaces.ammonia + surfaces.ammoniaIce + surfaces.oxygen + surfaces.oxygenIce + surfaces.nitrogen + surfaces.nitrogenIce;
+  const bio = Math.min(Math.max(0, biomass), Math.max(0, 1 - combinedSurface) * 0.75);
   return { ...surfaces, biomass: bio };
 }
 function distribute(amount, weights, rng) { const keys = Object.keys(weights); const jittered = {}; let sum = 0; for (const k of keys) { const j = 1 + randRange(rng, -0.1, 0.1); const val = Math.max(0, weights[k] * j); jittered[k] = val; sum += val; } const out = {}; if (sum <= 0 || !isFinite(sum)) { keys.forEach((k) => (out[k] = 0)); } else { keys.forEach((k) => (out[k] = amount * (jittered[k] / sum))); } return out; }
@@ -1355,7 +1362,7 @@ function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
   const frac = getZoneFractionsSafe(params);
   const makeZoneSurface = () => ({
     liquidWater: 0, ice: 0, buriedIce: 0,
-    dryIce: 0, buriedDryIce: 0, liquidCO2: 0,
+    dryIce: 0, buriedDryIce: 0, liquidCO2: 0, liquidHydrogen: 0,
     biomass: 0, hazardousBiomass: 0,
     liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0,
     liquidAmmonia: 0, ammoniaIce: 0, buriedAmmoniaIce: 0,
@@ -1425,6 +1432,9 @@ function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
   };
   assignSplit('dryIce', distributeIceWithAllIceRule(dryIce, liquidCO2, dryIceBias, frac, rng));
 
+  const liquidHydrogen = surface.liquidHydrogen?.initialValue || 0;
+  assignSplit('liquidHydrogen', distribute(liquidHydrogen, cryoLiquidBias, rng));
+
   const liquidMethane = surface.liquidMethane?.initialValue || 0;
   const hydrocarbonIce = surface.hydrocarbonIce?.initialValue || 0;
   assignSplit('liquidMethane', distribute(liquidMethane, cryoLiquidBias, rng));
@@ -1468,6 +1478,7 @@ function normalizeZonalSurfaceOverride(override) {
       dryIce: zoneSurface.dryIce ?? zoneCO2.ice ?? 0,
       buriedDryIce: zoneSurface.buriedDryIce ?? zoneCO2.buriedIce ?? 0,
       liquidCO2: zoneSurface.liquidCO2 ?? zoneCO2.liquid ?? 0,
+      liquidHydrogen: zoneSurface.liquidHydrogen ?? 0,
       liquidMethane: zoneSurface.liquidMethane ?? zoneHydro.liquid ?? 0,
       hydrocarbonIce: zoneSurface.hydrocarbonIce ?? zoneHydro.ice ?? 0,
       buriedHydrocarbonIce: zoneSurface.buriedHydrocarbonIce ?? zoneHydro.buriedIce ?? 0,
@@ -1593,6 +1604,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
       biomass: calculateZonalCoverageLocal(tmpTerraforming, z, "biomass", params),
       dryIce: calculateZonalCoverageLocal(tmpTerraforming, z, "dryIce", params),
       liquidCO2: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidCO2", params),
+      liquidHydrogen: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidHydrogen", params),
       liquidMethane: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidMethane", params),
       hydrocarbonIce: calculateZonalCoverageLocal(tmpTerraforming, z, "hydrocarbonIce", params),
       liquidAmmonia: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidAmmonia", params),
@@ -1607,6 +1619,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const avgIce = calculateAverageCoverageLocal(zonalCoverageCache, "ice", params);
   const avgBio = calculateAverageCoverageLocal(zonalCoverageCache, "biomass", params);
   const avgLiquidCO2 = calculateAverageCoverageLocal(zonalCoverageCache, "liquidCO2", params);
+  const avgLiquidHydrogen = calculateAverageCoverageLocal(zonalCoverageCache, "liquidHydrogen", params);
   const avgHydro = calculateAverageCoverageLocal(zonalCoverageCache, "liquidMethane", params);
   const avgHydroIce = calculateAverageCoverageLocal(zonalCoverageCache, "hydrocarbonIce", params);
   const avgDryIce = calculateAverageCoverageLocal(zonalCoverageCache, "dryIce", params);
@@ -1623,6 +1636,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     avgHydro,
     avgHydroIce,
     avgDryIce + avgLiquidCO2,
+    avgLiquidHydrogen,
     avgAmmonia,
     avgAmmoniaIce,
     avgLiquidOxygen,

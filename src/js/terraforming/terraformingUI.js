@@ -1776,7 +1776,7 @@ function createWaterBox(row) {
 
     let allTargetsMet = true;
     for (const entry of terraforming.liquidCoverageTargets) {
-      const current = calculateAverageCoverage(terraforming, entry.coverageKey) || 0;
+      const current = calculateTerraformingTargetCoverage(terraforming, entry.coverageKey) || 0;
       const met = entry.comparison === 'atMost'
         ? current <= entry.coverageTarget
         : current >= entry.coverageTarget;
