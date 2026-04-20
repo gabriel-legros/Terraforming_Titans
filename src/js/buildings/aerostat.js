@@ -14,6 +14,9 @@ const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
 const AEROSTAT_MAX_LAND_SHARE = 0.25;
 const AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP = 100;
+const AEROSTAT_POWERED_FLIGHT_MASS_KG = 500_000;
+const AEROSTAT_POWERED_FLIGHT_ROTOR_AREA_M2 = 20000;
+const AEROSTAT_POWERED_FLIGHT_INDUCED_POWER_FACTOR = 1.15;
 function getAerostatText(path, fallback, vars) {
   try {
     return t(path, vars, fallback);
@@ -22,11 +25,6 @@ function getAerostatText(path, fallback, vars) {
   }
 }
 
-const AEROSTAT_BUOYANCY_NOTES =
-  getAerostatText(
-    'ui.buildings.aerostat.buoyancyNotes',
-    'Aerostats are immune to the pressure penalty and have reduced temperature maintenance penalty. Their own maintenance always uses at least the dry-adiabatic 1 atm temperature floor. Aerostats require additional components, electronics and lift, and form small communities that allow the use of factories. Colony researches that normally unlock new colony types will also improve aerostat comfort and enable electronics/androids consumption. Aerostats need at least 50 kPa of ambient pressure to stay buoyant. When lift fails, active aerostats can land as Research Outposts if sufficient land remains.'
-  );
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   getAerostatText(
     'ui.buildings.aerostat.landLimitTooltip',
@@ -65,14 +63,18 @@ class Aerostat extends BaseColony {
     this._liftDisableAccumulator = 0;
     this._liftBelowThreshold = false;
     this._pressureBelowThreshold = false;
-    this.buoyancyNotes = AEROSTAT_BUOYANCY_NOTES;
     this.landAsResearchOutpost = true;
     this.androidCapacityShare = 0;
     this.aerostats_collision_avoidance = false;
+    this.aerostats_powered_flight = false;
   }
 
   hasCollisionAvoidance() {
     return !!this.aerostats_collision_avoidance;
+  }
+
+  hasPoweredFlight() {
+    return !!this.aerostats_powered_flight;
   }
 
   getAndroidCapacityShare() {
@@ -350,7 +352,7 @@ class Aerostat extends BaseColony {
       return false;
     }
 
-    if (this.isLiftBelowThreshold(undefined, this.getCurrentSurfacePressure())) {
+    if (this.isFlightOperationBlocked()) {
       return false;
     }
 
@@ -403,9 +405,7 @@ class Aerostat extends BaseColony {
       return false;
     }
 
-    const lift = this.getCurrentLift();
-    const pressure = this.getCurrentSurfacePressure();
-    if (this.isLiftBelowThreshold(lift, pressure)) {
+    if (this.isFlightOperationBlocked()) {
       return false;
     }
 
@@ -423,7 +423,7 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    if (this.isLiftBelowThreshold(undefined, this.getCurrentSurfacePressure())) {
+    if (this.isFlightOperationBlocked()) {
       return 0;
     }
 
@@ -473,16 +473,16 @@ class Aerostat extends BaseColony {
   }
 
   getBuoyancySummary() {
-    let summary = this.buoyancyNotes;
+    let summary = this.getBuoyancyNotes();
     const lift = this.getCurrentLift();
     const pressure = this.getCurrentSurfacePressure();
-    const { pressureBelow, liftBelow } = this._evaluateBuoyancy(
+    const status = this._evaluateBuoyancy(
       lift,
       pressure
     );
 
     let warning = '';
-    if (pressureBelow) {
+    if (status.pressureBelow) {
       const minPressure = this.getMinimumOperationalPressure();
       warning = Number.isFinite(pressure)
         ? `▲ Current atmospheric pressure is ${formatNumber(pressure, false, 1)} kPa, below the ${formatNumber(
@@ -491,7 +491,14 @@ class Aerostat extends BaseColony {
             0
           )} kPa minimum needed for aerostat buoyancy. ▲`
         : `▲ Atmospheric pressure is below the ${formatNumber(minPressure, false, 0)} kPa minimum needed for aerostat buoyancy. ▲`;
-    } else if (liftBelow) {
+    } else if (status.poweredFlightActive) {
+      const poweredFlightCost = this.getPoweredFlightEnergyPerAerostat(lift, pressure);
+      warning = getAerostatText(
+        'ui.buildings.aerostat.poweredFlightSummary',
+        'Powered flight is active. Each aerostat consumes an additional {value} energy to stay aloft.',
+        { value: formatNumber(poweredFlightCost, false, 0, true) }
+      );
+    } else if (status.liftBelow) {
       warning =
         '▲ Current lift is below the minimum operational requirement, preventing aerostat activation and construction. ▲';
     }
@@ -501,6 +508,18 @@ class Aerostat extends BaseColony {
     }
 
     return summary;
+  }
+
+  getBuoyancyNotes() {
+    return this.hasPoweredFlight()
+      ? getAerostatText(
+          'ui.buildings.aerostat.buoyancyNotesPoweredFlight',
+          'Aerostats ignore normal pressure colony penalties and use the dry-adiabatic 1 atm temperature floor for their own upkeep. They need at least 50 kPa of surface pressure to stay airborne. On worlds with poor buoyancy, powered flight can keep them aloft for extra energy. If flight fails, active aerostats can land as Research Outposts if enough land remains.'
+        )
+      : getAerostatText(
+          'ui.buildings.aerostat.buoyancyNotes',
+          'Aerostats ignore normal pressure colony penalties and use the dry-adiabatic 1 atm temperature floor for their own upkeep. They need at least 50 kPa of surface pressure and enough lift to stay airborne. If lift fails, active aerostats can land as Research Outposts if enough land remains.'
+        );
   }
 
   getMinimumOperationalLift() {
@@ -602,11 +621,20 @@ class Aerostat extends BaseColony {
 
     const minLift = this.getMinimumOperationalLift();
     const liftBelow = lift !== null && lift < minLift;
-
-    const insufficient = pressureBelow || liftBelow;
+    const poweredFlightAvailable = this.hasPoweredFlight() && !pressureBelow;
+    const poweredFlightActive = poweredFlightAvailable && liftBelow;
+    const insufficient = pressureBelow || (liftBelow && !poweredFlightAvailable);
     this._liftBelowThreshold = insufficient;
 
-    return { lift, pressure, pressureBelow, liftBelow, insufficient };
+    return {
+      lift,
+      pressure,
+      pressureBelow,
+      liftBelow,
+      poweredFlightAvailable,
+      poweredFlightActive,
+      insufficient
+    };
   }
 
   isLiftBelowThreshold(liftValue, pressureValue) {
@@ -619,6 +647,84 @@ class Aerostat extends BaseColony {
 
     const { insufficient } = this._evaluateBuoyancy(lift, pressure);
     return insufficient;
+  }
+
+  isFlightOperationBlocked(liftValue, pressureValue) {
+    return this.isLiftBelowThreshold(liftValue, pressureValue);
+  }
+
+  getCurrentSurfaceAtmosphericDensity() {
+    const pressureKPa = this.getCurrentSurfacePressure();
+    const temperatureK = Number(terraforming?.temperature?.value) || 0;
+    const atmosphere = this.getAtmosphericComposition();
+    const molecularWeight =
+      globalThis.calculateMolecularWeight?.(
+        getAerostatLiftComposition(atmosphere)
+      ) || 0;
+
+    if (!(pressureKPa > 0) || !(temperatureK > 0) || !(molecularWeight > 0)) {
+      return null;
+    }
+
+    const pressurePa = pressureKPa * 1000;
+    const molarMassKg = molecularWeight / 1000;
+    const gasConstant = 8.314;
+    const density = (pressurePa * molarMassKg) / (gasConstant * temperatureK);
+    return Number.isFinite(density) && density > 0 ? density : null;
+  }
+
+  getPoweredFlightEnergyPerAerostat(liftValue, pressureValue) {
+    const lift =
+      liftValue === undefined ? this.getCurrentLift() : liftValue;
+    const pressure =
+      pressureValue === undefined
+        ? this.getCurrentSurfacePressure()
+        : pressureValue;
+    const status = this._evaluateBuoyancy(lift, pressure);
+    if (!status.poweredFlightActive) {
+      return 0;
+    }
+
+    const density = this.getCurrentSurfaceAtmosphericDensity();
+    if (!(density > 0)) {
+      return 0;
+    }
+
+    const minLift = this.getMinimumOperationalLift();
+    if (minLift <= 0) {
+      return 0;
+    }
+
+    const liftDeficitRatio = Math.max(0, (minLift - status.lift) / minLift);
+    if (liftDeficitRatio <= 0) {
+      return 0;
+    }
+
+    const gravity = Math.max(
+      0,
+      Number(terraforming?.celestialParameters?.gravity) || 0
+    );
+    if (!(gravity > 0)) {
+      return 0;
+    }
+
+    const unsupportedWeightNewtons =
+      AEROSTAT_POWERED_FLIGHT_MASS_KG *
+      gravity *
+      liftDeficitRatio;
+    if (!(unsupportedWeightNewtons > 0)) {
+      return 0;
+    }
+
+    const rotorTerm = 2 * density * AEROSTAT_POWERED_FLIGHT_ROTOR_AREA_M2;
+    if (!(rotorTerm > 0)) {
+      return 0;
+    }
+
+    return (
+      AEROSTAT_POWERED_FLIGHT_INDUCED_POWER_FACTOR *
+      Math.pow(unsupportedWeightNewtons, 1.5)
+    ) / Math.sqrt(rotorTerm);
   }
 
   initUI(autoBuildContainer, cache) {
@@ -657,12 +763,37 @@ class Aerostat extends BaseColony {
     return multiplier;
   }
 
+  getConsumptionResource(category, resource) {
+    const consumption = super.getConsumptionResource(category, resource);
+    if (category !== 'colony' || resource !== 'energy') {
+      return consumption;
+    }
+
+    const poweredFlightEnergy = this.getPoweredFlightEnergyPerAerostat();
+    if (!(poweredFlightEnergy > 0)) {
+      return consumption;
+    }
+
+    const resourceMultiplier = this.getEffectiveResourceConsumptionMultiplier(
+      'colony',
+      'energy'
+    );
+    const normalizedPenalty = resourceMultiplier > 0
+      ? poweredFlightEnergy / resourceMultiplier
+      : poweredFlightEnergy;
+
+    return {
+      amount: consumption.amount + normalizedPenalty,
+      ignoreProductivity: consumption.ignoreProductivity
+    };
+  }
+
   filterActivationChange(change) {
     const normalizedChange = typeof normalizeSignedStructureChange === 'function'
       ? normalizeSignedStructureChange(change)
       : BigInt(Math.trunc(Number(change) || 0));
     if (normalizedChange <= BigInt(Number.MIN_SAFE_INTEGER) || normalizedChange >= BigInt(Number.MAX_SAFE_INTEGER)) {
-      if (normalizedChange > 0n && this.isLiftBelowThreshold()) {
+      if (normalizedChange > 0n && this.isFlightOperationBlocked()) {
         return 0n;
       }
       return normalizedChange;
@@ -674,7 +805,7 @@ class Aerostat extends BaseColony {
     }
 
     const sanitized = Math.trunc(numericChange);
-    if (sanitized > 0 && this.isLiftBelowThreshold()) {
+    if (sanitized > 0 && this.isFlightOperationBlocked()) {
       return 0;
     }
     if (sanitized > 0) {
@@ -695,7 +826,8 @@ class Aerostat extends BaseColony {
 
     const lift = this.getCurrentLift();
     const pressure = this.getCurrentSurfacePressure();
-    const belowThreshold = this.isLiftBelowThreshold(lift, pressure);
+    const status = this._evaluateBuoyancy(lift, pressure);
+    const belowThreshold = status.insufficient;
 
     if (!belowThreshold) {
       this._liftDisableAccumulator = 0;
@@ -1083,6 +1215,8 @@ function attachAerostatBuoyancySection(container, structure) {
     !existing.container ||
     !existing.container.isConnected ||
     !existing.liftValue ||
+    !existing.poweredFlightRow ||
+    !existing.poweredFlightValue ||
     !existing.mitigationValue ||
     !existing.limitValue ||
     !existing.limitInfo ||
@@ -1149,6 +1283,27 @@ function attachAerostatBuoyancySection(container, structure) {
     liftRow.appendChild(liftInfo);
 
     body.appendChild(liftRow);
+
+    const poweredFlightRow = document.createElement('div');
+    poweredFlightRow.classList.add('colony-buoyancy-lift-row');
+
+    const poweredFlightLabel = document.createElement('span');
+    poweredFlightLabel.classList.add('colony-buoyancy-lift-label');
+    poweredFlightLabel.textContent = `${getAerostatText(
+      'ui.buildings.aerostat.poweredFlightLabel',
+      'Powered Flight'
+    )}:`;
+    poweredFlightRow.appendChild(poweredFlightLabel);
+
+    const poweredFlightValue = document.createElement('span');
+    poweredFlightValue.classList.add('colony-buoyancy-lift-value');
+    poweredFlightValue.textContent = getAerostatText(
+      'ui.buildings.aerostat.poweredFlightInactive',
+      'Inactive'
+    );
+    poweredFlightRow.appendChild(poweredFlightValue);
+
+    body.appendChild(poweredFlightRow);
 
     const mitigationRow = document.createElement('div');
     mitigationRow.classList.add(
@@ -1291,6 +1446,8 @@ function attachAerostatBuoyancySection(container, structure) {
       liftValue,
       liftInfo,
       liftTooltip,
+      poweredFlightRow,
+      poweredFlightValue,
       mitigationValue,
       mitigationInfo,
       mitigationTooltip,
@@ -1345,8 +1502,13 @@ function updateAerostatBuoyancySection(structure) {
   const minPressure =
     structure.getMinimumOperationalPressure?.() ??
     AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
+  const status =
+    structure._evaluateBuoyancy?.(lift, pressure) ??
+    { pressureBelow: Number.isFinite(pressure) && pressure < minPressure, poweredFlightActive: false };
   const liftAvailable =
-    Number.isFinite(pressure) && pressure < minPressure ? null : lift;
+    status.pressureBelow ? null : lift;
+  const poweredFlightEnergy =
+    structure.getPoweredFlightEnergyPerAerostat?.(lift, pressure) ?? 0;
 
   const baseBuildLimitRaw = structure._getBuildLimit?.() ?? null;
   const baseBuildLimit = Number.isFinite(baseBuildLimitRaw)
@@ -1452,7 +1614,41 @@ function updateAerostatBuoyancySection(structure) {
       'Aerostats require at least {value} kPa of surface pressure to remain buoyant.',
       { value: formatNumber(minPressure, false, 0) }
     )}`;
+    if (structure.hasPoweredFlight?.()) {
+      title += `\n${getAerostatText(
+        'ui.buildings.aerostat.poweredFlightUnlocked',
+        'Powered flight unlock active: if pressure stays above the minimum, aerostats can remain airborne with additional energy when lift is insufficient.'
+      )}`;
+    }
+    if (status.poweredFlightActive && poweredFlightEnergy > 0) {
+      title += `\n${getAerostatText(
+        'ui.buildings.aerostat.poweredFlightTooltipActive',
+        'Powered flight active: +{value} energy per active aerostat.',
+        { value: formatNumber(poweredFlightEnergy, false, 0, true) }
+      )}`;
+    }
     setTooltipText(ui.liftTooltip, title, ui, 'liftTooltipText');
+  }
+
+  if (ui.poweredFlightRow) {
+    ui.poweredFlightRow.style.display = structure.hasPoweredFlight?.() ? '' : 'none';
+  }
+
+  if (ui.poweredFlightValue) {
+    if (!structure.hasPoweredFlight?.()) {
+      ui.poweredFlightValue.textContent = '';
+    } else if (status.poweredFlightActive && poweredFlightEnergy > 0) {
+      ui.poweredFlightValue.textContent = getAerostatText(
+        'ui.buildings.aerostat.poweredFlightRowActive',
+        'Active (+{value} energy)',
+        { value: formatNumber(poweredFlightEnergy, false, 0, true) }
+      );
+    } else {
+      ui.poweredFlightValue.textContent = getAerostatText(
+        'ui.buildings.aerostat.poweredFlightInactive',
+        'Inactive'
+      );
+    }
   }
 
   if (ui.mitigationValue) {

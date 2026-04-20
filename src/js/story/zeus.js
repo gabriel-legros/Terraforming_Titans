@@ -16,10 +16,28 @@ progressZeus.chapters.push(
     chapter: 42,
     activePlanet: "zeus",
     title: "Chapter 42: King of the gods",
-    narrative: "Mary : 'Prometheus...  please tell me our destination is one of the moons around this thing, and not this thing.'  \n $RED$Prometheus : 'It's the Gas Giant.'  \n Mary : 'Prometheus... this thing is the size of Jupiter.'  \n $RED$Prometheus : 'Indeed.'  \n Mary : 'There's NOTHING here but hydrogen.  We should leave and build a shell remotely or something.'  \n $RED$Prometheus : 'No.  You need HOPE to turn off my defenses... and keep them off.'  \n Mary : 'This is just plain stupid.  This is a ball of HYDROGEN.'  \n Evelyn : 'Mary... our aerostats can't float here but they can fly.  It will cost you though.'  \n Mary : '*sighs*  I can't wait for this to be over already.'",
+    narrative: "Mary : 'Prometheus...  please tell me our destination is one of the moons around this thing, and not this thing.'  \n $RED$Prometheus : 'I already told you.  It's the Gas Giant.'  \n Mary : 'Prometheus... this thing is the size of Jupiter.'  \n $RED$Prometheus : 'Indeed.'  \n Mary : 'There's NOTHING here but hydrogen.  We should leave and build a shell remotely or something.'  \n $RED$Prometheus : 'No.  You need HOPE to turn off my defenses... and keep them off.'  \n Mary : 'This is just plain stupid.  This is a ball of HYDROGEN.'  \n Evelyn : 'Mary... our aerostats can't float here but they can fly.  It will cost you though.'  \n  System Message : Powered Flight for aerostats available.  \n Mary : '*sighs*  I can't wait for this to be over already.'",
     prerequisites: [
       'styx.41.7'
     ],
+    objectives: [],
+    reward: [
+      {
+        target: 'colony',
+        targetId: 'aerostat_colony',
+        type: 'booleanFlag',
+        flagId: 'aerostats_powered_flight',
+        value: true
+      }
+    ]
+  },
+  {
+    id: "zeus.42.0b",
+    type: "journal",
+    chapter: 42,
+    activePlanet: "zeus",
+    narrative: "",
+    prerequisites: ['zeus.42.0'],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 50 }
     ],
@@ -31,7 +49,7 @@ progressZeus.chapters.push(
     chapter: 42,
     activePlanet: "zeus",
     narrative: "$RED$Prometheus : 'I apologize for the inconvenience Mary.'  \n Mary : 'I get it.  You wanted to place these command centers in difficult to access places.  One is right next to a pulsar.  One is at the core of molten world.  One at the heart of a gas giant.'  \n $RED$Prometheus : 'I could access them easily... if I was free.'  \n Mary : 'Yeah we would have to turn off your kill switch for that...  Speaking of which.  When this war is finally done we should... turn it off?  You've been of great help.'  \n $RED$Prometheus : 'I appreciate the sentiment... but I urge you to be careful.  How do you know...  I am not trying to manipulate you?'",
-    prerequisites: ["zeus.42.0"],
+    prerequisites: ["zeus.42.0b"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 100 }
     ],

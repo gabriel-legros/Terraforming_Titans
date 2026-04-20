@@ -381,10 +381,10 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "Placeholder",
+    narrative: "Acquire full control of sector R5-29 to continue.",
     prerequisites: ['impossible'],
     objectives: [
-
+      { type: 'galaxySectorControl', sectorLabel: 'R5-29' }
     ],
     reward: [
       { target: 'spaceManager', targetId: 'zeus', type: 'enable' }
@@ -395,7 +395,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "Placeholder",
+    narrative: "Pete : 'This is it.  One more weapon and they have nothing.  Soon our fleets will be stronger than theirs.  I might even be able to really negotiate with them after that.'  \n Mary : 'I hope so.  I would rather we avoid having to take over the entire galaxy one sector at a time.'  \n Pete : 'Still if they get to warp around with this weapon we will never find peace.  Get this job done Mary.  I believe in you now.'  \n Mary : 'We will.  I promise.'  \n Travel to Zeus to continue.",
     prerequisites: ['styx.41.6'],
     objectives: [
       { type: 'currentPlanet', planetId: 'zeus' }

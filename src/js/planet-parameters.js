@@ -1893,6 +1893,7 @@ const styxOverrides = {
 
 const zeusOverrides = {
   name: 'Zeus',
+  gravityPenaltyEnabled: true,
   specialAttributes: {
     hasSand: false,
     dynamicMass: true,

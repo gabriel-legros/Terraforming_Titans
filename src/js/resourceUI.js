@@ -1182,6 +1182,10 @@ function getAerostatLiftAlert() {
     typeof aerostat.getMinimumOperationalLift === 'function'
       ? aerostat.getMinimumOperationalLift()
       : 0.2;
+  const poweredFlightActive =
+    typeof aerostat.getPoweredFlightEnergyPerAerostat === 'function'
+      ? aerostat.getPoweredFlightEnergyPerAerostat(lift, pressure) > 0
+      : false;
   const warningLift = minLift + 0.1;
 
   if (!Number.isFinite(lift) && !Number.isFinite(pressure)) {
@@ -1203,11 +1207,13 @@ function getAerostatLiftAlert() {
       }
     );
   } else if (Number.isFinite(lift) && lift < minLift) {
-    severity = 'critical';
+    severity = poweredFlightActive ? 'warning' : 'critical';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
     message = getResourceUIWarningText(
-      'aerostatLiftCritical',
-      '▲ Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ minimum needed to stay aloft. ▲',
+      poweredFlightActive ? 'aerostatLiftPowered' : 'aerostatLiftCritical',
+      poweredFlightActive
+        ? 'Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ buoyancy threshold. Powered flight is covering the deficit.'
+        : '▲ Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ minimum needed to stay aloft. ▲',
       {
         lift: liftText,
         minimum: formatNumber(minLift, false, 2),
