@@ -230,6 +230,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
+- Planet visualizer now supports a composition-driven gas overlay layered above the normal world texture: strong atmospheric/surface hydrogen enables Jupiter-style tan banding, methane adds cooler blue-gray belt shading, and ammonia adds bright pale cloud-band/storm accents once each gas clears its visual threshold.
 - Building, project, research, and colony automation preset builders now support preset import plus `Export to clipboard`; imports create a new preset from the pasted transfer string and the transfer buttons sit between `Delete` and `Apply Once Now`.
 - Runtime building and colony `count`/`active` state now use `BigInt` internally; convert through the shared numeric cache (`countNumber`/`activeNumber`) when a system needs JS number math for rates, UI percentages, or other fractional calculations, while keeping save data numeric.
 - Localization scaffold now loads a swappable language script through `index.html`; static shell text can use `data-i18n` attributes, and catalog/story localization is applied centrally before globals initialize. No in-game language selector exists yet.

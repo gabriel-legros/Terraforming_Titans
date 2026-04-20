@@ -267,6 +267,82 @@
     this.lavaOverlayMaterial = material;
   };
 
+  PlanetVisualizer.prototype.getGasGiantVisualState = function getGasGiantVisualState() {
+    const pressureByKey = this.debug.mode === 'debug'
+      ? null
+      : this.terraforming?.atmosphericPressureCache?.pressureByKey;
+    const totalPressureKPa = Math.max(0, this.computeTotalPressureKPa());
+    const hydrogenKPa = this.debug.mode === 'debug'
+      ? Math.max(0, this.viz.kpa.h2 || 0)
+      : Math.max(0, (pressureByKey?.hydrogen || 0) / 1000);
+    const methaneKPa = this.debug.mode === 'debug'
+      ? Math.max(0, this.viz.kpa.ch4 || 0)
+      : Math.max(0, (pressureByKey?.atmosphericMethane || 0) / 1000);
+    const ammoniaKPa = this.debug.mode === 'debug'
+      ? Math.max(0, this.viz.kpa.nh3 || 0)
+      : Math.max(0, (pressureByKey?.atmosphericAmmonia || 0) / 1000);
+    const hydrogenShare = totalPressureKPa > 0 ? hydrogenKPa / totalPressureKPa : 0;
+    const liquidHydrogenCoverage = this.debug.mode === 'debug'
+      ? 0
+      : Math.max(0, calculateAverageCoverage(this.terraforming, 'liquidHydrogen') || 0);
+
+    const hydrogenStrength = Math.max(
+      smoothstep(60, 800, hydrogenKPa),
+      smoothstep(0.08, 0.5, hydrogenShare),
+      smoothstep(0.04, 0.28, liquidHydrogenCoverage)
+    );
+    const methaneStrength = smoothstep(3, 140, methaneKPa) * hydrogenStrength;
+    const ammoniaStrength = smoothstep(1.5, 70, ammoniaKPa) * hydrogenStrength;
+    const overlayStrength = clamp01(
+      Math.max(
+        hydrogenStrength,
+        hydrogenStrength * (0.88 + methaneStrength * 0.06 + ammoniaStrength * 0.06)
+      )
+    );
+
+    return {
+      overlayStrength,
+      hydrogenStrength,
+      methaneStrength,
+      ammoniaStrength,
+      hydrogenKPa,
+      methaneKPa,
+      ammoniaKPa,
+      liquidHydrogenCoverage,
+    };
+  };
+
+  PlanetVisualizer.prototype.createGasOverlayMesh = function createGasOverlayMesh() {
+    if (this.gasOverlayMesh || !this.surfaceMesh) return;
+
+    const isRing = this.isRingWorld();
+    const geometry = isRing
+      ? new THREE.CylinderGeometry(
+        Math.max(0.1, (this.ringRadius || 1) + 0.055),
+        Math.max(0.1, (this.ringRadius || 1) + 0.055),
+        (this.ringHeight || 0.23625) + 0.02,
+        96,
+        1,
+        true
+      )
+      : new THREE.SphereGeometry(1.055, 32, 32);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.NormalBlending,
+      side: isRing ? THREE.BackSide : THREE.FrontSide,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.visible = false;
+    mesh.renderOrder = 6;
+    this.surfaceMesh.add(mesh);
+    this.gasOverlayMesh = mesh;
+    this.gasOverlayMaterial = material;
+  };
+
   PlanetVisualizer.prototype.ensureLavaOverlayTexture = function ensureLavaOverlayTexture() {
     const material = this.lavaOverlayMaterial;
     if (!material) return;
@@ -291,6 +367,32 @@
     material.needsUpdate = true;
   };
 
+  PlanetVisualizer.prototype.ensureGasOverlayTexture = function ensureGasOverlayTexture(state) {
+    const material = this.gasOverlayMaterial;
+    if (!material) return;
+
+    const { w, h } = this.getSurfaceTextureSize();
+    const textureKey = [
+      `${w}x${h}`,
+      state.hydrogenStrength.toFixed(3),
+      state.methaneStrength.toFixed(3),
+      state.ammoniaStrength.toFixed(3),
+      state.overlayStrength.toFixed(3),
+    ].join('|');
+    if (this.gasOverlayTexture && this.gasOverlayTextureKey === textureKey) {
+      return;
+    }
+
+    const texture = this.generateGasOverlayTexture(w, h, state);
+    if (this.gasOverlayTexture && this.gasOverlayTexture.dispose) {
+      this.gasOverlayTexture.dispose();
+    }
+    this.gasOverlayTexture = texture;
+    this.gasOverlayTextureKey = textureKey;
+    material.map = texture;
+    material.needsUpdate = true;
+  };
+
   PlanetVisualizer.prototype.updateLavaOverlay = function updateLavaOverlay() {
     const mesh = this.lavaOverlayMesh;
     const material = this.lavaOverlayMaterial;
@@ -306,6 +408,23 @@
     this.ensureLavaOverlayTexture();
     mesh.visible = true;
     material.opacity = lava;
+  };
+
+  PlanetVisualizer.prototype.updateGasOverlay = function updateGasOverlay() {
+    const mesh = this.gasOverlayMesh;
+    const material = this.gasOverlayMaterial;
+    if (!mesh || !material) return;
+
+    const state = this.getGasGiantVisualState();
+    if (state.overlayStrength <= 0) {
+      mesh.visible = false;
+      material.opacity = 0;
+      return;
+    }
+
+    this.ensureGasOverlayTexture(state);
+    mesh.visible = true;
+    material.opacity = clamp01(smoothstep(0.12, 0.7, state.overlayStrength) * 1.16);
   };
 
   PlanetVisualizer.prototype.buildZoneRowIndex = function buildZoneRowIndex(h) {
@@ -1064,6 +1183,267 @@
       data[idx + 2] = Math.max(0, Math.min(255, Math.round(b)));
       data[idx + 3] = 255;
     }
+    ctx.putImageData(img, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    if (THREE && THREE.SRGBColorSpace) {
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+    return texture;
+  };
+
+  PlanetVisualizer.prototype.generateGasOverlayTexture = function generateGasOverlayTexture(w, h, state) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(w, h);
+    const data = img.data;
+    const ringAspect = this.getRingUvAspect();
+    const gasSeed = this.hashSeedFromPlanet();
+    const seedValue = Math.floor((gasSeed.x * 917519) ^ (gasSeed.y * 655357)) >>> 0;
+    const hash = (x, y) => {
+      const n = Math.sin(x * 127.1 + y * 311.7 + seedValue * 0.00019) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const smooth = (t) => t * t * (3 - 2 * t);
+    const wrapIndex = (idx, period) => {
+      const p = Math.max(1, Math.round(period));
+      let v = idx % p;
+      if (v < 0) v += p;
+      return v;
+    };
+    const value2 = (x, y) => {
+      const xi = Math.floor(x);
+      const yi = Math.floor(y);
+      const xf = x - xi;
+      const yf = y - yi;
+      const u = smooth(xf);
+      const v = smooth(yf);
+      const a = hash(xi, yi);
+      const b = hash(xi + 1, yi);
+      const c = hash(xi, yi + 1);
+      const d = hash(xi + 1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    };
+    const value2Periodic = (x, y, period) => {
+      const xi = Math.floor(x);
+      const yi = Math.floor(y);
+      const xf = x - xi;
+      const yf = y - yi;
+      const u = smooth(xf);
+      const v = smooth(yf);
+      const x0 = wrapIndex(xi, period);
+      const x1 = wrapIndex(xi + 1, period);
+      const a = hash(x0, yi);
+      const b = hash(x1, yi);
+      const c = hash(x0, yi + 1);
+      const d = hash(x1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    };
+    const usePeriodic = this.isRingWorld();
+    const sample = (x, y, period) => (usePeriodic && period ? value2Periodic(x, y, period) : value2(x, y));
+    const bandPeriod = ringAspect * 5.2;
+    const stormPeriod = ringAspect * 9.4;
+    const spotCx = 0.72 + (hash(11.2, 7.4) - 0.5) * 0.08;
+    const spotCy = 0.60 + (hash(3.6, 19.1) - 0.5) * 0.06;
+    const spotRx = 0.11 + hash(1.7, 2.8) * 0.04;
+    const spotRy = 0.045 + hash(5.1, 9.3) * 0.02;
+
+    const hydrogenLight = { r: 238, g: 221, b: 199 };
+    const hydrogenMid = { r: 203, g: 174, b: 142 };
+    const hydrogenDark = { r: 147, g: 108, b: 79 };
+    const warmBeltTint = { r: 196, g: 136, b: 92 };
+    const methaneTint = { r: 142, g: 152, b: 164 };
+    const ammoniaTint = { r: 249, g: 246, b: 241 };
+    const stormTint = { r: 214, g: 145, b: 74 };
+
+    for (let i = 0; i < w * h; i++) {
+      const x = i % w;
+      const y = (i - x) / w;
+      const idx = i * 4;
+      const u = x / Math.max(1, w - 1);
+      const v = y / Math.max(1, h - 1);
+      const lat = (v - 0.5) * 2;
+      const latAbs = Math.abs(lat);
+      const chemistryStrength = clamp01(state.methaneStrength * 0.58 + state.ammoniaStrength * 0.72);
+      const pureHydrogenStrength = state.hydrogenStrength * (1 - chemistryStrength);
+      const polarFade = 1 - smoothstep(0.8, 0.95, latAbs);
+      const polarBlend = smoothstep(0.72, 0.96, latAbs);
+
+      const baseBroad = sample(u * ringAspect * 0.85 + 2.6, v * 1.4 + 4.9, bandPeriod * 0.18);
+      const baseSoft = sample(u * ringAspect * 2.0 - 3.1, v * 2.3 + 7.8, bandPeriod * 0.4);
+      const baseMarble = sample(u * ringAspect * 3.2 + 9.4, v * 3.8 - 2.7, bandPeriod * 0.62);
+      const roughA = sample(u * ringAspect * 12.8 + 13.4, v * 15.2 - 7.6, bandPeriod * 2.2);
+      const roughB = sample(u * ringAspect * 24.4 - 18.1, v * 31.5 + 5.7, bandPeriod * 5.1);
+      const roughC = sample(u * ringAspect * 37.2 + 6.3, v * 43.8 - 14.9, bandPeriod * 7.8);
+      const roughMix = clamp01(0.5 * roughA + 0.32 * roughB + 0.18 * roughC);
+      const roughMask = smoothstep(0.18, 0.92, roughMix);
+      const hydrogenBase = clamp01(
+        0.52
+        + (baseBroad - 0.5) * 0.18
+        + (baseSoft - 0.5) * 0.1
+        + (baseMarble - 0.5) * 0.06
+        + (roughMix - 0.5) * 0.06
+      );
+
+      const beltPhase = lat * Math.PI * (2.8 + chemistryStrength * 2.1);
+      const belts = Math.sin(beltPhase + seedValue * 0.0000021) * 0.5 + 0.5;
+      const broad = sample(u * ringAspect * 1.7 + 2.1, v * 2.8 + 6.2, bandPeriod * 0.33);
+      const fine = sample(u * ringAspect * 13.5 - 14.4, v * 16.8 + 3.7, bandPeriod * 2.8);
+      const streak = sample(u * ringAspect * 22.5 + 17.3, v * 26.4 - 9.2, bandPeriod * 4.6);
+      const eddy = sample(u * ringAspect * 8.4 - 5.6, v * 10.1 + 4.8, bandPeriod * 1.75);
+      const messyBreakup = sample(u * ringAspect * 5.2 - 7.7, v * 6.4 + 12.1, bandPeriod * 0.92);
+      const swirlFieldA = sample(u * ringAspect * 9.6 + 7.1, v * 11.8 - 5.2, bandPeriod * 1.85) - 0.5;
+      const swirlFieldB = sample(u * ringAspect * 16.4 - 12.7, v * 18.2 + 9.3, bandPeriod * 3.1) - 0.5;
+      const swirlCurl = Math.sin((u * ringAspect * 9.1 + swirlFieldA * 5.2 + swirlFieldB * 3.8) * Math.PI);
+      const shear = (swirlFieldA * 0.58 + swirlFieldB * 0.42) * (0.32 + chemistryStrength * 0.52);
+      const swirlMask = clamp01(0.5 + swirlCurl * 0.22 + shear * 0.28);
+      const edgeSwirlA = sample(u * ringAspect * 24.8 + 5.4, v * 28.7 - 9.1, bandPeriod * 4.6) - 0.5;
+      const edgeSwirlB = sample(u * ringAspect * 37.6 - 18.3, v * 42.1 + 14.8, bandPeriod * 7.4) - 0.5;
+      const edgeSwirlMask = clamp01(0.5 + edgeSwirlA * 0.42 + edgeSwirlB * 0.34 + swirlCurl * 0.12);
+      const beltBase = clamp01(
+        belts * 0.3
+        + broad * 0.18
+        + fine * 0.08
+        + streak * 0.08
+        + messyBreakup * 0.18
+        + swirlMask * 0.12
+      );
+      const beltContrastRaw = clamp01((beltBase - 0.5) * (1 + chemistryStrength * 0.95) + 0.5);
+      const beltContrast = smoothstep(0.16, 0.84, Math.pow(beltContrastRaw, 0.78));
+      const brightBandMask = smoothstep(0.58 - chemistryStrength * 0.04, 0.9, beltContrast) * chemistryStrength * polarFade;
+      const darkBandMask = smoothstep(0.22, 0.66 + chemistryStrength * 0.04, 1 - beltContrast) * chemistryStrength * polarFade;
+      const vortexA = sample(u * ringAspect * 28.5 + 1.7, v * 31.4 - 8.6, bandPeriod * 5.5);
+      const vortexB = sample(u * ringAspect * 41.2 - 14.1, v * 38.7 + 13.3, bandPeriod * 7.2);
+      const crispDetail = sample(u * ringAspect * 56.8 + 22.7, v * 63.4 - 18.9, bandPeriod * 10.4);
+      const crispDetailB = sample(u * ringAspect * 73.2 - 9.6, v * 81.1 + 14.5, bandPeriod * 13.6);
+      const crispMask = smoothstep(0.5, 0.82, clamp01(crispDetail * 0.56 + crispDetailB * 0.44));
+      const edgeBand = clamp01(1 - Math.abs(beltContrast - 0.5) * 2.4);
+      const turbulence = clamp01(
+        0.16 * fine
+        + 0.1 * streak
+        + 0.08 * eddy
+        + 0.12 * roughMix
+        + 0.08 * swirlMask
+        + 0.1 * vortexA
+        + 0.14 * crispMask
+        + 0.22 * edgeSwirlMask * edgeBand
+      );
+      const roughTurbulence = (roughMask - 0.5) * (0.08 + chemistryStrength * 0.08);
+      const hydrogenBands = clamp01(
+        hydrogenBase
+        + (beltContrast - 0.5) * 0.42 * chemistryStrength
+        + (turbulence - 0.5) * 0.1 * chemistryStrength
+        + (swirlMask - 0.5) * 0.04 * chemistryStrength
+        + (edgeSwirlMask - 0.5) * 0.1 * chemistryStrength * edgeBand
+        + (crispMask - 0.5) * 0.08 * chemistryStrength
+        + roughTurbulence
+      );
+      const smoothHydrogenBase = clamp01(0.58 + (baseBroad - 0.5) * 0.08 + (baseSoft - 0.5) * 0.04 + (roughA - 0.5) * 0.03);
+      const hydrogenBandsSmoothed = clamp01(
+        hydrogenBands * (1 - pureHydrogenStrength)
+        + smoothHydrogenBase * pureHydrogenStrength
+      );
+      const polarHydrogenBase = clamp01(0.56 + (baseBroad - 0.5) * 0.1 + (roughA - 0.5) * 0.04);
+      const hydrogenBandsFinal = clamp01(hydrogenBandsSmoothed * (1 - polarBlend) + polarHydrogenBase * polarBlend);
+
+      let r = Math.round(hydrogenDark.r + (hydrogenMid.r - hydrogenDark.r) * hydrogenBandsFinal);
+      let g = Math.round(hydrogenDark.g + (hydrogenMid.g - hydrogenDark.g) * hydrogenBandsFinal);
+      let b = Math.round(hydrogenDark.b + (hydrogenMid.b - hydrogenDark.b) * hydrogenBandsFinal);
+
+      const brightMix = 0.06 + 0.72 * brightBandMask + roughMask * 0.02 + crispMask * 0.08;
+      r = Math.round(r + (hydrogenLight.r - r) * brightMix);
+      g = Math.round(g + (hydrogenLight.g - g) * brightMix);
+      b = Math.round(b + (hydrogenLight.b - b) * brightMix);
+
+      const warmBeltMix = darkBandMask * (0.18 + 0.22 * turbulence + 0.07 * roughMask + 0.1 * crispMask);
+      r = Math.round(r + (warmBeltTint.r - r) * warmBeltMix);
+      g = Math.round(g + (warmBeltTint.g - g) * warmBeltMix);
+      b = Math.round(b + (warmBeltTint.b - b) * warmBeltMix);
+
+      const methanePhase = (lat - 0.08) * Math.PI * (2.6 + chemistryStrength * 1.8) + 0.9;
+      const methaneWave = Math.sin(methanePhase) * 0.5 + 0.5;
+      const methaneNoise = sample(u * ringAspect * 6.8 - 12.6, v * 8.9 + 3.4, bandPeriod * 1.36);
+      const methaneSwirl = sample(u * ringAspect * 15.4 + 4.6, v * 19.8 - 16.1, bandPeriod * 3.2);
+      const methaneBelts = clamp01(
+        darkBandMask * 0.2
+        + methaneWave * 0.18
+        + methaneNoise * 0.18
+        + methaneSwirl * 0.14
+        + swirlMask * 0.08
+        + edgeSwirlMask * 0.14 * edgeBand
+        + vortexA * 0.08
+        + latAbs * 0.04
+      );
+      const methaneMix = state.methaneStrength * smoothstep(0.66, 0.9, methaneBelts) * (0.08 + 0.1 * turbulence + 0.12 * roughMask + 0.12 * swirlMask + 0.08 * crispMask) * polarFade;
+      r = Math.round(r + (methaneTint.r - r) * methaneMix);
+      g = Math.round(g + (methaneTint.g - g) * methaneMix);
+      b = Math.round(b + (methaneTint.b - b) * methaneMix);
+
+      const ammoniaPhase = (lat + 0.24) * Math.PI * (3.1 + chemistryStrength * 1.15) + 1.7;
+      const ammoniaWave = Math.sin(ammoniaPhase) * 0.5 + 0.5;
+      const ammoniaNoise = sample(u * ringAspect * 7.9 + 16.2, v * 9.7 - 11.4, stormPeriod * 1.18);
+      const ammoniaSwirl = sample(u * ringAspect * 18.8 - 3.2, v * 22.6 + 8.4, stormPeriod * 2.6);
+      const ammoniaLane = clamp01(
+        ammoniaWave * 0.24
+        + ammoniaNoise * 0.18
+        + ammoniaSwirl * 0.22
+        + swirlMask * 0.08
+        + edgeSwirlMask * 0.16 * edgeBand
+        + vortexB * 0.12
+      );
+      const methaneSuppression = 1 - smoothstep(0.42, 0.88, methaneBelts);
+      const ammoniaBands = clamp01(
+        sample(u * ringAspect * 4.5 + 9.3, v * 5.9 - 2.4, stormPeriod * 0.78) * 0.08
+        + brightBandMask * 0.06
+        + ammoniaLane * 0.58
+        + methaneSuppression * 0.08
+      );
+      const ammoniaMix = state.ammoniaStrength * smoothstep(0.72, 0.88, ammoniaBands) * (0.22 + 0.2 * (1 - latAbs) + 0.1 * roughMask + 0.14 * crispMask) * polarFade;
+      r = Math.round(r + (ammoniaTint.r - r) * ammoniaMix);
+      g = Math.round(g + (ammoniaTint.g - g) * ammoniaMix);
+      b = Math.round(b + (ammoniaTint.b - b) * ammoniaMix);
+
+      const dx = (u - spotCx) / Math.max(0.0001, spotRx);
+      const dy = (v - spotCy) / Math.max(0.0001, spotRy);
+      const spotBase = clamp01(1 - (dx * dx + dy * dy));
+      const spotNoise = sample(u * ringAspect * 11.2 + 21.4, v * 13.7 - 12.8, stormPeriod * 1.9);
+      const stormMask = smoothstep(0.18, 0.88, spotBase * 0.78 + spotNoise * 0.22) * state.ammoniaStrength * chemistryStrength;
+      if (stormMask > 0) {
+        const stormGlow = 0.62 * stormMask;
+        r = Math.round(r + (stormTint.r - r) * stormGlow);
+        g = Math.round(g + (stormTint.g - g) * stormGlow);
+        b = Math.round(b + (stormTint.b - b) * stormGlow);
+      }
+
+      const grain = (roughB - 0.5) * 18 + (roughC - 0.5) * 10 + (crispDetail - 0.5) * 12;
+      r = Math.max(0, Math.min(255, Math.round(r + grain)));
+      g = Math.max(0, Math.min(255, Math.round(g + grain * 0.82)));
+      b = Math.max(0, Math.min(255, Math.round(b + grain * 0.66)));
+
+      const localContrast = 1 + crispMask * 0.18 + chemistryStrength * 0.08;
+      r = Math.max(0, Math.min(255, Math.round((r - 128) * localContrast + 128)));
+      g = Math.max(0, Math.min(255, Math.round((g - 128) * localContrast + 128)));
+      b = Math.max(0, Math.min(255, Math.round((b - 128) * localContrast + 128)));
+
+      const alphaBase = 0.84 + brightBandMask * 0.08 + stormMask * 0.18;
+      const alphaFloor = Math.max(
+        smoothstep(0.72, 1, state.hydrogenStrength) * (0.92 + 0.07 * pureHydrogenStrength),
+        smoothstep(0.82, 1, state.overlayStrength) * 0.96
+      );
+      const alpha = Math.max(
+        alphaFloor,
+        clamp01(alphaBase * (0.42 + 0.9 * state.overlayStrength))
+      );
+      data[idx] = r;
+      data[idx + 1] = g;
+      data[idx + 2] = b;
+      data[idx + 3] = Math.round(alpha * 255);
+    }
+
     ctx.putImageData(img, 0, 0);
     const texture = new THREE.CanvasTexture(canvas);
     if (THREE && THREE.SRGBColorSpace) {

@@ -18,6 +18,10 @@
       this.lavaOverlayMaterial = null;
       this.lavaOverlayTexture = null;
       this.lavaOverlayTextureKey = '';
+      this.gasOverlayMesh = null;
+      this.gasOverlayMaterial = null;
+      this.gasOverlayTexture = null;
+      this.gasOverlayTextureKey = '';
       this.ringShadeMesh = null;
       this.ringShadeMaterial = null;
       this.ringShadeOffset = 0;
@@ -448,6 +452,7 @@
 
       this.createSurfaceMesh();
       this.createLavaOverlayMesh();
+      this.createGasOverlayMesh();
       if (!isRing) {
         this.createCityLights();
         this.createAtmosphere();
@@ -465,6 +470,7 @@
       this.updateOverlayText();
       this.updateSurfaceTextureFromPressure(true);
       this.updateLavaOverlay();
+      this.updateGasOverlay();
       this.updateCityLights();
       this.updateCloudUniforms();
       this.animate();
@@ -525,6 +531,7 @@
       this.updateDustTint();
       this.updateSurfaceHeatMaterial();
       this.updateLavaOverlay();
+      this.updateGasOverlay();
       this.updateSurfaceTextureFromPressure();
       this.updateCityLights();
       this.updateAtmosphereUniforms();
