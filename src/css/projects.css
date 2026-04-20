@@ -404,9 +404,22 @@
 
 #ss-resource-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(210px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     padding: 10px 0;
+    width: 100%;
+}
+
+@container space-storage-card (max-width: 860px) {
+    #ss-resource-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container space-storage-card (max-width: 560px) {
+    #ss-resource-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .space-storage-card {
@@ -414,23 +427,12 @@
     container-name: space-storage-card;
 }
 
-@container space-storage-card (max-width: 720px) {
-    #ss-resource-grid {
-        grid-template-columns: repeat(2, minmax(210px, 1fr));
-    }
-}
-
-@container space-storage-card (max-width: 440px) {
-    #ss-resource-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 .storage-resource-item {
     display: grid;
-    grid-template-columns: auto 1fr auto auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
     gap: 5px;
     align-items: center;
+    min-width: 0;
 }
 
 .storage-resource-separator {
