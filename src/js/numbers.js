@@ -192,6 +192,46 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false,
   
     return value < 0 ? '-' + formatted : formatted;
   }
+
+function formatPascalValue(value, precision = 2, allowSmall = false, roundDown = false) {
+  if (value === Infinity) return '∞Pa';
+  if (value === -Infinity) return '-∞Pa';
+  if (value !== value) return '0Pa';
+
+  const numericValue = Number(value);
+  const absValue = Math.abs(numericValue);
+  const pressureUnits = [
+    { divisor: 1e30, unit: 'QPa' },
+    { divisor: 1e27, unit: 'RPa' },
+    { divisor: 1e24, unit: 'YPa' },
+    { divisor: 1e21, unit: 'ZPa' },
+    { divisor: 1e18, unit: 'EPa' },
+    { divisor: 1e15, unit: 'PPa' },
+    { divisor: 1e12, unit: 'TPa' },
+    { divisor: 1e9, unit: 'GPa' },
+    { divisor: 1e6, unit: 'MPa' },
+    { divisor: 1e3, unit: 'kPa' },
+  ];
+
+  const matchedUnit = pressureUnits.find(({ divisor }) => absValue >= divisor);
+  if (!matchedUnit) {
+    return `${formatNumber(numericValue, false, precision, allowSmall, roundDown)}Pa`;
+  }
+
+  const scaledValue = numericValue / matchedUnit.divisor;
+  const absScaledValue = Math.abs(scaledValue);
+  let formattedMagnitude;
+
+  if (absScaledValue >= 1000) {
+    formattedMagnitude = formatScientificWithRounding(absScaledValue, precision, roundDown);
+  } else if (isNearlyWhole(absScaledValue)) {
+    formattedMagnitude = formatIntegerWithRounding(absScaledValue, roundDown);
+  } else {
+    formattedMagnitude = formatWithRounding(absScaledValue, precision, roundDown);
+  }
+
+  return `${scaledValue < 0 ? '-' : ''}${formattedMagnitude}${matchedUnit.unit}`;
+}
   
 function formatBigInteger(number) {
     // Convert the number to a string and use regex to add commas
@@ -441,6 +481,7 @@ function parseFlexibleNumber(value) {
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       formatNumber,
+      formatPascalValue,
       formatBigInteger,
       formatGroupedNumber,
       formatShipCount,

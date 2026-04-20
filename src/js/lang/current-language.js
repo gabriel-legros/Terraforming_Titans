@@ -2061,7 +2061,7 @@ setLanguageData({
             windMultiplier: 'Wind turbine multiplier',
             pressurePenalty: 'Colony cost multiplier from pressure : {value}',
           },
-          targetRange: '{min}Pa - {max}Pa',
+          targetRange: '{min} - {max}',
           opticalDepthTooltipIntro: 'Measures the effective Greenhouse Gas Effect. Higher value means more heat trapped. On very hot worlds, this value is reduced automatically as thermal emission shifts toward near-IR. To achieve both temperature and luminosity target, it is usually recommended, but not required, to keep this value below 3.',
           opticalDepthContribution: '{name}: {value}',
         },

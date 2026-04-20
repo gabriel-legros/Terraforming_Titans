@@ -1648,7 +1648,7 @@ function estimateGasPressure(res, gasKey) {
     const amt = res.merged?.resources?.atmospheric?.[gasKey]?.initialValue || 0; // tons
     if (!c.gravity || !c.radius) return null;
     const pa = calculateAtmosphericPressure(amt, c.gravity, c.radius);
-    return pa; // kPa
+    return pa;
   } catch { return null; }
 }
 
@@ -1671,8 +1671,8 @@ function renderAtmoTable(res) {
     const hideSmall = resource?.hideWhenSmall ?? defaults[r.key]?.hideWhenSmall;
     if (hideSmall && Math.abs(amt ?? 0) < 1e-4) return '';
     const amtText = (amt === undefined || amt === null) ? '—' : fmt(amt);
-    const kPa = estimateGasPressure(res, r.key);
-    const pText = (typeof kPa === 'number' && isFinite(kPa)) ? `${formatNumber(kPa)}Pa` : '—';
+    const pressurePa = estimateGasPressure(res, r.key);
+    const pText = (typeof pressurePa === 'number' && isFinite(pressurePa)) ? formatPascalValue(pressurePa, 2) : '—';
     return `<div class="rwg-row"><span>${r.label}</span><span>${amtText}</span><span>${pText}</span></div>`;
   }).filter(Boolean).join('');
   // Header row

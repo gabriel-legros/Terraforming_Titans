@@ -18,7 +18,7 @@ progressZeus.chapters.push(
     title: "Chapter 42: King of the gods",
     narrative: "Mary : 'Prometheus...  please tell me our destination is one of the moons around this thing, and not this thing.'  \n $RED$Prometheus : 'It's the Gas Giant.'  \n Mary : 'Prometheus... this thing is the size of Jupiter.'  \n $RED$Prometheus : 'Indeed.'  \n Mary : 'There's NOTHING here but hydrogen.  We should leave and build a shell remotely or something.'  \n $RED$Prometheus : 'No.  You need HOPE to turn off my defenses... and keep them off.'  \n Mary : 'This is just plain stupid.  This is a ball of HYDROGEN.'  \n Evelyn : 'Mary... our aerostats can't float here but they can fly.  It will cost you though.'  \n Mary : '*sighs*  I can't wait for this to be over already.'",
     prerequisites: [
-      "impossible13"
+      'styx.41.7'
     ],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 50 }

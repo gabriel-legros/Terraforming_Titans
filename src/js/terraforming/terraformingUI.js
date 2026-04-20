@@ -1409,7 +1409,7 @@ function createTemperatureBox(row) {
 
     const totalPressureKPa = terraforming.calculateTotalPressure();
     const totalPressurePa = totalPressureKPa * 1000;
-    els.current.textContent = `${formatNumber(totalPressurePa, false, 2)}Pa`;
+    els.current.textContent = formatPascalValue(totalPressurePa, 2);
     const pressureTarget = terraforming.atmosphere.totalPressureTargetRangeKPa;
     const hasPressureTarget = pressureTarget
       && (pressureTarget.min > 0 || pressureTarget.max > 0);
@@ -1419,10 +1419,10 @@ function createTemperatureBox(row) {
         const maxPa = pressureTarget.max * 1000;
         els.pressureTarget.textContent = getTerraformingSummaryText(
           'atmosphere.targetRange',
-          '{min}Pa - {max}Pa',
+          '{min} - {max}',
           {
-            min: formatNumber(minPa, false, 2),
-            max: formatNumber(maxPa, false, 2),
+            min: formatPascalValue(minPa, 2),
+            max: formatPascalValue(maxPa, 2),
           }
         );
         const inRange = totalPressureKPa >= pressureTarget.min && totalPressureKPa <= pressureTarget.max;

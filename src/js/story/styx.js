@@ -382,11 +382,25 @@ progressStyx.chapters.push(
     chapter: 41,
     activePlanet: 'styx',
     narrative: "Placeholder",
-    prerequisites: ['impossible13'],
+    prerequisites: ['impossible'],
     objectives: [
+
     ],
     reward: [
       { target: 'spaceManager', targetId: 'zeus', type: 'enable' }
+    ]
+  },
+  {
+    id: 'styx.41.7',
+    type: 'journal',
+    chapter: 41,
+    activePlanet: 'styx',
+    narrative: "Placeholder",
+    prerequisites: ['styx.41.6'],
+    objectives: [
+      { type: 'currentPlanet', planetId: 'zeus' }
+    ],
+    reward: [
     ]
   }
 );
