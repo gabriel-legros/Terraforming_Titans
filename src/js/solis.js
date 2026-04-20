@@ -58,6 +58,7 @@ class SolisManager extends EffectableEntity {
       startingShips: { baseCost: 100, purchases: 0 },
       research: { baseCost: 10, purchases: 0 },
       terraformingMeasurements: { baseCost: 300, purchases: 0, max: 1 },
+      shipbuildingPermanentResearch: { baseCost: 0, purchases: 0, max: 1, enabled: false },
       androidsPermanentResearch: { baseCost: 1000, purchases: 0, max: 1, enabled: false },
       advancedOversight: { baseCost: 1000, purchases: 0, max: 1 },
       researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length },
@@ -101,6 +102,8 @@ class SolisManager extends EffectableEntity {
       this.setUpgradeEnabled('shipAssignment', !!effect.value);
     } else if (effect.flagId === 'solisLifeAutomation') {
       this.setUpgradeEnabled('lifeAutomation', !!effect.value);
+    } else if (effect.flagId === 'solisShipbuildingPermanentResearch') {
+      this.setUpgradeEnabled('shipbuildingPermanentResearch', !!effect.value);
     } else if (effect.flagId === 'solisAndroidsPermanentResearch') {
       this.setUpgradeEnabled('androidsPermanentResearch', !!effect.value);
     } else if (effect.flagId === 'solisBuildingsAutomation') {
@@ -338,6 +341,8 @@ class SolisManager extends EffectableEntity {
       this.applyResearchUpgrade();
     } else if (key === 'terraformingMeasurements') {
       this.applyTerraformingMeasurementUpgrade();
+    } else if (key === 'shipbuildingPermanentResearch') {
+      this.applyShipbuildingPermanentResearch();
     } else if (key === 'androidsPermanentResearch') {
       this.applyAndroidsPermanentResearch();
     } else if (key === 'advancedOversight' && typeof addEffect === 'function') {
@@ -511,6 +516,17 @@ class SolisManager extends EffectableEntity {
     researchManager.completeResearchInstant('terraforming_sensor');
   }
 
+  applyShipbuildingPermanentResearch() {
+    const upgrade = this.shopUpgrades.shipbuildingPermanentResearch;
+    if (!upgrade || upgrade.purchases <= 0) {
+      return;
+    }
+    if (!researchManager || typeof researchManager.completeResearchInstant !== 'function') {
+      return;
+    }
+    researchManager.completeResearchInstant('shipyard');
+  }
+
   applyAndroidsPermanentResearch() {
     const upgrade = this.shopUpgrades.androidsPermanentResearch;
     if (!upgrade || upgrade.purchases <= 0) {
@@ -536,6 +552,7 @@ class SolisManager extends EffectableEntity {
     this.setUpgradeEnabled('autoResearch', this.isBooleanFlagSet('solisAutoResearch'));
     this.setUpgradeEnabled('shipAssignment', this.isBooleanFlagSet('solisShipAssignment'));
     this.setUpgradeEnabled('lifeAutomation', this.isBooleanFlagSet('solisLifeAutomation'));
+    this.setUpgradeEnabled('shipbuildingPermanentResearch', this.isBooleanFlagSet('solisShipbuildingPermanentResearch'));
     this.setUpgradeEnabled('androidsPermanentResearch', this.isBooleanFlagSet('solisAndroidsPermanentResearch'));
     this.setUpgradeEnabled('buildingsAutomation', this.isBooleanFlagSet('solisBuildingsAutomation'));
     this.setUpgradeEnabled('projectsAutomation', this.isBooleanFlagSet('solisProjectsAutomation'));
@@ -581,6 +598,7 @@ class SolisManager extends EffectableEntity {
 
     this.applyResearchUpgrade();
     this.applyTerraformingMeasurementUpgrade();
+    this.applyShipbuildingPermanentResearch();
     this.applyAndroidsPermanentResearch();
 
     this.setUpgradeEnabled('researchAutomation', this.isBooleanFlagSet('solisResearchAutomation'));

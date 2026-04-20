@@ -63,6 +63,7 @@ const shopDescriptions = {
   startingShips: 'Add one Solis-built cargo ship to your starting fleet (base cost: 100)',
   research: 'Increase starting research points by 100',
   terraformingMeasurements: 'Permanently unlock Terraforming measurements research across colonies',
+  shipbuildingPermanentResearch: 'Permanently unlock Shipbuilding research across colonies',
   androidsPermanentResearch: 'Permanently unlock Android Manufacturing research across colonies',
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase',
@@ -692,6 +693,7 @@ function updateSolisDynamicShopItems(refs) {
   const solis1 = solisManager.isBooleanFlagSet('solisUpgrade1');
   const solis2 = solisManager.isBooleanFlagSet('solisUpgrade2');
   const terraformingUnlocked = solisManager.isBooleanFlagSet('solisTerraformingMeasurements');
+  const shipbuildingResearchUnlocked = solisManager.isBooleanFlagSet('solisShipbuildingPermanentResearch');
   const androidsResearchUnlocked = solisManager.isBooleanFlagSet('solisAndroidsPermanentResearch');
 
   syncConditionalShopItem('research', solis1, refs.shopItems);
@@ -699,6 +701,7 @@ function updateSolisDynamicShopItems(refs) {
   syncConditionalShopItem('advancedOversight', solis1, refs.researchShopItems);
   syncConditionalShopItem('terraformingMeasurements', terraformingUnlocked, refs.researchShopItems);
   syncConditionalShopItem('androidsPermanentResearch', androidsResearchUnlocked, refs.researchShopItems);
+  syncConditionalShopItem('shipbuildingPermanentResearch', shipbuildingResearchUnlocked, refs.researchShopItems);
 
   let automationVisible = 0;
   automationShopKeys.forEach(key => {

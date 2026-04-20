@@ -78,6 +78,7 @@ progressZeus.chapters.push(
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 1_000 }
     ],
     reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisShipbuildingPermanentResearch', value: true }
     ]
   },
   {
@@ -85,8 +86,8 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 42,
     activePlanet: "zeus",
-    narrative: "Solis : 'I promised you something very good this time, and I am here to deliver.'  \n Mary : 'Let's see.'  \n Solis : 'First, an apology for the disappointing upgrade last time.  Free of charge, my R&D team has developed a spaceship blueprint that is compatible with HOPE on ANY world.  This means HOPE may begin shipbuilding right away.'  \n Mary : 'Wow!  That's... actually really nice.  Free?'  \n Solis : 'Yes.  Free.  Next...  we developed a sub-AI coordinator for all of HOPE's automation software.  All within regulations.  That should allow HOPE to operate with massively reduced effort.  HOPE just has to design all the rules it needs to follow.'  \n Prometheus : 'Automation for AI.  Ironic.'  \n Mary : 'That's... wow you must have put a lot of effort into that software.  Thank you Adrien.'",
-    prerequisites: ["zeus.42.3b"],
+    narrative: "Solis : 'I promised you something very good this time, and I am here to deliver.'  \n Mary : 'Let's see.'  \n Solis : 'First, an apology for the disappointing upgrade last time.  Free of charge, my R&D team has developed a spaceship blueprint that is compatible with HOPE on ANY world.  This means HOPE may begin shipbuilding right away.'  \n Mary : 'Wow!  That's... actually really nice.  Free?'  \n Solis : 'Yes.  Free.  Next...  we developed a sub-AI coordinator for all of HOPE's automation software.  All within regulations.  That should allow HOPE to operate with massively reduced effort.  HOPE just has to design all the rules it needs to follow.'  \n $RED$Prometheus : 'Automation for AI.  Ironic.'  \n Mary : 'That's... wow you must have put a lot of effort into that software.  Thank you Adrien.'",
+    prerequisites: ["zeus.42.3"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000 }
     ],
