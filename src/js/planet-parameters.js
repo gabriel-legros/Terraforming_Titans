@@ -1907,16 +1907,16 @@ const zeusOverrides = {
     habitableZone: { inner: 0.67, outer: 1.05 }
   },
   celestialParameters: {
-    distanceFromSun: 3.5268115912251394,
-    gravity: 24.79,
+    distanceFromSun: 3.514208763918426,
+    gravity: 24.43,
     hasNaturalMagnetosphere: true,
-    radius: 71485,
-    mass: 1.898e27,
-    albedo: 0.503,
-    rotationPeriod: 9.93,
-    spinPeriod: 9.93,
+    radius: 70738,
+    mass: 1.8726e27,
+    albedo: 0.487,
+    rotationPeriod: 10.14,
+    spinPeriod: 10.14,
     starLuminosity: 0.46,
-    coreHeatFlux: 4_345_338,
+    coreHeatFlux: 4_112_684,
     sector: 'R5-29'
   },
   visualization: {
@@ -1948,11 +1948,11 @@ const zeusOverrides = {
     },
     atmospheric: {
       carbonDioxide: { initialValue: 0 },
-      atmosphericWater: { initialValue: 2e17 },
-      atmosphericMethane: { initialValue: 8e17 },
-      atmosphericAmmonia: { initialValue: 6e17 },
+      atmosphericWater: { initialValue: 1.836e17 },
+      atmosphericMethane: { initialValue: 7.42e17 },
+      atmosphericAmmonia: { initialValue: 5.68e17 },
       oxygen: { initialValue: 0 },
-      inertGas: { initialValue: 5.5e19 },
+      inertGas: { initialValue: 5.27e19 },
       hydrogen: { initialValue: 2.590404693635974e22 },
       sulfuricAcid: { initialValue: 0 }
     }

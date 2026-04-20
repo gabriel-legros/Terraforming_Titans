@@ -268,6 +268,24 @@ function updateKesslerFailureWarning(project, elements) {
   }
 }
 
+function updateProjectWarning(project, elements) {
+  const warning = elements.projectWarning;
+  const warningText = elements.projectWarningText;
+  if (!warning || !warningText) {
+    return;
+  }
+
+  const warningState = project.getWarningState ? project.getWarningState() : null;
+  const isCollapsed = elements.projectItem?.classList?.contains('collapsed');
+  if (!warningState || !warningState.message || isCollapsed) {
+    warning.style.display = 'none';
+    return;
+  }
+
+  warningText.textContent = warningState.message;
+  warning.style.display = 'flex';
+}
+
 function invalidateAutomationSettingsCache(projectName) {
   const els = projectElements[projectName];
   if (els && els.automationSettingsContainer) {
@@ -543,6 +561,24 @@ function createProjectItem(project) {
       kesslerFailureWarningText: warningText
     };
   }
+
+  const projectWarning = document.createElement('div');
+  projectWarning.classList.add('project-kessler-warning');
+  projectWarning.style.display = 'none';
+  const projectWarningIcon = document.createElement('span');
+  projectWarningIcon.classList.add('project-kessler-warning__icon');
+  projectWarningIcon.textContent = '⚠';
+  const projectWarningText = document.createElement('span');
+  const projectWarningIconRight = document.createElement('span');
+  projectWarningIconRight.classList.add('project-kessler-warning__icon');
+  projectWarningIconRight.textContent = '⚠';
+  projectWarning.append(projectWarningIcon, projectWarningText, projectWarningIconRight);
+  projectCard.appendChild(projectWarning);
+  projectElements[project.name] = {
+    ...projectElements[project.name],
+    projectWarning,
+    projectWarningText
+  };
 
   // Card Body
   const cardBody = document.createElement('div');
@@ -1364,6 +1400,7 @@ function updateProjectUI(projectName) {
   if (elements.sustainCostElement) {
     updateSustainCostDisplay(project);
   }
+  updateProjectWarning(project, elements);
 
   // Check if the project has reached its maximum repeat count or is completed and not repeatable
   const maxRepeats = project.getMaxRepeats ? project.getMaxRepeats() : project.maxRepeatCount;
@@ -1483,7 +1520,16 @@ function updateProjectUI(projectName) {
             }
           }
         } else if (project.isActive) {
-          if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
+          const warningState = project.getWarningState ? project.getWarningState() : null;
+          if (warningState && warningState.blocksProgress) {
+            const statusText = warningState.statusText || warningState.message;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, statusText);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
+            elements.progressButton.style.background = '#f44336';
+          } else if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
             const statusText = getProjectsUIText('ui.projects.status.pausedStorm', 'Paused: Electromagnetic Storm');
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
@@ -1550,7 +1596,15 @@ function updateProjectUI(projectName) {
           } else {
             // Update dynamic duration for spaceMining projects
             let duration = project.getEffectiveDuration();
-            if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+            const warningState = project.getWarningState ? project.getWarningState() : null;
+            if (warningState && warningState.blocksStart) {
+              const statusText = warningState.statusText || warningState.message;
+              if (isImportProject && importUI) {
+                importUI.setProgressLabel(elements, project, statusText);
+              } else {
+                elements.progressButton.textContent = statusText;
+              }
+            } else if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
               const statusText = getProjectsUIText('ui.projects.status.startStorageExpansion', 'Start storage expansion (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, statusText);

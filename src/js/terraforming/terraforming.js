@@ -654,6 +654,9 @@ class Terraforming extends EffectableEntity{
       return 0;
     }
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
+      return 0;
+    }
     const megaHeatSinkCount =
       megaHeatSinkProject?.heatSinksActive === false
         ? 0

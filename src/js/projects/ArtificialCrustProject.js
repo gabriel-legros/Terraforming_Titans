@@ -1,10 +1,30 @@
 class ArtificialCrustProject extends ArtificialSkyProject {
-  getCostRateLabel() {
-    try {
-      return t('ui.projects.artificialCrust.costRateLabel', null, 'Artificial Crust');
-    } catch (error) {
-      return 'Artificial Crust';
+  hasLiquidHydrogenBlocker() {
+    return resources.surface.liquidHydrogen.value > 0;
+  }
+
+  getWarningState() {
+    if (!this.hasLiquidHydrogenBlocker()) {
+      return null;
     }
+    return {
+      blocksStart: true,
+      blocksProgress: true,
+      message: t(
+        'ui.projects.artificialCrust.liquidHydrogenWarning',
+        null,
+        'Liquid hydrogen blocks Artificial Crust construction. Remove it before starting or continuing this project.'
+      ),
+      statusText: t(
+        'ui.projects.artificialCrust.liquidHydrogenStatus',
+        null,
+        'Blocked: remove liquid hydrogen first'
+      )
+    };
+  }
+
+  getCostRateLabel() {
+    return t('ui.projects.artificialCrust.costRateLabel', null, 'Artificial Crust');
   }
 
   getBaseCoreHeatFlux() {

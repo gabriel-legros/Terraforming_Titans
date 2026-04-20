@@ -269,6 +269,15 @@ class Project extends EffectableEntity {
     return this.getActiveDisableHazard() === 'kessler';
   }
 
+  getWarningState() {
+    return null;
+  }
+
+  isProgressBlocked() {
+    const warningState = this.getWarningState();
+    return !!(warningState && warningState.blocksProgress);
+  }
+
   // Calculates the effective cost for building, factoring in all active cost multipliers
   getEffectiveCost(buildCount = 1) {
     const effectiveCost = {};
@@ -451,6 +460,11 @@ class Project extends EffectableEntity {
       return false;
     }
 
+    const warningState = this.getWarningState();
+    if (warningState && warningState.blocksStart) {
+      return false;
+    }
+
     if (
       this.category === 'story' &&
       this.attributes.planet &&
@@ -586,6 +600,9 @@ class Project extends EffectableEntity {
     if (this.isPermanentlyDisabled()) {
       return false;
     }
+    if (this.isProgressBlocked()) {
+      return false;
+    }
     if (this.isPaused && !this.isCompleted && this.hasSustainResources()) {
       this.isActive = true;
       this.isPaused = false;
@@ -608,6 +625,10 @@ class Project extends EffectableEntity {
       spaceManager.getCurrentPlanetKey() !== this.attributes.planet
     ) {
       this.isActive = false;
+      return;
+    }
+
+    if (this.isProgressBlocked()) {
       return;
     }
 

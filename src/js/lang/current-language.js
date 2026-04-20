@@ -1361,6 +1361,8 @@ setLanguageData({
       },
       artificialCrust: {
         costRateLabel: 'Artificial Crust',
+        liquidHydrogenWarning: 'Liquid hydrogen blocks Artificial Crust construction. Remove it before starting or continuing this project.',
+        liquidHydrogenStatus: 'Blocked: remove liquid hydrogen first',
       },
       spaceDisposal: {
         resourceDisposal: 'Resource Disposal',
@@ -1447,6 +1449,9 @@ setLanguageData({
         fluxMitigation: 'Total Flux mitigation',
         coolingPerSecond: 'Cooling per Second',
         control: 'Control',
+        liquidHydrogenWarning: 'Liquid hydrogen is preventing heat sinks from reducing core heat flux.  Heat sinks can still be built.',
+        liquidHydrogenStatus: 'Blocked: liquid hydrogen prevents heat removal',
+        liquidHydrogenStatusShort: 'Blocked',
       },
       deeperMining: {
         deepeningSpeedBoost: 'Deepening speed boost',
