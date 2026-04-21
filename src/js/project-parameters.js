@@ -640,6 +640,26 @@ const projectParameters = {
       showInResourcesRate: false
     }
   },
+  aerostatStructuralNet: {
+    type: 'AerostatStructuralNetProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {
+      colony: {
+        superalloys: 10,
+      }
+    },
+    duration: 50000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: 1,
+    unlocked: false,
+    automationRequiresEverEnabled: true,
+    attributes: {
+      spaceMining: true,
+      showInResourcesRate: false
+    }
+  },
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',
     name: '',

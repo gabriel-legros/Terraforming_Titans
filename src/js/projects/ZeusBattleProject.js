@@ -1007,28 +1007,19 @@ class ZeusBattleProject extends Project {
 
     for (let i = 0; i < imperialUnits.length; i += 1) {
       const unit = imperialUnits[i];
-      const blinkDelayMs = i * 220;
-      const blinkElapsedMs = Math.max(0, elapsedMs - blinkDelayMs);
-      const collapseDurationMs = 1700;
-      let alpha = 1;
+      const warpExitState = this.getImperialWarpExitState(elapsedMs, i);
 
-      if (blinkElapsedMs > 0) {
-        const fade = Math.max(0, 1 - blinkElapsedMs / collapseDurationMs);
-        const blinkRate = 90;
-        const blinkVisible = Math.floor(blinkElapsedMs / blinkRate) % 2 === 0;
-        alpha = blinkVisible ? fade : fade * 0.08;
-        if (blinkElapsedMs >= collapseDurationMs) {
-          alpha = 0;
-        }
-      }
-
-      if (alpha <= 0) {
+      if (warpExitState.alpha <= 0) {
         continue;
       }
 
+      this.drawImperialWarpExitEffect(ctx, unit, width, height, warpExitState);
       this.drawUnit(ctx, {
         ...unit,
-        alpha: alpha,
+        x: unit.x + warpExitState.offsetX,
+        y: unit.y + warpExitState.offsetY,
+        size: unit.size ? unit.size * warpExitState.scale : unit.size,
+        alpha: warpExitState.alpha,
         forceDraw: true
       }, width, height);
     }
@@ -1056,6 +1047,91 @@ class ZeusBattleProject extends Project {
         combatElapsedMs: edmondCombatElapsedMs
       });
     }
+  }
+
+  getImperialWarpExitState(elapsedMs, unitIndex) {
+    const warpDelayMs = unitIndex * 220;
+    const warpElapsedMs = Math.max(0, elapsedMs - warpDelayMs);
+    const warpDurationMs = 1500;
+
+    if (warpElapsedMs <= 0) {
+      return {
+        alpha: 1,
+        scale: 1,
+        offsetX: 0,
+        offsetY: 0,
+        progress: 0,
+        flare: 0
+      };
+    }
+
+    const progress = Math.max(0, Math.min(1, warpElapsedMs / warpDurationMs));
+    const chargeProgress = Math.max(0, Math.min(1, progress / 0.22));
+    const vanishProgress = Math.max(0, (progress - 0.22) / 0.78);
+    const flare = Math.sin(chargeProgress * Math.PI);
+    const alpha = progress < 0.22
+      ? Math.min(1, 0.88 + flare * 0.2)
+      : Math.max(0, 1 - Math.pow(vanishProgress, 0.55));
+    const scale = progress < 0.22
+      ? 1 + flare * 0.18
+      : Math.max(0.08, 1 - Math.pow(vanishProgress, 0.72) * 0.92);
+    const driftStrength = progress < 0.22 ? 0.003 * chargeProgress : 0.003 + vanishProgress * 0.014;
+
+    return {
+      alpha: progress >= 1 ? 0 : alpha,
+      scale: scale,
+      offsetX: (0.40 - 0.5) * driftStrength,
+      offsetY: -driftStrength * 0.2,
+      progress: progress,
+      flare: flare
+    };
+  }
+
+  drawImperialWarpExitEffect(ctx, unit, width, height, warpExitState) {
+    const x = (unit.x + warpExitState.offsetX) * width;
+    const y = (unit.y + warpExitState.offsetY) * height;
+    const unitSize = (unit.size || 0.045) * width;
+    const warpRadius = unitSize * (0.9 + warpExitState.progress * 1.7 + warpExitState.flare * 0.35);
+    const flareAlpha = Math.max(0, Math.min(1, 0.14 + warpExitState.flare * 0.55 + (1 - warpExitState.alpha) * 0.2));
+    const streakAlpha = Math.max(0, Math.min(1, 0.08 + warpExitState.progress * 0.24));
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+
+    const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, warpRadius * 2.1);
+    glowGradient.addColorStop(0, "rgba(255, 255, 255, " + (flareAlpha * 0.85) + ")");
+    glowGradient.addColorStop(0.22, "rgba(255, 210, 160, " + (flareAlpha * 0.8) + ")");
+    glowGradient.addColorStop(0.58, "rgba(120, 220, 255, " + (flareAlpha * 0.34) + ")");
+    glowGradient.addColorStop(1, "rgba(120, 220, 255, 0)");
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, warpRadius * 2.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(180, 235, 255, " + (0.25 + flareAlpha * 0.55) + ")";
+    ctx.lineWidth = 1.5 + flareAlpha * 2.6;
+    ctx.beginPath();
+    ctx.ellipse(x, y, warpRadius * 1.15, warpRadius * 0.62, -0.16, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 170, 120, " + (0.18 + flareAlpha * 0.42) + ")";
+    ctx.lineWidth = 1 + flareAlpha * 1.8;
+    ctx.beginPath();
+    ctx.ellipse(x, y, warpRadius * 0.82, warpRadius * 0.38, -0.16, 0, Math.PI * 2);
+    ctx.stroke();
+
+    const streakLength = warpRadius * (1.2 + warpExitState.progress * 1.6);
+    ctx.strokeStyle = "rgba(220, 245, 255, " + streakAlpha + ")";
+    ctx.lineWidth = 1.4;
+    for (let i = 0; i < 3; i += 1) {
+      const streakOffset = (i - 1) * warpRadius * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(x - streakLength * 0.9, y + streakOffset);
+      ctx.lineTo(x + streakLength * 0.28, y + streakOffset * 0.4);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
   drawSuperweaponDebris(ctx, superweaponUnit, width, height, alpha) {

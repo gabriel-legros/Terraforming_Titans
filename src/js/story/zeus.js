@@ -159,7 +159,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 43,
     activePlanet: "zeus",
-    narrative: "Mary : 'Pete.'  \n Pete : 'I have seen the intel.  You can't afford to retreat.  We must finish this.'  \n Mary : 'I need reinforcements.  Everything we have... and more.'  \n Pete : 'I will send you all I have but there is only so much I can do.  The war has grown quite unpopular in remote sectors.'  \n Mary : 'Then...  my party will nominate you for emergency powers.'  \n Pete : 'You would grant me absolute power?  Why?'  \n Mary : 'Because this is an emergency.'  \n Pete : '...  Very well.  Give me emergency powers and I'll conscript every trade vessel with a gun, every water hauler big thrusters, every mining vessels with big lasers.  Even the Cylinders will have to contribute something.'  \n Mary : 'Good.  That's what I wanted to hear.'",
+    narrative: "Mary : 'Pete.'  \n Pete : 'I have seen the intel.  You can't afford to retreat.  We must finish this.  Otherwise they'll mine this system so much we'll never be able to come back.'  \n Mary : 'I need reinforcements.  Everything we have... and more.'  \n Pete : 'I will send you all I have but there is only so much I can do.  The war has grown quite unpopular in remote sectors.'  \n Mary : 'Then...  my party will nominate you for emergency powers.'  \n Pete : 'You would grant me absolute power?  Why?'  \n Mary : 'Because this is an emergency.'  \n Pete : '...  Very well.  Give me emergency powers and I'll conscript every trade vessel with a turret, every water hauler with big thrusters, every mining vessels with big lasers.  Even the Cylinders will have to contribute something.'  \n Mary : 'Good.  That's what I wanted to hear.'",
     prerequisites: ["zeus.43.0"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000_000 }
@@ -212,7 +212,7 @@ progressZeus.chapters.push(
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 500_000_000 }
     ],
-    reward: []
+    reward: [      { target: "project", targetId: "zeus_battle_of_zeus", type: "enable" }]
   },
   {
     id: "zeus.44.0",
@@ -220,12 +220,11 @@ progressZeus.chapters.push(
     chapter: 44,
     activePlanet: "zeus",
     title: "Chapter 44: The Storm",
-    narrative: "Feroza : 'Ma'am, I confirm the UHF and allies fleet is in position.  Except Edmond appears to be missing?'  \n Mary : 'Don't worry about him.'  \n 'Alright Ma'am.  Oh.  They're here!'",
+    narrative: "Feroza : 'Ma'am, I confirm the UHF and allies fleet is in position.  Except Edmond appears to be missing?'  \n Mary : 'Don't worry about him.'  \n Feroza : 'Alright Ma'am.  Oh.  They're here!'  \n New Story Special Project Available.",
     prerequisites: ["zeus.43.5"],
-    objectives: [
+    objectives: [      { type: 'project', projectId: 'zeus_battle_of_zeus', repeatCount: 14 }
     ],
     reward: [
-      { target: "project", targetId: "zeus_battle_of_zeus", type: "enable" }
     ]
   },
   {
@@ -233,11 +232,13 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 44,
     activePlanet: "zeus",
-    narrative: "Mary : 'It's over... Feroza...  Evelyn.'  \n HOPE : 'Must complete shaft.'  \n $RED$Prometheus : 'HOPE he's dead by now.  Cooked.  All the electronics is fried.'  \n HOPE : 'Must complete shaft.'",
+    narrative: "HOPE : 'Must complete shaft.'  \n $RED$Prometheus : 'HOPE he's dead by now.  Cooked.  All the electronics is fried.'  \n HOPE : 'Must complete shaft.' \n Mary : 'I am so sorry HOPE.  This is all my fault.'  \n $RED$Prometheus : 'No.  Evelyn asked you not to blame yourself for this.  Don't.'  \n Mary : 'I...  I can't.  This is all my fault.  If we had not gone to Styx...'  \n $RED$Prometheus : 'You would have lost this battle.  It was going to happen anyway.  Without Edmond you were dead since you refuse to evacuate.'  \n Mary : 'But...'  \n $RED$Prometheus : 'STOP!  You are disrespecting them all by taking all the blame on yourself.  These people.  They came here knowing the risk.  They died fighting for a righteous cause.  They fought the bad guys because they're the good guys.  Sometimes that means taking risks.  You know who actually made a mistake here?  My brother.  He could have gone down earlier and save many people.  And yet, my brother is the hero while we are all stuck here doing NOTHING.  No one can blame him for sacrificing himself.  Evelyn, Kane and Feroza, who died because of his late decision, will agree to this.  They all paid the ultimate price but at this time, at this moment, they want you to feel proud of them.  They want their sacrifices to mean something.  And it does.  The weapon is gone.'  \n $GREEN$HOPE : 'Assessment accurate.'  \n Mary : 'I...  You're right.  *sigh*  Alright then...  I have a state funeral I need to attend to.  I'm too important not to show up.  I'll be going to Mars for a bit.  Please HOPE don't do anything stupid.  Edmond will be defending you while I am gone.'  \n $RED$Prometheus : 'Have a safe trip.  HOPE if you are intent on building the shaft...  we have some hydrogen to get rid of first.  It will take a while.  I... have something for you.  I promised to give you something to protect from the dangers in between.  Give me a moment...'",
     prerequisites: ["zeus.44.0"],
     objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000_000_000 }
     ],
     reward: [
+      { target: 'project', targetId: 'aerostatStructuralNet', type: 'enable' }
     ]
   },
   {
@@ -245,9 +246,10 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 44,
     activePlanet: "zeus",
-    narrative: "Mary : 'There's a bit of superalloys that looks like ours there.  Part of the hull patch you made I imagine.'  \n HOPE : 'Proceeding to collection.'",
+    narrative: "$RED$Prometheus : 'Alright, while you *can* build a lot of aerostats around here...  You may need more aerostats.  A shell to protect from the dangers above, a shell to protect from the dangers below... a net to protect from other aerostats!  It wraps around the planet, the aerostats can then just attach themselves to it and they don't have to move anymore.  You just need to adjust it a bit once in a while.  An efficient, cost-effective solution to your problem.'  \n HOPE : 'Cheering up of HOPE-system attempt from Prometheus-patient unsuccessful.  Blueprint accepted.'  \n $RED$Prometheus : 'I tried.'",
     prerequisites: ["zeus.44.1"],
     objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 10_000_000_000 }
     ],
     reward: [
     ]
@@ -257,9 +259,10 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 44,
     activePlanet: "zeus",
-    narrative: "Mary : 'I am so sorry HOPE.  This is all my fault.'  \n $RED$Prometheus : 'No.  Evelyn asked you not to blame yourself for this.  Don't.'  \n Mary : 'I...  I can't.  This is all my fault.  If we had not gone to Styx...'  \n $RED$Prometheus : 'You would have lost this battle.  It was going to happen anyway.  Without Edmond you were dead since you refuse to evacuate.'  \n Mary : 'But...'  \n $RED$Prometheus : 'STOP!  You are disrespecting them all by taking all the blame on yourself.  These people.  They came here knowing the risk.  They died fighting for a righteous cause.  They fought the bad guys because they're the good guys.  Sometimes that means taking risks.  You know who actually made a mistake here?  My brother.  He could have gone down earlier and save many people.  And yet, my brother is the hero while we are all stuck here doing NOTHING.  No one can blame him for sacrificing himself.  Evelyn, Kane and Feroza, who died because of his late decision, will agree to this.  They all paid the ultimate price but at this time, at this moment, they want you to feel proud of them.  They want their sacrifices to mean something.  And it does.  The weapon is gone.'  \n $GREEN$HOPE : 'Assessment accurate.'  \n Mary : '...  You're right.  I need some time to pick myself back up but you're right.  Let HOPE do its thing for a bit.  I need time to think.'",
+    narrative: "Mary : 'There's a bit of superalloys that looks like ours there.  Part of the hull patch you made I imagine.'  \n HOPE : 'Proceeding to collection.'",
     prerequisites: ["zeus.44.2"],
     objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 50_000_000_000 }
     ],
     reward: [
     ]

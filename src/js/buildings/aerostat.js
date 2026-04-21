@@ -128,15 +128,23 @@ class Aerostat extends BaseColony {
     return Math.floor(initialLand * AEROSTAT_MAX_LAND_SHARE);
   }
 
+  getStructuralNetBonusCap() {
+    return Math.max(0, Math.floor(projectManager.projects.aerostatStructuralNet?.repeatCount || 0));
+  }
+
+  getFreeBuildCap() {
+    return this._getBuildLimit() + this.getStructuralNetBonusCap();
+  }
+
   getBuildLimit() {
-    const baseLimit = this._getBuildLimit();
-    if (baseLimit <= 0) {
+    const freeCap = this.getFreeBuildCap();
+    if (freeCap <= 0) {
       return 0;
     }
 
     const researchLimit = this.getResearchSelfFundingBuildLimit();
     if (!this.hasCollisionAvoidance()) {
-      return Math.min(baseLimit, researchLimit);
+      return Math.min(freeCap, researchLimit);
     }
     return researchLimit;
   }
@@ -161,7 +169,7 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    const overCount = Math.max(0, normalizedCount - baseLimit);
+    const overCount = Math.max(0, normalizedCount - this.getFreeBuildCap());
     if (overCount <= 0) {
       return 0;
     }
@@ -185,13 +193,13 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    const zeroSurchargeBuilds = Math.max(0, baseLimit + 1 - startCount);
+    const zeroSurchargeBuilds = Math.max(0, this.getFreeBuildCap() + 1 - startCount);
     const chargedBuilds = Math.max(0, normalizedBuildCount - zeroSurchargeBuilds);
     if (chargedBuilds <= 0) {
       return 0;
     }
 
-    const firstChargedTerm = Math.max(1, startCount - baseLimit);
+    const firstChargedTerm = Math.max(1, startCount - this.getFreeBuildCap());
     return (
       chargedBuilds *
       (2 * firstChargedTerm + chargedBuilds - 1) *
@@ -210,7 +218,7 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    const overCount = Math.max(0, normalizedCount - baseLimit);
+    const overCount = Math.max(0, normalizedCount - this.getFreeBuildCap());
     if (overCount <= 0) {
       return 0;
     }
@@ -272,6 +280,7 @@ class Aerostat extends BaseColony {
     if (baseLimit <= 0) {
       return 0;
     }
+    const freeCap = this.getFreeBuildCap();
 
     const outputPerAerostat = this.getResearchOutputPerAerostat();
     const baseMaintenancePerAerostat =
@@ -281,7 +290,7 @@ class Aerostat extends BaseColony {
     }
 
     if (!this.hasCollisionAvoidance()) {
-      return baseLimit;
+      return freeCap;
     }
 
     const maintenanceMultiplier =
@@ -307,7 +316,56 @@ class Aerostat extends BaseColony {
       (maintenanceBudget * baseLimit) /
       AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP
     );
-    return Math.max(baseLimit, baseLimit + maxOverCap);
+    return Math.max(freeCap, freeCap + maxOverCap);
+  }
+
+  getStructuralNetExemptBuiltCount() {
+    const bonusCap = this.getStructuralNetBonusCap();
+    const baseLimit = this._getBuildLimit();
+    if (bonusCap <= 0 || baseLimit <= 0) {
+      return 0;
+    }
+
+    return Math.min(bonusCap, Math.max(0, this.countNumber - baseLimit));
+  }
+
+  getStructuralNetFlightExemptBuiltCount() {
+    const bonusCap = this.getStructuralNetBonusCap();
+    if (bonusCap <= 0) {
+      return 0;
+    }
+
+    return Math.min(bonusCap, this.countNumber);
+  }
+
+  getStructuralNetExemptActiveCount() {
+    const exemptBuiltCount = this.getStructuralNetFlightExemptBuiltCount();
+    if (exemptBuiltCount <= 0) {
+      return 0;
+    }
+
+    return Math.min(this.activeNumber, exemptBuiltCount);
+  }
+
+  getPoweredFlightChargedActiveCount() {
+    return Math.max(0, this.activeNumber - this.getStructuralNetExemptActiveCount());
+  }
+
+  getAveragePoweredFlightEnergyPerActiveAerostat(liftValue, pressureValue) {
+    const activeCount = this.activeNumber;
+    if (activeCount <= 0) {
+      return 0;
+    }
+
+    const chargedActiveCount = this.getPoweredFlightChargedActiveCount();
+    if (chargedActiveCount <= 0) {
+      return 0;
+    }
+
+    return (
+      this.getPoweredFlightEnergyPerAerostat(liftValue, pressureValue) *
+      chargedActiveCount
+    ) / activeCount;
   }
 
   getBaseEffectiveCost(buildCount = 1) {
@@ -492,10 +550,10 @@ class Aerostat extends BaseColony {
           )} kPa minimum needed for aerostat buoyancy. ▲`
         : `▲ Atmospheric pressure is below the ${formatNumber(minPressure, false, 0)} kPa minimum needed for aerostat buoyancy. ▲`;
     } else if (status.poweredFlightActive) {
-      const poweredFlightCost = this.getPoweredFlightEnergyPerAerostat(lift, pressure);
+      const poweredFlightCost = this.getAveragePoweredFlightEnergyPerActiveAerostat(lift, pressure);
       warning = getAerostatText(
         'ui.buildings.aerostat.poweredFlightSummary',
-        'Powered flight is active. Each aerostat consumes an additional {value} energy to stay aloft.',
+        'Powered flight is active. Active aerostats consume an additional average of {value} energy to stay aloft.',
         { value: formatNumber(poweredFlightCost, false, 0, true) }
       );
     } else if (status.liftBelow) {
@@ -781,9 +839,17 @@ class Aerostat extends BaseColony {
     const normalizedPenalty = resourceMultiplier > 0
       ? poweredFlightEnergy / resourceMultiplier
       : poweredFlightEnergy;
+    const activeCount = this.activeNumber;
+    if (activeCount <= 0) {
+      return consumption;
+    }
+    const chargedActiveCount = this.getPoweredFlightChargedActiveCount();
+    if (chargedActiveCount <= 0) {
+      return consumption;
+    }
 
     return {
-      amount: consumption.amount + normalizedPenalty,
+      amount: consumption.amount + (normalizedPenalty * chargedActiveCount) / activeCount,
       ignoreProductivity: consumption.ignoreProductivity
     };
   }
@@ -1508,12 +1574,22 @@ function updateAerostatBuoyancySection(structure) {
   const liftAvailable =
     status.pressureBelow ? null : lift;
   const poweredFlightEnergy =
-    structure.getPoweredFlightEnergyPerAerostat?.(lift, pressure) ?? 0;
+    structure.getAveragePoweredFlightEnergyPerActiveAerostat?.(lift, pressure) ?? 0;
 
   const baseBuildLimitRaw = structure._getBuildLimit?.() ?? null;
   const baseBuildLimit = Number.isFinite(baseBuildLimitRaw)
     ? Math.max(0, Math.floor(baseBuildLimitRaw))
     : null;
+  const structuralNetBonusRaw = structure.getStructuralNetBonusCap?.() ?? 0;
+  const structuralNetBonus = Number.isFinite(structuralNetBonusRaw)
+    ? Math.max(0, Math.floor(structuralNetBonusRaw))
+    : 0;
+  const freeBuildCapRaw = structure.getFreeBuildCap?.() ?? baseBuildLimitRaw;
+  const freeBuildCap = freeBuildCapRaw === Infinity
+    ? Infinity
+    : Number.isFinite(freeBuildCapRaw)
+      ? Math.max(0, Math.floor(freeBuildCapRaw))
+      : null;
   const buildLimitRaw = structure.getBuildLimit?.() ?? baseBuildLimitRaw;
   const buildLimit = buildLimitRaw === Infinity
     ? Infinity
@@ -1623,7 +1699,7 @@ function updateAerostatBuoyancySection(structure) {
     if (status.poweredFlightActive && poweredFlightEnergy > 0) {
       title += `\n${getAerostatText(
         'ui.buildings.aerostat.poweredFlightTooltipActive',
-        'Powered flight active: +{value} energy per active aerostat.',
+        'Powered flight active: +{value} average energy per active aerostat.',
         { value: formatNumber(poweredFlightEnergy, false, 0, true) }
       )}`;
     }
@@ -1753,10 +1829,17 @@ function updateAerostatBuoyancySection(structure) {
         : structure.hasCollisionAvoidance?.() && baseBuildLimit !== null
           ? getAerostatText(
               'ui.buildings.aerostat.maximumAerostatsWithBase',
-              '{value} ({base} base)',
+              '{value} ({base} base{bonus})',
               {
                 value: formatAerostatLimit(buildLimit),
-                base: formatAerostatLimit(baseBuildLimit)
+                base: formatAerostatLimit(baseBuildLimit),
+                bonus: structuralNetBonus > 0
+                  ? getAerostatText(
+                      'ui.buildings.aerostat.maximumAerostatsWithStructuralNetSuffix',
+                      ', +{value} net',
+                      { value: formatAerostatLimit(structuralNetBonus) }
+                    )
+                  : ''
               }
             )
           : formatAerostatLimit(buildLimit);
@@ -1769,6 +1852,24 @@ function updateAerostatBuoyancySection(structure) {
         'ui.buildings.aerostat.baseMaximumAerostats',
         'Base land cap: {value}.',
         { value: formatAerostatLimit(baseBuildLimit) }
+      )}`;
+    }
+    if (structuralNetBonus > 0) {
+      limitTitle += `\n${getAerostatText(
+        'ui.buildings.aerostat.structuralNetBonusCap',
+        'Aerostat Structural Net bonus cap: +{value}.',
+        { value: formatAerostatLimit(structuralNetBonus) }
+      )}`;
+      if (freeBuildCap !== null) {
+        limitTitle += `\n${getAerostatText(
+          'ui.buildings.aerostat.structuralNetFreeCap',
+          'Free aerostat cap before collision-avoidance surcharges: {value}.',
+          { value: formatAerostatLimit(freeBuildCap) }
+        )}`;
+      }
+      limitTitle += `\n${getAerostatText(
+        'ui.buildings.aerostat.structuralNetFreeCapEffect',
+        'Aerostats occupying structural-net bonus slots ignore collision-avoidance research costs and powered-flight energy.'
       )}`;
     }
     if (remainingCapacity !== null) {

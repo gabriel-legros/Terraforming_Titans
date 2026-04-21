@@ -657,8 +657,8 @@ setLanguageData({
         liftTooltipShutdownThreshold: 'Aerostat shutdown threshold: {value} kg/m^3.',
         liftTooltipMinimumPressure: 'Aerostats require at least {value} kPa of surface pressure to remain buoyant.',
         poweredFlightUnlocked: 'Powered flight unlock active: if pressure stays above the minimum, aerostats can remain airborne with additional energy when lift is insufficient.',
-        poweredFlightTooltipActive: 'Powered flight active: +{value} energy per active aerostat.',
-        poweredFlightSummary: 'Powered flight is active. Each aerostat consumes an additional {value} energy to stay aloft.',
+        poweredFlightTooltipActive: 'Powered flight active: +{value} average energy per active aerostat.',
+        poweredFlightSummary: 'Powered flight is active. Active aerostats consume an additional average of {value} energy to stay aloft.',
         mitigationValue: '{percent}% ({workers} workers/{capacity} aerostat capacity)',
         mitigationDataUnavailable: 'Mitigation data unavailable.',
         activeAerostats: 'Active aerostats: {value}.',
@@ -678,10 +678,14 @@ setLanguageData({
         collisionAvoidanceMaintenance: 'This extra research maintenance ignores maintenance multipliers.',
         aboveBaseCap: 'Aerostats above base cap: {value}.',
         currentSurcharge: 'Current surcharge per new aerostat: {value} research.',
+        maximumAerostatsWithStructuralNetSuffix: ', +{value} net',
         researchMaximumAerostats: 'Research self-funding cap: {value}.',
         researchOutputPerAerostat: 'Per-aerostat research output at 100% productivity: {value}.',
         nextResearchMaintenancePerAerostat: 'Per-aerostat research maintenance for the next aerostat: {value}.',
         capacityBreakdown: 'Each active aerostat currently provides {colonists} colonist housing and {androids} android housing before storage multipliers.',
+        structuralNetBonusCap: 'Aerostat Structural Net bonus cap: +{value}.',
+        structuralNetFreeCap: 'Free aerostat cap before collision-avoidance surcharges: {value}.',
+        structuralNetFreeCapEffect: 'Aerostats occupying structural-net bonus slots ignore collision-avoidance research costs and powered-flight energy.',
       },
     },
     structures: {
@@ -1363,6 +1367,9 @@ setLanguageData({
         costRateLabel: 'Artificial Crust',
         liquidHydrogenWarning: 'Liquid hydrogen blocks Artificial Crust construction. Remove it before starting or continuing this project.',
         liquidHydrogenStatus: 'Blocked: remove liquid hydrogen first',
+      },
+      aerostatStructuralNet: {
+        costRateLabel: 'Aerostat Structural Net',
       },
       spaceDisposal: {
         resourceDisposal: 'Resource Disposal',
@@ -3540,6 +3547,10 @@ setLanguageData({
       artificialCrust: {
         name: 'Artificial Crust',
         description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale directly with planetary base land, while assigned spaceships accelerate construction. Completion proportionally reduces both core heat flux and molten-surface land reservation, reaching zero when the shell is finished.',
+      },
+      aerostatStructuralNet: {
+        name: 'Aerostat Structural Net',
+        description: 'Deploy a segmented structural net across the planet suitable for aerostats anchoring.  Each completed segment adds 1 extra aerostat cap above the normal land limit; aerostats occupying that extra cap pay no collision-avoidance research surcharge and no powered-flight energy.',
       },
       planetaryThruster: {
         name: 'Planetary Thrusters',
