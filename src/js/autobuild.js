@@ -668,6 +668,40 @@ function canApplyAutoActiveTarget(building) {
     return !!building.autoActiveEnabled;
 }
 
+function getAutoActivationTargetCount(building, population, workerCap, totalLand, collection) {
+    const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
+    if (usesFillMode) {
+        const fillData = getAutoBuildFillData(building);
+        return building.countNumber + fillData.requiredAmount;
+    }
+
+    const usesMaxBasis = building.autoBuildBasis === 'max';
+    const usesAdjustableMaxBasis = usesMaxBasis && building.hasAdjustableAutoBuildMaxTarget();
+    const usesFixedBasis = building.autoBuildBasis === 'fixed';
+    const usesWorkerShareBasis = building.autoBuildBasis === 'workerShare';
+    const usesLandShareBasis = building.autoBuildBasis === 'landShare';
+    const usesAndroidCountBasis = building.autoBuildBasis === 'androidCount';
+    const usesAndroidCapacityShareBasis = building.autoBuildBasis === 'androidCapacityShare';
+    const fixedTarget = usesFixedBasis ? Math.max(0, Math.floor(building.autoBuildFixed || 0)) : 0;
+    const base = usesMaxBasis || usesFixedBasis || usesWorkerShareBasis || usesLandShareBasis || usesAndroidCountBasis || usesAndroidCapacityShareBasis
+        ? 0
+        : resolveAutoBuildBase(building, population, workerCap, collection);
+
+    return usesMaxBasis
+        ? (usesAdjustableMaxBasis ? building.getAutoBuildMaxTargetCount() : Infinity)
+        : usesFixedBasis
+            ? fixedTarget
+            : usesWorkerShareBasis
+                ? building.getWorkerShareTarget(workerCap)
+                : usesLandShareBasis
+                    ? building.getLandShareTarget(totalLand)
+                    : usesAndroidCountBasis
+                        ? building.getAndroidCountTarget(resources.colony.androids.value || 0)
+                        : usesAndroidCapacityShareBasis
+                            ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
+                            : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
+}
+
 function autoBuild(buildings, delta = 0) {
     resetAutoBuildPartialFlags(buildings);
     resetAutoBuildResourceShortages(typeof resources !== 'undefined' ? resources : null);
@@ -686,7 +720,7 @@ function autoBuild(buildings, delta = 0) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (!building || building.isHidden || !building.unlocked) continue;
-        if (building.autoBuildEnabled || building.autoActiveEnabled) {
+        if (building.autoBuildEnabled || building.autoActiveEnabled || (building.shouldClampSetActiveToSupported && building.shouldClampSetActiveToSupported())) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {
                 const fillData = getAutoBuildFillData(building);
@@ -853,11 +887,41 @@ function autoBuild(buildings, delta = 0) {
     }
 
     // Step 4: Auto-set active counts after building
-    buildingInfos.forEach(({ building, targetCount }) => {
+    buildingInfos.forEach(({ building }) => {
+        if (!building.shouldClampSetActiveToSupported || !building.shouldClampSetActiveToSupported()) {
+            return;
+        }
+        const supportedCap = Math.max(0, Math.floor(building.getSupportedActiveCap()));
+        const change = supportedCap - building.activeNumber;
+        if (change >= 0) {
+            return;
+        }
+        if (typeof adjustStructureActivation === 'function') {
+            adjustStructureActivation(building, change);
+        } else {
+            building.active = BigInt(
+                Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
+            );
+        }
+    });
+
+    buildingInfos.forEach(({ building }) => {
         if (!canApplyAutoActiveTarget(building)) {
             return;
         }
-        const desiredActive = Math.min(targetCount, building.countNumber);
+        const currentPopulation = resources.colony.colonists.value;
+        const currentWorkerCap = resources.colony.workers?.cap || 0;
+        const currentTotalLand = resources.surface.land.value;
+        const targetCount = getAutoActivationTargetCount(
+            building,
+            currentPopulation,
+            currentWorkerCap,
+            currentTotalLand,
+            buildings
+        );
+        const desiredActive = building.getClampedSetActiveTargetCount
+            ? building.getClampedSetActiveTargetCount(targetCount, building.countNumber)
+            : Math.min(targetCount, building.countNumber);
         const change = desiredActive - building.activeNumber;
         if (change !== 0) {
             if (typeof adjustStructureActivation === 'function') {

@@ -2131,7 +2131,7 @@ function updateLifeBox() {
         <p id="radiation-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.radiationPenalty', 'Radiation penalty')}: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
         <p>${getTerraformingSummaryText('magnetosphere.labels.gravity', 'Gravity')}: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
         <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>${getTerraformingSummaryText('magnetosphere.labels.equatorialGravity', 'Equatorial gravity')}<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
-        <p id="gravity-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.gravityPenalty', 'Gravity penalty')}<span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
+        <p id="gravity-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.gravityPenalty', 'Gravity penalty')}<span class="info-tooltip-icon">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
         <div id="others-extra-requirements"></div>
       `;
     if (!hasMagnetosphere && (radPenalty || 0) < 0.0001) {
@@ -2151,6 +2151,11 @@ function updateLifeBox() {
       equatorialGravityInfo,
       EQUATORIAL_GRAVITY_TOOLTIP_TEXT
     );
+    const gravityPenaltyInfo = magnetosphereBox.querySelector('#gravity-penalty-row .info-tooltip-icon');
+    const gravityPenaltyTooltip = attachDynamicInfoTooltip(
+      gravityPenaltyInfo,
+      GRAVITY_PENALTY_TOOLTIP_TEXT
+    );
 
     row.appendChild(magnetosphereBox);
     terraformingUICache.magnetosphere = {
@@ -2167,6 +2172,7 @@ function updateLifeBox() {
       equatorialGravityTooltip,
       gravityPenaltyRow: magnetosphereBox.querySelector('#gravity-penalty-row'),
       gravityPenaltyValue: magnetosphereBox.querySelector('#terraforming-gravity-penalty'),
+      gravityPenaltyTooltip,
       otherRequirements: magnetosphereBox.querySelector('#others-extra-requirements')
     };
     updateOtherRequirementStatuses(terraformingUICache.magnetosphere);

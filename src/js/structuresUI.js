@@ -1145,6 +1145,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const autoBuildTargetContainer = document.createElement('div');
   autoBuildTargetContainer.classList.add('auto-build-target-container');
+  cached.autoBuildTargetContainer = autoBuildTargetContainer;
 
   // First row: Target display
   const autoBuildTarget = document.createElement('span');
@@ -1179,6 +1180,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoActiveCheckbox.addEventListener('click', e => e.stopPropagation());
   structureUIElements[structure.name].autoActiveCheckbox = autoActiveCheckbox;
   structureUIElements[structure.name].setActiveButton = setActiveButton;
+  cached.setActiveButton = setActiveButton;
 
   setActiveButton.appendChild(autoActiveCheckbox);
   setActiveButton.appendChild(setActiveLabel);
@@ -1221,7 +1223,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
               : usesAndroidCapacityShareMode
                 ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
               : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
-    const desiredActive = Math.min(targetCount, structureCount);
+    const desiredActive = structure.getClampedSetActiveTargetCount
+      ? structure.getClampedSetActiveTargetCount(targetCount, structureCount)
+      : Math.min(targetCount, structureCount);
     const change = desiredActive - structureActive;
     adjustStructureActivation(structure, change);
     updateBuildingDisplay(buildings);
@@ -1244,6 +1248,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setTargetButtonContainer.style.display = 'flex';
   setTargetButtonContainer.style.alignItems = 'center';
   setTargetButtonContainer.style.gap = '4px';
+  cached.setTargetButtonContainer = setTargetButtonContainer;
 
   const setTargetButton = document.createElement('button');
   setTargetButton.id = `${structure.name}-set-target-button`;

@@ -152,11 +152,6 @@
       setToggleButtonState(elements.coolingToggle, coolingActive);
       if (!coolingActive) {
         elements.coolingPerHeatSinkValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
-      } else if (hydrogenBlocked) {
-        elements.coolingPerHeatSinkValue.textContent = getMegaHeatSinkText(
-          'ui.projects.megaHeatSink.liquidHydrogenStatusShort',
-          'Blocked'
-        );
       } else if (Number.isFinite(coolingPerHeatSink) && coolingPerHeatSink > 0) {
         elements.coolingPerHeatSinkValue.textContent = `${formatValue(coolingPerHeatSink, false, 2)} W`;
       } else if (heatSinkCount > 0) {
@@ -178,11 +173,6 @@
       }
       if (!coolingActive) {
         elements.coolingValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
-      } else if (hydrogenBlocked) {
-        elements.coolingValue.textContent = getMegaHeatSinkText(
-          'ui.projects.megaHeatSink.liquidHydrogenStatusShort',
-          'Blocked'
-        );
       } else if (Number.isFinite(coolingPerSecond) && coolingPerSecond > 0) {
         elements.coolingValue.textContent = `${formatValue(coolingPerSecond, false, 2)} K/s`;
       } else {
@@ -202,9 +192,6 @@
     }
 
     calculateCoolingPerSecond() {
-      if (this.hasLiquidHydrogenBlocker()) {
-        return 0;
-      }
       const effectiveCount = Math.max(1, this.getEffectiveHeatSinkCount());
       const terra = terraforming;
       const area = terra?.celestialParameters?.surfaceArea;

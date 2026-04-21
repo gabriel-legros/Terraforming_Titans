@@ -9,7 +9,7 @@ function getColonySlidersText(path, fallback, vars) {
 }
 
 let mechanicalAssistanceRow;
-let mechanicalAssistanceInfo;
+let mechanicalAssistanceTooltip;
 let mechanicalAssistanceEffect;
 let mechanicalAssistanceValue;
 let mechanicalAssistanceInput;
@@ -331,8 +331,11 @@ function initializeColonySlidersUI() {
   mechLabel.textContent = getColonySlidersText('ui.colony.sliders.mechanicalAssistance', 'Mechanical Assistance ');
   const mechInfo = document.createElement('span');
   mechInfo.classList.add('info-tooltip-icon');
-  mechInfo.title = getColonySlidersText('ui.colony.sliders.mechanicalAssistanceTooltip', 'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.');
   mechInfo.innerHTML = '&#9432;';
+  const mechTooltip = attachDynamicInfoTooltip(
+    mechInfo,
+    getColonySlidersText('ui.colony.sliders.mechanicalAssistanceTooltip', 'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.')
+  );
   mechLabel.appendChild(mechInfo);
   mechanicalAssistanceRow.appendChild(mechLabel);
 
@@ -380,7 +383,7 @@ function initializeColonySlidersUI() {
   mechanicalAssistanceRow.style.display = colonySliderSettings.isBooleanFlagSet('mechanicalAssistance') ? 'grid' : 'none';
   body.appendChild(mechanicalAssistanceRow);
 
-  mechanicalAssistanceInfo = mechInfo;
+  mechanicalAssistanceTooltip = mechTooltip;
   mechanicalAssistanceEffect = mechEffect;
   mechanicalAssistanceValue = mechValue;
   mechanicalAssistanceInput = mechInput;
@@ -439,8 +442,9 @@ function initializeColonySlidersUI() {
     const remaining = (Math.round(Math.max(0, 100 - mitigationPercent) * 10) / 10).toFixed(1).replace(/\.0$/, '');
     const adaptationStatus = adaptationMitigation > 0 ? 'Active (+50% base mitigation).' : 'Not researched.';
 
-    if (mechanicalAssistanceInfo) {
-      mechanicalAssistanceInfo.title = [
+    setTooltipText(
+      mechanicalAssistanceTooltip,
+      [
         getColonySlidersText('ui.colony.sliders.mechanicalAssistanceTooltip', 'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.'),
         getColonySlidersText('ui.colony.sliders.sliderValue', 'Slider: {value}x.', { value: sliderText }),
         getColonySlidersText('ui.colony.sliders.componentsCoverage', 'Components coverage: {value}%.', { value: coveragePercent }),
@@ -451,8 +455,8 @@ function initializeColonySlidersUI() {
         getColonySlidersText('ui.colony.sliders.effectiveMitigation', 'Effective mitigation: {value}% of gravity decay.', { value: effectiveMitigation }),
         getColonySlidersText('ui.colony.sliders.highGravityAdaptation', 'High-gravity adaptation: {value}', { value: adaptationStatus }),
         getColonySlidersText('ui.colony.sliders.remainingDecay', 'Remaining decay: {value}% of the original high-gravity loss per day when gravity exceeds 20 m/s^2.', { value: remaining })
-      ].join('\n');
-    }
+      ].join('\n')
+    );
   };
 
   mechanicalAssistanceRefresh = refreshMechanicalAssistanceDetails;

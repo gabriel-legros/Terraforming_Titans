@@ -653,10 +653,19 @@ class Terraforming extends EffectableEntity{
     if (isEquilibrating) {
       return 0;
     }
+    const rawFlux = this.getMegaHeatSinkRawFlux();
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
       return 0;
     }
+    return rawFlux;
+  }
+
+  getMegaHeatSinkRawFlux() {
+    if (isEquilibrating) {
+      return 0;
+    }
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     const megaHeatSinkCount =
       megaHeatSinkProject?.heatSinksActive === false
         ? 0
@@ -676,7 +685,11 @@ class Terraforming extends EffectableEntity{
 
   getMegaHeatSinkCoolingFlux() {
     const coreHeatFlux = this.getCoreHeatFlux();
-    const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
+    const megaHeatSinkFlux = this.getMegaHeatSinkRawFlux();
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
+      return megaHeatSinkFlux;
+    }
     return Math.max(0, megaHeatSinkFlux - coreHeatFlux);
   }
 

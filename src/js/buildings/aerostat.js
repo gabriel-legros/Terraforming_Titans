@@ -64,6 +64,7 @@ class Aerostat extends BaseColony {
     this._liftBelowThreshold = false;
     this._pressureBelowThreshold = false;
     this.landAsResearchOutpost = true;
+    this.capActiveToSupported = false;
     this.androidCapacityShare = 0;
     this.aerostats_collision_avoidance = false;
     this.aerostats_powered_flight = false;
@@ -137,6 +138,27 @@ class Aerostat extends BaseColony {
     const repeats = Math.max(0, Math.floor(project.repeatCount || 0));
     const maxRepeats = Math.max(0, Math.floor(project.getMaxRepeats?.() || 0));
     return Math.min(repeats, maxRepeats);
+  }
+
+  shouldShowCapActiveToSupportedToggle() {
+    return this.getStructuralNetBonusCap() > 0;
+  }
+
+  getSupportedActiveCap() {
+    return this.getStructuralNetBonusCap();
+  }
+
+  shouldClampSetActiveToSupported() {
+    return this.shouldShowCapActiveToSupportedToggle() && !!this.capActiveToSupported;
+  }
+
+  getClampedSetActiveTargetCount(targetCount, structureCount = this.countNumber) {
+    let desiredActive = Math.min(targetCount, structureCount);
+    if (!this.shouldClampSetActiveToSupported()) {
+      return desiredActive;
+    }
+
+    return Math.min(desiredActive, this.getSupportedActiveCap());
   }
 
   getFreeBuildCap() {
@@ -600,6 +622,7 @@ class Aerostat extends BaseColony {
     return {
       ...base,
       landAsResearchOutpost: this.landAsResearchOutpost,
+      capActiveToSupported: !!this.capActiveToSupported,
       androidCapacityShare: this.getAndroidCapacityShare()
     };
   }
@@ -614,6 +637,16 @@ class Aerostat extends BaseColony {
       this.landAsResearchOutpost = !!state.landAsResearchOutpost;
     } else {
       this.landAsResearchOutpost = true;
+    }
+
+    if (
+      state &&
+      typeof state === 'object' &&
+      Object.prototype.hasOwnProperty.call(state, 'capActiveToSupported')
+    ) {
+      this.capActiveToSupported = !!state.capActiveToSupported;
+    } else {
+      this.capActiveToSupported = false;
     }
 
     if (
@@ -794,11 +827,13 @@ class Aerostat extends BaseColony {
 
   initUI(autoBuildContainer, cache) {
     super.initUI?.(autoBuildContainer, cache);
+    this._ensureCapActiveToSupportedToggle(autoBuildContainer, cache);
     this._ensureResearchOutpostToggle(autoBuildContainer, cache);
   }
 
   updateUI(cache) {
     super.updateUI?.(cache);
+    this._syncCapActiveToSupportedToggle(cache);
     this._syncResearchOutpostToggle(cache);
   }
 
@@ -1115,6 +1150,66 @@ class Aerostat extends BaseColony {
     }
 
     this._syncResearchOutpostToggle(cache);
+  }
+
+  _ensureCapActiveToSupportedToggle(autoBuildContainer, cache = {}) {
+    if (!autoBuildContainer) {
+      return;
+    }
+
+    let container = cache.capActiveSupportedContainer;
+    let checkbox = cache.capActiveSupportedCheckbox;
+
+    if (!container || !container.isConnected || !checkbox) {
+      container = document.createElement('label');
+      container.classList.add('aerostat-cap-active-supported-toggle');
+
+      checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.classList.add('aerostat-cap-active-supported-checkbox');
+      checkbox.addEventListener('change', () => {
+        this.capActiveToSupported = checkbox.checked;
+        if (typeof updateColonyDisplay === 'function' && typeof colonies !== 'undefined') {
+          updateColonyDisplay(colonies);
+        }
+      });
+
+      const text = document.createElement('span');
+      text.textContent = getAerostatText(
+        'ui.buildings.aerostat.capActiveToSupported',
+        'Cap Active to Supported'
+      );
+
+      container.appendChild(checkbox);
+      container.appendChild(text);
+
+      cache.capActiveSupportedContainer = container;
+      cache.capActiveSupportedCheckbox = checkbox;
+    }
+
+    const targetContainer = cache.autoBuildTargetContainer || autoBuildContainer;
+    const reference = cache.setTargetButtonContainer || cache.reverseControl;
+    if (container.parentElement !== targetContainer) {
+      if (reference && reference.parentElement === targetContainer) {
+        targetContainer.insertBefore(container, reference);
+      } else {
+        targetContainer.appendChild(container);
+      }
+    }
+
+    this._syncCapActiveToSupportedToggle(cache);
+  }
+
+  _syncCapActiveToSupportedToggle(cache = {}) {
+    const container = cache.capActiveSupportedContainer;
+    const checkbox = cache.capActiveSupportedCheckbox;
+    if (!container || !checkbox) {
+      return;
+    }
+
+    const visible = this.shouldShowCapActiveToSupportedToggle();
+    container.style.display = visible ? '' : 'none';
+    checkbox.checked = visible ? !!this.capActiveToSupported : false;
   }
 
   _syncResearchOutpostToggle(cache = {}) {
