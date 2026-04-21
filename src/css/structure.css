@@ -493,6 +493,13 @@
     align-self: flex-start;
 }
 
+.aerostat-cap-active-supported-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+}
+
 .auto-build-priority {
     margin-left: 5px;
 }

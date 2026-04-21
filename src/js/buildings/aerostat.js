@@ -1161,11 +1161,12 @@ class Aerostat extends BaseColony {
     let checkbox = cache.capActiveSupportedCheckbox;
 
     if (!container || !container.isConnected || !checkbox) {
-      container = document.createElement('label');
+      container = document.createElement('div');
       container.classList.add('aerostat-cap-active-supported-toggle');
 
       checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
+      checkbox.id = `${this.name}-cap-active-supported-checkbox`;
       checkbox.classList.add('aerostat-cap-active-supported-checkbox');
       checkbox.addEventListener('change', () => {
         this.capActiveToSupported = checkbox.checked;
@@ -1174,7 +1175,8 @@ class Aerostat extends BaseColony {
         }
       });
 
-      const text = document.createElement('span');
+      const text = document.createElement('label');
+      text.htmlFor = checkbox.id;
       text.textContent = getAerostatText(
         'ui.buildings.aerostat.capActiveToSupported',
         'Cap Active to Supported'
