@@ -1412,10 +1412,17 @@ function updateSpaceStorageUI(project) {
       const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
       if (project.shipOperationIsActive) {
         const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
-        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', {
+        let statusText = getSpaceStorageUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', {
           time: timeRemaining,
           percent: progressPercent.toFixed(2)
         });
+        const workerRatio = project.getHazardousMachineryWorkerAvailabilityRatio();
+        if (workerRatio < 0.999) {
+          statusText += getSpaceStorageUIText('ui.projects.status.productivitySuffix', ' ({value}% productivity)', {
+            value: (workerRatio * 100).toFixed(2)
+          });
+        }
+        els.shipProgressButton.textContent = statusText;
         els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
       } else if (project.shipOperationIsPaused) {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.resumeShipTransfers', 'Resume ship transfers ({time}s left)', { time: timeRemaining });
