@@ -1214,6 +1214,7 @@ const SPACE_BUILDING_PRODUCTIVITY_PROJECTS = {
   manufacturingWorld: true,
   lifters: true,
   nuclearAlchemyFurnace: true,
+  spaceChemistry: true,
   superalloyGigafoundry: true,
 };
 
