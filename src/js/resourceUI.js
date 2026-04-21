@@ -2009,8 +2009,11 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
           timeDiv.textContent = getResourceUICommonText('timeToFullNoCap', 'Time to full: no cap set.');
         } else if (netRate < 0) {
           const time = resource.value / Math.abs(netRate);
+          const wholeSeconds = Math.max(time, 0);
+          const minutes = Math.floor(wholeSeconds / 60);
+          const seconds = Math.floor(wholeSeconds % 60);
           timeDiv.textContent = getResourceUICommonText('timeToEmpty', 'Time to empty: {value}', {
-            value: formatDuration(Math.max(time, 0)),
+            value: minutes >= 1 ? `${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s` : formatDuration(wholeSeconds),
           });
         } else {
           timeDiv.innerHTML = '&nbsp;';

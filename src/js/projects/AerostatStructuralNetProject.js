@@ -10,7 +10,7 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
   }
 
   getInitialLand() {
-    return Math.max(resolveWorldBaseLand(terraforming, resources.surface.land), 0);
+    return Math.max(resolveWorldGeometricLand(terraforming, resources.surface.land), 0);
   }
 
   getMaxRepeats() {
@@ -21,6 +21,42 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
     );
     this.maxRepeatCount = segments;
     return segments;
+  }
+
+  getBuiltSegmentsWithProgress() {
+    const maxSegments = this.getMaxRepeats();
+    let built = Math.max(0, this.repeatCount || 0);
+
+    if (this.isActive && !this.isContinuous() && this.startingDuration > 0) {
+      const progress = (this.startingDuration - this.remainingTime) / this.startingDuration;
+      built += Math.max(0, Math.min(1, progress));
+    } else {
+      built += Math.max(0, this.segmentProgress || 0);
+    }
+
+    return this.isCompleted ? Math.max(built, maxSegments) : built;
+  }
+
+  completeProjectFully() {
+    const maxSegments = this.getMaxRepeats();
+    this.repeatCount = Math.max(maxSegments, this.repeatCount || 0);
+    this.segmentProgress = 0;
+    this.isCompleted = true;
+    this.isActive = false;
+    this.isPaused = false;
+    this.remainingTime = 0;
+    this.startingDuration = 0;
+    this.applyArtificialSkyCompletionEffects();
+  }
+
+  loadState(state) {
+    this.maxRepeatCount = this.getMaxRepeats();
+    SpaceshipProject.prototype.loadState.call(this, state);
+    this.segmentProgress = state.segmentProgress || 0;
+    const maxSegments = this.getMaxRepeats();
+    if ((this.repeatCount || 0) >= maxSegments || this.isCompleted) {
+      this.completeProjectFully();
+    }
   }
 
   getFullBuildCost() {
