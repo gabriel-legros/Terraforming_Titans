@@ -266,7 +266,7 @@
       scrapMetal : {name: '', initialValue : 0, unlocked: false, unit: 'ton', marginTop:10, reverseColor: true },
       garbage: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       trash: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
-      junk: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
+      junk: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', reverseColor: true },
       radioactiveWaste: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
     },
     underground: {

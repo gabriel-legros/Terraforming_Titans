@@ -86,6 +86,7 @@ class Building extends EffectableEntity {
     this.currentProduction = {};
     this.currentConsumption = {};
     this.currentMaintenance = {};
+    this.currentWasteCleanupSlack = {};
     this._tickEffectCache = null;
 
     this._automationActivityMultiplier = 1;
@@ -1474,6 +1475,7 @@ class Building extends EffectableEntity {
       : this.productivity;
 
     this.currentConsumption = {}; // Reset current consumption
+    this.currentWasteCleanupSlack = {};
 
     // Reversal dynamic consumption: when reversed, consume the active recipe's produced resource
     if (this.reversalAvailable && this.reverseEnabled && this.recipes && this.currentRecipeKey) {
@@ -1526,6 +1528,18 @@ class Building extends EffectableEntity {
 
         // Track actual consumption in the building
         this.currentConsumption[category][resource] = scaledConsumption;
+
+        if (this.category === 'waste' && category === 'surface') {
+          const maxScaledConsumption = baseConsumption * (deltaTime / 1000);
+          const cleanupSlack = Math.max(0, maxScaledConsumption - scaledConsumption);
+          if (cleanupSlack > 0) {
+            if (!this.currentWasteCleanupSlack[category]) {
+              this.currentWasteCleanupSlack[category] = {};
+            }
+            this.currentWasteCleanupSlack[category][resource] =
+              (this.currentWasteCleanupSlack[category][resource] || 0) + cleanupSlack;
+          }
+        }
 
         // Accumulate consumption changes (as negative values)
         accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - scaledConsumption;

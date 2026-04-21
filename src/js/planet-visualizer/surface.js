@@ -1268,7 +1268,10 @@
       const v = y / Math.max(1, h - 1);
       const lat = (v - 0.5) * 2;
       const latAbs = Math.abs(lat);
-      const chemistryStrength = clamp01(state.methaneStrength * 0.58 + state.ammoniaStrength * 0.72);
+      const hydrogenBandGate = smoothstep(0.35, 0.75, state.hydrogenStrength);
+      const chemistryStrength = clamp01(
+        (state.methaneStrength * 0.58 + state.ammoniaStrength * 0.72) * hydrogenBandGate
+      );
       const pureHydrogenStrength = state.hydrogenStrength * (1 - chemistryStrength);
       const polarFade = 1 - smoothstep(0.8, 0.95, latAbs);
       const polarBlend = smoothstep(0.72, 0.96, latAbs);
@@ -1378,7 +1381,7 @@
         + vortexA * 0.08
         + latAbs * 0.04
       );
-      const methaneMix = state.methaneStrength * smoothstep(0.66, 0.9, methaneBelts) * (0.08 + 0.1 * turbulence + 0.12 * roughMask + 0.12 * swirlMask + 0.08 * crispMask) * polarFade;
+      const methaneMix = state.methaneStrength * hydrogenBandGate * smoothstep(0.66, 0.9, methaneBelts) * (0.08 + 0.1 * turbulence + 0.12 * roughMask + 0.12 * swirlMask + 0.08 * crispMask) * polarFade;
       r = Math.round(r + (methaneTint.r - r) * methaneMix);
       g = Math.round(g + (methaneTint.g - g) * methaneMix);
       b = Math.round(b + (methaneTint.b - b) * methaneMix);
@@ -1402,7 +1405,7 @@
         + ammoniaLane * 0.58
         + methaneSuppression * 0.08
       );
-      const ammoniaMix = state.ammoniaStrength * smoothstep(0.72, 0.88, ammoniaBands) * (0.22 + 0.2 * (1 - latAbs) + 0.1 * roughMask + 0.14 * crispMask) * polarFade;
+      const ammoniaMix = state.ammoniaStrength * hydrogenBandGate * smoothstep(0.72, 0.88, ammoniaBands) * (0.22 + 0.2 * (1 - latAbs) + 0.1 * roughMask + 0.14 * crispMask) * polarFade;
       r = Math.round(r + (ammoniaTint.r - r) * ammoniaMix);
       g = Math.round(g + (ammoniaTint.g - g) * ammoniaMix);
       b = Math.round(b + (ammoniaTint.b - b) * ammoniaMix);

@@ -47,6 +47,24 @@ function initializeAccumulatedSpecialChanges() {
   };
 }
 
+function collectWasteCleanupSlackByResource(buildings) {
+  const cleanupSlack = {};
+  for (const buildingName in buildings) {
+    const building = buildings[buildingName];
+    const byCategory = building.currentWasteCleanupSlack || {};
+    for (const category in byCategory) {
+      if (!cleanupSlack[category]) {
+        cleanupSlack[category] = {};
+      }
+      for (const resourceName in byCategory[category]) {
+        cleanupSlack[category][resourceName] =
+          (cleanupSlack[category][resourceName] || 0) + byCategory[category][resourceName];
+      }
+    }
+  }
+  return cleanupSlack;
+}
+
 function accumulateSpecialPlanetaryMassChange(accumulatedSpecialChanges, source, amount) {
   if (!(amount > 0)) {
     return;
@@ -1617,6 +1635,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   const spaceStorageCapLimits = spaceStorageProject?.getResourceCapLimits?.() || null;
+  const wasteCleanupSlack = collectWasteCleanupSlackByResource(buildings);
 
   // Apply accumulated changes to resources
   for (const category in resources) {
@@ -1644,6 +1663,11 @@ function produceResources(deltaTime, buildings) {
       }
 
       resource.value = Math.max(finalValue, 0); // Ensure non-negative
+
+      const cleanupSlackForResource = wasteCleanupSlack[category]?.[resourceName] || 0;
+      if (cleanupSlackForResource > 0 && resource.value > 0 && cleanupSlackForResource > resource.value) {
+        resource.value = 0;
+      }
 
       if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalSurface) {
         const zones = getZones();
