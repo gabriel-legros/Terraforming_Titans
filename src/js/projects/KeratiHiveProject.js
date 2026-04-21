@@ -287,6 +287,25 @@ class KeratiHiveProject extends Project {
     return Math.max(0, Math.min(1, this.territory / initialLand));
   }
 
+  getCompletionTolerance(initialLand = this.getInitialLand()) {
+    return Math.max(1e-6, Math.abs(initialLand) * 1e-12);
+  }
+
+  isComplete() {
+    const initialLand = this.getInitialLand();
+    if (!(initialLand > 0)) {
+      this.isCompleted = false;
+      return false;
+    }
+    if (this.territory + this.getCompletionTolerance(initialLand) < initialLand) {
+      this.isCompleted = false;
+      return false;
+    }
+    this.territory = initialLand;
+    this.isCompleted = true;
+    return true;
+  }
+
   syncLandReservation() {
     const shouldReserve = this.hasInitializedHive || this.isCompleted;
     const reserved = shouldReserve
@@ -388,16 +407,9 @@ class KeratiHiveProject extends Project {
   }
 
   checkCompletion() {
-    const initialLand = this.getInitialLand();
-    if (!(initialLand > 0)) {
-      return;
+    if (this.isComplete()) {
+      this.syncLandReservation();
     }
-    if (this.territory < initialLand) {
-      return;
-    }
-    this.territory = initialLand;
-    this.isCompleted = true;
-    this.syncLandReservation();
   }
 
   getFoodTransferAmount() {

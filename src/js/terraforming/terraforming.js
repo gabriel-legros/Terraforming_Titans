@@ -779,7 +779,7 @@ class Terraforming extends EffectableEntity{
         const label = requirement.labelKey
           ? t(requirement.labelKey, null, requirement.label || project?.displayName || projectId || 'Project')
           : (requirement.label || project?.displayName || projectId || 'Project');
-        const complete = !!(project && project.isCompleted);
+        const complete = !!(project && (typeof project.isComplete === 'function' ? project.isComplete() : project.isCompleted));
         statuses.push({
           key: `project:${projectId}`,
           label,
