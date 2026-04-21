@@ -1,4 +1,4 @@
-const AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND = 1;
+const AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND = 1000;
 
 class AerostatStructuralNetProject extends ArtificialSkyProject {
   getCostRateLabel() {
@@ -14,13 +14,34 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
   }
 
   getMaxRepeats() {
-    const initialLand = this.getInitialLand();
+    const baseLand = this.getInitialLand();
     const segments = Math.max(
       1,
-      Math.ceil(initialLand * AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND)
+      Math.ceil(baseLand * AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND)
     );
     this.maxRepeatCount = segments;
     return segments;
+  }
+
+  getFullBuildCost() {
+    const perSegmentCost = Project.prototype.getScaledCost.call(this);
+    const fullCost = {};
+    const segments = this.getMaxRepeats();
+
+    for (const category in perSegmentCost) {
+      fullCost[category] = {};
+      for (const resource in perSegmentCost[category]) {
+        const scaled = perSegmentCost[category][resource] * segments;
+        if (scaled > 0) {
+          fullCost[category][resource] = scaled;
+        }
+      }
+      if (!Object.keys(fullCost[category]).length) {
+        delete fullCost[category];
+      }
+    }
+
+    return fullCost;
   }
 
   isRelevantToCurrentPlanet() {

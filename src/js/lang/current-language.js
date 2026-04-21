@@ -644,7 +644,7 @@ setLanguageData({
         currentLift: 'Current Lift:',
         temperatureMaintenanceMitigation: 'Temperature Maintenance Mitigation:',
         maximumAerostats: 'Maximum Aerostats:',
-        maximumAerostatsWithBase: '{value} ({base} base)',
+        maximumAerostatsWithBase: '{value} ({base} base{bonus})',
         androidSpace: 'Aerostat Android Space:',
         poweredFlightLabel: 'Powered Flight',
         poweredFlightInactive: 'Inactive',
@@ -1365,7 +1365,7 @@ setLanguageData({
       },
       artificialCrust: {
         costRateLabel: 'Artificial Crust',
-        liquidHydrogenWarning: 'Liquid hydrogen blocks Artificial Crust construction. Remove it before starting or continuing this project.',
+        liquidHydrogenWarning: 'Liquid hydrogen blocks Artificial Crust construction. Remove it first.',
         liquidHydrogenStatus: 'Blocked: remove liquid hydrogen first',
       },
       aerostatStructuralNet: {

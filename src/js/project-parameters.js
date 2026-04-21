@@ -646,10 +646,10 @@ const projectParameters = {
     category: 'infrastructure',
     cost: {
       colony: {
-        superalloys: 10,
+        superalloys: 1,
       }
     },
-    duration: 50000,
+    duration: 1200,
     description: '',
     repeatable: true,
     maxRepeatCount: 1,

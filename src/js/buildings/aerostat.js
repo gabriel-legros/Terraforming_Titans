@@ -129,7 +129,14 @@ class Aerostat extends BaseColony {
   }
 
   getStructuralNetBonusCap() {
-    return Math.max(0, Math.floor(projectManager.projects.aerostatStructuralNet?.repeatCount || 0));
+    const project = projectManager.projects.aerostatStructuralNet;
+    if (!project) {
+      return 0;
+    }
+
+    const repeats = Math.max(0, Math.floor(project.repeatCount || 0));
+    const maxRepeats = Math.max(0, Math.floor(project.getMaxRepeats?.() || 0));
+    return Math.min(repeats, maxRepeats);
   }
 
   getFreeBuildCap() {
@@ -826,32 +833,7 @@ class Aerostat extends BaseColony {
     if (category !== 'colony' || resource !== 'energy') {
       return consumption;
     }
-
-    const poweredFlightEnergy = this.getPoweredFlightEnergyPerAerostat();
-    if (!(poweredFlightEnergy > 0)) {
-      return consumption;
-    }
-
-    const resourceMultiplier = this.getEffectiveResourceConsumptionMultiplier(
-      'colony',
-      'energy'
-    );
-    const normalizedPenalty = resourceMultiplier > 0
-      ? poweredFlightEnergy / resourceMultiplier
-      : poweredFlightEnergy;
-    const activeCount = this.activeNumber;
-    if (activeCount <= 0) {
-      return consumption;
-    }
-    const chargedActiveCount = this.getPoweredFlightChargedActiveCount();
-    if (chargedActiveCount <= 0) {
-      return consumption;
-    }
-
-    return {
-      amount: consumption.amount + (normalizedPenalty * chargedActiveCount) / activeCount,
-      ignoreProductivity: consumption.ignoreProductivity
-    };
+    return consumption;
   }
 
   filterActivationChange(change) {
@@ -998,6 +980,96 @@ class Aerostat extends BaseColony {
         this.updateResourceStorage();
       }
     }
+  }
+
+  calculateBaseMinRatio(resources, deltaTime, ignoreMap) {
+    let minRatio = super.calculateBaseMinRatio(resources, deltaTime, ignoreMap);
+    const chargedActiveCount = this.getPoweredFlightChargedActiveCount();
+    if (chargedActiveCount <= 0) {
+      return minRatio;
+    }
+
+    const poweredFlightEnergy = this.getPoweredFlightEnergyPerAerostat();
+    if (!(poweredFlightEnergy > 0)) {
+      return minRatio;
+    }
+
+    const effectiveEnergy =
+      poweredFlightEnergy *
+      this.getEffectiveConsumptionMultiplier();
+    if (!(effectiveEnergy > 0)) {
+      return minRatio;
+    }
+
+    const energyRatio = getResourceAvailabilityRatio(resources.colony.energy);
+    return Math.min(minRatio, energyRatio);
+  }
+
+  updateNeedsRatio(resources, deltaTime) {
+    super.updateNeedsRatio(resources, deltaTime);
+
+    const chargedActiveCount = this.getPoweredFlightChargedActiveCount();
+    if (chargedActiveCount <= 0) {
+      return;
+    }
+
+    const poweredFlightEnergy = this.getPoweredFlightEnergyPerAerostat();
+    if (!(poweredFlightEnergy > 0)) {
+      return;
+    }
+
+    const effectiveEnergy =
+      chargedActiveCount *
+      poweredFlightEnergy *
+      this.getEffectiveConsumptionMultiplier() *
+      (deltaTime / 1000);
+    if (!(effectiveEnergy > 0)) {
+      return;
+    }
+
+    const availableEnergy = resources.colony.energy.value;
+    let availabilityRatio = 1;
+    if (availableEnergy < effectiveEnergy) {
+      const consumptionRate = resources.colony.energy.consumptionRate;
+      if (consumptionRate !== 0) {
+        availabilityRatio =
+          resources.colony.energy.productionRate / consumptionRate;
+      }
+    }
+    this.adjustNeedRatio('energy', availabilityRatio, deltaTime);
+  }
+
+  consume(accumulatedChanges, deltaTime) {
+    super.consume(accumulatedChanges, deltaTime);
+
+    const chargedActiveCount = this.getPoweredFlightChargedActiveCount();
+    if (chargedActiveCount <= 0) {
+      return;
+    }
+
+    const poweredFlightEnergy = this.getPoweredFlightEnergyPerAerostat();
+    if (!(poweredFlightEnergy > 0)) {
+      return;
+    }
+
+    const baseConsumption =
+      chargedActiveCount *
+      poweredFlightEnergy *
+      this.getEffectiveConsumptionMultiplier();
+    const scaledConsumption = baseConsumption * (deltaTime / 1000);
+    if (!(scaledConsumption > 0)) {
+      return;
+    }
+
+    this.currentConsumption.colony.energy =
+      (this.currentConsumption.colony.energy || 0) + scaledConsumption;
+    accumulatedChanges.colony.energy =
+      (accumulatedChanges.colony.energy || 0) - scaledConsumption;
+    resources.colony.energy.modifyRate(
+      -(scaledConsumption * (1000 / deltaTime)),
+      this.displayName,
+      'building'
+    );
   }
 
   _ensureResearchOutpostToggle(autoBuildContainer, cache = {}) {
@@ -1826,7 +1898,7 @@ function updateAerostatBuoyancySection(structure) {
     ui.limitValue.textContent =
       buildLimit === null
         ? getAerostatText('ui.buildings.aerostat.notAvailable', 'N/A')
-        : structure.hasCollisionAvoidance?.() && baseBuildLimit !== null
+        : baseBuildLimit !== null
           ? getAerostatText(
               'ui.buildings.aerostat.maximumAerostatsWithBase',
               '{value} ({base} base{bonus})',

@@ -28,7 +28,9 @@
     Math.log(HYDROGEN_SUPERCRITICAL_REFERENCE_P / HYDROGEN_P_CRIT) /
     Math.log(HYDROGEN_SUPERCRITICAL_REFERENCE_T / HYDROGEN_T_CRIT);
   const HYDROGEN_REPARTITION_TIMESCALE_SECONDS = 86400;
-  const HYDROGEN_PRESSURE_TOLERANCE_FRACTION = 1e-6;
+  const HYDROGEN_PRESSURE_TOLERANCE_FRACTION = 1e-10;
+  const HYDROGEN_MIN_PRESSURE_TOLERANCE_PA = 1e-6;
+  const HYDROGEN_MAX_PRESSURE_TOLERANCE_PA = 0.1;
 
   const HYDROGEN_LIQUID_B =
     (Math.log(HYDROGEN_P_BOILING) - Math.log(HYDROGEN_P_TRIPLE)) /
@@ -188,7 +190,18 @@
         totalAtmosphericChange: 0,
       };
       const pressureDelta = targetPressurePa - currentPressurePa;
-      const tolerance = Math.max(HYDROGEN_P_CRIT, targetPressurePa) * HYDROGEN_PRESSURE_TOLERANCE_FRACTION;
+      const pressureScale = Math.max(
+        HYDROGEN_P_TRIPLE,
+        targetPressurePa,
+        currentPressurePa
+      );
+      const tolerance = Math.min(
+        HYDROGEN_MAX_PRESSURE_TOLERANCE_PA,
+        Math.max(
+          HYDROGEN_MIN_PRESSURE_TOLERANCE_PA,
+          pressureScale * HYDROGEN_PRESSURE_TOLERANCE_FRACTION
+        )
+      );
       if (Math.abs(pressureDelta) <= tolerance) {
         this.applySurfaceFlow(terraforming, zones, durationSeconds, totals);
         return totals;

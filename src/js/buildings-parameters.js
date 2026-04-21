@@ -829,7 +829,7 @@ const buildingsParameters = {
     name: '',
     category: 'terraforming',
     description: '',
-    cost: { colony: { metal: 10000, components: 50, superconductors:50 } },
+    cost: { colony: { metal: 1000, components: 50, superconductors:50 } },
     consumption: {},
     production: {},
     storage: {},
@@ -837,6 +837,7 @@ const buildingsParameters = {
     canBeToggled: true,
     requiresMaintenance: true,
     requiresWorker: 0,
+    aerostatReduction: 0.1,
     maintenanceFactor: 1,
     unlocked: false
   },
