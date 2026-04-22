@@ -5,6 +5,8 @@
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
   const LAVA_WORLD_START_K = 900;
   const LAVA_WORLD_FULL_K = 1400;
+  const HYDROGEN_VISUAL_MIN_KPA = 1e3;
+  const HYDROGEN_VISUAL_MAX_KPA = 1e6;
 
   const PLANET_TYPE_TEXTURES = {
     default: {
@@ -204,6 +206,15 @@
     return t * t * (3 - 2 * t);
   }
 
+  function logPressureRamp(valueKPa, minKPa, maxKPa) {
+    const safeValue = Math.max(1e-9, valueKPa);
+    const minLog = Math.log10(Math.max(1e-9, minKPa));
+    const maxLog = Math.log10(Math.max(minKPa + 1e-9, maxKPa));
+    const valueLog = Math.log10(safeValue);
+    const span = Math.max(1e-6, maxLog - minLog);
+    return clamp01((valueLog - minLog) / span);
+  }
+
   PlanetVisualizer.prototype.getSurfaceTemperatureK = function getSurfaceTemperatureK() {
     const worldTemp = this.terraforming?.temperature?.value;
     if (Number.isFinite(worldTemp) && worldTemp > 0) {
@@ -286,11 +297,17 @@
       ? 0
       : Math.max(0, calculateAverageCoverage(this.terraforming, 'liquidHydrogen') || 0);
 
-    const hydrogenStrength = Math.max(
-      smoothstep(60, 800, hydrogenKPa),
+    const hydrogenStrengthRaw = Math.max(
+      logPressureRamp(hydrogenKPa, HYDROGEN_VISUAL_MIN_KPA, HYDROGEN_VISUAL_MAX_KPA),
       smoothstep(0.08, 0.5, hydrogenShare),
       smoothstep(0.04, 0.28, liquidHydrogenCoverage)
     );
+    const hydrogenPressureGate = smoothstep(
+      HYDROGEN_VISUAL_MIN_KPA,
+      HYDROGEN_VISUAL_MIN_KPA * 1.2,
+      hydrogenKPa
+    );
+    const hydrogenStrength = hydrogenStrengthRaw * hydrogenPressureGate;
     const methaneStrength = smoothstep(3, 140, methaneKPa) * hydrogenStrength;
     const ammoniaStrength = smoothstep(1.5, 70, ammoniaKPa) * hydrogenStrength;
     const overlayStrength = clamp01(
