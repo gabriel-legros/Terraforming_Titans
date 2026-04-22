@@ -318,7 +318,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 45,
     activePlanet: "zeus",
-    narrative: "Mary : 'I'm back.  Wait you are turning this world into spaghetti?  I like it.  You know...  at any other time I would be talking about convincing HOPE to leave, or that we are wasting our time terraforming a gas giant... but not this time.  HOPE.  Let's build this shaft.  The people out there...  they don't realize just how much of a hero Epimetheus is.  Some don't even believe me.  Let's get him.'  \n HOPE : 'Thank you.'  \n Mary : 'That... yes.  Let's do it HOPE.  Together.'",
+    narrative: "Mary : 'I'm back.  Wait you are turning this world into spaghetti?' \n HOPE : 'Affirmative' \n $RED$Prometheus : 'Yes' \n Mary :'I like it.  You know...  at any other time I would be talking about convincing HOPE to leave, or that we are wasting our time terraforming a gas giant... but not this time.  HOPE.  Let's build this shaft.  The people out there...  they don't realize just how much of a hero Epimetheus is.  Some don't even believe me.  Let's get him.'  \n HOPE : 'Thank you.'  \n Mary : 'That... yes.  Let's do it HOPE.  Together.'",
     prerequisites: ["zeus.45.3"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 500_000_000_000 }
@@ -458,6 +458,7 @@ progressZeus.chapters.push(
       { type: 'project', projectId: 'zeus_warp_shaft', repeatCount: 1 }
     ],
     reward: [
+      { target: 'project', targetId: 'zeus_beach_construction', type: 'enable' }
     ]
   },
   {
@@ -468,11 +469,67 @@ progressZeus.chapters.push(
     narrative: "Mary : '...' \n $RED$Prometheus : '...'  \n HOPE : '... Wish to build... beach.  Return... Star Flower...'  \n Mary : 'Yeah.  Let's do that.'",
     prerequisites: ["zeus.45.14"],
     objectives: [
+      { type: 'project', projectId: 'zeus_beach_construction', repeatCount: 3 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.16",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    title: "",
+    narrative: "HOPE : 'Mission accomplished.  2nd Primary Directive requires removal of hazardous elements.  New target designated : Olympus.'  \n $RED$Prometheus : 'Hmmmm.'  \n Mary : '...'",
+    prerequisites: ["zeus.45.15"],
+    objectives: [
+    ],
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true },
+    ]
+  },
+  {
+    id: "zeus.45.17",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    title: "",
+    narrative: "(world 15 not implemented yet)",
+    prerequisites: ["zeus.45.16"],
+    objectives: [
     ],
     reward: [
     ]
   }
 );
+
+progressZeus.storyProjects.zeus_beach_construction = {
+  type: 'Project',
+  name: 'Zeus Beach Construction',
+  category: 'story',
+  chapter: 45,
+  cost: {
+    colony: {
+      silicon: 5_000_000_000_000,
+      water: 2_000_000_000_000,
+      glass: 500_000_000_000,
+      components: 100_000_000_000
+    }
+  },
+  duration: 120_000,
+  description: 'Construct a calm shoreline on Zeus so HOPE can return the Star Flower to Epimetheus at a place worthy of it.',
+  repeatable: true,
+  maxRepeatCount: 3,
+  unlocked: false,
+  attributes: {
+    planet: 'zeus',
+    storySteps: [
+      'Where thunder kept his desolate dominion, we summoned from the wandering deep a lucid shore; and there the winds, grown tender, seemed to speak the gentler name of lost Epimetheus.',
+      'We cast bright sand beneath the mourning heavens, and on that pale and consecrated strand the Star Flower burned like love that will not die, though its dear bringer sleeps beyond the storm.',
+      'So stands the beach, a frail yet deathless hymn: wave after wave repeats his memory, and all the serene light upon the waters keeps watch for Epimetheus evermore.'
+    ]
+  }
+};
 
 try {
   module.exports = progressZeus;
