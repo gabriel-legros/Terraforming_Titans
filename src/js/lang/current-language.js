@@ -3551,7 +3551,7 @@ setLanguageData({
       },
       aerostatStructuralNet: {
         name: 'Aerostat Structural Net',
-        description: 'Deploy a segmented structural net across the planet suitable for aerostats anchoring.  Each completed segment adds 1 extra aerostat cap above the normal land limit; aerostats occupying that extra cap pay no collision-avoidance research surcharge and no powered-flight energy.',
+        description: 'Deploy a segmented structural net across the planet suitable for aerostats anchoring. This project is only available on gas giants. Each completed segment adds 1 extra aerostat cap above the normal land limit; aerostats occupying that extra cap pay no collision-avoidance research surcharge and no powered-flight energy.',
       },
       planetaryThruster: {
         name: 'Planetary Thrusters',
