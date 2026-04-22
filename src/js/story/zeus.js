@@ -305,7 +305,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 45,
     activePlanet: "zeus",
-    narrative: "HOPE : 'Query.  Completion of terraforming objective may involve severe overpopulation.  Requesting advice from Prometheus-patient.'  \n $RED$Prometheus : '...  Well yes of course.  The surface area and atmosphere of this world will come down as you get rid of hydrogens.  If you rely on colonists instead of androids... hmmmmm...  Build them some cylinders maybe?  It should be easy for you.'  \n HOPE : 'Suggestion appropriate.'",
+    narrative: "HOPE : 'Query.  Completion of terraforming objective may involve severe overpopulation.  Requesting advice from Prometheus-patient.'  \n $RED$Prometheus : '...  Well yes of course.  The surface area and atmosphere of this world will come down as you get rid of hydrogen.  If you rely on colonists instead of androids... hmmmmm...  Build them some cylinders maybe?  It should be easy for you.'  \n HOPE : 'Suggestion appropriate.'",
     prerequisites: ["zeus.45.2"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 100_000_000_000 }
@@ -318,7 +318,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 45,
     activePlanet: "zeus",
-    narrative: "Mary : 'I'm back.  Wait you are turning this world into spaghetti?  I like it.  You know...  at any other time I would be talking about convincing HOPE to leave, or that we are wasting our time terraforming a gas giant... but not this time.  HOPE.  Let's build this shaft.  The people out there...  they don't realize just how much a hero Epimetheus is.  Some don't even believe me.  Let's get him.'  \n HOPE : 'Thank you.'  \n Mary : 'That... yes.  Let's do it HOPE.  Together.'",
+    narrative: "Mary : 'I'm back.  Wait you are turning this world into spaghetti?  I like it.  You know...  at any other time I would be talking about convincing HOPE to leave, or that we are wasting our time terraforming a gas giant... but not this time.  HOPE.  Let's build this shaft.  The people out there...  they don't realize just how much of a hero Epimetheus is.  Some don't even believe me.  Let's get him.'  \n HOPE : 'Thank you.'  \n Mary : 'That... yes.  Let's do it HOPE.  Together.'",
     prerequisites: ["zeus.45.3"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 500_000_000_000 }
@@ -357,7 +357,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 45,
     activePlanet: "zeus",
-    narrative: "$RED$Prometheus : 'It is much more difficult to use and they used it wrong.  It works by catalyzing a star, forcing it to go supernova.  Since it needs to do so remotely via the warp... it's very sensitive to ward fields around it.  They did not know that.  They do now.  Like the others it will, in time, repair itself.  In its case it may take a while since it is truly enormous.'  \n Mary : 'Let's get rid of it then.  End this once and for all.'  \n $RED$Prometheus : 'I agree.  Since it will be very hard to find we should do it like we did the others : by getting to its command center.'  \n Mary : 'Which is located...?'  \n $RED$Prometheus : 'On Olympus, in the deepest levels of the Imperial Palace.'  \n Mary : 'Well... I've always dreamed of pillaging a palace I guess.  Do you think they'll let us in?'  \n $RED$Prometheus : 'Definitely not.'",
+    narrative: "$RED$Prometheus : 'It is much more difficult to use and they used it wrong.  It works by catalyzing a star, forcing it to go supernova.  Since it needs to do so remotely via the warp... it's very sensitive to warp fields around it.  They did not know that.  They do now.  Like the others it will, in time, repair itself.  In its case it may take a while since it is truly enormous.'  \n Mary : 'Let's get rid of it then.  End this once and for all.'  \n $RED$Prometheus : 'I agree.  Since it will be very hard to find we should do it like we did the others : by getting to its command center.'  \n Mary : 'Which is located...?'  \n $RED$Prometheus : 'On Olympus, in the deepest levels of the Imperial Palace.'  \n Mary : 'Well... I've always dreamed of pillaging a palace I guess.  Do you think they'll let us in?'  \n $RED$Prometheus : 'Definitely not.'",
     prerequisites: ["zeus.45.6"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 10_000_000_000_000 }
@@ -422,7 +422,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 45,
     activePlanet: "zeus",
-    narrative: "Mary : 'We are terraforming a Gas Giant.  This is... actually awesome.'  \n $RED$Prometheus : 'Here's a joke for you.  What is HOPE doing with all this hydrogen?'  \n Mary : '?'  \n $RED$Prometheus : 'It's building a gas giant!'  \n Mary : 'Hahaha.  Good one.  I sure don't want to terraform that one.'  \n $RED$Prometheus : 'If we did, we would have the chance to build another one!  It's Gas Giant all the way down.'  \n Mary : 'Please stop.  I can't breathe.'",
+    narrative: "Mary : 'We are terraforming a Gas Giant.  This is... actually awesome.'  \n $RED$Prometheus : 'Here's a joke for you.  What is HOPE doing with all this hydrogen?'  \n Mary : '?'  \n $RED$Prometheus : 'It's building a gas giant!'  \n Mary : 'Hahaha.  Good one.  I sure don't want to terraform that one.'  \n $RED$Prometheus : 'If we did, we would have the chance to build a third one!  It's Gas Giant all the way down.'  \n Mary : 'Hahaha.  Please stop.  I can't breathe.'",
     prerequisites: ["zeus.45.11"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000_000_000_000_000 }
