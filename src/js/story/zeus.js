@@ -270,7 +270,7 @@ progressZeus.chapters.push(
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000_000_000 }
     ],
     reward: [
-      { target: 'project', targetId: 'aerostatStructuralNet', type: 'enable' }
+      { target: 'project', targetId: 'aerostatStructuralNet', type: 'enable', planetId: 'zeus' }
     ]
   },
   {
