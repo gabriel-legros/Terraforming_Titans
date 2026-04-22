@@ -45,6 +45,24 @@ function getWasteTooltipNoteText() {
   );
 }
 
+function formatResourceTimeToEmpty(seconds) {
+  if (seconds >= 24 * 3600) {
+    return formatDuration(seconds);
+  }
+  if (seconds >= 3600) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${hours}h ${String(minutes).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+  }
+  if (seconds >= 60) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(minutes).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+  }
+  return formatDuration(seconds);
+}
+
 function showSpaceStorageInDefaultPanel() {
   return gameSettings.showSpaceStorageInDefaultPanel === true;
 }
@@ -2010,10 +2028,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         } else if (netRate < 0) {
           const time = resource.value / Math.abs(netRate);
           const wholeSeconds = Math.max(time, 0);
-          const minutes = Math.floor(wholeSeconds / 60);
-          const seconds = Math.floor(wholeSeconds % 60);
           timeDiv.textContent = getResourceUICommonText('timeToEmpty', 'Time to empty: {value}', {
-            value: minutes >= 1 ? `${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s` : formatDuration(wholeSeconds),
+            value: formatResourceTimeToEmpty(wholeSeconds),
           });
         } else {
           timeDiv.innerHTML = '&nbsp;';
