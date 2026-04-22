@@ -1,8 +1,12 @@
+const researchAutomationUIState = {
+  builderName: ''
+};
+
 function buildAutomationResearchUI() {
   const card = automationElements.researchAutomation || document.getElementById('automation-research');
 
   const toggleCollapsed = () => {
-    researchManager.setAutoResearchAutomationCollapsed(!researchManager.autoResearchAutomationCollapsed);
+    automationManager.researchAutomation.setCollapsed(!automationManager.researchAutomation.collapsed);
     queueAutomationUIRefresh();
     updateAutomationUI();
   };
@@ -138,9 +142,10 @@ function updateResearchAutomationUI() {
     researchPresetJsonDetails,
   } = automationElements;
   const manager = automationManager;
+  const automation = manager.researchAutomation;
   const unlocked = manager.hasFeature('automationResearch');
-  const presets = researchManager.autoResearchPresets.slice();
-  const activePreset = researchManager.getSelectedAutoResearchPreset();
+  const presets = automation.presets.slice();
+  const activePreset = automation.getSelectedPreset();
   const activePresetIndex = activePreset
     ? presets.findIndex((preset) => preset.id === activePreset.id)
     : -1;
@@ -162,22 +167,26 @@ function updateResearchAutomationUI() {
     return;
   }
 
-  researchPanelBody.style.display = researchManager.autoResearchAutomationCollapsed ? 'none' : 'flex';
-  researchCollapseButton.textContent = researchManager.autoResearchAutomationCollapsed ? '▶' : '▼';
+  researchPanelBody.style.display = automation.collapsed ? 'none' : 'flex';
+  researchCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
 
   if (document.activeElement !== researchPresetSelect) {
     researchPresetSelect.textContent = '';
+    const newOption = document.createElement('option');
+    newOption.value = '';
+    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
+    researchPresetSelect.appendChild(newOption);
     presets.forEach((preset) => {
       const option = document.createElement('option');
       option.value = String(preset.id);
       option.textContent = preset.name || `Preset ${preset.id}`;
       researchPresetSelect.appendChild(option);
     });
-    researchPresetSelect.value = activePreset ? String(activePreset.id) : '';
+    researchPresetSelect.value = automation.getSelectedPresetId() || '';
   }
 
   if (document.activeElement !== researchPresetNameInput) {
-    researchPresetNameInput.value = activePreset ? activePreset.name || '' : '';
+    researchPresetNameInput.value = activePreset ? activePreset.name || '' : researchAutomationUIState.builderName;
   }
 
   researchPresetMoveUpButton.disabled = activePresetIndex <= 0;
@@ -186,18 +195,15 @@ function updateResearchAutomationUI() {
   researchImportPresetButton.disabled = false;
   researchExportPresetButton.disabled = !activePreset;
   researchNewPresetButton.disabled = false;
-  researchSavePresetButton.disabled = !activePreset;
+  researchSavePresetButton.disabled = false;
   researchApplyOnceButton.disabled = !activePreset;
-  const nextTravelPresetId = researchManager.nextTravelAutoResearchPresetId;
-  const nextTravelPreset = nextTravelPresetId
-    ? researchManager.getAutoResearchPresetObject(nextTravelPresetId)
-    : null;
+  const nextTravelPresetId = automation.nextTravelPresetId;
+  const nextTravelPreset = nextTravelPresetId ? automation.getPresetById(nextTravelPresetId) : null;
   if (nextTravelPresetId && !nextTravelPreset) {
-    researchManager.nextTravelAutoResearchPresetId = null;
-    researchManager.nextTravelAutoResearchPresetPersistent = false;
+    automation.nextTravelPresetId = null;
+    automation.nextTravelPersistent = false;
   }
-  researchManager.nextTravelAutoResearchPresetPersistent = researchManager.nextTravelAutoResearchPresetPersistent
-    && !!researchManager.nextTravelAutoResearchPresetId;
+  automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelPresetId;
   if (document.activeElement !== researchApplyNextTravelSelect) {
     researchApplyNextTravelSelect.textContent = '';
     const noneOption = document.createElement('option');
@@ -210,12 +216,12 @@ function updateResearchAutomationUI() {
       option.textContent = preset.name || `Preset ${preset.id}`;
       researchApplyNextTravelSelect.appendChild(option);
     });
-    researchApplyNextTravelSelect.value = researchManager.nextTravelAutoResearchPresetId
-      ? String(researchManager.nextTravelAutoResearchPresetId)
+    researchApplyNextTravelSelect.value = automation.nextTravelPresetId
+      ? String(automation.nextTravelPresetId)
       : '';
   }
-  researchApplyNextTravelPersistToggle.checked = researchManager.nextTravelAutoResearchPresetPersistent;
-  researchApplyNextTravelPersistToggle.disabled = !researchManager.nextTravelAutoResearchPresetId;
+  researchApplyNextTravelPersistToggle.checked = automation.nextTravelPersistent;
+  researchApplyNextTravelPersistToggle.disabled = !automation.nextTravelPresetId;
 
   updateAutomationPresetJsonDetails(researchPresetJsonDetails, activePreset);
 }
@@ -235,53 +241,65 @@ function attachResearchAutomationHandlers() {
     researchApplyNextTravelSelect,
     researchApplyNextTravelPersistToggle,
   } = automationElements;
+  const automation = automationManager.researchAutomation;
 
   researchPresetSelect.addEventListener('change', (event) => {
-    researchManager.setCurrentAutoResearchPreset(Number(event.target.value));
+    automation.setSelectedPresetId(event.target.value || null);
     queueAutomationUIRefresh();
     updateAutomationUI();
-    updateResearchUI();
   });
 
   researchPresetNameInput.addEventListener('input', (event) => {
-    const preset = researchManager.getSelectedAutoResearchPreset();
+    const preset = automation.getSelectedPreset();
     if (!preset) {
+      researchAutomationUIState.builderName = event.target.value || '';
+      queueAutomationUIRefresh();
+      updateAutomationUI();
       return;
     }
-    researchManager.renameAutoResearchPreset(preset.id, event.target.value || '');
+    if (!automation.renamePreset(preset.id, event.target.value || '')) {
+      return;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
 
   researchPresetMoveUpButton.addEventListener('click', () => {
-    const preset = researchManager.getSelectedAutoResearchPreset();
+    const preset = automation.getSelectedPreset();
     if (!preset) {
       return;
     }
-    researchManager.moveAutoResearchPreset(preset.id, -1);
+    automation.movePreset(preset.id, -1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
 
   researchPresetMoveDownButton.addEventListener('click', () => {
-    const preset = researchManager.getSelectedAutoResearchPreset();
+    const preset = automation.getSelectedPreset();
     if (!preset) {
       return;
     }
-    researchManager.moveAutoResearchPreset(preset.id, 1);
+    automation.movePreset(preset.id, 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
 
   researchNewPresetButton.addEventListener('click', () => {
-    researchManager.createAutoResearchPreset('');
+    automation.setSelectedPresetId(null);
+    researchAutomationUIState.builderName = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
-    updateResearchUI();
   });
 
   researchSavePresetButton.addEventListener('click', () => {
-    researchManager.saveCurrentAutoResearchPreset();
+    const preset = automation.getSelectedPreset();
+    const name = researchPresetNameInput.value || researchAutomationUIState.builderName || '';
+    if (preset) {
+      automation.updatePreset(preset.id, name);
+    } else {
+      automation.addPreset(name);
+      researchAutomationUIState.builderName = '';
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -299,33 +317,32 @@ function attachResearchAutomationHandlers() {
         if (!parsed.ok) {
           return parsed;
         }
-        researchManager.importAutoResearchPreset(parsed.preset);
+        automation.importPreset(parsed.preset);
         queueAutomationUIRefresh();
         updateAutomationUI();
-        updateResearchUI();
         return { ok: true };
       }
     });
   });
 
   researchExportPresetButton.addEventListener('click', () => {
-    const preset = researchManager.getSelectedAutoResearchPreset();
+    const preset = automation.getSelectedPreset();
     if (!preset) {
       return;
     }
     exportAutomationPresetToClipboard(
       'research',
-      researchManager.exportAutoResearchPreset(preset.id),
+      automation.exportPreset(preset.id),
       researchExportPresetButton
     );
   });
 
   researchApplyOnceButton.addEventListener('click', () => {
-    const preset = researchManager.getSelectedAutoResearchPreset();
+    const preset = automation.getSelectedPreset();
     if (!preset) {
       return;
     }
-    researchManager.applyAutoResearchPresetOnce(preset.id);
+    automation.applyPresetOnce(preset.id);
     queueAutomationUIRefresh();
     updateAutomationUI();
     updateResearchUI();
@@ -333,24 +350,23 @@ function attachResearchAutomationHandlers() {
 
   researchApplyNextTravelSelect.addEventListener('change', (event) => {
     const presetId = event.target.value;
-    researchManager.nextTravelAutoResearchPresetId = presetId ? Number(presetId) : null;
-    researchManager.nextTravelAutoResearchPresetPersistent = researchManager.nextTravelAutoResearchPresetPersistent
-      && !!researchManager.nextTravelAutoResearchPresetId;
-    researchApplyNextTravelPersistToggle.checked = researchManager.nextTravelAutoResearchPresetPersistent;
-    researchApplyNextTravelPersistToggle.disabled = !researchManager.nextTravelAutoResearchPresetId;
+    automation.nextTravelPresetId = presetId ? Number(presetId) : null;
+    automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelPresetId;
+    researchApplyNextTravelPersistToggle.checked = automation.nextTravelPersistent;
+    researchApplyNextTravelPersistToggle.disabled = !automation.nextTravelPresetId;
   });
 
   researchApplyNextTravelPersistToggle.addEventListener('change', (event) => {
-    researchManager.nextTravelAutoResearchPresetPersistent = event.target.checked
-      && !!researchManager.nextTravelAutoResearchPresetId;
+    automation.nextTravelPersistent = event.target.checked && !!automation.nextTravelPresetId;
   });
 
   researchDeletePresetButton.addEventListener('click', () => {
-    const preset = researchManager.getSelectedAutoResearchPreset();
+    const preset = automation.getSelectedPreset();
     if (!preset) {
       return;
     }
-    researchManager.deleteAutoResearchPreset(preset.id);
+    automation.deletePreset(preset.id);
+    researchAutomationUIState.builderName = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
     updateResearchUI();

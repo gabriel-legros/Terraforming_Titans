@@ -26,6 +26,10 @@ let cachedToggleButtons = [];
 let researchUICacheInvalidated = true;
 let hiddenResearchIds = [];
 
+function getResearchAutomation() {
+    return automationManager ? automationManager.researchAutomation : null;
+}
+
 function ensureHiddenResearchIds() {
     if (!Array.isArray(gameSettings.hiddenResearchIds)) {
         gameSettings.hiddenResearchIds = [];
@@ -46,16 +50,11 @@ function applyHiddenResearchFlags() {
 function setResearchHiddenByUser(researchItem, hidden) {
     ensureHiddenResearchIds();
     researchItem.hiddenByUser = hidden;
-    const index = hiddenResearchIds.indexOf(researchItem.id);
-    if (hidden && index === -1) {
-        hiddenResearchIds.push(researchItem.id);
+    const researchAutomation = getResearchAutomation();
+    if (researchAutomation) {
+        researchAutomation.setResearchHiddenInCurrentState(researchItem.id, hidden);
     }
-    if (!hidden && index !== -1) {
-        hiddenResearchIds.splice(index, 1);
-    }
-    if (researchManager && researchManager.setResearchHiddenInCurrentPreset) {
-        researchManager.setResearchHiddenInCurrentPreset(researchItem.id, hidden);
-    }
+    ensureHiddenResearchIds();
 }
 
 function isResearchHidden(researchItem) {
@@ -138,15 +137,10 @@ function updateAllResearchButtons(researchData) {
                     autoPrioritySelect.style.display = unlocked ? '' : 'none';
                 }
                 if (unlocked) {
-                    autoCheckbox.checked = researchManager.isAutoResearchEnabled(
-                        researchManager.currentAutoResearchPreset,
-                        researchItem.id
-                    );
+                    const researchAutomation = getResearchAutomation();
+                    autoCheckbox.checked = researchAutomation ? researchAutomation.isAutoResearchEnabled(researchItem.id) : false;
                     if (autoPrioritySelect) {
-                        autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(
-                            researchManager.currentAutoResearchPreset,
-                            researchItem.id
-                        )}`;
+                        autoPrioritySelect.value = `${researchAutomation ? researchAutomation.getAutoResearchPriority(researchItem.id) : 4}`;
                     }
                 }
             }
@@ -357,22 +351,19 @@ function loadResearchCategory(category) {
         let autoLabel = null;
         let autoPrioritySelect = null;
         if (category !== 'advanced') {
+            const researchAutomation = getResearchAutomation();
             autoCheckbox = document.createElement('input');
             autoCheckbox.type = 'checkbox';
             autoCheckbox.classList.add('research-auto-checkbox');
-            autoCheckbox.checked = researchManager.isAutoResearchEnabled(
-                researchManager.currentAutoResearchPreset,
-                research.id
-            );
+            autoCheckbox.checked = researchAutomation ? researchAutomation.isAutoResearchEnabled(research.id) : false;
             autoCheckbox.addEventListener('click', (event) => {
                 event.stopPropagation();
             });
             autoCheckbox.addEventListener('change', () => {
-                const applied = researchManager.setAutoResearchEnabled(
-                    researchManager.currentAutoResearchPreset,
-                    research.id,
-                    autoCheckbox.checked
-                );
+                const activeResearchAutomation = getResearchAutomation();
+                const applied = activeResearchAutomation
+                    ? activeResearchAutomation.setAutoResearchEnabled(research.id, autoCheckbox.checked)
+                    : false;
                 if (!applied) {
                     autoCheckbox.checked = false;
                 }
@@ -394,19 +385,15 @@ function loadResearchCategory(category) {
                 option.textContent = `P${value}`;
                 autoPrioritySelect.appendChild(option);
             });
-            autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(
-                researchManager.currentAutoResearchPreset,
-                research.id
-            )}`;
+            autoPrioritySelect.value = `${researchAutomation ? researchAutomation.getAutoResearchPriority(research.id) : 4}`;
             autoPrioritySelect.addEventListener('click', (event) => {
                 event.stopPropagation();
             });
             autoPrioritySelect.addEventListener('change', () => {
-                const applied = researchManager.setAutoResearchPriority(
-                    researchManager.currentAutoResearchPreset,
-                    research.id,
-                    Number.parseInt(autoPrioritySelect.value, 10)
-                );
+                const activeResearchAutomation = getResearchAutomation();
+                const applied = activeResearchAutomation
+                    ? activeResearchAutomation.setAutoResearchPriority(research.id, Number.parseInt(autoPrioritySelect.value, 10))
+                    : false;
                 if (!applied) {
                     autoPrioritySelect.value = '4';
                 }

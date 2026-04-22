@@ -37,6 +37,14 @@ try {
   ColonyAutomationRef = ColonyAutomationRef || require('./colony-automation.js').ColonyAutomation;
 } catch (error) {}
 
+let ResearchAutomationRef;
+try {
+  ResearchAutomationRef = ResearchAutomation;
+} catch (error) {}
+try {
+  ResearchAutomationRef = ResearchAutomationRef || require('./research-automation.js').ResearchAutomation;
+} catch (error) {}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
@@ -54,6 +62,7 @@ class AutomationManager extends EffectableEntity {
     this.buildingsAutomation = BuildingAutomationRef ? new BuildingAutomationRef() : null;
     this.projectsAutomation = ProjectAutomationRef ? new ProjectAutomationRef() : null;
     this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef() : null;
+    this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef() : null;
   }
 
   enable() {
@@ -140,8 +149,8 @@ class AutomationManager extends EffectableEntity {
       appliedTravelAutomation = true;
     }
 
-    if (typeof researchManager !== 'undefined' && researchManager && researchManager.applyTravelAutoResearchPreset) {
-      const appliedResearchPreset = researchManager.applyTravelAutoResearchPreset();
+    if (this.researchAutomation) {
+      const appliedResearchPreset = this.researchAutomation.applyTravelPreset();
       appliedTravelAutomation = appliedTravelAutomation || appliedResearchPreset;
     }
 
@@ -165,11 +174,12 @@ class AutomationManager extends EffectableEntity {
       lifeAutomation: this.lifeAutomation ? this.lifeAutomation.saveState() : null,
       buildingsAutomation: this.buildingsAutomation ? this.buildingsAutomation.saveState() : null,
       projectsAutomation: this.projectsAutomation ? this.projectsAutomation.saveState() : null,
-      colonyAutomation: this.colonyAutomation ? this.colonyAutomation.saveState() : null
+      colonyAutomation: this.colonyAutomation ? this.colonyAutomation.saveState() : null,
+      researchAutomation: this.researchAutomation ? this.researchAutomation.saveState() : null
     };
   }
 
-  loadState(data = {}) {
+  loadState(data = {}, legacyResearchState = null) {
     this.enabled = !!data.enabled;
     this.features = Object.assign({
       automationShipAssignment: false,
@@ -196,6 +206,9 @@ class AutomationManager extends EffectableEntity {
     if (data.colonyAutomation && this.colonyAutomation) {
       this.colonyAutomation.loadState(data.colonyAutomation);
     }
+    if (this.researchAutomation) {
+      this.researchAutomation.loadState(data.researchAutomation || {}, legacyResearchState);
+    }
     this.reapplyEffects();
   }
 
@@ -214,6 +227,9 @@ class AutomationManager extends EffectableEntity {
     }
     if (this.colonyAutomation) {
       this.colonyAutomation.update(delta || 0);
+    }
+    if (this.researchAutomation) {
+      this.researchAutomation.update(delta || 0);
     }
   }
 }

@@ -434,17 +434,16 @@ function initializeSidebarAutomationUI() {
   });
 
   sidebarAutomationElements.researchPresetSelect.addEventListener('change', (event) => {
-    researchManager.setCurrentAutoResearchPreset(Number(event.target.value));
+    automationManager.researchAutomation.setSelectedPresetId(event.target.value || null);
     queueAutomationUIRefresh();
     updateAutomationUI();
-    updateResearchUI();
   });
   sidebarAutomationElements.researchPresetDeploy.addEventListener('click', () => {
-    const preset = researchManager.getSelectedAutoResearchPreset();
+    const preset = automationManager.researchAutomation.getSelectedPreset();
     if (!preset) {
       return;
     }
-    researchManager.applyAutoResearchPresetOnce(preset.id);
+    automationManager.researchAutomation.applyPresetOnce(preset.id);
     queueAutomationUIRefresh();
     updateAutomationUI();
     updateResearchUI();
@@ -592,12 +591,13 @@ function updateSidebarAutomationUI() {
   elements.researchPresetSelect.disabled = !researchUnlocked;
   elements.researchPresetDeploy.disabled = !researchUnlocked;
   if (researchUnlocked) {
+    const researchAutomation = manager.researchAutomation;
     fillSelect(
       elements.researchPresetSelect,
-      researchManager.autoResearchPresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
-      researchManager.currentAutoResearchPreset
+      researchAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      researchAutomation.getSelectedPresetId()
     );
-    elements.researchPresetDeploy.disabled = !researchManager.getSelectedAutoResearchPreset();
+    elements.researchPresetDeploy.disabled = !researchAutomation.getSelectedPreset();
   }
 
   const buildingAutomation = manager.buildingsAutomation;

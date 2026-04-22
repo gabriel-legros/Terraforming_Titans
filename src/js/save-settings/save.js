@@ -563,8 +563,8 @@ function loadGame(slotOrCustomString, recreate = true) {
       nanotechManager.loadState(gameState.nanotechManager);
     }
 
-    if (gameState.automationManager && automationManager && automationManager.loadState) {
-      automationManager.loadState(gameState.automationManager);
+    if (automationManager && automationManager.loadState) {
+      automationManager.loadState(gameState.automationManager || {}, gameState.research || null);
       updateAutomationVisibility?.();
     }
 
