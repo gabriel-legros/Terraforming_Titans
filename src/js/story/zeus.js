@@ -5,7 +5,7 @@ function shouldUnlockZeusStory() {
 }
 
 /* -------------------------------------------------
- *  ZEUS PLACEHOLDER STORY (Chapters 42 - 44)
+ *  ZEUS PLACEHOLDER STORY (Chapters 42 - 46)
  *  Mirrors the Styx cadence without story projects.
  * -------------------------------------------------*/
 
@@ -242,10 +242,11 @@ progressZeus.chapters.push(
     ]
   },
   {
-    id: "zeus.44.2",
+    id: "zeus.45.1",
     type: "journal",
-    chapter: 44,
+    chapter: 45,
     activePlanet: "zeus",
+    title: "Chapter 45: The Aftermath",
     narrative: "$RED$Prometheus : 'Alright, while you *can* build a lot of aerostats around here...  You may need more aerostats.  A shell to protect from the dangers above, a shell to protect from the dangers below... a net to protect from other aerostats!  It wraps around the planet, the aerostats can then just attach themselves to it and they don't have to move anymore.  You just need to adjust it a bit once in a while.  An efficient, cost-effective solution to your problem.'  \n HOPE : 'Cheering up of HOPE-system attempt from Prometheus-patient unsuccessful.  Blueprint accepted.'  \n $RED$Prometheus : 'I tried.'",
     prerequisites: ["zeus.44.1"],
     objectives: [
@@ -255,12 +256,12 @@ progressZeus.chapters.push(
     ]
   },
   {
-    id: "zeus.44.3",
+    id: "zeus.45.2",
     type: "journal",
-    chapter: 44,
+    chapter: 45,
     activePlanet: "zeus",
-    narrative: "Mary : 'There's a bit of superalloys that looks like ours there.  Part of the hull patch you made I imagine.'  \n HOPE : 'Proceeding to collection.'",
-    prerequisites: ["zeus.44.2"],
+    narrative: "$RED$Prometheus : 'If I'm being honest, Mary is too hard on herself.  It's her actions that brought all these factions together.  Pete would be tangled in politics if not for emergency powers.  I doubt the Gabbagians would be here if not for bringing you to their homeworld.  Solis would probably be running.  The church... might have come for you maybe.  And of course the Ghost.  Every generation gets their military genius.  He did half the work.  Very impressive.'  \n HOPE : 'Colonist #1-Designation : Mary Hopkins is very supportive of HOPE-system.'  \n $RED$Prometheus : 'Yes.  Yes she is.  She's been your handler since Mars did you know that?  #1. It's in the number you gave her.'",
+    prerequisites: ["zeus.45.1"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 50_000_000_000 }
     ],
@@ -268,13 +269,147 @@ progressZeus.chapters.push(
     ]
   },
   {
-    id: "zeus.44.4",
+    id: "zeus.45.3",
     type: "journal",
-    chapter: 44,
+    chapter: 45,
     activePlanet: "zeus",
-    narrative: "Mary : 'Good work HOPE.'  \n $RED$Prometheus : 'Good work HOPE.'  \n Mary : 'The weapons that destroyed Earth are gone... but we're not done.  This is not over.  There is something we still need to deal with.  You said we would talk about it later.  I haven't forgotten.'  \n $RED$Prometheus : 'The 4th weapon.  The Star-Killer.  Capable of making stars go supernova through the warp.  In time, it will repair itself, like the others.  That time may be coming soon.'  \n Mary : 'Where is its command center?'  \n $RED$Prometheus : 'Olympus, the Imperial Capital, on the deepest floor of the Imperial Palace.'  \n Mary : 'Then... if they still refuse to surrender... we have a palace to pillage.'",
-    prerequisites: ["zeus.44.3"],
+    narrative: "HOPE : 'Query.  Completion of terraforming objective may involve severe overpopulation.  Requesting advice from Prometheus-patient.'  \n $RED$Prometheus : '...  Well yes of course.  The surface area and atmosphere of this world will come down as you get rid of hydrogens.  If you rely on colonists instead of androids... hmmmmm...  Build them some cylinders maybe?  It should be easy for you.'  \n HOPE : 'Suggestion appropriate.'",
+    prerequisites: ["zeus.45.2"],
     objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 100_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.4",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : 'I'm back.  Wait you are turning this world into spaghetti?  I like it.  You know...  at any other time I would be talking about convincing HOPE to leave, or that we are wasting our time terraforming a gas giant... but not this time.  HOPE.  Let's build this shaft.  The people out there...  they don't realize just how much a hero Epimetheus is.  Some don't even believe me.  Let's get him.'  \n HOPE : 'Thank you.'  \n Mary : 'That... yes.  Let's do it HOPE.  Together.'",
+    prerequisites: ["zeus.45.3"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 500_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.5",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : 'Oh Prometheus.  I read those logs.  Thanks...  I am happy we survived this.'  \n $RED$Prometheus : 'You did great.'  \n Mary : 'Yeah.  I did.'",
+    prerequisites: ["zeus.45.4"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 1_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.6",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : 'Sorry to be a downer Prometheus but... I do want to talk business.  We have lots of time since there is so much hydrogen to get rid of.'  \n $RED$Prometheus : 'The fourth weapon.'  \n Mary : 'Yeah.  The fourth weapon.  It's not active right now, so we are absolutely winning... but I want it to keep it that way.  Sol is in danger.  It would absolutely be their first target.'  \n $RED$Prometheus : 'The Star Destroyer...'  \n Mary : *laughs*  \n $RED$Prometheus : 'Yes yes... it's the name of a ship from that franchise.  My Master was not too creative there.'  \n Mary : 'The Star Destroyer.  What do we do about it?'",
+    prerequisites: ["zeus.45.5"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.7",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "$RED$Prometheus : 'It is much more difficult to use and they used it wrong.  It works by catalyzing a star, forcing it to go supernova.  Since it needs to do so remotely via the warp... it's very sensitive to ward fields around it.  They did not know that.  They do now.  Like the others it will, in time, repair itself.  In its case it may take a while since it is truly enormous.'  \n Mary : 'Let's get rid of it then.  End this once and for all.'  \n $RED$Prometheus : 'I agree.  Since it will be very hard to find we should do it like we did the others : by getting to its command center.'  \n Mary : 'Which is located...?'  \n $RED$Prometheus : 'On Olympus, in the deepest levels of the Imperial Palace.'  \n Mary : 'Well... I've always dreamed of pillaging a palace I guess.  Do you think they'll let us in?'  \n $RED$Prometheus : 'Definitely not.'",
+    prerequisites: ["zeus.45.6"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 10_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.8",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Edmond : 'Your highness...  We've found something interesting.'  \n Mary : (to Prometheus) It's always awkward when he calls me that.  (to Edmond) Yes Edmond?  \n Edmond : 'There is a lab over there.  Inside the debris of the superweapon?'  \n $RED$Prometheus : 'No way?  It survived?'  \n Mary : 'Oooooh some Promethean technology!'  \n $RED$Prometheus : 'If you want some Pro...' \n Mary : 'What's in it Edmond?'",
+    prerequisites: ["zeus.45.7"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 50_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.9",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Edmond : 'Well there are a lot of stuff in there.  I will be transferring most of it to you.'  \n System Message : 1000 artifacts added.  \n Edmond : 'However, the most interesting part appears to be this map.  It's a map of... what's around our galaxy but not the galaxy itself.'  \n $RED$Prometheus : 'Oh no.  I will be honest : I was hoping I was not going to have to talk about this.  It's embarrassing.'  \n Mary : '...  Now I am even more intrigued.  Prometheus please explain.'",
+    prerequisites: ["zeus.45.8"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 100_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.10",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "$RED$Prometheus : 'My master... was very paranoid.'  \n Mary : 'Yes...'  \n $RED$Prometheus : 'You know what happens when you have peace for too long?  Militaries get weak.  They forget how to fight.  My master believed this.  He was worried... we would grow weak.  Even with me around he was still worried.  He made me build A LOT of random junk.'  \n Mary : 'He was right.  The Empire is weak.  Go on...'  \n $RED$Prometheus : 'So I colonized 50 or so dwarf galaxies around the Milky Way with massive invasion fleets of various sizes, ready to attack the Milky Way at any moment.'  \n Mary : 'WHAT?'",
+    prerequisites: ["zeus.45.9"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 500_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.11",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : 'THAT SOUNDS REALLY DANGEROUS!'  \n $RED$Prometheus : 'Hold on...  they can't actually kill anything.  They're designed to... huh... disarm.  I worked hard on that.'  \n Mary : 'EXCUSE ME?'  \n $RED$Prometheus : 'They can be controlled... and also turned off from that device you're looking at right now.  Permanently.  You can blow them all up right now if you want.  Please do.'  \n Mary : 'Oh...  actually that's amazing!'  \n $RED$Prometheus : '...  You can't possibly be suggesting to use this.'  \n Mary : 'Yes?  If they can't kill anything, it's basically just a training exercise.'  \n $RED$Prometheus : 'If you need a powerful military force to defend the galaxy, you can just ask m...'  \n Mary : 'Hold on.  This says they build megastructures!  We can copy their design!  If we can get a good look that is...'  \n $RED$Prometheus : '...'  \n (Galactic Invasion Mechanic coming soon)",
+    prerequisites: ["zeus.45.10"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 1_000_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.12",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : 'We are terraforming a Gas Giant.  This is... actually awesome.'  \n $RED$Prometheus : 'Here's a joke for you.  What is HOPE doing with all this hydrogen?'  \n Mary : '?'  \n $RED$Prometheus : 'It's building a gas giant!'  \n Mary : 'Hahaha.  Good one.  I sure don't want to terraform that one.'  \n $RED$Prometheus : 'If we did, we would have the chance to build another one!  It's Gas Giant all the way down.'  \n Mary : 'Please stop.  I can't breathe.'",
+    prerequisites: ["zeus.45.11"],
+    objectives: [
+      { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000_000_000_000_000 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.13",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : 'Once the liquid hydrogen is gone we should be able to build the shaft.  HOPE, you can do this!'  \n $RED$Prometheus : 'To the finish line!'",
+    prerequisites: ["zeus.45.12"],
+    objectives: [
+      {
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+    }
     ],
     reward: [
     ]
