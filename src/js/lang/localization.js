@@ -326,6 +326,32 @@ function applyLocalizedPlanetFields(localizedPlanets) {
           }
         }
       }
+      if (localizedPlanet.travelWarning) {
+        const localizedTravelWarning = localizedPlanet.travelWarning;
+        if (!target.travelWarning) {
+          target.travelWarning = {};
+        }
+        if (localizedTravelWarning.message !== undefined) {
+          target.travelWarning.message = localizedTravelWarning.message;
+        }
+        if (localizedTravelWarning.confirmLabel !== undefined) {
+          target.travelWarning.confirmLabel = localizedTravelWarning.confirmLabel;
+        }
+        if (localizedTravelWarning.cancelLabel !== undefined) {
+          target.travelWarning.cancelLabel = localizedTravelWarning.cancelLabel;
+        }
+        if (localizedTravelWarning.hint) {
+          if (!target.travelWarning.hint) {
+            target.travelWarning.hint = {};
+          }
+          if (localizedTravelWarning.hint.title !== undefined) {
+            target.travelWarning.hint.title = localizedTravelWarning.hint.title;
+          }
+          if (localizedTravelWarning.hint.body !== undefined) {
+            target.travelWarning.hint.body = localizedTravelWarning.hint.body;
+          }
+        }
+      }
     }
   }
 }

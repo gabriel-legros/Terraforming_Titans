@@ -289,6 +289,7 @@ function showTravelWarningPopup(warningData, onConfirm) {
         travelWarningMessageEl = document.createElement('div');
         travelWarningMessageEl.className = 'travel-warning-message';
         travelWarningMessageEl.style.marginBottom = '12px';
+        travelWarningMessageEl.style.whiteSpace = 'pre-line';
         win.appendChild(travelWarningMessageEl);
 
         travelWarningHintContainer = document.createElement('div');

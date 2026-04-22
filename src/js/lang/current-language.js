@@ -4547,6 +4547,13 @@ setLanguageData({
       zeus: {
         name: 'Zeus',
         star: { name: 'Okoth' },
+        travelWarning: {
+          message: 'World 14 is not the final story world of this game, but it is its final boss.  You best be prepared.  \n This planet has dynamic mass, meaning gravity and land can change.  Titania (Atlas World) can be a good introduction to the concept but is not required.  \n This planet is the first story world with high gravity.  It gives large penalties to colonists which can be mitigated with some advanced researches.  \n The 5M Advanced Research "Warp Gate Fabrication" is highly recommended before beginning this world.',
+          hint: {
+            title: 'Hint',
+            body: '- Aerostats will be given an upgrade so they can fly.  Values are somewhat realistic hence this is extremely energy-intensive, and requires the use of a Dyson Swarm (or energy orbitals before that) to be viable.  Superalloy Fusion and a later upgrade given in the world will provide alternate solutions.  \n - You will be given a solution to the lack of metal fairly early but not immediately.  You may rely on orbitals for a few story steps.  \n - You may need to aim for at least 500T mass drivers (cheaper) or 5Q spaceships (easier to maintain). \n A large amount of superalloys in space storage will make this world much easier.'
+          }
+        },
       },
     },
     life: {

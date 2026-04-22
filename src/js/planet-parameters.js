@@ -1893,6 +1893,13 @@ const styxOverrides = {
 
 const zeusOverrides = {
   name: 'Zeus',
+  travelWarning: {
+    message: venusOverrides.travelWarning.message,
+    hint: {
+      title: venusOverrides.travelWarning.hint.title,
+      body: venusOverrides.travelWarning.hint.body
+    }
+  },
   gravityPenaltyEnabled: true,
   specialAttributes: {
     hasSand: false,
