@@ -1,4 +1,4 @@
-const AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND = 2500;
+const AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND = 5000;
 
 class AerostatStructuralNetProject extends ArtificialSkyProject {
   getCostRateLabel() {
