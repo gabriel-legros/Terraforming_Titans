@@ -20,6 +20,7 @@ class PopulationModule extends EffectableEntity {
       this.gravityDecayRate = 0;
       this.overpopulationDecayRate = 0;
       this.gravityMitigation = 0;
+      this.currentWorldOverpopulationLossTotal = 0;
     }
 
   getEffectiveGrowthMultiplier(){
@@ -227,6 +228,9 @@ class PopulationModule extends EffectableEntity {
         const populationExcess = currentPopulation - populationCap;
         overpopulationDecayPerSecond = populationExcess * 0.01;
       }
+      if (overpopulationDecayPerSecond > 0 && seconds > 0) {
+        this.currentWorldOverpopulationLossTotal += overpopulationDecayPerSecond * seconds;
+      }
       this.overpopulationDecayRate = currentPopulation > 0 ? overpopulationDecayPerSecond / currentPopulation : 0;
 
       const totalDecayPerSecond =
@@ -379,6 +383,16 @@ class PopulationModule extends EffectableEntity {
     } catch (error) {
       return 0;
     }
+  }
+
+  saveState() {
+    return {
+      currentWorldOverpopulationLossTotal: this.currentWorldOverpopulationLossTotal
+    };
+  }
+
+  loadState(state = {}) {
+    this.currentWorldOverpopulationLossTotal = Math.max(0, state.currentWorldOverpopulationLossTotal || 0);
   }
 }
 

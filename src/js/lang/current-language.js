@@ -1067,6 +1067,19 @@ setLanguageData({
         timesTen: 'x10',
         buildButton: 'Build {count} Batteries',
       },
+      overpopulationOneillCylinders: {
+        title: "O'Neill Cylinder Components",
+        lostPopulation: 'Population Lost',
+        requiredCylinders: 'Required Cylinders',
+        cylindersBuilt: 'Cylinders Built',
+        travelConversion: 'Travel Conversion',
+        buildAmount: 'Build Amount',
+        one: '1',
+        divideTen: '/10',
+        timesTen: 'x10',
+        max: 'Max',
+        buildButton: 'Build {count} Cylinders',
+      },
       keratiHive: {
         title: 'Kerati Hive',
         tooltip: 'Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.  Provides workers once complete.',
@@ -3618,6 +3631,10 @@ setLanguageData({
       spaceAntimatter: {
         name: 'Space Antimatter',
         description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 1Q to space energy storage.  Resources can be paid from space or colony storage, depending on space storage settings.',
+      },
+      overpopulationOneillCylinders: {
+        name: "Overpopulation O'Neill Cylinders",
+        description: "Assemble O'Neill cylinder habitat modules sized for population lost specifically to overpopulation from the current gas giant. Cylinders are built in batches equivalent to 1 terraformed world.",
       },
       lifters: {
         name: 'Lifters',

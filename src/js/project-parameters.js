@@ -981,6 +981,26 @@ const projectParameters = {
       preserveProgressOnTravel: true
     }
   },
+  overpopulationOneillCylinders: {
+    type: 'OverpopulationOneillCylindersProject',
+    name: '',
+    category: 'mega',
+    cost: {
+      colony: {
+        metal: 10_000_000_000_000,
+        components: 1_000_000_000_000,
+        electronics: 100_000_000_000
+      }
+    },
+    duration: 1,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true
+    }
+  },
   lifters: {
     type: 'LiftersProject',
     name: '',

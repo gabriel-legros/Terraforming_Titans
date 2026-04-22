@@ -159,6 +159,7 @@ function getGameState() {
           ])
         )
       : undefined,
+    populationModule: (typeof populationModule !== 'undefined' && typeof populationModule.saveState === 'function') ? populationModule.saveState() : undefined,
     projects: (typeof projectManager !== 'undefined' && typeof projectManager.saveState === 'function') ? projectManager.saveState() : undefined,
     research: (typeof researchManager !== 'undefined' && typeof researchManager.saveState === 'function') ? researchManager.saveState() : undefined,
     oreScanning: (typeof oreScanner !== 'undefined' && typeof oreScanner.saveState === 'function') ? oreScanner.saveState() : undefined,
@@ -465,6 +466,10 @@ function loadGame(slotOrCustomString, recreate = true) {
       createColonyButtons(colonies);
       initializeColonyAlerts();
       recalculateLandUsage();
+
+      if (gameState.populationModule && typeof populationModule.loadState === 'function') {
+        populationModule.loadState(gameState.populationModule);
+      }
 
       if (gameState.selectedBuildCounts) {
         for (const key in gameState.selectedBuildCounts) {
