@@ -4,6 +4,38 @@ function shouldUnlockZeusStory() {
   return false;
 }
 
+progressZeus.storyProjects.zeus_warp_shaft = {
+  type: 'Project',
+  name: 'Build Quantum Micro-Singularity Superalloy Warp Shaft',
+  category: 'story',
+  chapter: 45,
+  cost: {
+    colony: {
+      metal: 500_000_000_000_000,
+      components: 20_000_000_000_000,
+      electronics: 2_000_000_000_000,
+      superconductors: 2_000_000_000_000,
+      superalloys: 1_000_000_000_000,
+      energy: 1_000_000_000_000_000_000,
+      research: 5_000_000_000_000
+    },
+    special: {
+      antimatter: 100_000
+    }
+  },
+  duration: 300_000,
+  description: 'Assemble the quantum-stabilized superalloy warp shaft needed to open a survivable descent path through Zeus.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'zeus',
+    storySteps: [
+      'Remains of Epimetheus secured.'
+    ]
+  }
+};
+
 /* -------------------------------------------------
  *  ZEUS PLACEHOLDER STORY (Chapters 42 - 46)
  *  Mirrors the Styx cadence without story projects.
@@ -410,6 +442,32 @@ progressZeus.chapters.push(
       type: 'terraforming',
       terraformingParameter : 'complete',
     }
+    ],
+    reward: [
+      { target: 'project', targetId: 'zeus_warp_shaft', type: 'enable' }
+    ]
+  },
+  {
+    id: "zeus.45.14",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : 'This is it.  I've pulled some strings and got our best experts to scan the core for you.  There's a few signatures in this area.  Let's get him.'",
+    prerequisites: ["zeus.45.13"],
+    objectives: [
+      { type: 'project', projectId: 'zeus_warp_shaft', repeatCount: 1 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: "zeus.45.15",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    narrative: "Mary : '...' \n $RED$Prometheus : '...'  \n HOPE : '... Wish to build... beach.  Return... Star Flower...'  \n Mary : 'Yeah.  Let's do that.'",
+    prerequisites: ["zeus.45.14"],
+    objectives: [
     ],
     reward: [
     ]
