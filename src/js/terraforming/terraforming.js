@@ -998,19 +998,36 @@ class Terraforming extends EffectableEntity{
             'greenhouseGas', 'atmosphericMethane', 'atmosphericAmmonia',
             'hydrogen', 'sulfuricAcid', 'calciteAerosol'
           ];
-          let baseSurfaceMassKg = 0;
-          let baseAtmosphericMassKg = 0;
+          let derivedBaseSurfaceMassKg = 0;
+          let derivedBaseAtmosphericMassKg = 0;
           for (let index = 0; index < surfaceMassKeys.length; index += 1) {
               const key = surfaceMassKeys[index];
               const amount = planetParameters.resources.surface[key]?.initialValue || 0;
-              baseSurfaceMassKg += amount * 1000;
+              derivedBaseSurfaceMassKg += amount * 1000;
           }
           for (let index = 0; index < atmosphericMassKeys.length; index += 1) {
               const key = atmosphericMassKeys[index];
               const amount = planetParameters.resources.atmospheric[key]?.initialValue || 0;
-              baseAtmosphericMassKg += amount * 1000;
+              derivedBaseAtmosphericMassKg += amount * 1000;
           }
-          const basePlanetaryMass = Math.max(0, baseMass - baseSurfaceMassKg - baseAtmosphericMassKg);
+          const baseSurfaceMassKg = Number.isFinite(baseCelestialParameters.baseSurfaceMassKg)
+            ? baseCelestialParameters.baseSurfaceMassKg
+            : derivedBaseSurfaceMassKg;
+          const baseAtmosphericMassKg = Number.isFinite(baseCelestialParameters.baseAtmosphericMassKg)
+            ? baseCelestialParameters.baseAtmosphericMassKg
+            : derivedBaseAtmosphericMassKg;
+          const basePlanetaryMass = Number.isFinite(baseCelestialParameters.basePlanetaryMass)
+            ? Math.max(0, baseCelestialParameters.basePlanetaryMass)
+            : Math.max(0, baseMass - baseSurfaceMassKg - baseAtmosphericMassKg);
+          const basePlanetaryVolumeM3 = Number.isFinite(baseCelestialParameters.basePlanetaryVolumeM3)
+            ? Math.max(0, baseCelestialParameters.basePlanetaryVolumeM3)
+            : null;
+          const dynamicDirectMassDeltaKg = Number.isFinite(baseCelestialParameters.dynamicDirectMassDeltaKg)
+            ? baseCelestialParameters.dynamicDirectMassDeltaKg
+            : 0;
+          const dynamicDirectVolumeDeltaM3 = Number.isFinite(baseCelestialParameters.dynamicDirectVolumeDeltaM3)
+            ? baseCelestialParameters.dynamicDirectVolumeDeltaM3
+            : 0;
 
           Object.assign(this.initialCelestialParameters, baseCelestialParameters);
           Object.assign(this.celestialParameters, baseCelestialParameters);
@@ -1020,7 +1037,7 @@ class Terraforming extends EffectableEntity{
           this.basePlanetaryMass = basePlanetaryMass;
           this.baseSurfaceMassKg = baseSurfaceMassKg;
           this.baseAtmosphericMassKg = baseAtmosphericMassKg;
-          this.basePlanetaryVolumeM3 = null;
+          this.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
           this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
           this.initialLand = this.baseLand;
           if (this.resources.surface?.land) {
@@ -1031,7 +1048,7 @@ class Terraforming extends EffectableEntity{
           this.celestialParameters.baseMass = baseMass;
           this.celestialParameters.baseGravity = baseGravity;
           this.celestialParameters.basePlanetaryMass = basePlanetaryMass;
-          this.celestialParameters.basePlanetaryVolumeM3 = null;
+          this.celestialParameters.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
           this.celestialParameters.baseSurfaceMassKg = baseSurfaceMassKg;
           this.celestialParameters.baseAtmosphericMassKg = baseAtmosphericMassKg;
           this.initialCelestialParameters.baseLand = this.baseLand;
@@ -1039,7 +1056,7 @@ class Terraforming extends EffectableEntity{
           this.initialCelestialParameters.baseMass = baseMass;
           this.initialCelestialParameters.baseGravity = baseGravity;
           this.initialCelestialParameters.basePlanetaryMass = basePlanetaryMass;
-          this.initialCelestialParameters.basePlanetaryVolumeM3 = null;
+          this.initialCelestialParameters.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
           this.initialCelestialParameters.baseSurfaceMassKg = baseSurfaceMassKg;
           this.initialCelestialParameters.baseAtmosphericMassKg = baseAtmosphericMassKg;
           this.currentPlanetaryMassKg = null;
@@ -1047,8 +1064,8 @@ class Terraforming extends EffectableEntity{
           this.currentAtmosphericMassKg = null;
           this.currentPlanetaryVolumeM3 = null;
           this.currentSurfaceVolumeM3 = null;
-          this.dynamicDirectMassDeltaKg = 0;
-          this.dynamicDirectVolumeDeltaM3 = 0;
+          this.dynamicDirectMassDeltaKg = dynamicDirectMassDeltaKg;
+          this.dynamicDirectVolumeDeltaM3 = dynamicDirectVolumeDeltaM3;
           this.dynamicMassDeltaKg = 0;
           this.dynamicSurfaceVolumeDeltaM3 = 0;
           this.celestialParameters.currentPlanetaryMassKg = null;
@@ -1056,8 +1073,8 @@ class Terraforming extends EffectableEntity{
           this.celestialParameters.currentAtmosphericMassKg = null;
           this.celestialParameters.currentPlanetaryVolumeM3 = null;
           this.celestialParameters.currentSurfaceVolumeM3 = null;
-          this.celestialParameters.dynamicDirectMassDeltaKg = 0;
-          this.celestialParameters.dynamicDirectVolumeDeltaM3 = 0;
+          this.celestialParameters.dynamicDirectMassDeltaKg = dynamicDirectMassDeltaKg;
+          this.celestialParameters.dynamicDirectVolumeDeltaM3 = dynamicDirectVolumeDeltaM3;
           this.celestialParameters.dynamicMassDeltaKg = 0;
           this.celestialParameters.dynamicSurfaceVolumeDeltaM3 = 0;
           this.refreshDynamicWorldGeometry(planetParameters);
@@ -1073,6 +1090,7 @@ class Terraforming extends EffectableEntity{
 
       if (hasZonalTemperatureDefaults && (!planetParameters.classification || !planetParameters.classification?.archetype == 'artificial')) {
           let weightedTemperature = 0;
+          let weightedEquilibriumTemperature = 0;
           zones.forEach(zone => {
               const zoneDefaults = zonalTemperatureDefaults[zone] || {};
               const meanValue = zoneDefaults.value ?? this.temperature.zones[zone].value;
@@ -1085,10 +1103,13 @@ class Terraforming extends EffectableEntity{
               this.temperature.zones[zone].night = nightValue;
               this.temperature.zones[zone].trendValue = meanValue;
 
-              weightedTemperature += meanValue * this.getZoneWeight(zone);
+              const zoneWeight = this.getZoneWeight(zone);
+              weightedTemperature += meanValue * zoneWeight;
+              weightedEquilibriumTemperature += (this.temperature.zones[zone].equilibriumTemperature ?? meanValue) * zoneWeight;
           });
           this.temperature.value = weightedTemperature;
-          this.temperature.equilibriumTemperature = weightedTemperature;
+          this.temperature.trendValue = weightedTemperature;
+          this.temperature.equilibriumTemperature = weightedEquilibriumTemperature;
       } else {
           this.temperature.zones.tropical.value = this.temperature.zones.tropical.trendValue;
           this.temperature.zones.temperate.value = this.temperature.zones.temperate.trendValue;

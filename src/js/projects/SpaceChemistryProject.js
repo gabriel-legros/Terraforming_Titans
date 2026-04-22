@@ -4,7 +4,10 @@ const SPACE_CHEMISTRY_RECIPE_KEYS = [
   'recipe3',
   'recipe4',
   'haberBosch',
-  'ammoniaCombustion'
+  'ammoniaCombustion',
+  'methaneCombustion',
+  'waterElectrolysis',
+  'silicates'
 ];
 
 const SPACE_CHEMISTRY_RECIPES = {
@@ -61,6 +64,33 @@ const SPACE_CHEMISTRY_RECIPES = {
     outputs: {
       spaceStorage: { inertGas: 82.35, liquidWater: 158.82 }
     }
+  },
+  methaneCombustion: {
+    inputs: {
+      space: { energy: 100_000 },
+      spaceStorage: { atmosphericMethane: 36.36, oxygen: 145.45 }
+    },
+    outputs: {
+      spaceStorage: { carbonDioxide: 100, liquidWater: 81.82 }
+    }
+  },
+  waterElectrolysis: {
+    inputs: {
+      space: { energy: 24_000_000 },
+      spaceStorage: { liquidWater: 100 }
+    },
+    outputs: {
+      spaceStorage: { oxygen: 88.89, hydrogen: 11.11 }
+    }
+  },
+  silicates: {
+    inputs: {
+      space: { energy: 150_000_000 },
+      spaceStorage: { silicon: 100 }
+    },
+    outputs: {
+      spaceStorage: { oxygen: 53.24 }
+    }
   }
 };
 
@@ -69,6 +99,7 @@ const SPACE_CHEMISTRY_RATE_ORDER = [
   'hydrogen',
   'carbonDioxide',
   'oxygen',
+  'silicon',
   'inertGas',
   'atmosphericAmmonia',
   'liquidWater',
@@ -81,6 +112,7 @@ const SPACE_CHEMISTRY_RESOURCE_LABELS = {
   hydrogen: { path: 'ui.projects.spaceStorage.resources.hydrogen', fallback: 'Hydrogen' },
   carbonDioxide: { path: 'ui.projects.spaceStorage.resources.carbonDioxide', fallback: 'Carbon Dioxide' },
   oxygen: { path: 'ui.projects.spaceStorage.resources.oxygen', fallback: 'Oxygen' },
+  silicon: { path: 'ui.projects.spaceStorage.resources.silicon', fallback: 'Silica' },
   inertGas: { path: 'ui.projects.spaceStorage.resources.nitrogen', fallback: 'Nitrogen' },
   atmosphericAmmonia: { path: 'ui.projects.spaceStorage.resources.ammonia', fallback: 'Ammonia' },
   liquidWater: { path: 'ui.projects.spaceStorage.resources.water', fallback: 'Water' },
@@ -93,6 +125,7 @@ const SPACE_CHEMISTRY_RATE_RESOURCE_LABELS = {
   hydrogen: { path: 'ui.projects.spaceChemistry.rateLabels.hydrogen', fallback: 'H2' },
   carbonDioxide: { path: 'ui.projects.spaceChemistry.rateLabels.carbonDioxide', fallback: 'CO2' },
   oxygen: { path: 'ui.projects.spaceChemistry.rateLabels.oxygen', fallback: 'O2' },
+  silicon: { path: 'ui.projects.spaceChemistry.rateLabels.silicon', fallback: 'SiO2' },
   inertGas: { path: 'ui.projects.spaceChemistry.rateLabels.inertGas', fallback: 'N2' },
   atmosphericAmmonia: { path: 'ui.projects.spaceChemistry.rateLabels.atmosphericAmmonia', fallback: 'NH3' },
   liquidWater: { path: 'ui.projects.spaceChemistry.rateLabels.liquidWater', fallback: 'H2O' },

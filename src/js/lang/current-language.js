@@ -1517,6 +1517,7 @@ setLanguageData({
           hydrogen: 'H2',
           carbonDioxide: 'CO2',
           oxygen: 'O2',
+          silicon: 'SiO2',
           inertGas: 'N2',
           atmosphericAmmonia: 'NH3',
           liquidWater: 'H2O',
@@ -3417,6 +3418,9 @@ setLanguageData({
           recipe4: { shortName: 'CO2 Synthesis' },
           haberBosch: { shortName: 'Haber-Bosch' },
           ammoniaCombustion: { shortName: 'Ammonia Combustion' },
+          methaneCombustion: { shortName: 'Methane Combustion' },
+          waterElectrolysis: { shortName: 'Water Electrolysis' },
+          silicates: { shortName: 'Silicates -> Oxygen' },
         },
       },
       massDriver: {

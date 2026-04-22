@@ -193,8 +193,61 @@
     return { resources: { surface, atmospheric }, zonalSurface, zonalTemperatures };
   }
 
+  function captureDynamicWorldCelestialSnapshot() {
+    const source = terraforming?.celestialParameters || null;
+    if (!source) {
+      return null;
+    }
+
+    const keys = [
+      'baseLand',
+      'baseRadius',
+      'baseMass',
+      'baseGravity',
+      'basePlanetaryMass',
+      'basePlanetaryVolumeM3',
+      'baseSurfaceMassKg',
+      'baseAtmosphericMassKg',
+      'dynamicDirectMassDeltaKg',
+      'dynamicDirectVolumeDeltaM3',
+      'dynamicMassDeltaKg',
+      'dynamicSurfaceVolumeDeltaM3',
+      'currentPlanetaryMassKg',
+      'currentSurfaceMassKg',
+      'currentAtmosphericMassKg',
+      'currentPlanetaryVolumeM3',
+      'currentSurfaceVolumeM3',
+      'mass',
+      'radius',
+      'gravity'
+    ];
+    const snapshot = {};
+    let hasValue = false;
+
+    keys.forEach(key => {
+      if (Number.isFinite(source[key])) {
+        snapshot[key] = source[key];
+        hasValue = true;
+      }
+    });
+
+    return hasValue ? snapshot : null;
+  }
+
   function generateOverrideSnippet(values) {
-    return JSON.stringify(buildOverrideObject(values), null, 2);
+    const override = buildOverrideObject(values);
+    if (currentPlanetParameters?.specialAttributes?.dynamicMass === true) {
+      const celestialSnapshot = captureDynamicWorldCelestialSnapshot();
+      if (celestialSnapshot) {
+        override.celestialParameters = celestialSnapshot;
+      }
+      if (resources?.surface?.land) {
+        override.resources.surface.land = {
+          initialValue: resources.surface.land.value
+        };
+      }
+    }
+    return JSON.stringify(override, null, 2);
   }
   function formatZonalTemperatureSnippet(temperatures) {
     const zonesList = typeof ZONES !== 'undefined' ? ZONES : ['tropical', 'temperate', 'polar'];
@@ -215,9 +268,8 @@
 
   function logTerraformingOverride() {
     const values = captureValues();
-    const override = buildOverrideObject(values);
-    delete override.resources.surface;
-    const snippet = JSON.stringify(override, null, 2);
+    const snippet = generateOverrideSnippet(values);
+    const override = JSON.parse(snippet);
     const oxygenOverride = override.resources.atmospheric.oxygen.initialValue;
     const inertOverride = override.resources.atmospheric.inertGas.initialValue;
     console.log('Override snippet:\n' + snippet);
