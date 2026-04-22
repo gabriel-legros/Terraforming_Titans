@@ -1,18 +1,18 @@
 function getEcumenopolisLandFraction(terraforming) {
   const eco = colonies?.t7_colony;
-  const baseLand = resolveWorldBaseLand(terraforming);
-  if (!eco || !baseLand) return 0;
+  const geometricLand = resolveWorldGeometricLand(terraforming);
+  if (!eco || !geometricLand) return 0;
   const activeCount = Number.isFinite(eco?.activeNumber)
     ? eco.activeNumber
     : (typeof buildingCountToNumber === 'function'
       ? buildingCountToNumber(eco?.active)
       : Math.max(0, Math.floor(Number(eco?.active) || 0)));
-  return (activeCount * eco.requiresLand) / baseLand;
+  return (activeCount * eco.requiresLand) / geometricLand;
 }
 
 function getBiodomeLandFraction(terraforming) {
-  const baseLand = resolveWorldBaseLand(terraforming);
-  if (!baseLand) return 0;
+  const geometricLand = resolveWorldGeometricLand(terraforming);
+  if (!geometricLand) return 0;
   try {
     const biodome = buildings.biodome;
     const activeCount = Number.isFinite(biodome?.activeNumber)
@@ -20,7 +20,7 @@ function getBiodomeLandFraction(terraforming) {
       : (typeof buildingCountToNumber === 'function'
         ? buildingCountToNumber(biodome?.active)
         : Math.max(0, Math.floor(Number(biodome?.active) || 0)));
-    const fraction = (activeCount * biodome.requiresLand) / baseLand;
+    const fraction = (activeCount * biodome.requiresLand) / geometricLand;
     return Math.max(0, Math.min(1, fraction));
   } catch (error) {
     return 0;

@@ -1868,11 +1868,12 @@ function createWaterBox(row) {
     }
 
     const targetSpan = document.createElement('span');
+    const effectiveLifeTarget = getEffectiveLifeFraction(terraforming);
     targetSpan.textContent = formatTerraformingTargetText(
       getTerraformingSummaryText(
         'lifeSummary.targetAtLeast',
         'Life coverage at least {percent}%.',
-        { percent: (terraforming.life.target * 100).toFixed(0) }
+        { percent: (effectiveLifeTarget * 100).toFixed(0) }
       )
     );
     targetSpan.style.marginTop = 'auto';

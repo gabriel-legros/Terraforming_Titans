@@ -149,8 +149,8 @@ class FollowersManager extends EffectableEntity {
   }
 
   getHolyWorldEcumenopolisCoverage() {
-    const initialLand = Math.max(0, resolveWorldBaseLand(terraforming));
-    if (initialLand <= 0) {
+    const geometricLand = Math.max(0, resolveWorldGeometricLand(terraforming));
+    if (geometricLand <= 0) {
       return 0;
     }
     const ecumenopolis = colonies.t7_colony;
@@ -159,7 +159,7 @@ class FollowersManager extends EffectableEntity {
       : (typeof buildingCountToNumber === 'function'
         ? buildingCountToNumber(ecumenopolis?.active)
         : Math.max(0, Math.floor(Number(ecumenopolis?.active) || 0)));
-    return (activeCount * ecumenopolis.requiresLand) / initialLand;
+    return (activeCount * ecumenopolis.requiresLand) / geometricLand;
   }
 
   getHolyWorldRequirements() {
