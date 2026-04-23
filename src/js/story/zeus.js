@@ -279,7 +279,7 @@ progressZeus.chapters.push(
     chapter: 45,
     activePlanet: "zeus",
     title: "Chapter 45: The Aftermath",
-    narrative: "$RED$Prometheus : 'Alright, while you *can* build a lot of aerostats around here...  You may need more aerostats.  A shell to protect from the dangers above, a shell to protect from the dangers below... a net to protect from other aerostats!  It wraps around the planet, the aerostats can then just attach themselves to it and they don't have to move anymore.  You just need to adjust it a bit once in a while.  An efficient, cost-effective solution to your problem.'  \n HOPE : 'Cheering up of HOPE-system attempt from Prometheus-patient unsuccessful.  Blueprint accepted.'  \n $RED$Prometheus : 'I tried.'",
+    narrative: "$RED$Prometheus : 'Alright, while you *can* build a lot of aerostats around here...  You may need more aerostats.  A shell to protect from the dangers above, a shell to protect from the dangers below... a net to protect from other aerostats!  It wraps around the planet, the aerostats can then just attach themselves to it and they don't have to move anymore.  You just need to adjust it a bit once in a while.  An efficient, cost-effective solution to your problem.'  \n HOPE : 'Cheering up of HOPE-system attempt from Prometheus-patient unsuccessful.  Blueprint accepted.'  \n New Infrastructure Project Available. \n $RED$Prometheus : 'I tried.'",
     prerequisites: ["zeus.44.1"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 10_000_000_000 }
@@ -305,7 +305,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 45,
     activePlanet: "zeus",
-    narrative: "HOPE : 'Query.  Completion of terraforming objective may involve severe overpopulation.  Requesting advice from Prometheus-patient.'  \n $RED$Prometheus : '...  Well yes of course.  The surface area and atmosphere of this world will come down as you get rid of hydrogen.  If you rely on colonists instead of androids... hmmmmm...  Build them some cylinders maybe?  It should be easy for you.'  \n HOPE : 'Suggestion appropriate.'",
+    narrative: "HOPE : 'Query.  Completion of terraforming objective may involve severe overpopulation.  Requesting advice from Prometheus-patient.'  \n $RED$Prometheus : '...  Well yes of course.  The surface area and atmosphere of this world will come down as you get rid of hydrogen.  If you rely on colonists instead of androids... hmmmmm...  Build them some cylinders maybe?  It should be easy for you.'  \n HOPE : 'Suggestion appropriate.'  \n New Mega Project Available.",
     prerequisites: ["zeus.45.2"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 100_000_000_000 }
