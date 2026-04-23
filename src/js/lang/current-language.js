@@ -3648,7 +3648,7 @@ setLanguageData({
       },
       overpopulationOneillCylinders: {
         name: "Overpopulation O'Neill Cylinders",
-        description: "Assemble O'Neill cylinder habitat modules sized for population lost specifically to overpopulation from the current gas giant. Cylinders are built in batches equivalent to 1 terraformed world.",
+        description: "Assemble O'Neill cylinder habitat modules sized for population lost specifically to overpopulation from the current gas giant. Cylinders are built in batches equivalent to 1 terraformed world.  Can be paid from either colony or space storage (respecting space storage settings).",
       },
       lifters: {
         name: 'Lifters',
