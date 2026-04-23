@@ -345,7 +345,7 @@ progressZeus.chapters.push(
     type: "journal",
     chapter: 45,
     activePlanet: "zeus",
-    narrative: "Mary : 'Sorry to be a downer Prometheus but... I do want to talk business.  We have lots of time since there is so much hydrogen to get rid of.'  \n $RED$Prometheus : 'The fourth weapon.'  \n Mary : 'Yeah.  The fourth weapon.  It's not active right now, so we are absolutely winning... but I want it to keep it that way.  Sol is in danger.  It would absolutely be their first target.'  \n $RED$Prometheus : 'The Star Destroyer...'  \n Mary : *laughs*  \n $RED$Prometheus : 'Yes yes... it's the name of a ship from that franchise.  My Master was not too creative there.'  \n Mary : 'The Star Destroyer.  What do we do about it?'",
+    narrative: "Mary : 'Sorry to be a downer Prometheus but... I do want to talk business.  We have lots of time since there is so much hydrogen to get rid of.'  \n $RED$Prometheus : 'The fourth weapon.'  \n Mary : 'Yeah.  The fourth weapon.  It's not active right now, so we are absolutely winning... but I want to keep it that way.  Sol is in danger.  It would absolutely be their first target.'  \n $RED$Prometheus : 'The Star Destroyer...'  \n Mary : *laughs*  \n $RED$Prometheus : 'Yes yes... it's the name of a ship from that franchise.  My Master was not too creative there.'  \n Mary : 'The Star Destroyer.  What do we do about it?'",
     prerequisites: ["zeus.45.5"],
     objectives: [
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 5_000_000_000_000 }
@@ -377,6 +377,14 @@ progressZeus.chapters.push(
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 50_000_000_000_000 }
     ],
     reward: [
+      {
+        target: "resource",
+        resourceType: "special",
+        targetId: "alienArtifact",
+        type: "instantResourceGain",
+        quantity: 1000,
+        oneTimeFlag: true
+      }
     ]
   },
   {
