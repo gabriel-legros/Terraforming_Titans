@@ -487,6 +487,8 @@ progressZeus.chapters.push(
     ],
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true },
+      { target: 'artificialManager', type: 'unlockCore', targetId: 'stellar-bh' },
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'a-star' }
     ]
   },
   {
@@ -495,7 +497,7 @@ progressZeus.chapters.push(
     chapter: 45,
     activePlanet: "zeus",
     title: "",
-    narrative: "(world 15 not implemented yet)",
+    narrative: "(World 15 not implemented yet)",
     prerequisites: ["zeus.45.16"],
     objectives: [
     ],
