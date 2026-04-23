@@ -79,6 +79,10 @@
     } = {}) {
       this.atmKey = 'hydrogen';
       this.repartitionTimescaleSeconds = repartitionTimescaleSeconds;
+      this.tripleTemperature = HYDROGEN_T_TRIPLE;
+      this.triplePressure = HYDROGEN_P_TRIPLE;
+      this.criticalTemperature = HYDROGEN_T_CRIT;
+      this.saturationVaporPressureFn = calculateSaturationPressureHydrogen;
     }
 
     getCoverage(zone, cache = {}) {

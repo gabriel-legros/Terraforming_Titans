@@ -2322,6 +2322,7 @@ setLanguageData({
         },
         phaseLabels: {
           water: 'Water',
+          hydrogen: 'Hydrogen',
           carbonDioxide: 'CO2',
           methane: 'Methane',
           ammonia: 'Ammonia',

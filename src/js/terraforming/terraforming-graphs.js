@@ -48,6 +48,7 @@ const TERRAFORMING_GRAPH_PALETTE = [
 
 const TERRAFORMING_PHASE_DIAGRAM_ORDER = [
   'water',
+  'hydrogen',
   'carbonDioxide',
   'methane',
   'ammonia',
@@ -61,6 +62,16 @@ const TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS = {
     label: getTerraformingGraphText('phaseLabels.water', 'Water'),
     cycle: waterCycle,
     atmosphereKey: 'atmosphericWater'
+  },
+  hydrogen: {
+    id: 'hydrogen',
+    label: getTerraformingGraphText('phaseLabels.hydrogen', 'Hydrogen'),
+    cycle: hydrogenCycle,
+    atmosphereKey: 'hydrogen',
+    minTemperature: 0,
+    maxTemperature: 3000,
+    maxPressure: 1e10,
+    phaseBoundaryPressureFn: calculateHydrogenBoundaryPressure
   },
   carbonDioxide: {
     id: 'carbonDioxide',
@@ -871,14 +882,15 @@ class TerraformingGraphsManager {
     const definition = TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS[this.selectedPhaseDiagram]
       || TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS.water;
     const cycle = definition.cycle;
+    const phaseBoundaryPressureFn = definition.phaseBoundaryPressureFn || cycle.saturationVaporPressureFn;
     const tripleTemp = cycle.tripleTemperature;
     const criticalTemp = cycle.criticalTemperature;
-    const minTemp = Math.max(5, tripleTemp * 0.4);
-    const maxTemp = Math.max(tripleTemp * 1.2, Math.min(criticalTemp * 1.05, tripleTemp * 4));
-    const maxTempForPressure = Math.min(criticalTemp, maxTemp);
+    const minTemp = definition.minTemperature ?? Math.max(5, tripleTemp * 0.4);
+    const maxTemp = definition.maxTemperature ?? Math.max(tripleTemp * 1.2, Math.min(criticalTemp * 1.05, tripleTemp * 4));
+    const maxTempForPressure = definition.maxPressure ? maxTemp : Math.min(criticalTemp, maxTemp);
     const triplePressure = cycle.triplePressure;
     const minPressure = Math.max(0.1, triplePressure * 0.02);
-    const maxPressure = Math.max(triplePressure * 8, cycle.saturationVaporPressureFn(maxTempForPressure) * 1.2);
+    const maxPressure = definition.maxPressure ?? Math.max(triplePressure * 8, phaseBoundaryPressureFn(maxTempForPressure) * 1.2);
     const logMin = Math.log10(minPressure);
     const logMax = Math.log10(maxPressure);
 
@@ -930,8 +942,6 @@ class TerraformingGraphsManager {
       supercritical: '#f5b041'
     };
 
-    const cols = 120;
-    const rows = 70;
     const tempSpan = maxTemp - minTemp;
     const logSpan = logMax - logMin;
     const darkMode = document.body.classList.contains('dark-mode');
@@ -955,6 +965,8 @@ class TerraformingGraphsManager {
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
     const chartBottom = padding.top + plotHeight;
+    const cols = Math.max(120, Math.floor(plotWidth * (definition.renderResolutionX || 1)));
+    const rows = Math.max(70, Math.floor(plotHeight * (definition.renderResolutionY || 1)));
 
     for (let row = 0; row < rows; row += 1) {
       const rowT = row / rows;
@@ -964,14 +976,14 @@ class TerraformingGraphsManager {
       for (let col = 0; col < cols; col += 1) {
         const colT = col / cols;
         const temp = minTemp + colT * tempSpan;
-        const psat = cycle.saturationVaporPressureFn(temp);
+        const phaseBoundaryPressure = phaseBoundaryPressureFn(temp);
         let phase = 'gas';
         if (temp < tripleTemp) {
-          phase = pressure >= psat ? 'solid' : 'gas';
+          phase = pressure >= phaseBoundaryPressure ? 'solid' : 'gas';
         } else if (temp >= criticalTemp) {
-          phase = pressure >= psat ? 'supercritical' : 'gas';
+          phase = pressure >= phaseBoundaryPressure ? 'supercritical' : 'gas';
         } else {
-          phase = pressure >= psat ? 'liquid' : 'gas';
+          phase = pressure >= phaseBoundaryPressure ? 'liquid' : 'gas';
         }
         ctx.fillStyle = colorMap[phase];
         const x = padding.left + colT * plotWidth;
@@ -1003,8 +1015,8 @@ class TerraformingGraphsManager {
     ctx.beginPath();
     for (let i = 0; i <= cols; i += 1) {
       const temp = minTemp + (tempSpan * i) / cols;
-      const psat = cycle.saturationVaporPressureFn(temp);
-      const clampedLogP = Math.min(logMax, Math.max(logMin, Math.log10(Math.max(psat, minPressure))));
+      const phaseBoundaryPressure = phaseBoundaryPressureFn(temp);
+      const clampedLogP = Math.min(logMax, Math.max(logMin, Math.log10(Math.max(phaseBoundaryPressure, minPressure))));
       const x = padding.left + ((temp - minTemp) / tempSpan) * plotWidth;
       const y = padding.top + (1 - (clampedLogP - logMin) / logSpan) * plotHeight;
       if (i === 0) {
