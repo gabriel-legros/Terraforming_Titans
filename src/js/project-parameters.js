@@ -887,7 +887,7 @@ const projectParameters = {
     kesslerDebrisSize: 'large',
     attributes: {
       spaceStorage: true,
-      costPerShip: { colony: { metal : 100_000, energy: 2_500_000_000 } },
+      costPerShip: { colony: { metal : 100_000, energy: 25_000_000_000 } },
       transportPerShip: 1_000_000,
       canUseSpaceStorage: true,
       defaultExpansionRecipe: 'standard',
