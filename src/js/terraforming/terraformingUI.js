@@ -1134,7 +1134,7 @@ function createTemperatureBox(row) {
       setTooltipText(els.coreHeatTooltip, getCoreHeatTooltipText());
     }
     if (els.coreHeat) {
-      els.coreHeat.textContent = formatNumber(netCoreHeatFlux, false, netCoreHeatFlux >= 100 ? 0 : 2);
+      els.coreHeat.textContent = formatNumber(netCoreHeatFlux, false, 2);
     }
 
     els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
