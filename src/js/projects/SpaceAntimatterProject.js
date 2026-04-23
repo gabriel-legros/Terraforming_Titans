@@ -31,6 +31,13 @@
       return this.repeatCount * SPACE_ANTIMATTER_STORAGE_PER_BATTERY;
     }
 
+    getSelectedBuildCount() {
+      if (!gameSettings.roundBuildingConstruction) {
+        return this.buildCount;
+      }
+      return getRoundedBuildCount(this.repeatCount, this.buildCount);
+    }
+
     applyBatteryStorageEffect() {
       const sourceId = this.getStorageEffectSourceId();
       const bonus = this.getTotalStorageBonus();
@@ -93,7 +100,7 @@
 
     getScaledCost() {
       const base = super.getScaledCost();
-      const count = this.isActive ? this.activeBuildCount : this.buildCount;
+      const count = this.isActive ? this.activeBuildCount : this.getSelectedBuildCount();
       const scaled = {};
       for (const category in base) {
         scaled[category] = {};
@@ -118,7 +125,7 @@
     }
 
     start(resources) {
-      this.activeBuildCount = this.buildCount;
+      this.activeBuildCount = this.getSelectedBuildCount();
       const started = super.start(resources);
       if (!started) {
         this.activeBuildCount = 1;
@@ -244,12 +251,13 @@
       if (!this.uiElements) {
         return;
       }
+      const selected = this.getSelectedBuildCount();
       this.uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, true);
       this.uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonus(), true);
       this.uiElements.buildButton.textContent = getSpaceAntimatterText(
         'buildButton',
-        { count: formatNumber(this.buildCount, true) },
-        `Build ${formatNumber(this.buildCount, true)} Batteries`
+        { count: formatNumber(selected, true) },
+        `Build ${formatNumber(selected, true)} Batteries`
       );
       this.uiElements.buildButton.disabled = !this.canStart();
     }

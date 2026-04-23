@@ -31,7 +31,11 @@
     }
 
     getSelectedBuildCount() {
-      return Math.max(0, this.buildCount || 0);
+      const selected = Math.max(0, this.buildCount || 0);
+      if (!gameSettings.roundBuildingConstruction) {
+        return selected;
+      }
+      return getRoundedBuildCount(this.getBuiltCylinderCount(), selected);
     }
 
     isVisible() {
