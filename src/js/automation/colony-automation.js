@@ -465,6 +465,8 @@ class ColonyAutomation {
       componentsSlider: nanotechManager.componentsSlider,
       maintenance3Slider: nanotechManager.maintenance3Slider,
       electronicsSlider: nanotechManager.electronicsSlider,
+      maintenance4Slider: nanotechManager.maintenance4Slider,
+      grapheneSlider: nanotechManager.grapheneSlider,
       maxEnergyPercent: nanotechManager.maxEnergyPercent,
       maxEnergyAbsolute: nanotechManager.maxEnergyAbsolute,
       energyLimitMode: nanotechManager.energyLimitMode,
@@ -477,6 +479,9 @@ class ColonyAutomation {
       maxBiomassPercent: nanotechManager.maxBiomassPercent,
       maxBiomassAbsolute: nanotechManager.maxBiomassAbsolute,
       biomassLimitMode: nanotechManager.biomassLimitMode,
+      maxGraphitePercent: nanotechManager.maxGraphitePercent,
+      maxGraphiteAbsolute: nanotechManager.maxGraphiteAbsolute,
+      graphiteLimitMode: nanotechManager.graphiteLimitMode,
       onlyScrap: nanotechManager.onlyScrap,
       onlyTrash: nanotechManager.onlyTrash,
       onlyJunk: nanotechManager.onlyJunk,
@@ -744,6 +749,8 @@ class ColonyAutomation {
     nanotechManager.componentsSlider = control.componentsSlider || 0;
     nanotechManager.maintenance3Slider = control.maintenance3Slider || 0;
     nanotechManager.electronicsSlider = control.electronicsSlider || 0;
+    nanotechManager.maintenance4Slider = control.maintenance4Slider || 0;
+    nanotechManager.grapheneSlider = control.grapheneSlider || 0;
     nanotechManager.maxEnergyPercent = control.maxEnergyPercent ?? 10;
     nanotechManager.maxEnergyAbsolute = control.maxEnergyAbsolute ?? 1e6;
     nanotechManager.energyLimitMode = control.energyLimitMode || 'percent';
@@ -756,6 +763,9 @@ class ColonyAutomation {
     nanotechManager.maxBiomassPercent = control.maxBiomassPercent ?? 10;
     nanotechManager.maxBiomassAbsolute = control.maxBiomassAbsolute ?? 1e6;
     nanotechManager.biomassLimitMode = control.biomassLimitMode || 'percent';
+    nanotechManager.maxGraphitePercent = control.maxGraphitePercent ?? 10;
+    nanotechManager.maxGraphiteAbsolute = control.maxGraphiteAbsolute ?? 1e6;
+    nanotechManager.graphiteLimitMode = control.graphiteLimitMode || 'percent';
     nanotechManager.onlyScrap = control.onlyScrap === true;
     nanotechManager.onlyTrash = control.onlyTrash === true;
     nanotechManager.onlyJunk = control.onlyJunk === true;

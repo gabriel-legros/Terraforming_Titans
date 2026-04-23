@@ -1939,6 +1939,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nanotechnology_stage_4',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 30_000_000_000 },
+        prerequisites: ['nanotechnology_stage_3'],
+        effects: [
+          {
+            target: 'nanotechManager',
+            type: 'booleanFlag',
+            flagId: 'stage4_enabled',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'orbital_rings',
         name: '',
         description: '',

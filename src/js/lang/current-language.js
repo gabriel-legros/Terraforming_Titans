@@ -1875,6 +1875,7 @@ setLanguageData({
           stage1: 'Stage I',
           stage2: 'Stage II',
           stage3: 'Stage III',
+          stage4: 'Stage IV',
         },
         recycling: {
           junk: 'Junk',
@@ -1914,10 +1915,19 @@ setLanguageData({
           electronicsProduction: 'Electronics Production',
           electronicsDescription: 'Diverts growth to fabricate electronics.',
         },
+        stage4: {
+          graphiteAllocation: 'Graphite allocation',
+          graphiteDescription: 'Consumes graphite to boost growth.',
+          maintenance: 'Maintenance IV',
+          maintenanceDescription: 'Reduces all maintenance by up to 50%, additive with the earlier stages.',
+          grapheneProduction: 'Graphene Production',
+          grapheneDescription: 'Diverts growth to fabricate graphene.',
+        },
         warnings: {
           noSand: '⚠️ No sand deposits; glass capped to silica allocation.',
           noOre: '⚠️ No ore deposits; components capped to metal allocation.',
           noResources: '⚠️ No resources; electronics capped to biomass allocation.',
+          noDeposits: '⚠️ No deposits, metal capped to graphite.',
         },
         status: {
           disabled: 'Disabled',
@@ -1934,6 +1944,7 @@ setLanguageData({
           silica: 'Percentage of silica production: maximum share of silicon production the swarm may consume per second.\nAbsolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: junk usage is not capped, but silica usage still follows this limit.',
           metal: 'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: scrap usage is not capped, but metal usage still follows this limit.',
           biomass: 'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: trash usage is not capped, but biomass usage still follows this limit.',
+          graphite: 'Percentage of graphite production: maximum share of graphite production the swarm may consume per second.\nAbsolute: fixed graphite limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: graphite usage ignores production-rate caps and is limited only by available graphite.',
         },
       },
     },
@@ -4194,6 +4205,10 @@ setLanguageData({
         nanotechnology_stage_3: {
           name: 'Nanotechnology Stage III',
           description: 'Further expands the nanocolony program.',
+        },
+        nanotechnology_stage_4: {
+          name: 'Nanotechnology Stage IV',
+          description: 'The ultimate form of nanotechnology.',
         },
         orbital_rings: {
           name: 'Orbital Rings',

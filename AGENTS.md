@@ -129,6 +129,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Silica/metal allocation supports production percent or absolute caps.
 - Recycling supports junk/scrap filtering and uncapped selector.
 - Output requires same-tick material input (prevents free output).
+- Nanotechnology Stage IV is a `30B` advanced research after Stage III; it adds graphite allocation, additive standard-material maintenance reduction, and graphene-as-metal production, with a no-deposits warning when graphite fabrication is capped by graphite input.
 - Nanocolony growth, production, consumption, and maintenance effects fully shut down when global average temperature exceeds `700°C` (`973.15 K`), and the colony card shows a red warning using the current temperature unit.
 
 ### Warp Gate Command
