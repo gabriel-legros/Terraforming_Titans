@@ -733,6 +733,12 @@ class NanotechManager extends EffectableEntity {
   applyMaintenanceEffects() {
     if (typeof structures === 'undefined' || !structures) return;
     const totals = { metal: 0, glass: 0, water: 0, components: 0, superconductors: 0, electronics: 0 };
+    const nanotechSources = new Set([
+      'nanotechMaintenance',
+      'nanotechMaintenance2',
+      'nanotechMaintenance3',
+      'nanotechMaintenance4',
+    ]);
     for (const name in structures) {
       const s = structures[name];
       if (!s || !s.maintenanceCost) continue;
@@ -742,12 +748,44 @@ class NanotechManager extends EffectableEntity {
         : (typeof buildingCountToNumber === 'function'
           ? buildingCountToNumber(s.active)
           : Math.max(0, Math.floor(Number(s.active) || 0)));
-      totals.metal += (s.maintenanceCost.metal || 0) * activeCount * prod;
-      totals.glass += (s.maintenanceCost.glass || 0) * activeCount * prod;
-      totals.water += (s.maintenanceCost.water || 0) * activeCount * prod;
-      totals.components += (s.maintenanceCost.components || 0) * activeCount * prod;
-      totals.superconductors += (s.maintenanceCost.superconductors || 0) * activeCount * prod;
-      totals.electronics += (s.maintenanceCost.electronics || 0) * activeCount * prod;
+      const effectiveCost = typeof s.getEffectiveCost === 'function' ? s.getEffectiveCost() : null;
+      const colonyCost = effectiveCost?.colony || {};
+      const maintenanceMultiplier = typeof s.getEffectiveMaintenanceMultiplier === 'function'
+        ? s.getEffectiveMaintenanceMultiplier()
+        : 1;
+      const resourceTotals = totals;
+      ['metal', 'glass', 'water', 'components', 'superconductors', 'electronics'].forEach((res) => {
+        const resourceCost = colonyCost[res];
+        if (!(resourceCost > 0)) {
+          return;
+        }
+        let nonNanotechMultiplier = 1;
+        if (Array.isArray(s.activeEffects)) {
+          s.activeEffects.forEach((effect) => {
+            if (
+              effect &&
+              effect.type === 'maintenanceCostMultiplier' &&
+              effect.resourceCategory === 'colony' &&
+              effect.resourceId === res &&
+              !nanotechSources.has(effect.sourceId)
+            ) {
+              nonNanotechMultiplier *= effect.value;
+            }
+          });
+        }
+        const resourceData = resources?.colony?.[res];
+        const resourceMultiplier = resourceData && resourceData.maintenanceMultiplier !== undefined
+          ? resourceData.maintenanceMultiplier
+          : 1;
+        const baseMaintenance =
+          resourceCost *
+          maintenanceFraction *
+          s.maintenanceFactor *
+          nonNanotechMultiplier *
+          resourceMultiplier *
+          maintenanceMultiplier;
+        resourceTotals[res] += baseMaintenance * activeCount * prod;
+      });
     }
     const total = totals.metal + totals.glass + totals.water;
     const coveragePerBot = 1e-18 * this.getNanotechEfficiencyMultiplier();
