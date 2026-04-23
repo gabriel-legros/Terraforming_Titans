@@ -91,6 +91,13 @@ function mergeSettingKeys(primary, secondary) {
   return Array.from(keys);
 }
 
+function getMirrorOversightProjectedState(settings) {
+  if (!settings || !settings.advancedOversight) {
+    return null;
+  }
+  return settings.lastProjectedTemperatureState || null;
+}
+
 // Mirror oversight controls
 function createDefaultMirrorOversightSettings() {
   return {
@@ -505,6 +512,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
+  mirrorOversightSettings.lastProjectedTemperatureState = null;
   syncMirrorAssignmentMode(mirrorOversightSettings);
   updateMirrorOversightUI();
 }
@@ -754,6 +762,7 @@ function toggleAdvancedOversight(enable) {
     }
   } else if (wasAdvanced) {
     mirrorOversightSettings.useFinerControls = true;
+    mirrorOversightSettings.lastProjectedTemperatureState = null;
   }
   syncMirrorAssignmentMode(mirrorOversightSettings);
   if (typeof updateMirrorOversightUI === 'function') updateMirrorOversightUI();
@@ -1575,6 +1584,7 @@ function updateZonalFluxTable() {
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   ensureMirrorOversightCache();
   const C = mirrorOversightCache || {};
+  const projectedState = getMirrorOversightProjectedState(mirrorOversightSettings);
   const header = C.fluxTempHeader;
   if (header) header.textContent = getSpaceMirrorText(
     'ui.projects.spaceMirrorFacility.table.temperatureCurrentTrend',
@@ -1593,8 +1603,11 @@ function updateZonalFluxTable() {
     const fluxCell = cells.flux;
     const tempCell = cells.temp;
     const dayTempCell = cells.dayTemp;
+    const projectedZone = projectedState?.temperature?.zones?.[zone] || null;
     let flux = 0;
-    if (typeof terraforming.calculateZoneSolarFlux === 'function') {
+    if (Number.isFinite(projectedState?.luminosity?.zonalFluxes?.[zone])) {
+      flux = projectedState.luminosity.zonalFluxes[zone] / 4;
+    } else if (typeof terraforming.calculateZoneSolarFlux === 'function') {
       flux = terraforming.calculateZoneSolarFlux(zone) / 4;
     }
     if (fluxCell) fluxCell.textContent = formatNumber(flux, false, 2);
@@ -1606,9 +1619,11 @@ function updateZonalFluxTable() {
         temp = Number.isFinite(terraforming.temperature.zones[zone].value)
           ? terraforming.temperature.zones[zone].value
           : 0;
-        trend = Number.isFinite(terraforming.temperature.zones[zone].trendValue)
-          ? terraforming.temperature.zones[zone].trendValue
-          : 0;
+        trend = Number.isFinite(projectedZone?.trendValue)
+          ? projectedZone.trendValue
+          : (Number.isFinite(terraforming.temperature.zones[zone].trendValue)
+            ? terraforming.temperature.zones[zone].trendValue
+            : 0);
       }
       if (typeof toDisplayTemperature === 'function') {
         temp = toDisplayTemperature(temp);
@@ -1625,12 +1640,18 @@ function updateZonalFluxTable() {
       if (terraforming.temperature && terraforming.temperature.zones && terraforming.temperature.zones[zone]) {
         const zoneTemps = terraforming.temperature.zones[zone];
         if (Number.isFinite(zoneTemps.day)) dayTemp = zoneTemps.day;
-        const meanValue = Number.isFinite(zoneTemps.value) ? zoneTemps.value : 0;
-        const offset = Number.isFinite(zoneTemps.day) && Number.isFinite(zoneTemps.value)
-          ? zoneTemps.day - zoneTemps.value
-          : 0;
-        const trendMean = Number.isFinite(zoneTemps.trendValue) ? zoneTemps.trendValue : meanValue;
-        dayTrend = trendMean + offset;
+        dayTrend = Number.isFinite(projectedZone?.day)
+          ? projectedZone.day
+          : (() => {
+            const meanValue = Number.isFinite(zoneTemps.value) ? zoneTemps.value : 0;
+            const offset = Number.isFinite(zoneTemps.day) && Number.isFinite(zoneTemps.value)
+              ? zoneTemps.day - zoneTemps.value
+              : 0;
+            const trendMean = Number.isFinite(projectedZone?.trendValue)
+              ? projectedZone.trendValue
+              : (Number.isFinite(zoneTemps.trendValue) ? zoneTemps.trendValue : meanValue);
+            return trendMean + offset;
+          })();
       }
       if (typeof toDisplayTemperature === 'function') {
         dayTemp = toDisplayTemperature(dayTemp);

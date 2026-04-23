@@ -168,7 +168,7 @@ class SpaceMirrorAdvancedOversight {
 
       const simulateFluxes = (zonalFluxes) => {
         terraforming.restoreTemperatureState(snapshot);
-        terraforming.updateSurfaceTemperature(0, {
+        terraforming.runUpdateStep(0, {
           ignoreHeatCapacity: true,
           zonalFluxOverrides: zonalFluxes,
           disableAvailableAdvancedHeating: true,
@@ -531,7 +531,7 @@ class SpaceMirrorAdvancedOversight {
       };
 
       terraforming.restoreTemperatureState(snapshot);
-      terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+      terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
       const currentFluxes = {};
       for (const zone of ZONES) {
         currentFluxes[zone] = Math.max(
@@ -758,7 +758,7 @@ class SpaceMirrorAdvancedOversight {
         reversalMode: { ...reverse },
       };
 
-      terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+      terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
       solvedSnapshot = terraforming.saveTemperatureState();
 
     } finally {
@@ -766,67 +766,7 @@ class SpaceMirrorAdvancedOversight {
     }
 
     terraforming.restoreTemperatureState(snapshot);
-    if (solvedSnapshot) {
-      const solvedTemp = solvedSnapshot.temperature || {};
-      const solvedLum = solvedSnapshot.luminosity || {};
-
-      if (terraforming.temperature) {
-        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'trendValue')) {
-          terraforming.temperature.trendValue = solvedTemp.trendValue;
-        }
-        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'equilibriumTemperature')) {
-          terraforming.temperature.equilibriumTemperature = solvedTemp.equilibriumTemperature;
-        }
-        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'effectiveTempNoAtmosphere')) {
-          terraforming.temperature.effectiveTempNoAtmosphere = solvedTemp.effectiveTempNoAtmosphere;
-        }
-        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'emissivity')) {
-          terraforming.temperature.emissivity = solvedTemp.emissivity;
-        }
-        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'opticalDepth')) {
-          terraforming.temperature.opticalDepth = solvedTemp.opticalDepth;
-        }
-
-        const targetContributions = terraforming.temperature.opticalDepthContributions || {};
-        const solvedContributions = solvedTemp.opticalDepthContributions || {};
-        for (const key of Object.keys(targetContributions)) {
-          delete targetContributions[key];
-        }
-        for (const key of Object.keys(solvedContributions)) {
-          targetContributions[key] = solvedContributions[key];
-        }
-
-        const zones = terraforming.temperature.zones || {};
-        const solvedZones = solvedTemp.zones || {};
-        for (const zoneKey of Object.keys(zones)) {
-          const zone = zones[zoneKey];
-          const solvedZone = solvedZones[zoneKey] || {};
-          if (Object.prototype.hasOwnProperty.call(solvedZone, 'trendValue')) {
-            zone.trendValue = solvedZone.trendValue;
-          }
-          if (Object.prototype.hasOwnProperty.call(solvedZone, 'equilibriumTemperature')) {
-            zone.equilibriumTemperature = solvedZone.equilibriumTemperature;
-          }
-        }
-      }
-
-      if (terraforming.luminosity) {
-        if (Object.prototype.hasOwnProperty.call(solvedLum, 'modifiedSolarFlux')) {
-          terraforming.luminosity.modifiedSolarFlux = solvedLum.modifiedSolarFlux;
-        }
-        if (Object.prototype.hasOwnProperty.call(solvedLum, 'modifiedSolarFluxUnpenalized')) {
-          terraforming.luminosity.modifiedSolarFluxUnpenalized = solvedLum.modifiedSolarFluxUnpenalized;
-        }
-        const targetZonalFluxes = terraforming.luminosity.zonalFluxes || {};
-        const solvedZonalFluxes = solvedLum.zonalFluxes || {};
-        for (const key of Object.keys(targetZonalFluxes)) {
-          delete targetZonalFluxes[key];
-        }
-        for (const key of Object.keys(solvedZonalFluxes)) {
-          targetZonalFluxes[key] = solvedZonalFluxes[key];
-        }
-      }
-    }
+    settings.lastProjectedTemperatureState = solvedSnapshot || null;
   }
 }
 
