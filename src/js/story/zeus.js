@@ -494,7 +494,7 @@ progressZeus.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'zeus', value: true },
       {
         target: 'artificialManager',
         type: 'setFleetCapacityWorldCap',
