@@ -579,6 +579,24 @@ class SpaceManager extends EffectableEntity {
         };
     }
 
+    _isArtificialFleetCapacityUncapped() {
+        return !Number.isFinite(this._getArtificialFleetCapacityCap());
+    }
+
+    _getArtificialSummarySectorUnitsTotal() {
+        return Object.values(this.artificialSummary.sectorUnits || {})
+            .reduce((total, value) => total + (Number(value) || 0), 0);
+    }
+
+    _getArtificialSummarySaveData() {
+        const summary = this._sanitizeArtificialSummary(this.artificialSummary);
+        if (this._isArtificialFleetCapacityUncapped()) {
+            delete summary.terraformValueCounts;
+            delete summary.sectorTerraformValueCounts;
+        }
+        return summary;
+    }
+
     _getWorldStatusMap(type) {
         if (type === 'story') {
             return this.planetStatuses;
@@ -742,8 +760,10 @@ class SpaceManager extends EffectableEntity {
         const terraformedValue = this._deriveArtificialTerraformValue(status);
         this._adjustArtificialSummaryMapValue('sectorTerraformCounts', sector, 1);
         this._adjustArtificialSummaryMapValue('sectorUnits', sector, terraformedValue);
-        this._adjustArtificialSummaryMapValue('terraformValueCounts', String(terraformedValue), 1);
-        this._adjustArtificialSummaryNestedMapValue('sectorTerraformValueCounts', sector, String(terraformedValue), 1);
+        if (!this._isArtificialFleetCapacityUncapped()) {
+            this._adjustArtificialSummaryMapValue('terraformValueCounts', String(terraformedValue), 1);
+            this._adjustArtificialSummaryNestedMapValue('sectorTerraformValueCounts', sector, String(terraformedValue), 1);
+        }
 
         if (status.specialization) {
             this._adjustArtificialSummaryMapValue('specializationCounts', status.specialization, 1);
@@ -1022,8 +1042,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     _getTotalArtificialTerraformBonus() {
-        const summaryUnits = Object.values(this.artificialSummary.sectorUnits || {})
-            .reduce((total, value) => total + (Number(value) || 0), 0);
+        const summaryUnits = this._getArtificialSummarySectorUnitsTotal();
         return (this.worldStatsCache.artificialTerraformBonus || 0)
             + Math.max(0, summaryUnits - (this.artificialSummary.terraformedCount || 0));
     }
@@ -1695,6 +1714,14 @@ class SpaceManager extends EffectableEntity {
         if (this.worldStatsCache.lastArtificialFleetCap === cap) {
             return this.worldStatsCache.artificialFleetCapacityWorlds || 0;
         }
+        if (!Number.isFinite(cap)) {
+            const total = (this.worldStatsCache.artificialTerraformed || 0)
+                + (this.worldStatsCache.artificialTerraformBonus || 0)
+                + this._getArtificialSummarySectorUnitsTotal();
+            this.worldStatsCache.artificialFleetCapacityWorlds = total;
+            this.worldStatsCache.lastArtificialFleetCap = cap;
+            return total;
+        }
         let total = 0;
         const counts = this._mergeCountMaps(
             this.worldStatsCache.artificialTerraformValueCounts,
@@ -1721,8 +1748,12 @@ class SpaceManager extends EffectableEntity {
             if (!status?.terraformed || normalizeSectorLabel(status.sector) !== target) {
                 return;
             }
-            total += Math.min(cap, this._deriveArtificialTerraformValue(status));
+            const terraformedValue = this._deriveArtificialTerraformValue(status);
+            total += Number.isFinite(cap) ? Math.min(cap, terraformedValue) : terraformedValue;
         });
+        if (!Number.isFinite(cap)) {
+            return total + (this.artificialSummary.sectorUnits[target] || 0);
+        }
         const counts = this.artificialSummary.sectorTerraformValueCounts[target] || {};
         Object.keys(counts).forEach((valueKey) => {
             const count = counts[valueKey];
@@ -2750,7 +2781,7 @@ class SpaceManager extends EffectableEntity {
             currentRandomName: this.currentRandomName,
             currentArtificialKey: this.currentArtificialKey,
             artificialWorldStatuses: pruneArtificialStatuses(this.artificialWorldStatuses, activeArtificialKey),
-            artificialSummary: this._sanitizeArtificialSummary(this.artificialSummary),
+            artificialSummary: this._getArtificialSummarySaveData(),
             randomWorldStatuses: pruneStatuses(this.randomWorldStatuses, activeRandomKey),
             rwgSummary: this._sanitizeRwgSummary(this.rwgSummary),
             randomTabEnabled: this.randomTabEnabled,

@@ -382,7 +382,7 @@ progressStyx.chapters.push(
     chapter: 41,
     activePlanet: 'styx',
     narrative: "Acquire full control of sector R5-29 to continue.",
-    prerequisites: ['impossible'],
+    prerequisites: ['styx.41.5'],
     objectives: [
       { type: 'galaxySectorControl', sectorLabel: 'R5-29' }
     ],

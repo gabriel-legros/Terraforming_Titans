@@ -272,6 +272,7 @@ setLanguageData({
         worldsForFleetCapacityMax: 'Worlds for fleet capacity (max {value}):',
         fleetCapacityTooltip: 'Artificial worlds cannot use their full power for direct military purposes.  If they did, they would become a critical military target for alien superweapons, which they cannot dodge.  This number will increase rectroactively if galactic superweapons are shut down.',
         fleetCapacityTooltipMax: 'Artificial worlds cannot use their full power for direct military purposes. If they did, they would become critical military targets for alien superweapons, which they cannot dodge. Fleet capacity contribution per artificial world is capped at {value}. This cap increase applies retroactively.',
+        fleetCapacityTooltipUncapped: 'Artificial worlds now contribute their full terraformed value to fleet capacity. This change applies retroactively.',
         oneDistinctWorld: '1 distinct world',
         distinctWorldsCount: '{value} distinct worlds',
         oneTerraformedWorld: '1 terraformed world',
@@ -2650,6 +2651,7 @@ setLanguageData({
         uniqueTooltip: 'Counts every distinct story world and terraformed random world you have completed. Ignores all other bonuses.',
         effectiveTooltip: 'Includes worlds from other sources. This value influences advanced research, Solis rewards, mega structure expansion speed, and export caps.',
         effectiveTooltipGalaxy: "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to {value} and O'Neill cylinders are ignored).",
+        effectiveTooltipGalaxyUncapped: "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute their full value and O'Neill cylinders are ignored).",
       },
     },
     atlas: {

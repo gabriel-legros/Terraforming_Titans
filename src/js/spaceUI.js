@@ -702,12 +702,18 @@ function updateSpaceStatsUI() {
             'Includes worlds from other sources. This value influences advanced research, Solis rewards, mega structure expansion speed, and export caps.'
         );
         const artificialFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 5;
+        const artificialFleetCapUncapped = artificialManager?.isFleetCapacityWorldCapUncapped?.() || !Number.isFinite(artificialFleetCap);
         const effectiveGalaxy = galaxyUnlocked
-            ? ` ${getSpaceUIText(
-                'stats.effectiveTooltipGalaxy',
-                "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to {value} and O'Neill cylinders are ignored).",
-                { value: artificialFleetCap }
-            )}`
+            ? ` ${artificialFleetCapUncapped
+                ? getSpaceUIText(
+                    'stats.effectiveTooltipGalaxyUncapped',
+                    "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute their full value and O'Neill cylinders are ignored)."
+                )
+                : getSpaceUIText(
+                    'stats.effectiveTooltipGalaxy',
+                    "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to {value} and O'Neill cylinders are ignored).",
+                    { value: artificialFleetCap }
+                )}`
             : '';
         const effectiveTooltipText = `${effectiveBase}${effectiveGalaxy}`;
         if (spaceStatEffectiveTooltipContentEl) {

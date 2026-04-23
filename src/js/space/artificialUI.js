@@ -1927,6 +1927,7 @@ function renderGains(project, selection, manager) {
   const effective = project?.terraformedValue || manager.calculateTerraformWorldValue(r);
   const defense = effective;
   const fleetCap = manager.getFleetCapacityWorldCap ? manager.getFleetCapacityWorldCap() : 5;
+  const fleetCapUncapped = manager.isFleetCapacityWorldCapUncapped ? manager.isFleetCapacityWorldCapUncapped() : !Number.isFinite(fleetCap);
   const fleet = manager.calculateFleetCapacityWorldValue
     ? manager.calculateFleetCapacityWorldValue(r, effective)
     : 2;
@@ -1956,10 +1957,14 @@ function renderGains(project, selection, manager) {
     artificialUICache.gainFleet.textContent = label;
   }
   if (artificialUICache.gainFleetLabel) {
-    artificialUICache.gainFleetLabel.textContent = getArtificialText('gains.worldsForFleetCapacityMax', 'Worlds for fleet capacity (max {value}):', { value: fleetCap });
+    artificialUICache.gainFleetLabel.textContent = fleetCapUncapped
+      ? getArtificialText('gains.worldsForFleetCapacity', 'Worlds for fleet capacity:')
+      : getArtificialText('gains.worldsForFleetCapacityMax', 'Worlds for fleet capacity (max {value}):', { value: fleetCap });
   }
   if (artificialUICache.gainFleetTooltip) {
-    artificialUICache.gainFleetTooltip.title = getArtificialText('gains.fleetCapacityTooltipMax', 'Artificial worlds cannot use their full power for direct military purposes. If they did, they would become critical military targets for alien superweapons, which they cannot dodge. Fleet capacity contribution per artificial world is capped at {value}. This cap increase applies retroactively.', { value: fleetCap });
+    artificialUICache.gainFleetTooltip.title = fleetCapUncapped
+      ? getArtificialText('gains.fleetCapacityTooltipUncapped', 'Artificial worlds now contribute their full terraformed value to fleet capacity. This change applies retroactively.')
+      : getArtificialText('gains.fleetCapacityTooltipMax', 'Artificial worlds cannot use their full power for direct military purposes. If they did, they would become critical military targets for alien superweapons, which they cannot dodge. Fleet capacity contribution per artificial world is capped at {value}. This cap increase applies retroactively.', { value: fleetCap });
   }
 }
 

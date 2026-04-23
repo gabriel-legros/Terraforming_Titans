@@ -487,6 +487,13 @@ progressZeus.chapters.push(
     ],
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true },
+      {
+        target: 'artificialManager',
+        type: 'setFleetCapacityWorldCap',
+        value: 'uncapped',
+        effectId: 'hades-artificial-fleet-cap',
+        sourceId: 'zeus.45.16'
+      },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'stellar-bh' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'a-star' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'b-star' }

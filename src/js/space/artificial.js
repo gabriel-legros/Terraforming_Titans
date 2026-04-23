@@ -296,6 +296,7 @@ function calculateRingLandHectares(orbitRadiusAU, widthKm) {
 }
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
+const ARTIFICIAL_FLEET_CAPACITY_UNCAPPED = 'uncapped';
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
@@ -447,12 +448,21 @@ class ArtificialManager extends EffectableEntity {
         this.updateUI(true);
     }
 
+    isFleetCapacityWorldCapUncapped() {
+        return this.fleetCapacityWorldCap === ARTIFICIAL_FLEET_CAPACITY_UNCAPPED;
+    }
+
     getFleetCapacityWorldCap() {
+        if (this.isFleetCapacityWorldCapUncapped()) {
+            return Infinity;
+        }
         return Math.max(1, Math.floor(this.fleetCapacityWorldCap || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
     }
 
     setFleetCapacityWorldCap(value) {
-        const next = Math.max(1, Math.floor(value || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
+        const next = value === ARTIFICIAL_FLEET_CAPACITY_UNCAPPED || value === Infinity
+            ? ARTIFICIAL_FLEET_CAPACITY_UNCAPPED
+            : Math.max(1, Math.floor(value || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
         if (next === this.fleetCapacityWorldCap) return;
         this.fleetCapacityWorldCap = next;
         if (this.activeProject) {
@@ -1736,11 +1746,15 @@ class ArtificialManager extends EffectableEntity {
     loadState(state) {
         if (!state) return;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
-        const existingFleetCap = this.getFleetCapacityWorldCap();
+        const existingFleetCap = this.fleetCapacityWorldCap;
         const hasSavedFleetCap = Object.prototype.hasOwnProperty.call(state, 'fleetCapacityWorldCap');
         if (hasSavedFleetCap) {
-            const savedFleetCap = Math.max(1, Math.floor(state.fleetCapacityWorldCap || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
-            this.fleetCapacityWorldCap = Math.max(existingFleetCap, savedFleetCap);
+            const savedFleetCap = state.fleetCapacityWorldCap === ARTIFICIAL_FLEET_CAPACITY_UNCAPPED
+                ? ARTIFICIAL_FLEET_CAPACITY_UNCAPPED
+                : Math.max(1, Math.floor(state.fleetCapacityWorldCap || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
+            this.fleetCapacityWorldCap = existingFleetCap === ARTIFICIAL_FLEET_CAPACITY_UNCAPPED || savedFleetCap === ARTIFICIAL_FLEET_CAPACITY_UNCAPPED
+                ? ARTIFICIAL_FLEET_CAPACITY_UNCAPPED
+                : Math.max(existingFleetCap, savedFleetCap);
         } else {
             this.fleetCapacityWorldCap = existingFleetCap;
         }
