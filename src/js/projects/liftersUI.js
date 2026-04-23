@@ -378,7 +378,7 @@ function updateLiftersUI(project) {
     const maxForKey = project.getAssignmentMaxTarget(key);
 
     row.complexity.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
-    row.value.textContent = formatNumber(displayedCurrent, true);
+    row.value.textContent = formatNumber(displayedCurrent, true, 2);
     row.minusButton.textContent = `-${formatNumber(step, true)}`;
     row.plusButton.textContent = `+${formatNumber(step, true)}`;
     row.autoAssign.checked = project.autoAssignFlags[key] === true;

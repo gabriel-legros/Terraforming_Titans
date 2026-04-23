@@ -1100,7 +1100,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       const displayedCurrent = this.getDisplayedAssignmentAmount(key);
       const maxForKey = this.getAssignmentMaxTarget(key);
 
-      row.value.textContent = formatNumber(displayedCurrent, true);
+      row.value.textContent = formatNumber(displayedCurrent, true, 2);
       row.minusButton.textContent = `-${formatNumber(step, true)}`;
       row.plusButton.textContent = `+${formatNumber(step, true)}`;
       row.autoAssign.checked = this.autoAssignFlags[key] === true;

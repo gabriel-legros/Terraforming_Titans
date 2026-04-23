@@ -1296,7 +1296,7 @@
         const displayedCurrent = this.getDisplayedAssignmentAmount(key);
         const maxForKey = this.getAssignmentMaxTarget(key);
 
-        row.value.textContent = formatNumber(displayedCurrent, true);
+        row.value.textContent = formatNumber(displayedCurrent, true, 2);
         const recipe = this.isUnassignedAssignmentKey(key) ? null : this.getRecipe(key);
         const unitProduction = recipe
           ? (recipe.baseOutput * this.getRecipeOutputMultiplier(key)) / recipe.complexity
