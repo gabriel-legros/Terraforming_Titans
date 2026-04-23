@@ -235,7 +235,7 @@ class NanotechManager extends EffectableEntity {
     };
     const getEstimatedLifeBiomassProductionRate = () => {
       const seconds = deltaTime / 1000;
-      if (seconds <= 0) {
+      if (seconds <= 0 || lifeManager.isBooleanFlagSet('ringworldLowGravityLife')) {
         return 0;
       }
       const plan = lifeManager.buildAtmosphericPlan(deltaTime, accumulatedChanges);
