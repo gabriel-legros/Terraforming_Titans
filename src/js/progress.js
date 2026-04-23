@@ -265,8 +265,9 @@ class StoryManager {
     }
 
     update() {
-        // If a pop-up is active or the journal is busy typing, pause all story progression.
+        // Keep the objective label live even while story progression is paused by UI typing/popups.
         if ((typeof window !== 'undefined' && window.popupActive) || (typeof journalTyping !== 'undefined' && journalTyping)) {
+            this.updateCurrentObjectiveUI();
             return;
         }
 
