@@ -488,7 +488,8 @@ progressZeus.chapters.push(
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'stellar-bh' },
-      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'a-star' }
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'a-star' },
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'b-star' }
     ]
   },
   {

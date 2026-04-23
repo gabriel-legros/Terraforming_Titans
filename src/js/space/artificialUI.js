@@ -1930,6 +1930,9 @@ function renderGains(project, selection, manager) {
   const fleet = manager.calculateFleetCapacityWorldValue
     ? manager.calculateFleetCapacityWorldValue(r, effective)
     : 2;
+  const effectiveValueLabel = formatNumber(effective, true, 3);
+  const defenseValueLabel = formatNumber(defense, true, 3);
+  const fleetValueLabel = formatNumber(fleet, true, 3);
   const distinct = 1;
   if (artificialUICache.gainDistinct) {
     const label = distinct === 1
@@ -1940,16 +1943,16 @@ function renderGains(project, selection, manager) {
   if (artificialUICache.gainEffective) {
     const label = effective === 1
       ? getArtificialText('gains.oneTerraformedWorld', '1 terraformed world')
-      : getArtificialText('gains.terraformedWorldsCount', '{value} terraformed worlds', { value: effective });
+      : getArtificialText('gains.terraformedWorldsCount', '{value} terraformed worlds', { value: effectiveValueLabel });
     artificialUICache.gainEffective.textContent = label;
-    artificialUICache.gainEffective.title = getArtificialText('gains.landContribution', 'Land contributes {value} (1 per 50B ha, minimum 1).', { value: label });
+    artificialUICache.gainEffective.title = getArtificialText('gains.landContribution', 'Land contributes {value} (1 per 50B ha, minimum 1).', { value: effectiveValueLabel });
   }
   if (artificialUICache.gainDefense) {
-    const label = defense === 1 ? getArtificialText('gains.oneWorld', '1 world') : getArtificialText('gains.worldsCount', '{value} worlds', { value: defense });
+    const label = defense === 1 ? getArtificialText('gains.oneWorld', '1 world') : getArtificialText('gains.worldsCount', '{value} worlds', { value: defenseValueLabel });
     artificialUICache.gainDefense.textContent = label;
   }
   if (artificialUICache.gainFleet) {
-    const label = fleet === 1 ? getArtificialText('gains.oneWorld', '1 world') : getArtificialText('gains.worldsCount', '{value} worlds', { value: fleet });
+    const label = fleet === 1 ? getArtificialText('gains.oneWorld', '1 world') : getArtificialText('gains.worldsCount', '{value} worlds', { value: fleetValueLabel });
     artificialUICache.gainFleet.textContent = label;
   }
   if (artificialUICache.gainFleetLabel) {
