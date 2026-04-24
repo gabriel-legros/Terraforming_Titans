@@ -6,6 +6,7 @@ const SPACE_CHEMISTRY_RECIPE_KEYS = [
   'haberBosch',
   'ammoniaCombustion',
   'methaneCombustion',
+  'methanePyrolysis',
   'waterElectrolysis',
   'silicates'
 ];
@@ -72,6 +73,15 @@ const SPACE_CHEMISTRY_RECIPES = {
     },
     outputs: {
       spaceStorage: { carbonDioxide: 100, liquidWater: 81.82 }
+    }
+  },
+  methanePyrolysis: {
+    inputs: {
+      space: { energy: 7_000_000 },
+      spaceStorage: { atmosphericMethane: 100 }
+    },
+    outputs: {
+      spaceStorage: { graphite: 75, hydrogen: 25 }
     }
   },
   waterElectrolysis: {

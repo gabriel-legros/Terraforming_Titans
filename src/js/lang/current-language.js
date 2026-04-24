@@ -3446,6 +3446,7 @@ setLanguageData({
           haberBosch: { shortName: 'Haber-Bosch' },
           ammoniaCombustion: { shortName: 'Ammonia Combustion' },
           methaneCombustion: { shortName: 'Methane Combustion' },
+          methanePyrolysis: { shortName: 'Methane Pyrolysis' },
           waterElectrolysis: { shortName: 'Water Electrolysis' },
           silicates: { shortName: 'Silicates -> Oxygen' },
         },
