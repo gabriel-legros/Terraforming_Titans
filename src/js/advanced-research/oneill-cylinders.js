@@ -222,7 +222,7 @@ function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
     return 0;
   }
   if (!(perSecond > 0)) {
-    space?.setOneillCylinderCount?.(current, capacity);
+    space?.setOneillCylinderCount?.(current);
     return space?.getOneillCylinderCount?.() ?? 0;
   }
   space?.setOneillCylinderCount?.(next, capacity);
