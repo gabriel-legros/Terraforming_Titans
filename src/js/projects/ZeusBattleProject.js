@@ -21,6 +21,28 @@ class ZeusBattleProject extends Project {
     this.ui = null;
   }
 
+  loadState(state) {
+    super.loadState(state);
+    this.restoreUnlockedFrameState();
+  }
+
+  restoreUnlockedFrameState() {
+    const unlockedFrame = this.getMaxUnlockedFrame();
+    const settledAt = Date.now() - 20000;
+    this.stopAnimation();
+    this.currentFrameIndex = unlockedFrame;
+    this.targetFrameIndex = unlockedFrame;
+    this.lastUnlockedFrame = unlockedFrame;
+    this.animationFromFrameIndex = unlockedFrame;
+    this.animationToFrameIndex = unlockedFrame;
+    this.animationProgress = 1;
+    this.animationStartTime = 0;
+    this.frameActivatedAt = settledAt;
+    this.primaryBattleActivatedAt = unlockedFrame >= 1 ? settledAt : 0;
+    this.edmondTransitionFrom = null;
+    this.edmondTransitionStartedAt = 0;
+  }
+
   getText(path, vars, fallback) {
     try {
       return t(path, vars, fallback);
