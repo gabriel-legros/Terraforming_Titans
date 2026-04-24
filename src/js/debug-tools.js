@@ -74,6 +74,7 @@
       co2: resources.atmospheric.carbonDioxide?.value || 0,
       waterVapor: resources.atmospheric.atmosphericWater?.value || 0,
       atmosphericMethane: resources.atmospheric.atmosphericMethane?.value || 0,
+      atmosphericAmmonia: resources.atmospheric.atmosphericAmmonia?.value || 0,
       oxygen: resources.atmospheric.oxygen?.value || 0,
       inertGas: resources.atmospheric.inertGas?.value || 0,
       hydrogen: resources.atmospheric.hydrogen?.value || 0,
@@ -125,7 +126,7 @@
   }
 
   function isStable(prev, cur, threshold) {
-    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','liquidHydrogen','co2','waterVapor','liquidMethane','hydrocarbonIce','liquidOxygen','oxygenIce','liquidNitrogen','nitrogenIce','atmosphericMethane','oxygen','inertGas','hydrogen','sulfuricAcid'];
+    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','liquidHydrogen','co2','waterVapor','liquidMethane','hydrocarbonIce','liquidOxygen','oxygenIce','liquidNitrogen','nitrogenIce','atmosphericMethane','atmosphericAmmonia','oxygen','inertGas','hydrogen','sulfuricAcid'];
     for (const k of keys) {
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
@@ -155,6 +156,7 @@
       carbonDioxide: { initialValue: values.global.co2 },
       atmosphericWater: { initialValue: values.global.waterVapor },
       atmosphericMethane: { initialValue: values.global.atmosphericMethane },
+      atmosphericAmmonia: { initialValue: values.global.atmosphericAmmonia },
       oxygen: { initialValue: values.global.oxygen },
       inertGas: { initialValue: values.global.inertGas },
       hydrogen: { initialValue: values.global.hydrogen },

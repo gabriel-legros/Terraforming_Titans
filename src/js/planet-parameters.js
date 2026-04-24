@@ -1929,17 +1929,17 @@ const zeusOverrides = {
     baseRadius: 70738,
     baseMass: 1.8726e27,
     baseGravity: 24.977282698856314,
-    basePlanetaryMass: 2.182328308239878e26,
+    basePlanetaryMass: 2.182322628239878e26,
     basePlanetaryVolumeM3: 5.361937984673442e22,
     baseSurfaceMassKg: 1.6291272e27,
-    baseAtmosphericMassKg: 2.523996917601243e25,
+    baseAtmosphericMassKg: 2.524053717601243e25,
     dynamicMassDeltaKg: 7.177033604151992e23,
     dynamicSurfaceVolumeDeltaM3: 1.2393178671461328e21,
     dynamicDirectMassDeltaKg: 0,
     dynamicDirectVolumeDeltaM3: 0,
-    currentPlanetaryMassKg: 2.182328308239878e26,
+    currentPlanetaryMassKg: 2.182322628239878e26,
     currentSurfaceMassKg: 1.6305400223685466e27,
-    currentAtmosphericMassKg: 2.45448501678809e25,
+    currentAtmosphericMassKg: 2.45454181678809e25,
     currentPlanetaryVolumeM3: 5.361937984673442e22,
     currentSurfaceVolumeM3: 1.4302982652355672e24
   },
@@ -1979,6 +1979,9 @@ const zeusOverrides = {
       },
       "atmosphericMethane": {
         "initialValue": 742000000000000000
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 568000000000000000
       },
       "oxygen": {
         "initialValue": 0
