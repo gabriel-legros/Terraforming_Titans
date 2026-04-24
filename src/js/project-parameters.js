@@ -699,6 +699,7 @@ const projectParameters = {
       canUseSpaceStorage: true,
       completedWhenUnlocked: true,
       spaceBuilding: true,
+      spaceBuildingProductivity: true,
       spaceEnergyProducer: true
     }
   },
@@ -722,7 +723,8 @@ const projectParameters = {
     attributes: {
       canUseSpaceStorage: true,
       alchemyParameter: 100_000,
-      spaceBuilding: true
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
     }
   },
   dysonSphere: {
@@ -742,6 +744,7 @@ const projectParameters = {
       canUseSpaceStorage: true,
       preserveProgressOnTravel: true,
       spaceBuilding: true,
+      spaceBuildingProductivity: true,
       spaceEnergyProducer: true
     }
   },
@@ -781,7 +784,8 @@ const projectParameters = {
     attributes: {
       canUseSpaceStorage: true,
       alchemyParameter: 50_000_000_000,
-      spaceBuilding: true
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
     }
   },
   superalloyGigafoundry: {
@@ -805,7 +809,8 @@ const projectParameters = {
     attributes: {
       canUseSpaceStorage: true,
       alchemyParameter: 1,
-      spaceBuilding: true
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
     }
   },
   artificialStars: {
@@ -828,6 +833,7 @@ const projectParameters = {
       canUseSpaceStorage: true,
       alchemyParameter: 1,
       spaceBuilding: true,
+      spaceBuildingProductivity: true,
       spaceEnergyProducer: true
     }
   },
@@ -1024,6 +1030,7 @@ const projectParameters = {
       lifterUnitRate: 500_000_000,
       lifterEnergyPerUnit: 5_000_000_000_000_000,
       spaceBuilding: true,
+      spaceBuildingProductivity: true,
       lifterStripRecipe: {
         label: '',
         complexity: 10,
@@ -1116,7 +1123,8 @@ const projectParameters = {
     attributes: {
       projectGroup: 'specializedWorlds',
       keepStartBarVisible: true,
-      spaceBuilding: true
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
     }
   },
   disposeResources : {

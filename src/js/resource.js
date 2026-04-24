@@ -1208,21 +1208,11 @@ const shouldTreatProjectAsBuilding = (project) =>
   project?.treatAsBuilding ||
   (project?.isContinuous() && project?.attributes?.continuousAsBuilding);
 
-const SPACE_BUILDING_PRODUCTIVITY_PROJECTS = {
-  dysonSwarmReceiver: true,
-  dysonSphere: true,
-  manufacturingWorld: true,
-  lifters: true,
-  nuclearAlchemyFurnace: true,
-  spaceChemistry: true,
-  superalloyGigafoundry: true,
-};
-
 const shouldApplySpaceBuildingProductivity = (project) =>
   Boolean(
     project?.attributes?.spaceBuilding
     && project?.applyOperationCostAndGain
-    && SPACE_BUILDING_PRODUCTIVITY_PROJECTS[project?.name]
+    && project?.attributes?.spaceBuildingProductivity
   );
 
 const shouldApplyProjectProductivity = (project) =>

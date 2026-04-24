@@ -382,9 +382,45 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     resources[category][resourceKey].modifyRate(rate, this.displayName, 'project');
   }
 
+  getRecipeOperationProductivity(key, productivity = 1) {
+    const clamp = (value) => Math.max(0, Math.min(1, value));
+    if (Number.isFinite(productivity)) {
+      return clamp(productivity);
+    }
+    const value = productivity?.[key];
+    if (Number.isFinite(value)) {
+      return clamp(value);
+    }
+    return 1;
+  }
+
+  getOperationProductivityForTick() {
+    const productivityByRecipe = {};
+    this.normalizeAssignments();
+    this.getAssignmentKeys().forEach((key) => {
+      const assigned = this.furnaceAssignments[key] || 0;
+      if (!(assigned > 0)) {
+        productivityByRecipe[key] = 0;
+        return;
+      }
+      const recipe = this.getRecipe(key);
+      let productivity = 1;
+      for (const category in recipe.inputs) {
+        const bucket = recipe.inputs[category] || {};
+        for (const resourceKey in bucket) {
+          const ratio = resources[category][resourceKey].availabilityRatio;
+          productivity = Math.min(productivity, ratio);
+        }
+      }
+      productivityByRecipe[key] = Math.max(0, Math.min(1, productivity));
+    });
+    return productivityByRecipe;
+  }
+
   buildOperationTotals(seconds, productivity = 1) {
     const totals = {
       hasAssignments: false,
+      hasInputShortfall: false,
       inputTotals: { space: {}, spaceStorage: {} },
       outputTotals: { spaceStorage: {} },
       inputRates: {},
@@ -401,11 +437,15 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
       if (!(assigned > 0) || !(complexity > 0)) {
         return;
       }
-      const batchCount = (assigned / complexity) * parameter * seconds * productivity;
+      totals.hasAssignments = true;
+      const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
+      if (recipeProductivity < 1) {
+        totals.hasInputShortfall = true;
+      }
+      const batchCount = (assigned / complexity) * parameter * seconds * recipeProductivity;
       if (!(batchCount > 0)) {
         return;
       }
-      totals.hasAssignments = true;
 
       const recipeOutputRates = {};
       let totalRecipeOutputRate = 0;
@@ -475,8 +515,16 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     if (!hasAnyInput) {
       return this.getText('status.idle', null, 'Idle');
     }
-    if (productivity < 1) {
+    if (Number.isFinite(productivity) && productivity < 1) {
       return this.getText('status.insufficientSpaceInput', null, 'Insufficient space input');
+    }
+    if (!Number.isFinite(productivity)) {
+      for (const key of this.getAssignmentKeys()) {
+        const assigned = this.furnaceAssignments[key] || 0;
+        if (assigned > 0 && this.getRecipeOperationProductivity(key, productivity) < 1) {
+          return this.getText('status.insufficientSpaceInput', null, 'Insufficient space input');
+        }
+      }
     }
     return this.getText('status.idle', null, 'Idle');
   }
@@ -567,7 +615,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
       totals.outputRateTexts
     );
     this.updateStatus(this.getText('status.running', null, 'Running'));
-    this.shortfallLastTick = false;
+    this.shortfallLastTick = totals.hasInputShortfall;
   }
 
   estimateOperationCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

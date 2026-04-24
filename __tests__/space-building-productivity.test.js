@@ -185,7 +185,7 @@ function createDysonCollectorProject(collectorPowerPerSecond = 0) {
   return {
     name: 'dysonSwarmReceiver',
     displayName: 'Dyson Swarm Receiver',
-    attributes: { spaceBuilding: true, spaceEnergyProducer: true },
+    attributes: { spaceBuilding: true, spaceBuildingProductivity: true, spaceEnergyProducer: true },
     autoStart: false,
     operationPreRunThisTick: false,
     unlocked: true,
@@ -295,7 +295,7 @@ class MockDemandProject {
   constructor(resourceKey, demandPerTick, projectName = '') {
     this.name = projectName || `mockDemand-${resourceKey}`;
     this.displayName = this.name;
-    this.attributes = { spaceBuilding: true };
+    this.attributes = { spaceBuilding: true, spaceBuildingProductivity: true };
     this.resourceKey = resourceKey;
     this.demandPerTick = demandPerTick;
     this.autoStart = false;
@@ -545,6 +545,7 @@ describe('Space building productivity via produceResources', () => {
       attributes: {
         canUseSpaceStorage: true,
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
         alchemyParameter: 1,
       },
     }, 'nuclearAlchemyFurnace');
@@ -590,6 +591,7 @@ describe('Space building productivity via produceResources', () => {
       attributes: {
         canUseSpaceStorage: true,
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
         alchemyParameter: 1,
       },
     }, 'nuclearAlchemyFurnace');
@@ -634,6 +636,7 @@ describe('Space building productivity via produceResources', () => {
       attributes: {
         canUseSpaceStorage: true,
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
         alchemyParameter: 1,
       },
     }, 'nuclearAlchemyFurnace');
@@ -679,6 +682,7 @@ describe('Space building productivity via produceResources', () => {
         projectGroup: 'specializedWorlds',
         keepStartBarVisible: true,
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
       },
     }, 'manufacturingWorld');
 
@@ -739,6 +743,7 @@ describe('Space building productivity via produceResources', () => {
         projectGroup: 'specializedWorlds',
         keepStartBarVisible: true,
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
       },
     }, 'manufacturingWorld');
 
@@ -809,6 +814,7 @@ describe('Space building productivity via produceResources', () => {
       attributes: {
         canUseSpaceStorage: true,
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
         alchemyParameter: 1,
       },
     }, 'superalloyGigafoundry');
@@ -859,6 +865,7 @@ describe('Space building productivity via produceResources', () => {
       cost: {},
       attributes: {
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
         lifterUnitRate: 1,
         lifterEnergyPerUnit: 10,
         lifterHarvestRecipes: {
@@ -910,6 +917,7 @@ describe('Space building productivity via produceResources', () => {
       cost: {},
       attributes: {
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
         lifterUnitRate: 1,
         lifterEnergyPerUnit: 10,
         lifterHarvestRecipes: {
@@ -964,6 +972,7 @@ describe('Space building productivity via produceResources', () => {
       cost: {},
       attributes: {
         spaceBuilding: true,
+        spaceBuildingProductivity: true,
         lifterUnitRate: 1,
         lifterEnergyPerUnit: 10,
         lifterHarvestRecipes: {
