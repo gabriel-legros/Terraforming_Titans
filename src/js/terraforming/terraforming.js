@@ -415,6 +415,19 @@ function buildAtmosphereContext(atmospheric, gravity, radius) {
     return { totalPressure: totalPressurePa, pressureByKey, availableByKey };
 }
 
+function calculateInitialAtmosphericPressureForDelta(terraformingState, amount) {
+    const currentCelestial = terraformingState.celestialParameters;
+    const initialCelestial = terraformingState.initialCelestialParameters;
+    const dynamicMassWorld = currentPlanetParameters.specialAttributes?.dynamicMass === true;
+    const gravity = dynamicMassWorld
+        ? (initialCelestial.baseGravity || initialCelestial.gravity)
+        : currentCelestial.gravity;
+    const radius = dynamicMassWorld
+        ? (initialCelestial.baseRadius || initialCelestial.radius)
+        : currentCelestial.radius;
+    return calculateAtmosphericPressure(amount, gravity, radius);
+}
+
 class Terraforming extends EffectableEntity{
   constructor(resources, celestialParameters, specialAttributes = {}) {
     super({ description: 'This module manages all terraforming compononents' });
@@ -2560,7 +2573,7 @@ class Terraforming extends EffectableEntity{
             const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
 
             const currentPressure = calculateAtmosphericPressure(currentAmount, this.celestialParameters.gravity, this.celestialParameters.radius);
-            const initialPressure = calculateAtmosphericPressure(initialAmount, this.celestialParameters.gravity, this.celestialParameters.radius);
+            const initialPressure = calculateInitialAtmosphericPressureForDelta(this, initialAmount);
 
             totalDelta += Math.abs(currentPressure - initialPressure);
         }
@@ -3092,6 +3105,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
   module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER_CONST;
   module.exports.buildAtmosphereContext = buildAtmosphereContext;
+  module.exports.calculateInitialAtmosphericPressureForDelta = calculateInitialAtmosphericPressureForDelta;
   module.exports.calculateApparentEquatorialGravity = getApparentEquatorialGravity;
 } else {
   globalThis.setStarLuminosity = setStarLuminosity;

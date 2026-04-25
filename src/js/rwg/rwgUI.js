@@ -524,6 +524,15 @@ function applyDynamicMassSelection(res, enabled) {
   };
 }
 
+function syncDynamicMassCheckboxForType(type) {
+  if (!rwgDynamicMassEl) return;
+  const forced = type === 'jupiter-like';
+  if (forced) {
+    rwgDynamicMassEl.checked = true;
+  }
+  rwgDynamicMassEl.disabled = forced;
+}
+
 function isDynamicMassRwgControlUnlocked() {
   const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
   if (!mgr) {
@@ -547,6 +556,7 @@ function refreshRwgSettingsVisibility() {
   if (rwgDynamicMassEl && !dynamicMassUnlocked) {
     rwgDynamicMassEl.checked = false;
   }
+  syncDynamicMassCheckboxForType(rwgTypeEl?.value);
   if (rwgDynamicMassRowEl) {
     rwgDynamicMassRowEl.style.display = dynamicMassUnlocked ? '' : 'none';
   }
@@ -899,7 +909,10 @@ function initializeRandomWorldUI() {
   if (rwgTypeEl) {
     rwgTypeEl.dataset.lastTypeList = '[]';
     refreshTypeSelect();
-    rwgTypeEl.addEventListener('change', updateRandomWorldUI);
+    rwgTypeEl.addEventListener('change', () => {
+      syncDynamicMassCheckboxForType(rwgTypeEl.value);
+      updateRandomWorldUI();
+    });
   }
 
   const result = document.createElement('div');
@@ -951,7 +964,7 @@ function initializeRandomWorldUI() {
       if (targetSel) targetSel.value = options.target;
       if (orbitSel) orbitSel.value = options.orbitPreset;
       if (typeSel) typeSel.value = options.type;
-      if (rwgDynamicMassEl) rwgDynamicMassEl.checked = isDynamicMassRwgControlUnlocked() && options.dynamicMass === true;
+      if (rwgDynamicMassEl) rwgDynamicMassEl.checked = (isDynamicMassRwgControlUnlocked() && options.dynamicMass === true) || options.type === 'jupiter-like';
       const hazards = normalizeHazardList(options.hazards);
       if (rwgHazardEl) {
         rwgHazardEl.value = hazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
@@ -1196,7 +1209,7 @@ function drawSingle(seed, options) {
     orbitPreset: options?.orbitPreset,
     type: options?.type,
     hazards: normalizedHazards,
-    dynamicMass: isDynamicMassRwgControlUnlocked() && options?.dynamicMass === true
+    dynamicMass: options?.type === 'jupiter-like' || (isDynamicMassRwgControlUnlocked() && options?.dynamicMass === true)
   };
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
 
@@ -1222,6 +1235,11 @@ function drawSingle(seed, options) {
     availableTypes: typeOptions,
     hazards: normalizedHazards
   });
+  if (res.archetype === 'jupiter-like') {
+    resolvedOptions.dynamicMass = true;
+    if (rwgDynamicMassEl) rwgDynamicMassEl.checked = true;
+    syncDynamicMassCheckboxForType(rwgTypeEl?.value);
+  }
   applyDynamicMassSelection(res, resolvedOptions.dynamicMass);
   const appliedHazards = normalizeHazardList(res?.hazards ?? res?.hazard ?? normalizedHazards);
   hazardSelect.value = normalizedHazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;

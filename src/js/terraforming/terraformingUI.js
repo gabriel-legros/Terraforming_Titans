@@ -1527,11 +1527,7 @@ function createTemperatureBox(row) {
         }
 
         const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
-        const initialGlobalPressurePa = calculateAtmosphericPressure(
-             initialAmount,
-             terraforming.celestialParameters.gravity,
-             terraforming.celestialParameters.radius
-        );
+        const initialGlobalPressurePa = calculateInitialAtmosphericPressureForDelta(terraforming, initialAmount);
 
         if (gasEls && gasEls.delta) {
             const delta = currentGlobalPressurePa - initialGlobalPressurePa;
