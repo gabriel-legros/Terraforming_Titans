@@ -455,7 +455,10 @@ const DEFAULT_PARAMS = {
     geothermalBoostRange: [0.95, 1.6]
   },
   jupiterLike: {
-    coreHeatFluxRangeWm2: [1_500_000, 7_500_000]
+    coreHeatFluxRangeWm2: [1_500_000, 7_500_000],
+    planetaryMassEarthRange: [5, 80],
+    hydrogenMassJupiterRange: [0.25, 2.2],
+    planetaryDensityKgM3Range: [3500, 9000]
   },
   classification: {
     typeAlbedo: {
@@ -613,9 +616,7 @@ const DEFAULT_PARAMS = {
       "ammonia-rich": 5e15,
       "jupiter-like": 6e17
     },
-    H2_total: {
-      "jupiter-like": 1.4e22
-    },
+    H2_total: {},
     referenceLandHa: 14_400_000_000
   },
   zonal: {
@@ -1054,6 +1055,49 @@ function gravityFromMassRadius(M_kg, R_km) { const G = 6.6743e-11; const R_m = R
 function surfaceAreaHa(radius_km) { const area_km2 = 4 * Math.PI * radius_km * radius_km; return Math.round(area_km2 * 100); }
 function totalAtmosphereMassTons(pressureBar, radius_km, gravity_ms2) { const P = pressureBar * 1e5; const R_m = radius_km * 1000; const M_kg = (4 * Math.PI * R_m * R_m * P) / gravity_ms2; return toTons(M_kg); }
 
+function sumInitialResourceMassKg(resourcesByKey, excludedKeys = {}) {
+  let total = 0;
+  for (const key in resourcesByKey || {}) {
+    if (excludedKeys[key]) continue;
+    const value = resourcesByKey[key]?.initialValue || 0;
+    if (value > 0) total += value * 1000;
+  }
+  return total;
+}
+
+const RWG_EARTH_MASS_KG = 5.972e24;
+const RWG_EARTH_RADIUS_KM = 6371;
+const RWG_JUPITER_MASS_KG = 1.898e27;
+const RWG_LIQUID_HYDROGEN_BASE_DENSITY = 71;
+const RWG_LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY = 1140;
+const RWG_LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG = 1.2e27;
+const RWG_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG = 20;
+const RWG_LIQUID_HYDROGEN_COMPRESSION_EXPONENT = 1.6;
+
+function sphereRadiusKmFromVolumeM3(volumeM3) {
+  return volumeM3 > 0 ? Math.pow((3 * volumeM3) / (4 * Math.PI), 1 / 3) / 1000 : 0;
+}
+
+function getRwgLiquidHydrogenDensityKgM3(massKg) {
+  if (!(massKg > 0)) {
+    return RWG_LIQUID_HYDROGEN_BASE_DENSITY;
+  }
+  const logMass = Math.log10(Math.max(1, massKg));
+  if (logMass <= RWG_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG) {
+    return RWG_LIQUID_HYDROGEN_BASE_DENSITY;
+  }
+  const referenceLog = Math.log10(RWG_LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG);
+  const denominator = Math.max(1e-9, referenceLog - RWG_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG);
+  const progress = clamp(
+    (logMass - RWG_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG) / denominator,
+    0,
+    1
+  );
+  return RWG_LIQUID_HYDROGEN_BASE_DENSITY + (
+    RWG_LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY - RWG_LIQUID_HYDROGEN_BASE_DENSITY
+  ) * Math.pow(progress, RWG_LIQUID_HYDROGEN_COMPRESSION_EXPONENT);
+}
+
 function getMoltenCoreHeatFluxMax(params) {
   const bands = params.molten.coreHeatFluxBandsWm2;
   let max = 0;
@@ -1201,7 +1245,10 @@ function resolveTypeOrbitLock({ forcedType, seedBase, star, params, currentPrese
 }
 // ===================== World building helpers =====================
 function sampleBulk(rng, archetype, params) {
-  const Me = 5.972e24, Re_km = 6371;
+  if (archetype === 'jupiter-like') {
+    return sampleJupiterLikeBulk(rng, params);
+  }
+  const Me = RWG_EARTH_MASS_KG, Re_km = RWG_EARTH_RADIUS_KM;
   const rr = params.bulk.radiusER[archetype] || [0.5, 1.2];
   const dr = params.bulk.densityRel[archetype] || [0.7, 1.1];
   const radius_rel = randRange(rng, rr[0], rr[1]);
@@ -1209,6 +1256,32 @@ function sampleBulk(rng, archetype, params) {
   const mass_rel = density_rel * Math.pow(radius_rel, 3);
   const mass = mass_rel * Me; const radius_km = radius_rel * Re_km; const gravity = gravityFromMassRadius(mass, radius_km);
   return { mass, radius_km, gravity, radius_rel };
+}
+
+function sampleJupiterLikeBulk(rng, params) {
+  const config = params.jupiterLike || {};
+  const planetaryMassRange = config.planetaryMassEarthRange || [5, 80];
+  const hydrogenMassRange = config.hydrogenMassJupiterRange || [0.25, 2.2];
+  const densityRange = config.planetaryDensityKgM3Range || [3500, 9000];
+  const planetaryMassKg = randRange(rng, planetaryMassRange[0], planetaryMassRange[1]) * RWG_EARTH_MASS_KG;
+  const liquidHydrogenMassKg = randRange(rng, hydrogenMassRange[0], hydrogenMassRange[1]) * RWG_JUPITER_MASS_KG;
+  const planetaryDensityKgM3 = randRange(rng, densityRange[0], densityRange[1]);
+  const liquidHydrogenDensityKgM3 = getRwgLiquidHydrogenDensityKgM3(liquidHydrogenMassKg);
+  const basePlanetaryVolumeM3 = planetaryMassKg / planetaryDensityKgM3;
+  const liquidHydrogenVolumeM3 = liquidHydrogenMassKg / liquidHydrogenDensityKgM3;
+  const radius_km = sphereRadiusKmFromVolumeM3(basePlanetaryVolumeM3 + liquidHydrogenVolumeM3);
+  const mass = planetaryMassKg + liquidHydrogenMassKg;
+  const gravity = gravityFromMassRadius(mass, radius_km);
+  return {
+    mass,
+    radius_km,
+    gravity,
+    radius_rel: radius_km / RWG_EARTH_RADIUS_KM,
+    basePlanetaryMassKg: planetaryMassKg,
+    basePlanetaryVolumeM3,
+    liquidHydrogenMassKg,
+    liquidHydrogenVolumeM3
+  };
 }
 function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   const tpl = params.atmosphere.templates[archetype];
@@ -1612,6 +1685,11 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const initialThermalTempK = equilibriumTempFromFlux(baseFlux + coreHeatFlux, classification.albedo);
   classification.Teq = initialThermalTempK;
   const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng, params);
+  if (type === 'jupiter-like') {
+    const atmosphericMassKg = sumAtmosphericMass(atmo) * 1000;
+    bulk.mass = (bulk.basePlanetaryMassKg || 0) + (bulk.liquidHydrogenMassKg || 0) + atmosphericMassKg;
+    bulk.gravity = gravityFromMassRadius(bulk.mass, bulk.radius_km);
+  }
   const surface = buildVolatiles(
     type,
     initialThermalTempK,
@@ -1621,6 +1699,16 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     bulk.gravity,
     bulk.radius_km
   );
+  if (type === 'jupiter-like' && bulk.liquidHydrogenMassKg > 0) {
+    surface.liquidHydrogen.initialValue = bulk.liquidHydrogenMassKg / 1000;
+    surface.liquidHydrogen.unlocked = true;
+  }
+  if (type === 'jupiter-like') {
+    const surfaceMassKg = sumInitialResourceMassKg(surface, { land: true });
+    const atmosphericMassKg = sumInitialResourceMassKg(atmo);
+    bulk.mass = (bulk.basePlanetaryMassKg || 0) + surfaceMassKg + atmosphericMassKg;
+    bulk.gravity = gravityFromMassRadius(bulk.mass, bulk.radius_km);
+  }
   let rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
   if (type === "venus-like") rotation = randRange(rng, 5200, 6400);
   // For rogue worlds, spinPeriod is 0 but rotationPeriod is 24h for day-night cycle
@@ -1867,8 +1955,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
       baseLand: landHa,
       // Dynamic-mass ledger fields are derived from the generated world and must not
       // inherit story-world defaults through deepMerge(defaultPlanetParameters, override).
-      basePlanetaryMass: null,
-      basePlanetaryVolumeM3: null,
+      basePlanetaryMass: type === 'jupiter-like' ? bulk.basePlanetaryMassKg : null,
+      basePlanetaryVolumeM3: type === 'jupiter-like' ? bulk.basePlanetaryVolumeM3 : null,
       baseSurfaceMassKg: null,
       baseAtmosphericMassKg: null,
       currentPlanetaryMassKg: null,
