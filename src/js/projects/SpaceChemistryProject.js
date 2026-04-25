@@ -131,7 +131,7 @@ const SPACE_CHEMISTRY_RESOURCE_LABELS = {
 };
 
 const SPACE_CHEMISTRY_RATE_RESOURCE_LABELS = {
-  energy: { path: 'ui.projects.spaceChemistry.rateLabels.energy', fallback: 'E' },
+  energy: { path: 'ui.projects.spaceChemistry.rateLabels.energy', fallback: 'Wd' },
   hydrogen: { path: 'ui.projects.spaceChemistry.rateLabels.hydrogen', fallback: 'H2' },
   carbonDioxide: { path: 'ui.projects.spaceChemistry.rateLabels.carbonDioxide', fallback: 'CO2' },
   oxygen: { path: 'ui.projects.spaceChemistry.rateLabels.oxygen', fallback: 'O2' },

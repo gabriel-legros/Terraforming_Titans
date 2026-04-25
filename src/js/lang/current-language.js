@@ -1527,7 +1527,7 @@ setLanguageData({
         recipeTooltip: '{inputs} + {energy} -> {outputs}',
         spaceEnergy: 'Space Energy',
         rateLabels: {
-          energy: 'E',
+          energy: 'Wd',
           hydrogen: 'H2',
           carbonDioxide: 'CO2',
           oxygen: 'O2',
@@ -4934,17 +4934,17 @@ setLanguageData({
       },
       build_cost: {
         name: 'Efficient Architecture',
-        description: 'Reduces Building Costs by 10% (indirectly impacts maintenance)',
+        description: 'Reduces Building Costs by 10% per rank (indirectly impacts maintenance)',
         effectName: 'Awakening',
       },
       pop_growth: {
         name: 'Population Boom',
-        description: 'Increases population growth by 20%',
+        description: 'Increases population growth by 20% per rank',
         effectName: 'Awakening',
       },
       worker_reduction: {
         name: 'Automation',
-        description: 'Reduces worker requirements by 10%',
+        description: 'Reduces worker requirements by 10% per rank',
       },
       research_boost: {
         name: 'Innovation Initiative',

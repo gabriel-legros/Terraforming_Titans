@@ -192,19 +192,25 @@ function formatSignedValue(value, decimals = 2, unit = '') {
 
 function formatValueWithUnit(value, unit, decimals = 2) {
   const normalizedUnit = `${unit || ''}`.trim().toLowerCase();
-  const magnitude = Number.isFinite(value) ? Math.abs(value) : 0;
 
   if (normalizedUnit === 'kpa' && Number.isFinite(value)) {
-    if (magnitude >= 1_000_000) {
-      return `${formatNumeric(value / 1_000_000, decimals)} GPa`;
-    }
-    if (magnitude >= 1000) {
-      return `${formatNumeric(value / 1000, decimals)} MPa`;
-    }
+    return formatPascalValue(value * 1000, decimals);
   }
 
-  if (normalizedUnit === 'mpa' && Number.isFinite(value) && magnitude >= 1000) {
-    return `${formatNumeric(value / 1000, decimals)} GPa`;
+  if (normalizedUnit === 'mpa' && Number.isFinite(value)) {
+    return formatPascalValue(value * 1_000_000, decimals);
+  }
+
+  if (normalizedUnit === 'pa' && Number.isFinite(value)) {
+    return formatPascalValue(value, decimals);
+  }
+
+  if (normalizedUnit === 'bar' && Number.isFinite(value)) {
+    return formatPascalValue(value * 100_000, decimals);
+  }
+
+  if (normalizedUnit === 'mbar' && Number.isFinite(value)) {
+    return formatPascalValue(value * 100, decimals);
   }
 
   const safeUnit = unit ? ` ${unit}` : '';
@@ -844,28 +850,11 @@ function buildPressureFactor(hazard, manager, cache, fieldKey, label) {
   }
 
   const unit = entry.unit || 'kPa';
-  const convert = manager.convertPressureFromPa
-    ? manager.convertPressureFromPa.bind(manager)
-    : (value, desiredUnit) => {
-      if (!desiredUnit) {
-        return value;
-      }
-      const target = `${desiredUnit}`.toLowerCase();
-      if (target === 'kpa') {
-        return value / 1000;
-      }
-      if (target === 'pa') {
-        return value;
-      }
-      return value;
-    };
-
   const source = fieldKey === 'atmosphericPressure'
     ? cache.totalPressure
     : cache.pressureByKey && cache.pressureByKey[fieldKey === 'co2Pressure' ? 'carbonDioxide' : 'oxygen'];
 
   const current = Number.isFinite(source) ? source : 0;
-  const converted = convert(current, unit);
 
   const penalty = manager.calculatePressureGrowthPenalty
     ? manager.calculatePressureGrowthPenalty(cache, entry, fieldKey === 'atmosphericPressure' ? null : (fieldKey === 'co2Pressure' ? 'carbonDioxide' : 'oxygen'))
@@ -885,8 +874,8 @@ function buildPressureFactor(hazard, manager, cache, fieldKey, label) {
     key: fieldKey,
     label,
     info: infoParts.join('\n'),
-    values: [getHazardousBiomassLabel('current', `Current: ${formatValueWithUnit(converted, unit, 3)}`, {
-      value: formatValueWithUnit(converted, unit, 3)
+    values: [getHazardousBiomassLabel('current', `Current: ${formatPascalValue(current, 3)}`, {
+      value: formatPascalValue(current, 3)
     })],
     penalties: [getHazardousBiomassLabel('penalty', `Penalty: ${formatSignedPercentage(-penalty, 3)}`, {
       value: formatSignedPercentage(-penalty, 3)

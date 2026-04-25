@@ -1083,7 +1083,7 @@ const specialSeedDefinitions = {
     replayable: true,
     target: 'planet',
     archetype: 'mars-like',
-    orbitPreset: 'inner',
+    orbitPreset: 'very-hot',
     specialEffects: [
       {
         id: 'star-proximity-disables-systems',
@@ -1186,7 +1186,7 @@ const specialSeedDefinitions = {
     replayable: true,
     target: 'planet',
     archetype: 'molten',
-    orbitPreset: 'outer',
+    orbitPreset: 'very-cold',
     specialEffects: [
       {
         id: 'steam-atmosphere',

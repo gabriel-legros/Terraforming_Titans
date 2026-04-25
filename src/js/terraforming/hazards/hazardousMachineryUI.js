@@ -118,6 +118,29 @@ function formatMachineryNumber(value, decimals = 2) {
   }
 }
 
+function formatHazardousMachineryPressure(value, unit, decimals = 2) {
+  const normalizedUnit = `${unit || ''}`.trim().toLowerCase();
+  if (!Number.isFinite(value)) {
+    return formatPascalValue(0, decimals);
+  }
+  if (normalizedUnit === 'pa') {
+    return formatPascalValue(value, decimals);
+  }
+  if (normalizedUnit === 'kpa') {
+    return formatPascalValue(value * 1000, decimals);
+  }
+  if (normalizedUnit === 'mpa') {
+    return formatPascalValue(value * 1_000_000, decimals);
+  }
+  if (normalizedUnit === 'bar') {
+    return formatPascalValue(value * 100_000, decimals);
+  }
+  if (normalizedUnit === 'mbar') {
+    return formatPascalValue(value * 100, decimals);
+  }
+  return null;
+}
+
 function formatMachineryPercent(value, decimals = 2) {
   return `${formatMachineryNumber((value || 0) * 100, decimals)}%`;
 }
@@ -209,29 +232,33 @@ function formatHazardousMachineryRange(entry, fallbackUnit = '') {
   const unit = entry.unit || fallbackUnit;
   const hasMin = Number.isFinite(entry.min);
   const hasMax = Number.isFinite(entry.max);
-  const minText = formatMachineryNumber(entry.min, 2);
-  const maxText = formatMachineryNumber(entry.max, 2);
+  const minPressureText = hasMin ? formatHazardousMachineryPressure(entry.min, unit, 2) : null;
+  const maxPressureText = hasMax ? formatHazardousMachineryPressure(entry.max, unit, 2) : null;
+  const usesPressureText = !!(minPressureText || maxPressureText);
+  const minText = minPressureText || formatMachineryNumber(entry.min, 2);
+  const maxText = maxPressureText || formatMachineryNumber(entry.max, 2);
+  const displayUnit = usesPressureText ? '' : unit;
 
   if (hasMin && hasMax) {
     return getHazardousMachineryUiText('labels.range', 'Range {min}-{max} {unit}', {
       min: minText,
       max: maxText,
-      unit
-    });
+      unit: displayUnit
+    }).trim();
   }
 
   if (hasMin) {
     return getHazardousMachineryUiText('labels.minimum', 'Min {value} {unit}', {
       value: minText,
-      unit
-    });
+      unit: displayUnit
+    }).trim();
   }
 
   if (hasMax) {
     return getHazardousMachineryUiText('labels.maximum', 'Max {value} {unit}', {
       value: maxText,
-      unit
-    });
+      unit: displayUnit
+    }).trim();
   }
 
   return getHazardousMachineryUiText('labels.unbounded', 'Unbounded');
@@ -969,8 +996,8 @@ function updateHazardousMachineryUI(parameters) {
       info: [oxygenRangeText, oxygenSeverityText].filter(Boolean).join('\n'),
       values: [
         getHazardousMachineryUiText('labels.current', 'Current: {value}{unit}', {
-          value: formatMachineryNumber(status.oxygenPressureValue, 2),
-          unit: oxygenUnit
+          value: formatPascalValue(status.oxygenPressurePa, 2),
+          unit: ''
         })
       ],
       effects: [
