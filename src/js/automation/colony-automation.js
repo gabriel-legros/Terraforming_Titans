@@ -322,7 +322,10 @@ class ColonyAutomation {
           {
             categoryId: entry.categoryId,
             control: entry.control ? this.deepClone(entry.control) : null,
-            automation: entry.automation ? this.deepClone(entry.automation) : null
+            automation: entry.automation ? {
+              ...this.deepClone(entry.automation),
+              autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
+            } : null
           }
         ])
       )
@@ -344,6 +347,9 @@ class ColonyAutomation {
       const entry = importedTargets[targetId] || {};
       const control = entry.control ? this.deepClone(entry.control) : null;
       const automation = entry.automation ? this.deepClone(entry.automation) : null;
+      if (automation && automation.autoBuildBasis === 'initialLand') {
+        automation.autoBuildBasis = 'geometricLand';
+      }
       if (!control && !automation) {
         continue;
       }
@@ -447,7 +453,7 @@ class ColonyAutomation {
     return {
       autoBuildEnabled: colony.autoBuildEnabled,
       autoBuildPriority: colony.autoBuildPriority,
-      autoBuildBasis: colony.autoBuildBasis,
+      autoBuildBasis: colony.autoBuildBasis === 'initialLand' ? 'geometricLand' : colony.autoBuildBasis,
       autoBuildPercent: colony.autoBuildPercent,
       autoBuildFixed: colony.autoBuildFixed,
       autoBuildFillPercent: colony.autoBuildFillPercent,
@@ -711,8 +717,9 @@ class ColonyAutomation {
       colony.autoBuildPriority = automation.autoBuildPriority;
       changed = true;
     }
-    if (colony.autoBuildBasis !== automation.autoBuildBasis) {
-      colony.autoBuildBasis = automation.autoBuildBasis;
+    const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
+    if (colony.autoBuildBasis !== automationBasis) {
+      colony.autoBuildBasis = automationBasis;
       changed = true;
     }
     if (colony.autoBuildPercent !== automation.autoBuildPercent) {
@@ -993,7 +1000,10 @@ class ColonyAutomation {
             {
               categoryId: entry.categoryId,
               control: entry.control ? this.deepClone(entry.control) : null,
-              automation: entry.automation ? this.deepClone(entry.automation) : null
+              automation: entry.automation ? {
+                ...this.deepClone(entry.automation),
+                autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
+              } : null
             }
           ])
         )
@@ -1026,7 +1036,19 @@ class ColonyAutomation {
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
-      targets: preset.targets || {}
+      targets: Object.fromEntries(
+        Object.entries(preset.targets || {}).map(([targetId, entry]) => {
+          const automation = entry?.automation ? { ...entry.automation } : null;
+          if (automation && automation.autoBuildBasis === 'initialLand') {
+            automation.autoBuildBasis = 'geometricLand';
+          }
+          return [targetId, {
+            categoryId: entry?.categoryId || this.getTargetCategoryId(targetId),
+            control: entry?.control || null,
+            automation
+          }];
+        })
+      )
     })) : [];
     this.assignments = Array.isArray(data.assignments) ? data.assignments.map(item => ({
       id: item.id,

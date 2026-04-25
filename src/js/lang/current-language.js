@@ -724,7 +724,7 @@ setLanguageData({
           workers: '% of workers',
           workerShare: '% worker share',
           landShare: '% land share',
-          initialLand: '% base land',
+          geometricLand: '% geometric land',
           fixed: 'Fixed',
           storageDepots: '% of Storage Depots',
           percentOf: '% of {name}',

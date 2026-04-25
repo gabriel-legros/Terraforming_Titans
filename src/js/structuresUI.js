@@ -411,6 +411,10 @@ function createAutoBuildStepControls(structure, autoBuildInput) {
 function resolveAutoBuildBasisValue(structure, select) {
   const defaultBasis = structure.autoBuildFillEnabled ? 'fill' : 'population';
   const basis = `${structure.autoBuildBasis || defaultBasis}`;
+  if (basis === 'initialLand') {
+    structure.autoBuildBasis = 'geometricLand';
+    return hasAutoBuildBasisOption(select, 'geometricLand') ? 'geometricLand' : defaultBasis;
+  }
   for (let i = 0; i < select.options.length; i += 1) {
     if (select.options[i].value === basis) {
       return basis;
@@ -449,8 +453,8 @@ function getAutoBuildBaseValue(structure, population, workerCap, collection) {
   if (basis === 'workers') {
     return workerCap;
   }
-  if (basis === 'initialLand') {
-    return resolveWorldBaseLand(terraforming);
+  if (basis === 'geometricLand' || basis === 'initialLand') {
+    return resolveWorldGeometricLand(terraforming, resources.surface.land);
   }
 
   if (basis.startsWith('building:')) {
@@ -828,10 +832,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     landOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.landShare', '% land share');
     autoBuildBasisSelect.appendChild(landOption);
   }
-  const initialLandOption = document.createElement('option');
-  initialLandOption.value = 'initialLand';
-  initialLandOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.initialLand', '% base land');
-  autoBuildBasisSelect.appendChild(initialLandOption);
+  const geometricLandOption = document.createElement('option');
+  geometricLandOption.value = 'geometricLand';
+  geometricLandOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.geometricLand', '% geometric land');
+  autoBuildBasisSelect.appendChild(geometricLandOption);
   const fixedOption = document.createElement('option');
   fixedOption.value = 'fixed';
   fixedOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.fixed', 'Fixed');

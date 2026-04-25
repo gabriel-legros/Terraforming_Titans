@@ -378,7 +378,10 @@ class BuildingAutomation {
           buildingId,
           {
             control: entry.control ? this.deepClone(entry.control) : null,
-            automation: entry.automation ? this.deepClone(entry.automation) : null
+            automation: entry.automation ? {
+              ...this.deepClone(entry.automation),
+              autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
+            } : null
           }
         ])
       )
@@ -400,6 +403,9 @@ class BuildingAutomation {
       const entry = importedBuildings[buildingId] || {};
       const control = entry.control ? this.deepClone(entry.control) : null;
       const automation = entry.automation ? this.deepClone(entry.automation) : null;
+      if (automation && automation.autoBuildBasis === 'initialLand') {
+        automation.autoBuildBasis = 'geometricLand';
+      }
       if (!control && !automation) {
         continue;
       }
@@ -478,7 +484,7 @@ class BuildingAutomation {
     return {
       autoBuildEnabled: building.autoBuildEnabled,
       autoBuildPriority: building.autoBuildPriority,
-      autoBuildBasis: building.autoBuildBasis,
+      autoBuildBasis: building.autoBuildBasis === 'initialLand' ? 'geometricLand' : building.autoBuildBasis,
       autoBuildPercent: building.autoBuildPercent,
       autoBuildFixed: building.autoBuildFixed,
       autoBuildFillPercent: building.autoBuildFillPercent,
@@ -627,8 +633,9 @@ class BuildingAutomation {
       building.autoBuildPriority = automation.autoBuildPriority;
       changed = true;
     }
-    if (building.autoBuildBasis !== automation.autoBuildBasis) {
-      building.autoBuildBasis = automation.autoBuildBasis;
+    const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
+    if (building.autoBuildBasis !== automationBasis) {
+      building.autoBuildBasis = automationBasis;
       if (typeof building.normalizeAutoBuildBasis === 'function') {
         building.normalizeAutoBuildBasis();
       }
@@ -700,7 +707,10 @@ class BuildingAutomation {
             key,
             {
               control: entry.control ? { ...entry.control } : null,
-              automation: entry.automation ? { ...entry.automation } : null
+              automation: entry.automation ? {
+                ...entry.automation,
+                autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
+              } : null
             }
           ])
         )
@@ -734,7 +744,18 @@ class BuildingAutomation {
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
-      buildings: preset.buildings || {}
+      buildings: Object.fromEntries(
+        Object.entries(preset.buildings || {}).map(([buildingId, entry]) => {
+          const automation = entry?.automation ? { ...entry.automation } : null;
+          if (automation && automation.autoBuildBasis === 'initialLand') {
+            automation.autoBuildBasis = 'geometricLand';
+          }
+          return [buildingId, {
+            control: entry?.control || null,
+            automation
+          }];
+        })
+      )
     })) : [];
     this.assignments = Array.isArray(data.assignments) ? data.assignments.map(item => ({
       id: item.id,

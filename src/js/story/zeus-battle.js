@@ -376,7 +376,7 @@ progressZeusBattle.storyProjects.zeus_battle_of_zeus = {
   chapter: 44,
   cost: {},
   duration: 10_000,
-  description: "(This story project happens over a very short time period)  Progress the Battle of Zeus.",
+  description: "(This story project happens over a very short time period and before HOPE had any chance to prepare a large amount of ships)  Progress the Battle of Zeus.",
   repeatable: true,
   maxRepeatCount: 14,
   unlocked: false,

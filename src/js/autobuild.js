@@ -185,8 +185,8 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
     if (basis === 'workers') {
         return workerCap;
     }
-    if (basis === 'initialLand') {
-        return resolveWorldBaseLand(terraforming);
+    if (basis === 'geometricLand' || basis === 'initialLand') {
+        return resolveWorldGeometricLand(terraforming, resources.surface.land);
     }
 
     if (basis.startsWith('building:')) {
@@ -769,7 +769,7 @@ function captureAutoBuildSettings(structures) {
         const s = structures[name];
         savedAutoBuildSettings[name] = {
             percent: s.autoBuildPercent,
-            basis: s.autoBuildBasis,
+            basis: s.autoBuildBasis === 'initialLand' ? 'geometricLand' : s.autoBuildBasis,
             priority: s.autoBuildPriority,
             autoActive: s.autoActiveEnabled,
             autoUpgrade: s.autoUpgradeEnabled,
@@ -787,7 +787,8 @@ function restoreAutoBuildSettings(structures) {
         const s = structures[name];
         if (savedAutoBuildSettings[name]) {
             s.autoBuildPercent = savedAutoBuildSettings[name].percent;
-            s.autoBuildBasis = savedAutoBuildSettings[name].basis || (s.autoBuildFillEnabled ? 'fill' : 'population');
+            const savedBasis = savedAutoBuildSettings[name].basis || (s.autoBuildFillEnabled ? 'fill' : 'population');
+            s.autoBuildBasis = savedBasis === 'initialLand' ? 'geometricLand' : savedBasis;
             const priority = savedAutoBuildSettings[name].priority;
             if (priority === true) {
                 s.autoBuildPriority = 1;

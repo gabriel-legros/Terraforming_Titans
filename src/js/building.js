@@ -243,8 +243,8 @@ class Building extends EffectableEntity {
     if (basis === 'workers') {
       return workerCap;
     }
-    if (basis === 'initialLand') {
-      return resolveWorldBaseLand(terraforming);
+    if (basis === 'geometricLand' || basis === 'initialLand') {
+      return resolveWorldGeometricLand(terraforming, resources.surface.land);
     }
     if (basis.startsWith('building:')) {
       const targetCollection = collection || {};
@@ -318,7 +318,7 @@ class Building extends EffectableEntity {
       autoBuildPercent: this.autoBuildPercent,
       autoBuildStep: this.autoBuildStep,
       autoBuildPriority: this.autoBuildPriority,
-      autoBuildBasis: this.autoBuildBasis,
+      autoBuildBasis: this.autoBuildBasis === 'initialLand' ? 'geometricLand' : this.autoBuildBasis,
       autoBuildFixed: this.autoBuildFixed,
       autoBuildFillPercent: this.autoBuildFillPercent,
       autoBuildFillResourcePrimary: this.autoBuildFillResourcePrimary,
@@ -374,7 +374,9 @@ class Building extends EffectableEntity {
         this.autoBuildPriority = 0;
       }
     }
-    if ('autoBuildBasis' in state) this.autoBuildBasis = state.autoBuildBasis;
+    if ('autoBuildBasis' in state) {
+      this.autoBuildBasis = state.autoBuildBasis === 'initialLand' ? 'geometricLand' : state.autoBuildBasis;
+    }
     if ('autoBuildFixed' in state) {
       this.autoBuildFixed = Math.max(0, Math.floor(state.autoBuildFixed || 0));
     }
