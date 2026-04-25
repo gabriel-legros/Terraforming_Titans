@@ -727,6 +727,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 0.1,
     unlocked: false,
     defaultRecipe: 'water',
     recipes: {
