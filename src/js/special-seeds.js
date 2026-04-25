@@ -487,18 +487,16 @@ const hermesOverrides = {
     {
       target: 'building',
       targetId: 'spaceMirror',
-      type: 'booleanFlag',
-      flagId: 'disableMirrorFacilityActivation',
+      type: 'permanentBuildingDisable',
       value: true,
-      effectId: 'hermes-disable-space-mirror-activation'
+      effectId: 'hermes-disable-space-mirrors'
     },
     {
       target: 'building',
       targetId: 'hyperionLantern',
-      type: 'booleanFlag',
-      flagId: 'disableMirrorFacilityActivation',
+      type: 'permanentBuildingDisable',
       value: true,
-      effectId: 'hermes-disable-hyperion-lantern-activation'
+      effectId: 'hermes-disable-hyperion-lanterns'
     },
     {
       target: 'project',
@@ -1088,7 +1086,7 @@ const specialSeedDefinitions = {
       {
         id: 'star-proximity-disables-systems',
         descriptionKey: 'catalogs.specialSeeds.hermes.effects.starProximityDisablesSystems',
-        description: 'Space Mirror Facility and Tractor Beams are disabled on this world due to star proximity.'
+        description: 'Space Mirror Facility, Space Mirrors, Hyperion Lanterns, and Tractor Beams are permanently disabled on this world due to star proximity.'
       },
       {
         id: 'calcite-factories-disabled',

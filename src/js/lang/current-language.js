@@ -3240,7 +3240,7 @@ setLanguageData({
         name: 'Hermes',
         difficulty: 'Hard+',
         effects: {
-          starProximityDisablesSystems: 'Space Mirror Facility and Tractor Beams are disabled on this world due to star proximity.',
+          starProximityDisablesSystems: 'Space Mirror Facility, Space Mirrors, Hyperion Lanterns, and Tractor Beams are permanently disabled on this world due to star proximity.',
           calciteFactoriesDisabled: 'Calcite Factories are also disabled because HOPE is stubborn about certain things.',
           resemblesMercury: 'May resemble Mercury.',
         },
