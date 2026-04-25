@@ -173,7 +173,7 @@
       const v = sandboxResources.atmospheric && sandboxResources.atmospheric[k] ? sandboxResources.atmospheric[k].value || 0 : 0;
       out.resources.atmospheric[k] = out.resources.atmospheric[k] || {}; out.resources.atmospheric[k].initialValue = v;
     });
-    const surfKeys = ['ice','liquidWater','dryIce','liquidCO2','liquidMethane','hydrocarbonIce','liquidAmmonia','ammoniaIce','liquidOxygen','oxygenIce','buriedOxygenIce','liquidNitrogen','nitrogenIce','buriedNitrogenIce'];
+    const surfKeys = ['ice','liquidWater','dryIce','liquidCO2','liquidHydrogen','liquidMethane','hydrocarbonIce','liquidAmmonia','ammoniaIce','liquidOxygen','oxygenIce','buriedOxygenIce','liquidNitrogen','nitrogenIce','buriedNitrogenIce'];
     out.resources.surface = out.resources.surface || {};
     surfKeys.forEach(k => {
       const v = sandboxResources.surface && sandboxResources.surface[k] ? sandboxResources.surface[k].value || 0 : 0;
@@ -232,7 +232,7 @@
     function g(obj, k) { return obj[k] ? (obj[k].value || 0) : 0; }
     const metrics = [
       g(atmo,'carbonDioxide'), g(atmo,'inertGas'), g(atmo,'oxygen'), g(atmo,'atmosphericWater'), g(atmo,'greenhouseGas'), g(atmo,'atmosphericMethane'), g(atmo,'atmosphericAmmonia'), g(atmo,'hydrogen'), g(atmo,'sulfuricAcid'), g(atmo,'calciteAerosol'),
-      g(surf,'ice'), g(surf,'liquidWater'), g(surf,'dryIce'), g(surf,'liquidCO2'), g(surf,'liquidMethane'), g(surf,'hydrocarbonIce'), g(surf,'liquidAmmonia'), g(surf,'ammoniaIce'),
+      g(surf,'ice'), g(surf,'liquidWater'), g(surf,'dryIce'), g(surf,'liquidCO2'), g(surf,'liquidHydrogen'), g(surf,'liquidMethane'), g(surf,'hydrocarbonIce'), g(surf,'liquidAmmonia'), g(surf,'ammoniaIce'),
       g(surf,'liquidOxygen'), g(surf,'oxygenIce'), g(surf,'liquidNitrogen'), g(surf,'nitrogenIce')
     ];
     const zones = ['tropical', 'temperate', 'polar'];
@@ -240,6 +240,7 @@
        const zs = terra.zonalSurface[zone] || {};
        metrics.push(zs.liquidWater || 0, zs.ice || 0, zs.buriedIce || 0);
        metrics.push(zs.liquidCO2 || 0, zs.dryIce || 0, zs.biomass || 0);
+       metrics.push(zs.liquidHydrogen || 0);
        metrics.push(zs.liquidMethane || 0, zs.hydrocarbonIce || 0, zs.buriedHydrocarbonIce || 0);
        metrics.push(zs.liquidAmmonia || 0, zs.ammoniaIce || 0, zs.buriedAmmoniaIce || 0);
        metrics.push(zs.liquidOxygen || 0, zs.oxygenIce || 0, zs.buriedOxygenIce || 0);
