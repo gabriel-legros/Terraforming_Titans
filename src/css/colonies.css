@@ -227,6 +227,52 @@ input[type="range"].pretty-slider::-moz-range-thumb {
 
 #construction-office-card #strategic-reserve-input {
   width: 50px;
+  box-sizing: border-box;
+  height: 28px;
+}
+
+#construction-office-card .construction-office-reserve-controls {
+  display: grid;
+  grid-template-columns: 56px auto 28px;
+  align-items: center;
+  column-gap: 4px;
+}
+
+#construction-office-card .construction-office-reserve-settings-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.construction-office-reserve-window {
+  width: min(480px, 92vw);
+}
+
+.construction-office-reserve-intro {
+  font-size: 14px;
+}
+
+.construction-office-reserve-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.construction-office-reserve-default-row {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 2px;
+}
+
+.construction-office-reserve-input-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
 }
 
 /* --- Nanocolony Card --- */

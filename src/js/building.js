@@ -224,7 +224,7 @@ class Building extends EffectableEntity {
 
     if (this.requiresLand && typeof this.landAffordCount === 'function') {
       const inactiveCount = Math.max(0, this.countNumber - this.activeNumber);
-      const remainingLandBackedBuilds = Math.max(0, this.landAffordCount() - inactiveCount);
+      const remainingLandBackedBuilds = Math.max(0, this.landAffordCount(reservePercent) - inactiveCount);
       maxBuildable = Math.min(maxBuildable, remainingLandBackedBuilds);
     }
 
@@ -1072,6 +1072,20 @@ class Building extends EffectableEntity {
   }
 
   // Adjusted canAfford method to use effective cost and an optional strategic reserve
+  getStrategicReservePercentForResource(reservePercent, category, resource) {
+    if (reservePercent && reservePercent.constructor === Object) {
+      const key = `${category}.${resource}`;
+      if (Object.prototype.hasOwnProperty.call(reservePercent, key)) {
+        return Math.max(0, Math.min(100, Number(reservePercent[key]) || 0));
+      }
+      if (Object.prototype.hasOwnProperty.call(reservePercent, resource)) {
+        return Math.max(0, Math.min(100, Number(reservePercent[resource]) || 0));
+      }
+      return Math.max(0, Math.min(100, Number(reservePercent.default) || 0));
+    }
+    return Math.max(0, Math.min(100, Number(reservePercent) || 0));
+  }
+
   canAfford(buildCount = 1, reservePercent = 0, additionalReserves = null) {
     const effectiveCost = this.getEffectiveCost(buildCount);
 
@@ -1079,7 +1093,8 @@ class Building extends EffectableEntity {
       for (const resource in effectiveCost[category]) {
         const resObj = resources[category][resource];
         const cap = resObj.cap || 0;
-        const reserve = Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
+        const resourceReservePercent = this.getStrategicReservePercentForResource(reservePercent, category, resource);
+        const reserve = Number.isFinite(cap) ? (resourceReservePercent / 100) * cap : 0;
         const prioritizedReserve = additionalReserves?.[category]?.[resource] || 0;
         if (resObj.value - reserve - prioritizedReserve < effectiveCost[category][resource]) {
           return false;
@@ -1087,7 +1102,7 @@ class Building extends EffectableEntity {
       }
     }
 
-    return this.canAffordDeposit(buildCount) && this.canAffordLand(buildCount);
+    return this.canAffordDeposit(buildCount) && this.canAffordLand(buildCount, reservePercent);
   }
 
   setAutomationActivityMultiplier(value) {
@@ -1110,9 +1125,14 @@ class Building extends EffectableEntity {
     return true;
   }
 
-  canAffordLand(amount = 1){
+  canAffordLand(amount = 1, reservePercent = 0){
     if (this.requiresLand) {
-      if (!resources.surface.land.canAffordLandAmount(this.requiresLand * amount)) {
+      const land = resources.surface.land;
+      const cap = land.cap || 0;
+      const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
+      const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+      const available = (land.getAvailableAmount ? land.getAvailableAmount() : land.value - land.reserved) - strategicReserve;
+      if (available < this.requiresLand * amount) {
         return false;
       }
     }
@@ -1120,11 +1140,16 @@ class Building extends EffectableEntity {
     return true;    
   }
 
-  landAffordCount(){
+  landAffordCount(reservePercent = 0){
     if(!this.requiresLand){
       return Infinity;
     }
-    return Math.floor(resources.surface.land.getLandAffordCount(this.requiresLand));
+    const land = resources.surface.land;
+    const cap = land.cap || 0;
+    const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
+    const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+    const available = Math.max((land.getAvailableAmount ? land.getAvailableAmount() : land.value - land.reserved) - strategicReserve, 0);
+    return Math.floor(available / this.requiresLand);
   }
 
   adjustLand(amount){
@@ -1195,7 +1220,8 @@ class Building extends EffectableEntity {
       for (const resource in costObj[category]) {
         const resObj = resources[category][resource];
         const cap = resObj.cap || 0;
-        const reserve = Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
+        const resourceReservePercent = this.getStrategicReservePercentForResource(reservePercent, category, resource);
+        const reserve = Number.isFinite(cap) ? (resourceReservePercent / 100) * cap : 0;
         const prioritizedReserve = additionalReserves?.[category]?.[resource] || 0;
         const available = Math.max(resObj.value - reserve - prioritizedReserve, 0);
         const costPerUnit = costObj[category][resource];

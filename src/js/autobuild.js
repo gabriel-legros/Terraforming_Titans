@@ -68,6 +68,58 @@ function getConstructionOfficeText(path, fallback, vars) {
     }
 }
 
+const CONSTRUCTION_OFFICE_RESERVE_RESOURCES = [
+    { key: 'colony.energy', category: 'colony', resource: 'energy', labelKey: 'energy', fallbackLabel: 'Energy' },
+    { key: 'colony.metal', category: 'colony', resource: 'metal', labelKey: 'metal', fallbackLabel: 'Metal' },
+    { key: 'colony.glass', category: 'colony', resource: 'glass', labelKey: 'glass', fallbackLabel: 'Glass' },
+    { key: 'colony.water', category: 'colony', resource: 'water', labelKey: 'water', fallbackLabel: 'Water' },
+    { key: 'colony.components', category: 'colony', resource: 'components', labelKey: 'components', fallbackLabel: 'Components' },
+    { key: 'colony.electronics', category: 'colony', resource: 'electronics', labelKey: 'electronics', fallbackLabel: 'Electronics' },
+    { key: 'colony.superconductors', category: 'colony', resource: 'superconductors', labelKey: 'superconductors', fallbackLabel: 'Superconductors' },
+    { key: 'colony.superalloys', category: 'colony', resource: 'superalloys', labelKey: 'superalloys', fallbackLabel: 'Superalloys' },
+    { key: 'surface.land', category: 'surface', resource: 'land', labelKey: 'land', fallbackLabel: 'Land' },
+];
+
+function normalizeConstructionOfficeReservePercent(value) {
+    const parsed = parseFloat(value);
+    if (Number.isNaN(parsed)) {
+        return 0;
+    }
+    return Math.max(0, Math.min(100, parsed));
+}
+
+function getConstructionOfficeReserveResourceLabel(option) {
+    return getConstructionOfficeText(
+        `ui.colony.constructionOffice.reserveResources.${option.labelKey}`,
+        option.fallbackLabel
+    );
+}
+
+function getConstructionOfficeReservePercentForResource(reserveSettings, category, resource) {
+    if (reserveSettings && reserveSettings.constructor === Object) {
+        const key = `${category}.${resource}`;
+        if (Object.prototype.hasOwnProperty.call(reserveSettings, key)) {
+            return normalizeConstructionOfficeReservePercent(reserveSettings[key]);
+        }
+        if (Object.prototype.hasOwnProperty.call(reserveSettings, resource)) {
+            return normalizeConstructionOfficeReservePercent(reserveSettings[resource]);
+        }
+        return normalizeConstructionOfficeReservePercent(reserveSettings.default);
+    }
+    return normalizeConstructionOfficeReservePercent(reserveSettings);
+}
+
+function getConstructionOfficeReserveSettings() {
+    const settings = { default: constructionOfficeState.strategicReserve };
+    const perResource = constructionOfficeState.strategicReserveResources || {};
+    CONSTRUCTION_OFFICE_RESERVE_RESOURCES.forEach(option => {
+        if (Object.prototype.hasOwnProperty.call(perResource, option.key)) {
+            settings[option.key] = normalizeConstructionOfficeReservePercent(perResource[option.key]);
+        }
+    });
+    return settings;
+}
+
 function addCostToPrioritizedReserve(reserve, cost) {
     if (!cost) return;
     for (const category in cost) {
@@ -263,7 +315,8 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
                 const required = cost[category][resource];
                 if (required <= 0) continue;
                 const cap = resObj.cap || 0;
-                const reserve = Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
+                const resourceReservePercent = getConstructionOfficeReservePercentForResource(reservePercent, category, resource);
+                const reserve = Number.isFinite(cap) ? (resourceReservePercent / 100) * cap : 0;
                 const prioritizedReserve = extraReserves?.[category]?.[resource] || 0;
                 const baseAvailable = resObj.getAvailableAmount ? resObj.getAvailableAmount() : (resObj.value || 0) - (resObj.reserved || 0);
                 const available = baseAvailable - reserve - prioritizedReserve;
@@ -312,7 +365,11 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
             if (landRes) {
                 const required = building.requiresLand * requiredAmount;
                 if (required > 0) {
-                    const available = landRes.getAvailableAmount ? landRes.getAvailableAmount() : (landRes.value || 0) - (landRes.reserved || 0);
+                    const cap = landRes.cap || 0;
+                    const landReservePercent = getConstructionOfficeReservePercentForResource(reservePercent, 'surface', 'land');
+                    const reserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+                    const baseAvailable = landRes.getAvailableAmount ? landRes.getAvailableAmount() : (landRes.value || 0) - (landRes.reserved || 0);
+                    const available = baseAvailable - reserve;
                     if (available + 1e-9 < required) {
                         const ratio = available / required;
                         registerShortage(landRes, ratio, {
@@ -387,6 +444,12 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
 const constructionOfficeState = {
     autobuilderActive: true,
     strategicReserve: 0,
+    strategicReserveResources: {},
+};
+
+const constructionOfficeReserveSettingsElements = {
+    overlay: null,
+    inputs: {},
 };
 
 function updateConstructionOfficeUI() {
@@ -415,6 +478,19 @@ function updateConstructionOfficeUI() {
             reserveInput.value = `${constructionOfficeState.strategicReserve}`;
         }
     }
+    for (const key in constructionOfficeReserveSettingsElements.inputs) {
+        if (!Object.prototype.hasOwnProperty.call(constructionOfficeReserveSettingsElements.inputs, key)) continue;
+        const input = constructionOfficeReserveSettingsElements.inputs[key];
+        if (input && input !== document.activeElement) {
+            const value = key === 'default'
+                ? constructionOfficeState.strategicReserve
+                : (Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, key)
+                    ? constructionOfficeState.strategicReserveResources[key]
+                    : constructionOfficeState.strategicReserve);
+            input.dataset.constructionOfficeReserve = String(value);
+            input.value = String(value);
+        }
+    }
 }
 
 function setAutobuilderActive(active) {
@@ -427,22 +503,157 @@ function toggleAutobuilder() {
 }
 
 function setStrategicReserve(value) {
-    let val = parseFloat(value);
-    if (Number.isNaN(val)) {
-        val = 0;
+    constructionOfficeState.strategicReserve = normalizeConstructionOfficeReservePercent(value);
+}
+
+function setStrategicReserveForResource(key, value) {
+    const known = CONSTRUCTION_OFFICE_RESERVE_RESOURCES.some(option => option.key === key);
+    if (!known) return;
+    constructionOfficeState.strategicReserveResources[key] = normalizeConstructionOfficeReservePercent(value);
+}
+
+function closeConstructionOfficeReserveSettings() {
+    if (constructionOfficeReserveSettingsElements.overlay) {
+        constructionOfficeReserveSettingsElements.overlay.classList.remove('is-visible');
     }
-    val = Math.max(0, Math.min(100, val));
-    constructionOfficeState.strategicReserve = val;
+}
+
+function openConstructionOfficeReserveSettings() {
+    updateConstructionOfficeUI();
+    constructionOfficeReserveSettingsElements.overlay.classList.add('is-visible');
+}
+
+function createConstructionOfficeReserveSettingsWindow() {
+    const overlay = document.createElement('div');
+    overlay.classList.add('space-storage-settings-overlay');
+
+    const win = document.createElement('div');
+    win.classList.add('space-storage-settings-window', 'construction-office-reserve-window');
+
+    const header = document.createElement('div');
+    header.classList.add('space-storage-settings-header');
+    const title = document.createElement('div');
+    title.classList.add('space-storage-settings-title');
+    title.textContent = getConstructionOfficeText('ui.colony.constructionOffice.reserveSettingsTitle', 'Strategic Reserve');
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.classList.add('space-storage-settings-close');
+    close.textContent = getConstructionOfficeText('ui.colony.constructionOffice.close', 'X');
+    close.addEventListener('click', closeConstructionOfficeReserveSettings);
+    header.append(title, close);
+
+    const intro = document.createElement('div');
+    intro.classList.add('construction-office-reserve-intro');
+    intro.textContent = getConstructionOfficeText(
+        'ui.colony.constructionOffice.reserveSettingsIntro',
+        'Set the Construction Office reserve percentage for each resource.'
+    );
+
+    const grid = document.createElement('div');
+    grid.classList.add('construction-office-reserve-grid');
+    constructionOfficeReserveSettingsElements.inputs = {};
+
+    const createReserveRow = (labelText, inputId, value, onValue) => {
+        const row = document.createElement('div');
+        row.classList.add('space-storage-settings-row');
+
+        const label = document.createElement('label');
+        label.classList.add('space-storage-settings-label');
+        label.htmlFor = inputId;
+        label.textContent = labelText;
+
+        const inputWrap = document.createElement('div');
+        inputWrap.classList.add('construction-office-reserve-input-wrap');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = inputId;
+        input.classList.add('space-storage-settings-input');
+        input.dataset.constructionOfficeReserve = String(value);
+        input.value = input.dataset.constructionOfficeReserve;
+        wireStringNumberInput(input, {
+            datasetKey: 'constructionOfficeReserve',
+            parseValue: (inputValue) => normalizeConstructionOfficeReservePercent(parseFlexibleNumber(inputValue)),
+            formatValue: (inputValue) => String(inputValue),
+            onValue,
+        });
+        const percent = document.createElement('span');
+        percent.textContent = '%';
+        inputWrap.append(input, percent);
+        row.append(label, inputWrap);
+        return { row, input };
+    };
+
+    const defaultRow = createReserveRow(
+        getConstructionOfficeText('ui.colony.constructionOffice.globalReserve', 'Global default'),
+        'construction-office-reserve-default',
+        constructionOfficeState.strategicReserve,
+        (value) => {
+            setStrategicReserve(value);
+            updateConstructionOfficeUI();
+        }
+    );
+    defaultRow.row.classList.add('construction-office-reserve-default-row');
+    grid.appendChild(defaultRow.row);
+    constructionOfficeReserveSettingsElements.inputs.default = defaultRow.input;
+
+    CONSTRUCTION_OFFICE_RESERVE_RESOURCES.forEach(option => {
+        const reserveRow = createReserveRow(
+            getConstructionOfficeReserveResourceLabel(option),
+            `construction-office-reserve-${option.resource}`,
+            Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, option.key)
+                ? constructionOfficeState.strategicReserveResources[option.key]
+                : constructionOfficeState.strategicReserve,
+            (value) => {
+                setStrategicReserveForResource(option.key, value);
+            }
+        );
+        grid.appendChild(reserveRow.row);
+        constructionOfficeReserveSettingsElements.inputs[option.key] = reserveRow.input;
+    });
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.classList.add('space-storage-settings-confirm');
+    closeButton.textContent = getConstructionOfficeText('ui.colony.constructionOffice.done', 'Done');
+    closeButton.addEventListener('click', closeConstructionOfficeReserveSettings);
+
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) {
+            closeConstructionOfficeReserveSettings();
+        }
+    });
+
+    win.append(header, intro, grid, closeButton);
+    overlay.appendChild(win);
+    document.body.appendChild(overlay);
+    constructionOfficeReserveSettingsElements.overlay = overlay;
+}
+
+function ensureConstructionOfficeReserveSettingsWindow() {
+    if (!constructionOfficeReserveSettingsElements.overlay || !constructionOfficeReserveSettingsElements.overlay.isConnected) {
+        createConstructionOfficeReserveSettingsWindow();
+    }
 }
 
 function saveConstructionOfficeState() {
-    return { ...constructionOfficeState };
+    return {
+        ...constructionOfficeState,
+        strategicReserveResources: { ...constructionOfficeState.strategicReserveResources },
+    };
 }
 
 function loadConstructionOfficeState(state) {
     if (!state) return;
     setAutobuilderActive(state.autobuilderActive);
     setStrategicReserve(state.strategicReserve);
+    constructionOfficeState.strategicReserveResources = {};
+    if (state.strategicReserveResources && state.strategicReserveResources.constructor === Object) {
+        CONSTRUCTION_OFFICE_RESERVE_RESOURCES.forEach(option => {
+            if (Object.prototype.hasOwnProperty.call(state.strategicReserveResources, option.key)) {
+                setStrategicReserveForResource(option.key, state.strategicReserveResources[option.key]);
+            }
+        });
+    }
 }
 
 function captureConstructionOfficeSettings() {
@@ -512,9 +723,10 @@ function initializeConstructionOfficeUI() {
     reserveDiv.appendChild(reserveLabel);
 
     const reserveControlsDiv = document.createElement('div');
-    reserveControlsDiv.style.display = 'flex';
-    reserveControlsDiv.style.alignItems = 'flex-start';
+    reserveControlsDiv.style.display = 'grid';
+    reserveControlsDiv.style.alignItems = 'center';
     reserveControlsDiv.style.gap = '4px';
+    reserveControlsDiv.classList.add('construction-office-reserve-controls');
 
     const reserveInput = document.createElement('input');
     reserveInput.type = 'number';
@@ -527,9 +739,20 @@ function initializeConstructionOfficeUI() {
     });
     const percentSpan = document.createElement('span');
     percentSpan.textContent = '%';
+    const reserveSettingsButton = document.createElement('button');
+    reserveSettingsButton.type = 'button';
+    reserveSettingsButton.classList.add('construction-office-reserve-settings-button');
+    reserveSettingsButton.innerHTML = '&#9881;';
+    reserveSettingsButton.setAttribute('aria-label', getConstructionOfficeText('ui.colony.constructionOffice.reserveSettingsButton', 'Reserve settings'));
+    reserveSettingsButton.title = getConstructionOfficeText('ui.colony.constructionOffice.reserveSettingsButton', 'Reserve settings');
+    reserveSettingsButton.addEventListener('click', () => {
+        ensureConstructionOfficeReserveSettingsWindow();
+        openConstructionOfficeReserveSettings();
+    });
 
     reserveControlsDiv.appendChild(reserveInput);
     reserveControlsDiv.appendChild(percentSpan);
+    reserveControlsDiv.appendChild(reserveSettingsButton);
     reserveDiv.appendChild(reserveControlsDiv);
     body.appendChild(reserveDiv);
 
@@ -805,9 +1028,9 @@ function autoBuild(buildings, delta = 0) {
         });
 
         // Step 3: Efficiently allocate builds
+        const reserve = getConstructionOfficeReserveSettings();
         buildableBuildings.forEach(({ building, requiredAmount, maxMode }) => {
             let buildCount = 0;
-            const reserve = constructionOfficeState.strategicReserve;
             let extraReserves = normalReserve;
             if (building.autoBuildPriority > 0) {
                 extraReserves = null;
@@ -834,8 +1057,7 @@ function autoBuild(buildings, delta = 0) {
 
             if (maxMode && buildCount > 0 && buildCount < desiredAmount) {
                 building.autoBuildPartial = true;
-                const reservePercent = constructionOfficeState.strategicReserve;
-                markAutoBuildShortages(building, desiredAmount, reservePercent, extraReserves);
+                markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
             }
 
             if (buildCount > 0) {
@@ -947,6 +1169,8 @@ if (typeof module !== 'undefined' && module.exports) {
         setAutobuilderActive,
         toggleAutobuilder,
         setStrategicReserve,
+        setStrategicReserveForResource,
+        getConstructionOfficeReserveSettings,
         saveConstructionOfficeState,
         loadConstructionOfficeState,
         captureConstructionOfficeSettings,
@@ -967,6 +1191,8 @@ if (typeof window !== 'undefined') {
     window.setAutobuilderActive = setAutobuilderActive;
     window.toggleAutobuilder = toggleAutobuilder;
     window.setStrategicReserve = setStrategicReserve;
+    window.setStrategicReserveForResource = setStrategicReserveForResource;
+    window.getConstructionOfficeReserveSettings = getConstructionOfficeReserveSettings;
     window.saveConstructionOfficeState = saveConstructionOfficeState;
     window.loadConstructionOfficeState = loadConstructionOfficeState;
     window.captureConstructionOfficeSettings = captureConstructionOfficeSettings;

@@ -685,6 +685,10 @@
     color: #f8f9fa;
 }
 
+.dark-mode .construction-office-reserve-default-row {
+    border-bottom-color: #374151;
+}
+
 .dark-mode .save-slots table {
     border-color: #444;
 }
