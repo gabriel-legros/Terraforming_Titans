@@ -22,6 +22,7 @@
       this.gasOverlayMaterial = null;
       this.gasOverlayTexture = null;
       this.gasOverlayTextureKey = '';
+      this.gasOverlayTextures = null;
       this.ringShadeMesh = null;
       this.ringShadeMaterial = null;
       this.ringShadeOffset = 0;

@@ -343,10 +343,42 @@
         true
       )
       : new THREE.SphereGeometry(1.055, 32, 32);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        baseMap: { value: null },
+        methaneMap: { value: null },
+        ammoniaMap: { value: null },
+        methaneMix: { value: 0 },
+        ammoniaMix: { value: 0 },
+        overlayOpacity: { value: 0 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D baseMap;
+        uniform sampler2D methaneMap;
+        uniform sampler2D ammoniaMap;
+        uniform float methaneMix;
+        uniform float ammoniaMix;
+        uniform float overlayOpacity;
+        varying vec2 vUv;
+
+        void main() {
+          vec4 baseColor = texture2D(baseMap, vUv);
+          vec4 methaneColor = texture2D(methaneMap, vUv);
+          vec4 ammoniaColor = texture2D(ammoniaMap, vUv);
+          vec4 gasColor = mix(baseColor, methaneColor, clamp(methaneMix, 0.0, 1.0));
+          gasColor = mix(gasColor, ammoniaColor, clamp(ammoniaMix, 0.0, 1.0));
+          float alpha = max(baseColor.a, max(methaneColor.a * methaneMix, ammoniaColor.a * ammoniaMix));
+          gl_FragColor = vec4(gasColor.rgb, alpha * overlayOpacity);
+        }
+      `,
       transparent: true,
-      opacity: 0,
       depthWrite: false,
       depthTest: true,
       blending: THREE.NormalBlending,
@@ -384,29 +416,54 @@
     material.needsUpdate = true;
   };
 
-  PlanetVisualizer.prototype.ensureGasOverlayTexture = function ensureGasOverlayTexture(state) {
+  PlanetVisualizer.prototype.ensureGasOverlayTextures = function ensureGasOverlayTextures() {
     const material = this.gasOverlayMaterial;
     if (!material) return;
 
     const { w, h } = this.getSurfaceTextureSize();
-    const textureKey = [
-      `${w}x${h}`,
-      state.hydrogenStrength.toFixed(3),
-      state.methaneStrength.toFixed(3),
-      state.ammoniaStrength.toFixed(3),
-      state.overlayStrength.toFixed(3),
-    ].join('|');
-    if (this.gasOverlayTexture && this.gasOverlayTextureKey === textureKey) {
+    const seed = this.hashSeedFromPlanet();
+    const textureKey = `${w}x${h}|${seed.x.toFixed(6)}|${seed.y.toFixed(6)}`;
+    if (this.gasOverlayTextures && this.gasOverlayTextureKey === textureKey) {
       return;
     }
 
-    const texture = this.generateGasOverlayTexture(w, h, state);
-    if (this.gasOverlayTexture && this.gasOverlayTexture.dispose) {
-      this.gasOverlayTexture.dispose();
+    if (this.gasOverlayTextures) {
+      for (const key in this.gasOverlayTextures) {
+        const texture = this.gasOverlayTextures[key];
+        if (texture && texture.dispose) {
+          texture.dispose();
+        }
+      }
     }
-    this.gasOverlayTexture = texture;
+
+    const baseState = {
+      overlayStrength: 1,
+      hydrogenStrength: 1,
+      methaneStrength: 0,
+      ammoniaStrength: 0,
+    };
+    const methaneState = {
+      overlayStrength: 1,
+      hydrogenStrength: 1,
+      methaneStrength: 1,
+      ammoniaStrength: 0,
+    };
+    const ammoniaState = {
+      overlayStrength: 1,
+      hydrogenStrength: 1,
+      methaneStrength: 0,
+      ammoniaStrength: 1,
+    };
+    this.gasOverlayTextures = {
+      base: this.generateGasOverlayTexture(w, h, baseState),
+      methane: this.generateGasOverlayTexture(w, h, methaneState),
+      ammonia: this.generateGasOverlayTexture(w, h, ammoniaState),
+    };
+    this.gasOverlayTexture = this.gasOverlayTextures.base;
     this.gasOverlayTextureKey = textureKey;
-    material.map = texture;
+    material.uniforms.baseMap.value = this.gasOverlayTextures.base;
+    material.uniforms.methaneMap.value = this.gasOverlayTextures.methane;
+    material.uniforms.ammoniaMap.value = this.gasOverlayTextures.ammonia;
     material.needsUpdate = true;
   };
 
@@ -435,13 +492,15 @@
     const state = this.getGasGiantVisualState();
     if (state.overlayStrength <= 0) {
       mesh.visible = false;
-      material.opacity = 0;
+      material.uniforms.overlayOpacity.value = 0;
       return;
     }
 
-    this.ensureGasOverlayTexture(state);
+    this.ensureGasOverlayTextures();
     mesh.visible = true;
-    material.opacity = clamp01(smoothstep(0.12, 0.7, state.overlayStrength) * 1.16);
+    material.uniforms.methaneMix.value = state.methaneStrength;
+    material.uniforms.ammoniaMix.value = state.ammoniaStrength;
+    material.uniforms.overlayOpacity.value = clamp01(smoothstep(0.12, 0.7, state.overlayStrength) * 1.16);
   };
 
   PlanetVisualizer.prototype.buildZoneRowIndex = function buildZoneRowIndex(h) {
