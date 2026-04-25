@@ -3008,6 +3008,7 @@ setLanguageData({
         shipMaxLabel: 'Max',
         shipPercentPopulation: '% Population',
         shipPercentWorkers: '% Workers',
+        shipPercentGeometricLand: '% Geometric Land',
         shipReleaseIfDisabled: 'Release if disabled',
         shipNoProjectsAvailable: 'No projects available',
         buildingsAutomationTitle: 'Buildings Automation',

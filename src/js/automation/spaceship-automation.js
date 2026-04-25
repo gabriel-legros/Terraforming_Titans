@@ -345,6 +345,9 @@ class SpaceshipAutomation {
     } else if (mode === 'workers') {
       const workers = resources.colony?.workers?.cap || 0;
       baseMax = workers * (entry.max || 0) / 100;
+    } else if (mode === 'geometricLand') {
+      const geometricLand = resolveWorldGeometricLand(terraforming, resources.surface.land);
+      baseMax = geometricLand * (entry.max || 0) / 100;
     }
     const boundedMax = Number.isFinite(baseMax) && baseMax > 0 ? baseMax : Infinity;
     if (!Number.isFinite(boundedMax)) {

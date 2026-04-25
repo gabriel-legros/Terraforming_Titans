@@ -253,6 +253,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - HazardManager now skips neutral `applyHazardEffects` channels, tracks previously applied hazard channels, and performs one-time hazard effect cleanup/reapply on transitions so stale hazard effects are removed without per-tick neutral reapplication.
 - Multiple automation systems expanded:
   - Ship automation reorder/limits/resource disposal support
+  - Ship automation per-target caps support absolute ship counts, `% Population`, `% Workers`, and `% Geometric Land` limits.
   - Building preset combinations and travel application options
   - Project automation presets/combinations (non-story projects), with per-project control-only save/load and travel application options
   - Colony automation presets/combinations mirror building automation for colony buildings, colony sliders, Construction Office, Nanocolony, and Orbitals, with autobuild available only for colony-building targets and journal sidebar deploy shortcuts for presets/combinations
