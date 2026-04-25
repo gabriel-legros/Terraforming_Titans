@@ -80,8 +80,8 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
     return fullCost;
   }
 
-  isRelevantToCurrentPlanet() {
-    return spaceManager.currentPlanetKey === 'zeus';
+  isRelevantToCurrentPlanet(currentPlanetKey, planetParameters) {
+    return currentPlanetKey === 'zeus' || planetParameters.classification?.archetype === 'jupiter-like';
   }
 
   applyArtificialSkyCompletionEffects() {}

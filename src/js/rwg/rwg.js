@@ -248,6 +248,7 @@ globalThis.RWG_WORLD_TYPES = {
   "rogue": { displayName: "Rogue" },
   "ammonia-rich": { displayName: "Ammonia-rich" },
   "molten": { displayName: "Molten" },
+  "jupiter-like": { displayName: "Jupiter-like" },
 };
 const RWG_WORLD_TYPES = globalThis.RWG_WORLD_TYPES;
 
@@ -267,6 +268,7 @@ const RWG_TYPE_BASE_COLORS = {
   "chthonian": "#3f3f46",
   "venus-like": "#cdb675",
   "molten": "#a64a1e",
+  "jupiter-like": "#c28a52",
   "rogue": "#193347",
   "ammonia-rich": "#7a9b6b",
 };
@@ -426,7 +428,7 @@ const DEFAULT_PARAMS = {
       veryColdFluxWm2: [10, 100]
     },
     moonChance: { thresholdAU: 3, chance: 0.35 },
-    moonTypeBlacklist: ["super-earth", "chthonian", "molten"],
+    moonTypeBlacklist: ["super-earth", "chthonian", "molten", "jupiter-like"],
     typeOrbitLocks: {
       "icy-moon": {
         excludedPresets: ["very-hot", "hot"]
@@ -452,6 +454,9 @@ const DEFAULT_PARAMS = {
     ],
     geothermalBoostRange: [0.95, 1.6]
   },
+  jupiterLike: {
+    coreHeatFluxRangeWm2: [1_500_000, 7_500_000]
+  },
   classification: {
     typeAlbedo: {
       "venus-like": 0.15, "mars-like": 0.25, "cold-desert": 0.5,
@@ -461,6 +466,7 @@ const DEFAULT_PARAMS = {
       "super-earth": 0.30,
       "chthonian": 0.30,
       "molten": 0.07,
+      "jupiter-like": 0.48,
       "rogue": 0.40,
       "ammonia-rich": 0.36,
     },
@@ -476,6 +482,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": [0.6, 1.2],
       "super-earth": [1.4, 2],
       "chthonian": [2, 4],
+      "jupiter-like": [7.5, 12.5],
       "molten": [0.45, 0.95],
       "rogue": [0.7, 1.3],
       "ammonia-rich": [0.6, 1.3]
@@ -487,6 +494,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": [0.80, 1.05],
       "super-earth": [0.90, 1.30],
       "chthonian": [0.90, 1.30],
+      "jupiter-like": [0.16, 0.35],
       "molten": [0.95, 1.20],
       "rogue": [0.85, 1.15],
       "ammonia-rich": [0.85, 1.15]
@@ -537,6 +545,16 @@ const DEFAULT_PARAMS = {
           sulfuricAcid: 0.05
         }
       },
+      "jupiter-like": {
+        pressureBar: 100000,
+        mix: {
+          hydrogen: 0.965,
+          inertGas: 0.02,
+          atmosphericMethane: 0.006,
+          atmosphericAmmonia: 0.005,
+          atmosphericWater: 0.004
+        }
+      },
       "rogue": {
         pressureBar: 0.8,
         mix: {
@@ -566,6 +584,7 @@ const DEFAULT_PARAMS = {
       "super-earth": [0.7, 2.2],
       "chthonian": [0.7, 2.2],
       "molten": [0.5, 6.0],
+      "jupiter-like": [0.65, 1.35],
       "rogue": [0.6, 1.4],
       "ammonia-rich": [0.7, 1.3],
     }
@@ -577,6 +596,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": 1e13, "super-earth": 2e15,
       "chthonian": 2e15,
       "molten": 8e13,
+      "jupiter-like": 6e12,
       "rogue": 4e16,
       "ammonia-rich": 2e14,
     },
@@ -585,11 +605,16 @@ const DEFAULT_PARAMS = {
       "carbon-planet": 5e14,
       "desiccated-desert": 0, "super-earth": 0,
       "chthonian": 0,
+      "jupiter-like": 8e17,
       "rogue": 8e15,
       "ammonia-rich": 8e13,
     },
     NH3_total: {
-      "ammonia-rich": 5e15
+      "ammonia-rich": 5e15,
+      "jupiter-like": 6e17
+    },
+    H2_total: {
+      "jupiter-like": 1.4e22
     },
     referenceLandHa: 14_400_000_000
   },
@@ -603,6 +628,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": 0.8, "super-earth": 0.2,
       "chthonian": 0.2,
       "molten": 0.03,
+      "jupiter-like": 0.0,
       "rogue": 2.5,
       "ammonia-rich": 1.2,
     },
@@ -629,6 +655,7 @@ const DEFAULT_PARAMS = {
         "icy-moon": 0.60,
         "titan-like": 0.50,
         "molten": 1.15,
+        "jupiter-like": 0.00,
         "rogue": 1.10,
         default: 1.00
       },
@@ -669,6 +696,7 @@ const DEFAULT_PARAMS = {
         "chthonian": 0.60,
         "carbon-planet": 0.35,
         "molten": 1.00,
+        "jupiter-like": 0.00,
         "rogue": 0.45,
 
         // These only get geothermal if tides push them over threshold
@@ -696,6 +724,7 @@ const DEFAULT_PARAMS = {
       "super-earth": 0.35,
       "chthonian": 0.35,
       "molten": 0.08,
+      "jupiter-like": 0.75,
       "rogue": 0.20,
       "ammonia-rich": 0.12,
     },
@@ -1048,6 +1077,11 @@ function sampleMoltenCoreHeatFlux(rng, bulk, params) {
   return Math.round(randRange(rng, selected.range[0], selected.range[1]) * radiusScale);
 }
 
+function sampleJupiterLikeCoreHeatFlux(rng, params) {
+  const range = params.jupiterLike?.coreHeatFluxRangeWm2 || [1_500_000, 7_500_000];
+  return Math.round(randRange(rng, range[0], range[1]));
+}
+
 // ===================== Naming =====================
 function starName(seed, params) {
   const rng = mulberry32(seed ^ 0x9e3779b9);
@@ -1235,7 +1269,7 @@ function buildVolatiles(archetype, temperatureK, landHa, params, atmosphere, gra
   const surface = {};
   const surfaceKeys = [
     'land', 'liquidWater', 'ice', 'buriedIce',
-    'liquidCO2', 'dryIce', 'buriedDryIce',
+    'liquidCO2', 'dryIce', 'buriedDryIce', 'liquidHydrogen',
     'liquidMethane', 'hydrocarbonIce', 'buriedHydrocarbonIce',
     'liquidAmmonia', 'ammoniaIce', 'buriedAmmoniaIce',
     'liquidOxygen', 'oxygenIce', 'buriedOxygenIce',
@@ -1254,6 +1288,7 @@ function buildVolatiles(archetype, temperatureK, landHa, params, atmosphere, gra
   const waterTotal = (params.volatiles.H2O_total[archetype] ?? 5e14) * landScale;
   const methaneTotal = (params.volatiles.CH4_total[archetype] ?? 0) * landScale;
   const ammoniaTotal = (params.volatiles.NH3_total[archetype] ?? 0) * landScale;
+  const hydrogenTotal = (params.volatiles.H2_total?.[archetype] ?? 0) * landScale;
   const totalAtmosphereMass = sumAtmosphericMass(atmosphere);
   const totalPressurePa = calcAtmPressure
     ? calcAtmPressure(totalAtmosphereMass, gravity, radius_km)
@@ -1276,6 +1311,10 @@ function buildVolatiles(archetype, temperatureK, landHa, params, atmosphere, gra
     } else {
       surface.liquidAmmonia.initialValue = ammoniaTotal;
     }
+  }
+  if (hydrogenTotal > 0) {
+    surface.liquidHydrogen.initialValue = hydrogenTotal;
+    surface.liquidHydrogen.unlocked = true;
   }
   return surface;
 }
@@ -1555,7 +1594,9 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   }
   let type = classification.type;
   const bulk = sampleBulk(rng, type, params);
-  const coreHeatFlux = type === "molten" ? sampleMoltenCoreHeatFlux(mulberry32(seed ^ 0xC011D00D), bulk, params) : 0;
+  const coreHeatFlux = type === "molten"
+    ? sampleMoltenCoreHeatFlux(mulberry32(seed ^ 0xC011D00D), bulk, params)
+    : (type === "jupiter-like" ? sampleJupiterLikeCoreHeatFlux(mulberry32(seed ^ 0x1A971E), params) : 0);
   const landHa = surfaceAreaHa(bulk.radius_km);
   const { areaTotal } = depositsFromLandHa(landHa, params);
   const starLuminosity = Number.isFinite(star.luminositySolar) ? star.luminositySolar : 1;
@@ -1685,7 +1726,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const geoRng = mulberry32(seed ^ 0x0A12);
   const oreCaps = computeOreCaps(areaTotal, type, oreRng, params);
   const geoCaps = computeGeothermalCaps(type, areaTotal, isMoon, geoRng, params, coreHeatFlux);
-  const moltenOreDisabled = type === "molten";
+  const moltenOreDisabled = type === "molten" || type === "jupiter-like";
   const moltenGeothermalAmount = type === "molten" ? Math.round(landHa) : null;
 
   const underground = {
@@ -1778,15 +1819,31 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const baseColor = pickBaseColorForType(classification?.type || type);
   const sectorLabel = selectSectorLabel(seed) || DEFAULT_SECTOR_LABEL;
   const distanceFromSun = isStarlessRogueWorld ? 0 : safeAU;
-  const effects = type === 'molten'
-    ? [
-        {
-          target: 'building',
-          targetId: 'foundry',
-          type: 'enable'
-        }
-      ]
-    : [];
+  const effects = [];
+  if (type === 'molten') {
+    effects.push({
+      target: 'building',
+      targetId: 'foundry',
+      type: 'enable'
+    });
+  }
+  if (type === 'jupiter-like') {
+    effects.push(
+      {
+        target: 'project',
+        targetId: 'aerostatStructuralNet',
+        type: 'enable'
+      },
+      {
+        target: 'project',
+        targetId: 'overpopulationOneillCylinders',
+        type: 'enable'
+      }
+    );
+  }
+  const specialAttributes = type === 'jupiter-like'
+    ? { hasSand: false, dynamicMass: true }
+    : undefined;
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -1798,6 +1855,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
+    ...(specialAttributes ? { specialAttributes } : {}),
     celestialParameters: {
       distanceFromSun,
       gravity: bulk.gravity,
@@ -1917,7 +1975,7 @@ class RwgManager extends EffectableEntity {
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
     this.enableDynamicMass = false;
     this.lockedOrbits = new Set(["very-hot", "hot"]);
-    this.lockedTypes = new Set(["venus-like", "molten", "rogue", "ammonia-rich"]);
+    this.lockedTypes = new Set(["venus-like", "molten", "rogue", "ammonia-rich", "jupiter-like"]);
     this.lockedFeatures = new Set(['hazards', 'dominions']);
     this.lockedHazards = new Set(['hazardousBiomass', 'hazardousMachinery', 'garbage', 'kessler', 'pulsar']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
@@ -1945,7 +2003,7 @@ class RwgManager extends EffectableEntity {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
       : ["mars-like", "cold-desert", "titan-like", "venus-like",
-        "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian", "molten"];
+        "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian", "molten", "jupiter-like"];
     return base.filter((t) => !this.lockedTypes.has(t));
   }
 

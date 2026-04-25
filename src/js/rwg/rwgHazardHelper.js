@@ -442,21 +442,31 @@
     const zoneKeys = Array.from(new Set(zoneKeysSource));
     const zoneCount = zoneKeys.length || 1;
 
-    const radiusKm = override.celestialParameters && Number.isFinite(override.celestialParameters.radius)
+    const terraRadiusKm = terra && terra.celestialParameters && Number.isFinite(terra.celestialParameters.radius)
+      ? terra.celestialParameters.radius
+      : 0;
+    const overrideRadiusKm = override.celestialParameters && Number.isFinite(override.celestialParameters.radius)
       ? override.celestialParameters.radius
-      : (terra && terra.celestialParameters && Number.isFinite(terra.celestialParameters.radius)
-        ? terra.celestialParameters.radius
-        : 0);
-    const derivedLandFromRadius = radiusKm > 0 ? (4 * Math.PI * radiusKm * radiusKm * 100) : 0;
-    const landCandidates = [
+      : 0;
+    const derivedLandFromTerraformingRadius = terraRadiusKm > 0 ? (4 * Math.PI * terraRadiusKm * terraRadiusKm * 100) : 0;
+    const derivedLandFromOverrideRadius = overrideRadiusKm > 0 ? (4 * Math.PI * overrideRadiusKm * overrideRadiusKm * 100) : 0;
+    const dynamicMassWorld = override.specialAttributes && override.specialAttributes.dynamicMass === true;
+    const baseLandCandidates = [
       terra ? terra.baseLand : null,
       override.celestialParameters ? override.celestialParameters.baseLand : null,
       terra ? terra.initialLand : null,
       override.resources && override.resources.surface && override.resources.surface.land
         ? (override.resources.surface.land.baseLand || override.resources.surface.land.initialValue)
         : null,
-      derivedLandFromRadius,
+      derivedLandFromOverrideRadius,
+      derivedLandFromTerraformingRadius,
     ];
+    const dynamicLandCandidates = [
+      derivedLandFromTerraformingRadius,
+      derivedLandFromOverrideRadius,
+      ...baseLandCandidates
+    ];
+    const landCandidates = dynamicMassWorld ? dynamicLandCandidates : baseLandCandidates;
     let landArea = 0;
     for (let index = 0; index < landCandidates.length; index += 1) {
       const candidate = landCandidates[index];

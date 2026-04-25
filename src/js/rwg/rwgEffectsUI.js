@@ -170,6 +170,12 @@ function _computeRWGEffectsSummary() {
         const eachPct = (each * 100).toFixed(0);
         descr = descr || `Maintenance divided by (${eachPct}% each)`;
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
+      } else if (eff.type === 'globalCostReduction') {
+        const each = eff.factor ?? 0.01;
+        const divisor = 1 + each * Math.sqrt(Math.max(0, effectiveCount));
+        const eachPct = (each * 100).toFixed(0);
+        descr = descr || `Building and colony construction cost divided by (1+${eachPct}% × sqrt(N))`;
+        display = divisor > 0 ? `/${divisor.toFixed(3)}` : '—';
       } else if (eff.type === 'resourceCostMultiplier') {
         const divisor = raw > 0 ? 1 / raw : 0;
         const what = RWG_BUILDING_OUTPUT[eff.targetId] || (eff.targetId || 'Cost');

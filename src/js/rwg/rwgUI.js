@@ -516,7 +516,7 @@ function applyDominionSelection(res) {
 function applyDynamicMassSelection(res, enabled) {
   const override = res.override || (res.override = {});
   const special = { ...(override.specialAttributes || {}) };
-  special.dynamicMass = enabled === true;
+  special.dynamicMass = res.archetype === 'jupiter-like' || enabled === true;
   override.specialAttributes = special;
   res.merged.specialAttributes = {
     ...(res.merged.specialAttributes || {}),
@@ -654,7 +654,8 @@ function refreshTypeSelect() {
     'venus-like',
     'rogue',
     'ammonia-rich',
-    'molten'
+    'molten',
+    'jupiter-like'
   ];
   const types = [];
   baseOrder.forEach((t) => { if (!types.includes(t) && meta[t]) types.push(t); });
@@ -1623,6 +1624,7 @@ function renderSurfaceResources(surface) {
   Object.values(resourcePhaseGroups).forEach((group) => {
     keys.push(group.surfaceKeys.liquid, group.surfaceKeys.ice);
   });
+  keys.push('liquidHydrogen');
   const defaults = defaultPlanetResources?.surface || {};
   const seen = new Set();
   const rows = [];

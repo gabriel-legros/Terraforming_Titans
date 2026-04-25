@@ -495,6 +495,7 @@ progressZeus.chapters.push(
     ],
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'zeus', value: true },
+      { target: 'rwgManager', type: 'unlockType', targetId: 'jupiter-like' },
       {
         target: 'artificialManager',
         type: 'setFleetCapacityWorldCap',

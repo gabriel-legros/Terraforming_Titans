@@ -179,6 +179,7 @@ function normalizeHazardousMachineryParameters(parameters = {}) {
   return {
     initialCoverage: clampRatio(source.initialCoverage ?? 1),
     maxCoverageBase: clampRatio(source.maxCoverageBase ?? 1),
+    targetCoverage: Number.isFinite(source.targetCoverage) ? clampRatio(source.targetCoverage) : null,
     waterCoveragePenalty: Math.max(0, source.waterCoveragePenalty ?? 0.5),
     baseGrowth: normalizeBaseGrowthEntry(source.baseGrowth),
     invasivenessPreference: normalizeInvasivenessPreference(source),
@@ -260,7 +261,10 @@ class HazardousMachineryHazard {
   getMaxCoverageShare(terraforming, parameters) {
     const base = clampRatio(parameters?.maxCoverageBase ?? 1);
     const waterCoverage = this.getWaterCoverage(terraforming);
-    return clampRatio(base - waterCoverage * (parameters?.waterCoveragePenalty ?? 0.5));
+    const waterLimitedShare = clampRatio(base - waterCoverage * (parameters?.waterCoveragePenalty ?? 0.5));
+    return Number.isFinite(parameters?.targetCoverage)
+      ? Math.min(waterLimitedShare, clampRatio(parameters.targetCoverage))
+      : waterLimitedShare;
   }
 
   getFullCoverageAmount(terraforming) {

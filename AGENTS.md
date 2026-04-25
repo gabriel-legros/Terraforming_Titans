@@ -163,6 +163,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Special seeds can define world-specific effects (project/building flags), are replayable by seed, and surface effect descriptions in RWG world details.
 - RWG `Dynamic Mass` is no longer available by default; show that control only when `rwgManager` has boolean flag `enableDynamicMass`, and hide the RWG settings card when none of its controls are unlocked.
 - Poseidon chapter `poseidon.38.5` unlocks RWG type `molten`: a core-heat-driven world with randomized `coreHeatFlux` in the `150,000-300,000 W/m²` band set before radius scaling, strong geothermal identity, and terraforming rewards of `+5%` energy production each for Geothermal Generators, Fusion Reactors, and Superalloy Fusion Reactors.
+- Zeus chapter `zeus.45.16` unlocks RWG type `jupiter-like`: a gas-giant world with randomized Jupiter-scale radius, density, hydrogen atmosphere/liquid hydrogen envelope, core heat, dynamic mass enabled by default, enabled `Aerostat Structural Net` and `Overpopulation O'Neill Cylinders` projects, and a terraforming reward that divides building and colony construction cost by `1 + 0.01 * sqrt(n)`.
 
 ### Artificial Worlds
 - Managed via `ArtificialManager` (shell/ring/disk-ready architecture).
