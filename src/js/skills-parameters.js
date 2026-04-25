@@ -159,21 +159,6 @@ const skillParameters = {
     ],
     requires: ['pop_growth']
   },
-  nanotech_efficiency: {
-    id: 'nanotech_efficiency',
-    name: '',
-    description: '',
-    cost: 1,
-    maxRank: 5,
-    hiddenUntilRevealed: true,
-    effect: {
-      target: 'nanotechManager',
-      type: 'nanotechEfficiencyMultiplier',
-      baseValue: 0.2,
-      perRank: true
-    },
-    requires: []
-  },
   chemistry_mastery: {
     id: 'chemistry_mastery',
     name: '',
@@ -199,6 +184,22 @@ const skillParameters = {
     ],
     requires: []
   },
+  cloning_expertise: {
+    id: 'cloning_expertise',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effect: {
+      target: 'building',
+      targetId: 'cloningFacility',
+      type: 'productionMultiplier',
+      baseValue: 0.4,
+      perRank: true
+    },
+    requires: []
+  },
   optimized_heat_sinks: {
     id: 'optimized_heat_sinks',
     name: '',
@@ -215,18 +216,17 @@ const skillParameters = {
     },
     requires: []
   },
-  cloning_expertise: {
-    id: 'cloning_expertise',
+  nanotech_efficiency: {
+    id: 'nanotech_efficiency',
     name: '',
     description: '',
     cost: 1,
     maxRank: 5,
     hiddenUntilRevealed: true,
     effect: {
-      target: 'building',
-      targetId: 'cloningFacility',
-      type: 'productionMultiplier',
-      baseValue: 0.4,
+      target: 'nanotechManager',
+      type: 'nanotechEfficiencyMultiplier',
+      baseValue: 0.2,
       perRank: true
     },
     requires: []

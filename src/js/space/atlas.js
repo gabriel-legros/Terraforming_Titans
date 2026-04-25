@@ -1,4 +1,4 @@
-const ATLAS_FEATURED_SEED_KEYS = ['titania', 'hermes', 'therealposeidon', 'wolfysnightmare'];
+const ATLAS_FEATURED_SEED_KEYS = ['hermes', 'titania', 'therealposeidon', 'wolfysnightmare'];
 const ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD = 1000;
 
 function getAtlasSpecialSeedKey(source) {

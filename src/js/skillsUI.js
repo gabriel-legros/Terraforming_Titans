@@ -143,8 +143,8 @@ const skillLayout = {
     ship_efficiency: { row: 3, col: 2 },
     project_speed: { row: 2, col: 2 },
     life_design_points: { row: 3, col: 6 },
-    nanotech_efficiency: { row: 4, col: 0 },
-    optimized_heat_sinks: { row: 4, col: 2 },
+    optimized_heat_sinks: { row: 4, col: 0 },
+    nanotech_efficiency: { row: 4, col: 2 },
     cloning_expertise: { row: 4, col: 4 },
     chemistry_mastery: { row: 4, col: 6 }
 };

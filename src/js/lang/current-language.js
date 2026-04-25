@@ -3222,7 +3222,7 @@ setLanguageData({
     specialSeeds: {
       titania: {
         name: 'Titania',
-        difficulty: 'Hard',
+        difficulty: 'Hard+',
         effects: {
           dynamicMassLowGravity: 'Gravity is low, but planetary mass can be increased from additional import resource options and from surface resources.',
         },
@@ -3239,7 +3239,7 @@ setLanguageData({
       },
       hermes: {
         name: 'Hermes',
-        difficulty: 'Hard+',
+        difficulty: 'Hard',
         effects: {
           starProximityDisablesSystems: 'Space Mirror Facility, Space Mirrors, Hyperion Lanterns, and Tractor Beams are permanently disabled on this world due to star proximity.',
           calciteFactoriesDisabled: 'Calcite Factories are also disabled because HOPE is stubborn about certain things.',
