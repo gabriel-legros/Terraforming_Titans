@@ -405,6 +405,12 @@ class HazardousMachineryHazard {
     const tuned = this.normalize(currentPlanetParameters.hazards.hazardousMachinery);
     this.manager.parameters.hazardousMachinery = tuned;
     this.manager.lastSerializedParameters = JSON.stringify(this.manager.parameters);
+    const tunedResource = currentPlanetParameters.resources?.surface?.hazardousMachinery;
+    const resource = this.getResource();
+    if (resource && Number.isFinite(tunedResource?.initialValue)) {
+      resource.initialValue = Math.max(0, tunedResource.initialValue);
+      resource.value = resource.initialValue;
+    }
     return tuned;
   }
 
