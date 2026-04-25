@@ -4,6 +4,26 @@ let automationUIStale = true;
 const automationElements = {
   tab: null,
   content: null,
+  scriptAutomation: null,
+  scriptAutomationStatus: null,
+  scriptAutomationDescription: null,
+  scriptCollapseButton: null,
+  scriptPanelBody: null,
+  scriptMasterToggle: null,
+  scriptRunButton: null,
+  scriptPauseButton: null,
+  scriptStepButton: null,
+  scriptResetButton: null,
+  scriptAutoRestartToggle: null,
+  scriptStatusLine: null,
+  scriptSelect: null,
+  scriptNameInput: null,
+  scriptNewButton: null,
+  scriptDuplicateButton: null,
+  scriptDeleteButton: null,
+  scriptEnabledToggle: null,
+  scriptLinesContainer: null,
+  scriptAddLineButton: null,
   shipAssignment: null,
   shipAssignmentStatus: null,
   shipAssignmentDescription: null,
@@ -185,6 +205,66 @@ function cacheAutomationElements() {
   }
   if (!automationElements.content) {
     automationElements.content = document.getElementById('automation-hope');
+  }
+  if (!automationElements.scriptAutomation) {
+    automationElements.scriptAutomation = document.getElementById('automation-scripts');
+  }
+  if (!automationElements.scriptAutomationStatus) {
+    automationElements.scriptAutomationStatus = document.getElementById('automation-scripts-status');
+  }
+  if (!automationElements.scriptAutomationDescription) {
+    automationElements.scriptAutomationDescription = document.getElementById('automation-scripts-description');
+  }
+  if (!automationElements.scriptCollapseButton && automationElements.scriptAutomation) {
+    automationElements.scriptCollapseButton = automationElements.scriptAutomation.querySelector('.automation-collapse');
+  }
+  if (!automationElements.scriptPanelBody && automationElements.scriptAutomation) {
+    automationElements.scriptPanelBody = automationElements.scriptAutomation.querySelector('.automation-body');
+  }
+  if (!automationElements.scriptMasterToggle && automationElements.scriptAutomation) {
+    automationElements.scriptMasterToggle = automationElements.scriptAutomation.querySelector('.script-automation-master-toggle');
+  }
+  if (!automationElements.scriptRunButton && automationElements.scriptAutomation) {
+    automationElements.scriptRunButton = automationElements.scriptAutomation.querySelector('.script-automation-run');
+  }
+  if (!automationElements.scriptPauseButton && automationElements.scriptAutomation) {
+    automationElements.scriptPauseButton = automationElements.scriptAutomation.querySelector('.script-automation-pause');
+  }
+  if (!automationElements.scriptStepButton && automationElements.scriptAutomation) {
+    automationElements.scriptStepButton = automationElements.scriptAutomation.querySelector('.script-automation-step-once');
+  }
+  if (!automationElements.scriptResetButton && automationElements.scriptAutomation) {
+    automationElements.scriptResetButton = automationElements.scriptAutomation.querySelector('.script-automation-reset');
+  }
+  if (!automationElements.scriptAutoRestartToggle && automationElements.scriptAutomation) {
+    automationElements.scriptAutoRestartToggle = automationElements.scriptAutomation.querySelector('.script-automation-auto-restart-toggle');
+  }
+  if (!automationElements.scriptStatusLine && automationElements.scriptAutomation) {
+    automationElements.scriptStatusLine = automationElements.scriptAutomation.querySelector('.script-automation-status-line');
+  }
+  if (!automationElements.scriptSelect && automationElements.scriptAutomation) {
+    automationElements.scriptSelect = automationElements.scriptAutomation.querySelector('.script-automation-select');
+  }
+  if (!automationElements.scriptNameInput && automationElements.scriptAutomation) {
+    automationElements.scriptNameInput = automationElements.scriptAutomation.querySelector('.script-automation-name');
+  }
+  if (!automationElements.scriptNewButton && automationElements.scriptAutomation) {
+    automationElements.scriptNewButton = automationElements.scriptAutomation.querySelector('.script-automation-new');
+  }
+  if (!automationElements.scriptDuplicateButton && automationElements.scriptAutomation) {
+    automationElements.scriptDuplicateButton = automationElements.scriptAutomation.querySelector('.script-automation-duplicate');
+  }
+  if (!automationElements.scriptDeleteButton && automationElements.scriptAutomation) {
+    automationElements.scriptDeleteButton = automationElements.scriptAutomation.querySelector('.script-automation-delete');
+  }
+  if (!automationElements.scriptEnabledToggle && automationElements.scriptAutomation) {
+    automationElements.scriptEnabledToggle = automationElements.scriptAutomation.querySelector('.script-automation-script-toggle');
+  }
+  if (!automationElements.scriptLinesContainer && automationElements.scriptAutomation) {
+    automationElements.scriptLinesContainer = automationElements.scriptAutomation.querySelector('.script-automation-lines');
+  }
+  if (!automationElements.scriptAddLineButton && automationElements.scriptAutomation) {
+    automationElements.scriptAddLineButton = automationElements.scriptAutomation.querySelector('.script-automation-add-line');
   }
   if (!automationElements.shipAssignment) {
     automationElements.shipAssignment = document.getElementById('automation-ship-assignment');
@@ -1059,6 +1139,7 @@ function initializeAutomationUI() {
     return;
   }
   cacheAutomationElements();
+  buildScriptAutomationUI();
   buildAutomationShipUI();
   buildAutomationLifeUI();
   buildAutomationResearchUI();
@@ -1098,6 +1179,7 @@ function updateAutomationUI() {
   }
   automationUIStale = false;
   if (panelActive) {
+    updateScriptAutomationUI();
     updateShipAutomationUI();
     updateLifeAutomationUI();
     updateResearchAutomationUI();

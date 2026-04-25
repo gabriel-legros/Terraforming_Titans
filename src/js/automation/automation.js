@@ -45,6 +45,14 @@ try {
   ResearchAutomationRef = ResearchAutomationRef || require('./research-automation.js').ResearchAutomation;
 } catch (error) {}
 
+let ScriptAutomationRef;
+try {
+  ScriptAutomationRef = ScriptAutomation;
+} catch (error) {}
+try {
+  ScriptAutomationRef = ScriptAutomationRef || require('./script-automation.js').ScriptAutomation;
+} catch (error) {}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
@@ -55,7 +63,8 @@ class AutomationManager extends EffectableEntity {
       automationResearch: false,
       automationBuildings: false,
       automationProjects: false,
-      automationColony: false
+      automationColony: false,
+      automationScripts: false
     };
     this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef() : null;
     this.lifeAutomation = LifeAutomationRef ? new LifeAutomationRef() : null;
@@ -63,6 +72,7 @@ class AutomationManager extends EffectableEntity {
     this.projectsAutomation = ProjectAutomationRef ? new ProjectAutomationRef() : null;
     this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef() : null;
     this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef() : null;
+    this.scriptAutomation = ScriptAutomationRef ? new ScriptAutomationRef() : null;
   }
 
   enable() {
@@ -84,6 +94,12 @@ class AutomationManager extends EffectableEntity {
       this.setFeature('automationProjects', !!effect.value);
     } else if (effect.flagId === 'automationColony') {
       this.setFeature('automationColony', !!effect.value);
+    } else if (effect.flagId === 'automationScripts') {
+      this.setFeature('automationScripts', !!effect.value);
+      if (this.scriptAutomation) {
+        if (effect.value) this.scriptAutomation.enable();
+        else this.scriptAutomation.disable();
+      }
     }
   }
 
@@ -114,6 +130,11 @@ class AutomationManager extends EffectableEntity {
     this.setFeature('automationBuildings', this.isBooleanFlagSet('automationBuildings'));
     this.setFeature('automationProjects', this.isBooleanFlagSet('automationProjects'));
     this.setFeature('automationColony', this.isBooleanFlagSet('automationColony'));
+    this.setFeature('automationScripts', this.isBooleanFlagSet('automationScripts'));
+    if (this.scriptAutomation) {
+      if (this.hasFeature('automationScripts')) this.scriptAutomation.enable();
+      else this.scriptAutomation.disable();
+    }
     if (this.buildingsAutomation) {
       this.buildingsAutomation.recordCurrentlyAvailableBuildings();
     }
@@ -175,7 +196,8 @@ class AutomationManager extends EffectableEntity {
       buildingsAutomation: this.buildingsAutomation ? this.buildingsAutomation.saveState() : null,
       projectsAutomation: this.projectsAutomation ? this.projectsAutomation.saveState() : null,
       colonyAutomation: this.colonyAutomation ? this.colonyAutomation.saveState() : null,
-      researchAutomation: this.researchAutomation ? this.researchAutomation.saveState() : null
+      researchAutomation: this.researchAutomation ? this.researchAutomation.saveState() : null,
+      scriptAutomation: this.scriptAutomation ? this.scriptAutomation.saveState() : null
     };
   }
 
@@ -187,7 +209,8 @@ class AutomationManager extends EffectableEntity {
       automationResearch: false,
       automationBuildings: false,
       automationProjects: false,
-      automationColony: false
+      automationColony: false,
+      automationScripts: false
     }, data.features || {});
     const flags = Array.isArray(data.booleanFlags) ? data.booleanFlags : [];
     this.booleanFlags = new Set(flags);
@@ -209,10 +232,16 @@ class AutomationManager extends EffectableEntity {
     if (this.researchAutomation) {
       this.researchAutomation.loadState(data.researchAutomation || {}, legacyResearchState);
     }
+    if (this.scriptAutomation) {
+      this.scriptAutomation.loadState(data.scriptAutomation || {});
+    }
     this.reapplyEffects();
   }
 
   update(delta) {
+    if (this.scriptAutomation) {
+      this.scriptAutomation.update(delta || 0);
+    }
     if (this.spaceshipAutomation) {
       this.spaceshipAutomation.update(delta || 0);
     }

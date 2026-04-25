@@ -150,6 +150,8 @@
     <script src="src/js/automation/project-automation.js"></script>
     <script src="src/js/automation/colony-automation.js"></script>
     <script src="src/js/automation/research-automation.js"></script>
+    <script src="src/js/automation/script-variable-registry.js"></script>
+    <script src="src/js/automation/script-automation.js"></script>
     <script src="src/js/automation/automation.js"></script>
     <script src="src/js/projects.js"></script>
     <script src="src/js/projects/SpaceshipProject.js"></script>
@@ -255,6 +257,7 @@
     <script src="src/js/milestones.js"></script>
     <script src="src/js/milestonesUI.js"></script>
     <script src="src/js/automation/automationUI.js"></script>
+    <script src="src/js/automation/automationScriptUI.js"></script>
     <script src="src/js/automation/automationShipUI.js"></script>
     <script src="src/js/automation/automationLifeUI.js"></script>
     <script src="src/js/automation/automationResearchUI.js"></script>
@@ -675,6 +678,15 @@
                 </div>
                 <div id="automation-hope" class="hope-subtab-content hidden">
                     <div class="automation-container">
+                        <div class="automation-card hidden" id="automation-scripts">
+                            <div class="automation-card-header">
+                                <h3 data-i18n="ui.hope.automationCards.scriptAutomationTitle">Script Automation</h3>
+                                <span id="automation-scripts-status" class="automation-status" data-i18n="ui.common.locked">Locked</span>
+                            </div>
+                            <div id="automation-scripts-description" class="automation-description" data-i18n="ui.hope.automationCards.scriptAutomationDescription">
+                                Run structured automation scripts built from dropdown conditions and preset actions.
+                            </div>
+                        </div>
                         <div class="automation-card" id="automation-ship-assignment">
                             <div class="automation-card-header">
                                 <h3 data-i18n="ui.hope.automationCards.shipAssignmentTitle">Ship Assignment</h3>
