@@ -174,7 +174,7 @@ function _computeRWGEffectsSummary() {
         const each = eff.factor ?? 0.01;
         const divisor = 1 + each * Math.sqrt(Math.max(0, effectiveCount));
         const eachPct = (each * 100).toFixed(0);
-        descr = descr || `Building and colony construction cost divided by (1+${eachPct}% × sqrt(N))`;
+        descr = descr || `Building and colony construction cost divided by (1+${eachPct}% × √N)`;
         display = divisor > 0 ? `/${divisor.toFixed(3)}` : '—';
       } else if (eff.type === 'resourceCostMultiplier') {
         const divisor = raw > 0 ? 1 / raw : 0;

@@ -1,6 +1,15 @@
 const AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND = 5000;
 
 class AerostatStructuralNetProject extends ArtificialSkyProject {
+  constructor(config, name) {
+    super(config, name);
+    this.kesslerDebrisSize = null;
+  }
+
+  getKesslerSuccessChance() {
+    return 1;
+  }
+
   getCostRateLabel() {
     return t(
       'ui.projects.aerostatStructuralNet.costRateLabel',

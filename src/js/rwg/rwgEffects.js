@@ -168,7 +168,7 @@ const RWG_EFFECTS = {
       target: "global",
       type: "globalCostReduction",
       factor: 0.01,
-      description: "Building and colony construction cost divided by (1 + 1% × sqrt(N))",
+      description: "Building and colony construction cost divided by (1 + 1% × √N)",
       computeValue(count, def) {
         const f = def?.factor ?? 0.01;
         const divisor = 1 + f * Math.sqrt(Math.max(0, count));

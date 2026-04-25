@@ -1,4 +1,13 @@
 class ArtificialCrustProject extends ArtificialSkyProject {
+  constructor(config, name) {
+    super(config, name);
+    this.kesslerDebrisSize = null;
+  }
+
+  getKesslerSuccessChance() {
+    return 1;
+  }
+
   hasLiquidHydrogenBlocker() {
     return resources.surface.liquidHydrogen.value > 0;
   }
