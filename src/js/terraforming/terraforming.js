@@ -2806,37 +2806,13 @@ class Terraforming extends EffectableEntity{
     // [simulateAtmosphericFlow function removed - no longer needed with global atmosphere]
 
 // Distributes net changes from global resources (caused by buildings/other non-zonal processes)
-// proportionally into the zonal data structures before zonal simulation runs.
-distributeGlobalChangesToZones(deltaTime) {
+// proportionally into the zonal data structures after systems have finished accumulating changes.
+distributeSurfaceChangesToZones(surfaceChanges = {}) {
     const zones = getZones();
-    const secondsMultiplier = deltaTime / 1000;
     const configs = this.zonalSurfaceResourceConfigs;
 
     for (const config of configs) {
-        const globalRes = resources.surface[config.distributionKey];
-        const productionByType = globalRes.productionRateByType || {};
-        const consumptionByType = globalRes.consumptionRateByType || {};
-        let netExternalRate = 0;
-        for (const type in productionByType) {
-            if (type === 'terraforming') {
-                continue;
-            }
-            const entries = productionByType[type];
-            for (const source in entries) {
-                netExternalRate += entries[source] || 0;
-            }
-        }
-        for (const type in consumptionByType) {
-            if (type === 'terraforming') {
-                continue;
-            }
-            const entries = consumptionByType[type];
-            for (const source in entries) {
-                netExternalRate -= entries[source] || 0;
-            }
-        }
-
-        const netChangeAmount = netExternalRate * secondsMultiplier;
+        const netChangeAmount = surfaceChanges[config.name] || 0;
         if (Math.abs(netChangeAmount) < 1e-9) {
             continue;
         }
@@ -2948,6 +2924,40 @@ distributeGlobalChangesToZones(deltaTime) {
             this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentValue + zonalChange);
         }
     }
+}
+
+distributeGlobalChangesToZones(deltaTime) {
+    const surfaceChanges = {};
+    const secondsMultiplier = deltaTime / 1000;
+    const configs = this.zonalSurfaceResourceConfigs;
+
+    for (const config of configs) {
+        const globalRes = resources.surface[config.name];
+        const productionByType = globalRes.productionRateByType || {};
+        const consumptionByType = globalRes.consumptionRateByType || {};
+        let netExternalRate = 0;
+        for (const type in productionByType) {
+            if (type === 'terraforming') {
+                continue;
+            }
+            const entries = productionByType[type];
+            for (const source in entries) {
+                netExternalRate += entries[source] || 0;
+            }
+        }
+        for (const type in consumptionByType) {
+            if (type === 'terraforming') {
+                continue;
+            }
+            const entries = consumptionByType[type];
+            for (const source in entries) {
+                netExternalRate -= entries[source] || 0;
+            }
+        }
+        surfaceChanges[config.name] = netExternalRate * secondsMultiplier;
+    }
+
+    this.distributeSurfaceChangesToZones(surfaceChanges);
 }
 
 // Updates the global SURFACE resources object based on summed zonal surface/water data.

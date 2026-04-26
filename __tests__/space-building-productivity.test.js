@@ -78,6 +78,7 @@ function createResources(initial = {}) {
       funding: createResource('funding', 0),
       energy: createResource('energy', 0, true, initial.colonyEnergyCap || Infinity),
       workers: createResource('workers', 0),
+      water: createResource('water', 0, true, Infinity),
     },
     surface: {
       land: createResource('land', 0),
@@ -465,6 +466,7 @@ function setupHarness(initialStorage = {}) {
     zonalSurface: {},
     temperature: { zones: {} },
     updateResources: () => {},
+    distributeSurfaceChangesToZones: () => {},
     distributeGlobalChangesToZones: () => {},
   }, originalGlobals);
   setGlobal('lifeManager', null, originalGlobals);

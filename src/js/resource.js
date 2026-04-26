@@ -65,6 +65,43 @@ function collectWasteCleanupSlackByResource(buildings) {
   return cleanupSlack;
 }
 
+function routeColonyWaterOverflow(deltaTime, accumulatedChanges) {
+  const resource = resources.colony.water;
+  if (!resource.hasCap) {
+    return;
+  }
+
+  const previousValue = resource.value;
+  const newValue = resource.value + accumulatedChanges.colony.water;
+  const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+  const overflow = newValue > limit ? newValue - limit : 0;
+  if (overflow <= 0) {
+    return;
+  }
+
+  accumulatedChanges.colony.water -= overflow;
+
+  const zones = getZones();
+  const zoneTemp = zone => terraforming.temperature.zones[zone].value;
+  const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
+  const seconds = deltaTime / 1000;
+  const rate = seconds > 0 ? overflow / seconds : 0;
+  const allZonesHot = zones.every(zone => zoneTemp(zone) > 373.15);
+
+  if (allZonesHot) {
+    accumulatedChanges.atmospheric.atmosphericWater += overflow;
+    resources.atmospheric.atmosphericWater.modifyRate(rate, 'Overflow', 'overflow');
+  } else if (warmZones.length > 0) {
+    accumulatedChanges.surface.liquidWater += overflow;
+    resources.surface.liquidWater.modifyRate(rate, 'Overflow', 'overflow');
+  } else {
+    accumulatedChanges.surface.ice += overflow;
+    resources.surface.ice.modifyRate(rate, 'Overflow', 'overflow');
+  }
+
+  resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+}
+
 function accumulateSpecialPlanetaryMassChange(accumulatedSpecialChanges, source, amount) {
   if (!(amount > 0)) {
     return;
@@ -1587,7 +1624,6 @@ function produceResources(deltaTime, buildings) {
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
   if(terraforming) {
     terraforming.updateResources(deltaTime);
-    terraforming.distributeGlobalChangesToZones(deltaTime);
   }
 
   // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,
@@ -1625,6 +1661,11 @@ function produceResources(deltaTime, buildings) {
     spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
   }
 
+  if (terraforming) {
+    routeColonyWaterOverflow(deltaTime, accumulatedChanges);
+    terraforming.distributeSurfaceChangesToZones(accumulatedChanges.surface);
+  }
+
   const spaceStorageCapLimits = spaceStorageProject?.getResourceCapLimits?.() || null;
   const wasteCleanupSlack = collectWasteCleanupSlackByResource(buildings);
 
@@ -1660,52 +1701,6 @@ function produceResources(deltaTime, buildings) {
         resource.value = 0;
       }
 
-      if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalSurface) {
-        const zones = getZones();
-        const zoneTemp = zone => terraforming.temperature?.zones?.[zone]?.value ?? 0;
-        const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
-        const targetZones = warmZones.length > 0 ? warmZones : zones;
-        const warmArea = warmZones.reduce((sum, zone) => sum + getZonePercentage(zone), 0) || 1;
-        const seconds = deltaTime / 1000;
-        const rate = seconds > 0 ? overflow / seconds : 0;
-        const allZonesHot = zones.every(zone => zoneTemp(zone) > 373.15);
-        let liquidRate = 0;
-        let iceRate = 0;
-        let atmosphericRate = 0;
-
-        if (allZonesHot && resources.atmospheric?.atmosphericWater) {
-          resources.atmospheric.atmosphericWater.value += overflow;
-          atmosphericRate = rate;
-        } else {
-          targetZones.forEach(zone => {
-            const zoneArea = getZonePercentage(zone);
-            const proportion = warmZones.length > 0 ? zoneArea / warmArea : zoneArea; // ensure proportions sum to 1 among warm zones
-            const amount = overflow * proportion;
-
-            if (warmZones.length > 0) {
-              terraforming.zonalSurface[zone].liquidWater += amount;
-              resources.surface.liquidWater.value += amount;
-              liquidRate += seconds > 0 ? amount / seconds : 0;
-            } else {
-              terraforming.zonalSurface[zone].ice += amount;
-              resources.surface.ice.value += amount;
-              iceRate += seconds > 0 ? amount / seconds : 0;
-            }
-          });
-        }
-
-        // Record overflow separately for tooltip display without affecting totals
-        resource.modifyRate?.(-rate, 'Overflow (not summed)', 'overflow');
-        if (liquidRate > 0) {
-          resources.surface?.liquidWater?.modifyRate?.(liquidRate, 'Overflow', 'overflow');
-        }
-        if (iceRate > 0) {
-          resources.surface?.ice?.modifyRate?.(iceRate, 'Overflow', 'overflow');
-        }
-        if (atmosphericRate > 0) {
-          resources.atmospheric?.atmosphericWater?.modifyRate?.(atmosphericRate, 'Overflow', 'overflow');
-        }
-      }
     }
   }
 

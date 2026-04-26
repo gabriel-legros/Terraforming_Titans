@@ -43,7 +43,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       return disposeDynamicWorldPlanetaryMass(terraforming, amount);
     }
     resources[selection.category][selection.resource].decrease(amount);
-    this.removeZonalResource(selection.category, selection.resource, amount);
+    if (selection.category === 'surface') {
+      terraforming.distributeSurfaceChangesToZones({ [selection.resource]: -amount });
+    }
     return amount;
   }
 
@@ -1704,8 +1706,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         accumulatedChanges[entry.category][entry.resource] -= amount;
       } else {
         resources[entry.category][entry.resource].decrease(amount);
+        if (entry.category === 'surface') {
+          terraforming.distributeSurfaceChangesToZones({ [entry.resource]: -amount });
+        }
       }
-      this.removeZonalResource(entry.category, entry.resource, amount);
     }
 
     if (plan.gainFraction > 0) {

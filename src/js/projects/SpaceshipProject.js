@@ -913,68 +913,6 @@ class SpaceshipProject extends Project {
     return { container, key: descriptor.key };
   }
 
-  removeZonalResource(category, resource, amount) {
-    if (amount <= 0) {
-      return 0;
-    }
-
-    const descriptor = this.getZonalDisposalDescriptor(category, resource);
-    if (!descriptor) {
-      return 0;
-    }
-
-    const { container, key } = descriptor;
-    const zoneNames = getZones();
-
-    const entries = zoneNames.map(zone => ({
-      zone,
-      amount: container[zone]?.[key] || 0,
-      weight: getZonePercentage(zone),
-    }));
-
-    const totalAvailable = entries.reduce((sum, entry) => sum + entry.amount, 0);
-    const actual = Math.min(amount, totalAvailable);
-    if (actual <= 0) {
-      return 0;
-    }
-
-    const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0);
-    const weightTotal = totalWeight > 0 ? totalWeight : entries.length;
-    let remaining = actual;
-
-    entries.forEach(entry => {
-      const weight = totalWeight > 0 ? entry.weight : 1;
-      const target = actual * (weight / weightTotal);
-      const take = Math.min(target, entry.amount);
-      entry.take = take;
-      entry.remaining = entry.amount - take;
-      remaining -= take;
-    });
-
-    if (remaining > 1e-9) {
-      const remainingEntries = entries.filter(entry => entry.remaining > 0);
-      const remainingWeightTotal = totalWeight > 0
-        ? remainingEntries.reduce((sum, entry) => sum + entry.weight, 0)
-        : remainingEntries.length;
-      const fallbackWeightTotal = remainingWeightTotal > 0 ? remainingWeightTotal : remainingEntries.length;
-      remainingEntries.forEach((entry, index) => {
-        const isLast = index === remainingEntries.length - 1;
-        const weight = totalWeight > 0 ? entry.weight : 1;
-        let take = isLast ? remaining : remaining * (weight / fallbackWeightTotal);
-        take = Math.min(take, entry.remaining, remaining);
-        entry.take += take;
-        remaining -= take;
-      });
-    }
-
-    entries.forEach(entry => {
-      const zoneData = container[entry.zone];
-      zoneData[key] = Math.max(0, zoneData[key] - (entry.take || 0));
-    });
-
-    return actual;
-  }
-
   calculateSpaceshipAdjustedDuration() {
     if (!this.attributes.spaceMining && !this.attributes.spaceExport) return this.duration;
     const maxShipsForDurationReduction = 100;
@@ -1082,7 +1020,9 @@ class SpaceshipProject extends Project {
           disposalShortfall = disposalShortfall || entry.requestedAmount > 0;
         }
         resources[entry.category][entry.resource].decrease(actualAmount);
-        this.removeZonalResource(entry.category, entry.resource, actualAmount);
+        if (entry.category === 'surface' && actualAmount > 0) {
+          terraforming.distributeSurfaceChangesToZones({ [entry.resource]: -actualAmount });
+        }
         totalDisposed += actualAmount;
       }
       if (this.attributes.fundingGainAmount > 0 && totalDisposed > 0) {
@@ -1644,8 +1584,10 @@ class SpaceshipProject extends Project {
         accumulatedChanges[entry.category][entry.resource] -= amount;
       } else {
         resources[entry.category][entry.resource].decrease(amount);
+        if (entry.category === 'surface') {
+          terraforming.distributeSurfaceChangesToZones({ [entry.resource]: -amount });
+        }
       }
-      this.removeZonalResource(entry.category, entry.resource, amount);
     }
 
     if (plan.gainFraction > 0) {
