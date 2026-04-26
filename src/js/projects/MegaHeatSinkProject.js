@@ -167,7 +167,7 @@
           'Blocked'
         );
       } else if (Number.isFinite(fluxMitigation) && fluxMitigation > 0) {
-        elements.fluxMitigationValue.textContent = `${formatValue(fluxMitigation, false, fluxMitigation >= 100 ? 0 : 2)} W/m^2`;
+        elements.fluxMitigationValue.textContent = `${formatValue(fluxMitigation, false, fluxMitigation >= 100 ? 2 : 4)} W/m^2`;
       } else {
         elements.fluxMitigationValue.textContent = '0 W/m^2';
       }
