@@ -439,6 +439,8 @@ class Colony extends Building {
   }
 
   getUpgradeCost(upgradeCount = 1) {
+    const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
+    const upgradeCountNumber = Number(upgradeCountBigInt);
     const nextName = this.getNextTierName();
     if (!nextName) return null;
     const next = colonies[nextName];
@@ -446,17 +448,21 @@ class Colony extends Building {
 
     const nextCost = next.getEffectiveCost(1);
     const cost = {};
-    const amount = upgradeCount * 10;
-    const currentActive = this.activeNumber;
-    const currentCount = this.countNumber;
-    const activeToRemove = Math.min(amount, currentActive);
-    const inactiveToRemove = Math.min(amount - activeToRemove, currentCount - currentActive);
-    const removeCount = activeToRemove + inactiveToRemove;
-    const missingRatio = (amount - removeCount) / amount;
+    const amount = upgradeCountBigInt * 10n;
+    const activeToRemoveBigInt = this.active < amount ? this.active : amount;
+    const inactiveNeededBigInt = amount - activeToRemoveBigInt;
+    const inactiveAvailableBigInt = this.count > this.active ? this.count - this.active : 0n;
+    const inactiveToRemoveBigInt = inactiveAvailableBigInt < inactiveNeededBigInt ? inactiveAvailableBigInt : inactiveNeededBigInt;
+    const removeCountBigInt = activeToRemoveBigInt + inactiveToRemoveBigInt;
+    const amountNumber = Number(amount);
+    const activeToRemove = Number(activeToRemoveBigInt);
+    const inactiveToRemove = Number(inactiveToRemoveBigInt);
+    const removeCount = Number(removeCountBigInt);
+    const missingRatio = amountNumber > 0 ? (amountNumber - removeCount) / amountNumber : 0;
 
     for (const category in nextCost) {
       for (const resource in nextCost[category]) {
-        const baseAmount = nextCost[category][resource] * upgradeCount;
+        const baseAmount = nextCost[category][resource] * upgradeCountNumber;
         let value = 0;
         if (nextName === 't7_colony' && resource === 'superalloys') {
           value = baseAmount;
@@ -472,7 +478,7 @@ class Colony extends Building {
       }
     }
 
-    let landNeeded = upgradeCount * next.requiresLand + inactiveToRemove * (this.requiresLand || 0) - activeToRemove * (this.requiresLand || 0);
+    let landNeeded = upgradeCountNumber * next.requiresLand + inactiveToRemove * (this.requiresLand || 0) - activeToRemove * (this.requiresLand || 0);
     if (landNeeded > 0) {
       if (!cost.surface) cost.surface = {};
       cost.surface.land = landNeeded;
@@ -482,8 +488,9 @@ class Colony extends Building {
   }
 
   canAffordUpgrade(upgradeCount = 1) {
-    const maxUpgrades = Math.ceil(this.countNumber / 10);
-    if (maxUpgrades === 0 || upgradeCount > maxUpgrades) return false;
+    const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
+    const maxUpgrades = (this.count + 9n) / 10n;
+    if (maxUpgrades === 0n || upgradeCountBigInt > maxUpgrades) return false;
     const cost = this.getUpgradeCost(upgradeCount);
     if (!cost) return false;
     for (const category in cost) {
@@ -505,20 +512,23 @@ class Colony extends Building {
   }
 
   upgrade(upgradeCount = 1) {
+    const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
+    const upgradeCountNumber = Number(upgradeCountBigInt);
     const nextName = this.getNextTierName();
     if (!nextName) return false;
     const next = colonies[nextName];
     if (!next || !next.unlocked) return false;
     if (!this.canAffordUpgrade(upgradeCount)) return false;
     const cost = this.getUpgradeCost(upgradeCount);
-    const amount = upgradeCount * 10;
+    const amount = upgradeCountBigInt * 10n;
 
     // Determine how many colonies to remove, prioritizing active ones
-    const currentActive = this.activeNumber;
-    const currentCount = this.countNumber;
-    const activeToRemove = Math.min(amount, currentActive);
-    const inactiveToRemove = Math.min(amount - activeToRemove, currentCount - currentActive);
-    const removeCount = activeToRemove + inactiveToRemove;
+    const activeToRemoveBigInt = this.active < amount ? this.active : amount;
+    const inactiveNeededBigInt = amount - activeToRemoveBigInt;
+    const inactiveAvailableBigInt = this.count > this.active ? this.count - this.active : 0n;
+    const inactiveToRemoveBigInt = inactiveAvailableBigInt < inactiveNeededBigInt ? inactiveAvailableBigInt : inactiveNeededBigInt;
+    const removeCountBigInt = activeToRemoveBigInt + inactiveToRemoveBigInt;
+    const activeToRemove = Number(activeToRemoveBigInt);
 
     // Pay cost
     for (const category in cost) {
@@ -530,17 +540,17 @@ class Colony extends Building {
 
     // Adjust land usage
     if (this.requiresLand) this.adjustLand(-activeToRemove);
-    if (next.requiresLand) next.adjustLand(upgradeCount);
+    if (next.requiresLand) next.adjustLand(upgradeCountNumber);
 
     // Remove lower tier buildings
-    this.count -= BigInt(removeCount);
-    this.active -= BigInt(activeToRemove);
+    this.count -= removeCountBigInt;
+    this.active -= activeToRemoveBigInt;
     if (this.active < 0n) this.active = 0n;
     this.updateResourceStorage();
 
     // Add upgraded building
-    next.count += BigInt(upgradeCount);
-    next.active += BigInt(upgradeCount);
+    next.count += upgradeCountBigInt;
+    next.active += upgradeCountBigInt;
     next.updateResourceStorage();
 
     return true;

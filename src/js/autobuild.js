@@ -834,21 +834,17 @@ function restoreAutoBuildSettings(structures) {
 }
 
 function getAffordableUpgradeCount(colony, maxCount) {
-    let best = 0;
-    let low = 1;
-    let high = maxCount;
+    const maxCountBigInt = normalizeBuildingCount(maxCount);
+    let best = 0n;
+    let low = 1n;
+    let high = maxCountBigInt;
     while (low <= high) {
-        const previousLow = low;
-        const previousHigh = high;
-        const mid = Math.floor((low + high) / 2);
+        const mid = (low + high) / 2n;
         if (colony.canAffordUpgrade(mid)) {
             best = mid;
-            low = mid + 1;
+            low = mid + 1n;
         } else {
-            high = mid - 1;
-        }
-        if (low === previousLow && high === previousHigh) {
-            break;
+            high = mid - 1n;
         }
     }
     return best;
@@ -866,10 +862,10 @@ function autoUpgradeColonies(buildings) {
 
         while (structure.count >= 10n) {
             const previousCount = structure.count;
-            const maxByCount = Math.floor(structure.countNumber / 10);
-            if (maxByCount <= 0) break;
+            const maxByCount = structure.count / 10n;
+            if (maxByCount <= 0n) break;
             const upgradeCount = getAffordableUpgradeCount(structure, maxByCount);
-            if (!upgradeCount) break;
+            if (upgradeCount <= 0n) break;
             const cost = structure.getUpgradeCost(upgradeCount);
             if (!structure.upgrade(upgradeCount)) break;
             if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);
@@ -877,8 +873,8 @@ function autoUpgradeColonies(buildings) {
         }
 
         if (structure.count > 0n) {
-            const upgradeCount = getAffordableUpgradeCount(structure, 1);
-            if (!upgradeCount) continue;
+            const upgradeCount = getAffordableUpgradeCount(structure, 1n);
+            if (upgradeCount <= 0n) continue;
             const cost = structure.getUpgradeCost(upgradeCount);
             if (!structure.upgrade(upgradeCount)) continue;
             if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);

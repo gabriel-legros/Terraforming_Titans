@@ -4,6 +4,8 @@ class FusionPowerPlant extends MultiRecipesBuilding {
   }
 
   getUpgradeCost(upgradeCount = 1) {
+    const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
+    const upgradeCountNumber = Number(upgradeCountBigInt);
     const nextName = this.getNextTierName();
     const next = buildings[nextName];
     const nextCost = next.getEffectiveCost(1);
@@ -11,7 +13,7 @@ class FusionPowerPlant extends MultiRecipesBuilding {
 
     for (const category in nextCost) {
       for (const resource in nextCost[category]) {
-        const baseAmount = nextCost[category][resource] * upgradeCount;
+        const baseAmount = nextCost[category][resource] * upgradeCountNumber;
         const value = resource === 'superalloys' ? baseAmount : 0;
         if (value <= 0) continue;
         if (!cost[category]) cost[category] = {};
@@ -23,8 +25,9 @@ class FusionPowerPlant extends MultiRecipesBuilding {
   }
 
   canAffordUpgrade(upgradeCount = 1) {
-    const maxUpgrades = Math.floor(this.countNumber / 10);
-    if (maxUpgrades <= 0 || upgradeCount > maxUpgrades) return false;
+    const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
+    const maxUpgrades = this.count / 10n;
+    if (maxUpgrades <= 0n || upgradeCountBigInt > maxUpgrades) return false;
     const cost = this.getUpgradeCost(upgradeCount);
 
     for (const category in cost) {
@@ -43,8 +46,9 @@ class FusionPowerPlant extends MultiRecipesBuilding {
     if (!next.unlocked) return false;
     if (!this.canAffordUpgrade(upgradeCount)) return false;
     const cost = this.getUpgradeCost(upgradeCount);
-    const amount = upgradeCount * 10;
-    const activeToRemove = Math.min(amount, this.activeNumber);
+    const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
+    const amount = upgradeCountBigInt * 10n;
+    const activeToRemove = this.active < amount ? this.active : amount;
 
     for (const category in cost) {
       for (const resource in cost[category]) {
@@ -52,13 +56,13 @@ class FusionPowerPlant extends MultiRecipesBuilding {
       }
     }
 
-    this.count -= BigInt(amount);
-    this.active -= BigInt(activeToRemove);
+    this.count -= amount;
+    this.active -= activeToRemove;
     if (this.active < 0n) this.active = 0n;
     this.updateResourceStorage();
 
-    next.count += BigInt(upgradeCount);
-    next.active += BigInt(upgradeCount);
+    next.count += upgradeCountBigInt;
+    next.active += upgradeCountBigInt;
     next.updateResourceStorage();
     return true;
   }
