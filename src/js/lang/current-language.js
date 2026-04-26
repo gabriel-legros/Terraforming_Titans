@@ -1765,7 +1765,7 @@ setLanguageData({
             line4: 'Manual mode sets exact assignments with the current step size.',
             line5: 'Weight mode distributes assignments by integer weights among unlocked resources.',
             line6: 'Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.',
-            line7: 'Orbitals only produce if the target resource is unlocked.  Each orbital also contribute to storage of the resource they produce.',
+            line7: 'Orbitals only produce if the target resource is unlocked.  Each orbital also contributes to storage of the resource they produce.',
           },
         },
         art: {
