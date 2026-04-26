@@ -983,12 +983,12 @@ class SpaceMiningProject extends SpaceshipProject {
     return super.calculateSpaceshipTotalResourceGain(perSecond);
   }
 
-  applyWaterImportToColony(amount, accumulatedChanges = null) {
+  applyWaterImportToColony(amount, accumulatedChanges = null, allowOverflow = false) {
     const resource = resources.colony.water;
     const pending = accumulatedChanges?.colony?.water || 0;
     const current = resource.value + pending;
     const limit = resource.hasCap
-      ? (current >= resource.cap ? current : resource.cap)
+      ? (allowOverflow ? current + amount : (current >= resource.cap ? current : resource.cap))
       : current + amount;
     const available = Math.max(0, limit - current);
     const toColony = Math.min(amount, available);
@@ -1053,23 +1053,15 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       let amount = entry[resourceName] * fraction * productivity;
       if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
-        amount = this.applyWaterImportToColony(amount, accumulatedChanges);
-        if (this.waterImportTarget === 'colonyOnly' || amount <= 0) {
-          return;
-        }
+        this.applyWaterImportToColony(amount, accumulatedChanges, this.waterImportTarget === 'colony');
+        return;
       }
-      const seconds = this.currentTickDeltaTime ? this.currentTickDeltaTime / 1000 : 0;
-      if (allBelow || resourceName === 'ice') {
-        if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony' && seconds > 0) {
-          resources.surface?.ice?.modifyRate?.(amount / seconds, 'Spaceship Mining', 'project');
-        }
+      const surfaceResource = (allBelow || resourceName === 'ice') ? 'ice' : 'liquidWater';
+      if (accumulatedChanges) {
+        accumulatedChanges.surface[surfaceResource] = (accumulatedChanges.surface[surfaceResource] || 0) + amount;
       } else {
-        if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony' && seconds > 0) {
-          resources.surface?.liquidWater?.modifyRate?.(amount / seconds, 'Spaceship Mining', 'project');
-        }
-      }
-      if (typeof terraforming.synchronizeGlobalResources === 'function') {
-        terraforming.synchronizeGlobalResources();
+        resources.surface[surfaceResource].value += amount;
+        terraforming.distributeSurfaceChangesToZones({ [surfaceResource]: amount });
       }
       return;
     }
