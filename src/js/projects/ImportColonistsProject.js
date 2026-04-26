@@ -231,8 +231,12 @@ class ImportColonistsProject extends Project {
 
     const gain = this.getEffectiveResourceGain();
     const target = this.getImportTarget();
-    const amount = this.getImportAmountFromGain(gain, target);
-    amountSpan.textContent = formatNumber(amount, true);
+    const amount = this.isContinuous()
+      ? this.getContinuousImportAmount(1000, 1, false)
+      : this.getImportAmountFromGain(gain, target);
+    amountSpan.textContent = this.isContinuous()
+      ? `${formatNumber(amount, true)}${this.getText('rateSuffix', null, '/s')}`
+      : formatNumber(amount, true);
     this.updateKesslerWarning();
   }
 

@@ -956,6 +956,7 @@ setLanguageData({
       },
       importColonists: {
         separator: ': ',
+        rateSuffix: '/s',
         crusaderTooltip: 'Crusaders do not grow or produce research, but can eliminate hazardous biomass.',
       },
       orbitalRing: {
