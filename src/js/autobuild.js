@@ -838,12 +838,17 @@ function getAffordableUpgradeCount(colony, maxCount) {
     let low = 1;
     let high = maxCount;
     while (low <= high) {
+        const previousLow = low;
+        const previousHigh = high;
         const mid = Math.floor((low + high) / 2);
         if (colony.canAffordUpgrade(mid)) {
             best = mid;
             low = mid + 1;
         } else {
             high = mid - 1;
+        }
+        if (low === previousLow && high === previousHigh) {
+            break;
         }
     }
     return best;
@@ -860,6 +865,7 @@ function autoUpgradeColonies(buildings) {
         if (!next || !next.unlocked || next.isHidden) continue;
 
         while (structure.count >= 10n) {
+            const previousCount = structure.count;
             const maxByCount = Math.floor(structure.countNumber / 10);
             if (maxByCount <= 0) break;
             const upgradeCount = getAffordableUpgradeCount(structure, maxByCount);
@@ -867,6 +873,7 @@ function autoUpgradeColonies(buildings) {
             const cost = structure.getUpgradeCost(upgradeCount);
             if (!structure.upgrade(upgradeCount)) break;
             if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);
+            if (structure.count >= previousCount) break;
         }
 
         if (structure.count > 0n) {
