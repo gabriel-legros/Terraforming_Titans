@@ -2517,7 +2517,13 @@ class Terraforming extends EffectableEntity{
         penalty: 1
       };
 
-      if (!Number.isFinite(surfacePressureKPa) || surfacePressureKPa <= KPA_PER_ATM) {
+      if (!Number.isFinite(surfacePressureKPa)) {
+        return result;
+      }
+
+      if (surfacePressureKPa < KPA_PER_ATM) {
+        result.temperatureK = this.temperature.value;
+        result.penalty = calculateMaintenancePenaltyForTemperature(this.temperature.value);
         return result;
       }
 
