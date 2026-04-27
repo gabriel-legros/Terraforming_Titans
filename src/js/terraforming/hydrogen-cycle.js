@@ -27,7 +27,7 @@
   const HYDROGEN_SUPERCRITICAL_PRESSURE_EXPONENT =
     Math.log(HYDROGEN_SUPERCRITICAL_REFERENCE_P / HYDROGEN_P_CRIT) /
     Math.log(HYDROGEN_SUPERCRITICAL_REFERENCE_T / HYDROGEN_T_CRIT);
-  const HYDROGEN_REPARTITION_TIMESCALE_SECONDS = 86400;
+  const HYDROGEN_REPARTITION_TONS_PER_PA_M2_SECOND = 1.18e-9;
   const HYDROGEN_PRESSURE_TOLERANCE_FRACTION = 1e-10;
   const HYDROGEN_MIN_PRESSURE_TOLERANCE_PA = 1e-6;
   const HYDROGEN_MAX_PRESSURE_TOLERANCE_PA = 0.1;
@@ -75,10 +75,10 @@
 
   class HydrogenCycle {
     constructor({
-      repartitionTimescaleSeconds = HYDROGEN_REPARTITION_TIMESCALE_SECONDS,
+      repartitionTonsPerPaM2Second = HYDROGEN_REPARTITION_TONS_PER_PA_M2_SECOND,
     } = {}) {
       this.atmKey = 'hydrogen';
-      this.repartitionTimescaleSeconds = repartitionTimescaleSeconds;
+      this.repartitionTonsPerPaM2Second = repartitionTonsPerPaM2Second;
       this.tripleTemperature = HYDROGEN_T_TRIPLE;
       this.triplePressure = HYDROGEN_P_TRIPLE;
       this.criticalTemperature = HYDROGEN_T_CRIT;
@@ -183,8 +183,9 @@
       const surfaceHydrogen = terraforming?.resources?.surface?.liquidHydrogen?.value || 0;
       const currentPressurePa = options.vaporPressure || 0;
       const targetPressurePa = this.calculateTargetPressurePa(terraforming);
+      const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
 
-      if (!(durationSeconds > 0) || !(gravity > 0)) {
+      if (!(durationSeconds > 0) || !(gravity > 0) || !(surfaceArea > 0)) {
         return { evaporation: 0, condensation: 0, totalAtmosphericChange: 0 };
       }
 
@@ -212,10 +213,14 @@
       }
 
       const targetMassDelta = this.calculateMassForPressure(terraforming, Math.abs(pressureDelta), gravity);
-      const relaxationFraction = 1 - Math.exp(-durationSeconds / this.repartitionTimescaleSeconds);
+      const transferCapacity = Math.abs(pressureDelta) *
+        surfaceArea *
+        this.repartitionTonsPerPaM2Second *
+        durationSeconds;
+      const requestedAmount = Math.min(targetMassDelta, transferCapacity);
 
       if (pressureDelta > 0) {
-        const requested = Math.min(surfaceHydrogen, targetMassDelta * relaxationFraction);
+        const requested = Math.min(surfaceHydrogen, requestedAmount);
         const released = this.distributeSurfaceHydrogen(terraforming, zones, requested);
         totals.evaporation = released;
         totals.totalAtmosphericChange = released;
@@ -223,7 +228,7 @@
         return totals;
       }
 
-      const requested = Math.min(atmosphericHydrogen, targetMassDelta * relaxationFraction);
+      const requested = Math.min(atmosphericHydrogen, requestedAmount);
       const absorbed = this.depositSurfaceHydrogen(terraforming, zones, requested);
       totals.condensation = absorbed;
       totals.totalAtmosphericChange = -absorbed;
