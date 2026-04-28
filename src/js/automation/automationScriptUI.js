@@ -897,7 +897,13 @@ function renderActionsEditor(automation, script, line, container, actions, title
         forceScriptAutomationRefresh = true;
         queueAutomationUIRefresh();
       });
-      row.appendChild(labeledNode(getAutomationCardText('scriptSleepMs', {}, 'Milliseconds'), duration));
+      const sleepDuration = document.createElement('span');
+      sleepDuration.classList.add('script-sleep-duration');
+      const sleepUnit = document.createElement('span');
+      sleepUnit.classList.add('script-sleep-unit');
+      sleepUnit.textContent = getAutomationCardText('scriptSleepMs', {}, 'Milliseconds');
+      sleepDuration.append(duration, sleepUnit);
+      row.appendChild(sleepDuration);
     } else if (action.kind === 'goto') {
       const lineSelect = createSelect(createLineTargetOptions(script), action.targetLineId || script.lines[0].id);
       action.targetLineId = Number(lineSelect.value);

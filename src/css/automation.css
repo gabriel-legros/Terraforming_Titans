@@ -794,6 +794,19 @@
   align-items: center;
 }
 
+.script-sleep-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.script-sleep-unit {
+  color: #51617f;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .script-automation-status-line {
   padding: 8px 10px;
   border: 1px solid #dbe1ec;
@@ -945,6 +958,7 @@
 .script-automation-script-row select,
 .script-term-row input,
 .script-term-row select,
+.script-action-row input,
 .script-action-row select,
 .script-editor-row input,
 .script-editor-row select,
@@ -1098,6 +1112,7 @@
 .dark-mode .script-automation-script-row select,
 .dark-mode .script-term-row input,
 .dark-mode .script-term-row select,
+.dark-mode .script-action-row input,
 .dark-mode .script-action-row select,
 .dark-mode .script-editor-row input,
 .dark-mode .script-editor-row select,
