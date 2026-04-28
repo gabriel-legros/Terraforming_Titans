@@ -2,14 +2,14 @@ class ScriptVariableRegistry {
   constructor() {
     this.sources = [
       { id: 'constant', label: 'Constant' },
+      { id: 'resources', label: 'Resources' },
       { id: 'buildings', label: 'Buildings' },
       { id: 'colony', label: 'Colony' },
       { id: 'projects', label: 'Special Projects' },
       { id: 'terraforming', label: 'Terraforming' },
       { id: 'celestial', label: 'Celestial Parameters' },
       { id: 'hazards', label: 'Hazards' },
-      { id: 'research', label: 'Research' },
-      { id: 'resources', label: 'Resources' }
+      { id: 'research', label: 'Research' }
     ];
   }
 
@@ -86,7 +86,6 @@ class ScriptVariableRegistry {
       { id: 'active', label: 'Active', valueType: 'number' },
       { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
       { id: 'hidden', label: 'Hidden', valueType: 'boolean' },
-      { id: 'permanentlyDisabled', label: 'Permanently Disabled', valueType: 'boolean' },
       { id: 'autoBuildEnabled', label: 'Auto-build Enabled', valueType: 'boolean' },
       { id: 'autoActiveEnabled', label: 'Auto-active Enabled', valueType: 'boolean' },
       { id: 'workerPriority', label: 'Worker Priority', valueType: 'number' },
@@ -143,7 +142,6 @@ class ScriptVariableRegistry {
       return [
         { id: 'population', label: 'Population', valueType: 'number' },
         { id: 'workers', label: 'Workers', valueType: 'number' },
-        { id: 'unemployed', label: 'Unemployed', valueType: 'number' },
         { id: 'housingCapacity', label: 'Housing Capacity', valueType: 'number' },
         { id: 'workerCapacity', label: 'Worker Capacity', valueType: 'number' },
         { id: 'happiness', label: 'Happiness', valueType: 'number' }
@@ -155,10 +153,13 @@ class ScriptVariableRegistry {
         { id: 'nanobots', label: 'Nanobots', valueType: 'number' },
         { id: 'maxNanobots', label: 'Max Nanobots', valueType: 'number' },
         { id: 'powerFraction', label: 'Power Fraction', valueType: 'number' },
-        { id: 'maintenanceSlider', label: 'Maintenance Slider', valueType: 'number' },
+        { id: 'maintenanceSlider', label: 'Maintenance I', valueType: 'number' },
         { id: 'glassSlider', label: 'Glass Slider', valueType: 'number' },
+        { id: 'maintenance2Slider', label: 'Maintenance II', valueType: 'number' },
         { id: 'componentsSlider', label: 'Components Slider', valueType: 'number' },
+        { id: 'maintenance3Slider', label: 'Maintenance III', valueType: 'number' },
         { id: 'electronicsSlider', label: 'Electronics Slider', valueType: 'number' },
+        { id: 'maintenance4Slider', label: 'Maintenance IV', valueType: 'number' },
         { id: 'grapheneSlider', label: 'Graphene Slider', valueType: 'number' }
       ];
     }
@@ -168,7 +169,7 @@ class ScriptVariableRegistry {
     if (categoryId === 'orbitals') {
       return [
         { id: 'availableOrbitals', label: 'Available Orbitals', valueType: 'number' },
-        { id: 'assignmentStep', label: 'Assignment Step', valueType: 'number' }
+        { id: 'assignedOrbitals', label: 'Assigned Orbitals', valueType: 'number' }
       ];
     }
     return [
@@ -215,34 +216,64 @@ class ScriptVariableRegistry {
       { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
       { id: 'visible', label: 'Visible', valueType: 'boolean' },
       { id: 'completed', label: 'Completed', valueType: 'boolean' },
-      { id: 'active', label: 'Active', valueType: 'boolean' },
+      { id: 'active', label: 'Construction Active', valueType: 'boolean' },
+      { id: 'running', label: 'Running', valueType: 'boolean' },
       { id: 'progressPercent', label: 'Progress %', valueType: 'number' },
       { id: 'assignedSpaceships', label: 'Assigned Spaceships', valueType: 'number' },
       { id: 'durationRemaining', label: 'Duration Remaining', valueType: 'number' },
       { id: 'repeatCount', label: 'Repeat Count', valueType: 'number' },
       { id: 'maxRepeatCount', label: 'Max Repeat Count', valueType: 'number' },
-      { id: 'autoStart', label: 'Auto-start', valueType: 'boolean' },
-      { id: 'autoContinuousOperation', label: 'Auto-continuous Operation', valueType: 'boolean' },
-      { id: 'buildCount', label: 'Build Count', valueType: 'number' }
+      { id: 'autoStart', label: 'Auto-start Construction', valueType: 'boolean' },
+      { id: 'autoContinuousOperation', label: 'Auto Operation Enabled', valueType: 'boolean' }
     ];
   }
 
   getTerraformingCategories() {
     return [
+      { id: 'status', label: 'Status' },
+      { id: 'specialization', label: 'Specialization' },
       { id: 'temperature', label: 'Temperature' },
       { id: 'atmosphere', label: 'Atmosphere' },
       { id: 'surface', label: 'Surface' },
       { id: 'luminosity', label: 'Luminosity' },
-      { id: 'life', label: 'Life' },
       { id: 'others', label: 'Others' }
     ];
   }
 
   getTerraformingTargets(categoryId) {
+    if (categoryId === 'status') return [{ id: 'status', label: 'Status' }];
+    if (categoryId === 'specialization') return [{ id: 'specialization', label: 'Current Specialization' }];
     return [{ id: categoryId, label: this.formatIdLabel(categoryId) }];
   }
 
   getTerraformingAttributes(categoryId) {
+    if (categoryId === 'status') {
+      return [
+        { id: 'pending', label: 'Pending', valueType: 'boolean' },
+        { id: 'readyForCompletion', label: 'Ready for completion', valueType: 'boolean' },
+        { id: 'complete', label: 'Complete', valueType: 'boolean' }
+      ];
+    }
+    if (categoryId === 'specialization') {
+      return [
+        {
+          id: 'currentSpecialization',
+          label: 'Current Specialization',
+          valueType: 'enum',
+          valueLabels: {
+            0: 'None',
+            1: 'BioWorld',
+            2: 'Manufacturing World',
+            3: 'Holy World',
+            4: 'Foundry World'
+          }
+        },
+        { id: 'bioworld', label: 'BioWorld', valueType: 'boolean' },
+        { id: 'manufacturingWorld', label: 'Manufacturing World', valueType: 'boolean' },
+        { id: 'holyWorld', label: 'Holy World', valueType: 'boolean' },
+        { id: 'foundryWorld', label: 'Foundry World', valueType: 'boolean' }
+      ];
+    }
     if (categoryId === 'temperature') {
       return [
         { id: 'averageTemperatureK', label: 'Average Temperature K', valueType: 'number' },
@@ -270,10 +301,7 @@ class ScriptVariableRegistry {
     if (categoryId === 'surface') {
       return [
         { id: 'land', label: 'Land', valueType: 'number' },
-        { id: 'geometricLand', label: 'Geometric Land', valueType: 'number' },
-        { id: 'liquidWaterCoverage', label: 'Liquid Water Coverage', valueType: 'number' },
-        { id: 'iceCoverage', label: 'Ice Coverage', valueType: 'number' },
-        { id: 'reservedLandPercent', label: 'Reserved Land %', valueType: 'number' }
+        { id: 'geometricLand', label: 'Geometric Land', valueType: 'number' }
       ];
     }
     if (categoryId === 'luminosity') {
@@ -285,22 +313,25 @@ class ScriptVariableRegistry {
         { id: 'coreHeatFlux', label: 'Core Heat Flux', valueType: 'number' }
       ];
     }
-    if (categoryId === 'life') {
-      return [
-        { id: 'biomass', label: 'Biomass', valueType: 'number' },
-        { id: 'plants', label: 'Plants', valueType: 'number' },
-        { id: 'animals', label: 'Animals', valueType: 'number' },
-        { id: 'microbes', label: 'Microbes', valueType: 'number' }
-      ];
-    }
     return [
-      { id: 'terraformingComplete', label: 'Terraforming Complete', valueType: 'boolean' },
-      { id: 'dayNightPeriod', label: 'Day-Night Period', valueType: 'number' }
+      { id: 'hasNaturalMagnetosphere', label: 'Natural Magnetosphere', valueType: 'boolean' },
+      { id: 'hasArtificialMagnetosphere', label: 'Artificial Magnetosphere', valueType: 'boolean' },
+      { id: 'magnetosphereStatus', label: 'Magnetosphere Status', valueType: 'boolean' }
     ];
   }
 
   getCelestialAttributes() {
     return [
+      {
+        id: 'worldArchetype',
+        label: 'World Archetype',
+        valueType: 'boolean'
+      },
+      {
+        id: 'worldType',
+        label: 'World Type',
+        valueType: 'boolean'
+      },
       { id: 'gravity', label: 'Gravity', valueType: 'number' },
       { id: 'radius', label: 'Radius', valueType: 'number' },
       { id: 'mass', label: 'Mass', valueType: 'number' },
@@ -327,10 +358,7 @@ class ScriptVariableRegistry {
   getHazardAttributes() {
     return [
       { id: 'active', label: 'Active', valueType: 'boolean' },
-      { id: 'coveragePercent', label: 'Coverage %', valueType: 'number' },
-      { id: 'severity', label: 'Severity', valueType: 'number' },
-      { id: 'growthRate', label: 'Growth Rate', valueType: 'number' },
-      { id: 'decayRate', label: 'Decay Rate', valueType: 'number' }
+      { id: 'coveragePercent', label: 'Coverage %', valueType: 'number' }
     ];
   }
 
@@ -349,8 +377,8 @@ class ScriptVariableRegistry {
 
   getResearchAttributes() {
     return [
+      { id: 'completed', label: 'Researched', valueType: 'boolean' },
       { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
-      { id: 'completed', label: 'Completed', valueType: 'boolean' },
       { id: 'enabledForAutomation', label: 'Auto-research Enabled', valueType: 'boolean' },
       { id: 'hiddenByUser', label: 'Hidden By User', valueType: 'boolean' },
       { id: 'priority', label: 'Priority', valueType: 'number' },
@@ -381,8 +409,8 @@ class ScriptVariableRegistry {
     return targets;
   }
 
-  getResourceAttributes() {
-    return [
+  getResourceAttributes(categoryId, targetId) {
+    const attributes = [
       { id: 'value', label: 'Value', valueType: 'number' },
       { id: 'cap', label: 'Cap', valueType: 'number' },
       { id: 'fillPercent', label: 'Fill %', valueType: 'number' },
@@ -390,6 +418,10 @@ class ScriptVariableRegistry {
       { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
       { id: 'netRate', label: 'Net Rate', valueType: 'number' }
     ];
+    if (this.getSurfaceResourceCoverageKey(categoryId, targetId)) {
+      attributes.push({ id: 'coverage', label: 'Coverage', valueType: 'number' });
+    }
+    return attributes;
   }
 
   resolveValue(ref) {
@@ -413,7 +445,6 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'active') return this.toNumber(building.activeNumber ?? building.active);
     if (ref.attribute === 'unlocked') return building.unlocked ? 1 : 0;
     if (ref.attribute === 'hidden') return building.isHidden ? 1 : 0;
-    if (ref.attribute === 'permanentlyDisabled') return building.permanentlyDisabled ? 1 : 0;
     if (ref.attribute === 'autoBuildEnabled') return building.autoBuildEnabled ? 1 : 0;
     if (ref.attribute === 'autoActiveEnabled') return building.autoActiveEnabled ? 1 : 0;
     if (ref.attribute === 'workerPriority') return this.toNumber(building.workerPriority);
@@ -443,19 +474,32 @@ class ScriptVariableRegistry {
   resolveColonyGlobalValue(attribute) {
     if (attribute === 'population') return this.toNumber(resources.colony.colonists.value);
     if (attribute === 'workers') return this.toNumber(resources.colony.workers?.value);
-    if (attribute === 'unemployed') return this.toNumber(resources.colony.unemployed?.value);
     if (attribute === 'housingCapacity') return this.toNumber(resources.colony.colonists.cap);
     if (attribute === 'workerCapacity') return this.toNumber(resources.colony.workers?.cap);
-    if (attribute === 'happiness') return this.toNumber(colonySliderSettings?.happiness);
+    if (attribute === 'happiness') return this.resolveColonyHappiness();
     return 0;
   }
 
   resolveNanocolonyValue(attribute) {
     if (attribute === 'enabled') return nanotechManager?.enabled ? 1 : 0;
     if (attribute === 'nanobots') return this.toNumber(nanotechManager?.nanobots);
-    if (attribute === 'maxNanobots') return this.toNumber(nanotechManager?.maxNanobots);
+    if (attribute === 'maxNanobots') return this.toNumber(nanotechManager?.getMaxNanobots());
     if (attribute === 'powerFraction') return this.toNumber(nanotechManager?.powerFraction);
     return this.toNumber(nanotechManager?.[attribute]);
+  }
+
+  resolveColonyHappiness() {
+    let totalWeightedHappiness = 0;
+    let totalCapacity = 0;
+    for (const colonyId in colonies) {
+      const colony = colonies[colonyId];
+      const capacity = colony.getStorageContribution('colony', 'colonists');
+      if (capacity > 0) {
+        totalWeightedHappiness += colony.happiness * capacity;
+        totalCapacity += capacity;
+      }
+    }
+    return totalCapacity > 0 ? totalWeightedHappiness / totalCapacity : 0;
   }
 
   resolveColonySliderValue(target) {
@@ -470,8 +514,13 @@ class ScriptVariableRegistry {
 
   resolveOrbitalsValue(attribute) {
     if (attribute === 'availableOrbitals') return this.toNumber(followersManager?.availableOrbitals);
-    if (attribute === 'assignmentStep') return this.toNumber(followersManager?.assignmentStep);
+    if (attribute === 'assignedOrbitals') return this.resolveAssignedOrbitals();
     return 0;
+  }
+
+  resolveAssignedOrbitals() {
+    const snapshot = followersManager?.getAssignmentsSnapshot?.();
+    return this.toNumber(snapshot?.assigned);
   }
 
   resolveProjectValue(ref) {
@@ -481,6 +530,7 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'visible') return project.isVisible ? (project.isVisible() ? 1 : 0) : (project.unlocked ? 1 : 0);
     if (ref.attribute === 'completed') return project.isCompleted ? 1 : 0;
     if (ref.attribute === 'active') return project.isActive ? 1 : 0;
+    if (ref.attribute === 'running') return this.resolveProjectRunning(project);
     if (ref.attribute === 'progressPercent') return this.resolveProjectProgressPercent(project);
     if (ref.attribute === 'assignedSpaceships') return this.toNumber(project.assignedSpaceships);
     if (ref.attribute === 'durationRemaining') return this.toNumber(project.remainingTime);
@@ -488,12 +538,20 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'maxRepeatCount') return this.toNumber(project.maxRepeatCount);
     if (ref.attribute === 'autoStart') return project.autoStart ? 1 : 0;
     if (ref.attribute === 'autoContinuousOperation') return project.autoContinuousOperation ? 1 : 0;
-    if (ref.attribute === 'buildCount') return this.toNumber(project.buildCount);
     return 0;
+  }
+
+  resolveProjectRunning(project) {
+    if (project.isRunning === true) return 1;
+    if (project.heatSinksActive === true) return project.repeatCount > 0 ? 1 : 0;
+    if (project.autoContinuousOperation === true) return 1;
+    return project.isActive && !project.isPaused ? 1 : 0;
   }
 
   resolveTerraformingValue(ref) {
     const attribute = ref.attribute;
+    if (ref.category === 'status') return this.resolveTerraformingStatusValue(attribute);
+    if (ref.category === 'specialization') return this.resolveTerraformingSpecializationValue(attribute);
     if (attribute === 'averageTemperatureK') return this.toNumber(terraforming.temperature.value);
     if (attribute === 'averageTemperatureC') return this.toNumber(terraforming.temperature.value - 273.15);
     if (attribute === 'trendTemperatureK') return this.toNumber(terraforming.temperature.trendValue);
@@ -512,27 +570,181 @@ class ScriptVariableRegistry {
     if (attribute === 'waterVaporPressurePa') return this.toNumber(terraforming.atmosphericPressureCache.pressureByKey.atmosphericWater);
     if (attribute === 'land') return this.toNumber(resources.surface.land.value);
     if (attribute === 'geometricLand') return resolveWorldGeometricLand(terraforming, resources.surface.land);
-    if (attribute === 'liquidWaterCoverage') return this.toNumber(resources.surface.liquidWater?.coverage);
-    if (attribute === 'iceCoverage') return this.toNumber(resources.surface.ice?.coverage);
-    if (attribute === 'reservedLandPercent') return this.toNumber(resources.surface.land.reservedPercent);
     if (attribute === 'solarFlux') return this.toNumber(terraforming.luminosity.solarFlux);
     if (attribute === 'modifiedSolarFlux') return this.toNumber(terraforming.luminosity.modifiedSolarFlux);
     if (attribute === 'albedo') return this.toNumber(terraforming.luminosity.surfaceAlbedo);
     if (attribute === 'opticalDepth') return this.toNumber(terraforming.temperature.opticalDepth);
     if (attribute === 'coreHeatFlux') return this.toNumber(terraforming.celestialParameters.coreHeatFlux);
-    if (attribute === 'biomass') return this.toNumber(resources.surface.biomass?.value);
-    if (attribute === 'plants') return this.toNumber(resources.surface.plants?.value);
-    if (attribute === 'animals') return this.toNumber(resources.surface.animals?.value);
-    if (attribute === 'microbes') return this.toNumber(resources.surface.microbes?.value);
-    if (attribute === 'terraformingComplete') return terraforming.isTerraformingComplete ? 1 : 0;
-    if (attribute === 'dayNightPeriod') return this.toNumber(dayNightCycle?.periodSeconds);
+    if (attribute === 'hasNaturalMagnetosphere') return terraforming.celestialParameters.hasNaturalMagnetosphere ? 1 : 0;
+    if (attribute === 'hasArtificialMagnetosphere') return this.hasArtificialMagnetosphere() ? 1 : 0;
+    if (attribute === 'magnetosphereStatus') return terraforming.celestialParameters.hasNaturalMagnetosphere || this.hasArtificialMagnetosphere() ? 1 : 0;
+    return 0;
+  }
+
+  hasArtificialMagnetosphere() {
+    const project = projectManager.projects.apolloCoreSurgeryPlatform;
+    return project && project.isCompleted && terraforming.celestialParameters.hasNaturalMagnetosphere;
+  }
+
+  resolveTerraformingStatusValue(attribute) {
+    const complete = terraforming.completed === true;
+    const ready = !complete && terraforming.readyForCompletion;
+    if (attribute === 'pending') return !complete && !ready ? 1 : 0;
+    if (attribute === 'readyForCompletion') return ready ? 1 : 0;
+    if (attribute === 'complete') return complete ? 1 : 0;
+    return 0;
+  }
+
+  resolveTerraformingSpecializationValue(attribute) {
+    const current = this.getCurrentWorldSpecializationValue();
+    if (attribute === 'currentSpecialization') return current;
+    if (attribute === 'bioworld') return current === 1 ? 1 : 0;
+    if (attribute === 'manufacturingWorld') return current === 2 ? 1 : 0;
+    if (attribute === 'holyWorld') return current === 3 ? 1 : 0;
+    if (attribute === 'foundryWorld') return current === 4 ? 1 : 0;
+    return 0;
+  }
+
+  getCurrentWorldSpecializationValue() {
+    const projects = projectManager.projects;
+    if (projects.bioworld && (projects.bioworld.isCompleted || projects.bioworld.isActive)) return 1;
+    if (projects.manufacturingWorld && (projects.manufacturingWorld.isCompleted || projects.manufacturingWorld.isActive)) return 2;
+    if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) return 3;
+    if (projects.foundryWorld && (projects.foundryWorld.isCompleted || projects.foundryWorld.isActive)) return 4;
     return 0;
   }
 
   resolveCelestialValue(ref) {
     const params = terraforming.celestialParameters || {};
+    if (ref.attribute === 'worldArchetype') return this.resolveWorldArchetypeOption(ref);
+    if (ref.attribute === 'worldType') return this.resolveCelestialOptionMatch(ref, this.getCurrentWorldTypeValue());
     if (ref.attribute === 'hasNaturalMagnetosphere') return params.hasNaturalMagnetosphere ? 1 : 0;
     return this.toNumber(params[ref.attribute]);
+  }
+
+  resolveWorldArchetypeOption(ref) {
+    const options = this.getCelestialAttributeOptions(ref.attribute);
+    const selected = options.find(option => option.id === ref.option) || options[0];
+    const artificial = spaceManager.currentArtificialKey !== null;
+    const challenge = this.isCurrentAtlasChallengeWorld();
+    const random = spaceManager.currentRandomSeed !== null && !challenge;
+    const story = !artificial && !random && !challenge;
+    if (selected.id === 'artificial') return artificial ? 1 : 0;
+    if (selected.id === 'natural') return artificial ? 0 : 1;
+    if (selected.id === 'story') return story ? 1 : 0;
+    if (selected.id === 'random') return random ? 1 : 0;
+    if (selected.id === 'challenge') return challenge ? 1 : 0;
+    return 0;
+  }
+
+  resolveCelestialOptionMatch(ref, currentValue) {
+    const options = this.getCelestialAttributeOptions(ref.attribute);
+    const selected = options.find(option => option.id === ref.option) || options[0];
+    return selected && currentValue === selected.value ? 1 : 0;
+  }
+
+  getCelestialAttributeOptions(attribute) {
+    if (attribute === 'worldArchetype') {
+      return [
+        { id: 'artificial', label: 'Artificial', value: 1 },
+        { id: 'random', label: 'Random', value: 2 },
+        { id: 'natural', label: 'Natural', value: 3 },
+        { id: 'story', label: 'Story', value: 4 },
+        { id: 'challenge', label: 'Challenge', value: 5 }
+      ];
+    }
+    if (attribute === 'worldType') {
+      return [
+        { id: 'mars-like', label: 'Mars-like', value: 1 },
+        { id: 'cold-desert', label: 'Desert', value: 2 },
+        { id: 'icy-moon', label: 'Water-rich', value: 3 },
+        { id: 'titan-like', label: 'Titan-like', value: 4 },
+        { id: 'carbon-planet', label: 'Carbon', value: 5 },
+        { id: 'desiccated-desert', label: 'Desiccated Desert', value: 6 },
+        { id: 'super-earth', label: 'Super-Earth', value: 7 },
+        { id: 'chthonian', label: 'Chthonian', value: 8 },
+        { id: 'venus-like', label: 'Venus-like', value: 9 },
+        { id: 'rogue', label: 'Rogue', value: 10 },
+        { id: 'ammonia-rich', label: 'Ammonia-rich', value: 11 },
+        { id: 'molten', label: 'Molten', value: 12 },
+        { id: 'jupiter-like', label: 'Jupiter-like', value: 13 },
+        { id: 'shell', label: 'Shell World', value: 14 },
+        { id: 'ring', label: 'Ringworld', value: 15 },
+        { id: 'disk', label: 'Disk World', value: 16 }
+      ];
+    }
+    return [];
+  }
+
+  isCurrentAtlasChallengeWorld() {
+    const original = spaceManager.getCurrentWorldOriginal ? spaceManager.getCurrentWorldOriginal() : null;
+    const seedKey = currentPlanetParameters.rwgMeta?.specialSeedKey
+      || currentPlanetParameters.specialSeedKey
+      || original?.rwgMeta?.specialSeedKey
+      || original?.merged?.rwgMeta?.specialSeedKey
+      || original?.override?.rwgMeta?.specialSeedKey
+      || '';
+    return !!seedKey;
+  }
+
+  getCurrentWorldTypeValue() {
+    const typeKey = this.getCurrentWorldTypeKey();
+    const typeValues = {
+      'mars-like': 1,
+      'cold-desert': 2,
+      'icy-moon': 3,
+      'titan-like': 4,
+      'carbon-planet': 5,
+      'desiccated-desert': 6,
+      'super-earth': 7,
+      chthonian: 8,
+      'venus-like': 9,
+      rogue: 10,
+      'ammonia-rich': 11,
+      molten: 12,
+      'jupiter-like': 13,
+      shell: 14,
+      ring: 15,
+      disk: 16
+    };
+    return typeValues[typeKey] || 0;
+  }
+
+  getCurrentWorldTypeKey() {
+    const classification = currentPlanetParameters.classification || {};
+    const direct = classification.archetype || classification.type || '';
+    if (direct) return direct;
+    const original = spaceManager.getCurrentWorldOriginal ? spaceManager.getCurrentWorldOriginal() : null;
+    const originalType = original?.archetype
+      || original?.classification?.archetype
+      || original?.classification?.type
+      || original?.merged?.classification?.archetype
+      || original?.merged?.classification?.type
+      || original?.override?.classification?.archetype
+      || original?.override?.classification?.type
+      || '';
+    if (originalType) return originalType;
+    return this.getStoryWorldTypeKey(spaceManager.currentPlanetKey);
+  }
+
+  getStoryWorldTypeKey(planetKey) {
+    const storyTypes = {
+      mars: 'mars-like',
+      titan: 'titan-like',
+      callisto: 'icy-moon',
+      ganymede: 'icy-moon',
+      vega2: 'mars-like',
+      venus: 'venus-like',
+      umbra: 'rogue',
+      solisPrime: 'mars-like',
+      gabbag: 'mars-like',
+      tartarus: 'venus-like',
+      hades: 'mars-like',
+      poseidon: 'icy-moon',
+      styx: 'mars-like',
+      zeus: 'jupiter-like'
+    };
+    return storyTypes[planetKey] || '';
   }
 
   resolveHazardValue(ref) {
@@ -540,9 +752,6 @@ class ScriptVariableRegistry {
     if (!hazard) return 0;
     if (ref.attribute === 'active') return hazard.active || hazard.enabled ? 1 : 0;
     if (ref.attribute === 'coveragePercent') return this.toNumber((hazard.coverage || hazard.coverageFraction || hazard.landCoverage || 0) * 100);
-    if (ref.attribute === 'severity') return this.toNumber(hazard.severity || hazard.intensity);
-    if (ref.attribute === 'growthRate') return this.toNumber(hazard.growthRate);
-    if (ref.attribute === 'decayRate') return this.toNumber(hazard.decayRate);
     return 0;
   }
 
@@ -550,7 +759,7 @@ class ScriptVariableRegistry {
     const research = researchManager.getResearchById(ref.target);
     if (!research) return 0;
     if (ref.attribute === 'unlocked') return research.unlocked ? 1 : 0;
-    if (ref.attribute === 'completed') return research.completed ? 1 : 0;
+    if (ref.attribute === 'completed') return research.isResearched || research.timesResearched > 0 ? 1 : 0;
     if (ref.attribute === 'enabledForAutomation') return automationManager.researchAutomation?.isAutoResearchEnabled(ref.target) ? 1 : 0;
     if (ref.attribute === 'hiddenByUser') return research.hiddenByUser ? 1 : 0;
     if (ref.attribute === 'priority') return this.toNumber(automationManager.researchAutomation?.getResearchPriority(ref.target));
@@ -569,7 +778,21 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'productionRate') return this.toNumber(resource.productionRate);
     if (ref.attribute === 'consumptionRate') return this.toNumber(resource.consumptionRate);
     if (ref.attribute === 'netRate') return this.toNumber(resource.productionRate) - this.toNumber(resource.consumptionRate);
+    if (ref.attribute === 'coverage') return this.resolveSurfaceResourceCoverage(ref.category, ref.target);
     return 0;
+  }
+
+  getSurfaceResourceCoverageKey(categoryId, targetId) {
+    if (categoryId !== 'surface') return '';
+    const config = defaultPlanetResources.surface[targetId]?.zonalConfig;
+    const keys = Array.isArray(config?.coverageKeys) ? config.coverageKeys : [];
+    return keys[0] || '';
+  }
+
+  resolveSurfaceResourceCoverage(categoryId, targetId) {
+    const coverageKey = this.getSurfaceResourceCoverageKey(categoryId, targetId);
+    if (!coverageKey) return 0;
+    return this.toNumber(calculateAverageCoverage(terraforming, coverageKey));
   }
 
   resolveProjectProgressPercent(project) {
@@ -606,6 +829,20 @@ class ScriptVariableRegistry {
     if (!ref || ref.constructor !== Object) return 'Value';
     if (ref.source === 'constant') return `${ref.constant ?? 0}`;
     const source = this.sources.find(item => item.id === ref.source);
+    if (ref.source === 'celestial') {
+      const attributes = this.getCelestialAttributes();
+      const attribute = attributes.find(item => item.id === ref.attribute);
+      const options = this.getCelestialAttributeOptions(ref.attribute);
+      const option = options.find(item => item.id === ref.option);
+      return [source?.label, attribute?.label, option?.label].filter(Boolean).join(' / ');
+    }
+    if (ref.source === 'hazards') {
+      const targets = this.getTargets(ref.source, ref.category);
+      const target = targets.find(item => item.id === ref.target);
+      const attributes = this.getAttributes(ref.source, ref.category, ref.target);
+      const attribute = attributes.find(item => item.id === ref.attribute);
+      return [source?.label, target?.label, attribute?.label].filter(Boolean).join(' / ');
+    }
     const categories = this.getCategories(ref.source);
     const category = categories.find(item => item.id === ref.category);
     const targets = this.getTargets(ref.source, ref.category);
@@ -613,6 +850,17 @@ class ScriptVariableRegistry {
     const attributes = this.getAttributes(ref.source, ref.category, ref.target);
     const attribute = attributes.find(item => item.id === ref.attribute);
     return [source?.label, category?.label, target?.label, attribute?.label].filter(Boolean).join(' / ');
+  }
+
+  formatResolvedValue(ref, value) {
+    const attributes = this.getAttributes(ref.source, ref.category, ref.target);
+    const attribute = attributes.find(item => item.id === ref.attribute);
+    const valueLabels = attribute?.valueLabels;
+    if (valueLabels) {
+      const label = valueLabels[value];
+      if (label) return `${label} (${formatNumber(value)})`;
+    }
+    return formatNumber(value);
   }
 
   toNumber(value) {

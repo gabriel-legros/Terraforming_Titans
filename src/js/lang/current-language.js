@@ -85,7 +85,7 @@ setLanguageData({
       },
       equilibrate: {
         none: 'none',
-        tooltip: 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. Special seeds require Equilibrate unless the seed explicitly skips it.\nCurrent Fastest Terraform (real time): {value}.',
+        tooltip: 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. \nCurrent Fastest Terraform (real time): {value}.',
         progressMinimum: 'Minimum fast-forward (Game is paused)',
         progressAdditional: 'Additional fast-forward (Game is paused)',
         refinementsStability: 'Number of refinements from stability: {value}',
@@ -2980,6 +2980,7 @@ setLanguageData({
         scriptAddClause: '+ Clause',
         scriptAddTerm: '+ Term',
         scriptActions: 'Actions',
+        scriptElseActions: 'Else Actions',
         scriptApplyPreset: 'Apply Preset',
         scriptApplyCombination: 'Apply Combination',
         scriptAddAction: '+ Action',

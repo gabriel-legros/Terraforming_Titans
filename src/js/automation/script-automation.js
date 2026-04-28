@@ -13,6 +13,7 @@ class ScriptAutomation {
     this.lastError = '';
     this.lastActionSummary = '';
     this.lastEvaluatedLineId = null;
+    this.manualStepDisplayLineId = null;
     this.lastConditionResult = null;
     this.haltedReason = 'inactive';
     this.autoRestartOnCompletion = false;
@@ -62,7 +63,8 @@ class ScriptAutomation {
       kind,
       expanded: true,
       condition: this.createDefaultCondition(),
-      actions: []
+      actions: [],
+      elseActions: []
     };
   }
 
@@ -184,6 +186,7 @@ class ScriptAutomation {
       this.pcLineId = script.lines[0]?.id || null;
     }
     this.running = true;
+    this.manualStepDisplayLineId = null;
     this.lastStatus = 'Running';
     this.haltedReason = 'running';
     return true;
@@ -191,6 +194,7 @@ class ScriptAutomation {
 
   pause() {
     this.running = false;
+    this.manualStepDisplayLineId = null;
     this.haltedReason = 'paused';
     this.lastStatus = 'Paused';
   }
@@ -198,15 +202,20 @@ class ScriptAutomation {
   reset() {
     const script = this.getActiveScript();
     this.pcLineId = script?.lines[0]?.id || null;
+    this.manualStepDisplayLineId = null;
     this.haltedReason = 'reset';
     this.lastStatus = 'Reset';
   }
 
   stepOnce() {
     const wasRunning = this.running;
+    const script = this.getActiveScript();
+    if (!this.pcLineId && script?.lines.length) this.pcLineId = script.lines[0].id;
     this.running = true;
     this.update(0, true);
-    this.running = wasRunning;
+    this.manualStepDisplayLineId = this.lastEvaluatedLineId;
+    if (wasRunning && this.pcLineId) this.running = true;
+    else this.running = false;
   }
 
   addLine(scriptId, kind = 'if') {
@@ -251,9 +260,14 @@ class ScriptAutomation {
   }
 
   update(delta, forceStep = false) {
+    if (!forceStep && this.running) this.manualStepDisplayLineId = null;
     if (!forceStep && !this.isActive()) {
-      this.lastStatus = this.enabled ? 'Paused' : 'Inactive';
-      this.haltedReason = this.enabled ? 'paused' : 'inactive';
+      if (this.enabled && this.haltedReason === 'end') {
+        this.lastStatus = 'End reached';
+      } else {
+        this.lastStatus = this.enabled ? 'Paused' : 'Inactive';
+        this.haltedReason = this.enabled ? 'paused' : 'inactive';
+      }
       return;
     }
 
@@ -266,12 +280,12 @@ class ScriptAutomation {
 
     let linesEvaluated = 0;
     let actionsUsed = 0;
-    let whileUsed = false;
     let gotoUsed = false;
     this.lastError = '';
     this.lastActionSummary = '';
+    const maxLines = forceStep ? 1 : this.maxLinesPerTick;
 
-    while (linesEvaluated < this.maxLinesPerTick) {
+    while (linesEvaluated < maxLines) {
       const line = this.getCurrentLine(script);
       if (!line) {
         if (this.autoRestartOnCompletion) {
@@ -288,34 +302,27 @@ class ScriptAutomation {
 
       this.lastEvaluatedLineId = line.id;
       linesEvaluated += 1;
-      const conditionResult = this.evaluateCondition(line.condition);
+      const conditionResult = line.kind === 'actions' ? true : this.evaluateCondition(line.condition);
       this.lastConditionResult = conditionResult;
+
+      if (line.kind === 'actions') {
+        const actionResult = this.runActions(line.actions, script, { actionsUsed, gotoUsed });
+        actionsUsed = actionResult.actionsUsed;
+        gotoUsed = actionResult.gotoUsed;
+        if (actionResult.gotoTriggered || actionResult.actionLimitReached) {
+          this.haltedReason = actionResult.gotoTriggered ? 'goto' : 'actionLimit';
+          this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : 'Action limit reached';
+          break;
+        }
+        this.advanceLine(script, line);
+        this.haltedReason = 'actions';
+        this.lastStatus = `Ran actions ${this.getLineLabel(script, line)}`;
+        break;
+      }
 
       if (line.kind === 'wait' && !conditionResult) {
         this.haltedReason = 'wait';
         this.lastStatus = `Waiting at ${this.getLineLabel(script, line)}`;
-        break;
-      }
-
-      if (line.kind === 'while') {
-        if (whileUsed) {
-          this.haltedReason = 'whileLimit';
-          this.lastStatus = 'While limit reached';
-          break;
-        }
-        whileUsed = true;
-        if (!conditionResult) {
-          this.advanceLine(script, line);
-          this.haltedReason = 'whileFalse';
-          this.lastStatus = 'While false';
-          break;
-        }
-        const actionResult = this.runActions(line.actions, script, { actionsUsed, gotoUsed });
-        actionsUsed = actionResult.actionsUsed;
-        gotoUsed = actionResult.gotoUsed;
-        if (!actionResult.gotoTriggered) this.pcLineId = line.id;
-        this.haltedReason = actionResult.gotoTriggered ? 'goto' : 'while';
-        this.lastStatus = `Ran WHILE ${this.getLineLabel(script, line)}`;
         break;
       }
 
@@ -328,6 +335,15 @@ class ScriptAutomation {
           this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : 'Action limit reached';
           break;
         }
+      } else if (line.kind === 'if') {
+        const actionResult = this.runActions(line.elseActions, script, { actionsUsed, gotoUsed });
+        actionsUsed = actionResult.actionsUsed;
+        gotoUsed = actionResult.gotoUsed;
+        if (actionResult.gotoTriggered || actionResult.actionLimitReached) {
+          this.haltedReason = actionResult.gotoTriggered ? 'goto' : 'actionLimit';
+          this.lastStatus = actionResult.gotoTriggered ? 'ELSE GOTO executed' : 'Action limit reached';
+          break;
+        }
       }
 
       this.advanceLine(script, line);
@@ -337,7 +353,7 @@ class ScriptAutomation {
       if (line.kind === 'wait') break;
     }
 
-    if (linesEvaluated >= this.maxLinesPerTick) {
+    if (linesEvaluated >= maxLines && !forceStep) {
       this.haltedReason = 'lineLimit';
       this.lastStatus = 'Line limit reached';
     }
@@ -346,6 +362,11 @@ class ScriptAutomation {
   getCurrentLine(script) {
     if (!this.pcLineId) return null;
     return script.lines.find(line => line.id === this.pcLineId) || null;
+  }
+
+  getDisplayLineId() {
+    if (!this.running && this.manualStepDisplayLineId) return this.manualStepDisplayLineId;
+    return this.pcLineId;
   }
 
   advanceLine(script, line) {
@@ -505,6 +526,7 @@ class ScriptAutomation {
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
       pcLineId: this.pcLineId,
+      manualStepDisplayLineId: this.manualStepDisplayLineId,
       nextScriptId: this.nextScriptId,
       nextLineId: this.nextLineId,
       lastStatus: this.lastStatus,
@@ -545,10 +567,11 @@ class ScriptAutomation {
     return {
       id: Number(line.id) || this.nextLineId++,
       name: line.name || '',
-      kind: ['if', 'while', 'wait'].includes(line.kind) ? line.kind : 'if',
+      kind: ['if', 'wait', 'actions'].includes(line.kind) ? line.kind : 'if',
       expanded: line.expanded !== false,
       condition: line.condition?.constructor === Object ? line.condition : this.createDefaultCondition(),
-      actions: Array.isArray(line.actions) ? line.actions : []
+      actions: Array.isArray(line.actions) ? line.actions : [],
+      elseActions: Array.isArray(line.elseActions) ? line.elseActions : []
     };
   }
 

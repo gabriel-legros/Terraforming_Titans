@@ -113,7 +113,7 @@ const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
-const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 90;
+const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 60;
 
 function getRwgText(path, fallback, vars) {
   try {
