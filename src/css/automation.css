@@ -948,6 +948,18 @@
   cursor: not-allowed;
 }
 
+.script-automation-body button.automation-toggle,
+.script-automation-body button.ui-toggle {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.script-automation-body button.automation-toggle:hover,
+.script-automation-body button.ui-toggle:hover {
+  background: transparent;
+}
+
 .script-automation-run,
 .script-automation-add-line,
 .script-automation-new,
@@ -956,6 +968,135 @@
   color: #fff;
   border-color: #2a4db8 !important;
   font-weight: 700;
+}
+
+.dark-mode .script-automation-status-line {
+  background: #111827;
+  border-color: #24324a;
+  color: #d7e2f3;
+}
+
+.dark-mode .script-automation-script-row,
+.dark-mode .script-line-card,
+.dark-mode .script-editor-section,
+.dark-mode .script-clause-card,
+.dark-mode .script-expression-editor {
+  background: #111827;
+  border-color: #24324a;
+  box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-mode .script-editor-section {
+  background: #101826;
+}
+
+.dark-mode .script-clause-card,
+.dark-mode .script-expression-editor {
+  background: #0e1421;
+}
+
+.dark-mode .script-line-card {
+  background: linear-gradient(180deg, #121a28 0%, #0b111b 100%);
+  border-color: #2a3650;
+  border-left-color: #3f7bf7;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.6);
+}
+
+.dark-mode .script-line-card.script-line-current {
+  border-left-color: #62d184;
+  box-shadow: 0 0 0 2px rgba(98, 209, 132, 0.2), 0 10px 18px rgba(0, 0, 0, 0.6);
+}
+
+.dark-mode .script-line-header {
+  background: transparent;
+  border-bottom: 1px solid #1d293b;
+}
+
+.dark-mode .script-line-summary,
+.dark-mode .script-editor-section-title,
+.dark-mode .script-expression-title {
+  color: #e7ecf7;
+}
+
+.dark-mode .script-labeled-node,
+.dark-mode .script-current-value {
+  color: #acb6c6;
+}
+
+.dark-mode .script-labeled-node input,
+.dark-mode .script-labeled-node select,
+.dark-mode .script-automation-script-row input,
+.dark-mode .script-automation-script-row select,
+.dark-mode .script-term-row input,
+.dark-mode .script-term-row select,
+.dark-mode .script-action-row select,
+.dark-mode .script-editor-row input,
+.dark-mode .script-editor-row select,
+.dark-mode .script-clause-card select {
+  background: #0d1522;
+  border-color: #30405a;
+  color: #e7ecf7;
+}
+
+.dark-mode .script-labeled-node input:focus,
+.dark-mode .script-labeled-node select:focus,
+.dark-mode .script-automation-script-row input:focus,
+.dark-mode .script-automation-script-row select:focus,
+.dark-mode .script-term-row input:focus,
+.dark-mode .script-term-row select:focus,
+.dark-mode .script-action-row select:focus,
+.dark-mode .script-editor-row input:focus,
+.dark-mode .script-editor-row select:focus,
+.dark-mode .script-clause-card select:focus {
+  border-color: #3f7bf7;
+  outline: 2px solid rgba(63, 123, 247, 0.3);
+  outline-offset: 1px;
+}
+
+.dark-mode .script-term-row,
+.dark-mode .script-action-row {
+  background: #0e1421;
+  border-color: #202d42;
+}
+
+.dark-mode .script-automation-body button,
+.dark-mode .script-line-header button,
+.dark-mode .script-line-editor button {
+  background: #1a2538;
+  border-color: #2b3a53;
+  color: #e7ecf7;
+}
+
+.dark-mode .script-automation-body button:hover,
+.dark-mode .script-line-header button:hover,
+.dark-mode .script-line-editor button:hover {
+  background: #24324a;
+}
+
+.dark-mode .script-automation-body button:disabled,
+.dark-mode .script-line-header button:disabled,
+.dark-mode .script-line-editor button:disabled {
+  background: #141c2b;
+  border-color: #223049;
+  color: #6a778f;
+  opacity: 0.7;
+}
+
+.dark-mode .script-automation-body button.automation-toggle,
+.dark-mode .script-automation-body button.ui-toggle,
+.dark-mode .script-automation-body button.automation-toggle:hover,
+.dark-mode .script-automation-body button.ui-toggle:hover {
+  background: transparent;
+  border: none;
+}
+
+.dark-mode .script-automation-run,
+.dark-mode .script-automation-add-line,
+.dark-mode .script-automation-new,
+.dark-mode .script-editor-section > button {
+  background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%) !important;
+  border-color: #3f7bf7 !important;
+  color: #ffffff;
 }
 
 @media (max-width: 920px) {
