@@ -924,6 +924,10 @@ class ScriptVariableRegistry {
     if (value === Infinity) return 1e300;
     if (value === -Infinity) return -1e300;
     if (value && value.constructor === BigInt) return Number(value);
+    if (value && value.constructor === String) {
+      const parsed = parseFlexibleNumber(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
     const numeric = Number(value || 0);
     return Number.isFinite(numeric) ? numeric : 0;
   }

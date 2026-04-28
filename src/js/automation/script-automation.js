@@ -19,6 +19,7 @@ class ScriptAutomation {
     this.autoRestartOnCompletion = true;
     this.nextTravelScriptId = null;
     this.nextTravelPersistent = false;
+    this.sleepRemainingMs = 0;
     this.maxLinesPerTick = 25;
     this.maxActionsPerTick = 25;
     this.registry = new ScriptVariableRegistry();
@@ -61,7 +62,9 @@ class ScriptAutomation {
     return {
       id: this.nextLineId++,
       name: '',
+      description: '',
       kind,
+      enabled: true,
       expanded: true,
       condition: this.createDefaultCondition(),
       actions: [],
@@ -183,6 +186,7 @@ class ScriptAutomation {
       this.pcLineId = script.lines[0]?.id || null;
     }
     this.running = true;
+    this.sleepRemainingMs = 0;
     this.manualStepDisplayLineId = null;
     this.lastStatus = 'Running';
     this.haltedReason = 'running';
@@ -216,6 +220,7 @@ class ScriptAutomation {
     const script = this.getActiveScript();
     this.pcLineId = script?.lines[0]?.id || null;
     this.manualStepDisplayLineId = null;
+    this.sleepRemainingMs = 0;
     this.haltedReason = 'reset';
     this.lastStatus = 'Ready to Start';
   }
@@ -273,6 +278,14 @@ class ScriptAutomation {
   }
 
   update(delta, forceStep = false) {
+    if (!forceStep && this.sleepRemainingMs > 0) {
+      this.sleepRemainingMs = Math.max(0, this.sleepRemainingMs - Math.max(0, delta || 0));
+      if (this.sleepRemainingMs > 0) {
+        this.haltedReason = 'sleep';
+        this.lastStatus = `Sleeping (${formatNumber(this.sleepRemainingMs, false, 0)} ms)`;
+        return;
+      }
+    }
     if (!forceStep && this.running) this.manualStepDisplayLineId = null;
     if (!forceStep && !this.isActive()) {
       if (this.enabled && this.haltedReason === 'end') {
@@ -317,6 +330,12 @@ class ScriptAutomation {
 
       this.lastEvaluatedLineId = line.id;
       linesEvaluated += 1;
+      if (line.enabled === false) {
+        this.advanceLine(script, line);
+        this.haltedReason = 'disabledLine';
+        this.lastStatus = `Skipped disabled ${this.getLineLabel(script, line)}`;
+        continue;
+      }
       const conditionResult = line.kind === 'actions' ? true : this.evaluateCondition(line.condition);
       this.lastConditionResult = conditionResult;
 
@@ -324,9 +343,10 @@ class ScriptAutomation {
         const actionResult = this.runActions(line.actions, script, { actionsUsed, gotoUsed });
         actionsUsed = actionResult.actionsUsed;
         gotoUsed = actionResult.gotoUsed;
-        if (actionResult.gotoTriggered || actionResult.actionLimitReached) {
-          this.haltedReason = actionResult.gotoTriggered ? 'goto' : 'actionLimit';
-          this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : 'Action limit reached';
+        if (actionResult.gotoTriggered || actionResult.actionLimitReached || actionResult.sleepTriggered) {
+          if (actionResult.sleepTriggered) this.advanceLine(script, line);
+          this.haltedReason = actionResult.gotoTriggered ? 'goto' : (actionResult.sleepTriggered ? 'sleep' : 'actionLimit');
+          this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : (actionResult.sleepTriggered ? `Sleeping (${formatNumber(this.sleepRemainingMs, false, 0)} ms)` : 'Action limit reached');
           break;
         }
         this.advanceLine(script, line);
@@ -345,18 +365,20 @@ class ScriptAutomation {
         const actionResult = this.runActions(line.actions, script, { actionsUsed, gotoUsed });
         actionsUsed = actionResult.actionsUsed;
         gotoUsed = actionResult.gotoUsed;
-        if (actionResult.gotoTriggered || actionResult.actionLimitReached) {
-          this.haltedReason = actionResult.gotoTriggered ? 'goto' : 'actionLimit';
-          this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : 'Action limit reached';
+        if (actionResult.gotoTriggered || actionResult.actionLimitReached || actionResult.sleepTriggered) {
+          if (actionResult.sleepTriggered) this.advanceLine(script, line);
+          this.haltedReason = actionResult.gotoTriggered ? 'goto' : (actionResult.sleepTriggered ? 'sleep' : 'actionLimit');
+          this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : (actionResult.sleepTriggered ? `Sleeping (${formatNumber(this.sleepRemainingMs, false, 0)} ms)` : 'Action limit reached');
           break;
         }
       } else if (line.kind === 'if') {
         const actionResult = this.runActions(line.elseActions, script, { actionsUsed, gotoUsed });
         actionsUsed = actionResult.actionsUsed;
         gotoUsed = actionResult.gotoUsed;
-        if (actionResult.gotoTriggered || actionResult.actionLimitReached) {
-          this.haltedReason = actionResult.gotoTriggered ? 'goto' : 'actionLimit';
-          this.lastStatus = actionResult.gotoTriggered ? 'ELSE GOTO executed' : 'Action limit reached';
+        if (actionResult.gotoTriggered || actionResult.actionLimitReached || actionResult.sleepTriggered) {
+          if (actionResult.sleepTriggered) this.advanceLine(script, line);
+          this.haltedReason = actionResult.gotoTriggered ? 'goto' : (actionResult.sleepTriggered ? 'sleep' : 'actionLimit');
+          this.lastStatus = actionResult.gotoTriggered ? 'ELSE GOTO executed' : (actionResult.sleepTriggered ? `Sleeping (${formatNumber(this.sleepRemainingMs, false, 0)} ms)` : 'Action limit reached');
           break;
         }
       }
@@ -395,6 +417,7 @@ class ScriptAutomation {
     let actionsUsed = state.actionsUsed || 0;
     let gotoUsed = !!state.gotoUsed;
     let gotoTriggered = false;
+    let sleepTriggered = false;
     let actionLimitReached = false;
     const summaries = [];
     const actionList = Array.isArray(actions) ? actions : [];
@@ -405,6 +428,13 @@ class ScriptAutomation {
         break;
       }
       const action = actionList[index];
+      if (action.kind === 'sleep') {
+        this.sleepRemainingMs = Math.max(0, this.registry.toNumber(action.durationMs));
+        sleepTriggered = this.sleepRemainingMs > 0;
+        if (sleepTriggered) summaries.push(`Sleep ${formatNumber(this.sleepRemainingMs, false, 0)} ms`);
+        actionsUsed += 1;
+        break;
+      }
       if (action.kind === 'goto') {
         if (gotoUsed) continue;
         const target = script.lines.find(line => line.id === Number(action.targetLineId));
@@ -425,7 +455,7 @@ class ScriptAutomation {
     }
 
     this.lastActionSummary = summaries.join(', ');
-    return { actionsUsed, gotoUsed, gotoTriggered, actionLimitReached };
+    return { actionsUsed, gotoUsed, gotoTriggered, sleepTriggered, actionLimitReached };
   }
 
   applyAutomationAction(action) {
@@ -514,6 +544,7 @@ class ScriptAutomation {
   }
 
   describeAction(action) {
+    if (action.kind === 'sleep') return `Sleep ${formatNumber(this.registry.toNumber(action.durationMs), false, 0)} ms`;
     const target = this.getAutomationTarget(action.automationType);
     if (!target) return 'Action';
     if (action.kind === 'applyPreset') {
@@ -540,6 +571,7 @@ class ScriptAutomation {
       autoRestartOnCompletion: this.autoRestartOnCompletion,
       nextTravelScriptId: this.nextTravelScriptId,
       nextTravelPersistent: this.nextTravelPersistent,
+      sleepRemainingMs: this.sleepRemainingMs,
       scripts: this.deepClone(this.scripts),
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
@@ -559,6 +591,7 @@ class ScriptAutomation {
     this.autoRestartOnCompletion = data.autoRestartOnCompletion !== false;
     this.nextTravelScriptId = data.nextTravelScriptId ? Number(data.nextTravelScriptId) : null;
     this.nextTravelPersistent = data.nextTravelPersistent === true && !!this.nextTravelScriptId;
+    this.sleepRemainingMs = this.registry.toNumber(data.sleepRemainingMs);
     this.scripts = Array.isArray(data.scripts) ? this.normalizeScripts(data.scripts) : [];
     this.selectedScriptId = data.selectedScriptId ? Number(data.selectedScriptId) : null;
     this.activeScriptId = data.activeScriptId ? Number(data.activeScriptId) : null;
@@ -590,7 +623,9 @@ class ScriptAutomation {
     return {
       id: Number(line.id) || this.nextLineId++,
       name: line.name || '',
+      description: line.description || '',
       kind: ['if', 'wait', 'actions'].includes(line.kind) ? line.kind : 'if',
+      enabled: line.enabled !== false,
       expanded: line.expanded !== false,
       condition: line.condition?.constructor === Object ? line.condition : this.createDefaultCondition(),
       actions: Array.isArray(line.actions) ? line.actions : [],

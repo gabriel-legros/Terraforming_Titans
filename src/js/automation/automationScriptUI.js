@@ -396,11 +396,24 @@ function renderScriptLines(automation, script, container) {
   script.lines.forEach((line, index) => {
     const card = document.createElement('div');
     card.classList.add('script-line-card');
+    if (line.enabled === false) card.classList.add('script-line-disabled');
     const displayLineId = automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId;
     if (line.id === displayLineId) card.classList.add('script-line-current');
 
     const header = document.createElement('div');
     header.classList.add('script-line-header');
+
+    if (line.enabled !== false) line.enabled = true;
+    const enabledToggle = document.createElement('input');
+    enabledToggle.type = 'checkbox';
+    enabledToggle.checked = line.enabled !== false;
+    enabledToggle.classList.add('script-line-enabled-toggle');
+    enabledToggle.title = getAutomationCardText('scriptLineEnabled', {}, 'Line enabled');
+    enabledToggle.addEventListener('change', event => {
+      line.enabled = event.target.checked;
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
 
     const summary = document.createElement('div');
     summary.classList.add('script-line-summary');
@@ -441,7 +454,7 @@ function renderScriptLines(automation, script, container) {
       queueAutomationUIRefresh();
     });
     controls.append(up, down, remove);
-    header.append(expand, summary, controls);
+    header.append(enabledToggle, expand, summary, controls);
     card.appendChild(header);
 
     if (line.expanded !== false) {
@@ -462,10 +475,13 @@ function renderScriptLines(automation, script, container) {
 }
 
 function buildScriptLineSummary(automation, script, line, index) {
+  const nameText = line.name ? `${line.name}: ` : '';
+  if (line.description) {
+    return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${nameText}${line.description}`;
+  }
   const conditionText = line.kind === 'actions' ? 'Always' : automation.describeCondition(line.condition);
   const actionText = describeScriptLineActions(automation, script, line);
   const elseText = line.kind === 'if' ? describeScriptActions(automation, script, line.elseActions) : '';
-  const nameText = line.name ? `${line.name}: ` : '';
   const actionSuffix = actionText ? ` → ${actionText}` : ' → No actions';
   const elseSuffix = elseText ? ` ELSE → ${elseText}` : '';
   return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${nameText}${conditionText}${actionSuffix}${elseSuffix}`;
@@ -524,6 +540,8 @@ function createLineKindSelect(selectedKind) {
 
 function ensureLineKindState(automation, line) {
   if (!['if', 'wait', 'actions'].includes(line.kind)) line.kind = 'if';
+  if (line.enabled !== false) line.enabled = true;
+  if (!line.description) line.description = '';
   if (!line.condition) line.condition = automation.createDefaultCondition();
   if (!Array.isArray(line.actions)) line.actions = [];
   if (!Array.isArray(line.elseActions)) line.elseActions = [];
@@ -537,7 +555,8 @@ function getScriptActionKinds() {
   return [
     { id: 'applyPreset', label: getAutomationCardText('scriptApplyPreset', {}, 'Apply Preset') },
     { id: 'applyCombination', label: getAutomationCardText('scriptApplyCombination', {}, 'Apply Combination') },
-    { id: 'goto', label: 'GOTO' }
+    { id: 'goto', label: 'GOTO' },
+    { id: 'sleep', label: getAutomationCardText('scriptSleep', {}, 'Sleep') }
   ];
 }
 
@@ -562,7 +581,20 @@ function renderLineBasics(automation, script, line, container) {
     queueAutomationUIRefresh();
   });
 
-  row.append(labeledNode(getAutomationCardText('scriptLineKind', {}, 'Line Type'), kind), labeledNode(getAutomationCardText('scriptLineName', {}, 'Name'), name));
+  const description = document.createElement('input');
+  description.type = 'text';
+  description.placeholder = getAutomationCardText('scriptLineDescriptionPlaceholder', {}, 'Description');
+  description.value = line.description || '';
+  description.addEventListener('input', event => {
+    line.description = event.target.value;
+    queueAutomationUIRefresh();
+  });
+
+  row.append(
+    labeledNode(getAutomationCardText('scriptLineKind', {}, 'Line Type'), kind),
+    labeledNode(getAutomationCardText('scriptLineName', {}, 'Name'), name),
+    labeledNode(getAutomationCardText('scriptLineDescription', {}, 'Description'), description)
+  );
   container.appendChild(row);
 }
 
@@ -647,7 +679,7 @@ function renderExpressionEditor(automation, expression, container, titleText) {
   wrap.classList.add('script-expression-editor');
   const title = document.createElement('div');
   title.classList.add('script-expression-title');
-  title.textContent = titleText;
+  title.textContent = `${titleText} (Current Value: ${formatNumber(automation.evaluateExpression(expression))})`;
   wrap.appendChild(title);
 
   expression.terms.forEach((term, index) => {
@@ -707,6 +739,12 @@ function renderReferencePicker(automation, ref, row) {
     input.value = ref.constant ?? 0;
     input.addEventListener('input', event => {
       ref.constant = event.target.value;
+    });
+    input.addEventListener('blur', () => {
+      ref.constant = formatNumber(registry.toNumber(ref.constant), true, 3);
+      input.value = ref.constant;
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
     });
     appendScriptSelectWithValue(row, input, getScriptRefCurrentText(automation, ref));
     return;
@@ -845,7 +883,22 @@ function renderActionsEditor(automation, script, line, container, actions, title
     });
     row.appendChild(kind);
 
-    if (action.kind === 'goto') {
+    if (action.kind === 'sleep') {
+      const duration = document.createElement('input');
+      duration.type = 'text';
+      duration.value = action.durationMs ?? 1000;
+      duration.addEventListener('input', event => {
+        action.durationMs = event.target.value;
+        queueAutomationUIRefresh();
+      });
+      duration.addEventListener('blur', () => {
+        action.durationMs = formatNumber(automation.registry.toNumber(action.durationMs), true, 3);
+        duration.value = action.durationMs;
+        forceScriptAutomationRefresh = true;
+        queueAutomationUIRefresh();
+      });
+      row.appendChild(labeledNode(getAutomationCardText('scriptSleepMs', {}, 'Milliseconds'), duration));
+    } else if (action.kind === 'goto') {
       const lineSelect = createSelect(createLineTargetOptions(script), action.targetLineId || script.lines[0].id);
       action.targetLineId = Number(lineSelect.value);
       lineSelect.addEventListener('change', event => {
