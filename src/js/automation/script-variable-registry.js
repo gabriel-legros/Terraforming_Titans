@@ -232,6 +232,7 @@ class ScriptVariableRegistry {
     return [
       { id: 'status', label: 'Status' },
       { id: 'specialization', label: 'Specialization' },
+      { id: 'life', label: t('ui.hope.automationCards.scriptVariables.terraforming.life.category', {}, 'Life') },
       { id: 'temperature', label: 'Temperature' },
       { id: 'atmosphere', label: 'Atmosphere' },
       { id: 'surface', label: 'Surface' },
@@ -243,6 +244,7 @@ class ScriptVariableRegistry {
   getTerraformingTargets(categoryId) {
     if (categoryId === 'status') return [{ id: 'status', label: 'Status' }];
     if (categoryId === 'specialization') return [{ id: 'specialization', label: 'Current Specialization' }];
+    if (categoryId === 'life') return [{ id: 'life', label: t('ui.hope.automationCards.scriptVariables.terraforming.life.target', {}, 'Life') }];
     return [{ id: categoryId, label: this.formatIdLabel(categoryId) }];
   }
 
@@ -272,6 +274,20 @@ class ScriptVariableRegistry {
         { id: 'manufacturingWorld', label: 'Manufacturing World', valueType: 'boolean' },
         { id: 'holyWorld', label: 'Holy World', valueType: 'boolean' },
         { id: 'foundryWorld', label: 'Foundry World', valueType: 'boolean' }
+      ];
+    }
+    if (categoryId === 'life') {
+      return [
+        {
+          id: 'canSurviveAnyZone',
+          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.canSurviveAnyZone', {}, 'Can Survive in Any Zone'),
+          valueType: 'boolean'
+        },
+        {
+          id: 'canSurviveAllZones',
+          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.canSurviveAllZones', {}, 'Can Survive in All Zones'),
+          valueType: 'boolean'
+        }
       ];
     }
     if (categoryId === 'temperature') {
@@ -553,6 +569,7 @@ class ScriptVariableRegistry {
     const attribute = ref.attribute;
     if (ref.category === 'status') return this.resolveTerraformingStatusValue(attribute);
     if (ref.category === 'specialization') return this.resolveTerraformingSpecializationValue(attribute);
+    if (ref.category === 'life') return this.resolveTerraformingLifeValue(attribute);
     if (attribute === 'averageTemperatureK') return this.toNumber(terraforming.temperature.value);
     if (attribute === 'averageTemperatureC') return this.toNumber(terraforming.temperature.value - 273.15);
     if (attribute === 'trendTemperatureK') return this.toNumber(terraforming.temperature.trendValue);
@@ -603,6 +620,13 @@ class ScriptVariableRegistry {
     if (attribute === 'manufacturingWorld') return current === 2 ? 1 : 0;
     if (attribute === 'holyWorld') return current === 3 ? 1 : 0;
     if (attribute === 'foundryWorld') return current === 4 ? 1 : 0;
+    return 0;
+  }
+
+  resolveTerraformingLifeValue(attribute) {
+    const design = lifeDesigner.currentDesign;
+    if (attribute === 'canSurviveAnyZone') return design.canSurviveAnywhere() ? 1 : 0;
+    if (attribute === 'canSurviveAllZones') return design.canSurviveInAllZones() ? 1 : 0;
     return 0;
   }
 

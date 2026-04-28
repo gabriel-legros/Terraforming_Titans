@@ -529,6 +529,12 @@ class LifeDesign {
       return tempResults.global.pass;
   }
 
+  canSurviveInAllZones() {
+      const tempResults = this.temperatureSurvivalCheck();
+      const zones = getZones();
+      return zones.every(zoneName => tempResults[zoneName]?.pass);
+  }
+
   getPrimarySurvivalFailureReason() {
       const tempResults = this.temperatureSurvivalCheck();
       if (tempResults.global.pass) {

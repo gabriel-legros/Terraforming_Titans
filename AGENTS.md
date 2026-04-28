@@ -264,6 +264,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Research automation adds Solis-unlocked preset management in the Hope automation tab without combinations; presets directly capture the Research tab's manual hidden state plus per-research auto-research toggle and priority, switching presets reapplies those saved research UI states, and a single preset can be queued for next travel with optional persistence
   - Sensitive automation picker entries can use `automationRequiresEverEnabled`; they stay hidden until the building/project has been available once, and automation preserves that discovery through save/load/travel
   - Life automation presets and as-needed modes
+  - Script Automation can inspect Terraforming -> Life survivability with Any Zone and All Zones checks.
   - GHG/calcite and dust factory automation targeting
 - String numeric input handling standardized across major controls.
 - GHG factory temperature-band automation now aims both greenhouse gas and calcite corrections at the selected band midpoint, then idles again while the projected trend remains inside the band.
