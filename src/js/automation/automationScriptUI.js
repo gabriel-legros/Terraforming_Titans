@@ -73,6 +73,24 @@ function buildScriptAutomationUI() {
   controls.append(masterToggle, runButton, pauseButton, stepButton, resetButton, autoRestartToggle);
   body.appendChild(controls);
 
+  const nextTravelRow = document.createElement('div');
+  nextTravelRow.classList.add('script-automation-next-travel-row', 'building-automation-next-travel-row');
+  const nextTravelLabel = document.createElement('label');
+  nextTravelLabel.classList.add('script-automation-next-travel-label', 'building-automation-apply-next-travel-label');
+  const nextTravelText = document.createElement('span');
+  nextTravelText.textContent = getAutomationCardText('scriptOnNextTravelLabel', {}, 'Script on Next Travel');
+  const nextTravelSelect = document.createElement('select');
+  nextTravelSelect.classList.add('script-automation-next-travel-select', 'building-automation-next-travel-select');
+  const nextTravelPersistToggle = document.createElement('input');
+  nextTravelPersistToggle.type = 'checkbox';
+  nextTravelPersistToggle.classList.add('script-automation-next-travel-persist-toggle');
+  const nextTravelPersistText = document.createElement('span');
+  nextTravelPersistText.textContent = getAutomationCardText('allFutureTravelsLabel', {}, 'All future travels');
+  nextTravelPersistText.classList.add('script-automation-next-travel-persist-text', 'building-automation-next-travel-persist-text');
+  nextTravelLabel.append(nextTravelText, nextTravelSelect, nextTravelPersistToggle, nextTravelPersistText);
+  nextTravelRow.appendChild(nextTravelLabel);
+  body.appendChild(nextTravelRow);
+
   const statusLine = document.createElement('div');
   statusLine.classList.add('script-automation-status-line');
   body.appendChild(statusLine);
@@ -120,6 +138,8 @@ function buildScriptAutomationUI() {
   automationElements.scriptStepButton = stepButton;
   automationElements.scriptResetButton = resetButton;
   automationElements.scriptAutoRestartToggle = autoRestartToggle;
+  automationElements.scriptNextTravelSelect = nextTravelSelect;
+  automationElements.scriptNextTravelPersistToggle = nextTravelPersistToggle;
   automationElements.scriptStatusLine = statusLine;
   automationElements.scriptSelect = scriptSelect;
   automationElements.scriptNameInput = scriptName;
@@ -179,6 +199,22 @@ function wireScriptAutomationEvents() {
     if (!automation) return;
     automation.autoRestartOnCompletion = !automation.autoRestartOnCompletion;
     queueAutomationUIRefresh();
+  });
+
+  els.scriptNextTravelSelect.addEventListener('change', event => {
+    const automation = getScriptAutomation();
+    if (!automation) return;
+    const scriptId = event.target.value;
+    automation.nextTravelScriptId = scriptId ? Number(scriptId) : null;
+    automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelScriptId;
+    els.scriptNextTravelPersistToggle.checked = automation.nextTravelPersistent;
+    els.scriptNextTravelPersistToggle.disabled = !automation.nextTravelScriptId;
+  });
+
+  els.scriptNextTravelPersistToggle.addEventListener('change', event => {
+    const automation = getScriptAutomation();
+    if (!automation) return;
+    automation.nextTravelPersistent = event.target.checked && !!automation.nextTravelScriptId;
   });
 
   els.scriptSelect.addEventListener('change', event => {
@@ -248,6 +284,33 @@ function updateScriptAutomationUI() {
   setAutomationToggleState(automationElements.scriptAutoRestartToggle, automation.autoRestartOnCompletion);
 
   const script = automation.getSelectedScript();
+  const nextTravelScriptId = automation.nextTravelScriptId;
+  const nextTravelScript = nextTravelScriptId ? automation.scripts.find(item => item.id === Number(nextTravelScriptId)) : null;
+  if (nextTravelScriptId && !nextTravelScript) {
+    automation.nextTravelScriptId = null;
+    automation.nextTravelPersistent = false;
+  }
+  automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelScriptId;
+
+  if (document.activeElement !== automationElements.scriptNextTravelSelect) {
+    automationElements.scriptNextTravelSelect.textContent = '';
+    const noneOption = document.createElement('option');
+    noneOption.value = '';
+    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
+    automationElements.scriptNextTravelSelect.appendChild(noneOption);
+    automation.scripts.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.name || `Script ${item.id}`;
+      automationElements.scriptNextTravelSelect.appendChild(option);
+    });
+    automationElements.scriptNextTravelSelect.value = automation.nextTravelScriptId
+      ? String(automation.nextTravelScriptId)
+      : '';
+  }
+  automationElements.scriptNextTravelPersistToggle.checked = automation.nextTravelPersistent;
+  automationElements.scriptNextTravelPersistToggle.disabled = !automation.nextTravelScriptId;
+
   if (document.activeElement !== automationElements.scriptSelect) {
     automationElements.scriptSelect.textContent = '';
     automation.scripts.forEach(item => {

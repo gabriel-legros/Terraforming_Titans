@@ -175,6 +175,11 @@ class AutomationManager extends EffectableEntity {
       appliedTravelAutomation = appliedTravelAutomation || appliedResearchPreset;
     }
 
+    if (this.scriptAutomation) {
+      const appliedTravelScript = this.scriptAutomation.applyTravelScript();
+      appliedTravelAutomation = appliedTravelAutomation || appliedTravelScript;
+    }
+
     if (appliedTravelAutomation) {
       queueAutomationUIRefresh();
       updateAutomationUI();

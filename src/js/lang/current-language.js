@@ -3065,6 +3065,7 @@ setLanguageData({
         colonyBuilderHint: 'Colony Buildings capture colony controls and autobuild settings, including aerostat controls. Other categories capture control settings only.',
         colonyApplyHintEmpty: 'Save a preset above to enable the Apply list.',
         colonyApplyHintRule: 'Lower presets override higher presets when they target the same colony setting.',
+        scriptOnNextTravelLabel: 'Script on Next Travel',
         movePresetUp: 'Move preset up',
         movePresetDown: 'Move preset down',
         moveCombinationUp: 'Move combination up',

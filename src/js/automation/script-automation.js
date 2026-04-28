@@ -16,7 +16,9 @@ class ScriptAutomation {
     this.manualStepDisplayLineId = null;
     this.lastConditionResult = null;
     this.haltedReason = 'inactive';
-    this.autoRestartOnCompletion = false;
+    this.autoRestartOnCompletion = true;
+    this.nextTravelScriptId = null;
+    this.nextTravelPersistent = false;
     this.maxLinesPerTick = 25;
     this.maxActionsPerTick = 25;
     this.registry = new ScriptVariableRegistry();
@@ -159,6 +161,10 @@ class ScriptAutomation {
       this.activeScriptId = this.scripts[0].id;
       this.pcLineId = this.scripts[0].lines[0]?.id || null;
     }
+    if (this.nextTravelScriptId === numericId) {
+      this.nextTravelScriptId = null;
+      this.nextTravelPersistent = false;
+    }
     return true;
   }
 
@@ -180,6 +186,22 @@ class ScriptAutomation {
     this.manualStepDisplayLineId = null;
     this.lastStatus = 'Running';
     this.haltedReason = 'running';
+    return true;
+  }
+
+  applyTravelScript() {
+    const script = this.scripts.find(item => item.id === Number(this.nextTravelScriptId));
+    if (!script) {
+      this.nextTravelScriptId = null;
+      this.nextTravelPersistent = false;
+      return false;
+    }
+    this.enabled = true;
+    this.runScript(script.id);
+    this.lastStatus = 'Running (Travel script)';
+    if (!this.nextTravelPersistent) {
+      this.nextTravelScriptId = null;
+    }
     return true;
   }
 
@@ -284,7 +306,7 @@ class ScriptAutomation {
         if (this.autoRestartOnCompletion) {
           this.pcLineId = script.lines[0]?.id || null;
           this.haltedReason = 'autoRestart';
-          this.lastStatus = 'Auto restart queued';
+          this.lastStatus = 'Running (Auto restarting)';
         } else {
           this.running = false;
           this.haltedReason = 'end';
@@ -516,6 +538,8 @@ class ScriptAutomation {
       running: this.running,
       collapsed: this.collapsed,
       autoRestartOnCompletion: this.autoRestartOnCompletion,
+      nextTravelScriptId: this.nextTravelScriptId,
+      nextTravelPersistent: this.nextTravelPersistent,
       scripts: this.deepClone(this.scripts),
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
@@ -532,7 +556,9 @@ class ScriptAutomation {
     this.enabled = data.enabled === true;
     this.running = data.running === true && this.enabled;
     this.collapsed = data.collapsed === true;
-    this.autoRestartOnCompletion = data.autoRestartOnCompletion === true;
+    this.autoRestartOnCompletion = data.autoRestartOnCompletion !== false;
+    this.nextTravelScriptId = data.nextTravelScriptId ? Number(data.nextTravelScriptId) : null;
+    this.nextTravelPersistent = data.nextTravelPersistent === true && !!this.nextTravelScriptId;
     this.scripts = Array.isArray(data.scripts) ? this.normalizeScripts(data.scripts) : [];
     this.selectedScriptId = data.selectedScriptId ? Number(data.selectedScriptId) : null;
     this.activeScriptId = data.activeScriptId ? Number(data.activeScriptId) : null;
@@ -544,6 +570,10 @@ class ScriptAutomation {
     this.ensureDefaultScript();
     this.getSelectedScript();
     this.getActiveScript();
+    if (!this.scripts.find(script => script.id === this.nextTravelScriptId)) {
+      this.nextTravelScriptId = null;
+      this.nextTravelPersistent = false;
+    }
   }
 
   normalizeScripts(scripts) {
