@@ -73,10 +73,11 @@ const shopDescriptions = {
   lifeAutomation: 'Provides HOPE with software for easier biomass management',
   buildingsAutomation: 'Provides HOPE with software for easier buildings management',
   projectsAutomation: 'Provides HOPE with software for easier projects management',
-  colonyAutomation: 'Provides HOPE with software for easier colony management'
+  colonyAutomation: 'Provides HOPE with software for easier colony management',
+  automationScripting: 'Automation Scripting'
 };
 
-const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation', 'buildingsAutomation', 'projectsAutomation', 'colonyAutomation', 'researchAutomation'];
+const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation', 'buildingsAutomation', 'projectsAutomation', 'colonyAutomation', 'researchAutomation', 'automationScripting'];
 const solisShopRepeatableKeys = [
   'funding',
   'metal',

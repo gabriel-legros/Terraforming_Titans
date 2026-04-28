@@ -19,6 +19,21 @@ function buildScriptAutomationUI() {
       queueAutomationUIRefresh();
     }
   );
+  const info = document.createElement('span');
+  info.classList.add('info-tooltip-icon');
+  info.innerHTML = '&#9432;';
+  info.addEventListener('click', event => {
+    event.stopPropagation();
+  });
+  header.title.appendChild(info);
+  attachDynamicInfoTooltip(
+    info,
+    getAutomationCardText(
+      'scriptAutomationTooltip',
+      {},
+      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF lines test their condition. When true, they run Actions; when false, they run Else Actions. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
+    )
+  );
 
   const body = document.createElement('div');
   body.classList.add('automation-body', 'script-automation-body');
@@ -73,12 +88,6 @@ function buildScriptAutomationUI() {
   scriptName.placeholder = getAutomationCardText('scriptNamePlaceholder', {}, 'Script name');
   scriptName.classList.add('script-automation-name');
 
-  const scriptToggle = createAutomationToggle(
-    getAutomationCardText('scriptEnabledOn', {}, 'Script On'),
-    getAutomationCardText('scriptEnabledOff', {}, 'Script Off')
-  );
-  scriptToggle.classList.add('script-automation-script-toggle');
-
   const newButton = document.createElement('button');
   newButton.classList.add('script-automation-new');
   newButton.textContent = getAutomationCardText('scriptNew', {}, 'New Script');
@@ -91,7 +100,7 @@ function buildScriptAutomationUI() {
   deleteButton.classList.add('script-automation-delete');
   deleteButton.textContent = getAutomationCardText('scriptDelete', {}, 'Delete');
 
-  scriptRow.append(scriptSelect, scriptName, scriptToggle, newButton, duplicateButton, deleteButton);
+  scriptRow.append(scriptSelect, scriptName, newButton, duplicateButton, deleteButton);
   body.appendChild(scriptRow);
 
   const linesContainer = document.createElement('div');
@@ -114,7 +123,6 @@ function buildScriptAutomationUI() {
   automationElements.scriptStatusLine = statusLine;
   automationElements.scriptSelect = scriptSelect;
   automationElements.scriptNameInput = scriptName;
-  automationElements.scriptEnabledToggle = scriptToggle;
   automationElements.scriptNewButton = newButton;
   automationElements.scriptDuplicateButton = duplicateButton;
   automationElements.scriptDeleteButton = deleteButton;
@@ -189,14 +197,6 @@ function wireScriptAutomationEvents() {
     queueAutomationUIRefresh();
   });
 
-  els.scriptEnabledToggle.addEventListener('click', () => {
-    const automation = getScriptAutomation();
-    const script = automation?.getSelectedScript();
-    if (!automation || !script) return;
-    automation.setScriptEnabled(script.id, !script.enabled);
-    queueAutomationUIRefresh();
-  });
-
   els.scriptNewButton.addEventListener('click', () => {
     const automation = getScriptAutomation();
     if (!automation) return;
@@ -242,10 +242,6 @@ function updateScriptAutomationUI() {
   card.classList.toggle('hidden', !visible);
   if (!visible) return;
 
-  automationElements.scriptAutomationDescription.textContent = automation.enabled
-    ? getAutomationCardText('scriptAutomationDescriptionUnlocked', {}, 'Run structured automation scripts built from dropdown conditions and preset actions.')
-    : getAutomationCardText('scriptAutomationDescriptionLocked', {}, 'Script automation is disabled. Enable it manually when you are ready to use experimental scripts.');
-
   automationElements.scriptPanelBody.style.display = automation.collapsed ? 'none' : 'flex';
   automationElements.scriptCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
   setAutomationToggleState(automationElements.scriptMasterToggle, automation.enabled);
@@ -266,11 +262,10 @@ function updateScriptAutomationUI() {
   if (script && document.activeElement !== automationElements.scriptNameInput) {
     automationElements.scriptNameInput.value = script.name || '';
   }
-  setAutomationToggleState(automationElements.scriptEnabledToggle, !!script?.enabled);
   automationElements.scriptDeleteButton.disabled = automation.scripts.length <= 1;
-  automationElements.scriptRunButton.disabled = !automation.enabled || !script || !script.enabled;
+  automationElements.scriptRunButton.disabled = !automation.enabled || !script;
   automationElements.scriptPauseButton.disabled = !automation.running;
-  automationElements.scriptStepButton.disabled = !automation.enabled || !script || !script.enabled;
+  automationElements.scriptStepButton.disabled = !automation.enabled || !script;
   automationElements.scriptResetButton.disabled = !script;
 
   const displayLineId = automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId;

@@ -110,7 +110,8 @@ progressZeus.chapters.push(
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 1_000 }
     ],
     reward: [
-      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisShipbuildingPermanentResearch', value: true }
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisShipbuildingPermanentResearch', value: true },
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAutomationScripting', value: true }
     ]
   },
   {

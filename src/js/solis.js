@@ -68,7 +68,8 @@ class SolisManager extends EffectableEntity {
       lifeAutomation: { baseCost: 750, purchases: 0, max: 1, enabled: false },
       buildingsAutomation: { baseCost: 1000, purchases: 0, max: 1, enabled: false },
       projectsAutomation: { baseCost: 2000, purchases: 0, max: 1, enabled: false },
-      colonyAutomation: { baseCost: 3000, purchases: 0, max: 1, enabled: false }
+      colonyAutomation: { baseCost: 3000, purchases: 0, max: 1, enabled: false },
+      automationScripting: { baseCost: 10000, purchases: 0, max: 1, enabled: false }
     };
   }
 
@@ -112,6 +113,8 @@ class SolisManager extends EffectableEntity {
       this.setUpgradeEnabled('projectsAutomation', !!effect.value);
     } else if (effect.flagId === 'solisColonyAutomation') {
       this.setUpgradeEnabled('colonyAutomation', !!effect.value);
+    } else if (effect.flagId === 'solisAutomationScripting') {
+      this.setUpgradeEnabled('automationScripting', !!effect.value);
     }
   }
 
@@ -454,6 +457,21 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisAutomationColony',
         sourceId: 'solisShop'
       });
+    } else if (key === 'automationScripting') {
+      addEffect({
+        target: 'automationManager',
+        type: 'enable',
+        effectId: 'solisAutomationEnable',
+        sourceId: 'solisShop'
+      });
+      addEffect({
+        target: 'automationManager',
+        type: 'booleanFlag',
+        flagId: 'automationScripts',
+        value: true,
+        effectId: 'solisAutomationScripting',
+        sourceId: 'solisShop'
+      });
     } else if (key === 'startingShips') {
       if (!shipsResource.unlocked) {
         if (shipsResource.enable) {
@@ -557,6 +575,7 @@ class SolisManager extends EffectableEntity {
     this.setUpgradeEnabled('buildingsAutomation', this.isBooleanFlagSet('solisBuildingsAutomation'));
     this.setUpgradeEnabled('projectsAutomation', this.isBooleanFlagSet('solisProjectsAutomation'));
     this.setUpgradeEnabled('colonyAutomation', this.isBooleanFlagSet('solisColonyAutomation'));
+    this.setUpgradeEnabled('automationScripting', this.isBooleanFlagSet('solisAutomationScripting'));
 
     const count = this.shopUpgrades.funding.purchases;
     if (count > 0 && typeof addEffect === 'function') {
@@ -695,6 +714,23 @@ class SolisManager extends EffectableEntity {
         flagId: 'automationProjects',
         value: true,
         effectId: 'solisAutomationProjects',
+        sourceId: 'solisShop'
+      });
+    }
+    const automationScriptingUpgrade = this.shopUpgrades.automationScripting;
+    if (automationScriptingUpgrade && automationScriptingUpgrade.purchases > 0) {
+      addEffect({
+        target: 'automationManager',
+        type: 'enable',
+        effectId: 'solisAutomationEnable',
+        sourceId: 'solisShop'
+      });
+      addEffect({
+        target: 'automationManager',
+        type: 'booleanFlag',
+        flagId: 'automationScripts',
+        value: true,
+        effectId: 'solisAutomationScripting',
         sourceId: 'solisShop'
       });
     }

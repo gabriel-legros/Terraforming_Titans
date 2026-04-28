@@ -47,7 +47,6 @@ class ScriptAutomation {
     const script = {
       id: this.nextScriptId++,
       name: 'Default Script',
-      enabled: true,
       lines: [this.createLine('if')]
     };
     this.scripts.push(script);
@@ -128,7 +127,6 @@ class ScriptAutomation {
     const script = {
       id: this.nextScriptId++,
       name: name || `Script ${this.nextScriptId - 1}`,
-      enabled: true,
       lines: [line]
     };
     this.scripts.push(script);
@@ -171,13 +169,6 @@ class ScriptAutomation {
     return true;
   }
 
-  setScriptEnabled(id, enabled) {
-    const script = this.scripts.find(item => item.id === Number(id));
-    if (!script) return false;
-    script.enabled = !!enabled;
-    return true;
-  }
-
   runScript(id) {
     const script = this.scripts.find(item => item.id === Number(id));
     if (!script) return false;
@@ -204,7 +195,7 @@ class ScriptAutomation {
     this.pcLineId = script?.lines[0]?.id || null;
     this.manualStepDisplayLineId = null;
     this.haltedReason = 'reset';
-    this.lastStatus = 'Reset';
+    this.lastStatus = 'Ready to Start';
   }
 
   stepOnce() {
@@ -264,6 +255,8 @@ class ScriptAutomation {
     if (!forceStep && !this.isActive()) {
       if (this.enabled && this.haltedReason === 'end') {
         this.lastStatus = 'End reached';
+      } else if (this.enabled && this.haltedReason === 'reset') {
+        this.lastStatus = 'Ready to Start';
       } else {
         this.lastStatus = this.enabled ? 'Paused' : 'Inactive';
         this.haltedReason = this.enabled ? 'paused' : 'inactive';
@@ -272,9 +265,9 @@ class ScriptAutomation {
     }
 
     const script = this.getActiveScript();
-    if (!script || !script.enabled || script.lines.length === 0) {
+    if (!script || script.lines.length === 0) {
       this.haltedReason = 'noScript';
-      this.lastStatus = 'No enabled script';
+      this.lastStatus = 'No script';
       return;
     }
 
@@ -365,6 +358,7 @@ class ScriptAutomation {
   }
 
   getDisplayLineId() {
+    if (this.haltedReason === 'reset') return null;
     if (!this.running && this.manualStepDisplayLineId) return this.manualStepDisplayLineId;
     return this.pcLineId;
   }
@@ -556,7 +550,6 @@ class ScriptAutomation {
     return scripts.map(script => ({
       id: Number(script.id) || this.nextScriptId++,
       name: script.name || 'Script',
-      enabled: script.enabled !== false,
       lines: Array.isArray(script.lines) && script.lines.length
         ? script.lines.map(line => this.normalizeLine(line))
         : [this.createLine('if')]

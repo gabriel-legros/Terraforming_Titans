@@ -6,7 +6,6 @@ const automationElements = {
   content: null,
   scriptAutomation: null,
   scriptAutomationStatus: null,
-  scriptAutomationDescription: null,
   scriptCollapseButton: null,
   scriptPanelBody: null,
   scriptMasterToggle: null,
@@ -21,7 +20,6 @@ const automationElements = {
   scriptNewButton: null,
   scriptDuplicateButton: null,
   scriptDeleteButton: null,
-  scriptEnabledToggle: null,
   scriptLinesContainer: null,
   scriptAddLineButton: null,
   shipAssignment: null,
@@ -212,9 +210,6 @@ function cacheAutomationElements() {
   if (!automationElements.scriptAutomationStatus) {
     automationElements.scriptAutomationStatus = document.getElementById('automation-scripts-status');
   }
-  if (!automationElements.scriptAutomationDescription) {
-    automationElements.scriptAutomationDescription = document.getElementById('automation-scripts-description');
-  }
   if (!automationElements.scriptCollapseButton && automationElements.scriptAutomation) {
     automationElements.scriptCollapseButton = automationElements.scriptAutomation.querySelector('.automation-collapse');
   }
@@ -256,9 +251,6 @@ function cacheAutomationElements() {
   }
   if (!automationElements.scriptDeleteButton && automationElements.scriptAutomation) {
     automationElements.scriptDeleteButton = automationElements.scriptAutomation.querySelector('.script-automation-delete');
-  }
-  if (!automationElements.scriptEnabledToggle && automationElements.scriptAutomation) {
-    automationElements.scriptEnabledToggle = automationElements.scriptAutomation.querySelector('.script-automation-script-toggle');
   }
   if (!automationElements.scriptLinesContainer && automationElements.scriptAutomation) {
     automationElements.scriptLinesContainer = automationElements.scriptAutomation.querySelector('.script-automation-lines');
@@ -740,7 +732,7 @@ function createAutomationCardHeader(card, titleText, onToggle) {
     event.stopPropagation();
     onToggle();
   });
-  return { collapse, titleGroup };
+  return { collapse, titleGroup, title };
 }
 
 function getAutomationCardText(path, vars, fallback) {

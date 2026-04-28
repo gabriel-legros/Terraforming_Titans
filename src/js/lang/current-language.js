@@ -2823,6 +2823,7 @@ setLanguageData({
         buildingsAutomation: 'Provides HOPE with software for easier buildings management',
         projectsAutomation: 'Provides HOPE with software for easier projects management',
         colonyAutomation: 'Provides HOPE with software for easier colony management',
+        automationScripting: 'Automation Scripting',
       },
       wgcUi: {
         clipboardPrompt: 'Copy Warp Gate Command team stats:',
@@ -2950,9 +2951,7 @@ setLanguageData({
       },
       automationCards: {
         scriptAutomationTitle: 'Script Automation',
-        scriptAutomationDescription: 'Run structured automation scripts built from dropdown conditions and preset actions.',
-        scriptAutomationDescriptionUnlocked: 'Run structured automation scripts built from dropdown conditions and preset actions.',
-        scriptAutomationDescriptionLocked: 'Script automation is disabled. Enable it manually when you are ready to use experimental scripts.',
+        scriptAutomationTooltip: 'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF lines test their condition. When true, they run Actions; when false, they run Else Actions. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.',
         scriptMasterOn: 'Scripts On',
         scriptMasterOff: 'Scripts Off',
         scriptRun: 'Run',
@@ -2962,8 +2961,6 @@ setLanguageData({
         scriptAutoRestartOn: 'Auto Restart On',
         scriptAutoRestartOff: 'Auto Restart Off',
         scriptNamePlaceholder: 'Script name',
-        scriptEnabledOn: 'Script On',
-        scriptEnabledOff: 'Script Off',
         scriptNew: 'New Script',
         scriptDuplicate: 'Duplicate',
         scriptDelete: 'Delete',
