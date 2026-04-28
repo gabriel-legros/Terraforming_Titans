@@ -358,7 +358,8 @@ class ScriptVariableRegistry {
   getHazardAttributes() {
     return [
       { id: 'active', label: 'Active', valueType: 'boolean' },
-      { id: 'coveragePercent', label: 'Coverage %', valueType: 'number' }
+      { id: 'unclearedPercent', label: 'Uncleared %', valueType: 'number' },
+      { id: 'clearedPercent', label: 'Cleared %', valueType: 'number' }
     ];
   }
 
@@ -750,9 +751,65 @@ class ScriptVariableRegistry {
   resolveHazardValue(ref) {
     const hazard = this.getHazard(ref.target);
     if (!hazard) return 0;
-    if (ref.attribute === 'active') return hazard.active || hazard.enabled ? 1 : 0;
-    if (ref.attribute === 'coveragePercent') return this.toNumber((hazard.coverage || hazard.coverageFraction || hazard.landCoverage || 0) * 100);
+    if (ref.attribute === 'active') return this.isHazardActive(ref.target, hazard) ? 1 : 0;
+    if (ref.attribute === 'unclearedPercent' || ref.attribute === 'coveragePercent') return this.resolveHazardUnclearedPercent(ref.target, hazard);
+    if (ref.attribute === 'clearedPercent') return Math.max(0, Math.min(100, 100 - this.resolveHazardUnclearedPercent(ref.target, hazard)));
     return 0;
+  }
+
+  isHazardActive(hazardId, hazard) {
+    if (!hazardManager.hasHazardParameters(hazardId)) return false;
+    return !this.isHazardCleared(hazardId, hazard);
+  }
+
+  isHazardCleared(hazardId, hazard) {
+    if (hazardId === 'hazardousBiomass') return hazard.isCleared(terraforming, hazardManager.parameters.hazardousBiomass);
+    if (hazardId === 'hazardousMachinery') return hazard.isCleared(terraforming, hazardManager.parameters.hazardousMachinery);
+    if (hazardId === 'garbage') return hazard.isCleared(terraforming, hazardManager.parameters.garbage);
+    if (hazardId === 'kessler') return hazard.isCleared(terraforming, hazardManager.parameters.kessler);
+    if (hazardId === 'pulsar') return hazard.isCleared(terraforming, hazardManager.parameters.pulsar);
+    return true;
+  }
+
+  resolveHazardUnclearedPercent(hazardId, hazard) {
+    if (!hazardManager.hasHazardParameters(hazardId)) return 0;
+    if (hazardId === 'hazardousBiomass') return this.toPercent(hazardManager.getHazardousBiomassControl());
+    if (hazardId === 'hazardousMachinery') return this.resolveHazardousMachineryUnclearedPercent(hazard);
+    if (hazardId === 'garbage') return this.resolveGarbageUnclearedPercent();
+    if (hazardId === 'kessler') return this.resolveResourceRemainingPercent(resources.special.orbitalDebris);
+    if (hazardId === 'pulsar') return this.toPercent(hazard.getHazardStrength(terraforming, hazardManager.parameters.pulsar));
+    return 0;
+  }
+
+  resolveHazardousMachineryUnclearedPercent(hazard) {
+    const status = hazard.getCurrentPenaltyValues(terraforming, hazardManager.parameters.hazardousMachinery);
+    return this.toPercent(status.currentCoverageShare);
+  }
+
+  resolveGarbageUnclearedPercent() {
+    const parameters = hazardManager.parameters.garbage || {};
+    const surfaceResources = parameters.surfaceResources || {};
+    const clearedCategories = hazardManager.getGarbageClearedCategories ? hazardManager.getGarbageClearedCategories() : {};
+    let totalCurrent = 0;
+    let totalInitial = 0;
+    Object.keys(surfaceResources).forEach(resourceKey => {
+      const resource = resources.surface?.[resourceKey];
+      const initial = this.toNumber(resource?.initialValue);
+      const current = clearedCategories[resourceKey] ? 0 : this.toNumber(resource?.value);
+      totalInitial += initial;
+      totalCurrent += Math.max(0, Math.min(current, initial));
+    });
+    return totalInitial > 0 ? (totalCurrent / totalInitial) * 100 : 0;
+  }
+
+  resolveResourceRemainingPercent(resource) {
+    const initial = this.toNumber(resource?.initialValue);
+    if (initial <= 0) return 0;
+    return Math.max(0, Math.min(100, (this.toNumber(resource?.value) / initial) * 100));
+  }
+
+  toPercent(value) {
+    return Math.max(0, Math.min(100, this.toNumber(value) * 100));
   }
 
   resolveResearchValue(ref) {
