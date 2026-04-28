@@ -115,6 +115,7 @@ function buildAutomationLifeUI() {
   automationElements.lifeNewPresetButton = presetRow.newPreset;
   automationElements.lifeDeletePresetButton = presetRow.deletePreset;
   automationElements.lifeEnablePresetCheckbox = presetRow.enableCheckbox;
+  automationElements.lifeShowPresetInSidebarCheckbox = presetRow.showInSidebarCheckbox;
   automationElements.lifePurchaseContainer = purchaseList;
   automationElements.lifePurchaseEnableCheckbox = purchaseEnable;
   automationElements.lifeDesignStepsContainer = stepsContainer;
@@ -141,6 +142,7 @@ function updateLifeAutomationUI() {
     lifeNewPresetButton,
     lifeDeletePresetButton,
     lifeEnablePresetCheckbox,
+    lifeShowPresetInSidebarCheckbox,
     lifePurchaseContainer,
     lifePurchaseEnableCheckbox,
     lifeDesignStepsContainer,
@@ -184,6 +186,7 @@ function updateLifeAutomationUI() {
     lifePresetNameInput.value = activePreset.name || '';
   }
   setAutomationToggleState(lifeEnablePresetCheckbox, !!activePreset.enabled);
+  lifeShowPresetInSidebarCheckbox.checked = activePreset.showInSidebar !== false;
   const activePresetIndex = automation.presets.findIndex(preset => preset.id === activePreset.id);
   lifePresetMoveUpButton.disabled = activePresetIndex <= 0;
   lifePresetMoveDownButton.disabled = activePresetIndex >= automation.presets.length - 1;
@@ -260,6 +263,7 @@ function attachLifeAutomationHandlers() {
     lifeNewPresetButton,
     lifeDeletePresetButton,
     lifeEnablePresetCheckbox,
+    lifeShowPresetInSidebarCheckbox,
     lifePurchaseEnableCheckbox,
     lifeAddStepButton,
     lifeDeployInput,
@@ -310,6 +314,13 @@ function attachLifeAutomationHandlers() {
     const automation = automationManager.lifeAutomation;
     const preset = automation.getActivePreset();
     automation.togglePresetEnabled(preset.id, !preset.enabled);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  lifeShowPresetInSidebarCheckbox.addEventListener('change', (event) => {
+    const automation = automationManager.lifeAutomation;
+    const preset = automation.getActivePreset();
+    automation.setPresetShowInSidebar(preset.id, event.target.checked);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

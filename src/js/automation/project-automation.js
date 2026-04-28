@@ -295,6 +295,7 @@ class ProjectAutomation {
     const combo = {
       id,
       name: name || `Combination ${id}`,
+      showInSidebar: true,
       assignments: (assignments || []).map(entry => ({
         presetId: entry.presetId,
         enabled: entry.enabled !== false
@@ -310,9 +311,11 @@ class ProjectAutomation {
     if (index < 0) {
       return false;
     }
+    const existing = this.combinations[index];
     this.combinations[index] = {
       id,
       name: name || `Combination ${id}`,
+      showInSidebar: existing.showInSidebar !== false,
       assignments: (assignments || []).map(entry => ({
         presetId: entry.presetId,
         enabled: entry.enabled !== false
@@ -330,6 +333,15 @@ class ProjectAutomation {
       this.nextTravelCombinationId = null;
       this.nextTravelCombinationPersistent = false;
     }
+  }
+
+  setCombinationShowInSidebar(id, showInSidebar) {
+    const combo = this.getCombinationById(id);
+    if (!combo) {
+      return false;
+    }
+    combo.showInSidebar = showInSidebar !== false;
+    return true;
   }
 
   applyCombination(id) {
@@ -384,6 +396,15 @@ class ProjectAutomation {
     preset.name = name;
   }
 
+  setPresetShowInSidebar(id, showInSidebar) {
+    const preset = this.getPresetById(id);
+    if (!preset) {
+      return false;
+    }
+    preset.showInSidebar = showInSidebar !== false;
+    return true;
+  }
+
   exportPreset(presetId) {
     const preset = this.getPresetById(Number(presetId));
     if (!preset) {
@@ -391,6 +412,7 @@ class ProjectAutomation {
     }
     return {
       name: preset.name,
+      showInSidebar: preset.showInSidebar !== false,
       includeExpansion: preset.includeExpansion !== false,
       includeOperations: preset.includeOperations !== false,
       scopeAll: preset.scopeAll === true,
@@ -403,6 +425,7 @@ class ProjectAutomation {
     const importedPreset = {
       id,
       name: presetData.name || `Preset ${id}`,
+      showInSidebar: presetData.showInSidebar !== false,
       includeExpansion: presetData.includeExpansion !== false,
       includeOperations: presetData.includeOperations !== false,
       scopeAll: presetData.scopeAll === true,
@@ -421,6 +444,7 @@ class ProjectAutomation {
     const preset = {
       id,
       name: name || `Preset ${id}`,
+      showInSidebar: options.showInSidebar !== false,
       includeExpansion,
       includeOperations,
       scopeAll,
@@ -936,6 +960,7 @@ class ProjectAutomation {
       presets: this.presets.map(preset => ({
         id: preset.id,
         name: preset.name,
+        showInSidebar: preset.showInSidebar !== false,
         includeExpansion: preset.includeExpansion !== false,
         includeOperations: preset.includeOperations !== false,
         scopeAll: !!preset.scopeAll,
@@ -945,6 +970,7 @@ class ProjectAutomation {
       combinations: this.combinations.map(combo => ({
         id: combo.id,
         name: combo.name,
+        showInSidebar: combo.showInSidebar !== false,
         assignments: combo.assignments.map(entry => ({
           presetId: entry.presetId,
           enabled: entry.enabled !== false
@@ -967,6 +993,7 @@ class ProjectAutomation {
     this.presets = Array.isArray(data.presets) ? data.presets.map(preset => ({
       id: preset.id,
       name: preset.name || 'Preset',
+      showInSidebar: preset.showInSidebar !== false,
       includeExpansion: preset.includeExpansion !== false,
       includeOperations: preset.includeOperations !== false,
       scopeAll: preset.scopeAll === true,
@@ -980,6 +1007,7 @@ class ProjectAutomation {
     this.combinations = Array.isArray(data.combinations) ? data.combinations.map(combo => ({
       id: combo.id,
       name: combo.name || 'Combination',
+      showInSidebar: combo.showInSidebar !== false,
       assignments: Array.isArray(combo.assignments) ? combo.assignments.map(entry => ({
         presetId: entry.presetId,
         enabled: entry.enabled !== false

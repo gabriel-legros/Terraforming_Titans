@@ -4,12 +4,14 @@ const projectAutomationUIState = {
   builderName: '',
   builderType: 'both',
   builderScope: 'all',
+  builderShowInSidebar: true,
   builderSelectedProjects: [],
   builderCategoryValue: 'all',
   builderProjectValue: '',
   combinationId: null,
   combinationSyncedId: null,
-  combinationName: ''
+  combinationName: '',
+  combinationShowInSidebar: true
 };
 
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
@@ -105,6 +107,7 @@ function buildAutomationProjectsUI() {
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('project-automation-builder-apply-once');
+  const builderShowSidebar = createAutomationShowInSidebarLabel('project-automation-builder');
   builderRow.append(
     presetSelect,
     presetMoveButtons,
@@ -114,7 +117,8 @@ function buildAutomationProjectsUI() {
     deleteButton,
     transferButtons.importButton,
     transferButtons.exportButton,
-    applyOnceButton
+    applyOnceButton,
+    builderShowSidebar.label
   );
   builderSection.appendChild(builderRow);
 
@@ -238,6 +242,7 @@ function buildAutomationProjectsUI() {
   const combinationDeleteButton = document.createElement('button');
   combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
   combinationDeleteButton.classList.add('project-automation-combination-delete');
+  const combinationShowSidebar = createAutomationShowInSidebarLabel('project-automation-combination');
   combinationRow.append(
     combinationSelect,
     combinationMoveButtons,
@@ -245,6 +250,7 @@ function buildAutomationProjectsUI() {
     combinationNewButton,
     combinationSaveButton,
     combinationDeleteButton,
+    combinationShowSidebar.label,
     applyCombinationButton
   );
   applySection.appendChild(combinationRow);
@@ -276,6 +282,7 @@ function buildAutomationProjectsUI() {
   automationElements.projectsBuilderImportButton = transferButtons.importButton;
   automationElements.projectsBuilderExportButton = transferButtons.exportButton;
   automationElements.projectsBuilderApplyOnceButton = applyOnceButton;
+  automationElements.projectsBuilderShowInSidebarCheckbox = builderShowSidebar.checkbox;
   automationElements.projectsBuilderDirty = builderDirty;
   automationElements.projectsBuilderTypeSelect = typeSelect;
   automationElements.projectsBuilderScopeSelect = scopeSelect;
@@ -296,6 +303,7 @@ function buildAutomationProjectsUI() {
   automationElements.projectsCombinationNewButton = combinationNewButton;
   automationElements.projectsCombinationSaveButton = combinationSaveButton;
   automationElements.projectsCombinationDeleteButton = combinationDeleteButton;
+  automationElements.projectsCombinationShowInSidebarCheckbox = combinationShowSidebar.checkbox;
   automationElements.projectsApplyList = applyList;
   automationElements.projectsApplyHint = applyHint;
   automationElements.projectsAddApplyButton = addApplyButton;
@@ -319,6 +327,7 @@ function updateProjectsAutomationUI() {
     projectsBuilderImportButton,
     projectsBuilderExportButton,
     projectsBuilderApplyOnceButton,
+    projectsBuilderShowInSidebarCheckbox,
     projectsBuilderDirty,
     projectsBuilderTypeSelect,
     projectsBuilderScopeSelect,
@@ -341,7 +350,8 @@ function updateProjectsAutomationUI() {
     projectsCombinationNameInput,
     projectsCombinationNewButton,
     projectsCombinationSaveButton,
-    projectsCombinationDeleteButton
+    projectsCombinationDeleteButton,
+    projectsCombinationShowInSidebarCheckbox
   } = automationElements;
   const manager = automationManager;
   const automation = manager.projectsAutomation;
@@ -397,6 +407,7 @@ function updateProjectsAutomationUI() {
         : 'operations';
     projectAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
     projectAutomationUIState.builderSelectedProjects = names.slice();
+    projectAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
     projectAutomationUIState.syncedPresetId = activePresetId;
   }
   if (!activePreset && projectAutomationUIState.syncedPresetId) {
@@ -407,6 +418,9 @@ function updateProjectsAutomationUI() {
   if (document.activeElement !== projectsBuilderPresetNameInput) {
     projectsBuilderPresetNameInput.value = activePreset ? activePreset.name : projectAutomationUIState.builderName;
   }
+  projectsBuilderShowInSidebarCheckbox.checked = activePreset
+    ? activePreset.showInSidebar !== false
+    : projectAutomationUIState.builderShowInSidebar;
   if (document.activeElement !== projectsBuilderTypeSelect) {
     projectsBuilderTypeSelect.value = projectAutomationUIState.builderType;
   }
@@ -532,6 +546,7 @@ function updateProjectsAutomationUI() {
     : -1;
   if (activeCombination && projectAutomationUIState.combinationSyncedId !== activeCombinationId) {
     projectAutomationUIState.combinationName = activeCombination.name;
+    projectAutomationUIState.combinationShowInSidebar = activeCombination.showInSidebar !== false;
     projectAutomationUIState.combinationSyncedId = activeCombinationId;
   }
   if (!activeCombination && projectAutomationUIState.combinationSyncedId) {
@@ -543,6 +558,9 @@ function updateProjectsAutomationUI() {
       ? activeCombination.name
       : projectAutomationUIState.combinationName;
   }
+  projectsCombinationShowInSidebarCheckbox.checked = activeCombination
+    ? activeCombination.showInSidebar !== false
+    : projectAutomationUIState.combinationShowInSidebar;
 
   projectsCombinationDeleteButton.disabled = !activeCombination;
   projectsCombinationMoveUpButton.disabled = activeCombinationIndex <= 0;
@@ -736,6 +754,7 @@ function attachProjectsAutomationHandlers() {
     projectsBuilderExportButton,
     projectsBuilderTypeSelect,
     projectsBuilderScopeSelect,
+    projectsBuilderShowInSidebarCheckbox,
     projectsBuilderCategorySelect,
     projectsBuilderProjectSelect,
     projectsBuilderAddButton,
@@ -752,6 +771,7 @@ function attachProjectsAutomationHandlers() {
     projectsCombinationNewButton,
     projectsCombinationSaveButton,
     projectsCombinationDeleteButton,
+    projectsCombinationShowInSidebarCheckbox,
     projectsAddApplyButton
   } = automationElements;
 
@@ -801,6 +821,7 @@ function attachProjectsAutomationHandlers() {
     projectAutomationUIState.builderName = '';
     projectAutomationUIState.builderType = 'both';
     projectAutomationUIState.builderScope = 'all';
+    projectAutomationUIState.builderShowInSidebar = true;
     projectAutomationUIState.builderSelectedProjects = [];
     projectAutomationUIState.builderCategoryValue = 'all';
     projectAutomationUIState.builderProjectValue = '';
@@ -816,6 +837,16 @@ function attachProjectsAutomationHandlers() {
 
   projectsBuilderScopeSelect.addEventListener('change', (event) => {
     projectAutomationUIState.builderScope = event.target.value;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  projectsBuilderShowInSidebarCheckbox.addEventListener('change', () => {
+    projectAutomationUIState.builderShowInSidebar = projectsBuilderShowInSidebarCheckbox.checked;
+    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.projectsAutomation.setPresetShowInSidebar(Number(presetId), projectAutomationUIState.builderShowInSidebar);
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -876,14 +907,15 @@ function attachProjectsAutomationHandlers() {
     const includeExpansion = type === 'expansion' || type === 'both';
     const includeOperations = type === 'operations' || type === 'both';
     const scopeAll = projectAutomationUIState.builderScope === 'all';
+    const showInSidebar = projectAutomationUIState.builderShowInSidebar;
     const projectIds = scopeAll
       ? getAutomatableProjects(projectAutomationUIState.builderSelectedProjects).map(project => project.name)
       : projectAutomationUIState.builderSelectedProjects.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
-      automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll });
+      automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll });
+      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
       projectAutomationUIState.syncedPresetId = null;
       projectAutomationUIState.builderName = '';
     }
@@ -1009,6 +1041,17 @@ function attachProjectsAutomationHandlers() {
     automationManager.projectsAutomation.setSelectedCombinationId(null);
     projectAutomationUIState.combinationSyncedId = null;
     projectAutomationUIState.combinationName = '';
+    projectAutomationUIState.combinationShowInSidebar = true;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  projectsCombinationShowInSidebarCheckbox.addEventListener('change', () => {
+    projectAutomationUIState.combinationShowInSidebar = projectsCombinationShowInSidebarCheckbox.checked;
+    const comboId = automationManager.projectsAutomation.getSelectedCombinationId();
+    if (comboId) {
+      automationManager.projectsAutomation.setCombinationShowInSidebar(Number(comboId), projectAutomationUIState.combinationShowInSidebar);
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -1023,8 +1066,10 @@ function attachProjectsAutomationHandlers() {
     const comboId = automation.getSelectedCombinationId();
     if (comboId) {
       automation.updateCombination(Number(comboId), name, snapshot);
+      automation.setCombinationShowInSidebar(Number(comboId), projectAutomationUIState.combinationShowInSidebar);
     } else {
-      automation.addCombination(name, snapshot);
+      const newComboId = automation.addCombination(name, snapshot);
+      automation.setCombinationShowInSidebar(newComboId, projectAutomationUIState.combinationShowInSidebar);
       projectAutomationUIState.combinationSyncedId = null;
       projectAutomationUIState.combinationName = '';
     }

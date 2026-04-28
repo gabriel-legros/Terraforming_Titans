@@ -396,6 +396,9 @@ function initializeSidebarAutomationUI() {
   sidebarAutomationElements.toggle.addEventListener('click', toggleJournalAutomationMode);
 
   sidebarAutomationElements.shipPresetSelect.addEventListener('change', (event) => {
+    if (!event.target.value) {
+      return;
+    }
     const id = Number(event.target.value);
     automationManager.spaceshipAutomation.setSelectedPresetId(id);
     queueAutomationUIRefresh();
@@ -403,12 +406,18 @@ function initializeSidebarAutomationUI() {
   });
   sidebarAutomationElements.shipPresetToggle.addEventListener('click', () => {
     const preset = automationManager.spaceshipAutomation.getActivePreset();
+    if (!automationItemShowsInSidebar(preset)) {
+      return;
+    }
     automationManager.spaceshipAutomation.togglePresetEnabled(preset.id, !preset.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
 
   sidebarAutomationElements.lifePresetSelect.addEventListener('change', (event) => {
+    if (!event.target.value) {
+      return;
+    }
     const id = Number(event.target.value);
     automationManager.lifeAutomation.setSelectedPresetId(id);
     queueAutomationUIRefresh();
@@ -416,18 +425,27 @@ function initializeSidebarAutomationUI() {
   });
   sidebarAutomationElements.lifePresetToggle.addEventListener('click', () => {
     const preset = automationManager.lifeAutomation.getActivePreset();
+    if (!automationItemShowsInSidebar(preset)) {
+      return;
+    }
     automationManager.lifeAutomation.togglePresetEnabled(preset.id, !preset.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
   sidebarAutomationElements.lifePurchaseToggle.addEventListener('click', () => {
     const preset = automationManager.lifeAutomation.getActivePreset();
+    if (!automationItemShowsInSidebar(preset)) {
+      return;
+    }
     automationManager.lifeAutomation.setPurchaseAutomationEnabled(preset.id, !preset.purchaseEnabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
   sidebarAutomationElements.lifeDesignToggle.addEventListener('click', () => {
     const preset = automationManager.lifeAutomation.getActivePreset();
+    if (!automationItemShowsInSidebar(preset)) {
+      return;
+    }
     automationManager.lifeAutomation.setDesignAutomationEnabled(preset.id, !preset.designEnabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -554,12 +572,16 @@ function updateSidebarAutomationUI() {
   elements.shipPresetSelect.disabled = !shipUnlocked;
   elements.shipPresetToggle.disabled = !shipUnlocked;
   if (shipUnlocked) {
+    const visibleShipPresets = shipAutomation.presets.filter(automationItemShowsInSidebar);
+    const selectedShipPreset = shipAutomation.getSelectedPreset();
     fillSelect(
       elements.shipPresetSelect,
-      shipAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
-      shipAutomation.getSelectedPresetId()
+      visibleShipPresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      automationItemShowsInSidebar(selectedShipPreset) ? shipAutomation.getSelectedPresetId() : '',
+      getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     const activePreset = shipAutomation.getActivePreset();
+    elements.shipPresetToggle.disabled = !automationItemShowsInSidebar(activePreset);
     setToggleButtonState(elements.shipPresetToggle, !!activePreset.enabled);
   }
 
@@ -573,12 +595,19 @@ function updateSidebarAutomationUI() {
   elements.lifePurchaseToggle.disabled = !lifeUnlocked;
   elements.lifeDesignToggle.disabled = !lifeUnlocked;
   if (lifeUnlocked) {
+    const visibleLifePresets = lifeAutomation.presets.filter(automationItemShowsInSidebar);
+    const selectedLifePreset = lifeAutomation.getSelectedPreset();
     fillSelect(
       elements.lifePresetSelect,
-      lifeAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
-      lifeAutomation.getSelectedPresetId()
+      visibleLifePresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      automationItemShowsInSidebar(selectedLifePreset) ? lifeAutomation.getSelectedPresetId() : '',
+      getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     const activePreset = lifeAutomation.getActivePreset();
+    const activeLifePresetVisible = automationItemShowsInSidebar(activePreset);
+    elements.lifePresetToggle.disabled = !activeLifePresetVisible;
+    elements.lifePurchaseToggle.disabled = !activeLifePresetVisible;
+    elements.lifeDesignToggle.disabled = !activeLifePresetVisible;
     setToggleButtonState(elements.lifePresetToggle, !!activePreset.enabled);
     setToggleButtonState(elements.lifePurchaseToggle, activePreset.purchaseEnabled !== false);
     setToggleButtonState(elements.lifeDesignToggle, activePreset.designEnabled !== false);
@@ -592,12 +621,15 @@ function updateSidebarAutomationUI() {
   elements.researchPresetDeploy.disabled = !researchUnlocked;
   if (researchUnlocked) {
     const researchAutomation = manager.researchAutomation;
+    const visibleResearchPresets = researchAutomation.presets.filter(automationItemShowsInSidebar);
+    const selectedResearchPreset = researchAutomation.getSelectedPreset();
     fillSelect(
       elements.researchPresetSelect,
-      researchAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
-      researchAutomation.getSelectedPresetId()
+      visibleResearchPresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      automationItemShowsInSidebar(selectedResearchPreset) ? researchAutomation.getSelectedPresetId() : '',
+      getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
-    elements.researchPresetDeploy.disabled = !researchAutomation.getSelectedPreset();
+    elements.researchPresetDeploy.disabled = !automationItemShowsInSidebar(selectedResearchPreset);
   }
 
   const buildingAutomation = manager.buildingsAutomation;
@@ -610,21 +642,24 @@ function updateSidebarAutomationUI() {
   elements.buildingsCombinationSelect.disabled = !buildingsUnlocked;
   elements.buildingsCombinationDeploy.disabled = !buildingsUnlocked;
   if (buildingsUnlocked) {
-    const buildingCombinations = buildingAutomation.getCombinations();
+    const visibleBuildingPresets = buildingAutomation.presets.filter(automationItemShowsInSidebar);
+    const buildingCombinations = buildingAutomation.getCombinations().filter(automationItemShowsInSidebar);
+    const selectedBuildingPreset = buildingAutomation.getSelectedPreset();
+    const selectedBuildingCombination = buildingAutomation.getSelectedCombination();
     fillSelect(
       elements.buildingsPresetSelect,
-      buildingAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
-      buildingAutomation.getSelectedPresetId() || '',
+      visibleBuildingPresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      automationItemShowsInSidebar(selectedBuildingPreset) ? buildingAutomation.getSelectedPresetId() || '' : '',
       getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     fillSelect(
       elements.buildingsCombinationSelect,
       buildingCombinations.map(combo => ({ value: combo.id, label: getSidebarCombinationLabel(combo) })),
-      buildingAutomation.getSelectedCombinationId() || '',
+      automationItemShowsInSidebar(selectedBuildingCombination) ? buildingAutomation.getSelectedCombinationId() || '' : '',
       getSidebarAutomationText('selectCombination', null, 'Select combination')
     );
-    elements.buildingsPresetDeploy.disabled = !buildingAutomation.getSelectedPresetId();
-    elements.buildingsCombinationDeploy.disabled = !buildingAutomation.getSelectedCombinationId() || buildingAutomation.getAssignments().length === 0;
+    elements.buildingsPresetDeploy.disabled = !automationItemShowsInSidebar(selectedBuildingPreset);
+    elements.buildingsCombinationDeploy.disabled = !automationItemShowsInSidebar(selectedBuildingCombination) || buildingAutomation.getAssignments().length === 0;
   }
 
   const projectsAutomation = manager.projectsAutomation;
@@ -637,21 +672,24 @@ function updateSidebarAutomationUI() {
   elements.projectsCombinationSelect.disabled = !projectsUnlocked;
   elements.projectsCombinationDeploy.disabled = !projectsUnlocked;
   if (projectsUnlocked) {
-    const projectCombinations = projectsAutomation.getCombinations();
+    const visibleProjectPresets = projectsAutomation.presets.filter(automationItemShowsInSidebar);
+    const projectCombinations = projectsAutomation.getCombinations().filter(automationItemShowsInSidebar);
+    const selectedProjectPreset = projectsAutomation.getSelectedPreset();
+    const selectedProjectCombination = projectsAutomation.getSelectedCombination();
     fillSelect(
       elements.projectsPresetSelect,
-      projectsAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
-      projectsAutomation.getSelectedPresetId() || '',
+      visibleProjectPresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      automationItemShowsInSidebar(selectedProjectPreset) ? projectsAutomation.getSelectedPresetId() || '' : '',
       getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     fillSelect(
       elements.projectsCombinationSelect,
       projectCombinations.map(combo => ({ value: combo.id, label: getSidebarCombinationLabel(combo) })),
-      projectsAutomation.getSelectedCombinationId() || '',
+      automationItemShowsInSidebar(selectedProjectCombination) ? projectsAutomation.getSelectedCombinationId() || '' : '',
       getSidebarAutomationText('selectCombination', null, 'Select combination')
     );
-    elements.projectsPresetDeploy.disabled = !projectsAutomation.getSelectedPresetId();
-    elements.projectsCombinationDeploy.disabled = !projectsAutomation.getSelectedCombinationId() || projectsAutomation.getAssignments().length === 0;
+    elements.projectsPresetDeploy.disabled = !automationItemShowsInSidebar(selectedProjectPreset);
+    elements.projectsCombinationDeploy.disabled = !automationItemShowsInSidebar(selectedProjectCombination) || projectsAutomation.getAssignments().length === 0;
   }
 
   const colonyAutomation = manager.colonyAutomation;
@@ -664,21 +702,24 @@ function updateSidebarAutomationUI() {
   elements.colonyCombinationSelect.disabled = !colonyUnlocked;
   elements.colonyCombinationDeploy.disabled = !colonyUnlocked;
   if (colonyUnlocked) {
-    const colonyCombinations = colonyAutomation.getCombinations();
+    const visibleColonyPresets = colonyAutomation.presets.filter(automationItemShowsInSidebar);
+    const colonyCombinations = colonyAutomation.getCombinations().filter(automationItemShowsInSidebar);
+    const selectedColonyPreset = colonyAutomation.getSelectedPreset();
+    const selectedColonyCombination = colonyAutomation.getSelectedCombination();
     fillSelect(
       elements.colonyPresetSelect,
-      colonyAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
-      colonyAutomation.getSelectedPresetId() || '',
+      visibleColonyPresets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      automationItemShowsInSidebar(selectedColonyPreset) ? colonyAutomation.getSelectedPresetId() || '' : '',
       getSidebarAutomationText('selectPreset', null, 'Select preset')
     );
     fillSelect(
       elements.colonyCombinationSelect,
       colonyCombinations.map(combo => ({ value: combo.id, label: getSidebarCombinationLabel(combo) })),
-      colonyAutomation.getSelectedCombinationId() || '',
+      automationItemShowsInSidebar(selectedColonyCombination) ? colonyAutomation.getSelectedCombinationId() || '' : '',
       getSidebarAutomationText('selectCombination', null, 'Select combination')
     );
-    elements.colonyPresetDeploy.disabled = !colonyAutomation.getSelectedPresetId();
-    elements.colonyCombinationDeploy.disabled = !colonyAutomation.getSelectedCombinationId() || colonyAutomation.getAssignments().length === 0;
+    elements.colonyPresetDeploy.disabled = !automationItemShowsInSidebar(selectedColonyPreset);
+    elements.colonyCombinationDeploy.disabled = !automationItemShowsInSidebar(selectedColonyCombination) || colonyAutomation.getAssignments().length === 0;
   }
 
   return true;

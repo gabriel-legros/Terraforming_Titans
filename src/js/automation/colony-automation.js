@@ -215,6 +215,7 @@ class ColonyAutomation {
     const combo = {
       id,
       name: name || `Combination ${id}`,
+      showInSidebar: true,
       assignments: (assignments || []).map(entry => ({
         presetId: entry.presetId,
         enabled: entry.enabled !== false
@@ -230,9 +231,11 @@ class ColonyAutomation {
     if (index < 0) {
       return false;
     }
+    const existing = this.combinations[index];
     const combo = {
       id,
       name: name || `Combination ${id}`,
+      showInSidebar: existing.showInSidebar !== false,
       assignments: (assignments || []).map(entry => ({
         presetId: entry.presetId,
         enabled: entry.enabled !== false
@@ -251,6 +254,15 @@ class ColonyAutomation {
       this.nextTravelCombinationId = null;
       this.nextTravelCombinationPersistent = false;
     }
+  }
+
+  setCombinationShowInSidebar(id, showInSidebar) {
+    const combo = this.getCombinationById(id);
+    if (!combo) {
+      return false;
+    }
+    combo.showInSidebar = showInSidebar !== false;
+    return true;
   }
 
   applyCombination(id) {
@@ -306,6 +318,15 @@ class ColonyAutomation {
     preset.name = name;
   }
 
+  setPresetShowInSidebar(id, showInSidebar) {
+    const preset = this.getPresetById(id);
+    if (!preset) {
+      return false;
+    }
+    preset.showInSidebar = showInSidebar !== false;
+    return true;
+  }
+
   exportPreset(presetId) {
     const preset = this.getPresetById(Number(presetId));
     if (!preset) {
@@ -313,6 +334,7 @@ class ColonyAutomation {
     }
     return {
       name: preset.name,
+      showInSidebar: preset.showInSidebar !== false,
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
@@ -337,6 +359,7 @@ class ColonyAutomation {
     const importedPreset = {
       id,
       name: presetData.name || `Preset ${id}`,
+      showInSidebar: presetData.showInSidebar !== false,
       includeControl: presetData.includeControl !== false,
       includeAutomation: presetData.includeAutomation !== false,
       scopeAll: presetData.scopeAll === true,
@@ -372,6 +395,7 @@ class ColonyAutomation {
     const preset = {
       id,
       name: name || `Preset ${id}`,
+      showInSidebar: options.showInSidebar !== false,
       includeControl,
       includeAutomation,
       scopeAll,
@@ -991,6 +1015,7 @@ class ColonyAutomation {
       presets: this.presets.map(preset => ({
         id: preset.id,
         name: preset.name,
+        showInSidebar: preset.showInSidebar !== false,
         includeControl: !!preset.includeControl,
         includeAutomation: !!preset.includeAutomation,
         scopeAll: !!preset.scopeAll,
@@ -1012,6 +1037,7 @@ class ColonyAutomation {
       combinations: this.combinations.map(combo => ({
         id: combo.id,
         name: combo.name,
+        showInSidebar: combo.showInSidebar !== false,
         assignments: combo.assignments.map(entry => ({
           presetId: entry.presetId,
           enabled: entry.enabled !== false
@@ -1033,6 +1059,7 @@ class ColonyAutomation {
     this.presets = Array.isArray(data.presets) ? data.presets.map(preset => ({
       id: preset.id,
       name: preset.name || 'Preset',
+      showInSidebar: preset.showInSidebar !== false,
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
@@ -1058,6 +1085,7 @@ class ColonyAutomation {
     this.combinations = Array.isArray(data.combinations) ? data.combinations.map(combo => ({
       id: combo.id,
       name: combo.name || 'Combination',
+      showInSidebar: combo.showInSidebar !== false,
       assignments: Array.isArray(combo.assignments) ? combo.assignments.map(entry => ({
         presetId: entry.presetId,
         enabled: entry.enabled !== false

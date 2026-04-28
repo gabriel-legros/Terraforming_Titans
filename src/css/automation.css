@@ -116,6 +116,20 @@
   padding: 6px 8px;
 }
 
+.automation-show-sidebar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4c5872;
+  white-space: nowrap;
+}
+
+.automation-show-sidebar-label input {
+  width: auto;
+  margin: 0;
+}
+
 .automation-toggle,
 .ui-toggle {
   display: inline-flex;

@@ -34,6 +34,7 @@ const automationElements = {
   newPresetButton: null,
   deletePresetButton: null,
   enablePresetCheckbox: null,
+  showPresetInSidebarCheckbox: null,
   stepsContainer: null,
   addStepButton: null,
   lifeDesign: null,
@@ -48,6 +49,7 @@ const automationElements = {
   lifeNewPresetButton: null,
   lifeDeletePresetButton: null,
   lifeEnablePresetCheckbox: null,
+  lifeShowPresetInSidebarCheckbox: null,
   lifePurchaseContainer: null,
   lifePurchaseEnableCheckbox: null,
   lifeDesignStepsContainer: null,
@@ -72,6 +74,7 @@ const automationElements = {
   researchImportPresetButton: null,
   researchExportPresetButton: null,
   researchApplyOnceButton: null,
+  researchShowPresetInSidebarCheckbox: null,
   researchApplyNextTravelSelect: null,
   researchApplyNextTravelPersistToggle: null,
   researchPresetJsonDetails: null,
@@ -90,6 +93,7 @@ const automationElements = {
   buildingsBuilderImportButton: null,
   buildingsBuilderExportButton: null,
   buildingsBuilderApplyOnceButton: null,
+  buildingsBuilderShowInSidebarCheckbox: null,
   buildingsBuilderTypeSelect: null,
   buildingsBuilderScopeSelect: null,
   buildingsBuilderCategorySelect: null,
@@ -111,6 +115,7 @@ const automationElements = {
   buildingsCombinationNewButton: null,
   buildingsCombinationSaveButton: null,
   buildingsCombinationDeleteButton: null,
+  buildingsCombinationShowInSidebarCheckbox: null,
   buildingsAddApplyButton: null,
   projectsAutomation: null,
   projectsAutomationStatus: null,
@@ -127,6 +132,7 @@ const automationElements = {
   projectsBuilderImportButton: null,
   projectsBuilderExportButton: null,
   projectsBuilderApplyOnceButton: null,
+  projectsBuilderShowInSidebarCheckbox: null,
   projectsBuilderScopeSelect: null,
   projectsBuilderCategorySelect: null,
   projectsBuilderProjectSelect: null,
@@ -147,6 +153,7 @@ const automationElements = {
   projectsCombinationNewButton: null,
   projectsCombinationSaveButton: null,
   projectsCombinationDeleteButton: null,
+  projectsCombinationShowInSidebarCheckbox: null,
   projectsAddApplyButton: null,
   colonyAutomation: null,
   colonyAutomationStatus: null,
@@ -163,6 +170,7 @@ const automationElements = {
   colonyBuilderImportButton: null,
   colonyBuilderExportButton: null,
   colonyBuilderApplyOnceButton: null,
+  colonyBuilderShowInSidebarCheckbox: null,
   colonyBuilderDirty: null,
   colonyBuilderTypeSelect: null,
   colonyBuilderScopeSelect: null,
@@ -185,6 +193,7 @@ const automationElements = {
   colonyCombinationNewButton: null,
   colonyCombinationSaveButton: null,
   colonyCombinationDeleteButton: null,
+  colonyCombinationShowInSidebarCheckbox: null,
   colonyAddApplyButton: null
 };
 
@@ -811,6 +820,22 @@ function createAutomationPresetTransferButtons(baseClassName) {
   return { importButton, exportButton };
 }
 
+function automationItemShowsInSidebar(item) {
+  return !!item && item.showInSidebar !== false;
+}
+
+function createAutomationShowInSidebarLabel(baseClassName) {
+  const label = document.createElement('label');
+  label.classList.add('automation-show-sidebar-label');
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.classList.add(`${baseClassName}-show-sidebar`);
+  const text = document.createElement('span');
+  text.textContent = getAutomationCardText('showInSidebarLabel', {}, 'Show in sidebar');
+  label.append(checkbox, text);
+  return { label, checkbox };
+}
+
 function buildAutomationPresetTransferPayload(automationType, preset) {
   return JSON.stringify({
     format: AUTOMATION_PRESET_TRANSFER_FORMAT,
@@ -1046,6 +1071,9 @@ function createAutomationPresetRow(body) {
   enableToggle.classList.add('automation-preset-toggle');
   presetRow.appendChild(enableToggle);
 
+  const showSidebar = createAutomationShowInSidebarLabel('automation-preset');
+  presetRow.appendChild(showSidebar.label);
+
   const presetButtons = document.createElement('div');
   presetButtons.classList.add('automation-preset-buttons');
   const newPreset = document.createElement('button');
@@ -1064,6 +1092,7 @@ function createAutomationPresetRow(body) {
     presetMoveDown,
     presetName,
     enableCheckbox: enableToggle,
+    showInSidebarCheckbox: showSidebar.checkbox,
     newPreset,
     deletePreset
   };

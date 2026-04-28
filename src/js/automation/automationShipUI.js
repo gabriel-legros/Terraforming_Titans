@@ -91,6 +91,7 @@ function buildAutomationShipUI() {
   automationElements.newPresetButton = presetRow.newPreset;
   automationElements.deletePresetButton = presetRow.deletePreset;
   automationElements.enablePresetCheckbox = presetRow.enableCheckbox;
+  automationElements.showPresetInSidebarCheckbox = presetRow.showInSidebarCheckbox;
   automationElements.stepsContainer = stepsContainer;
   automationElements.addStepButton = addStepButton;
 
@@ -111,6 +112,7 @@ function updateShipAutomationUI() {
     newPresetButton,
     deletePresetButton,
     enablePresetCheckbox,
+    showPresetInSidebarCheckbox,
     stepsContainer,
     addStepButton
   } = automationElements;
@@ -126,7 +128,7 @@ function updateShipAutomationUI() {
     ? getAutomationCardText('shipAssignmentDescriptionUnlocked', {}, 'Automatically assigns cargo ships based on available routes.')
     : getAutomationCardText('shipAssignmentDescriptionLocked', {}, 'Purchase the Solis Ship Assignment upgrade to enable ship automation.');
 
-  if (!automation || !panelBody || !collapseButton || !presetSelect || !presetMoveUpButton || !presetMoveDownButton || !presetNameInput || !newPresetButton || !deletePresetButton || !enablePresetCheckbox || !stepsContainer || !addStepButton) {
+  if (!automation || !panelBody || !collapseButton || !presetSelect || !presetMoveUpButton || !presetMoveDownButton || !presetNameInput || !newPresetButton || !deletePresetButton || !enablePresetCheckbox || !showPresetInSidebarCheckbox || !stepsContainer || !addStepButton) {
     return;
   }
 
@@ -155,9 +157,11 @@ function updateShipAutomationUI() {
       presetNameInput.value = activePreset.name || '';
     }
     setAutomationToggleState(enablePresetCheckbox, !!activePreset.enabled);
+    showPresetInSidebarCheckbox.checked = activePreset.showInSidebar !== false;
   } else {
     presetNameInput.value = '';
     setAutomationToggleState(enablePresetCheckbox, false);
+    showPresetInSidebarCheckbox.checked = true;
   }
   const activePresetIndex = activePreset
     ? automation.presets.findIndex(preset => preset.id === activePreset.id)
@@ -191,6 +195,7 @@ function attachAutomationHandlers() {
     newPresetButton,
     deletePresetButton,
     enablePresetCheckbox,
+    showPresetInSidebarCheckbox,
     addStepButton
   } = automationElements;
   if (presetSelect) {
@@ -261,6 +266,17 @@ function attachAutomationHandlers() {
       const preset = automation.getActivePreset();
       if (!preset) return;
       automation.togglePresetEnabled(preset.id, !preset.enabled);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+  }
+  if (showPresetInSidebarCheckbox) {
+    showPresetInSidebarCheckbox.addEventListener('change', (event) => {
+      if (!automationManager || !automationManager.spaceshipAutomation) return;
+      const automation = automationManager.spaceshipAutomation;
+      const preset = automation.getActivePreset();
+      if (!preset) return;
+      automation.setPresetShowInSidebar(preset.id, event.target.checked);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });

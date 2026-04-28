@@ -1,5 +1,6 @@
 const researchAutomationUIState = {
-  builderName: ''
+  builderName: '',
+  builderShowInSidebar: true
 };
 
 function buildAutomationResearchUI() {
@@ -61,6 +62,7 @@ function buildAutomationResearchUI() {
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('research-automation-preset-apply-once');
+  const showSidebar = createAutomationShowInSidebarLabel('research-automation-preset');
   presetRow.append(
     presetSelect,
     presetMoveButtons,
@@ -70,7 +72,8 @@ function buildAutomationResearchUI() {
     deleteButton,
     transferButtons.importButton,
     transferButtons.exportButton,
-    applyOnceButton
+    applyOnceButton,
+    showSidebar.label
   );
   presetSection.appendChild(presetRow);
 
@@ -114,6 +117,7 @@ function buildAutomationResearchUI() {
   automationElements.researchImportPresetButton = transferButtons.importButton;
   automationElements.researchExportPresetButton = transferButtons.exportButton;
   automationElements.researchApplyOnceButton = applyOnceButton;
+  automationElements.researchShowPresetInSidebarCheckbox = showSidebar.checkbox;
   automationElements.researchApplyNextTravelSelect = nextTravelSelect;
   automationElements.researchApplyNextTravelPersistToggle = nextTravelPersistToggle;
   automationElements.researchPresetJsonDetails = presetJsonDetails;
@@ -137,6 +141,7 @@ function updateResearchAutomationUI() {
     researchImportPresetButton,
     researchExportPresetButton,
     researchApplyOnceButton,
+    researchShowPresetInSidebarCheckbox,
     researchApplyNextTravelSelect,
     researchApplyNextTravelPersistToggle,
     researchPresetJsonDetails,
@@ -188,6 +193,12 @@ function updateResearchAutomationUI() {
   if (document.activeElement !== researchPresetNameInput) {
     researchPresetNameInput.value = activePreset ? activePreset.name || '' : researchAutomationUIState.builderName;
   }
+  if (activePreset) {
+    researchAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
+  }
+  researchShowPresetInSidebarCheckbox.checked = activePreset
+    ? activePreset.showInSidebar !== false
+    : researchAutomationUIState.builderShowInSidebar;
 
   researchPresetMoveUpButton.disabled = activePresetIndex <= 0;
   researchPresetMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
@@ -238,6 +249,7 @@ function attachResearchAutomationHandlers() {
     researchImportPresetButton,
     researchExportPresetButton,
     researchApplyOnceButton,
+    researchShowPresetInSidebarCheckbox,
     researchApplyNextTravelSelect,
     researchApplyNextTravelPersistToggle,
   } = automationElements;
@@ -260,6 +272,17 @@ function attachResearchAutomationHandlers() {
     if (!automation.renamePreset(preset.id, event.target.value || '')) {
       return;
     }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  researchShowPresetInSidebarCheckbox.addEventListener('change', (event) => {
+    researchAutomationUIState.builderShowInSidebar = event.target.checked;
+    const preset = automation.getSelectedPreset();
+    if (!preset) {
+      return;
+    }
+    automation.setPresetShowInSidebar(preset.id, researchAutomationUIState.builderShowInSidebar);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -287,6 +310,7 @@ function attachResearchAutomationHandlers() {
   researchNewPresetButton.addEventListener('click', () => {
     automation.setSelectedPresetId(null);
     researchAutomationUIState.builderName = '';
+    researchAutomationUIState.builderShowInSidebar = true;
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -296,8 +320,10 @@ function attachResearchAutomationHandlers() {
     const name = researchPresetNameInput.value || researchAutomationUIState.builderName || '';
     if (preset) {
       automation.updatePreset(preset.id, name);
+      automation.setPresetShowInSidebar(preset.id, researchAutomationUIState.builderShowInSidebar);
     } else {
-      automation.addPreset(name);
+      const presetId = automation.addPreset(name);
+      automation.setPresetShowInSidebar(presetId, researchAutomationUIState.builderShowInSidebar);
       researchAutomationUIState.builderName = '';
     }
     queueAutomationUIRefresh();

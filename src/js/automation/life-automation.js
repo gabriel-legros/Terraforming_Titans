@@ -119,6 +119,7 @@ class LifeAutomation {
       id: this.nextPresetId++,
       name: 'Default',
       enabled: false,
+      showInSidebar: true,
       purchaseSettings: this.createDefaultPurchaseSettings(),
       purchaseEnabled: true,
       designSteps: [],
@@ -166,6 +167,7 @@ class LifeAutomation {
       id: this.nextPresetId++,
       name: name || `Preset ${this.nextPresetId - 1}`,
       enabled: false,
+      showInSidebar: true,
       purchaseSettings: this.createDefaultPurchaseSettings(),
       purchaseEnabled: true,
       designSteps: [],
@@ -204,6 +206,11 @@ class LifeAutomation {
   renamePreset(id, name) {
     const preset = this.presets.find(item => item.id === id) || this.presets[0];
     preset.name = name;
+  }
+
+  setPresetShowInSidebar(id, showInSidebar) {
+    const preset = this.presets.find(item => item.id === id) || this.presets[0];
+    preset.showInSidebar = showInSidebar !== false;
   }
 
   setCollapsed(collapsed) {
@@ -747,6 +754,7 @@ class LifeAutomation {
         id: preset.id,
         name: preset.name,
         enabled: !!preset.enabled,
+        showInSidebar: preset.showInSidebar !== false,
         purchaseSettings: Object.fromEntries(
           Object.entries(preset.purchaseSettings).map(([key, value]) => [key, { ...value }])
         ),
@@ -809,6 +817,7 @@ class LifeAutomation {
         id: preset.id,
         name: preset.name || 'Preset',
         enabled: !!preset.enabled,
+        showInSidebar: preset.showInSidebar !== false,
         purchaseSettings,
         purchaseEnabled: preset.purchaseEnabled !== false,
         designSteps: steps,

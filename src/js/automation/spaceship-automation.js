@@ -106,6 +106,7 @@ class SpaceshipAutomation {
       id: this.nextPresetId++,
       name: 'Default',
       enabled: false,
+      showInSidebar: true,
       steps: []
     };
     this.presets.push(preset);
@@ -155,6 +156,7 @@ class SpaceshipAutomation {
       id: this.nextPresetId++,
       name: name || `Preset ${this.nextPresetId - 1}`,
       enabled: false,
+      showInSidebar: true,
       steps: []
     };
     this.presets.push(preset);
@@ -188,6 +190,12 @@ class SpaceshipAutomation {
     const preset = this.presets.find(item => item.id === id);
     if (!preset) return;
     preset.name = name;
+  }
+
+  setPresetShowInSidebar(id, showInSidebar) {
+    const preset = this.presets.find(item => item.id === id);
+    if (!preset) return;
+    preset.showInSidebar = showInSidebar !== false;
   }
 
   addStep(presetId) {
@@ -1080,6 +1088,7 @@ class SpaceshipAutomation {
     return {
       presets: this.presets.map(preset => ({
         ...preset,
+      showInSidebar: preset.showInSidebar !== false,
       steps: preset.steps.map(step => ({
         ...step,
         entries: step.entries.map(entry => ({ ...entry }))
@@ -1098,6 +1107,7 @@ class SpaceshipAutomation {
       id: preset.id,
       name: preset.name || 'Preset',
       enabled: !!preset.enabled,
+      showInSidebar: preset.showInSidebar !== false,
       steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
         const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
         let stepMode = step.mode || 'fill';

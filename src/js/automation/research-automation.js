@@ -84,6 +84,7 @@ class ResearchAutomation {
     const normalized = {
       id,
       name: (preset && preset.name) || `Preset ${id}`,
+      showInSidebar: !preset || preset.showInSidebar !== false,
       researches: {},
       hiddenResearchIds: this.normalizeHiddenResearchIds(preset && preset.hiddenResearchIds)
     };
@@ -225,6 +226,15 @@ class ResearchAutomation {
     return true;
   }
 
+  setPresetShowInSidebar(id, showInSidebar) {
+    const preset = this.getPresetById(id);
+    if (!preset) {
+      return false;
+    }
+    preset.showInSidebar = showInSidebar !== false;
+    return true;
+  }
+
   deletePreset(id) {
     const numericId = Number(id);
     const index = this.presets.findIndex((preset) => preset.id === numericId);
@@ -262,6 +272,7 @@ class ResearchAutomation {
     }
     const exportedPreset = {
       name: preset.name,
+      showInSidebar: preset.showInSidebar !== false,
       hiddenResearchIds: preset.hiddenResearchIds.slice(),
       researches: {}
     };
@@ -456,6 +467,7 @@ class ResearchAutomation {
       presets: this.presets.map((preset) => ({
         id: preset.id,
         name: preset.name,
+        showInSidebar: preset.showInSidebar !== false,
         hiddenResearchIds: preset.hiddenResearchIds.slice(),
         researches: Object.fromEntries(
           Object.entries(preset.researches).map(([researchId, entry]) => [

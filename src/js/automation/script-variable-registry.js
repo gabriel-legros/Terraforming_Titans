@@ -393,7 +393,7 @@ class ScriptVariableRegistry {
     const categories = [];
     for (const category in resources) {
       if (resources[category] && resources[category].constructor === Object) {
-        categories.push({ id: category, label: this.formatIdLabel(category) });
+        categories.push({ id: category, label: this.getResourceCategoryLabel(category) });
       }
     }
     return categories;
@@ -405,7 +405,7 @@ class ScriptVariableRegistry {
     for (const resourceId in group) {
       const resource = group[resourceId];
       if (!resource || resource.constructor !== Resource) continue;
-      targets.push({ id: resourceId, label: resource.displayName || resource.name || resourceId });
+      targets.push({ id: resourceId, label: this.getResourceLabel(categoryId, resourceId, resource) });
     }
     return targets;
   }
@@ -871,6 +871,22 @@ class ScriptVariableRegistry {
       }
     }
     return cap > 0 ? (value / cap) * 100 : 0;
+  }
+
+  getResourceCategoryLabel(categoryId) {
+    return t(
+      `ui.resources.categories.${categoryId}`,
+      null,
+      this.formatIdLabel(categoryId)
+    );
+  }
+
+  getResourceLabel(categoryId, resourceId, resource) {
+    const fallback = resource
+      ? (resource.displayName || resource.name || this.formatIdLabel(resourceId))
+      : this.formatIdLabel(resourceId);
+    const name = t(`catalogs.resources.${categoryId}.${resourceId}.name`, null, fallback);
+    return t(`catalogs.resources.${categoryId}.${resourceId}.displayName`, null, name);
   }
 
   getHazard(hazardId) {

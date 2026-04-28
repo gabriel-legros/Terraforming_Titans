@@ -4,12 +4,14 @@ const colonyAutomationUIState = {
   builderName: '',
   builderScope: 'all',
   builderType: 'both',
+  builderShowInSidebar: true,
   builderSelectedTargets: [],
   builderCategoryValue: 'all',
   builderTargetValue: '',
   combinationId: null,
   combinationSyncedId: null,
-  combinationName: ''
+  combinationName: '',
+  combinationShowInSidebar: true
 };
 
 function getColonyAutomationPresetLabel(preset) {
@@ -85,6 +87,7 @@ function buildAutomationColonyUI() {
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
   applyOnceButton.classList.add('colony-automation-builder-apply-once');
+  const builderShowSidebar = createAutomationShowInSidebarLabel('colony-automation-builder');
   builderRow.append(
     presetSelect,
     presetMoveButtons,
@@ -94,7 +97,8 @@ function buildAutomationColonyUI() {
     deleteButton,
     transferButtons.importButton,
     transferButtons.exportButton,
-    applyOnceButton
+    applyOnceButton,
+    builderShowSidebar.label
   );
   builderSection.appendChild(builderRow);
 
@@ -218,6 +222,7 @@ function buildAutomationColonyUI() {
   const combinationDeleteButton = document.createElement('button');
   combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
   combinationDeleteButton.classList.add('colony-automation-combination-delete');
+  const combinationShowSidebar = createAutomationShowInSidebarLabel('colony-automation-combination');
   combinationRow.append(
     combinationSelect,
     combinationMoveButtons,
@@ -225,6 +230,7 @@ function buildAutomationColonyUI() {
     combinationNewButton,
     combinationSaveButton,
     combinationDeleteButton,
+    combinationShowSidebar.label,
     applyCombinationButton
   );
   applySection.appendChild(combinationRow);
@@ -256,6 +262,7 @@ function buildAutomationColonyUI() {
   automationElements.colonyBuilderImportButton = transferButtons.importButton;
   automationElements.colonyBuilderExportButton = transferButtons.exportButton;
   automationElements.colonyBuilderApplyOnceButton = applyOnceButton;
+  automationElements.colonyBuilderShowInSidebarCheckbox = builderShowSidebar.checkbox;
   automationElements.colonyBuilderDirty = builderDirty;
   automationElements.colonyBuilderTypeSelect = typeSelect;
   automationElements.colonyBuilderScopeSelect = scopeSelect;
@@ -276,6 +283,7 @@ function buildAutomationColonyUI() {
   automationElements.colonyCombinationNewButton = combinationNewButton;
   automationElements.colonyCombinationSaveButton = combinationSaveButton;
   automationElements.colonyCombinationDeleteButton = combinationDeleteButton;
+  automationElements.colonyCombinationShowInSidebarCheckbox = combinationShowSidebar.checkbox;
   automationElements.colonyApplyList = applyList;
   automationElements.colonyApplyHint = applyHint;
   automationElements.colonyAddApplyButton = addApplyButton;
@@ -299,6 +307,7 @@ function updateColonyAutomationUI() {
     colonyBuilderImportButton,
     colonyBuilderExportButton,
     colonyBuilderApplyOnceButton,
+    colonyBuilderShowInSidebarCheckbox,
     colonyBuilderDirty,
     colonyBuilderTypeSelect,
     colonyBuilderScopeSelect,
@@ -321,7 +330,8 @@ function updateColonyAutomationUI() {
     colonyCombinationNameInput,
     colonyCombinationNewButton,
     colonyCombinationSaveButton,
-    colonyCombinationDeleteButton
+    colonyCombinationDeleteButton,
+    colonyCombinationShowInSidebarCheckbox
   } = automationElements;
   const manager = automationManager;
   const automation = manager.colonyAutomation;
@@ -370,6 +380,7 @@ function updateColonyAutomationUI() {
       : activePreset.includeControl
         ? 'control'
         : 'automation';
+    colonyAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
     colonyAutomationUIState.syncedPresetId = activePresetId;
   }
   if (!activePreset && colonyAutomationUIState.syncedPresetId) {
@@ -380,6 +391,9 @@ function updateColonyAutomationUI() {
   if (document.activeElement !== colonyBuilderPresetNameInput) {
     colonyBuilderPresetNameInput.value = activePreset ? activePreset.name : colonyAutomationUIState.builderName;
   }
+  colonyBuilderShowInSidebarCheckbox.checked = activePreset
+    ? activePreset.showInSidebar !== false
+    : colonyAutomationUIState.builderShowInSidebar;
   if (document.activeElement !== colonyBuilderTypeSelect) {
     colonyBuilderTypeSelect.value = colonyAutomationUIState.builderType;
   }
@@ -504,6 +518,7 @@ function updateColonyAutomationUI() {
     : -1;
   if (activeCombination && colonyAutomationUIState.combinationSyncedId !== activeCombinationId) {
     colonyAutomationUIState.combinationName = activeCombination.name;
+    colonyAutomationUIState.combinationShowInSidebar = activeCombination.showInSidebar !== false;
     colonyAutomationUIState.combinationSyncedId = activeCombinationId;
   }
   if (!activeCombination && colonyAutomationUIState.combinationSyncedId) {
@@ -515,6 +530,9 @@ function updateColonyAutomationUI() {
       ? activeCombination.name
       : colonyAutomationUIState.combinationName;
   }
+  colonyCombinationShowInSidebarCheckbox.checked = activeCombination
+    ? activeCombination.showInSidebar !== false
+    : colonyAutomationUIState.combinationShowInSidebar;
 
   colonyCombinationDeleteButton.disabled = !activeCombination;
   colonyCombinationMoveUpButton.disabled = activeCombinationIndex <= 0;
@@ -686,6 +704,7 @@ function attachColonyAutomationHandlers() {
     colonyBuilderExportButton,
     colonyBuilderTypeSelect,
     colonyBuilderScopeSelect,
+    colonyBuilderShowInSidebarCheckbox,
     colonyBuilderCategorySelect,
     colonyBuilderTargetSelect,
     colonyBuilderAddButton,
@@ -702,6 +721,7 @@ function attachColonyAutomationHandlers() {
     colonyCombinationNewButton,
     colonyCombinationSaveButton,
     colonyCombinationDeleteButton,
+    colonyCombinationShowInSidebarCheckbox,
     colonyAddApplyButton
   } = automationElements;
 
@@ -751,6 +771,7 @@ function attachColonyAutomationHandlers() {
     colonyAutomationUIState.builderName = '';
     colonyAutomationUIState.builderScope = 'all';
     colonyAutomationUIState.builderType = 'both';
+    colonyAutomationUIState.builderShowInSidebar = true;
     colonyAutomationUIState.builderSelectedTargets = [];
     colonyAutomationUIState.builderCategoryValue = 'all';
     colonyAutomationUIState.builderTargetValue = '';
@@ -766,6 +787,16 @@ function attachColonyAutomationHandlers() {
 
   colonyBuilderScopeSelect.addEventListener('change', (event) => {
     colonyAutomationUIState.builderScope = event.target.value;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  colonyBuilderShowInSidebarCheckbox.addEventListener('change', () => {
+    colonyAutomationUIState.builderShowInSidebar = colonyBuilderShowInSidebarCheckbox.checked;
+    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.colonyAutomation.setPresetShowInSidebar(Number(presetId), colonyAutomationUIState.builderShowInSidebar);
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -826,14 +857,15 @@ function attachColonyAutomationHandlers() {
     const includeControl = type === 'control' || type === 'both';
     const includeAutomation = type === 'automation' || type === 'both';
     const scopeAll = colonyAutomationUIState.builderScope === 'all';
+    const showInSidebar = colonyAutomationUIState.builderShowInSidebar;
     const targetIds = scopeAll
       ? getColonyAutomationTargets().map(target => target.id)
       : colonyAutomationUIState.builderSelectedTargets.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
-      automation.updatePreset(Number(presetId), name, targetIds, { includeControl, includeAutomation, scopeAll });
+      automation.updatePreset(Number(presetId), name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll });
+      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
       colonyAutomationUIState.syncedPresetId = null;
       colonyAutomationUIState.builderName = '';
     }
@@ -958,6 +990,17 @@ function attachColonyAutomationHandlers() {
     automationManager.colonyAutomation.setSelectedCombinationId(null);
     colonyAutomationUIState.combinationSyncedId = null;
     colonyAutomationUIState.combinationName = '';
+    colonyAutomationUIState.combinationShowInSidebar = true;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  colonyCombinationShowInSidebarCheckbox.addEventListener('change', () => {
+    colonyAutomationUIState.combinationShowInSidebar = colonyCombinationShowInSidebarCheckbox.checked;
+    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
+    if (comboId) {
+      automationManager.colonyAutomation.setCombinationShowInSidebar(Number(comboId), colonyAutomationUIState.combinationShowInSidebar);
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -972,8 +1015,10 @@ function attachColonyAutomationHandlers() {
     const comboId = automation.getSelectedCombinationId();
     if (comboId) {
       automation.updateCombination(Number(comboId), name, snapshot);
+      automation.setCombinationShowInSidebar(Number(comboId), colonyAutomationUIState.combinationShowInSidebar);
     } else {
-      automation.addCombination(name, snapshot);
+      const newComboId = automation.addCombination(name, snapshot);
+      automation.setCombinationShowInSidebar(newComboId, colonyAutomationUIState.combinationShowInSidebar);
       colonyAutomationUIState.combinationSyncedId = null;
       colonyAutomationUIState.combinationName = '';
     }
