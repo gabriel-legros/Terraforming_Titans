@@ -33,7 +33,7 @@ const RINGWORLD_STAR_CORES = [
     { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: "World 13", minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 180_000 },
     { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 300_000 },
     { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 600_000 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 1_500_000 }
+    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", baseDisabledSource: "World 14 & Galactic Conquest", requiresFullGalaxyControl: true, minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 1_500_000 }
 ];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
@@ -188,7 +188,10 @@ function buildArtificialStarContext({ seed, hasStar, minFlux, maxFlux }) {
 }
 
 function getRingStarCores() {
-    return RINGWORLD_STAR_CORES;
+    if (artificialManager && typeof artificialManager.getRingStarCoreOptions === 'function') {
+        return artificialManager.getRingStarCoreOptions();
+    }
+    return RINGWORLD_STAR_CORES.map((entry) => ({ ...entry }));
 }
 
 function getRingStarCoreConfig(value) {
@@ -305,6 +308,22 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = true;
         this.nextId = 1;
         this.activeProject = null;
+        this.unlockedTypes = new Set(
+            ARTIFICIAL_TYPES
+                .filter((entry) => entry.disabled !== true)
+                .map((entry) => entry.value)
+        );
+        this.unlockedCores = new Set(
+            ARTIFICIAL_CORES
+                .filter((entry) => entry.disabled !== true)
+                .map((entry) => entry.value)
+        );
+        this.unlockedRingStarCores = new Set(
+            RINGWORLD_STAR_CORES
+                .filter((entry) => entry.disabled !== true && entry.requiresFullGalaxyControl !== true)
+                .map((entry) => entry.value)
+        );
+        this.storyUnlockedRingStarCores = new Set();
         this.draftSelection = this.normalizeDraftSelection(this.createDefaultDraftSelection());
         this.prepay = {
             signature: '',
@@ -312,16 +331,56 @@ class ArtificialManager extends EffectableEntity {
         };
         this.fleetCapacityWorldCap = ARTIFICIAL_FLEET_CAPACITY_WORLDS;
         this._tickTimer = 0;
+        this._lastGalaxyConquestUnlockState = false;
+    }
+
+    getArtificialTypeOptions() {
+        return ARTIFICIAL_TYPES.map((entry) => ({
+            ...entry,
+            disabled: !this.unlockedTypes.has(entry.value),
+            disabledSource: this.unlockedTypes.has(entry.value) ? null : entry.disabledSource
+        }));
+    }
+
+    getArtificialCoreOptions() {
+        return ARTIFICIAL_CORES.map((entry) => ({
+            ...entry,
+            disabled: !this.unlockedCores.has(entry.value),
+            disabledSource: this.unlockedCores.has(entry.value) ? null : entry.disabledSource
+        }));
+    }
+
+    isRingStarCoreUnlocked(coreId) {
+        const entry = RINGWORLD_STAR_CORES.find((core) => core.value === coreId);
+        if (!entry) {
+            return false;
+        }
+        if (entry.requiresFullGalaxyControl) {
+            return this.storyUnlockedRingStarCores.has(coreId)
+                && galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
+        }
+        return this.unlockedRingStarCores.has(coreId);
+    }
+
+    getRingStarCoreOptions() {
+        return RINGWORLD_STAR_CORES.map((entry) => {
+            const unlocked = this.isRingStarCoreUnlocked(entry.value);
+            return {
+                ...entry,
+                disabled: !unlocked,
+                disabledSource: unlocked ? null : (entry.baseDisabledSource || entry.disabledSource || null)
+            };
+        });
     }
 
     createDefaultDraftSelection() {
-        const types = getArtificialTypes();
+        const types = this.getArtificialTypeOptions();
         const typeDefault = types.find((entry) => !entry.disabled) || types[0];
-        const cores = getArtificialCores();
+        const cores = this.getArtificialCoreOptions();
         const coreDefault = cores.find((entry) => !entry.disabled) || cores[0];
         const starContexts = getArtificialStarContexts();
         const starDefault = starContexts.find((entry) => !entry.disabled) || starContexts[0];
-        const ringCores = getRingStarCores();
+        const ringCores = this.getRingStarCoreOptions();
         const ringDefault = ringCores.find((entry) => !entry.disabled) || ringCores[0];
         const coreBounds = getArtificialCoreBounds(coreDefault.value);
         const orbitBounds = getRingRadiusBoundsAU(ringDefault.value);
@@ -341,12 +400,12 @@ class ArtificialManager extends EffectableEntity {
     }
 
     normalizeDraftSelection(selection) {
-        const types = getArtificialTypes();
+        const types = this.getArtificialTypeOptions();
         const typeDefault = types.find((entry) => !entry.disabled) || types[0];
         const typeValue = types.some((entry) => entry.value === selection.type)
             ? selection.type
             : typeDefault.value;
-        const cores = getArtificialCores();
+        const cores = this.getArtificialCoreOptions();
         const coreDefault = cores.find((entry) => !entry.disabled) || cores[0];
         const coreValue = cores.some((entry) => entry.value === selection.core)
             ? selection.core
@@ -356,7 +415,7 @@ class ArtificialManager extends EffectableEntity {
         const starValue = starContexts.some((entry) => entry.value === selection.starContext)
             ? selection.starContext
             : starDefault.value;
-        const ringCores = getRingStarCores();
+        const ringCores = this.getRingStarCoreOptions();
         const ringDefault = ringCores.find((entry) => !entry.disabled) || ringCores[0];
         const requestedRingCore = selection.ringStarCore || (typeValue === 'ring' ? selection.core : null);
         const ringValue = ringCores.some((entry) => entry.value === requestedRingCore)
@@ -425,26 +484,35 @@ class ArtificialManager extends EffectableEntity {
     }
 
     enableRingworld() {
-        const entry = ARTIFICIAL_TYPES.find((type) => type.value === 'ring');
-        if (!entry || !entry.disabled) return;
-        entry.disabled = false;
-        entry.disabledSource = null;
+        if (this.unlockedTypes.has('ring')) return;
+        this.unlockedTypes.add('ring');
         this.updateUI(true);
     }
 
     unlockCore(coreId) {
-        const entry = ARTIFICIAL_CORES.find((core) => core.value === coreId);
-        if (!entry || !entry.disabled) return;
-        entry.disabled = false;
-        entry.disabledSource = null;
+        if (!ARTIFICIAL_CORES.some((core) => core.value === coreId)) return;
+        if (this.unlockedCores.has(coreId)) return;
+        this.unlockedCores.add(coreId);
         this.updateUI(true);
     }
 
     unlockRingStarCore(coreId) {
         const entry = RINGWORLD_STAR_CORES.find((core) => core.value === coreId);
-        if (!entry || !entry.disabled) return;
-        entry.disabled = false;
-        entry.disabledSource = null;
+        if (!entry) return;
+        if (entry.requiresFullGalaxyControl) {
+            this.storyUnlockedRingStarCores.add(coreId);
+            this.refreshConditionalRingStarCoreUnlocks();
+            return;
+        }
+        if (this.unlockedRingStarCores.has(coreId)) return;
+        this.unlockedRingStarCores.add(coreId);
+        this.updateUI(true);
+    }
+
+    refreshConditionalRingStarCoreUnlocks() {
+        const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
+        this._lastGalaxyConquestUnlockState = hasGalaxyConquest;
+        this.draftSelection = this.normalizeDraftSelection(this.draftSelection);
         this.updateUI(true);
     }
 
@@ -476,6 +544,10 @@ class ArtificialManager extends EffectableEntity {
     }
 
     update(delta) {
+        const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
+        if (hasGalaxyConquest !== this._lastGalaxyConquestUnlockState) {
+            this.refreshConditionalRingStarCoreUnlocks();
+        }
         if (!this.enabled || !this.activeProject) return;
         if (this.activeProject.status === 'building') {
             this.setRemainingTime(this.activeProject.remainingMs - delta, false);
@@ -1738,6 +1810,10 @@ class ArtificialManager extends EffectableEntity {
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
             activeProject: project,
+            unlockedTypes: Array.from(this.unlockedTypes),
+            unlockedCores: Array.from(this.unlockedCores),
+            unlockedRingStarCores: Array.from(this.unlockedRingStarCores),
+            storyUnlockedRingStarCores: Array.from(this.storyUnlockedRingStarCores),
             draftSelection: { ...this.draftSelection },
             prepay: this.prepay
         };
@@ -1746,6 +1822,18 @@ class ArtificialManager extends EffectableEntity {
     loadState(state) {
         if (!state) return;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
+        if (Array.isArray(state.unlockedTypes)) {
+            this.unlockedTypes = new Set(state.unlockedTypes);
+        }
+        if (Array.isArray(state.unlockedCores)) {
+            this.unlockedCores = new Set(state.unlockedCores);
+        }
+        if (Array.isArray(state.unlockedRingStarCores)) {
+            this.unlockedRingStarCores = new Set(state.unlockedRingStarCores);
+        }
+        if (Array.isArray(state.storyUnlockedRingStarCores)) {
+            this.storyUnlockedRingStarCores = new Set(state.storyUnlockedRingStarCores);
+        }
         const existingFleetCap = this.fleetCapacityWorldCap;
         const hasSavedFleetCap = Object.prototype.hasOwnProperty.call(state, 'fleetCapacityWorldCap');
         if (hasSavedFleetCap) {
@@ -1770,6 +1858,7 @@ class ArtificialManager extends EffectableEntity {
                 superalloys: Math.max(prepay.paid?.superalloys || 0, 0)
             }
         };
+        this.refreshConditionalRingStarCoreUnlocks();
         if (this.activeProject) {
             this.resetPrepay();
             this.activeProject.override = null;
@@ -1886,11 +1975,17 @@ class ArtificialManager extends EffectableEntity {
 }
 
 function getArtificialTypes() {
-    return ARTIFICIAL_TYPES;
+    if (artificialManager && typeof artificialManager.getArtificialTypeOptions === 'function') {
+        return artificialManager.getArtificialTypeOptions();
+    }
+    return ARTIFICIAL_TYPES.map((entry) => ({ ...entry }));
 }
 
 function getArtificialCores() {
-    return ARTIFICIAL_CORES;
+    if (artificialManager && typeof artificialManager.getArtificialCoreOptions === 'function') {
+        return artificialManager.getArtificialCoreOptions();
+    }
+    return ARTIFICIAL_CORES.map((entry) => ({ ...entry }));
 }
 
 function getRingStarCoreBounds(coreValue) {

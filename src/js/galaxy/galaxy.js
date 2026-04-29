@@ -24,6 +24,7 @@ class GalaxyManager extends EffectableEntity {
         this.controlledSectorCacheDirty = true;
         this.controlledSectorCacheVersion = 0;
         this.controlledSectorWorldCountCache = {};
+        this.hasEverControlledWholeGalaxyFlag = false;
         this.fleetUpgradePurchases = {};
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
             this.fleetUpgradePurchases[key] = 0;
@@ -137,6 +138,7 @@ class GalaxyManager extends EffectableEntity {
             operations: operationState.operations,
             fleetUpgrades: this.#serializeFleetUpgrades(),
             successfulOperations: this.successfulOperations,
+            hasEverControlledWholeGalaxyFlag: this.hasEverControlledWholeGalaxy(),
             operationSteps: operationState.operationSteps,
             operationAutoSectors: operationState.operationAutoSectors,
             operationAutoThreshold: operationState.operationAutoThreshold
@@ -192,8 +194,12 @@ class GalaxyManager extends EffectableEntity {
                 faction.loadState(factionState, this);
             }
         });
+        this.hasEverControlledWholeGalaxyFlag = state?.hasEverControlledWholeGalaxyFlag === true;
         if (state && Number.isFinite(state.successfulOperations)) {
             this.successfulOperations = Math.max(0, state.successfulOperations);
+        }
+        if (this.isGalaxyFullyControlledByUhf()) {
+            this.hasEverControlledWholeGalaxyFlag = true;
         }
         if (this.operationManager) {
             this.operationManager.loadState(state);
@@ -203,6 +209,7 @@ class GalaxyManager extends EffectableEntity {
         });
         this.refreshUIVisibility();
         this.#updateIncomingAttackWarning();
+        artificialManager?.refreshConditionalRingStarCoreUnlocks?.();
     }
 
     #serializeFleetUpgrades() {
@@ -242,6 +249,7 @@ class GalaxyManager extends EffectableEntity {
         this.factions.clear();
         this.sectors.clear();
         this.markControlledSectorCacheDirty();
+        this.hasEverControlledWholeGalaxyFlag = false;
         if (this.operationManager) {
             this.operationManager.reset();
         }
@@ -258,6 +266,10 @@ class GalaxyManager extends EffectableEntity {
         return Array.from(this.sectors.values());
     }
 
+    getTotalSectorCount() {
+        return this.sectors.size || generateSectorCoordinates(this.radius).length;
+    }
+
     getUhfControlledSectors() {
         if (!this.controlledSectorCacheDirty) {
             return this.controlledSectorCache;
@@ -270,11 +282,23 @@ class GalaxyManager extends EffectableEntity {
         });
         this.controlledSectorCache = controlled;
         this.controlledSectorCacheDirty = false;
+        this.#updateWholeGalaxyControlFlag(controlled.length);
         return this.controlledSectorCache;
     }
 
     getControlledSectorCacheVersion() {
         return this.controlledSectorCacheVersion;
+    }
+
+    isGalaxyFullyControlledByUhf() {
+        return this.getUhfControlledSectors().length >= this.getTotalSectorCount();
+    }
+
+    hasEverControlledWholeGalaxy() {
+        if (this.controlledSectorCacheDirty) {
+            this.getUhfControlledSectors();
+        }
+        return this.hasEverControlledWholeGalaxyFlag === true;
     }
 
     hasAcquiredSectorReward(sectorReference) {
@@ -976,6 +1000,12 @@ class GalaxyManager extends EffectableEntity {
         }
         this.controlledSectorCacheDirty = true;
         this.controlledSectorWorldCountCache = {};
+    }
+
+    #updateWholeGalaxyControlFlag(controlledCount) {
+        if (controlledCount >= this.getTotalSectorCount()) {
+            this.hasEverControlledWholeGalaxyFlag = true;
+        }
     }
 
     #markAllFactionBorderCachesDirty() {
