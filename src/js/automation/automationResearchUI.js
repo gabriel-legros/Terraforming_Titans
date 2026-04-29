@@ -16,7 +16,8 @@ function buildAutomationResearchUI() {
   const header = createAutomationCardHeader(
     card,
     getAutomationCardText('researchAutomationTitle', {}, 'Research Automation'),
-    toggleCollapsed
+    toggleCollapsed,
+    'research'
   );
 
   const body = document.createElement('div');
@@ -151,9 +152,12 @@ function updateResearchAutomationUI() {
   const automation = manager.researchAutomation;
   const unlocked = manager.hasFeature('automationResearch');
   const presets = automation.presets.slice();
-  const activePreset = automation.getSelectedPreset();
-  const activePresetIndex = activePreset
-    ? presets.findIndex((preset) => preset.id === activePreset.id)
+  if (presets.length > 0 && !automation.getSelectedPreset()) {
+    automation.setSelectedPresetId(presets[0].id);
+  }
+  const selectedPreset = automation.getSelectedPreset();
+  const selectedPresetIndex = selectedPreset
+    ? presets.findIndex((preset) => preset.id === selectedPreset.id)
     : -1;
 
   researchAutomation.style.display = unlocked ? '' : 'none';
@@ -192,24 +196,24 @@ function updateResearchAutomationUI() {
   }
 
   if (document.activeElement !== researchPresetNameInput) {
-    researchPresetNameInput.value = activePreset ? activePreset.name || '' : researchAutomationUIState.builderName;
+    researchPresetNameInput.value = selectedPreset ? selectedPreset.name || '' : researchAutomationUIState.builderName;
   }
-  if (activePreset) {
-    researchAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
+  if (selectedPreset) {
+    researchAutomationUIState.builderShowInSidebar = selectedPreset.showInSidebar !== false;
     researchAutomationUIState.builderIsCreatingNewPreset = false;
   }
-  researchShowPresetInSidebarCheckbox.checked = activePreset
-    ? activePreset.showInSidebar !== false
+  researchShowPresetInSidebarCheckbox.checked = selectedPreset
+    ? selectedPreset.showInSidebar !== false
     : researchAutomationUIState.builderShowInSidebar;
 
-  researchPresetMoveUpButton.disabled = activePresetIndex <= 0;
-  researchPresetMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
-  researchDeletePresetButton.disabled = presets.length <= 1 || !activePreset;
+  researchPresetMoveUpButton.disabled = selectedPresetIndex <= 0;
+  researchPresetMoveDownButton.disabled = selectedPresetIndex < 0 || selectedPresetIndex >= presets.length - 1;
+  researchDeletePresetButton.disabled = !selectedPreset;
   researchImportPresetButton.disabled = false;
-  researchExportPresetButton.disabled = !activePreset;
+  researchExportPresetButton.disabled = !selectedPreset;
   researchNewPresetButton.disabled = false;
   researchSavePresetButton.disabled = false;
-  researchApplyOnceButton.disabled = !activePreset;
+  researchApplyOnceButton.disabled = !selectedPreset;
   const nextTravelPresetId = automation.nextTravelPresetId;
   const nextTravelPreset = nextTravelPresetId ? automation.getPresetById(nextTravelPresetId) : null;
   if (nextTravelPresetId && !nextTravelPreset) {
@@ -236,7 +240,7 @@ function updateResearchAutomationUI() {
   researchApplyNextTravelPersistToggle.checked = automation.nextTravelPersistent;
   researchApplyNextTravelPersistToggle.disabled = !automation.nextTravelPresetId;
 
-  updateAutomationPresetJsonDetails(researchPresetJsonDetails, activePreset);
+  updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset);
 }
 
 function attachResearchAutomationHandlers() {
@@ -329,7 +333,7 @@ function attachResearchAutomationHandlers() {
     const automation = getAutomation();
     const preset = researchAutomationUIState.builderIsCreatingNewPreset
       ? null
-      : (automation.getSelectedPreset() || automation.getCurrentPreset());
+      : automation.getSelectedPreset();
     const name = researchPresetNameInput.value || researchAutomationUIState.builderName || '';
     if (preset) {
       automation.updatePreset(preset.id, name);

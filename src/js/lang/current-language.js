@@ -2954,6 +2954,7 @@ setLanguageData({
         scriptAutomationTooltip: 'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. All conditions compare numerical values; boolean values (for example if something is enabled or not) take values 0 and 1. WAIT lines also test a condition, but they stay on that line until the condition becomes true. You should only use WAIT lines if you truly understand what it is doing, otherwise it is recommended to only use IF lines. ELSE IF only chains from the immediately previous IF or ELSE IF; otherwise it behaves like IF. ELSE only chains from the immediately previous IF or ELSE IF; otherwise it behaves like ACTIONS. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.',
         scriptVariables: {
           resources: {
+            available: 'Available',
             surface: {
               solid: 'Solid',
               liquid: 'Liquid',

@@ -1,9 +1,19 @@
 let automationTabVisible = false;
 let automationUIInitialized = false;
 let automationUIStale = true;
+const AUTOMATION_CARD_ORDER_KEYS = [
+  'scripts',
+  'ships',
+  'life',
+  'research',
+  'buildings',
+  'projects',
+  'colony'
+];
 const automationElements = {
   tab: null,
   content: null,
+  container: null,
   scriptAutomation: null,
   scriptAutomationStatus: null,
   scriptCollapseButton: null,
@@ -205,6 +215,119 @@ function queueAutomationUIRefresh() {
   automationUIStale = true;
 }
 
+function getAutomationCardElementByKey(cardKey) {
+  if (cardKey === 'scripts') {
+    return automationElements.scriptAutomation;
+  }
+  if (cardKey === 'ships') {
+    return automationElements.shipAssignment;
+  }
+  if (cardKey === 'life') {
+    return automationElements.lifeDesign;
+  }
+  if (cardKey === 'research') {
+    return automationElements.researchAutomation;
+  }
+  if (cardKey === 'buildings') {
+    return automationElements.buildingsAutomation;
+  }
+  if (cardKey === 'projects') {
+    return automationElements.projectsAutomation;
+  }
+  if (cardKey === 'colony') {
+    return automationElements.colonyAutomation;
+  }
+  return null;
+}
+
+function isAutomationCardDisplayed(card) {
+  if (!card) {
+    return false;
+  }
+  if (card.classList.contains('hidden')) {
+    return false;
+  }
+  return card.style.display !== 'none';
+}
+
+function getVisibleAutomationCardKeys() {
+  const visibleKeys = [];
+  for (let index = 0; index < AUTOMATION_CARD_ORDER_KEYS.length; index += 1) {
+    const cardKey = AUTOMATION_CARD_ORDER_KEYS[index];
+    const card = getAutomationCardElementByKey(cardKey);
+    if (isAutomationCardDisplayed(card)) {
+      visibleKeys.push(cardKey);
+    }
+  }
+  return visibleKeys;
+}
+
+function applyAutomationCardOrder() {
+  const container = automationElements.container;
+  if (!container || !automationManager) {
+    return;
+  }
+  const orderedKeys = automationManager.getAutomationCardOrder();
+  const currentKeys = [];
+  for (let index = 0; index < container.children.length; index += 1) {
+    const child = container.children[index];
+    if (!child || !child.id) {
+      continue;
+    }
+    if (child.id === 'automation-scripts') {
+      currentKeys.push('scripts');
+    } else if (child.id === 'automation-ship-assignment') {
+      currentKeys.push('ships');
+    } else if (child.id === 'automation-life-design') {
+      currentKeys.push('life');
+    } else if (child.id === 'automation-research') {
+      currentKeys.push('research');
+    } else if (child.id === 'automation-buildings') {
+      currentKeys.push('buildings');
+    } else if (child.id === 'automation-projects') {
+      currentKeys.push('projects');
+    } else if (child.id === 'automation-colony') {
+      currentKeys.push('colony');
+    }
+  }
+  let alreadyOrdered = currentKeys.length === orderedKeys.length;
+  if (alreadyOrdered) {
+    for (let index = 0; index < orderedKeys.length; index += 1) {
+      if (currentKeys[index] !== orderedKeys[index]) {
+        alreadyOrdered = false;
+        break;
+      }
+    }
+  }
+  if (alreadyOrdered) {
+    return;
+  }
+  for (let index = 0; index < orderedKeys.length; index += 1) {
+    const card = getAutomationCardElementByKey(orderedKeys[index]);
+    if (card && card.parentElement === container) {
+      container.appendChild(card);
+    }
+  }
+}
+
+function updateAutomationCardOrderControls() {
+  if (!automationManager) {
+    return;
+  }
+  const visibleKeys = getVisibleAutomationCardKeys();
+  for (let index = 0; index < AUTOMATION_CARD_ORDER_KEYS.length; index += 1) {
+    const cardKey = AUTOMATION_CARD_ORDER_KEYS[index];
+    const card = getAutomationCardElementByKey(cardKey);
+    if (!card || !card._automationMoveUpButton || !card._automationMoveDownButton) {
+      continue;
+    }
+    const visibleIndex = visibleKeys.indexOf(cardKey);
+    const isVisible = visibleIndex >= 0;
+    card._automationMoveUpButton.disabled = !isVisible || visibleIndex <= 0;
+    card._automationMoveDownButton.disabled = !isVisible || visibleIndex >= visibleKeys.length - 1;
+  }
+}
+
 function cacheAutomationElements() {
   if (typeof document === 'undefined') return;
   if (!automationElements.tab) {
@@ -212,6 +335,9 @@ function cacheAutomationElements() {
   }
   if (!automationElements.content) {
     automationElements.content = document.getElementById('automation-hope');
+  }
+  if (!automationElements.container && automationElements.content) {
+    automationElements.container = automationElements.content.querySelector('.automation-container');
   }
   if (!automationElements.scriptAutomation) {
     automationElements.scriptAutomation = document.getElementById('automation-scripts');
@@ -722,7 +848,7 @@ function cacheAutomationElements() {
   }
 }
 
-function createAutomationCardHeader(card, titleText, onToggle) {
+function createAutomationCardHeader(card, titleText, onToggle, orderKey) {
   const header = card.querySelector('.automation-card-header');
   header.textContent = '';
   const titleGroup = document.createElement('div');
@@ -735,13 +861,48 @@ function createAutomationCardHeader(card, titleText, onToggle) {
   title.classList.add('automation-title');
   title.textContent = titleText;
   titleGroup.append(collapse, title);
-  header.appendChild(titleGroup);
+  const headerRight = document.createElement('div');
+  headerRight.classList.add('project-header-right');
+  const reorderButtons = document.createElement('div');
+  reorderButtons.classList.add('reorder-buttons');
+  const moveUpButton = document.createElement('button');
+  moveUpButton.innerHTML = '&#9650;';
+  moveUpButton.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
+  moveUpButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!automationManager || !orderKey) {
+      return;
+    }
+    if (automationManager.moveAutomationCard(orderKey, -1, getVisibleAutomationCardKeys())) {
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    }
+  });
+  const moveDownButton = document.createElement('button');
+  moveDownButton.innerHTML = '&#9660;';
+  moveDownButton.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
+  moveDownButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!automationManager || !orderKey) {
+      return;
+    }
+    if (automationManager.moveAutomationCard(orderKey, 1, getVisibleAutomationCardKeys())) {
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    }
+  });
+  reorderButtons.append(moveUpButton, moveDownButton);
+  headerRight.appendChild(reorderButtons);
+  header.append(titleGroup, headerRight);
   titleGroup.addEventListener('click', onToggle);
   collapse.addEventListener('click', (event) => {
     event.stopPropagation();
     onToggle();
   });
-  return { collapse, titleGroup, title };
+  card._automationOrderKey = orderKey || '';
+  card._automationMoveUpButton = moveUpButton;
+  card._automationMoveDownButton = moveDownButton;
+  return { collapse, titleGroup, title, moveUpButton, moveDownButton };
 }
 
 function getAutomationCardText(path, vars, fallback) {
@@ -1207,6 +1368,8 @@ function updateAutomationUI() {
     updateBuildingsAutomationUI();
     updateProjectsAutomationUI();
     updateColonyAutomationUI();
+    applyAutomationCardOrder();
+    updateAutomationCardOrderControls();
   }
   if (sidebarActive && !updateSidebarAutomationUI()) {
     automationUIStale = true;

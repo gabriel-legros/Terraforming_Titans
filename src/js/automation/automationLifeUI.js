@@ -15,7 +15,8 @@ function buildAutomationLifeUI() {
   const header = createAutomationCardHeader(
     card,
     getAutomationCardText('lifeAutomationTitle', {}, 'Life Automation'),
-    toggleCollapsed
+    toggleCollapsed,
+    'life'
   );
 
   const body = document.createElement('div');

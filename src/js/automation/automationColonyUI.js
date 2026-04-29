@@ -35,7 +35,8 @@ function buildAutomationColonyUI() {
   const header = createAutomationCardHeader(
     card,
     getAutomationCardText('colonyAutomationTitle', {}, 'Colony Automation'),
-    toggleCollapsed
+    toggleCollapsed,
+    'colony'
   );
 
   const body = document.createElement('div');

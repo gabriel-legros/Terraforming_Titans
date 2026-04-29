@@ -64,7 +64,8 @@ function buildAutomationShipUI() {
   const header = createAutomationCardHeader(
     card,
     getAutomationCardText('shipAssignmentTitle', {}, 'Ship Assignment'),
-    toggleCollapsed
+    toggleCollapsed,
+    'ships'
   );
 
   const body = document.createElement('div');

@@ -57,6 +57,15 @@ class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
     this.enabled = false;
+    this.automationCardOrder = [
+      'scripts',
+      'ships',
+      'life',
+      'research',
+      'buildings',
+      'projects',
+      'colony'
+    ];
     this.features = {
       automationShipAssignment: false,
       automationLifeDesign: false,
@@ -73,6 +82,78 @@ class AutomationManager extends EffectableEntity {
     this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef() : null;
     this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef() : null;
     this.scriptAutomation = ScriptAutomationRef ? new ScriptAutomationRef() : null;
+  }
+
+  normalizeAutomationCardOrder(order) {
+    const defaultOrder = [
+      'scripts',
+      'ships',
+      'life',
+      'research',
+      'buildings',
+      'projects',
+      'colony'
+    ];
+    const normalized = [];
+    const seen = new Set();
+    const source = Array.isArray(order) ? order : [];
+    for (let index = 0; index < source.length; index += 1) {
+      const key = source[index];
+      if (!defaultOrder.includes(key) || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      normalized.push(key);
+    }
+    for (let index = 0; index < defaultOrder.length; index += 1) {
+      const key = defaultOrder[index];
+      if (seen.has(key)) {
+        continue;
+      }
+      normalized.push(key);
+    }
+    return normalized;
+  }
+
+  getAutomationCardOrder() {
+    this.automationCardOrder = this.normalizeAutomationCardOrder(this.automationCardOrder);
+    return this.automationCardOrder.slice();
+  }
+
+  moveAutomationCard(cardKey, direction, visibleCardKeys) {
+    const order = this.normalizeAutomationCardOrder(this.automationCardOrder);
+    const visible = Array.isArray(visibleCardKeys)
+      ? visibleCardKeys.filter(key => order.includes(key))
+      : [];
+    let swapKey = null;
+
+    if (visible.length > 0) {
+      const visibleIndex = visible.indexOf(cardKey);
+      const nextVisibleIndex = visibleIndex + direction;
+      if (visibleIndex >= 0 && nextVisibleIndex >= 0 && nextVisibleIndex < visible.length) {
+        swapKey = visible[nextVisibleIndex];
+      }
+    }
+
+    if (!swapKey) {
+      const index = order.indexOf(cardKey);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= order.length) {
+        return false;
+      }
+      swapKey = order[nextIndex];
+    }
+
+    const index = order.indexOf(cardKey);
+    const swapIndex = order.indexOf(swapKey);
+    if (index < 0 || swapIndex < 0 || index === swapIndex) {
+      return false;
+    }
+
+    order[index] = swapKey;
+    order[swapIndex] = cardKey;
+    this.automationCardOrder = order;
+    return true;
   }
 
   enable() {
@@ -194,6 +275,7 @@ class AutomationManager extends EffectableEntity {
   saveState() {
     return {
       enabled: this.enabled,
+      automationCardOrder: this.getAutomationCardOrder(),
       features: { ...this.features },
       booleanFlags: Array.from(this.booleanFlags),
       spaceshipAutomation: this.spaceshipAutomation ? this.spaceshipAutomation.saveState() : null,
@@ -208,6 +290,7 @@ class AutomationManager extends EffectableEntity {
 
   loadState(data = {}, legacyResearchState = null) {
     this.enabled = !!data.enabled;
+    this.automationCardOrder = this.normalizeAutomationCardOrder(data.automationCardOrder);
     this.features = Object.assign({
       automationShipAssignment: false,
       automationLifeDesign: false,

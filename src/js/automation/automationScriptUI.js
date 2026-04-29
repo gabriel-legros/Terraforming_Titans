@@ -17,7 +17,8 @@ function buildScriptAutomationUI() {
       if (!automation) return;
       automation.setCollapsed(!automation.collapsed);
       queueAutomationUIRefresh();
-    }
+    },
+    'scripts'
   );
   const info = document.createElement('span');
   info.classList.add('info-tooltip-icon');

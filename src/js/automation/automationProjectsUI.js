@@ -55,7 +55,8 @@ function buildAutomationProjectsUI() {
   const header = createAutomationCardHeader(
     card,
     getAutomationCardText('projectsAutomationTitle', {}, 'Projects Automation'),
-    toggleCollapsed
+    toggleCollapsed,
+    'projects'
   );
 
   const body = document.createElement('div');

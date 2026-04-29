@@ -448,6 +448,16 @@ class ScriptVariableRegistry {
       { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
       { id: 'netRate', label: 'Net Rate', valueType: 'number' }
     ];
+    if (categoryId === 'surface' && resolvedTargetId === 'land') {
+      return [
+        { id: 'value', label: 'Value', valueType: 'number' },
+        { id: 'available', label: t('ui.hope.automationCards.scriptVariables.resources.available', {}, 'Available'), valueType: 'number' },
+        { id: 'fillPercent', label: 'Fill %', valueType: 'number' },
+        { id: 'productionRate', label: 'Production Rate', valueType: 'number' },
+        { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
+        { id: 'netRate', label: 'Net Rate', valueType: 'number' }
+      ];
+    }
     if (this.getSurfaceResourceCoverageKey(categoryId, resolvedTargetId)) {
       attributes.push({ id: 'coverage', label: 'Coverage', valueType: 'number' });
     }
@@ -479,7 +489,7 @@ class ScriptVariableRegistry {
     if (String(resourceId).startsWith('liquid')) return 'liquid';
     const zonalKeys = defaultPlanetResources.surface?.[resourceId]?.zonalConfig?.keys || [];
     if (zonalKeys.some(key => String(key).startsWith('buried'))) return 'buried';
-    if (['land', 'fineSand', 'graphite'].includes(resourceId)) return 'solid';
+    if (['fineSand', 'graphite'].includes(resourceId)) return 'solid';
     return 'others';
   }
 
@@ -917,6 +927,7 @@ class ScriptVariableRegistry {
     const resource = resources[ref.category]?.[resourceId];
     if (!resource) return 0;
     if (ref.attribute === 'value') return this.toNumber(resource.value);
+    if (ref.attribute === 'available') return this.resolveAvailableResourceValue(ref.category, resourceId, resource);
     if (ref.attribute === 'cap') return this.toNumber(resource.cap);
     if (ref.attribute === 'fillPercent') return resource.cap > 0 ? (this.toNumber(resource.value) / this.toNumber(resource.cap)) * 100 : 0;
     if (ref.attribute === 'productionRate') return this.toNumber(resource.productionRate);
@@ -937,6 +948,14 @@ class ScriptVariableRegistry {
     const coverageKey = this.getSurfaceResourceCoverageKey(categoryId, targetId);
     if (!coverageKey) return 0;
     return this.toNumber(calculateAverageCoverage(terraforming, coverageKey));
+  }
+
+  resolveAvailableResourceValue(categoryId, resourceId, resource) {
+    if (categoryId === 'surface' && resourceId === 'land') {
+      if (resource.getAvailableAmount) return this.toNumber(resource.getAvailableAmount());
+      return this.toNumber(resource.value) - this.toNumber(resource.reserved);
+    }
+    return this.toNumber(resource.value);
   }
 
   resolveProjectProgressPercent(project) {

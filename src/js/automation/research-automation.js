@@ -8,9 +8,6 @@ class ResearchAutomation {
     this.nextTravelPersistent = false;
     this.collapsed = false;
     this.nextPresetId = 1;
-
-    const presetId = this.addPreset('');
-    this.applyPresetOnce(presetId);
   }
 
   setCollapsed(collapsed) {
@@ -265,8 +262,8 @@ class ResearchAutomation {
     }
 
     if (this.presets.length === 0) {
-      const replacementId = this.addPreset('');
-      this.applyPresetOnce(replacementId);
+      this.selectedPresetId = null;
+      this.currentPresetId = null;
       return true;
     }
 
@@ -490,8 +487,6 @@ class ResearchAutomation {
         }
       }
       gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
-      const presetId = this.addPreset('');
-      this.applyPresetOnce(presetId);
       return;
     }
 
@@ -549,8 +544,6 @@ class ResearchAutomation {
         }
       }
       gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
-      const presetId = this.addPreset('');
-      this.applyPresetOnce(presetId);
       return;
     }
 
@@ -619,9 +612,6 @@ class ResearchAutomation {
       this.loadLegacyState(legacyResearchState);
       return;
     }
-
-    const presetId = this.addPreset('');
-    this.applyPresetOnce(presetId);
   }
 }
 
