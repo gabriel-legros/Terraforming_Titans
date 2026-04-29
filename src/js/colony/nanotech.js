@@ -869,20 +869,16 @@ class NanotechManager extends EffectableEntity {
       ? coverage4 * (this.maintenance4Slider / 10)
       : 0;
     this.currentMaintenance4Reduction = reduction4;
-    const reductionByResource = {
-      metal: reduction,
-      glass: reduction,
-      water: reduction,
-      components: reduction2,
-      superconductors: reduction2,
-      electronics: reduction3,
+    const netReductionByResource = {
+      metal: Math.min(1, reduction + reduction4),
+      glass: Math.min(1, reduction + reduction4),
+      water: Math.min(1, reduction + reduction4),
+      components: Math.min(1, reduction2 + reduction4),
+      superconductors: Math.min(1, reduction2 + reduction4),
+      electronics: Math.min(1, reduction3 + reduction4),
     };
-    Object.keys(reductionByResource).forEach((res) => {
-      const priorReduction = reductionByResource[res];
-      const priorMultiplier = 1 - priorReduction;
-      const targetReduction = Math.min(1, priorReduction + reduction4);
-      const targetMultiplier = 1 - targetReduction;
-      const stage4Multiplier = priorMultiplier > 0 ? targetMultiplier / priorMultiplier : 0;
+    Object.keys(netReductionByResource).forEach((res) => {
+      const targetMultiplier = 1 - netReductionByResource[res];
       for (const name in structures) {
         const target = colonies && colonies[name] ? 'colony' : 'building';
         const effect = {
@@ -891,9 +887,9 @@ class NanotechManager extends EffectableEntity {
           type: 'maintenanceCostMultiplier',
           resourceCategory: 'colony',
           resourceId: res,
-          value: stage4Multiplier,
-          effectId: `nanotechMaint4_${res}`,
-          sourceId: 'nanotechMaintenance4',
+          value: targetMultiplier,
+          effectId: `nanotechMaint_${res}`,
+          sourceId: 'nanotechMaintenance',
           name: 'Nanocolony',
         };
         addEffect(effect);
