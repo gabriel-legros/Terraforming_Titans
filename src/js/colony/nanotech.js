@@ -281,10 +281,10 @@ class NanotechManager extends EffectableEntity {
     this.optimalEnergyConsumption = this.nanobots * 1e-12;
     this.optimalSiliconConsumption = this.nanobots * 1e-18 * (siliconAllocation / 10) * efficiencyMultiplier;
     this.optimalMetalConsumption = stage2Enabled
-      ? this.nanobots * 1e-18 * (metalAllocation / 10) * efficiencyMultiplier
+      ? this.nanobots * 1e-19 * (metalAllocation / 10) * efficiencyMultiplier
       : 0;
     this.optimalBiomassConsumption = stage3Enabled
-      ? this.nanobots * 1e-18 * (biomassAllocation / 10) * efficiencyMultiplier
+      ? this.nanobots * 1e-19 * (biomassAllocation / 10) * efficiencyMultiplier
       : 0;
     this.optimalGraphiteConsumption = stage4Enabled
       ? this.nanobots * 1e-19 * (graphiteAllocation / 10) * efficiencyMultiplier
