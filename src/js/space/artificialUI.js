@@ -216,17 +216,12 @@ function buildHistoryRow(entry) {
   const nameText = document.createElement('span');
   nameText.className = 'artificial-history-name-text';
   nameText.textContent = entry.name;
-  const seedTooltip = createArtificialInfoIcon(entry.seed || '');
-  seedTooltip.icon.classList.add('artificial-history-info');
   const editBtn = document.createElement('button');
   editBtn.type = 'button';
   editBtn.className = 'artificial-history-edit-btn';
   editBtn.textContent = '';
-  const renameTooltip = getArtificialText('history.renameTitle', 'Rename this artificial world');
-  attachDynamicInfoTooltip(editBtn, renameTooltip, false);
-  editBtn.setAttribute('aria-label', renameTooltip);
+  editBtn.setAttribute('aria-label', getArtificialText('history.renameTitle', 'Rename this artificial world'));
   name.appendChild(nameText);
-  name.appendChild(seedTooltip.icon);
   name.appendChild(editBtn);
   const type = document.createElement('span');
   const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
@@ -245,12 +240,6 @@ function buildHistoryRow(entry) {
     ? entry.terraformedValue
     : (landValue !== undefined ? Math.max(1, Math.floor((landValue || 0) / 50_000_000_000)) : undefined);
   effective.textContent = effectiveValue !== undefined ? (formatNumber ? formatNumber(effectiveValue, true, 2) : effectiveValue) : '—';
-  const valueTooltip = createArtificialInfoIcon(
-    getArtificialText('history.valueTitle', 'Counts toward terraformed worlds (1 per 50B ha, minimum 1).')
-  );
-  valueTooltip.icon.classList.add('artificial-history-info');
-  effective.appendChild(document.createTextNode(' '));
-  effective.appendChild(valueTooltip.icon);
   const status = document.createElement('span');
   const statusKey = entry.status || '';
   const statusLabelMap = {
@@ -268,11 +257,6 @@ function buildHistoryRow(entry) {
     const discardBtn = document.createElement('button');
     discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
     discardBtn.textContent = getArtificialText('history.discard', 'Discard');
-    attachDynamicInfoTooltip(
-      discardBtn,
-      getArtificialText('history.discardTitle', 'Discard this stored artificial world'),
-      false
-    );
     discardBtn.addEventListener('click', (event) => {
       event.stopPropagation();
       artificialManager.discardStoredWorld(entry.id);
@@ -283,11 +267,6 @@ function buildHistoryRow(entry) {
     const travelBtn = document.createElement('button');
     travelBtn.className = 'artificial-history-travel-btn';
     travelBtn.textContent = getArtificialText('history.travel', 'Travel');
-    attachDynamicInfoTooltip(
-      travelBtn,
-      getArtificialText('history.travelTitle', 'Travel to this artificial world'),
-      false
-    );
     travelBtn.addEventListener('click', (event) => {
       event.stopPropagation();
       const attemptTravel = (skipCurrentWorldWarnings) => {
