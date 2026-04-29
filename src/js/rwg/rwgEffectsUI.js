@@ -130,7 +130,9 @@ function _computeRWGEffectsSummary() {
     const effs = effects.filter((eff) => !eff.hideInSummary).map(eff => {
       const raw = typeof eff.computeValue === 'function' ? eff.computeValue(effectiveCount, eff) : eff.value;
       let display = '';
-      let descr = eff.description || '';
+      let descr = eff.descriptionKey
+        ? getRwgUiText(eff.descriptionKey, eff.description || '')
+        : (eff.description || '');
       if (eff.type === 'productionMultiplier') {
         const percent = (raw - 1) * 100;
         const what = RWG_BUILDING_OUTPUT[eff.targetId] || 'Production';
@@ -182,6 +184,12 @@ function _computeRWGEffectsSummary() {
         const perWorld = eff.factor ?? 0;
         descr = descr || `${what} construction cost (/(1+${perWorld.toFixed(1)}xN))`;
         display = divisor > 0 ? `/${divisor.toFixed(1)}` : '—';
+      } else if (eff.type === 'importCapMultiplier') {
+        const each = eff.factor ?? 0.2;
+        const divisor = 1 + each * effectiveCount;
+        const eachPct = (each * 100).toFixed(0);
+        descr = descr || `Import cap divided by (1+${eachPct}% each)`;
+        display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'flavorText') {
         descr = descr || '';
         display = '—';

@@ -53,6 +53,11 @@ setLanguageData({
         equilibrate: 'Equilibrate',
         travel: 'Travel',
       },
+      effects: {
+        waterImportDurationAndCaps: 'Water Import duration and caps divided by (1+20% each)',
+        carbonImportDurationAndCaps: 'Carbon Import duration and caps divided by (1+20% each)',
+        nitrogenImportDurationAndCaps: 'Nitrogen Import duration and caps divided by (1+20% each)',
+      },
       dominions: {
         human: 'Human',
         gabbagian: 'Gabbagian',

@@ -153,9 +153,36 @@ class WarpGateNetworkManager extends EffectableEntity {
   }
 
   applyImportCapMultiplier(effect) {
-    const key = effect.resourceKey;
-    IMPORT_CAP_MULTIPLIERS[key] = effect.value;
+    this.recalculateImportCapMultipliers();
     this.breakdownDirty = true;
+  }
+
+  recalculateImportCapMultipliers() {
+    Object.keys(IMPORT_CAP_MULTIPLIERS).forEach((key) => {
+      IMPORT_CAP_MULTIPLIERS[key] = 1;
+    });
+    for (const effect of this.activeEffects) {
+      if (effect.type !== 'importCapMultiplier') {
+        continue;
+      }
+      const key = effect.resourceKey;
+      if (!(key in IMPORT_CAP_MULTIPLIERS)) {
+        continue;
+      }
+      IMPORT_CAP_MULTIPLIERS[key] *= effect.value;
+    }
+  }
+
+  removeEffect(effect) {
+    super.removeEffect(effect);
+    this.recalculateImportCapMultipliers();
+    this.breakdownDirty = true;
+    return this;
+  }
+
+  applyActiveEffects(firstTime = true) {
+    super.applyActiveEffects(firstTime);
+    this.recalculateImportCapMultipliers();
   }
 
   getFoundryMetalCapBonus() {

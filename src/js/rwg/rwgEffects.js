@@ -9,6 +9,19 @@ const RWG_EFFECTS = {
       targetId: "nitrogenSpaceMining",
       type: "projectDurationMultiplier",
       factor: 0.2,
+      descriptionKey: "ui.rwg.effects.nitrogenImportDurationAndCaps",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.2;
+        return 1 / (1 + f * count);
+      },
+    },
+    {
+      effectId: "rwg-titan-nitrogen-cap",
+      target: "warpGateNetworkManager",
+      type: "importCapMultiplier",
+      resourceKey: "nitrogen",
+      factor: 0.2,
+      hideInSummary: true,
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
@@ -22,6 +35,19 @@ const RWG_EFFECTS = {
       targetId: "carbonSpaceMining",
       type: "projectDurationMultiplier",
       factor: 0.2,
+      descriptionKey: "ui.rwg.effects.carbonImportDurationAndCaps",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.2;
+        return 1 / (1 + f * count);
+      },
+    },
+    {
+      effectId: "rwg-carbon-carbon-cap",
+      target: "warpGateNetworkManager",
+      type: "importCapMultiplier",
+      resourceKey: "carbon",
+      factor: 0.2,
+      hideInSummary: true,
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
@@ -35,6 +61,19 @@ const RWG_EFFECTS = {
       targetId: "waterSpaceMining",
       type: "projectDurationMultiplier",
       factor: 0.2,
+      descriptionKey: "ui.rwg.effects.waterImportDurationAndCaps",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.2;
+        return 1 / (1 + f * count);
+      },
+    },
+    {
+      effectId: "rwg-icy-water-cap",
+      target: "warpGateNetworkManager",
+      type: "importCapMultiplier",
+      resourceKey: "water",
+      factor: 0.2,
+      hideInSummary: true,
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
@@ -305,6 +344,7 @@ function applyRWGEffects() {
         resourceCategory: eff.resourceCategory,
         resourceTarget: eff.resourceTarget,
         resourceId: eff.resourceId,
+        resourceKey: eff.resourceKey,
         excludeSpaceships: eff.excludeSpaceships,
         value,
       });
