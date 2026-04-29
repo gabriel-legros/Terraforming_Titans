@@ -14,6 +14,7 @@ class ScriptAutomation {
     this.lastActionSummary = '';
     this.lastEvaluatedLineId = null;
     this.manualStepDisplayLineId = null;
+    this.manualStepPendingLineId = null;
     this.lastConditionResult = null;
     this.haltedReason = 'inactive';
     this.autoRestartOnCompletion = true;
@@ -194,6 +195,7 @@ class ScriptAutomation {
     this.running = true;
     this.sleepRemainingMs = 0;
     this.manualStepDisplayLineId = null;
+    this.manualStepPendingLineId = null;
     this.lastStatus = 'Running';
     this.haltedReason = 'running';
     return true;
@@ -218,6 +220,7 @@ class ScriptAutomation {
   pause() {
     this.running = false;
     this.manualStepDisplayLineId = null;
+    this.manualStepPendingLineId = null;
     this.haltedReason = 'paused';
     this.lastStatus = 'Paused';
   }
@@ -226,6 +229,7 @@ class ScriptAutomation {
     const script = this.getActiveScript();
     this.pcLineId = script?.lines[0]?.id || null;
     this.manualStepDisplayLineId = null;
+    this.manualStepPendingLineId = null;
     this.sleepRemainingMs = 0;
     this.haltedReason = 'reset';
     this.lastStatus = 'Ready to Start';
@@ -234,6 +238,13 @@ class ScriptAutomation {
   stepOnce() {
     const wasRunning = this.running;
     const script = this.getActiveScript();
+    if (!this.running && this.manualStepPendingLineId && !script?.lines.find(line => line.id === this.manualStepPendingLineId)) {
+      this.manualStepPendingLineId = null;
+    }
+    if (!this.running && this.manualStepPendingLineId) {
+      this.pcLineId = this.manualStepPendingLineId;
+      this.manualStepPendingLineId = null;
+    }
     if (!this.pcLineId && script?.lines.length) this.pcLineId = script.lines[0].id;
     this.running = true;
     this.update(0, true);
@@ -430,6 +441,12 @@ class ScriptAutomation {
         }
 
         if (branchResult.gotoLineId) {
+          if (forceStep) {
+            this.manualStepPendingLineId = branchResult.gotoLineId;
+            this.haltedReason = 'linkedElse';
+            this.lastStatus = `Evaluated ${this.getLineLabel(script, line)} as ${this.lastConditionResult ? 'true' : 'false'}`;
+            break;
+          }
           this.pcLineId = branchResult.gotoLineId;
           this.haltedReason = 'linkedElse';
           this.lastStatus = `Linked ELSE from ${this.getLineLabel(script, line)}`;
@@ -723,6 +740,7 @@ class ScriptAutomation {
       activeScriptId: this.activeScriptId,
       pcLineId: this.pcLineId,
       manualStepDisplayLineId: this.manualStepDisplayLineId,
+      manualStepPendingLineId: this.manualStepPendingLineId,
       nextScriptId: this.nextScriptId,
       nextLineId: this.nextLineId,
       lastStatus: this.lastStatus,
@@ -746,6 +764,7 @@ class ScriptAutomation {
     this.nextLineId = data.nextLineId || this.getNextLineIdFromScripts();
     this.lastStatus = data.lastStatus || 'Loaded';
     this.haltedReason = data.haltedReason || 'loaded';
+    this.manualStepPendingLineId = data.manualStepPendingLineId ? Number(data.manualStepPendingLineId) : null;
     this.ensureDefaultScript();
     this.getSelectedScript();
     this.getActiveScript();
