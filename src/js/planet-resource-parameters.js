@@ -108,7 +108,7 @@
           coverageKeys: ['liquidMethane'],
           coverageScale: 0.0001,
           distributionKey: 'liquidMethane',
-          distribution: { production: 'skip', consumption: 'skip' },
+          distribution: { production: 'area', consumption: 'currentAmount' },
         },
       },
       hydrocarbonIce: {
@@ -122,7 +122,7 @@
           coverageKeys: ['hydrocarbonIce'],
           coverageScale: 0.01,
           distributionKey: 'hydrocarbonIce',
-          distribution: { production: 'skip', consumption: 'skip' },
+          distribution: { production: 'area', consumption: 'currentAmount' },
         },
       },
       liquidAmmonia: {

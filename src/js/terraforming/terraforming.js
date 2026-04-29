@@ -2834,7 +2834,8 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
         let distributionMode = initialMode;
         let totalDistributionFactor = 0;
         let targetZones = zones;
-        const iceUsesBuried = config.distributionKey === 'ice' && config.keys.includes('buriedIce');
+        const buriedKey = config.keys.find(key => key.startsWith('buried'));
+        const usesBuriedStore = buriedKey && config.distributionKey;
 
         if (distributionMode === 'biomassGrowth') {
             const design = lifeDesigner.currentDesign;
@@ -2854,36 +2855,36 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
             }
         }
 
-        if (iceUsesBuried && netChangeAmount < 0 && distributionMode === 'currentAmount') {
-            let totalSurfaceIce = 0;
-            let totalBuriedIce = 0;
+        if (usesBuriedStore && netChangeAmount < 0 && distributionMode === 'currentAmount') {
+            let totalSurfaceAmount = 0;
+            let totalBuriedAmount = 0;
             for (const zone of zones) {
-                totalSurfaceIce += this.zonalSurface[zone].ice || 0;
-                totalBuriedIce += this.zonalSurface[zone].buriedIce || 0;
+                totalSurfaceAmount += this.zonalSurface[zone][config.distributionKey] || 0;
+                totalBuriedAmount += this.zonalSurface[zone][buriedKey] || 0;
             }
 
-            const surfaceTake = Math.min(-netChangeAmount, totalSurfaceIce);
-            if (surfaceTake > 0 && totalSurfaceIce > 0) {
+            const surfaceTake = Math.min(-netChangeAmount, totalSurfaceAmount);
+            if (surfaceTake > 0 && totalSurfaceAmount > 0) {
                 for (const zone of zones) {
-                    const currentIce = this.zonalSurface[zone].ice || 0;
-                    if (currentIce <= 0) {
+                    const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
+                    if (currentAmount <= 0) {
                         continue;
                     }
-                    const share = currentIce / totalSurfaceIce;
-                    this.zonalSurface[zone].ice = Math.max(0, currentIce - surfaceTake * share);
+                    const share = currentAmount / totalSurfaceAmount;
+                    this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentAmount - surfaceTake * share);
                 }
             }
 
             const remaining = netChangeAmount + surfaceTake;
-            if (remaining < 0 && totalBuriedIce > 0) {
+            if (remaining < 0 && totalBuriedAmount > 0) {
                 const buriedTake = -remaining;
                 for (const zone of zones) {
-                    const currentBuried = this.zonalSurface[zone].buriedIce || 0;
+                    const currentBuried = this.zonalSurface[zone][buriedKey] || 0;
                     if (currentBuried <= 0) {
                         continue;
                     }
-                    const share = currentBuried / totalBuriedIce;
-                    this.zonalSurface[zone].buriedIce = Math.max(0, currentBuried - buriedTake * share);
+                    const share = currentBuried / totalBuriedAmount;
+                    this.zonalSurface[zone][buriedKey] = Math.max(0, currentBuried - buriedTake * share);
                 }
             }
             continue;
