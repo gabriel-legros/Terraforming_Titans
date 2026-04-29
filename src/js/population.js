@@ -88,6 +88,20 @@ class PopulationModule extends EffectableEntity {
     const colonistWorkers = Math.floor(
       ratio * this.populationResource.value * multipliers.colonistMultiplier
     );
+    const uncappedTotalWorkers =
+      colonistWorkers +
+      androidState.availableAndroids +
+      bioworkers +
+      keratiHiveWorkers;
+    const aerostat = colonies?.aerostat_colony || null;
+    const aerostatWorkerCapEnabled =
+      !!(aerostat && aerostat.shouldCapWorkersToAerostatCapacity());
+    const aerostatWorkerCap = aerostatWorkerCapEnabled
+      ? Math.max(0, aerostat.getWorkerCapacityCap())
+      : null;
+    const totalWorkers = aerostatWorkerCapEnabled
+      ? Math.min(uncappedTotalWorkers, aerostatWorkerCap)
+      : uncappedTotalWorkers;
     return {
       ratio,
       zealMultiplier: multipliers.zealMultiplier,
@@ -97,7 +111,12 @@ class PopulationModule extends EffectableEntity {
       androidWorkers: androidState.availableAndroids,
       bioworkers,
       keratiHiveWorkers,
-      totalWorkers: colonistWorkers + androidState.availableAndroids + bioworkers + keratiHiveWorkers
+      uncappedTotalWorkers,
+      aerostatWorkerCapEnabled,
+      aerostatWorkerCap,
+      aerostatWorkerCapApplied:
+        aerostatWorkerCapEnabled && totalWorkers < uncappedTotalWorkers,
+      totalWorkers
     };
   }
 

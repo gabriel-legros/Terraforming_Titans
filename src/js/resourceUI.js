@@ -1008,6 +1008,28 @@ function updateWorkerAssignments(assignmentsDiv) {
     });
     if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
 
+    let capDiv = assignmentsDiv._capDiv;
+    if (workerBreakdown.aerostatWorkerCapEnabled) {
+      if (!capDiv) {
+        capDiv = document.createElement('div');
+        assignmentsDiv._capDiv = capDiv;
+      }
+      if (capDiv.parentNode !== assignmentsDiv) {
+        assignmentsDiv.appendChild(capDiv);
+      }
+      const capText = getResourceUIText(
+        'workers.aerostatCap',
+        'Aerostat worker cap: {cap} (from {uncapped} uncapped)',
+        {
+          cap: formatNumber(workerBreakdown.totalWorkers, true),
+          uncapped: formatNumber(workerBreakdown.uncappedTotalWorkers, true),
+        }
+      );
+      if (capDiv.textContent !== capText) capDiv.textContent = capText;
+    } else if (capDiv && capDiv.parentNode === assignmentsDiv) {
+      assignmentsDiv.removeChild(capDiv);
+    }
+
     const bioworkers = workerBreakdown.bioworkers;
     let bioworkerDiv = assignmentsDiv._bioworkerDiv;
     if (bioworkers > 0) {

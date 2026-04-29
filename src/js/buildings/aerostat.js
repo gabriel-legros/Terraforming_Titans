@@ -41,7 +41,6 @@ const AEROSTAT_ANDROID_SPACE_TOOLTIP =
     'ui.buildings.aerostat.androidSpaceTooltip',
     'Reserve part of each aerostat for android housing instead of colonists. The slider value is android capacity per aerostat out of 10 total housing slots.'
   );
-
 globalThis.AEROSTAT_STANDARD_PRESSURE_PA ??= AEROSTAT_STANDARD_PRESSURE_PA;
 globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
 globalThis.AEROSTAT_INTERNAL_AIR_MOL_WEIGHT ??= AEROSTAT_INTERNAL_AIR_MOL_WEIGHT;
@@ -65,6 +64,7 @@ class Aerostat extends BaseColony {
     this._pressureBelowThreshold = false;
     this.landAsResearchOutpost = true;
     this.capActiveToSupported = false;
+    this.capWorkersToAerostatCapacity = false;
     this.androidCapacityShare = 0;
     this.aerostats_collision_avoidance = false;
     this.aerostats_powered_flight = false;
@@ -87,6 +87,22 @@ class Aerostat extends BaseColony {
 
   getColonistCapacityShare() {
     return AEROSTAT_TOTAL_CAPACITY - this.getAndroidCapacityShare();
+  }
+
+  shouldCapWorkersToAerostatCapacity() {
+    return this.capWorkersToAerostatCapacity === true;
+  }
+
+  getWorkerCapacityCap() {
+    return Math.max(0, this.activeNumber * AEROSTAT_TOTAL_CAPACITY);
+  }
+
+  refreshWorkerCapacityCapState() {
+    populationModule.updateWorkerCap();
+    populationModule.workerResource.value =
+      populationModule.workerResource.cap - populationModule.totalWorkersRequired;
+    updateResourceDisplay(resources, 0);
+    updateColonyDisplay(colonies);
   }
 
   setAndroidCapacityShare(value) {
@@ -623,6 +639,7 @@ class Aerostat extends BaseColony {
       ...base,
       landAsResearchOutpost: this.landAsResearchOutpost,
       capActiveToSupported: !!this.capActiveToSupported,
+      capWorkersToAerostatCapacity: !!this.capWorkersToAerostatCapacity,
       androidCapacityShare: this.getAndroidCapacityShare()
     };
   }
@@ -647,6 +664,16 @@ class Aerostat extends BaseColony {
       this.capActiveToSupported = !!state.capActiveToSupported;
     } else {
       this.capActiveToSupported = false;
+    }
+
+    if (
+      state &&
+      typeof state === 'object' &&
+      Object.prototype.hasOwnProperty.call(state, 'capWorkersToAerostatCapacity')
+    ) {
+      this.capWorkersToAerostatCapacity = !!state.capWorkersToAerostatCapacity;
+    } else {
+      this.capWorkersToAerostatCapacity = false;
     }
 
     if (
@@ -1576,6 +1603,38 @@ function attachAerostatBuoyancySection(container, structure) {
 
     body.appendChild(mitigationRow);
 
+    const workerCapRow = document.createElement('div');
+    workerCapRow.classList.add(
+      'colony-buoyancy-lift-row',
+      'colony-buoyancy-worker-cap-row'
+    );
+
+    const workerCapLabel = document.createElement('label');
+    workerCapLabel.classList.add(
+      'colony-buoyancy-lift-label',
+      'colony-buoyancy-worker-cap-label'
+    );
+
+    const workerCapCheckbox = document.createElement('input');
+    workerCapCheckbox.type = 'checkbox';
+    workerCapCheckbox.classList.add('colony-buoyancy-worker-cap-checkbox');
+    workerCapCheckbox.addEventListener('change', () => {
+      structure.capWorkersToAerostatCapacity = workerCapCheckbox.checked;
+      structure.refreshWorkerCapacityCapState();
+      updateAerostatBuoyancySection(structure);
+    });
+    workerCapLabel.appendChild(workerCapCheckbox);
+
+    const workerCapText = document.createElement('span');
+    workerCapText.textContent = getAerostatText(
+      'ui.buildings.aerostat.capWorkersToAerostatCapacity',
+      'Cap workers to aerostat capacity'
+    );
+    workerCapLabel.appendChild(workerCapText);
+    workerCapRow.appendChild(workerCapLabel);
+
+    body.appendChild(workerCapRow);
+
     const limitRow = document.createElement('div');
     limitRow.classList.add(
       'colony-buoyancy-lift-row',
@@ -1686,6 +1745,7 @@ function attachAerostatBuoyancySection(container, structure) {
       mitigationValue,
       mitigationInfo,
       mitigationTooltip,
+      workerCapCheckbox,
       limitValue,
       limitInfo,
       limitTooltip,
@@ -1811,6 +1871,7 @@ function updateAerostatBuoyancySection(structure) {
     : [];
   const androidCapacityShare = structure.getAndroidCapacityShare();
   const colonistCapacityShare = structure.getColonistCapacityShare();
+  const workerCapEnabled = structure.shouldCapWorkersToAerostatCapacity();
 
   if (ui.liftValue) {
     ui.liftValue.textContent =
@@ -1989,6 +2050,10 @@ function updateAerostatBuoyancySection(structure) {
       }
     }
     setTooltipText(ui.mitigationTooltip, mitigationTitle, ui, 'mitigationTooltipText');
+  }
+
+  if (ui.workerCapCheckbox) {
+    ui.workerCapCheckbox.checked = workerCapEnabled;
   }
 
   if (ui.limitValue) {

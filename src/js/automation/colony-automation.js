@@ -465,6 +465,8 @@ class ColonyAutomation {
     };
     if (colony.name === 'aerostat_colony') {
       control.landAsResearchOutpost = colony.landAsResearchOutpost === true;
+      control.capWorkersToAerostatCapacity =
+        colony.capWorkersToAerostatCapacity === true;
       control.androidCapacityShare = colony.getAndroidCapacityShare();
     }
     return control;
@@ -716,6 +718,15 @@ class ColonyAutomation {
     }
     if ('landAsResearchOutpost' in control && colony.landAsResearchOutpost !== control.landAsResearchOutpost) {
       colony.landAsResearchOutpost = control.landAsResearchOutpost === true;
+      changed = true;
+    }
+    if (
+      'capWorkersToAerostatCapacity' in control &&
+      colony.capWorkersToAerostatCapacity !== control.capWorkersToAerostatCapacity
+    ) {
+      colony.capWorkersToAerostatCapacity =
+        control.capWorkersToAerostatCapacity === true;
+      colony.refreshWorkerCapacityCapState?.();
       changed = true;
     }
     if ('androidCapacityShare' in control) {

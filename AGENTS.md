@@ -235,6 +235,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
+- Aerostats now include a saved and colony-preset-aware `Cap workers to aerostat capacity` checkbox in the buoyancy details card; when enabled, total world worker capacity is clamped to active aerostats x 10.
 - Planet visualizer now supports a composition-driven gas overlay layered above the normal world texture: strong atmospheric/surface hydrogen enables Jupiter-style tan banding, methane adds cooler blue-gray belt shading, and ammonia adds bright pale cloud-band/storm accents once each gas clears its visual threshold.
 - Building, project, research, and colony automation preset builders now support preset import plus `Export to clipboard`; imports create a new preset from the pasted transfer string and the transfer buttons sit between `Delete` and `Apply Once Now`.
 - Ship, life, building, project, colony, and research automation presets, plus building/project/colony combinations, include a `Show in sidebar` flag that defaults on and controls whether that entry appears in the journal automation sidebar dropdowns.
