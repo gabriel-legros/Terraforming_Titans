@@ -2974,6 +2974,7 @@ setLanguageData({
               canSurviveAnyZone: 'Can Survive in Any Zone',
               canSurviveAllZones: 'Can Survive in All Zones',
               biomassDensity: 'Biomass Density',
+              coverageRequirementPercent: 'Coverage Requirement %',
             },
             temperature: {
               trendTemperatureC: 'Trend Temperature C',

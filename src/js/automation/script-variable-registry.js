@@ -292,6 +292,11 @@ class ScriptVariableRegistry {
           id: 'biomassDensity',
           label: t('ui.hope.automationCards.scriptVariables.terraforming.life.biomassDensity', {}, 'Biomass Density'),
           valueType: 'number'
+        },
+        {
+          id: 'coverageRequirementPercent',
+          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.coverageRequirementPercent', {}, 'Coverage Requirement %'),
+          valueType: 'number'
         }
       ];
     }
@@ -699,6 +704,7 @@ class ScriptVariableRegistry {
       const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
       return totalSurfaceArea > 0 ? this.toNumber(totalBiomass / totalSurfaceArea) : 0;
     }
+    if (attribute === 'coverageRequirementPercent') return this.toNumber(getEffectiveLifeFraction(terraforming) * 100);
     return 0;
   }
 
