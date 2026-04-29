@@ -81,7 +81,7 @@ const SPACE_CHEMISTRY_RECIPES = {
       spaceStorage: { atmosphericMethane: 100 }
     },
     outputs: {
-      spaceStorage: { graphite: 75, hydrogen: 25 }
+      spaceStorage: { graphite: 74.87, hydrogen: 25.13 }
     }
   },
   waterElectrolysis: {
