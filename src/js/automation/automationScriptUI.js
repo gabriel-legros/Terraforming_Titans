@@ -803,30 +803,6 @@ function renderReferencePicker(automation, ref, row) {
     return;
   }
 
-  const categories = registry.getCategories(ref.source);
-  const category = createSelect(categories.map(item => ({ id: item.id, label: item.label })), ref.category);
-  category.addEventListener('change', event => {
-    ref.category = event.target.value;
-    ref.target = null;
-    ref.attribute = null;
-    normalizeScriptRef(registry, ref);
-    forceScriptAutomationRefresh = true;
-    queueAutomationUIRefresh();
-  });
-  row.appendChild(category);
-
-  if (ref.source === 'terraforming') {
-    const attributes = registry.getAttributes(ref.source, ref.category, ref.target);
-    const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
-    attribute.addEventListener('change', event => {
-      ref.attribute = event.target.value;
-      forceScriptAutomationRefresh = true;
-      queueAutomationUIRefresh();
-    });
-    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
-    return;
-  }
-
   if (ref.source === 'hazards') {
     const targets = registry.getTargets(ref.source, ref.category);
     const target = createSelect(targets.map(item => ({ id: item.id, label: item.label })), ref.target);
@@ -839,6 +815,65 @@ function renderReferencePicker(automation, ref, row) {
     });
     row.appendChild(target);
 
+    const attributes = registry.getAttributes(ref.source, ref.category, ref.target);
+    const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
+    attribute.addEventListener('change', event => {
+      ref.attribute = event.target.value;
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
+    return;
+  }
+
+  const categories = registry.getCategories(ref.source);
+  const category = createSelect(categories.map(item => ({ id: item.id, label: item.label })), ref.category);
+  category.addEventListener('change', event => {
+    ref.category = event.target.value;
+    ref.target = null;
+    ref.attribute = null;
+    normalizeScriptRef(registry, ref);
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+  row.appendChild(category);
+
+  if (ref.source === 'resources' && ref.category === 'surface') {
+    const targets = registry.getTargets(ref.source, ref.category);
+    const target = createSelect(targets.map(item => ({ id: item.id, label: item.label })), ref.target);
+    target.addEventListener('change', event => {
+      ref.target = event.target.value;
+      ref.option = null;
+      ref.attribute = null;
+      normalizeScriptRef(registry, ref);
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    row.appendChild(target);
+
+    const options = registry.getSurfaceResourceOptions ? registry.getSurfaceResourceOptions(ref.target) : [];
+    const optionSelect = createSelect(options.map(item => ({ id: item.id, label: item.label })), ref.option);
+    optionSelect.addEventListener('change', event => {
+      ref.option = event.target.value;
+      ref.attribute = null;
+      normalizeScriptRef(registry, ref);
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    row.appendChild(optionSelect);
+
+    const attributes = registry.getAttributes(ref.source, ref.category, ref.target, ref.option);
+    const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
+    attribute.addEventListener('change', event => {
+      ref.attribute = event.target.value;
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
+    return;
+  }
+
+  if (ref.source === 'terraforming') {
     const attributes = registry.getAttributes(ref.source, ref.category, ref.target);
     const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
     attribute.addEventListener('change', event => {
@@ -874,6 +909,20 @@ function renderReferencePicker(automation, ref, row) {
 function normalizeScriptRef(registry, ref) {
   const categories = registry.getCategories(ref.source);
   if (!categories.find(item => item.id === ref.category)) ref.category = categories[0]?.id || null;
+  if (ref.source === 'resources' && ref.category === 'surface' && registry.getSurfaceResourceOptions) {
+    const surfaceGroups = registry.getTargets(ref.source, ref.category);
+    const targetIsGroup = surfaceGroups.find(item => item.id === ref.target);
+    if (!targetIsGroup && ref.target) {
+      ref.option = ref.option || ref.target;
+      ref.target = registry.getSurfaceResourceGroupId ? registry.getSurfaceResourceGroupId(ref.option) : surfaceGroups[0]?.id || null;
+    }
+    if (!surfaceGroups.find(item => item.id === ref.target)) ref.target = surfaceGroups[0]?.id || null;
+    const options = registry.getSurfaceResourceOptions(ref.target);
+    if (!options.find(option => option.id === ref.option)) ref.option = options[0]?.id || null;
+    const attributes = registry.getAttributes(ref.source, ref.category, ref.target, ref.option);
+    if (!attributes.find(item => item.id === ref.attribute)) ref.attribute = attributes[0]?.id || null;
+    return;
+  }
   const targets = registry.getTargets(ref.source, ref.category);
   if (!targets.find(item => item.id === ref.target)) ref.target = targets[0]?.id || null;
   const attributes = registry.getAttributes(ref.source, ref.category, ref.target);

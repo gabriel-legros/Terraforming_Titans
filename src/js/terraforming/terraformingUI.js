@@ -1854,7 +1854,6 @@ function createWaterBox(row) {
           <tr data-zone-row="polar"><td>${getTerraformingZoneLabel('polar')}</td><td id="life-coverage-polar">0.00</td><td id="life-photo-polar">0.00</td></tr>
           <tr data-zone-row="temperate"><td>${getTerraformingZoneLabel('temperate')}</td><td id="life-coverage-temperate">0.00</td><td id="life-photo-temperate">0.00</td></tr>
           <tr data-zone-row="tropical"><td>${getTerraformingZoneLabel('tropical')}</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
-          <tr><td colspan="2">${getTerraformingSummaryText('lifeSummary.labels.biomassDensity', 'Biomass Density (t/m²)')}</td><td id="life-biomass-density-global">0.00</td></tr>
         </tbody>
       </table>
       `;
@@ -1899,8 +1898,7 @@ function createWaterBox(row) {
         tropical: lifeBox.querySelector('#life-photo-tropical'),
         temperate: lifeBox.querySelector('#life-photo-temperate'),
         polar: lifeBox.querySelector('#life-photo-polar')
-      },
-      biomassDensityGlobal: lifeBox.querySelector('#life-biomass-density-global')
+      }
     };
 }
 
@@ -1920,8 +1918,6 @@ function updateLifeBox() {
     zones.forEach(zone => {
         totalBiomass += terraforming.zonalSurface[zone].biomass || 0;
     });
-    const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-    const globalBiomassDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
 
     // Calculate average biomass coverage percentage using the centralized helper function
     const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
@@ -1941,9 +1937,6 @@ function updateLifeBox() {
           { percent: (effectiveTarget * 100).toFixed(0) }
         )
       );
-    }
-    if (els.biomassDensityGlobal) {
-      els.biomassDensityGlobal.textContent = formatNumber(globalBiomassDensity, false, 2);
     }
 
     const zoneLines = zones.map(zone => {

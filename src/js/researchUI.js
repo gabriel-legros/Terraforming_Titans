@@ -137,10 +137,9 @@ function updateAllResearchButtons(researchData) {
                     autoPrioritySelect.style.display = unlocked ? '' : 'none';
                 }
                 if (unlocked) {
-                    const researchAutomation = getResearchAutomation();
-                    autoCheckbox.checked = researchAutomation ? researchAutomation.isAutoResearchEnabled(researchItem.id) : false;
+                    autoCheckbox.checked = researchManager.getAutoResearchEnabled(researchItem.id);
                     if (autoPrioritySelect) {
-                        autoPrioritySelect.value = `${researchAutomation ? researchAutomation.getAutoResearchPriority(researchItem.id) : 4}`;
+                        autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(researchItem.id)}`;
                     }
                 }
             }
@@ -351,19 +350,15 @@ function loadResearchCategory(category) {
         let autoLabel = null;
         let autoPrioritySelect = null;
         if (category !== 'advanced') {
-            const researchAutomation = getResearchAutomation();
             autoCheckbox = document.createElement('input');
             autoCheckbox.type = 'checkbox';
             autoCheckbox.classList.add('research-auto-checkbox');
-            autoCheckbox.checked = researchAutomation ? researchAutomation.isAutoResearchEnabled(research.id) : false;
+            autoCheckbox.checked = researchManager.getAutoResearchEnabled(research.id);
             autoCheckbox.addEventListener('click', (event) => {
                 event.stopPropagation();
             });
             autoCheckbox.addEventListener('change', () => {
-                const activeResearchAutomation = getResearchAutomation();
-                const applied = activeResearchAutomation
-                    ? activeResearchAutomation.setAutoResearchEnabled(research.id, autoCheckbox.checked)
-                    : false;
+                const applied = researchManager.setAutoResearchEnabled(research.id, autoCheckbox.checked);
                 if (!applied) {
                     autoCheckbox.checked = false;
                 }
@@ -385,15 +380,12 @@ function loadResearchCategory(category) {
                 option.textContent = `P${value}`;
                 autoPrioritySelect.appendChild(option);
             });
-            autoPrioritySelect.value = `${researchAutomation ? researchAutomation.getAutoResearchPriority(research.id) : 4}`;
+            autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(research.id)}`;
             autoPrioritySelect.addEventListener('click', (event) => {
                 event.stopPropagation();
             });
             autoPrioritySelect.addEventListener('change', () => {
-                const activeResearchAutomation = getResearchAutomation();
-                const applied = activeResearchAutomation
-                    ? activeResearchAutomation.setAutoResearchPriority(research.id, Number.parseInt(autoPrioritySelect.value, 10))
-                    : false;
+                const applied = researchManager.setAutoResearchPriority(research.id, Number.parseInt(autoPrioritySelect.value, 10));
                 if (!applied) {
                     autoPrioritySelect.value = '4';
                 }

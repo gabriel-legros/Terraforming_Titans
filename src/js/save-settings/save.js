@@ -571,6 +571,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     if (automationManager && automationManager.loadState) {
       automationManager.loadState(gameState.automationManager || {}, gameState.research || null);
       updateAutomationVisibility?.();
+      updateResearchUI?.();
     }
 
     if (gameState.artificialManager && artificialManager && artificialManager.loadState) {

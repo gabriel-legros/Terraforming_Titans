@@ -43,7 +43,7 @@ class ScriptVariableRegistry {
     return [];
   }
 
-  getAttributes(sourceId, categoryId, targetId) {
+  getAttributes(sourceId, categoryId, targetId, optionId) {
     if (sourceId === 'constant') return [{ id: 'value', label: 'Value', valueType: 'number' }];
     if (sourceId === 'buildings') return this.getBuildingAttributes(targetId);
     if (sourceId === 'colony') return this.getColonyAttributes(categoryId, targetId);
@@ -52,7 +52,7 @@ class ScriptVariableRegistry {
     if (sourceId === 'celestial') return this.getCelestialAttributes();
     if (sourceId === 'hazards') return this.getHazardAttributes(targetId);
     if (sourceId === 'research') return this.getResearchAttributes(targetId);
-    if (sourceId === 'resources') return this.getResourceAttributes(categoryId, targetId);
+    if (sourceId === 'resources') return this.getResourceAttributes(categoryId, targetId, optionId);
     return [];
   }
 
@@ -300,10 +300,15 @@ class ScriptVariableRegistry {
         { id: 'averageTemperatureK', label: 'Average Temperature K', valueType: 'number' },
         { id: 'averageTemperatureC', label: 'Average Temperature C', valueType: 'number' },
         { id: 'trendTemperatureK', label: 'Trend Temperature K', valueType: 'number' },
+        { id: 'trendTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.trendTemperatureC', {}, 'Trend Temperature C'), valueType: 'number' },
         { id: 'equilibriumTemperatureK', label: 'Equilibrium Temperature K', valueType: 'number' },
+        { id: 'equilibriumTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.equilibriumTemperatureC', {}, 'Equilibrium Temperature C'), valueType: 'number' },
         { id: 'tropicalTemperatureK', label: 'Tropical Temperature K', valueType: 'number' },
+        { id: 'tropicalTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.tropicalTemperatureC', {}, 'Tropical Temperature C'), valueType: 'number' },
         { id: 'temperateTemperatureK', label: 'Temperate Temperature K', valueType: 'number' },
-        { id: 'polarTemperatureK', label: 'Polar Temperature K', valueType: 'number' }
+        { id: 'temperateTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.temperateTemperatureC', {}, 'Temperate Temperature C'), valueType: 'number' },
+        { id: 'polarTemperatureK', label: 'Polar Temperature K', valueType: 'number' },
+        { id: 'polarTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.polarTemperatureC', {}, 'Polar Temperature C'), valueType: 'number' }
       ];
     }
     if (categoryId === 'atmosphere') {
@@ -421,6 +426,7 @@ class ScriptVariableRegistry {
   }
 
   getResourceTargets(categoryId) {
+    if (categoryId === 'surface') return this.getSurfaceResourceGroups();
     const group = resources[categoryId] || {};
     const targets = [];
     for (const resourceId in group) {
@@ -431,7 +437,9 @@ class ScriptVariableRegistry {
     return targets;
   }
 
-  getResourceAttributes(categoryId, targetId) {
+  getResourceAttributes(categoryId, targetId, optionId) {
+    const resolvedTargetId = this.getResolvedResourceTargetId(categoryId, targetId, optionId);
+    if (!resolvedTargetId) return [];
     const attributes = [
       { id: 'value', label: 'Value', valueType: 'number' },
       { id: 'cap', label: 'Cap', valueType: 'number' },
@@ -440,10 +448,49 @@ class ScriptVariableRegistry {
       { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
       { id: 'netRate', label: 'Net Rate', valueType: 'number' }
     ];
-    if (this.getSurfaceResourceCoverageKey(categoryId, targetId)) {
+    if (this.getSurfaceResourceCoverageKey(categoryId, resolvedTargetId)) {
       attributes.push({ id: 'coverage', label: 'Coverage', valueType: 'number' });
     }
     return attributes;
+  }
+
+  getSurfaceResourceGroups() {
+    return [
+      { id: 'solid', label: t('ui.hope.automationCards.scriptVariables.resources.surface.solid', {}, 'Solid') },
+      { id: 'liquid', label: t('ui.hope.automationCards.scriptVariables.resources.surface.liquid', {}, 'Liquid') },
+      { id: 'buried', label: t('ui.hope.automationCards.scriptVariables.resources.surface.buried', {}, 'Buried') },
+      { id: 'others', label: t('ui.hope.automationCards.scriptVariables.resources.surface.others', {}, 'Others') }
+    ];
+  }
+
+  getSurfaceResourceOptions(groupId) {
+    const group = resources.surface || {};
+    const targets = [];
+    for (const resourceId in group) {
+      const resource = group[resourceId];
+      if (!resource || resource.constructor !== Resource) continue;
+      if (this.getSurfaceResourceGroupId(resourceId) !== groupId) continue;
+      targets.push({ id: resourceId, label: this.getResourceLabel('surface', resourceId, resource) });
+    }
+    return targets;
+  }
+
+  getSurfaceResourceGroupId(resourceId) {
+    if (String(resourceId).startsWith('liquid')) return 'liquid';
+    const zonalKeys = defaultPlanetResources.surface?.[resourceId]?.zonalConfig?.keys || [];
+    if (zonalKeys.some(key => String(key).startsWith('buried'))) return 'buried';
+    if (['land', 'fineSand', 'graphite'].includes(resourceId)) return 'solid';
+    return 'others';
+  }
+
+  getResolvedResourceTargetId(categoryId, targetId, optionId) {
+    if (categoryId === 'surface') {
+      if (optionId) return optionId;
+      const groups = this.getSurfaceResourceGroups();
+      if (groups.some(group => group.id === targetId)) return '';
+      return targetId;
+    }
+    return targetId;
   }
 
   resolveValue(ref) {
@@ -578,10 +625,15 @@ class ScriptVariableRegistry {
     if (attribute === 'averageTemperatureK') return this.toNumber(terraforming.temperature.value);
     if (attribute === 'averageTemperatureC') return this.toNumber(terraforming.temperature.value - 273.15);
     if (attribute === 'trendTemperatureK') return this.toNumber(terraforming.temperature.trendValue);
+    if (attribute === 'trendTemperatureC') return this.toNumber(terraforming.temperature.trendValue - 273.15);
     if (attribute === 'equilibriumTemperatureK') return this.toNumber(terraforming.temperature.equilibriumTemperature);
+    if (attribute === 'equilibriumTemperatureC') return this.toNumber(terraforming.temperature.equilibriumTemperature - 273.15);
     if (attribute === 'tropicalTemperatureK') return this.toNumber(terraforming.temperature.zones.tropical.value);
+    if (attribute === 'tropicalTemperatureC') return this.toNumber(terraforming.temperature.zones.tropical.value - 273.15);
     if (attribute === 'temperateTemperatureK') return this.toNumber(terraforming.temperature.zones.temperate.value);
+    if (attribute === 'temperateTemperatureC') return this.toNumber(terraforming.temperature.zones.temperate.value - 273.15);
     if (attribute === 'polarTemperatureK') return this.toNumber(terraforming.temperature.zones.polar.value);
+    if (attribute === 'polarTemperatureC') return this.toNumber(terraforming.temperature.zones.polar.value - 273.15);
     if (attribute === 'totalPressurePa') return this.toNumber(terraforming.atmosphericPressureCache.totalPressure);
     if (attribute === 'totalPressureKPa') return this.toNumber(terraforming.atmosphericPressureCache.totalPressureKPa);
     if (attribute === 'co2PressurePa') return this.toNumber(terraforming.atmosphericPressureCache.pressureByKey.carbonDioxide);
@@ -861,7 +913,8 @@ class ScriptVariableRegistry {
   }
 
   resolveResourceValue(ref) {
-    const resource = resources[ref.category]?.[ref.target];
+    const resourceId = this.getResolvedResourceTargetId(ref.category, ref.target, ref.option);
+    const resource = resources[ref.category]?.[resourceId];
     if (!resource) return 0;
     if (ref.attribute === 'value') return this.toNumber(resource.value);
     if (ref.attribute === 'cap') return this.toNumber(resource.cap);
@@ -869,7 +922,7 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'productionRate') return this.toNumber(resource.productionRate);
     if (ref.attribute === 'consumptionRate') return this.toNumber(resource.consumptionRate);
     if (ref.attribute === 'netRate') return this.toNumber(resource.productionRate) - this.toNumber(resource.consumptionRate);
-    if (ref.attribute === 'coverage') return this.resolveSurfaceResourceCoverage(ref.category, ref.target);
+    if (ref.attribute === 'coverage') return this.resolveSurfaceResourceCoverage(ref.category, resourceId);
     return 0;
   }
 
@@ -954,13 +1007,21 @@ class ScriptVariableRegistry {
     const category = categories.find(item => item.id === ref.category);
     const targets = this.getTargets(ref.source, ref.category);
     const target = targets.find(item => item.id === ref.target);
-    const attributes = this.getAttributes(ref.source, ref.category, ref.target);
+    if (ref.source === 'resources' && ref.category === 'surface') {
+      const options = this.getSurfaceResourceOptions(ref.target);
+      const resolvedOptionId = ref.option || this.getResolvedResourceTargetId(ref.category, ref.target, ref.option);
+      const option = options.find(item => item.id === resolvedOptionId);
+      const attributes = this.getAttributes(ref.source, ref.category, ref.target, resolvedOptionId);
+      const attribute = attributes.find(item => item.id === ref.attribute);
+      return [source?.label, category?.label, target?.label, option?.label, attribute?.label].filter(Boolean).join(' / ');
+    }
+    const attributes = this.getAttributes(ref.source, ref.category, ref.target, ref.option);
     const attribute = attributes.find(item => item.id === ref.attribute);
     return [source?.label, category?.label, target?.label, attribute?.label].filter(Boolean).join(' / ');
   }
 
   formatResolvedValue(ref, value) {
-    const attributes = this.getAttributes(ref.source, ref.category, ref.target);
+    const attributes = this.getAttributes(ref.source, ref.category, ref.target, ref.option);
     const attribute = attributes.find(item => item.id === ref.attribute);
     const valueLabels = attribute?.valueLabels;
     if (valueLabels) {

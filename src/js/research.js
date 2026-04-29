@@ -26,6 +26,8 @@ class Research {
       this.alertedWhenUnlocked = extra.alertedWhenUnlocked || false;
       this.alertedSpaceTab = extra.alertedSpaceTab || false;
       this.hiddenByUser = false;
+      this.autoResearchEnabledForAutomation = false;
+      this.autoResearchPriorityForAutomation = 4;
     }
 }
 
@@ -105,6 +107,46 @@ class Research {
       const multiplier = (research.repeatableCostMultiplier || 1) ** Math.max(research.timesResearched, 0);
       research.cost = scaleResearchCost(research.baseCost, multiplier);
       this.orderDirty = true;
+    }
+
+    normalizeAutoResearchPriority(priority) {
+      const parsed = Number.parseInt(priority, 10);
+      if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 4) {
+        return parsed;
+      }
+      return 4;
+    }
+
+    getAutoResearchEnabled(researchId) {
+      const research = this.getResearchById(researchId);
+      return !!research && !!research.autoResearchEnabledForAutomation;
+    }
+
+    setAutoResearchEnabled(researchId, enabled) {
+      const research = this.getResearchById(researchId);
+      if (!research) {
+        return false;
+      }
+      research.autoResearchEnabledForAutomation = !!enabled;
+      return true;
+    }
+
+    getAutoResearchPriority(researchId) {
+      const research = this.getResearchById(researchId);
+      if (!research) {
+        return 4;
+      }
+      research.autoResearchPriorityForAutomation = this.normalizeAutoResearchPriority(research.autoResearchPriorityForAutomation);
+      return research.autoResearchPriorityForAutomation;
+    }
+
+    setAutoResearchPriority(researchId, priority) {
+      const research = this.getResearchById(researchId);
+      if (!research) {
+        return false;
+      }
+      research.autoResearchPriorityForAutomation = this.normalizeAutoResearchPriority(priority);
+      return true;
     }
 
     update(deltaTime) {
@@ -196,6 +238,8 @@ class Research {
           timesResearched: research.timesResearched,
           alertedWhenUnlocked: research.alertedWhenUnlocked,
           alertedSpaceTab: research.alertedSpaceTab,
+          autoResearchEnabledForAutomation: !!research.autoResearchEnabledForAutomation,
+          autoResearchPriorityForAutomation: this.normalizeAutoResearchPriority(research.autoResearchPriorityForAutomation),
         }));
       }
       return {
@@ -222,6 +266,8 @@ class Research {
             research.isResearched = savedResearch.isResearched || savedTimes > 0;
             research.alertedWhenUnlocked = savedResearch.alertedWhenUnlocked || false;
             research.alertedSpaceTab = savedResearch.alertedSpaceTab || savedResearch.isResearched || false;
+            research.autoResearchEnabledForAutomation = !!savedResearch.autoResearchEnabledForAutomation;
+            research.autoResearchPriorityForAutomation = this.normalizeAutoResearchPriority(savedResearch.autoResearchPriorityForAutomation);
             this.updateRepeatableResearchCost(research);
             if (research.isResearched && this.getRepeatCount(research) > 0) {
               this.applyResearchEffects(research); // Reapply effects if research is completed

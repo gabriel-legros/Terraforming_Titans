@@ -3,14 +3,12 @@ class ResearchAutomation {
     this.presets = [];
     this.selectedPresetId = null;
     this.currentPresetId = null;
-    this.currentState = {};
     this.currentHiddenResearchIds = [];
     this.nextTravelPresetId = null;
     this.nextTravelPersistent = false;
     this.collapsed = false;
     this.nextPresetId = 1;
 
-    this.populateCurrentState();
     const presetId = this.addPreset('');
     this.applyPresetOnce(presetId);
   }
@@ -103,29 +101,45 @@ class ResearchAutomation {
     this.presets = this.presets.map((preset) => this.normalizePreset(preset, preset.id));
   }
 
-  populateCurrentState() {
-    this.populateResearchEntries(this.currentState);
-  }
-
-  normalizeCurrentState() {
-    const normalized = {};
-    this.populateResearchEntries(normalized);
-    for (const researchId in this.currentState) {
-      normalized[researchId] = this.normalizeEntry(this.currentState[researchId]);
-    }
-    this.currentState = normalized;
-  }
-
-  syncHiddenResearchState() {
-    const hiddenSet = new Set(this.currentHiddenResearchIds);
+  getCurrentStateSnapshot() {
+    const state = {};
     for (const category in researchManager.researches) {
       const researches = researchManager.researches[category];
       for (let index = 0; index < researches.length; index += 1) {
         const research = researches[index];
-        research.hiddenByUser = hiddenSet.has(research.id);
+        state[research.id] = this.normalizeEntry({
+          enabled: researchManager.getAutoResearchEnabled(research.id),
+          priority: researchManager.getAutoResearchPriority(research.id)
+        });
       }
     }
-    gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
+    return state;
+  }
+
+  applyCurrentStateSnapshot(state = {}) {
+    const normalized = {};
+    this.populateResearchEntries(normalized);
+    for (const researchId in state) {
+      normalized[researchId] = this.normalizeEntry(state[researchId]);
+    }
+    for (const researchId in normalized) {
+      researchManager.setAutoResearchEnabled(researchId, normalized[researchId].enabled);
+      researchManager.setAutoResearchPriority(researchId, normalized[researchId].priority);
+    }
+  }
+
+  syncHiddenResearchState() {
+    this.currentHiddenResearchIds = [];
+    for (const category in researchManager.researches) {
+      const researches = researchManager.researches[category];
+      for (let index = 0; index < researches.length; index += 1) {
+        const research = researches[index];
+        if (research.hiddenByUser) {
+          this.currentHiddenResearchIds.push(research.id);
+        }
+      }
+    }
+    gameSettings.hiddenResearchIds = this.normalizeHiddenResearchIds(this.currentHiddenResearchIds);
   }
 
   getPresetById(id) {
@@ -178,12 +192,13 @@ class ResearchAutomation {
 
   buildPresetFromCurrentState(name, idOverride) {
     const preset = this.normalizePreset({ name }, idOverride);
-    this.normalizeCurrentState();
+    const currentState = this.getCurrentStateSnapshot();
     preset.researches = {};
-    for (const researchId in this.currentState) {
-      preset.researches[researchId] = this.normalizeEntry(this.currentState[researchId]);
+    for (const researchId in currentState) {
+      preset.researches[researchId] = this.normalizeEntry(currentState[researchId]);
     }
-    preset.hiddenResearchIds = this.normalizeHiddenResearchIds(this.currentHiddenResearchIds);
+    this.syncHiddenResearchState();
+    preset.hiddenResearchIds = this.currentHiddenResearchIds.slice();
     return preset;
   }
 
@@ -295,13 +310,17 @@ class ResearchAutomation {
     }
 
     this.currentPresetId = preset.id;
-    this.currentState = {};
-    for (const researchId in preset.researches) {
-      this.currentState[researchId] = this.normalizeEntry(preset.researches[researchId]);
-    }
-    this.populateCurrentState();
+    this.applyCurrentStateSnapshot(preset.researches);
     this.currentHiddenResearchIds = this.normalizeHiddenResearchIds(preset.hiddenResearchIds);
-    this.syncHiddenResearchState();
+    const hiddenSet = new Set(this.currentHiddenResearchIds);
+    for (const category in researchManager.researches) {
+      const researches = researchManager.researches[category];
+      for (let index = 0; index < researches.length; index += 1) {
+        const research = researches[index];
+        research.hiddenByUser = hiddenSet.has(research.id);
+      }
+    }
+    gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
 
     if (syncSelected !== false) {
       this.selectedPresetId = preset.id;
@@ -338,59 +357,29 @@ class ResearchAutomation {
   }
 
   setResearchHiddenInCurrentState(researchId, hidden) {
-    const hiddenIds = new Set(this.currentHiddenResearchIds);
-    if (hidden) {
-      hiddenIds.add(researchId);
-    } else {
-      hiddenIds.delete(researchId);
+    const research = researchManager.getResearchById(researchId);
+    if (!research) {
+      return false;
     }
-    this.currentHiddenResearchIds = this.normalizeHiddenResearchIds(Array.from(hiddenIds));
+    research.hiddenByUser = !!hidden;
     this.syncHiddenResearchState();
     return true;
   }
 
   isAutoResearchEnabled(researchId) {
-    this.normalizeCurrentState();
-    if (!Object.prototype.hasOwnProperty.call(this.currentState, researchId)) {
-      return false;
-    }
-    const entry = this.normalizeEntry(this.currentState[researchId]);
-    this.currentState[researchId] = entry;
-    return !!entry.enabled;
+    return researchManager.getAutoResearchEnabled(researchId);
   }
 
   setAutoResearchEnabled(researchId, enabled) {
-    this.normalizeCurrentState();
-    if (!Object.prototype.hasOwnProperty.call(this.currentState, researchId)) {
-      return false;
-    }
-    this.currentState[researchId] = this.normalizeEntry({
-      ...this.currentState[researchId],
-      enabled
-    });
-    return true;
+    return researchManager.setAutoResearchEnabled(researchId, enabled);
   }
 
   getAutoResearchPriority(researchId) {
-    this.normalizeCurrentState();
-    if (!Object.prototype.hasOwnProperty.call(this.currentState, researchId)) {
-      return 4;
-    }
-    const entry = this.normalizeEntry(this.currentState[researchId]);
-    this.currentState[researchId] = entry;
-    return entry.priority;
+    return researchManager.getAutoResearchPriority(researchId);
   }
 
   setAutoResearchPriority(researchId, priority) {
-    this.normalizeCurrentState();
-    if (!Object.prototype.hasOwnProperty.call(this.currentState, researchId)) {
-      return false;
-    }
-    this.currentState[researchId] = this.normalizeEntry({
-      ...this.currentState[researchId],
-      priority
-    });
-    return true;
+    return researchManager.setAutoResearchPriority(researchId, priority);
   }
 
   processAutoResearchQueue() {
@@ -398,8 +387,6 @@ class ResearchAutomation {
     if (!unlocked) {
       return;
     }
-
-    this.normalizeCurrentState();
 
     const candidates = [];
     for (const category in researchManager.researches) {
@@ -414,8 +401,10 @@ class ResearchAutomation {
           continue;
         }
 
-        const entry = this.normalizeEntry(this.currentState[research.id]);
-        this.currentState[research.id] = entry;
+        const entry = this.normalizeEntry({
+          enabled: researchManager.getAutoResearchEnabled(research.id),
+          priority: researchManager.getAutoResearchPriority(research.id)
+        });
         if (!entry.enabled) {
           continue;
         }
@@ -457,11 +446,8 @@ class ResearchAutomation {
   }
 
   saveState() {
-    this.normalizeCurrentState();
-    const savedCurrentState = {};
-    for (const researchId in this.currentState) {
-      savedCurrentState[researchId] = this.normalizeEntry(this.currentState[researchId]);
-    }
+    const savedCurrentState = this.getCurrentStateSnapshot();
+    this.syncHiddenResearchState();
 
     return {
       presets: this.presets.map((preset) => ({
@@ -479,7 +465,7 @@ class ResearchAutomation {
       selectedPresetId: this.selectedPresetId,
       currentPresetId: this.currentPresetId,
       currentState: savedCurrentState,
-      currentHiddenResearchIds: this.normalizeHiddenResearchIds(this.currentHiddenResearchIds),
+      currentHiddenResearchIds: this.currentHiddenResearchIds.slice(),
       nextTravelPresetId: this.nextTravelPresetId,
       nextTravelPersistent: this.nextTravelPersistent,
       collapsed: this.collapsed,
@@ -493,12 +479,17 @@ class ResearchAutomation {
       : [];
     if (this.presets.length === 0) {
       const savedCurrentState = data.currentState || {};
-      this.currentState = {};
-      for (const researchId in savedCurrentState) {
-        this.currentState[researchId] = this.normalizeEntry(savedCurrentState[researchId]);
-      }
-      this.populateCurrentState();
+      this.applyCurrentStateSnapshot(savedCurrentState);
       this.currentHiddenResearchIds = this.normalizeHiddenResearchIds(data.currentHiddenResearchIds);
+      const hiddenSet = new Set(this.currentHiddenResearchIds);
+      for (const category in researchManager.researches) {
+        const researches = researchManager.researches[category];
+        for (let index = 0; index < researches.length; index += 1) {
+          const research = researches[index];
+          research.hiddenByUser = hiddenSet.has(research.id);
+        }
+      }
+      gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
       const presetId = this.addPreset('');
       this.applyPresetOnce(presetId);
       return;
@@ -522,19 +513,23 @@ class ResearchAutomation {
     this.nextPresetId = Math.max(this.nextPresetId, data.nextPresetId || 0, this.presets.length + 1);
 
     const savedCurrentState = data.currentState || {};
-    this.currentState = {};
-    for (const researchId in savedCurrentState) {
-      this.currentState[researchId] = this.normalizeEntry(savedCurrentState[researchId]);
-    }
     this.currentHiddenResearchIds = this.normalizeHiddenResearchIds(data.currentHiddenResearchIds);
 
-    if (Object.keys(this.currentState).length === 0 && this.currentHiddenResearchIds.length === 0) {
+    if (Object.keys(savedCurrentState).length === 0 && this.currentHiddenResearchIds.length === 0) {
       this.applyPresetState(this.getCurrentPreset(), false);
       return;
     }
 
-    this.normalizeCurrentState();
-    this.syncHiddenResearchState();
+    this.applyCurrentStateSnapshot(savedCurrentState);
+    const hiddenSet = new Set(this.currentHiddenResearchIds);
+    for (const category in researchManager.researches) {
+      const researches = researchManager.researches[category];
+      for (let index = 0; index < researches.length; index += 1) {
+        const research = researches[index];
+        research.hiddenByUser = hiddenSet.has(research.id);
+      }
+    }
+    gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
   }
 
   loadLegacyState(legacyData = {}) {
@@ -543,12 +538,17 @@ class ResearchAutomation {
       : [];
     if (this.presets.length === 0) {
       const savedCurrentState = legacyData.currentAutoResearchState || {};
-      this.currentState = {};
-      for (const researchId in savedCurrentState) {
-        this.currentState[researchId] = this.normalizeEntry(savedCurrentState[researchId]);
-      }
-      this.populateCurrentState();
+      this.applyCurrentStateSnapshot(savedCurrentState);
       this.currentHiddenResearchIds = this.normalizeHiddenResearchIds(legacyData.currentAutoResearchHiddenIds);
+      const hiddenSet = new Set(this.currentHiddenResearchIds);
+      for (const category in researchManager.researches) {
+        const researches = researchManager.researches[category];
+        for (let index = 0; index < researches.length; index += 1) {
+          const research = researches[index];
+          research.hiddenByUser = hiddenSet.has(research.id);
+        }
+      }
+      gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
       const presetId = this.addPreset('');
       this.applyPresetOnce(presetId);
       return;
@@ -572,27 +572,30 @@ class ResearchAutomation {
     this.nextTravelPersistent = legacyData.nextTravelAutoResearchPresetPersistent === true && !!this.nextTravelPresetId;
 
     const savedCurrentState = legacyData.currentAutoResearchState || {};
-    this.currentState = {};
-    for (const researchId in savedCurrentState) {
-      this.currentState[researchId] = this.normalizeEntry(savedCurrentState[researchId]);
-    }
     this.currentHiddenResearchIds = this.normalizeHiddenResearchIds(legacyData.currentAutoResearchHiddenIds);
     this.nextPresetId = Math.max(this.nextPresetId, legacyData.nextAutoResearchPresetId || 0, this.presets.length + 1);
 
-    if (Object.keys(this.currentState).length === 0 && this.currentHiddenResearchIds.length === 0) {
+    if (Object.keys(savedCurrentState).length === 0 && this.currentHiddenResearchIds.length === 0) {
       this.applyPresetState(this.getCurrentPreset(), false);
       return;
     }
 
-    this.normalizeCurrentState();
-    this.syncHiddenResearchState();
+    this.applyCurrentStateSnapshot(savedCurrentState);
+    const hiddenSet = new Set(this.currentHiddenResearchIds);
+    for (const category in researchManager.researches) {
+      const researches = researchManager.researches[category];
+      for (let index = 0; index < researches.length; index += 1) {
+        const research = researches[index];
+        research.hiddenByUser = hiddenSet.has(research.id);
+      }
+    }
+    gameSettings.hiddenResearchIds = this.currentHiddenResearchIds.slice();
   }
 
   loadState(data = {}, legacyResearchState = null) {
     this.presets = [];
     this.selectedPresetId = null;
     this.currentPresetId = null;
-    this.currentState = {};
     this.currentHiddenResearchIds = [];
     this.nextTravelPresetId = null;
     this.nextTravelPersistent = false;
@@ -617,7 +620,6 @@ class ResearchAutomation {
       return;
     }
 
-    this.populateCurrentState();
     const presetId = this.addPreset('');
     this.applyPresetOnce(presetId);
   }
