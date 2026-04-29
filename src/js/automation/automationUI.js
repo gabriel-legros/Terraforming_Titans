@@ -240,6 +240,34 @@ function getAutomationCardElementByKey(cardKey) {
   return null;
 }
 
+function getAutomationCardKeyFromElement(card) {
+  if (!card || !card.id) {
+    return null;
+  }
+  if (card.id === 'automation-scripts') {
+    return 'scripts';
+  }
+  if (card.id === 'automation-ship-assignment') {
+    return 'ships';
+  }
+  if (card.id === 'automation-life-design') {
+    return 'life';
+  }
+  if (card.id === 'automation-research') {
+    return 'research';
+  }
+  if (card.id === 'automation-buildings') {
+    return 'buildings';
+  }
+  if (card.id === 'automation-projects') {
+    return 'projects';
+  }
+  if (card.id === 'automation-colony') {
+    return 'colony';
+  }
+  return null;
+}
+
 function isAutomationCardDisplayed(card) {
   if (!card) {
     return false;
@@ -252,8 +280,22 @@ function isAutomationCardDisplayed(card) {
 
 function getVisibleAutomationCardKeys() {
   const visibleKeys = [];
-  for (let index = 0; index < AUTOMATION_CARD_ORDER_KEYS.length; index += 1) {
-    const cardKey = AUTOMATION_CARD_ORDER_KEYS[index];
+  const container = automationElements.container;
+  if (container) {
+    for (let index = 0; index < container.children.length; index += 1) {
+      const card = container.children[index];
+      const cardKey = getAutomationCardKeyFromElement(card);
+      if (cardKey && isAutomationCardDisplayed(card)) {
+        visibleKeys.push(cardKey);
+      }
+    }
+    return visibleKeys;
+  }
+  const orderedKeys = automationManager
+    ? automationManager.getAutomationCardOrder()
+    : AUTOMATION_CARD_ORDER_KEYS;
+  for (let index = 0; index < orderedKeys.length; index += 1) {
+    const cardKey = orderedKeys[index];
     const card = getAutomationCardElementByKey(cardKey);
     if (isAutomationCardDisplayed(card)) {
       visibleKeys.push(cardKey);
@@ -270,24 +312,9 @@ function applyAutomationCardOrder() {
   const orderedKeys = automationManager.getAutomationCardOrder();
   const currentKeys = [];
   for (let index = 0; index < container.children.length; index += 1) {
-    const child = container.children[index];
-    if (!child || !child.id) {
-      continue;
-    }
-    if (child.id === 'automation-scripts') {
-      currentKeys.push('scripts');
-    } else if (child.id === 'automation-ship-assignment') {
-      currentKeys.push('ships');
-    } else if (child.id === 'automation-life-design') {
-      currentKeys.push('life');
-    } else if (child.id === 'automation-research') {
-      currentKeys.push('research');
-    } else if (child.id === 'automation-buildings') {
-      currentKeys.push('buildings');
-    } else if (child.id === 'automation-projects') {
-      currentKeys.push('projects');
-    } else if (child.id === 'automation-colony') {
-      currentKeys.push('colony');
+    const cardKey = getAutomationCardKeyFromElement(container.children[index]);
+    if (cardKey) {
+      currentKeys.push(cardKey);
     }
   }
   let alreadyOrdered = currentKeys.length === orderedKeys.length;
