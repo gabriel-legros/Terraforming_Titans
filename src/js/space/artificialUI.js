@@ -249,6 +249,8 @@ function buildHistoryRow(entry) {
     getArtificialText('history.valueTitle', 'Counts toward terraformed worlds (1 per 50B ha, minimum 1).')
   );
   valueTooltip.icon.classList.add('artificial-history-info');
+  effective.appendChild(document.createTextNode(' '));
+  effective.appendChild(valueTooltip.icon);
   const status = document.createElement('span');
   const statusKey = entry.status || '';
   const statusLabelMap = {
@@ -332,7 +334,6 @@ function buildHistoryRow(entry) {
   row.appendChild(sector);
   row.appendChild(land);
   row.appendChild(effective);
-  row.appendChild(valueTooltip.icon);
   row.appendChild(status);
   return row;
 }
