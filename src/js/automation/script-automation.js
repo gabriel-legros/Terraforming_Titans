@@ -12,6 +12,8 @@ class ScriptAutomation {
     this.lastStatus = 'Inactive';
     this.lastError = '';
     this.lastActionSummary = '';
+    this.lastLineOutcomeSummary = '';
+    this.lastLineOutcomeLineId = null;
     this.lastEvaluatedLineId = null;
     this.manualStepDisplayLineId = null;
     this.manualStepPendingLineId = null;
@@ -249,8 +251,12 @@ class ScriptAutomation {
     this.running = true;
     this.update(0, true);
     this.manualStepDisplayLineId = this.lastEvaluatedLineId;
-    if (wasRunning && this.pcLineId) this.running = true;
-    else this.running = false;
+    if (wasRunning && this.pcLineId) {
+      this.running = true;
+    } else {
+      this.running = false;
+      if (this.haltedReason === 'skippedBranch') this.lastStatus = 'Paused';
+    }
   }
 
   addLine(scriptId, kind = 'if') {
@@ -384,6 +390,8 @@ class ScriptAutomation {
     let gotoUsed = false;
     this.lastError = '';
     this.lastActionSummary = '';
+    this.lastLineOutcomeSummary = '';
+    this.lastLineOutcomeLineId = null;
     const maxLines = forceStep ? 1 : this.maxLinesPerTick;
 
     while (linesEvaluated < maxLines) {
@@ -441,21 +449,32 @@ class ScriptAutomation {
         }
 
         if (branchResult.gotoLineId) {
+          const targetLine = script.lines.find(item => item.id === branchResult.gotoLineId);
+          const targetLabel = targetLine ? this.getLineLabel(script, targetLine) : `#${branchResult.gotoLineId}`;
+          this.lastLineOutcomeSummary = `GOTO ${targetLabel}`;
+          this.lastLineOutcomeLineId = line.id;
           if (forceStep) {
             this.manualStepPendingLineId = branchResult.gotoLineId;
             this.haltedReason = 'linkedElse';
-            this.lastStatus = `Evaluated ${this.getLineLabel(script, line)} as ${this.lastConditionResult ? 'true' : 'false'}`;
+            this.lastStatus = 'Paused';
             break;
           }
           this.pcLineId = branchResult.gotoLineId;
           this.haltedReason = 'linkedElse';
-          this.lastStatus = `Linked ELSE from ${this.getLineLabel(script, line)}`;
+          this.lastStatus = `Linked ELSE from ${this.getLineLabel(script, line)} to ${targetLabel}`;
           continue;
         }
 
         this.advanceLine(script, line);
-        this.haltedReason = 'advanced';
-        this.lastStatus = `Advanced past ${this.getLineLabel(script, line)}`;
+        if (branchResult.skippedByEarlierMatch) {
+          this.haltedReason = 'skippedBranch';
+          this.lastLineOutcomeSummary = 'Skipped (earlier linked branch matched)';
+          this.lastLineOutcomeLineId = line.id;
+          this.lastStatus = forceStep && !this.running ? 'Paused' : `Skipped ${this.getLineLabel(script, line)} (earlier linked branch matched)`;
+        } else {
+          this.haltedReason = 'advanced';
+          this.lastStatus = `Advanced past ${this.getLineLabel(script, line)}`;
+        }
 
         if (branchResult.stopAfterLine) break;
         continue;
@@ -502,7 +521,8 @@ class ScriptAutomation {
         conditionResult,
         executeActions: conditionResult,
         stopAfterLine: false,
-        gotoLineId: linkedElse ? linkedElse.id : null
+        gotoLineId: linkedElse ? linkedElse.id : null,
+        skippedByEarlierMatch: false
       };
     }
 
@@ -513,7 +533,8 @@ class ScriptAutomation {
           conditionResult: true,
           executeActions: true,
           stopAfterLine: true,
-          gotoLineId: null
+          gotoLineId: null,
+          skippedByEarlierMatch: false
         };
       }
       const eligible = this.isLinkedElseEligible(script, linkedIf);
@@ -523,7 +544,8 @@ class ScriptAutomation {
         conditionResult: ownConditionResult,
         executeActions: ownConditionResult,
         stopAfterLine: false,
-        gotoLineId: linkedElse ? linkedElse.id : null
+        gotoLineId: linkedElse ? linkedElse.id : null,
+        skippedByEarlierMatch: !eligible
       };
     }
 
@@ -533,7 +555,8 @@ class ScriptAutomation {
         conditionResult: true,
         executeActions: true,
         stopAfterLine: true,
-        gotoLineId: null
+        gotoLineId: null,
+        skippedByEarlierMatch: false
       };
     }
 
@@ -542,7 +565,8 @@ class ScriptAutomation {
       conditionResult,
       executeActions: conditionResult,
       stopAfterLine: false,
-      gotoLineId: null
+      gotoLineId: null,
+      skippedByEarlierMatch: !conditionResult
     };
   }
 

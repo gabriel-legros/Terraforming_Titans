@@ -50,6 +50,11 @@ function createCase(lines, targetName) {
   return automation.getValidLinkedIfOptions(script, byName[targetName]).map(line => line.name);
 }
 
+function setConditionResult(line, result) {
+  line.condition.clauses[0].left.terms[0].ref.constant = result ? 1 : 0;
+  line.condition.clauses[0].right.terms[0].ref.constant = result ? 0 : 1;
+}
+
 describe('Script automation linked ELSE eligibility', () => {
   test.each([
     {
@@ -234,5 +239,86 @@ describe('Script automation linked ELSE eligibility', () => {
     },
   ])('$name', ({ lines, target, expected }) => {
     expect(createCase(lines, target)).toEqual(expected);
+  });
+
+  it('reports skipped linked ELSE IF lines when an earlier branch matched', () => {
+    const ScriptAutomation = loadScriptAutomation();
+    const automation = new ScriptAutomation();
+    const script = automation.getSelectedScript();
+    const if1 = automation.createLine('if');
+    const elif1 = automation.createLine('elseIf');
+    const elif2 = automation.createLine('elseIf');
+
+    if1.name = 'IF1';
+    elif1.name = 'ELIF1';
+    elif2.name = 'ELIF2';
+    setConditionResult(if1, false);
+    setConditionResult(elif1, true);
+    setConditionResult(elif2, true);
+
+    script.lines = [if1, elif1, elif2];
+    elif1.linkedIfLineId = if1.id;
+    elif2.linkedIfLineId = elif1.id;
+    automation.enabled = true;
+    automation.activeScriptId = script.id;
+    automation.selectedScriptId = script.id;
+    automation.pcLineId = if1.id;
+
+    automation.stepOnce();
+    expect(automation.haltedReason).toBe('linkedElse');
+    expect(automation.lastStatus).toBe('Paused');
+    expect(automation.lastLineOutcomeSummary).toBe('GOTO #2 ELIF1');
+    expect(automation.lastLineOutcomeLineId).toBe(if1.id);
+
+    automation.stepOnce();
+    automation.stepOnce();
+
+    expect(automation.haltedReason).toBe('skippedBranch');
+    expect(automation.lastStatus).toBe('Paused');
+    expect(automation.lastActionSummary).toBe('');
+    expect(automation.lastLineOutcomeSummary).toBe('Skipped (earlier linked branch matched)');
+    expect(automation.lastLineOutcomeLineId).toBe(elif2.id);
+
+    automation.update(1000);
+
+    expect(automation.haltedReason).toBe('paused');
+    expect(automation.lastStatus).toBe('Paused');
+    expect(automation.lastLineOutcomeSummary).toBe('Skipped (earlier linked branch matched)');
+  });
+
+  it('clears skipped line outcomes before stepping a different line', () => {
+    const ScriptAutomation = loadScriptAutomation();
+    const automation = new ScriptAutomation();
+    const script = automation.getSelectedScript();
+    const if1 = automation.createLine('if');
+    const elif1 = automation.createLine('elseIf');
+    const elif2 = automation.createLine('elseIf');
+
+    if1.name = 'IF1';
+    elif1.name = 'ELIF1';
+    elif2.name = 'ELIF2';
+    setConditionResult(if1, false);
+    setConditionResult(elif1, true);
+    setConditionResult(elif2, true);
+
+    script.lines = [if1, elif1, elif2];
+    elif1.linkedIfLineId = if1.id;
+    elif2.linkedIfLineId = elif1.id;
+    automation.enabled = true;
+    automation.activeScriptId = script.id;
+    automation.selectedScriptId = script.id;
+    automation.pcLineId = if1.id;
+
+    automation.stepOnce();
+    automation.stepOnce();
+    automation.stepOnce();
+    expect(automation.lastLineOutcomeSummary).toBe('Skipped (earlier linked branch matched)');
+
+    automation.reset();
+    automation.stepOnce();
+
+    expect(automation.manualStepDisplayLineId).toBe(if1.id);
+    expect(automation.lastLineOutcomeSummary).toBe('GOTO #2 ELIF1');
+    expect(automation.lastLineOutcomeLineId).toBe(if1.id);
   });
 });

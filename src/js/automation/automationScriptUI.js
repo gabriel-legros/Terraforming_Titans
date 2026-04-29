@@ -337,6 +337,9 @@ function updateScriptAutomationUI() {
   const statusParts = [automation.lastStatus || 'Idle'];
   if (currentLine) statusParts.push(`Line: ${automation.getLineLabel(script, currentLine)}`);
   if (automation.lastActionSummary) statusParts.push(`Last action: ${automation.lastActionSummary}`);
+  else if (automation.lastLineOutcomeSummary && automation.lastLineOutcomeLineId === displayLineId) {
+    statusParts.push(automation.lastLineOutcomeSummary);
+  }
   automationElements.scriptStatusLine.textContent = statusParts.join(' | ');
 
   const signature = getScriptLinesSignature(automation, script);
