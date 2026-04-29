@@ -287,6 +287,11 @@ class ScriptVariableRegistry {
           id: 'canSurviveAllZones',
           label: t('ui.hope.automationCards.scriptVariables.terraforming.life.canSurviveAllZones', {}, 'Can Survive in All Zones'),
           valueType: 'boolean'
+        },
+        {
+          id: 'biomassDensity',
+          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.biomassDensity', {}, 'Biomass Density'),
+          valueType: 'number'
         }
       ];
     }
@@ -627,6 +632,11 @@ class ScriptVariableRegistry {
     const design = lifeDesigner.currentDesign;
     if (attribute === 'canSurviveAnyZone') return design.canSurviveAnywhere() ? 1 : 0;
     if (attribute === 'canSurviveAllZones') return design.canSurviveInAllZones() ? 1 : 0;
+    if (attribute === 'biomassDensity') {
+      const totalBiomass = resources.surface.biomass?.value || 0;
+      const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
+      return totalSurfaceArea > 0 ? this.toNumber(totalBiomass / totalSurfaceArea) : 0;
+    }
     return 0;
   }
 

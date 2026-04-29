@@ -993,6 +993,11 @@
   border-radius: 6px;
 }
 
+.script-term-row > button:last-child,
+.script-action-row > button:last-child {
+  margin-left: auto;
+}
+
 .script-automation-body button,
 .script-line-header button,
 .script-line-editor button {
