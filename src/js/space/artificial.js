@@ -350,6 +350,14 @@ class ArtificialManager extends EffectableEntity {
         }));
     }
 
+    isArtificialTypeUnlocked(typeId) {
+        return this.unlockedTypes.has(typeId);
+    }
+
+    isArtificialCoreUnlocked(coreId) {
+        return this.unlockedCores.has(coreId);
+    }
+
     isRingStarCoreUnlocked(coreId) {
         const entry = RINGWORLD_STAR_CORES.find((core) => core.value === coreId);
         if (!entry) {
@@ -988,7 +996,9 @@ class ArtificialManager extends EffectableEntity {
 
     startShellConstruction(options) {
       if (!this.enabled || this.activeProject) return false;
+      if (!this.isArtificialTypeUnlocked('shell')) return false;
       const core = options?.core || 'super-earth';
+      if (!this.isArtificialCoreUnlocked(core)) return false;
       const coreConfig = getArtificialCoreConfig(core);
       const bounds = getArtificialCoreBounds(core);
       const starContext = options?.starContext || ARTIFICIAL_STAR_CONTEXTS[0].value;
@@ -1080,10 +1090,11 @@ class ArtificialManager extends EffectableEntity {
 
     startRingConstruction(options) {
       if (!this.enabled || this.activeProject) return false;
+      if (!this.isArtificialTypeUnlocked('ring')) return false;
 
       const starCore = options?.starCore || RINGWORLD_STAR_CORES[0].value;
+      if (!this.isRingStarCoreUnlocked(starCore)) return false;
       const starCoreConfig = getRingStarCoreConfig(starCore);
-      if (starCoreConfig.disabled) return false;
 
       const bounds = getRingRadiusBoundsAU(starCore);
       const orbitRadiusAU = clampRingOrbitRadiusAU(options?.orbitRadiusAU, bounds);

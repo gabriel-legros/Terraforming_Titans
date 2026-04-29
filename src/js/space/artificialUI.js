@@ -39,12 +39,15 @@ const artificialUICache = {
   ringAreaLabel: null,
   durationValue: null,
   durationTooltip: null,
+  durationTooltipContent: null,
   gainEffective: null,
+  gainEffectiveTooltip: null,
   gainDistinct: null,
   gainFleet: null,
   gainFleetLabel: null,
   gainDefense: null,
   gainFleetTooltip: null,
+  gainFleetTooltipContent: null,
   effectShipEnergy: null,
   effectShipEnergyRow: null,
   effectShipEnergyLabel: null,
@@ -103,6 +106,16 @@ function getArtificialText(path, fallback, vars) {
     });
     return text;
   }
+}
+
+function createArtificialInfoIcon(text, clickToPin = true) {
+  const icon = document.createElement('span');
+  icon.classList.add('info-tooltip-icon');
+  icon.innerHTML = '&#9432;';
+  return {
+    icon,
+    tooltip: attachDynamicInfoTooltip(icon, text, clickToPin)
+  };
 }
 
 function formatArtificialSectorResourceLabel(resourceKey) {
@@ -203,14 +216,17 @@ function buildHistoryRow(entry) {
   const nameText = document.createElement('span');
   nameText.className = 'artificial-history-name-text';
   nameText.textContent = entry.name;
-  nameText.title = entry.seed || '';
+  const seedTooltip = createArtificialInfoIcon(entry.seed || '');
+  seedTooltip.icon.classList.add('artificial-history-info');
   const editBtn = document.createElement('button');
   editBtn.type = 'button';
   editBtn.className = 'artificial-history-edit-btn';
   editBtn.textContent = '';
-  editBtn.title = getArtificialText('history.renameTitle', 'Rename this artificial world');
-  editBtn.setAttribute('aria-label', getArtificialText('history.renameTitle', 'Rename this artificial world'));
+  const renameTooltip = getArtificialText('history.renameTitle', 'Rename this artificial world');
+  attachDynamicInfoTooltip(editBtn, renameTooltip, false);
+  editBtn.setAttribute('aria-label', renameTooltip);
   name.appendChild(nameText);
+  name.appendChild(seedTooltip.icon);
   name.appendChild(editBtn);
   const type = document.createElement('span');
   const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
@@ -229,7 +245,10 @@ function buildHistoryRow(entry) {
     ? entry.terraformedValue
     : (landValue !== undefined ? Math.max(1, Math.floor((landValue || 0) / 50_000_000_000)) : undefined);
   effective.textContent = effectiveValue !== undefined ? (formatNumber ? formatNumber(effectiveValue, true, 2) : effectiveValue) : '—';
-  effective.title = getArtificialText('history.valueTitle', 'Counts toward terraformed worlds (1 per 50B ha, minimum 1).');
+  const valueTooltip = createArtificialInfoIcon(
+    getArtificialText('history.valueTitle', 'Counts toward terraformed worlds (1 per 50B ha, minimum 1).')
+  );
+  valueTooltip.icon.classList.add('artificial-history-info');
   const status = document.createElement('span');
   const statusKey = entry.status || '';
   const statusLabelMap = {
@@ -247,7 +266,11 @@ function buildHistoryRow(entry) {
     const discardBtn = document.createElement('button');
     discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
     discardBtn.textContent = getArtificialText('history.discard', 'Discard');
-    discardBtn.title = getArtificialText('history.discardTitle', 'Discard this stored artificial world');
+    attachDynamicInfoTooltip(
+      discardBtn,
+      getArtificialText('history.discardTitle', 'Discard this stored artificial world'),
+      false
+    );
     discardBtn.addEventListener('click', (event) => {
       event.stopPropagation();
       artificialManager.discardStoredWorld(entry.id);
@@ -258,7 +281,11 @@ function buildHistoryRow(entry) {
     const travelBtn = document.createElement('button');
     travelBtn.className = 'artificial-history-travel-btn';
     travelBtn.textContent = getArtificialText('history.travel', 'Travel');
-    travelBtn.title = getArtificialText('history.travelTitle', 'Travel to this artificial world');
+    attachDynamicInfoTooltip(
+      travelBtn,
+      getArtificialText('history.travelTitle', 'Travel to this artificial world'),
+      false
+    );
     travelBtn.addEventListener('click', (event) => {
       event.stopPropagation();
       const attemptTravel = (skipCurrentWorldWarnings) => {
@@ -279,7 +306,6 @@ function buildHistoryRow(entry) {
     input.type = 'text';
     input.className = 'artificial-history-name-input';
     input.value = entry.name;
-    input.title = nameText.title;
     name.replaceChild(input, nameText);
     editBtn.disabled = true;
     input.focus();
@@ -306,6 +332,7 @@ function buildHistoryRow(entry) {
   row.appendChild(sector);
   row.appendChild(land);
   row.appendChild(effective);
+  row.appendChild(valueTooltip.icon);
   row.appendChild(status);
   return row;
 }
@@ -734,7 +761,10 @@ function ensureArtificialLayout() {
   gravityLabel.textContent = getArtificialText('blueprint.targetGravity', 'Target gravity');
   const gravityValue = document.createElement('div');
   gravityValue.className = 'artificial-gravity';
-  gravityValue.innerHTML = `1g <span class="info-tooltip-icon" title="${getArtificialText('blueprint.gravityTooltip', 'HOPE is stubborn about certain things')}">&#9432;</span>`;
+  gravityValue.textContent = '1g ';
+  gravityValue.appendChild(
+    createArtificialInfoIcon(getArtificialText('blueprint.gravityTooltip', 'HOPE is stubborn about certain things')).icon
+  );
   gravityRow.appendChild(gravityLabel);
   gravityRow.appendChild(gravityValue);
   blueprint.appendChild(gravityRow);
@@ -776,7 +806,11 @@ function ensureArtificialLayout() {
   radiusAuto.type = 'button';
   radiusAuto.className = 'artificial-secondary artificial-radius-auto';
   radiusAuto.textContent = getArtificialText('common.auto', 'Auto');
-  radiusAuto.title = getArtificialText('blueprint.radiusAutoTitle', 'Set radius for a 5 hour construction time.');
+  attachDynamicInfoTooltip(
+    radiusAuto,
+    getArtificialText('blueprint.radiusAutoTitle', 'Set radius for a 5 hour construction time.'),
+    false
+  );
   artificialUICache.radiusAuto = radiusAuto;
   radiusControls.appendChild(radiusAuto);
   radiusLabel.appendChild(radiusControls);
@@ -803,10 +837,9 @@ function ensureArtificialLayout() {
   ringOrbitTop.className = 'artificial-radius-row';
   const ringOrbitText = document.createElement('span');
   ringOrbitText.textContent = getArtificialText('blueprint.orbitalRadius', 'Orbital radius (AU)');
-  const ringOrbitInfo = document.createElement('span');
-  ringOrbitInfo.className = 'info-tooltip-icon';
-  ringOrbitInfo.innerHTML = '&#9432;';
-  ringOrbitInfo.title = getArtificialText('blueprint.orbitTooltip', 'Ring orbital distance from the system star.');
+  const ringOrbitInfo = createArtificialInfoIcon(
+    getArtificialText('blueprint.orbitTooltip', 'Ring orbital distance from the system star.')
+  ).icon;
   ringOrbitText.appendChild(document.createTextNode(' '));
   ringOrbitText.appendChild(ringOrbitInfo);
   const ringOrbitValue = document.createElement('span');
@@ -838,7 +871,11 @@ function ensureArtificialLayout() {
   ringAuto.type = 'button';
   ringAuto.className = 'artificial-secondary artificial-radius-auto';
   ringAuto.textContent = getArtificialText('common.auto', 'Auto');
-  ringAuto.title = getArtificialText('blueprint.orbitAutoTitle', 'Set a just-under-5h build by maximizing width at minimum orbit, then solving orbit radius.');
+  attachDynamicInfoTooltip(
+    ringAuto,
+    getArtificialText('blueprint.orbitAutoTitle', 'Set a just-under-5h build by maximizing width at minimum orbit, then solving orbit radius.'),
+    false
+  );
   artificialUICache.ringAuto = ringAuto;
   ringOrbitControls.appendChild(ringAuto);
   ringOrbitBox.appendChild(ringOrbitControls);
@@ -851,10 +888,9 @@ function ensureArtificialLayout() {
   ringWidthTop.className = 'artificial-radius-row';
   const ringWidthText = document.createElement('span');
   ringWidthText.textContent = getArtificialText('blueprint.widthKm', 'Width (km)');
-  const ringWidthInfo = document.createElement('span');
-  ringWidthInfo.className = 'info-tooltip-icon';
-  ringWidthInfo.innerHTML = '&#9432;';
-  ringWidthInfo.title = getArtificialText('blueprint.widthTooltip', 'Usable surface width for the ring band (1000 km to 1,000,000 km).');
+  const ringWidthInfo = createArtificialInfoIcon(
+    getArtificialText('blueprint.widthTooltip', 'Usable surface width for the ring band (1000 km to 1,000,000 km).')
+  ).icon;
   ringWidthText.appendChild(document.createTextNode(' '));
   ringWidthText.appendChild(ringWidthInfo);
   const ringWidthValue = document.createElement('span');
@@ -891,10 +927,9 @@ function ensureArtificialLayout() {
   ringFluxTop.className = 'artificial-radius-row';
   const ringFluxText = document.createElement('span');
   ringFluxText.textContent = getArtificialText('blueprint.targetFlux', 'Target flux (W/m²)');
-  const ringFluxInfo = document.createElement('span');
-  ringFluxInfo.className = 'info-tooltip-icon';
-  ringFluxInfo.innerHTML = '&#9432;';
-  ringFluxInfo.title = getArtificialText('blueprint.fluxTooltip', 'Stellar flux at the ringworld orbit (1200–1400 W/m²).');
+  const ringFluxInfo = createArtificialInfoIcon(
+    getArtificialText('blueprint.fluxTooltip', 'Stellar flux at the ringworld orbit (1200–1400 W/m²).')
+  ).icon;
   ringFluxText.appendChild(document.createTextNode(' '));
   ringFluxText.appendChild(ringFluxInfo);
   const ringFluxValue = document.createElement('span');
@@ -969,6 +1004,10 @@ function ensureArtificialLayout() {
   durationInfo.innerHTML = '&#9432;';
   artificialUICache.durationValue = durationValue;
   artificialUICache.durationTooltip = durationInfo;
+  artificialUICache.durationTooltipContent = attachDynamicInfoTooltip(
+    durationInfo,
+    getArtificialText('costs.durationTooltip', 'Construction time is divided by terraformed worlds (currently {value}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.', { value: '0' })
+  );
   durationRow.appendChild(durationLabel);
   durationRow.appendChild(durationValue);
   durationRow.appendChild(durationInfo);
@@ -989,6 +1028,7 @@ function ensureArtificialLayout() {
   const startBtn = document.createElement('button');
   startBtn.className = 'artificial-primary';
   startBtn.textContent = getArtificialText('actions.startArtificialWorld', 'Start Artificial World');
+  artificialUICache.startBtnTooltipContent = attachDynamicInfoTooltip(startBtn, '', false);
   artificialUICache.startBtn = startBtn;
   costs.appendChild(startBtn);
 
@@ -1014,10 +1054,14 @@ function ensureArtificialLayout() {
   effectiveLabel.textContent = getArtificialText('gains.countsAs', 'Counts as:');
   const effectiveValue = document.createElement('span');
   effectiveValue.className = 'artificial-gain-value';
-  effectiveValue.title = getArtificialText('gains.countsAsTooltip', 'Effective terraformed worlds contributed by this construct.');
   artificialUICache.gainEffective = effectiveValue;
+  const effectiveTooltip = createArtificialInfoIcon(
+    getArtificialText('gains.countsAsTooltip', 'Effective terraformed worlds contributed by this construct.')
+  );
+  artificialUICache.gainEffectiveTooltip = effectiveTooltip.tooltip;
   effectiveRow.appendChild(effectiveLabel);
   effectiveRow.appendChild(effectiveValue);
+  effectiveRow.appendChild(effectiveTooltip.icon);
   const defenseRow = document.createElement('div');
   defenseRow.className = 'artificial-gain-row';
   const defenseLabel = document.createElement('span');
@@ -1031,15 +1075,16 @@ function ensureArtificialLayout() {
   fleetRow.className = 'artificial-gain-row';
   const fleetLabel = document.createElement('span');
   fleetLabel.textContent = getArtificialText('gains.worldsForFleetCapacity', 'Worlds for fleet capacity:');
-  const fleetInfo = document.createElement('span');
-  fleetInfo.className = 'info-tooltip-icon';
-  fleetInfo.innerHTML = '&#9432;';
-  fleetInfo.title = getArtificialText('gains.fleetCapacityTooltip', 'Artificial worlds cannot use their full power for direct military purposes.  If they did, they would become a critical military target for alien superweapons, which they cannot dodge.  This number will increase rectroactively if galactic superweapons are shut down.');
+  const fleetTooltip = createArtificialInfoIcon(
+    getArtificialText('gains.fleetCapacityTooltip', 'Artificial worlds cannot use their full power for direct military purposes.  If they did, they would become a critical military target for alien superweapons, which they cannot dodge.  This number will increase rectroactively if galactic superweapons are shut down.')
+  );
+  const fleetInfo = fleetTooltip.icon;
   const fleetValue = document.createElement('span');
   fleetValue.className = 'artificial-gain-value';
   artificialUICache.gainFleet = fleetValue;
   artificialUICache.gainFleetLabel = fleetLabel;
   artificialUICache.gainFleetTooltip = fleetInfo;
+  artificialUICache.gainFleetTooltipContent = fleetTooltip.tooltip;
   fleetRow.appendChild(fleetLabel);
   fleetRow.appendChild(fleetValue);
   fleetInfo.style.color = '#63a6ff';
@@ -1116,9 +1161,7 @@ function ensureArtificialLayout() {
     const title = document.createElement('span');
     title.className = 'artificial-stash-title';
     title.textContent = label;
-    const capInfo = document.createElement('span');
-    capInfo.className = 'info-tooltip-icon';
-    capInfo.innerHTML = '&#9432;';
+    const capInfo = createArtificialInfoIcon('').icon;
     header.appendChild(title);
     header.appendChild(capInfo);
     row.appendChild(header);
@@ -1154,7 +1197,11 @@ function ensureArtificialLayout() {
       addBtn,
       maxBtn,
       stock: staged,
-      capInfo
+      capInfo,
+      capTooltipContent: attachDynamicInfoTooltip(capInfo, ''),
+      addTooltipContent: attachDynamicInfoTooltip(addBtn, '', false),
+      maxTooltipContent: attachDynamicInfoTooltip(maxBtn, '', false),
+      stockTooltipContent: attachDynamicInfoTooltip(staged, '')
     };
 
     return row;
@@ -1172,10 +1219,10 @@ function ensureArtificialLayout() {
   const bailoutTitle = document.createElement('span');
   bailoutTitle.className = 'artificial-stash-title';
   bailoutTitle.textContent = getArtificialText('bailout.title', 'Solis Bailout');
-  const bailoutInfo = document.createElement('span');
-  bailoutInfo.className = 'info-tooltip-icon';
-  bailoutInfo.innerHTML = '&#9432;';
-  bailoutInfo.title = getArtificialText('bailout.tooltip', 'Spend 10 alien artifacts to receive 100M metal and 100M silica for this world. Bypasses storage cap. Only available on artificial worlds.');
+  const bailoutTooltip = createArtificialInfoIcon(
+    getArtificialText('bailout.tooltip', 'Spend 10 alien artifacts to receive 100M metal and 100M silica for this world. Bypasses storage cap. Only available on artificial worlds.')
+  );
+  const bailoutInfo = bailoutTooltip.icon;
   bailoutHeader.append(bailoutTitle, bailoutInfo);
   bailoutRow.appendChild(bailoutHeader);
 
@@ -1194,6 +1241,7 @@ function ensureArtificialLayout() {
   bailoutRow.appendChild(bailoutBody);
 
   artificialUICache.bailoutBtn = bailoutBtn;
+  artificialUICache.bailoutBtnTooltipContent = attachDynamicInfoTooltip(bailoutBtn, '', false);
   artificialUICache.bailoutStock = bailoutStock;
 
   stashList.appendChild(bailoutRow);
@@ -1228,6 +1276,7 @@ function ensureArtificialLayout() {
   const stopBtn = document.createElement('button');
   stopBtn.className = 'artificial-secondary';
   stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+  artificialUICache.stopBtnTooltipContent = attachDynamicInfoTooltip(stopBtn, '', false);
   artificialUICache.stopBtn = stopBtn;
   actions.appendChild(stopBtn);
   const travelBtn = document.createElement('button');
@@ -1238,6 +1287,7 @@ function ensureArtificialLayout() {
   const storeBtn = document.createElement('button');
   storeBtn.className = 'artificial-secondary';
   storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
+  artificialUICache.storeBtnTooltipContent = attachDynamicInfoTooltip(storeBtn, '', false);
   artificialUICache.storeBtn = storeBtn;
   actions.appendChild(storeBtn);
   progressPanel.appendChild(actions);
@@ -1667,17 +1717,20 @@ function renderProgress(project, prepayState) {
       if (prepaid > 0) {
         artificialUICache.stopBtn.disabled = false;
         artificialUICache.stopBtn.textContent = getArtificialText('actions.discardPrepay', 'Discard Prepay');
-        artificialUICache.stopBtn.title = getArtificialText('actions.discardPrepayTitle', 'Clear staged prepayments for this artificial world.');
+        setTooltipText(
+          artificialUICache.stopBtnTooltipContent,
+          getArtificialText('actions.discardPrepayTitle', 'Clear staged prepayments for this artificial world.')
+        );
       } else {
         artificialUICache.stopBtn.disabled = true;
         artificialUICache.stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
-        artificialUICache.stopBtn.title = '';
+        setTooltipText(artificialUICache.stopBtnTooltipContent, '');
       }
     }
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
-      artificialUICache.storeBtn.title = '';
+      setTooltipText(artificialUICache.storeBtnTooltipContent, '');
     }
     return;
   }
@@ -1689,11 +1742,14 @@ function renderProgress(project, prepayState) {
     label.textContent = getArtificialText('progress.remaining', '{name} — {value} remaining', { name: project.name, value: remaining });
     artificialUICache.stopBtn.disabled = false;
     artificialUICache.stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
-    artificialUICache.stopBtn.title = getArtificialText('actions.cancelActiveBuildTitle', 'Cancel the active build');
+    setTooltipText(
+      artificialUICache.stopBtnTooltipContent,
+      getArtificialText('actions.cancelActiveBuildTitle', 'Cancel the active build')
+    );
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
-      artificialUICache.storeBtn.title = '';
+      setTooltipText(artificialUICache.storeBtnTooltipContent, '');
     }
     return;
   }
@@ -1702,22 +1758,28 @@ function renderProgress(project, prepayState) {
     label.textContent = getArtificialText('progress.complete', '{name} complete. Ready to travel.', { name: project.name });
     artificialUICache.stopBtn.disabled = false;
     artificialUICache.stopBtn.textContent = getArtificialText('actions.discardWorld', 'Discard World');
-    artificialUICache.stopBtn.title = getArtificialText('actions.discardWorldTitle', 'Discard this completed world');
+    setTooltipText(
+      artificialUICache.stopBtnTooltipContent,
+      getArtificialText('actions.discardWorldTitle', 'Discard this completed world')
+    );
     artificialUICache.travelBtn.disabled = false;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = false;
-      artificialUICache.storeBtn.title = getArtificialText('actions.storeWorldTitle', 'Store this completed world for later travel.');
+      setTooltipText(
+        artificialUICache.storeBtnTooltipContent,
+        getArtificialText('actions.storeWorldTitle', 'Store this completed world for later travel.')
+      );
     }
     return;
   }
   label.textContent = getArtificialText('progress.idle', 'Idle');
   artificialUICache.stopBtn.disabled = true;
   artificialUICache.stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
-  artificialUICache.stopBtn.title = '';
+  setTooltipText(artificialUICache.stopBtnTooltipContent, '');
   artificialUICache.travelBtn.disabled = true;
   if (artificialUICache.storeBtn) {
     artificialUICache.storeBtn.disabled = true;
-    artificialUICache.storeBtn.title = '';
+    setTooltipText(artificialUICache.storeBtnTooltipContent, '');
   }
 }
 
@@ -1750,11 +1812,14 @@ function renderStash(project, manager) {
     const maxAmount = active ? getMaxStashAmount(resource, project, manager) : 0;
     const cappedOut = active && remaining === 0;
     if (controls.capInfo) {
-      controls.capInfo.title = capTitle;
+      setTooltipText(controls.capTooltipContent, capTitle);
     }
     if (controls.stock) {
       controls.stock.textContent = active ? fmt(staged, false, 2) : '—';
-      controls.stock.title = active ? getArtificialText('stash.capValue', 'Cap: {value}', { value: capLabel }) : '';
+      setTooltipText(
+        controls.stockTooltipContent,
+        active ? getArtificialText('stash.capValue', 'Cap: {value}', { value: capLabel }) : ''
+      );
       controls.stock.classList.toggle('artificial-stash-unaffordable', active && !cappedOut && !canAfford);
       controls.stock.classList.toggle('artificial-stash-capped', active && cappedOut);
     }
@@ -1764,13 +1829,13 @@ function renderStash(project, manager) {
       controls.addBtn.classList.toggle('artificial-stash-unaffordable', active && !cappedOut && !canAfford);
       controls.addBtn.classList.toggle('artificial-stash-capped', active && cappedOut);
       if (!active) {
-        controls.addBtn.title = getArtificialText('stash.beginConstruction', 'Begin construction to stage resources');
+        setTooltipText(controls.addTooltipContent, getArtificialText('stash.beginConstruction', 'Begin construction to stage resources'));
       } else if (cappedOut) {
-        controls.addBtn.title = getArtificialText('stash.stockpileFull', 'Stockpile full (cap {value})', { value: capLabel });
+        setTooltipText(controls.addTooltipContent, getArtificialText('stash.stockpileFull', 'Stockpile full (cap {value})', { value: capLabel }));
       } else if (!canAfford) {
-        controls.addBtn.title = getArtificialText('stash.insufficientResources', 'Insufficient resources');
+        setTooltipText(controls.addTooltipContent, getArtificialText('stash.insufficientResources', 'Insufficient resources'));
       } else {
-        controls.addBtn.title = getArtificialText('stash.addToLaunch', 'Add to launch stash');
+        setTooltipText(controls.addTooltipContent, getArtificialText('stash.addToLaunch', 'Add to launch stash'));
       }
     }
     if (controls.divBtn) controls.divBtn.disabled = !active;
@@ -1781,13 +1846,13 @@ function renderStash(project, manager) {
       controls.maxBtn.disabled = disabled;
       controls.maxBtn.classList.toggle('artificial-stash-unaffordable', disabled);
       if (!active) {
-        controls.maxBtn.title = getArtificialText('stash.beginConstruction', 'Begin construction to stage resources');
+        setTooltipText(controls.maxTooltipContent, getArtificialText('stash.beginConstruction', 'Begin construction to stage resources'));
       } else if (maxAmount <= 0 && cappedOut) {
-        controls.maxBtn.title = getArtificialText('stash.stockpileFull', 'Stockpile full (cap {value})', { value: capLabel });
+        setTooltipText(controls.maxTooltipContent, getArtificialText('stash.stockpileFull', 'Stockpile full (cap {value})', { value: capLabel }));
       } else if (maxAmount <= 0) {
-        controls.maxBtn.title = getArtificialText('stash.insufficientResources', 'Insufficient resources');
+        setTooltipText(controls.maxTooltipContent, getArtificialText('stash.insufficientResources', 'Insufficient resources'));
       } else {
-        controls.maxBtn.title = getArtificialText('stash.fillStash', 'Fill stash (+{value})', { value: fmt(maxAmount, false, 0) });
+        setTooltipText(controls.maxTooltipContent, getArtificialText('stash.fillStash', 'Fill stash (+{value})', { value: fmt(maxAmount, false, 0) }));
       }
     }
   });
@@ -1806,12 +1871,12 @@ function renderBailout(project, manager) {
   const allowed = onArtificial && canAfford;
   btn.disabled = !allowed;
   btn.classList.toggle('artificial-stash-unaffordable', !allowed);
-  btn.title = '';
+  setTooltipText(artificialUICache.bailoutBtnTooltipContent, '');
   if (!allowed) {
     if (!onArtificial) {
-      btn.title = getArtificialText('bailout.availableOnlyOnArtificial', 'Available only on an artificial world.');
+      setTooltipText(artificialUICache.bailoutBtnTooltipContent, getArtificialText('bailout.availableOnlyOnArtificial', 'Available only on an artificial world.'));
     } else if (!canAfford) {
-      btn.title = getArtificialText('bailout.needArtifacts', 'Need 10 alien artifacts.');
+      setTooltipText(artificialUICache.bailoutBtnTooltipContent, getArtificialText('bailout.needArtifacts', 'Need 10 alien artifacts.'));
     }
   }
 }
@@ -1916,7 +1981,10 @@ function renderCosts(project, selection, manager) {
     artificialUICache.durationValue.textContent = formatDuration(seconds);
   }
   if (artificialUICache.durationTooltip) {
-    artificialUICache.durationTooltip.title = getArtificialText('costs.durationTooltip', 'Construction time is divided by terraformed worlds (currently {value}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.', { value: fmt(durationContext.worldCount, false, 2) });
+    setTooltipText(
+      artificialUICache.durationTooltipContent,
+      getArtificialText('costs.durationTooltip', 'Construction time is divided by terraformed worlds (currently {value}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.', { value: fmt(durationContext.worldCount, false, 2) })
+    );
   }
   const exceedsLimit = manager.exceedsDurationLimit(durationContext.durationMs);
   return { type, cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount, exceedsLimit, prepayState };
@@ -1946,7 +2014,10 @@ function renderGains(project, selection, manager) {
       ? getArtificialText('gains.oneTerraformedWorld', '1 terraformed world')
       : getArtificialText('gains.terraformedWorldsCount', '{value} terraformed worlds', { value: effectiveValueLabel });
     artificialUICache.gainEffective.textContent = label;
-    artificialUICache.gainEffective.title = getArtificialText('gains.landContribution', 'Land contributes {value} (1 per 50B ha, minimum 1).', { value: effectiveValueLabel });
+    setTooltipText(
+      artificialUICache.gainEffectiveTooltip,
+      getArtificialText('gains.landContribution', 'Land contributes {value} (1 per 50B ha, minimum 1).', { value: effectiveValueLabel })
+    );
   }
   if (artificialUICache.gainDefense) {
     const label = defense === 1 ? getArtificialText('gains.oneWorld', '1 world') : getArtificialText('gains.worldsCount', '{value} worlds', { value: defenseValueLabel });
@@ -1962,9 +2033,12 @@ function renderGains(project, selection, manager) {
       : getArtificialText('gains.worldsForFleetCapacityMax', 'Worlds for fleet capacity (max {value}):', { value: fleetCap });
   }
   if (artificialUICache.gainFleetTooltip) {
-    artificialUICache.gainFleetTooltip.title = fleetCapUncapped
-      ? getArtificialText('gains.fleetCapacityTooltipUncapped', 'Artificial worlds now contribute their full terraformed value to fleet capacity. This change applies retroactively.')
-      : getArtificialText('gains.fleetCapacityTooltipMax', 'Artificial worlds cannot use their full power for direct military purposes. If they did, they would become critical military targets for alien superweapons, which they cannot dodge. Fleet capacity contribution per artificial world is capped at {value}. This cap increase applies retroactively.', { value: fleetCap });
+    setTooltipText(
+      artificialUICache.gainFleetTooltipContent,
+      fleetCapUncapped
+        ? getArtificialText('gains.fleetCapacityTooltipUncapped', 'Artificial worlds now contribute their full terraformed value to fleet capacity. This change applies retroactively.')
+        : getArtificialText('gains.fleetCapacityTooltipMax', 'Artificial worlds cannot use their full power for direct military purposes. If they did, they would become critical military targets for alien superweapons, which they cannot dodge. Fleet capacity contribution per artificial world is capped at {value}. This cap increase applies retroactively.', { value: fleetCap })
+    );
   }
 }
 
@@ -1990,7 +2064,7 @@ function renderStartButton(project, manager, preview) {
   if (project) {
     btn.disabled = true;
     btn.textContent = getArtificialText('actions.constructionLocked', 'Construction locked');
-    btn.title = '';
+    setTooltipText(artificialUICache.startBtnTooltipContent, '');
     return;
   }
   const prepayState = preview.prepayState;
@@ -2002,20 +2076,23 @@ function renderStartButton(project, manager, preview) {
   btn.disabled = durationBlocked || !supported || (!canStart && !canPrepay);
   if (durationBlocked) {
     btn.textContent = getArtificialText('actions.exceedsLimit', 'Exceeds 5-hour limit');
-    btn.title = getArtificialText('actions.exceedsLimitTitle', 'Reduce size or gain more terraformed worlds to shorten construction below 5 hours.');
+    setTooltipText(
+      artificialUICache.startBtnTooltipContent,
+      getArtificialText('actions.exceedsLimitTitle', 'Reduce size or gain more terraformed worlds to shorten construction below 5 hours.')
+    );
   } else {
     if (!supported) {
       btn.textContent = getArtificialText('actions.comingSoon', 'Coming soon');
-      btn.title = '';
+      setTooltipText(artificialUICache.startBtnTooltipContent, '');
     } else if (canStart) {
       btn.textContent = getArtificialText('actions.startConstruction', 'Start Construction');
-      btn.title = '';
+      setTooltipText(artificialUICache.startBtnTooltipContent, '');
     } else if (canPrepay) {
       btn.textContent = getArtificialText('actions.prepay', 'Prepay');
-      btn.title = '';
+      setTooltipText(artificialUICache.startBtnTooltipContent, '');
     } else {
       btn.textContent = getArtificialText('actions.insufficient', 'Insufficient');
-      btn.title = '';
+      setTooltipText(artificialUICache.startBtnTooltipContent, '');
     }
   }
 }
