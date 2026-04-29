@@ -31,7 +31,7 @@ function buildScriptAutomationUI() {
     getAutomationCardText(
       'scriptAutomationTooltip',
       {},
-      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF lines test their condition. When true, they run Actions; when false, they run Else Actions. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
+      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF only chains from the immediately previous IF or ELSE IF; otherwise it behaves like IF. ELSE only chains from the immediately previous IF or ELSE IF; otherwise it behaves like ACTIONS. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
     )
   );
 
@@ -461,12 +461,10 @@ function renderScriptLines(automation, script, container) {
       const editor = document.createElement('div');
       editor.classList.add('script-line-editor');
       renderLineBasics(automation, script, line, editor);
-      if (line.kind !== 'actions') renderConditionEditor(automation, line, editor);
-      renderActionsEditor(automation, script, line, editor, line.actions, getAutomationCardText('scriptActions', {}, 'Actions'));
-      if (line.kind === 'if') {
-        if (!Array.isArray(line.elseActions)) line.elseActions = [];
-        renderActionsEditor(automation, script, line, editor, line.elseActions, getAutomationCardText('scriptElseActions', {}, 'Else Actions'));
+      if (line.kind === 'if' || line.kind === 'elseIf' || line.kind === 'wait') {
+        renderConditionEditor(automation, line, editor);
       }
+      renderActionsEditor(automation, script, line, editor, line.actions, getScriptActionsSectionTitle(line.kind));
       card.appendChild(editor);
     }
 
@@ -479,12 +477,13 @@ function buildScriptLineSummary(automation, script, line, index) {
   if (line.description) {
     return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${nameText}${line.description}`;
   }
-  const conditionText = line.kind === 'actions' ? 'Always' : automation.describeCondition(line.condition);
+  const effectiveKind = getEffectiveScriptLineKind(script, line);
+  const conditionText = (effectiveKind === 'actions' || effectiveKind === 'else')
+    ? getAutomationCardText('scriptAlways', {}, 'Always')
+    : automation.describeCondition(line.condition);
   const actionText = describeScriptLineActions(automation, script, line);
-  const elseText = line.kind === 'if' ? describeScriptActions(automation, script, line.elseActions) : '';
   const actionSuffix = actionText ? ` → ${actionText}` : ' → No actions';
-  const elseSuffix = elseText ? ` ELSE → ${elseText}` : '';
-  return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${nameText}${conditionText}${actionSuffix}${elseSuffix}`;
+  return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${nameText}${conditionText}${actionSuffix}`;
 }
 
 function describeScriptLineActions(automation, script, line) {
@@ -504,8 +503,11 @@ function describeScriptActions(automation, script, actions) {
 }
 
 function getScriptLineKindLabel(kind) {
-  if (kind === 'actions') return 'ACTIONS';
-  return String(kind || 'if').toUpperCase();
+  if (kind === 'elseIf') return getAutomationCardText('scriptLineTypeElseIf', {}, 'ELSE IF');
+  if (kind === 'else') return getAutomationCardText('scriptLineTypeElse', {}, 'ELSE');
+  if (kind === 'wait') return getAutomationCardText('scriptLineTypeWait', {}, 'WAIT');
+  if (kind === 'actions') return getAutomationCardText('scriptLineTypeActions', {}, 'ACTIONS');
+  return getAutomationCardText('scriptLineTypeIf', {}, 'IF');
 }
 
 function getScriptRefCurrentText(automation, ref) {
@@ -532,19 +534,42 @@ function createScriptAction() {
 
 function createLineKindSelect(selectedKind) {
   return createSelect([
-    { id: 'if', label: 'IF' },
-    { id: 'wait', label: 'WAIT' },
-    { id: 'actions', label: 'ACTIONS' }
+    { id: 'if', label: getAutomationCardText('scriptLineTypeIf', {}, 'IF') },
+    { id: 'elseIf', label: getAutomationCardText('scriptLineTypeElseIf', {}, 'ELSE IF') },
+    { id: 'else', label: getAutomationCardText('scriptLineTypeElse', {}, 'ELSE') },
+    { id: 'wait', label: getAutomationCardText('scriptLineTypeWait', {}, 'WAIT') },
+    { id: 'actions', label: getAutomationCardText('scriptLineTypeActions', {}, 'ACTIONS') }
   ], selectedKind || 'if');
 }
 
 function ensureLineKindState(automation, line) {
-  if (!['if', 'wait', 'actions'].includes(line.kind)) line.kind = 'if';
+  if (!['if', 'elseIf', 'else', 'wait', 'actions'].includes(line.kind)) line.kind = 'if';
   if (line.enabled !== false) line.enabled = true;
   if (!line.description) line.description = '';
   if (!line.condition) line.condition = automation.createDefaultCondition();
   if (!Array.isArray(line.actions)) line.actions = [];
-  if (!Array.isArray(line.elseActions)) line.elseActions = [];
+}
+
+function getScriptActionsSectionTitle(kind) {
+  if (kind === 'else') return getAutomationCardText('scriptElseActions', {}, 'Else Actions');
+  return getAutomationCardText('scriptActions', {}, 'Actions');
+}
+
+function getEffectiveScriptLineKind(script, line) {
+  if (line.kind === 'elseIf') {
+    return hasScriptConditionalPredecessor(script, line) ? 'elseIf' : 'if';
+  }
+  if (line.kind === 'else') {
+    return hasScriptConditionalPredecessor(script, line) ? 'else' : 'actions';
+  }
+  return line.kind;
+}
+
+function hasScriptConditionalPredecessor(script, line) {
+  const index = script.lines.findIndex(item => item.id === line.id);
+  if (index <= 0) return false;
+  const previousLine = script.lines[index - 1];
+  return previousLine && (previousLine.kind === 'if' || previousLine.kind === 'elseIf');
 }
 
 function createLineTargetOptions(script) {
