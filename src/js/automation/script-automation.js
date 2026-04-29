@@ -304,10 +304,14 @@ class ScriptAutomation {
     const index = script.lines.findIndex(item => item.id === line.id);
     const lineIndex = index >= 0 ? index : script.lines.length;
     let startIndex = 0;
+    let endIndex = lineIndex;
     for (let i = lineIndex - 1; i >= 0; i -= 1) {
       const priorLine = script.lines[i];
       if (priorLine.kind === 'else') {
-        startIndex = i + 1;
+        const linkedIfIndex = priorLine.linkedIfLineId
+          ? script.lines.findIndex(item => item.id === Number(priorLine.linkedIfLineId))
+          : -1;
+        endIndex = linkedIfIndex > 0 ? linkedIfIndex : 0;
         break;
       }
       if (priorLine.kind === 'elseIf') {
@@ -322,7 +326,7 @@ class ScriptAutomation {
       }
     });
     const options = [];
-    for (let i = startIndex; i < lineIndex; i += 1) {
+    for (let i = startIndex; i < endIndex; i += 1) {
       const candidate = script.lines[i];
       if (!['if', 'elseIf'].includes(candidate.kind)) continue;
       if (linkedIds[candidate.id]) continue;
