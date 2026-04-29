@@ -3,7 +3,7 @@ const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
 const ARTIFICIAL_TYPES = [
     { value: 'shell', label: 'Shellworld', disabled: false },
     { value: 'ring', label: 'Ringworld', disabled: true, disabledSource: 'World 10' },
-    { value: 'disk', label: 'Artificial disk (coming not so soon)', disabled: true }
+    { value: 'disk', label: 'Artificial disk (Coming Soon)', disabled: true }
 ];
 const ARTIFICIAL_CORES = [
     { value: 'super-earth', label: 'Super Earth', disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
@@ -14,7 +14,7 @@ const ARTIFICIAL_CORES = [
     { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
     { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
     { value: 'stellar-bh', label: 'Stellar Black Hole', disabled: true, disabledSource : "World 14", minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
-    { value: 'smbh', label: 'Supermassive Black Hole', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 1200000, maxRadiusEarth: 1200000, allowStar: false}
+    { value: 'smbh', label: 'Supermassive Black Hole (Coming Soon)', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 1200000, maxRadiusEarth: 1200000, allowStar: false}
 ];
 const ARTIFICIAL_STAR_CONTEXTS = [
     { value: 'with-star', label: 'Star in system', hasStar: true, disabled: false },
