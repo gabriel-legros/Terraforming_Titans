@@ -125,33 +125,37 @@ class AutomationManager extends EffectableEntity {
     const visible = Array.isArray(visibleCardKeys)
       ? visibleCardKeys.filter(key => order.includes(key))
       : [];
-    let swapKey = null;
+    let targetKey = null;
 
     if (visible.length > 0) {
       const visibleIndex = visible.indexOf(cardKey);
       const nextVisibleIndex = visibleIndex + direction;
       if (visibleIndex >= 0 && nextVisibleIndex >= 0 && nextVisibleIndex < visible.length) {
-        swapKey = visible[nextVisibleIndex];
+        targetKey = visible[nextVisibleIndex];
       }
     }
 
-    if (!swapKey) {
+    if (!targetKey) {
       const index = order.indexOf(cardKey);
       const nextIndex = index + direction;
       if (index < 0 || nextIndex < 0 || nextIndex >= order.length) {
         return false;
       }
-      swapKey = order[nextIndex];
+      targetKey = order[nextIndex];
     }
 
     const index = order.indexOf(cardKey);
-    const swapIndex = order.indexOf(swapKey);
-    if (index < 0 || swapIndex < 0 || index === swapIndex) {
+    if (index < 0 || targetKey === cardKey) {
       return false;
     }
 
-    order[index] = swapKey;
-    order[swapIndex] = cardKey;
+    const movedCard = order.splice(index, 1)[0];
+    const targetIndex = order.indexOf(targetKey);
+    if (targetIndex < 0) {
+      return false;
+    }
+    const insertIndex = direction < 0 ? targetIndex : targetIndex + 1;
+    order.splice(insertIndex, 0, movedCard);
     this.automationCardOrder = order;
     return true;
   }
