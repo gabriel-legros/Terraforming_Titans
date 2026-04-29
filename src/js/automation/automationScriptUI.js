@@ -32,7 +32,7 @@ function buildScriptAutomationUI() {
     getAutomationCardText(
       'scriptAutomationTooltip',
       {},
-      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF only chains from the immediately previous IF or ELSE IF; otherwise it behaves like IF. ELSE only chains from the immediately previous IF or ELSE IF; otherwise it behaves like ACTIONS. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
+      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
     )
   );
 
@@ -462,7 +462,8 @@ function renderScriptLines(automation, script, container) {
       const editor = document.createElement('div');
       editor.classList.add('script-line-editor');
       renderLineBasics(automation, script, line, editor);
-      if (line.kind === 'if' || line.kind === 'elseIf' || line.kind === 'wait') {
+      const effectiveKind = getEffectiveScriptLineKind(automation, script, line);
+      if (line.kind === 'if' || effectiveKind === 'elseIf' || line.kind === 'wait') {
         renderConditionEditor(automation, line, editor);
       }
       renderActionsEditor(automation, script, line, editor, line.actions, getScriptActionsSectionTitle(line.kind));
@@ -478,13 +479,14 @@ function buildScriptLineSummary(automation, script, line, index) {
   if (line.description) {
     return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${nameText}${line.description}`;
   }
-  const effectiveKind = getEffectiveScriptLineKind(script, line);
+  const effectiveKind = getEffectiveScriptLineKind(automation, script, line);
   const conditionText = (effectiveKind === 'actions' || effectiveKind === 'else')
     ? getAutomationCardText('scriptAlways', {}, 'Always')
     : automation.describeCondition(line.condition);
+  const linkedText = getScriptLinkedIfSummary(automation, script, line);
   const actionText = describeScriptLineActions(automation, script, line);
   const actionSuffix = actionText ? ` → ${actionText}` : ' → No actions';
-  return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${nameText}${conditionText}${actionSuffix}`;
+  return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${linkedText}${nameText}${conditionText}${actionSuffix}`;
 }
 
 function describeScriptLineActions(automation, script, line) {
@@ -545,6 +547,7 @@ function createLineKindSelect(selectedKind) {
 
 function ensureLineKindState(automation, line) {
   if (!['if', 'elseIf', 'else', 'wait', 'actions'].includes(line.kind)) line.kind = 'if';
+  if (!['elseIf', 'else'].includes(line.kind)) line.linkedIfLineId = null;
   if (line.enabled !== false) line.enabled = true;
   if (!line.description) line.description = '';
   if (!line.condition) line.condition = automation.createDefaultCondition();
@@ -556,21 +559,21 @@ function getScriptActionsSectionTitle(kind) {
   return getAutomationCardText('scriptActions', {}, 'Actions');
 }
 
-function getEffectiveScriptLineKind(script, line) {
+function getEffectiveScriptLineKind(automation, script, line) {
   if (line.kind === 'elseIf') {
-    return hasScriptConditionalPredecessor(script, line) ? 'elseIf' : 'if';
+    return automation.getLinkedIfLine(script, line) ? 'elseIf' : 'actions';
   }
   if (line.kind === 'else') {
-    return hasScriptConditionalPredecessor(script, line) ? 'else' : 'actions';
+    return automation.getLinkedIfLine(script, line) ? 'else' : 'actions';
   }
   return line.kind;
 }
 
-function hasScriptConditionalPredecessor(script, line) {
-  const index = script.lines.findIndex(item => item.id === line.id);
-  if (index <= 0) return false;
-  const previousLine = script.lines[index - 1];
-  return previousLine && (previousLine.kind === 'if' || previousLine.kind === 'elseIf');
+function getScriptLinkedIfSummary(automation, script, line) {
+  if (!['elseIf', 'else'].includes(line.kind)) return '';
+  const linkedIf = automation.getLinkedIfLine(script, line);
+  if (!linkedIf) return `(${getAutomationCardText('scriptLinkedToNone', {}, 'unlinked')}) `;
+  return `(${getAutomationCardText('scriptLinkedTo', {}, 'Linked to')} ${automation.getLineLabel(script, linkedIf)}) `;
 }
 
 function createLineTargetOptions(script) {
@@ -594,6 +597,7 @@ function renderLineBasics(automation, script, line, container) {
   const kind = createLineKindSelect(line.kind);
   kind.addEventListener('change', event => {
     line.kind = event.target.value;
+    automation.assignDefaultLinkedIf(script, line);
     forceScriptAutomationRefresh = true;
     queueAutomationUIRefresh();
   });
@@ -617,11 +621,32 @@ function renderLineBasics(automation, script, line, container) {
   });
 
   row.append(
-    labeledNode(getAutomationCardText('scriptLineKind', {}, 'Line Type'), kind),
+    labeledNode(getAutomationCardText('scriptLineKind', {}, 'Line Type'), kind)
+  );
+  if (line.kind === 'elseIf' || line.kind === 'else') {
+    row.appendChild(labeledNode(getAutomationCardText('scriptLinkedTo', {}, 'Linked to'), createLinkedIfSelect(automation, script, line)));
+  }
+  row.append(
     labeledNode(getAutomationCardText('scriptLineName', {}, 'Name'), name),
     labeledNode(getAutomationCardText('scriptLineDescription', {}, 'Description'), description)
   );
   container.appendChild(row);
+}
+
+function createLinkedIfSelect(automation, script, line) {
+  const options = [{ id: '', label: getAutomationCardText('scriptLinkedToNone', {}, 'None') }];
+  automation.getValidLinkedIfOptions(script, line).forEach((targetLine) => {
+    options.push({ id: targetLine.id, label: automation.getLineLabel(script, targetLine) });
+  });
+  const linkedIf = automation.getLinkedIfLine(script, line);
+  const select = createSelect(options, linkedIf ? linkedIf.id : '');
+  line.linkedIfLineId = linkedIf ? linkedIf.id : null;
+  select.addEventListener('change', event => {
+    line.linkedIfLineId = event.target.value ? Number(event.target.value) : null;
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+  return select;
 }
 
 function renderConditionEditor(automation, line, container) {

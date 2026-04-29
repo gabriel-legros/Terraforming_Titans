@@ -64,6 +64,7 @@ class ScriptAutomation {
       name: '',
       description: '',
       kind,
+      linkedIfLineId: null,
       enabled: true,
       expanded: true,
       condition: this.createDefaultCondition(),
@@ -146,8 +147,14 @@ class ScriptAutomation {
     const script = this.deepClone(source);
     script.id = this.nextScriptId++;
     script.name = `${source.name || 'Script'} Copy`;
+    const lineIdMap = {};
     script.lines.forEach(line => {
+      const oldId = line.id;
       line.id = this.nextLineId++;
+      lineIdMap[oldId] = line.id;
+    });
+    script.lines.forEach(line => {
+      line.linkedIfLineId = line.linkedIfLineId ? lineIdMap[line.linkedIfLineId] || null : null;
     });
     this.scripts.push(script);
     this.selectedScriptId = script.id;
@@ -239,6 +246,7 @@ class ScriptAutomation {
     const script = this.scripts.find(item => item.id === Number(scriptId));
     if (!script) return null;
     const line = this.createLine(kind);
+    this.assignDefaultLinkedIf(script, line);
     script.lines.push(line);
     if (!this.pcLineId) this.pcLineId = line.id;
     return line.id;
@@ -248,6 +256,9 @@ class ScriptAutomation {
     const script = this.scripts.find(item => item.id === Number(scriptId));
     if (!script || script.lines.length <= 1) return false;
     script.lines = script.lines.filter(line => line.id !== Number(lineId));
+    script.lines.forEach(line => {
+      if (line.linkedIfLineId === Number(lineId)) line.linkedIfLineId = null;
+    });
     if (this.pcLineId === Number(lineId)) this.pcLineId = script.lines[0]?.id || null;
     return true;
   }
@@ -278,6 +289,60 @@ class ScriptAutomation {
     if (!line) return false;
     Object.assign(line, patch);
     return true;
+  }
+
+  assignDefaultLinkedIf(script, line) {
+    if (!['elseIf', 'else'].includes(line.kind)) {
+      line.linkedIfLineId = null;
+      return;
+    }
+    const options = this.getValidLinkedIfOptions(script, line);
+    line.linkedIfLineId = options.length ? options[options.length - 1].id : null;
+  }
+
+  getValidLinkedIfOptions(script, line) {
+    const index = script.lines.findIndex(item => item.id === line.id);
+    const lineIndex = index >= 0 ? index : script.lines.length;
+    let startIndex = 0;
+    for (let i = lineIndex - 1; i >= 0; i -= 1) {
+      const priorLine = script.lines[i];
+      if (priorLine.kind === 'else') {
+        startIndex = i + 1;
+        break;
+      }
+      if (priorLine.kind === 'elseIf') {
+        startIndex = i;
+        break;
+      }
+    }
+    const linkedIds = {};
+    script.lines.forEach(item => {
+      if (item.id !== line.id && ['elseIf', 'else'].includes(item.kind) && item.linkedIfLineId) {
+        linkedIds[Number(item.linkedIfLineId)] = true;
+      }
+    });
+    const options = [];
+    for (let i = startIndex; i < lineIndex; i += 1) {
+      const candidate = script.lines[i];
+      if (!['if', 'elseIf'].includes(candidate.kind)) continue;
+      if (linkedIds[candidate.id]) continue;
+      options.push(candidate);
+    }
+    return options;
+  }
+
+  getLinkedElseLine(script, line) {
+    return script.lines.find(item => ['elseIf', 'else'].includes(item.kind) && Number(item.linkedIfLineId) === line.id) || null;
+  }
+
+  getLinkedIfLine(script, line) {
+    if (!['elseIf', 'else'].includes(line.kind) || !line.linkedIfLineId) return null;
+    const linkedIf = script.lines.find(item => item.id === Number(line.linkedIfLineId)) || null;
+    if (!linkedIf || !['if', 'elseIf'].includes(linkedIf.kind)) return null;
+    if (this.getLineIndex(script, linkedIf.id) >= this.getLineIndex(script, line.id)) return null;
+    if (!this.getValidLinkedIfOptions(script, line).find(item => item.id === linkedIf.id)) return null;
+    if (this.getLinkedElseLine(script, linkedIf)?.id !== line.id) return null;
+    return linkedIf;
   }
 
   getLine(scriptId, lineId) {
@@ -376,6 +441,13 @@ class ScriptAutomation {
           }
         }
 
+        if (branchResult.gotoLineId) {
+          this.pcLineId = branchResult.gotoLineId;
+          this.haltedReason = 'linkedElse';
+          this.lastStatus = `Linked ELSE from ${this.getLineLabel(script, line)}`;
+          continue;
+        }
+
         this.advanceLine(script, line);
         this.haltedReason = 'advanced';
         this.lastStatus = `Advanced past ${this.getLineLabel(script, line)}`;
@@ -420,65 +492,64 @@ class ScriptAutomation {
   evaluateConditionalLine(script, line) {
     if (line.kind === 'if') {
       const conditionResult = this.evaluateCondition(line.condition);
+      const linkedElse = conditionResult ? null : this.getLinkedElseLine(script, line);
       return {
         conditionResult,
         executeActions: conditionResult,
-        stopAfterLine: false
+        stopAfterLine: false,
+        gotoLineId: linkedElse ? linkedElse.id : null
       };
     }
 
     if (line.kind === 'elseIf') {
-      const conditionResult = this.evaluateCondition(line.condition);
-      if (!this.hasConditionalPredecessor(script, line)) {
+      const linkedIf = this.getLinkedIfLine(script, line);
+      if (!linkedIf) {
         return {
-          conditionResult,
-          executeActions: conditionResult,
-          stopAfterLine: false
+          conditionResult: true,
+          executeActions: true,
+          stopAfterLine: true,
+          gotoLineId: null
         };
       }
-      if (this.hasEarlierConditionalMatch(script, line)) {
-        return {
-          conditionResult: false,
-          executeActions: false,
-          stopAfterLine: false
-        };
-      }
+      const eligible = this.isLinkedElseEligible(script, linkedIf);
+      const ownConditionResult = eligible && this.evaluateCondition(line.condition);
+      const linkedElse = this.isLinkedElseEligible(script, line) ? this.getLinkedElseLine(script, line) : null;
       return {
-        conditionResult,
-        executeActions: conditionResult,
-        stopAfterLine: false
+        conditionResult: ownConditionResult,
+        executeActions: ownConditionResult,
+        stopAfterLine: false,
+        gotoLineId: linkedElse ? linkedElse.id : null
       };
     }
 
-    if (!this.hasConditionalPredecessor(script, line)) {
+    const linkedIf = this.getLinkedIfLine(script, line);
+    if (!linkedIf) {
       return {
         conditionResult: true,
         executeActions: true,
-        stopAfterLine: true
+        stopAfterLine: true,
+        gotoLineId: null
       };
     }
 
-    const conditionResult = !this.hasEarlierConditionalMatch(script, line);
+    const conditionResult = this.isLinkedElseEligible(script, linkedIf);
     return {
       conditionResult,
       executeActions: conditionResult,
-      stopAfterLine: false
+      stopAfterLine: false,
+      gotoLineId: null
     };
   }
 
-  hasConditionalPredecessor(script, line) {
-    const previousLine = this.getPreviousLine(script, line);
-    return previousLine && ['if', 'elseIf'].includes(previousLine.kind);
-  }
-
-  hasEarlierConditionalMatch(script, line) {
-    const index = this.getLineIndex(script, line.id);
-    if (index <= 0) return false;
-    for (let previousIndex = index - 1; previousIndex >= 0; previousIndex -= 1) {
-      const previousLine = script.lines[previousIndex];
-      if (!['if', 'elseIf'].includes(previousLine.kind)) break;
-      if (previousLine.enabled === false) continue;
-      if (this.evaluateCondition(previousLine.condition)) return true;
+  isLinkedElseEligible(script, line) {
+    if (line.kind === 'if') {
+      if (line.enabled === false) return true;
+      return !this.evaluateCondition(line.condition);
+    }
+    if (line.kind === 'elseIf') {
+      const linkedIf = this.getLinkedIfLine(script, line);
+      if (line.enabled === false) return !!linkedIf && this.isLinkedElseEligible(script, linkedIf);
+      return !!linkedIf && this.isLinkedElseEligible(script, linkedIf) && !this.evaluateCondition(line.condition);
     }
     return false;
   }
@@ -697,13 +768,17 @@ class ScriptAutomation {
   }
 
   normalizeScripts(scripts) {
-    return scripts.map(script => ({
-      id: Number(script.id) || this.nextScriptId++,
-      name: script.name || 'Script',
-      lines: Array.isArray(script.lines) && script.lines.length
-        ? script.lines.map(line => this.normalizeLine(line))
-        : [this.createLine('if')]
-    }));
+    return scripts.map(script => {
+      const normalizedScript = {
+        id: Number(script.id) || this.nextScriptId++,
+        name: script.name || 'Script',
+        lines: Array.isArray(script.lines) && script.lines.length
+          ? script.lines.map(line => this.normalizeLine(line))
+          : [this.createLine('if')]
+      };
+      this.normalizeLinkedElseLines(normalizedScript);
+      return normalizedScript;
+    });
   }
 
   normalizeLine(line) {
@@ -712,11 +787,31 @@ class ScriptAutomation {
       name: line.name || '',
       description: line.description || '',
       kind: ['if', 'elseIf', 'else', 'wait', 'actions'].includes(line.kind) ? line.kind : 'if',
+      linkedIfLineId: line.linkedIfLineId ? Number(line.linkedIfLineId) : null,
       enabled: line.enabled !== false,
       expanded: line.expanded !== false,
       condition: line.condition?.constructor === Object ? line.condition : this.createDefaultCondition(),
       actions: Array.isArray(line.actions) ? line.actions : []
     };
+  }
+
+  normalizeLinkedElseLines(script) {
+    script.lines.forEach(line => {
+      if (!['elseIf', 'else'].includes(line.kind)) {
+        line.linkedIfLineId = null;
+        return;
+      }
+      if (!line.linkedIfLineId && this.hasAdjacentConditionalPredecessor(script, line)) {
+        line.linkedIfLineId = this.getPreviousLine(script, line).id;
+      }
+      const linkedIf = this.getLinkedIfLine(script, line);
+      if (!linkedIf) line.linkedIfLineId = null;
+    });
+  }
+
+  hasAdjacentConditionalPredecessor(script, line) {
+    const previousLine = this.getPreviousLine(script, line);
+    return previousLine && ['if', 'elseIf'].includes(previousLine.kind) && !this.getLinkedElseLine(script, previousLine);
   }
 
   getNextScriptIdFromScripts() {
