@@ -367,7 +367,12 @@ class PopulationModule extends EffectableEntity {
       if (!biomass || biomass.value <= 0) {
         return 0;
       }
-      return Math.floor(biomass.value * points * bioworkersPerBiomassPerPoint);
+      const requirements = getActiveLifeDesignRequirements();
+      const maxBiomassDensity = (requirements.baseMaxBiomassDensityTPerM2 || 0) * (1 + design.spaceEfficiency.value);
+      const landArea = resolveWorldGeometricLand(terraforming, resources.surface.land);
+      const maxBiomass = landArea > 0 ? landArea * maxBiomassDensity : 0;
+      const cappedBiomass = Math.min(biomass.value, maxBiomass);
+      return Math.floor(cappedBiomass * points * bioworkersPerBiomassPerPoint);
     } catch (error) {
       return 0;
     }
