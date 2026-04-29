@@ -303,36 +303,20 @@ class ScriptAutomation {
   getValidLinkedIfOptions(script, line) {
     const index = script.lines.findIndex(item => item.id === line.id);
     const lineIndex = index >= 0 ? index : script.lines.length;
-    let startIndex = 0;
-    let endIndex = lineIndex;
-    for (let i = lineIndex - 1; i >= 0; i -= 1) {
-      const priorLine = script.lines[i];
-      if (priorLine.kind === 'else') {
-        const linkedIfIndex = priorLine.linkedIfLineId
-          ? script.lines.findIndex(item => item.id === Number(priorLine.linkedIfLineId))
-          : -1;
-        endIndex = linkedIfIndex > 0 ? linkedIfIndex : 0;
-        break;
-      }
-      if (priorLine.kind === 'elseIf') {
-        startIndex = i;
-        break;
+    const openBranches = [];
+    for (let i = 0; i < lineIndex; i += 1) {
+      const current = script.lines[i];
+      if (current.kind === 'if') {
+        openBranches.push(current);
+      } else if (current.kind === 'elseIf' || current.kind === 'else') {
+        const linkedIndex = openBranches.findIndex(item => item.id === Number(current.linkedIfLineId));
+        if (linkedIndex >= 0) {
+          openBranches.splice(linkedIndex);
+          if (current.kind === 'elseIf') openBranches.push(current);
+        }
       }
     }
-    const linkedIds = {};
-    script.lines.forEach(item => {
-      if (item.id !== line.id && ['elseIf', 'else'].includes(item.kind) && item.linkedIfLineId) {
-        linkedIds[Number(item.linkedIfLineId)] = true;
-      }
-    });
-    const options = [];
-    for (let i = startIndex; i < endIndex; i += 1) {
-      const candidate = script.lines[i];
-      if (!['if', 'elseIf'].includes(candidate.kind)) continue;
-      if (linkedIds[candidate.id]) continue;
-      options.push(candidate);
-    }
-    return options;
+    return openBranches;
   }
 
   getLinkedElseLine(script, line) {
