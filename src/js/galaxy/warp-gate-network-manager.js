@@ -264,8 +264,13 @@ class WarpGateNetworkManager extends EffectableEntity {
     const foundryLine = foundry.bonus > 0
       ? ` Foundry worlds add +${formatNumber(foundry.bonus, true)} to the Metal cap.`
       : '';
-    const flatBonusLine = (IMPORT_CAP_FLAT_BONUSES.metal > 0 || IMPORT_CAP_FLAT_BONUSES.silicon > 0)
-      ? ` Planet Crackers add +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal and +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates cap.`
+    const flatBonusLine = (
+      IMPORT_CAP_FLAT_BONUSES.metal > 0
+      || IMPORT_CAP_FLAT_BONUSES.silicon > 0
+      || IMPORT_CAP_FLAT_BONUSES.carbon > 0
+      || IMPORT_CAP_FLAT_BONUSES.water > 0
+    )
+      ? ` Planet Crackers add +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.carbon || 0, true)} CO2, and +${formatNumber(IMPORT_CAP_FLAT_BONUSES.water || 0, true)} Water cap.`
       : '';
     if (!this.warpGateUnlocked) {
       return `Due to limited deposits, import caps are ${formatImportCapList(IMPORT_CAP_BASE)} ships.${foundryLine}${flatBonusLine}`;
@@ -289,8 +294,13 @@ class WarpGateNetworkManager extends EffectableEntity {
     const foundryRule = foundry.bonus > 0
       ? `Foundry worlds: +${formatNumber(foundry.bonus, true)} Metal cap (${foundry.count} worlds).`
       : '';
-    const crackerRule = (IMPORT_CAP_FLAT_BONUSES.metal > 0 || IMPORT_CAP_FLAT_BONUSES.silicon > 0)
-      ? `Planet Crackers: +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates cap.`
+    const crackerRule = (
+      IMPORT_CAP_FLAT_BONUSES.metal > 0
+      || IMPORT_CAP_FLAT_BONUSES.silicon > 0
+      || IMPORT_CAP_FLAT_BONUSES.carbon > 0
+      || IMPORT_CAP_FLAT_BONUSES.water > 0
+    )
+      ? `Planet Crackers: +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.carbon || 0, true)} CO2 cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.water || 0, true)} Water cap.`
       : '';
     if (!this.warpGateUnlocked) {
       return {

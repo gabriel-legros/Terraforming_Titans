@@ -1541,7 +1541,7 @@ setLanguageData({
           iceRich: 'Ice-rich planets',
         },
         recipeTooltip: 'Per cracked planet: +{metal} metal cap, +{silicon} silica cap, +{carbon} carbon cap, +{water} ice cap.',
-        operationNote: 'Consumes {energy} space energy per cracked planet. Complexity and cap bonuses are defined per target type.',
+        operationNote: 'Consumes {energy} space energy per cracked planet. Complexity and cap bonuses vary based on planet type.',
         planetProgress: 'Cracked: {cracked} / {total} | Remaining: {remaining}',
         status: {
           depleted: 'All configured planet targets have been cracked',
