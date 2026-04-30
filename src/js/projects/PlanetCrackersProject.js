@@ -174,7 +174,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
         silicon: formatNumber(typeConfig.capBonuses.silicon || 0, true),
         water: formatNumber(typeConfig.capBonuses.water || 0, true),
       },
-      `Per cracked planet: +${formatNumber(typeConfig.capBonuses.metal || 0, true)} metal cap, +${formatNumber(typeConfig.capBonuses.silicon || 0, true)} silica cap, +${formatNumber(typeConfig.capBonuses.water || 0, true)} ice cap channel.`
+      `Per cracked planet: +${formatNumber(typeConfig.capBonuses.metal || 0, true)} metal cap, +${formatNumber(typeConfig.capBonuses.silicon || 0, true)} silica cap, +${formatNumber(typeConfig.capBonuses.water || 0, true)} ice cap.`
     );
   }
 

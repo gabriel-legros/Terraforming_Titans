@@ -1538,7 +1538,7 @@ setLanguageData({
           ironRich: 'Iron-rich planets',
           iceRich: 'Ice-rich planets',
         },
-        recipeTooltip: 'Per cracked planet: +{metal} metal cap, +{silicon} silica cap, +{water} ice cap channel.',
+        recipeTooltip: 'Per cracked planet: +{metal} metal cap, +{silicon} silica cap, +{water} ice cap.',
         operationNote: 'Consumes {energy} space energy per cracked planet. Complexity and cap bonuses are defined per target type.',
         planetProgress: 'Cracked: {cracked} / {total} | Remaining: {remaining}',
         status: {
@@ -3754,7 +3754,7 @@ setLanguageData({
       },
       planetCrackers: {
         name: 'Planet Crackers',
-        description: 'Build tera-scale cracking platforms that shatter worlds into mining belts. Assign crackers and run them to consume space energy and permanently raise global import caps.  Not a weapon.',
+        description: 'Build tera-scale cracking platforms that shatter worlds into mining belts. Assign crackers and run them to consume space energy and permanently raise global import caps.  Not a weapon.  HOPE will purposefully set aside any planets it may be interested in terraforming present or future.',
       },
       orbitalRing: {
         name: 'Orbital Ring',
