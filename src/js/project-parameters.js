@@ -889,8 +889,8 @@ const projectParameters = {
             complexity: 1,
             total: 10_000_000_000,
             capBonuses: {
-              metal: 10_000_000_000,
-              silicon: 5_000_000_000,
+              metal: 6_000_000_000,
+              silicon: 4_000_000_000,
               carbon: 0,
               water: 0
             }
