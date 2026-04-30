@@ -382,15 +382,25 @@ class PopulationModule extends EffectableEntity {
         return 0;
       }
       const bioworkersPerBiomassPerPoint = terraforming?.requirements?.lifeDesign?.bioworkersPerBiomassPerPoint ?? 0.00001;
-      const biomass = resources.surface?.biomass;
-      if (!biomass || biomass.value <= 0) {
+      let activeBiomass = 0;
+      const zones = getZones();
+      zones.forEach((zoneName) => {
+        if (terraforming.biomassDyingZones && terraforming.biomassDyingZones[zoneName]) {
+          return;
+        }
+        const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
+        if (zonalBiomass > 0) {
+          activeBiomass += zonalBiomass;
+        }
+      });
+      if (activeBiomass <= 0) {
         return 0;
       }
       const requirements = getActiveLifeDesignRequirements();
       const maxBiomassDensity = (requirements.baseMaxBiomassDensityTPerM2 || 0) * (1 + design.spaceEfficiency.value);
       const landAreaM2 = resolveWorldGeometricLand(terraforming, resources.surface.land) * 10000;
       const maxBiomass = landAreaM2 > 0 ? landAreaM2 * maxBiomassDensity : 0;
-      const cappedBiomass = Math.min(biomass.value, maxBiomass);
+      const cappedBiomass = Math.min(activeBiomass, maxBiomass);
       return Math.floor(cappedBiomass * points * bioworkersPerBiomassPerPoint);
     } catch (error) {
       return 0;

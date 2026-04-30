@@ -492,6 +492,20 @@ class LifeDesign {
       return Math.max(dayPen, nightPen);
   }
 
+  getTemperatureSurvivalExcessK(zoneName) {
+      const ranges = this.getTemperatureRanges().survival;
+      const zoneData = terraforming.temperature.zones[zoneName];
+      const lowerLimit = ranges.min - 0.5;
+      const upperLimit = ranges.max + 0.5;
+      const dayExcess = zoneData.day < lowerLimit
+        ? lowerLimit - zoneData.day
+        : (zoneData.day > upperLimit ? zoneData.day - upperLimit : 0);
+      const nightExcess = zoneData.night < lowerLimit
+        ? lowerLimit - zoneData.night
+        : (zoneData.night > upperLimit ? zoneData.night - upperLimit : 0);
+      return Math.max(dayExcess, nightExcess);
+  }
+
     // Checks radiation tolerance against magnetosphere status
     radiationCheck() {
         const hasShield = terraforming.getMagnetosphereStatus();
@@ -1360,11 +1374,13 @@ class LifeManager extends EffectableEntity {
       const zonalBiomass = biomassByZone[zoneName];
       if (zonalBiomass <= 0) return;
       let targetDecay = radiationDecayByZone[zoneName] || 0;
-      const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
-      if (penaltyFraction > 0) {
-        const decayFactor = 0.01 * penaltyFraction;
-        const percentDecayAmount = zonalBiomass * decayFactor * secondsMultiplier;
-        const minDecayAmount = requirements.minimumBiomassDecayRateTPerS * secondsMultiplier * penaltyFraction;
+      const temperatureExcessK = design.getTemperatureSurvivalExcessK(zoneName);
+      if (temperatureExcessK > 0) {
+        const decayMultiplier = temperatureExcessK < 10
+          ? 1
+          : Math.pow(2, (temperatureExcessK - 10) / 10);
+        const percentDecayAmount = zonalBiomass * 0.01 * decayMultiplier * secondsMultiplier;
+        const minDecayAmount = requirements.minimumBiomassDecayRateTPerS * secondsMultiplier * decayMultiplier;
         targetDecay += Math.max(percentDecayAmount, minDecayAmount);
       }
       if (targetDecay <= 0) return;
@@ -1666,6 +1682,9 @@ class LifeManager extends EffectableEntity {
       let totalConvertedBiomass = 0;
 
       zones.forEach(zoneName => {
+        if (terraforming.biomassDyingZones[zoneName]) {
+          return;
+        }
         const currentZonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
         if (currentZonalBiomass <= 0) {
           return;
