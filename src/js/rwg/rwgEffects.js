@@ -9,7 +9,7 @@ const RWG_EFFECTS = {
       targetId: "nitrogenSpaceMining",
       type: "projectDurationMultiplier",
       factor: 0.2,
-      descriptionKey: "ui.rwg.effects.nitrogenImportDurationAndCaps",
+      descriptionKey: "effects.nitrogenImportDurationAndCaps",
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
@@ -35,7 +35,7 @@ const RWG_EFFECTS = {
       targetId: "carbonSpaceMining",
       type: "projectDurationMultiplier",
       factor: 0.2,
-      descriptionKey: "ui.rwg.effects.carbonImportDurationAndCaps",
+      descriptionKey: "effects.carbonImportDurationAndCaps",
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
@@ -61,7 +61,7 @@ const RWG_EFFECTS = {
       targetId: "waterSpaceMining",
       type: "projectDurationMultiplier",
       factor: 0.2,
-      descriptionKey: "ui.rwg.effects.waterImportDurationAndCaps",
+      descriptionKey: "effects.waterImportDurationAndCaps",
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
