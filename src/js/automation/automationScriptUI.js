@@ -733,7 +733,7 @@ function renderExpressionEditor(automation, expression, container, titleText) {
   wrap.classList.add('script-expression-editor');
   const title = document.createElement('div');
   title.classList.add('script-expression-title');
-  title.textContent = `${titleText} (Current Value: ${formatNumber(automation.evaluateExpression(expression))})`;
+  title.textContent = `${titleText} (Current Value: ${formatNumber(automation.evaluateExpression(expression), false, 3)})`;
   wrap.appendChild(title);
 
   expression.terms.forEach((term, index) => {
