@@ -840,6 +840,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
 
   let pointsBudget = member ? member.getPointsToAllocate() : 5;
   const alloc = { power: 0, athletics: 0, wit: 0 };
+  let pointStep = 1;
   const remainingSpan = document.createElement('div');
   const statValueEls = {};
   const autoInputs = {};
@@ -880,7 +881,32 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   headerRow.appendChild(headerPoints);
 
   const headerSpacer = document.createElement('span');
-  headerSpacer.classList.add('wgc-stat-button-placeholder');
+  headerSpacer.classList.add('wgc-stat-step-controls');
+  const stepDownButton = document.createElement('button');
+  stepDownButton.type = 'button';
+  stepDownButton.classList.add('wgc-stat-step-button');
+  stepDownButton.textContent = '/10';
+  const stepUpButton = document.createElement('button');
+  stepUpButton.type = 'button';
+  stepUpButton.classList.add('wgc-stat-step-button');
+  stepUpButton.textContent = 'x10';
+  const statAddButtons = [];
+  const updatePointStepUI = () => {
+    const addLabel = `+${pointStep}`;
+    for (let i = 0; i < statAddButtons.length; i += 1) {
+      statAddButtons[i].textContent = addLabel;
+    }
+  };
+  stepDownButton.addEventListener('click', () => {
+    pointStep = Math.max(1, Math.floor(pointStep / 10));
+    updatePointStepUI();
+  });
+  stepUpButton.addEventListener('click', () => {
+    pointStep = Math.min(1000000, pointStep * 10);
+    updatePointStepUI();
+  });
+  headerSpacer.appendChild(stepDownButton);
+  headerSpacer.appendChild(stepUpButton);
   headerRow.appendChild(headerSpacer);
 
   const autoToggle = document.createElement('label');
@@ -920,16 +946,19 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     statValueEls[stat] = valueSpan;
 
     const addButton = document.createElement('button');
-    addButton.textContent = '+';
+    addButton.textContent = `+${pointStep}`;
+    statAddButtons.push(addButton);
     addButton.addEventListener('click', () => {
       if (member) {
-        if (member.getPointsToAllocate() <= 0) return;
-        member[stat] += 1;
+        const available = member.getPointsToAllocate();
+        if (available <= 0) return;
+        member[stat] += Math.min(pointStep, available);
         statValues[stat] = member[stat];
       } else {
         const totalAllocated = alloc.power + alloc.athletics + alloc.wit;
-        if (totalAllocated >= pointsBudget) return;
-        alloc[stat] += 1;
+        const available = pointsBudget - totalAllocated;
+        if (available <= 0) return;
+        alloc[stat] += Math.min(pointStep, available);
       }
       updateStatDisplay();
       updateRemainingPoints();

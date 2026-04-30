@@ -608,7 +608,7 @@
 
 .wgc-stat-container {
   display: grid;
-  grid-template-columns: 1fr 70px 40px 64px;
+  grid-template-columns: 1fr 70px 68px 64px;
   align-items: center;
   background-color: var(--wgc-bg-dark);
   padding: 6px 10px;
@@ -645,8 +645,20 @@
   justify-self: flex-end;
 }
 
-.wgc-stat-button-placeholder {
-  visibility: hidden;
+.wgc-stat-step-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.wgc-stat-step-controls .wgc-stat-step-button {
+  width: 30px;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  line-height: 1;
 }
 
 .wgc-auto-toggle {
