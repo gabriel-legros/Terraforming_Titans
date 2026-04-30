@@ -2289,6 +2289,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const span = costElement._spans.get(item.key);
       if (!span) return;
       const text = `${item.label}: ${formatNumber(requiredAmount, true)}`;
+      const workerText = `${item.label}: ${formatNumber(requiredAmount, true, 2)}`;
 
       if (item.key === 'colony.workers') {
         let textSpan = span._textSpan;
@@ -2354,8 +2355,8 @@ function updateDecreaseButtonText(button, buildCount) {
           span._refreshPriorityUI = refresh;
         }
         const labelNode = textSpan._labelNode;
-        if (labelNode && labelNode.nodeValue !== text) {
-          labelNode.nodeValue = text;
+        if (labelNode && labelNode.nodeValue !== workerText) {
+          labelNode.nodeValue = workerText;
         }
         span._refreshPriorityUI();
         span._workerTooltipContext = {

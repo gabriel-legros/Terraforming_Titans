@@ -20,7 +20,7 @@ class LifeAutomation {
     this.collapsed = false;
     this.nextPresetId = 1;
     this.elapsed = 0;
-    this.maxSteps = 10;
+    this.maxSteps = 20;
     this.ensureDefaultPreset();
   }
 
