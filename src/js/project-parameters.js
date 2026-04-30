@@ -886,7 +886,7 @@ const projectParameters = {
         planetTypes: {
           ironRich: {
             label: '',
-            complexity: 1,
+            complexity: 10,
             total: 10_000_000_000,
             capBonuses: {
               metal: 6_000_000_000,
@@ -897,7 +897,7 @@ const projectParameters = {
           },
           carbonRich: {
             label: '',
-            complexity: 1,
+            complexity: 10,
             total: 1_000_000_000,
             capBonuses: {
               metal: 3_000_000_000,
@@ -908,7 +908,7 @@ const projectParameters = {
           },
           waterRich: {
             label: '',
-            complexity: 1,
+            complexity: 10,
             total: 100_000_000_000,
             capBonuses: {
               metal: 1_000_000_000,
