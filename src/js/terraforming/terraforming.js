@@ -420,10 +420,10 @@ function calculateInitialAtmosphericPressureForDelta(terraformingState, amount) 
     const initialCelestial = terraformingState.initialCelestialParameters;
     const dynamicMassWorld = currentPlanetParameters.specialAttributes?.dynamicMass === true;
     const gravity = dynamicMassWorld
-        ? (initialCelestial.baseGravity || initialCelestial.gravity)
+        ? (initialCelestial.gravity || initialCelestial.baseGravity)
         : currentCelestial.gravity;
     const radius = dynamicMassWorld
-        ? (initialCelestial.baseRadius || initialCelestial.radius)
+        ? (initialCelestial.radius || initialCelestial.baseRadius)
         : currentCelestial.radius;
     return calculateAtmosphericPressure(amount, gravity, radius);
 }
@@ -1091,6 +1091,11 @@ class Terraforming extends EffectableEntity{
           this.celestialParameters.dynamicMassDeltaKg = 0;
           this.celestialParameters.dynamicSurfaceVolumeDeltaM3 = 0;
           this.refreshDynamicWorldGeometry(planetParameters);
+          this.initialCelestialParameters.mass = this.celestialParameters.mass;
+          this.initialCelestialParameters.radius = this.celestialParameters.radius;
+          this.initialCelestialParameters.gravity = this.celestialParameters.gravity;
+          this.initialCelestialParameters.surfaceArea = this.celestialParameters.surfaceArea;
+          this.initialCelestialParameters.crossSectionArea = this.celestialParameters.crossSectionArea;
           reconcileLandResourceValue();
       }
       this._updateZonalCoverageCache();

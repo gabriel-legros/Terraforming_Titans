@@ -202,6 +202,15 @@
     }
 
     const keys = [
+      'distanceFromSun',
+      'hasNaturalMagnetosphere',
+      'albedo',
+      'rotationPeriod',
+      'spinPeriod',
+      'starLuminosity',
+      'coreHeatFlux',
+      'surfaceArea',
+      'crossSectionArea',
       'baseLand',
       'baseRadius',
       'baseMass',
@@ -221,13 +230,14 @@
       'currentSurfaceVolumeM3',
       'mass',
       'radius',
-      'gravity'
+      'gravity',
+      'sector'
     ];
     const snapshot = {};
     let hasValue = false;
 
     keys.forEach(key => {
-      if (Number.isFinite(source[key])) {
+      if (Number.isFinite(source[key]) || typeof source[key] === 'string' || typeof source[key] === 'boolean') {
         snapshot[key] = source[key];
         hasValue = true;
       }
