@@ -824,7 +824,7 @@ const projectParameters = {
         superconductors: 500_000_000_000_000
       }
     },
-    duration: 180_000_000,
+    duration: 300_000_000,
     description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
@@ -870,7 +870,7 @@ const projectParameters = {
         electronics: 100_000_000_000_000
       }
     },
-    duration: 180_000_000,
+    duration: 300_000_000_000_000,
     description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
