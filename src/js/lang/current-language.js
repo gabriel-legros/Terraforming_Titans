@@ -1536,9 +1536,11 @@ setLanguageData({
         remainingHeader: 'Remaining',
         recipeLabels: {
           ironRich: 'Iron-rich planets',
+          carbonRich: 'Carbon-rich planets',
+          waterRich: 'Water-rich planets',
           iceRich: 'Ice-rich planets',
         },
-        recipeTooltip: 'Per cracked planet: +{metal} metal cap, +{silicon} silica cap, +{water} ice cap.',
+        recipeTooltip: 'Per cracked planet: +{metal} metal cap, +{silicon} silica cap, +{carbon} carbon cap, +{water} ice cap.',
         operationNote: 'Consumes {energy} space energy per cracked planet. Complexity and cap bonuses are defined per target type.',
         planetProgress: 'Cracked: {cracked} / {total} | Remaining: {remaining}',
         status: {

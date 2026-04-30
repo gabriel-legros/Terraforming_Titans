@@ -6,7 +6,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     this.crackedByType = {};
     this.lastCrackedPerSecond = 0;
     this.lastSpaceEnergyPerSecond = 0;
-    this.lastCapGainPerSecond = { metal: 0, silicon: 0, water: 0 };
+    this.lastCapGainPerSecond = { metal: 0, silicon: 0, carbon: 0, water: 0 };
     this.lastAppliedCapKey = '';
   }
 
@@ -58,6 +58,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
         capBonuses: {
           metal: Number(config.metalCapPerPlanet) || 100000000000,
           silicon: Number(config.silicaCapPerPlanet) || 50000000000,
+          carbon: Number(config.carbonCapPerPlanet) || 0,
           water: Number(config.iceCapPerPlanet) || 0,
         },
       }),
@@ -71,6 +72,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     const metalBonus = Number(capBonuses.metal);
     const siliconBonus = Number(capBonuses.silicon);
     const waterBonus = Number(capBonuses.water);
+    const carbonBonus = Number(capBonuses.carbon);
     const fallbackLabel = this.getText(`recipeLabels.${key}`, null, `${key}`);
     return {
       key,
@@ -80,6 +82,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       capBonuses: {
         metal: Number.isFinite(metalBonus) && metalBonus > 0 ? metalBonus : 0,
         silicon: Number.isFinite(siliconBonus) && siliconBonus > 0 ? siliconBonus : 0,
+        carbon: Number.isFinite(carbonBonus) && carbonBonus > 0 ? carbonBonus : 0,
         water: Number.isFinite(waterBonus) && waterBonus > 0 ? waterBonus : 0,
       },
     };
@@ -172,9 +175,10 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       {
         metal: formatNumber(typeConfig.capBonuses.metal || 0, true),
         silicon: formatNumber(typeConfig.capBonuses.silicon || 0, true),
+        carbon: formatNumber(typeConfig.capBonuses.carbon || 0, true),
         water: formatNumber(typeConfig.capBonuses.water || 0, true),
       },
-      `Per cracked planet: +${formatNumber(typeConfig.capBonuses.metal || 0, true)} metal cap, +${formatNumber(typeConfig.capBonuses.silicon || 0, true)} silica cap, +${formatNumber(typeConfig.capBonuses.water || 0, true)} ice cap.`
+      `Per cracked planet: +${formatNumber(typeConfig.capBonuses.metal || 0, true)} metal cap, +${formatNumber(typeConfig.capBonuses.silicon || 0, true)} silica cap, +${formatNumber(typeConfig.capBonuses.carbon || 0, true)} carbon cap, +${formatNumber(typeConfig.capBonuses.water || 0, true)} ice cap.`
     );
   }
 
@@ -207,11 +211,12 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
   }
 
   getTotalCapBonusesFromCracked() {
-    const totals = { metal: 0, silicon: 0, water: 0 };
+    const totals = { metal: 0, silicon: 0, carbon: 0, water: 0 };
     this.getPlanetTypeConfigs().forEach((typeConfig) => {
       const cracked = this.getCrackedForType(typeConfig.key);
       totals.metal += cracked * typeConfig.capBonuses.metal;
       totals.silicon += cracked * typeConfig.capBonuses.silicon;
+      totals.carbon += cracked * typeConfig.capBonuses.carbon;
       totals.water += cracked * typeConfig.capBonuses.water;
     });
     return totals;
@@ -219,7 +224,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
 
   getCapKey() {
     const totals = this.getTotalCapBonusesFromCracked();
-    return `${totals.metal}|${totals.silicon}|${totals.water}`;
+    return `${totals.metal}|${totals.silicon}|${totals.carbon}|${totals.water}`;
   }
 
   applyCapBonusEffects() {
@@ -236,6 +241,13 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       resourceKey: 'silicon',
       value: totals.silicon,
       effectId: 'planet-crackers-silicon-cap-bonus',
+      sourceId: 'planetCrackers',
+    });
+    warpGateNetworkManager.addAndReplace({
+      type: 'importCapFlatBonus',
+      resourceKey: 'carbon',
+      value: totals.carbon,
+      effectId: 'planet-crackers-carbon-cap-bonus',
       sourceId: 'planetCrackers',
     });
     warpGateNetworkManager.addAndReplace({
@@ -274,7 +286,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       crackedTotal: 0,
       crackedByType: {},
       spaceEnergyUse: 0,
-      capGain: { metal: 0, silicon: 0, water: 0 },
+      capGain: { metal: 0, silicon: 0, carbon: 0, water: 0 },
       reasons: {
         noTargetsRemaining: false,
       },
@@ -326,6 +338,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       plan.crackedTotal += cracked;
       plan.capGain.metal += cracked * entry.typeConfig.capBonuses.metal;
       plan.capGain.silicon += cracked * entry.typeConfig.capBonuses.silicon;
+      plan.capGain.carbon += cracked * entry.typeConfig.capBonuses.carbon;
       plan.capGain.water += cracked * entry.typeConfig.capBonuses.water;
     }
 
@@ -414,6 +427,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       {
         metal: plan.capGain.metal / seconds,
         silicon: plan.capGain.silicon / seconds,
+        carbon: plan.capGain.carbon / seconds,
         water: plan.capGain.water / seconds,
       },
       ratesByType

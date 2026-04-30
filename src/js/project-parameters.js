@@ -891,7 +891,30 @@ const projectParameters = {
             capBonuses: {
               metal: 10_000_000_000,
               silicon: 5_000_000_000,
+              carbon: 0,
               water: 0
+            }
+          },
+          carbonRich: {
+            label: '',
+            complexity: 1,
+            total: 1_000_000_000,
+            capBonuses: {
+              metal: 3_000_000_000,
+              silicon: 4_000_000_000,
+              carbon: 3_000_000_000,
+              water: 0
+            }
+          },
+          waterRich: {
+            label: '',
+            complexity: 1,
+            total: 100_000_000_000,
+            capBonuses: {
+              metal: 1_000_000_000,
+              silicon: 4_000_000_000,
+              carbon: 0,
+              water: 5_000_000_000
             }
           }
         }
