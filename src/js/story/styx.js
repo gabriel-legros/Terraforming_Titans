@@ -368,7 +368,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 41,
     activePlanet: 'styx',
-    narrative: "(World 14 not implemented yet)",
+    narrative: "",
     prerequisites: ['styx.41.4'],
     objectives: [
     ],
