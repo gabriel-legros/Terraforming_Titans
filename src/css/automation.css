@@ -952,6 +952,32 @@
   font-weight: 600;
 }
 
+.script-line-basics-row {
+  align-items: flex-end;
+}
+
+.script-line-basics-kind {
+  flex: 0 0 auto;
+}
+
+.script-line-basics-expand {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.script-line-basics-expand.script-line-basics-name {
+  flex: 1 1 220px;
+}
+
+.script-line-basics-expand.script-line-basics-description {
+  flex: 2 1 440px;
+}
+
+.script-line-basics-expand input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .script-labeled-node input,
 .script-labeled-node select,
 .script-automation-script-row input,

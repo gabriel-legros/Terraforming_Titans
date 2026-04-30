@@ -595,6 +595,7 @@ function getScriptActionKinds() {
 function renderLineBasics(automation, script, line, container) {
   const row = document.createElement('div');
   row.classList.add('script-editor-row');
+  row.classList.add('script-line-basics-row');
 
   ensureLineKindState(automation, line);
   const kind = createLineKindSelect(line.kind);
@@ -623,16 +624,21 @@ function renderLineBasics(automation, script, line, container) {
     queueAutomationUIRefresh();
   });
 
-  row.append(
-    labeledNode(getAutomationCardText('scriptLineKind', {}, 'Line Type'), kind)
-  );
+  const kindField = labeledNode(getAutomationCardText('scriptLineKind', {}, 'Line Type'), kind);
+  kindField.classList.add('script-line-basics-kind');
+  row.append(kindField);
   if (line.kind === 'elseIf' || line.kind === 'else') {
-    row.appendChild(labeledNode(getAutomationCardText('scriptLinkedTo', {}, 'Linked to'), createLinkedIfSelect(automation, script, line)));
+    const linkedField = labeledNode(getAutomationCardText('scriptLinkedTo', {}, 'Linked to'), createLinkedIfSelect(automation, script, line));
+    linkedField.classList.add('script-line-basics-kind');
+    row.appendChild(linkedField);
   }
-  row.append(
-    labeledNode(getAutomationCardText('scriptLineName', {}, 'Name'), name),
-    labeledNode(getAutomationCardText('scriptLineDescription', {}, 'Description'), description)
-  );
+  const nameField = labeledNode(getAutomationCardText('scriptLineName', {}, 'Name'), name);
+  nameField.classList.add('script-line-basics-expand');
+  nameField.classList.add('script-line-basics-name');
+  const descriptionField = labeledNode(getAutomationCardText('scriptLineDescription', {}, 'Description'), description);
+  descriptionField.classList.add('script-line-basics-expand');
+  descriptionField.classList.add('script-line-basics-description');
+  row.append(nameField, descriptionField);
   container.appendChild(row);
 }
 
