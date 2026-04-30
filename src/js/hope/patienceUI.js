@@ -228,7 +228,7 @@ const PatienceUI = {
         spendInput.type = 'number';
         spendInput.id = 'patience-spend-input';
         spendInput.min = '1';
-        spendInput.max = '12';
+        spendInput.max = '1';
         spendInput.step = '1';
         spendInput.value = '1';
         spendRow.appendChild(spendInput);
@@ -478,6 +478,13 @@ const PatienceUI = {
                 ? patienceManager.getEffectiveMaxHours()
                 : patienceManager.maxHours;
             this.maxValueEl.textContent = effectiveMaxHours;
+            if (this.spendInputEl) {
+                this.spendInputEl.max = String(effectiveMaxHours || 1);
+                const spendHours = parseFloat(this.spendInputEl.value) || 0;
+                if (spendHours > effectiveMaxHours) {
+                    this.spendInputEl.value = String(effectiveMaxHours);
+                }
+            }
         }
 
         if (this.timerValueEl) {
