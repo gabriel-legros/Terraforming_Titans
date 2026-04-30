@@ -237,7 +237,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
-    if (!this.unlocked) {
+    if (this.isPermanentlyDisabled()) {
       return totals;
     }
     const operationAlreadyHandled = this.operationPreRunThisTick === true;
@@ -379,7 +379,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.unlocked) {
+    if (this.isPermanentlyDisabled()) {
       return;
     }
     this.operationPreRunThisTick = false;
