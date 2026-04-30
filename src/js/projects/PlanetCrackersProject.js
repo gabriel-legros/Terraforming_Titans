@@ -255,10 +255,16 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     }
   }
 
-  setLastRunStats(planetsRate = 0, spaceEnergyRate = 0, capRate = null) {
+  setLastRunStats(planetsRate = 0, spaceEnergyRate = 0, capRate = null, ratesByType = null) {
     this.lastCrackedPerSecond = planetsRate;
     this.lastSpaceEnergyPerSecond = spaceEnergyRate;
     this.lastCapGainPerSecond = capRate || { metal: 0, silicon: 0, water: 0 };
+    this.lastOutputRatesByResource = {};
+    const keys = this.getAssignmentKeys();
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = keys[index];
+      this.lastOutputRatesByResource[key] = ratesByType?.[key] || 0;
+    }
     this.lastTotalOutputPerSecond = planetsRate;
   }
 
@@ -396,11 +402,22 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
 
     resources.space.energy.modifyRate(-spaceEnergyRate, this.displayName, 'project');
 
-    this.setLastRunStats(planetsRate, spaceEnergyRate, {
-      metal: plan.capGain.metal / seconds,
-      silicon: plan.capGain.silicon / seconds,
-      water: plan.capGain.water / seconds,
-    });
+    const ratesByType = {};
+    const crackedKeys = Object.keys(plan.crackedByType);
+    for (let index = 0; index < crackedKeys.length; index += 1) {
+      const key = crackedKeys[index];
+      ratesByType[key] = plan.crackedByType[key] / seconds;
+    }
+    this.setLastRunStats(
+      planetsRate,
+      spaceEnergyRate,
+      {
+        metal: plan.capGain.metal / seconds,
+        silicon: plan.capGain.silicon / seconds,
+        water: plan.capGain.water / seconds,
+      },
+      ratesByType
+    );
     this.updateStatus(this.getText('status.running', null, 'Running'));
     this.shortfallLastTick = false;
   }
