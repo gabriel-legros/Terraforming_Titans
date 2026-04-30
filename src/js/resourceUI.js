@@ -689,6 +689,82 @@ function updateRateTable(container, entries, formatter) {
   });
 }
 
+function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings, formatter) {
+  if (!container) return;
+  const info = container._info;
+  const used = new Set();
+  const breakdownMap = new Map();
+  for (let i = 0; i < breakdownEntries.length; i += 1) {
+    const entry = breakdownEntries[i];
+    if (!entry) continue;
+    const name = entry[0];
+    const value = entry[1];
+    if (!name) continue;
+    breakdownMap.set(name, value || 0);
+  }
+
+  if (shortageBuildings) {
+    for (const buildingName in shortageBuildings) {
+      if (!Object.prototype.hasOwnProperty.call(shortageBuildings, buildingName)) continue;
+      if (!breakdownMap.has(buildingName)) {
+        breakdownMap.set(buildingName, 0);
+      }
+    }
+  }
+
+  const entries = Array.from(breakdownMap.entries());
+  entries.sort((a, b) => b[1] - a[1]);
+  for (let i = 0; i < entries.length; i += 1) {
+    const name = entries[i][0];
+    const value = entries[i][1];
+    const throttled = !!(shortageBuildings && shortageBuildings[name]);
+    let rowInfo = info.rows.get(name);
+    if (!rowInfo) {
+      const row = document.createElement('div');
+      row.style.display = 'table-row';
+      const left = document.createElement('div');
+      left.style.display = 'table-cell';
+      left.style.textAlign = 'left';
+      left.style.paddingRight = '10px';
+      const right = document.createElement('div');
+      right.style.display = 'table-cell';
+      right.style.textAlign = 'right';
+      right.style.minWidth = '90px';
+      right.style.whiteSpace = 'nowrap';
+      row.appendChild(left);
+      row.appendChild(right);
+      info.table.appendChild(row);
+      rowInfo = { row, left, right };
+      info.rows.set(name, rowInfo);
+    }
+
+    if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
+
+    const rateText = formatter(value);
+    if (!rowInfo.valueSpan) {
+      rowInfo.right.textContent = '';
+      rowInfo.valueSpan = document.createElement('span');
+      rowInfo.markerSpan = document.createElement('span');
+      rowInfo.right.appendChild(rowInfo.valueSpan);
+      rowInfo.right.appendChild(rowInfo.markerSpan);
+    }
+    if (rowInfo.valueSpan.textContent !== rateText) rowInfo.valueSpan.textContent = rateText;
+    const markerText = throttled ? ' !' : '';
+    if (rowInfo.markerSpan.textContent !== markerText) rowInfo.markerSpan.textContent = markerText;
+    rowInfo.markerSpan.style.color = throttled ? 'orange' : '';
+    rowInfo.row.style.display = 'table-row';
+    info.table.appendChild(rowInfo.row);
+    used.add(name);
+  }
+
+  info.rows.forEach((rowInfo, name) => {
+    if (!used.has(name)) {
+      if (rowInfo.row.parentNode) rowInfo.row.parentNode.removeChild(rowInfo.row);
+      info.rows.delete(name);
+    }
+  });
+}
+
 function updateRateTableWithCooldown(container, entries, formatter, frameDelta) {
   if (!container) return false;
   const info = container._info;
@@ -2349,11 +2425,17 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   if (autobuildDiv) {
     if (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource)) {
       const avgCost = autobuildAvg;
-      if (avgCost !== 0) {
+      const shortageBuildings = resource.autobuildShortageBuildings;
+      if (avgCost !== 0 || shortageBuildings) {
         autobuildDiv.style.display = 'block';
         autobuildDiv._info.value.textContent = `${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
         const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
-        updateRateTable(autobuildDiv, breakdown, cost => `${formatNumber(cost, false, 2)}/s`);
+        updateAutobuildRateTable(
+          autobuildDiv,
+          breakdown,
+          shortageBuildings,
+          cost => `${formatNumber(cost, false, 2)}/s`
+        );
       } else {
         autobuildDiv.style.display = 'none';
       }

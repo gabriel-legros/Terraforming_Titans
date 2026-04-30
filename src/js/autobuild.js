@@ -44,6 +44,7 @@ const autobuildCostTracker = {
         for (const buildCosts of this.buildingCostQueue) {
             for (const building in buildCosts) {
                 const val = buildCosts[building]?.[category]?.[resource] || 0;
+                if (val === 0) continue;
                 if (!totals[building]) totals[building] = 0;
                 totals[building] += val;
             }
@@ -274,6 +275,7 @@ function resetAutoBuildResourceShortages(resourceCollection) {
             const resource = categoryResources[resourceName];
             if (resource) {
                 resource.autobuildShortage = false;
+                resource.autobuildShortageBuildings = null;
             }
         }
     }
@@ -437,6 +439,10 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
         }
 
         resObj.autobuildShortage = true;
+        if (!resObj.autobuildShortageBuildings) {
+            resObj.autobuildShortageBuildings = {};
+        }
+        resObj.autobuildShortageBuildings[building.displayName || building.name] = true;
     }
 }
 

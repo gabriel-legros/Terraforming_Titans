@@ -244,6 +244,7 @@ class Resource extends EffectableEntity {
     this.marginBottom = resourceData.marginBottom || 0;
     this.reverseColor = resourceData.reverseColor || false;
     this.autobuildShortage = false; // Flagged when autobuild cannot use this resource this tick
+    this.autobuildShortageBuildings = null; // Building names throttled by this resource this tick
     this.automationLimited = false; // Flagged when import automation settings limit this resource
     this.zonalConfig = resourceData.zonalConfig || null;
     this.preserveOnTravel = resourceData.preserveOnTravel === true;
