@@ -383,6 +383,7 @@ function renderProjects(activeSubtabId) {
   updateStoryProjectsVisibility();
   updateMegaProjectsVisibility();
   updateGigaProjectsVisibility();
+  updateTeraProjectsVisibility();
 }
 
 function initializeProjectsUI() {
@@ -412,6 +413,7 @@ function initializeProjectsUI() {
   updateStoryProjectsVisibility();
   updateMegaProjectsVisibility();
   updateGigaProjectsVisibility();
+  updateTeraProjectsVisibility();
   const selectedSubtabId = resolveProjectSubtabId(projectsSubtabState.preferredSubtabId);
   if (selectedSubtabId) {
     projectsSubtabState.preferredSubtabId = selectedSubtabId;
@@ -1835,6 +1837,10 @@ function updateGigaProjectsVisibility() {
   updateCategoryProjectsVisibility('giga', 'giga-projects');
 }
 
+function updateTeraProjectsVisibility() {
+  updateCategoryProjectsVisibility('tera', 'tera-projects');
+}
+
 function activateProjectSubtab(subtabId) {
   if (!subtabId) return;
   projectsSubtabState.preferredSubtabId = subtabId;
@@ -1855,6 +1861,7 @@ const projectSubtabAlerts = {
   'infrastructure-projects': false,
   'mega-projects': false,
   'giga-projects': false,
+  'tera-projects': false,
   'story-projects': false,
 };
 

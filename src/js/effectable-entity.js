@@ -259,6 +259,11 @@ class EffectableEntity {
         case 'importCapMultiplier':
           this.applyImportCapMultiplier(effect);
           break;
+        case 'importCapFlatBonus':
+          if (typeof this.applyImportCapFlatBonus === 'function') {
+            this.applyImportCapFlatBonus(effect);
+          }
+          break;
         case 'lifeGrowthMultiplier':
           this.applyLifeGrowthMultiplier(effect);
           break;

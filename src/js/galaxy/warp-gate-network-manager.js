@@ -16,6 +16,13 @@ const IMPORT_CAP_MULTIPLIERS = {
   silicon: 1,
   water: 1,
 };
+const IMPORT_CAP_FLAT_BONUSES = {
+  metal: 0,
+  nitrogen: 0,
+  carbon: 0,
+  silicon: 0,
+  water: 0,
+};
 const IMPORT_CAP_RESOURCES = [
   { key: 'metal', label: 'Metal' },
   { key: 'nitrogen', label: 'Nitrogen' },
@@ -39,16 +46,21 @@ const getImportRatioSummary = () => (
   'Ratios: Metal x1, Nitrogen x1, CO2 x2, Silicates x5, Water x10.'
 );
 
-const getImportCapEntries = (baseCap, summary, fallbackDetail) => (
+const getImportCapEntries = (baseCap, summary, fallbackDetail, bonusByResource = {}) => (
   IMPORT_CAP_RESOURCES.map(({ key, label }) => {
     const ratio = getImportCapRatio(key);
     const base = baseCap * ratio;
     const entry = summary ? summary.resources[key] : null;
     const useEntry = summary && summary.fullControlCount > 0;
-    const cap = useEntry ? entry.cap : base;
+    const bonus = bonusByResource[key] || 0;
+    const capWithoutBonus = useEntry ? entry.cap : base;
+    const cap = capWithoutBonus + bonus;
+    const bonusText = bonus > 0
+      ? `, +${formatNumber(bonus, true)} bonus`
+      : '';
     const detail = useEntry
-      ? `${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal`
-      : fallbackDetail;
+      ? `${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal${bonusText}`
+      : `${fallbackDetail}${bonusText}`;
     return {
       key,
       label,
@@ -157,6 +169,11 @@ class WarpGateNetworkManager extends EffectableEntity {
     this.breakdownDirty = true;
   }
 
+  applyImportCapFlatBonus(effect) {
+    this.recalculateImportCapFlatBonuses();
+    this.breakdownDirty = true;
+  }
+
   recalculateImportCapMultipliers() {
     Object.keys(IMPORT_CAP_MULTIPLIERS).forEach((key) => {
       IMPORT_CAP_MULTIPLIERS[key] = 1;
@@ -173,9 +190,26 @@ class WarpGateNetworkManager extends EffectableEntity {
     }
   }
 
+  recalculateImportCapFlatBonuses() {
+    Object.keys(IMPORT_CAP_FLAT_BONUSES).forEach((key) => {
+      IMPORT_CAP_FLAT_BONUSES[key] = 0;
+    });
+    for (const effect of this.activeEffects) {
+      if (effect.type !== 'importCapFlatBonus') {
+        continue;
+      }
+      const key = effect.resourceKey;
+      if (!(key in IMPORT_CAP_FLAT_BONUSES)) {
+        continue;
+      }
+      IMPORT_CAP_FLAT_BONUSES[key] += effect.value;
+    }
+  }
+
   removeEffect(effect) {
     super.removeEffect(effect);
     this.recalculateImportCapMultipliers();
+    this.recalculateImportCapFlatBonuses();
     this.breakdownDirty = true;
     return this;
   }
@@ -183,6 +217,7 @@ class WarpGateNetworkManager extends EffectableEntity {
   applyActiveEffects(firstTime = true) {
     super.applyActiveEffects(firstTime);
     this.recalculateImportCapMultipliers();
+    this.recalculateImportCapFlatBonuses();
   }
 
   getFoundryMetalCapBonus() {
@@ -202,16 +237,17 @@ class WarpGateNetworkManager extends EffectableEntity {
     if (resourceKey === 'hydrogen') {
       return Infinity;
     }
+    const flatBonus = IMPORT_CAP_FLAT_BONUSES[resourceKey] || 0;
     const foundryBonus = resourceKey === 'metal'
       ? this.getFoundryMetalCapBonus().bonus
       : 0;
     if (!this.warpGateUnlocked) {
-      return IMPORT_CAP_BASE * getImportCapRatio(resourceKey) + foundryBonus;
+      return IMPORT_CAP_BASE * getImportCapRatio(resourceKey) + foundryBonus + flatBonus;
     }
     if (!this.galaxyUnlocked) {
-      return IMPORT_CAP_WARP * getImportCapRatio(resourceKey) + foundryBonus;
+      return IMPORT_CAP_WARP * getImportCapRatio(resourceKey) + foundryBonus + flatBonus;
     }
-    return this.getGalaxyCap(resourceKey) + foundryBonus;
+    return this.getGalaxyCap(resourceKey) + foundryBonus + flatBonus;
   }
 
   getGalaxyCap(resourceKey) {
@@ -228,29 +264,42 @@ class WarpGateNetworkManager extends EffectableEntity {
     const foundryLine = foundry.bonus > 0
       ? ` Foundry worlds add +${formatNumber(foundry.bonus, true)} to the Metal cap.`
       : '';
+    const flatBonusLine = (IMPORT_CAP_FLAT_BONUSES.metal > 0 || IMPORT_CAP_FLAT_BONUSES.silicon > 0)
+      ? ` Planet Crackers add +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal and +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates cap.`
+      : '';
     if (!this.warpGateUnlocked) {
-      return `Due to limited deposits, import caps are ${formatImportCapList(IMPORT_CAP_BASE)} ships.${foundryLine}`;
+      return `Due to limited deposits, import caps are ${formatImportCapList(IMPORT_CAP_BASE)} ships.${foundryLine}${flatBonusLine}`;
     }
     if (!this.galaxyUnlocked) {
-      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${formatImportCapList(IMPORT_CAP_WARP)} ships.${foundryLine}`;
+      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${formatImportCapList(IMPORT_CAP_WARP)} ships.${foundryLine}${flatBonusLine}`;
     }
-    return `${this.getGalaxyCapText()}${foundryLine}`;
+    return `${this.getGalaxyCapText()}${foundryLine}${flatBonusLine}`;
   }
 
   getCapSummaryData() {
     this.syncUnlocks();
     const foundry = this.getFoundryMetalCapBonus();
+    const bonusByResource = {
+      metal: foundry.bonus + (IMPORT_CAP_FLAT_BONUSES.metal || 0),
+      nitrogen: IMPORT_CAP_FLAT_BONUSES.nitrogen || 0,
+      carbon: IMPORT_CAP_FLAT_BONUSES.carbon || 0,
+      silicon: IMPORT_CAP_FLAT_BONUSES.silicon || 0,
+      water: IMPORT_CAP_FLAT_BONUSES.water || 0,
+    };
     const foundryRule = foundry.bonus > 0
       ? `Foundry worlds: +${formatNumber(foundry.bonus, true)} Metal cap (${foundry.count} worlds).`
+      : '';
+    const crackerRule = (IMPORT_CAP_FLAT_BONUSES.metal > 0 || IMPORT_CAP_FLAT_BONUSES.silicon > 0)
+      ? `Planet Crackers: +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates cap.`
       : '';
     if (!this.warpGateUnlocked) {
       return {
         intro: 'Due to limited deposits, imports are limited until Warp Gate Command is unlocked.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_BASE, true)} ships.`,
         ratiosLine: '',
-        ruleLines: foundryRule ? [foundryRule] : [],
+        ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
-        caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap'),
+        caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource),
         hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
       };
     }
@@ -259,9 +308,9 @@ class WarpGateNetworkManager extends EffectableEntity {
         intro: 'Warp Gate Command expands shipments before galaxy control is available.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_WARP, true)} ships.`,
         ratiosLine: '',
-        ruleLines: foundryRule ? [foundryRule] : [],
+        ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
-        caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap'),
+        caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource),
         hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
       };
     }
@@ -272,13 +321,14 @@ class WarpGateNetworkManager extends EffectableEntity {
       intro: 'Import caps scale with fully controlled sectors.',
       baseCapLine: baseLine,
       ratiosLine: '',
-      ruleLines: [
-        'Rich sectors add +100% for that resource; poor sectors cut -50%.',
-        'Warp Gate Network levels add +10% cap per level.',
-        ...(foundryRule ? [foundryRule] : []),
-      ],
+        ruleLines: [
+          'Rich sectors add +100% for that resource; poor sectors cut -50%.',
+          'Warp Gate Network levels add +10% cap per level.',
+          ...(foundryRule ? [foundryRule] : []),
+          ...(crackerRule ? [crackerRule] : []),
+        ],
       fullControlLine,
-      caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap'),
+      caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap', bonusByResource),
       hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
     };
   }

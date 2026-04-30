@@ -799,6 +799,7 @@ setLanguageData({
       infrastructure: 'Infrastructure',
       mega: 'Mega',
       giga: 'Giga',
+      tera: 'Tera',
       story: 'Story',
     },
     projects: {
@@ -1519,6 +1520,35 @@ setLanguageData({
           runDisabled: 'Run disabled',
           noAssignments: 'No assignments',
           buildSpaceStorage: 'Build space storage',
+          running: 'Running',
+        },
+      },
+      planetCrackers: {
+        target: 'Target',
+        title: 'Planet Cracker Controls',
+        totalCrackers: 'Total Planet Crackers',
+        runCrackers: 'Run planet crackers',
+        energyUse: 'Energy Use',
+        spaceEnergyRate: '{value} space energy/s',
+        expansionRate: '{value} crackers/s',
+        ironRichPlanets: 'Iron-rich planets',
+        crackedHeader: 'Cracked',
+        remainingHeader: 'Remaining',
+        recipeLabels: {
+          ironRich: 'Iron-rich planets',
+          iceRich: 'Ice-rich planets',
+        },
+        recipeTooltip: 'Per cracked planet: +{metal} metal cap, +{silicon} silica cap, +{water} ice cap channel.',
+        operationNote: 'Consumes {energy} space energy per cracked planet. Complexity and cap bonuses are defined per target type.',
+        planetProgress: 'Cracked: {cracked} / {total} | Remaining: {remaining}',
+        status: {
+          depleted: 'All configured planet targets have been cracked',
+          noSpaceEnergy: 'No space energy',
+          insufficientSpaceEnergy: 'Insufficient space energy',
+          idle: 'Idle',
+          completeAtLeastOne: 'Complete at least one planet cracker',
+          runDisabled: 'Run disabled',
+          noAssignments: 'No assignments',
           running: 'Running',
         },
       },
@@ -3722,6 +3752,10 @@ setLanguageData({
         name: 'Apollo Planetary Core Surgery Platform',
         description: 'Build a massive core surgery platform capable of creating an artificial natural magnetosphere.  Medicine for planets.  Project completion persists on travel.',
       },
+      planetCrackers: {
+        name: 'Planet Crackers',
+        description: 'Build tera-scale cracking platforms that shatter worlds into mining belts. Assign crackers and run them to consume space energy and permanently raise global import caps.  Not a weapon.',
+      },
       orbitalRing: {
         name: 'Orbital Ring',
         description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.  You can prepay rings for each world without a ring.',
@@ -4467,6 +4501,10 @@ setLanguageData({
         artificial_stars: {
           name: 'Artificial Stars',
           description: 'Regular stars are wasteful and inefficient.  Our engineers can do so much better.',
+        },
+        planet_cracking: {
+          name: 'Planet Cracking',
+          description: 'There is still so much metal out there... if we can get to it.',
         },
         tractor_beams: {
           name: 'Tractor Beams',

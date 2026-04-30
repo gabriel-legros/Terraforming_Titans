@@ -1039,6 +1039,10 @@
     grid-template-columns: minmax(160px, 1fr) minmax(80px, 0.45fr) 340px minmax(180px, 1.35fr);
 }
 
+.planet-crackers-assignment-row {
+    grid-template-columns: minmax(160px, 1fr) minmax(80px, 0.35fr) minmax(80px, 0.35fr) minmax(100px, 0.45fr) minmax(110px, 0.5fr) 340px minmax(180px, 1fr);
+}
+
 .manufacturing-assignment-list {
     --manufacturing-block-a-width: 400px;
     --manufacturing-block-b-width: 430px;

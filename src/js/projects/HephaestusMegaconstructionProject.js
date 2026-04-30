@@ -33,7 +33,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     const dummyButton = { textContent: '', disabled: false };
     const dummyWrapper = { style: { display: '' } };
     const rowElements = {};
-    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', name].forEach((key) => {
+    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', name].forEach((key) => {
       rowElements[key] = {
         wrapper: dummyWrapper,
         value: dummyText,
@@ -83,7 +83,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   }
 
   getAllAssignableKeys() {
-    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars'];
+    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers'];
   }
 
   shouldShowSpaceChemistryTarget() {
@@ -118,6 +118,14 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     return project.unlocked || project.isActive || project.repeatCount > 0;
   }
 
+  shouldShowPlanetCrackersTarget() {
+    const project = projectManager?.projects?.planetCrackers;
+    if (!project) {
+      return false;
+    }
+    return project.unlocked || project.isActive || project.repeatCount > 0;
+  }
+
   getOptionalAssignmentKeys() {
     const keys = [];
     if (this.shouldShowSpaceChemistryTarget()) {
@@ -131,6 +139,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     }
     if (this.shouldShowArtificialStarsTarget()) {
       keys.push('artificialStars');
+    }
+    if (this.shouldShowPlanetCrackersTarget()) {
+      keys.push('planetCrackers');
     }
     return keys;
   }
@@ -679,7 +690,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       getHephaestusText('ui.projects.common.idleUnassigned', 'Idle/Unassigned')
     );
 
-    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars'];
+    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
       const labelText = project?.displayName || key;
@@ -721,7 +732,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars'];
+    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
       const storedCurrent = this.getStoredAssignmentAmount(key);
@@ -756,6 +767,8 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         row.wrapper.style.display = this.shouldShowSuperalloyGigafoundryTarget() ? '' : 'none';
       } else if (key === 'artificialStars') {
         row.wrapper.style.display = this.shouldShowArtificialStarsTarget() ? '' : 'none';
+      } else if (key === 'planetCrackers') {
+        row.wrapper.style.display = this.shouldShowPlanetCrackersTarget() ? '' : 'none';
       }
     });
   }

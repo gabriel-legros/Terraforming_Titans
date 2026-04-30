@@ -858,6 +858,46 @@ const projectParameters = {
       preserveProgressOnTravel: true
     }
   },
+  planetCrackers: {
+    type: 'PlanetCrackersProject',
+    name: '',
+    category: 'tera',
+    cost: {
+      colony: {
+        superalloys: 1_000_000_000_000_000_000_000,
+        superconductors: 100_000_000_000_000_000_000,
+        components: 10_000_000_000_000_000_000,
+        electronics: 100_000_000_000_000
+      }
+    },
+    duration: 180_000_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      alchemyParameter: 1,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true,
+      planetCracking: {
+        planetsPerAssignmentSecond: 1,
+        spaceEnergyPerPlanet: 1e28,
+        planetTypes: {
+          ironRich: {
+            label: '',
+            complexity: 1,
+            total: 10_000_000_000,
+            capBonuses: {
+              metal: 10_000_000_000,
+              silicon: 5_000_000_000,
+              water: 0
+            }
+          }
+        }
+      }
+    }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: '',

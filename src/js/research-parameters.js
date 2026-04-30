@@ -2591,6 +2591,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'planet_cracking',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 1_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'planetCrackers',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: '',
         description: '',
