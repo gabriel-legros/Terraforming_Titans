@@ -1087,6 +1087,7 @@ setLanguageData({
         one: '1',
         divideTen: '/10',
         timesTen: 'x10',
+        req: 'Req',
         max: 'Max',
         buildButton: 'Build {count} Cylinders',
       },

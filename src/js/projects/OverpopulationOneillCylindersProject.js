@@ -32,10 +32,7 @@
 
     getSelectedBuildCount() {
       const selected = Math.max(0, this.buildCount || 0);
-      if (!gameSettings.roundBuildingConstruction) {
-        return selected;
-      }
-      return getRoundedBuildCount(this.getBuiltCylinderCount(), selected);
+      return selected;
     }
 
     isVisible() {
@@ -95,16 +92,16 @@
 
     setBuildCount(value) {
       const numeric = Number(value);
-      if (numeric > 0) {
+      if (numeric >= 0) {
         this.buildCount = Math.min(OVERPOPULATION_ONEILL_MAX_BATCH, numeric);
       }
     }
 
-    setMaxBuildCount() {
-      const max = this.getRequiredCylinderCount();
-      if (max > 0) {
-        this.buildCount = Math.min(OVERPOPULATION_ONEILL_MAX_BATCH, max);
-      }
+    setRequiredBuildCount() {
+      const required = this.getRequiredCylinderCount();
+      const built = this.getBuiltCylinderCount();
+      const remaining = Math.max(0, required - built);
+      this.buildCount = Math.min(OVERPOPULATION_ONEILL_MAX_BATCH, remaining);
     }
 
     start(resources) {
@@ -208,9 +205,9 @@
       divideButton.textContent = getOverpopulationOneillText('divideTen', null, '/10');
       const multiplyButton = document.createElement('button');
       multiplyButton.textContent = getOverpopulationOneillText('timesTen', null, 'x10');
-      const maxButton = document.createElement('button');
-      maxButton.textContent = getOverpopulationOneillText('max', null, 'Max');
-      multiplierControls.append(oneButton, divideButton, multiplyButton, maxButton);
+      const reqButton = document.createElement('button');
+      reqButton.textContent = getOverpopulationOneillText('req', null, 'Req');
+      multiplierControls.append(oneButton, divideButton, multiplyButton, reqButton);
       buildAmount.content.classList.add('project-summary-flex');
       buildAmount.content.appendChild(multiplierControls);
 
@@ -247,8 +244,8 @@
         this.setBuildCount(1);
         refresh();
       });
-      maxButton.addEventListener('click', () => {
-        this.setMaxBuildCount();
+      reqButton.addEventListener('click', () => {
+        this.setRequiredBuildCount();
         refresh();
       });
 
