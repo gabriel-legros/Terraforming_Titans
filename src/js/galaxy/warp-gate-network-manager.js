@@ -16,6 +16,13 @@ const IMPORT_CAP_MULTIPLIERS = {
   silicon: 1,
   water: 1,
 };
+const IMPORT_CAP_RWG_REDUCTION_MULTIPLIERS = {
+  metal: 1,
+  nitrogen: 1,
+  carbon: 1,
+  silicon: 1,
+  water: 1,
+};
 const IMPORT_CAP_FLAT_BONUSES = {
   metal: 0,
   nitrogen: 0,
@@ -35,32 +42,29 @@ const getImportCapRatio = (resourceKey) => (
   (IMPORT_CAP_RATIOS[resourceKey] || 1) * (IMPORT_CAP_MULTIPLIERS[resourceKey] || 1)
 );
 
-const formatImportCapList = (baseCap) => (
-  IMPORT_CAP_RESOURCES.map(({ key, label }) => {
-    const cap = baseCap * getImportCapRatio(key);
-    return `${label}: ${formatNumber(cap, true)}`;
-  }).join(', ')
-);
-
 const getImportRatioSummary = () => (
   'Ratios: Metal x1, Nitrogen x1, CO2 x2, Silicates x5, Water x10.'
 );
 
-const getImportCapEntries = (baseCap, summary, fallbackDetail, bonusByResource = {}) => (
+const getImportCapEntries = (baseCap, summary, fallbackDetail, bonusByResource = {}, rwgReductionByResource = {}) => (
   IMPORT_CAP_RESOURCES.map(({ key, label }) => {
     const ratio = getImportCapRatio(key);
     const base = baseCap * ratio;
     const entry = summary ? summary.resources[key] : null;
     const useEntry = summary && summary.fullControlCount > 0;
     const bonus = bonusByResource[key] || 0;
+    const rwgReduction = rwgReductionByResource[key] || 1;
     const capWithoutBonus = useEntry ? entry.cap : base;
-    const cap = capWithoutBonus + bonus;
+    const cap = (capWithoutBonus + bonus) * rwgReduction;
     const bonusText = bonus > 0
       ? `, +${formatNumber(bonus, true)} bonus`
       : '';
+    const rwgText = rwgReduction < 1
+      ? `, RWG x${formatNumber(rwgReduction, false, 3)}`
+      : '';
     const detail = useEntry
-      ? `${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal${bonusText}`
-      : `${fallbackDetail}${bonusText}`;
+      ? `${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal${bonusText}${rwgText}`
+      : `${fallbackDetail}${bonusText}${rwgText}`;
     return {
       key,
       label,
@@ -178,6 +182,9 @@ class WarpGateNetworkManager extends EffectableEntity {
     Object.keys(IMPORT_CAP_MULTIPLIERS).forEach((key) => {
       IMPORT_CAP_MULTIPLIERS[key] = 1;
     });
+    Object.keys(IMPORT_CAP_RWG_REDUCTION_MULTIPLIERS).forEach((key) => {
+      IMPORT_CAP_RWG_REDUCTION_MULTIPLIERS[key] = 1;
+    });
     for (const effect of this.activeEffects) {
       if (effect.type !== 'importCapMultiplier') {
         continue;
@@ -186,8 +193,20 @@ class WarpGateNetworkManager extends EffectableEntity {
       if (!(key in IMPORT_CAP_MULTIPLIERS)) {
         continue;
       }
-      IMPORT_CAP_MULTIPLIERS[key] *= effect.value;
+      const value = Number(effect.value);
+      if (!(value > 0)) {
+        continue;
+      }
+      if ((effect.sourceId || '').startsWith('rwg-') && value < 1) {
+        IMPORT_CAP_RWG_REDUCTION_MULTIPLIERS[key] *= value;
+      } else {
+        IMPORT_CAP_MULTIPLIERS[key] *= value;
+      }
     }
+  }
+
+  getRwgImportCapReduction(resourceKey) {
+    return IMPORT_CAP_RWG_REDUCTION_MULTIPLIERS[resourceKey] || 1;
   }
 
   recalculateImportCapFlatBonuses() {
@@ -237,17 +256,20 @@ class WarpGateNetworkManager extends EffectableEntity {
     if (resourceKey === 'hydrogen') {
       return Infinity;
     }
+    const rwgReduction = this.getRwgImportCapReduction(resourceKey);
     const flatBonus = IMPORT_CAP_FLAT_BONUSES[resourceKey] || 0;
     const foundryBonus = resourceKey === 'metal'
       ? this.getFoundryMetalCapBonus().bonus
       : 0;
+    let baseCap = 0;
     if (!this.warpGateUnlocked) {
-      return IMPORT_CAP_BASE * getImportCapRatio(resourceKey) + foundryBonus + flatBonus;
+      baseCap = IMPORT_CAP_BASE * getImportCapRatio(resourceKey);
+    } else if (!this.galaxyUnlocked) {
+      baseCap = IMPORT_CAP_WARP * getImportCapRatio(resourceKey);
+    } else {
+      baseCap = this.getGalaxyCap(resourceKey);
     }
-    if (!this.galaxyUnlocked) {
-      return IMPORT_CAP_WARP * getImportCapRatio(resourceKey) + foundryBonus + flatBonus;
-    }
-    return this.getGalaxyCap(resourceKey) + foundryBonus + flatBonus;
+    return (baseCap + foundryBonus + flatBonus) * rwgReduction;
   }
 
   getGalaxyCap(resourceKey) {
@@ -273,10 +295,12 @@ class WarpGateNetworkManager extends EffectableEntity {
       ? ` Planet Crackers add +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.carbon || 0, true)} CO2, and +${formatNumber(IMPORT_CAP_FLAT_BONUSES.water || 0, true)} Water cap.`
       : '';
     if (!this.warpGateUnlocked) {
-      return `Due to limited deposits, import caps are ${formatImportCapList(IMPORT_CAP_BASE)} ships.${foundryLine}${flatBonusLine}`;
+      const list = IMPORT_CAP_RESOURCES.map(({ key, label }) => `${label}: ${formatNumber(this.getCapForResource(key), true)}`).join(', ');
+      return `Due to limited deposits, import caps are ${list} ships.${foundryLine}${flatBonusLine}`;
     }
     if (!this.galaxyUnlocked) {
-      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${formatImportCapList(IMPORT_CAP_WARP)} ships.${foundryLine}${flatBonusLine}`;
+      const list = IMPORT_CAP_RESOURCES.map(({ key, label }) => `${label}: ${formatNumber(this.getCapForResource(key), true)}`).join(', ');
+      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${list} ships.${foundryLine}${flatBonusLine}`;
     }
     return `${this.getGalaxyCapText()}${foundryLine}${flatBonusLine}`;
   }
@@ -290,6 +314,13 @@ class WarpGateNetworkManager extends EffectableEntity {
       carbon: IMPORT_CAP_FLAT_BONUSES.carbon || 0,
       silicon: IMPORT_CAP_FLAT_BONUSES.silicon || 0,
       water: IMPORT_CAP_FLAT_BONUSES.water || 0,
+    };
+    const rwgReductionByResource = {
+      metal: this.getRwgImportCapReduction('metal'),
+      nitrogen: this.getRwgImportCapReduction('nitrogen'),
+      carbon: this.getRwgImportCapReduction('carbon'),
+      silicon: this.getRwgImportCapReduction('silicon'),
+      water: this.getRwgImportCapReduction('water'),
     };
     const foundryRule = foundry.bonus > 0
       ? `Foundry worlds: +${formatNumber(foundry.bonus, true)} Metal cap (${foundry.count} worlds).`
@@ -309,7 +340,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ratiosLine: '',
         ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
-        caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource),
+        caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource, rwgReductionByResource),
         hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
       };
     }
@@ -320,7 +351,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ratiosLine: '',
         ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
-        caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource),
+        caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource, rwgReductionByResource),
         hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
       };
     }
@@ -338,7 +369,7 @@ class WarpGateNetworkManager extends EffectableEntity {
           ...(crackerRule ? [crackerRule] : []),
         ],
       fullControlLine,
-      caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap', bonusByResource),
+      caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap', bonusByResource, rwgReductionByResource),
       hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
     };
   }
@@ -357,7 +388,11 @@ class WarpGateNetworkManager extends EffectableEntity {
     IMPORT_CAP_RESOURCES.forEach(({ key, label }) => {
       const entry = summary.resources[key];
       const baseCap = IMPORT_CAP_PER_SECTOR * getImportCapRatio(key);
-      const cap = summary.fullControlCount > 0 ? entry.cap : baseCap;
+      const capWithoutBonuses = summary.fullControlCount > 0 ? entry.cap : baseCap;
+      const foundryBonus = key === 'metal' ? this.getFoundryMetalCapBonus().bonus : 0;
+      const flatBonus = IMPORT_CAP_FLAT_BONUSES[key] || 0;
+      const rwgReduction = this.getRwgImportCapReduction(key);
+      const cap = (capWithoutBonuses + foundryBonus + flatBonus) * rwgReduction;
       const detail = summary.fullControlCount > 0
         ? `${label}: ${formatNumber(cap, true)} ships (${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal)`
         : `${label}: ${formatNumber(cap, true)} ships (minimum cap)`;
