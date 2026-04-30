@@ -403,9 +403,9 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     resources.space.energy.modifyRate(-spaceEnergyRate, this.displayName, 'project');
 
     const ratesByType = {};
-    const crackedKeys = Object.keys(plan.crackedByType);
-    for (let index = 0; index < crackedKeys.length; index += 1) {
-      const key = crackedKeys[index];
+    const crackedRateKeys = Object.keys(plan.crackedByType);
+    for (let index = 0; index < crackedRateKeys.length; index += 1) {
+      const key = crackedRateKeys[index];
       ratesByType[key] = plan.crackedByType[key] / seconds;
     }
     this.setLastRunStats(
