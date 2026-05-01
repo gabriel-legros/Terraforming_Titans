@@ -387,7 +387,30 @@ function updateColonyAutomationUI() {
   if (!activePreset && colonyAutomationUIState.syncedPresetId) {
     colonyAutomationUIState.syncedPresetId = null;
   }
-  updateAutomationPresetJsonDetails(colonyPresetJsonDetails, activePreset);
+  updateAutomationPresetJsonDetails(colonyPresetJsonDetails, activePreset, {
+    onFieldChange: (fieldPath, nextValue) => {
+      if (!activePreset) {
+        return;
+      }
+      applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+        onApplied: (appliedPath, appliedValue, rootKey) => {
+          if (rootKey === 'showInSidebar') {
+            colonyAutomationUIState.builderShowInSidebar = appliedValue !== false;
+          }
+          if (rootKey === 'scopeAll') {
+            colonyAutomationUIState.builderScope = appliedValue ? 'all' : 'manual';
+          }
+          if (rootKey === 'includeControl' || rootKey === 'includeAutomation') {
+            colonyAutomationUIState.builderType = activePreset.includeControl && activePreset.includeAutomation
+              ? 'both'
+              : activePreset.includeControl
+                ? 'control'
+                : 'automation';
+          }
+        }
+      });
+    }
+  });
 
   if (document.activeElement !== colonyBuilderPresetNameInput) {
     colonyBuilderPresetNameInput.value = activePreset ? activePreset.name : colonyAutomationUIState.builderName;

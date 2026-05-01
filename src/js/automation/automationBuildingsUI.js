@@ -401,7 +401,30 @@ function updateBuildingsAutomationUI() {
   if (!activePreset && buildingAutomationUIState.syncedPresetId) {
     buildingAutomationUIState.syncedPresetId = null;
   }
-  updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset);
+  updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset, {
+    onFieldChange: (fieldPath, nextValue) => {
+      if (!activePreset) {
+        return;
+      }
+      applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+        onApplied: (appliedPath, appliedValue, rootKey) => {
+          if (rootKey === 'showInSidebar') {
+            buildingAutomationUIState.builderShowInSidebar = appliedValue !== false;
+          }
+          if (rootKey === 'scopeAll') {
+            buildingAutomationUIState.builderScope = appliedValue ? 'all' : 'manual';
+          }
+          if (rootKey === 'includeControl' || rootKey === 'includeAutomation') {
+            buildingAutomationUIState.builderType = activePreset.includeControl && activePreset.includeAutomation
+              ? 'both'
+              : activePreset.includeControl
+                ? 'control'
+                : 'automation';
+          }
+        }
+      });
+    }
+  });
 
   if (document.activeElement !== buildingsBuilderPresetNameInput) {
     buildingsBuilderPresetNameInput.value = activePreset ? activePreset.name : buildingAutomationUIState.builderName;

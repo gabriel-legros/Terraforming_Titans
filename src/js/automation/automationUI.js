@@ -1,6 +1,7 @@
 let automationTabVisible = false;
 let automationUIInitialized = false;
 let automationUIStale = true;
+const automationPresetJsonDraftStore = {};
 const AUTOMATION_CARD_ORDER_KEYS = [
   'scripts',
   'ships',
@@ -945,31 +946,316 @@ function createAutomationPresetJsonDetails(extraClassName) {
 
   const summary = document.createElement('summary');
   summary.classList.add('automation-preset-json-summary');
+  const summaryText = document.createElement('span');
+  summary.appendChild(summaryText);
+  const saveButton = document.createElement('button');
+  saveButton.type = 'button';
+  const saveButtonText = document.createElement('span');
+  saveButtonText.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
+  const saveButtonStar = document.createElement('span');
+  saveButtonStar.textContent = ' *';
+  saveButtonStar.style.color = '#d02b2b';
+  saveButtonStar.style.display = 'none';
+  saveButton.append(saveButtonText, saveButtonStar);
+  saveButton.classList.add('automation-preset-json-save');
+  saveButton.style.marginLeft = '8px';
+  saveButton.style.display = 'none';
+  saveButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  summary.appendChild(saveButton);
   details.appendChild(summary);
+  details.addEventListener('toggle', () => {
+    saveButton.style.display = details.open ? '' : 'none';
+  });
 
   const pre = document.createElement('pre');
   pre.classList.add('automation-preset-json-content');
   details.appendChild(pre);
 
   details._summaryNode = summary;
+  details._summaryTextNode = summaryText;
+  details._saveButton = saveButton;
+  details._saveButtonTextNode = saveButtonText;
+  details._saveButtonStarNode = saveButtonStar;
   details._contentNode = pre;
   details._renderedSummaryText = '';
   details._renderedPresetJson = '';
+  details._renderedFieldKeySignature = '';
+  details._jsonInputMap = {};
+  details._jsonDraftMap = {};
+  details._jsonDirty = false;
+  details._draftStorageKey = extraClassName || 'automation-preset-json';
+  details._basePresetSignature = '';
+  details._boundPresetId = null;
   details.style.display = 'none';
   return details;
 }
 
-function updateAutomationPresetJsonDetails(details, preset) {
+function getAutomationPresetJsonDraftStoreKey(details, presetId) {
+  return `${details._draftStorageKey}:${presetId}`;
+}
+
+function clearAutomationPresetJsonDraftStore(details, presetId) {
+  const storeKey = getAutomationPresetJsonDraftStoreKey(details, presetId);
+  delete automationPresetJsonDraftStore[storeKey];
+}
+
+function saveAutomationPresetJsonDraftStore(details, presetId) {
+  const storeKey = getAutomationPresetJsonDraftStoreKey(details, presetId);
+  automationPresetJsonDraftStore[storeKey] = {
+    baseSignature: details._basePresetSignature,
+    drafts: details._jsonDraftMap
+  };
+}
+
+function loadAutomationPresetJsonDraftStore(details, presetId) {
+  const storeKey = getAutomationPresetJsonDraftStoreKey(details, presetId);
+  return automationPresetJsonDraftStore[storeKey] || null;
+}
+
+function parseAutomationPresetJsonFieldValue(rawValue) {
+  const trimmed = String(rawValue).trim();
+  if (!trimmed) {
+    return '';
+  }
+  if (trimmed === 'true') {
+    return true;
+  }
+  if (trimmed === 'false') {
+    return false;
+  }
+  if (trimmed === 'null') {
+    return null;
+  }
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    const numeric = Number(trimmed);
+    if (Number.isFinite(numeric)) {
+      return numeric;
+    }
+  }
+  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    return JSON.parse(trimmed);
+  }
+  return rawValue;
+}
+
+function formatAutomationPresetJsonFieldValue(value) {
+  if (value && value.constructor === Object) {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  if (value === null) {
+    return 'null';
+  }
+  if (value === undefined) {
+    return '';
+  }
+  return String(value);
+}
+
+function buildAutomationPresetLeafPathKey(path) {
+  return path.map((segment) => `[${segment}]`).join('');
+}
+
+function formatAutomationPresetLeafPathLabel(path) {
+  let label = '';
+  for (let index = 0; index < path.length; index += 1) {
+    const segment = path[index];
+    if (Number.isInteger(segment)) {
+      label += `[${segment}]`;
+    } else {
+      label += label ? `.${segment}` : segment;
+    }
+  }
+  return label;
+}
+
+function collectAutomationPresetLeafPaths(target, path, outPaths) {
+  if (Array.isArray(target)) {
+    for (let index = 0; index < target.length; index += 1) {
+      collectAutomationPresetLeafPaths(target[index], path.concat(index), outPaths);
+    }
+    return;
+  }
+  if (target && target.constructor === Object) {
+    const keys = Object.keys(target);
+    for (let keyIndex = 0; keyIndex < keys.length; keyIndex += 1) {
+      const key = keys[keyIndex];
+      collectAutomationPresetLeafPaths(target[key], path.concat(key), outPaths);
+    }
+    return;
+  }
+  outPaths.push(path);
+}
+
+function getAutomationPresetValueAtPath(target, path) {
+  let current = target;
+  for (let index = 0; index < path.length; index += 1) {
+    current = current[path[index]];
+  }
+  return current;
+}
+
+function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange) {
+  const content = details._contentNode;
+  content.textContent = '';
+  details._jsonInputMap = {};
+
+  const writeText = (text) => {
+    content.appendChild(document.createTextNode(text));
+  };
+
+  const appendLeafInput = (path, value, isString) => {
+    const pathKey = buildAutomationPresetLeafPathKey(path);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.classList.add('automation-preset-json-field-input');
+    input.dataset.fieldKey = pathKey;
+    const draftEntry = details._jsonDraftMap[pathKey];
+    const valueToRender = draftEntry ? draftEntry.value : value;
+    input.value = formatAutomationPresetJsonFieldValue(valueToRender);
+    input.size = Math.max(1, input.value.length);
+    input.style.fontFamily = 'inherit';
+    input.style.fontSize = 'inherit';
+    input.style.lineHeight = 'inherit';
+    input.style.padding = '0 2px';
+    input.style.margin = '0';
+    input.style.border = '1px solid #888';
+    input.style.background = 'rgba(255,255,255,0.85)';
+    input.readOnly = path.length === 1 && path[0] === 'id';
+    if (input.readOnly) {
+      input.style.opacity = '0.8';
+    }
+    input.addEventListener('input', () => {
+      input.size = Math.max(1, input.value.length);
+    });
+    input.addEventListener('change', (event) => {
+      try {
+        const nextValue = parseAutomationPresetJsonFieldValue(event.target.value);
+        const baseValue = getAutomationPresetValueAtPath(preset, path);
+        if (JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
+          delete details._jsonDraftMap[pathKey];
+        } else {
+          details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue };
+        }
+        details._jsonDirty = Object.keys(details._jsonDraftMap).length > 0;
+        if (details._jsonDirty) {
+          saveAutomationPresetJsonDraftStore(details, preset.id);
+        } else {
+          clearAutomationPresetJsonDraftStore(details, preset.id);
+        }
+        if (details._onDirtyChange) {
+          details._onDirtyChange(details._jsonDirty);
+        }
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      } catch (error) {
+        showAutomationImportStatus(
+          getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.'),
+          true
+        );
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      }
+    });
+    details._jsonInputMap[pathKey] = input;
+    if (isString) {
+      writeText('"');
+      content.appendChild(input);
+      writeText('"');
+      return;
+    }
+    content.appendChild(input);
+  };
+
+  const renderValue = (value, path, indent, keyName, isLast) => {
+    const indentText = '  '.repeat(indent);
+    const keyPrefix = keyName === null ? '' : `${JSON.stringify(keyName)}: `;
+    if (Array.isArray(value)) {
+      writeText(`${indentText}${keyPrefix}[\n`);
+      for (let index = 0; index < value.length; index += 1) {
+        renderValue(value[index], path.concat(index), indent + 1, null, index === value.length - 1);
+      }
+      writeText(`${indentText}]${isLast ? '' : ','}\n`);
+      return;
+    }
+    if (value && value.constructor === Object) {
+      const keys = Object.keys(value);
+      writeText(`${indentText}${keyPrefix}{\n`);
+      for (let keyIndex = 0; keyIndex < keys.length; keyIndex += 1) {
+        const childKey = keys[keyIndex];
+        renderValue(value[childKey], path.concat(childKey), indent + 1, childKey, keyIndex === keys.length - 1);
+      }
+      writeText(`${indentText}}${isLast ? '' : ','}\n`);
+      return;
+    }
+    writeText(`${indentText}${keyPrefix}`);
+    appendLeafInput(path, value, typeof value === 'string');
+    writeText(`${isLast ? '' : ','}\n`);
+  };
+
+  renderValue(preset, [], 0, null, true);
+}
+
+function applyAutomationPresetJsonFieldEdit(preset, path, nextValue, options = {}) {
+  if (!preset || !Array.isArray(path) || path.length === 0) {
+    return false;
+  }
+  if (path.length === 1 && path[0] === 'id') {
+    return false;
+  }
+  const rootKey = path[0];
+  const parentPath = path.slice(0, path.length - 1);
+  const leafKey = path[path.length - 1];
+  let parent = preset;
+  for (let index = 0; index < parentPath.length; index += 1) {
+    parent = parent[parentPath[index]];
+  }
+  const previousValue = parent[leafKey];
+  const normalizeValue = options.normalizeValue;
+  const finalValue = normalizeValue ? normalizeValue(path, nextValue) : nextValue;
+  const valueChanged = JSON.stringify(previousValue) !== JSON.stringify(finalValue);
+  if (!valueChanged) {
+    return false;
+  }
+  parent[leafKey] = finalValue;
+  if (options.onApplied) {
+    options.onApplied(path, finalValue, rootKey);
+  }
+  return true;
+}
+
+function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   if (!details) {
     return;
   }
+  const onFieldChange = options.onFieldChange;
+  const onDirtyChange = options.onDirtyChange;
+  details._onDirtyChange = onDirtyChange || null;
 
   if (!preset) {
     details.open = false;
     details.style.display = 'none';
+    details._boundPresetId = null;
     if (details._renderedSummaryText) {
       details._summaryNode.textContent = '';
       details._renderedSummaryText = '';
+    }
+    details._renderedFieldKeySignature = '';
+    details._jsonInputMap = {};
+    details._jsonDraftMap = {};
+    details._jsonDirty = false;
+    details._basePresetSignature = '';
+    if (details._saveButton) {
+      details._saveButton.style.display = 'none';
+      details._saveButton.disabled = true;
+      if (details._saveButtonStarNode) {
+        details._saveButtonStarNode.style.display = 'none';
+      }
     }
     if (details._renderedPresetJson) {
       details._contentNode.textContent = '';
@@ -979,21 +1265,128 @@ function updateAutomationPresetJsonDetails(details, preset) {
   }
 
   details.style.display = '';
+  const presetSignature = JSON.stringify(preset);
   const summaryText = getAutomationCardText(
     'selectedPresetJsonSummary',
     { name: preset.name || `Preset ${preset.id}` },
     'Selected preset JSON'
   );
   if (details._renderedSummaryText !== summaryText) {
-    details._summaryNode.textContent = summaryText;
+    details._summaryTextNode.textContent = summaryText;
     details._renderedSummaryText = summaryText;
   }
+  details._saveButton.style.display = details.open ? '' : 'none';
 
-  const presetJson = JSON.stringify(preset, null, 2);
-  if (details._renderedPresetJson !== presetJson) {
-    details._contentNode.textContent = presetJson;
-    details._renderedPresetJson = presetJson;
+  if (details._boundPresetId !== preset.id) {
+    const storedDraft = loadAutomationPresetJsonDraftStore(details, preset.id);
+    if (storedDraft && storedDraft.baseSignature === presetSignature) {
+      details._jsonDraftMap = storedDraft.drafts;
+      details._basePresetSignature = storedDraft.baseSignature;
+    } else {
+      details._jsonDraftMap = {};
+      details._basePresetSignature = presetSignature;
+    }
+    if (storedDraft && storedDraft.baseSignature !== presetSignature) {
+      clearAutomationPresetJsonDraftStore(details, preset.id);
+    }
+    details._jsonDirty = false;
+    if (details._onDirtyChange) {
+      details._onDirtyChange(false);
+    }
   }
+  if (details._jsonDirty && details._basePresetSignature !== presetSignature) {
+    details._jsonDraftMap = {};
+    details._jsonDirty = false;
+    details._basePresetSignature = presetSignature;
+    clearAutomationPresetJsonDraftStore(details, preset.id);
+    if (details._onDirtyChange) {
+      details._onDirtyChange(false);
+    }
+  }
+
+  const leafPaths = [];
+  collectAutomationPresetLeafPaths(preset, [], leafPaths);
+  const nextFieldKeySignature = leafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|');
+  for (let pathIndex = 0; pathIndex < leafPaths.length; pathIndex += 1) {
+    const path = leafPaths[pathIndex];
+    const pathKey = buildAutomationPresetLeafPathKey(path);
+    const draftEntry = details._jsonDraftMap[pathKey];
+    if (!draftEntry) {
+      continue;
+    }
+    const baseValue = getAutomationPresetValueAtPath(preset, path);
+    if (JSON.stringify(baseValue) === JSON.stringify(draftEntry.value)) {
+      delete details._jsonDraftMap[pathKey];
+    }
+  }
+  details._jsonDirty = Object.keys(details._jsonDraftMap).length > 0;
+  if (!details._jsonDirty) {
+    details._basePresetSignature = presetSignature;
+  }
+  if (details._jsonDirty) {
+    saveAutomationPresetJsonDraftStore(details, preset.id);
+  } else {
+    clearAutomationPresetJsonDraftStore(details, preset.id);
+  }
+  details._saveButton.disabled = !details._jsonDirty;
+  if (details._saveButtonStarNode) {
+    details._saveButtonStarNode.style.display = details._jsonDirty ? '' : 'none';
+  }
+  if (details._onDirtyChange) {
+    details._onDirtyChange(details._jsonDirty);
+  }
+
+  if (!details._saveButton._boundClick) {
+    details._saveButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!onFieldChange) {
+        return;
+      }
+      const draftEntries = Object.values(details._jsonDraftMap);
+      for (let index = 0; index < draftEntries.length; index += 1) {
+        const draftEntry = draftEntries[index];
+        onFieldChange(draftEntry.path, draftEntry.value);
+      }
+      details._jsonDraftMap = {};
+      details._jsonDirty = false;
+      clearAutomationPresetJsonDraftStore(details, preset.id);
+      details._saveButton.disabled = true;
+      if (details._saveButtonStarNode) {
+        details._saveButtonStarNode.style.display = 'none';
+      }
+      if (details._onDirtyChange) {
+        details._onDirtyChange(false);
+      }
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    details._saveButton._boundClick = true;
+  }
+
+  const shouldRebuildJson = details._renderedFieldKeySignature !== nextFieldKeySignature || details._boundPresetId !== preset.id;
+  if (shouldRebuildJson) {
+    renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange);
+    details._renderedFieldKeySignature = nextFieldKeySignature;
+    details._boundPresetId = preset.id;
+  } else {
+    for (let keyIndex = 0; keyIndex < leafPaths.length; keyIndex += 1) {
+      const leafPath = leafPaths[keyIndex];
+      const pathKey = buildAutomationPresetLeafPathKey(leafPath);
+      const input = details._jsonInputMap[pathKey];
+      if (!input || document.activeElement === input) {
+        continue;
+      }
+      const draftEntry = details._jsonDraftMap[pathKey];
+      const valueToRender = draftEntry
+        ? draftEntry.value
+        : getAutomationPresetValueAtPath(preset, leafPath);
+      input.value = formatAutomationPresetJsonFieldValue(valueToRender);
+      input.size = Math.max(1, input.value.length);
+    }
+  }
+
+  details._renderedPresetJson = presetSignature;
 }
 
 function createAutomationPresetTransferButtons(baseClassName) {

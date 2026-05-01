@@ -240,7 +240,20 @@ function updateResearchAutomationUI() {
   researchApplyNextTravelPersistToggle.checked = automation.nextTravelPersistent;
   researchApplyNextTravelPersistToggle.disabled = !automation.nextTravelPresetId;
 
-  updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset);
+  updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset, {
+    onFieldChange: (fieldPath, nextValue) => {
+      if (!selectedPreset) {
+        return;
+      }
+      applyAutomationPresetJsonFieldEdit(selectedPreset, fieldPath, nextValue, {
+        onApplied: (appliedPath, appliedValue, rootKey) => {
+          if (rootKey === 'showInSidebar') {
+            researchAutomationUIState.builderShowInSidebar = appliedValue !== false;
+          }
+        }
+      });
+    }
+  });
 }
 
 function attachResearchAutomationHandlers() {

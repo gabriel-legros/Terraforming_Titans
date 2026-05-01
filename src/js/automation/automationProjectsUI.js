@@ -414,7 +414,32 @@ function updateProjectsAutomationUI() {
   if (!activePreset && projectAutomationUIState.syncedPresetId) {
     projectAutomationUIState.syncedPresetId = null;
   }
-  updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset);
+  updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
+    onFieldChange: (fieldPath, nextValue) => {
+      if (!activePreset) {
+        return;
+      }
+      applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+        onApplied: (appliedPath, appliedValue, rootKey) => {
+          if (rootKey === 'showInSidebar') {
+            projectAutomationUIState.builderShowInSidebar = appliedValue !== false;
+          }
+          if (rootKey === 'scopeAll') {
+            projectAutomationUIState.builderScope = appliedValue ? 'all' : 'manual';
+          }
+          if (rootKey === 'includeExpansion' || rootKey === 'includeOperations') {
+            const includeExpansion = activePreset.includeExpansion !== false;
+            const includeOperations = activePreset.includeOperations !== false;
+            projectAutomationUIState.builderType = includeExpansion && includeOperations
+              ? 'both'
+              : includeExpansion
+                ? 'expansion'
+                : 'operations';
+          }
+        }
+      });
+    }
+  });
 
   if (document.activeElement !== projectsBuilderPresetNameInput) {
     projectsBuilderPresetNameInput.value = activePreset ? activePreset.name : projectAutomationUIState.builderName;
