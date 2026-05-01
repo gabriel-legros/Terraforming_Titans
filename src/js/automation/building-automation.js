@@ -318,7 +318,12 @@ class BuildingAutomation {
   }
 
   addPreset(name, buildingIds, options = {}) {
-    const preset = this.buildPreset(name, buildingIds, options);
+    const shouldCreateEmpty = options.createEmpty === true;
+    const preset = this.buildPreset(
+      name,
+      shouldCreateEmpty ? [] : buildingIds,
+      shouldCreateEmpty ? { ...options, scopeAll: false } : options
+    );
     this.presets.push(preset);
     this.selectedPresetId = preset.id;
     return preset.id;

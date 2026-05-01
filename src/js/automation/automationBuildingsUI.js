@@ -368,17 +368,18 @@ function updateBuildingsAutomationUI() {
 
   if (document.activeElement !== buildingsBuilderPresetSelect) {
     buildingsBuilderPresetSelect.textContent = '';
-    const newOption = document.createElement('option');
-    newOption.value = '';
-    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
-    buildingsBuilderPresetSelect.appendChild(newOption);
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
       option.textContent = getAutomationPresetLabel(preset);
       buildingsBuilderPresetSelect.appendChild(option);
     });
-    buildingsBuilderPresetSelect.value = automation.getSelectedPresetId() || '';
+    const selectedPresetId = automation.getSelectedPresetId();
+    if (selectedPresetId) {
+      buildingsBuilderPresetSelect.value = String(selectedPresetId);
+    } else {
+      buildingsBuilderPresetSelect.selectedIndex = -1;
+    }
   }
 
   const activePresetId = automation.getSelectedPresetId();
@@ -925,7 +926,7 @@ function attachBuildingsAutomationHandlers() {
     if (presetId) {
       automation.updatePreset(Number(presetId), name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
+      automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar, createEmpty: true });
       buildingAutomationUIState.syncedPresetId = null;
       buildingAutomationUIState.builderName = '';
     }

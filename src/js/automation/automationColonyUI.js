@@ -355,17 +355,18 @@ function updateColonyAutomationUI() {
 
   if (document.activeElement !== colonyBuilderPresetSelect) {
     colonyBuilderPresetSelect.textContent = '';
-    const newOption = document.createElement('option');
-    newOption.value = '';
-    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
-    colonyBuilderPresetSelect.appendChild(newOption);
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
       option.textContent = getColonyAutomationPresetLabel(preset);
       colonyBuilderPresetSelect.appendChild(option);
     });
-    colonyBuilderPresetSelect.value = automation.getSelectedPresetId() || '';
+    const selectedPresetId = automation.getSelectedPresetId();
+    if (selectedPresetId) {
+      colonyBuilderPresetSelect.value = String(selectedPresetId);
+    } else {
+      colonyBuilderPresetSelect.selectedIndex = -1;
+    }
   }
 
   const activePresetId = automation.getSelectedPresetId();
@@ -889,7 +890,7 @@ function attachColonyAutomationHandlers() {
     if (presetId) {
       automation.updatePreset(Number(presetId), name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
+      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar, createEmpty: true });
       colonyAutomationUIState.syncedPresetId = null;
       colonyAutomationUIState.builderName = '';
     }

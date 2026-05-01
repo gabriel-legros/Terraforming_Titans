@@ -275,7 +275,12 @@ class ColonyAutomation {
   }
 
   addPreset(name, targetIds, options = {}) {
-    const preset = this.buildPreset(name, targetIds, options);
+    const shouldCreateEmpty = options.createEmpty === true;
+    const preset = this.buildPreset(
+      name,
+      shouldCreateEmpty ? [] : targetIds,
+      shouldCreateEmpty ? { ...options, scopeAll: false } : options
+    );
     this.presets.push(preset);
     this.selectedPresetId = preset.id;
     return preset.id;

@@ -379,17 +379,18 @@ function updateProjectsAutomationUI() {
 
   if (document.activeElement !== projectsBuilderPresetSelect) {
     projectsBuilderPresetSelect.textContent = '';
-    const newOption = document.createElement('option');
-    newOption.value = '';
-    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
-    projectsBuilderPresetSelect.appendChild(newOption);
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
       option.textContent = getProjectAutomationPresetLabel(preset);
       projectsBuilderPresetSelect.appendChild(option);
     });
-    projectsBuilderPresetSelect.value = automation.getSelectedPresetId() || '';
+    const selectedPresetId = automation.getSelectedPresetId();
+    if (selectedPresetId) {
+      projectsBuilderPresetSelect.value = String(selectedPresetId);
+    } else {
+      projectsBuilderPresetSelect.selectedIndex = -1;
+    }
   }
 
   const activePresetId = automation.getSelectedPresetId();
@@ -941,7 +942,7 @@ function attachProjectsAutomationHandlers() {
     if (presetId) {
       automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
+      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, createEmpty: true });
       projectAutomationUIState.syncedPresetId = null;
       projectAutomationUIState.builderName = '';
     }

@@ -354,7 +354,12 @@ class ProjectAutomation {
   }
 
   addPreset(name, projectIds, options = {}) {
-    const preset = this.buildPreset(name, projectIds, options);
+    const shouldCreateEmpty = options.createEmpty === true;
+    const preset = this.buildPreset(
+      name,
+      shouldCreateEmpty ? [] : projectIds,
+      shouldCreateEmpty ? { ...options, scopeAll: false } : options
+    );
     this.presets.push(preset);
     this.selectedPresetId = preset.id;
     return preset.id;

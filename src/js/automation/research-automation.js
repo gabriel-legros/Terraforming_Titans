@@ -199,10 +199,19 @@ class ResearchAutomation {
     return preset;
   }
 
+  buildEmptyPreset(name, idOverride) {
+    const preset = this.normalizePreset({ name, researches: {}, hiddenResearchIds: [] }, idOverride);
+    for (const researchId in preset.researches) {
+      preset.researches[researchId] = this.normalizeEntry({ enabled: false, priority: 4 });
+    }
+    preset.hiddenResearchIds = [];
+    return preset;
+  }
+
   addPreset(name, presetData) {
     const preset = presetData
       ? this.normalizePreset(presetData)
-      : this.buildPresetFromCurrentState(name);
+      : this.buildEmptyPreset(name);
     this.presets.push(preset);
     this.selectedPresetId = preset.id;
     return preset.id;

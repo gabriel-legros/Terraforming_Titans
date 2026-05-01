@@ -182,17 +182,18 @@ function updateResearchAutomationUI() {
 
   if (document.activeElement !== researchPresetSelect) {
     researchPresetSelect.textContent = '';
-    const newOption = document.createElement('option');
-    newOption.value = '';
-    newOption.textContent = getAutomationCardText('newPresetOption', {}, 'New preset');
-    researchPresetSelect.appendChild(newOption);
     presets.forEach((preset) => {
       const option = document.createElement('option');
       option.value = String(preset.id);
       option.textContent = preset.name || `Preset ${preset.id}`;
       researchPresetSelect.appendChild(option);
     });
-    researchPresetSelect.value = automation.getSelectedPresetId() || '';
+    const selectedPresetId = automation.getSelectedPresetId();
+    if (selectedPresetId) {
+      researchPresetSelect.value = String(selectedPresetId);
+    } else {
+      researchPresetSelect.selectedIndex = -1;
+    }
   }
 
   if (document.activeElement !== researchPresetNameInput) {
