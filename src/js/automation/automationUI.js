@@ -1111,14 +1111,29 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
 
   const appendLeafInput = (path, value, isString) => {
     const pathKey = buildAutomationPresetLeafPathKey(path);
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.classList.add('automation-preset-json-field-input');
-    input.dataset.fieldKey = pathKey;
     const draftEntry = details._jsonDraftMap[pathKey];
     const valueToRender = draftEntry ? draftEntry.value : value;
-    input.value = formatAutomationPresetJsonFieldValue(valueToRender);
-    input.size = Math.max(1, input.value.length);
+    const isBooleanLeaf = typeof value === 'boolean';
+    const input = isBooleanLeaf ? document.createElement('select') : document.createElement('input');
+    input.classList.add('automation-preset-json-field-input');
+    input.dataset.fieldKey = pathKey;
+    if (isBooleanLeaf) {
+      const optionTrue = document.createElement('option');
+      optionTrue.value = 'true';
+      optionTrue.textContent = 'true';
+      const optionFalse = document.createElement('option');
+      optionFalse.value = 'false';
+      optionFalse.textContent = 'false';
+      input.append(optionTrue, optionFalse);
+      input.value = valueToRender ? 'true' : 'false';
+    } else {
+      input.type = 'text';
+      input.value = formatAutomationPresetJsonFieldValue(valueToRender);
+      input.size = Math.max(1, input.value.length);
+      input.addEventListener('input', () => {
+        input.size = Math.max(1, input.value.length);
+      });
+    }
     input.style.fontFamily = 'inherit';
     input.style.fontSize = 'inherit';
     input.style.lineHeight = 'inherit';
@@ -1126,16 +1141,15 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     input.style.margin = '0';
     input.style.border = '1px solid #888';
     input.style.background = 'rgba(255,255,255,0.85)';
-    input.readOnly = path.length === 1 && path[0] === 'id';
-    if (input.readOnly) {
+    input.disabled = path.length === 1 && path[0] === 'id';
+    if (input.disabled) {
       input.style.opacity = '0.8';
     }
-    input.addEventListener('input', () => {
-      input.size = Math.max(1, input.value.length);
-    });
     input.addEventListener('change', (event) => {
       try {
-        const nextValue = parseAutomationPresetJsonFieldValue(event.target.value);
+        const nextValue = isBooleanLeaf
+          ? event.target.value === 'true'
+          : parseAutomationPresetJsonFieldValue(event.target.value);
         const baseValue = getAutomationPresetValueAtPath(preset, path);
         if (JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
           delete details._jsonDraftMap[pathKey];
@@ -1227,6 +1241,32 @@ function applyAutomationPresetJsonFieldEdit(preset, path, nextValue, options = {
     options.onApplied(path, finalValue, rootKey);
   }
   return true;
+}
+
+function isValidAutomationPresetLeafReplacement(baseValue, nextValue) {
+  if (baseValue === null) {
+    return nextValue === null;
+  }
+  const baseType = typeof baseValue;
+  if (baseType === 'number') {
+    return typeof nextValue === 'number' && Number.isFinite(nextValue);
+  }
+  if (baseType === 'string') {
+    return typeof nextValue === 'string';
+  }
+  if (baseType === 'boolean') {
+    return typeof nextValue === 'boolean';
+  }
+  if (baseType === 'undefined') {
+    return false;
+  }
+  if (Array.isArray(baseValue)) {
+    return Array.isArray(nextValue);
+  }
+  if (baseValue && baseValue.constructor === Object) {
+    return nextValue && nextValue.constructor === Object;
+  }
+  return false;
 }
 
 function updateAutomationPresetJsonDetails(details, preset, options = {}) {
@@ -1346,6 +1386,23 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       const draftEntries = Object.values(details._jsonDraftMap);
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
+        const baseValue = getAutomationPresetValueAtPath(preset, draftEntry.path);
+        if (!isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value)) {
+          showAutomationImportStatus(
+            getAutomationCardText(
+              'importPresetInvalidJsonError',
+              {},
+              'That preset string is not valid JSON.'
+            ),
+            true
+          );
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+          return;
+        }
+      }
+      for (let index = 0; index < draftEntries.length; index += 1) {
+        const draftEntry = draftEntries[index];
         onFieldChange(draftEntry.path, draftEntry.value);
       }
       details._jsonDraftMap = {};
@@ -1381,8 +1438,12 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       const valueToRender = draftEntry
         ? draftEntry.value
         : getAutomationPresetValueAtPath(preset, leafPath);
-      input.value = formatAutomationPresetJsonFieldValue(valueToRender);
-      input.size = Math.max(1, input.value.length);
+      if (input.tagName === 'SELECT') {
+        input.value = valueToRender ? 'true' : 'false';
+      } else {
+        input.value = formatAutomationPresetJsonFieldValue(valueToRender);
+        input.size = Math.max(1, input.value.length);
+      }
     }
   }
 
