@@ -131,14 +131,14 @@ function renderLiftersUI(project, container) {
   const stepDownButton = document.createElement('button');
   stepDownButton.textContent = getLiftersUIText('ui.projects.common.divideTen', '/10');
   stepDownButton.addEventListener('click', () => {
-    project.setAssignmentStep(project.assignmentStep / 10);
+    project.divideAssignmentStepByTen();
     project.updateUI();
   });
 
   const stepUpButton = document.createElement('button');
   stepUpButton.textContent = getLiftersUIText('ui.projects.common.timesTen', 'x10');
   stepUpButton.addEventListener('click', () => {
-    project.setAssignmentStep(project.assignmentStep * 10);
+    project.multiplyAssignmentStepByTen();
     project.updateUI();
   });
 
@@ -213,10 +213,14 @@ function renderLiftersUI(project, container) {
     });
 
     const minusButton = document.createElement('button');
-    minusButton.addEventListener('click', () => project.adjustAssignment(key, -project.assignmentStep));
+    minusButton.addEventListener('click', () => {
+      project.adjustAssignment(key, -project.getAssignmentStep());
+    });
 
     const plusButton = document.createElement('button');
-    plusButton.addEventListener('click', () => project.adjustAssignment(key, project.assignmentStep));
+    plusButton.addEventListener('click', () => {
+      project.adjustAssignment(key, project.getAssignmentStep());
+    });
 
     const maxButton = document.createElement('button');
     maxButton.textContent = getLiftersUIText('ui.projects.common.max', 'Max');
@@ -332,12 +336,12 @@ function updateLiftersUI(project) {
   }
 
   project.normalizeAssignments();
-  const total = project.repeatCount;
   const assigned = project.getAssignedTotal();
-  const available = Math.max(0, total - assigned);
-  const step = project.assignmentStep;
+  const totalBigInt = project.getAvailableLifters() + assigned;
+  const available = project.getAvailableLifters();
+  const step = project.getAssignmentStep();
 
-  elements.totalValue.textContent = formatNumber(total, true, 2);
+  elements.totalValue.textContent = formatNumber(totalBigInt, true, 2);
   elements.assignedValue.textContent = formatNumber(assigned, true, 2);
   elements.unassignedValue.textContent = formatNumber(available, true, 2);
   elements.statusValue.textContent = project.statusText || 'Idle';
@@ -354,9 +358,9 @@ function updateLiftersUI(project) {
   elements.superchargeEnergyValue.textContent = `Energy x${formatNumber(energyMultiplier, true, 0)}`;
 
   elements.runCheckbox.checked = project.isRunning;
-  elements.runCheckbox.disabled = total <= 0;
-  elements.stepDownButton.disabled = total <= 0;
-  elements.stepUpButton.disabled = total <= 0;
+  elements.runCheckbox.disabled = totalBigInt <= 0n;
+  elements.stepDownButton.disabled = totalBigInt <= 0n;
+  elements.stepUpButton.disabled = totalBigInt <= 0n;
 
   const displayKeys = [project.getUnassignedAssignmentKey()].concat(project.getRecipeKeys());
   displayKeys.forEach((key) => {
@@ -382,22 +386,22 @@ function updateLiftersUI(project) {
     row.minusButton.textContent = `-${formatNumber(step, true)}`;
     row.plusButton.textContent = `+${formatNumber(step, true)}`;
     row.autoAssign.checked = project.autoAssignFlags[key] === true;
-    row.autoAssign.disabled = total <= 0;
+    row.autoAssign.disabled = totalBigInt <= 0n;
     if (document.activeElement !== row.weightInput) {
       row.weightInput.value = String(
         Object.prototype.hasOwnProperty.call(project.autoAssignWeights, key) ? project.autoAssignWeights[key] : 1
       );
     }
-    row.weightInput.disabled = total <= 0;
-    row.zeroButton.disabled = storedCurrent <= 0 || project.autoAssignFlags[key];
-    row.maxButton.disabled = storedCurrent >= maxForKey || total <= 0 || project.autoAssignFlags[key];
-    row.minusButton.disabled = storedCurrent <= 0 || project.autoAssignFlags[key];
-    row.plusButton.disabled = storedCurrent >= maxForKey || total <= 0 || project.autoAssignFlags[key];
+    row.weightInput.disabled = totalBigInt <= 0n;
+    row.zeroButton.disabled = storedCurrent <= 0n || project.autoAssignFlags[key];
+    row.maxButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || project.autoAssignFlags[key];
+    row.minusButton.disabled = storedCurrent <= 0n || project.autoAssignFlags[key];
+    row.plusButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || project.autoAssignFlags[key];
 
     const rate = isUnassigned ? 0 : (project.lastDisplayedRatesByRecipe?.[key] || 0);
     row.rate.textContent = isUnassigned ? '' : formatPerSecond(rate);
     const productivity = isUnassigned ? 1 : project.getDisplayedRecipeProductivity(key);
-    const productivityLimited = !isUnassigned && project.isRunning && storedCurrent > 0 && productivity < 1;
+    const productivityLimited = !isUnassigned && project.isRunning && storedCurrent > 0n && productivity < 1;
     row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
   });
 

@@ -21,6 +21,47 @@ const DEFAULT_LIFTER_HARVEST_RECIPES = {
   },
 };
 
+function normalizeLifterInteger(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0n;
+  }
+  if (Object.prototype.toString.call(value) === '[object BigInt]') {
+    return value < 0n ? 0n : value;
+  }
+  if (Object.prototype.toString.call(value) === '[object String]') {
+    const trimmed = value.trim();
+    if (/^\d+$/.test(trimmed)) {
+      return BigInt(trimmed);
+    }
+  }
+  const numeric = Number(value) || 0;
+  if (numeric <= 0) {
+    return 0n;
+  }
+  if (Number.isSafeInteger(numeric)) {
+    return BigInt(numeric);
+  }
+  return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
+    useGrouping: false,
+    maximumFractionDigits: 0
+  }));
+}
+
+function serializeLifterInteger(value) {
+  const normalized = normalizeLifterInteger(value);
+  return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
+    ? Number(normalized)
+    : normalized.toString();
+}
+
+function serializeLifterAssignments(assignments = {}) {
+  const serialized = {};
+  Object.keys(assignments).forEach((key) => {
+    serialized[key] = serializeLifterInteger(assignments[key]);
+  });
+  return serialized;
+}
+
 function getLiftersProjectText(path, vars, fallback = '') {
   try {
     return t(`ui.projects.lifters.${path}`, vars, fallback);
@@ -62,7 +103,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.mode = LIFTER_MODES.GAS_HARVEST;
 
     this.lifterAssignments = {};
-    this.assignmentStep = 1;
+    this.assignmentStep = 1n;
     this.autoAssignFlags = {};
     this.autoAssignWeights = {};
 
@@ -311,7 +352,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       if (useAutoAssign) {
         this.autoAssignFlags[targetKey] = true;
       } else {
-        this.lifterAssignments[targetKey] = this.repeatCount;
+        this.lifterAssignments[targetKey] = normalizeLifterInteger(this.repeatCount);
       }
     }
     this.normalizeAssignments();
@@ -422,24 +463,24 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     const idleKey = this.getUnassignedAssignmentKey();
     const allKeys = [idleKey].concat(this.getRecipeKeys());
     const availableKeys = this.getManagedAssignmentKeys();
-    const total = this.repeatCount;
+    const total = normalizeLifterInteger(this.repeatCount);
 
     allKeys.forEach((key) => {
-      this.lifterAssignments[key] = Math.max(0, Math.floor(this.lifterAssignments[key] || 0));
+      this.lifterAssignments[key] = normalizeLifterInteger(this.lifterAssignments[key]);
       this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
       const weight = Number(this.autoAssignWeights[key]);
       this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
     });
 
-    let usedManual = 0;
+    let usedManual = 0n;
     availableKeys.forEach((key) => {
       if (!this.autoAssignFlags[key]) {
-        usedManual += this.lifterAssignments[key] || 0;
+        usedManual += this.lifterAssignments[key] || 0n;
       }
     });
 
     const autoKeys = availableKeys.filter((key) => this.autoAssignFlags[key]);
-    const remaining = Math.max(0, total - usedManual);
+    const remaining = total > usedManual ? (total - usedManual) : 0n;
 
     if (autoKeys.length > 0) {
       let totalWeight = 0;
@@ -449,56 +490,59 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
       if (totalWeight <= 0) {
         autoKeys.forEach((key) => {
-          this.lifterAssignments[key] = 0;
+          this.lifterAssignments[key] = 0n;
         });
       } else {
         const remainders = [];
-        let assigned = 0;
+        let assigned = 0n;
         autoKeys.forEach((key) => {
-          const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
+          const exact = Number(remaining) * (this.autoAssignWeights[key] / totalWeight);
           const floorValue = Math.floor(exact);
-          this.lifterAssignments[key] = floorValue;
-          assigned += floorValue;
+          const floorBigInt = normalizeLifterInteger(floorValue);
+          this.lifterAssignments[key] = floorBigInt;
+          assigned += floorBigInt;
           remainders.push({ key, value: exact - floorValue });
         });
         let leftover = remaining - assigned;
         remainders.sort((left, right) => right.value - left.value);
-        for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
-          this.lifterAssignments[remainders[i].key] += 1;
-          leftover -= 1;
+        if (leftover > 0n && remainders.length > 0) {
+          this.lifterAssignments[remainders[0].key] += leftover;
+          leftover = 0n;
         }
-        if (leftover > 0 && autoKeys.length > 0) {
+        if (leftover > 0n && autoKeys.length > 0) {
           const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
           this.lifterAssignments[targetKey] += leftover;
         }
       }
     }
 
-    let assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0), 0);
+    let assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
     if (assignedTotal > total) {
       let excess = assignedTotal - total;
-      for (let i = availableKeys.length - 1; i >= 0 && excess > 0; i -= 1) {
+      for (let i = availableKeys.length - 1; i >= 0 && excess > 0n; i -= 1) {
         const key = availableKeys[i];
-        const current = this.lifterAssignments[key] || 0;
-        const reduction = Math.min(current, excess);
+        const current = this.lifterAssignments[key] || 0n;
+        const reduction = current < excess ? current : excess;
         this.lifterAssignments[key] = current - reduction;
         excess -= reduction;
       }
-      assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0), 0);
+      assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
     }
   }
 
   getAssignedTotal() {
     this.normalizeAssignments();
-    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.lifterAssignments[key] || 0), 0);
+    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
   }
 
   getAvailableLifters() {
-    return Math.max(0, this.repeatCount - this.getAssignedTotal());
+    const total = normalizeLifterInteger(this.repeatCount);
+    const assigned = this.getAssignedTotal();
+    return total > assigned ? (total - assigned) : 0n;
   }
 
   getStoredAssignmentAmount(key) {
-    return this.lifterAssignments[key] || 0;
+    return this.lifterAssignments[key] || 0n;
   }
 
   getDisplayedAssignmentAmount(key) {
@@ -510,7 +554,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   getAssignmentMaxTarget(key) {
     const keys = this.getManagedAssignmentKeys();
-    const total = this.repeatCount;
+    const total = normalizeLifterInteger(this.repeatCount);
     const usedOther = keys.reduce((sum, otherKey) => {
       if (otherKey === key) {
         return sum;
@@ -519,19 +563,54 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         return sum;
       }
       return sum + this.getStoredAssignmentAmount(otherKey);
-    }, 0);
-    return Math.max(0, total - usedOther);
+    }, 0n);
+    return total > usedOther ? (total - usedOther) : 0n;
   }
 
   setAssignmentStep(step) {
-    const next = Math.min(1_000_000_000_000_000, Math.max(1, Math.round(step)));
-    this.assignmentStep = next;
+    const next = normalizeLifterInteger(step);
+    const max = 1_000_000_000_000_000n;
+    this.assignmentStep = next < 1n ? 1n : (next > max ? max : next);
   }
 
-  setAutoAssignTarget(key, enabled) {
-    this.autoAssignFlags[key] = enabled === true;
-    this.normalizeAssignments();
-    this.updateUI();
+  normalizeAssignmentStep() {
+    this.assignmentStep = normalizeLifterInteger(this.assignmentStep);
+    if (this.assignmentStep < 1n) {
+      this.assignmentStep = 1n;
+    }
+  }
+
+  divideAssignmentStepByTen() {
+    this.normalizeAssignmentStep();
+    this.assignmentStep = this.assignmentStep > 1n ? (this.assignmentStep / 10n) : 1n;
+    if (this.assignmentStep < 1n) {
+      this.assignmentStep = 1n;
+    }
+  }
+
+  multiplyAssignmentStepByTen() {
+    this.normalizeAssignmentStep();
+    const max = 1_000_000_000_000_000n;
+    this.assignmentStep = this.assignmentStep * 10n;
+    if (this.assignmentStep > max) {
+      this.assignmentStep = max;
+    }
+  }
+
+  getAssignmentStep() {
+    this.normalizeAssignmentStep();
+    return this.assignmentStep;
+  }
+
+  getSignedAssignmentDelta(delta) {
+    const normalized = normalizeLifterInteger(delta);
+    if (normalized === 0n) {
+      return 0n;
+    }
+    if (Object.prototype.toString.call(delta) === '[object String]') {
+      return delta.trim().startsWith('-') ? -normalized : normalized;
+    }
+    return Number(delta) < 0 ? -normalized : normalized;
   }
 
   adjustAssignment(key, delta) {
@@ -539,9 +618,20 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return;
     }
     this.normalizeAssignments();
+    const signedDelta = this.getSignedAssignmentDelta(delta);
+    if (signedDelta === 0n) {
+      return;
+    }
     const current = this.getStoredAssignmentAmount(key);
     const maxForKey = this.getAssignmentMaxTarget(key);
-    this.lifterAssignments[key] = Math.min(maxForKey, Math.max(0, current + delta));
+    let next = current + signedDelta;
+    if (next < 0n) {
+      next = 0n;
+    }
+    if (next > maxForKey) {
+      next = maxForKey;
+    }
+    this.lifterAssignments[key] = next;
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -550,7 +640,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (this.autoAssignFlags[key]) {
       return;
     }
-    this.lifterAssignments[key] = 0;
+    this.lifterAssignments[key] = 0n;
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -569,10 +659,17 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (this.isPermanentlyDisabled?.()) {
       return false;
     }
-    if (!this.isRunning || this.repeatCount <= 0) {
+    const total = normalizeLifterInteger(this.repeatCount);
+    if (!this.isRunning || total <= 0n) {
       return false;
     }
-    return this.getAssignedTotal() > 0;
+    return this.getAssignedTotal() > 0n;
+  }
+
+  setAutoAssignTarget(key, enabled) {
+    this.autoAssignFlags[key] = enabled === true;
+    this.normalizeAssignments();
+    this.updateUI();
   }
 
   setRunning(shouldRun) {
@@ -841,13 +938,14 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     this.getAssignmentKeys().forEach((key) => {
       const recipe = this.getRecipe(key);
-      const assigned = this.lifterAssignments[key] || 0;
-      if (!(assigned > 0) || !recipe) {
+      const assigned = this.lifterAssignments[key] || 0n;
+      if (!(assigned > 0n) || !recipe) {
         return;
       }
       const complexity = this.getRecipeComplexity(recipe);
       const productivityRatio = this.getRecipeOperationProductivity(key, productivity);
-      const unitsPerSecond = (assigned / complexity) * this.getEffectiveUnitRatePerLifter();
+      const assignedNumber = Number(assigned);
+      const unitsPerSecond = (assignedNumber / complexity) * this.getEffectiveUnitRatePerLifter();
       const baseUnits = unitsPerSecond * seconds;
       const desiredUnits = baseUnits * productivityRatio;
 
@@ -855,6 +953,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         key,
         recipe,
         assigned,
+        assignedNumber,
         complexity,
         baseUnits,
         requestedProductivity: productivityRatio,
@@ -907,7 +1006,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     entries.forEach((entry) => {
       plan.desiredTotalUnits += entry.desiredUnits;
-      plan.desiredAssignedLifters += entry.assigned * (entry.requestedProductivity || 0);
+      plan.desiredAssignedLifters += entry.assignedNumber * (entry.requestedProductivity || 0);
       if (entry.recipe.type === LIFTER_RECIPE_TYPES.STRIP) {
         plan.hasStripAssignments = true;
         const limited = Math.min(entry.desiredUnits, atmosphereAvailable);
@@ -934,7 +1033,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         return sum;
       }
       const utilization = Math.max(0, Math.min(1, entry.limitedUnits / entry.desiredUnits));
-      const assignedAtRecipeProductivity = entry.assigned * (entry.requestedProductivity || 0);
+      const assignedAtRecipeProductivity = entry.assignedNumber * (entry.requestedProductivity || 0);
       return sum + (assignedAtRecipeProductivity * utilization);
     }, 0);
     if (!(plan.limitedTotalUnits > 0)) {
@@ -1200,7 +1299,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     if (plan.entries.length > 0) {
       const desiredAssignedLifters = plan.entries.reduce((sum, entry) => {
-        return sum + (entry.assigned * (entry.requestedProductivity || 0));
+        return sum + (entry.assignedNumber * (entry.requestedProductivity || 0));
       }, 0);
       const desiredEnergy = desiredAssignedLifters * this.getEffectiveEnergyPerUnit() * seconds;
       const energyAvailability = this.getEnergyAvailabilityForTick(deltaTime, accumulatedChanges);
@@ -1547,7 +1646,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     const desiredAssignedLifters = entries.reduce((sum, entry) => {
-      return sum + (entry.assigned * (entry.requestedProductivity || 0));
+      return sum + (entry.assignedNumber * (entry.requestedProductivity || 0));
     }, 0);
     const desiredEnergy = desiredAssignedLifters * this.getEffectiveEnergyPerUnit() * seconds;
     if (!(desiredEnergy > 0)) {
@@ -1596,8 +1695,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return {
       ...super.saveAutomationSettings(),
       isRunning: this.isRunning === true,
-      lifterAssignments: { ...this.lifterAssignments },
-      assignmentStep: this.assignmentStep,
+      lifterAssignments: serializeLifterAssignments(this.lifterAssignments),
+      assignmentStep: serializeLifterInteger(this.assignmentStep),
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
       superchargeMultiplier: this.superchargeMultiplier,
@@ -1651,6 +1750,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags();
     this.normalizeAssignments();
+    this.normalizeAssignmentStep();
   }
 
   saveState() {
@@ -1658,8 +1758,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       ...super.saveState(),
       isRunning: this.isRunning,
       expansionProgress: this.expansionProgress,
-      lifterAssignments: { ...this.lifterAssignments },
-      assignmentStep: this.assignmentStep,
+      lifterAssignments: serializeLifterAssignments(this.lifterAssignments),
+      assignmentStep: serializeLifterInteger(this.assignmentStep),
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
       superchargeMultiplier: this.superchargeMultiplier,
@@ -1702,6 +1802,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags();
     this.normalizeAssignments();
+    this.normalizeAssignmentStep();
 
     if (!this.isRunning) {
       this.setLastTickStats({});
@@ -1713,8 +1814,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     const state = {
       repeatCount: this.repeatCount,
       expansionProgress: this.expansionProgress,
-      lifterAssignments: { ...this.lifterAssignments },
-      assignmentStep: this.assignmentStep,
+      lifterAssignments: serializeLifterAssignments(this.lifterAssignments),
+      assignmentStep: serializeLifterInteger(this.assignmentStep),
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
       superchargeMultiplier: this.superchargeMultiplier,
@@ -1762,6 +1863,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags();
     this.normalizeAssignments();
+    this.normalizeAssignmentStep();
 
     this.isRunning = false;
     this.isCompleted = false;
