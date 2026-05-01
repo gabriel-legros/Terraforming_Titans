@@ -312,10 +312,6 @@ class Project extends EffectableEntity {
     return this.applyDurationEffects(base);
   }
 
-  calculateSpaceshipAdjustedDuration() {
-    return this.duration;
-  }
-
   getBaseDuration(){
     if (this.attributes.ignoreDurationModifiers) {
       return this.duration;
