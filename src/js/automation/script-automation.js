@@ -665,6 +665,8 @@ class ScriptAutomation {
     if (type === 'projects') return automationManager.projectsAutomation;
     if (type === 'colony') return automationManager.colonyAutomation;
     if (type === 'research') return automationManager.researchAutomation;
+    if (type === 'ship') return automationManager.spaceshipAutomation;
+    if (type === 'life') return automationManager.lifeAutomation;
     return null;
   }
 

@@ -142,8 +142,23 @@ class LifeAutomation {
     return this.getActivePreset();
   }
 
+  getPresetById(id) {
+    return this.presets.find(preset => preset.id === Number(id)) || null;
+  }
+
   setSelectedPresetId(id) {
     this.setActivePreset(id);
+  }
+
+  applyPresetOnce(presetId) {
+    const preset = this.getPresetById(presetId);
+    if (!preset) {
+      return false;
+    }
+    this.setActivePreset(preset.id);
+    this.applyAutoPurchases(preset);
+    this.applyAutoDesign(preset);
+    return true;
   }
 
   setActivePreset(id) {

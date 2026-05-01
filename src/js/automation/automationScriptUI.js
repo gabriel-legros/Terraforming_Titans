@@ -32,7 +32,7 @@ function buildScriptAutomationUI() {
     getAutomationCardText(
       'scriptAutomationTooltip',
       {},
-      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, or research presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
+      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
     )
   );
 
@@ -1050,7 +1050,7 @@ function renderActionsEditor(automation, script, line, container, actions, title
 function renderActionTargetPicker(action, row) {
   const types = action.kind === 'applyCombination'
     ? ['buildings', 'projects', 'colony']
-    : ['buildings', 'projects', 'colony', 'research'];
+    : ['buildings', 'projects', 'colony', 'research', 'ship', 'life'];
   if (!types.includes(action.automationType)) action.automationType = types[0];
   const typeSelect = createSelect(types.map(type => ({ id: type, label: type.charAt(0).toUpperCase() + type.slice(1) })), action.automationType);
   typeSelect.addEventListener('change', event => {
@@ -1090,6 +1090,8 @@ function getScriptActionAutomationTarget(type) {
   if (type === 'projects') return automationManager.projectsAutomation;
   if (type === 'colony') return automationManager.colonyAutomation;
   if (type === 'research') return automationManager.researchAutomation;
+  if (type === 'ship') return automationManager.spaceshipAutomation;
+  if (type === 'life') return automationManager.lifeAutomation;
   return null;
 }
 
