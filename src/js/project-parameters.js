@@ -880,6 +880,7 @@ const projectParameters = {
       alchemyParameter: 1,
       spaceBuilding: true,
       spaceBuildingProductivity: true,
+      preserveProgressOnTravel: true,
       planetCracking: {
         planetsPerAssignmentSecond: 1,
         spaceEnergyPerPlanet: 1e28,

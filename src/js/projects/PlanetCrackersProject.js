@@ -640,6 +640,39 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     }
     this.lastAppliedCapKey = '';
   }
+
+  saveTravelState() {
+    return {
+      ...super.saveTravelState(),
+      crackedByType: { ...this.crackedByType },
+      crackedIronRichPlanets: this.getCrackedForType('ironRich'),
+    };
+  }
+
+  loadTravelState(state = {}) {
+    super.loadTravelState(state);
+    this.crackedByType = {};
+    const configuredKeys = this.getAssignmentKeys();
+    const savedMap = state.crackedByType || {};
+    for (let index = 0; index < configuredKeys.length; index += 1) {
+      const key = configuredKeys[index];
+      const typeConfig = this.getPlanetTypeMap()[key];
+      const saved = Number(savedMap[key]);
+      if (Number.isFinite(saved) && saved > 0) {
+        this.crackedByType[key] = Math.max(0, Math.min(typeConfig.total, saved));
+      }
+    }
+    const legacyIronRich = Number(state.crackedIronRichPlanets);
+    if (Number.isFinite(legacyIronRich) && legacyIronRich > 0 && !this.crackedByType.ironRich) {
+      const typeConfig = this.getPlanetTypeMap().ironRich;
+      if (typeConfig) {
+        this.crackedByType.ironRich = Math.max(0, Math.min(typeConfig.total, legacyIronRich));
+      }
+    }
+    this.lastAppliedCapKey = '';
+    this.applyCapBonusEffects();
+    this.updateUI();
+  }
 }
 
 window.PlanetCrackersProject = PlanetCrackersProject;
