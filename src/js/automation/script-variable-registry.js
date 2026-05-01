@@ -722,6 +722,14 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'worldArchetype') return this.resolveWorldArchetypeOption(ref);
     if (ref.attribute === 'worldType') return this.resolveCelestialOptionMatch(ref, this.getCurrentWorldTypeValue());
     if (ref.attribute === 'hasNaturalMagnetosphere') return params.hasNaturalMagnetosphere ? 1 : 0;
+    if (ref.attribute === 'solarFlux') return this.toNumber(terraforming.luminosity?.solarFlux);
+    if (ref.attribute === 'density') {
+      const massKg = this.toNumber(params.mass);
+      const radiusKm = this.toNumber(params.radius);
+      const radiusM = radiusKm * 1000;
+      const volumeM3 = (4 / 3) * Math.PI * radiusM * radiusM * radiusM;
+      return volumeM3 > 0 ? this.toNumber(massKg / volumeM3) : 0;
+    }
     return this.toNumber(params[ref.attribute]);
   }
 
@@ -921,9 +929,9 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'completed') return research.isResearched || research.timesResearched > 0 ? 1 : 0;
     if (ref.attribute === 'enabledForAutomation') return automationManager.researchAutomation?.isAutoResearchEnabled(ref.target) ? 1 : 0;
     if (ref.attribute === 'hiddenByUser') return research.hiddenByUser ? 1 : 0;
-    if (ref.attribute === 'priority') return this.toNumber(automationManager.researchAutomation?.getResearchPriority(ref.target));
-    if (ref.attribute === 'cost') return this.toNumber(research.cost);
-    if (ref.attribute === 'canAfford') return researchManager.canAffordResearch(research) ? 1 : 0;
+    if (ref.attribute === 'priority') return this.toNumber(automationManager.researchAutomation?.getAutoResearchPriority(ref.target));
+    if (ref.attribute === 'cost') return this.toNumber(researchManager.calculateResearchTotalCost(research));
+    if (ref.attribute === 'canAfford') return canAffordResearch(research) ? 1 : 0;
     if (ref.attribute === 'isAdvanced') return research.isAdvanced ? 1 : 0;
     return 0;
   }
@@ -965,6 +973,9 @@ class ScriptVariableRegistry {
   }
 
   resolveProjectProgressPercent(project) {
+    if (project.getSurfaceGravityRatio) {
+      return Math.max(0, Math.min(100, this.toNumber(project.getSurfaceGravityRatio()) * 100));
+    }
     const starting = this.toNumber(project.startingDuration || project.duration);
     if (starting <= 0) return project.isCompleted ? 100 : 0;
     return Math.max(0, Math.min(100, ((starting - this.toNumber(project.remainingTime)) / starting) * 100));
