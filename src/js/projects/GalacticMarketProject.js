@@ -916,6 +916,19 @@ class GalacticMarketProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (accumulatedChanges) {
+      this._deferredTradeTickDelta = deltaTime;
+      return;
+    }
+    this.applyPostProjectTrade(deltaTime);
+  }
+
+  applyPostProjectTrade(deltaTime, accumulatedChanges) {
+    if (!accumulatedChanges && this._deferredTradeTickDelta) {
+      deltaTime = this._deferredTradeTickDelta;
+    }
+    this._deferredTradeTickDelta = 0;
+
     const automationUnlocked = projectManager?.isBooleanFlagSet?.('automateSpecialProjects');
     const manualRunActive = !automationUnlocked && this.manualRunRemainingTime > 0;
     this.shortfallLastTick = false;
@@ -925,22 +938,6 @@ class GalacticMarketProject extends Project {
     const seconds = effectiveDeltaTime / 1000;
     const effectiveProductivity = 1;
     const tradeScale = this.getKesslerTradeScale();
-    const buyTransactions = [];
-    let buyCostPerSecond = 0;
-
-    this.buySelections.forEach(({ category, resource, quantity }) => {
-      if (!this.isSelectionResourceUnlocked(category, resource)) {
-        return;
-      }
-      const scaledQuantity = quantity * tradeScale;
-      const basePrice = this.getBasePrice(category, resource);
-      const perSecondCost = resource === 'spaceships'
-        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
-        : basePrice * scaledQuantity;
-      buyTransactions.push({ category, resource, quantity: scaledQuantity, perSecondCost });
-      buyCostPerSecond += perSecondCost;
-    });
-
     const sellTransactions = [];
 
     this.sellSelections.forEach(({ category, resource, quantity }) => {
@@ -950,28 +947,6 @@ class GalacticMarketProject extends Project {
       const scaledQuantity = quantity * tradeScale;
       sellTransactions.push({ category, resource, quantity: scaledQuantity });
     });
-
-    let totalBuyCost = buyCostPerSecond * seconds * effectiveProductivity;
-    const pendingFunding = accumulatedChanges?.colony?.funding || 0;
-    const availableFunding = Math.max(0, resources.colony.funding.value + pendingFunding);
-
-    if (totalBuyCost > availableFunding && totalBuyCost > 0) {
-      this.shortfallLastTick = true;
-      if (availableFunding <= 0) {
-        buyTransactions.forEach((transaction) => {
-          transaction.quantity = 0;
-          transaction.perSecondCost = 0;
-        });
-        totalBuyCost = 0;
-      } else {
-        const scale = availableFunding / totalBuyCost;
-        buyTransactions.forEach((transaction) => {
-          transaction.quantity *= scale;
-          transaction.perSecondCost *= scale;
-        });
-        totalBuyCost = availableFunding;
-      }
-    }
 
     sellTransactions.forEach((transaction) => {
       const resourceObject = resources[transaction.category]?.[transaction.resource];
@@ -997,16 +972,76 @@ class GalacticMarketProject extends Project {
 
     const totalSellRevenue = totalSellRevenuePerSecond * seconds * effectiveProductivity;
 
-    const netFundingChange = totalSellRevenue - totalBuyCost;
+    sellTransactions.forEach((transaction) => {
+      const amount = transaction.quantity * seconds * effectiveProductivity;
+      if (amount <= 0) return;
+      const resourceObject = resources[transaction.category]?.[transaction.resource];
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[transaction.category]) accumulatedChanges[transaction.category] = {};
+        accumulatedChanges[transaction.category][transaction.resource] =
+          (accumulatedChanges[transaction.category][transaction.resource] || 0) - amount;
+      } else if (resourceObject) {
+        if (resourceObject.decrease) {
+          resourceObject.decrease(amount);
+        } else {
+          resourceObject.value = Math.max(0, resourceObject.value - amount);
+        }
+      }
+    });
 
-    if (netFundingChange !== 0) {
+    if (totalSellRevenue !== 0) {
       if (accumulatedChanges) {
         if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
-        accumulatedChanges.colony.funding = (accumulatedChanges.colony.funding || 0) + netFundingChange;
-      } else if (netFundingChange > 0) {
-        resources.colony.funding.increase(netFundingChange);
+        accumulatedChanges.colony.funding = (accumulatedChanges.colony.funding || 0) + totalSellRevenue;
       } else {
-        resources.colony.funding.decrease(-netFundingChange);
+        resources.colony.funding.increase(totalSellRevenue);
+      }
+    }
+
+    const buyTransactions = [];
+    let buyCostPerSecond = 0;
+
+    this.buySelections.forEach(({ category, resource, quantity }) => {
+      if (!this.isSelectionResourceUnlocked(category, resource)) {
+        return;
+      }
+      const scaledQuantity = quantity * tradeScale;
+      const basePrice = this.getBasePrice(category, resource);
+      const perSecondCost = resource === 'spaceships'
+        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
+        : basePrice * scaledQuantity;
+      buyTransactions.push({ category, resource, quantity: scaledQuantity, perSecondCost });
+      buyCostPerSecond += perSecondCost;
+    });
+
+    let totalBuyCost = buyCostPerSecond * seconds * effectiveProductivity;
+    const pendingFunding = accumulatedChanges?.colony?.funding || 0;
+    const availableFunding = Math.max(0, resources.colony.funding.value + pendingFunding);
+
+    if (totalBuyCost > availableFunding && totalBuyCost > 0) {
+      this.shortfallLastTick = true;
+      if (availableFunding <= 0) {
+        buyTransactions.forEach((transaction) => {
+          transaction.quantity = 0;
+          transaction.perSecondCost = 0;
+        });
+        totalBuyCost = 0;
+      } else {
+        const scale = availableFunding / totalBuyCost;
+        buyTransactions.forEach((transaction) => {
+          transaction.quantity *= scale;
+          transaction.perSecondCost *= scale;
+        });
+        totalBuyCost = availableFunding;
+      }
+    }
+
+    if (totalBuyCost !== 0) {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
+        accumulatedChanges.colony.funding = (accumulatedChanges.colony.funding || 0) - totalBuyCost;
+      } else {
+        resources.colony.funding.decrease(totalBuyCost);
       }
     }
 
@@ -1022,23 +1057,6 @@ class GalacticMarketProject extends Project {
       }
       if (transaction.resource === 'spaceships') {
         this.applySpaceshipPurchase(amount);
-      }
-    });
-
-    sellTransactions.forEach((transaction) => {
-      const amount = transaction.quantity * seconds * effectiveProductivity;
-      if (amount <= 0) return;
-      const resourceObject = resources[transaction.category]?.[transaction.resource];
-      if (accumulatedChanges) {
-        if (!accumulatedChanges[transaction.category]) accumulatedChanges[transaction.category] = {};
-        accumulatedChanges[transaction.category][transaction.resource] =
-          (accumulatedChanges[transaction.category][transaction.resource] || 0) - amount;
-      } else if (resourceObject) {
-        if (resourceObject.decrease) {
-          resourceObject.decrease(amount);
-        } else {
-          resourceObject.value = Math.max(0, resourceObject.value - amount);
-        }
       }
     });
 

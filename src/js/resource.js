@@ -1661,6 +1661,10 @@ function produceResources(deltaTime, buildings) {
   if (spaceStorageProject?.applyPostProjectShipOperation) {
     spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
   }
+  const galacticMarketProject = projectManager?.projects?.galactic_market;
+  if (galacticMarketProject?.applyPostProjectTrade) {
+    galacticMarketProject.applyPostProjectTrade(deltaTime, accumulatedChanges);
+  }
 
   if (terraforming) {
     routeColonyWaterOverflow(deltaTime, accumulatedChanges);

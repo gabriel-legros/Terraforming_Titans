@@ -75,6 +75,19 @@ function createPlanetVisualizerStub(window) {
   };
 }
 
+function exposeGameGlobal(window, globalName) {
+  if (Object.prototype.hasOwnProperty.call(window, globalName)) {
+    return;
+  }
+  Object.defineProperty(window, globalName, {
+    configurable: true,
+    enumerable: false,
+    get() {
+      return window.eval(globalName);
+    }
+  });
+}
+
 function installEventListenerTracker(window) {
   if (window.__listenerTracker) {
     return;
@@ -328,6 +341,7 @@ async function createGameDom() {
 
   await waitForWindowLoad(dom.window);
   dom.window.initializePlanetVisualizerUI();
+  exposeGameGlobal(dom.window, 'projectManager');
   return dom;
 }
 
