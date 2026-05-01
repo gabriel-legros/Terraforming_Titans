@@ -385,7 +385,7 @@ class PopulationModule extends EffectableEntity {
       let activeBiomass = 0;
       const zones = getZones();
       zones.forEach((zoneName) => {
-        if (terraforming.biomassDyingZones && terraforming.biomassDyingZones[zoneName]) {
+        if (terraforming.biomassUnsurvivableZones && terraforming.biomassUnsurvivableZones[zoneName]) {
           return;
         }
         const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;

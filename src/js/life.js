@@ -1479,6 +1479,7 @@ class LifeManager extends EffectableEntity {
       supportedDecayByZone,
       decaySurfaceDeltasByZone,
       decayTargetsByZone,
+      canSurviveByZone,
       growthAtmosphericDeltas,
       growthColonyDeltas,
       decayAtmosphericDeltas,
@@ -1565,15 +1566,18 @@ class LifeManager extends EffectableEntity {
       supportedDecayByZone,
       decaySurfaceDeltasByZone,
       decayTargetsByZone,
+      canSurviveByZone,
       growthAtmosphericDeltas,
       growthColonyDeltas,
       decayAtmosphericDeltas,
     } = plan;
 
     terraforming.biomassDyingZones = {};
+    terraforming.biomassUnsurvivableZones = {};
     const netBiomassChangeByZone = {};
     zones.forEach(zoneName => {
       terraforming.biomassDyingZones[zoneName] = false;
+      terraforming.biomassUnsurvivableZones[zoneName] = !canSurviveByZone[zoneName];
       netBiomassChangeByZone[zoneName] = 0;
     });
 
@@ -1682,7 +1686,7 @@ class LifeManager extends EffectableEntity {
       let totalConvertedBiomass = 0;
 
       zones.forEach(zoneName => {
-        if (terraforming.biomassDyingZones[zoneName]) {
+        if (!canSurviveByZone[zoneName]) {
           return;
         }
         const currentZonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
