@@ -169,7 +169,11 @@ class Aerostat extends BaseColony {
   }
 
   getClampedSetActiveTargetCount(targetCount, structureCount = this.countNumber) {
-    let desiredActive = Math.min(targetCount, structureCount);
+    const cappedBuildLimit = this.getBuildLimit();
+    const limitBound = Number.isFinite(cappedBuildLimit)
+      ? Math.max(0, Math.floor(cappedBuildLimit))
+      : structureCount;
+    let desiredActive = Math.min(targetCount, structureCount, limitBound);
     if (!this.shouldClampSetActiveToSupported()) {
       return desiredActive;
     }
@@ -922,14 +926,43 @@ class Aerostat extends BaseColony {
       const maxActive = this.getResearchSelfFundingBuildLimit();
       if (Number.isFinite(maxActive)) {
         const currentActive = this.activeNumber;
-        const allowedIncrease = Math.max(0, Math.floor(maxActive) - currentActive);
+        const allowedByCap = Math.max(0, Math.floor(maxActive) - currentActive);
+        const allowedByCount = Math.max(0, this.countNumber - currentActive);
+        const allowedIncrease = Math.min(allowedByCap, allowedByCount);
         return Math.min(sanitized, allowedIncrease);
       }
     }
     return sanitized;
   }
 
+  clampActiveToBuildLimit() {
+    const buildLimit = this.getBuildLimit();
+    if (!Number.isFinite(buildLimit)) {
+      return false;
+    }
+
+    const maxAllowed = Math.max(0, Math.floor(buildLimit));
+    const currentActive = this.activeNumber;
+    if (currentActive <= maxAllowed) {
+      return false;
+    }
+
+    const nextActive = maxAllowed;
+    const activeChange = nextActive - currentActive;
+
+    this.active = BigInt(nextActive);
+    if (activeChange !== 0 && this.requiresLand) {
+      this.adjustLand(activeChange);
+    }
+
+    this._liftDisableAccumulator = 0;
+    this.updateResourceStorage();
+    return true;
+  }
+
   update(deltaTime = 0) {
+    this.clampActiveToBuildLimit();
+
     if (!Number.isFinite(deltaTime) || deltaTime <= 0) {
       return;
     }
