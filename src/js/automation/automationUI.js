@@ -989,6 +989,8 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._draftStorageKey = extraClassName || 'automation-preset-json';
   details._basePresetSignature = '';
   details._boundPresetId = null;
+  details._activePresetRef = null;
+  details._activeOnFieldChange = null;
   details.style.display = 'none';
   return details;
 }
@@ -1276,6 +1278,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const onFieldChange = options.onFieldChange;
   const onDirtyChange = options.onDirtyChange;
   details._onDirtyChange = onDirtyChange || null;
+  details._activePresetRef = preset || null;
+  details._activeOnFieldChange = onFieldChange || null;
 
   if (!preset) {
     details.open = false;
@@ -1380,13 +1384,15 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     details._saveButton.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      if (!onFieldChange) {
+      const currentPreset = details._activePresetRef;
+      const currentOnFieldChange = details._activeOnFieldChange;
+      if (!currentOnFieldChange || !currentPreset) {
         return;
       }
       const draftEntries = Object.values(details._jsonDraftMap);
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
-        const baseValue = getAutomationPresetValueAtPath(preset, draftEntry.path);
+        const baseValue = getAutomationPresetValueAtPath(currentPreset, draftEntry.path);
         if (!isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value)) {
           showAutomationImportStatus(
             getAutomationCardText(
@@ -1403,11 +1409,11 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       }
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
-        onFieldChange(draftEntry.path, draftEntry.value);
+        currentOnFieldChange(draftEntry.path, draftEntry.value);
       }
       details._jsonDraftMap = {};
       details._jsonDirty = false;
-      clearAutomationPresetJsonDraftStore(details, preset.id);
+      clearAutomationPresetJsonDraftStore(details, currentPreset.id);
       details._saveButton.disabled = true;
       if (details._saveButtonStarNode) {
         details._saveButtonStarNode.style.display = 'none';
