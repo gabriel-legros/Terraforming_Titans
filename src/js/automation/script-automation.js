@@ -7,6 +7,7 @@ class ScriptAutomation {
     this.selectedScriptId = null;
     this.activeScriptId = null;
     this.pcLineId = null;
+    this.pcActionIndex = 0;
     this.nextScriptId = 1;
     this.nextLineId = 1;
     this.lastStatus = 'Inactive';
@@ -172,6 +173,7 @@ class ScriptAutomation {
     if (this.activeScriptId === numericId) {
       this.activeScriptId = this.scripts[0].id;
       this.pcLineId = this.scripts[0].lines[0]?.id || null;
+      this.pcActionIndex = 0;
     }
     if (this.nextTravelScriptId === numericId) {
       this.nextTravelScriptId = null;
@@ -193,6 +195,7 @@ class ScriptAutomation {
     this.activeScriptId = script.id;
     if (!this.pcLineId || !script.lines.find(line => line.id === this.pcLineId)) {
       this.pcLineId = script.lines[0]?.id || null;
+      this.pcActionIndex = 0;
     }
     this.running = true;
     this.sleepRemainingMs = 0;
@@ -230,6 +233,7 @@ class ScriptAutomation {
   reset() {
     const script = this.getActiveScript();
     this.pcLineId = script?.lines[0]?.id || null;
+    this.pcActionIndex = 0;
     this.manualStepDisplayLineId = null;
     this.manualStepPendingLineId = null;
     this.sleepRemainingMs = 0;
@@ -245,9 +249,14 @@ class ScriptAutomation {
     }
     if (!this.running && this.manualStepPendingLineId) {
       this.pcLineId = this.manualStepPendingLineId;
+      this.pcActionIndex = 0;
       this.manualStepPendingLineId = null;
     }
-    if (!this.pcLineId && script?.lines.length) this.pcLineId = script.lines[0].id;
+    if (!this.pcLineId && script?.lines.length) {
+      this.pcLineId = script.lines[0].id;
+      this.pcActionIndex = 0;
+    }
+    if (!this.pcLineId) this.pcActionIndex = 0;
     this.running = true;
     this.update(0, true);
     this.manualStepDisplayLineId = this.lastEvaluatedLineId;
@@ -272,11 +281,15 @@ class ScriptAutomation {
   removeLine(scriptId, lineId) {
     const script = this.scripts.find(item => item.id === Number(scriptId));
     if (!script || script.lines.length <= 1) return false;
+    const removedActiveLine = this.pcLineId === Number(lineId);
     script.lines = script.lines.filter(line => line.id !== Number(lineId));
     script.lines.forEach(line => {
       if (line.linkedIfLineId === Number(lineId)) line.linkedIfLineId = null;
     });
-    if (this.pcLineId === Number(lineId)) this.pcLineId = script.lines[0]?.id || null;
+    if (removedActiveLine) {
+      this.pcLineId = script.lines[0]?.id || null;
+      this.pcActionIndex = 0;
+    }
     return true;
   }
 
@@ -399,6 +412,7 @@ class ScriptAutomation {
       if (!line) {
         if (this.autoRestartOnCompletion) {
           this.pcLineId = script.lines[0]?.id || null;
+          this.pcActionIndex = 0;
           this.haltedReason = 'autoRestart';
           this.lastStatus = 'Running (Auto restarting)';
         } else {
@@ -418,15 +432,23 @@ class ScriptAutomation {
         continue;
       }
       if (line.kind === 'actions') {
-        const actionResult = this.runActions(line.actions, script, { actionsUsed, gotoUsed });
+        const actionResult = this.runActions(
+          line.actions,
+          script,
+          { actionsUsed, gotoUsed },
+          this.pcActionIndex,
+          forceStep ? 1 : this.maxActionsPerTick,
+          forceStep
+        );
         actionsUsed = actionResult.actionsUsed;
         gotoUsed = actionResult.gotoUsed;
         if (actionResult.gotoTriggered || actionResult.actionLimitReached || actionResult.sleepTriggered) {
-          if (actionResult.sleepTriggered) this.advanceLine(script, line);
+          this.pcActionIndex = actionResult.nextActionIndex;
           this.haltedReason = actionResult.gotoTriggered ? 'goto' : (actionResult.sleepTriggered ? 'sleep' : 'actionLimit');
           this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : (actionResult.sleepTriggered ? `Sleeping (${formatNumber(this.sleepRemainingMs, false, 0)} ms)` : 'Action limit reached');
           break;
         }
+        this.pcActionIndex = 0;
         this.advanceLine(script, line);
         this.haltedReason = 'actions';
         this.lastStatus = `Ran actions ${this.getLineLabel(script, line)}`;
@@ -437,11 +459,18 @@ class ScriptAutomation {
         const branchResult = this.evaluateConditionalLine(script, line);
         this.lastConditionResult = branchResult.conditionResult;
         if (branchResult.executeActions) {
-          const actionResult = this.runActions(line.actions, script, { actionsUsed, gotoUsed });
+          const actionResult = this.runActions(
+            line.actions,
+            script,
+            { actionsUsed, gotoUsed },
+            this.pcActionIndex,
+            forceStep ? 1 : this.maxActionsPerTick,
+            forceStep
+          );
           actionsUsed = actionResult.actionsUsed;
           gotoUsed = actionResult.gotoUsed;
           if (actionResult.gotoTriggered || actionResult.actionLimitReached || actionResult.sleepTriggered) {
-            if (actionResult.sleepTriggered) this.advanceLine(script, line);
+            this.pcActionIndex = actionResult.nextActionIndex;
             this.haltedReason = actionResult.gotoTriggered ? 'goto' : (actionResult.sleepTriggered ? 'sleep' : 'actionLimit');
             this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : (actionResult.sleepTriggered ? `Sleeping (${formatNumber(this.sleepRemainingMs, false, 0)} ms)` : 'Action limit reached');
             break;
@@ -460,6 +489,7 @@ class ScriptAutomation {
             break;
           }
           this.pcLineId = branchResult.gotoLineId;
+          this.pcActionIndex = 0;
           this.haltedReason = 'linkedElse';
           this.lastStatus = `Linked ELSE from ${this.getLineLabel(script, line)} to ${targetLabel}`;
           continue;
@@ -484,22 +514,31 @@ class ScriptAutomation {
       this.lastConditionResult = conditionResult;
 
       if (line.kind === 'wait' && !conditionResult) {
+        this.pcActionIndex = 0;
         this.haltedReason = 'wait';
         this.lastStatus = `Waiting at ${this.getLineLabel(script, line)}`;
         break;
       }
 
       if (conditionResult) {
-        const actionResult = this.runActions(line.actions, script, { actionsUsed, gotoUsed });
+        const actionResult = this.runActions(
+          line.actions,
+          script,
+          { actionsUsed, gotoUsed },
+          this.pcActionIndex,
+          forceStep ? 1 : this.maxActionsPerTick,
+          forceStep
+        );
         actionsUsed = actionResult.actionsUsed;
         gotoUsed = actionResult.gotoUsed;
         if (actionResult.gotoTriggered || actionResult.actionLimitReached || actionResult.sleepTriggered) {
-          if (actionResult.sleepTriggered) this.advanceLine(script, line);
+          this.pcActionIndex = actionResult.nextActionIndex;
           this.haltedReason = actionResult.gotoTriggered ? 'goto' : (actionResult.sleepTriggered ? 'sleep' : 'actionLimit');
           this.lastStatus = actionResult.gotoTriggered ? 'GOTO executed' : (actionResult.sleepTriggered ? `Sleeping (${formatNumber(this.sleepRemainingMs, false, 0)} ms)` : 'Action limit reached');
           break;
         }
       }
+      this.pcActionIndex = 0;
       this.advanceLine(script, line);
       this.haltedReason = 'advanced';
       this.lastStatus = `Advanced past ${this.getLineLabel(script, line)}`;
@@ -598,40 +637,48 @@ class ScriptAutomation {
     const index = script.lines.findIndex(item => item.id === line.id);
     const next = script.lines[index + 1];
     this.pcLineId = next ? next.id : null;
+    this.pcActionIndex = 0;
   }
 
-  runActions(actions, script, state) {
+  runActions(actions, script, state, startIndex = 0, maxActionsThisRun = this.maxActionsPerTick, treatSleepAsZero = false) {
     let actionsUsed = state.actionsUsed || 0;
     let gotoUsed = !!state.gotoUsed;
     let gotoTriggered = false;
     let sleepTriggered = false;
     let actionLimitReached = false;
+    let nextActionIndex = Math.max(0, Number(startIndex) || 0);
     const summaries = [];
     const actionList = Array.isArray(actions) ? actions : [];
 
-    for (let index = 0; index < actionList.length; index += 1) {
-      if (actionsUsed >= this.maxActionsPerTick) {
+    for (let index = nextActionIndex; index < actionList.length; index += 1) {
+      if (actionsUsed >= maxActionsThisRun) {
         actionLimitReached = true;
+        nextActionIndex = index;
         break;
       }
       const action = actionList[index];
       if (action.kind === 'sleep') {
-        this.sleepRemainingMs = Math.max(0, this.registry.toNumber(action.durationMs));
+        const sleepDurationMs = treatSleepAsZero ? 0 : Math.max(0, this.registry.toNumber(action.durationMs));
+        this.sleepRemainingMs = sleepDurationMs;
         sleepTriggered = this.sleepRemainingMs > 0;
-        if (sleepTriggered) summaries.push(`Sleep ${formatNumber(this.sleepRemainingMs, false, 0)} ms`);
+        summaries.push(`Sleep ${formatNumber(sleepDurationMs, false, 0)} ms`);
         actionsUsed += 1;
-        break;
+        nextActionIndex = index + 1;
+        if (sleepTriggered) break;
+        continue;
       }
       if (action.kind === 'goto') {
         if (gotoUsed) continue;
         const target = script.lines.find(line => line.id === Number(action.targetLineId));
         if (target) {
           this.pcLineId = target.id;
+          this.pcActionIndex = 0;
           gotoUsed = true;
           gotoTriggered = true;
           summaries.push(`GOTO ${this.getLineLabel(script, target)}`);
         }
         actionsUsed += 1;
+        nextActionIndex = 0;
         break;
       }
 
@@ -639,10 +686,11 @@ class ScriptAutomation {
         summaries.push(this.describeAction(action));
       }
       actionsUsed += 1;
+      nextActionIndex = index + 1;
     }
 
     this.lastActionSummary = summaries.join(', ');
-    return { actionsUsed, gotoUsed, gotoTriggered, sleepTriggered, actionLimitReached };
+    return { actionsUsed, gotoUsed, gotoTriggered, sleepTriggered, actionLimitReached, nextActionIndex };
   }
 
   applyAutomationAction(action) {
@@ -765,6 +813,7 @@ class ScriptAutomation {
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
       pcLineId: this.pcLineId,
+      pcActionIndex: this.pcActionIndex,
       manualStepDisplayLineId: this.manualStepDisplayLineId,
       manualStepPendingLineId: this.manualStepPendingLineId,
       nextScriptId: this.nextScriptId,
@@ -786,6 +835,7 @@ class ScriptAutomation {
     this.selectedScriptId = data.selectedScriptId ? Number(data.selectedScriptId) : null;
     this.activeScriptId = data.activeScriptId ? Number(data.activeScriptId) : null;
     this.pcLineId = data.pcLineId ? Number(data.pcLineId) : null;
+    this.pcActionIndex = Math.max(0, this.registry.toNumber(data.pcActionIndex));
     this.nextScriptId = data.nextScriptId || this.getNextScriptIdFromScripts();
     this.nextLineId = data.nextLineId || this.getNextLineIdFromScripts();
     this.lastStatus = data.lastStatus || 'Loaded';
