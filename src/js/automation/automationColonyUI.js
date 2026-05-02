@@ -895,7 +895,7 @@ function attachColonyAutomationHandlers() {
     if (presetId) {
       automation.updatePreset(Number(presetId), name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar, createEmpty: true });
+      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
       colonyAutomationUIState.syncedPresetId = null;
       colonyAutomationUIState.builderName = '';
     }

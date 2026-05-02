@@ -947,7 +947,7 @@ function attachProjectsAutomationHandlers() {
     if (presetId) {
       automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, createEmpty: true });
+      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
       projectAutomationUIState.syncedPresetId = null;
       projectAutomationUIState.builderName = '';
     }

@@ -931,7 +931,7 @@ function attachBuildingsAutomationHandlers() {
     if (presetId) {
       automation.updatePreset(Number(presetId), name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
     } else {
-      automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar, createEmpty: true });
+      automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
       buildingAutomationUIState.syncedPresetId = null;
       buildingAutomationUIState.builderName = '';
     }
