@@ -705,11 +705,15 @@ class RingworldTerraformingProject extends Project {
       this.investing = settings.investing === true;
       this.isActive = this.investing;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'shadingStrength')) {
+    const hasAutoShadeEnabled = Object.prototype.hasOwnProperty.call(settings, 'autoShadeEnabled');
+    const nextAutoShadeEnabled = hasAutoShadeEnabled
+      ? settings.autoShadeEnabled === true
+      : this.autoShadeEnabled === true;
+    if (Object.prototype.hasOwnProperty.call(settings, 'shadingStrength') && !nextAutoShadeEnabled) {
       this.setShadingStrength(settings.shadingStrength ?? this.shadingStrength);
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoShadeEnabled')) {
-      this.autoShadeEnabled = settings.autoShadeEnabled === true;
+    if (hasAutoShadeEnabled) {
+      this.autoShadeEnabled = nextAutoShadeEnabled;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoShadeMode')) {
       this.autoShadeMode = settings.autoShadeMode || this.autoShadeMode;

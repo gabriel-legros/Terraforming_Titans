@@ -192,18 +192,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
   }
 
   getAverageWarpGateNetworkLevel() {
-    if (!galaxyManager.enabled) {
-      return 0;
-    }
-    const sectors = galaxyManager.getUhfControlledSectors();
-    if (!sectors.length) {
-      return 0;
-    }
-    let totalLevel = 0;
-    for (let index = 0; index < sectors.length; index += 1) {
-      totalLevel += Math.max(0, Math.floor(Number(sectors[index].warpGateNetworkLevel) || 0));
-    }
-    return totalLevel / sectors.length;
+    return warpGateNetworkManager.getAverageWarpGateLevelAllSectors();
   }
 
   getCrackablePlanetLimitMultiplier() {

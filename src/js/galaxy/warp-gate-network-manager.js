@@ -82,6 +82,8 @@ class WarpGateNetworkManager extends EffectableEntity {
     this.galaxyUnlocked = false;
     this.breakdownCache = this.createEmptyBreakdown();
     this.breakdownDirty = true;
+    this.allSectorWarpGateAverageCache = 0;
+    this.allSectorWarpGateAverageDirty = true;
     this.controlCacheVersion = -1;
   }
 
@@ -108,6 +110,7 @@ class WarpGateNetworkManager extends EffectableEntity {
     if (version !== this.controlCacheVersion) {
       this.controlCacheVersion = version;
       this.breakdownDirty = true;
+      this.allSectorWarpGateAverageDirty = true;
     }
   }
 
@@ -158,6 +161,7 @@ class WarpGateNetworkManager extends EffectableEntity {
     }
     if (levelChanged) {
       this.breakdownDirty = true;
+      this.allSectorWarpGateAverageDirty = true;
     }
   }
 
@@ -165,6 +169,7 @@ class WarpGateNetworkManager extends EffectableEntity {
     super.applyBooleanFlag(effect);
     if (effect.flagId === 'warpGateFabrication') {
       this.breakdownDirty = true;
+      this.allSectorWarpGateAverageDirty = true;
     }
   }
 
@@ -230,6 +235,7 @@ class WarpGateNetworkManager extends EffectableEntity {
     this.recalculateImportCapMultipliers();
     this.recalculateImportCapFlatBonuses();
     this.breakdownDirty = true;
+    this.allSectorWarpGateAverageDirty = true;
     return this;
   }
 
@@ -438,6 +444,31 @@ class WarpGateNetworkManager extends EffectableEntity {
     this.breakdownCache = summary;
     this.breakdownDirty = false;
     return this.breakdownCache;
+  }
+
+  getAverageWarpGateLevelAllSectors() {
+    this.syncGalaxyCache();
+    if (!this.allSectorWarpGateAverageDirty) {
+      return this.allSectorWarpGateAverageCache;
+    }
+    if (!galaxyManager.enabled) {
+      this.allSectorWarpGateAverageCache = 0;
+      this.allSectorWarpGateAverageDirty = false;
+      return this.allSectorWarpGateAverageCache;
+    }
+    const sectors = galaxyManager.getSectors();
+    if (!sectors.length) {
+      this.allSectorWarpGateAverageCache = 0;
+      this.allSectorWarpGateAverageDirty = false;
+      return this.allSectorWarpGateAverageCache;
+    }
+    let totalLevel = 0;
+    for (let index = 0; index < sectors.length; index += 1) {
+      totalLevel += Math.max(0, Math.floor(Number(sectors[index].warpGateNetworkLevel) || 0));
+    }
+    this.allSectorWarpGateAverageCache = totalLevel / sectors.length;
+    this.allSectorWarpGateAverageDirty = false;
+    return this.allSectorWarpGateAverageCache;
   }
 
   getWarpGateMultiplier(sector) {
