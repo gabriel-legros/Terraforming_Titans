@@ -1,4 +1,5 @@
 const PLANET_CRACKER_UNASSIGNED_KEY = 'idleUnassigned';
+const PLANET_CRACKER_WARP_GATE_LEVEL_CAP = 1000000;
 
 class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
   constructor(config, name) {
@@ -190,16 +191,40 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     return 0;
   }
 
-  getRemainingForType(typeKey) {
+  getAverageWarpGateNetworkLevel() {
+    if (!galaxyManager.enabled) {
+      return 0;
+    }
+    const sectors = galaxyManager.getUhfControlledSectors();
+    if (!sectors.length) {
+      return 0;
+    }
+    let totalLevel = 0;
+    for (let index = 0; index < sectors.length; index += 1) {
+      totalLevel += Math.max(0, Math.floor(Number(sectors[index].warpGateNetworkLevel) || 0));
+    }
+    return totalLevel / sectors.length;
+  }
+
+  getCrackablePlanetLimitMultiplier() {
+    const averageLevel = this.getAverageWarpGateNetworkLevel();
+    return Math.max(1, averageLevel) / PLANET_CRACKER_WARP_GATE_LEVEL_CAP;
+  }
+
+  getEffectiveTotalForType(typeKey) {
     const typeConfig = this.getPlanetTypeMap()[typeKey];
     if (!typeConfig) {
       return 0;
     }
-    return Math.max(0, typeConfig.total - this.getCrackedForType(typeKey));
+    return typeConfig.total * this.getCrackablePlanetLimitMultiplier();
+  }
+
+  getRemainingForType(typeKey) {
+    return Math.max(0, this.getEffectiveTotalForType(typeKey) - this.getCrackedForType(typeKey));
   }
 
   getTotalConfiguredPlanets() {
-    return this.getPlanetTypeConfigs().reduce((sum, entry) => sum + entry.total, 0);
+    return this.getPlanetTypeConfigs().reduce((sum, entry) => sum + this.getEffectiveTotalForType(entry.key), 0);
   }
 
   getTotalCrackedPlanets() {

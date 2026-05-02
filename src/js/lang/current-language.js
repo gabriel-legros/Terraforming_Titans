@@ -3755,7 +3755,7 @@ setLanguageData({
       },
       planetCrackers: {
         name: 'Planet Crackers',
-        description: 'Build tera-scale cracking platforms that shatter worlds into mining belts. Assign crackers and run them to consume space energy and permanently raise global import caps.  Not a weapon.  HOPE will purposefully set aside any planets it may be interested in terraforming present or future.',
+        description: 'Build tera-scale cracking platforms that shatter worlds into mining belts. Assign crackers and run them to consume space energy and permanently raise global import caps.  Not a weapon.  HOPE will purposefully set aside any planets it may be interested in terraforming present or future.  The amount of crackable worlds scale with your Warp Gate Level in each sector, up to the cap of 1M.',
       },
       orbitalRing: {
         name: 'Orbital Ring',
