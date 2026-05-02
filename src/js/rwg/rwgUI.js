@@ -49,7 +49,8 @@ if (!rwgGravityHelpers.constants) {
     linearThreshold: 10,
     linearRate: 0.1,
     exponentialThreshold: 20,
-    exponentialInterval: 10
+    exponentialInterval: 10,
+    multiplierCap: 1e12
   };
 }
 
@@ -71,7 +72,7 @@ if (!rwgGravityHelpers.calculateGravityCostMultiplier) {
       const exponent = (gravity - constants.exponentialThreshold) / constants.exponentialInterval;
       exponentialIncrease = Math.pow(2, exponent) - 1;
     }
-    return 1 + linearIncrease + exponentialIncrease;
+    return Math.min(constants.multiplierCap, 1 + linearIncrease + exponentialIncrease);
   };
 }
 

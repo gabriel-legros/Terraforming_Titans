@@ -2,6 +2,7 @@ const GRAVITY_LINEAR_THRESHOLD = 10;
 const GRAVITY_EXPONENTIAL_THRESHOLD = 20;
 const GRAVITY_LINEAR_RATE = 0.1;
 const GRAVITY_EXPONENTIAL_INTERVAL = 10;
+const GRAVITY_COST_MULTIPLIER_CAP = 1e12;
 
 function createNoGravityPenalty() {
   return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
@@ -21,7 +22,10 @@ function calculatePenaltyComponents(gravity) {
     exponentialIncrease = Math.pow(2, exponent) - 1;
   }
 
-  const multiplier = 1 + linearIncrease + exponentialIncrease;
+  const multiplier = Math.min(
+    GRAVITY_COST_MULTIPLIER_CAP,
+    1 + linearIncrease + exponentialIncrease
+  );
   return { multiplier, linearIncrease, exponentialIncrease };
 }
 
@@ -82,7 +86,10 @@ function calculateGravityCostPenalty(input) {
     surfacePenalty.exponentialIncrease * surfaceWeight;
 
   return {
-    multiplier: 1 + linearIncrease + exponentialIncrease,
+    multiplier: Math.min(
+      GRAVITY_COST_MULTIPLIER_CAP,
+      1 + linearIncrease + exponentialIncrease
+    ),
     linearIncrease,
     exponentialIncrease,
   };
