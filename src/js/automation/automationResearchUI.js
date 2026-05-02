@@ -152,7 +152,7 @@ function updateResearchAutomationUI() {
   const automation = manager.researchAutomation;
   const unlocked = manager.hasFeature('automationResearch');
   const presets = automation.presets.slice();
-  if (presets.length > 0 && !automation.getSelectedPreset()) {
+  if (presets.length > 0 && !automation.getSelectedPreset() && !researchAutomationUIState.builderIsCreatingNewPreset) {
     automation.setSelectedPresetId(presets[0].id);
   }
   const selectedPreset = automation.getSelectedPreset();
@@ -335,8 +335,9 @@ function attachResearchAutomationHandlers() {
 
   researchNewPresetButton.addEventListener('click', () => {
     const automation = getAutomation();
+    const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
     automation.setSelectedPresetId(null);
-    researchAutomationUIState.builderName = '';
+    researchAutomationUIState.builderName = suggestedName;
     researchAutomationUIState.builderShowInSidebar = true;
     researchAutomationUIState.builderIsCreatingNewPreset = true;
     queueAutomationUIRefresh();

@@ -843,9 +843,11 @@ function attachProjectsAutomationHandlers() {
   });
 
   projectsBuilderNewButton.addEventListener('click', () => {
-    automationManager.projectsAutomation.setSelectedPresetId(null);
+    const automation = automationManager.projectsAutomation;
+    const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+    automation.setSelectedPresetId(null);
     projectAutomationUIState.syncedPresetId = null;
-    projectAutomationUIState.builderName = '';
+    projectAutomationUIState.builderName = suggestedName;
     projectAutomationUIState.builderType = 'both';
     projectAutomationUIState.builderScope = 'all';
     projectAutomationUIState.builderShowInSidebar = true;

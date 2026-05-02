@@ -1286,7 +1286,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     details.style.display = 'none';
     details._boundPresetId = null;
     if (details._renderedSummaryText) {
-      details._summaryNode.textContent = '';
+      details._summaryTextNode.textContent = '';
       details._renderedSummaryText = '';
     }
     details._renderedFieldKeySignature = '';

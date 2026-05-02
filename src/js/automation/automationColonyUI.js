@@ -791,9 +791,11 @@ function attachColonyAutomationHandlers() {
   });
 
   colonyBuilderNewButton.addEventListener('click', () => {
-    automationManager.colonyAutomation.setSelectedPresetId(null);
+    const automation = automationManager.colonyAutomation;
+    const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+    automation.setSelectedPresetId(null);
     colonyAutomationUIState.syncedPresetId = null;
-    colonyAutomationUIState.builderName = '';
+    colonyAutomationUIState.builderName = suggestedName;
     colonyAutomationUIState.builderScope = 'all';
     colonyAutomationUIState.builderType = 'both';
     colonyAutomationUIState.builderShowInSidebar = true;

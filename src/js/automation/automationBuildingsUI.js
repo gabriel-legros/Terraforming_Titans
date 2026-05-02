@@ -828,9 +828,11 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsBuilderNewButton.addEventListener('click', () => {
-    automationManager.buildingsAutomation.setSelectedPresetId(null);
+    const automation = automationManager.buildingsAutomation;
+    const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+    automation.setSelectedPresetId(null);
     buildingAutomationUIState.syncedPresetId = null;
-    buildingAutomationUIState.builderName = '';
+    buildingAutomationUIState.builderName = suggestedName;
     buildingAutomationUIState.builderScope = 'all';
     buildingAutomationUIState.builderType = 'both';
     buildingAutomationUIState.builderShowInSidebar = true;
