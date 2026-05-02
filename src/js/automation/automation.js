@@ -182,8 +182,7 @@ class AutomationManager extends EffectableEntity {
     } else if (effect.flagId === 'automationScripts') {
       this.setFeature('automationScripts', !!effect.value);
       if (this.scriptAutomation) {
-        if (effect.value) this.scriptAutomation.enable();
-        else this.scriptAutomation.disable();
+        if (!effect.value) this.scriptAutomation.disable();
       }
     }
   }
@@ -217,8 +216,7 @@ class AutomationManager extends EffectableEntity {
     this.setFeature('automationColony', this.isBooleanFlagSet('automationColony'));
     this.setFeature('automationScripts', this.isBooleanFlagSet('automationScripts'));
     if (this.scriptAutomation) {
-      if (this.hasFeature('automationScripts')) this.scriptAutomation.enable();
-      else this.scriptAutomation.disable();
+      if (!this.hasFeature('automationScripts')) this.scriptAutomation.disable();
     }
     if (this.buildingsAutomation) {
       this.buildingsAutomation.recordCurrentlyAvailableBuildings();
