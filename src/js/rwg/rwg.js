@@ -2245,7 +2245,7 @@ class RwgManager extends EffectableEntity {
       let candidates = Array.isArray(opts.availableTypes) ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
       if (Array.isArray(opts.lockedTypes)) candidates = candidates.filter((c) => !opts.lockedTypes.includes(c));
       if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
-      const autoCandidates = candidates.filter((c) => c !== "chthonian");
+      const autoCandidates = candidates.filter((c) => c !== "chthonian" && c !== "jupiter-like");
       if (autoCandidates.length) candidates = autoCandidates;
       forcedType = candidates[Math.floor(rngType() * candidates.length)];
     }
@@ -2320,7 +2320,7 @@ class RwgManager extends EffectableEntity {
       let isMoon = aAU > moonConfig.thresholdAU && moonRoll < moonConfig.chance;
       const typePick = mulberry32(S ^ (0xC0FFEE ^ (i + 1)))();
       const typeList = this.getAvailableTypes(isMoon);
-      const autoTypes = typeList.filter((t) => t !== "chthonian");
+      const autoTypes = typeList.filter((t) => t !== "chthonian" && t !== "jupiter-like");
       const types = autoTypes.length ? autoTypes : typeList;
       const forcedType = types[Math.floor(typePick * types.length)] || "mars-like";
       const planetSeed = S ^ ((i + 1) * 0x9e37);
