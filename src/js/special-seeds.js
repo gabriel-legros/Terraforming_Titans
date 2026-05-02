@@ -550,6 +550,14 @@ const theRealPoseidonOverrides = {
       type: 'enable'
     },
     {
+      target: 'colony',
+      targetId: 'aerostat_colony',
+      type: 'booleanFlag',
+      flagId: 'aerostats_powered_flight',
+      value: false,
+      effectId: 'therealposeidon-disable-aerostats-powered-flight'
+    },
+    {
       target: 'project',
       targetId: 'spaceStorage',
       type: 'booleanFlag',
@@ -1195,6 +1203,11 @@ const specialSeedDefinitions = {
         id: 'space-storage-no-withdrawal',
         descriptionKey: 'catalogs.specialSeeds.therealposeidon.effects.noSpaceWithdrawal',
         description: 'Space Storage cannot withdraw any resources on this world.'
+      },
+      {
+        id: 'aerostats-powered-flight-disabled',
+        descriptionKey: 'catalogs.specialSeeds.therealposeidon.effects.aerostatsPoweredFlightDisabled',
+        description: 'A certain World 14 upgrade on aerostats is disabled because HOPE did not have access to it at the time.'
       },
       {
         id: 'mega-heat-sink-disabled',

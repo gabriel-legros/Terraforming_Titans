@@ -3370,6 +3370,7 @@ setLanguageData({
         effects: {
           steamAtmosphere: 'Uses Poseidon parameters, but all starting carbon dioxide is replaced with water vapour.',
           noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
+          aerostatsPoweredFlightDisabled: 'A certain World 14 upgrade on aerostats is disabled because HOPE did not have access to it at the time.',
           megaHeatSinkDisabled: 'Mega Heat Sink is permanently disabled on this world.',
         },
         rewards: {
