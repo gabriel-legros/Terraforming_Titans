@@ -839,14 +839,14 @@ function restoreAutoBuildSettings(structures) {
     }
 }
 
-function getAffordableUpgradeCount(colony, maxCount) {
+function getAffordableUpgradeCount(colony, maxCount, reservePercent = 0, additionalReserves = null) {
     const maxCountBigInt = normalizeBuildingCount(maxCount);
     let best = 0n;
     let low = 1n;
     let high = maxCountBigInt;
     while (low <= high) {
         const mid = (low + high) / 2n;
-        if (colony.canAffordUpgrade(mid)) {
+        if (colony.canAffordUpgrade(mid, reservePercent, additionalReserves)) {
             best = mid;
             low = mid + 1n;
         } else {
@@ -856,7 +856,7 @@ function getAffordableUpgradeCount(colony, maxCount) {
     return best;
 }
 
-function autoUpgradeColonies(buildings) {
+function autoUpgradeColonies(buildings, reservePercent = 0, additionalReserves = null) {
     for (const key in buildings) {
         const structure = buildings[key];
         if (!structure || structure.isHidden || !structure.autoUpgradeEnabled) continue;
@@ -870,19 +870,19 @@ function autoUpgradeColonies(buildings) {
             const previousCount = structure.count;
             const maxByCount = structure.count / 10n;
             if (maxByCount <= 0n) break;
-            const upgradeCount = getAffordableUpgradeCount(structure, maxByCount);
+            const upgradeCount = getAffordableUpgradeCount(structure, maxByCount, reservePercent, additionalReserves);
             if (upgradeCount <= 0n) break;
             const cost = structure.getUpgradeCost(upgradeCount);
-            if (!structure.upgrade(upgradeCount)) break;
+            if (!structure.upgrade(upgradeCount, reservePercent, additionalReserves)) break;
             if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);
             if (structure.count >= previousCount) break;
         }
 
         if (structure.count > 0n) {
-            const upgradeCount = getAffordableUpgradeCount(structure, 1n);
+            const upgradeCount = getAffordableUpgradeCount(structure, 1n, reservePercent, additionalReserves);
             if (upgradeCount <= 0n) continue;
             const cost = structure.getUpgradeCost(upgradeCount);
-            if (!structure.upgrade(upgradeCount)) continue;
+            if (!structure.upgrade(upgradeCount, reservePercent, additionalReserves)) continue;
             if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);
         }
     }
@@ -939,9 +939,10 @@ function autoBuild(buildings, delta = 0) {
     resetAutoBuildPartialFlags(buildings);
     resetAutoBuildResourceShortages(typeof resources !== 'undefined' ? resources : null);
     const autobuilderPaused = typeof constructionOfficeState !== 'undefined' && !constructionOfficeState.autobuilderActive;
+    const reserve = getConstructionOfficeReserveSettings();
     if (!autobuilderPaused) {
         autobuildCostTracker.update(delta);
-        autoUpgradeColonies(buildings);
+        autoUpgradeColonies(buildings, reserve, null);
     }
     const population = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
@@ -1038,7 +1039,6 @@ function autoBuild(buildings, delta = 0) {
         });
 
         // Step 3: Efficiently allocate builds
-        const reserve = getConstructionOfficeReserveSettings();
         buildableBuildings.forEach(({ building, requiredAmount, maxMode }) => {
             let buildCount = 0;
             let extraReserves = normalReserve;

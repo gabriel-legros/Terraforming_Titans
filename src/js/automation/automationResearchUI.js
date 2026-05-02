@@ -29,7 +29,13 @@ function buildAutomationResearchUI() {
 
   const presetTitle = document.createElement('div');
   presetTitle.classList.add('building-automation-section-title');
-  presetTitle.textContent = getAutomationCardText('researchAutomationPresetTitle', {}, 'Preset Builder');
+  const presetTitleText = document.createElement('span');
+  presetTitleText.textContent = getAutomationCardText('researchAutomationPresetTitle', {}, 'Preset Builder');
+  const presetTitleDirty = document.createElement('span');
+  presetTitleDirty.classList.add('building-automation-builder-dirty');
+  presetTitleDirty.textContent = '*';
+  presetTitleDirty.style.display = 'none';
+  presetTitle.append(presetTitleText, presetTitleDirty);
   presetSection.appendChild(presetTitle);
 
   const presetRow = document.createElement('div');
@@ -123,6 +129,7 @@ function buildAutomationResearchUI() {
   automationElements.researchApplyNextTravelSelect = nextTravelSelect;
   automationElements.researchApplyNextTravelPersistToggle = nextTravelPersistToggle;
   automationElements.researchPresetJsonDetails = presetJsonDetails;
+  automationElements.researchBuilderDirty = presetTitleDirty;
 
   attachResearchAutomationHandlers();
 }
@@ -147,6 +154,7 @@ function updateResearchAutomationUI() {
     researchApplyNextTravelSelect,
     researchApplyNextTravelPersistToggle,
     researchPresetJsonDetails,
+    researchBuilderDirty
   } = automationElements;
   const manager = automationManager;
   const automation = manager.researchAutomation;
@@ -203,6 +211,7 @@ function updateResearchAutomationUI() {
     researchAutomationUIState.builderShowInSidebar = selectedPreset.showInSidebar !== false;
     researchAutomationUIState.builderIsCreatingNewPreset = false;
   }
+  researchBuilderDirty.style.display = researchAutomationUIState.builderIsCreatingNewPreset ? '' : 'none';
   researchShowPresetInSidebarCheckbox.checked = selectedPreset
     ? selectedPreset.showInSidebar !== false
     : researchAutomationUIState.builderShowInSidebar;

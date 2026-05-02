@@ -487,7 +487,7 @@ class Colony extends Building {
     return cost;
   }
 
-  canAffordUpgrade(upgradeCount = 1) {
+  canAffordUpgrade(upgradeCount = 1, reservePercent = 0, additionalReserves = null) {
     const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
     const maxUpgrades = (this.count + 9n) / 10n;
     if (maxUpgrades === 0n || upgradeCountBigInt > maxUpgrades) return false;
@@ -497,28 +497,39 @@ class Colony extends Building {
       for (const resource in cost[category]) {
         if (resource === 'land') {
           const landResource = resources[category][resource];
+          const cap = landResource.cap || 0;
+          const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
+          const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
           const available = landResource.getAvailableAmount
             ? landResource.getAvailableAmount()
             : landResource.value - landResource.reserved;
-          if (available < cost[category][resource]) {
+          const adjustedAvailable = available - strategicReserve;
+          if (adjustedAvailable < cost[category][resource]) {
             return false;
           }
-        } else if (resources[category][resource].value < cost[category][resource]) {
-          return false;
+        } else {
+          const resObj = resources[category][resource];
+          const cap = resObj.cap || 0;
+          const resourceReservePercent = this.getStrategicReservePercentForResource(reservePercent, category, resource);
+          const strategicReserve = Number.isFinite(cap) ? (resourceReservePercent / 100) * cap : 0;
+          const prioritizedReserve = additionalReserves?.[category]?.[resource] || 0;
+          if (resObj.value - strategicReserve - prioritizedReserve < cost[category][resource]) {
+            return false;
+          }
         }
       }
     }
     return true;
   }
 
-  upgrade(upgradeCount = 1) {
+  upgrade(upgradeCount = 1, reservePercent = 0, additionalReserves = null) {
     const upgradeCountBigInt = normalizeBuildingCount(upgradeCount);
     const upgradeCountNumber = Number(upgradeCountBigInt);
     const nextName = this.getNextTierName();
     if (!nextName) return false;
     const next = colonies[nextName];
     if (!next || !next.unlocked) return false;
-    if (!this.canAffordUpgrade(upgradeCount)) return false;
+    if (!this.canAffordUpgrade(upgradeCount, reservePercent, additionalReserves)) return false;
     const cost = this.getUpgradeCost(upgradeCount);
     const amount = upgradeCountBigInt * 10n;
 
