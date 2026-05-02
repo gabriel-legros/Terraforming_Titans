@@ -632,8 +632,8 @@ setLanguageData({
         },
       },
       dustFactory: {
-        targetGroundAlbedo: 'Target ground albedo:',
         dustColor: 'Dust color:',
+        albedoValue: 'Albedo: {albedo}',
         resourceNames: {
           customDust: 'Custom Dust',
           blackDust: 'Black Dust',
@@ -2316,8 +2316,6 @@ setLanguageData({
             blackDustAlbedo: 'Black dust albedo: {value}',
             blackDustColor: 'Black dust color: {value}',
             blackDustCoverage: 'Black dust coverage: {value}%',
-            whiteDustAlbedo: 'White dust albedo: {value}',
-            whiteDustCoverage: 'White dust coverage: {value}%',
           },
           surfaceTooltip: {
             compositionByZone: 'Surface composition by zone',
@@ -3533,11 +3531,10 @@ setLanguageData({
         description: 'Recharges and stores androids.',
       },
       dustFactory: {
-        name: 'Black Dust Factory',
+        name: 'Dust Factory',
         description: 'Generates large amount of black dust and spreads it over the surface.  May need millions to have any meaningful effect.',
         recipes: {
-          black: { displayName: 'Black Dust Factory' },
-          white: { displayName: 'White Dust Factory' },
+          black: { displayName: 'Dust Factory' },
         },
       },
       sandSeeder: {
@@ -4589,7 +4586,6 @@ setLanguageData({
       },
       special: {
         albedoUpgrades: { name: 'Black Dust', displayName: 'Black Dust' },
-        whiteDust: { name: 'White Dust' },
         orbitalDebris: { name: 'Orbital Debris' },
         spaceships: { name: 'Spaceships' },
         alienArtifact: { name: 'Alien artifact' },

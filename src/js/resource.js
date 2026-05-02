@@ -1000,15 +1000,15 @@ function backfillResourceConfigDefaults(targetConfig, defaultConfig) {
 
 function createResources(resourcesData) {
   backfillResourceConfigDefaults(resourcesData, defaultPlanetParameters.resources);
+  if (resourcesData?.special?.whiteDust) {
+    delete resourcesData.special.whiteDust;
+  }
 
   const landInitial = resourcesData?.surface?.land?.initialValue;
   if (Number.isFinite(landInitial) && resourcesData?.special) {
     const dustCap = landInitial * 10000;
     if (resourcesData.special.albedoUpgrades) {
       resourcesData.special.albedoUpgrades.baseCap = dustCap;
-    }
-    if (resourcesData.special.whiteDust) {
-      resourcesData.special.whiteDust.baseCap = dustCap;
     }
   }
 
@@ -1149,9 +1149,6 @@ function reconcileLandResourceValue() {
     const dustCap = Math.max(0, totalLand * 10000);
     if (resources.special.albedoUpgrades) {
       resources.special.albedoUpgrades.baseCap = dustCap;
-    }
-    if (resources.special.whiteDust) {
-      resources.special.whiteDust.baseCap = dustCap;
     }
   }
 }

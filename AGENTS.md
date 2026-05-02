@@ -190,6 +190,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Terraforming history charts include a rolling 500-year window and phase diagrams (Water, CO2, Methane, Ammonia, O2, N2).
 - Oxygen and nitrogen now have full phase-change cycles.
 - Phase-change cycles now include rapid boiling (liquid -> gas) above local boiling points, tracked as a separate `boiling` rate/tooltip channel, with rate `current liquid × 1e-7 × (temperature - boiling point)`.
+- Dust Factory no longer has a separate white-dust process: it only produces black/custom dust (`albedoUpgrades`), reverse mode removes that same dust pool, and legacy `whiteDust` is deleted during resource creation/load migration.
 - Hydrology, phase transitions, and zonal resource synchronization were refactored for stability and consistency.
 
 ### Space, Projects, and Hazards
@@ -237,6 +238,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
+- Dust Factory no longer has target-ground-albedo automation controls; its card now shows a `Dust Color` + computed albedo readout and uses manual forward/reverse behavior.
 - Aerostats now include a saved and colony-preset-aware `Cap workers to aerostat capacity` checkbox in the buoyancy details card; when enabled, total world worker capacity is clamped to active aerostats x 10.
 - Planet visualizer now supports a composition-driven gas overlay layered above the normal world texture: strong atmospheric/surface hydrogen enables Jupiter-style tan banding, methane adds cooler blue-gray belt shading, and ammonia adds bright pale cloud-band/storm accents once each gas clears its visual threshold.
 - Building, project, research, and colony automation preset builders now support preset import plus `Export to clipboard`; imports create a new preset from the pasted transfer string and the transfer buttons sit between `Delete` and `Apply Once Now`.

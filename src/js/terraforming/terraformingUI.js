@@ -2464,21 +2464,12 @@ function updateLifeBox() {
       const special = (typeof resources !== 'undefined' && resources.special) ? resources.special : {};
       const black = (special.albedoUpgrades && typeof special.albedoUpgrades.value === 'number')
         ? special.albedoUpgrades.value : 0;
-      const white = (special.whiteDust && typeof special.whiteDust.value === 'number')
-        ? special.whiteDust.value : 0;
 
       const bRatioRaw = area > 0 ? Math.max(0, black / area) : 0;
-      const wRatioRaw = area > 0 ? Math.max(0, white / area) : 0;
-      const totalApplied = Math.min(bRatioRaw + wRatioRaw, 1);
-      let shareBlack = 0, shareWhite = 0;
-      if (totalApplied > 0) {
-        const sumRaw = bRatioRaw + wRatioRaw;
-        shareWhite = (wRatioRaw / sumRaw) * totalApplied;
-        shareBlack = totalApplied - shareWhite;
-      }
+      const totalApplied = Math.min(bRatioRaw, 1);
+      const shareBlack = totalApplied;
 
       const blackAlbedo = dustFactorySettings.dustColorAlbedo;
-      const whiteAlbedo = 0.8;
       const lines = [
         getTerraformingSummaryText('luminosity.groundTooltip.base', 'Base: {value}', { value: base.toFixed(3) }),
         getTerraformingSummaryText('luminosity.groundTooltip.blackDustAlbedo', 'Black dust albedo: {value}', { value: blackAlbedo.toFixed(3) }),
@@ -2486,10 +2477,6 @@ function updateLifeBox() {
       ];
       if (shareBlack > 0) {
         lines.push(getTerraformingSummaryText('luminosity.groundTooltip.blackDustCoverage', 'Black dust coverage: {value}%', { value: (shareBlack * 100).toFixed(1) }));
-      }
-      lines.push(getTerraformingSummaryText('luminosity.groundTooltip.whiteDustAlbedo', 'White dust albedo: {value}', { value: whiteAlbedo.toFixed(3) }));
-      if (shareWhite > 0) {
-        lines.push(getTerraformingSummaryText('luminosity.groundTooltip.whiteDustCoverage', 'White dust coverage: {value}%', { value: (shareWhite * 100).toFixed(1) }));
       }
       setTooltipText(els.groundAlbedoTooltip, lines.join('\n'), els.tooltips, 'ground');
     }

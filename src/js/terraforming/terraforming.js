@@ -1403,10 +1403,8 @@ class Terraforming extends EffectableEntity{
         const surfaceArea = this.celestialParameters.surfaceArea || 0;
         const special = this.resources.special;
         const black = special.albedoUpgrades.value;
-        const white = special.whiteDust.value;
         const bRatioRaw = surfaceArea > 0 ? Math.max(0, black / surfaceArea) : 0;
-        const wRatioRaw = surfaceArea > 0 ? Math.max(0, white / surfaceArea) : 0;
-        const totalApplied = Math.min(bRatioRaw + wRatioRaw, 1);
+        const totalApplied = Math.min(bRatioRaw, 1);
         if (totalApplied >= 1) {
           dustFactory.dustAlbedoTransitionActive = false;
         }
@@ -1942,26 +1940,17 @@ class Terraforming extends EffectableEntity{
     calculateGroundAlbedo() {
         const baseAlbedo = this.celestialParameters.albedo;
         const blackAlbedo = dustFactorySettings.dustColorAlbedo; // black dust
-        const whiteAlbedo = 0.8;  // white dust
         const surfaceArea = this.celestialParameters.surfaceArea || 0;
         const dustFactory = buildings.dustFactory;
 
         const special = this.resources.special;
         const black = special.albedoUpgrades.value;
-        const white = special.whiteDust.value;
 
         const bRatioRaw = surfaceArea > 0 ? Math.max(0, black / surfaceArea) : 0;
-        const wRatioRaw = surfaceArea > 0 ? Math.max(0, white / surfaceArea) : 0;
-        const totalApplied = Math.min(bRatioRaw + wRatioRaw, 1);
-        let shareBlack = 0, shareWhite = 0;
-        if (totalApplied > 0) {
-            const sumRaw = bRatioRaw + wRatioRaw;
-            // Distribute the applied coverage proportionally between black and white dust
-            shareWhite = (wRatioRaw / sumRaw) * totalApplied;
-            shareBlack = totalApplied - shareWhite;
-        }
+        const totalApplied = Math.min(bRatioRaw, 1);
+        const shareBlack = totalApplied;
         const untouched = Math.max(0, 1 - totalApplied);
-        const blended = (blackAlbedo * shareBlack) + (whiteAlbedo * shareWhite) + (baseAlbedo * untouched);
+        const blended = (blackAlbedo * shareBlack) + (baseAlbedo * untouched);
 
         if (dustFactory.dustAlbedoTransitionActive) {
             const start = dustFactory.dustAlbedoStart ?? baseAlbedo;

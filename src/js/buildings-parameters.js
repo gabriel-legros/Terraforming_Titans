@@ -640,11 +640,6 @@ const buildingsParameters = {
         displayName: '',
         production: { special: { albedoUpgrades: 100 } },
         reverseTarget: { category: 'special', resource: 'albedoUpgrades' }
-      },
-      white: {
-        displayName: '',
-        production: { special: { whiteDust: 100 } },
-        reverseTarget: { category: 'special', resource: 'whiteDust' }
       }
     }
   },
