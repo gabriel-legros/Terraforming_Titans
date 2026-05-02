@@ -299,6 +299,7 @@ progressZeus.chapters.push(
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 50_000_000_000 }
     ],
     reward: [
+      { target: 'project', targetId: 'overpopulationOneillCylinders', type: 'enable', planetId: 'zeus' }
     ]
   },
   {
@@ -312,7 +313,6 @@ progressZeus.chapters.push(
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 100_000_000_000 }
     ],
     reward: [
-      { target: 'project', targetId: 'overpopulationOneillCylinders', type: 'enable', planetId: 'zeus' }
     ]
   },
   {
