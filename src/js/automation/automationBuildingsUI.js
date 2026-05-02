@@ -926,6 +926,9 @@ function attachBuildingsAutomationHandlers() {
       : buildingAutomationUIState.builderSelectedBuildings.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
+      resetAutomationPresetJsonDetailsState(automationElements.buildingsPresetJsonDetails, Number(presetId));
+    }
+    if (presetId) {
       automation.updatePreset(Number(presetId), name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
     } else {
       automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar, createEmpty: true });

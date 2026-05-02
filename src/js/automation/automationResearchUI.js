@@ -360,6 +360,7 @@ function attachResearchAutomationHandlers() {
       : automation.getSelectedPreset();
     const name = researchPresetNameInput.value || researchAutomationUIState.builderName || '';
     if (preset) {
+      resetAutomationPresetJsonDetailsState(automationElements.researchPresetJsonDetails, preset.id);
       automation.updatePreset(preset.id, name);
       automation.setPresetShowInSidebar(preset.id, researchAutomationUIState.builderShowInSidebar);
     } else {

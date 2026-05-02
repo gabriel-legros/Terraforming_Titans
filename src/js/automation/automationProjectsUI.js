@@ -942,6 +942,9 @@ function attachProjectsAutomationHandlers() {
       : projectAutomationUIState.builderSelectedProjects.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
+      resetAutomationPresetJsonDetailsState(automationElements.projectsPresetJsonDetails, Number(presetId));
+    }
+    if (presetId) {
       automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
     } else {
       automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, createEmpty: true });

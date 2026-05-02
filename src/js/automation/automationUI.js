@@ -951,7 +951,7 @@ function createAutomationPresetJsonDetails(extraClassName) {
   const saveButton = document.createElement('button');
   saveButton.type = 'button';
   const saveButtonText = document.createElement('span');
-  saveButtonText.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
+  saveButtonText.textContent = getAutomationCardText('savePresetJsonButton', {}, 'Save');
   const saveButtonStar = document.createElement('span');
   saveButtonStar.textContent = ' *';
   saveButtonStar.style.color = '#d02b2b';
@@ -1015,6 +1015,30 @@ function saveAutomationPresetJsonDraftStore(details, presetId) {
 function loadAutomationPresetJsonDraftStore(details, presetId) {
   const storeKey = getAutomationPresetJsonDraftStoreKey(details, presetId);
   return automationPresetJsonDraftStore[storeKey] || null;
+}
+
+function resetAutomationPresetJsonDetailsState(details, presetId) {
+  if (!details) {
+    return;
+  }
+  if (presetId !== undefined && presetId !== null && presetId !== '') {
+    clearAutomationPresetJsonDraftStore(details, Number(presetId));
+  }
+  details._jsonDraftMap = {};
+  details._jsonDirty = false;
+  details._basePresetSignature = '';
+  details._boundPresetId = null;
+  details._renderedFieldKeySignature = '';
+  details._renderedPresetJson = '';
+  if (details._saveButton) {
+    details._saveButton.disabled = true;
+  }
+  if (details._saveButtonStarNode) {
+    details._saveButtonStarNode.style.display = 'none';
+  }
+  if (details._onDirtyChange) {
+    details._onDirtyChange(false);
+  }
 }
 
 function parseAutomationPresetJsonFieldValue(rawValue) {

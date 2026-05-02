@@ -890,6 +890,9 @@ function attachColonyAutomationHandlers() {
       : colonyAutomationUIState.builderSelectedTargets.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
+      resetAutomationPresetJsonDetailsState(automationElements.colonyPresetJsonDetails, Number(presetId));
+    }
+    if (presetId) {
       automation.updatePreset(Number(presetId), name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
     } else {
       automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar, createEmpty: true });
