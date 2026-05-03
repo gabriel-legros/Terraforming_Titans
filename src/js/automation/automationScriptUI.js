@@ -1025,6 +1025,31 @@ function renderActionsEditor(automation, script, line, container, actions, title
       renderActionTargetPicker(action, row);
     }
 
+    const controls = document.createElement('div');
+    controls.classList.add('script-action-controls');
+
+    const up = document.createElement('button');
+    up.textContent = '↑';
+    up.disabled = index === 0;
+    up.addEventListener('click', () => {
+      const movedAction = actions.splice(index, 1)[0];
+      actions.splice(index - 1, 0, movedAction);
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    controls.appendChild(up);
+
+    const down = document.createElement('button');
+    down.textContent = '↓';
+    down.disabled = index === actions.length - 1;
+    down.addEventListener('click', () => {
+      const movedAction = actions.splice(index, 1)[0];
+      actions.splice(index + 1, 0, movedAction);
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    controls.appendChild(down);
+
     const remove = document.createElement('button');
     remove.textContent = '×';
     remove.addEventListener('click', () => {
@@ -1032,7 +1057,8 @@ function renderActionsEditor(automation, script, line, container, actions, title
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
-    row.appendChild(remove);
+    controls.appendChild(remove);
+    row.appendChild(controls);
     section.appendChild(row);
   });
 

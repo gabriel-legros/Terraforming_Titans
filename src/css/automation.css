@@ -1019,9 +1019,14 @@
   border-radius: 6px;
 }
 
-.script-term-row > button:last-child,
-.script-action-row > button:last-child {
+.script-term-row > button:last-child {
   margin-left: auto;
+}
+
+.script-action-controls {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 4px;
 }
 
 .script-automation-body button,
