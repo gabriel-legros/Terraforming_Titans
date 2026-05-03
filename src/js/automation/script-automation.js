@@ -456,7 +456,14 @@ class ScriptAutomation {
       }
 
       if (line.kind === 'if' || line.kind === 'elseIf' || line.kind === 'else') {
-        const branchResult = this.evaluateConditionalLine(script, line);
+        const isResumingLineActions = this.pcActionIndex > 0;
+        const branchResult = isResumingLineActions ? {
+          conditionResult: true,
+          executeActions: true,
+          stopAfterLine: false,
+          gotoLineId: null,
+          skippedByEarlierMatch: false
+        } : this.evaluateConditionalLine(script, line);
         this.lastConditionResult = branchResult.conditionResult;
         if (branchResult.executeActions) {
           const actionResult = this.runActions(
@@ -510,7 +517,8 @@ class ScriptAutomation {
         continue;
       }
 
-      const conditionResult = this.evaluateCondition(line.condition);
+      const isResumingLineActions = this.pcActionIndex > 0;
+      const conditionResult = isResumingLineActions ? true : this.evaluateCondition(line.condition);
       this.lastConditionResult = conditionResult;
 
       if (line.kind === 'wait' && !conditionResult) {
