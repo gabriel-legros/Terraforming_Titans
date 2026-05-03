@@ -920,6 +920,11 @@ function getAutoActivationTargetCount(building, population, workerCap, totalLand
         ? 0
         : resolveAutoBuildBase(building, population, workerCap, collection);
 
+    const percentTarget = ((building.autoBuildPercent || 0) * base) / 100;
+    const roundedPercentTarget = building.autoBuildBasis === 'aerostatCapacity'
+        ? Math.floor(percentTarget)
+        : Math.ceil(percentTarget);
+
     return usesMaxBasis
         ? (usesAdjustableMaxBasis ? building.getAutoBuildMaxTargetCount() : Infinity)
         : usesFixedBasis
@@ -932,7 +937,7 @@ function getAutoActivationTargetCount(building, population, workerCap, totalLand
                         ? building.getAndroidCountTarget(resources.colony.androids.value || 0)
                         : usesAndroidCapacityShareBasis
                             ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
-                            : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
+                            : roundedPercentTarget;
 }
 
 function autoBuild(buildings, delta = 0) {
@@ -981,6 +986,10 @@ function autoBuild(buildings, delta = 0) {
             const base = usesMaxBasis || usesFixedBasis || usesWorkerShareBasis || usesLandShareBasis || usesAndroidCountBasis || usesAndroidCapacityShareBasis
                 ? 0
                 : resolveAutoBuildBase(building, population, workerCap, buildings);
+            const percentTarget = ((building.autoBuildPercent || 0) * base) / 100;
+            const roundedPercentTarget = building.autoBuildBasis === 'aerostatCapacity'
+                ? Math.floor(percentTarget)
+                : Math.ceil(percentTarget);
             const targetCount = usesMaxBasis
                 ? (usesAdjustableMaxBasis ? building.getAutoBuildMaxTargetCount() : Infinity)
                 : usesFixedBasis
@@ -990,10 +999,10 @@ function autoBuild(buildings, delta = 0) {
                         : usesLandShareBasis
                             ? building.getLandShareTarget(totalLand)
                             : usesAndroidCountBasis
-                                ? building.getAndroidCountTarget(resources.colony.androids.value || 0)
+                            ? building.getAndroidCountTarget(resources.colony.androids.value || 0)
                             : usesAndroidCapacityShareBasis
                                 ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
-                            : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
+                            : roundedPercentTarget;
 
             buildingInfos.push({ building, targetCount });
 

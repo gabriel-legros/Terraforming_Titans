@@ -233,6 +233,10 @@ function refreshAutoBuildTarget(structure) {
   const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed || autoBuildUsesWorkerShare || autoBuildUsesLandShare || autoBuildUsesAndroidCount || autoBuildUsesAndroidCapacityShare
     ? 0
     : getAutoBuildBaseValue(structure, pop, workerCap, collection);
+  const percentTarget = (structure.autoBuildPercent * base || 0) / 100;
+  const roundedPercentTarget = structure.autoBuildBasis === 'aerostatCapacity'
+    ? Math.floor(percentTarget)
+    : Math.ceil(percentTarget);
   const targetCount = autoBuildUsesMax
     ? (autoBuildUsesAdjustableMax ? structure.getAutoBuildMaxTargetCount() : Infinity)
     : autoBuildUsesFixed
@@ -245,7 +249,7 @@ function refreshAutoBuildTarget(structure) {
             ? structure.getAndroidCountTarget(resources.colony.androids.value || 0)
           : autoBuildUsesAndroidCapacityShare
             ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
-          : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+          : roundedPercentTarget;
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesFill
@@ -1210,6 +1214,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const base = (usesFillMode || usesMaxMode || usesFixedMode || usesWorkerShareMode || usesLandShareMode || usesAndroidCountMode || usesAndroidCapacityShareMode)
       ? 0
       : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
+    const percentTarget = (structure.autoBuildPercent * base || 0) / 100;
+    const roundedPercentTarget = structure.autoBuildBasis === 'aerostatCapacity'
+      ? Math.floor(percentTarget)
+      : Math.ceil(percentTarget);
     const structureCount = getStructureCountNumber(structure.count);
     const structureActive = getStructureCountNumber(structure.active);
     const targetCount = usesFillMode
@@ -1226,7 +1234,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
                 ? structure.getAndroidCountTarget(resources.colony.androids.value || 0)
               : usesAndroidCapacityShareMode
                 ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
-              : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+              : roundedPercentTarget;
     const desiredActive = structure.getClampedSetActiveTargetCount
       ? structure.getClampedSetActiveTargetCount(targetCount, structureCount)
       : Math.min(targetCount, structureCount);
