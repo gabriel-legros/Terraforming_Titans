@@ -417,6 +417,32 @@ class ColonyAutomation {
     return preset;
   }
 
+  mergeMissingTargetsIntoPreset(presetId, targetIds = []) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return false;
+    }
+    const ids = Array.isArray(targetIds) ? targetIds : [];
+    let changed = false;
+    for (let index = 0; index < ids.length; index += 1) {
+      const targetId = ids[index];
+      if (preset.targets[targetId]) {
+        continue;
+      }
+      const entry = this.captureTargetSettings(
+        targetId,
+        preset.includeControl !== false,
+        preset.includeAutomation !== false
+      );
+      if (!entry.control && !entry.automation) {
+        continue;
+      }
+      preset.targets[targetId] = entry;
+      changed = true;
+    }
+    return changed;
+  }
+
   captureTargetSettings(targetId, includeControl, includeAutomation) {
     const entry = {
       categoryId: this.getTargetCategoryId(targetId),

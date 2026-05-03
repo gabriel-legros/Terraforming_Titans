@@ -885,6 +885,11 @@ function attachBuildingsAutomationHandlers() {
     if (!buildingAutomationUIState.builderSelectedBuildings.includes(buildingId)) {
       buildingAutomationUIState.builderSelectedBuildings.push(buildingId);
     }
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.buildingsAutomation.mergeMissingBuildingsIntoPreset(Number(presetId), [buildingId]);
+      buildingAutomationUIState.syncedPresetId = null;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -903,6 +908,14 @@ function attachBuildingsAutomationHandlers() {
         buildingAutomationUIState.builderSelectedBuildings.push(building.name);
       }
     });
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.buildingsAutomation.mergeMissingBuildingsIntoPreset(
+        Number(presetId),
+        additions.map(building => building.name)
+      );
+      buildingAutomationUIState.syncedPresetId = null;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

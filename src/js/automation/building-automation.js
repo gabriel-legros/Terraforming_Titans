@@ -473,6 +473,36 @@ class BuildingAutomation {
     return preset;
   }
 
+  mergeMissingBuildingsIntoPreset(presetId, buildingIds = []) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return false;
+    }
+    const ids = Array.isArray(buildingIds) ? buildingIds : [];
+    let changed = false;
+    for (let index = 0; index < ids.length; index += 1) {
+      const buildingId = ids[index];
+      if (preset.buildings[buildingId]) {
+        continue;
+      }
+      const building = buildings[buildingId];
+      if (!building) {
+        continue;
+      }
+      const entry = this.captureBuildingSettings(
+        building,
+        preset.includeControl !== false,
+        preset.includeAutomation !== false
+      );
+      if (!entry.control && !entry.automation) {
+        continue;
+      }
+      preset.buildings[buildingId] = entry;
+      changed = true;
+    }
+    return changed;
+  }
+
   captureBuildingSettings(building, includeControl, includeAutomation) {
     const entry = {
       control: null,

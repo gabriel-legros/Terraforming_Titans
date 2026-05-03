@@ -849,6 +849,11 @@ function attachColonyAutomationHandlers() {
     if (!colonyAutomationUIState.builderSelectedTargets.includes(targetId)) {
       colonyAutomationUIState.builderSelectedTargets.push(targetId);
     }
+    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.colonyAutomation.mergeMissingTargetsIntoPreset(Number(presetId), [targetId]);
+      colonyAutomationUIState.syncedPresetId = null;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -867,6 +872,14 @@ function attachColonyAutomationHandlers() {
         colonyAutomationUIState.builderSelectedTargets.push(target.id);
       }
     });
+    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.colonyAutomation.mergeMissingTargetsIntoPreset(
+        Number(presetId),
+        additions.map(target => target.id)
+      );
+      colonyAutomationUIState.syncedPresetId = null;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

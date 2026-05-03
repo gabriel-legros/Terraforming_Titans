@@ -464,6 +464,32 @@ class ProjectAutomation {
     return preset;
   }
 
+  mergeMissingProjectsIntoPreset(presetId, projectIds = []) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return false;
+    }
+    const ids = Array.isArray(projectIds) ? projectIds : [];
+    let changed = false;
+    for (let index = 0; index < ids.length; index += 1) {
+      const projectId = this.normalizeProjectId(ids[index]);
+      if (preset.projects[projectId]) {
+        continue;
+      }
+      const entry = this.captureProjectSettingsForId(
+        projectId,
+        preset.includeExpansion !== false,
+        preset.includeOperations !== false
+      );
+      if (!entry) {
+        continue;
+      }
+      this.mergePresetProjectEntry(preset.projects, projectId, entry);
+      changed = true;
+    }
+    return changed;
+  }
+
   captureProjectSettingsForId(projectId, includeExpansion = true, includeOperations = true) {
     const project = this.getProjectForAutomationId(projectId);
     if (!project || project.category === 'story') {

@@ -901,6 +901,11 @@ function attachProjectsAutomationHandlers() {
     if (!projectAutomationUIState.builderSelectedProjects.includes(projectId)) {
       projectAutomationUIState.builderSelectedProjects.push(projectId);
     }
+    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(Number(presetId), [projectId]);
+      projectAutomationUIState.syncedPresetId = null;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -919,6 +924,14 @@ function attachProjectsAutomationHandlers() {
         projectAutomationUIState.builderSelectedProjects.push(project.name);
       }
     });
+    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(
+        Number(presetId),
+        additions.map(project => project.name)
+      );
+      projectAutomationUIState.syncedPresetId = null;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
