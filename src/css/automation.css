@@ -92,6 +92,23 @@
   color: #223049;
 }
 
+.automation-preset-json-field-input {
+  border: 1px solid #8896ad;
+  background: rgba(255, 255, 255, 0.92);
+  color: #223049;
+  border-radius: 2px;
+}
+
+.automation-preset-json-field-input:focus {
+  outline: none;
+  border-color: #4d79cf;
+  box-shadow: 0 0 0 1px rgba(77, 121, 207, 0.25);
+}
+
+.automation-preset-json-field-input-disabled {
+  opacity: 0.78;
+}
+
 .automation-preset-row,
 .automation-add-entry-row {
   display: flex;

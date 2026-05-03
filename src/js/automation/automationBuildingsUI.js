@@ -591,6 +591,14 @@ function updateBuildingsAutomationUI() {
       remove.title = getAutomationCardText('removeBuilding', {}, 'Remove building');
       remove.addEventListener('click', () => {
         buildingAutomationUIState.builderSelectedBuildings = buildingAutomationUIState.builderSelectedBuildings.filter(id => id !== name);
+        const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+        if (presetId) {
+          const preset = automationManager.buildingsAutomation.getPresetById(Number(presetId));
+          if (preset && preset.buildings[name]) {
+            delete preset.buildings[name];
+            buildingAutomationUIState.syncedPresetId = null;
+          }
+        }
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
@@ -921,6 +929,17 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsBuilderClearButton.addEventListener('click', () => {
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (presetId) {
+      const preset = automationManager.buildingsAutomation.getPresetById(Number(presetId));
+      if (preset) {
+        const selected = buildingAutomationUIState.builderSelectedBuildings.slice();
+        for (let index = 0; index < selected.length; index += 1) {
+          delete preset.buildings[selected[index]];
+        }
+        buildingAutomationUIState.syncedPresetId = null;
+      }
+    }
     buildingAutomationUIState.builderSelectedBuildings = [];
     queueAutomationUIRefresh();
     updateAutomationUI();

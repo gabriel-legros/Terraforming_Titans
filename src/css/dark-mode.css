@@ -915,6 +915,22 @@
     color: #d7e2f3;
 }
 
+.dark-mode .automation-preset-json-field-input {
+    background: #1a2435;
+    border-color: #41557a;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-preset-json-field-input:focus {
+    border-color: #74a0ff;
+    box-shadow: 0 0 0 1px rgba(116, 160, 255, 0.25);
+}
+
+.dark-mode .automation-preset-json-field-input-disabled {
+    background: #172133;
+    color: #b8c4d9;
+}
+
 .dark-mode .automation-preset-row {
     background: #111827;
     border-color: #24324a;

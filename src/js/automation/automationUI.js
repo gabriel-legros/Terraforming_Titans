@@ -1165,11 +1165,9 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     input.style.lineHeight = 'inherit';
     input.style.padding = '0 2px';
     input.style.margin = '0';
-    input.style.border = '1px solid #888';
-    input.style.background = 'rgba(255,255,255,0.85)';
     input.disabled = path.length === 1 && path[0] === 'id';
     if (input.disabled) {
-      input.style.opacity = '0.8';
+      input.classList.add('automation-preset-json-field-input-disabled');
     }
     input.addEventListener('change', (event) => {
       try {

@@ -607,6 +607,15 @@ function updateProjectsAutomationUI() {
       remove.title = getAutomationCardText('removeProject', {}, 'Remove project');
       remove.addEventListener('click', () => {
         projectAutomationUIState.builderSelectedProjects = projectAutomationUIState.builderSelectedProjects.filter(id => id !== name);
+        const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+        if (presetId) {
+          const normalizedProjectId = automationManager.projectsAutomation.normalizeProjectId(name);
+          const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
+          if (preset && preset.projects[normalizedProjectId]) {
+            delete preset.projects[normalizedProjectId];
+            projectAutomationUIState.syncedPresetId = null;
+          }
+        }
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
@@ -937,6 +946,18 @@ function attachProjectsAutomationHandlers() {
   });
 
   projectsBuilderClearButton.addEventListener('click', () => {
+    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (presetId) {
+      const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
+      if (preset) {
+        const selected = projectAutomationUIState.builderSelectedProjects.slice();
+        for (let index = 0; index < selected.length; index += 1) {
+          const normalizedProjectId = automationManager.projectsAutomation.normalizeProjectId(selected[index]);
+          delete preset.projects[normalizedProjectId];
+        }
+        projectAutomationUIState.syncedPresetId = null;
+      }
+    }
     projectAutomationUIState.builderSelectedProjects = [];
     queueAutomationUIRefresh();
     updateAutomationUI();

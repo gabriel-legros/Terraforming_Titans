@@ -574,6 +574,14 @@ function updateColonyAutomationUI() {
     remove.title = getAutomationCardText('removeTarget', {}, 'Remove target');
     remove.addEventListener('click', () => {
       colonyAutomationUIState.builderSelectedTargets = colonyAutomationUIState.builderSelectedTargets.filter(id => id !== targetId);
+      const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+      if (presetId) {
+        const preset = automationManager.colonyAutomation.getPresetById(Number(presetId));
+        if (preset && preset.targets[targetId]) {
+          delete preset.targets[targetId];
+          colonyAutomationUIState.syncedPresetId = null;
+        }
+      }
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -885,6 +893,17 @@ function attachColonyAutomationHandlers() {
   });
 
   colonyBuilderClearButton.addEventListener('click', () => {
+    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (presetId) {
+      const preset = automationManager.colonyAutomation.getPresetById(Number(presetId));
+      if (preset) {
+        const selected = colonyAutomationUIState.builderSelectedTargets.slice();
+        for (let index = 0; index < selected.length; index += 1) {
+          delete preset.targets[selected[index]];
+        }
+        colonyAutomationUIState.syncedPresetId = null;
+      }
+    }
     colonyAutomationUIState.builderSelectedTargets = [];
     queueAutomationUIRefresh();
     updateAutomationUI();
