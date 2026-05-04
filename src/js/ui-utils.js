@@ -229,6 +229,7 @@ function setTooltipText(node, text, cache, key) {
 
 function attachDynamicInfoTooltip(iconElement, text, clickToPin = true) {
   if (!iconElement) return null;
+  if (!iconElement.innerHTML) iconElement.innerHTML = '&#9432;';
   let tooltip = iconElement.querySelector('.resource-tooltip.dynamic-tooltip');
   if (!tooltip) {
     tooltip = document.createElement('span');
@@ -237,7 +238,6 @@ function attachDynamicInfoTooltip(iconElement, text, clickToPin = true) {
   }
   setTooltipText(tooltip, text);
   iconElement.removeAttribute('title');
-  if (!iconElement.innerHTML) iconElement.innerHTML = '&#9432;';
   if (!tooltip._dynamicHoverAttached) {
     addTooltipHover(iconElement, tooltip, { dynamicPlacement: true, clickToPin });
     tooltip._dynamicHoverAttached = true;
