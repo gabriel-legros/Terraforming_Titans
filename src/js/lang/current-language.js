@@ -156,6 +156,7 @@ setLanguageData({
         waterVapor: 'Water Vap.',
         safeGhg: 'Safe GHG',
         ch4: 'CH₄',
+        nh3: 'NH₃',
         h2: 'H₂',
         h2so4: 'H₂SO₄',
         gas: 'Gas',

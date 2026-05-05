@@ -1682,6 +1682,7 @@ function renderAtmoTable(res) {
     { label: getRwgUiText('atmo.waterVapor', 'Water Vap.'), key: 'atmosphericWater' },
     { label: getRwgUiText('atmo.safeGhg', 'Safe GHG'), key: 'greenhouseGas' },
     { label: getRwgUiText('atmo.ch4', 'CH₄'), key: 'atmosphericMethane' },
+    { label: getRwgUiText('atmo.nh3', 'NH₃'), key: 'atmosphericAmmonia' },
     { label: getRwgUiText('atmo.h2', 'H₂'), key: 'hydrogen' },
     { label: getRwgUiText('atmo.h2so4', 'H₂SO₄'), key: 'sulfuricAcid' }
   ];
