@@ -1547,7 +1547,8 @@ async function runAutoTravelEquilibrationPopup(res) {
   try {
     const eqInput = buildEquilibrationInputParams(res);
     const result = await runEquilibration(eqInput, {
-      cancelToken
+      cancelToken,
+      skipAdditionalFastForward: true
     }, (p, info) => {
       const label = document.getElementById('rwg-progress-label');
       if (label && info?.label) label.textContent = info.label;

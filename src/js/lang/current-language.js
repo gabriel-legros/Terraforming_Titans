@@ -3039,6 +3039,8 @@ setLanguageData({
           waitForSpecialization: 'Wait on complete specialization',
           blockIfNoStoredFromArtificial: "Don't travel out of current artificial world if none is stored",
           skipEquilibration: 'Skip equilibration',
+          skipEquilibrationTooltip: 'Available once your fastest-terraform record is below 60s.  Pausing and clever usage of galactic market and space storage can make this much easier.\nCurrent Fastest Terraform (real time): {value}.',
+          noRecordYet: 'No record yet',
           skipVisualizer: 'Skip world visualizer initialization',
         },
         scriptAutomationTitle: 'Script Automation',

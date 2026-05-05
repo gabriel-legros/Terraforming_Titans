@@ -283,6 +283,7 @@
     const chunkSteps = options.chunkSteps ?? 1000;
     const cancelToken = options.cancelToken;
     const minRunMs = options.minRunMs ?? (options.sync ? 0 : 30000);
+    const skipAdditionalFastForward = options.skipAdditionalFastForward === true;
     let additionalRunMs = options.additionalRunMs ?? 60000;
     let timeoutMs = options.timeoutMs ?? (minRunMs + additionalRunMs);
 
@@ -456,6 +457,10 @@
                   refinementsFromInstability,
                   simulatedMs: totalSimulatedMs
                 });
+              }
+              if (skipAdditionalFastForward && elapsedNow >= minRunMs) {
+                finalize(true);
+                return;
               }
             }
           }

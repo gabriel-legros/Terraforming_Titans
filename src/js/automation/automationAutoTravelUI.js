@@ -11,6 +11,22 @@ function getAutoTravelOptionText(path, fallback, vars) {
   return getAutomationCardText(`autoTravel.${path}`, vars, fallback);
 }
 
+function getFastestTerraformRecordText() {
+  if (Number(fastestTerraformRealSeconds) > 0) {
+    return `${Number(fastestTerraformRealSeconds).toFixed(2)}s`;
+  }
+  return getAutoTravelOptionText('noRecordYet', 'No record yet');
+}
+
+function getSkipEquilibrationTooltipText() {
+  const recordText = getFastestTerraformRecordText();
+  return getAutoTravelOptionText(
+    'skipEquilibrationTooltip',
+    'Available once your fastest-terraform record is below 60s.  Pausing and clever usage of galactic market and space storage can make this much easier.\nCurrent Fastest Terraform (real time): {value}.',
+    { value: recordText }
+  );
+}
+
 function buildAutoTravelSelect(parent, className, options) {
   const select = document.createElement('select');
   select.classList.add(className);
@@ -136,6 +152,20 @@ function buildAutoTravelUI() {
   const waitSpecializationToggle = addCheckboxRow('wait-specialization', getAutoTravelOptionText('waitForSpecialization', 'Wait on complete specialization'));
   const blockIfNoStoredToggle = addCheckboxRow('block-no-stored', getAutoTravelOptionText('blockIfNoStoredFromArtificial', "Don't travel out of current artificial world if none is stored"));
   const skipEquilibrationToggle = addCheckboxRow('skip-equilibration', getAutoTravelOptionText('skipEquilibration', 'Skip equilibration'));
+  if (skipEquilibrationToggle?.parentElement) {
+    const skipLabelText = skipEquilibrationToggle.parentElement.querySelector('span');
+    if (skipLabelText) {
+      const skipInfoIcon = document.createElement('span');
+      skipInfoIcon.className = 'info-tooltip-icon';
+      skipInfoIcon.innerHTML = '&#9432;';
+      skipLabelText.appendChild(document.createTextNode(' '));
+      skipLabelText.appendChild(skipInfoIcon);
+      automationElements.autoTravelSkipEquilibrationInfoTooltipContent = attachDynamicInfoTooltip(
+        skipInfoIcon,
+        getSkipEquilibrationTooltipText()
+      );
+    }
+  }
   const skipVisualizerToggle = addCheckboxRow('skip-visualizer', getAutoTravelOptionText('skipVisualizer', 'Skip world visualizer initialization'));
 
   automationElements.autoTravelCollapseButton = header.collapse;
@@ -434,6 +464,10 @@ function updateAutoTravelUI() {
     const canSkipEquilibration = Number(fastestTerraformRealSeconds) > 0 && Number(fastestTerraformRealSeconds) < 60;
     automationElements.autoTravelSkipEquilibrationToggle.checked = !!preset.skipEquilibration;
     automationElements.autoTravelSkipEquilibrationToggle.disabled = !canSkipEquilibration;
+    setTooltipText(
+      automationElements.autoTravelSkipEquilibrationInfoTooltipContent,
+      getSkipEquilibrationTooltipText()
+    );
     automationElements.autoTravelSkipVisualizerToggle.checked = !!preset.skipWorldVisualizerInitialization;
     updateAutoTravelHazards(preset);
 
