@@ -108,12 +108,9 @@ function buildAutoTravelUI() {
   const hazardsSection = createSection(getAutoTravelOptionText('hazardsSection', 'Hazards'), 'auto-travel-hazards-section');
   const hazardsRow = document.createElement('div');
   hazardsRow.classList.add('auto-travel-hazards-row');
-  const hazardsLabel = document.createElement('div');
-  hazardsLabel.textContent = getAutoTravelOptionText('hazardsLabel', 'Match exactly these hazards');
-  hazardsLabel.classList.add('auto-travel-hazards-label');
   const hazardsWrap = document.createElement('div');
   hazardsWrap.classList.add('auto-travel-hazards');
-  hazardsRow.append(hazardsLabel, hazardsWrap);
+  hazardsRow.appendChild(hazardsWrap);
   hazardsSection.appendChild(hazardsRow);
 
   const behaviorSection = createSection(getAutoTravelOptionText('behaviorSection', 'Behavior'), 'auto-travel-behavior-section');
