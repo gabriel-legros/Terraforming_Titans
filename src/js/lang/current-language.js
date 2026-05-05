@@ -2287,6 +2287,15 @@ setLanguageData({
             'Each deck has its own brightness. Coverage blends those brightness values together and only brightens surfaces that are still darker than the deck, so clouds taper off once the surface reflects as much light as the clouds do.',
             'Condensed clouds return vapor to the surface as rain, snow, or acid drizzle, while haze and calcite aerosols add their own reflective layers on top of the cloud contribution.',
           ].join('\n'),
+          cloudHazeBreakdown: {
+            header: 'Current layer contributions:',
+            waterClouds: '  Water clouds: {value}',
+            methaneClouds: '  Methane clouds: {value}',
+            sulfuricClouds: '  Sulfuric acid clouds: {value}',
+            methaneHaze: '  Methane haze: {value}',
+            calciteAerosol: '  Calcite aerosol: {value}',
+            total: '  Combined cloud/haze layer: {value}',
+          },
           labels: {
             parameter: 'Parameter',
             value: 'Value',

@@ -2418,6 +2418,7 @@ function updateLifeBox() {
         ground: '',
         surface: '',
         actual: '',
+        cloudHaze: '',
         solarFlux: '',
         main: ''
       }
@@ -2431,6 +2432,47 @@ function updateLifeBox() {
     }
   }
   
+  function setCloudHazeTooltipCompact() {
+    const els = terraformingUICache.luminosity || {};
+    const tooltipNode = els.cloudHazeTooltip;
+    if (!tooltipNode) return;
+    const lines = [getTerraformingSummaryText(
+      'luminosity.cloudHazeTooltip',
+      'Layered cloud, haze, and calcite brightness applied to the remaining surface headroom. This value also penalizes solar panel and life growth and is capped by the total albedo.'
+    )];
+    try {
+      const pressureBar = terraforming.calculateTotalPressure() / 100;
+      const gSurface = terraforming.celestialParameters.gravity || 9.81;
+      const composition = terraforming.calculateAtmosphericComposition().composition || {};
+      const radius_km = terraforming.celestialParameters.radius || 0;
+      const area_m2 = 4 * Math.PI * Math.pow(radius_km * 1000, 2);
+      const aerosolsSW = {};
+      if (terraforming.resources?.atmospheric?.calciteAerosol) {
+        const mass_ton = terraforming.resources.atmospheric.calciteAerosol.value || 0;
+        aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
+      }
+      const contribs = calculateCloudAlbedoContributions({
+        pressureBar,
+        composition,
+        gSurface,
+        aerosolsSW
+      }) || {};
+      const cloudByGas = contribs.cloudByGas || {};
+      const eps = 5e-4;
+      const fmt = (value) => `+${Math.max(0, value).toFixed(3)}`;
+
+      lines.push('');
+      lines.push(getTerraformingSummaryText('luminosity.cloudHazeBreakdown.header', 'Current layer contributions:'));
+      if ((cloudByGas.h2o || 0) >= eps) lines.push(getTerraformingSummaryText('luminosity.cloudHazeBreakdown.waterClouds', '  Water clouds: {value}', { value: fmt(cloudByGas.h2o || 0) }));
+      if ((cloudByGas.ch4 || 0) >= eps) lines.push(getTerraformingSummaryText('luminosity.cloudHazeBreakdown.methaneClouds', '  Methane clouds: {value}', { value: fmt(cloudByGas.ch4 || 0) }));
+      if ((cloudByGas.h2so4 || 0) >= eps) lines.push(getTerraformingSummaryText('luminosity.cloudHazeBreakdown.sulfuricClouds', '  Sulfuric acid clouds: {value}', { value: fmt(cloudByGas.h2so4 || 0) }));
+      if ((contribs.hazeRaw || 0) >= eps) lines.push(getTerraformingSummaryText('luminosity.cloudHazeBreakdown.methaneHaze', '  Methane haze: {value}', { value: fmt(contribs.hazeRaw || 0) }));
+      if ((contribs.calciteRaw || 0) >= eps) lines.push(getTerraformingSummaryText('luminosity.cloudHazeBreakdown.calciteAerosol', '  Calcite aerosol: {value}', { value: fmt(contribs.calciteRaw || 0) }));
+      lines.push(getTerraformingSummaryText('luminosity.cloudHazeBreakdown.total', '  Combined cloud/haze layer: {value}', { value: Math.max(0, contribs.layerReflectivity || 0).toFixed(3) }));
+    } catch (error) {}
+    setTooltipText(tooltipNode, lines.join('\n'), els.tooltips, 'cloudHaze');
+  }
+
   function updateLuminosityBox() {
     const els = terraformingUICache.luminosity;
     const luminosityBox = els.box;
@@ -2563,6 +2605,7 @@ function updateLifeBox() {
         : terraforming.luminosity.cloudHazePenalty;
       els.cloudHazePenalty.textContent = raw.toFixed(3);
     }
+    setCloudHazeTooltipCompact();
 
     if (els.modifiedSolarFlux) {
       els.modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
