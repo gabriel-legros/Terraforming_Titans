@@ -254,6 +254,32 @@ function getArtificialAutoSectorCandidates(filterValue = 'all') {
     });
 }
 
+function normalizeArtificialSectorLabel(value) {
+    return value ? String(value).trim().toLowerCase() : '';
+}
+
+function getStoredArtificialWorldCountForSector(sectorLabel) {
+    const statuses = spaceManager?.artificialWorldStatuses || {};
+    const target = normalizeArtificialSectorLabel(sectorLabel);
+    let count = 0;
+    Object.values(statuses).forEach((status) => {
+        if (!status?.stored) return;
+        if (normalizeArtificialSectorLabel(status.sector) !== target) return;
+        const storedValue = Number(status.terraformedValue);
+        if (Number.isFinite(storedValue) && storedValue > 0) {
+            count += storedValue;
+            return;
+        }
+        const landValue = Number(status.landHa);
+        if (Number.isFinite(landValue) && landValue > 0) {
+            count += Math.max(1, Math.floor(landValue / TERRAFORM_WORLD_DIVISOR));
+            return;
+        }
+        count += 1;
+    });
+    return count;
+}
+
 function estimateRingRotationPeriodHours(orbitRadiusAU) {
     const radiusMeters = (Math.max(orbitRadiusAU || 0, 0) * AU_IN_KM) * 1000;
     const gravity = 9.81;
@@ -464,7 +490,10 @@ class ArtificialManager extends EffectableEntity {
         let bestSector = null;
         let bestCount = Infinity;
         candidates.forEach((sector) => {
-            const count = Math.max(0, Math.round(galaxyManager?.getTerraformedWorldCountForSector?.(sector) || 0));
+            const sectorLabel = sector?.getDisplayName?.() || sector?.key || '';
+            const terraformedCount = Math.max(0, Math.round(galaxyManager?.getTerraformedWorldCountForSector?.(sector) || 0));
+            const storedCount = getStoredArtificialWorldCountForSector(sectorLabel);
+            const count = terraformedCount + storedCount;
             if (count < bestCount) {
                 bestSector = sector;
                 bestCount = count;
