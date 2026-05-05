@@ -2439,7 +2439,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
           autobuildDiv,
           breakdown,
           shortageBuildings,
-          cost => `${formatNumber(cost, false, 2)}/s`
+          cost => `${formatNumber(isOrbitalDebris ? Math.abs(cost) : cost, false, 2)}/s`
         );
       } else {
         autobuildDiv.style.display = 'none';
