@@ -7,6 +7,7 @@ class AutoTravelAutomation {
     this.nextPresetId = 1;
     this._cooldownMs = 0;
     this._travelInProgress = false;
+    this._equilibrationInProgress = false;
     this.ensureDefaultPreset();
   }
 
@@ -324,6 +325,42 @@ class AutoTravelAutomation {
       }
       res.merged = deepMerge(defaultPlanetParameters, override);
     }
+    if (!preset.skipEquilibration) {
+      if (this._equilibrationInProgress) {
+        return false;
+      }
+      if (typeof runAutoTravelEquilibrationPopup === 'function') {
+        this._equilibrationInProgress = true;
+        runAutoTravelEquilibrationPopup(res)
+          .then((equilibratedRes) => {
+            if (!equilibratedRes) {
+              return;
+            }
+            autoTravelContext = {
+              active: true,
+              skipWorldVisualizerInitialization: !!preset.skipWorldVisualizerInitialization,
+              suppressTabSwitch: true,
+              restoreTabState: this._captureCurrentTabState()
+            };
+            const travelSeed = String(equilibratedRes.seedString || equilibratedRes.original?.seedString || equilibratedRes.original?.seed || '');
+            const traveled = spaceManager && spaceManager.travelToRandomWorld
+              ? spaceManager.travelToRandomWorld(equilibratedRes, travelSeed)
+              : false;
+            if (!traveled) {
+              autoTravelContext.active = false;
+            }
+          })
+          .catch((error) => {
+            console.error('Auto travel equilibration failed:', error);
+          })
+          .finally(() => {
+            this._equilibrationInProgress = false;
+            this._cooldownMs = 1000;
+            queueAutomationUIRefresh();
+          });
+        return true;
+      }
+    }
     autoTravelContext = {
       active: true,
       skipWorldVisualizerInitialization: !!preset.skipWorldVisualizerInitialization,
@@ -374,6 +411,9 @@ class AutoTravelAutomation {
     if (globalGameIsTraveling || globalGameIsLoadingFromSave || isEquilibrating) {
       return;
     }
+    if (this._equilibrationInProgress) {
+      return;
+    }
     if (this._travelInProgress) {
       return;
     }
@@ -415,7 +455,7 @@ class AutoTravelAutomation {
   }
 
   loadState(data = {}) {
-    this.enabled = !!data.enabled;
+    this.enabled = false;
     this.collapsed = !!data.collapsed;
     this.nextPresetId = Math.max(1, Number(data.nextPresetId) || 1);
     this.presets = Array.isArray(data.presets)

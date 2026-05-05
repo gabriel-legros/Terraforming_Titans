@@ -1466,6 +1466,128 @@ function buildEquilibrationInputParams(res) {
   return base;
 }
 
+async function runAutoTravelEquilibrationPopup(res) {
+  const prevSpeed = typeof getGameSpeed === 'function' ? getGameSpeed() : 1;
+  if (typeof setGameSpeed === 'function') setGameSpeed(0);
+  const cancelToken = { cancelled: false };
+
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.background = 'rgba(0,0,0,0.5)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = 3;
+
+  const win = document.createElement('div');
+  win.style.background = '#222';
+  win.style.padding = '16px';
+  win.style.border = '1px solid #555';
+  win.style.color = '#fff';
+  win.style.width = '260px';
+
+  const progressLabel = document.createElement('div');
+  progressLabel.id = 'rwg-progress-label';
+  progressLabel.style.marginBottom = '4px';
+  progressLabel.textContent = getRwgUiText('equilibrate.progressMinimum', 'Minimum fast-forward (Game is paused)');
+
+  const barContainer = document.createElement('div');
+  barContainer.style.width = '100%';
+  barContainer.style.height = '20px';
+  barContainer.style.background = '#444';
+  barContainer.style.marginBottom = '12px';
+
+  const bar = document.createElement('div');
+  bar.style.height = '100%';
+  bar.style.width = '0%';
+  bar.style.background = '#0f0';
+  barContainer.appendChild(bar);
+
+  const statsDiv = document.createElement('div');
+  statsDiv.style.marginBottom = '12px';
+  const stableRefText = document.createElement('div');
+  stableRefText.textContent = getRwgUiText('equilibrate.refinementsStability', 'Number of refinements from stability: {value}', { value: 0 });
+  const unstableRefText = document.createElement('div');
+  unstableRefText.textContent = getRwgUiText('equilibrate.refinementsInstability', 'Number of refinements from instability: {value}', { value: 0 });
+  const timeSimText = document.createElement('div');
+  timeSimText.textContent = getRwgUiText('equilibrate.timeSimulated', 'Time simulated: {value}', { value: '0s' });
+  statsDiv.appendChild(stableRefText);
+  statsDiv.appendChild(unstableRefText);
+  statsDiv.appendChild(timeSimText);
+
+  const endBtn = document.createElement('button');
+  endBtn.id = 'rwg-end-early-btn';
+  endBtn.textContent = getRwgUiText('equilibrate.endEarly', 'End Early');
+  endBtn.style.display = 'none';
+  endBtn.onclick = () => { cancelToken.endEarly = true; };
+
+  const addTimeBtn = document.createElement('button');
+  addTimeBtn.textContent = getRwgUiText('equilibrate.addTime', 'Add 10s');
+  addTimeBtn.onclick = () => {
+    cancelToken.addTime = (cancelToken.addTime || 0) + 10000;
+  };
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = getRwgUiText('equilibrate.cancel', 'Cancel');
+  cancelBtn.onclick = () => { cancelToken.cancelled = true; };
+
+  win.appendChild(progressLabel);
+  win.appendChild(barContainer);
+  win.appendChild(statsDiv);
+  win.appendChild(endBtn);
+  win.appendChild(addTimeBtn);
+  win.appendChild(cancelBtn);
+  overlay.appendChild(win);
+  document.body.appendChild(overlay);
+
+  try {
+    const eqInput = buildEquilibrationInputParams(res);
+    const result = await runEquilibration(eqInput, {
+      cancelToken
+    }, (p, info) => {
+      const label = document.getElementById('rwg-progress-label');
+      if (label && info?.label) label.textContent = info.label;
+      bar.style.width = `${(p * 100).toFixed(2)}%`;
+      if (info) {
+        stableRefText.textContent = getRwgUiText(
+          'equilibrate.refinementsStabilityTarget',
+          'Number of refinements from stability: {value}/20',
+          { value: info.refinementsFromStability || 0 }
+        );
+        unstableRefText.textContent = getRwgUiText(
+          'equilibrate.refinementsInstability',
+          'Number of refinements from instability: {value}',
+          { value: info.refinementsFromInstability || 0 }
+        );
+        if (typeof formatDuration === 'function') {
+          const seconds = (info.simulatedMs || 0) / 1000 * 86400;
+          timeSimText.textContent = getRwgUiText('equilibrate.timeSimulated', 'Time simulated: {value}', { value: formatDuration(seconds) });
+        }
+      }
+      if (info?.label === getRwgUiText('equilibrate.progressAdditional', 'Additional fast-forward (Game is paused)')) endBtn.style.display = '';
+    });
+    const mergedAfterEq = deepMerge(defaultPlanetParameters, result.override);
+    const newRes = { ...res, override: result.override, merged: mergedAfterEq };
+    syncResultStarData(newRes);
+    return newRes;
+  } catch (e) {
+    if (e?.message === 'timeout') {
+      return res;
+    }
+    if (e?.message === 'cancelled') {
+      return null;
+    }
+    throw e;
+  } finally {
+    if (typeof setGameSpeed === 'function') setGameSpeed(prevSpeed);
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+}
+
 function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const c = res.merged?.celestialParameters || {};
