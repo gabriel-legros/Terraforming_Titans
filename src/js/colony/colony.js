@@ -58,6 +58,8 @@ class Colony extends Building {
     }
     this.happiness = 0.5;
     this.autoUpgradeEnabled = false;
+    this.currentNeedDemand = {};
+    this.currentNeedFulfilled = {};
     
   }
 
@@ -120,7 +122,9 @@ class Colony extends Building {
       luxuryResourcesEnabled: { ...this.luxuryResourcesEnabled },
       obsolete: this.obsolete,
       happiness: this.happiness,
-      autoUpgradeEnabled: this.autoUpgradeEnabled
+      autoUpgradeEnabled: this.autoUpgradeEnabled,
+      currentNeedDemand: { ...this.currentNeedDemand },
+      currentNeedFulfilled: { ...this.currentNeedFulfilled }
     };
   }
 
@@ -154,6 +158,8 @@ class Colony extends Building {
     } else {
       this.autoUpgradeEnabled = false;
     }
+    this.currentNeedDemand = state.currentNeedDemand ? { ...state.currentNeedDemand } : {};
+    this.currentNeedFulfilled = state.currentNeedFulfilled ? { ...state.currentNeedFulfilled } : {};
 
     this.rebuildFilledNeeds();
   }
@@ -242,7 +248,6 @@ class Colony extends Building {
   }
 
   updateNeedsRatio(resources, deltaTime) {
-    const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
     const consumption = this.getConsumption();
     for (const category in consumption) {
       if (!this.currentConsumption[category]) {
@@ -257,26 +262,13 @@ class Colony extends Building {
           this.filledNeeds[resource] = 0;
           continue;
         }
-  
-        const consumptionRatio = this.getConsumptionRatioForResource(category, resource);
-        const { amount } = this.getConsumptionResource(category, resource);
-        const baseConsumption = this.activeNumber * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
-        const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
-  
-        const availableAmount = resources[category][resource].value;
-  
-        let availabilityRatio = 1;
-        if (availableAmount < scaledConsumption) {
-          const consumptionRate = resources[category][resource].consumptionRate;
-          if (consumptionRate === 0) {
-            availabilityRatio = 1;
-          } else {
-            availabilityRatio = resources[category][resource].productionRate / consumptionRate;
-          }
-        }
-  
-        // Adjust filledNeeds for the consumed resource
-        this.adjustNeedRatio(resource, availabilityRatio, deltaTime);
+
+        const demand = this.currentNeedDemand[resource] || 0;
+        const fulfilled = this.currentNeedFulfilled[resource] || 0;
+        const fulfillmentRatio = demand > 0 ? fulfilled / demand : 1;
+
+        // Adjust filledNeeds for the consumed resource using actual fulfilled demand this tick
+        this.adjustNeedRatio(resource, fulfillmentRatio, deltaTime);
       }
     }
   }
@@ -286,6 +278,8 @@ class Colony extends Building {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
   
     this.currentConsumption = {}; // Reset current consumption
+    this.currentNeedDemand = {};
+    this.currentNeedFulfilled = {};
   
     // Calculate consumption and accumulate changes
     const consumption = this.getConsumption();
@@ -306,12 +300,20 @@ class Colony extends Building {
         const { amount } = this.getConsumptionResource(category, resource);
         const baseConsumption = this.activeNumber * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
+
+        const availableAmount = Math.max(
+          0,
+          (resources[category][resource].value || 0) + (accumulatedChanges[category][resource] || 0)
+        );
+        const fulfilledConsumption = Math.min(scaledConsumption, availableAmount);
   
         // Track actual consumption in the building
-        this.currentConsumption[category][resource] = scaledConsumption;
+        this.currentConsumption[category][resource] = fulfilledConsumption;
+        this.currentNeedDemand[resource] = (this.currentNeedDemand[resource] || 0) + scaledConsumption;
+        this.currentNeedFulfilled[resource] = (this.currentNeedFulfilled[resource] || 0) + fulfilledConsumption;
   
         // Accumulate consumption changes (as negative values)
-        accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - scaledConsumption;
+        accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - fulfilledConsumption;
   
         // Update consumption rate for the resource
         resources[category][resource].modifyRate(
