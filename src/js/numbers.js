@@ -40,11 +40,34 @@ function formatBigIntWithSuffix(absValue, divisor, suffix) {
   return `${whole}.${tenths}${suffix}`;
 }
 
+function getScientificThreshold() {
+  let scientificThreshold = 1e30;
+  try {
+    scientificThreshold = gameSettings.scientificNotationThreshold ?? scientificThreshold;
+  } catch (error) {
+    scientificThreshold = scientificThreshold;
+  }
+  return scientificThreshold;
+}
+
 function formatBigIntValue(value, precision, roundDown) {
   const absValue = value < 0n ? -value : value;
   let formatted;
+  const scientificThreshold = getScientificThreshold();
+  let scientificThresholdBigInt = 1000000000000000000000000000000n;
+  const numericThreshold = Number(scientificThreshold);
+  if (Number.isFinite(numericThreshold) && numericThreshold > 0) {
+    if (numericThreshold <= Number.MAX_SAFE_INTEGER) {
+      scientificThresholdBigInt = BigInt(Math.floor(numericThreshold));
+    } else {
+      scientificThresholdBigInt = BigInt(Math.floor(numericThreshold).toLocaleString('fullwide', {
+        useGrouping: false,
+        maximumFractionDigits: 0
+      }));
+    }
+  }
 
-  if (absValue >= 1000000000000000000000000000000n) {
+  if (absValue >= scientificThresholdBigInt) {
     formatted = formatScientificWithRounding(Number(absValue), precision, roundDown);
   } else if (absValue >= 1000000000000000000000000000000000000000n) {
     formatted = formatBigIntWithSuffix(absValue, 1000000000000000000000000000000000000000n, 'Dd');
@@ -88,12 +111,7 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false,
     }
     const absValue = Math.abs(value);
     let formatted;
-    let scientificThreshold = 1e30;
-    try {
-      scientificThreshold = gameSettings.scientificNotationThreshold ?? scientificThreshold;
-    } catch (error) {
-      scientificThreshold = scientificThreshold;
-    }
+    const scientificThreshold = getScientificThreshold();
 
     if (absValue >= scientificThreshold) {
       formatted = formatScientificWithRounding(absValue, precision, roundDown);

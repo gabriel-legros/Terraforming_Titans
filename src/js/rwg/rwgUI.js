@@ -816,6 +816,7 @@ function initializeRandomWorldUI() {
       <select id="rwg-type"></select>
       <select id="rwg-orbit">
         <option value="auto" selected>${getRwgUiText('controls.orbitAuto', 'Orbit: Auto')}</option>
+        <option value="rogue">${getRwgUiText('controls.orbitRogue', 'Orbit: Rogue')}</option>
         <option value="very-cold">${getRwgUiText('controls.orbitVeryCold', 'Orbit: Very Cold')}</option>
         <option value="cold">${getRwgUiText('controls.orbitCold', 'Orbit: Cold')}</option>
         <option value="hz-outer">${getRwgUiText('controls.orbitHzOuter', 'Orbit: HZ Outer')}</option>

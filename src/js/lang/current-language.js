@@ -34,6 +34,7 @@ setLanguageData({
         typeAuto: 'Type: Auto',
         typeValue: 'Type: {value}',
         orbitAuto: 'Orbit: Auto',
+        orbitRogue: 'Orbit: Rogue',
         orbitVeryHotLocked: 'Orbit: Very Hot (Locked)',
         orbitHzInner: 'Orbit: HZ Inner',
         orbitHzMid: 'Orbit: HZ Mid',
