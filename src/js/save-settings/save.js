@@ -640,6 +640,10 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageInDefaultPanel')) {
         gameSettings.showSpaceStorageInDefaultPanel = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'pauseKeybind')) {
+        gameSettings.pauseKeybind = 'Space';
+      }
+      setPauseKeybindCode(gameSettings.pauseKeybind);
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
       }
@@ -674,6 +678,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
       cachedSettings.suppressFaithToggle.checked = gameSettings.suppressFaith;
+      updatePauseKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();
       }

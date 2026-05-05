@@ -1,4 +1,5 @@
 let settingsElements = null;
+let pauseKeybindCaptureActive = false;
 
 function cacheSettingsElements() {
   if (settingsElements) {
@@ -30,9 +31,27 @@ function cacheSettingsElements() {
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
     startBackgroundSilenceButton: document.getElementById('start-background-silence-button'),
     pauseButton: document.getElementById('pause-button'),
+    pauseKeybindCaptureButton: document.getElementById('pause-keybind-capture-button'),
   };
 
   return settingsElements;
+}
+
+function getPauseKeybindButtonLabel() {
+  const current = getPauseKeybindDisplay();
+  return t('ui.settings.pauseKeybindCaptureButton', { keybind: current }, `Capture key (${current})`);
+}
+
+function updatePauseKeybindButtons() {
+  const cached = cacheSettingsElements();
+  if (!cached.pauseKeybindCaptureButton) {
+    return;
+  }
+  if (pauseKeybindCaptureActive) {
+    cached.pauseKeybindCaptureButton.textContent = t('ui.settings.pauseKeybindCapturing', {}, 'Press any key...');
+    return;
+  }
+  cached.pauseKeybindCaptureButton.textContent = getPauseKeybindButtonLabel();
 }
 
 function addSettingsListeners() {
@@ -239,8 +258,43 @@ function addSettingsListeners() {
   }
 
   if (cached.pauseButton) {
+    if (!isGamePaused()) {
+      cached.pauseButton.textContent = t(
+        'ui.settings.pauseButtonLabel',
+        { keybind: getPauseKeybindDisplay() },
+        `Pause (${getPauseKeybindDisplay()})`
+      );
+    }
     cached.pauseButton.addEventListener('click', togglePause);
   }
+
+  if (cached.pauseKeybindCaptureButton) {
+    updatePauseKeybindButtons();
+    cached.pauseKeybindCaptureButton.addEventListener('click', () => {
+      if (pauseKeybindCaptureActive) {
+        return;
+      }
+      pauseKeybindCaptureActive = true;
+      updatePauseKeybindButtons();
+      const captureKeydown = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        pauseKeybindCaptureActive = false;
+        setPauseKeybindCode(event.code);
+        if (!isGamePaused() && cached.pauseButton) {
+          cached.pauseButton.textContent = t(
+            'ui.settings.pauseButtonLabel',
+            { keybind: getPauseKeybindDisplay() },
+            `Pause (${getPauseKeybindDisplay()})`
+          );
+        }
+        updatePauseKeybindButtons();
+        document.removeEventListener('keydown', captureKeydown, true);
+      };
+      document.addEventListener('keydown', captureKeydown, true);
+    });
+  }
+
 }
 
 function initializePreferencesSettingsSubtab() {

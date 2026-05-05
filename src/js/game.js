@@ -70,6 +70,10 @@ function create() {
 }
 
 function initializeDefaultGlobals(){
+  if (!gameSettings.pauseKeybind) {
+    gameSettings.pauseKeybind = 'Space';
+  }
+  setPauseKeybindCode(gameSettings.pauseKeybind);
   shipEfficiency = 1;
   // Instantiate the TabManager and load tabs from the constant
   tabManager = new TabManager({

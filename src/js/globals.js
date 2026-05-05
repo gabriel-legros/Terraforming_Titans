@@ -69,6 +69,7 @@ let gameSettings = {
   simplifyGoldenAsteroid: false,
   suppressFaith: false,
   scientificNotationThreshold: 1e30,
+  pauseKeybind: 'Space',
 };
 
 Object.defineProperty(globalThis, 'gameSettings', {

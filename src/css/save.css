@@ -45,6 +45,20 @@
     width: min(100%, 1200px);
   }
 
+  .settings-section-title {
+    margin: 0 0 8px;
+    text-align: center;
+    width: min(100%, 1200px);
+  }
+
+  .settings-grid-keybinds {
+    margin-bottom: 0;
+  }
+
+  .settings-keybind-option {
+    justify-content: flex-start;
+  }
+
   #settings-credits-list .settings-stat-line {
     margin-bottom: 16px;
   }
