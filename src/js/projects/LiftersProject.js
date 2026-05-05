@@ -10,6 +10,7 @@ const LIFTER_RECIPE_TYPES = {
 
 const LIFTER_STRIP_RECIPE_KEY = 'stripAtmosphere';
 const LIFTERS_UNASSIGNED_KEY = 'idleUnassigned';
+const LIFTER_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
 
 const DEFAULT_LIFTER_HARVEST_RECIPES = {
   hydrogen: {
@@ -569,8 +570,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   setAssignmentStep(step) {
     const next = normalizeLifterInteger(step);
-    const max = 1_000_000_000_000_000n;
-    this.assignmentStep = next < 1n ? 1n : (next > max ? max : next);
+    this.assignmentStep = next < 1n ? 1n : (next > LIFTER_ASSIGNMENT_STEP_MAX ? LIFTER_ASSIGNMENT_STEP_MAX : next);
   }
 
   normalizeAssignmentStep() {
@@ -590,10 +590,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   multiplyAssignmentStepByTen() {
     this.normalizeAssignmentStep();
-    const max = 1_000_000_000_000_000n;
     this.assignmentStep = this.assignmentStep * 10n;
-    if (this.assignmentStep > max) {
-      this.assignmentStep = max;
+    if (this.assignmentStep > LIFTER_ASSIGNMENT_STEP_MAX) {
+      this.assignmentStep = LIFTER_ASSIGNMENT_STEP_MAX;
     }
   }
 
@@ -603,14 +602,29 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   getSignedAssignmentDelta(delta) {
-    const normalized = normalizeLifterInteger(delta);
-    if (normalized === 0n) {
+    const valueType = Object.prototype.toString.call(delta);
+    if (valueType === '[object BigInt]') {
+      return delta;
+    }
+    if (valueType === '[object String]') {
+      const trimmed = delta.trim();
+      if (!trimmed || trimmed === '-') {
+        return 0n;
+      }
+      const isNegative = trimmed.startsWith('-');
+      const digits = isNegative || trimmed.startsWith('+') ? trimmed.slice(1) : trimmed;
+      if (!/^\d+$/.test(digits)) {
+        return 0n;
+      }
+      const magnitude = BigInt(digits);
+      return isNegative ? -magnitude : magnitude;
+    }
+    const numeric = Number(delta);
+    if (!Number.isFinite(numeric) || numeric === 0) {
       return 0n;
     }
-    if (Object.prototype.toString.call(delta) === '[object String]') {
-      return delta.trim().startsWith('-') ? -normalized : normalized;
-    }
-    return Number(delta) < 0 ? -normalized : normalized;
+    const magnitude = normalizeLifterInteger(Math.abs(numeric));
+    return numeric < 0 ? -magnitude : magnitude;
   }
 
   adjustAssignment(key, delta) {
