@@ -1,21 +1,33 @@
-class ResearchAutomation {
+let ResearchAutomationPresetManagerBaseRef;
+try {
+  ResearchAutomationPresetManagerBaseRef = AutomationPresetManagerBase;
+} catch (error) {}
+try {
+  ResearchAutomationPresetManagerBaseRef = ResearchAutomationPresetManagerBaseRef
+    || require('./automation-preset-manager-base.js').AutomationPresetManagerBase;
+} catch (error) {}
+const ResearchAutomationPresetManagerBaseClass = ResearchAutomationPresetManagerBaseRef || class ResearchAutomationPresetManagerBaseFallback {};
+
+class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
   constructor() {
-    this.presets = [];
-    this.selectedPresetId = null;
+    super({
+      featureKey: 'automationResearch',
+      presetLabel: 'Preset',
+      useMasterEnabled: false,
+      useAssignments: false,
+      useCombinations: false,
+      nextTravelKind: 'preset'
+    });
     this.currentPresetId = null;
     this.currentHiddenResearchIds = [];
-    this.nextTravelPresetId = null;
-    this.nextTravelPersistent = false;
-    this.collapsed = false;
-    this.nextPresetId = 1;
   }
 
   setCollapsed(collapsed) {
-    this.collapsed = !!collapsed;
+    super.setCollapsed(collapsed);
   }
 
   isActive() {
-    return automationManager.enabled && automationManager.hasFeature('automationResearch');
+    return super.isActive();
   }
 
   normalizePriority(priority) {
@@ -140,34 +152,19 @@ class ResearchAutomation {
   }
 
   getPresetById(id) {
-    return this.presets.find((preset) => preset.id === Number(id)) || null;
+    return super.getPresetById(id);
   }
 
   getSelectedPreset() {
-    if (!this.selectedPresetId) {
-      return null;
-    }
-    const preset = this.getPresetById(this.selectedPresetId);
-    if (!preset) {
-      this.selectedPresetId = null;
-      return null;
-    }
-    return preset;
+    return super.getSelectedPreset();
   }
 
   getSelectedPresetId() {
-    const preset = this.getSelectedPreset();
-    return preset ? preset.id : null;
+    return super.getSelectedPresetId();
   }
 
   setSelectedPresetId(id) {
-    if (id === null || id === undefined || id === '') {
-      this.selectedPresetId = null;
-      return null;
-    }
-    const preset = this.getPresetById(id);
-    this.selectedPresetId = preset ? preset.id : null;
-    return preset;
+    return super.setSelectedPresetId(id);
   }
 
   getCurrentPreset() {
@@ -228,32 +225,15 @@ class ResearchAutomation {
   }
 
   movePreset(id, direction) {
-    const index = this.presets.findIndex((preset) => preset.id === Number(id));
-    const nextIndex = index + direction;
-    if (index < 0 || nextIndex < 0 || nextIndex >= this.presets.length) {
-      return false;
-    }
-    const moved = this.presets.splice(index, 1)[0];
-    this.presets.splice(nextIndex, 0, moved);
-    return true;
+    return super.movePreset(id, direction);
   }
 
   renamePreset(id, name) {
-    const preset = this.getPresetById(id);
-    if (!preset) {
-      return false;
-    }
-    preset.name = name || `Preset ${preset.id}`;
-    return true;
+    return super.renamePreset(id, name);
   }
 
   setPresetShowInSidebar(id, showInSidebar) {
-    const preset = this.getPresetById(id);
-    if (!preset) {
-      return false;
-    }
-    preset.showInSidebar = showInSidebar !== false;
-    return true;
+    return super.setPresetShowInSidebar(id, showInSidebar);
   }
 
   deletePreset(id) {

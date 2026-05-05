@@ -119,6 +119,47 @@ function createSidebarRow() {
   return row;
 }
 
+function createSidebarPresetCombinationControls() {
+  const presetRow = createSidebarRow();
+  presetRow.classList.add('journal-automation-row-stacked');
+  const presetLabel = document.createElement('span');
+  presetLabel.classList.add('journal-automation-row-label');
+  presetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
+  const presetControls = createSidebarRow();
+  const presetSelect = document.createElement('select');
+  presetSelect.classList.add('journal-automation-select');
+  const presetDeploy = document.createElement('button');
+  presetDeploy.type = 'button';
+  presetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
+  presetDeploy.classList.add('journal-automation-action');
+  presetControls.append(presetSelect, presetDeploy);
+  presetRow.append(presetLabel, presetControls);
+
+  const comboRow = createSidebarRow();
+  comboRow.classList.add('journal-automation-row-stacked');
+  const comboLabel = document.createElement('span');
+  comboLabel.classList.add('journal-automation-row-label');
+  comboLabel.textContent = getSidebarAutomationText('combination', null, 'Combination');
+  const comboControls = createSidebarRow();
+  const comboSelect = document.createElement('select');
+  comboSelect.classList.add('journal-automation-select');
+  const comboDeploy = document.createElement('button');
+  comboDeploy.type = 'button';
+  comboDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
+  comboDeploy.classList.add('journal-automation-action');
+  comboControls.append(comboSelect, comboDeploy);
+  comboRow.append(comboLabel, comboControls);
+
+  return {
+    presetRow,
+    presetSelect,
+    presetDeploy,
+    comboRow,
+    comboSelect,
+    comboDeploy
+  };
+}
+
 function buildSidebarAutomationUI() {
   const elements = sidebarAutomationElements;
   const panel = elements.panel;
@@ -186,118 +227,37 @@ function buildSidebarAutomationUI() {
   elements.lifeDesignToggle = designToggle;
 
   const buildings = createSidebarSection(getSidebarAutomationText('buildings', null, 'Buildings'));
-  const buildingsPresetRow = createSidebarRow();
-  buildingsPresetRow.classList.add('journal-automation-row-stacked');
-  const buildingsPresetLabel = document.createElement('span');
-  buildingsPresetLabel.classList.add('journal-automation-row-label');
-  buildingsPresetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
-  const buildingsPresetControls = createSidebarRow();
-  const buildingsPresetSelect = document.createElement('select');
-  buildingsPresetSelect.classList.add('journal-automation-select');
-  const buildingsPresetDeploy = document.createElement('button');
-  buildingsPresetDeploy.type = 'button';
-  buildingsPresetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
-  buildingsPresetDeploy.classList.add('journal-automation-action');
-  buildingsPresetControls.append(buildingsPresetSelect, buildingsPresetDeploy);
-  buildingsPresetRow.append(buildingsPresetLabel, buildingsPresetControls);
-  const buildingsComboRow = createSidebarRow();
-  buildingsComboRow.classList.add('journal-automation-row-stacked');
-  const buildingsComboLabel = document.createElement('span');
-  buildingsComboLabel.classList.add('journal-automation-row-label');
-  buildingsComboLabel.textContent = getSidebarAutomationText('combination', null, 'Combination');
-  const buildingsComboControls = createSidebarRow();
-  const buildingsComboSelect = document.createElement('select');
-  buildingsComboSelect.classList.add('journal-automation-select');
-  const buildingsComboDeploy = document.createElement('button');
-  buildingsComboDeploy.type = 'button';
-  buildingsComboDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
-  buildingsComboDeploy.classList.add('journal-automation-action');
-  buildingsComboControls.append(buildingsComboSelect, buildingsComboDeploy);
-  buildingsComboRow.append(buildingsComboLabel, buildingsComboControls);
-  buildings.section.append(buildingsPresetRow, buildingsComboRow);
+  const buildingsControls = createSidebarPresetCombinationControls();
+  buildings.section.append(buildingsControls.presetRow, buildingsControls.comboRow);
   panel.appendChild(buildings.section);
   elements.buildingsSection = buildings.section;
   elements.buildingsStatus = buildings.status;
-  elements.buildingsPresetSelect = buildingsPresetSelect;
-  elements.buildingsPresetDeploy = buildingsPresetDeploy;
-  elements.buildingsCombinationSelect = buildingsComboSelect;
-  elements.buildingsCombinationDeploy = buildingsComboDeploy;
+  elements.buildingsPresetSelect = buildingsControls.presetSelect;
+  elements.buildingsPresetDeploy = buildingsControls.presetDeploy;
+  elements.buildingsCombinationSelect = buildingsControls.comboSelect;
+  elements.buildingsCombinationDeploy = buildingsControls.comboDeploy;
 
   const projects = createSidebarSection(getSidebarAutomationText('projects', null, 'Projects'));
-  const projectsPresetRow = createSidebarRow();
-  projectsPresetRow.classList.add('journal-automation-row-stacked');
-  const projectsPresetLabel = document.createElement('span');
-  projectsPresetLabel.classList.add('journal-automation-row-label');
-  projectsPresetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
-  const projectsPresetControls = createSidebarRow();
-  const projectsPresetSelect = document.createElement('select');
-  projectsPresetSelect.classList.add('journal-automation-select');
-  const projectsPresetDeploy = document.createElement('button');
-  projectsPresetDeploy.type = 'button';
-  projectsPresetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
-  projectsPresetDeploy.classList.add('journal-automation-action');
-  projectsPresetControls.append(projectsPresetSelect, projectsPresetDeploy);
-  projectsPresetRow.append(projectsPresetLabel, projectsPresetControls);
-  const projectsComboRow = createSidebarRow();
-  projectsComboRow.classList.add('journal-automation-row-stacked');
-  const projectsComboLabel = document.createElement('span');
-  projectsComboLabel.classList.add('journal-automation-row-label');
-  projectsComboLabel.textContent = getSidebarAutomationText('combination', null, 'Combination');
-  const projectsComboControls = createSidebarRow();
-  const projectsComboSelect = document.createElement('select');
-  projectsComboSelect.classList.add('journal-automation-select');
-  const projectsComboDeploy = document.createElement('button');
-  projectsComboDeploy.type = 'button';
-  projectsComboDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
-  projectsComboDeploy.classList.add('journal-automation-action');
-  projectsComboControls.append(projectsComboSelect, projectsComboDeploy);
-  projectsComboRow.append(projectsComboLabel, projectsComboControls);
-  projects.section.append(projectsPresetRow, projectsComboRow);
+  const projectsControls = createSidebarPresetCombinationControls();
+  projects.section.append(projectsControls.presetRow, projectsControls.comboRow);
   panel.appendChild(projects.section);
   elements.projectsSection = projects.section;
   elements.projectsStatus = projects.status;
-  elements.projectsPresetSelect = projectsPresetSelect;
-  elements.projectsPresetDeploy = projectsPresetDeploy;
-  elements.projectsCombinationSelect = projectsComboSelect;
-  elements.projectsCombinationDeploy = projectsComboDeploy;
+  elements.projectsPresetSelect = projectsControls.presetSelect;
+  elements.projectsPresetDeploy = projectsControls.presetDeploy;
+  elements.projectsCombinationSelect = projectsControls.comboSelect;
+  elements.projectsCombinationDeploy = projectsControls.comboDeploy;
 
   const colony = createSidebarSection(getSidebarAutomationText('colony', null, 'Colony'));
-  const colonyPresetRow = createSidebarRow();
-  colonyPresetRow.classList.add('journal-automation-row-stacked');
-  const colonyPresetLabel = document.createElement('span');
-  colonyPresetLabel.classList.add('journal-automation-row-label');
-  colonyPresetLabel.textContent = getSidebarAutomationText('preset', null, 'Preset');
-  const colonyPresetControls = createSidebarRow();
-  const colonyPresetSelect = document.createElement('select');
-  colonyPresetSelect.classList.add('journal-automation-select');
-  const colonyPresetDeploy = document.createElement('button');
-  colonyPresetDeploy.type = 'button';
-  colonyPresetDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
-  colonyPresetDeploy.classList.add('journal-automation-action');
-  colonyPresetControls.append(colonyPresetSelect, colonyPresetDeploy);
-  colonyPresetRow.append(colonyPresetLabel, colonyPresetControls);
-  const colonyComboRow = createSidebarRow();
-  colonyComboRow.classList.add('journal-automation-row-stacked');
-  const colonyComboLabel = document.createElement('span');
-  colonyComboLabel.classList.add('journal-automation-row-label');
-  colonyComboLabel.textContent = getSidebarAutomationText('combination', null, 'Combination');
-  const colonyComboControls = createSidebarRow();
-  const colonyComboSelect = document.createElement('select');
-  colonyComboSelect.classList.add('journal-automation-select');
-  const colonyComboDeploy = document.createElement('button');
-  colonyComboDeploy.type = 'button';
-  colonyComboDeploy.textContent = getSidebarAutomationText('deploy', null, 'Deploy');
-  colonyComboDeploy.classList.add('journal-automation-action');
-  colonyComboControls.append(colonyComboSelect, colonyComboDeploy);
-  colonyComboRow.append(colonyComboLabel, colonyComboControls);
-  colony.section.append(colonyPresetRow, colonyComboRow);
+  const colonyControls = createSidebarPresetCombinationControls();
+  colony.section.append(colonyControls.presetRow, colonyControls.comboRow);
   panel.appendChild(colony.section);
   elements.colonySection = colony.section;
   elements.colonyStatus = colony.status;
-  elements.colonyPresetSelect = colonyPresetSelect;
-  elements.colonyPresetDeploy = colonyPresetDeploy;
-  elements.colonyCombinationSelect = colonyComboSelect;
-  elements.colonyCombinationDeploy = colonyComboDeploy;
+  elements.colonyPresetSelect = colonyControls.presetSelect;
+  elements.colonyPresetDeploy = colonyControls.presetDeploy;
+  elements.colonyCombinationSelect = colonyControls.comboSelect;
+  elements.colonyCombinationDeploy = colonyControls.comboDeploy;
 
   const research = createSidebarSection(getSidebarAutomationText('research', null, 'Research'));
   const researchRow = createSidebarRow();

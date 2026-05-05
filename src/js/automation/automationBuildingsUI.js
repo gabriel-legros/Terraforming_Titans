@@ -14,14 +14,6 @@ const buildingAutomationUIState = {
   combinationShowInSidebar: true
 };
 
-function getAutomationPresetLabel(preset) {
-  return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
-}
-
-function getAutomationCombinationLabel(combination) {
-  return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
-}
-
 function formatBuildingAutomationPresetType(preset) {
   if (!preset) {
     return getAutomationCardText('selectPreset', {}, 'Select a preset');
@@ -36,60 +28,7 @@ function formatBuildingAutomationPresetType(preset) {
 }
 
 function getBuildingAutomationAutoBuildBasisOptions(structure, currentValue) {
-  const options = [];
-  const seen = new Set();
-  const addOption = (value, label) => {
-    if (seen.has(value)) {
-      return;
-    }
-    seen.add(value);
-    options.push({ value, label });
-  };
-  if (structure) {
-    if (structure.autoBuildFillEnabled) {
-      addOption('fill', getStructuresUIText('ui.structures.autoBuild.basis.fill', '% filled'));
-    }
-    addOption('population', getStructuresUIText('ui.structures.autoBuild.basis.population', '% of pop'));
-    addOption('workers', getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers'));
-    if (structure.requiresWorker > 0) {
-      addOption('workerShare', getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share'));
-    }
-    if (structure.requiresLand > 0) {
-      addOption('landShare', getStructuresUIText('ui.structures.autoBuild.basis.landShare', '% land share'));
-    }
-    addOption('geometricLand', getStructuresUIText('ui.structures.autoBuild.basis.geometricLand', '% geometric land'));
-    addOption('fixed', getStructuresUIText('ui.structures.autoBuild.basis.fixed', 'Fixed'));
-    addOption('building:storageDepot', getStructuresUIText('ui.structures.autoBuild.basis.storageDepots', '% of Storage Depots'));
-    if (Array.isArray(structure.automationBuildingsDropDown)) {
-      for (let index = 0; index < structure.automationBuildingsDropDown.length; index += 1) {
-        const buildingId = structure.automationBuildingsDropDown[index];
-        const basisValue = `building:${buildingId}`;
-        const displayName = (buildings[buildingId] && buildings[buildingId].displayName) || buildingId;
-        addOption(
-          basisValue,
-          getStructuresUIText('ui.structures.autoBuild.basis.percentOf', '% of {name}', { name: displayName })
-        );
-      }
-    }
-    if (Array.isArray(structure.automationCustomBasisOptions)) {
-      for (let index = 0; index < structure.automationCustomBasisOptions.length; index += 1) {
-        const optionData = structure.automationCustomBasisOptions[index];
-        addOption(optionData.value, optionData.label);
-      }
-    }
-    if (structure.autoBuildMaxOption) {
-      addOption(
-        'max',
-        structure.getAutoBuildMaxModeLabel
-          ? structure.getAutoBuildMaxModeLabel()
-          : getStructuresUIText('ui.common.max', 'Max')
-      );
-    }
-  }
-  if (currentValue && !seen.has(currentValue)) {
-    addOption(currentValue, currentValue);
-  }
-  return options;
+  return getAutomationAutoBuildBasisOptions(structure, currentValue);
 }
 
 function getBuildingAutomationJsonModeForPath(preset, fieldPath) {
@@ -136,52 +75,20 @@ function buildAutomationBuildingsUI() {
   builderHeader.append(builderTitle, builderDirty);
   builderSection.appendChild(builderHeader);
 
-  const builderRow = document.createElement('div');
-  builderRow.classList.add('building-automation-row');
-  const presetSelect = document.createElement('select');
-  presetSelect.classList.add('building-automation-builder-select');
-  const presetMoveButtons = document.createElement('div');
-  presetMoveButtons.classList.add('automation-order-buttons');
-  const presetMoveUpButton = document.createElement('button');
-  presetMoveUpButton.textContent = '↑';
-  presetMoveUpButton.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
-  presetMoveUpButton.classList.add('building-automation-builder-move-up');
-  const presetMoveDownButton = document.createElement('button');
-  presetMoveDownButton.textContent = '↓';
-  presetMoveDownButton.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
-  presetMoveDownButton.classList.add('building-automation-builder-move-down');
-  presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
-  const presetNameInput = document.createElement('input');
-  presetNameInput.type = 'text';
-  presetNameInput.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
-  presetNameInput.classList.add('building-automation-builder-name');
-  const newButton = document.createElement('button');
-  newButton.textContent = getAutomationCardText('newPresetButton', {}, 'New');
-  newButton.classList.add('building-automation-builder-new');
-  const saveButton = document.createElement('button');
-  saveButton.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
-  saveButton.classList.add('building-automation-builder-save');
-  const deleteButton = document.createElement('button');
-  deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
-  deleteButton.classList.add('building-automation-builder-delete');
-  const transferButtons = createAutomationPresetTransferButtons('building-automation-builder');
-  const applyOnceButton = document.createElement('button');
-  applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
-  applyOnceButton.classList.add('building-automation-builder-apply-once');
-  const builderShowSidebar = createAutomationShowInSidebarLabel('building-automation-builder');
-  builderRow.append(
-    presetSelect,
-    presetMoveButtons,
-    presetNameInput,
-    newButton,
-    saveButton,
-    deleteButton,
-    transferButtons.importButton,
-    transferButtons.exportButton,
-    applyOnceButton,
-    builderShowSidebar.label
-  );
-  builderSection.appendChild(builderRow);
+  const builderRowParts = buildAutomationPresetBuilderRow({
+    rowClasses: ['building-automation-row'],
+    selectClasses: ['building-automation-builder-select'],
+    moveUpButtonClasses: ['building-automation-builder-move-up'],
+    moveDownButtonClasses: ['building-automation-builder-move-down'],
+    nameInputClasses: ['building-automation-builder-name'],
+    newButtonClasses: ['building-automation-builder-new'],
+    saveButtonClasses: ['building-automation-builder-save'],
+    deleteButtonClasses: ['building-automation-builder-delete'],
+    transferKey: 'building-automation-builder',
+    applyOnceButtonClasses: ['building-automation-builder-apply-once'],
+    showSidebarKey: 'building-automation-builder'
+  });
+  builderSection.appendChild(builderRowParts.row);
 
   const builderModeRow = document.createElement('div');
   builderModeRow.classList.add('building-automation-row');
@@ -241,109 +148,43 @@ function buildAutomationBuildingsUI() {
 
   body.appendChild(builderSection);
 
-  const applySection = document.createElement('div');
-  applySection.classList.add('building-automation-section');
-  const applyHeader = document.createElement('div');
-  applyHeader.classList.add('building-automation-section-title');
-  const applyTitle = document.createElement('span');
-  applyTitle.textContent = getAutomationCardText('presetCombinationTitle', {}, 'Preset Combination');
-  const applyNextTravelLabel = document.createElement('label');
-  applyNextTravelLabel.classList.add('building-automation-apply-next-travel-label');
-  const applyNextTravelText = document.createElement('span');
-  applyNextTravelText.textContent = getAutomationCardText('combinationOnNextTravelLabel', {}, 'Combination on Next Travel');
-  const applyNextTravelSelect = document.createElement('select');
-  applyNextTravelSelect.classList.add('building-automation-next-travel-select');
-  const applyNextTravelPersistToggle = document.createElement('input');
-  applyNextTravelPersistToggle.type = 'checkbox';
-  applyNextTravelPersistToggle.classList.add('building-automation-next-travel-persist-toggle');
-  const applyNextTravelPersistText = document.createElement('span');
-  applyNextTravelPersistText.textContent = getAutomationCardText('allFutureTravelsLabel', {}, 'All future travels');
-  applyNextTravelPersistText.classList.add('building-automation-next-travel-persist-text');
-  applyNextTravelLabel.append(
-    applyNextTravelText,
-    applyNextTravelSelect,
-    applyNextTravelPersistToggle,
-    applyNextTravelPersistText
-  );
-  applyHeader.append(applyTitle);
-  applySection.appendChild(applyHeader);
-  const applyNextTravelRow = document.createElement('div');
-  applyNextTravelRow.classList.add('building-automation-next-travel-row');
-  applyNextTravelRow.append(applyNextTravelLabel);
-  applySection.appendChild(applyNextTravelRow);
-
-  const combinationRow = document.createElement('div');
-  combinationRow.classList.add('building-automation-row');
-  const applyCombinationButton = document.createElement('button');
-  applyCombinationButton.textContent = getAutomationCardText('applyCombinationButton', {}, 'Apply Combination');
-  applyCombinationButton.classList.add('building-automation-apply-combination');
-  const combinationSelect = document.createElement('select');
-  combinationSelect.classList.add('building-automation-combination-select');
-  const combinationMoveButtons = document.createElement('div');
-  combinationMoveButtons.classList.add('automation-order-buttons');
-  const combinationMoveUpButton = document.createElement('button');
-  combinationMoveUpButton.textContent = '↑';
-  combinationMoveUpButton.title = getAutomationCardText('moveCombinationUp', {}, 'Move combination up');
-  combinationMoveUpButton.classList.add('building-automation-combination-move-up');
-  const combinationMoveDownButton = document.createElement('button');
-  combinationMoveDownButton.textContent = '↓';
-  combinationMoveDownButton.title = getAutomationCardText('moveCombinationDown', {}, 'Move combination down');
-  combinationMoveDownButton.classList.add('building-automation-combination-move-down');
-  combinationMoveButtons.append(combinationMoveUpButton, combinationMoveDownButton);
-  const combinationNameInput = document.createElement('input');
-  combinationNameInput.type = 'text';
-  combinationNameInput.placeholder = getAutomationCardText('combinationNamePlaceholder', {}, 'Combination name');
-  combinationNameInput.classList.add('building-automation-combination-name');
-  const combinationNewButton = document.createElement('button');
-  combinationNewButton.textContent = getAutomationCardText('newCombinationButton', {}, 'New');
-  combinationNewButton.classList.add('building-automation-combination-new');
-  const combinationSaveButton = document.createElement('button');
-  combinationSaveButton.textContent = getAutomationCardText('saveCombinationButton', {}, 'Save');
-  combinationSaveButton.classList.add('building-automation-combination-save');
-  const combinationDeleteButton = document.createElement('button');
-  combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
-  combinationDeleteButton.classList.add('building-automation-combination-delete');
-  const combinationShowSidebar = createAutomationShowInSidebarLabel('building-automation-combination');
-  combinationRow.append(
-    combinationSelect,
-    combinationMoveButtons,
-    combinationNameInput,
-    combinationNewButton,
-    combinationSaveButton,
-    combinationDeleteButton,
-    combinationShowSidebar.label,
-    applyCombinationButton
-  );
-  applySection.appendChild(combinationRow);
-
-  const applyList = document.createElement('div');
-  applyList.classList.add('building-automation-apply-list');
-  applySection.appendChild(applyList);
-
-  const addApplyButton = document.createElement('button');
-  addApplyButton.textContent = getAutomationCardText('addPresetButton', {}, '+ Preset');
-  addApplyButton.classList.add('building-automation-apply-add');
-  applySection.appendChild(addApplyButton);
-
-  const applyHint = document.createElement('div');
-  applyHint.classList.add('building-automation-apply-hint');
-  applySection.appendChild(applyHint);
-
-  body.appendChild(applySection);
+  const applyParts = buildAutomationCombinationApplySection({
+    sectionClasses: ['building-automation-section'],
+    headerClasses: ['building-automation-section-title'],
+    nextTravelRowClasses: ['building-automation-next-travel-row'],
+    nextTravelLabelClasses: ['building-automation-apply-next-travel-label'],
+    nextTravelSelectClasses: ['building-automation-next-travel-select'],
+    nextTravelPersistToggleClasses: ['building-automation-next-travel-persist-toggle'],
+    nextTravelPersistTextClasses: ['building-automation-next-travel-persist-text'],
+    rowClasses: ['building-automation-row'],
+    applyCombinationButtonClasses: ['building-automation-apply-combination'],
+    combinationSelectClasses: ['building-automation-combination-select'],
+    combinationMoveUpButtonClasses: ['building-automation-combination-move-up'],
+    combinationMoveDownButtonClasses: ['building-automation-combination-move-down'],
+    combinationNameInputClasses: ['building-automation-combination-name'],
+    combinationNewButtonClasses: ['building-automation-combination-new'],
+    combinationSaveButtonClasses: ['building-automation-combination-save'],
+    combinationDeleteButtonClasses: ['building-automation-combination-delete'],
+    combinationShowSidebarKey: 'building-automation-combination',
+    applyListClasses: ['building-automation-apply-list'],
+    addApplyButtonClasses: ['building-automation-apply-add'],
+    applyHintClasses: ['building-automation-apply-hint']
+  });
+  body.appendChild(applyParts.section);
 
   automationElements.buildingsCollapseButton = header.collapse;
   automationElements.buildingsPanelBody = body;
-  automationElements.buildingsBuilderPresetSelect = presetSelect;
-  automationElements.buildingsBuilderMoveUpButton = presetMoveUpButton;
-  automationElements.buildingsBuilderMoveDownButton = presetMoveDownButton;
-  automationElements.buildingsBuilderPresetNameInput = presetNameInput;
-  automationElements.buildingsBuilderNewButton = newButton;
-  automationElements.buildingsBuilderSaveButton = saveButton;
-  automationElements.buildingsBuilderDeleteButton = deleteButton;
-  automationElements.buildingsBuilderImportButton = transferButtons.importButton;
-  automationElements.buildingsBuilderExportButton = transferButtons.exportButton;
-  automationElements.buildingsBuilderApplyOnceButton = applyOnceButton;
-  automationElements.buildingsBuilderShowInSidebarCheckbox = builderShowSidebar.checkbox;
+  automationElements.buildingsBuilderPresetSelect = builderRowParts.presetSelect;
+  automationElements.buildingsBuilderMoveUpButton = builderRowParts.presetMoveUpButton;
+  automationElements.buildingsBuilderMoveDownButton = builderRowParts.presetMoveDownButton;
+  automationElements.buildingsBuilderPresetNameInput = builderRowParts.presetNameInput;
+  automationElements.buildingsBuilderNewButton = builderRowParts.newButton;
+  automationElements.buildingsBuilderSaveButton = builderRowParts.saveButton;
+  automationElements.buildingsBuilderDeleteButton = builderRowParts.deleteButton;
+  automationElements.buildingsBuilderImportButton = builderRowParts.importButton;
+  automationElements.buildingsBuilderExportButton = builderRowParts.exportButton;
+  automationElements.buildingsBuilderApplyOnceButton = builderRowParts.applyOnceButton;
+  automationElements.buildingsBuilderShowInSidebarCheckbox = builderRowParts.showInSidebarCheckbox;
   automationElements.buildingsBuilderDirty = builderDirty;
   automationElements.buildingsBuilderTypeSelect = typeSelect;
   automationElements.buildingsBuilderScopeSelect = scopeSelect;
@@ -354,20 +195,20 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderClearButton = clearButton;
   automationElements.buildingsBuilderSelectedList = selectedList;
   automationElements.buildingsPresetJsonDetails = presetJsonDetails;
-  automationElements.buildingsApplyCombinationButton = applyCombinationButton;
-  automationElements.buildingsApplyNextTravelSelect = applyNextTravelSelect;
-  automationElements.buildingsApplyNextTravelPersistToggle = applyNextTravelPersistToggle;
-  automationElements.buildingsCombinationSelect = combinationSelect;
-  automationElements.buildingsCombinationMoveUpButton = combinationMoveUpButton;
-  automationElements.buildingsCombinationMoveDownButton = combinationMoveDownButton;
-  automationElements.buildingsCombinationNameInput = combinationNameInput;
-  automationElements.buildingsCombinationNewButton = combinationNewButton;
-  automationElements.buildingsCombinationSaveButton = combinationSaveButton;
-  automationElements.buildingsCombinationDeleteButton = combinationDeleteButton;
-  automationElements.buildingsCombinationShowInSidebarCheckbox = combinationShowSidebar.checkbox;
-  automationElements.buildingsApplyList = applyList;
-  automationElements.buildingsApplyHint = applyHint;
-  automationElements.buildingsAddApplyButton = addApplyButton;
+  automationElements.buildingsApplyCombinationButton = applyParts.applyCombinationButton;
+  automationElements.buildingsApplyNextTravelSelect = applyParts.applyNextTravelSelect;
+  automationElements.buildingsApplyNextTravelPersistToggle = applyParts.applyNextTravelPersistToggle;
+  automationElements.buildingsCombinationSelect = applyParts.combinationSelect;
+  automationElements.buildingsCombinationMoveUpButton = applyParts.combinationMoveUpButton;
+  automationElements.buildingsCombinationMoveDownButton = applyParts.combinationMoveDownButton;
+  automationElements.buildingsCombinationNameInput = applyParts.combinationNameInput;
+  automationElements.buildingsCombinationNewButton = applyParts.combinationNewButton;
+  automationElements.buildingsCombinationSaveButton = applyParts.combinationSaveButton;
+  automationElements.buildingsCombinationDeleteButton = applyParts.combinationDeleteButton;
+  automationElements.buildingsCombinationShowInSidebarCheckbox = applyParts.combinationShowInSidebarCheckbox;
+  automationElements.buildingsApplyList = applyParts.applyList;
+  automationElements.buildingsApplyHint = applyParts.applyHint;
+  automationElements.buildingsAddApplyButton = applyParts.addApplyButton;
 
   attachBuildingsAutomationHandlers();
 }
@@ -438,7 +279,7 @@ function updateBuildingsAutomationUI() {
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
-      option.textContent = getAutomationPresetLabel(preset);
+      option.textContent = getDefaultAutomationPresetLabel(preset);
       buildingsBuilderPresetSelect.appendChild(option);
     });
     const selectedPresetId = automation.getSelectedPresetId();
@@ -602,73 +443,24 @@ function updateBuildingsAutomationUI() {
   buildingsBuilderMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
   buildingsApplyCombinationButton.disabled = automation.getAssignments().length === 0;
   buildingsCombinationSaveButton.disabled = automation.getAssignments().length === 0;
-  const nextTravelComboId = automation.nextTravelCombinationId;
-  const nextTravelCombo = nextTravelComboId ? automation.getCombinationById(nextTravelComboId) : null;
-  if (nextTravelComboId && !nextTravelCombo) {
-    automation.nextTravelCombinationId = null;
-    automation.nextTravelCombinationPersistent = false;
-  }
-  automation.nextTravelCombinationPersistent = automation.nextTravelCombinationPersistent && !!automation.nextTravelCombinationId;
-  if (document.activeElement !== buildingsApplyNextTravelSelect) {
-    buildingsApplyNextTravelSelect.textContent = '';
-    const noneOption = document.createElement('option');
-    noneOption.value = '';
-    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
-    buildingsApplyNextTravelSelect.appendChild(noneOption);
-    combinations.forEach(combo => {
-      const option = document.createElement('option');
-      option.value = String(combo.id);
-      option.textContent = getAutomationCombinationLabel(combo);
-      buildingsApplyNextTravelSelect.appendChild(option);
-    });
-    buildingsApplyNextTravelSelect.value = automation.nextTravelCombinationId
-      ? String(automation.nextTravelCombinationId)
-      : '';
-  }
-  buildingsApplyNextTravelPersistToggle.checked = automation.nextTravelCombinationPersistent;
-  buildingsApplyNextTravelPersistToggle.disabled = !automation.nextTravelCombinationId;
+  updateAutomationNextTravelCombinationControls({
+    automation,
+    combinations,
+    selectElement: buildingsApplyNextTravelSelect,
+    persistToggleElement: buildingsApplyNextTravelPersistToggle
+  });
 
-  if (document.activeElement !== buildingsCombinationSelect) {
-    buildingsCombinationSelect.textContent = '';
-    const newOption = document.createElement('option');
-    newOption.value = '';
-    newOption.textContent = getAutomationCardText('newCombinationOption', {}, 'New combination');
-    buildingsCombinationSelect.appendChild(newOption);
-    combinations.forEach(combo => {
-      const option = document.createElement('option');
-      option.value = String(combo.id);
-      option.textContent = getAutomationCombinationLabel(combo);
-      buildingsCombinationSelect.appendChild(option);
-    });
-    buildingsCombinationSelect.value = automation.getSelectedCombinationId() || '';
-  }
-
-  const activeCombinationId = automation.getSelectedCombinationId();
-  const activeCombination = activeCombinationId ? automation.getCombinationById(Number(activeCombinationId)) : null;
-  const activeCombinationIndex = activeCombination
-    ? combinations.findIndex(combo => combo.id === activeCombination.id)
-    : -1;
-  if (activeCombination && buildingAutomationUIState.combinationSyncedId !== activeCombinationId) {
-    buildingAutomationUIState.combinationName = activeCombination.name;
-    buildingAutomationUIState.combinationShowInSidebar = activeCombination.showInSidebar !== false;
-    buildingAutomationUIState.combinationSyncedId = activeCombinationId;
-  }
-  if (!activeCombination && buildingAutomationUIState.combinationSyncedId) {
-    buildingAutomationUIState.combinationSyncedId = null;
-  }
-
-  if (document.activeElement !== buildingsCombinationNameInput) {
-    buildingsCombinationNameInput.value = activeCombination
-      ? activeCombination.name
-      : buildingAutomationUIState.combinationName;
-  }
-  buildingsCombinationShowInSidebarCheckbox.checked = activeCombination
-    ? activeCombination.showInSidebar !== false
-    : buildingAutomationUIState.combinationShowInSidebar;
-
-  buildingsCombinationDeleteButton.disabled = !activeCombination;
-  buildingsCombinationMoveUpButton.disabled = activeCombinationIndex <= 0;
-  buildingsCombinationMoveDownButton.disabled = activeCombinationIndex < 0 || activeCombinationIndex >= combinations.length - 1;
+  updateAutomationCombinationControls({
+    automation,
+    combinations,
+    uiState: buildingAutomationUIState,
+    selectElement: buildingsCombinationSelect,
+    nameInputElement: buildingsCombinationNameInput,
+    showCheckboxElement: buildingsCombinationShowInSidebarCheckbox,
+    moveUpButtonElement: buildingsCombinationMoveUpButton,
+    moveDownButtonElement: buildingsCombinationMoveDownButton,
+    deleteButtonElement: buildingsCombinationDeleteButton
+  });
 
   const selectedHasFocus = buildingsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
@@ -775,7 +567,7 @@ function updateBuildingsAutomationUI() {
         presets.forEach(preset => {
           const option = document.createElement('option');
           option.value = String(preset.id);
-          option.textContent = getAutomationPresetLabel(preset);
+          option.textContent = getDefaultAutomationPresetLabel(preset);
           if (assignment.presetId === preset.id) {
             option.selected = true;
           }
@@ -1119,123 +911,21 @@ function attachBuildingsAutomationHandlers() {
     }
   });
 
-  buildingsApplyCombinationButton.addEventListener('click', () => {
-    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
-    automationManager.buildingsAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
-  });
-
-  buildingsApplyNextTravelSelect.addEventListener('change', (event) => {
-    const comboId = event.target.value;
-    automationManager.buildingsAutomation.nextTravelCombinationId = comboId ? Number(comboId) : null;
-    automationManager.buildingsAutomation.nextTravelCombinationPersistent = automationManager.buildingsAutomation.nextTravelCombinationPersistent
-      && !!automationManager.buildingsAutomation.nextTravelCombinationId;
-    buildingsApplyNextTravelPersistToggle.checked = automationManager.buildingsAutomation.nextTravelCombinationPersistent;
-    buildingsApplyNextTravelPersistToggle.disabled = !automationManager.buildingsAutomation.nextTravelCombinationId;
-  });
-  buildingsApplyNextTravelPersistToggle.addEventListener('change', (event) => {
-    automationManager.buildingsAutomation.nextTravelCombinationPersistent = event.target.checked
-      && !!automationManager.buildingsAutomation.nextTravelCombinationId;
-  });
-
-  buildingsCombinationSelect.addEventListener('change', (event) => {
-    const comboId = event.target.value || null;
-    automationManager.buildingsAutomation.setSelectedCombinationId(comboId);
-    buildingAutomationUIState.combinationSyncedId = null;
-    if (comboId) {
-      automationManager.buildingsAutomation.applyCombination(Number(comboId));
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  buildingsCombinationMoveUpButton.addEventListener('click', () => {
-    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      return;
-    }
-    automationManager.buildingsAutomation.moveCombination(Number(comboId), -1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  buildingsCombinationMoveDownButton.addEventListener('click', () => {
-    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      return;
-    }
-    automationManager.buildingsAutomation.moveCombination(Number(comboId), 1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  buildingsCombinationNameInput.addEventListener('input', (event) => {
-    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      buildingAutomationUIState.combinationName = event.target.value || '';
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-      return;
-    }
-    const combo = automationManager.buildingsAutomation.getCombinationById(Number(comboId));
-    combo.name = event.target.value || '';
-  });
-
-  buildingsCombinationNewButton.addEventListener('click', () => {
-    automationManager.buildingsAutomation.setSelectedCombinationId(null);
-    buildingAutomationUIState.combinationSyncedId = null;
-    buildingAutomationUIState.combinationName = '';
-    buildingAutomationUIState.combinationShowInSidebar = true;
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  buildingsCombinationShowInSidebarCheckbox.addEventListener('change', () => {
-    buildingAutomationUIState.combinationShowInSidebar = buildingsCombinationShowInSidebarCheckbox.checked;
-    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
-    if (comboId) {
-      automationManager.buildingsAutomation.setCombinationShowInSidebar(Number(comboId), buildingAutomationUIState.combinationShowInSidebar);
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  buildingsCombinationSaveButton.addEventListener('click', () => {
-    const automation = automationManager.buildingsAutomation;
-    const name = buildingsCombinationNameInput.value || buildingAutomationUIState.combinationName || '';
-    const snapshot = automation.getAssignments().map(entry => ({
-      presetId: entry.presetId,
-      enabled: entry.enabled !== false
-    }));
-    const comboId = automation.getSelectedCombinationId();
-    if (comboId) {
-      automation.updateCombination(Number(comboId), name, snapshot);
-      automation.setCombinationShowInSidebar(Number(comboId), buildingAutomationUIState.combinationShowInSidebar);
-    } else {
-      const newComboId = automation.addCombination(name, snapshot);
-      automation.setCombinationShowInSidebar(newComboId, buildingAutomationUIState.combinationShowInSidebar);
-      buildingAutomationUIState.combinationSyncedId = null;
-      buildingAutomationUIState.combinationName = '';
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  buildingsCombinationDeleteButton.addEventListener('click', () => {
-    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      return;
-    }
-    automationManager.buildingsAutomation.deleteCombination(Number(comboId));
-    buildingAutomationUIState.combinationSyncedId = null;
-    buildingAutomationUIState.combinationName = '';
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  buildingsAddApplyButton.addEventListener('click', () => {
-    const automation = automationManager.buildingsAutomation;
-    const preset = automation.presets[0];
-    automation.addAssignment(preset ? preset.id : null);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
+  attachAutomationCombinationHandlers({
+    getAutomation: () => automationManager.buildingsAutomation,
+    uiState: buildingAutomationUIState,
+    applyCombinationButton: buildingsApplyCombinationButton,
+    nextTravelSelect: buildingsApplyNextTravelSelect,
+    nextTravelPersistToggle: buildingsApplyNextTravelPersistToggle,
+    combinationSelect: buildingsCombinationSelect,
+    combinationMoveUpButton: buildingsCombinationMoveUpButton,
+    combinationMoveDownButton: buildingsCombinationMoveDownButton,
+    combinationNameInput: buildingsCombinationNameInput,
+    combinationNewButton: buildingsCombinationNewButton,
+    combinationShowInSidebarCheckbox: buildingsCombinationShowInSidebarCheckbox,
+    combinationSaveButton: buildingsCombinationSaveButton,
+    combinationDeleteButton: buildingsCombinationDeleteButton,
+    addApplyButton: buildingsAddApplyButton
   });
 }
 

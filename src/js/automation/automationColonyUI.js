@@ -14,69 +14,8 @@ const colonyAutomationUIState = {
   combinationShowInSidebar: true
 };
 
-function getColonyAutomationPresetLabel(preset) {
-  return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
-}
-
-function getColonyAutomationCombinationLabel(combination) {
-  return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
-}
-
 function getColonyAutomationAutoBuildBasisOptions(structure, currentValue) {
-  const options = [];
-  const seen = new Set();
-  const addOption = (value, label) => {
-    if (seen.has(value)) {
-      return;
-    }
-    seen.add(value);
-    options.push({ value, label });
-  };
-  if (structure) {
-    if (structure.autoBuildFillEnabled) {
-      addOption('fill', getStructuresUIText('ui.structures.autoBuild.basis.fill', '% filled'));
-    }
-    addOption('population', getStructuresUIText('ui.structures.autoBuild.basis.population', '% of pop'));
-    addOption('workers', getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers'));
-    if (structure.requiresWorker > 0) {
-      addOption('workerShare', getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share'));
-    }
-    if (structure.requiresLand > 0) {
-      addOption('landShare', getStructuresUIText('ui.structures.autoBuild.basis.landShare', '% land share'));
-    }
-    addOption('geometricLand', getStructuresUIText('ui.structures.autoBuild.basis.geometricLand', '% geometric land'));
-    addOption('fixed', getStructuresUIText('ui.structures.autoBuild.basis.fixed', 'Fixed'));
-    addOption('building:storageDepot', getStructuresUIText('ui.structures.autoBuild.basis.storageDepots', '% of Storage Depots'));
-    if (Array.isArray(structure.automationBuildingsDropDown)) {
-      for (let index = 0; index < structure.automationBuildingsDropDown.length; index += 1) {
-        const buildingId = structure.automationBuildingsDropDown[index];
-        const basisValue = `building:${buildingId}`;
-        const displayName = (buildings[buildingId] && buildings[buildingId].displayName) || buildingId;
-        addOption(
-          basisValue,
-          getStructuresUIText('ui.structures.autoBuild.basis.percentOf', '% of {name}', { name: displayName })
-        );
-      }
-    }
-    if (Array.isArray(structure.automationCustomBasisOptions)) {
-      for (let index = 0; index < structure.automationCustomBasisOptions.length; index += 1) {
-        const optionData = structure.automationCustomBasisOptions[index];
-        addOption(optionData.value, optionData.label);
-      }
-    }
-    if (structure.autoBuildMaxOption) {
-      addOption(
-        'max',
-        structure.getAutoBuildMaxModeLabel
-          ? structure.getAutoBuildMaxModeLabel()
-          : getStructuresUIText('ui.common.max', 'Max')
-      );
-    }
-  }
-  if (currentValue && !seen.has(currentValue)) {
-    addOption(currentValue, currentValue);
-  }
-  return options;
+  return getAutomationAutoBuildBasisOptions(structure, currentValue);
 }
 
 function getColonyAutomationJsonModeForPath(preset, fieldPath) {
@@ -123,52 +62,20 @@ function buildAutomationColonyUI() {
   builderHeader.append(builderTitle, builderDirty);
   builderSection.appendChild(builderHeader);
 
-  const builderRow = document.createElement('div');
-  builderRow.classList.add('colony-automation-row', 'building-automation-row');
-  const presetSelect = document.createElement('select');
-  presetSelect.classList.add('colony-automation-builder-select');
-  const presetMoveButtons = document.createElement('div');
-  presetMoveButtons.classList.add('automation-order-buttons');
-  const presetMoveUpButton = document.createElement('button');
-  presetMoveUpButton.textContent = '↑';
-  presetMoveUpButton.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
-  presetMoveUpButton.classList.add('colony-automation-builder-move-up');
-  const presetMoveDownButton = document.createElement('button');
-  presetMoveDownButton.textContent = '↓';
-  presetMoveDownButton.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
-  presetMoveDownButton.classList.add('colony-automation-builder-move-down');
-  presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
-  const presetNameInput = document.createElement('input');
-  presetNameInput.type = 'text';
-  presetNameInput.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
-  presetNameInput.classList.add('colony-automation-builder-name');
-  const newButton = document.createElement('button');
-  newButton.textContent = getAutomationCardText('newPresetButton', {}, 'New');
-  newButton.classList.add('colony-automation-builder-new');
-  const saveButton = document.createElement('button');
-  saveButton.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
-  saveButton.classList.add('colony-automation-builder-save', 'building-automation-builder-save');
-  const deleteButton = document.createElement('button');
-  deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
-  deleteButton.classList.add('colony-automation-builder-delete');
-  const transferButtons = createAutomationPresetTransferButtons('colony-automation-builder');
-  const applyOnceButton = document.createElement('button');
-  applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
-  applyOnceButton.classList.add('colony-automation-builder-apply-once');
-  const builderShowSidebar = createAutomationShowInSidebarLabel('colony-automation-builder');
-  builderRow.append(
-    presetSelect,
-    presetMoveButtons,
-    presetNameInput,
-    newButton,
-    saveButton,
-    deleteButton,
-    transferButtons.importButton,
-    transferButtons.exportButton,
-    applyOnceButton,
-    builderShowSidebar.label
-  );
-  builderSection.appendChild(builderRow);
+  const builderRowParts = buildAutomationPresetBuilderRow({
+    rowClasses: ['colony-automation-row', 'building-automation-row'],
+    selectClasses: ['colony-automation-builder-select'],
+    moveUpButtonClasses: ['colony-automation-builder-move-up'],
+    moveDownButtonClasses: ['colony-automation-builder-move-down'],
+    nameInputClasses: ['colony-automation-builder-name'],
+    newButtonClasses: ['colony-automation-builder-new'],
+    saveButtonClasses: ['colony-automation-builder-save', 'building-automation-builder-save'],
+    deleteButtonClasses: ['colony-automation-builder-delete'],
+    transferKey: 'colony-automation-builder',
+    applyOnceButtonClasses: ['colony-automation-builder-apply-once'],
+    showSidebarKey: 'colony-automation-builder'
+  });
+  builderSection.appendChild(builderRowParts.row);
 
   const builderModeRow = document.createElement('div');
   builderModeRow.classList.add('colony-automation-row', 'building-automation-row');
@@ -228,109 +135,43 @@ function buildAutomationColonyUI() {
 
   body.appendChild(builderSection);
 
-  const applySection = document.createElement('div');
-  applySection.classList.add('colony-automation-section', 'building-automation-section');
-  const applyHeader = document.createElement('div');
-  applyHeader.classList.add('colony-automation-section-title', 'building-automation-section-title');
-  const applyTitle = document.createElement('span');
-  applyTitle.textContent = getAutomationCardText('presetCombinationTitle', {}, 'Preset Combination');
-  const applyNextTravelLabel = document.createElement('label');
-  applyNextTravelLabel.classList.add('colony-automation-apply-next-travel-label', 'building-automation-apply-next-travel-label');
-  const applyNextTravelText = document.createElement('span');
-  applyNextTravelText.textContent = getAutomationCardText('combinationOnNextTravelLabel', {}, 'Combination on Next Travel');
-  const applyNextTravelSelect = document.createElement('select');
-  applyNextTravelSelect.classList.add('colony-automation-next-travel-select', 'building-automation-next-travel-select');
-  const applyNextTravelPersistToggle = document.createElement('input');
-  applyNextTravelPersistToggle.type = 'checkbox';
-  applyNextTravelPersistToggle.classList.add('colony-automation-next-travel-persist-toggle');
-  const applyNextTravelPersistText = document.createElement('span');
-  applyNextTravelPersistText.textContent = getAutomationCardText('allFutureTravelsLabel', {}, 'All future travels');
-  applyNextTravelPersistText.classList.add('colony-automation-next-travel-persist-text', 'building-automation-next-travel-persist-text');
-  applyNextTravelLabel.append(
-    applyNextTravelText,
-    applyNextTravelSelect,
-    applyNextTravelPersistToggle,
-    applyNextTravelPersistText
-  );
-  applyHeader.append(applyTitle);
-  applySection.appendChild(applyHeader);
-  const applyNextTravelRow = document.createElement('div');
-  applyNextTravelRow.classList.add('colony-automation-next-travel-row', 'building-automation-next-travel-row');
-  applyNextTravelRow.append(applyNextTravelLabel);
-  applySection.appendChild(applyNextTravelRow);
-
-  const combinationRow = document.createElement('div');
-  combinationRow.classList.add('colony-automation-row', 'building-automation-row');
-  const applyCombinationButton = document.createElement('button');
-  applyCombinationButton.textContent = getAutomationCardText('applyCombinationButton', {}, 'Apply Combination');
-  applyCombinationButton.classList.add('colony-automation-apply-combination', 'building-automation-apply-combination');
-  const combinationSelect = document.createElement('select');
-  combinationSelect.classList.add('colony-automation-combination-select');
-  const combinationMoveButtons = document.createElement('div');
-  combinationMoveButtons.classList.add('automation-order-buttons');
-  const combinationMoveUpButton = document.createElement('button');
-  combinationMoveUpButton.textContent = '↑';
-  combinationMoveUpButton.title = getAutomationCardText('moveCombinationUp', {}, 'Move combination up');
-  combinationMoveUpButton.classList.add('colony-automation-combination-move-up');
-  const combinationMoveDownButton = document.createElement('button');
-  combinationMoveDownButton.textContent = '↓';
-  combinationMoveDownButton.title = getAutomationCardText('moveCombinationDown', {}, 'Move combination down');
-  combinationMoveDownButton.classList.add('colony-automation-combination-move-down');
-  combinationMoveButtons.append(combinationMoveUpButton, combinationMoveDownButton);
-  const combinationNameInput = document.createElement('input');
-  combinationNameInput.type = 'text';
-  combinationNameInput.placeholder = getAutomationCardText('combinationNamePlaceholder', {}, 'Combination name');
-  combinationNameInput.classList.add('colony-automation-combination-name');
-  const combinationNewButton = document.createElement('button');
-  combinationNewButton.textContent = getAutomationCardText('newCombinationButton', {}, 'New');
-  combinationNewButton.classList.add('colony-automation-combination-new');
-  const combinationSaveButton = document.createElement('button');
-  combinationSaveButton.textContent = getAutomationCardText('saveCombinationButton', {}, 'Save');
-  combinationSaveButton.classList.add('colony-automation-combination-save', 'building-automation-combination-save');
-  const combinationDeleteButton = document.createElement('button');
-  combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
-  combinationDeleteButton.classList.add('colony-automation-combination-delete');
-  const combinationShowSidebar = createAutomationShowInSidebarLabel('colony-automation-combination');
-  combinationRow.append(
-    combinationSelect,
-    combinationMoveButtons,
-    combinationNameInput,
-    combinationNewButton,
-    combinationSaveButton,
-    combinationDeleteButton,
-    combinationShowSidebar.label,
-    applyCombinationButton
-  );
-  applySection.appendChild(combinationRow);
-
-  const applyList = document.createElement('div');
-  applyList.classList.add('colony-automation-apply-list', 'building-automation-apply-list');
-  applySection.appendChild(applyList);
-
-  const addApplyButton = document.createElement('button');
-  addApplyButton.textContent = getAutomationCardText('addPresetButton', {}, '+ Preset');
-  addApplyButton.classList.add('colony-automation-apply-add', 'building-automation-apply-add');
-  applySection.appendChild(addApplyButton);
-
-  const applyHint = document.createElement('div');
-  applyHint.classList.add('colony-automation-apply-hint', 'building-automation-apply-hint');
-  applySection.appendChild(applyHint);
-
-  body.appendChild(applySection);
+  const applyParts = buildAutomationCombinationApplySection({
+    sectionClasses: ['colony-automation-section', 'building-automation-section'],
+    headerClasses: ['colony-automation-section-title', 'building-automation-section-title'],
+    nextTravelRowClasses: ['colony-automation-next-travel-row', 'building-automation-next-travel-row'],
+    nextTravelLabelClasses: ['colony-automation-apply-next-travel-label', 'building-automation-apply-next-travel-label'],
+    nextTravelSelectClasses: ['colony-automation-next-travel-select', 'building-automation-next-travel-select'],
+    nextTravelPersistToggleClasses: ['colony-automation-next-travel-persist-toggle'],
+    nextTravelPersistTextClasses: ['colony-automation-next-travel-persist-text', 'building-automation-next-travel-persist-text'],
+    rowClasses: ['colony-automation-row', 'building-automation-row'],
+    applyCombinationButtonClasses: ['colony-automation-apply-combination', 'building-automation-apply-combination'],
+    combinationSelectClasses: ['colony-automation-combination-select'],
+    combinationMoveUpButtonClasses: ['colony-automation-combination-move-up'],
+    combinationMoveDownButtonClasses: ['colony-automation-combination-move-down'],
+    combinationNameInputClasses: ['colony-automation-combination-name'],
+    combinationNewButtonClasses: ['colony-automation-combination-new'],
+    combinationSaveButtonClasses: ['colony-automation-combination-save', 'building-automation-combination-save'],
+    combinationDeleteButtonClasses: ['colony-automation-combination-delete'],
+    combinationShowSidebarKey: 'colony-automation-combination',
+    applyListClasses: ['colony-automation-apply-list', 'building-automation-apply-list'],
+    addApplyButtonClasses: ['colony-automation-apply-add', 'building-automation-apply-add'],
+    applyHintClasses: ['colony-automation-apply-hint', 'building-automation-apply-hint']
+  });
+  body.appendChild(applyParts.section);
 
   automationElements.colonyCollapseButton = header.collapse;
   automationElements.colonyPanelBody = body;
-  automationElements.colonyBuilderPresetSelect = presetSelect;
-  automationElements.colonyBuilderMoveUpButton = presetMoveUpButton;
-  automationElements.colonyBuilderMoveDownButton = presetMoveDownButton;
-  automationElements.colonyBuilderPresetNameInput = presetNameInput;
-  automationElements.colonyBuilderNewButton = newButton;
-  automationElements.colonyBuilderSaveButton = saveButton;
-  automationElements.colonyBuilderDeleteButton = deleteButton;
-  automationElements.colonyBuilderImportButton = transferButtons.importButton;
-  automationElements.colonyBuilderExportButton = transferButtons.exportButton;
-  automationElements.colonyBuilderApplyOnceButton = applyOnceButton;
-  automationElements.colonyBuilderShowInSidebarCheckbox = builderShowSidebar.checkbox;
+  automationElements.colonyBuilderPresetSelect = builderRowParts.presetSelect;
+  automationElements.colonyBuilderMoveUpButton = builderRowParts.presetMoveUpButton;
+  automationElements.colonyBuilderMoveDownButton = builderRowParts.presetMoveDownButton;
+  automationElements.colonyBuilderPresetNameInput = builderRowParts.presetNameInput;
+  automationElements.colonyBuilderNewButton = builderRowParts.newButton;
+  automationElements.colonyBuilderSaveButton = builderRowParts.saveButton;
+  automationElements.colonyBuilderDeleteButton = builderRowParts.deleteButton;
+  automationElements.colonyBuilderImportButton = builderRowParts.importButton;
+  automationElements.colonyBuilderExportButton = builderRowParts.exportButton;
+  automationElements.colonyBuilderApplyOnceButton = builderRowParts.applyOnceButton;
+  automationElements.colonyBuilderShowInSidebarCheckbox = builderRowParts.showInSidebarCheckbox;
   automationElements.colonyBuilderDirty = builderDirty;
   automationElements.colonyBuilderTypeSelect = typeSelect;
   automationElements.colonyBuilderScopeSelect = scopeSelect;
@@ -341,20 +182,20 @@ function buildAutomationColonyUI() {
   automationElements.colonyBuilderClearButton = clearButton;
   automationElements.colonyBuilderSelectedList = selectedList;
   automationElements.colonyPresetJsonDetails = presetJsonDetails;
-  automationElements.colonyApplyCombinationButton = applyCombinationButton;
-  automationElements.colonyApplyNextTravelSelect = applyNextTravelSelect;
-  automationElements.colonyApplyNextTravelPersistToggle = applyNextTravelPersistToggle;
-  automationElements.colonyCombinationSelect = combinationSelect;
-  automationElements.colonyCombinationMoveUpButton = combinationMoveUpButton;
-  automationElements.colonyCombinationMoveDownButton = combinationMoveDownButton;
-  automationElements.colonyCombinationNameInput = combinationNameInput;
-  automationElements.colonyCombinationNewButton = combinationNewButton;
-  automationElements.colonyCombinationSaveButton = combinationSaveButton;
-  automationElements.colonyCombinationDeleteButton = combinationDeleteButton;
-  automationElements.colonyCombinationShowInSidebarCheckbox = combinationShowSidebar.checkbox;
-  automationElements.colonyApplyList = applyList;
-  automationElements.colonyApplyHint = applyHint;
-  automationElements.colonyAddApplyButton = addApplyButton;
+  automationElements.colonyApplyCombinationButton = applyParts.applyCombinationButton;
+  automationElements.colonyApplyNextTravelSelect = applyParts.applyNextTravelSelect;
+  automationElements.colonyApplyNextTravelPersistToggle = applyParts.applyNextTravelPersistToggle;
+  automationElements.colonyCombinationSelect = applyParts.combinationSelect;
+  automationElements.colonyCombinationMoveUpButton = applyParts.combinationMoveUpButton;
+  automationElements.colonyCombinationMoveDownButton = applyParts.combinationMoveDownButton;
+  automationElements.colonyCombinationNameInput = applyParts.combinationNameInput;
+  automationElements.colonyCombinationNewButton = applyParts.combinationNewButton;
+  automationElements.colonyCombinationSaveButton = applyParts.combinationSaveButton;
+  automationElements.colonyCombinationDeleteButton = applyParts.combinationDeleteButton;
+  automationElements.colonyCombinationShowInSidebarCheckbox = applyParts.combinationShowInSidebarCheckbox;
+  automationElements.colonyApplyList = applyParts.applyList;
+  automationElements.colonyApplyHint = applyParts.applyHint;
+  automationElements.colonyAddApplyButton = applyParts.addApplyButton;
 
   attachColonyAutomationHandlers();
 }
@@ -425,7 +266,7 @@ function updateColonyAutomationUI() {
     presets.forEach(preset => {
       const option = document.createElement('option');
       option.value = String(preset.id);
-      option.textContent = getColonyAutomationPresetLabel(preset);
+      option.textContent = getDefaultAutomationPresetLabel(preset);
       colonyBuilderPresetSelect.appendChild(option);
     });
     const selectedPresetId = automation.getSelectedPresetId();
@@ -589,73 +430,24 @@ function updateColonyAutomationUI() {
   colonyApplyCombinationButton.disabled = automation.getAssignments().length === 0;
   colonyCombinationSaveButton.disabled = automation.getAssignments().length === 0;
 
-  const nextTravelComboId = automation.nextTravelCombinationId;
-  const nextTravelCombo = nextTravelComboId ? automation.getCombinationById(nextTravelComboId) : null;
-  if (nextTravelComboId && !nextTravelCombo) {
-    automation.nextTravelCombinationId = null;
-    automation.nextTravelCombinationPersistent = false;
-  }
-  automation.nextTravelCombinationPersistent = automation.nextTravelCombinationPersistent && !!automation.nextTravelCombinationId;
-  if (document.activeElement !== colonyApplyNextTravelSelect) {
-    colonyApplyNextTravelSelect.textContent = '';
-    const noneOption = document.createElement('option');
-    noneOption.value = '';
-    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
-    colonyApplyNextTravelSelect.appendChild(noneOption);
-    combinations.forEach(combo => {
-      const option = document.createElement('option');
-      option.value = String(combo.id);
-      option.textContent = getColonyAutomationCombinationLabel(combo);
-      colonyApplyNextTravelSelect.appendChild(option);
-    });
-    colonyApplyNextTravelSelect.value = automation.nextTravelCombinationId
-      ? String(automation.nextTravelCombinationId)
-      : '';
-  }
-  colonyApplyNextTravelPersistToggle.checked = automation.nextTravelCombinationPersistent;
-  colonyApplyNextTravelPersistToggle.disabled = !automation.nextTravelCombinationId;
+  updateAutomationNextTravelCombinationControls({
+    automation,
+    combinations,
+    selectElement: colonyApplyNextTravelSelect,
+    persistToggleElement: colonyApplyNextTravelPersistToggle
+  });
 
-  if (document.activeElement !== colonyCombinationSelect) {
-    colonyCombinationSelect.textContent = '';
-    const newOption = document.createElement('option');
-    newOption.value = '';
-    newOption.textContent = getAutomationCardText('newCombinationOption', {}, 'New combination');
-    colonyCombinationSelect.appendChild(newOption);
-    combinations.forEach(combo => {
-      const option = document.createElement('option');
-      option.value = String(combo.id);
-      option.textContent = getColonyAutomationCombinationLabel(combo);
-      colonyCombinationSelect.appendChild(option);
-    });
-    colonyCombinationSelect.value = automation.getSelectedCombinationId() || '';
-  }
-
-  const activeCombinationId = automation.getSelectedCombinationId();
-  const activeCombination = activeCombinationId ? automation.getCombinationById(Number(activeCombinationId)) : null;
-  const activeCombinationIndex = activeCombination
-    ? combinations.findIndex(combo => combo.id === activeCombination.id)
-    : -1;
-  if (activeCombination && colonyAutomationUIState.combinationSyncedId !== activeCombinationId) {
-    colonyAutomationUIState.combinationName = activeCombination.name;
-    colonyAutomationUIState.combinationShowInSidebar = activeCombination.showInSidebar !== false;
-    colonyAutomationUIState.combinationSyncedId = activeCombinationId;
-  }
-  if (!activeCombination && colonyAutomationUIState.combinationSyncedId) {
-    colonyAutomationUIState.combinationSyncedId = null;
-  }
-
-  if (document.activeElement !== colonyCombinationNameInput) {
-    colonyCombinationNameInput.value = activeCombination
-      ? activeCombination.name
-      : colonyAutomationUIState.combinationName;
-  }
-  colonyCombinationShowInSidebarCheckbox.checked = activeCombination
-    ? activeCombination.showInSidebar !== false
-    : colonyAutomationUIState.combinationShowInSidebar;
-
-  colonyCombinationDeleteButton.disabled = !activeCombination;
-  colonyCombinationMoveUpButton.disabled = activeCombinationIndex <= 0;
-  colonyCombinationMoveDownButton.disabled = activeCombinationIndex < 0 || activeCombinationIndex >= combinations.length - 1;
+  updateAutomationCombinationControls({
+    automation,
+    combinations,
+    uiState: colonyAutomationUIState,
+    selectElement: colonyCombinationSelect,
+    nameInputElement: colonyCombinationNameInput,
+    showCheckboxElement: colonyCombinationShowInSidebarCheckbox,
+    moveUpButtonElement: colonyCombinationMoveUpButton,
+    moveDownButtonElement: colonyCombinationMoveDownButton,
+    deleteButtonElement: colonyCombinationDeleteButton
+  });
 
   colonyBuilderSelectedList.textContent = '';
   colonyAutomationUIState.builderSelectedTargets.forEach(targetId => {
@@ -741,7 +533,7 @@ function updateColonyAutomationUI() {
       presets.forEach(preset => {
         const option = document.createElement('option');
         option.value = String(preset.id);
-        option.textContent = getColonyAutomationPresetLabel(preset);
+        option.textContent = getDefaultAutomationPresetLabel(preset);
         if (assignment.presetId === preset.id) {
           option.selected = true;
         }
@@ -1083,123 +875,21 @@ function attachColonyAutomationHandlers() {
     }
   });
 
-  colonyApplyCombinationButton.addEventListener('click', () => {
-    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
-    automationManager.colonyAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
-  });
-
-  colonyApplyNextTravelSelect.addEventListener('change', (event) => {
-    const comboId = event.target.value;
-    automationManager.colonyAutomation.nextTravelCombinationId = comboId ? Number(comboId) : null;
-    automationManager.colonyAutomation.nextTravelCombinationPersistent = automationManager.colonyAutomation.nextTravelCombinationPersistent
-      && !!automationManager.colonyAutomation.nextTravelCombinationId;
-    colonyApplyNextTravelPersistToggle.checked = automationManager.colonyAutomation.nextTravelCombinationPersistent;
-    colonyApplyNextTravelPersistToggle.disabled = !automationManager.colonyAutomation.nextTravelCombinationId;
-  });
-  colonyApplyNextTravelPersistToggle.addEventListener('change', (event) => {
-    automationManager.colonyAutomation.nextTravelCombinationPersistent = event.target.checked
-      && !!automationManager.colonyAutomation.nextTravelCombinationId;
-  });
-
-  colonyCombinationSelect.addEventListener('change', (event) => {
-    const comboId = event.target.value || null;
-    automationManager.colonyAutomation.setSelectedCombinationId(comboId);
-    colonyAutomationUIState.combinationSyncedId = null;
-    if (comboId) {
-      automationManager.colonyAutomation.applyCombination(Number(comboId));
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  colonyCombinationMoveUpButton.addEventListener('click', () => {
-    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      return;
-    }
-    automationManager.colonyAutomation.moveCombination(Number(comboId), -1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  colonyCombinationMoveDownButton.addEventListener('click', () => {
-    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      return;
-    }
-    automationManager.colonyAutomation.moveCombination(Number(comboId), 1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  colonyCombinationNameInput.addEventListener('input', (event) => {
-    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      colonyAutomationUIState.combinationName = event.target.value || '';
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-      return;
-    }
-    const combo = automationManager.colonyAutomation.getCombinationById(Number(comboId));
-    combo.name = event.target.value || '';
-  });
-
-  colonyCombinationNewButton.addEventListener('click', () => {
-    automationManager.colonyAutomation.setSelectedCombinationId(null);
-    colonyAutomationUIState.combinationSyncedId = null;
-    colonyAutomationUIState.combinationName = '';
-    colonyAutomationUIState.combinationShowInSidebar = true;
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  colonyCombinationShowInSidebarCheckbox.addEventListener('change', () => {
-    colonyAutomationUIState.combinationShowInSidebar = colonyCombinationShowInSidebarCheckbox.checked;
-    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
-    if (comboId) {
-      automationManager.colonyAutomation.setCombinationShowInSidebar(Number(comboId), colonyAutomationUIState.combinationShowInSidebar);
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  colonyCombinationSaveButton.addEventListener('click', () => {
-    const automation = automationManager.colonyAutomation;
-    const name = colonyCombinationNameInput.value || colonyAutomationUIState.combinationName || '';
-    const snapshot = automation.getAssignments().map(entry => ({
-      presetId: entry.presetId,
-      enabled: entry.enabled !== false
-    }));
-    const comboId = automation.getSelectedCombinationId();
-    if (comboId) {
-      automation.updateCombination(Number(comboId), name, snapshot);
-      automation.setCombinationShowInSidebar(Number(comboId), colonyAutomationUIState.combinationShowInSidebar);
-    } else {
-      const newComboId = automation.addCombination(name, snapshot);
-      automation.setCombinationShowInSidebar(newComboId, colonyAutomationUIState.combinationShowInSidebar);
-      colonyAutomationUIState.combinationSyncedId = null;
-      colonyAutomationUIState.combinationName = '';
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  colonyCombinationDeleteButton.addEventListener('click', () => {
-    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
-    if (!comboId) {
-      return;
-    }
-    automationManager.colonyAutomation.deleteCombination(Number(comboId));
-    colonyAutomationUIState.combinationSyncedId = null;
-    colonyAutomationUIState.combinationName = '';
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  colonyAddApplyButton.addEventListener('click', () => {
-    const automation = automationManager.colonyAutomation;
-    const preset = automation.presets[0];
-    automation.addAssignment(preset ? preset.id : null);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
+  attachAutomationCombinationHandlers({
+    getAutomation: () => automationManager.colonyAutomation,
+    uiState: colonyAutomationUIState,
+    applyCombinationButton: colonyApplyCombinationButton,
+    nextTravelSelect: colonyApplyNextTravelSelect,
+    nextTravelPersistToggle: colonyApplyNextTravelPersistToggle,
+    combinationSelect: colonyCombinationSelect,
+    combinationMoveUpButton: colonyCombinationMoveUpButton,
+    combinationMoveDownButton: colonyCombinationMoveDownButton,
+    combinationNameInput: colonyCombinationNameInput,
+    combinationNewButton: colonyCombinationNewButton,
+    combinationShowInSidebarCheckbox: colonyCombinationShowInSidebarCheckbox,
+    combinationSaveButton: colonyCombinationSaveButton,
+    combinationDeleteButton: colonyCombinationDeleteButton,
+    addApplyButton: colonyAddApplyButton
   });
 }
 

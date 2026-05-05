@@ -38,52 +38,20 @@ function buildAutomationResearchUI() {
   presetTitle.append(presetTitleText, presetTitleDirty);
   presetSection.appendChild(presetTitle);
 
-  const presetRow = document.createElement('div');
-  presetRow.classList.add('building-automation-row');
-  const presetSelect = document.createElement('select');
-  presetSelect.classList.add('research-automation-preset-select');
-  const presetMoveButtons = document.createElement('div');
-  presetMoveButtons.classList.add('automation-order-buttons');
-  const presetMoveUpButton = document.createElement('button');
-  presetMoveUpButton.textContent = '↑';
-  presetMoveUpButton.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
-  presetMoveUpButton.classList.add('research-automation-preset-move-up');
-  const presetMoveDownButton = document.createElement('button');
-  presetMoveDownButton.textContent = '↓';
-  presetMoveDownButton.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
-  presetMoveDownButton.classList.add('research-automation-preset-move-down');
-  presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
-  const presetNameInput = document.createElement('input');
-  presetNameInput.type = 'text';
-  presetNameInput.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
-  presetNameInput.classList.add('research-automation-preset-name');
-  const newButton = document.createElement('button');
-  newButton.textContent = getAutomationCardText('newPresetButton', {}, 'New');
-  newButton.classList.add('research-automation-preset-new');
-  const saveButton = document.createElement('button');
-  saveButton.textContent = getAutomationCardText('savePresetButton', {}, 'Save');
-  saveButton.classList.add('research-automation-preset-save');
-  const deleteButton = document.createElement('button');
-  deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
-  deleteButton.classList.add('research-automation-preset-delete');
-  const transferButtons = createAutomationPresetTransferButtons('research-automation-preset');
-  const applyOnceButton = document.createElement('button');
-  applyOnceButton.textContent = getAutomationCardText('applyOnceNowButton', {}, 'Apply Once Now');
-  applyOnceButton.classList.add('research-automation-preset-apply-once');
-  const showSidebar = createAutomationShowInSidebarLabel('research-automation-preset');
-  presetRow.append(
-    presetSelect,
-    presetMoveButtons,
-    presetNameInput,
-    newButton,
-    saveButton,
-    deleteButton,
-    transferButtons.importButton,
-    transferButtons.exportButton,
-    applyOnceButton,
-    showSidebar.label
-  );
-  presetSection.appendChild(presetRow);
+  const presetRowParts = buildAutomationPresetBuilderRow({
+    rowClasses: ['building-automation-row'],
+    selectClasses: ['research-automation-preset-select'],
+    moveUpButtonClasses: ['research-automation-preset-move-up'],
+    moveDownButtonClasses: ['research-automation-preset-move-down'],
+    nameInputClasses: ['research-automation-preset-name'],
+    newButtonClasses: ['research-automation-preset-new'],
+    saveButtonClasses: ['research-automation-preset-save'],
+    deleteButtonClasses: ['research-automation-preset-delete'],
+    transferKey: 'research-automation-preset',
+    applyOnceButtonClasses: ['research-automation-preset-apply-once'],
+    showSidebarKey: 'research-automation-preset'
+  });
+  presetSection.appendChild(presetRowParts.row);
 
   const nextTravelRow = document.createElement('div');
   nextTravelRow.classList.add('building-automation-next-travel-row');
@@ -115,17 +83,17 @@ function buildAutomationResearchUI() {
 
   automationElements.researchCollapseButton = header.collapse;
   automationElements.researchPanelBody = body;
-  automationElements.researchPresetSelect = presetSelect;
-  automationElements.researchPresetMoveUpButton = presetMoveUpButton;
-  automationElements.researchPresetMoveDownButton = presetMoveDownButton;
-  automationElements.researchPresetNameInput = presetNameInput;
-  automationElements.researchNewPresetButton = newButton;
-  automationElements.researchSavePresetButton = saveButton;
-  automationElements.researchDeletePresetButton = deleteButton;
-  automationElements.researchImportPresetButton = transferButtons.importButton;
-  automationElements.researchExportPresetButton = transferButtons.exportButton;
-  automationElements.researchApplyOnceButton = applyOnceButton;
-  automationElements.researchShowPresetInSidebarCheckbox = showSidebar.checkbox;
+  automationElements.researchPresetSelect = presetRowParts.presetSelect;
+  automationElements.researchPresetMoveUpButton = presetRowParts.presetMoveUpButton;
+  automationElements.researchPresetMoveDownButton = presetRowParts.presetMoveDownButton;
+  automationElements.researchPresetNameInput = presetRowParts.presetNameInput;
+  automationElements.researchNewPresetButton = presetRowParts.newButton;
+  automationElements.researchSavePresetButton = presetRowParts.saveButton;
+  automationElements.researchDeletePresetButton = presetRowParts.deleteButton;
+  automationElements.researchImportPresetButton = presetRowParts.importButton;
+  automationElements.researchExportPresetButton = presetRowParts.exportButton;
+  automationElements.researchApplyOnceButton = presetRowParts.applyOnceButton;
+  automationElements.researchShowPresetInSidebarCheckbox = presetRowParts.showInSidebarCheckbox;
   automationElements.researchApplyNextTravelSelect = nextTravelSelect;
   automationElements.researchApplyNextTravelPersistToggle = nextTravelPersistToggle;
   automationElements.researchPresetJsonDetails = presetJsonDetails;
@@ -193,7 +161,7 @@ function updateResearchAutomationUI() {
     presets.forEach((preset) => {
       const option = document.createElement('option');
       option.value = String(preset.id);
-      option.textContent = preset.name || `Preset ${preset.id}`;
+      option.textContent = getDefaultAutomationPresetLabel(preset);
       researchPresetSelect.appendChild(option);
     });
     const selectedPresetId = automation.getSelectedPresetId();
@@ -224,31 +192,12 @@ function updateResearchAutomationUI() {
   researchNewPresetButton.disabled = false;
   researchSavePresetButton.disabled = false;
   researchApplyOnceButton.disabled = !selectedPreset;
-  const nextTravelPresetId = automation.nextTravelPresetId;
-  const nextTravelPreset = nextTravelPresetId ? automation.getPresetById(nextTravelPresetId) : null;
-  if (nextTravelPresetId && !nextTravelPreset) {
-    automation.nextTravelPresetId = null;
-    automation.nextTravelPersistent = false;
-  }
-  automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelPresetId;
-  if (document.activeElement !== researchApplyNextTravelSelect) {
-    researchApplyNextTravelSelect.textContent = '';
-    const noneOption = document.createElement('option');
-    noneOption.value = '';
-    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
-    researchApplyNextTravelSelect.appendChild(noneOption);
-    presets.forEach((preset) => {
-      const option = document.createElement('option');
-      option.value = String(preset.id);
-      option.textContent = preset.name || `Preset ${preset.id}`;
-      researchApplyNextTravelSelect.appendChild(option);
-    });
-    researchApplyNextTravelSelect.value = automation.nextTravelPresetId
-      ? String(automation.nextTravelPresetId)
-      : '';
-  }
-  researchApplyNextTravelPersistToggle.checked = automation.nextTravelPersistent;
-  researchApplyNextTravelPersistToggle.disabled = !automation.nextTravelPresetId;
+  updateAutomationNextTravelPresetControls({
+    automation,
+    presets,
+    selectElement: researchApplyNextTravelSelect,
+    persistToggleElement: researchApplyNextTravelPersistToggle
+  });
 
   updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset, {
     onFieldChange: (fieldPath, nextValue) => {
@@ -420,18 +369,10 @@ function attachResearchAutomationHandlers() {
     updateResearchUI();
   });
 
-  researchApplyNextTravelSelect.addEventListener('change', (event) => {
-    const automation = getAutomation();
-    const presetId = event.target.value;
-    automation.nextTravelPresetId = presetId ? Number(presetId) : null;
-    automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelPresetId;
-    researchApplyNextTravelPersistToggle.checked = automation.nextTravelPersistent;
-    researchApplyNextTravelPersistToggle.disabled = !automation.nextTravelPresetId;
-  });
-
-  researchApplyNextTravelPersistToggle.addEventListener('change', (event) => {
-    const automation = getAutomation();
-    automation.nextTravelPersistent = event.target.checked && !!automation.nextTravelPresetId;
+  attachAutomationNextTravelPresetHandlers({
+    getAutomation,
+    selectElement: researchApplyNextTravelSelect,
+    persistToggleElement: researchApplyNextTravelPersistToggle
   });
 
   researchDeletePresetButton.addEventListener('click', () => {

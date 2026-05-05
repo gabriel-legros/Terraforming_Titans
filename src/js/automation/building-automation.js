@@ -43,31 +43,37 @@ const ChemicalReactorClass = ChemicalReactorRef || class ChemicalReactorFallback
 const GhgFactoryClass = GhgFactoryRef || class GhgFactoryFallback {};
 const OxygenFactoryClass = OxygenFactoryRef || class OxygenFactoryFallback {};
 const DustFactoryClass = DustFactoryRef || class DustFactoryFallback {};
+let BuildingAutomationPresetManagerBaseRef;
+try {
+  BuildingAutomationPresetManagerBaseRef = AutomationPresetManagerBase;
+} catch (error) {}
+try {
+  BuildingAutomationPresetManagerBaseRef = BuildingAutomationPresetManagerBaseRef
+    || require('./automation-preset-manager-base.js').AutomationPresetManagerBase;
+} catch (error) {}
+const BuildingAutomationPresetManagerBaseClass = BuildingAutomationPresetManagerBaseRef || class BuildingAutomationPresetManagerBaseFallback {};
 
-class BuildingAutomation {
+class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
   constructor() {
-    this.presets = [];
-    this.assignments = [];
-    this.combinations = [];
-    this.selectedPresetId = null;
-    this.selectedCombinationId = null;
+    super({
+      featureKey: 'automationBuildings',
+      presetLabel: 'Preset',
+      combinationLabel: 'Combination',
+      useMasterEnabled: true,
+      useAssignments: true,
+      useCombinations: true,
+      nextTravelKind: 'combination'
+    });
     this.everEnabledBuildings = new Set();
-    this.collapsed = false;
-    this.masterEnabled = true;
-    this.nextTravelCombinationId = null;
-    this.nextTravelCombinationPersistent = false;
-    this.nextPresetId = 1;
-    this.nextAssignmentId = 1;
-    this.nextCombinationId = 1;
     this.elapsed = 0;
   }
 
   setCollapsed(collapsed) {
-    this.collapsed = !!collapsed;
+    super.setCollapsed(collapsed);
   }
 
   setMasterEnabled(enabled) {
-    this.masterEnabled = !!enabled;
+    super.setMasterEnabled(enabled);
   }
 
   isBuildingAvailableNow(building) {
@@ -121,200 +127,95 @@ class BuildingAutomation {
   }
 
   isActive() {
-    return automationManager.enabled && automationManager.hasFeature('automationBuildings');
+    return super.isActive();
   }
 
   getPresetById(id) {
-    return this.presets.find(preset => preset.id === id) || null;
+    return super.getPresetById(id);
   }
 
   getSelectedPresetId() {
-    const preset = this.getSelectedPreset();
-    return preset ? preset.id : null;
+    return super.getSelectedPresetId();
   }
 
   getSelectedPreset() {
-    if (!this.selectedPresetId) {
-      return null;
-    }
-    const preset = this.getPresetById(Number(this.selectedPresetId));
-    if (!preset) {
-      this.selectedPresetId = null;
-      return null;
-    }
-    return preset;
+    return super.getSelectedPreset();
   }
 
   setSelectedPresetId(id) {
-    if (id === null || id === undefined || id === '') {
-      this.selectedPresetId = null;
-      return null;
-    }
-    const preset = this.getPresetById(Number(id));
-    this.selectedPresetId = preset ? preset.id : null;
-    return preset;
+    return super.setSelectedPresetId(id);
   }
 
   getAssignments() {
-    return this.assignments.slice();
+    return super.getAssignments();
   }
 
   getCombinations() {
-    return this.combinations.slice();
+    return super.getCombinations();
   }
 
   getCombinationById(id) {
-    return this.combinations.find(combo => combo.id === id) || null;
+    return super.getCombinationById(id);
   }
 
   getSelectedCombinationId() {
-    const combo = this.getSelectedCombination();
-    return combo ? combo.id : null;
+    return super.getSelectedCombinationId();
   }
 
   getSelectedCombination() {
-    if (!this.selectedCombinationId) {
-      return null;
-    }
-    const combo = this.getCombinationById(Number(this.selectedCombinationId));
-    if (!combo) {
-      this.selectedCombinationId = null;
-      return null;
-    }
-    return combo;
+    return super.getSelectedCombination();
   }
 
   setSelectedCombinationId(id) {
-    if (id === null || id === undefined || id === '') {
-      this.selectedCombinationId = null;
-      return null;
-    }
-    const combo = this.getCombinationById(Number(id));
-    this.selectedCombinationId = combo ? combo.id : null;
-    return combo;
+    return super.setSelectedCombinationId(id);
   }
 
   addAssignment(presetId) {
-    const preset = this.getPresetById(presetId) || this.presets[0] || null;
-    const assignment = {
-      id: this.nextAssignmentId++,
-      presetId: preset ? preset.id : null,
-      enabled: true
-    };
-    this.assignments.push(assignment);
-    return assignment.id;
+    return super.addAssignment(presetId);
   }
 
   setAssignments(assignments) {
-    const next = Array.isArray(assignments) ? assignments : [];
-    this.assignments = next.map(entry => ({
-      id: this.nextAssignmentId++,
-      presetId: entry.presetId,
-      enabled: entry.enabled !== false
-    }));
+    super.setAssignments(assignments);
   }
 
   removeAssignment(assignmentId) {
-    this.assignments = this.assignments.filter(item => item.id !== assignmentId);
+    super.removeAssignment(assignmentId);
   }
 
   moveAssignment(assignmentId, direction) {
-    const index = this.assignments.findIndex(item => item.id === assignmentId);
-    const nextIndex = index + direction;
-    if (index < 0 || nextIndex < 0 || nextIndex >= this.assignments.length) {
-      return;
-    }
-    const [item] = this.assignments.splice(index, 1);
-    this.assignments.splice(nextIndex, 0, item);
+    super.moveAssignment(assignmentId, direction);
   }
 
   setAssignmentPreset(assignmentId, presetId) {
-    const assignment = this.assignments.find(item => item.id === assignmentId);
-    const preset = this.getPresetById(presetId);
-    if (!assignment || !preset) {
-      return;
-    }
-    assignment.presetId = preset.id;
+    super.setAssignmentPreset(assignmentId, presetId);
   }
 
   setAssignmentEnabled(assignmentId, enabled) {
-    const assignment = this.assignments.find(item => item.id === assignmentId);
-    assignment.enabled = !!enabled;
+    super.setAssignmentEnabled(assignmentId, enabled);
   }
 
   moveCombination(id, direction) {
-    const index = this.combinations.findIndex(combo => combo.id === id);
-    const nextIndex = index + direction;
-    if (index < 0 || nextIndex < 0 || nextIndex >= this.combinations.length) {
-      return false;
-    }
-    const [combo] = this.combinations.splice(index, 1);
-    this.combinations.splice(nextIndex, 0, combo);
-    return true;
+    return super.moveCombination(id, direction);
   }
 
   addCombination(name, assignments) {
-    const id = this.nextCombinationId++;
-    const combo = {
-      id,
-      name: name || `Combination ${id}`,
-      showInSidebar: true,
-      assignments: (assignments || []).map(entry => ({
-        presetId: entry.presetId,
-        enabled: entry.enabled !== false
-      }))
-    };
-    this.combinations.push(combo);
-    this.selectedCombinationId = combo.id;
-    return combo.id;
+    return super.addCombination(name, assignments);
   }
 
   updateCombination(id, name, assignments) {
-    const index = this.combinations.findIndex(combo => combo.id === id);
-    if (index < 0) {
-      return false;
-    }
-    const existing = this.combinations[index];
-    const combo = {
-      id,
-      name: name || `Combination ${id}`,
-      showInSidebar: existing.showInSidebar !== false,
-      assignments: (assignments || []).map(entry => ({
-        presetId: entry.presetId,
-        enabled: entry.enabled !== false
-      }))
-    };
-    this.combinations.splice(index, 1, combo);
-    return true;
+    return super.updateCombination(id, name, assignments);
   }
 
   deleteCombination(id) {
-    this.combinations = this.combinations.filter(combo => combo.id !== id);
-    if (this.selectedCombinationId === id) {
-      this.selectedCombinationId = null;
-    }
-    if (this.nextTravelCombinationId === id) {
-      this.nextTravelCombinationId = null;
-      this.nextTravelCombinationPersistent = false;
-    }
+    super.deleteCombination(id);
   }
 
   setCombinationShowInSidebar(id, showInSidebar) {
-    const combo = this.getCombinationById(id);
-    if (!combo) {
-      return false;
-    }
-    combo.showInSidebar = showInSidebar !== false;
-    return true;
+    return super.setCombinationShowInSidebar(id, showInSidebar);
   }
 
   applyCombination(id) {
-    const combo = this.getCombinationById(id);
-    if (!combo) {
-      return;
-    }
-    this.selectedCombinationId = combo.id;
-    this.setAssignments(combo.assignments);
+    super.applyCombination(id);
   }
 
   addPreset(name, buildingIds, options = {}) {
@@ -330,14 +231,7 @@ class BuildingAutomation {
   }
 
   movePreset(id, direction) {
-    const index = this.presets.findIndex(preset => preset.id === id);
-    const nextIndex = index + direction;
-    if (index < 0 || nextIndex < 0 || nextIndex >= this.presets.length) {
-      return false;
-    }
-    const [preset] = this.presets.splice(index, 1);
-    this.presets.splice(nextIndex, 0, preset);
-    return true;
+    return super.movePreset(id, direction);
   }
 
   updatePreset(id, name, buildingIds, options = {}) {
@@ -351,42 +245,19 @@ class BuildingAutomation {
   }
 
   deletePreset(id) {
-    this.presets = this.presets.filter(preset => preset.id !== id);
-    this.assignments = this.assignments.filter(item => item.presetId !== id);
-    if (this.selectedPresetId === id) {
-      this.selectedPresetId = null;
-    }
+    super.deletePreset(id);
   }
 
   renamePreset(id, name) {
-    const preset = this.getPresetById(id);
-    if (!preset) {
-      return;
-    }
-    preset.name = name;
+    super.renamePreset(id, name);
   }
 
   setPresetShowInSidebar(id, showInSidebar) {
-    const preset = this.getPresetById(id);
-    if (!preset) {
-      return false;
-    }
-    preset.showInSidebar = showInSidebar !== false;
-    return true;
+    return super.setPresetShowInSidebar(id, showInSidebar);
   }
 
   deepClone(value) {
-    if (Array.isArray(value)) {
-      return value.map(item => this.deepClone(item));
-    }
-    if (!value || value.constructor !== Object) {
-      return value;
-    }
-    const clone = {};
-    for (const key in value) {
-      clone[key] = this.deepClone(value[key]);
-    }
-    return clone;
+    return super.deepClone(value);
   }
 
   exportPreset(presetId) {
@@ -775,16 +646,8 @@ class BuildingAutomation {
           ])
         )
       })),
-      assignments: this.assignments.map(item => ({ ...item })),
-      combinations: this.combinations.map(combo => ({
-        id: combo.id,
-        name: combo.name,
-        showInSidebar: combo.showInSidebar !== false,
-        assignments: combo.assignments.map(entry => ({
-          presetId: entry.presetId,
-          enabled: entry.enabled !== false
-        }))
-      })),
+      assignments: this.serializeAssignments(),
+      combinations: this.serializeCombinations(),
       everEnabledBuildings: Array.from(this.everEnabledBuildings),
       collapsed: this.collapsed,
       masterEnabled: this.masterEnabled,
@@ -819,43 +682,12 @@ class BuildingAutomation {
         })
       )
     })) : [];
-    this.assignments = Array.isArray(data.assignments) ? data.assignments.map(item => ({
-      id: item.id,
-      presetId: item.presetId,
-      enabled: item.enabled !== false
-    })) : [];
-    this.combinations = Array.isArray(data.combinations) ? data.combinations.map(combo => ({
-      id: combo.id,
-      name: combo.name || 'Combination',
-      showInSidebar: combo.showInSidebar !== false,
-      assignments: Array.isArray(combo.assignments) ? combo.assignments.map(entry => ({
-        presetId: entry.presetId,
-        enabled: entry.enabled !== false
-      })) : []
-    })) : [];
+    this.loadAssignmentsFromState(data.assignments);
+    this.loadCombinationsFromState(data.combinations);
     this.everEnabledBuildings = new Set(
       Array.isArray(data.everEnabledBuildings) ? data.everEnabledBuildings : []
     );
-    this.collapsed = !!data.collapsed;
-    this.masterEnabled = data.masterEnabled !== false;
-    this.nextTravelCombinationId = data.nextTravelCombinationId ? Number(data.nextTravelCombinationId) : null;
-    this.nextTravelCombinationPersistent = data.nextTravelCombinationPersistent === true && !!this.nextTravelCombinationId;
-    const hasSelectedPresetId = Object.prototype.hasOwnProperty.call(data, 'selectedPresetId');
-    const hasSelectedCombinationId = Object.prototype.hasOwnProperty.call(data, 'selectedCombinationId');
-    this.selectedPresetId = hasSelectedPresetId
-      ? (data.selectedPresetId ? Number(data.selectedPresetId) : null)
-      : (this.presets[0] ? this.presets[0].id : null);
-    this.selectedCombinationId = hasSelectedCombinationId
-      ? (data.selectedCombinationId ? Number(data.selectedCombinationId) : null)
-      : (this.combinations[0] ? this.combinations[0].id : null);
-    if (!this.nextTravelCombinationId && data.applyOnNextTravel) {
-      this.nextTravelCombinationId = this.addCombination('Next Travel', this.assignments);
-    }
-    this.nextPresetId = data.nextPresetId || this.presets.length + 1;
-    this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
-    this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;
-    this.getSelectedPreset();
-    this.getSelectedCombination();
+    this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: true });
     this.recordCurrentlyAvailableBuildings();
   }
 }
