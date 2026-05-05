@@ -298,7 +298,7 @@ setLanguageData({
       },
       stash: {
         title: 'Starting stockpile',
-        recommendation: 'It is recommended staging at least 1.00B of each resource.',
+        recommendation: 'It is recommend staging at least 1.00B of each resource.',
         capTitle: 'Stockpiles cap at {cap} based on 1 ton per hectare ({land} ha).',
         startConstruction: 'Start construction to stage resources.',
         capValue: 'Cap: {value}',
