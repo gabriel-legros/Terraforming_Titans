@@ -29,7 +29,6 @@ class AutoTravelAutomation {
       hazards: [],
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
-      prioritizeStoredArtificialWorlds: false,
       skipEquilibration: false,
       skipWorldVisualizerInitialization: false,
       blockIfNoStoredFromArtificial: true
@@ -72,7 +71,6 @@ class AutoTravelAutomation {
       hazards: [],
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
-      prioritizeStoredArtificialWorlds: false,
       skipEquilibration: false,
       skipWorldVisualizerInitialization: false,
       blockIfNoStoredFromArtificial: true
@@ -91,7 +89,6 @@ class AutoTravelAutomation {
       hazards: this._normalizeHazards(rawPreset.hazards),
       autoCompleteTerraforming: rawPreset.autoCompleteTerraforming !== false,
       waitForSpecialization: !!rawPreset.waitForSpecialization,
-      prioritizeStoredArtificialWorlds: !!rawPreset.prioritizeStoredArtificialWorlds,
       skipEquilibration: !!rawPreset.skipEquilibration,
       skipWorldVisualizerInitialization: !!rawPreset.skipWorldVisualizerInitialization,
       blockIfNoStoredFromArtificial: rawPreset.blockIfNoStoredFromArtificial !== false
@@ -267,7 +264,7 @@ class AutoTravelAutomation {
   }
 
   _travelToStoredArtificialWorld(preset) {
-    if (!preset.prioritizeStoredArtificialWorlds) {
+    if (preset.target !== 'storedArtificial') {
       return false;
     }
     const seed = this._getOldestStoredArtificialSeed();
@@ -358,11 +355,11 @@ class AutoTravelAutomation {
     if (preset.waitForSpecialization && !this._hasSomeSpecialization()) {
       return false;
     }
+    if (preset.target === 'storedArtificial') {
+      return this._travelToStoredArtificialWorld(preset);
+    }
     if (preset.blockIfNoStoredFromArtificial && this._isCurrentWorldArtificial() && !this._getOldestStoredArtificialSeed()) {
       return false;
-    }
-    if (this._travelToStoredArtificialWorld(preset)) {
-      return true;
     }
     return this._travelToRandomWorldPreset(preset);
   }
@@ -410,7 +407,6 @@ class AutoTravelAutomation {
         hazards: this._normalizeHazards(preset.hazards),
         autoCompleteTerraforming: preset.autoCompleteTerraforming !== false,
         waitForSpecialization: !!preset.waitForSpecialization,
-        prioritizeStoredArtificialWorlds: !!preset.prioritizeStoredArtificialWorlds,
         skipEquilibration: !!preset.skipEquilibration,
         skipWorldVisualizerInitialization: !!preset.skipWorldVisualizerInitialization,
         blockIfNoStoredFromArtificial: preset.blockIfNoStoredFromArtificial !== false

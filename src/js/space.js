@@ -177,6 +177,16 @@ class SpaceManager extends EffectableEntity {
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
         this.worldStatsCache = this._createEmptyWorldStatsCache();
+        this.travelPerfLoggingEnabled = true;
+        this.travelPerfStats = {
+            totalCount: 0,
+            totalMs: 0,
+            byKind: {
+                story: { count: 0, totalMs: 0 },
+                random: { count: 0, totalMs: 0 },
+                artificial: { count: 0, totalMs: 0 }
+            }
+        };
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -185,6 +195,36 @@ class SpaceManager extends EffectableEntity {
         }
         this._refreshWorldStatsCache();
         console.log("SpaceManager initialized with planet statuses.");
+    }
+
+    _recordTravelPerf(kind, elapsedMs, targetLabel) {
+        const resolvedKind = this.travelPerfStats.byKind[kind] ? kind : 'random';
+        const ms = Math.max(0, Number(elapsedMs) || 0);
+        this.travelPerfStats.totalCount += 1;
+        this.travelPerfStats.totalMs += ms;
+        const kindStats = this.travelPerfStats.byKind[resolvedKind];
+        kindStats.count += 1;
+        kindStats.totalMs += ms;
+
+        if (!this.travelPerfLoggingEnabled) {
+            return;
+        }
+        const totalAvg = this.travelPerfStats.totalMs / this.travelPerfStats.totalCount;
+        const kindAvg = kindStats.totalMs / kindStats.count;
+        const target = targetLabel || '-';
+        console.log(
+            `[TravelPerf] kind=${resolvedKind} target=${target} ms=${ms.toFixed(2)} kindAvg=${kindAvg.toFixed(2)} totalAvg=${totalAvg.toFixed(2)} count=${this.travelPerfStats.totalCount}`
+        );
+    }
+
+    getTravelPerfStats() {
+        const clone = JSON.parse(JSON.stringify(this.travelPerfStats));
+        clone.totalAvgMs = clone.totalCount > 0 ? clone.totalMs / clone.totalCount : 0;
+        Object.keys(clone.byKind).forEach((kind) => {
+            const entry = clone.byKind[kind];
+            entry.avgMs = entry.count > 0 ? entry.totalMs / entry.count : 0;
+        });
+        return clone;
     }
 
     // Initialize status for all known planets
@@ -2399,6 +2439,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     _finalizeTravelInitialization(options) {
+        const startMs = performance.now();
         const params = options?.planetParameters;
         if (options?.updateDefaultPlanet && options?.planetKey) {
             defaultPlanet = options.planetKey;
@@ -2409,6 +2450,8 @@ class SpaceManager extends EffectableEntity {
         }
         initializeGameState({ preserveManagers: true, preserveJournal: true });
         resetGameFrameClock(true);
+        const elapsedMs = performance.now() - startMs;
+        this._recordTravelPerf(options?.travelKind, elapsedMs, options?.targetLabel);
     }
 
     travelToStoryPlanet(targetKey) {
@@ -2441,7 +2484,9 @@ class SpaceManager extends EffectableEntity {
         this._finalizeTravelInitialization({
             planetKey: targetKey,
             planetParameters: params,
-            updateDefaultPlanet: true
+            updateDefaultPlanet: true,
+            travelKind: 'story',
+            targetLabel: targetKey
         });
         return true;
     }
@@ -2607,7 +2652,9 @@ class SpaceManager extends EffectableEntity {
         const latest = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const mergedParams = travelResult?.merged || latest?.original?.merged || null;
         this._finalizeTravelInitialization({
-            planetParameters: mergedParams
+            planetParameters: mergedParams,
+            travelKind: isArtificial ? 'artificial' : 'random',
+            targetLabel: s
         });
         return true;
     }

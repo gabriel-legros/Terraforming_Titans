@@ -97,6 +97,7 @@ function buildAutoTravelUI() {
   selectionRow.classList.add('script-automation-script-row', 'auto-travel-row', 'auto-travel-selection-row');
   const targetSelect = buildAutoTravelSelect(selectionRow, 'auto-travel-target-select', [
     { value: 'random', label: getAutoTravelOptionText('target.random', 'Target: Random') },
+    { value: 'storedArtificial', label: getAutoTravelOptionText('target.storedArtificial', 'Target: Stored Artificial World') },
     { value: 'planet', label: getAutoTravelOptionText('target.planet', 'Target: Planet') },
     { value: 'moon', label: getAutoTravelOptionText('target.moon', 'Target: Moon') }
   ]);
@@ -118,7 +119,7 @@ function buildAutoTravelUI() {
   checkboxWrap.classList.add('auto-travel-checkboxes');
   behaviorSection.appendChild(checkboxWrap);
 
-  function addCheckboxRow(key, labelText) {
+  function addCheckboxRow(key, labelText, parent = checkboxWrap) {
     const label = document.createElement('label');
     label.classList.add('auto-travel-checkbox-row');
     const input = document.createElement('input');
@@ -127,13 +128,12 @@ function buildAutoTravelUI() {
     const text = document.createElement('span');
     text.textContent = labelText;
     label.append(input, text);
-    checkboxWrap.appendChild(label);
+    parent.appendChild(label);
     return input;
   }
 
   const autoCompleteToggle = addCheckboxRow('auto-complete', getAutoTravelOptionText('autoCompleteTerraforming', 'Automatically complete terraforming when possible'));
   const waitSpecializationToggle = addCheckboxRow('wait-specialization', getAutoTravelOptionText('waitForSpecialization', 'Wait on complete specialization'));
-  const prioritizeStoredToggle = addCheckboxRow('prioritize-stored', getAutoTravelOptionText('prioritizeStored', 'Prioritize travel to stored artificial worlds'));
   const blockIfNoStoredToggle = addCheckboxRow('block-no-stored', getAutoTravelOptionText('blockIfNoStoredFromArtificial', "Don't travel out of current artificial world if none is stored"));
   const skipEquilibrationToggle = addCheckboxRow('skip-equilibration', getAutoTravelOptionText('skipEquilibration', 'Skip equilibration'));
   const skipVisualizerToggle = addCheckboxRow('skip-visualizer', getAutoTravelOptionText('skipVisualizer', 'Skip world visualizer initialization'));
@@ -151,10 +151,11 @@ function buildAutoTravelUI() {
   automationElements.autoTravelTypeSelect = typeSelect;
   automationElements.autoTravelOrbitSelect = orbitSelect;
   automationElements.autoTravelDominionSelect = dominionSelect;
+  automationElements.autoTravelSelectionRow = selectionRow;
+  automationElements.autoTravelHazardsSection = hazardsSection;
   automationElements.autoTravelHazardsWrap = hazardsWrap;
   automationElements.autoTravelAutoCompleteToggle = autoCompleteToggle;
   automationElements.autoTravelWaitSpecializationToggle = waitSpecializationToggle;
-  automationElements.autoTravelPrioritizeStoredToggle = prioritizeStoredToggle;
   automationElements.autoTravelBlockIfNoStoredToggle = blockIfNoStoredToggle;
   automationElements.autoTravelSkipEquilibrationToggle = skipEquilibrationToggle;
   automationElements.autoTravelSkipVisualizerToggle = skipVisualizerToggle;
@@ -259,7 +260,6 @@ function wireAutoTravelEvents() {
 
   els.autoTravelAutoCompleteToggle.addEventListener('change', (event) => setPresetFlag('autoCompleteTerraforming', event.target.checked));
   els.autoTravelWaitSpecializationToggle.addEventListener('change', (event) => setPresetFlag('waitForSpecialization', event.target.checked));
-  els.autoTravelPrioritizeStoredToggle.addEventListener('change', (event) => setPresetFlag('prioritizeStoredArtificialWorlds', event.target.checked));
   els.autoTravelBlockIfNoStoredToggle.addEventListener('change', (event) => setPresetFlag('blockIfNoStoredFromArtificial', event.target.checked));
   els.autoTravelSkipEquilibrationToggle.addEventListener('change', (event) => setPresetFlag('skipEquilibration', event.target.checked));
   els.autoTravelSkipVisualizerToggle.addEventListener('change', (event) => setPresetFlag('skipWorldVisualizerInitialization', event.target.checked));
@@ -391,6 +391,7 @@ function updateAutoTravelUI() {
     return;
   }
 
+  const disabled = !unlocked;
   setAutomationToggleState(automationElements.autoTravelMasterToggle, automation.enabled);
   const preset = automation.getSelectedPreset();
   const presetSignature = JSON.stringify(automation.presets.map((entry) => [entry.id, entry.name]));
@@ -416,7 +417,7 @@ function updateAutoTravelUI() {
     populateAutoTravelOrbitOptions(automationElements.autoTravelOrbitSelect);
     populateAutoTravelDominionOptions(automationElements.autoTravelDominionSelect);
     if (document.activeElement !== automationElements.autoTravelTargetSelect) {
-      automationElements.autoTravelTargetSelect.value = preset.target || 'random';
+    automationElements.autoTravelTargetSelect.value = preset.target || 'random';
     }
     if (document.activeElement !== automationElements.autoTravelTypeSelect) {
       automationElements.autoTravelTypeSelect.value = preset.type || 'random';
@@ -429,27 +430,35 @@ function updateAutoTravelUI() {
     }
     automationElements.autoTravelAutoCompleteToggle.checked = preset.autoCompleteTerraforming !== false;
     automationElements.autoTravelWaitSpecializationToggle.checked = !!preset.waitForSpecialization;
-    automationElements.autoTravelPrioritizeStoredToggle.checked = !!preset.prioritizeStoredArtificialWorlds;
     automationElements.autoTravelBlockIfNoStoredToggle.checked = preset.blockIfNoStoredFromArtificial !== false;
     const canSkipEquilibration = Number(fastestTerraformRealSeconds) > 0 && Number(fastestTerraformRealSeconds) < 60;
     automationElements.autoTravelSkipEquilibrationToggle.checked = !!preset.skipEquilibration;
     automationElements.autoTravelSkipEquilibrationToggle.disabled = !canSkipEquilibration;
     automationElements.autoTravelSkipVisualizerToggle.checked = !!preset.skipWorldVisualizerInitialization;
     updateAutoTravelHazards(preset);
+
+    const storedOnlyTarget = (preset.target === 'storedArtificial');
+    const disableWhenStoredOnly = [
+      automationElements.autoTravelTypeSelect,
+      automationElements.autoTravelOrbitSelect,
+      automationElements.autoTravelDominionSelect
+    ];
+    disableWhenStoredOnly.forEach((control) => {
+      if (!control) return;
+      control.disabled = disabled || storedOnlyTarget;
+    });
+    if (automationElements.autoTravelHazardsSection) {
+      automationElements.autoTravelHazardsSection.classList.toggle('hidden', storedOnlyTarget);
+    }
   }
 
-  const disabled = !unlocked;
   const controls = [
     automationElements.autoTravelMasterToggle,
     automationElements.autoTravelPresetSelect,
     automationElements.autoTravelPresetNameInput,
     automationElements.autoTravelTargetSelect,
-    automationElements.autoTravelTypeSelect,
-    automationElements.autoTravelOrbitSelect,
-    automationElements.autoTravelDominionSelect,
     automationElements.autoTravelAutoCompleteToggle,
     automationElements.autoTravelWaitSpecializationToggle,
-    automationElements.autoTravelPrioritizeStoredToggle,
     automationElements.autoTravelBlockIfNoStoredToggle,
     automationElements.autoTravelSkipVisualizerToggle,
     automationElements.autoTravelNewPresetButton,

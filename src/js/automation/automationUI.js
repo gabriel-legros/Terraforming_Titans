@@ -34,7 +34,6 @@ const automationElements = {
   autoTravelHazardsWrap: null,
   autoTravelAutoCompleteToggle: null,
   autoTravelWaitSpecializationToggle: null,
-  autoTravelPrioritizeStoredToggle: null,
   autoTravelBlockIfNoStoredToggle: null,
   autoTravelSkipEquilibrationToggle: null,
   autoTravelSkipVisualizerToggle: null,

@@ -3008,6 +3008,7 @@ setLanguageData({
           enabledOff: 'Auto Travel Off',
           target: {
             random: 'Target: Random',
+            storedArtificial: 'Target: Stored Artificial World',
             planet: 'Target: Planet',
             moon: 'Target: Moon',
           },
@@ -3036,7 +3037,6 @@ setLanguageData({
           behaviorSection: 'Behavior',
           autoCompleteTerraforming: 'Automatically complete terraforming when possible',
           waitForSpecialization: 'Wait on complete specialization',
-          prioritizeStored: 'Prioritize travel to stored artificial worlds',
           blockIfNoStoredFromArtificial: "Don't travel out of current artificial world if none is stored",
           skipEquilibration: 'Skip equilibration',
           skipVisualizer: 'Skip world visualizer initialization',

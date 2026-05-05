@@ -267,7 +267,7 @@
 }
 
 .auto-travel-selection-row {
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) minmax(260px, 1.4fr);
 }
 
 .auto-travel-automation-body select,
@@ -327,6 +327,11 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(260px, 1fr));
   gap: 8px 12px;
+}
+
+.auto-travel-inline-destination-checkbox {
+  align-self: center;
+  margin-left: 4px;
 }
 
 @media (max-width: 980px) {
