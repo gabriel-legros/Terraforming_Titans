@@ -310,7 +310,7 @@ function updateColonyAutomationUI() {
         return mode === 'fill';
       }
       if (leafKey === 'autoBuildPercent') {
-        return mode !== 'fixed' && mode !== 'fill';
+        return mode !== 'fixed' && mode !== 'fill' && mode !== 'max';
       }
       return true;
     },
