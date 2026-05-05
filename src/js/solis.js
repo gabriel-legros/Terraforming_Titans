@@ -69,7 +69,8 @@ class SolisManager extends EffectableEntity {
       buildingsAutomation: { baseCost: 1000, purchases: 0, max: 1, enabled: false },
       projectsAutomation: { baseCost: 2000, purchases: 0, max: 1, enabled: false },
       colonyAutomation: { baseCost: 3000, purchases: 0, max: 1, enabled: false },
-      automationScripting: { baseCost: 10000, purchases: 0, max: 1, enabled: false }
+      automationScripting: { baseCost: 10000, purchases: 0, max: 1, enabled: false },
+      autoTravel: { baseCost: 100000, purchases: 0, max: 1, enabled: false }
     };
   }
 
@@ -115,6 +116,8 @@ class SolisManager extends EffectableEntity {
       this.setUpgradeEnabled('colonyAutomation', !!effect.value);
     } else if (effect.flagId === 'solisAutomationScripting') {
       this.setUpgradeEnabled('automationScripting', !!effect.value);
+    } else if (effect.flagId === 'solisAutoTravel') {
+      this.setUpgradeEnabled('autoTravel', !!effect.value);
     }
   }
 
@@ -472,6 +475,21 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisAutomationScripting',
         sourceId: 'solisShop'
       });
+    } else if (key === 'autoTravel') {
+      addEffect({
+        target: 'automationManager',
+        type: 'enable',
+        effectId: 'solisAutomationEnable',
+        sourceId: 'solisShop'
+      });
+      addEffect({
+        target: 'automationManager',
+        type: 'booleanFlag',
+        flagId: 'automationAutoTravel',
+        value: true,
+        effectId: 'solisAutomationAutoTravel',
+        sourceId: 'solisShop'
+      });
     } else if (key === 'startingShips') {
       if (!shipsResource.unlocked) {
         if (shipsResource.enable) {
@@ -576,6 +594,7 @@ class SolisManager extends EffectableEntity {
     this.setUpgradeEnabled('projectsAutomation', this.isBooleanFlagSet('solisProjectsAutomation'));
     this.setUpgradeEnabled('colonyAutomation', this.isBooleanFlagSet('solisColonyAutomation'));
     this.setUpgradeEnabled('automationScripting', this.isBooleanFlagSet('solisAutomationScripting'));
+    this.setUpgradeEnabled('autoTravel', this.isBooleanFlagSet('solisAutoTravel'));
 
     const count = this.shopUpgrades.funding.purchases;
     if (count > 0 && typeof addEffect === 'function') {
@@ -731,6 +750,23 @@ class SolisManager extends EffectableEntity {
         flagId: 'automationScripts',
         value: true,
         effectId: 'solisAutomationScripting',
+        sourceId: 'solisShop'
+      });
+    }
+    const autoTravelUpgrade = this.shopUpgrades.autoTravel;
+    if (autoTravelUpgrade && autoTravelUpgrade.purchases > 0) {
+      addEffect({
+        target: 'automationManager',
+        type: 'enable',
+        effectId: 'solisAutomationEnable',
+        sourceId: 'solisShop'
+      });
+      addEffect({
+        target: 'automationManager',
+        type: 'booleanFlag',
+        flagId: 'automationAutoTravel',
+        value: true,
+        effectId: 'solisAutomationAutoTravel',
         sourceId: 'solisShop'
       });
     }

@@ -19,6 +19,7 @@ global.ProjectAutomation = AutomationStub;
 global.ColonyAutomation = AutomationStub;
 global.ResearchAutomation = AutomationStub;
 global.ScriptAutomation = AutomationStub;
+global.AutoTravelAutomation = AutomationStub;
 
 const { AutomationManager } = require('../src/js/automation/automation.js');
 
@@ -41,6 +42,7 @@ describe('Automation card order', () => {
   it('inserts moved cards beside the visible target when hidden cards are between them', () => {
     const manager = new AutomationManager();
     manager.automationCardOrder = [
+      'autoTravel',
       'ships',
       'scripts',
       'life',
@@ -53,6 +55,7 @@ describe('Automation card order', () => {
     manager.moveAutomationCard('life', -1, ['ships', 'life', 'research']);
 
     expect(manager.getAutomationCardOrder()).toEqual([
+      'autoTravel',
       'life',
       'ships',
       'scripts',

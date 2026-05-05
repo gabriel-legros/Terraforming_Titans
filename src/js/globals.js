@@ -44,6 +44,13 @@ let artificialManager;
 let atlasManager;
 let warpGateNetworkManager;
 let isEquilibrating = false;
+let autoTravelContext = {
+  active: false,
+  skipWorldVisualizerInitialization: false,
+  suppressTabSwitch: false,
+  restoreTabState: null
+};
+let suppressPlanetVisualizerRuntime = false;
 
 let gameSettings = {
   autosaveIntervalSeconds: 300,

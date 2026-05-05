@@ -632,8 +632,9 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
       }
       break;
     case 'world-terraforming': {
+      updateWorldVisualizerDisabledPrompt();
       const viz = typeof window !== 'undefined' ? window.planetVisualizer : null;
-      if (terraformingWorldInitialized && isTerraformingWorldSubtabActive() && viz && viz.animate) {
+      if (!suppressPlanetVisualizerRuntime && terraformingWorldInitialized && isTerraformingWorldSubtabActive() && viz && viz.animate) {
         viz.animate(deltaSeconds);
       }
       break;
@@ -670,6 +671,32 @@ function forceWorldSurfaceRefresh() {
     viz.resetSurfaceTextureThrottle();
     viz.updateSurfaceTextureFromPressure(true);
   } catch (e) {}
+}
+
+function updateWorldVisualizerDisabledPrompt() {
+  const worldCache = terraformingUICache.world;
+  const prompt = worldCache ? worldCache.disabledPrompt : null;
+  if (!prompt) {
+    return;
+  }
+  prompt.style.display = suppressPlanetVisualizerRuntime ? 'flex' : 'none';
+}
+
+function enableWorldVisualizerForCurrentWorld() {
+  suppressPlanetVisualizerRuntime = false;
+  if (typeof window !== 'undefined' && !window.planetVisualizer && typeof window.initializePlanetVisualizerUI === 'function') {
+    try {
+      window.initializePlanetVisualizerUI();
+    } catch (e) {}
+  }
+  try {
+    const viz = window.planetVisualizer;
+    if (viz && typeof viz.onResize === 'function') {
+      viz.onResize();
+    }
+  } catch (e) {}
+  updateWorldVisualizerDisabledPrompt();
+  forceWorldSurfaceRefresh();
 }
 
 function markTerraformingMilestonesIfActive() {
@@ -766,6 +793,10 @@ function setTerraformingMilestonesVisibility(unlocked) {
 }
 
 function openTerraformingWorldTab() {
+  if (autoTravelContext && autoTravelContext.suppressTabSwitch) {
+    autoTravelContext.suppressTabSwitch = false;
+    return;
+  }
   initializeTerraformingTabs();
   if (typeof tabManager !== 'undefined' && tabManager && typeof tabManager.activateTab === 'function') {
     tabManager.activateTab('terraforming');
@@ -795,11 +826,23 @@ function createTerraformingWorldUI() {
   overlay.className = 'planet-visualizer-overlay';
   overlay.id = 'planet-visualizer-overlay';
 
+  const disabledPrompt = document.createElement('button');
+  disabledPrompt.type = 'button';
+  disabledPrompt.className = 'planet-visualizer-disabled-prompt';
+  disabledPrompt.textContent = t(
+    'ui.terraforming.visualizerDisabledPrompt',
+    null,
+    'Disabled by auto-travel. Click to enable.'
+  );
+  disabledPrompt.addEventListener('click', enableWorldVisualizerForCurrentWorld);
+
   host.appendChild(container);
+  container.appendChild(disabledPrompt);
   host.appendChild(overlay);
 
-  terraformingUICache.world = { container, overlay };
+  terraformingUICache.world = { container, overlay, disabledPrompt };
   terraformingWorldInitialized = true;
+  updateWorldVisualizerDisabledPrompt();
 }
 
 function createTerraformingSummaryUI() {
@@ -2743,6 +2786,54 @@ function updateLifeBox() {
     }
   }
 
+function completeTerraformingNow() {
+  const isRingworld = currentPlanetParameters.classification?.type === 'ring';
+  if (isRingworld) {
+    const ringProject = projectManager.projects.ringworldTerraforming;
+    if (!ringProject.isCompleted) {
+      return false;
+    }
+  }
+  const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
+    ? terraforming.getHazardClearanceStatus()
+    : true;
+  if (!hazardsCleared) {
+    return false;
+  }
+  const planetTerraformed = (typeof spaceManager !== 'undefined' &&
+    typeof spaceManager.getCurrentPlanetKey === 'function' &&
+    typeof spaceManager.isPlanetTerraformed === 'function' &&
+    spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey()));
+  if (planetTerraformed || !terraforming.readyForCompletion) {
+    return false;
+  }
+  const isBetterTime = fastestTerraformDays === null || playTimeSeconds < fastestTerraformDays;
+  const sameTimeMissingReal = playTimeSeconds === fastestTerraformDays && fastestTerraformRealSeconds === null;
+  const sameTimeBetterReal = playTimeSeconds === fastestTerraformDays
+    && fastestTerraformRealSeconds !== null
+    && realPlayTimeSeconds < fastestTerraformRealSeconds;
+  if (isBetterTime || sameTimeMissingReal || sameTimeBetterReal) {
+    fastestTerraformDays = playTimeSeconds;
+    fastestTerraformRealSeconds = realPlayTimeSeconds;
+  }
+  terraforming.completed = true;
+  if (typeof spaceManager !== 'undefined') {
+    spaceManager.updateCurrentPlanetTerraformedStatus(true, {
+      playTimeSeconds,
+      realPlayTimeSeconds
+    });
+    spaceManager.grantDominionTerraformReward(terraforming.requirementId);
+  }
+  if (typeof updateSpaceUI === 'function') {
+    updateSpaceUI();
+  }
+  if (typeof updateCompleteTerraformingButton === 'function') {
+    updateCompleteTerraformingButton();
+  }
+  patienceManager.onTerraformingComplete();
+  return true;
+}
+
 // Function to create the "Complete Terraforming" button
   function createCompleteTerraformingButton(container) {
     const doc = (container && container.ownerDocument) || document;
@@ -2770,30 +2861,10 @@ function updateLifeBox() {
 
     // Add an event listener for the button
     button.onclick = () => {
-      const isBetterTime = fastestTerraformDays === null || playTimeSeconds < fastestTerraformDays;
-      const sameTimeMissingReal = playTimeSeconds === fastestTerraformDays && fastestTerraformRealSeconds === null;
-      const sameTimeBetterReal = playTimeSeconds === fastestTerraformDays
-        && fastestTerraformRealSeconds !== null
-        && realPlayTimeSeconds < fastestTerraformRealSeconds;
-      if (isBetterTime || sameTimeMissingReal || sameTimeBetterReal) {
-        fastestTerraformDays = playTimeSeconds;
-        fastestTerraformRealSeconds = realPlayTimeSeconds;
+      const completed = completeTerraformingNow();
+      if (!completed) {
+        return;
       }
-      terraforming.completed = true;
-      if (typeof spaceManager !== 'undefined') {
-        spaceManager.updateCurrentPlanetTerraformedStatus(true, {
-          playTimeSeconds,
-          realPlayTimeSeconds
-        });
-        spaceManager.grantDominionTerraformReward(terraforming.requirementId);
-      }
-      if (typeof updateSpaceUI === 'function') {
-        updateSpaceUI();
-      }
-      if (typeof updateCompleteTerraformingButton === 'function') {
-        updateCompleteTerraformingButton();
-      }
-      patienceManager.onTerraformingComplete();
       button.textContent = getTerraformingSummaryText(
         'actions.errorMtcNotResponding',
         'ERROR : MTC not responding'
@@ -2877,5 +2948,6 @@ if (typeof window !== 'undefined') {
   window.getTerraformingSubtabManager = getTerraformingSubtabManager;
   window.isTerraformingWorldSubtabActive = isTerraformingWorldSubtabActive;
   window.handleTerraformingTabActivated = handleTerraformingTabActivated;
+  window.completeTerraformingNow = completeTerraformingNow;
 }
 

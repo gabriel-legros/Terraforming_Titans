@@ -3,6 +3,7 @@ let automationUIInitialized = false;
 let automationUIStale = true;
 const automationPresetJsonDraftStore = {};
 const AUTOMATION_CARD_ORDER_KEYS = [
+  'autoTravel',
   'scripts',
   'ships',
   'life',
@@ -15,6 +16,27 @@ const automationElements = {
   tab: null,
   content: null,
   container: null,
+  autoTravel: null,
+  autoTravelStatus: null,
+  autoTravelCollapseButton: null,
+  autoTravelPanelBody: null,
+  autoTravelMasterToggle: null,
+  autoTravelPresetSelect: null,
+  autoTravelPresetNameInput: null,
+  autoTravelNewPresetButton: null,
+  autoTravelDeletePresetButton: null,
+  autoTravelImportPresetButton: null,
+  autoTravelExportPresetButton: null,
+  autoTravelTargetSelect: null,
+  autoTravelTypeSelect: null,
+  autoTravelOrbitSelect: null,
+  autoTravelDominionSelect: null,
+  autoTravelHazardsWrap: null,
+  autoTravelAutoCompleteToggle: null,
+  autoTravelWaitSpecializationToggle: null,
+  autoTravelPrioritizeStoredToggle: null,
+  autoTravelSkipEquilibrationToggle: null,
+  autoTravelSkipVisualizerToggle: null,
   scriptAutomation: null,
   scriptAutomationStatus: null,
   scriptCollapseButton: null,
@@ -217,6 +239,9 @@ function queueAutomationUIRefresh() {
 }
 
 function getAutomationCardElementByKey(cardKey) {
+  if (cardKey === 'autoTravel') {
+    return automationElements.autoTravel;
+  }
   if (cardKey === 'scripts') {
     return automationElements.scriptAutomation;
   }
@@ -247,6 +272,9 @@ function getAutomationCardKeyFromElement(card) {
   }
   if (card.id === 'automation-scripts') {
     return 'scripts';
+  }
+  if (card.id === 'automation-auto-travel') {
+    return 'autoTravel';
   }
   if (card.id === 'automation-ship-assignment') {
     return 'ships';
@@ -369,6 +397,12 @@ function cacheAutomationElements() {
   }
   if (!automationElements.scriptAutomation) {
     automationElements.scriptAutomation = document.getElementById('automation-scripts');
+  }
+  if (!automationElements.autoTravel) {
+    automationElements.autoTravel = document.getElementById('automation-auto-travel');
+  }
+  if (!automationElements.autoTravelStatus) {
+    automationElements.autoTravelStatus = document.getElementById('automation-auto-travel-status');
   }
   if (!automationElements.scriptAutomationStatus) {
     automationElements.scriptAutomationStatus = document.getElementById('automation-scripts-status');
@@ -1913,6 +1947,7 @@ function initializeAutomationUI() {
     return;
   }
   cacheAutomationElements();
+  buildAutoTravelUI();
   buildScriptAutomationUI();
   buildAutomationShipUI();
   buildAutomationLifeUI();
@@ -1953,6 +1988,7 @@ function updateAutomationUI() {
   }
   automationUIStale = false;
   if (panelActive) {
+    updateAutoTravelUI();
     updateScriptAutomationUI();
     updateShipAutomationUI();
     updateLifeAutomationUI();

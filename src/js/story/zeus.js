@@ -111,7 +111,8 @@ progressZeus.chapters.push(
     ],
     reward: [
       { target: 'solisManager', type: 'booleanFlag', flagId: 'solisShipbuildingPermanentResearch', value: true },
-      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAutomationScripting', value: true }
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAutomationScripting', value: true },
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAutoTravel', value: true }
     ]
   },
   {

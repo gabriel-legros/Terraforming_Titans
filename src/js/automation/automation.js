@@ -53,11 +53,20 @@ try {
   ScriptAutomationRef = ScriptAutomationRef || require('./script-automation.js').ScriptAutomation;
 } catch (error) {}
 
+let AutoTravelAutomationRef;
+try {
+  AutoTravelAutomationRef = AutoTravelAutomation;
+} catch (error) {}
+try {
+  AutoTravelAutomationRef = AutoTravelAutomationRef || require('./auto-travel-automation.js').AutoTravelAutomation;
+} catch (error) {}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
     this.enabled = false;
     this.automationCardOrder = [
+      'autoTravel',
       'scripts',
       'ships',
       'life',
@@ -67,6 +76,7 @@ class AutomationManager extends EffectableEntity {
       'colony'
     ];
     this.features = {
+      automationAutoTravel: false,
       automationShipAssignment: false,
       automationLifeDesign: false,
       automationResearch: false,
@@ -82,10 +92,12 @@ class AutomationManager extends EffectableEntity {
     this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef() : null;
     this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef() : null;
     this.scriptAutomation = ScriptAutomationRef ? new ScriptAutomationRef() : null;
+    this.autoTravelAutomation = AutoTravelAutomationRef ? new AutoTravelAutomationRef() : null;
   }
 
   normalizeAutomationCardOrder(order) {
     const defaultOrder = [
+      'autoTravel',
       'scripts',
       'ships',
       'life',
@@ -167,7 +179,9 @@ class AutomationManager extends EffectableEntity {
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
-    if (effect.flagId === 'automationShipAssignment') {
+    if (effect.flagId === 'automationAutoTravel') {
+      this.setFeature('automationAutoTravel', !!effect.value);
+    } else if (effect.flagId === 'automationShipAssignment') {
       this.setFeature('automationShipAssignment', !!effect.value);
     } else if (effect.flagId === 'automationLifeDesign') {
       this.setFeature('automationLifeDesign', !!effect.value);
@@ -208,6 +222,7 @@ class AutomationManager extends EffectableEntity {
   }
 
   reapplyEffects() {
+    this.setFeature('automationAutoTravel', this.isBooleanFlagSet('automationAutoTravel'));
     this.setFeature('automationShipAssignment', this.isBooleanFlagSet('automationShipAssignment'));
     this.setFeature('automationLifeDesign', this.isBooleanFlagSet('automationLifeDesign'));
     this.setFeature('automationResearch', this.isBooleanFlagSet('automationResearch'));
@@ -280,6 +295,7 @@ class AutomationManager extends EffectableEntity {
       automationCardOrder: this.getAutomationCardOrder(),
       features: { ...this.features },
       booleanFlags: Array.from(this.booleanFlags),
+      autoTravelAutomation: this.autoTravelAutomation ? this.autoTravelAutomation.saveState() : null,
       spaceshipAutomation: this.spaceshipAutomation ? this.spaceshipAutomation.saveState() : null,
       lifeAutomation: this.lifeAutomation ? this.lifeAutomation.saveState() : null,
       buildingsAutomation: this.buildingsAutomation ? this.buildingsAutomation.saveState() : null,
@@ -294,6 +310,7 @@ class AutomationManager extends EffectableEntity {
     this.enabled = !!data.enabled;
     this.automationCardOrder = this.normalizeAutomationCardOrder(data.automationCardOrder);
     this.features = Object.assign({
+      automationAutoTravel: false,
       automationShipAssignment: false,
       automationLifeDesign: false,
       automationResearch: false,
@@ -304,6 +321,9 @@ class AutomationManager extends EffectableEntity {
     }, data.features || {});
     const flags = Array.isArray(data.booleanFlags) ? data.booleanFlags : [];
     this.booleanFlags = new Set(flags);
+    if (data.autoTravelAutomation && this.autoTravelAutomation) {
+      this.autoTravelAutomation.loadState(data.autoTravelAutomation);
+    }
     if (data.spaceshipAutomation && this.spaceshipAutomation) {
       this.spaceshipAutomation.loadState(data.spaceshipAutomation);
     }
@@ -329,6 +349,9 @@ class AutomationManager extends EffectableEntity {
   }
 
   update(delta) {
+    if (this.autoTravelAutomation) {
+      this.autoTravelAutomation.update(delta || 0);
+    }
     if (this.scriptAutomation) {
       this.scriptAutomation.update(delta || 0);
     }

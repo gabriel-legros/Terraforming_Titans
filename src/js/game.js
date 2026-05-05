@@ -223,6 +223,38 @@ function initializeGameState(options = {}) {
     shipEfficiency = 1;
   }
   globalGameIsTraveling = preserveManagers && !globalGameIsLoadingFromSave;
+  const pendingAutoTravelTabRestore = (
+    autoTravelContext
+    && autoTravelContext.active
+    && autoTravelContext.restoreTabState
+  ) ? { ...autoTravelContext.restoreTabState } : null;
+  const restoreAutoTravelTabs = () => {
+    if (!pendingAutoTravelTabRestore) {
+      return;
+    }
+    const activateSubtabByDataId = (subtabId) => {
+      if (!subtabId) return false;
+      const button = document.querySelector(`[data-subtab="${subtabId}"]`);
+      if (!button || button.classList.contains('hidden')) return false;
+      button.click();
+      return true;
+    };
+    const mainTabId = pendingAutoTravelTabRestore.mainTabId || '';
+    if (mainTabId && tabManager && typeof tabManager.activateTab === 'function') {
+      tabManager.activateTab(mainTabId);
+    }
+    if (mainTabId === 'space' && typeof activateSpaceSubtab === 'function') {
+      activateSpaceSubtab(pendingAutoTravelTabRestore.spaceSubtabId || 'space-story');
+    } else if (mainTabId === 'terraforming' && typeof activateTerraformingSubtab === 'function') {
+      activateTerraformingSubtab(pendingAutoTravelTabRestore.terraformingSubtabId || 'world-terraforming');
+    } else if (mainTabId === 'hope' && typeof activateHopeSubtab === 'function') {
+      activateHopeSubtab(pendingAutoTravelTabRestore.hopeSubtabId || 'awakening-hope');
+    } else if (mainTabId === 'colonies' && typeof activateColonySubtab === 'function') {
+      activateColonySubtab(pendingAutoTravelTabRestore.colonySubtabId || 'workers-colony');
+    } else if (mainTabId === 'settings') {
+      activateSubtabByDataId(pendingAutoTravelTabRestore.settingsSubtabId || 'save-settings-subtab');
+    }
+  };
   let savedTravelResources = null;
   let savedProjectTravelState = null;
   let savedConstructionOffice = null;
@@ -385,7 +417,33 @@ function initializeGameState(options = {}) {
   }
 
   // Rebuild the Planet Visualizer with fresh references (resources/terraforming)
-  if (typeof window !== 'undefined') {
+  const skipVisualizerInitialization = !!(
+    autoTravelContext
+    && autoTravelContext.active
+    && autoTravelContext.skipWorldVisualizerInitialization
+  );
+  if (skipVisualizerInitialization) {
+    suppressPlanetVisualizerRuntime = true;
+    if (typeof window !== 'undefined') {
+      try {
+        const pv = window.planetVisualizer;
+        if (pv) {
+          if (typeof pv.onResize === 'function') {
+            window.removeEventListener('resize', pv.onResize);
+          }
+          const canvas = pv.renderer && pv.renderer.domElement;
+          if (canvas && canvas.parentNode) {
+            canvas.parentNode.removeChild(canvas);
+          }
+          if (pv.debug && pv.debug.container && pv.debug.container.parentNode) {
+            pv.debug.container.parentNode.removeChild(pv.debug.container);
+          }
+          window.planetVisualizer = null;
+        }
+      } catch (e) {}
+    }
+  } else if (typeof window !== 'undefined') {
+    suppressPlanetVisualizerRuntime = false;
     try {
       const pv = window.planetVisualizer;
       if (pv) {
@@ -522,6 +580,11 @@ function initializeGameState(options = {}) {
   if (preserveManagers && automationManager && typeof automationManager.reapplyEffects === 'function') {
     automationManager.reapplyEffects();
   }
+  if (autoTravelContext && autoTravelContext.active) {
+    autoTravelContext.active = false;
+    autoTravelContext.suppressTabSwitch = false;
+    autoTravelContext.restoreTabState = null;
+  }
   if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
     solisManager.reapplyEffects();
     hazardManager.applyTravelAdjustments(terraforming);
@@ -552,6 +615,12 @@ function initializeGameState(options = {}) {
     automationManager.applyTravelCombinationPresets();
   }
   globalGameIsTraveling = false;
+  restoreAutoTravelTabs();
+  if (pendingAutoTravelTabRestore && typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(() => {
+      restoreAutoTravelTabs();
+    });
+  }
 }
 
 function updateLogic(delta) {
@@ -680,13 +749,13 @@ function updateRender(force = false, options = {}) {
     if (isActive('terraforming')) {
       updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
       // Ensure the visualizer resizes once the tab becomes visible
-      if (typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
+      if (!suppressPlanetVisualizerRuntime && typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
         window.planetVisualizer.onResize();
       }
     }
 
     // Push world coverage to the visualizer for shading/tinting
-    if (typeof window !== 'undefined' && window.planetVisualizer) {
+    if (!suppressPlanetVisualizerRuntime && typeof window !== 'undefined' && window.planetVisualizer) {
       try {
         const pv = window.planetVisualizer;
         const mode = pv?.debug?.mode || 'game';
