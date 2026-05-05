@@ -20,7 +20,7 @@ class AndroidProject extends Project {
 
   isContinuous() {
     const baseDuration = this.getEffectiveDuration();
-    return baseDuration < this.continuousThreshold && this.assignedAndroids > 0;
+    return baseDuration < this.continuousThreshold;
   }
 
   canAssignAndroids() {
