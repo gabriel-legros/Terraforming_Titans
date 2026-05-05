@@ -22,6 +22,73 @@ function getColonyAutomationCombinationLabel(combination) {
   return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
 }
 
+function getColonyAutomationAutoBuildBasisOptions(structure, currentValue) {
+  const options = [];
+  const seen = new Set();
+  const addOption = (value, label) => {
+    if (seen.has(value)) {
+      return;
+    }
+    seen.add(value);
+    options.push({ value, label });
+  };
+  if (structure) {
+    if (structure.autoBuildFillEnabled) {
+      addOption('fill', getStructuresUIText('ui.structures.autoBuild.basis.fill', '% filled'));
+    }
+    addOption('population', getStructuresUIText('ui.structures.autoBuild.basis.population', '% of pop'));
+    addOption('workers', getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers'));
+    if (structure.requiresWorker > 0) {
+      addOption('workerShare', getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share'));
+    }
+    if (structure.requiresLand > 0) {
+      addOption('landShare', getStructuresUIText('ui.structures.autoBuild.basis.landShare', '% land share'));
+    }
+    addOption('geometricLand', getStructuresUIText('ui.structures.autoBuild.basis.geometricLand', '% geometric land'));
+    addOption('fixed', getStructuresUIText('ui.structures.autoBuild.basis.fixed', 'Fixed'));
+    addOption('building:storageDepot', getStructuresUIText('ui.structures.autoBuild.basis.storageDepots', '% of Storage Depots'));
+    if (Array.isArray(structure.automationBuildingsDropDown)) {
+      for (let index = 0; index < structure.automationBuildingsDropDown.length; index += 1) {
+        const buildingId = structure.automationBuildingsDropDown[index];
+        const basisValue = `building:${buildingId}`;
+        const displayName = (buildings[buildingId] && buildings[buildingId].displayName) || buildingId;
+        addOption(
+          basisValue,
+          getStructuresUIText('ui.structures.autoBuild.basis.percentOf', '% of {name}', { name: displayName })
+        );
+      }
+    }
+    if (Array.isArray(structure.automationCustomBasisOptions)) {
+      for (let index = 0; index < structure.automationCustomBasisOptions.length; index += 1) {
+        const optionData = structure.automationCustomBasisOptions[index];
+        addOption(optionData.value, optionData.label);
+      }
+    }
+    if (structure.autoBuildMaxOption) {
+      addOption(
+        'max',
+        structure.getAutoBuildMaxModeLabel
+          ? structure.getAutoBuildMaxModeLabel()
+          : getStructuresUIText('ui.common.max', 'Max')
+      );
+    }
+  }
+  if (currentValue && !seen.has(currentValue)) {
+    addOption(currentValue, currentValue);
+  }
+  return options;
+}
+
+function getColonyAutomationJsonModeForPath(preset, fieldPath) {
+  if (!preset || fieldPath[0] !== 'targets' || fieldPath[2] !== 'automation') {
+    return '';
+  }
+  const targetId = fieldPath[1];
+  const entry = preset.targets[targetId];
+  const automation = entry && entry.automation;
+  return (automation && automation.autoBuildBasis) || '';
+}
+
 function buildAutomationColonyUI() {
   const card = automationElements.colonyAutomation || document.getElementById('automation-colony');
 
@@ -389,6 +456,33 @@ function updateColonyAutomationUI() {
     colonyAutomationUIState.syncedPresetId = null;
   }
   updateAutomationPresetJsonDetails(colonyPresetJsonDetails, activePreset, {
+    isLeafVisible: (fieldPath, preset) => {
+      if (fieldPath[0] !== 'targets' || fieldPath[2] !== 'automation') {
+        return true;
+      }
+      const mode = getColonyAutomationJsonModeForPath(preset, fieldPath);
+      const leafKey = fieldPath[3];
+      if (leafKey === 'autoBuildFixed') {
+        return mode === 'fixed';
+      }
+      if (leafKey === 'autoBuildFillPercent' || leafKey === 'autoBuildFillResourcePrimary' || leafKey === 'autoBuildFillResourceSecondary') {
+        return mode === 'fill';
+      }
+      if (leafKey === 'autoBuildPercent') {
+        return mode !== 'fixed' && mode !== 'fill';
+      }
+      return true;
+    },
+    getFieldOptions: (fieldPath, value) => {
+      if (fieldPath[0] === 'targets' && fieldPath[2] === 'automation' && fieldPath[3] === 'autoBuildBasis') {
+        const targetId = fieldPath[1];
+        const structure = automationManager.colonyAutomation.getColonyTarget(targetId);
+        return {
+          selectOptions: getColonyAutomationAutoBuildBasisOptions(structure, value)
+        };
+      }
+      return null;
+    },
     onFieldChange: (fieldPath, nextValue) => {
       if (!activePreset) {
         return;

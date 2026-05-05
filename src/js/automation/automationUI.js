@@ -1130,7 +1130,44 @@ function getAutomationPresetValueAtPath(target, path) {
   return current;
 }
 
-function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange) {
+function setAutomationPresetValueAtPath(target, path, value) {
+  if (!target || !Array.isArray(path) || path.length === 0) {
+    return;
+  }
+  let current = target;
+  for (let index = 0; index < path.length - 1; index += 1) {
+    current = current[path[index]];
+  }
+  current[path[path.length - 1]] = value;
+}
+
+function buildAutomationPresetVisibleRenderTree(sourcePreset, visibleLeafPaths) {
+  const root = {};
+  const ensureContainer = (parent, key, nextSegment) => {
+    if (parent[key] !== undefined) {
+      return parent[key];
+    }
+    parent[key] = Number.isInteger(nextSegment) ? [] : {};
+    return parent[key];
+  };
+  for (let pathIndex = 0; pathIndex < visibleLeafPaths.length; pathIndex += 1) {
+    const path = visibleLeafPaths[pathIndex];
+    if (!path.length) {
+      continue;
+    }
+    let current = root;
+    for (let segmentIndex = 0; segmentIndex < path.length - 1; segmentIndex += 1) {
+      const segment = path[segmentIndex];
+      const nextSegment = path[segmentIndex + 1];
+      current = ensureContainer(current, segment, nextSegment);
+    }
+    const leafKey = path[path.length - 1];
+    current[leafKey] = getAutomationPresetValueAtPath(sourcePreset, path);
+  }
+  return root;
+}
+
+function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange, fieldOptionsResolver) {
   const content = details._contentNode;
   content.textContent = '';
   details._jsonInputMap = {};
@@ -1143,11 +1180,23 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     const pathKey = buildAutomationPresetLeafPathKey(path);
     const draftEntry = details._jsonDraftMap[pathKey];
     const valueToRender = draftEntry ? draftEntry.value : value;
+    const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(path, value, preset) : null;
+    const hasCustomSelectOptions = !!(fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length);
     const isBooleanLeaf = typeof value === 'boolean';
-    const input = isBooleanLeaf ? document.createElement('select') : document.createElement('input');
+    const useSelect = isBooleanLeaf || hasCustomSelectOptions;
+    const input = useSelect ? document.createElement('select') : document.createElement('input');
     input.classList.add('automation-preset-json-field-input');
     input.dataset.fieldKey = pathKey;
-    if (isBooleanLeaf) {
+    if (hasCustomSelectOptions) {
+      for (let optionIndex = 0; optionIndex < fieldOptions.selectOptions.length; optionIndex += 1) {
+        const optionData = fieldOptions.selectOptions[optionIndex];
+        const option = document.createElement('option');
+        option.value = optionData.value;
+        option.textContent = optionData.label;
+        input.appendChild(option);
+      }
+      input.value = String(valueToRender);
+    } else if (isBooleanLeaf) {
       const optionTrue = document.createElement('option');
       optionTrue.value = 'true';
       optionTrue.textContent = 'true';
@@ -1175,9 +1224,11 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     }
     input.addEventListener('change', (event) => {
       try {
-        const nextValue = isBooleanLeaf
-          ? event.target.value === 'true'
-          : parseAutomationPresetJsonFieldValue(event.target.value);
+        const nextValue = hasCustomSelectOptions
+          ? event.target.value
+          : isBooleanLeaf
+            ? event.target.value === 'true'
+            : parseAutomationPresetJsonFieldValue(event.target.value);
         const baseValue = getAutomationPresetValueAtPath(preset, path);
         if (JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
           delete details._jsonDraftMap[pathKey];
@@ -1205,7 +1256,7 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
       }
     });
     details._jsonInputMap[pathKey] = input;
-    if (isString) {
+    if (isString && !hasCustomSelectOptions) {
       writeText('"');
       content.appendChild(input);
       writeText('"');
@@ -1240,7 +1291,8 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     writeText(`${isLast ? '' : ','}\n`);
   };
 
-  renderValue(preset, [], 0, null, true);
+  const renderTree = buildAutomationPresetVisibleRenderTree(preset, leafPaths);
+  renderValue(renderTree, [], 0, null, true);
 }
 
 function applyAutomationPresetJsonFieldEdit(preset, path, nextValue, options = {}) {
@@ -1303,6 +1355,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   }
   const onFieldChange = options.onFieldChange;
   const onDirtyChange = options.onDirtyChange;
+  const isLeafVisible = options.isLeafVisible;
+  const fieldOptionsResolver = options.getFieldOptions;
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
@@ -1376,9 +1430,29 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
 
   const leafPaths = [];
   collectAutomationPresetLeafPaths(preset, [], leafPaths);
-  const nextFieldKeySignature = leafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|');
-  for (let pathIndex = 0; pathIndex < leafPaths.length; pathIndex += 1) {
-    const path = leafPaths[pathIndex];
+  const effectivePreset = JSON.parse(JSON.stringify(preset));
+  const draftEntries = Object.values(details._jsonDraftMap);
+  for (let draftIndex = 0; draftIndex < draftEntries.length; draftIndex += 1) {
+    const draftEntry = draftEntries[draftIndex];
+    if (!draftEntry || !Array.isArray(draftEntry.path) || draftEntry.path.length === 0) {
+      continue;
+    }
+    setAutomationPresetValueAtPath(effectivePreset, draftEntry.path, draftEntry.value);
+  }
+  const visibleLeafPaths = isLeafVisible
+    ? leafPaths.filter((path) => isLeafVisible(path, effectivePreset))
+    : leafPaths;
+  const visiblePathSet = new Set(visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)));
+  const draftKeys = Object.keys(details._jsonDraftMap);
+  for (let draftIndex = 0; draftIndex < draftKeys.length; draftIndex += 1) {
+    const draftKey = draftKeys[draftIndex];
+    if (!visiblePathSet.has(draftKey)) {
+      delete details._jsonDraftMap[draftKey];
+    }
+  }
+  const nextFieldKeySignature = visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|');
+  for (let pathIndex = 0; pathIndex < visibleLeafPaths.length; pathIndex += 1) {
+    const path = visibleLeafPaths[pathIndex];
     const pathKey = buildAutomationPresetLeafPathKey(path);
     const draftEntry = details._jsonDraftMap[pathKey];
     if (!draftEntry) {
@@ -1455,12 +1529,12 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
 
   const shouldRebuildJson = details._renderedFieldKeySignature !== nextFieldKeySignature || details._boundPresetId !== preset.id;
   if (shouldRebuildJson) {
-    renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange);
+    renderAutomationPresetEditableJson(details, effectivePreset, visibleLeafPaths, onFieldChange, fieldOptionsResolver);
     details._renderedFieldKeySignature = nextFieldKeySignature;
     details._boundPresetId = preset.id;
   } else {
-    for (let keyIndex = 0; keyIndex < leafPaths.length; keyIndex += 1) {
-      const leafPath = leafPaths[keyIndex];
+    for (let keyIndex = 0; keyIndex < visibleLeafPaths.length; keyIndex += 1) {
+      const leafPath = visibleLeafPaths[keyIndex];
       const pathKey = buildAutomationPresetLeafPathKey(leafPath);
       const input = details._jsonInputMap[pathKey];
       if (!input || document.activeElement === input) {
@@ -1471,7 +1545,12 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         ? draftEntry.value
         : getAutomationPresetValueAtPath(preset, leafPath);
       if (input.tagName === 'SELECT') {
-        input.value = valueToRender ? 'true' : 'false';
+        const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(leafPath, valueToRender, effectivePreset) : null;
+        if (fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length) {
+          input.value = String(valueToRender);
+        } else {
+          input.value = valueToRender ? 'true' : 'false';
+        }
       } else {
         input.value = formatAutomationPresetJsonFieldValue(valueToRender);
         input.size = Math.max(1, input.value.length);

@@ -35,6 +35,73 @@ function formatBuildingAutomationPresetType(preset) {
   return getAutomationCardText('autobuildOnly', {}, 'Autobuild only');
 }
 
+function getBuildingAutomationAutoBuildBasisOptions(structure, currentValue) {
+  const options = [];
+  const seen = new Set();
+  const addOption = (value, label) => {
+    if (seen.has(value)) {
+      return;
+    }
+    seen.add(value);
+    options.push({ value, label });
+  };
+  if (structure) {
+    if (structure.autoBuildFillEnabled) {
+      addOption('fill', getStructuresUIText('ui.structures.autoBuild.basis.fill', '% filled'));
+    }
+    addOption('population', getStructuresUIText('ui.structures.autoBuild.basis.population', '% of pop'));
+    addOption('workers', getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers'));
+    if (structure.requiresWorker > 0) {
+      addOption('workerShare', getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share'));
+    }
+    if (structure.requiresLand > 0) {
+      addOption('landShare', getStructuresUIText('ui.structures.autoBuild.basis.landShare', '% land share'));
+    }
+    addOption('geometricLand', getStructuresUIText('ui.structures.autoBuild.basis.geometricLand', '% geometric land'));
+    addOption('fixed', getStructuresUIText('ui.structures.autoBuild.basis.fixed', 'Fixed'));
+    addOption('building:storageDepot', getStructuresUIText('ui.structures.autoBuild.basis.storageDepots', '% of Storage Depots'));
+    if (Array.isArray(structure.automationBuildingsDropDown)) {
+      for (let index = 0; index < structure.automationBuildingsDropDown.length; index += 1) {
+        const buildingId = structure.automationBuildingsDropDown[index];
+        const basisValue = `building:${buildingId}`;
+        const displayName = (buildings[buildingId] && buildings[buildingId].displayName) || buildingId;
+        addOption(
+          basisValue,
+          getStructuresUIText('ui.structures.autoBuild.basis.percentOf', '% of {name}', { name: displayName })
+        );
+      }
+    }
+    if (Array.isArray(structure.automationCustomBasisOptions)) {
+      for (let index = 0; index < structure.automationCustomBasisOptions.length; index += 1) {
+        const optionData = structure.automationCustomBasisOptions[index];
+        addOption(optionData.value, optionData.label);
+      }
+    }
+    if (structure.autoBuildMaxOption) {
+      addOption(
+        'max',
+        structure.getAutoBuildMaxModeLabel
+          ? structure.getAutoBuildMaxModeLabel()
+          : getStructuresUIText('ui.common.max', 'Max')
+      );
+    }
+  }
+  if (currentValue && !seen.has(currentValue)) {
+    addOption(currentValue, currentValue);
+  }
+  return options;
+}
+
+function getBuildingAutomationJsonModeForPath(preset, fieldPath) {
+  if (!preset || fieldPath[0] !== 'buildings' || fieldPath[2] !== 'automation') {
+    return '';
+  }
+  const buildingId = fieldPath[1];
+  const entry = preset.buildings[buildingId];
+  const automation = entry && entry.automation;
+  return (automation && automation.autoBuildBasis) || '';
+}
+
 function buildAutomationBuildingsUI() {
   const card = automationElements.buildingsAutomation || document.getElementById('automation-buildings');
 
@@ -403,6 +470,33 @@ function updateBuildingsAutomationUI() {
     buildingAutomationUIState.syncedPresetId = null;
   }
   updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset, {
+    isLeafVisible: (fieldPath, preset) => {
+      if (fieldPath[0] !== 'buildings' || fieldPath[2] !== 'automation') {
+        return true;
+      }
+      const mode = getBuildingAutomationJsonModeForPath(preset, fieldPath);
+      const leafKey = fieldPath[3];
+      if (leafKey === 'autoBuildFixed') {
+        return mode === 'fixed';
+      }
+      if (leafKey === 'autoBuildFillPercent' || leafKey === 'autoBuildFillResourcePrimary' || leafKey === 'autoBuildFillResourceSecondary') {
+        return mode === 'fill';
+      }
+      if (leafKey === 'autoBuildPercent') {
+        return mode !== 'fixed' && mode !== 'fill';
+      }
+      return true;
+    },
+    getFieldOptions: (fieldPath, value, preset) => {
+      if (fieldPath[0] === 'buildings' && fieldPath[2] === 'automation' && fieldPath[3] === 'autoBuildBasis') {
+        const buildingId = fieldPath[1];
+        const structure = buildings[buildingId];
+        return {
+          selectOptions: getBuildingAutomationAutoBuildBasisOptions(structure, value)
+        };
+      }
+      return null;
+    },
     onFieldChange: (fieldPath, nextValue) => {
       if (!activePreset) {
         return;
