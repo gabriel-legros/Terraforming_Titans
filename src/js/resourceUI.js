@@ -613,7 +613,7 @@ function createTooltipElement(category, resourceName) {
   autoTable.style.display = 'table';
   autoTable.style.width = '100%';
   autobuildDiv.appendChild(autoTable);
-  autobuildDiv._info = { value: autoValue, table: autoTable, rows: new Map() };
+  autobuildDiv._info = { header: autoHeader, value: autoValue, table: autoTable, rows: new Map() };
 
   const col1 = document.createElement('div');
   col1.appendChild(headerDiv);
@@ -2427,8 +2427,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       const avgCost = autobuildAvg;
       const shortageBuildings = resource.autobuildShortageBuildings;
       if (avgCost !== 0 || shortageBuildings) {
+        const isOrbitalDebris = resource.category === 'special' && resource.name === 'orbitalDebris';
+        const autobuildDisplayRate = isOrbitalDebris ? Math.abs(avgCost) : avgCost;
         autobuildDiv.style.display = 'block';
-        autobuildDiv._info.value.textContent = `${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+        autobuildDiv._info.header.textContent = isOrbitalDebris
+          ? getResourceUICommonText('autobuildGain', 'Autobuild Gain (avg 10s):')
+          : getResourceUICommonText('autobuildCost', 'Autobuild Cost (avg 10s):');
+        autobuildDiv._info.value.textContent = `${formatNumber(autobuildDisplayRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
         const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
         updateAutobuildRateTable(
           autobuildDiv,

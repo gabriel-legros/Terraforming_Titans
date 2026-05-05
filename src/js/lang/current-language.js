@@ -300,7 +300,7 @@ setLanguageData({
       },
       stash: {
         title: 'Starting stockpile',
-        recommendation: 'It is recommend staging at least 1.00B of each resource.',
+        recommendation: 'It is recommended to stage at least 1.00B of each resource.',
         capTitle: 'Stockpiles cap at {cap} based on 1 ton per hectare ({land} ha).',
         startConstruction: 'Start construction to stage resources.',
         capValue: 'Cap: {value}',
@@ -497,6 +497,7 @@ setLanguageData({
         consumptionAndMaintenance: 'Consumption and Maintenance:',
         overflow: 'Overflow:',
         autobuildCost: 'Autobuild Cost (avg 10s):',
+        autobuildGain: 'Autobuild Gain (avg 10s):',
         assignments: 'Assignments:',
         workers: 'Workers',
         totalValue: 'Total {value}',
