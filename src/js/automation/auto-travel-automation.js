@@ -31,7 +31,8 @@ class AutoTravelAutomation {
       waitForSpecialization: false,
       prioritizeStoredArtificialWorlds: false,
       skipEquilibration: false,
-      skipWorldVisualizerInitialization: false
+      skipWorldVisualizerInitialization: false,
+      blockIfNoStoredFromArtificial: true
     });
     this.selectedPresetId = id;
   }
@@ -73,7 +74,8 @@ class AutoTravelAutomation {
       waitForSpecialization: false,
       prioritizeStoredArtificialWorlds: false,
       skipEquilibration: false,
-      skipWorldVisualizerInitialization: false
+      skipWorldVisualizerInitialization: false,
+      blockIfNoStoredFromArtificial: true
     };
   }
 
@@ -91,7 +93,8 @@ class AutoTravelAutomation {
       waitForSpecialization: !!rawPreset.waitForSpecialization,
       prioritizeStoredArtificialWorlds: !!rawPreset.prioritizeStoredArtificialWorlds,
       skipEquilibration: !!rawPreset.skipEquilibration,
-      skipWorldVisualizerInitialization: !!rawPreset.skipWorldVisualizerInitialization
+      skipWorldVisualizerInitialization: !!rawPreset.skipWorldVisualizerInitialization,
+      blockIfNoStoredFromArtificial: rawPreset.blockIfNoStoredFromArtificial !== false
     };
   }
 
@@ -219,6 +222,10 @@ class AutoTravelAutomation {
       }
     }
     return chosenSeed;
+  }
+
+  _isCurrentWorldArtificial() {
+    return spaceManager && spaceManager.currentArtificialKey !== null;
   }
 
   _captureCurrentTabState() {
@@ -351,6 +358,9 @@ class AutoTravelAutomation {
     if (preset.waitForSpecialization && !this._hasSomeSpecialization()) {
       return false;
     }
+    if (preset.blockIfNoStoredFromArtificial && this._isCurrentWorldArtificial() && !this._getOldestStoredArtificialSeed()) {
+      return false;
+    }
     if (this._travelToStoredArtificialWorld(preset)) {
       return true;
     }
@@ -402,7 +412,8 @@ class AutoTravelAutomation {
         waitForSpecialization: !!preset.waitForSpecialization,
         prioritizeStoredArtificialWorlds: !!preset.prioritizeStoredArtificialWorlds,
         skipEquilibration: !!preset.skipEquilibration,
-        skipWorldVisualizerInitialization: !!preset.skipWorldVisualizerInitialization
+        skipWorldVisualizerInitialization: !!preset.skipWorldVisualizerInitialization,
+        blockIfNoStoredFromArtificial: preset.blockIfNoStoredFromArtificial !== false
       }))
     };
   }

@@ -137,6 +137,7 @@ function buildAutoTravelUI() {
   const autoCompleteToggle = addCheckboxRow('auto-complete', getAutoTravelOptionText('autoCompleteTerraforming', 'Automatically complete terraforming when possible'));
   const waitSpecializationToggle = addCheckboxRow('wait-specialization', getAutoTravelOptionText('waitForSpecialization', 'Wait on complete specialization'));
   const prioritizeStoredToggle = addCheckboxRow('prioritize-stored', getAutoTravelOptionText('prioritizeStored', 'Prioritize travel to stored artificial worlds'));
+  const blockIfNoStoredToggle = addCheckboxRow('block-no-stored', getAutoTravelOptionText('blockIfNoStoredFromArtificial', "Don't travel out of current artificial world if none is stored"));
   const skipEquilibrationToggle = addCheckboxRow('skip-equilibration', getAutoTravelOptionText('skipEquilibration', 'Skip equilibration'));
   const skipVisualizerToggle = addCheckboxRow('skip-visualizer', getAutoTravelOptionText('skipVisualizer', 'Skip world visualizer initialization'));
 
@@ -157,6 +158,7 @@ function buildAutoTravelUI() {
   automationElements.autoTravelAutoCompleteToggle = autoCompleteToggle;
   automationElements.autoTravelWaitSpecializationToggle = waitSpecializationToggle;
   automationElements.autoTravelPrioritizeStoredToggle = prioritizeStoredToggle;
+  automationElements.autoTravelBlockIfNoStoredToggle = blockIfNoStoredToggle;
   automationElements.autoTravelSkipEquilibrationToggle = skipEquilibrationToggle;
   automationElements.autoTravelSkipVisualizerToggle = skipVisualizerToggle;
 
@@ -261,6 +263,7 @@ function wireAutoTravelEvents() {
   els.autoTravelAutoCompleteToggle.addEventListener('change', (event) => setPresetFlag('autoCompleteTerraforming', event.target.checked));
   els.autoTravelWaitSpecializationToggle.addEventListener('change', (event) => setPresetFlag('waitForSpecialization', event.target.checked));
   els.autoTravelPrioritizeStoredToggle.addEventListener('change', (event) => setPresetFlag('prioritizeStoredArtificialWorlds', event.target.checked));
+  els.autoTravelBlockIfNoStoredToggle.addEventListener('change', (event) => setPresetFlag('blockIfNoStoredFromArtificial', event.target.checked));
   els.autoTravelSkipEquilibrationToggle.addEventListener('change', (event) => setPresetFlag('skipEquilibration', event.target.checked));
   els.autoTravelSkipVisualizerToggle.addEventListener('change', (event) => setPresetFlag('skipWorldVisualizerInitialization', event.target.checked));
 }
@@ -430,6 +433,7 @@ function updateAutoTravelUI() {
     automationElements.autoTravelAutoCompleteToggle.checked = preset.autoCompleteTerraforming !== false;
     automationElements.autoTravelWaitSpecializationToggle.checked = !!preset.waitForSpecialization;
     automationElements.autoTravelPrioritizeStoredToggle.checked = !!preset.prioritizeStoredArtificialWorlds;
+    automationElements.autoTravelBlockIfNoStoredToggle.checked = preset.blockIfNoStoredFromArtificial !== false;
     const canSkipEquilibration = Number(fastestTerraformRealSeconds) > 0 && Number(fastestTerraformRealSeconds) < 60;
     automationElements.autoTravelSkipEquilibrationToggle.checked = !!preset.skipEquilibration;
     automationElements.autoTravelSkipEquilibrationToggle.disabled = !canSkipEquilibration;
@@ -449,6 +453,7 @@ function updateAutoTravelUI() {
     automationElements.autoTravelAutoCompleteToggle,
     automationElements.autoTravelWaitSpecializationToggle,
     automationElements.autoTravelPrioritizeStoredToggle,
+    automationElements.autoTravelBlockIfNoStoredToggle,
     automationElements.autoTravelSkipVisualizerToggle,
     automationElements.autoTravelNewPresetButton,
     automationElements.autoTravelDeletePresetButton,
