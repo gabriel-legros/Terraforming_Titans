@@ -1055,8 +1055,9 @@ function parseAutomationPresetJsonFieldValue(rawValue) {
   if (trimmed === 'null') {
     return null;
   }
-  if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
-    const numeric = Number(trimmed);
+  const compactNumberText = trimmed.replace(/[,_\s]/g, '');
+  if (/^[+-]?(?:\d+\.?\d*|\d*\.?\d+)(?:e[+-]?\d+)?(?:Dd|dd|Ud|ud|De|de|Dc|dc|No|no|Oc|oc|Sp|sp|Sx|sx|Qi|qi|Q|q|T|t|B|b|M|K|k|m|µ|u|U|n|N|p|P|f|F)?$/i.test(compactNumberText)) {
+    const numeric = parseFlexibleNumber(compactNumberText);
     if (Number.isFinite(numeric)) {
       return numeric;
     }
@@ -1068,6 +1069,9 @@ function parseAutomationPresetJsonFieldValue(rawValue) {
 }
 
 function formatAutomationPresetJsonFieldValue(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return formatNumber(value, false, 3, true);
+  }
   if (value && value.constructor === Object) {
     return JSON.stringify(value);
   }
