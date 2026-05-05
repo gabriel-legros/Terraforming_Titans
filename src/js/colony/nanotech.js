@@ -732,6 +732,37 @@ class NanotechManager extends EffectableEntity {
 
   applyMaintenanceEffects() {
     if (typeof structures === 'undefined' || !structures) return;
+    const clearNanotechMaintenanceEffects = () => {
+      const maintenanceEffectIds = [
+        'nanotechMaint_metal',
+        'nanotechMaint_glass',
+        'nanotechMaint_water',
+        'nanotechMaint_components',
+        'nanotechMaint_superconductors',
+        'nanotechMaint_electronics',
+        'nanotechMaint2_components',
+        'nanotechMaint2_superconductors',
+        'nanotechMaint3_electronics',
+      ];
+      for (const name in structures) {
+        const target = colonies && colonies[name] ? 'colony' : 'building';
+        maintenanceEffectIds.forEach((effectId) => {
+          removeEffect({
+            target,
+            targetId: name,
+            effectId,
+          });
+        });
+      }
+    };
+    if (!this.enabled || this.isTemperatureDisabled()) {
+      clearNanotechMaintenanceEffects();
+      this.currentMaintenanceReduction = 0;
+      this.currentMaintenance2Reduction = 0;
+      this.currentMaintenance3Reduction = 0;
+      this.currentMaintenance4Reduction = 0;
+      return;
+    }
     const totals = { metal: 0, glass: 0, water: 0, components: 0, superconductors: 0, electronics: 0 };
     const nanotechSources = new Set([
       'nanotechMaintenance',
