@@ -1380,7 +1380,8 @@ function updateLifeStatusTable() {
             let radPenalty = designToCheck.getRadiationGrowthPenalty();
             if (radPenalty < 0.0001) radPenalty = 0;
             const radMult = 1 - radPenalty;
-            const waterMult = (terraforming.zonalSurface[zone]?.liquidWater || 0) > 1e-9 ? 1 : 0;
+            const liquidKeys = getLiquidRequirementKeysFromProcess(metabolismProcess);
+            const liquidMult = liquidKeys.every((resourceKey) => (terraforming.zonalSurface[zone]?.[resourceKey] || 0) > 1e-9) ? 1 : 0;
             const growthBreakdown = getLifeManagerSafe()?.getLifeGrowthMultiplierBreakdown?.() ?? {
                 effectMultiplier: 1,
                 nitrogenMultiplier: 1,
@@ -1388,7 +1389,7 @@ function updateLifeStatusTable() {
                 totalMultiplier: 1,
             };
             const otherMult = growthBreakdown.totalMultiplier;
-            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
+            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * liquidMult * otherMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if (tooltipIcon) {
                 const lines = [
@@ -1418,13 +1419,7 @@ function updateLifeStatusTable() {
                         lines.push(`Biodome protection floor: x${formatNumber(landMult, false, 2)} (${formatNumber(biodomeFraction * 100, false, 2)}% base land)`);
                     }
                 }
-                const process = getActiveLifeMetabolismProcessForUI();
-                const liquidKeys = getLiquidRequirementKeysFromProcess(process);
                 liquidKeys.forEach((resourceKey) => {
-                    if (resourceKey === 'liquidWater') {
-                        lines.push(`Liquid Water: x${formatNumber(waterMult, false, 2)}`);
-                        return;
-                    }
                     const zoneAmount = terraforming.zonalSurface[zone]?.[resourceKey] || 0;
                     const mult = zoneAmount > 1e-9 ? 1 : 0;
                     const label = getLiquidRequirementLabel(resourceKey);

@@ -1103,6 +1103,10 @@ class LifeManager extends EffectableEntity {
     const process = getActiveLifeMetabolismProcess();
     const growthPerBiomass = process.growth.perBiomass;
     const decayPerBiomass = process.decay.perBiomass;
+    const liquidRequirementKeys = Object.entries(growthPerBiomass.surface || {})
+      .filter(([, coef]) => coef < 0)
+      .map(([resourceKey]) => resourceKey)
+      .filter((resourceKey) => resourceKey && resourceKey.indexOf('liquid') === 0);
     const getAtmosphericAvailable = (resourceKey) => {
       const pending = accumulatedChanges ? (accumulatedChanges.atmospheric[resourceKey] || 0) : 0;
       return Math.max(0, resources.atmospheric[resourceKey].value + pending);
@@ -1127,11 +1131,14 @@ class LifeManager extends EffectableEntity {
     const zones = getZones();
 
     const biomassByZone = {};
-    const waterByZone = {};
+    const liquidByZone = {};
     const overflowDecayByZone = {};
     zones.forEach(zoneName => {
       biomassByZone[zoneName] = terraforming.zonalSurface[zoneName].biomass || 0;
-      waterByZone[zoneName] = terraforming.zonalSurface[zoneName].liquidWater || 0;
+      liquidByZone[zoneName] = {};
+      liquidRequirementKeys.forEach((resourceKey) => {
+        liquidByZone[zoneName][resourceKey] = terraforming.zonalSurface[zoneName][resourceKey] || 0;
+      });
       overflowDecayByZone[zoneName] = 0;
     });
 
@@ -1163,10 +1170,10 @@ class LifeManager extends EffectableEntity {
     zones.forEach(zoneName => {
       const lumMult = usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
       const tempMult = design.temperatureGrowthMultiplierZone(zoneName);
-      const waterMult = waterByZone[zoneName] > 1e-9 ? 1 : 0;
+      const liquidMult = liquidRequirementKeys.every((resourceKey) => (liquidByZone[zoneName][resourceKey] || 0) > 1e-9) ? 1 : 0;
       const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
       const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
-      const growthRate = baseGrowthRate * lumMult * tempMult * radMult * waterMult * effectiveGrowthMultiplier;
+      const growthRate = baseGrowthRate * lumMult * tempMult * radMult * liquidMult * effectiveGrowthMultiplier;
       canGrowByZone[zoneName] = growthRate > 0 && maxBiomassForZone > 0;
     });
 
@@ -1219,8 +1226,8 @@ class LifeManager extends EffectableEntity {
       surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
         const requiredPerBiomass = -coef;
         let available = 0;
-        if (resourceKey === 'liquidWater') {
-          available = waterByZone[zoneName];
+        if (resourceKey.indexOf('liquid') === 0) {
+          available = liquidByZone[zoneName][resourceKey] || 0;
         } else {
           available = terraforming.zonalSurface[zoneName][resourceKey] || 0;
         }
@@ -1351,8 +1358,8 @@ class LifeManager extends EffectableEntity {
         const delta = zoneGrowth * coef;
         growthSurfaceDeltasByZone[zoneName][resourceKey] =
           (growthSurfaceDeltasByZone[zoneName][resourceKey] || 0) + delta;
-        if (resourceKey === 'liquidWater') {
-          waterByZone[zoneName] = Math.max(0, waterByZone[zoneName] + delta);
+        if (resourceKey.indexOf('liquid') === 0) {
+          liquidByZone[zoneName][resourceKey] = Math.max(0, (liquidByZone[zoneName][resourceKey] || 0) + delta);
         }
       });
       Object.entries(growthPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
@@ -1405,8 +1412,8 @@ class LifeManager extends EffectableEntity {
       let maxBySurfaceInputs = targetDecay;
       decaySurfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
         const requiredPerBiomass = -coef;
-        let available = resourceKey === 'liquidWater'
-          ? waterByZone[zoneName]
+        let available = resourceKey.indexOf('liquid') === 0
+          ? (liquidByZone[zoneName][resourceKey] || 0)
           : (terraforming.zonalSurface[zoneName][resourceKey] || 0);
         if (requiredPerBiomass > 0) {
           maxBySurfaceInputs = Math.min(maxBySurfaceInputs, available / requiredPerBiomass);
@@ -1469,7 +1476,7 @@ class LifeManager extends EffectableEntity {
       secondsMultiplier,
       zones,
       biomassByZone,
-      waterByZone,
+      waterByZone: liquidByZone,
       overflowDecayByZone,
       biomassGrowthLimiters,
       potentialGrowthByZone,
