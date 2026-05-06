@@ -50,6 +50,7 @@ let autoTravelContext = {
   suppressTabSwitch: false,
   restoreTabState: null
 };
+let autoTravelLoadingPopupElement = null;
 let suppressPlanetVisualizerRuntime = false;
 
 let gameSettings = {

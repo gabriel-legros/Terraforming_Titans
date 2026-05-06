@@ -5,6 +5,7 @@ setLanguageData({
   },
   ui: {
     loading: 'Loading...',
+    autoTravelLoading: 'Auto travel in progress...',
     topBar: {
       dayProgress: 'Day Progress',
     },

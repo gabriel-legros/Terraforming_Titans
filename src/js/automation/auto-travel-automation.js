@@ -226,6 +226,12 @@ class AutoTravelAutomation {
     return spaceManager && spaceManager.currentArtificialKey !== null;
   }
 
+  _runAfterLoadingPaint(callback) {
+    window.requestAnimationFrame(() => {
+      window.setTimeout(callback, 80);
+    });
+  }
+
   _captureCurrentTabState() {
     const activeMainTab = document.querySelector('.tab.active');
     const mainTabId = activeMainTab?.dataset?.tab || '';
@@ -278,13 +284,19 @@ class AutoTravelAutomation {
       suppressTabSwitch: true,
       restoreTabState: this._captureCurrentTabState()
     };
-    const traveled = artificialManager && artificialManager.travelToStoredWorld
-      ? artificialManager.travelToStoredWorld(seed)
-      : false;
-    if (!traveled) {
-      autoTravelContext.active = false;
-      return false;
-    }
+    showAutoTravelLoadingPopup();
+    this._runAfterLoadingPaint(() => {
+      const traveled = artificialManager && artificialManager.travelToStoredWorld
+        ? artificialManager.travelToStoredWorld(seed)
+        : false;
+      if (!traveled) {
+        autoTravelContext.active = false;
+      }
+      hideAutoTravelLoadingPopup();
+      this._travelInProgress = false;
+      this._cooldownMs = 1000;
+      queueAutomationUIRefresh();
+    });
     return true;
   }
 
@@ -334,6 +346,7 @@ class AutoTravelAutomation {
         runAutoTravelEquilibrationPopup(res)
           .then((equilibratedRes) => {
             if (!equilibratedRes) {
+              this._travelInProgress = false;
               return;
             }
             autoTravelContext = {
@@ -342,16 +355,24 @@ class AutoTravelAutomation {
               suppressTabSwitch: true,
               restoreTabState: this._captureCurrentTabState()
             };
-            const travelSeed = String(equilibratedRes.seedString || equilibratedRes.original?.seedString || equilibratedRes.original?.seed || '');
-            const traveled = spaceManager && spaceManager.travelToRandomWorld
-              ? spaceManager.travelToRandomWorld(equilibratedRes, travelSeed)
-              : false;
-            if (!traveled) {
-              autoTravelContext.active = false;
-            }
+            showAutoTravelLoadingPopup();
+            this._runAfterLoadingPaint(() => {
+              const travelSeed = String(equilibratedRes.seedString || equilibratedRes.original?.seedString || equilibratedRes.original?.seed || '');
+              const traveled = spaceManager && spaceManager.travelToRandomWorld
+                ? spaceManager.travelToRandomWorld(equilibratedRes, travelSeed)
+                : false;
+              if (!traveled) {
+                autoTravelContext.active = false;
+              }
+              hideAutoTravelLoadingPopup();
+              this._travelInProgress = false;
+              this._cooldownMs = 1000;
+              queueAutomationUIRefresh();
+            });
           })
           .catch((error) => {
             console.error('Auto travel equilibration failed:', error);
+            this._travelInProgress = false;
           })
           .finally(() => {
             this._equilibrationInProgress = false;
@@ -367,14 +388,20 @@ class AutoTravelAutomation {
       suppressTabSwitch: true,
       restoreTabState: this._captureCurrentTabState()
     };
-    const travelSeed = String(res.seedString || res.original?.seedString || res.original?.seed || '');
-    const traveled = spaceManager && spaceManager.travelToRandomWorld
-      ? spaceManager.travelToRandomWorld(res, travelSeed)
-      : false;
-    if (!traveled) {
-      autoTravelContext.active = false;
-      return false;
-    }
+    showAutoTravelLoadingPopup();
+    this._runAfterLoadingPaint(() => {
+      const travelSeed = String(res.seedString || res.original?.seedString || res.original?.seed || '');
+      const traveled = spaceManager && spaceManager.travelToRandomWorld
+        ? spaceManager.travelToRandomWorld(res, travelSeed)
+        : false;
+      if (!traveled) {
+        autoTravelContext.active = false;
+      }
+      hideAutoTravelLoadingPopup();
+      this._travelInProgress = false;
+      this._cooldownMs = 1000;
+      queueAutomationUIRefresh();
+    });
     return true;
   }
 
@@ -425,8 +452,10 @@ class AutoTravelAutomation {
     try {
       const didTravel = this.tryAutoTravel();
       this._cooldownMs = didTravel ? 1000 : 500;
+      if (!didTravel) {
+        this._travelInProgress = false;
+      }
     } finally {
-      this._travelInProgress = false;
       queueAutomationUIRefresh();
     }
   }

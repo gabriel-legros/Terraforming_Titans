@@ -196,6 +196,32 @@ function initializeDefaultGlobals(){
  */
 let preparedTravelState = null;
 
+function showAutoTravelLoadingPopup() {
+  if (!autoTravelLoadingPopupElement) {
+    autoTravelLoadingPopupElement = document.getElementById('auto-travel-loading-popup');
+  }
+  if (!autoTravelLoadingPopupElement) {
+    autoTravelLoadingPopupElement = document.createElement('div');
+    autoTravelLoadingPopupElement.id = 'auto-travel-loading-popup';
+    autoTravelLoadingPopupElement.className = 'auto-travel-loading-popup auto-travel-loading-popup--hidden';
+    document.body.appendChild(autoTravelLoadingPopupElement);
+  }
+  autoTravelLoadingPopupElement.textContent = t('ui.autoTravelLoading', {}, 'Auto travel in progress...');
+  if (!autoTravelLoadingPopupElement.parentNode) {
+    document.body.appendChild(autoTravelLoadingPopupElement);
+  }
+  autoTravelLoadingPopupElement.classList.remove('auto-travel-loading-popup--hidden');
+  autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'false');
+}
+
+function hideAutoTravelLoadingPopup() {
+  if (!autoTravelLoadingPopupElement) {
+    autoTravelLoadingPopupElement = document.getElementById('auto-travel-loading-popup');
+  }
+  autoTravelLoadingPopupElement.classList.add('auto-travel-loading-popup--hidden');
+  autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
+}
+
 function prepareForTravel(options = {}) {
   if (options.savePretravel !== false) {
     try {
