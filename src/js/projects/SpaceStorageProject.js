@@ -318,7 +318,10 @@ class SpaceStorageProject extends SpaceshipProject {
     const fallback = { mode: 'none', value: 0 };
     const caps = sourceCaps || this.resourceCaps;
     const setting = caps[resourceKey] || fallback;
-    const mode = setting.mode === 'amount' || setting.mode === 'percent' || setting.mode === 'weight'
+    const mode = setting.mode === 'amount'
+      || setting.mode === 'percent'
+      || setting.mode === 'weight'
+      || setting.mode === 'remaining'
       ? setting.mode
       : 'none';
     const parsedValue = Number(setting.value);
@@ -327,6 +330,8 @@ class SpaceStorageProject extends SpaceshipProject {
       value = Math.max(0, Math.min(100, value));
     } else if (mode === 'weight') {
       value = Math.max(0, Math.floor(value));
+    } else if (mode === 'remaining') {
+      value = 0;
     } else {
       value = Math.max(0, value);
     }
@@ -354,6 +359,7 @@ class SpaceStorageProject extends SpaceshipProject {
     const keys = this.getAllSpaceStorageResourceKeys(sourceCaps);
     const limits = {};
     let fixedTotal = 0;
+    let remainingCount = 0;
     let hasWeightCap = false;
     let totalWeight = 0;
 
@@ -376,10 +382,26 @@ class SpaceStorageProject extends SpaceshipProject {
         if (setting.value > 0) {
           totalWeight += setting.value;
         }
+        return;
+      }
+      if (setting.mode === 'remaining') {
+        remainingCount += 1;
       }
     });
 
     const remainingStorage = Math.max(0, this.maxStorage - fixedTotal);
+    if (remainingCount > 0) {
+      const splitCap = remainingStorage / remainingCount;
+      keys.forEach((resourceKey) => {
+        if (Object.prototype.hasOwnProperty.call(limits, resourceKey)) {
+          return;
+        }
+        const setting = this.getResourceCapSettingFromSource(resourceKey, sourceCaps);
+        limits[resourceKey] = setting.mode === 'remaining' ? splitCap : 0;
+      });
+      return limits;
+    }
+
     keys.forEach((resourceKey) => {
       if (Object.prototype.hasOwnProperty.call(limits, resourceKey)) {
         return;

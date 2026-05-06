@@ -373,7 +373,7 @@ function renderSpaceStorageUI(project, container) {
     capModeInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       capModeInfo,
-      getSpaceStorageUIText('ui.projects.spaceStorage.capTypeTooltip', 'By Weight first applies all Amount and % caps, subtracts those from max storage, then splits the remainder across By Weight resources proportional to weight. Weight 0 or no cap setting gets 0 cap while any By Weight cap exists.')
+      getSpaceStorageUIText('ui.projects.spaceStorage.capTypeTooltip', 'Amount and % caps apply first. All Remaining splits leftover storage evenly across all resources using that mode. If no All Remaining is set, By Weight splits leftover storage proportionally across weighted resources. Weight 0 or no cap setting gets 0 cap while any weighted split exists.')
     );
     capModeLabel.appendChild(capModeInfo);
     capModeSelect = document.createElement('select');
@@ -390,7 +390,10 @@ function renderSpaceStorageUI(project, container) {
     const capModeWeight = document.createElement('option');
     capModeWeight.value = 'weight';
     capModeWeight.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.byWeight', 'By Weight');
-    capModeSelect.append(capModeNone, capModeAmount, capModePercent, capModeWeight);
+    const capModeRemaining = document.createElement('option');
+    capModeRemaining.value = 'remaining';
+    capModeRemaining.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.allRemaining', 'All Remaining');
+    capModeSelect.append(capModeNone, capModeAmount, capModePercent, capModeWeight, capModeRemaining);
     capModeRow.append(capModeLabel, capModeSelect);
 
     const capValueRow = document.createElement('div');
@@ -416,6 +419,9 @@ function renderSpaceStorageUI(project, container) {
         }
         if (mode === 'weight') {
           return Math.max(0, Math.floor(parsed));
+        }
+        if (mode === 'remaining') {
+          return 0;
         }
         return Math.max(0, parsed);
       },
@@ -628,11 +634,15 @@ function renderSpaceStorageUI(project, container) {
 
   const updateCapInputState = () => {
     const mode = capModeSelect.value;
-    capValueInput.disabled = mode === 'none';
+    capValueInput.disabled = mode === 'none' || mode === 'remaining';
     capValueLabel.firstChild.textContent = mode === 'percent'
       ? getSpaceStorageUIText('ui.projects.spaceStorage.capPercent', 'Cap %:')
-      : (mode === 'weight' ? getSpaceStorageUIText('ui.projects.spaceStorage.weight', 'Weight:') : getSpaceStorageUIText('ui.projects.spaceStorage.capValue', 'Cap value:'));
-    if (mode === 'none') {
+      : (mode === 'weight'
+        ? getSpaceStorageUIText('ui.projects.spaceStorage.weight', 'Weight:')
+        : (mode === 'remaining'
+          ? getSpaceStorageUIText('ui.projects.spaceStorage.allRemaining', 'All Remaining')
+          : getSpaceStorageUIText('ui.projects.spaceStorage.capValue', 'Cap value:')));
+    if (mode === 'none' || mode === 'remaining') {
       capValueInput.value = '';
       capValueInput.dataset.spaceStorageCap = '0';
     }
@@ -711,6 +721,8 @@ function renderSpaceStorageUI(project, container) {
         normalized = Math.max(0, Math.min(100, parsed));
       } else if (mode === 'weight') {
         normalized = Math.max(0, Math.floor(parsed));
+      } else if (mode === 'remaining') {
+        normalized = 0;
       }
       const capLimit = getSpaceStorageCapLimitForDraft(project, key, mode, normalized);
       project.clampStoredResourceToLimit(key, capLimit);
@@ -724,6 +736,8 @@ function renderSpaceStorageUI(project, container) {
         normalized = Math.max(0, Math.min(100, parsed));
       } else if (mode === 'weight') {
         normalized = Math.max(0, Math.floor(parsed));
+      } else if (mode === 'remaining') {
+        normalized = 0;
       }
       projectElements[project.name].capDraft = mode === 'none'
         ? { mode: 'none', value: 0 }
@@ -1344,7 +1358,7 @@ function updateSpaceStorageUI(project) {
         ? String(reserveValue)
         : (reserveValue >= 1e6 ? formatNumber(reserveValue, true, 3) : String(reserveValue));
     }
-    els.capValueInput.disabled = els.capModeSelect.value === 'none';
+    els.capValueInput.disabled = els.capModeSelect.value === 'none' || els.capModeSelect.value === 'remaining';
     const reserveIsNone = els.reserveModeSelect.value === 'none';
     els.reserveValueInput.disabled = reserveIsNone;
     if (els.scopeExpansionsCheckbox) {
@@ -1367,6 +1381,8 @@ function updateSpaceStorageUI(project) {
         capNormalized = Math.max(0, Math.min(100, capParsed));
       } else if (capMode === 'weight') {
         capNormalized = Math.max(0, Math.floor(capParsed));
+      } else if (capMode === 'remaining') {
+        capNormalized = 0;
       }
       const amount = key ? Math.max(0, (project.getStoredResourceValue ? project.getStoredResourceValue(key) : 0)) : 0;
       const capLimit = key
@@ -1377,7 +1393,11 @@ function updateSpaceStorageUI(project) {
     if (els.capValueLabel) {
       els.capValueLabel.firstChild.textContent = els.capModeSelect.value === 'percent'
         ? getSpaceStorageUIText('ui.projects.spaceStorage.capPercent', 'Cap %:')
-        : (els.capModeSelect.value === 'weight' ? getSpaceStorageUIText('ui.projects.spaceStorage.weight', 'Weight:') : getSpaceStorageUIText('ui.projects.spaceStorage.capValue', 'Cap value:'));
+        : (els.capModeSelect.value === 'weight'
+          ? getSpaceStorageUIText('ui.projects.spaceStorage.weight', 'Weight:')
+          : (els.capModeSelect.value === 'remaining'
+            ? getSpaceStorageUIText('ui.projects.spaceStorage.allRemaining', 'All Remaining')
+            : getSpaceStorageUIText('ui.projects.spaceStorage.capValue', 'Cap value:')));
     }
     const capParsed = parseFlexibleNumber(els.capValueInput.dataset.spaceStorageCap) || 0;
     let capNormalized = Math.max(0, capParsed);
@@ -1385,6 +1405,8 @@ function updateSpaceStorageUI(project) {
       capNormalized = Math.max(0, Math.min(100, capParsed));
     } else if (els.capModeSelect.value === 'weight') {
       capNormalized = Math.max(0, Math.floor(capParsed));
+    } else if (els.capModeSelect.value === 'remaining') {
+      capNormalized = 0;
     }
     els.capValueInput.dataset.spaceStorageCap = String(capNormalized);
     if (els.reserveModeSelect.value === 'none') {
