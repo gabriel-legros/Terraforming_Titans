@@ -340,6 +340,13 @@ function getLiquidCoverageTargetAmount(terraformingState, coverageKey, targetCov
 
 function createResourceContainers(resourcesData) {
   const resourcesContainer = document.getElementById('resources-container');
+  const existingTooltipAnchors = resourcesContainer.querySelectorAll('.resource-item, .info-tooltip-icon');
+  for (let i = 0; i < existingTooltipAnchors.length; i += 1) {
+    const anchor = existingTooltipAnchors[i];
+    if (anchor._cleanupTooltipHover) {
+      anchor._cleanupTooltipHover();
+    }
+  }
   resourcesContainer.innerHTML = ''; // Clear the main container first
   resourceUICache.viewToggles = {};
 

@@ -30,6 +30,9 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
 
 function addTooltipHover(anchor, tooltip, options = {}) {
   if (!anchor) return;
+  if (anchor._cleanupTooltipHover) {
+    anchor._cleanupTooltipHover();
+  }
   const tooltipEl = tooltip || anchor.querySelector && anchor.querySelector('.resource-tooltip');
   if (!tooltipEl) return;
   const dynamicPlacement = options.dynamicPlacement || tooltipEl.classList.contains('dynamic-tooltip');
@@ -40,6 +43,10 @@ function addTooltipHover(anchor, tooltip, options = {}) {
   let documentListenerActive = false;
 
   const handleDocumentPointerDown = (event) => {
+    if (!anchor.isConnected || !tooltipEl.isConnected) {
+      cleanup();
+      return;
+    }
     if (!pointerActive && !clickPinned) return;
     if (anchor.contains(event.target) || tooltipEl.contains(event.target)) return;
     if (pointerActive) setPointerActive(false);
@@ -181,21 +188,21 @@ function addTooltipHover(anchor, tooltip, options = {}) {
     tooltipEl.style.visibility = '';
   };
 
-  anchor.addEventListener('mouseenter', () => {
+  const handleMouseEnter = () => {
     showTooltip();
-  });
-  anchor.addEventListener('mouseleave', () => {
+  };
+  const handleMouseLeave = () => {
     if (pointerActive || clickPinned) return;
     hideTooltip();
-  });
-  anchor.addEventListener('focusin', () => {
+  };
+  const handleFocusIn = () => {
     showTooltip();
-  });
-  anchor.addEventListener('focusout', () => {
+  };
+  const handleFocusOut = () => {
     if (pointerActive || clickPinned) return;
     hideTooltip();
-  });
-  anchor.addEventListener('pointerdown', (event) => {
+  };
+  const handlePointerDown = (event) => {
     const type = event.pointerType;
     if (type && type === 'mouse') {
       if (!clickToPin) return;
@@ -215,7 +222,28 @@ function addTooltipHover(anchor, tooltip, options = {}) {
       setPointerActive(false);
       hideTooltip();
     }
-  });
+  };
+
+  const cleanup = () => {
+    setPointerActive(false);
+    setClickPinned(false);
+    hideTooltip();
+    anchor.removeEventListener('mouseenter', handleMouseEnter);
+    anchor.removeEventListener('mouseleave', handleMouseLeave);
+    anchor.removeEventListener('focusin', handleFocusIn);
+    anchor.removeEventListener('focusout', handleFocusOut);
+    anchor.removeEventListener('pointerdown', handlePointerDown);
+    if (anchor._cleanupTooltipHover === cleanup) {
+      anchor._cleanupTooltipHover = null;
+    }
+  };
+
+  anchor.addEventListener('mouseenter', handleMouseEnter);
+  anchor.addEventListener('mouseleave', handleMouseLeave);
+  anchor.addEventListener('focusin', handleFocusIn);
+  anchor.addEventListener('focusout', handleFocusOut);
+  anchor.addEventListener('pointerdown', handlePointerDown);
+  anchor._cleanupTooltipHover = cleanup;
 }
 
 function setTooltipText(node, text, cache, key) {
