@@ -2468,11 +2468,11 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
-        this._grantDepartureSkillPoint();
         // prepareForTravel is now called within recordDepartureSnapshot via changeCurrentPlanet
         if (!this.changeCurrentPlanet(targetKey)) {
             return false;
         }
+        this._grantDepartureSkillPoint();
         this.currentArtificialKey = null;
 
         this.currentRandomSeed = null;
@@ -2507,8 +2507,6 @@ class SpaceManager extends EffectableEntity {
             }
         }
 
-        this._grantDepartureSkillPoint();
-
         const existing = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const revisitingRandomSeed = !isArtificial && !!existing?.visited;
         const specialSeedKey = getSpecialSeedKeyFromWorldData(res) || getSpecialSeedKeyFromWorldData(existing);
@@ -2535,6 +2533,7 @@ class SpaceManager extends EffectableEntity {
 
         // prepareForTravel is now called within recordDepartureSnapshot
         this.recordDepartureSnapshot();
+        this._grantDepartureSkillPoint();
         if (revisitingRandomSeed) {
             this.resetRandomWorldStatus(s);
         }
