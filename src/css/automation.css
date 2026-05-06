@@ -987,6 +987,10 @@
   font-size: 12px;
 }
 
+.script-automation-status-line.script-automation-status-line-paused {
+  color: #c62828;
+}
+
 .script-automation-script-row,
 .script-line-card,
 .script-editor-section,
@@ -1250,6 +1254,10 @@
   background: #111827;
   border-color: #24324a;
   color: #d7e2f3;
+}
+
+.dark-mode .script-automation-status-line.script-automation-status-line-paused {
+  color: #ff6b6b;
 }
 
 .dark-mode .script-automation-script-row,

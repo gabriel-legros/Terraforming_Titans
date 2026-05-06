@@ -341,6 +341,7 @@ function updateScriptAutomationUI() {
     statusParts.push(automation.lastLineOutcomeSummary);
   }
   automationElements.scriptStatusLine.textContent = statusParts.join(' | ');
+  automationElements.scriptStatusLine.classList.toggle('script-automation-status-line-paused', automation.lastStatus === 'Paused');
 
   const signature = getScriptLinesSignature(automation, script);
   const activeElement = document.activeElement;
