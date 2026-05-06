@@ -490,7 +490,9 @@ class ScriptAutomation {
           this.lastLineOutcomeSummary = `GOTO ${targetLabel}`;
           this.lastLineOutcomeLineId = line.id;
           if (forceStep) {
-            this.manualStepPendingLineId = branchResult.gotoLineId;
+            this.pcLineId = branchResult.gotoLineId;
+            this.pcActionIndex = 0;
+            this.manualStepPendingLineId = null;
             this.haltedReason = 'linkedElse';
             this.lastStatus = 'Paused';
             break;
