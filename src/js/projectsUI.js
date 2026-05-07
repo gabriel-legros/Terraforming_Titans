@@ -670,7 +670,7 @@ function createProjectItem(project) {
 
   // Cost
   if (project.cost && Object.keys(project.cost).length > 0) {
-    const costElement = document.createElement('p');
+    const costElement = document.createElement('div');
     costElement.classList.add('project-cost');
     const label = document.createElement('strong');
     label.textContent = getProjectsUIText('ui.projects.cost', 'Cost:');

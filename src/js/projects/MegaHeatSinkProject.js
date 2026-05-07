@@ -64,19 +64,29 @@
         showAutoMax: false,
         showMaxValue: false,
       });
+      if (this.workerCapacityUI?.container) {
+        this.workerCapacityUI.container.classList.add('mega-heat-sink-top-section');
+      }
+      if (this.workerCapacityUI?.amountSection) {
+        this.workerCapacityUI.amountSection.classList.add('mega-heat-sink-metric-section');
+      }
+      if (this.workerCapacityUI?.amountDisplay) {
+        this.workerCapacityUI.amountDisplay.classList.remove('amount-display');
+        this.workerCapacityUI.amountDisplay.classList.add('project-cost', 'mega-heat-sink-metric-value');
+      }
       if (this.workerCapacityUI?.val) {
         this.workerCapacityUI.val.style.fontWeight = '400';
       }
       if (this.workerCapacityUI?.container) {
         const expansionSection = document.createElement('div');
-        expansionSection.className = 'project-section-container worker-capacity-amount-section';
+        expansionSection.className = 'project-section-container worker-capacity-amount-section mega-heat-sink-metric-section';
         const expansionHeader = document.createElement('h4');
         expansionHeader.className = 'section-title';
         expansionHeader.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.expansion', 'Expansion');
         const expansionRow = document.createElement('div');
         expansionRow.className = 'worker-capacity-row';
         const expansionDisplay = document.createElement('div');
-        expansionDisplay.className = 'amount-display';
+        expansionDisplay.className = 'project-cost mega-heat-sink-metric-value';
         const expansionValue = document.createElement('span');
         expansionValue.style.fontWeight = '400';
         expansionDisplay.appendChild(expansionValue);

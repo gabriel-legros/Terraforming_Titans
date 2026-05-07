@@ -2322,6 +2322,16 @@
     grid-template-columns: repeat(3, 1fr);
 }
 
+.mega-heat-sink-top-section .mega-heat-sink-metric-section .worker-capacity-row {
+    display: block;
+    margin: 0;
+}
+
+.mega-heat-sink-top-section .mega-heat-sink-metric-section .project-cost {
+    margin: 0;
+}
+
+
 /* --- Space Export Project --- */
 .disposal-container {
     display: contents; /* This makes the container's children act as direct children of the grid */
