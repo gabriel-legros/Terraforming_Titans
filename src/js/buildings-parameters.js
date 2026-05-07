@@ -346,6 +346,7 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
+    snapProductivity: true,
     autoBuildPercent: 100,
     autoBuildMaxOption: true,
     temperatureMaintenanceImmune: true,

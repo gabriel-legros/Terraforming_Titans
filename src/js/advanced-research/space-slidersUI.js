@@ -4,6 +4,8 @@ const spaceSlidersUiCache = {
   slider: null,
   tickValue: null,
   energyValue: null,
+  productivityValue: null,
+  notches: null,
   tooltip: null,
   tooltipContent: null,
 };
@@ -26,6 +28,12 @@ function setSpaceSliderElements(elements = {}) {
   if (elements.energyValue) {
     spaceSlidersUiCache.energyValue = elements.energyValue;
   }
+  if (elements.productivityValue) {
+    spaceSlidersUiCache.productivityValue = elements.productivityValue;
+  }
+  if (elements.notches) {
+    spaceSlidersUiCache.notches = elements.notches;
+  }
   if (elements.tooltip) {
     spaceSlidersUiCache.tooltip = elements.tooltip;
   }
@@ -41,7 +49,9 @@ function initializeSpaceSlidersUI(space) {
   const card = document.getElementById('space-slider-cylinders-hope-card');
   const slider = document.getElementById('space-slider-cylinders-hope-input');
   const tickValue = document.getElementById('space-slider-cylinders-hope-tick');
+  const notches = document.getElementById('space-slider-cylinders-hope-notches');
   const energyValue = document.getElementById('space-slider-cylinders-hope-energy');
+  const productivityValue = document.getElementById('space-slider-cylinders-hope-productivity');
   const tooltip = document.getElementById('space-slider-cylinders-hope-tooltip');
   const tooltipContent = attachDynamicInfoTooltip(tooltip, '');
   setSpaceSliderElements({
@@ -49,7 +59,9 @@ function initializeSpaceSlidersUI(space) {
     card,
     slider,
     tickValue,
+    notches,
     energyValue,
+    productivityValue,
     tooltip,
     tooltipContent
   });
@@ -63,6 +75,7 @@ function initializeSpaceSlidersUI(space) {
       updateSpaceSlidersUI({ space: spaceSlidersUiSpaceManager });
     });
   }
+  renderSpaceSliderNotches();
 }
 
 function setSpaceSlidersUIManager(space) {
@@ -74,6 +87,19 @@ function setSpaceSlidersTooltip(text) {
     spaceSlidersUiCache.tooltipContent.textContent = text;
   } else if (spaceSlidersUiCache.tooltip) {
     spaceSlidersUiCache.tooltip.title = text;
+  }
+}
+
+function renderSpaceSliderNotches() {
+  const notches = spaceSlidersUiCache.notches;
+  if (!notches || notches.childElementCount > 0) {
+    return;
+  }
+  for (let index = 0; index <= 10; index += 1) {
+    const notch = document.createElement('span');
+    notch.className = 'space-slider-notch';
+    notch.style.left = `${index * 10}%`;
+    notches.appendChild(notch);
   }
 }
 
@@ -89,8 +115,13 @@ function updateSpaceSlidersUI({ space } = {}) {
     return;
   }
   const tick = getCylindersHopeTick(space);
+  const cylinders = Math.max(0, Number(space?.getOneillCylinderCount?.() || 0));
   const perCylinder = getCylindersHopeEnergyPerCylinderPerSecond(tick);
   const totalEnergy = getCylindersHopeTotalDesiredEnergyPerSecond(space);
+  const productivity = tick <= 0 ? 1 : space.getSpaceSliderRuntimeProductivity('cylindersHope');
+  const worldsPerSector = getCylindersHopeWarpGateWorldBonusPerSector(space, galaxyManager) * productivity;
+  const perCylinderManufacturing = tick <= 0 ? 0 : 1e12 * (tick / 10) * productivity;
+  const totalManufacturing = cylinders * perCylinderManufacturing;
   if (spaceSlidersUiCache.slider && document.activeElement !== spaceSlidersUiCache.slider) {
     spaceSlidersUiCache.slider.value = String(tick);
   }
@@ -98,17 +129,22 @@ function updateSpaceSlidersUI({ space } = {}) {
     spaceSlidersUiCache.tickValue.textContent = String(tick);
   }
   if (spaceSlidersUiCache.energyValue) {
-    const line = tick <= 0
-      ? t('ui.space.spaceSliders.cylindersHope.energyOff', null, '0 space energy/s')
-      : t(
-        'ui.space.spaceSliders.cylindersHope.energyLine',
-        {
-          perCylinder: formatNumber(perCylinder, true),
-          total: formatNumber(totalEnergy, true),
-        },
-        '{perCylinder} per cylinder/s, total {total}/s'
-      );
+    const line = t(
+      'ui.space.spaceSliders.cylindersHope.combinedLine',
+      {
+        energyPerCylinder: formatNumber(perCylinder, true),
+        energyTotal: formatNumber(totalEnergy, true),
+        manufacturingPerCylinder: formatNumber(perCylinderManufacturing, true),
+        manufacturingTotal: formatNumber(totalManufacturing, true),
+        worldsPerSector: formatNumber(worldsPerSector, true, 2),
+        productivity: formatNumber(productivity * 100, false, 2),
+      },
+      'Energy Cost: {energyPerCylinder} per cylinder/s, total {energyTotal}/s | Manufacturing Population Gain: {manufacturingPerCylinder} per cylinder, total {manufacturingTotal} | Worlds per Sector: {worldsPerSector} | Productivity: {productivity}%'
+    );
     spaceSlidersUiCache.energyValue.textContent = line;
+  }
+  if (spaceSlidersUiCache.productivityValue) {
+    spaceSlidersUiCache.productivityValue.textContent = '';
   }
   const tooltipText = t(
     'ui.space.spaceSliders.cylindersHope.tooltip',

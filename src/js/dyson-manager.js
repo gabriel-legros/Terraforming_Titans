@@ -74,6 +74,19 @@ class DysonManager {
       0
     );
   }
+
+  applyProjectedResourceRates(resourcesRef) {
+    const projectedPerSecond = this.getTotalCollectorEnergyPerSecond();
+    if (!(projectedPerSecond > 0)) {
+      return 0;
+    }
+    resourcesRef.space.energy.modifyRate(
+      projectedPerSecond,
+      'Dyson Collectors',
+      'project'
+    );
+    return projectedPerSecond;
+  }
 }
 
 const dysonManager = new DysonManager();

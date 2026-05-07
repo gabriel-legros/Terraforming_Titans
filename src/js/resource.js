@@ -1239,9 +1239,18 @@ if (typeof globalThis !== 'undefined') {
   globalThis.reconcileLandResourceValue = reconcileLandResourceValue;
 }
 
-const shouldTreatProjectAsBuilding = (project) =>
-  project?.treatAsBuilding ||
-  (project?.isContinuous() && project?.attributes?.continuousAsBuilding);
+const shouldTreatProjectAsBuilding = (project) => {
+  if (project?.treatAsBuilding) {
+    return true;
+  }
+  if (!project?.attributes?.continuousAsBuilding) {
+    return false;
+  }
+  if (typeof project.isContinuous !== 'function') {
+    return false;
+  }
+  return project.isContinuous();
+};
 
 const shouldApplySpaceBuildingProductivity = (project) =>
   Boolean(
@@ -1256,6 +1265,32 @@ const shouldApplyProjectProductivity = (project) =>
 
 const isProjectAutoContinuousEnabled = (project) =>
   project?.autoContinuousOperation === true || project?.autoDeployCollectors === true;
+
+function getExternalProductivityOperations() {
+  const operations = [];
+  if (typeof getSpaceSliderProductivityOperations === 'function') {
+    operations.push(...getSpaceSliderProductivityOperations(spaceManager));
+  }
+  return operations;
+}
+
+function applyProjectedExternalRates(deltaTime, externalOperations = []) {
+  for (let index = 0; index < externalOperations.length; index += 1) {
+    externalOperations[index].applyProjectedRates?.(deltaTime);
+  }
+}
+
+function updateExternalOperationProductivities(externalOperations = []) {
+  for (let index = 0; index < externalOperations.length; index += 1) {
+    externalOperations[index].updateProductivity?.(resources);
+  }
+}
+
+function applyExternalProductivityOperations(externalOperations = [], deltaTime, accumulatedChanges) {
+  for (let index = 0; index < externalOperations.length; index += 1) {
+    externalOperations[index].applyOperationCostAndGain?.(deltaTime, accumulatedChanges);
+  }
+}
 
 function calculateProductionRates(deltaTime, buildings, options = {}) {
   const {
@@ -1386,7 +1421,7 @@ function produceResources(deltaTime, buildings) {
   let projectProductivityMap = {};
   let spaceEnergyProducerOperations = [];
   let otherSpaceBuildingOperations = [];
-  let cylindersHopeSliderProductivity = null;
+  const externalProductivityOperations = getExternalProductivityOperations();
 
   terraforming?.refreshDynamicWorldGeometry?.(currentPlanetParameters);
   reconcileLandResourceValue();
@@ -1424,7 +1459,9 @@ function produceResources(deltaTime, buildings) {
   }
 
   calculateProductionRates(deltaTime, buildings);
+  applyProjectedExternalRates(deltaTime, externalProductivityOperations);
   updateResourceAvailabilityRatios(resources, deltaTime);
+  updateExternalOperationProductivities(externalProductivityOperations);
 
   const productivityIterations = 3;
   const productivityMap = {};
@@ -1444,7 +1481,9 @@ function produceResources(deltaTime, buildings) {
         keepProjected: true,
         productivityMap
       });
+      applyProjectedExternalRates(deltaTime, externalProductivityOperations);
       updateResourceAvailabilityRatios(resources, deltaTime);
+      updateExternalOperationProductivities(externalProductivityOperations);
     }
   }
 
@@ -1476,32 +1515,11 @@ function produceResources(deltaTime, buildings) {
       const { cost = {}, gain = {} } = estimateResult || {};
       projectData[name] = { project, cost, gain };
     }
-    if (typeof getCylindersHopeTotalDesiredEnergyPerSecond === 'function' && typeof isCylindersHopeUnlocked === 'function') {
-      const desiredPerSecond = getCylindersHopeTotalDesiredEnergyPerSecond(spaceManager);
-      if (isCylindersHopeUnlocked(spaceManager) && desiredPerSecond > 0) {
-        const seconds = deltaTime / 1000;
-        const desiredTotal = desiredPerSecond * seconds;
-        projectData.__cylindersHopeSpaceSlider = {
-          project: {
-            id: '__cylindersHopeSpaceSlider',
-            attributes: { spaceBuilding: true }
-          },
-          cost: { space: { energy: desiredTotal } },
-          gain: {}
-        };
-      }
-    }
     projectProductivityMap = calculateProjectProductivities(
       resources,
       deltaTime,
       projectData
     );
-    if (Object.prototype.hasOwnProperty.call(projectProductivityMap, '__cylindersHopeSpaceSlider')) {
-      cylindersHopeSliderProductivity = projectProductivityMap.__cylindersHopeSpaceSlider;
-    }
-    if (Object.prototype.hasOwnProperty.call(projectData, '__cylindersHopeSpaceSlider')) {
-      delete projectData.__cylindersHopeSpaceSlider;
-    }
     projectEntries = Object.entries(projectData);
     for (const [name, data] of projectEntries) {
       const productivity = projectProductivityMap[name] ?? 1;
@@ -1592,13 +1610,7 @@ function produceResources(deltaTime, buildings) {
       project.operationPreRunThisTick = true;
     }
 
-    if (typeof updateSpaceSliders === 'function') {
-      updateSpaceSliders(deltaTime, {
-        space: spaceManager,
-        accumulatedChanges,
-        forcedProductivity: cylindersHopeSliderProductivity
-      });
-    }
+    applyExternalProductivityOperations(externalProductivityOperations, deltaTime, accumulatedChanges);
 
     for (const [, data] of projectEntries) {
       const { project } = data;
@@ -1802,7 +1814,10 @@ function calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, extr
     return 0;
   }
   const producedAmount = Math.max(0, resource.productionRate * seconds);
-  const storedAmount = Math.max(0, resource.value - (resource.reserved || 0) - (extraReserve || 0));
+  const hasUsableStorage = !resource.hasCap || resource.cap > 0;
+  const storedAmount = hasUsableStorage
+    ? Math.max(0, resource.value - (resource.reserved || 0) - (extraReserve || 0))
+    : 0;
   const availableAmount = producedAmount + storedAmount;
   return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
 }

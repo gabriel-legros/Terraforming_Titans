@@ -94,7 +94,7 @@ function updateSpaceSliders(deltaTime, { space, accumulatedChanges, forcedProduc
   const tick = getCylindersHopeTick(space);
   if (runtime.actualTotal > 0) {
     accumulatedChanges.space.energy -= runtime.actualTotal;
-    resources.space.energy.modifyRate(-runtime.actualPerSecond, "Cylinders-HOPE Collaboration Agreement", 'project');
+    resources.space.energy.modifyRate(-runtime.actualPerSecond, "O'Neill cylinders", 'project');
   }
   if (space?.setSpaceSliderRuntimeData) {
     space.setSpaceSliderRuntimeData('cylindersHope', {
@@ -104,6 +104,39 @@ function updateSpaceSliders(deltaTime, { space, accumulatedChanges, forcedProduc
       actualPerSecond: runtime.actualPerSecond
     });
   }
+}
+
+function createCylindersHopeProductivityOperation(space) {
+  const desiredPerSecond = getCylindersHopeTotalDesiredEnergyPerSecond(space);
+  if (!(desiredPerSecond > 0)) {
+    return null;
+  }
+  return {
+    id: 'cylindersHope',
+    productivity: 1,
+    applyProjectedRates() {
+      resources.space.energy.modifyRate(
+        -desiredPerSecond,
+        "O'Neill cylinders",
+        'project'
+      );
+    },
+    updateProductivity() {
+      this.productivity = Math.max(0, Math.min(1, getResourceAvailabilityRatio(resources.space.energy)));
+    },
+    applyOperationCostAndGain(deltaTime, accumulatedChanges) {
+      updateSpaceSliders(deltaTime, {
+        space,
+        accumulatedChanges,
+        forcedProductivity: this.productivity
+      });
+    }
+  };
+}
+
+function getSpaceSliderProductivityOperations(space) {
+  const cylindersHope = createCylindersHopeProductivityOperation(space);
+  return cylindersHope ? [cylindersHope] : [];
 }
 
 function getCylindersHopeManufacturingPopulationBonus(space) {
@@ -130,12 +163,11 @@ function getCylindersHopeWarpGateWorldBonusPerSector(space, galaxy) {
     return 0;
   }
   const tick = getCylindersHopeTick(space);
-  const strength = getCylindersHopeStrength(tick);
-  if (!(strength > 0)) {
+  if (!(tick > 0)) {
     return 0;
   }
   const cylinders = Math.max(0, Number(space?.getOneillCylinderCount?.() || 0));
-  return (cylinders / sectorCount) * strength;
+  return (cylinders / sectorCount) * tick;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -147,6 +179,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getCylindersHopeWarpGateWorldBonusPerSector,
     getCylindersHopeProductivity,
     getCylindersHopeTotalDesiredEnergyPerSecond,
+    getSpaceSliderProductivityOperations,
     isCylindersHopeUnlocked,
     getAnySpaceSliderEnabled,
     updateSpaceSliders,
@@ -161,6 +194,7 @@ if (typeof window !== 'undefined') {
   window.getCylindersHopeWarpGateWorldBonusPerSector = getCylindersHopeWarpGateWorldBonusPerSector;
   window.getCylindersHopeProductivity = getCylindersHopeProductivity;
   window.getCylindersHopeTotalDesiredEnergyPerSecond = getCylindersHopeTotalDesiredEnergyPerSecond;
+  window.getSpaceSliderProductivityOperations = getSpaceSliderProductivityOperations;
   window.isCylindersHopeUnlocked = isCylindersHopeUnlocked;
   window.getAnySpaceSliderEnabled = getAnySpaceSliderEnabled;
   window.updateSpaceSliders = updateSpaceSliders;
