@@ -1435,6 +1435,7 @@ setLanguageData({
         disposalTargetsSubheading: 'Configure up to 10 resources. Active auto-start targets split assigned disposal evenly.',
         addTarget: '+ Add target',
         phase: 'Phase',
+        none: '—',
         remove: 'Remove',
         waitForFullCapacity: 'Wait for full capacity',
         disableBelowTemperature: 'Disable below temperature',

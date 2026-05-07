@@ -117,9 +117,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   createDisposalTarget(overrides = {}) {
     const defaults = this.getDefaultLimitSettings();
-    const selection = this.cloneSelection(overrides.selectedDisposalResource)
-      || this.cloneSelection(this.selectedDisposalResource)
-      || this.getDefaultDisposalSelection();
+    const hasSelectionOverride = Object.prototype.hasOwnProperty.call(overrides, 'selectedDisposalResource');
+    const selection = hasSelectionOverride
+      ? this.cloneSelection(overrides.selectedDisposalResource)
+      : (this.cloneSelection(this.selectedDisposalResource) || this.getDefaultDisposalSelection());
     const target = {
       id: overrides.id ?? this.nextDisposalTargetId++,
       selectedDisposalResource: selection,
@@ -187,7 +188,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       const selection = target.selectedDisposalResource;
       const key = selection ? `${selection.category}:${selection.resource}` : null;
       if (!key || !validKeys[key]) {
-        target.selectedDisposalResource = this.getDefaultDisposalSelection();
+        target.selectedDisposalResource = null;
       }
       sanitized.push(target);
     }
@@ -838,8 +839,16 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     phaseLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.phase', 'Phase');
     const phaseSelect = document.createElement('select');
     phaseSelect.addEventListener('change', () => {
-      const parts = phaseSelect.value.split(':');
       const activeTarget = this.getTargetById(target.id);
+      if (!phaseSelect.value) {
+        activeTarget.selectedDisposalResource = null;
+        this.syncLegacySelectionState();
+        this.clearContinuousExecutionPlanCache();
+        this.refreshDisposalTargetSelects();
+        this.updateUI();
+        return;
+      }
+      const parts = phaseSelect.value.split(':');
       activeTarget.selectedDisposalResource = {
         category: parts[0],
         resource: parts[1],
@@ -1019,9 +1028,20 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   handleTargetGroupChange(targetId, groupKey) {
     const target = this.getTargetById(targetId);
+    if (!target) {
+      return;
+    }
+    if (groupKey === '') {
+      target.selectedDisposalResource = null;
+      this.syncLegacySelectionState();
+      this.clearContinuousExecutionPlanCache();
+      this.refreshDisposalTargetSelects();
+      this.updateUI();
+      return;
+    }
     const disposalGroupData = this.getDisposalGroupData();
     const group = disposalGroupData.groupMap[groupKey];
-    if (!target || !group || !group.options.length) {
+    if (!group || !group.options.length) {
       return;
     }
     let selectedOption = null;
@@ -1074,8 +1094,12 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       }
 
       const selectionKey = this.getTargetSelectionKey(target);
-      const groupKey = disposalGroupData.resourceGroupLookup[selectionKey] || disposalGroupData.groupList[0].key;
+      const groupKey = disposalGroupData.resourceGroupLookup[selectionKey] || '';
       row.typeSelect.textContent = '';
+      const noGroupOption = document.createElement('option');
+      noGroupOption.value = '';
+      noGroupOption.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.none', '—');
+      row.typeSelect.appendChild(noGroupOption);
 
       for (let groupIndex = 0; groupIndex < disposalGroupData.groupList.length; groupIndex += 1) {
         const group = disposalGroupData.groupList[groupIndex];
@@ -1088,21 +1112,27 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       row.typeSelect.value = groupKey;
       const group = disposalGroupData.groupMap[groupKey];
       row.phaseSelect.textContent = '';
+      const noPhaseOption = document.createElement('option');
+      noPhaseOption.value = '';
+      noPhaseOption.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.none', '—');
+      row.phaseSelect.appendChild(noPhaseOption);
 
-      for (let optionIndex = 0; optionIndex < group.options.length; optionIndex += 1) {
-        const optionData = group.options[optionIndex];
-        const option = document.createElement('option');
-        option.value = `${optionData.category}:${optionData.resource}`;
-        option.textContent = optionData.label;
-        const optionKey = option.value;
-        const selectedByOther = usedKeys[optionKey] && optionKey !== selectionKey;
-        option.disabled = selectedByOther;
-        row.phaseSelect.appendChild(option);
+      if (group) {
+        for (let optionIndex = 0; optionIndex < group.options.length; optionIndex += 1) {
+          const optionData = group.options[optionIndex];
+          const option = document.createElement('option');
+          option.value = `${optionData.category}:${optionData.resource}`;
+          option.textContent = optionData.label;
+          const optionKey = option.value;
+          const selectedByOther = usedKeys[optionKey] && optionKey !== selectionKey;
+          option.disabled = selectedByOther;
+          row.phaseSelect.appendChild(option);
+        }
       }
 
-      row.phaseSelect.value = selectionKey;
-      row.phaseLabel.textContent = group.key === 'storageDepotResource' ? 'Which one' : 'Phase';
-      row.phaseContainer.style.display = group.options.length > 1 ? 'flex' : 'none';
+      row.phaseSelect.value = selectionKey || '';
+      row.phaseLabel.textContent = group && group.key === 'storageDepotResource' ? 'Which one' : 'Phase';
+      row.phaseContainer.style.display = group && group.options.length > 1 ? 'flex' : 'none';
       row.removeButton.disabled = this.disposalTargets.length <= 1;
     }
   }
