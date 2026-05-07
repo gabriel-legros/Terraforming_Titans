@@ -240,6 +240,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
+- Autobuild building priority now supports five levels (`⏬`, `▼`, neutral, `▲`, `⏫`) mapped to `-2..2`; level `±2` reserves/builds more aggressively than `±1` while keeping the same styled priority buttons in light/dark themes.
 - Save & Settings now includes a `Keybinds` section in `Settings` with pause hotkey capture/reset controls; pause defaults to `Spacebar`, updates the Pause button label dynamically, and persists in `gameSettings.pauseKeybind`.
 - Dust Factory no longer has target-ground-albedo automation controls; its card now shows a `Dust Color` + computed albedo readout and uses manual forward/reverse behavior.
 - Aerostats now include a saved and colony-preset-aware `Cap workers to aerostat capacity` checkbox in the buoyancy details card; when enabled, total world worker capacity is clamped to active aerostats x 10.

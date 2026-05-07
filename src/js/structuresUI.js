@@ -1095,27 +1095,37 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildPriorityLabel.textContent = getStructuresUIText('ui.structures.autoBuild.priority', 'Priority : ');
   const priorityContainer = document.createElement('span');
   priorityContainer.classList.add('worker-priority-container');
+  const priorityUpDouble = document.createElement('span');
+  priorityUpDouble.textContent = '⏫\uFE0E';
+  priorityUpDouble.classList.add('worker-priority-btn', 'up');
   const priorityUp = document.createElement('span');
   priorityUp.textContent = '\u25B2';
   priorityUp.classList.add('worker-priority-btn', 'up');
   const priorityDown = document.createElement('span');
   priorityDown.textContent = '\u25BC';
   priorityDown.classList.add('worker-priority-btn', 'down');
+  const priorityDownDouble = document.createElement('span');
+  priorityDownDouble.textContent = '⏬\uFE0E';
+  priorityDownDouble.classList.add('worker-priority-btn', 'down');
 
   const refreshPriority = () => {
-    priorityUp.classList.toggle('active', structure.autoBuildPriority > 0);
-    priorityDown.classList.toggle('active', structure.autoBuildPriority < 0);
+    priorityUpDouble.classList.toggle('active', structure.autoBuildPriority === 2);
+    priorityUp.classList.toggle('active', structure.autoBuildPriority === 1);
+    priorityDown.classList.toggle('active', structure.autoBuildPriority === -1);
+    priorityDownDouble.classList.toggle('active', structure.autoBuildPriority === -2);
   };
 
   const setPriority = level => {
-    structure.autoBuildPriority = level;
+    structure.autoBuildPriority = Math.max(-2, Math.min(2, level));
     refreshPriority();
   };
 
-  priorityUp.addEventListener('click', () => setPriority(structure.autoBuildPriority > 0 ? 0 : 1));
-  priorityDown.addEventListener('click', () => setPriority(structure.autoBuildPriority < 0 ? 0 : -1));
+  priorityUpDouble.addEventListener('click', () => setPriority(structure.autoBuildPriority === 2 ? 0 : 2));
+  priorityUp.addEventListener('click', () => setPriority(structure.autoBuildPriority === 1 ? 0 : 1));
+  priorityDown.addEventListener('click', () => setPriority(structure.autoBuildPriority === -1 ? 0 : -1));
+  priorityDownDouble.addEventListener('click', () => setPriority(structure.autoBuildPriority === -2 ? 0 : -2));
 
-  priorityContainer.append(priorityUp, priorityDown);
+  priorityContainer.append(priorityUpDouble, priorityUp, priorityDown, priorityDownDouble);
   autoBuildPriorityLabel.appendChild(priorityContainer);
   structureUIElements[structure.name].autoBuildPriorityRefresh = refreshPriority;
   refreshPriority();

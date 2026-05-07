@@ -368,7 +368,7 @@ class Building extends EffectableEntity {
         this.autoBuildPriority = 1;
       } else if (priority === false || priority === undefined) {
         this.autoBuildPriority = 0;
-      } else if (priority === -1 || priority === 0 || priority === 1) {
+      } else if (Number.isInteger(priority) && priority >= -2 && priority <= 2) {
         this.autoBuildPriority = priority;
       } else {
         this.autoBuildPriority = 0;

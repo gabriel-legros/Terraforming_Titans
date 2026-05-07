@@ -800,7 +800,7 @@ function restoreAutoBuildSettings(structures) {
                 s.autoBuildPriority = 1;
             } else if (priority === false || priority === undefined) {
                 s.autoBuildPriority = 0;
-            } else if (priority === -1 || priority === 0 || priority === 1) {
+            } else if (Number.isInteger(priority) && priority >= -2 && priority <= 2) {
                 s.autoBuildPriority = priority;
             } else {
                 s.autoBuildPriority = 0;
@@ -1022,19 +1022,33 @@ function autoBuild(buildings, delta = 0) {
         }
     }
 
-    const highReserve = {};
-    const normalReserve = {};
+    const reserveForPriorityTwo = {};
+    const reserveForPriorityOneAndTwo = {};
+    const reserveForPriorityZeroToTwo = {};
+    const reserveForPriorityNegativeOneToTwo = {};
     buildableBuildings.forEach(entry => {
         const priority = entry.building.autoBuildPriority;
-        if (priority > 0) {
-            const totalCost = entry.building.getEffectiveCost?.(1);
-            addCostToPrioritizedReserve(highReserve, totalCost);
-            addCostToPrioritizedReserve(normalReserve, totalCost);
+        const totalCost = entry.building.getEffectiveCost?.(1);
+        if (priority >= 2) {
+            addCostToPrioritizedReserve(reserveForPriorityTwo, totalCost);
+            addCostToPrioritizedReserve(reserveForPriorityOneAndTwo, totalCost);
+            addCostToPrioritizedReserve(reserveForPriorityZeroToTwo, totalCost);
+            addCostToPrioritizedReserve(reserveForPriorityNegativeOneToTwo, totalCost);
             return;
         }
-        if (priority === 0) {
-            const totalCost = entry.building.getEffectiveCost?.(1);
-            addCostToPrioritizedReserve(normalReserve, totalCost);
+        if (priority >= 1) {
+            addCostToPrioritizedReserve(reserveForPriorityOneAndTwo, totalCost);
+            addCostToPrioritizedReserve(reserveForPriorityZeroToTwo, totalCost);
+            addCostToPrioritizedReserve(reserveForPriorityNegativeOneToTwo, totalCost);
+            return;
+        }
+        if (priority >= 0) {
+            addCostToPrioritizedReserve(reserveForPriorityZeroToTwo, totalCost);
+            addCostToPrioritizedReserve(reserveForPriorityNegativeOneToTwo, totalCost);
+            return;
+        }
+        if (priority >= -1) {
+            addCostToPrioritizedReserve(reserveForPriorityNegativeOneToTwo, totalCost);
         }
     });
 
@@ -1050,11 +1064,15 @@ function autoBuild(buildings, delta = 0) {
         // Step 3: Efficiently allocate builds
         buildableBuildings.forEach(({ building, requiredAmount, maxMode }) => {
             let buildCount = 0;
-            let extraReserves = normalReserve;
-            if (building.autoBuildPriority > 0) {
+            let extraReserves = reserveForPriorityNegativeOneToTwo;
+            if (building.autoBuildPriority >= 2) {
                 extraReserves = null;
-            } else if (building.autoBuildPriority === 0) {
-                extraReserves = highReserve;
+            } else if (building.autoBuildPriority >= 1) {
+                extraReserves = reserveForPriorityTwo;
+            } else if (building.autoBuildPriority >= 0) {
+                extraReserves = reserveForPriorityOneAndTwo;
+            } else if (building.autoBuildPriority >= -1) {
+                extraReserves = reserveForPriorityZeroToTwo;
             }
             const maxCount = building.getAutoBuildMaxCount(reserve, extraReserves);
             const buildLimit = building.getBuildLimit() ?? Infinity;
@@ -1115,11 +1133,20 @@ function autoBuild(buildings, delta = 0) {
                     }
 
                     autobuildCostTracker.recordCost(building.displayName, cost);
-                    if (building.autoBuildPriority > 0) {
-                        subtractCostFromPrioritizedReserve(highReserve, effectiveCost);
-                        subtractCostFromPrioritizedReserve(normalReserve, effectiveCost);
-                    } else if (building.autoBuildPriority === 0) {
-                        subtractCostFromPrioritizedReserve(normalReserve, effectiveCost);
+                    if (building.autoBuildPriority >= 2) {
+                        subtractCostFromPrioritizedReserve(reserveForPriorityTwo, effectiveCost);
+                        subtractCostFromPrioritizedReserve(reserveForPriorityOneAndTwo, effectiveCost);
+                        subtractCostFromPrioritizedReserve(reserveForPriorityZeroToTwo, effectiveCost);
+                        subtractCostFromPrioritizedReserve(reserveForPriorityNegativeOneToTwo, effectiveCost);
+                    } else if (building.autoBuildPriority >= 1) {
+                        subtractCostFromPrioritizedReserve(reserveForPriorityOneAndTwo, effectiveCost);
+                        subtractCostFromPrioritizedReserve(reserveForPriorityZeroToTwo, effectiveCost);
+                        subtractCostFromPrioritizedReserve(reserveForPriorityNegativeOneToTwo, effectiveCost);
+                    } else if (building.autoBuildPriority >= 0) {
+                        subtractCostFromPrioritizedReserve(reserveForPriorityZeroToTwo, effectiveCost);
+                        subtractCostFromPrioritizedReserve(reserveForPriorityNegativeOneToTwo, effectiveCost);
+                    } else if (building.autoBuildPriority >= -1) {
+                        subtractCostFromPrioritizedReserve(reserveForPriorityNegativeOneToTwo, effectiveCost);
                     }
                 }
             }
