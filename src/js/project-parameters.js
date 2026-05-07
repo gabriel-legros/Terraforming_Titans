@@ -512,7 +512,9 @@ const projectParameters = {
     repeatable: false,
     unlocked: false,
     automationRequiresEverEnabled: true,
-    attributes: {}
+    attributes: {
+      geometricLandCostScalingBaseline: 10_000_000_000
+    }
   },
   shrilekHydrocarbonReserves: {
     type: 'Project',

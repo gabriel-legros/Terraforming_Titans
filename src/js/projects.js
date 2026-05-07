@@ -419,6 +419,10 @@ class Project extends EffectableEntity {
       const radiusKm = terraforming.celestialParameters.radius || 0;
       multiplier *= Math.max(radiusKm / EARTH_RADIUS_KM, 1);
     }
+    if (this.attributes.geometricLandCostScalingBaseline) {
+      const geometricLand = Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land));
+      multiplier *= geometricLand / this.attributes.geometricLandCostScalingBaseline;
+    }
     if (multiplier === 1) {
       return cost;
     }
