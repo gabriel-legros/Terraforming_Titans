@@ -524,12 +524,17 @@ class ArtificialSkyProject extends SpaceshipProject {
     if (elements.totalCostElement) {
       const perSecond = this.isContinuous();
       const totalCost = this.calculateSpaceshipTotalCost(perSecond);
+      let totalCostHtml = '';
       if (perSecond) {
-        elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, true)
+        totalCostHtml = formatTotalCostDisplay(totalCost, this, true)
           .replace(/^Total Cost:/, getArtificialSkyText('costPerSecond', null, 'Cost/s:'));
       } else {
-        elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, false)
+        totalCostHtml = formatTotalCostDisplay(totalCost, this, false)
           .replace(/^Total Cost:/, getArtificialSkyText('segmentCost', null, 'Segment Cost:'));
+      }
+      if (elements._cachedTotalCostHtml !== totalCostHtml) {
+        elements.totalCostElement.innerHTML = totalCostHtml;
+        elements._cachedTotalCostHtml = totalCostHtml;
       }
     }
 

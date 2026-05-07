@@ -296,6 +296,10 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     if (!rateElement) {
       return;
     }
+    if (rateElement.dataset.spaceChemistryMultiline !== '1') {
+      rateElement.style.whiteSpace = 'pre-line';
+      rateElement.dataset.spaceChemistryMultiline = '1';
+    }
 
     const ratesByResource = { ...this.lastInputRatesByResource };
     if (this.lastSpaceEnergyPerSecond > 0) {
@@ -303,19 +307,15 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     }
 
     const segments = getSpaceChemistryRateSegments(ratesByResource);
-    rateElement.textContent = '';
     if (segments.length === 0) {
       rateElement.textContent = '0/s';
       return;
     }
-
+    const lines = [];
     for (let i = 0; i < segments.length; i += 2) {
-      if (i > 0) {
-        rateElement.appendChild(document.createElement('br'));
-      }
-      const line = segments.slice(i, i + 2).join(', ');
-      rateElement.appendChild(document.createTextNode(line));
+      lines.push(segments.slice(i, i + 2).join(', '));
     }
+    rateElement.textContent = lines.join('\n');
   }
 
   getExpansionRateText(rate) {

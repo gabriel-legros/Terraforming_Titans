@@ -479,7 +479,11 @@ class SpaceshipProject extends Project {
     if (elements.totalCostElement && this.assignedSpaceships != null) {
       const perSecond = this.isContinuous();
       const totalCost = this.calculateSpaceshipTotalCost(perSecond);
-      elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, perSecond);
+      const totalCostHtml = formatTotalCostDisplay(totalCost, this, perSecond);
+      if (elements._cachedTotalCostHtml !== totalCostHtml) {
+        elements.totalCostElement.innerHTML = totalCostHtml;
+        elements._cachedTotalCostHtml = totalCostHtml;
+      }
     }
 
     if (elements.resourceGainPerShipElement && this.attributes.resourceGainPerShip) {
