@@ -20,6 +20,8 @@ function cacheSettingsElements() {
     preserveAutoStartToggle: document.getElementById('preserve-project-auto-start-toggle'),
     preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
+    noSpecializationWarningOnTravelToggle: document.getElementById('no-specialization-warning-on-travel-toggle'),
+    noSpecializationWarningOnTravelTooltip: document.getElementById('no-specialization-warning-on-travel-tooltip'),
     autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
     colonyUpgradeUncheckAutobuildToggle: document.getElementById('colony-upgrade-uncheck-autobuild-toggle'),
     roundBuildingToggle: document.getElementById('round-building-toggle'),
@@ -186,6 +188,24 @@ function addSettingsListeners() {
     cached.keepHiddenStructuresToggle.addEventListener('change', () => {
       gameSettings.keepHiddenStructuresOnTravel = cached.keepHiddenStructuresToggle.checked;
     });
+  }
+
+  if (cached.noSpecializationWarningOnTravelToggle) {
+    cached.noSpecializationWarningOnTravelToggle.checked = gameSettings.noSpecializationWarningOnTravel;
+    cached.noSpecializationWarningOnTravelToggle.addEventListener('change', () => {
+      gameSettings.noSpecializationWarningOnTravel = cached.noSpecializationWarningOnTravelToggle.checked;
+    });
+  }
+
+  if (cached.noSpecializationWarningOnTravelTooltip) {
+    attachDynamicInfoTooltip(
+      cached.noSpecializationWarningOnTravelTooltip,
+      t(
+        'ui.settings.noSpecializationWarningOnTravelTooltip',
+        {},
+        'When enabled, traveling away from a world with no active or completed specialization asks for confirmation.'
+      )
+    );
   }
 
   if (cached.autobuildSetActiveToggle) {

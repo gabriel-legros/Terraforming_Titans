@@ -392,6 +392,22 @@ function getActiveSpecializationProject() {
     return null;
 }
 
+function hasCompletedSpecializationProject() {
+    const bioworld = projectManager.projects.bioworld;
+    if (bioworld.isCompleted) {
+        return true;
+    }
+    const foundry = projectManager.projects.foundryWorld;
+    if (foundry.isCompleted) {
+        return true;
+    }
+    const manufacturing = projectManager.projects.manufacturingWorld;
+    if (manufacturing.isCompleted) {
+        return true;
+    }
+    return false;
+}
+
 function getSpecializationTravelWarningMessage() {
     const project = getActiveSpecializationProject();
     if (!project) {
@@ -401,6 +417,22 @@ function getSpecializationTravelWarningMessage() {
         'travelWarning.specializationInProgress',
         '{name} is still in progress. Leaving now will abandon its progress.',
         { name: project.displayName }
+    );
+}
+
+function getNoSpecializationTravelWarningMessage() {
+    if (!gameSettings.noSpecializationWarningOnTravel) {
+        return '';
+    }
+    if (getActiveSpecializationProject()) {
+        return '';
+    }
+    if (hasCompletedSpecializationProject()) {
+        return '';
+    }
+    return getSpaceUIText(
+        'travelWarning.noSpecialization',
+        'No world specialization is active or completed on this world. Leaving now may miss specialization rewards.'
     );
 }
 
@@ -418,6 +450,10 @@ function handleCurrentWorldTravelWarnings(onConfirm) {
     const specializationMessage = getSpecializationTravelWarningMessage();
     if (specializationMessage) {
         messages.push(specializationMessage);
+    }
+    const noSpecializationMessage = getNoSpecializationTravelWarningMessage();
+    if (noSpecializationMessage) {
+        messages.push(noSpecializationMessage);
     }
     if (!messages.length) {
         return false;

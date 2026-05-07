@@ -643,6 +643,9 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'pauseKeybind')) {
         gameSettings.pauseKeybind = 'Space';
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noSpecializationWarningOnTravel')) {
+        gameSettings.noSpecializationWarningOnTravel = false;
+      }
       setPauseKeybindCode(gameSettings.pauseKeybind);
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
@@ -671,6 +674,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
+      cachedSettings.noSpecializationWarningOnTravelToggle.checked = gameSettings.noSpecializationWarningOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       cachedSettings.colonyUpgradeUncheckAutobuildToggle.checked = gameSettings.colonyUpgradeUnchecksAutobuild;
       cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;

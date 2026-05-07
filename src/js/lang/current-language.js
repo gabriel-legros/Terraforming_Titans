@@ -2738,6 +2738,7 @@ setLanguageData({
         cancelTravel: 'Cancel Travel',
         unterraformedMessage: 'This world is not yet fully terraformed. Leaving now will abandon its progress.',
         specializationInProgress: '{name} is still in progress. Leaving now will abandon its progress.',
+        noSpecialization: 'No world specialization is active or completed on this world. Leaving now may miss specialization rewards.',
       },
       storyUi: {
         planetDataUnavailable: 'Error: Planet data unavailable.',
@@ -3389,6 +3390,8 @@ setLanguageData({
       preserveProjectSettingsTooltip: 'Preserves most project settings when traveling.',
       keepHiddenBuildings: 'Keep hidden buildings on travel',
       keepHiddenBuildingsTooltip: 'Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.',
+      noSpecializationWarningOnTravel: 'No specialization warning on travel',
+      noSpecializationWarningOnTravelTooltip: 'When enabled, traveling away from a world with no completed specialization asks for confirmation.',
       autobuildSetActive: 'Checking autobuild also checks Set Active to Target',
       colonyUpgradeUnchecksAutobuild: 'Checking Colony Upgrade unchecks autobuild',
       roundBuildingConstruction: 'Round building construction',
