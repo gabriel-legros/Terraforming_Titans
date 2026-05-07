@@ -652,9 +652,6 @@ function handleTerraformingSubtabActivated(subtabId, deltaSeconds) {
   if (subtabId === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
     markMilestonesViewed();
   }
-  if (subtabId === 'world-terraforming') {
-    forceWorldSurfaceRefresh();
-  }
   updateTerraformingSubtabUI(subtabId, deltaSeconds);
 }
 
@@ -662,7 +659,6 @@ function handleTerraformingTabActivated() {
   if (!isTerraformingWorldSubtabActive()) {
     return;
   }
-  forceWorldSurfaceRefresh();
 }
 
 function forceWorldSurfaceRefresh() {
