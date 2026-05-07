@@ -412,6 +412,12 @@ function updateAutoTravelUI() {
   card.style.display = visible ? '' : 'none';
   card.classList.toggle('collapsed', !!automation.collapsed);
   card.classList.toggle('locked', !unlocked);
+  if (automationElements.autoTravelPanelBody) {
+    automationElements.autoTravelPanelBody.style.display = automation.collapsed ? 'none' : 'flex';
+  }
+  if (automationElements.autoTravelCollapseButton) {
+    automationElements.autoTravelCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
+  }
   if (automationElements.autoTravelStatus) {
     automationElements.autoTravelStatus.textContent = unlocked
       ? getAutomationCardText('unlocked', {}, 'Unlocked')
