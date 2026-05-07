@@ -878,7 +878,7 @@
               <h2 data-i18n="ui.settings.settings">Settings</h2>
               <div class="settings-grid">
                 <label class="settings-option">
-                  <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.whiteNoiseTooltip" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
+                  <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span id="white-noise-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
                   <span data-i18n="ui.settings.autosaveInterval">Autosave interval</span>
@@ -909,10 +909,10 @@
                   <input type="checkbox" id="unlock-alert-toggle"> <span data-i18n="ui.settings.disableUnlockAlerts">Disable unlock alerts</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="day-night-toggle"> <span data-i18n="ui.settings.disableDayNightCycle">Disable day-night cycle</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.dayNightTooltip" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
+                  <input type="checkbox" id="day-night-toggle"> <span data-i18n="ui.settings.disableDayNightCycle">Disable day-night cycle</span> <span id="day-night-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="preserve-project-auto-start-toggle"> <span data-i18n="ui.settings.preserveProjectAutoStart">Preserve project auto-start between worlds</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.preserveProjectAutoStartTooltip" title="Keeps project auto-start selections when travelling.">&#9432;</span>
+                  <input type="checkbox" id="preserve-project-auto-start-toggle"> <span data-i18n="ui.settings.preserveProjectAutoStart">Preserve project auto-start between worlds</span> <span id="preserve-project-auto-start-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="preserve-project-settings-toggle"> <span data-i18n="ui.settings.preserveProjectSettings">Preserve most project settings on travel</span> <span id="preserve-project-settings-tooltip" class="info-tooltip-icon" data-i18n-title="ui.settings.preserveProjectSettingsTooltip" title="Preserves most project settings when traveling.">&#9432;</span>
@@ -930,13 +930,13 @@
                   <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> <span data-i18n="ui.settings.colonyUpgradeUnchecksAutobuild">Checking Colony Upgrade unchecks autobuild</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="round-building-toggle"> <span data-i18n="ui.settings.roundBuildingConstruction">Round building construction</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.roundBuildingConstructionTooltip" title="When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.  Does not apply if autobuild is on.">&#9432;</span>
+                  <input type="checkbox" id="round-building-toggle"> <span data-i18n="ui.settings.roundBuildingConstruction">Round building construction</span> <span id="round-building-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <span data-i18n="ui.settings.scientificNotationPrefix">Use scientific notation above</span> <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span class="info-tooltip-icon" data-i18n-title="ui.settings.scientificNotationTooltip" title="Values at or above this threshold are displayed in scientific notation, such as 1e30.">&#9432;</span>
+                  <span data-i18n="ui.settings.scientificNotationPrefix">Use scientific notation above</span> <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span id="scientific-notation-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="simplify-golden-asteroid-toggle"> <span data-i18n="ui.settings.simplifyGoldenAsteroid">Simplify Golden Asteroid</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.simplifyGoldenAsteroidTooltip" title="When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.">&#9432;</span>
+                  <input type="checkbox" id="simplify-golden-asteroid-toggle"> <span data-i18n="ui.settings.simplifyGoldenAsteroid">Simplify Golden Asteroid</span> <span id="simplify-golden-asteroid-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="suppress-faith-toggle"> <span data-i18n="ui.settings.suppressFaith">Suppress Faith</span> <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>

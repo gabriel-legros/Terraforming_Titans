@@ -9,6 +9,7 @@ function cacheSettingsElements() {
   settingsElements = {
     autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
+    whiteNoiseTooltip: document.getElementById('white-noise-tooltip'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
     celsiusToggle: document.getElementById('celsius-toggle'),
     silenceToggle: document.getElementById('solis-silence-toggle'),
@@ -16,8 +17,10 @@ function cacheSettingsElements() {
     showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
     dayNightToggle: document.getElementById('day-night-toggle'),
+    dayNightTooltip: document.getElementById('day-night-tooltip'),
     darkModeToggle: document.getElementById('dark-mode-toggle'),
     preserveAutoStartToggle: document.getElementById('preserve-project-auto-start-toggle'),
+    preserveAutoStartTooltip: document.getElementById('preserve-project-auto-start-tooltip'),
     preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
     noSpecializationWarningOnTravelToggle: document.getElementById('no-specialization-warning-on-travel-toggle'),
@@ -25,8 +28,11 @@ function cacheSettingsElements() {
     autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
     colonyUpgradeUncheckAutobuildToggle: document.getElementById('colony-upgrade-uncheck-autobuild-toggle'),
     roundBuildingToggle: document.getElementById('round-building-toggle'),
+    roundBuildingTooltip: document.getElementById('round-building-tooltip'),
     scientificNotationThresholdInput: document.getElementById('scientific-notation-threshold-input'),
+    scientificNotationTooltip: document.getElementById('scientific-notation-tooltip'),
     simplifyGoldenAsteroidToggle: document.getElementById('simplify-golden-asteroid-toggle'),
+    simplifyGoldenAsteroidTooltip: document.getElementById('simplify-golden-asteroid-tooltip'),
     suppressFaithToggle: document.getElementById('suppress-faith-toggle'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
@@ -82,6 +88,17 @@ function addSettingsListeners() {
         stopBackgroundSilence();
       }
     });
+  }
+
+  if (cached.whiteNoiseTooltip) {
+    attachDynamicInfoTooltip(
+      cached.whiteNoiseTooltip,
+      t(
+        'ui.settings.whiteNoiseTooltip',
+        {},
+        'After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution. Much more quiet on Firefox. May still work even if the tab is muted.'
+      )
+    );
   }
 
   if (cached.terraformingSubstepsToggle) {
@@ -153,6 +170,17 @@ function addSettingsListeners() {
     });
   }
 
+  if (cached.dayNightTooltip) {
+    attachDynamicInfoTooltip(
+      cached.dayNightTooltip,
+      t(
+        'ui.settings.dayNightTooltip',
+        {},
+        'Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance. Leads to a more realistic, slightly easier and more relaxed experience.'
+      )
+    );
+  }
+
   if (cached.darkModeToggle) {
     cached.darkModeToggle.checked = gameSettings.darkMode;
     document.body.classList.toggle('dark-mode', gameSettings.darkMode);
@@ -167,6 +195,17 @@ function addSettingsListeners() {
     cached.preserveAutoStartToggle.addEventListener('change', () => {
       gameSettings.preserveProjectAutoStart = cached.preserveAutoStartToggle.checked;
     });
+  }
+
+  if (cached.preserveAutoStartTooltip) {
+    attachDynamicInfoTooltip(
+      cached.preserveAutoStartTooltip,
+      t(
+        'ui.settings.preserveProjectAutoStartTooltip',
+        {},
+        'Keeps project auto-start selections when travelling.'
+      )
+    );
   }
 
   if (cached.preserveProjectSettingsToggle) {
@@ -231,6 +270,17 @@ function addSettingsListeners() {
     });
   }
 
+  if (cached.roundBuildingTooltip) {
+    attachDynamicInfoTooltip(
+      cached.roundBuildingTooltip,
+      t(
+        'ui.settings.roundBuildingConstructionTooltip',
+        {},
+        'When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.'
+      )
+    );
+  }
+
   if (cached.scientificNotationThresholdInput) {
     cached.scientificNotationThresholdInput.value = formatScientific(gameSettings.scientificNotationThreshold ?? 1e30);
     const thresholdWire = wireStringNumberInput(cached.scientificNotationThresholdInput, {
@@ -247,11 +297,33 @@ function addSettingsListeners() {
     thresholdWire.syncParsedValue();
   }
 
+  if (cached.scientificNotationTooltip) {
+    attachDynamicInfoTooltip(
+      cached.scientificNotationTooltip,
+      t(
+        'ui.settings.scientificNotationTooltip',
+        {},
+        'Values at or above this threshold are displayed in scientific notation, such as 1e30.'
+      )
+    );
+  }
+
   if (cached.simplifyGoldenAsteroidToggle) {
     cached.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
     cached.simplifyGoldenAsteroidToggle.addEventListener('change', () => {
       gameSettings.simplifyGoldenAsteroid = cached.simplifyGoldenAsteroidToggle.checked;
     });
+  }
+
+  if (cached.simplifyGoldenAsteroidTooltip) {
+    attachDynamicInfoTooltip(
+      cached.simplifyGoldenAsteroidTooltip,
+      t(
+        'ui.settings.simplifyGoldenAsteroidTooltip',
+        {},
+        'When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.'
+      )
+    );
   }
 
   if (cached.suppressFaithTooltip) {
