@@ -51,6 +51,7 @@ let travelWarningHintBodyEl = null;
 let travelWarningBaseMessage = '';
 let travelWarningCountdownProject = null;
 let travelWarningCountdownInterval = null;
+let travelWarningCountdownFinishedMessage = '';
 
 function getSpaceUIText(path, fallback, vars) {
     try {
@@ -87,6 +88,7 @@ function clearTravelWarningCountdown() {
         travelWarningCountdownInterval = null;
     }
     travelWarningCountdownProject = null;
+    travelWarningCountdownFinishedMessage = '';
 }
 
 function getTravelWarningCountdownText() {
@@ -104,8 +106,9 @@ function updateTravelWarningMessageText() {
         return;
     }
     const countdownText = getTravelWarningCountdownText();
-    const joiner = travelWarningBaseMessage && countdownText ? '\n\n' : '';
-    travelWarningMessageEl.textContent = `${travelWarningBaseMessage}${joiner}${countdownText}`;
+    const messageBody = countdownText ? travelWarningBaseMessage : (travelWarningCountdownFinishedMessage || travelWarningBaseMessage);
+    const joiner = messageBody && countdownText ? '\n\n' : '';
+    travelWarningMessageEl.textContent = `${messageBody}${joiner}${countdownText}`;
 }
 
 function showSpaceRandomTab() {
@@ -385,6 +388,7 @@ function showTravelWarningPopup(warningData, onConfirm) {
     clearTravelWarningCountdown();
     travelWarningBaseMessage = warning.message || '';
     travelWarningCountdownProject = warning.countdownProject || null;
+    travelWarningCountdownFinishedMessage = warning.countdownFinishedMessage || '';
     updateTravelWarningMessageText();
     if (travelWarningCountdownProject) {
         travelWarningCountdownInterval = setInterval(updateTravelWarningMessageText, 1000);
@@ -499,6 +503,12 @@ function handleCurrentWorldTravelWarnings(onConfirm) {
     showTravelWarningPopup({
         message: messages.join('\n\n'),
         countdownProject: specializationProject,
+        countdownFinishedMessage: specializationProject
+            ? getSpaceUIText(
+                'travelWarning.specializationNoLongerInProgress',
+                'Ready for travel now.'
+            )
+            : '',
     }, onConfirm);
     return true;
 }
