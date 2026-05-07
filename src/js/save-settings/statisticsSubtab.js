@@ -16,6 +16,7 @@ function cacheStatisticsElements() {
     fastestTerraformByTypeTitle: document.getElementById('fastest-terraform-by-type-title'),
     fastestTerraformByTypeList: document.getElementById('fastest-terraform-by-type-list'),
     recentTerraformHistoryTitle: document.getElementById('recent-terraform-history-title'),
+    recentTerraformAverageDisplay: document.getElementById('recent-terraform-average-display'),
     recentTerraformHistoryList: document.getElementById('recent-terraform-history-list'),
   };
 
@@ -46,6 +47,32 @@ function buildFastestTerraformByTypeText(worldType, entry) {
     'ui.settings.fastestTerraformByTypeEntry',
     vars,
     '{type}: {game} ({real} real time)'
+  );
+}
+
+function buildRecentTerraformAverageText(history) {
+  let totalGameSeconds = 0;
+  let totalRealSeconds = 0;
+  let realCount = 0;
+  const totalCount = history.length;
+
+  history.forEach((entry) => {
+    totalGameSeconds += entry.playTimeSeconds;
+    if (entry.realTimeSeconds !== null) {
+      totalRealSeconds += entry.realTimeSeconds;
+      realCount += 1;
+    }
+  });
+
+  const avgGame = formatPlayTime(totalGameSeconds / totalCount);
+  const avgReal = realCount > 0
+    ? formatDurationDetailed(totalRealSeconds / realCount)
+    : t('ui.settings.realTimeUnavailable', null, 'real time unavailable');
+
+  return t(
+    'ui.settings.recentTerraformHistoryAverage',
+    { game: avgGame, real: avgReal },
+    'Average: {game} ({real} real time)'
   );
 }
 
@@ -101,6 +128,9 @@ function updateStatisticsDisplay() {
     'Last {count} Terraformed Worlds'
   );
   cached.recentTerraformHistoryList.replaceChildren();
+  if (cached.recentTerraformAverageDisplay) {
+    cached.recentTerraformAverageDisplay.textContent = '';
+  }
 
   if (!history.length) {
     const emptyLine = document.createElement('p');
@@ -112,6 +142,10 @@ function updateStatisticsDisplay() {
     );
     cached.recentTerraformHistoryList.appendChild(emptyLine);
     return;
+  }
+
+  if (cached.recentTerraformAverageDisplay) {
+    cached.recentTerraformAverageDisplay.textContent = buildRecentTerraformAverageText(history);
   }
 
   history.forEach((entry) => {

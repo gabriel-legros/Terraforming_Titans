@@ -3432,8 +3432,10 @@ setLanguageData({
       fastestTerraformByTypeTitle: 'Fastest Terraform by World Type',
       fastestTerraformByTypeEntry: '{type}: {game} ({real} real time)',
       recentTerraformHistoryTitle: 'Last {count} Terraformed Worlds',
+      recentTerraformHistoryAverage: 'Average: {game} ({real} real time)',
       recentTerraformHistoryEmpty: 'No terraformed worlds recorded yet.',
       recentTerraformHistoryEntry: '{name}: {game} ({real} real time)',
+      realTimeUnavailable: 'real time unavailable',
     },
     journal: {
       title: 'Journal',
