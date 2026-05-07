@@ -195,7 +195,7 @@ function registerDefaultTabActivationHandlers() {
     updateBuildingDisplay(buildings);
   });
   registerTabActivationHandler('special-projects', () => {
-    updateProjectsUI();
+    renderProjects();
   });
   registerTabActivationHandler('colonies', () => {
     updateColonySlidersUI();
