@@ -1386,6 +1386,7 @@ function produceResources(deltaTime, buildings) {
   let projectProductivityMap = {};
   let spaceEnergyProducerOperations = [];
   let otherSpaceBuildingOperations = [];
+  let cylindersHopeSliderProductivity = null;
 
   terraforming?.refreshDynamicWorldGeometry?.(currentPlanetParameters);
   reconcileLandResourceValue();
@@ -1475,11 +1476,32 @@ function produceResources(deltaTime, buildings) {
       const { cost = {}, gain = {} } = estimateResult || {};
       projectData[name] = { project, cost, gain };
     }
+    if (typeof getCylindersHopeTotalDesiredEnergyPerSecond === 'function' && typeof isCylindersHopeUnlocked === 'function') {
+      const desiredPerSecond = getCylindersHopeTotalDesiredEnergyPerSecond(spaceManager);
+      if (isCylindersHopeUnlocked(spaceManager) && desiredPerSecond > 0) {
+        const seconds = deltaTime / 1000;
+        const desiredTotal = desiredPerSecond * seconds;
+        projectData.__cylindersHopeSpaceSlider = {
+          project: {
+            id: '__cylindersHopeSpaceSlider',
+            attributes: { spaceBuilding: true }
+          },
+          cost: { space: { energy: desiredTotal } },
+          gain: {}
+        };
+      }
+    }
     projectProductivityMap = calculateProjectProductivities(
       resources,
       deltaTime,
       projectData
     );
+    if (Object.prototype.hasOwnProperty.call(projectProductivityMap, '__cylindersHopeSpaceSlider')) {
+      cylindersHopeSliderProductivity = projectProductivityMap.__cylindersHopeSpaceSlider;
+    }
+    if (Object.prototype.hasOwnProperty.call(projectData, '__cylindersHopeSpaceSlider')) {
+      delete projectData.__cylindersHopeSpaceSlider;
+    }
     projectEntries = Object.entries(projectData);
     for (const [name, data] of projectEntries) {
       const productivity = projectProductivityMap[name] ?? 1;
@@ -1568,6 +1590,14 @@ function produceResources(deltaTime, buildings) {
       const productivity = project.operationProductivity ?? 1;
       project.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);
       project.operationPreRunThisTick = true;
+    }
+
+    if (typeof updateSpaceSliders === 'function') {
+      updateSpaceSliders(deltaTime, {
+        space: spaceManager,
+        accumulatedChanges,
+        forcedProductivity: cylindersHopeSliderProductivity
+      });
     }
 
     for (const [, data] of projectEntries) {

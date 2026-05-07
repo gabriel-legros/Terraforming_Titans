@@ -102,6 +102,8 @@
     <script src="src/js/advanced-research/hive-mind-androids.js"></script>
     <script src="src/js/advanced-research/ecumenopolis.js"></script>
     <script src="src/js/advanced-research/oneill-cylinders.js"></script>
+    <script src="src/js/advanced-research/space-sliders.js"></script>
+    <script src="src/js/advanced-research/space-slidersUI.js"></script>
     <script src="src/js/advanced-research/artificial-ecosystems.js"></script>
     <script src="src/js/special/antimatter.js"></script>
     <script src="src/js/resource.js"></script>
@@ -576,6 +578,22 @@
                                         <div id="space-stat-oneill-value" class="space-stat-value">0.00</div>
                                         <div id="space-stat-oneill-rate" class="space-stat-subvalue">+0.00/hr</div>
                                     </div>
+                                </div>
+                            </div>
+                            <div id="space-sliders-section" class="space-sliders-section hidden">
+                                <div class="space-sliders-header">
+                                    <h4 class="space-sliders-title" data-i18n="ui.space.spaceSliders.title">Space Sliders</h4>
+                                </div>
+                                <div id="space-slider-cylinders-hope-card" class="space-slider-card hidden">
+                                    <div class="space-slider-topline">
+                                        <span data-i18n="ui.space.spaceSliders.cylindersHope.label">Cylinders-HOPE Collaboration</span>
+                                        <span id="space-slider-cylinders-hope-tooltip" class="info-tooltip-icon">&#9432;</span>
+                                    </div>
+                                    <div class="space-slider-controls">
+                                        <input id="space-slider-cylinders-hope-input" type="range" min="0" max="10" step="1" value="0" />
+                                        <span id="space-slider-cylinders-hope-tick" class="space-slider-tick">0</span>
+                                    </div>
+                                    <div id="space-slider-cylinders-hope-energy" class="space-slider-energy">0 space energy/s</div>
                                 </div>
                             </div>
                         </section>

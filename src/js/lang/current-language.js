@@ -2722,6 +2722,15 @@ setLanguageData({
       oneillTooltipLocked: "Complete the O'Neill Cylinders advanced research to seed orbital habitats.",
       oneillTooltipBase: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
       oneillTooltipHyperlane: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity. Hyperlane makes each fully controlled sector contribute O'Neill cylinder capacity by the same Warp Gate Network multiplier used for resource import caps, with a minimum base capacity of 1000 when no sectors are controlled.\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
+      spaceSliders: {
+        title: 'Space Sliders',
+        cylindersHope: {
+          label: 'Cylinders-HOPE Collaboration',
+          energyOff: '0 space energy/s',
+          energyLine: '{perCylinder} per cylinder/s, total {total}/s',
+          tooltip: "0-10 slider. Tick 0: disabled. Tick 1: 1Q space energy/s per O'Neill cylinder. Each additional tick multiplies this by 10. Manufacturing and Warp Gate Network bonuses are scaled by this slider's space-energy productivity.",
+        },
+      },
       currentWorldLabel: 'Current World',
       originalProperties: 'Original Properties',
       worldSelectionTitle: 'World Selection',
@@ -4513,6 +4522,10 @@ setLanguageData({
         oneill_cylinders: {
           name: "O'Neill Cylinders",
           description: 'Worlds producing worlds producing worlds...  Enables passive generation of terraformed worlds.',
+        },
+        cylinders_hope_collaboration_agreement: {
+          name: 'Cylinders-HOPE Collaboration Agreement',
+          description: 'The cylinders have a very special, cheap access to space. They are uniquely suited for manufacturing and for expanding the Warp Gate Network. However, their infrastructure is lacking and unstable. They will work in exchange for Warpnet access, if HOPE provides. Unlocks a slider under the space story tab.',
         },
         high_gravity_adaptation: {
           name: 'High-gravity adaptation',

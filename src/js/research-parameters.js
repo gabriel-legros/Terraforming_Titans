@@ -2237,6 +2237,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'cylinders_hope_collaboration_agreement',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 300000000 },
+        prerequisites: ['oneill_cylinders', 'warp_gate_fabrication', 'manufacturing_worlds'],
+        effects: [
+          {
+            target: 'spaceManager',
+            type: 'booleanFlag',
+            flagId: 'cylindersHopeCollaborationAgreement',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'high_gravity_adaptation',
         name: '',
         description: '',

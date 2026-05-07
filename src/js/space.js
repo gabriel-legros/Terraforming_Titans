@@ -172,6 +172,8 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
+        this.spaceSliders = { cylindersHope: 0 };
+        this.spaceSliderRuntime = {};
         this.terraformHistory = [];
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
@@ -1728,6 +1730,40 @@ class SpaceManager extends EffectableEntity {
         return this.oneillCylinders;
     }
 
+    getSpaceSliderTick(sliderId) {
+        if (sliderId === 'cylindersHope') {
+            return Math.max(0, Math.min(10, Math.floor(Number(this.spaceSliders.cylindersHope) || 0)));
+        }
+        return 0;
+    }
+
+    setSpaceSliderTick(sliderId, value) {
+        if (sliderId !== 'cylindersHope') {
+            return 0;
+        }
+        const next = Math.max(0, Math.min(10, Math.floor(Number(value) || 0)));
+        this.spaceSliders.cylindersHope = next;
+        return next;
+    }
+
+    setSpaceSliderRuntimeData(sliderId, data = {}) {
+        if (!this.spaceSliderRuntime[sliderId]) {
+            this.spaceSliderRuntime[sliderId] = {};
+        }
+        this.spaceSliderRuntime[sliderId].productivity = Math.max(0, Math.min(1, Number(data.productivity) || 0));
+        this.spaceSliderRuntime[sliderId].tick = Math.max(0, Math.floor(Number(data.tick) || 0));
+        this.spaceSliderRuntime[sliderId].desiredPerSecond = Math.max(0, Number(data.desiredPerSecond) || 0);
+        this.spaceSliderRuntime[sliderId].actualPerSecond = Math.max(0, Number(data.actualPerSecond) || 0);
+    }
+
+    getSpaceSliderRuntimeProductivity(sliderId) {
+        const productivity = Number(this.spaceSliderRuntime?.[sliderId]?.productivity);
+        if (!Number.isFinite(productivity)) {
+            return 0;
+        }
+        return Math.max(0, Math.min(1, productivity));
+    }
+
     /**
      * Counts how many planets have been fully terraformed and adds orbital rings.
      * @returns {number}
@@ -2834,6 +2870,9 @@ class SpaceManager extends EffectableEntity {
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
             oneillCylinders: this.getOneillCylinderCount(),
+            spaceSliders: {
+                cylindersHope: this.getSpaceSliderTick('cylindersHope')
+            },
             terraformHistory: this.terraformHistory,
             dominionTerraformRewards: this.dominionTerraformRewards,
             dominionTerraformRewardCount: this.dominionTerraformRewardCount
@@ -2854,6 +2893,8 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
+        this.spaceSliders = { cylindersHope: 0 };
+        this.spaceSliderRuntime = {};
         this.terraformHistory = [];
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
@@ -2920,6 +2961,8 @@ class SpaceManager extends EffectableEntity {
         if (Number.isFinite(savedOneill) && savedOneill > 0) {
             this.setOneillCylinderCount(savedOneill);
         }
+        const savedSliders = savedData.spaceSliders || {};
+        this.setSpaceSliderTick('cylindersHope', savedSliders.cylindersHope || 0);
 
         // Load current location
         if (savedData.currentRandomSeed !== undefined && savedData.currentRandomSeed !== null) {

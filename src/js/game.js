@@ -213,7 +213,7 @@ function registerDefaultTabActivationHandlers() {
     updateGalaxyUI({ force: true });
   });
   registerTabActivationHandler('settings', () => {
-    updateStatistics();
+    updateStatisticsDisplay();
   });
 }
 

@@ -542,6 +542,9 @@ function initializeSpaceUI(spaceManager) {
     } else {
         hideSpaceAtlasTab();
     }
+    if (typeof setSpaceSlidersUIManager === 'function') {
+        setSpaceSlidersUIManager(_spaceManagerInstance);
+    }
 
     // If the UI has already been generated, just update with the new instance
     if (spaceUIInitialized) {
@@ -571,6 +574,9 @@ function initializeSpaceUI(spaceManager) {
             tooltip: spaceStatOneillTooltipEl,
             tooltipContent: spaceStatOneillTooltipContentEl
         });
+    }
+    if (typeof initializeSpaceSlidersUI === 'function') {
+        initializeSpaceSlidersUI(_spaceManagerInstance);
     }
 
     if (!optionsContainer) {
@@ -764,6 +770,9 @@ function updateSpaceStatsUI() {
             galaxy: typeof galaxyManager !== 'undefined' ? galaxyManager : null
         });
     }
+    if (typeof updateSpaceSlidersUI === 'function') {
+        updateSpaceSlidersUI({ space: _spaceManagerInstance });
+    }
 }
 
 // Handle click events for selecting planets
@@ -852,5 +861,8 @@ function updateCurrentWorldUI() {
             const detailsContent = detailsBox.querySelector('.details-content') || detailsBox;
             detailsContent.textContent = '';
         }
+    }
+    if (typeof updateSpaceSlidersUI === 'function') {
+        updateSpaceSlidersUI({ space: _spaceManagerInstance, galaxy: galaxyManager });
     }
 }

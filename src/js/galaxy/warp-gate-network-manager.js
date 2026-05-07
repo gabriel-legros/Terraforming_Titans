@@ -134,7 +134,16 @@ class WarpGateNetworkManager extends EffectableEntity {
     let levelChanged = false;
     for (let index = 0; index < sectors.length; index += 1) {
       const sector = sectors[index];
-      const worldCount = galaxyManager.getTerraformedWorldCountForSector(sector);
+      const baseWorldCount = galaxyManager.getTerraformedWorldCountForSector(sector);
+      let sliderBonus = 0;
+      if (typeof getCylindersHopeWarpGateWorldBonusPerSector === 'function') {
+        sliderBonus = getCylindersHopeWarpGateWorldBonusPerSector(spaceManager, galaxyManager);
+        if (typeof getCylindersHopeProductivity === 'function') {
+          const sliderProductivity = getCylindersHopeProductivity(deltaMs, { space: spaceManager }).productivity;
+          sliderBonus *= Math.max(0, Math.min(1, sliderProductivity));
+        }
+      }
+      const worldCount = baseWorldCount + sliderBonus;
       if (!(worldCount > 0)) {
         continue;
       }

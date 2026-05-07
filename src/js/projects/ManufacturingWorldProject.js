@@ -217,8 +217,16 @@
       this.cumulativePopulation += Math.max(0, value || 0);
     }
 
+    getCylindersHopePopulationBonus() {
+      if (typeof getCylindersHopeManufacturingPopulationBonus === 'function') {
+        return Math.max(0, getCylindersHopeManufacturingPopulationBonus(spaceManager));
+      }
+      return 0;
+    }
+
     getTotalPotentialPopulation() {
-      return Math.max(0, Math.floor(this.cumulativePopulation));
+      const bonus = this.getCylindersHopePopulationBonus();
+      return Math.max(0, Math.floor(this.cumulativePopulation + bonus));
     }
 
     getAssignmentKeys() {
@@ -1272,8 +1280,13 @@
       const assigned = this.getAssignedTotal();
       const available = Math.max(0, total - assigned);
       const step = this.assignmentStep;
+      const bonus = this.getCylindersHopePopulationBonus();
 
-      elements.cumulativeValue.textContent = formatNumber(this.cumulativePopulation, true, 2);
+      if (bonus > 0) {
+        elements.cumulativeValue.textContent = `${formatNumber(total, true, 2)} (${formatNumber(this.cumulativePopulation, true, 2)} + ${formatNumber(bonus, true, 2)})`;
+      } else {
+        elements.cumulativeValue.textContent = formatNumber(this.cumulativePopulation, true, 2);
+      }
       elements.assignedValue.textContent = formatNumber(assigned, true, 2);
       elements.freeValue.textContent = formatNumber(available, true);
       elements.statusValue.textContent = this.statusText || getManufacturingText('catalogs.specializations.manufacturing.status.idle');
