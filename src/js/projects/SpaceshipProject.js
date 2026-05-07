@@ -479,10 +479,36 @@ class SpaceshipProject extends Project {
     if (elements.totalCostElement && this.assignedSpaceships != null) {
       const perSecond = this.isContinuous();
       const totalCost = this.calculateSpaceshipTotalCost(perSecond);
-      const totalCostHtml = formatTotalCostDisplay(totalCost, this, perSecond);
-      if (elements._cachedTotalCostHtml !== totalCostHtml) {
-        elements.totalCostElement.innerHTML = totalCostHtml;
-        elements._cachedTotalCostHtml = totalCostHtml;
+      if (elements.isImportProject) {
+        const suffix = perSecond ? '/s' : '';
+        const costParts = [];
+        let hasShortfall = false;
+        for (const category in totalCost) {
+          for (const resource in totalCost[category]) {
+            const requiredAmount = totalCost[category][resource];
+            const availableAmount = getAvailableProjectCostAmount(this, category, resource);
+            const resourceDisplayName = resources[category][resource].displayName ||
+              resource.charAt(0).toUpperCase() + resource.slice(1);
+            costParts.push(`${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`);
+            if (!hasShortfall && shouldHighlightProjectCost(this, category, resource, availableAmount, requiredAmount)) {
+              hasShortfall = true;
+            }
+          }
+        }
+        const totalCostText = getProjectsUIText('ui.projects.totalCost', 'Total Cost: {items}', {
+          items: costParts.join(', ')
+        });
+        if (elements._cachedTotalCostText !== totalCostText) {
+          elements.totalCostElement.textContent = totalCostText;
+          elements._cachedTotalCostText = totalCostText;
+        }
+        elements.totalCostElement.style.color = hasShortfall ? 'red' : '';
+      } else {
+        const totalCostHtml = formatTotalCostDisplay(totalCost, this, perSecond);
+        if (elements._cachedTotalCostHtml !== totalCostHtml) {
+          elements.totalCostElement.innerHTML = totalCostHtml;
+          elements._cachedTotalCostHtml = totalCostHtml;
+        }
       }
     }
 

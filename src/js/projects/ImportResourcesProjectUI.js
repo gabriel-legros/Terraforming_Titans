@@ -51,6 +51,8 @@ class ImportResourcesProjectUI {
     this.downButton = null;
     this.kesslerWarning = null;
     this.kesslerWarningText = null;
+    this.capRulesSignature = '';
+    this.capRowOrderSignature = '';
   }
 
   reset() {
@@ -74,6 +76,8 @@ class ImportResourcesProjectUI {
     this.downButton = null;
     this.kesslerWarning = null;
     this.kesslerWarningText = null;
+    this.capRulesSignature = '';
+    this.capRowOrderSignature = '';
   }
 
   isImportProject(name) {
@@ -522,15 +526,19 @@ class ImportResourcesProjectUI {
     elements.fullControl.textContent = data.fullControlLine;
     elements.fullControl.style.display = data.fullControlLine ? 'block' : 'none';
 
-    while (elements.rulesList.firstChild) {
-      elements.rulesList.removeChild(elements.rulesList.firstChild);
+    const nextRulesSignature = data.ruleLines.join('\n');
+    if (this.capRulesSignature !== nextRulesSignature) {
+      while (elements.rulesList.firstChild) {
+        elements.rulesList.removeChild(elements.rulesList.firstChild);
+      }
+      data.ruleLines.forEach((line) => {
+        const item = document.createElement('li');
+        item.textContent = line;
+        elements.rulesList.appendChild(item);
+      });
+      this.capRulesSignature = nextRulesSignature;
     }
     elements.rulesList.style.display = data.ruleLines.length ? 'block' : 'none';
-    data.ruleLines.forEach((line) => {
-      const item = document.createElement('li');
-      item.textContent = line;
-      elements.rulesList.appendChild(item);
-    });
 
     const rowOrder = [];
     data.caps.forEach((entry) => {
@@ -549,13 +557,17 @@ class ImportResourcesProjectUI {
       row.detail.textContent = data.hydrogen.detail;
     }
 
-    rowOrder.forEach((label) => {
-      const row = elements.rows[label];
-      elements.table.appendChild(row.label);
-      elements.table.appendChild(row.ratio);
-      elements.table.appendChild(row.cap);
-      elements.table.appendChild(row.detail);
-    });
+    const nextRowOrderSignature = rowOrder.join('|');
+    if (this.capRowOrderSignature !== nextRowOrderSignature) {
+      rowOrder.forEach((label) => {
+        const row = elements.rows[label];
+        elements.table.appendChild(row.label);
+        elements.table.appendChild(row.ratio);
+        elements.table.appendChild(row.cap);
+        elements.table.appendChild(row.detail);
+      });
+      this.capRowOrderSignature = nextRowOrderSignature;
+    }
   }
 
   insertRow(mainRow, detailRow, projectName) {
