@@ -292,7 +292,6 @@ class AutoTravelAutomation {
       if (!traveled) {
         autoTravelContext.active = false;
       }
-      hideAutoTravelLoadingPopup();
       this._travelInProgress = false;
       this._cooldownMs = 1000;
       queueAutomationUIRefresh();
@@ -364,7 +363,6 @@ class AutoTravelAutomation {
               if (!traveled) {
                 autoTravelContext.active = false;
               }
-              hideAutoTravelLoadingPopup();
               this._travelInProgress = false;
               this._cooldownMs = 1000;
               queueAutomationUIRefresh();
@@ -397,7 +395,6 @@ class AutoTravelAutomation {
       if (!traveled) {
         autoTravelContext.active = false;
       }
-      hideAutoTravelLoadingPopup();
       this._travelInProgress = false;
       this._cooldownMs = 1000;
       queueAutomationUIRefresh();

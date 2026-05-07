@@ -240,14 +240,19 @@ function showAutoTravelLoadingPopup() {
   }
   autoTravelLoadingPopupElement.classList.remove('auto-travel-loading-popup--hidden');
   autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'false');
+  autoTravelLoadingPopupPendingHide = true;
 }
 
 function hideAutoTravelLoadingPopup() {
   if (!autoTravelLoadingPopupElement) {
     autoTravelLoadingPopupElement = document.getElementById('auto-travel-loading-popup');
   }
+  if (!autoTravelLoadingPopupElement) {
+    return;
+  }
   autoTravelLoadingPopupElement.classList.add('auto-travel-loading-popup--hidden');
   autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
+  autoTravelLoadingPopupPendingHide = false;
 }
 
 function prepareForTravel(options = {}) {
