@@ -6,6 +6,7 @@ if (typeof SubtabManager === 'undefined') {
     }
 }
 let hopeSubtabManager = null;
+let hopeSubtabManagerActivateHookBound = false;
 let awakeningSubtabAlert = false;
 
 function getActiveHopeSubtabId() {
@@ -38,14 +39,21 @@ function clearAwakeningSubtabAlert() {
 
 function initializeHopeTabs() {
     if (typeof SubtabManager !== 'function') return;
-    hopeSubtabManager = new SubtabManager('.hope-subtab', '.hope-subtab-content', true);
-    hopeSubtabManager.onActivate(id => {
-        if (id === 'awakening-hope') {
-            clearAwakeningSubtabAlert();
-        } else if (id === 'solis-hope' && typeof solisManager !== 'undefined' && typeof solisManager.setSolisTabAlert === 'function') {
-            solisManager.setSolisTabAlert(false);
-        }
-    });
+    if (hopeSubtabManager) {
+        hopeSubtabManager.reset();
+    } else {
+        hopeSubtabManager = new SubtabManager('.hope-subtab', '.hope-subtab-content', true);
+    }
+    if (!hopeSubtabManagerActivateHookBound) {
+        hopeSubtabManager.onActivate(id => {
+            if (id === 'awakening-hope') {
+                clearAwakeningSubtabAlert();
+            } else if (id === 'solis-hope' && typeof solisManager !== 'undefined' && typeof solisManager.setSolisTabAlert === 'function') {
+                solisManager.setSolisTabAlert(false);
+            }
+        });
+        hopeSubtabManagerActivateHookBound = true;
+    }
     if (typeof consumePendingAwakeningAlert === 'function' && consumePendingAwakeningAlert()) {
         const awakeningContent = document.getElementById ? document.getElementById('awakening-hope') : null;
         const awakeningActive = !!(awakeningContent && awakeningContent.classList && awakeningContent.classList.contains('active'));

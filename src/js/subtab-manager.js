@@ -11,6 +11,7 @@ class SubtabManager {
     this.subtabs = null;
     this.activeId = null;
     this.activateListeners = [];
+    this.tabClickHandlers = new Map();
     this._register();
   }
 
@@ -52,10 +53,22 @@ class SubtabManager {
     return null;
   }
 
+  _unregister() {
+    this.tabClickHandlers.forEach((handler, tab) => {
+      if (tab && tab.removeEventListener) {
+        tab.removeEventListener('click', handler);
+      }
+    });
+    this.tabClickHandlers.clear();
+  }
+
   _register() {
+    this._unregister();
     this._cacheSubtabs();
     this.subtabs.forEach(tab => {
-      tab.addEventListener('click', () => this.activate(tab.dataset.subtab));
+      const handler = () => this.activate(tab.dataset.subtab);
+      this.tabClickHandlers.set(tab, handler);
+      tab.addEventListener('click', handler);
     });
   }
 

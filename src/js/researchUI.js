@@ -17,6 +17,7 @@ const researchSubtabAlerts = {
     'advanced-research': false,
 };
 let researchSubtabManager = null;
+let researchSubtabManagerActivateHookBound = false;
 
 // Cached DOM nodes keyed by research id
 const researchElementCache = new Map();
@@ -252,12 +253,19 @@ function initializeResearchTabs() {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
     }
     if (typeof SubtabManager !== 'function') return;
-    researchSubtabManager = new SubtabManager('.research-subtab', '.research-subtab-content');
-    researchSubtabManager.onActivate(id => {
-        if (typeof markResearchSubtabViewed === 'function') {
-            markResearchSubtabViewed(id);
-        }
-    });
+    if (researchSubtabManager) {
+        researchSubtabManager.reset();
+    } else {
+        researchSubtabManager = new SubtabManager('.research-subtab', '.research-subtab-content');
+    }
+    if (!researchSubtabManagerActivateHookBound) {
+        researchSubtabManager.onActivate(id => {
+            if (typeof markResearchSubtabViewed === 'function') {
+                markResearchSubtabViewed(id);
+            }
+        });
+        researchSubtabManagerActivateHookBound = true;
+    }
 
     cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
     cachedToggleButtons.forEach(button => {
