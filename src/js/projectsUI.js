@@ -38,6 +38,13 @@ const projectDisplayState = {
   collapsed: {},
   activeGroups: {}
 };
+const CONTINUOUS_ETA_PROJECT_IDS = {
+  deeperMining: true,
+  undergroundExpansion: true,
+  artificialSky: true,
+  artificialCrust: true,
+  aerostatStructuralNet: true
+};
 
 function resetProjectDisplayState() {
   projectDisplayState.collapsed = {};
@@ -218,6 +225,48 @@ function getActiveProjectSubtabId() {
 function getProjectSubtabIdForProject(project) {
   const category = project.category || 'resources';
   return `${category}-projects`;
+}
+
+function getContinuousEtaSeconds(project) {
+  if (!project || !CONTINUOUS_ETA_PROJECT_IDS[project.name]) {
+    return null;
+  }
+
+  const duration = project.getEffectiveDuration();
+  if (!duration || !Number.isFinite(duration) || duration <= 0) {
+    return null;
+  }
+
+  const productivity = Math.max(0, project.continuousProductivity ?? 1);
+  if (productivity <= 0) {
+    return null;
+  }
+
+  let remainingUnits = 0;
+  if (project.name === 'deeperMining') {
+    const maxDepth = Number(project.maxDepth) || 0;
+    const averageDepth = Number(project.averageDepth) || 0;
+    remainingUnits = Math.max(0, maxDepth - averageDepth);
+  } else if (project.name === 'undergroundExpansion') {
+    const maxRepeats = Number(project.getMaxRepeats()) || 0;
+    const completed = (Number(project.repeatCount) || 0) + (Number(project.fractionalRepeatCount) || 0);
+    remainingUnits = Math.max(0, maxRepeats - completed);
+  } else {
+    const maxRepeats = Number(project.getMaxRepeats()) || 0;
+    const completed = (Number(project.repeatCount) || 0) + (Number(project.segmentProgress) || 0);
+    remainingUnits = Math.max(0, maxRepeats - completed);
+  }
+
+  if (remainingUnits <= 0) {
+    return 0;
+  }
+
+  const progressPerSecond = (1000 / duration) * productivity;
+  if (progressPerSecond <= 0) {
+    return null;
+  }
+
+  return Math.max(0, remainingUnits / progressPerSecond);
 }
 
 function getContentWrapper() {
@@ -1505,7 +1554,15 @@ function updateProjectUI(projectName) {
               ? getProjectsUIText('ui.projects.status.productivitySuffix', ' ({value}% productivity)', { value: Math.round(productivity * 100) })
               : '';
             if (project.autoStart && project.isActive && !project.isPaused) {
-              const statusText = `${getProjectsUIText('ui.projects.status.continuous', 'Continuous')}${productivityLabel}`;
+              const etaSeconds = getContinuousEtaSeconds(project);
+              const etaLabel = Number.isFinite(etaSeconds)
+                ? getProjectsUIText(
+                    'ui.projects.status.continuousWithEta',
+                    'Continuous ({time} remaining)',
+                    { time: formatDuration(Math.ceil(Math.max(0, etaSeconds))) }
+                  )
+                : getProjectsUIText('ui.projects.status.continuous', 'Continuous');
+              const statusText = `${etaLabel}${productivityLabel}`;
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, statusText);
               } else {

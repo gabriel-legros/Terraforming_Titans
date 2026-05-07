@@ -349,6 +349,7 @@ function formatPlayTime(days) {
 }
 
 function formatDuration(seconds) {
+  const padDurationUnit = (value) => String(Math.max(0, Math.floor(value))).padStart(2, '0');
   const yearSeconds = 365 * 24 * 3600;
   if (seconds >= yearSeconds) {
     const years = Math.floor(seconds / yearSeconds);
@@ -357,20 +358,20 @@ function formatDuration(seconds) {
   if (seconds >= 24 * 3600) {
     const days = Math.floor(seconds / (24 * 3600));
     const hours = Math.floor((seconds % (24 * 3600)) / 3600);
-    return `${days}d ${hours}h`;
+    return `${days}d ${padDurationUnit(hours)}h`;
   }
   if (seconds >= 3600) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    return `${hours}h ${minutes}m ${secs}s`;
+    return `${padDurationUnit(hours)}h ${padDurationUnit(minutes)}m ${padDurationUnit(secs)}s`;
   }
   if (seconds >= 60) {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${minutes}m ${secs}s`;
+    return `${padDurationUnit(minutes)}m ${padDurationUnit(secs)}s`;
   }
-  return `${Math.floor(seconds)}s`;
+  return `${padDurationUnit(seconds)}s`;
 }
 
 function formatDurationDetailed(seconds) {

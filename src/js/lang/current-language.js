@@ -1705,6 +1705,7 @@ setLanguageData({
         pausedByPulsar: 'Paused by pulsar',
         pausedStorm: 'Paused: Electromagnetic Storm',
         continuous: 'Continuous',
+        continuousWithEta: 'Continuous ({time} remaining)',
         productivitySuffix: ' ({value}% productivity)',
         stopped: 'Stopped',
         inProgress: 'In Progress: {time} seconds remaining',
