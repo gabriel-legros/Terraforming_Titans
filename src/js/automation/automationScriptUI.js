@@ -1,5 +1,7 @@
 let scriptAutomationLinesSignature = '';
 let forceScriptAutomationRefresh = false;
+let scriptNextTravelOptionsSignature = '';
+let scriptSelectOptionsSignature = '';
 
 function getScriptAutomation() {
   return automationManager ? automationManager.scriptAutomation : null;
@@ -293,7 +295,11 @@ function updateScriptAutomationUI() {
   }
   automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelScriptId;
 
-  if (document.activeElement !== automationElements.scriptNextTravelSelect) {
+  const nextTravelSignature = JSON.stringify(
+    automation.scripts.map((item) => [item.id, item.name || ''])
+  );
+  if (document.activeElement !== automationElements.scriptNextTravelSelect
+      && scriptNextTravelOptionsSignature !== nextTravelSignature) {
     automationElements.scriptNextTravelSelect.textContent = '';
     const noneOption = document.createElement('option');
     noneOption.value = '';
@@ -305,6 +311,9 @@ function updateScriptAutomationUI() {
       option.textContent = item.name || `Script ${item.id}`;
       automationElements.scriptNextTravelSelect.appendChild(option);
     });
+    scriptNextTravelOptionsSignature = nextTravelSignature;
+  }
+  if (document.activeElement !== automationElements.scriptNextTravelSelect) {
     automationElements.scriptNextTravelSelect.value = automation.nextTravelScriptId
       ? String(automation.nextTravelScriptId)
       : '';
@@ -312,7 +321,12 @@ function updateScriptAutomationUI() {
   automationElements.scriptNextTravelPersistToggle.checked = automation.nextTravelPersistent;
   automationElements.scriptNextTravelPersistToggle.disabled = !automation.nextTravelScriptId;
 
-  if (document.activeElement !== automationElements.scriptSelect) {
+  const selectedScriptSignature = JSON.stringify([
+    automation.getSelectedScript()?.id || null,
+    automation.scripts.map((item) => [item.id, item.name || ''])
+  ]);
+  if (document.activeElement !== automationElements.scriptSelect
+      && scriptSelectOptionsSignature !== selectedScriptSignature) {
     automationElements.scriptSelect.textContent = '';
     automation.scripts.forEach(item => {
       const option = document.createElement('option');
@@ -321,6 +335,9 @@ function updateScriptAutomationUI() {
       option.selected = script && item.id === script.id;
       automationElements.scriptSelect.appendChild(option);
     });
+    scriptSelectOptionsSignature = selectedScriptSignature;
+  } else if (document.activeElement !== automationElements.scriptSelect) {
+    automationElements.scriptSelect.value = script ? String(script.id) : '';
   }
 
   if (script && document.activeElement !== automationElements.scriptNameInput) {

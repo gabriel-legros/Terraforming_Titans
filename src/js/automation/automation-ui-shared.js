@@ -269,7 +269,8 @@ function updateAutomationNextTravelCombinationControls(config = {}) {
   }
   automation.nextTravelCombinationPersistent = automation.nextTravelCombinationPersistent && !!automation.nextTravelCombinationId;
 
-  if (document.activeElement !== select) {
+  const optionSignature = JSON.stringify(combinations.map((combo) => [combo.id, combo.name || '']));
+  if (document.activeElement !== select && select._optionSignature !== optionSignature) {
     select.textContent = '';
     const noneOption = document.createElement('option');
     noneOption.value = '';
@@ -281,6 +282,9 @@ function updateAutomationNextTravelCombinationControls(config = {}) {
       option.textContent = getDefaultAutomationCombinationLabel(combo);
       select.appendChild(option);
     });
+    select._optionSignature = optionSignature;
+  }
+  if (document.activeElement !== select) {
     select.value = automation.nextTravelCombinationId
       ? String(automation.nextTravelCombinationId)
       : '';
@@ -304,7 +308,8 @@ function updateAutomationCombinationControls(config = {}) {
     return null;
   }
 
-  if (document.activeElement !== select) {
+  const optionSignature = JSON.stringify(combinations.map((combo) => [combo.id, combo.name || '']));
+  if (document.activeElement !== select && select._optionSignature !== optionSignature) {
     select.textContent = '';
     const newOption = document.createElement('option');
     newOption.value = '';
@@ -316,6 +321,9 @@ function updateAutomationCombinationControls(config = {}) {
       option.textContent = getDefaultAutomationCombinationLabel(combo);
       select.appendChild(option);
     });
+    select._optionSignature = optionSignature;
+  }
+  if (document.activeElement !== select) {
     select.value = automation.getSelectedCombinationId() || '';
   }
 

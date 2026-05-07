@@ -1393,6 +1393,9 @@ function produceResources(deltaTime, buildings) {
     recalculateLandUsage();
   }
   updateAntimatterStorageCap(resources);
+  if (followersManager && followersManager.rebuildOrbitalStorageCapBonusCache) {
+    followersManager.rebuildOrbitalStorageCapBonusCache();
+  }
 
   // Update storage cap for all resources except workers
   for (const category in resources) {

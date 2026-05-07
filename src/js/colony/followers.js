@@ -17,6 +17,7 @@ class FollowersManager extends EffectableEntity {
     this.weights = {};
     this.lastProductionRates = {};
     this.lastAppliedAssignments = {};
+    this.orbitalStorageCapBonusCache = {};
     this.faithInitialized = false;
     this.worldBelieverRatio = 0.1;
     this.galacticPopulation = 0;
@@ -1203,33 +1204,42 @@ class FollowersManager extends EffectableEntity {
     return Math.max(100, perOrbitalRate * 10);
   }
 
-  getOrbitalStorageCapBonusForResource(category, resourceName) {
+  rebuildOrbitalStorageCapBonusCache() {
     if (!this.enabled) {
-      return 0;
+      this.orbitalStorageCapBonusCache = {};
+      return;
     }
 
     const snapshot = this.getAssignmentsSnapshot();
     const configs = this.getOrbitalConfigs();
-    let bonus = 0;
+    const bonusCache = {};
     for (let i = 0; i < configs.length; i += 1) {
       const config = configs[i];
-      if (config.targetCategory !== category || config.targetResource !== resourceName) {
-        continue;
-      }
-
       const assigned = snapshot.assignments[config.id] || 0;
       if (assigned <= 0) {
         continue;
       }
 
-      const targetResource = resources[category][resourceName];
+      const targetResource = resources[config.targetCategory][config.targetResource];
       if (!targetResource || !targetResource.hasCap || !targetResource.unlocked) {
         continue;
       }
 
-      bonus += this.getPerOrbitalCapBonus(config) * assigned;
+      const cacheKey = `${config.targetCategory}:${config.targetResource}`;
+      if (!bonusCache[cacheKey]) {
+        bonusCache[cacheKey] = 0;
+      }
+      bonusCache[cacheKey] += this.getPerOrbitalCapBonus(config) * assigned;
     }
-    return bonus;
+    this.orbitalStorageCapBonusCache = bonusCache;
+  }
+
+  getOrbitalStorageCapBonusForResource(category, resourceName) {
+    if (!this.enabled) {
+      return 0;
+    }
+    const cacheKey = `${category}:${resourceName}`;
+    return this.orbitalStorageCapBonusCache[cacheKey] || 0;
   }
 
   getLastProductionRate(id) {
@@ -1305,6 +1315,7 @@ class FollowersManager extends EffectableEntity {
   resetTransientState() {
     this.lastProductionRates = {};
     this.lastAppliedAssignments = {};
+    this.orbitalStorageCapBonusCache = {};
   }
 
   enable() {

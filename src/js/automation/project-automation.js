@@ -466,8 +466,6 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   }
 
   applyResolvedMaps(expansionMap = {}, operationsMap = {}) {
-    let changed = false;
-    const changedProjectIds = new Set();
     const projectIds = new Set([
       ...Object.keys(expansionMap || {}),
       ...Object.keys(operationsMap || {})
@@ -492,16 +490,8 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         return;
       }
 
-      if (this.applyProjectSettings(project, settings)) {
-        changed = true;
-        changedProjectIds.add(project.name);
-      }
+      this.applyProjectSettings(project, settings);
     });
-
-    if (changed) {
-      changedProjectIds.forEach(projectId => updateProjectUI(projectId));
-      renderProjects();
-    }
   }
 
   isSpaceStorageProxyProjectId(projectId) {

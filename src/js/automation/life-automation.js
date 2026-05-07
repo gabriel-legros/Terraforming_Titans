@@ -463,14 +463,17 @@ class LifeAutomation {
     }
     this.elapsed = 0;
     const preset = this.getActivePreset();
-    this.applyAutoPurchases(preset);
-    this.applyAutoDesign(preset);
-    queueAutomationUIRefresh();
+    const purchased = this.applyAutoPurchases(preset);
+    const deployed = this.applyAutoDesign(preset);
+    if (purchased || deployed) {
+      queueAutomationUIRefresh();
+    }
   }
 
   applyAutoPurchases(preset) {
+    let changed = false;
     if (!preset.purchaseEnabled) {
-      return;
+      return changed;
     }
     for (let index = 0; index < lifeShopCategories.length; index += 1) {
       const category = lifeShopCategories[index];
@@ -495,7 +498,9 @@ class LifeAutomation {
         continue;
       }
       lifeDesigner.buyPoint(category.name, 1);
+      changed = true;
     }
+    return changed;
   }
 
   buildCandidateDesign(preset) {
@@ -699,17 +704,17 @@ class LifeAutomation {
 
   applyAutoDesign(preset) {
     if (!preset.designEnabled) {
-      return;
+      return false;
     }
     if (lifeDesigner.isActive) {
-      return;
+      return false;
     }
     if (preset.designSteps.length === 0) {
-      return;
+      return false;
     }
     const candidate = this.buildCandidateDesign(preset);
     if (!candidate) {
-      return;
+      return false;
     }
     const currentDesign = lifeDesigner.currentDesign;
     let needsToleranceIncrease = false;
@@ -728,15 +733,16 @@ class LifeAutomation {
     const reassignedAsNeededPoints = this.getAsNeededReassignedPoints(candidate, currentDesign);
     const effectiveImprovement = Math.max(improvementMagnitude, reassignedAsNeededPoints);
     if (!needsToleranceIncrease && effectiveImprovement < preset.deployImprovement) {
-      return;
+      return false;
     }
     if (!candidate.canSurviveAnywhere()) {
-      return;
+      return false;
     }
     lifeDesigner.replaceDesign(candidate);
     document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
     lifeDesigner.confirmDesign();
     document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
+    return true;
   }
 
   forceDeployDesign(presetId) {
