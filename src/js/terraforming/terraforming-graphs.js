@@ -2,6 +2,10 @@
 const TERRAFORMING_GRAPH_YEAR_UNITS = 365;
 const TERRAFORMING_GRAPH_WINDOW_YEARS = 500;
 const TERRAFORMING_GRAPH_MIN_LOG = 1e-6;
+const TERRAFORMING_PHASE_ZOOM_STEP = 1.25;
+const TERRAFORMING_PHASE_MIN_SPAN_RATIO = 0.08;
+const TERRAFORMING_PHASE_MAX_TEMPERATURE = 10000;
+const TERRAFORMING_PHASE_MAX_PRESSURE = 1e12;
 
 function getTerraformingGraphText(path, fallback, vars) {
   return t(`ui.terraforming.graphs.${path}`, vars, fallback);
@@ -375,12 +379,22 @@ class TerraformingGraphsManager {
       phaseSection: null,
       phaseTitle: null,
       phaseCanvas: null,
+      phaseZoomControls: null,
+      phaseZoomIn: null,
+      phaseZoomOut: null,
       phaseNote: null,
       phaseButtons: null,
       phaseButtonsMap: {},
       menuButtons: {},
       legendItems: [],
       button: null
+    };
+    this.phaseViewport = {};
+    this.phasePanState = {
+      pointerId: null,
+      startX: 0,
+      startY: 0,
+      active: false
     };
   }
 
@@ -394,6 +408,9 @@ class TerraformingGraphsManager {
     this.needsRedraw = true;
     this.phaseNeedsRedraw = true;
     this.lastSnapshotYear = null;
+    this.phaseViewport = {};
+    this.phasePanState.pointerId = null;
+    this.phasePanState.active = false;
     this.hide();
   }
 
@@ -470,6 +487,20 @@ class TerraformingGraphsManager {
     phaseDisclaimer.textContent = getTerraformingGraphText('phaseDisclaimer', 'Phase diagrams in Terraforming Titans are very simplified versions of the real ones. Pressure is typically used as saturation pressure, not total pressure.');
     const phaseCanvas = document.createElement('canvas');
     phaseCanvas.className = 'terraforming-graphs-phase-canvas';
+    const phaseZoomControls = document.createElement('div');
+    phaseZoomControls.className = 'terraforming-graphs-phase-zoom';
+    const phaseZoomIn = document.createElement('button');
+    phaseZoomIn.type = 'button';
+    phaseZoomIn.className = 'terraforming-graphs-phase-zoom-button';
+    phaseZoomIn.textContent = '+';
+    phaseZoomIn.setAttribute('aria-label', getTerraformingGraphText('zoomIn', 'Zoom in'));
+    const phaseZoomOut = document.createElement('button');
+    phaseZoomOut.type = 'button';
+    phaseZoomOut.className = 'terraforming-graphs-phase-zoom-button';
+    phaseZoomOut.textContent = '-';
+    phaseZoomOut.setAttribute('aria-label', getTerraformingGraphText('zoomOut', 'Zoom out'));
+    phaseZoomControls.appendChild(phaseZoomIn);
+    phaseZoomControls.appendChild(phaseZoomOut);
     const phaseNote = document.createElement('div');
     phaseNote.className = 'terraforming-graphs-phase-note';
     const phaseButtons = document.createElement('div');
@@ -477,6 +508,7 @@ class TerraformingGraphsManager {
     phaseSection.appendChild(phaseDisclaimer);
     phaseSection.appendChild(phaseTitle);
     phaseSection.appendChild(phaseCanvas);
+    phaseSection.appendChild(phaseZoomControls);
     phaseSection.appendChild(phaseNote);
     phaseSection.appendChild(phaseButtons);
     chart.appendChild(canvas);
@@ -518,6 +550,21 @@ class TerraformingGraphsManager {
       }
     });
     closeButton.addEventListener('click', () => this.hide());
+    phaseCanvas.addEventListener('pointerdown', (event) => this.startPhasePan(event));
+    phaseCanvas.addEventListener('pointermove', (event) => this.movePhasePan(event));
+    phaseCanvas.addEventListener('pointerup', (event) => this.endPhasePan(event));
+    phaseCanvas.addEventListener('pointercancel', (event) => this.endPhasePan(event));
+    phaseCanvas.addEventListener('pointerleave', (event) => this.endPhasePan(event));
+    phaseZoomIn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      this.zoomPhaseDiagram(1 / TERRAFORMING_PHASE_ZOOM_STEP);
+    });
+    phaseZoomOut.addEventListener('click', (event) => {
+      event.stopPropagation();
+      this.zoomPhaseDiagram(TERRAFORMING_PHASE_ZOOM_STEP);
+    });
+    phaseZoomIn.addEventListener('pointerdown', (event) => event.stopPropagation());
+    phaseZoomOut.addEventListener('pointerdown', (event) => event.stopPropagation());
     window.addEventListener('resize', () => {
       if (this.isOpen) {
         this.needsRedraw = true;
@@ -540,6 +587,9 @@ class TerraformingGraphsManager {
     this.ui.phaseSection = phaseSection;
     this.ui.phaseTitle = phaseTitle;
     this.ui.phaseCanvas = phaseCanvas;
+    this.ui.phaseZoomControls = phaseZoomControls;
+    this.ui.phaseZoomIn = phaseZoomIn;
+    this.ui.phaseZoomOut = phaseZoomOut;
     this.ui.phaseNote = phaseNote;
     this.ui.phaseButtons = phaseButtons;
     this.ui.phaseButtonsMap = phaseButtonsMap;
@@ -574,6 +624,159 @@ class TerraformingGraphsManager {
     this.phaseNeedsRedraw = true;
     this.updatePhaseMenuState();
     this.drawPhaseDiagram();
+  }
+
+  getPhaseViewport(diagramId, baseRanges) {
+    let viewport = this.phaseViewport[diagramId];
+    if (!viewport) {
+      const bounds = this.buildPhaseNavigationBounds(baseRanges);
+      viewport = {
+        tempCenter: (baseRanges.minTemp + baseRanges.maxTemp) * 0.5,
+        tempSpan: baseRanges.maxTemp - baseRanges.minTemp,
+        logCenter: (baseRanges.logMin + baseRanges.logMax) * 0.5,
+        logSpan: baseRanges.logMax - baseRanges.logMin,
+        bounds
+      };
+      this.phaseViewport[diagramId] = viewport;
+    } else if (!viewport.bounds) {
+      viewport.bounds = this.buildPhaseNavigationBounds(baseRanges);
+    }
+    return viewport;
+  }
+
+  clampPhaseViewport(viewport, baseRanges) {
+    const bounds = viewport.bounds || this.buildPhaseNavigationBounds(baseRanges);
+    const fullTempSpan = bounds.maxTemp - bounds.minTemp;
+    const fullLogSpan = bounds.logMax - bounds.logMin;
+    const baseTempSpan = baseRanges.maxTemp - baseRanges.minTemp;
+    const baseLogSpan = baseRanges.logMax - baseRanges.logMin;
+    const minTempSpan = baseTempSpan * TERRAFORMING_PHASE_MIN_SPAN_RATIO;
+    const minLogSpan = baseLogSpan * TERRAFORMING_PHASE_MIN_SPAN_RATIO;
+    viewport.tempSpan = Math.max(minTempSpan, Math.min(fullTempSpan, viewport.tempSpan));
+    viewport.logSpan = Math.max(minLogSpan, Math.min(fullLogSpan, viewport.logSpan));
+    const minTempCenter = bounds.minTemp + viewport.tempSpan * 0.5;
+    const maxTempCenter = bounds.maxTemp - viewport.tempSpan * 0.5;
+    const minLogCenter = bounds.logMin + viewport.logSpan * 0.5;
+    const maxLogCenter = bounds.logMax - viewport.logSpan * 0.5;
+    viewport.tempCenter = Math.max(minTempCenter, Math.min(maxTempCenter, viewport.tempCenter));
+    viewport.logCenter = Math.max(minLogCenter, Math.min(maxLogCenter, viewport.logCenter));
+  }
+
+  buildPhaseNavigationBounds(baseRanges) {
+    const maxTemp = Math.max(baseRanges.maxTemp, TERRAFORMING_PHASE_MAX_TEMPERATURE);
+    const maxPressure = Math.max(baseRanges.maxPressure, TERRAFORMING_PHASE_MAX_PRESSURE);
+    return {
+      minTemp: Math.min(0, baseRanges.minTemp),
+      maxTemp,
+      logMin: baseRanges.logMin,
+      logMax: Math.log10(maxPressure)
+    };
+  }
+
+  zoomPhaseDiagram(multiplier) {
+    const definition = TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS[this.selectedPhaseDiagram]
+      || TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS.water;
+    const baseRanges = this.buildPhaseBaseRanges(definition);
+    const viewport = this.getPhaseViewport(definition.id, baseRanges);
+    viewport.tempSpan *= multiplier;
+    viewport.logSpan *= multiplier;
+    this.clampPhaseViewport(viewport, baseRanges);
+    this.phaseNeedsRedraw = true;
+    this.drawPhaseDiagram();
+  }
+
+  startPhasePan(event) {
+    if (event.button !== 0) {
+      return;
+    }
+    this.phasePanState.pointerId = event.pointerId;
+    this.phasePanState.startX = event.clientX;
+    this.phasePanState.startY = event.clientY;
+    this.phasePanState.active = true;
+    this.ui.phaseCanvas.classList.add('is-panning');
+    this.ui.phaseCanvas.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  movePhasePan(event) {
+    if (!this.phasePanState.active || this.phasePanState.pointerId !== event.pointerId) {
+      return;
+    }
+    const definition = TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS[this.selectedPhaseDiagram]
+      || TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS.water;
+    const baseRanges = this.buildPhaseBaseRanges(definition);
+    const viewport = this.getPhaseViewport(definition.id, baseRanges);
+    const canvasRect = this.ui.phaseCanvas.getBoundingClientRect();
+    const width = Math.max(320, Math.floor(canvasRect.width));
+    const height = Math.max(220, Math.floor(canvasRect.height));
+    const padding = this.getPhasePadding(width, height, baseRanges.logMin, baseRanges.logMax);
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+    const dx = event.clientX - this.phasePanState.startX;
+    const dy = event.clientY - this.phasePanState.startY;
+    viewport.tempCenter -= (dx / plotWidth) * viewport.tempSpan;
+    viewport.logCenter += (dy / plotHeight) * viewport.logSpan;
+    this.clampPhaseViewport(viewport, baseRanges);
+    this.phasePanState.startX = event.clientX;
+    this.phasePanState.startY = event.clientY;
+    this.phaseNeedsRedraw = true;
+    this.drawPhaseDiagram();
+    event.preventDefault();
+  }
+
+  endPhasePan(event) {
+    if (this.phasePanState.pointerId !== event.pointerId) {
+      return;
+    }
+    this.phasePanState.active = false;
+    this.phasePanState.pointerId = null;
+    this.ui.phaseCanvas.classList.remove('is-panning');
+    if (this.ui.phaseCanvas.hasPointerCapture(event.pointerId)) {
+      this.ui.phaseCanvas.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  buildPhaseBaseRanges(definition) {
+    const cycle = definition.cycle;
+    const phaseBoundaryPressureFn = definition.phaseBoundaryPressureFn || cycle.saturationVaporPressureFn;
+    const tripleTemp = cycle.tripleTemperature;
+    const criticalTemp = cycle.criticalTemperature;
+    const minTemp = definition.minTemperature ?? Math.max(5, tripleTemp * 0.4);
+    const maxTemp = definition.maxTemperature ?? Math.max(tripleTemp * 1.2, Math.min(criticalTemp * 1.05, tripleTemp * 4));
+    const maxTempForPressure = definition.maxPressure ? maxTemp : Math.min(criticalTemp, maxTemp);
+    const triplePressure = cycle.triplePressure;
+    const minPressure = Math.max(0.1, triplePressure * 0.02);
+    const maxPressure = definition.maxPressure ?? Math.max(triplePressure * 8, phaseBoundaryPressureFn(maxTempForPressure) * 1.2);
+    return {
+      phaseBoundaryPressureFn,
+      tripleTemp,
+      criticalTemp,
+      minPressure,
+      maxPressure,
+      minTemp,
+      maxTemp,
+      logMin: Math.log10(minPressure),
+      logMax: Math.log10(maxPressure)
+    };
+  }
+
+  getPhasePadding(width, height, logMin, logMax) {
+    const canvas = this.ui.phaseCanvas;
+    const pixelRatio = window.devicePixelRatio || 1;
+    const phaseCtx = canvas.getContext('2d');
+    phaseCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    phaseCtx.font = '12px "Segoe UI", Arial, sans-serif';
+    const pressureTicks = buildLogTicks(logMin, logMax);
+    const pressureTickLabels = pressureTicks.map((exp) => formatNumber(Math.pow(10, exp), false, 2, true));
+    const maxPressureTickLabelWidth = pressureTickLabels.reduce((maxWidth, label) => {
+      return Math.max(maxWidth, phaseCtx.measureText(label).width);
+    }, 0);
+    return {
+      left: Math.max(64, Math.ceil(maxPressureTickLabelWidth) + 16),
+      right: 20,
+      top: 48,
+      bottom: 40
+    };
   }
 
   updateMenuState() {
@@ -881,18 +1084,18 @@ class TerraformingGraphsManager {
   drawPhaseDiagram() {
     const definition = TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS[this.selectedPhaseDiagram]
       || TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS.water;
-    const cycle = definition.cycle;
-    const phaseBoundaryPressureFn = definition.phaseBoundaryPressureFn || cycle.saturationVaporPressureFn;
-    const tripleTemp = cycle.tripleTemperature;
-    const criticalTemp = cycle.criticalTemperature;
-    const minTemp = definition.minTemperature ?? Math.max(5, tripleTemp * 0.4);
-    const maxTemp = definition.maxTemperature ?? Math.max(tripleTemp * 1.2, Math.min(criticalTemp * 1.05, tripleTemp * 4));
-    const maxTempForPressure = definition.maxPressure ? maxTemp : Math.min(criticalTemp, maxTemp);
-    const triplePressure = cycle.triplePressure;
-    const minPressure = Math.max(0.1, triplePressure * 0.02);
-    const maxPressure = definition.maxPressure ?? Math.max(triplePressure * 8, phaseBoundaryPressureFn(maxTempForPressure) * 1.2);
-    const logMin = Math.log10(minPressure);
-    const logMax = Math.log10(maxPressure);
+    const baseRanges = this.buildPhaseBaseRanges(definition);
+    const phaseBoundaryPressureFn = baseRanges.phaseBoundaryPressureFn;
+    const tripleTemp = baseRanges.tripleTemp;
+    const criticalTemp = baseRanges.criticalTemp;
+    const minPressure = baseRanges.minPressure;
+    const maxPressure = baseRanges.maxPressure;
+    const viewport = this.getPhaseViewport(definition.id, baseRanges);
+    this.clampPhaseViewport(viewport, baseRanges);
+    const minTemp = viewport.tempCenter - viewport.tempSpan * 0.5;
+    const maxTemp = viewport.tempCenter + viewport.tempSpan * 0.5;
+    const logMin = viewport.logCenter - viewport.logSpan * 0.5;
+    const logMax = viewport.logCenter + viewport.logSpan * 0.5;
 
     const gravity = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
@@ -953,15 +1156,7 @@ class TerraformingGraphsManager {
 
     const pressureTicks = buildLogTicks(logMin, logMax);
     const pressureTickLabels = pressureTicks.map((exp) => formatNumber(Math.pow(10, exp), false, 2, true));
-    const maxPressureTickLabelWidth = pressureTickLabels.reduce((maxWidth, label) => {
-      return Math.max(maxWidth, ctx.measureText(label).width);
-    }, 0);
-    const padding = {
-      left: Math.max(64, Math.ceil(maxPressureTickLabelWidth) + 16),
-      right: 20,
-      top: 48,
-      bottom: 40
-    };
+    const padding = this.getPhasePadding(width, height, logMin, logMax);
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
     const chartBottom = padding.top + plotHeight;
