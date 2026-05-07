@@ -21,6 +21,7 @@ const SPACE_STORAGE_UI_ORDER = [
 const SPACE_STORAGE_DIVIDER_TOP_RESOURCES = new Set(['components', 'liquidWater', 'carbonDioxide']);
 const SPACE_STORAGE_DIVIDER_MARGIN = 10;
 let resourceViewModeUpdating = false;
+let resourceCategoryCollapsedState = {};
 
 function getResourceUIText(path, fallback, vars) {
   try {
@@ -411,16 +412,35 @@ function createResourceContainers(resourcesData) {
     resourceList.id = `${category}-resources-resources-container`;
     categoryContainer.appendChild(resourceList);
 
+    const applyCollapsedState = () => {
+      const collapsed = resourceCategoryCollapsedState[category] === true;
+      resourceList.style.display = collapsed ? 'none' : '';
+      arrow.innerHTML = collapsed ? '&#9654;' : '&#9660;';
+    };
+    applyCollapsedState();
+
     collapseTarget.addEventListener('click', () => {
-      const hidden = resourceList.style.display === 'none';
-      resourceList.style.display = hidden ? '' : 'none';
-      arrow.innerHTML = hidden ? '&#9660;' : '&#9654;';
+      const collapsed = resourceList.style.display !== 'none';
+      resourceCategoryCollapsedState[category] = collapsed;
+      applyCollapsedState();
     });
 
     // Append the complete category container to the main container
     resourcesContainer.appendChild(categoryContainer);
   }
   updateResourceViewToggleState(resourcesData);
+}
+
+function resetResourceCategoryCollapseState() {
+  resourceCategoryCollapsedState = {};
+}
+
+function getResourceCategoryCollapseState() {
+  return { ...resourceCategoryCollapsedState };
+}
+
+function loadResourceCategoryCollapseState(state) {
+  resourceCategoryCollapsedState = { ...(state || {}) };
 }
 
 function createTooltipElement(category, resourceName) {

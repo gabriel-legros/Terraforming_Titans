@@ -328,6 +328,7 @@ function initializeGameState(options = {}) {
   if (!preserveManagers && !globalGameIsLoadingFromSave) {
     resetStructureDisplayState();
     resetProjectDisplayState();
+    resetResourceCategoryCollapseState();
   } else if (preserveManagers && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenStructuresOnTravel) {
     structureDisplayState.hidden = {};
   }

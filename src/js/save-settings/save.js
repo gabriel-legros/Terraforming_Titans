@@ -189,6 +189,7 @@ function getGameState() {
       : undefined,
     projectDisplayState: typeof projectDisplayState !== 'undefined' ? projectDisplayState : undefined,
     structureDisplayState: typeof structureDisplayState !== 'undefined' ? structureDisplayState : undefined,
+    resourceCategoryCollapsedState: typeof getResourceCategoryCollapseState === 'function' ? getResourceCategoryCollapseState() : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
     colonySliderSettings: (typeof colonySliderSettings !== 'undefined' && typeof colonySliderSettings.saveState === 'function') ? colonySliderSettings.saveState() : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
@@ -234,6 +235,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     const gameState = JSON.parse(savedState);
     resetStructureDisplayState();
     resetProjectDisplayState();
+    resetResourceCategoryCollapseState();
     if (gameState.structureDisplayState) {
       structureDisplayState.collapsed = { ...(gameState.structureDisplayState.collapsed || {}) };
       structureDisplayState.hidden = { ...(gameState.structureDisplayState.hidden || {}) };
@@ -241,6 +243,9 @@ function loadGame(slotOrCustomString, recreate = true) {
     if (gameState.projectDisplayState) {
       projectDisplayState.collapsed = { ...(gameState.projectDisplayState.collapsed || {}) };
       projectDisplayState.activeGroups = { ...(gameState.projectDisplayState.activeGroups || {}) };
+    }
+    if (gameState.resourceCategoryCollapsedState) {
+      loadResourceCategoryCollapseState(gameState.resourceCategoryCollapsedState);
     }
 
       // Load space state first so planet parameters are correct
