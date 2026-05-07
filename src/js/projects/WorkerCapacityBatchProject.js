@@ -172,6 +172,9 @@ class WorkerCapacityBatchProject extends Project {
     tooltip,
     autoMaxLabel = getProjectFolderText('ui.projects.common.autoMax', 'Auto Max'),
     layoutClass = 'worker-capacity-layout',
+    showControls = true,
+    showAutoMax = true,
+    showMaxValue = true,
   } = {}) {
     if (this.workerCapacityUI && this.workerCapacityUI.container?.isConnected) {
       return this.workerCapacityUI;
@@ -207,17 +210,28 @@ class WorkerCapacityBatchProject extends Project {
     amountDisplay.className = 'amount-display';
     const val = document.createElement('span');
     val.id = `${this.name}-count`;
-    const slash = document.createElement('span');
-    slash.textContent = getProjectFolderText('ui.projects.common.slash', ' / ');
-    const max = document.createElement('span');
-    max.id = `${this.name}-max`;
+    let slash = null;
+    let max = null;
+    if (showMaxValue) {
+      slash = document.createElement('span');
+      slash.textContent = getProjectFolderText('ui.projects.common.slash', ' / ');
+      max = document.createElement('span');
+      max.id = `${this.name}-max`;
+    }
     const info = document.createElement('span');
     info.className = 'info-tooltip-icon';
     info.innerHTML = '&#9432;';
     if (tooltip) {
       attachDynamicInfoTooltip(info, tooltip);
     }
-    amountDisplay.append(val, slash, max, info);
+    amountDisplay.appendChild(val);
+    if (slash) {
+      amountDisplay.appendChild(slash);
+    }
+    if (max) {
+      amountDisplay.appendChild(max);
+    }
+    amountDisplay.appendChild(info);
 
     const controls = document.createElement('div');
     controls.className = 'amount-controls';
@@ -259,7 +273,13 @@ class WorkerCapacityBatchProject extends Project {
 
     const amountRow = document.createElement('div');
     amountRow.className = 'worker-capacity-row';
-    amountRow.append(amountDisplay, controls, autoContainer);
+    amountRow.appendChild(amountDisplay);
+    if (showControls) {
+      amountRow.appendChild(controls);
+    }
+    if (showAutoMax) {
+      amountRow.appendChild(autoContainer);
+    }
 
     amountSection.append(amountHeader, amountRow);
     topSection.appendChild(amountSection);
@@ -272,41 +292,45 @@ class WorkerCapacityBatchProject extends Project {
       }
     };
 
-    bPlus.addEventListener('click', () => {
-      this.autoMax = false;
-      this.adjustBuildCount(this.getWorkerCapacityStep());
-      refresh();
-    });
-    bMinus.addEventListener('click', () => {
-      this.autoMax = false;
-      this.adjustBuildCount(-this.getWorkerCapacityStep());
-      refresh();
-    });
-    bMul.addEventListener('click', () => {
-      this.setWorkerCapacityStep(this.getWorkerCapacityStep() * 10);
-      refresh();
-    });
-    bDiv.addEventListener('click', () => {
-      this.setWorkerCapacityStep(this.getWorkerCapacityStep() / 10);
-      refresh();
-    });
-    bMin.addEventListener('click', () => {
-      this.autoMax = false;
-      this.setBuildCount(1);
-      refresh();
-    });
-    bMax.addEventListener('click', () => {
-      this.autoMax = false;
-      this.setMaxBuildCount();
-      refresh();
-    });
+    if (showControls) {
+      bPlus.addEventListener('click', () => {
+        this.autoMax = false;
+        this.adjustBuildCount(this.getWorkerCapacityStep());
+        refresh();
+      });
+      bMinus.addEventListener('click', () => {
+        this.autoMax = false;
+        this.adjustBuildCount(-this.getWorkerCapacityStep());
+        refresh();
+      });
+      bMul.addEventListener('click', () => {
+        this.setWorkerCapacityStep(this.getWorkerCapacityStep() * 10);
+        refresh();
+      });
+      bDiv.addEventListener('click', () => {
+        this.setWorkerCapacityStep(this.getWorkerCapacityStep() / 10);
+        refresh();
+      });
+      bMin.addEventListener('click', () => {
+        this.autoMax = false;
+        this.setBuildCount(1);
+        refresh();
+      });
+      bMax.addEventListener('click', () => {
+        this.autoMax = false;
+        this.setMaxBuildCount();
+        refresh();
+      });
+    }
 
     this.workerCapacityUI = {
       container: topSection,
       costSection,
       amountSection,
+      amountDisplay,
       val,
       max,
+      slash,
       info,
       bPlus,
       bMinus,
@@ -316,6 +340,8 @@ class WorkerCapacityBatchProject extends Project {
       bMax,
       autoMaxCheckbox,
       amountRow,
+      showControls,
+      showAutoMax,
     };
 
     return this.workerCapacityUI;

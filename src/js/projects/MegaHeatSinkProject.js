@@ -2,6 +2,7 @@
   const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
   const WORKERS_PER_HEAT_SINK = 1_000_000_000;
   const SECONDS_PER_DAY = 86_400;
+  const MEGA_HEAT_SINK_CONTINUOUS_THRESHOLD_MS = 1000;
   const getOrderedZones = () => getZones();
 
   let WorkerCapacityBatchProjectBase;
@@ -26,6 +27,9 @@
       this.summaryElements = null;
       this.workersPerCompletion = WORKERS_PER_HEAT_SINK;
       this.heatSinksActive = true;
+      this.autoMax = false;
+      this.buildCount = 1;
+      this.activeBuildCount = 1;
     }
 
     hasLiquidHydrogenBlocker() {
@@ -53,10 +57,34 @@
 
     renderUI(container) {
       this.renderWorkerCapacityControls(container, {
-        amountTitle: getMegaHeatSinkText('ui.projects.megaHeatSink.buildAmount', 'Build Amount'),
-        tooltip: getMegaHeatSinkText('ui.projects.megaHeatSink.buildAmountTooltip', 'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.'),
+        amountTitle: getMegaHeatSinkText('ui.projects.megaHeatSink.speedBoost', 'Speed Boost'),
+        tooltip: getMegaHeatSinkText('ui.projects.megaHeatSink.speedBoostTooltip', 'Duration is divided by max(1, worker cap / 1,000,000,000). Below 1 second duration, Mega Heat Sink runs continuously with fractional progress.'),
         layoutClass: 'scanner-layout worker-capacity-layout',
+        showControls: false,
+        showAutoMax: false,
+        showMaxValue: false,
       });
+      if (this.workerCapacityUI?.val) {
+        this.workerCapacityUI.val.style.fontWeight = '400';
+      }
+      if (this.workerCapacityUI?.container) {
+        const expansionSection = document.createElement('div');
+        expansionSection.className = 'project-section-container worker-capacity-amount-section';
+        const expansionHeader = document.createElement('h4');
+        expansionHeader.className = 'section-title';
+        expansionHeader.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.expansion', 'Expansion');
+        const expansionRow = document.createElement('div');
+        expansionRow.className = 'worker-capacity-row';
+        const expansionDisplay = document.createElement('div');
+        expansionDisplay.className = 'amount-display';
+        const expansionValue = document.createElement('span');
+        expansionValue.style.fontWeight = '400';
+        expansionDisplay.appendChild(expansionValue);
+        expansionRow.appendChild(expansionDisplay);
+        expansionSection.append(expansionHeader, expansionRow);
+        this.workerCapacityUI.container.appendChild(expansionSection);
+        this.workerCapacityUI.expansionValue = expansionValue;
+      }
 
       const card = document.createElement('div');
       card.classList.add('info-card');
@@ -128,6 +156,17 @@
 
     updateUI() {
       super.updateUI();
+      if (this.workerCapacityUI?.val) {
+        this.workerCapacityUI.val.textContent = `x${formatNumber(this.getSpeedBoost(), true, 2)}`;
+      }
+      if (this.workerCapacityUI?.expansionValue) {
+        const expansionPerSecond = this.getExpansionPerSecond();
+        this.workerCapacityUI.expansionValue.textContent = getMegaHeatSinkText(
+          'ui.projects.megaHeatSink.expansionRate',
+          '{value} heat sinks/s',
+          { value: formatNumber(expansionPerSecond, false, 2) }
+        );
+      }
 
       const elements = this.summaryElements;
       if (!elements) {
@@ -227,6 +266,31 @@
       return MEGA_HEAT_SINK_POWER_W * this.getHeatSinkPowerMultiplier();
     }
 
+    getSpeedBoost() {
+      const workerCap = Math.max(0, resources?.colony?.workers?.cap || 0);
+      return Math.max(1, workerCap / WORKERS_PER_HEAT_SINK);
+    }
+
+    getEffectiveDuration() {
+      const duration = Project.prototype.getEffectiveDuration.call(this);
+      return duration / this.getSpeedBoost();
+    }
+
+    getExpansionPerSecond() {
+      const duration = this.getEffectiveDuration();
+      if (!(duration > 0) || duration === Infinity) {
+        return 0;
+      }
+      const productivity = this.isContinuous()
+        ? Math.max(0, this.continuousProductivity ?? 1)
+        : 1;
+      return (1000 / duration) * productivity;
+    }
+
+    isContinuous() {
+      return this.getEffectiveDuration() < MEGA_HEAT_SINK_CONTINUOUS_THRESHOLD_MS;
+    }
+
     getHeatSinkPowerMultiplier() {
       let multiplier = 1;
       this.activeEffects.forEach((effect) => {
@@ -238,11 +302,147 @@
     }
 
     getEffectiveHeatSinkCount() {
-      return (this.repeatCount || 0) * this.getHeatSinkPowerMultiplier();
+      const builtHeatSinks = Math.max(0, Math.floor(this.repeatCount || 0));
+      return builtHeatSinks * this.getHeatSinkPowerMultiplier();
+    }
+
+    start(resources) {
+      this.activeBuildCount = 1;
+      const started = Project.prototype.start.call(this, resources);
+      if (!started) {
+        return false;
+      }
+
+      if (this.isContinuous()) {
+        this.startingDuration = Infinity;
+        this.remainingTime = Infinity;
+      }
+      return true;
+    }
+
+    update(deltaTime) {
+      if (!this.isActive || this.isCompleted || this.isPaused) {
+        return;
+      }
+      if (this.isContinuous()) {
+        return;
+      }
+      Project.prototype.update.call(this, deltaTime);
+    }
+
+    estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+      if (!this.isContinuous() || !this.isActive) {
+        return Project.prototype.estimateProjectCostAndGain.call(this, deltaTime, applyRates, productivity, accumulatedChanges);
+      }
+
+      const totals = { cost: {}, gain: {} };
+      const duration = this.getEffectiveDuration();
+      if (!(duration > 0) || duration === Infinity) {
+        return totals;
+      }
+
+      const progress = (deltaTime / duration) * productivity;
+      const rate = 1000 / duration;
+      const cost = Project.prototype.getScaledCost.call(this);
+      const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+      for (const category in cost) {
+        if (!totals.cost[category]) {
+          totals.cost[category] = {};
+        }
+        for (const resource in cost[category]) {
+          const amount = cost[category][resource] * progress;
+          totals.cost[category][resource] = amount;
+          if (applyRates && this.showsInResourcesRate() && amount > 0) {
+            const key = resource === 'water' ? 'liquidWater' : resource;
+            const colonyAvailable = Math.max(
+              (resources[category]?.[resource]?.value || 0) + (accumulatedChanges?.[category]?.[resource] ?? 0),
+              0
+            );
+            const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+            const colonyRate = cost[category][resource] * rate * productivity * (allocation.fromColony / amount);
+            const storageRate = cost[category][resource] * rate * productivity * (allocation.fromStorage / amount);
+            if (colonyRate > 0) {
+              resources[category][resource].modifyRate(-colonyRate, this.displayName, 'project');
+            }
+            if (storageRate > 0) {
+              resources?.spaceStorage?.[key]?.modifyRate?.(-storageRate, this.displayName, 'project');
+            }
+          }
+        }
+      }
+      return totals;
+    }
+
+    applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+      if (!this.isContinuous() || !this.isActive) {
+        return;
+      }
+
+      const duration = this.getEffectiveDuration();
+      if (!(duration > 0) || duration === Infinity) {
+        return;
+      }
+
+      const requestedProgress = (deltaTime / duration) * productivity;
+      if (!(requestedProgress > 0)) {
+        return;
+      }
+
+      const cost = Project.prototype.getScaledCost.call(this);
+      const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+      let paidProgress = requestedProgress;
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          const perSinkCost = cost[category][resource];
+          if (!(perSinkCost > 0)) {
+            continue;
+          }
+          const key = resource === 'water' ? 'liquidWater' : resource;
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+          const available = Math.max(0, (resources[category][resource].value || 0) + pending);
+          const requestedAmount = perSinkCost * requestedProgress;
+          const allocation = getMegaProjectResourceAllocation(storageProj, key, requestedAmount, available);
+          const affordableAmount = allocation.fromColony + allocation.fromStorage;
+          paidProgress = Math.min(paidProgress, affordableAmount / perSinkCost);
+        }
+      }
+
+      paidProgress = Math.max(0, Math.min(requestedProgress, paidProgress));
+      if (!(paidProgress > 0)) {
+        return;
+      }
+
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          const amount = cost[category][resource] * paidProgress;
+          const key = resource === 'water' ? 'liquidWater' : resource;
+          const colonyAvailable = Math.max(0, (resources[category][resource].value || 0) + (accumulatedChanges?.[category]?.[resource] ?? 0));
+          const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+          if (!accumulatedChanges[category]) {
+            accumulatedChanges[category] = {};
+          }
+          if (accumulatedChanges[category][resource] === undefined) {
+            accumulatedChanges[category][resource] = 0;
+          }
+          if (allocation.fromColony > 0) {
+            accumulatedChanges[category][resource] -= allocation.fromColony;
+          }
+          if (allocation.fromStorage > 0 && storageProj && typeof storageProj.spendStoredResource === 'function') {
+            storageProj.spendStoredResource(key, allocation.fromStorage);
+            storageProj.reconcileUsedStorage?.();
+          }
+        }
+      }
+      if (storageProj && typeof updateSpaceStorageUI === 'function') {
+        updateSpaceStorageUI(storageProj);
+      }
+
+      this.repeatCount += paidProgress;
     }
 
     complete() {
-      super.complete();
+      this.activeBuildCount = 1;
+      Project.prototype.complete.call(this);
     }
 
     saveAutomationSettings() {
