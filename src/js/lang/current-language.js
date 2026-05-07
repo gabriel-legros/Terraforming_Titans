@@ -3427,6 +3427,8 @@ setLanguageData({
       creditsTitle: 'Credits',
       totalPlaytime: 'Total Playtime:',
       fastestTerraform: 'Fastest Terraform:',
+      fastestTerraformByTypeTitle: 'Fastest Terraform by World Type',
+      fastestTerraformByTypeEntry: '{type}: {game} ({real} real time)',
       recentTerraformHistoryTitle: 'Last {count} Terraformed Worlds',
       recentTerraformHistoryEmpty: 'No terraformed worlds recorded yet.',
       recentTerraformHistoryEntry: '{name}: {game} ({real} real time)',

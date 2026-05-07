@@ -175,6 +175,7 @@ class SpaceManager extends EffectableEntity {
         this.spaceSliders = { cylindersHope: 0 };
         this.spaceSliderRuntime = {};
         this.terraformHistory = [];
+        this.fastestTerraformByWorldType = {};
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
@@ -405,7 +406,55 @@ class SpaceManager extends EffectableEntity {
         };
     }
 
+    _getCurrentWorldArchetype() {
+        if (this.currentRandomSeed !== null) {
+            const status = this.randomWorldStatuses[String(this.currentRandomSeed)];
+            return this._getRandomWorldType(status)
+                || currentPlanetParameters?.classification?.archetype
+                || null;
+        }
+        if (this.currentArtificialKey !== null) {
+            return null;
+        }
+        const key = this.currentPlanetKey;
+        return this.allPlanetsData?.[key]?.classification?.archetype
+            || this.allPlanetsData?.[key]?.archetype
+            || currentPlanetParameters?.classification?.archetype
+            || null;
+    }
+
+    _updateFastestTerraformByWorldType(archetype, playTime, realTime) {
+        if (!archetype) {
+            return;
+        }
+        const nextPlayTime = Math.max(0, Number(playTime) || 0);
+        const nextRealTime = Math.max(0, Number(realTime) || 0);
+        const current = this.fastestTerraformByWorldType[archetype];
+        if (!current || nextPlayTime < current.playTimeSeconds) {
+            this.fastestTerraformByWorldType[archetype] = {
+                playTimeSeconds: nextPlayTime,
+                realTimeSeconds: nextRealTime
+            };
+        }
+    }
+
+    getFastestTerraformByWorldType() {
+        const copy = {};
+        Object.keys(this.fastestTerraformByWorldType || {}).forEach((typeKey) => {
+            const entry = this.fastestTerraformByWorldType[typeKey];
+            if (!entry) {
+                return;
+            }
+            copy[typeKey] = {
+                playTimeSeconds: Math.max(0, Number(entry.playTimeSeconds) || 0),
+                realTimeSeconds: Math.max(0, Number(entry.realTimeSeconds) || 0)
+            };
+        });
+        return copy;
+    }
+
     recordCurrentTerraformCompletion(playTime, realTime) {
+        this._updateFastestTerraformByWorldType(this._getCurrentWorldArchetype(), playTime, realTime);
         this.terraformHistory.push(this._buildCurrentTerraformHistoryEntry(playTime, realTime));
         this._trimTerraformHistory();
     }
@@ -2874,6 +2923,7 @@ class SpaceManager extends EffectableEntity {
                 cylindersHope: this.getSpaceSliderTick('cylindersHope')
             },
             terraformHistory: this.terraformHistory,
+            fastestTerraformByWorldType: this.getFastestTerraformByWorldType(),
             dominionTerraformRewards: this.dominionTerraformRewards,
             dominionTerraformRewardCount: this.dominionTerraformRewardCount
         };
@@ -2896,6 +2946,7 @@ class SpaceManager extends EffectableEntity {
         this.spaceSliders = { cylindersHope: 0 };
         this.spaceSliderRuntime = {};
         this.terraformHistory = [];
+        this.fastestTerraformByWorldType = {};
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
         this._initializePlanetStatuses(); // Reset statuses to default structure
@@ -3130,6 +3181,17 @@ class SpaceManager extends EffectableEntity {
                 }))
                 .filter((entry) => entry.name);
             this._trimTerraformHistory();
+        }
+        if (savedData.fastestTerraformByWorldType && savedData.fastestTerraformByWorldType.constructor === Object) {
+            this.fastestTerraformByWorldType = {};
+            Object.keys(savedData.fastestTerraformByWorldType).forEach((typeKey) => {
+                const entry = savedData.fastestTerraformByWorldType[typeKey];
+                const playTimeSeconds = Math.max(0, Number(entry?.playTimeSeconds) || 0);
+                const realTimeSeconds = Math.max(0, Number(entry?.realTimeSeconds) || 0);
+                this.fastestTerraformByWorldType[typeKey] = { playTimeSeconds, realTimeSeconds };
+            });
+        } else {
+            this.fastestTerraformByWorldType = {};
         }
 
         this.rwgSummary = this._sanitizeRwgSummary(savedData.rwgSummary);
