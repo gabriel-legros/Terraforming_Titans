@@ -8,6 +8,7 @@ if (typeof SubtabManager === 'undefined') {
 let hopeSubtabManager = null;
 let hopeSubtabManagerActivateHookBound = false;
 let awakeningSubtabAlert = false;
+let hopeTabActivationHandlersRegistered = false;
 
 function getActiveHopeSubtabId() {
     if (hopeSubtabManager && typeof hopeSubtabManager.getActiveId === 'function') {
@@ -53,6 +54,15 @@ function initializeHopeTabs() {
             }
         });
         hopeSubtabManagerActivateHookBound = true;
+    }
+    if (!hopeTabActivationHandlersRegistered) {
+        registerTabActivationHandler('hope', () => {
+            updateHopeUI();
+        });
+        registerSubtabActivationHandler('hope-subtab', () => {
+            updateHopeUI();
+        });
+        hopeTabActivationHandlersRegistered = true;
     }
     if (typeof consumePendingAwakeningAlert === 'function' && consumePendingAwakeningAlert()) {
         const awakeningContent = document.getElementById ? document.getElementById('awakening-hope') : null;

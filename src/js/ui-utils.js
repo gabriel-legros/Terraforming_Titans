@@ -1,4 +1,32 @@
 const subtabScrollPositions = {};
+const tabActivationHandlers = {};
+const subtabActivationHandlers = {};
+
+function registerTabActivationHandler(tabId, handler) {
+  if (!tabId || typeof handler !== 'function') return;
+  tabActivationHandlers[tabId] = handler;
+}
+
+function notifyTabActivated(tabId) {
+  if (!tabId) return;
+  const handler = tabActivationHandlers[tabId];
+  if (typeof handler === 'function') {
+    handler(tabId);
+  }
+}
+
+function registerSubtabActivationHandler(subtabClass, handler) {
+  if (!subtabClass || typeof handler !== 'function') return;
+  subtabActivationHandlers[subtabClass] = handler;
+}
+
+function notifySubtabActivated(subtabClass, subtabId) {
+  if (!subtabClass || !subtabId) return;
+  const handler = subtabActivationHandlers[subtabClass];
+  if (typeof handler === 'function') {
+    handler(subtabId, subtabClass);
+  }
+}
 
 function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
   const activeContent = document.querySelector(`.${contentClass}.active`);
@@ -25,6 +53,7 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
     content.classList.add('active');
     const container = content.closest('.tab-content');
     if (container) container.scrollTop = subtabScrollPositions[subtabId] || 0;
+    notifySubtabActivated(subtabClass, subtabId);
   }
 }
 
@@ -398,6 +427,10 @@ function copyTextToClipboard(text, options = {}) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     activateSubtab,
+    registerTabActivationHandler,
+    notifyTabActivated,
+    registerSubtabActivationHandler,
+    notifySubtabActivated,
     addTooltipHover,
     setTooltipText,
     attachDynamicInfoTooltip,

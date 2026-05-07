@@ -1012,6 +1012,7 @@
             } else {
                 console.error(`Tab content with id "${tabId}" not found.`);
             }
+            notifyTabActivated(tabId);
         } else if (!tabButton) {
              console.error(`Tab button with data-tab="${tabId}" not found.`);
         } else {

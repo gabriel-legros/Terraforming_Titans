@@ -187,7 +187,35 @@ function initializeDefaultGlobals(){
 
   rwgManager = new RwgManager();
   patienceManager = new PatienceManager();
+  registerDefaultTabActivationHandlers();
   }
+
+function registerDefaultTabActivationHandlers() {
+  registerTabActivationHandler('buildings', () => {
+    updateBuildingDisplay(buildings);
+  });
+  registerTabActivationHandler('special-projects', () => {
+    updateProjectsUI();
+  });
+  registerTabActivationHandler('colonies', () => {
+    updateColonySlidersUI();
+    updateFollowersUI();
+    nanotechManager.updateUI();
+  });
+  registerTabActivationHandler('research', () => {
+    updateResearchUI();
+  });
+  registerTabActivationHandler('terraforming', () => {
+    updateTerraformingUI();
+  });
+  registerTabActivationHandler('space', () => {
+    updateSpaceUI();
+    updateGalaxyUI({ force: true });
+  });
+  registerTabActivationHandler('settings', () => {
+    updateStatistics();
+  });
+}
 
 /**
  * Unified method to prepare for planet travel.
