@@ -94,7 +94,7 @@ function updateSpaceSliders(deltaTime, { space, accumulatedChanges, forcedProduc
   const tick = getCylindersHopeTick(space);
   if (runtime.actualTotal > 0) {
     accumulatedChanges.space.energy -= runtime.actualTotal;
-    resources.space.energy.modifyRate(-runtime.actualPerSecond, "O'Neill cylinders", 'project');
+    resources.space.energy.modifyRate(-runtime.actualPerSecond, "O'Neill Cylinders", 'project');
   }
   if (space?.setSpaceSliderRuntimeData) {
     space.setSpaceSliderRuntimeData('cylindersHope', {
