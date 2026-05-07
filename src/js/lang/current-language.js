@@ -4527,7 +4527,7 @@ setLanguageData({
         },
         cylinders_hope_collaboration_agreement: {
           name: 'Cylinders-HOPE Collaboration Agreement',
-          description: 'The cylinders have cheap access to space and are uniquely suited for manufacturing and for expanding the Warp Gate Network. However, their infrastructure is lacking and unstable  If HOPE provides Warpnet access, they will work in exchange. Unlocks a slider under the space story tab.',
+          description: 'The cylinders have cheap access to space and are uniquely suited for manufacturing and for expanding the Warp Gate Network. However, their infrastructure is lacking and unstable.  If HOPE provides Warpnet access they will work in exchange. Unlocks a slider under the space story tab.',
         },
         high_gravity_adaptation: {
           name: 'High-gravity adaptation',
