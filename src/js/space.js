@@ -1779,6 +1779,15 @@ class SpaceManager extends EffectableEntity {
         return this.oneillCylinders;
     }
 
+    getOneillCylinderEffectiveWorldCount() {
+        const cylinders = this.getOneillCylinderCount();
+        if (!(cylinders > 0)) {
+            return 0;
+        }
+        const capacity = getOneillCylinderCapacity(galaxyManager, this);
+        return Math.min(cylinders, capacity);
+    }
+
     getSpaceSliderTick(sliderId) {
         if (sliderId === 'cylindersHope') {
             return Math.max(0, Math.min(10, Math.floor(Number(this.spaceSliders.cylindersHope) || 0)));
@@ -1830,7 +1839,7 @@ class SpaceManager extends EffectableEntity {
             : 0;
         const sectorBonus = Number.isFinite(sectorWorlds) ? Math.max(0, sectorWorlds) : 0;
         const artificialBonus = this._getTotalArtificialTerraformBonus();
-        const cylinders = this.getOneillCylinderCount();
+        const cylinders = this.getOneillCylinderEffectiveWorldCount();
         return base + rings + extra + sectorBonus + artificialBonus + cylinders;
     }
 
