@@ -48,6 +48,9 @@ let travelWarningHintContainer = null;
 let travelWarningHintToggle = null;
 let travelWarningHintTitleEl = null;
 let travelWarningHintBodyEl = null;
+let travelWarningBaseMessage = '';
+let travelWarningCountdownProject = null;
+let travelWarningCountdownInterval = null;
 
 function getSpaceUIText(path, fallback, vars) {
     try {
@@ -76,6 +79,33 @@ function setTravelWarningHintVisibility(isOpen) {
             : getSpaceUIText('travelWarning.showHint', 'Show Hint');
         travelWarningHintToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     }
+}
+
+function clearTravelWarningCountdown() {
+    if (travelWarningCountdownInterval !== null) {
+        clearInterval(travelWarningCountdownInterval);
+        travelWarningCountdownInterval = null;
+    }
+    travelWarningCountdownProject = null;
+}
+
+function getTravelWarningCountdownText() {
+    if (!travelWarningCountdownProject || !travelWarningCountdownProject.isActive || travelWarningCountdownProject.isCompleted) {
+        return '';
+    }
+    const remainingSeconds = Math.max(0, Math.ceil(Math.max(0, travelWarningCountdownProject.remainingTime) / 1000));
+    return getSpaceUIText('travelWarning.progressRemaining', 'Progress remaining: {value}', {
+        value: formatDuration(remainingSeconds)
+    });
+}
+
+function updateTravelWarningMessageText() {
+    if (!travelWarningMessageEl) {
+        return;
+    }
+    const countdownText = getTravelWarningCountdownText();
+    const joiner = travelWarningBaseMessage && countdownText ? '\n\n' : '';
+    travelWarningMessageEl.textContent = `${travelWarningBaseMessage}${joiner}${countdownText}`;
 }
 
 function showSpaceRandomTab() {
@@ -352,7 +382,13 @@ function showTravelWarningPopup(warningData, onConfirm) {
         document.body.appendChild(travelWarningOverlay);
     }
     const warning = warningData || { message: '' };
-    travelWarningMessageEl.textContent = warning.message || '';
+    clearTravelWarningCountdown();
+    travelWarningBaseMessage = warning.message || '';
+    travelWarningCountdownProject = warning.countdownProject || null;
+    updateTravelWarningMessageText();
+    if (travelWarningCountdownProject) {
+        travelWarningCountdownInterval = setInterval(updateTravelWarningMessageText, 1000);
+    }
     travelWarningConfirmBtn.textContent = warning.confirmLabel || getSpaceUIText('travelWarning.travel', 'Travel');
     travelWarningCancelBtn.textContent = warning.cancelLabel || getSpaceUIText('travelWarning.cancelTravel', 'Cancel Travel');
 
@@ -368,10 +404,12 @@ function showTravelWarningPopup(warningData, onConfirm) {
     }
     travelWarningConfirmBtn.onclick = () => {
         travelWarningOverlay.style.display = 'none';
+        clearTravelWarningCountdown();
         onConfirm();
     };
     travelWarningCancelBtn.onclick = () => {
         travelWarningOverlay.style.display = 'none';
+        clearTravelWarningCountdown();
     };
     travelWarningOverlay.style.display = 'flex';
 }
@@ -408,8 +446,7 @@ function hasCompletedSpecializationProject() {
     return false;
 }
 
-function getSpecializationTravelWarningMessage() {
-    const project = getActiveSpecializationProject();
+function getSpecializationTravelWarningMessage(project = getActiveSpecializationProject()) {
     if (!project) {
         return '';
     }
@@ -447,7 +484,8 @@ function handleCurrentWorldTravelWarnings(onConfirm) {
             'This world is not yet fully terraformed. Leaving now will abandon its progress.'
         ));
     }
-    const specializationMessage = getSpecializationTravelWarningMessage();
+    const specializationProject = getActiveSpecializationProject();
+    const specializationMessage = getSpecializationTravelWarningMessage(specializationProject);
     if (specializationMessage) {
         messages.push(specializationMessage);
     }
@@ -460,6 +498,7 @@ function handleCurrentWorldTravelWarnings(onConfirm) {
     }
     showTravelWarningPopup({
         message: messages.join('\n\n'),
+        countdownProject: specializationProject,
     }, onConfirm);
     return true;
 }

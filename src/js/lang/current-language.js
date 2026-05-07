@@ -2749,6 +2749,7 @@ setLanguageData({
         cancelTravel: 'Cancel Travel',
         unterraformedMessage: 'This world is not yet fully terraformed. Leaving now will abandon its progress.',
         specializationInProgress: '{name} is still in progress. Leaving now will abandon its progress.',
+        progressRemaining: 'Progress remaining: {value}',
         noSpecialization: 'No world specialization is active or completed on this world. Leaving now may miss specialization rewards.',
       },
       storyUi: {
