@@ -181,21 +181,21 @@ class AutoTravelAutomation {
     return completeTerraformingNow();
   }
 
-  _hasSomeSpecialization() {
+  _hasCompletedSpecialization() {
     const projects = projectManager?.projects;
     if (!projects) {
       return false;
     }
-    if (projects.bioworld && (projects.bioworld.isCompleted || projects.bioworld.isActive)) {
+    if (projects.bioworld && projects.bioworld.isCompleted) {
       return true;
     }
-    if (projects.manufacturingWorld && (projects.manufacturingWorld.isCompleted || projects.manufacturingWorld.isActive)) {
+    if (projects.manufacturingWorld && projects.manufacturingWorld.isCompleted) {
       return true;
     }
     if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
       return true;
     }
-    if (projects.foundryWorld && (projects.foundryWorld.isCompleted || projects.foundryWorld.isActive)) {
+    if (projects.foundryWorld && projects.foundryWorld.isCompleted) {
       return true;
     }
     return false;
@@ -416,7 +416,7 @@ class AutoTravelAutomation {
     if (!this._isCurrentWorldTerraformed()) {
       return false;
     }
-    if (preset.waitForSpecialization && !this._hasSomeSpecialization()) {
+    if (preset.waitForSpecialization && !this._hasCompletedSpecialization()) {
       return false;
     }
     if (preset.target === 'storedArtificial') {
