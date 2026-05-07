@@ -1,7 +1,7 @@
 const CYLINDERS_HOPE_FLAG = 'cylindersHopeCollaborationAgreement';
 const CYLINDERS_HOPE_TICK_MAX = 10;
 const CYLINDERS_HOPE_BASE_ENERGY_PER_CYLINDER = 1e15;
-const CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER = 1e12;
+const CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER = 1e13;
 
 function clampCylindersHopeTick(value) {
   const numeric = Math.floor(Number(value) || 0);
