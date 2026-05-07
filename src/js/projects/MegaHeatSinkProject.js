@@ -277,8 +277,11 @@
     }
 
     getSpeedBoost() {
-      const workerCap = Math.max(0, resources?.colony?.workers?.cap || 0);
-      return Math.max(1, workerCap / WORKERS_PER_HEAT_SINK);
+      const workerPotential = Math.max(
+        0,
+        resources?.colony?.workers?.potential || resources?.colony?.workers?.cap || 0
+      );
+      return Math.max(1, workerPotential / WORKERS_PER_HEAT_SINK);
     }
 
     getEffectiveDuration() {

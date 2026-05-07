@@ -298,7 +298,9 @@ class PopulationModule extends EffectableEntity {
   updateWorkerCap() {
     const breakdown = this.getWorkerCapacityBreakdown(true);
     const workerCap = breakdown.totalWorkers;
+    const workerPotential = breakdown.uncappedTotalWorkers;
     this.workerResource.cap = workerCap;
+    this.workerResource.potential = workerPotential;
 
     // Adjust the worker value if it exceeds the cap
     if (this.workerResource.value > workerCap) {
