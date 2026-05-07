@@ -97,9 +97,25 @@ const tabParameters = {
       const tabElement = document.getElementById(tabId);
       if (tabElement) {
         this.tabs[tabId] = tabElement;
+        this.bindTabClick(tabElement);
       } else {
         console.error(`Tab with ID "${tabId}" not found.`);
       }
+    }
+
+    bindTabClick(tabElement) {
+      if (tabElement.dataset.tabClickBound === '1') {
+        return;
+      }
+      tabElement.dataset.tabClickBound = '1';
+      tabElement.addEventListener('click', () => {
+        const tabId = tabElement.dataset.tab;
+        if (tabElement.classList.contains('hidden')) {
+          console.log(`Tab ${tabId} is hidden, cannot activate.`);
+          return;
+        }
+        this.activateTab(tabId);
+      });
     }
   
     // Enable a tab by removing the hidden class
@@ -132,18 +148,45 @@ const tabParameters = {
       const tabElement = document.querySelector(`[data-tab="${tabId}"]`);
       const tabContentElement = document.getElementById(tabId);
 
-      if (tabElement && tabContentElement) {
+      if (!tabElement) {
+        console.error(`Tab button with data-tab="${tabId}" not found.`);
+        return;
+      }
+      if (tabElement.classList.contains('hidden')) {
+        console.log(`Tab ${tabId} is hidden, cannot activate.`);
+        this.activateTab('settings');
+        return;
+      }
+      if (tabContentElement) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
 
         tabElement.classList.add('active');
         tabContentElement.classList.add('active');
+      } else {
+        console.error(`Tab content with id "${tabId}" not found.`);
       }
+      notifyTabActivated(tabId);
       if (tabId === 'terraforming') {
         try { window.handleTerraformingTabActivated(); } catch (e) {}
       }
+      if (tabId === 'buildings') {
+        markBuildingsViewed();
+      }
       if (tabId === 'colonies') {
         markColoniesViewed();
+      }
+      if (tabId === 'special-projects') {
+        markProjectsViewed();
+      }
+      if (tabId === 'research') {
+        markResearchViewed();
+      }
+      if (tabId === 'terraforming') {
+        markTerraformingMilestonesIfActive?.();
+      }
+      if (tabId === 'space') {
+        markSpaceTabAlertViewed();
       }
     }
 
@@ -167,4 +210,10 @@ function extractTabId(tabString) {
   }
   
   return tabString;
+}
+
+function activateTab(tabId) {
+  if (tabManager && typeof tabManager.activateTab === 'function') {
+    tabManager.activateTab(tabId);
+  }
 }
