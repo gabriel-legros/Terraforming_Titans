@@ -244,6 +244,8 @@ class NanotechManager extends EffectableEntity {
     const biomassAllocation = stage3Enabled ? 10 : 0;
     const graphiteAllocation = stage4Enabled ? 10 : 0;
     const isArtificialWorld = currentPlanetParameters?.classification?.archetype === 'artificial';
+    const hasSandDeposits = this.hasSandDeposits();
+    const hasOreDeposits = this.hasOreDeposits();
     const hasGraphiteDeposits = this.hasGraphiteDeposits();
     const getEffectiveProductionRate = (resource) => {
       const production = resource?.productionRate || 0;
@@ -525,7 +527,7 @@ class NanotechManager extends EffectableEntity {
       
       if (glassRes && accumulatedChanges?.colony) {
         const glassRate = this.nanobots * 1e-18 * (this.glassSlider / 10) * efficiencyMultiplier;
-        const glassAmount = isArtificialWorld
+        const glassAmount = (isArtificialWorld || !hasSandDeposits)
           ? Math.min(glassRate * (deltaTime / 1000), siliconProvided)
           : glassRate * (deltaTime / 1000);
         
@@ -543,7 +545,7 @@ class NanotechManager extends EffectableEntity {
       const componentsRes = resources.colony?.components;
       if (componentsRes && accumulatedChanges?.colony && stage2Enabled) {
         const componentsRate = this.nanobots * 1e-19 * (this.componentsSlider / 10) * efficiencyMultiplier;
-        const componentsAmount = isArtificialWorld
+        const componentsAmount = (isArtificialWorld || !hasOreDeposits)
           ? Math.min(componentsRate * (deltaTime / 1000), metalProvided)
           : componentsRate * (deltaTime / 1000);
         this.currentComponentsProduction = deltaTime > 0 ? componentsAmount / (deltaTime / 1000) : 0;
@@ -1310,10 +1312,7 @@ class NanotechManager extends EffectableEntity {
     const graphiteAllocation = stage4Active ? 10 : 0;
     const hasSand = this.hasSandDeposits();
     const hasGraphite = this.hasGraphiteDeposits();
-    const oreDeposits = currentPlanetParameters && currentPlanetParameters.resources
-      ? currentPlanetParameters.resources.underground?.ore?.maxDeposits || 0
-      : 0;
-    const hasOre = oreDeposits > 0;
+    const hasOre = this.hasOreDeposits();
     const isArtificialWorld = currentPlanetParameters?.classification?.archetype === 'artificial';
 
     const glassMax = hasSand ? 10 : siliconAllocation;
@@ -1793,6 +1792,11 @@ class NanotechManager extends EffectableEntity {
     const quarryHasSand = buildings?.sandQuarry?.hasSandAvailable?.();
     const attrHasSand = currentPlanetParameters?.specialAttributes?.hasSand;
     return (quarryHasSand ?? attrHasSand) !== false;
+  }
+
+  hasOreDeposits() {
+    const oreDeposits = currentPlanetParameters?.resources?.underground?.ore?.maxDeposits || 0;
+    return oreDeposits > 0;
   }
 
   hasGraphiteDeposits() {
