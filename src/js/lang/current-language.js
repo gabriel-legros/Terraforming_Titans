@@ -3098,6 +3098,10 @@ setLanguageData({
               temperateTemperatureC: 'Temperate Temperature C',
               polarTemperatureC: 'Polar Temperature C',
             },
+            others: {
+              surfaceRadiation: 'Surface Radiation',
+              orbitalRadiation: 'Orbital Radiation',
+            },
           },
         },
         scriptMasterOn: 'Scripts On',

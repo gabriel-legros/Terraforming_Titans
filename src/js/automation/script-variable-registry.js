@@ -347,7 +347,17 @@ class ScriptVariableRegistry {
     return [
       { id: 'hasNaturalMagnetosphere', label: 'Natural Magnetosphere', valueType: 'boolean' },
       { id: 'hasArtificialMagnetosphere', label: 'Artificial Magnetosphere', valueType: 'boolean' },
-      { id: 'magnetosphereStatus', label: 'Magnetosphere Status', valueType: 'boolean' }
+      { id: 'magnetosphereStatus', label: 'Magnetosphere Status', valueType: 'boolean' },
+      {
+        id: 'surfaceRadiation',
+        label: t('ui.hope.automationCards.scriptVariables.terraforming.others.surfaceRadiation', {}, 'Surface Radiation'),
+        valueType: 'number'
+      },
+      {
+        id: 'orbitalRadiation',
+        label: t('ui.hope.automationCards.scriptVariables.terraforming.others.orbitalRadiation', {}, 'Orbital Radiation'),
+        valueType: 'number'
+      }
     ];
   }
 
@@ -668,6 +678,8 @@ class ScriptVariableRegistry {
     if (attribute === 'hasNaturalMagnetosphere') return terraforming.celestialParameters.hasNaturalMagnetosphere ? 1 : 0;
     if (attribute === 'hasArtificialMagnetosphere') return this.hasArtificialMagnetosphere() ? 1 : 0;
     if (attribute === 'magnetosphereStatus') return terraforming.celestialParameters.hasNaturalMagnetosphere || this.hasArtificialMagnetosphere() ? 1 : 0;
+    if (attribute === 'surfaceRadiation') return this.toNumber(terraforming.surfaceRadiation);
+    if (attribute === 'orbitalRadiation') return this.toNumber(terraforming.orbitalRadiation);
     return 0;
   }
 
