@@ -240,7 +240,6 @@ function showAutoTravelLoadingPopup() {
   }
   autoTravelLoadingPopupElement.classList.remove('auto-travel-loading-popup--hidden');
   autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'false');
-  autoTravelLoadingPopupPendingHide = true;
 }
 
 function hideAutoTravelLoadingPopup() {
@@ -252,7 +251,6 @@ function hideAutoTravelLoadingPopup() {
   }
   autoTravelLoadingPopupElement.classList.add('auto-travel-loading-popup--hidden');
   autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
-  autoTravelLoadingPopupPendingHide = false;
 }
 
 function prepareForTravel(options = {}) {

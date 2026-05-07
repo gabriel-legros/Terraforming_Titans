@@ -402,8 +402,7 @@ function updateAutoTravelHazards(preset) {
 
 function updateAutoTravelUI() {
   if (
-    autoTravelLoadingPopupPendingHide
-    && !globalGameIsTraveling
+    !globalGameIsTraveling
     && !isEquilibrating
     && !(autoTravelContext && autoTravelContext.active)
   ) {
