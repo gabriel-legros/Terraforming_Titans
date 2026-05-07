@@ -28,6 +28,9 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
       1,
       Math.ceil(baseLand * AEROSTAT_STRUCTURAL_NET_REPEATS_PER_LAND)
     );
+    if (this.isCompleted && (this.repeatCount || 0) < segments) {
+      this.isCompleted = false;
+    }
     this.maxRepeatCount = segments;
     return segments;
   }
@@ -43,7 +46,7 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
       built += Math.max(0, this.segmentProgress || 0);
     }
 
-    return this.isCompleted ? Math.max(built, maxSegments) : built;
+    return Math.max(0, Math.min(maxSegments, built));
   }
 
   completeProjectFully() {
@@ -63,8 +66,12 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
     SpaceshipProject.prototype.loadState.call(this, state);
     this.segmentProgress = state.segmentProgress || 0;
     const maxSegments = this.getMaxRepeats();
-    if ((this.repeatCount || 0) >= maxSegments || this.isCompleted) {
+    if ((this.repeatCount || 0) >= maxSegments) {
       this.completeProjectFully();
+      return;
+    }
+    if (this.isCompleted) {
+      this.isCompleted = false;
     }
   }
 
