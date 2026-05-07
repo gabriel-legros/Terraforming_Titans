@@ -13,6 +13,10 @@ const projectAutomationUIState = {
   combinationName: '',
   combinationShowInSidebar: true
 };
+let projectsBuilderPresetSignature = '';
+let projectsBuilderCategorySignature = '';
+let projectsBuilderProjectSignature = '';
+let projectsBuilderSelectedSignature = '';
 
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
@@ -271,7 +275,8 @@ function updateProjectsAutomationUI() {
     automatableProjectLookup[project.name] = project;
   });
 
-  if (document.activeElement !== projectsBuilderPresetSelect) {
+  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  if (document.activeElement !== projectsBuilderPresetSelect && presetSignature !== projectsBuilderPresetSignature) {
     projectsBuilderPresetSelect.textContent = '';
     presets.forEach(preset => {
       const option = document.createElement('option');
@@ -279,6 +284,7 @@ function updateProjectsAutomationUI() {
       option.textContent = getDefaultAutomationPresetLabel(preset);
       projectsBuilderPresetSelect.appendChild(option);
     });
+    projectsBuilderPresetSignature = presetSignature;
     const selectedPresetId = automation.getSelectedPresetId();
     if (selectedPresetId) {
       projectsBuilderPresetSelect.value = String(selectedPresetId);
@@ -356,7 +362,8 @@ function updateProjectsAutomationUI() {
   projectsBuilderAddCategoryButton.style.display = showManual ? '' : 'none';
 
   const categories = getProjectAutomationCategories(automatableProjects);
-  if (document.activeElement !== projectsBuilderCategorySelect) {
+  const categorySignature = categories.join('|');
+  if (document.activeElement !== projectsBuilderCategorySelect && categorySignature !== projectsBuilderCategorySignature) {
     projectsBuilderCategorySelect.textContent = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
@@ -373,13 +380,15 @@ function updateProjectsAutomationUI() {
       projectsBuilderCategorySelect.value = 'all';
     }
     projectAutomationUIState.builderCategoryValue = projectsBuilderCategorySelect.value;
+    projectsBuilderCategorySignature = categorySignature;
   }
 
   const selectedCategory = projectsBuilderCategorySelect.value || projectAutomationUIState.builderCategoryValue || 'all';
-  if (document.activeElement !== projectsBuilderProjectSelect) {
-    const available = automatableProjects.filter(project => (
-      selectedCategory === 'all' || (project.category || 'general') === selectedCategory
-    ));
+  const available = automatableProjects.filter(project => (
+    selectedCategory === 'all' || (project.category || 'general') === selectedCategory
+  ));
+  const projectSignature = `${selectedCategory}|${available.map((project) => `${project.name}:${getAutomatableProjectDisplayName(project.name, automatableProjectLookup)}`).join('|')}`;
+  if (document.activeElement !== projectsBuilderProjectSelect && projectSignature !== projectsBuilderProjectSignature) {
     projectsBuilderProjectSelect.textContent = '';
     if (available.length === 0) {
       const empty = document.createElement('option');
@@ -402,6 +411,7 @@ function updateProjectsAutomationUI() {
       }
     }
     projectAutomationUIState.builderProjectValue = projectsBuilderProjectSelect.value || '';
+    projectsBuilderProjectSignature = projectSignature;
   }
 
   projectsBuilderAddButton.disabled = projectsBuilderProjectSelect.options.length === 0
@@ -439,7 +449,8 @@ function updateProjectsAutomationUI() {
 
   const selectedHasFocus = projectsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
-  if (!selectedHasFocus) {
+  const selectedSignature = projectAutomationUIState.builderSelectedProjects.join('|');
+  if (!selectedHasFocus && selectedSignature !== projectsBuilderSelectedSignature) {
     projectsBuilderSelectedList.textContent = '';
     projectAutomationUIState.builderSelectedProjects.forEach(name => {
       const pill = document.createElement('div');
@@ -466,6 +477,7 @@ function updateProjectsAutomationUI() {
       pill.append(label, remove);
       projectsBuilderSelectedList.appendChild(pill);
     });
+    projectsBuilderSelectedSignature = selectedSignature;
   }
 
   const savedType = activePreset

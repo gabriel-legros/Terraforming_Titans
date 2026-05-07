@@ -13,6 +13,11 @@ const colonyAutomationUIState = {
   combinationName: '',
   combinationShowInSidebar: true
 };
+let colonyBuilderPresetSignature = '';
+let colonyBuilderCategorySignature = '';
+let colonyBuilderTargetSignature = '';
+let colonyBuilderSelectedSignature = '';
+let colonyApplyRenderSignature = '';
 
 function getColonyAutomationAutoBuildBasisOptions(structure, currentValue) {
   return getAutomationAutoBuildBasisOptions(structure, currentValue);
@@ -261,7 +266,8 @@ function updateColonyAutomationUI() {
   const combinations = automation.getCombinations();
   const availableTargets = getColonyAutomationTargets();
 
-  if (document.activeElement !== colonyBuilderPresetSelect) {
+  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  if (document.activeElement !== colonyBuilderPresetSelect && presetSignature !== colonyBuilderPresetSignature) {
     colonyBuilderPresetSelect.textContent = '';
     presets.forEach(preset => {
       const option = document.createElement('option');
@@ -269,6 +275,7 @@ function updateColonyAutomationUI() {
       option.textContent = getDefaultAutomationPresetLabel(preset);
       colonyBuilderPresetSelect.appendChild(option);
     });
+    colonyBuilderPresetSignature = presetSignature;
     const selectedPresetId = automation.getSelectedPresetId();
     if (selectedPresetId) {
       colonyBuilderPresetSelect.value = String(selectedPresetId);
@@ -368,7 +375,8 @@ function updateColonyAutomationUI() {
   colonyBuilderAddCategoryButton.style.display = showManual ? '' : 'none';
 
   const categoryIds = automation.getCategoryIds();
-  if (document.activeElement !== colonyBuilderCategorySelect) {
+  const categorySignature = categoryIds.map((categoryId) => `${categoryId}:${automation.getCategoryLabel(categoryId)}`).join('|');
+  if (document.activeElement !== colonyBuilderCategorySelect && categorySignature !== colonyBuilderCategorySignature) {
     colonyBuilderCategorySelect.textContent = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
@@ -385,13 +393,15 @@ function updateColonyAutomationUI() {
       colonyBuilderCategorySelect.value = 'all';
     }
     colonyAutomationUIState.builderCategoryValue = colonyBuilderCategorySelect.value;
+    colonyBuilderCategorySignature = categorySignature;
   }
 
   const selectedCategory = colonyBuilderCategorySelect.value || colonyAutomationUIState.builderCategoryValue || 'all';
-  if (document.activeElement !== colonyBuilderTargetSelect) {
-    const filteredTargets = availableTargets.filter(target => (
-      selectedCategory === 'all' || target.categoryId === selectedCategory
-    ));
+  const filteredTargets = availableTargets.filter(target => (
+    selectedCategory === 'all' || target.categoryId === selectedCategory
+  ));
+  const targetSignature = `${selectedCategory}|${filteredTargets.map((target) => `${target.id}:${target.label}`).join('|')}`;
+  if (document.activeElement !== colonyBuilderTargetSelect && targetSignature !== colonyBuilderTargetSignature) {
     colonyBuilderTargetSelect.textContent = '';
     if (!filteredTargets.length) {
       const empty = document.createElement('option');
@@ -414,6 +424,7 @@ function updateColonyAutomationUI() {
       }
     }
     colonyAutomationUIState.builderTargetValue = colonyBuilderTargetSelect.value || '';
+    colonyBuilderTargetSignature = targetSignature;
   }
 
   colonyBuilderAddButton.disabled = colonyBuilderTargetSelect.options.length === 0
@@ -449,31 +460,35 @@ function updateColonyAutomationUI() {
     deleteButtonElement: colonyCombinationDeleteButton
   });
 
-  colonyBuilderSelectedList.textContent = '';
-  colonyAutomationUIState.builderSelectedTargets.forEach(targetId => {
-    const pill = document.createElement('div');
-    pill.classList.add('building-automation-builder-pill');
-    const label = document.createElement('span');
-    label.textContent = automation.getTargetLabel(targetId);
-    const remove = document.createElement('button');
-    remove.textContent = '✕';
-    remove.title = getAutomationCardText('removeTarget', {}, 'Remove target');
-    remove.addEventListener('click', () => {
-      colonyAutomationUIState.builderSelectedTargets = colonyAutomationUIState.builderSelectedTargets.filter(id => id !== targetId);
-      const presetId = automationManager.colonyAutomation.getSelectedPresetId();
-      if (presetId) {
-        const preset = automationManager.colonyAutomation.getPresetById(Number(presetId));
-        if (preset && preset.targets[targetId]) {
-          delete preset.targets[targetId];
-          colonyAutomationUIState.syncedPresetId = null;
+  const selectedSignature = colonyAutomationUIState.builderSelectedTargets.join('|');
+  if (selectedSignature !== colonyBuilderSelectedSignature) {
+    colonyBuilderSelectedList.textContent = '';
+    colonyAutomationUIState.builderSelectedTargets.forEach(targetId => {
+      const pill = document.createElement('div');
+      pill.classList.add('building-automation-builder-pill');
+      const label = document.createElement('span');
+      label.textContent = automation.getTargetLabel(targetId);
+      const remove = document.createElement('button');
+      remove.textContent = '✕';
+      remove.title = getAutomationCardText('removeTarget', {}, 'Remove target');
+      remove.addEventListener('click', () => {
+        colonyAutomationUIState.builderSelectedTargets = colonyAutomationUIState.builderSelectedTargets.filter(id => id !== targetId);
+        const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+        if (presetId) {
+          const preset = automationManager.colonyAutomation.getPresetById(Number(presetId));
+          if (preset && preset.targets[targetId]) {
+            delete preset.targets[targetId];
+            colonyAutomationUIState.syncedPresetId = null;
+          }
         }
-      }
-      queueAutomationUIRefresh();
-      updateAutomationUI();
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+      pill.append(label, remove);
+      colonyBuilderSelectedList.appendChild(pill);
     });
-    pill.append(label, remove);
-    colonyBuilderSelectedList.appendChild(pill);
-  });
+    colonyBuilderSelectedSignature = selectedSignature;
+  }
 
   const savedType = activePreset
     ? activePreset.includeControl && activePreset.includeAutomation
@@ -512,6 +527,24 @@ function updateColonyAutomationUI() {
   const applyHasFocus = colonyApplyList.contains(document.activeElement)
     && document.activeElement.tagName === 'SELECT';
   if (!applyHasFocus) {
+    const applySignature = JSON.stringify({
+      presets: presets.map(preset => ({
+        id: preset.id,
+        name: preset.name,
+        includeControl: preset.includeControl,
+        includeAutomation: preset.includeAutomation,
+        scopeAll: preset.scopeAll,
+        targets: Object.keys(preset.targets)
+      })),
+      assignments: assignments.map(assignment => ({
+        id: assignment.id,
+        presetId: assignment.presetId,
+        enabled: assignment.enabled
+      }))
+    });
+    if (applySignature === colonyApplyRenderSignature) {
+      // Keep existing rows and listeners when nothing changed.
+    } else {
     colonyApplyList.textContent = '';
     assignments.forEach((assignment, index) => {
       const row = document.createElement('div');
@@ -602,6 +635,8 @@ function updateColonyAutomationUI() {
       row.append(primary, detail, controls);
       colonyApplyList.appendChild(row);
     });
+      colonyApplyRenderSignature = applySignature;
+    }
   }
 
   colonyAddApplyButton.disabled = presets.length === 0;

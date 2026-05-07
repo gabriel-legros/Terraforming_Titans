@@ -13,6 +13,10 @@ const buildingAutomationUIState = {
   combinationName: '',
   combinationShowInSidebar: true
 };
+let buildingsBuilderPresetSignature = '';
+let buildingsBuilderCategorySignature = '';
+let buildingsBuilderBuildingSignature = '';
+let buildingsBuilderSelectedSignature = '';
 
 function formatBuildingAutomationPresetType(preset) {
   if (!preset) {
@@ -274,7 +278,8 @@ function updateBuildingsAutomationUI() {
   const combinations = automation.getCombinations();
   const automatableBuildings = getAutomatableBuildings();
 
-  if (document.activeElement !== buildingsBuilderPresetSelect) {
+  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  if (document.activeElement !== buildingsBuilderPresetSelect && presetSignature !== buildingsBuilderPresetSignature) {
     buildingsBuilderPresetSelect.textContent = '';
     presets.forEach(preset => {
       const option = document.createElement('option');
@@ -282,6 +287,7 @@ function updateBuildingsAutomationUI() {
       option.textContent = getDefaultAutomationPresetLabel(preset);
       buildingsBuilderPresetSelect.appendChild(option);
     });
+    buildingsBuilderPresetSignature = presetSignature;
     const selectedPresetId = automation.getSelectedPresetId();
     if (selectedPresetId) {
       buildingsBuilderPresetSelect.value = String(selectedPresetId);
@@ -382,7 +388,8 @@ function updateBuildingsAutomationUI() {
   buildingsBuilderAddCategoryButton.style.display = showManual ? '' : 'none';
 
   const categories = getBuildingCategories();
-  if (document.activeElement !== buildingsBuilderCategorySelect) {
+  const categorySignature = categories.join('|');
+  if (document.activeElement !== buildingsBuilderCategorySelect && categorySignature !== buildingsBuilderCategorySignature) {
     buildingsBuilderCategorySelect.textContent = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
@@ -399,13 +406,15 @@ function updateBuildingsAutomationUI() {
       buildingsBuilderCategorySelect.value = 'all';
     }
     buildingAutomationUIState.builderCategoryValue = buildingsBuilderCategorySelect.value;
+    buildingsBuilderCategorySignature = categorySignature;
   }
 
   const selectedCategory = buildingsBuilderCategorySelect.value || buildingAutomationUIState.builderCategoryValue || 'all';
-  if (document.activeElement !== buildingsBuilderBuildingSelect) {
-    const available = automatableBuildings.filter(building => (
-      selectedCategory === 'all' || building.category === selectedCategory
-    ));
+  const available = automatableBuildings.filter(building => (
+    selectedCategory === 'all' || building.category === selectedCategory
+  ));
+  const buildingSignature = `${selectedCategory}|${available.map((building) => `${building.name}:${building.displayName || ''}`).join('|')}`;
+  if (document.activeElement !== buildingsBuilderBuildingSelect && buildingSignature !== buildingsBuilderBuildingSignature) {
     buildingsBuilderBuildingSelect.textContent = '';
     if (available.length === 0) {
       const empty = document.createElement('option');
@@ -428,6 +437,7 @@ function updateBuildingsAutomationUI() {
       }
     }
     buildingAutomationUIState.builderBuildingValue = buildingsBuilderBuildingSelect.value || '';
+    buildingsBuilderBuildingSignature = buildingSignature;
   }
 
   buildingsBuilderAddButton.disabled = buildingsBuilderBuildingSelect.options.length === 0
@@ -464,7 +474,8 @@ function updateBuildingsAutomationUI() {
 
   const selectedHasFocus = buildingsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
-  if (!selectedHasFocus) {
+  const selectedSignature = buildingAutomationUIState.builderSelectedBuildings.join('|');
+  if (!selectedHasFocus && selectedSignature !== buildingsBuilderSelectedSignature) {
     buildingsBuilderSelectedList.textContent = '';
     buildingAutomationUIState.builderSelectedBuildings.forEach(name => {
       const building = buildings[name];
@@ -491,6 +502,7 @@ function updateBuildingsAutomationUI() {
       pill.append(label, remove);
       buildingsBuilderSelectedList.appendChild(pill);
     });
+    buildingsBuilderSelectedSignature = selectedSignature;
   }
 
   const savedType = activePreset

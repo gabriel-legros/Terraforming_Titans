@@ -357,16 +357,14 @@ function updateScriptAutomationUI() {
     scriptAutomationLinesSignature = getScriptLinesSignature(automation, script);
     forceScriptAutomationRefresh = false;
   }
+  updateCurrentScriptLineHighlight(automation, automationElements.scriptLinesContainer);
 }
 
 function getScriptLinesSignature(automation, script) {
   if (!script) return '';
   return JSON.stringify({
     selectedScriptId: script.id,
-    pcLineId: automation.pcLineId,
-    displayLineId: automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId,
     lines: script.lines,
-    values: collectScriptReferenceValueSignature(automation, script),
     presets: collectScriptActionOptionsSignature()
   });
 }
@@ -401,6 +399,7 @@ function renderScriptLines(automation, script, container) {
   script.lines.forEach((line, index) => {
     const card = document.createElement('div');
     card.classList.add('script-line-card');
+    card.dataset.lineId = String(line.id);
     if (line.enabled === false) card.classList.add('script-line-disabled');
     const displayLineId = automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId;
     if (line.id === displayLineId) card.classList.add('script-line-current');
@@ -476,6 +475,19 @@ function renderScriptLines(automation, script, container) {
 
     container.appendChild(card);
   });
+}
+
+function updateCurrentScriptLineHighlight(automation, container) {
+  if (!container) {
+    return;
+  }
+  const displayLineId = automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId;
+  const cards = container.querySelectorAll('.script-line-card');
+  for (let index = 0; index < cards.length; index += 1) {
+    const card = cards[index];
+    const lineId = Number(card.dataset.lineId);
+    card.classList.toggle('script-line-current', lineId === displayLineId);
+  }
 }
 
 function buildScriptLineSummary(automation, script, line, index) {

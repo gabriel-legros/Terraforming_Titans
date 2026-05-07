@@ -3,6 +3,7 @@ const researchAutomationUIState = {
   builderShowInSidebar: true,
   builderIsCreatingNewPreset: false
 };
+let researchPresetSignature = '';
 
 function buildAutomationResearchUI() {
   const card = automationElements.researchAutomation || document.getElementById('automation-research');
@@ -156,7 +157,8 @@ function updateResearchAutomationUI() {
   researchPanelBody.style.display = automation.collapsed ? 'none' : 'flex';
   researchCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
 
-  if (document.activeElement !== researchPresetSelect) {
+  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  if (document.activeElement !== researchPresetSelect && presetSignature !== researchPresetSignature) {
     researchPresetSelect.textContent = '';
     presets.forEach((preset) => {
       const option = document.createElement('option');
@@ -164,6 +166,7 @@ function updateResearchAutomationUI() {
       option.textContent = getDefaultAutomationPresetLabel(preset);
       researchPresetSelect.appendChild(option);
     });
+    researchPresetSignature = presetSignature;
     const selectedPresetId = automation.getSelectedPresetId();
     if (selectedPresetId) {
       researchPresetSelect.value = String(selectedPresetId);
