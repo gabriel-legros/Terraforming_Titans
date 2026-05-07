@@ -253,6 +253,13 @@ function hideAutoTravelLoadingPopup() {
   autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
 }
 
+function updateAutoTravelLoadingPopupVisibility() {
+  if (globalGameIsTraveling || isEquilibrating || (autoTravelContext && autoTravelContext.active)) {
+    return;
+  }
+  hideAutoTravelLoadingPopup();
+}
+
 function prepareForTravel(options = {}) {
   if (options.savePretravel !== false) {
     try {
@@ -773,6 +780,7 @@ function updateRender(force = false, options = {}) {
   if (typeof updateResearchAlert === 'function') updateResearchAlert();
   if (typeof updateHopeAlert === 'function') updateHopeAlert();
   updateSidebarAutomationToggleVisibility();
+  updateAutoTravelLoadingPopupVisibility();
 
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {

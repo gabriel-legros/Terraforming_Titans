@@ -401,13 +401,6 @@ function updateAutoTravelHazards(preset) {
 }
 
 function updateAutoTravelUI() {
-  if (
-    !globalGameIsTraveling
-    && !isEquilibrating
-    && !(autoTravelContext && autoTravelContext.active)
-  ) {
-    hideAutoTravelLoadingPopup();
-  }
   const card = automationElements.autoTravel || document.getElementById('automation-auto-travel');
   if (!card || !automationManager || !automationManager.autoTravelAutomation) {
     return;
