@@ -275,7 +275,8 @@ function updateProjectsAutomationUI() {
     automatableProjectLookup[project.name] = project;
   });
 
-  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  const selectedPresetIdForSignature = automation.getSelectedPresetId() || '';
+  const presetSignature = `${selectedPresetIdForSignature}|${presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|')}`;
   if (document.activeElement !== projectsBuilderPresetSelect && presetSignature !== projectsBuilderPresetSignature) {
     projectsBuilderPresetSelect.textContent = '';
     presets.forEach(preset => {
@@ -710,15 +711,24 @@ function attachProjectsAutomationHandlers() {
   projectsBuilderNewButton.addEventListener('click', () => {
     const automation = automationManager.projectsAutomation;
     const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
-    automation.setSelectedPresetId(null);
+    const presetId = automation.addPreset(suggestedName, [], {
+      createEmpty: true,
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false,
+      showInSidebar: true
+    });
     projectAutomationUIState.syncedPresetId = null;
-    projectAutomationUIState.builderName = suggestedName;
+    projectAutomationUIState.builderName = '';
     projectAutomationUIState.builderType = 'both';
-    projectAutomationUIState.builderScope = 'all';
+    projectAutomationUIState.builderScope = 'manual';
     projectAutomationUIState.builderShowInSidebar = true;
     projectAutomationUIState.builderSelectedProjects = [];
     projectAutomationUIState.builderCategoryValue = 'all';
     projectAutomationUIState.builderProjectValue = '';
+    if (presetId) {
+      resetAutomationPresetJsonDetailsState(automationElements.projectsPresetJsonDetails, Number(presetId));
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -766,7 +776,19 @@ function attachProjectsAutomationHandlers() {
     if (!projectAutomationUIState.builderSelectedProjects.includes(projectId)) {
       projectAutomationUIState.builderSelectedProjects.push(projectId);
     }
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    let presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (!presetId) {
+      const automation = automationManager.projectsAutomation;
+      const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+      presetId = automation.addPreset(suggestedName, [], {
+        createEmpty: true,
+        includeExpansion: true,
+        includeOperations: true,
+        scopeAll: false,
+        showInSidebar: projectAutomationUIState.builderShowInSidebar
+      });
+      projectAutomationUIState.syncedPresetId = null;
+    }
     if (presetId) {
       automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(Number(presetId), [projectId]);
       projectAutomationUIState.syncedPresetId = null;
@@ -789,7 +811,19 @@ function attachProjectsAutomationHandlers() {
         projectAutomationUIState.builderSelectedProjects.push(project.name);
       }
     });
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    let presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (!presetId) {
+      const automation = automationManager.projectsAutomation;
+      const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+      presetId = automation.addPreset(suggestedName, [], {
+        createEmpty: true,
+        includeExpansion: true,
+        includeOperations: true,
+        scopeAll: false,
+        showInSidebar: projectAutomationUIState.builderShowInSidebar
+      });
+      projectAutomationUIState.syncedPresetId = null;
+    }
     if (presetId) {
       automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(
         Number(presetId),
