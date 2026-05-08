@@ -38,7 +38,6 @@ class EffectableEntity {
       }
       const sourceId = effect.sourceId;
       if (!sourceId) {
-        console.warn("No sourceId provided to removeEffect");
         return;
       }
     
