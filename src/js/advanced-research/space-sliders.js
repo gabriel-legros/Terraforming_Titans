@@ -49,7 +49,7 @@ function getCylindersHopeTotalDesiredEnergyPerSecond(space) {
   if (!(perCylinder > 0)) {
     return 0;
   }
-  const cylinders = Math.max(0, Number(space?.getOneillCylinderCount?.() || 0));
+  const cylinders = Math.max(0, Number(space?.getOneillCylinderEffectiveWorldCount?.() || 0));
   return cylinders * perCylinder;
 }
 
@@ -148,7 +148,7 @@ function getCylindersHopeManufacturingPopulationBonus(space) {
   if (!(strength > 0)) {
     return 0;
   }
-  const cylinders = Math.max(0, Number(space?.getOneillCylinderCount?.() || 0));
+  const cylinders = Math.max(0, Number(space?.getOneillCylinderEffectiveWorldCount?.() || 0));
   const productivity = Math.max(0, Math.min(1, Number(space?.getSpaceSliderRuntimeProductivity?.('cylindersHope') || 0)));
   return cylinders * CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER * strength * productivity;
 }
@@ -166,7 +166,7 @@ function getCylindersHopeWarpGateWorldBonusPerSector(space, galaxy) {
   if (!(tick > 0)) {
     return 0;
   }
-  const cylinders = Math.max(0, Number(space?.getOneillCylinderCount?.() || 0));
+  const cylinders = Math.max(0, Number(space?.getOneillCylinderEffectiveWorldCount?.() || 0));
   return (cylinders / sectorCount) * tick;
 }
 
