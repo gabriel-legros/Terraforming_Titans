@@ -1,6 +1,22 @@
 (function () {
   const SPACE_ANTIMATTER_STORAGE_PER_BATTERY = 1e15;
-  const SPACE_ANTIMATTER_MAX_BATCH = 1e32;
+  const SPACE_ANTIMATTER_STORAGE_PER_BATTERY_BIGINT = 1000000000000000n;
+  const SPACE_ANTIMATTER_MAX_BATCH_BIGINT = 100000000000000000000000000000000n;
+
+  function normalizeSpaceAntimatterCount(value) {
+    return normalizeBuildingCount(value);
+  }
+
+  function serializeSpaceAntimatterCount(value) {
+    const normalized = normalizeSpaceAntimatterCount(value);
+    return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
+      ? Number(normalized)
+      : normalized.toString();
+  }
+
+  function spaceAntimatterCountToNumber(value) {
+    return Number(normalizeSpaceAntimatterCount(value));
+  }
 
   function getSpaceAntimatterText(path, vars, fallback = '') {
     try {
@@ -13,6 +29,7 @@
   class SpaceAntimatterProject extends Project {
     constructor(config, name) {
       super(config, name);
+      this.repeatCount = 0n;
       this.buildCount = 1;
       this.activeBuildCount = 1;
       this.startedCompleted = false;
@@ -28,7 +45,11 @@
     }
 
     getTotalStorageBonus() {
-      return this.repeatCount * SPACE_ANTIMATTER_STORAGE_PER_BATTERY;
+      return spaceAntimatterCountToNumber(this.repeatCount) * SPACE_ANTIMATTER_STORAGE_PER_BATTERY;
+    }
+
+    getTotalStorageBonusCount() {
+      return normalizeSpaceAntimatterCount(this.repeatCount) * SPACE_ANTIMATTER_STORAGE_PER_BATTERY_BIGINT;
     }
 
     getSelectedBuildCount() {
@@ -81,7 +102,7 @@
       if (this.isPermanentlyDisabled()) {
         return false;
       }
-      return this.unlocked || this.repeatCount > 0;
+      return this.unlocked || this.repeatCount > 0n;
     }
 
     shouldHideStartBar() {
@@ -100,7 +121,7 @@
 
     getScaledCost() {
       const base = super.getScaledCost();
-      const count = this.isActive ? this.activeBuildCount : this.getSelectedBuildCount();
+      const count = spaceAntimatterCountToNumber(this.isActive ? this.activeBuildCount : this.getSelectedBuildCount());
       const scaled = {};
       for (const category in base) {
         scaled[category] = {};
@@ -112,15 +133,17 @@
     }
 
     adjustBuildCount(delta) {
-      const next = Math.round(this.buildCount + delta);
-      this.buildCount = Math.max(1, Math.min(SPACE_ANTIMATTER_MAX_BATCH, next));
+      const current = normalizeSpaceAntimatterCount(this.buildCount);
+      const next = current + BigInt(Math.round(delta));
+      const capped = next > SPACE_ANTIMATTER_MAX_BATCH_BIGINT ? SPACE_ANTIMATTER_MAX_BATCH_BIGINT : next;
+      this.buildCount = serializeSpaceAntimatterCount(capped > 0n ? capped : 1n);
     }
 
     scaleBuildCount(multiplier) {
       if (multiplier > 1) {
-        this.buildCount = Math.min(SPACE_ANTIMATTER_MAX_BATCH, multiplyByTen(this.buildCount));
+        this.buildCount = serializeSpaceAntimatterCount(multiplyByTen(this.buildCount));
       } else {
-        this.buildCount = Math.max(1, divideByTen(this.buildCount));
+        this.buildCount = serializeSpaceAntimatterCount(divideByTen(this.buildCount));
       }
     }
 
@@ -136,7 +159,7 @@
     }
 
     complete() {
-      const completions = Math.max(0, Math.round(this.activeBuildCount || 1));
+      const completions = normalizeSpaceAntimatterCount(this.activeBuildCount || 1);
       this.activeBuildCount = 1;
       this.isActive = false;
       this.isPaused = false;
@@ -145,12 +168,12 @@
       this.kesslerRollElapsed = 0;
       this.kesslerStartCost = null;
 
-      if (completions > 0) {
+      if (completions > 0n) {
         const remaining = this.maxRepeatCount === Infinity
           ? completions
-          : Math.max(Math.min(completions, this.maxRepeatCount - this.repeatCount), 0);
-        if (remaining > 0) {
-          this.repeatCount += remaining;
+          : normalizeSpaceAntimatterCount(Math.max(this.maxRepeatCount - spaceAntimatterCountToNumber(this.repeatCount), 0));
+        if (remaining > 0n) {
+          this.repeatCount = normalizeSpaceAntimatterCount(this.repeatCount) + remaining;
         }
       }
 
@@ -253,7 +276,7 @@
       }
       const selected = this.getSelectedBuildCount();
       this.uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, true);
-      this.uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonus(), true);
+      this.uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonusCount(), true);
       this.uiElements.buildButton.textContent = getSpaceAntimatterText(
         'buildButton',
         { count: formatNumber(selected, true) },
@@ -265,45 +288,50 @@
     saveAutomationSettings() {
       return {
         ...super.saveAutomationSettings(),
-        buildCount: this.buildCount
+        buildCount: serializeSpaceAntimatterCount(this.buildCount)
       };
     }
 
     loadAutomationSettings(settings = {}) {
       super.loadAutomationSettings(settings);
       if (Object.prototype.hasOwnProperty.call(settings, 'buildCount')) {
-        this.buildCount = Math.max(1, settings.buildCount || 1);
+        this.buildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(settings.buildCount || 1));
       }
     }
 
     saveState() {
-      return {
+      const state = {
         ...super.saveState(),
-        buildCount: this.buildCount,
-        activeBuildCount: this.activeBuildCount,
+        repeatCount: serializeSpaceAntimatterCount(this.repeatCount),
+        buildCount: serializeSpaceAntimatterCount(this.buildCount),
+        activeBuildCount: serializeSpaceAntimatterCount(this.activeBuildCount),
         startedCompleted: this.startedCompleted === true
       };
+      return state;
     }
 
     loadState(state = {}) {
       super.loadState(state);
-      this.buildCount = Math.max(1, state.buildCount || 1);
-      this.activeBuildCount = Math.max(1, state.activeBuildCount || 1);
-      this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0 || this.isCompleted === true;
+      this.repeatCount = normalizeSpaceAntimatterCount(state.repeatCount || 0);
+      this.buildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(state.buildCount || 1));
+      this.activeBuildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(state.activeBuildCount || 1));
+      this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0n || this.isCompleted === true;
       this.applyBatteryStorageEffect();
     }
 
     saveTravelState() {
       const state = super.saveTravelState();
-      state.buildCount = this.buildCount;
+      state.repeatCount = serializeSpaceAntimatterCount(this.repeatCount);
+      state.buildCount = serializeSpaceAntimatterCount(this.buildCount);
       state.startedCompleted = this.startedCompleted === true;
       return state;
     }
 
     loadTravelState(state = {}) {
       super.loadTravelState(state);
-      this.buildCount = Math.max(1, state.buildCount || this.buildCount);
-      this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0 || this.isCompleted === true;
+      this.repeatCount = normalizeSpaceAntimatterCount(state.repeatCount || this.repeatCount);
+      this.buildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(state.buildCount || this.buildCount));
+      this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0n || this.isCompleted === true;
       this.applyBatteryStorageEffect();
     }
   }
