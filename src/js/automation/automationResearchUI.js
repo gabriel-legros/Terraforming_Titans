@@ -157,7 +157,8 @@ function updateResearchAutomationUI() {
   researchPanelBody.style.display = automation.collapsed ? 'none' : 'flex';
   researchCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
 
-  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  const selectedPresetIdForSignature = automation.getSelectedPresetId() || '';
+  const presetSignature = `${selectedPresetIdForSignature}|${presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|')}`;
   if (document.activeElement !== researchPresetSelect && presetSignature !== researchPresetSignature) {
     researchPresetSelect.textContent = '';
     presets.forEach((preset) => {

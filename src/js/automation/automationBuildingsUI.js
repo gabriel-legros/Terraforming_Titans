@@ -278,7 +278,8 @@ function updateBuildingsAutomationUI() {
   const combinations = automation.getCombinations();
   const automatableBuildings = getAutomatableBuildings();
 
-  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  const selectedPresetIdForSignature = automation.getSelectedPresetId() || '';
+  const presetSignature = `${selectedPresetIdForSignature}|${presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|')}`;
   if (document.activeElement !== buildingsBuilderPresetSelect && presetSignature !== buildingsBuilderPresetSignature) {
     buildingsBuilderPresetSelect.textContent = '';
     presets.forEach(preset => {
@@ -743,15 +744,24 @@ function attachBuildingsAutomationHandlers() {
   buildingsBuilderNewButton.addEventListener('click', () => {
     const automation = automationManager.buildingsAutomation;
     const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
-    automation.setSelectedPresetId(null);
+    const presetId = automation.addPreset(suggestedName, [], {
+      createEmpty: true,
+      includeControl: true,
+      includeAutomation: true,
+      scopeAll: false,
+      showInSidebar: true
+    });
     buildingAutomationUIState.syncedPresetId = null;
-    buildingAutomationUIState.builderName = suggestedName;
-    buildingAutomationUIState.builderScope = 'all';
+    buildingAutomationUIState.builderName = '';
+    buildingAutomationUIState.builderScope = 'manual';
     buildingAutomationUIState.builderType = 'both';
     buildingAutomationUIState.builderShowInSidebar = true;
     buildingAutomationUIState.builderSelectedBuildings = [];
     buildingAutomationUIState.builderCategoryValue = 'all';
     buildingAutomationUIState.builderBuildingValue = '';
+    if (presetId) {
+      resetAutomationPresetJsonDetailsState(automationElements.buildingsPresetJsonDetails, Number(presetId));
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -798,7 +808,19 @@ function attachBuildingsAutomationHandlers() {
     if (!buildingAutomationUIState.builderSelectedBuildings.includes(buildingId)) {
       buildingAutomationUIState.builderSelectedBuildings.push(buildingId);
     }
-    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    let presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (!presetId) {
+      const automation = automationManager.buildingsAutomation;
+      const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+      presetId = automation.addPreset(suggestedName, [], {
+        createEmpty: true,
+        includeControl: true,
+        includeAutomation: true,
+        scopeAll: false,
+        showInSidebar: buildingAutomationUIState.builderShowInSidebar
+      });
+      buildingAutomationUIState.syncedPresetId = null;
+    }
     if (presetId) {
       automationManager.buildingsAutomation.mergeMissingBuildingsIntoPreset(Number(presetId), [buildingId]);
       buildingAutomationUIState.syncedPresetId = null;
@@ -821,7 +843,19 @@ function attachBuildingsAutomationHandlers() {
         buildingAutomationUIState.builderSelectedBuildings.push(building.name);
       }
     });
-    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    let presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (!presetId) {
+      const automation = automationManager.buildingsAutomation;
+      const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+      presetId = automation.addPreset(suggestedName, [], {
+        createEmpty: true,
+        includeControl: true,
+        includeAutomation: true,
+        scopeAll: false,
+        showInSidebar: buildingAutomationUIState.builderShowInSidebar
+      });
+      buildingAutomationUIState.syncedPresetId = null;
+    }
     if (presetId) {
       automationManager.buildingsAutomation.mergeMissingBuildingsIntoPreset(
         Number(presetId),

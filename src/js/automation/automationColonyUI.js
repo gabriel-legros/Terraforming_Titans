@@ -266,7 +266,8 @@ function updateColonyAutomationUI() {
   const combinations = automation.getCombinations();
   const availableTargets = getColonyAutomationTargets();
 
-  const presetSignature = presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|');
+  const selectedPresetIdForSignature = automation.getSelectedPresetId() || '';
+  const presetSignature = `${selectedPresetIdForSignature}|${presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|')}`;
   if (document.activeElement !== colonyBuilderPresetSelect && presetSignature !== colonyBuilderPresetSignature) {
     colonyBuilderPresetSelect.textContent = '';
     presets.forEach(preset => {
@@ -722,15 +723,24 @@ function attachColonyAutomationHandlers() {
   colonyBuilderNewButton.addEventListener('click', () => {
     const automation = automationManager.colonyAutomation;
     const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
-    automation.setSelectedPresetId(null);
+    const presetId = automation.addPreset(suggestedName, [], {
+      createEmpty: true,
+      includeControl: true,
+      includeAutomation: true,
+      scopeAll: false,
+      showInSidebar: true
+    });
     colonyAutomationUIState.syncedPresetId = null;
-    colonyAutomationUIState.builderName = suggestedName;
-    colonyAutomationUIState.builderScope = 'all';
+    colonyAutomationUIState.builderName = '';
+    colonyAutomationUIState.builderScope = 'manual';
     colonyAutomationUIState.builderType = 'both';
     colonyAutomationUIState.builderShowInSidebar = true;
     colonyAutomationUIState.builderSelectedTargets = [];
     colonyAutomationUIState.builderCategoryValue = 'all';
     colonyAutomationUIState.builderTargetValue = '';
+    if (presetId) {
+      resetAutomationPresetJsonDetailsState(automationElements.colonyPresetJsonDetails, Number(presetId));
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -778,7 +788,19 @@ function attachColonyAutomationHandlers() {
     if (!colonyAutomationUIState.builderSelectedTargets.includes(targetId)) {
       colonyAutomationUIState.builderSelectedTargets.push(targetId);
     }
-    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    let presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (!presetId) {
+      const automation = automationManager.colonyAutomation;
+      const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+      presetId = automation.addPreset(suggestedName, [], {
+        createEmpty: true,
+        includeControl: true,
+        includeAutomation: true,
+        scopeAll: false,
+        showInSidebar: colonyAutomationUIState.builderShowInSidebar
+      });
+      colonyAutomationUIState.syncedPresetId = null;
+    }
     if (presetId) {
       automationManager.colonyAutomation.mergeMissingTargetsIntoPreset(Number(presetId), [targetId]);
       colonyAutomationUIState.syncedPresetId = null;
@@ -801,7 +823,19 @@ function attachColonyAutomationHandlers() {
         colonyAutomationUIState.builderSelectedTargets.push(target.id);
       }
     });
-    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    let presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (!presetId) {
+      const automation = automationManager.colonyAutomation;
+      const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
+      presetId = automation.addPreset(suggestedName, [], {
+        createEmpty: true,
+        includeControl: true,
+        includeAutomation: true,
+        scopeAll: false,
+        showInSidebar: colonyAutomationUIState.builderShowInSidebar
+      });
+      colonyAutomationUIState.syncedPresetId = null;
+    }
     if (presetId) {
       automationManager.colonyAutomation.mergeMissingTargetsIntoPreset(
         Number(presetId),
