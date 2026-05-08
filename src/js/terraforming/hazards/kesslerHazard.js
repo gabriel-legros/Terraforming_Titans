@@ -47,7 +47,28 @@ function resolveDensityModel(terraforming) {
   }
 }
 
-function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
+function calculateKesslerRadiusContext(terraforming, entry) {
+  const referenceRadiusKm = entry?.referenceRadiusKm
+    || terraforming?.baseRadius
+    || terraforming?.initialCelestialParameters?.baseRadius
+    || terraforming?.initialCelestialParameters?.radius
+    || terraforming?.celestialParameters?.baseRadius
+    || terraforming?.celestialParameters?.radius
+    || 0;
+  const currentRadiusKm = terraforming?.celestialParameters?.radius || referenceRadiusKm;
+  return {
+    referenceRadiusKm,
+    currentRadiusKm,
+    altitudeOffsetMeters: (referenceRadiusKm - currentRadiusKm) * 1000
+  };
+}
+
+function getEffectivePeriapsisAltitudeMeters(entry, terraforming) {
+  const radiusContext = calculateKesslerRadiusContext(terraforming, entry);
+  return Math.max(0, entry.periapsisMeters + radiusContext.altitudeOffsetMeters);
+}
+
+function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters, referenceRadiusKm, samples = PERIAPSIS_SAMPLE_COUNT) {
   const count = Math.max(1, Math.floor(samples));
   const std = Math.max(1, stdMeters);
   const span = Math.max(1, maxMeters);
@@ -72,6 +93,7 @@ function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters,
     const massTons = entry.weight * massPerWeight;
     return {
       periapsisMeters: entry.periapsisMeters,
+      referenceRadiusKm,
       massTons,
       maxSinceZero: massTons
     };
@@ -348,9 +370,17 @@ class KesslerHazard {
 
   ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {
     if (this.periapsisDistribution.length) {
+      const referenceRadiusKm = calculateKesslerRadiusContext(terraforming).referenceRadiusKm;
+      this.periapsisDistribution.forEach((entry) => {
+        entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
+      });
+      this.periapsisBaseline.forEach((entry) => {
+        entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
+      });
       return;
     }
     const densityModel = resolveDensityModel(terraforming);
+    const referenceRadiusKm = calculateKesslerRadiusContext(terraforming).referenceRadiusKm;
     const searchMax = Math.max(terraforming.exosphereHeightMeters || 0, DEBRIS_DENSITY_SEARCH_MAX);
     const meanMeters = Math.max(
       DEBRIS_DISTRIBUTION_MEAN_MIN_METERS,
@@ -363,10 +393,11 @@ class KesslerHazard {
     const sigmaMeters = Math.abs(meanMeters - dragReferenceMeters);
     const stdMeters = Math.max(1, sigmaMeters);
     const maxMeters = Math.max(1, meanMeters + stdMeters * 3);
-    this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters);
+    this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters, referenceRadiusKm);
     if (!this.periapsisBaseline.length) {
       this.periapsisBaseline = this.periapsisDistribution.map((entry) => ({
         periapsisMeters: entry.periapsisMeters,
+        referenceRadiusKm: entry.referenceRadiusKm,
         massTons: entry.massTons
       }));
     }
@@ -420,7 +451,7 @@ class KesslerHazard {
 
     this.syncDistributionToResource(terraforming, kesslerParameters, totalMass);
 
-    const altitudes = this.periapsisDistribution.map((entry) => entry.periapsisMeters);
+    const altitudes = this.periapsisDistribution.map((entry) => getEffectivePeriapsisAltitudeMeters(entry, terraforming));
     const densities = densityModel.getDensities(altitudes);
     let maxAltitude = 0;
     for (let i = 0; i < altitudes.length; i += 1) {

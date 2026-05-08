@@ -2500,12 +2500,13 @@ setLanguageData({
           smallChance: 'Small Chance',
           largeChance: 'Large Chance',
           projectFailureTooltip: 'Projects roll failure after 1s or on completion if they have a duration, or continuously for continuous projects. Buildings have increased cost and the difference is converted to debris on construction.',
-          debrisDecayTooltip: 'Drag line marks the altitude where the air density reaches about 1 ng/m^3. Atmospheric density depends on total gas in the atmosphere, gas mix, temperature, gravity, planet size, and upper-atmosphere heating from solar flux. To push the drag line higher, add atmosphere to raise pressure, warm the air, increase solar flux, or shift the mix toward lighter gases. Cooling the air, adding heavy gases, or removing atmosphere lowers the drag line. Water vapor is relatively light, but it condenses easily and therefore has very limited impact.',
+          debrisDecayTooltip: 'Drag line marks the altitude where the air density reaches about 1 ng/m^3. Chart altitudes are displayed relative to the world\'s initial radius; on dynamic-mass worlds, density and decay use the current radius-adjusted air path. Atmospheric density depends on total gas in the atmosphere, gas mix, temperature, gravity, planet size, and upper-atmosphere heating from solar flux. To push the drag line higher, add atmosphere to raise pressure, warm the air, increase solar flux, or shift the mix toward lighter gases. Cooling the air, adding heavy gases, or removing atmosphere lowers the drag line. Water vapor is relatively light, but it condenses easily and therefore has very limited impact.',
           chart: {
             drag: 'Drag {value}',
             orbitalDebrisCleared: 'Orbital debris cleared.',
             orbitalDebris: 'Orbital debris: {current} / {initial} t',
-            binDetail: 'Bin @ {altitude} km: {current} / {baseline} t, {decay} t/s, {density}',
+            binDetail: 'Initial-radius bin @ {altitude} km (current air path {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}',
+            initialRadiusMax: '{value} km initial radius',
           },
           summary: {
             debrisField: 'Debris: {current} / {initial} t\nDensity: {density} t/land\nClearance: {clearance}',
@@ -2518,7 +2519,7 @@ setLanguageData({
             solisDrop: 'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected). Solis storage bonuses cap at 1,000 per resource.',
             marketCap: 'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.',
             disabledProjects: 'Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains.',
-            debrisDecay: 'Debris decay scales with local atmospheric density at each periapsis bin.',
+            debrisDecay: 'Debris chart altitudes are relative to the world\'s initial radius; dynamic-mass worlds adjust the live air path for current radius before calculating decay.',
           },
           debrisSourcesList: {
             small: 'Small',

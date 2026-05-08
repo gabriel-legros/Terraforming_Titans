@@ -69,7 +69,7 @@ const KESSLER_EFFECTS = [
   getKesslerHazardText('effectsList.solisDrop', 'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected). Solis storage bonuses cap at 1,000 per resource.'),
   getKesslerHazardText('effectsList.marketCap', 'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.'),
   getKesslerHazardText('effectsList.disabledProjects', 'Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains.'),
-  getKesslerHazardText('effectsList.debrisDecay', 'Debris decay scales with local atmospheric density at each periapsis bin.')
+  getKesslerHazardText('effectsList.debrisDecay', 'Debris chart altitudes are relative to the world\'s initial radius; dynamic-mass worlds adjust the live air path for current radius before calculating decay.')
 ];
 const KESSLER_CHART_BINS = 64;
 let kesslerDecayConstants = null;
@@ -222,9 +222,10 @@ function formatDensityWithUnit(value) {
 function buildKesslerBinDetailText(entry) {
   return getKesslerHazardText(
     'chart.binDetail',
-    'Bin @ {altitude} km: {current} / {baseline} t, {decay} t/s, {density}',
+    'Initial-radius bin @ {altitude} km (current air path {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}',
     {
       altitude: formatNumeric(entry.altitudeKm, 1),
+      effectiveAltitude: formatNumeric(entry.effectiveAltitudeKm, 1),
       current: formatNumeric(entry.current, 2),
       baseline: formatNumeric(entry.baseline, 2),
       decay: formatNumeric(entry.decayRate, 2, true),
@@ -239,6 +240,23 @@ function getTerraforming() {
   } catch (error) {
     return null;
   }
+}
+
+function calculateKesslerUIRadiusContext(terraformingState, entries) {
+  const referenceRadiusKm = entries && entries.length && entries[0].referenceRadiusKm
+    ? entries[0].referenceRadiusKm
+    : terraformingState?.baseRadius
+    || terraformingState?.initialCelestialParameters?.baseRadius
+    || terraformingState?.initialCelestialParameters?.radius
+    || terraformingState?.celestialParameters?.baseRadius
+    || terraformingState?.celestialParameters?.radius
+    || 0;
+  const currentRadiusKm = terraformingState?.celestialParameters?.radius || referenceRadiusKm;
+  return {
+    referenceRadiusKm,
+    currentRadiusKm,
+    altitudeOffsetMeters: (referenceRadiusKm - currentRadiusKm) * 1000
+  };
 }
 
 const kesslerDensityFallbackModel = {
@@ -381,7 +399,7 @@ function buildKesslerLayout() {
         summaryRightInfoIcon,
         getKesslerHazardText(
           'debrisDecayTooltip',
-          'Drag line marks the altitude where the air density reaches about 1 ng/m^3. Atmospheric density depends on total gas in the atmosphere, gas mix, temperature, gravity, planet size, and upper-atmosphere heating from solar flux. To push the drag line higher, add atmosphere to raise pressure, warm the air, increase solar flux, or shift the mix toward lighter gases. Cooling the air, adding heavy gases, or removing atmosphere lowers the drag line. Water vapor is relatively light, but it condenses easily and therefore has very limited impact.'
+          'Drag line marks the altitude where the air density reaches about 1 ng/m^3. Chart altitudes are displayed relative to the world\'s initial radius; on dynamic-mass worlds, density and decay use the current radius-adjusted air path. Atmospheric density depends on total gas in the atmosphere, gas mix, temperature, gravity, planet size, and upper-atmosphere heating from solar flux. To push the drag line higher, add atmosphere to raise pressure, warm the air, increase solar flux, or shift the mix toward lighter gases. Cooling the air, adding heavy gases, or removing atmosphere lowers the drag line. Water vapor is relatively light, but it condenses easily and therefore has very limited impact.'
         )
       );
     } catch (error) {
@@ -632,6 +650,9 @@ function updateKesslerDebrisChart(
   const currentEntries = currentDistribution.length ? currentDistribution : baselineDistribution;
   const sortedEntries = baselineEntries.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
   const sortedCurrentEntries = currentEntries.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
+  const terraformingState = getTerraforming();
+  const radiusContext = calculateKesslerUIRadiusContext(terraformingState, sortedEntries);
+  const radiusAltitudeOffsetMeters = radiusContext.altitudeOffsetMeters;
   const bins = new Array(bars.length).fill(0);
   const currentBins = new Array(bars.length).fill(0);
   const maxSinceZeroBins = new Array(bars.length).fill(0);
@@ -687,7 +708,8 @@ function updateKesslerDebrisChart(
       maxSinceZeroBins[i] = 0;
     }
   }
-  const dragRatio = Math.min(1, Math.max(0, (dragThresholdMeters - minPeriapsis) / span));
+  const displayedDragThresholdMeters = dragThresholdMeters - radiusAltitudeOffsetMeters;
+  const dragRatio = Math.min(1, Math.max(0, (displayedDragThresholdMeters - minPeriapsis) / span));
 
   let maxMass = 0;
   for (let i = 0; i < bins.length; i += 1) {
@@ -701,14 +723,15 @@ function updateKesslerDebrisChart(
     const height = mass > 0 ? Math.max(2, heightRatio * 100) : 0;
     bars[i].style.height = `${height}%`;
     const binCenter = minPeriapsis + (i + 0.5) / bars.length * span;
-    const inDrag = binCenter <= dragThresholdMeters;
     const baselineMass = bins[i];
     const currentMass = currentBins[i];
     const fillRatio = baselineMass ? Math.max(0, Math.min(1, 1 - currentMass / baselineMass)) : 0;
     const fillHeight = height ? fillRatio * 100 : 0;
     fills[i].style.height = `${fillHeight}%`;
-    bars[i].classList.toggle('kessler-debris-chart__bar--below', inDrag);
-    bars[i].classList.toggle('kessler-debris-chart__bar--above', !inDrag);
+    const effectiveBinCenter = Math.max(0, binCenter + radiusAltitudeOffsetMeters);
+    const effectiveInDrag = effectiveBinCenter <= dragThresholdMeters;
+    bars[i].classList.toggle('kessler-debris-chart__bar--below', effectiveInDrag);
+    bars[i].classList.toggle('kessler-debris-chart__bar--above', !effectiveInDrag);
   }
 
   if (skipTransitions) {
@@ -745,16 +768,19 @@ function updateKesslerDebrisChart(
 
   const binCount = bars.length;
   const altitudes = new Array(binCount);
+  const effectiveAltitudes = new Array(binCount);
   for (let i = 0; i < binCount; i += 1) {
     altitudes[i] = minPeriapsis + (i + 0.5) / binCount * span;
+    effectiveAltitudes[i] = Math.max(0, altitudes[i] + radiusAltitudeOffsetMeters);
   }
   for (let i = 0; i < binCount; i += 1) {
     const entry = kesslerHazardUICache.binDetails[i];
     entry.current = currentBins[i];
     entry.baseline = bins[i];
     entry.altitudeKm = altitudes[i] / 1000;
+    entry.effectiveAltitudeKm = effectiveAltitudes[i] / 1000;
   }
-  const densities = densityModel.getDensities(altitudes);
+  const densities = densityModel.getDensities(effectiveAltitudes);
   const densityReference = Math.max(dragThresholdDensity, kesslerDecayConstants.densityFloor);
   for (let i = 0; i < binCount; i += 1) {
     const entry = kesslerHazardUICache.binDetails[i];
@@ -771,7 +797,11 @@ function updateKesslerDebrisChart(
     kesslerHazardUICache.chartDetails.textContent = buildKesslerBinDetailText(entry);
   }
   kesslerHazardUICache.densityBar.style.backgroundImage = buildDensityGradient(densities, binCount);
-  kesslerHazardUICache.densityMaxLabel.textContent = `${formatNumeric(maxPeriapsis / 1000, 1)} km`;
+  kesslerHazardUICache.densityMaxLabel.textContent = getKesslerHazardText(
+    'chart.initialRadiusMax',
+    '{value} km initial radius',
+    { value: formatNumeric(maxPeriapsis / 1000, 1) }
+  );
   updateKesslerChartDetails(resource, isCleared);
 }
 
