@@ -21,6 +21,7 @@ class PopulationModule extends EffectableEntity {
       this.overpopulationDecayRate = 0;
       this.gravityMitigation = 0;
       this.currentWorldOverpopulationLossTotal = 0;
+      this.currentWorldPeakPopulation = 0;
     }
 
   getEffectiveGrowthMultiplier(){
@@ -197,6 +198,7 @@ class PopulationModule extends EffectableEntity {
       // Get the current population and population cap
       let currentPopulation = this.populationResource.value;
       const populationCap = this.populationResource.cap;
+      this.currentWorldPeakPopulation = Math.max(this.currentWorldPeakPopulation, currentPopulation);
 
       // Crop tiny overages to the cap to avoid unnecessary decay
       if (
@@ -247,9 +249,7 @@ class PopulationModule extends EffectableEntity {
         const populationExcess = currentPopulation - populationCap;
         overpopulationDecayPerSecond = populationExcess * 0.01;
       }
-      if (overpopulationDecayPerSecond > 0 && seconds > 0) {
-        this.currentWorldOverpopulationLossTotal += overpopulationDecayPerSecond * seconds;
-      }
+      this.currentWorldOverpopulationLossTotal = Math.max(0, this.currentWorldPeakPopulation - currentPopulation);
       this.overpopulationDecayRate = currentPopulation > 0 ? overpopulationDecayPerSecond / currentPopulation : 0;
 
       const totalDecayPerSecond =
@@ -281,6 +281,10 @@ class PopulationModule extends EffectableEntity {
       } else if (populationChange < 0) {
         this.populationResource.decrease(-populationChange);
       }
+
+      currentPopulation = this.populationResource.value;
+      this.currentWorldPeakPopulation = Math.max(this.currentWorldPeakPopulation, currentPopulation);
+      this.currentWorldOverpopulationLossTotal = Math.max(0, this.currentWorldPeakPopulation - currentPopulation);
 
       if(currentPopulation < 1)
       {
@@ -423,12 +427,17 @@ class PopulationModule extends EffectableEntity {
 
   saveState() {
     return {
-      currentWorldOverpopulationLossTotal: this.currentWorldOverpopulationLossTotal
+      currentWorldOverpopulationLossTotal: this.currentWorldOverpopulationLossTotal,
+      currentWorldPeakPopulation: this.currentWorldPeakPopulation
     };
   }
 
   loadState(state = {}) {
-    this.currentWorldOverpopulationLossTotal = Math.max(0, state.currentWorldOverpopulationLossTotal || 0);
+    const savedPeak = Math.max(0, state.currentWorldPeakPopulation || 0);
+    const currentPopulation = Math.max(0, this.populationResource.value || 0);
+    const legacyLostPopulation = Math.max(0, state.currentWorldOverpopulationLossTotal || 0);
+    this.currentWorldPeakPopulation = Math.max(savedPeak, currentPopulation + legacyLostPopulation);
+    this.currentWorldOverpopulationLossTotal = Math.max(0, this.currentWorldPeakPopulation - currentPopulation);
   }
 }
 
