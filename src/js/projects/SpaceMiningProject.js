@@ -557,6 +557,10 @@ class SpaceMiningProject extends SpaceshipProject {
     return true;
   }
 
+  areDisableRulesActive() {
+    return this.shouldShowDisableIfControls();
+  }
+
   getPlanetaryMassGainResourceKey() {
     const resource = this.getPlanetaryMassImportResource();
     if (resource === 'metal') {
@@ -991,6 +995,9 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   shouldAutomationDisable(accumulatedChanges = null) {
+    if (!this.areDisableRulesActive()) {
+      return false;
+    }
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
       return true;
@@ -1014,6 +1021,9 @@ class SpaceMiningProject extends SpaceshipProject {
 
   canStart() {
     if (!super.canStart()) return false;
+    if (!this.areDisableRulesActive()) {
+      return true;
+    }
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
       return false;
@@ -1239,8 +1249,16 @@ class SpaceMiningProject extends SpaceshipProject {
   calculateSpaceshipTotalResourceGain(perSecond = false) {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const gainPerShip = this.calculateSpaceshipGainPerShip();
-      const category = gainPerShip.colony ? 'colony' : 'surface';
+      const category = gainPerShip.colony
+        ? 'colony'
+        : (gainPerShip.surface ? 'surface' : (gainPerShip.spaceStorage ? 'spaceStorage' : null));
+      if (!category || !gainPerShip[category]) {
+        return super.calculateSpaceshipTotalResourceGain(perSecond);
+      }
       const resource = Object.keys(gainPerShip[category])[0];
+      if (!resource) {
+        return super.calculateSpaceshipTotalResourceGain(perSecond);
+      }
       const multiplier = perSecond
         ? this.getActiveShipCount() * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()))
         : 1;
