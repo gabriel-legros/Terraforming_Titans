@@ -10,6 +10,16 @@ const sidebarAutomationElements = {
   objective: null,
   nav: null,
   indexIcon: null,
+  autoTravelSection: null,
+  autoTravelStatus: null,
+  autoTravelPresetSelect: null,
+  autoTravelPresetToggle: null,
+  scriptingSection: null,
+  scriptingStatus: null,
+  scriptingSelect: null,
+  scriptingToggle: null,
+  scriptingPauseButton: null,
+  scriptingPlayButton: null,
   shipSection: null,
   shipStatus: null,
   shipPresetSelect: null,
@@ -167,6 +177,62 @@ function buildSidebarAutomationUI() {
     return;
   }
 
+  const autoTravel = createSidebarSection(getSidebarAutomationText('autoTravel', null, 'Auto-travel'));
+  const autoTravelRow = createSidebarRow();
+  const autoTravelPresetSelect = document.createElement('select');
+  autoTravelPresetSelect.classList.add('journal-automation-select');
+  const autoTravelToggle = createToggleButton({
+    onLabel: getSidebarAutomationText('on', null, 'On'),
+    offLabel: getSidebarAutomationText('off', null, 'Off'),
+    isOn: false
+  });
+  autoTravelToggle.classList.add('journal-automation-switch');
+  autoTravelToggle.title = getSidebarAutomationText('toggleAutoTravelPreset', null, 'Toggle auto-travel preset');
+  autoTravel.header.insertBefore(autoTravelToggle, autoTravel.status);
+  autoTravelRow.append(autoTravelPresetSelect);
+  autoTravel.section.appendChild(autoTravelRow);
+  panel.appendChild(autoTravel.section);
+  elements.autoTravelSection = autoTravel.section;
+  elements.autoTravelStatus = autoTravel.status;
+  elements.autoTravelPresetSelect = autoTravelPresetSelect;
+  elements.autoTravelPresetToggle = autoTravelToggle;
+
+  const scripting = createSidebarSection(getSidebarAutomationText('scripting', null, 'Scripting'));
+  scripting.header.classList.add('journal-scripting-header');
+  scripting.title.classList.add('journal-scripting-title');
+  const scriptingRow = createSidebarRow();
+  const scriptingSelect = document.createElement('select');
+  scriptingSelect.classList.add('journal-automation-select');
+  const scriptingToggle = createToggleButton({
+    onLabel: getSidebarAutomationText('on', null, 'On'),
+    offLabel: getSidebarAutomationText('off', null, 'Off'),
+    isOn: false
+  });
+  scriptingToggle.classList.add('journal-automation-switch', 'journal-scripting-master-toggle');
+  scriptingToggle.title = getSidebarAutomationText('toggleScripting', null, 'Toggle script automation');
+  scripting.header.insertBefore(scriptingToggle, scripting.status);
+  const scriptingControls = document.createElement('span');
+  scriptingControls.classList.add('journal-scripting-controls', 'worker-priority-container');
+  const scriptingPauseButton = document.createElement('span');
+  scriptingPauseButton.classList.add('journal-scripting-control-button', 'worker-priority-btn');
+  scriptingPauseButton.textContent = '⏸';
+  scriptingPauseButton.title = getSidebarAutomationText('pauseScripting', null, 'Pause scripting');
+  const scriptingPlayButton = document.createElement('span');
+  scriptingPlayButton.classList.add('journal-scripting-control-button', 'worker-priority-btn');
+  scriptingPlayButton.textContent = '▶';
+  scriptingPlayButton.title = getSidebarAutomationText('playScripting', null, 'Play scripting');
+  scriptingControls.append(scriptingPauseButton, scriptingPlayButton);
+  scripting.header.insertBefore(scriptingControls, scripting.status);
+  scriptingRow.append(scriptingSelect);
+  scripting.section.appendChild(scriptingRow);
+  panel.appendChild(scripting.section);
+  elements.scriptingSection = scripting.section;
+  elements.scriptingStatus = scripting.status;
+  elements.scriptingSelect = scriptingSelect;
+  elements.scriptingToggle = scriptingToggle;
+  elements.scriptingPauseButton = scriptingPauseButton;
+  elements.scriptingPlayButton = scriptingPlayButton;
+
   const ship = createSidebarSection(getSidebarAutomationText('ships', null, 'Ships'));
   const shipRow = createSidebarRow();
   const shipPresetSelect = document.createElement('select');
@@ -310,12 +376,14 @@ function updateSidebarAutomationToggleVisibility() {
 
   const manager = automationManager;
   const hasAnyAutomation = !!(manager
-    && (manager.hasFeature('automationShipAssignment')
+    && (manager.hasFeature('automationAutoTravel')
+      || manager.hasFeature('automationShipAssignment')
       || manager.hasFeature('automationLifeDesign')
       || manager.hasFeature('automationResearch')
       || manager.hasFeature('automationBuildings')
       || manager.hasFeature('automationProjects')
-      || manager.hasFeature('automationColony')));
+      || manager.hasFeature('automationColony')
+      || manager.hasFeature('automationScripts')));
   const toggleVisible = !!(manager && manager.enabled && hasAnyAutomation);
   elements.toggle.classList.toggle('hidden', !toggleVisible);
   if (!toggleVisible && sidebarAutomationMode) {
@@ -354,6 +422,61 @@ function initializeSidebarAutomationUI() {
   }
   buildSidebarAutomationUI();
   sidebarAutomationElements.toggle.addEventListener('click', toggleJournalAutomationMode);
+
+  sidebarAutomationElements.autoTravelPresetSelect.addEventListener('change', (event) => {
+    if (!event.target.value) {
+      return;
+    }
+    automationManager.autoTravelAutomation.setSelectedPresetId(Number(event.target.value));
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.autoTravelPresetToggle.addEventListener('click', () => {
+    const automation = automationManager.autoTravelAutomation;
+    automation.setEnabled(!automation.enabled);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  sidebarAutomationElements.scriptingSelect.addEventListener('change', (event) => {
+    if (!event.target.value) {
+      return;
+    }
+    automationManager.scriptAutomation.setSelectedScriptId(Number(event.target.value));
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.scriptingToggle.addEventListener('click', () => {
+    const automation = automationManager.scriptAutomation;
+    if (automation.enabled) {
+      automation.disable();
+    } else {
+      automation.enable();
+      automationManager.setFeature('automationScripts', true);
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.scriptingPauseButton.addEventListener('click', () => {
+    const automation = automationManager.scriptAutomation;
+    automation.pause();
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.scriptingPlayButton.addEventListener('click', () => {
+    const automation = automationManager.scriptAutomation;
+    const script = automation.getSelectedScript();
+    if (!script) {
+      return;
+    }
+    if (!automation.enabled) {
+      automation.enable();
+      automationManager.setFeature('automationScripts', true);
+    }
+    automation.runScript(script.id);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
 
   sidebarAutomationElements.shipPresetSelect.addEventListener('change', (event) => {
     if (!event.target.value) {
@@ -523,6 +646,51 @@ function updateSidebarAutomationUI() {
   const elements = sidebarAutomationElements;
   const manager = automationManager;
   updateSidebarAutomationToggleVisibility();
+
+  const autoTravelAutomation = manager.autoTravelAutomation;
+  const autoTravelUnlocked = manager.hasFeature('automationAutoTravel');
+  elements.autoTravelSection.style.display = autoTravelUnlocked ? '' : 'none';
+  elements.autoTravelSection.classList.toggle('journal-automation-locked', !autoTravelUnlocked);
+  elements.autoTravelStatus.textContent = autoTravelUnlocked ? '' : t('ui.common.locked', null, 'Locked');
+  elements.autoTravelPresetSelect.disabled = !autoTravelUnlocked;
+  elements.autoTravelPresetToggle.disabled = !autoTravelUnlocked;
+  if (autoTravelUnlocked) {
+    fillSelect(
+      elements.autoTravelPresetSelect,
+      autoTravelAutomation.presets.map(preset => ({ value: preset.id, label: getSidebarPresetLabel(preset) })),
+      autoTravelAutomation.selectedPresetId || '',
+      getSidebarAutomationText('selectPreset', null, 'Select preset')
+    );
+    setToggleButtonState(elements.autoTravelPresetToggle, !!autoTravelAutomation.enabled);
+  }
+
+  const scriptAutomation = manager.scriptAutomation;
+  const scriptingUnlocked = manager.hasFeature('automationScripts') || scriptAutomation.enabled;
+  elements.scriptingSection.style.display = scriptingUnlocked ? '' : 'none';
+  elements.scriptingSection.classList.toggle('journal-automation-locked', !scriptingUnlocked);
+  elements.scriptingStatus.textContent = scriptingUnlocked ? '' : t('ui.common.locked', null, 'Locked');
+  elements.scriptingSelect.disabled = !scriptingUnlocked;
+  elements.scriptingToggle.disabled = !scriptingUnlocked;
+  elements.scriptingPauseButton.classList.toggle('disabled', !scriptingUnlocked);
+  elements.scriptingPlayButton.classList.toggle('disabled', !scriptingUnlocked);
+  if (scriptingUnlocked) {
+    fillSelect(
+      elements.scriptingSelect,
+      scriptAutomation.scripts.map(script => ({
+        value: script.id,
+        label: script.name || getSidebarAutomationText('scriptWithId', { id: script.id }, `Script ${script.id}`)
+      })),
+      scriptAutomation.selectedScriptId || '',
+      getSidebarAutomationText('selectScript', null, 'Select script')
+    );
+    setToggleButtonState(elements.scriptingToggle, !!scriptAutomation.enabled);
+    const scriptRunning = scriptAutomation.enabled && scriptAutomation.running;
+    elements.scriptingPauseButton.classList.toggle('active', !scriptRunning);
+    elements.scriptingPlayButton.classList.toggle('active', scriptRunning);
+  } else {
+    elements.scriptingPauseButton.classList.remove('active');
+    elements.scriptingPlayButton.classList.remove('active');
+  }
 
   const shipAutomation = manager.spaceshipAutomation;
   const shipUnlocked = manager.hasFeature('automationShipAssignment');
