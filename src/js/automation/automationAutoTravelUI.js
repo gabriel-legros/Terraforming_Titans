@@ -123,8 +123,8 @@ function buildAutoTravelUI() {
   const dominionSelect = buildAutoTravelSelect(selectionRow, 'auto-travel-dominion-select', [{ value: 'random', label: getAutoTravelOptionText('dominion.random', 'Dominion: Random') }]);
   destinationSection.appendChild(selectionRow);
 
-  const scriptAfterTravelRow = document.createElement('label');
-  scriptAfterTravelRow.classList.add('auto-travel-checkbox-row');
+  const scriptAfterTravelRow = document.createElement('div');
+  scriptAfterTravelRow.classList.add('auto-travel-script-after-travel-row');
   const scriptAfterTravelToggle = document.createElement('input');
   scriptAfterTravelToggle.type = 'checkbox';
   scriptAfterTravelToggle.classList.add('auto-travel-script-after-travel-toggle');
@@ -132,9 +132,7 @@ function buildAutoTravelUI() {
   scriptAfterTravelText.textContent = getAutoTravelOptionText('runScriptAfterTravel', 'Run following automation script after travel');
   const scriptAfterTravelSelect = document.createElement('select');
   scriptAfterTravelSelect.classList.add('auto-travel-script-after-travel-select');
-  scriptAfterTravelText.appendChild(document.createTextNode(' '));
-  scriptAfterTravelText.appendChild(scriptAfterTravelSelect);
-  scriptAfterTravelRow.append(scriptAfterTravelToggle, scriptAfterTravelText);
+  scriptAfterTravelRow.append(scriptAfterTravelToggle, scriptAfterTravelText, scriptAfterTravelSelect);
   destinationSection.appendChild(scriptAfterTravelRow);
 
   const hazardsSection = createSection(getAutoTravelOptionText('hazardsSection', 'Hazards'), 'auto-travel-hazards-section');
