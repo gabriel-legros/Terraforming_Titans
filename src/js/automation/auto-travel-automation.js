@@ -227,6 +227,10 @@ class AutoTravelAutomation {
   }
 
   _runAfterLoadingPaint(callback) {
+    if (document.hidden) {
+      window.setTimeout(callback, 80);
+      return;
+    }
     window.requestAnimationFrame(() => {
       window.setTimeout(callback, 80);
     });
