@@ -721,13 +721,29 @@ function refreshOrbitSelectState(mgr) {
   if (!rwgOrbitEl) return;
 
   const selectedType = rwgTypeEl ? rwgTypeEl.value : 'auto';
+  const forceRogueOrbitOnly = selectedType === 'rogue';
   const typeOrbitLock = selectedType && selectedType !== 'auto'
     ? getTypeOrbitLockState(selectedType, mgr)
     : { presets: [], excludedPresets: [] };
   const allowedByType = typeOrbitLock.presets.length ? typeOrbitLock.presets : null;
   const optionStates = Array.from(rwgOrbitEl.options).map((opt) => {
-    if (opt.value === 'auto') {
-      return { value: opt.value, disabled: false, text: opt.textContent };
+    const isAuto = opt.value === 'auto';
+    const isRogueOrbit = opt.value === 'rogue';
+    if (isAuto) {
+      return {
+        value: opt.value,
+        hidden: forceRogueOrbitOnly,
+        disabled: forceRogueOrbitOnly,
+        text: opt.textContent
+      };
+    }
+    if (isRogueOrbit && !forceRogueOrbitOnly) {
+      const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '').replace('????', '').trim();
+      return { value: opt.value, base, hidden: true, disabled: true, text: base };
+    }
+    if (!isRogueOrbit && forceRogueOrbitOnly) {
+      const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '').replace('????', '').trim();
+      return { value: opt.value, base, hidden: true, disabled: true, text: base };
     }
     const hardLocked = typeof mgr.isOrbitLocked === 'function' ? mgr.isOrbitLocked(opt.value) : false;
     const typeLocked = !!(allowedByType
@@ -737,6 +753,7 @@ function refreshOrbitSelectState(mgr) {
     const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '').replace('????', '').trim();
     return {
       value: opt.value,
+      hidden: false,
       base,
       disabled: locked,
       text: hardLocked
@@ -746,6 +763,7 @@ function refreshOrbitSelectState(mgr) {
   });
   const signature = JSON.stringify(optionStates.map((state) => ({
     value: state.value,
+    hidden: state.hidden,
     disabled: state.disabled,
     text: state.text
   })));
@@ -756,12 +774,13 @@ function refreshOrbitSelectState(mgr) {
     const opt = rwgOrbitEl.options[index];
     if (!opt) return;
     if (state.base) opt.dataset.baseText = state.base;
+    opt.hidden = !!state.hidden;
     opt.disabled = state.disabled;
     opt.textContent = state.text;
   });
   const selectedOption = Array.from(rwgOrbitEl.options).find((opt) => opt.value === rwgOrbitEl.value);
-  if (selectedOption && selectedOption.disabled) {
-    rwgOrbitEl.value = 'auto';
+  if (selectedOption && (selectedOption.disabled || selectedOption.hidden)) {
+    rwgOrbitEl.value = forceRogueOrbitOnly ? 'rogue' : 'auto';
   }
 }
 
