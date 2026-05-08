@@ -463,6 +463,13 @@ class ScriptVariableRegistry {
       { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
       { id: 'netRate', label: 'Net Rate', valueType: 'number' }
     ];
+    if (categoryId === 'special' && resolvedTargetId === 'spaceships') {
+      attributes.push({
+        id: 'totalAmount',
+        label: t('ui.hope.automationCards.scriptVariables.resources.totalAmount', {}, 'Total Amount'),
+        valueType: 'number'
+      });
+    }
     if (categoryId === 'surface' && resolvedTargetId === 'land') {
       return [
         { id: 'value', label: 'Value', valueType: 'number' },
@@ -959,8 +966,16 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'productionRate') return this.toNumber(resource.productionRate);
     if (ref.attribute === 'consumptionRate') return this.toNumber(resource.consumptionRate);
     if (ref.attribute === 'netRate') return this.toNumber(resource.productionRate) - this.toNumber(resource.consumptionRate);
+    if (ref.attribute === 'totalAmount') return this.resolveSpecialResourceTotalAmount(ref.category, resourceId, resource);
     if (ref.attribute === 'coverage') return this.resolveSurfaceResourceCoverage(ref.category, resourceId);
     return 0;
+  }
+
+  resolveSpecialResourceTotalAmount(categoryId, resourceId, resource) {
+    if (categoryId !== 'special' || resourceId !== 'spaceships') return this.toNumber(resource.value);
+    const unassignedShips = this.toNumber(resource.value);
+    const assignedShips = this.toNumber(projectManager.getAssignedSpaceships());
+    return unassignedShips + assignedShips;
   }
 
   getSurfaceResourceCoverageKey(categoryId, targetId) {

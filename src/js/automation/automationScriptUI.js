@@ -374,6 +374,7 @@ function updateScriptAutomationUI() {
     scriptAutomationLinesSignature = getScriptLinesSignature(automation, script);
     forceScriptAutomationRefresh = false;
   }
+  updateScriptAutomationLiveReferenceValues(automation, automationElements.scriptLinesContainer);
   updateCurrentScriptLineHighlight(automation, automationElements.scriptLinesContainer);
 }
 
@@ -554,12 +555,13 @@ function getScriptRefCurrentText(automation, ref) {
   return `= ${text}`;
 }
 
-function appendScriptSelectWithValue(row, select, valueText) {
+function appendScriptSelectWithValue(row, select, valueText, ref) {
   const wrap = document.createElement('span');
   wrap.classList.add('script-select-value-wrap');
   const value = document.createElement('span');
   value.classList.add('script-current-value');
   value.textContent = valueText;
+  value._scriptRef = ref;
   wrap.append(select, value);
   row.appendChild(wrap);
 }
@@ -769,7 +771,15 @@ function renderExpressionEditor(automation, expression, container, titleText) {
   wrap.classList.add('script-expression-editor');
   const title = document.createElement('div');
   title.classList.add('script-expression-title');
-  title.textContent = `${titleText} (Current Value: ${formatNumber(automation.evaluateExpression(expression), false, 3)})`;
+  const titleLabel = document.createElement('span');
+  titleLabel.textContent = `${titleText} (Current Value: `;
+  const titleValue = document.createElement('span');
+  titleValue.classList.add('script-expression-current-value');
+  titleValue._scriptExpression = expression;
+  titleValue.textContent = formatNumber(automation.evaluateExpression(expression), false, 3);
+  const titleSuffix = document.createElement('span');
+  titleSuffix.textContent = ')';
+  title.append(titleLabel, titleValue, titleSuffix);
   wrap.appendChild(title);
 
   expression.terms.forEach((term, index) => {
@@ -836,7 +846,7 @@ function renderReferencePicker(automation, ref, row) {
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
-    appendScriptSelectWithValue(row, input, getScriptRefCurrentText(automation, ref));
+    appendScriptSelectWithValue(row, input, getScriptRefCurrentText(automation, ref), ref);
     return;
   }
 
@@ -860,10 +870,10 @@ function renderReferencePicker(automation, ref, row) {
         forceScriptAutomationRefresh = true;
         queueAutomationUIRefresh();
       });
-      appendScriptSelectWithValue(row, optionSelect, getScriptRefCurrentText(automation, ref));
+      appendScriptSelectWithValue(row, optionSelect, getScriptRefCurrentText(automation, ref), ref);
     } else {
       ref.option = null;
-      appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
+      appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref), ref);
     }
     return;
   }
@@ -887,7 +897,7 @@ function renderReferencePicker(automation, ref, row) {
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
-    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
+    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref), ref);
     return;
   }
 
@@ -934,7 +944,7 @@ function renderReferencePicker(automation, ref, row) {
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
-    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
+    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref), ref);
     return;
   }
 
@@ -946,7 +956,7 @@ function renderReferencePicker(automation, ref, row) {
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
-    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
+    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref), ref);
     return;
   }
 
@@ -968,7 +978,27 @@ function renderReferencePicker(automation, ref, row) {
     forceScriptAutomationRefresh = true;
     queueAutomationUIRefresh();
   });
-  appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref));
+  appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref), ref);
+}
+
+function updateScriptAutomationLiveReferenceValues(automation, container) {
+  if (!automation || !container) return;
+
+  const currentValueEls = container.querySelectorAll('.script-current-value');
+  for (let index = 0; index < currentValueEls.length; index += 1) {
+    const valueEl = currentValueEls[index];
+    const ref = valueEl._scriptRef;
+    if (!ref) continue;
+    valueEl.textContent = getScriptRefCurrentText(automation, ref);
+  }
+
+  const expressionValueEls = container.querySelectorAll('.script-expression-current-value');
+  for (let index = 0; index < expressionValueEls.length; index += 1) {
+    const valueEl = expressionValueEls[index];
+    const expression = valueEl._scriptExpression;
+    if (!expression) continue;
+    valueEl.textContent = formatNumber(automation.evaluateExpression(expression), false, 3);
+  }
 }
 
 function normalizeScriptRef(registry, ref) {

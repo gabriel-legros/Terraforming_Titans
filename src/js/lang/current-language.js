@@ -3094,6 +3094,7 @@ setLanguageData({
         scriptVariables: {
           resources: {
             available: 'Available',
+            totalAmount: 'Total Amount',
             surface: {
               solid: 'Solid',
               liquid: 'Liquid',

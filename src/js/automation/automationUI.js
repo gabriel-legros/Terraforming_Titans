@@ -1979,10 +1979,15 @@ function updateAutomationVisibility() {
 }
 
 function updateAutomationUI() {
-  if (!automationUIStale) return;
   cacheAutomationElements();
   const panelActive = !!(automationElements.content && automationElements.content.classList.contains('active'));
   const sidebarActive = typeof sidebarAutomationMode !== 'undefined' && sidebarAutomationMode === true;
+  if (!automationUIStale) {
+    if (panelActive) {
+      updateScriptAutomationUI();
+    }
+    return;
+  }
   if (!panelActive && !sidebarActive) {
     return;
   }
