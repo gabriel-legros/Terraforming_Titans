@@ -888,7 +888,7 @@ class SpaceMiningProject extends SpaceshipProject {
     return monitoringOn
       && this.attributes.dynamicWaterImport
       && this.disableAboveWaterCoverage
-      && this.waterImportTarget === 'surface';
+      && this.waterImportTarget !== 'spaceStorage';
   }
 
   co2CoverageLimitEnabled(hasMonitoring) {
