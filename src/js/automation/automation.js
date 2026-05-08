@@ -281,6 +281,7 @@ class AutomationManager extends EffectableEntity {
         const overrideScript = this.scriptAutomation.scripts.find((item) => item.id === Number(autoTravelScriptOverrideId));
         if (overrideScript) {
           this.scriptAutomation.enabled = true;
+          this.scriptAutomation.selectedScriptId = overrideScript.id;
           this.scriptAutomation.runScript(overrideScript.id);
           this.scriptAutomation.lastStatus = 'Running (Travel script override)';
           appliedTravelAutomation = true;

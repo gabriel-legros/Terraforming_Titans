@@ -214,6 +214,7 @@ class ScriptAutomation {
       return false;
     }
     this.enabled = true;
+    this.selectedScriptId = script.id;
     this.runScript(script.id);
     this.lastStatus = 'Running (Travel script)';
     if (!this.nextTravelPersistent) {
