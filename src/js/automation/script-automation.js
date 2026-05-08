@@ -836,8 +836,8 @@ class ScriptAutomation {
   }
 
   loadState(data = {}) {
-    this.enabled = data.enabled === true;
-    this.running = data.running === true && this.enabled;
+    this.enabled = false;
+    this.running = false;
     this.collapsed = data.collapsed === true;
     this.autoRestartOnCompletion = data.autoRestartOnCompletion !== false;
     this.nextTravelScriptId = data.nextTravelScriptId ? Number(data.nextTravelScriptId) : null;
