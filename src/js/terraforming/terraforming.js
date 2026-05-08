@@ -2486,15 +2486,9 @@ class Terraforming extends EffectableEntity{
         ? calculateApparentEquatorialGravity(this.celestialParameters)
         : gravity;
 
-      const landResource = this.resources?.surface?.land;
-      const totalLand = landResource?.value || 0;
-      const usedLand = landResource?.reserved || 0;
-
       return calculateGravityCostPenalty({
         gravity,
         equatorialGravity,
-        totalLand,
-        usedLand,
       });
     }
 

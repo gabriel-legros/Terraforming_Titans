@@ -349,7 +349,7 @@ const EQUATORIAL_GRAVITY_TOOLTIP_TEXT = getTerraformingSummaryText(
 
 const GRAVITY_PENALTY_TOOLTIP_TEXT = getTerraformingSummaryText(
   'magnetosphere.gravityPenaltyTooltip',
-  'Gravity penalties blend equatorial and surface gravity based on developed land.\nThe first 25% of used land applies the equatorial gravity penalty, with any additional land using the full surface gravity.\nFor example, using 30% of land applies (25/30)×equatorial penalty plus (5/30)×surface gravity penalty.'
+  'Gravity penalties blend equatorial and surface gravity with fixed weights.\nThe final penalty always uses 25% equatorial gravity penalty plus 75% full surface gravity penalty.'
 );
 
 function getTemperatureMaintenanceImmuneTooltip() {

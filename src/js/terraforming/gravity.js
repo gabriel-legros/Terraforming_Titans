@@ -40,43 +40,19 @@ function calculateGravityCostPenalty(input) {
     return createNoGravityPenalty();
   }
 
-  const totalLand = Number.isFinite(params.totalLand) ? Math.max(params.totalLand, 0) : 0;
-  const usedLand = Number.isFinite(params.usedLand) ? Math.max(params.usedLand, 0) : 0;
   const equatorialGravity = Number.isFinite(params.equatorialGravity)
     ? params.equatorialGravity
     : gravity;
 
   const surfacePenalty = calculatePenaltyComponents(gravity);
 
-  if (!(totalLand > 0) || usedLand <= 0) {
-    return equatorialGravity === gravity
-      ? surfacePenalty
-      : calculatePenaltyComponents(equatorialGravity);
-  }
-
-  const landFraction = Math.min(1, usedLand / totalLand);
-  if (!(landFraction > 0)) {
-    return equatorialGravity === gravity
-      ? surfacePenalty
-      : calculatePenaltyComponents(equatorialGravity);
-  }
-
-  const equatorialPortion = Math.min(landFraction, 0.25);
-  const surfacePortion = Math.max(0, landFraction - 0.25);
-  const usedPortion = equatorialPortion + surfacePortion;
-
-  if (!(usedPortion > 0)) {
-    return equatorialGravity === gravity
-      ? surfacePenalty
-      : calculatePenaltyComponents(equatorialGravity);
-  }
-
   const equatorialPenalty = equatorialGravity === gravity
     ? surfacePenalty
     : calculatePenaltyComponents(equatorialGravity);
 
-  const equatorialWeight = equatorialPortion / usedPortion;
-  const surfaceWeight = surfacePortion / usedPortion;
+  // Assume full land development: 25% equatorial + 75% full surface.
+  const equatorialWeight = 0.25;
+  const surfaceWeight = 0.75;
 
   const linearIncrease =
     equatorialPenalty.linearIncrease * equatorialWeight +

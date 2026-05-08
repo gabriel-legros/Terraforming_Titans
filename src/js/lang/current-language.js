@@ -2298,9 +2298,8 @@ setLanguageData({
             'This value subtracts the centrifugal term (ω²R) so you see the effective pull felt on the surface.',
           ].join('\n'),
           gravityPenaltyTooltip: [
-            'Gravity penalties blend equatorial and surface gravity based on developed land.',
-            'The first 25% of used land applies the equatorial gravity penalty, with any additional land using the full surface gravity.',
-            'For example, using 30% of land applies (25/30)×equatorial penalty plus (5/30)×surface gravity penalty.',
+            'Gravity penalties blend equatorial and surface gravity with fixed weights.',
+            'The final penalty always uses 25% equatorial gravity penalty plus 75% full surface gravity penalty.',
           ].join('\n'),
         },
         luminosity: {
