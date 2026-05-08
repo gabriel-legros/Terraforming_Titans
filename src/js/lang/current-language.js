@@ -3082,6 +3082,8 @@ setLanguageData({
           destinationSection: 'Destination',
           hazardsSection: 'Hazards',
           behaviorSection: 'Behavior',
+          runScriptAfterTravel: 'Run following automation script after travel',
+          runScriptAfterTravelNone: 'Select script',
           autoCompleteTerraforming: 'Automatically complete terraforming when possible',
           waitForSpecialization: 'Wait on complete specialization',
           blockIfNoStoredFromArtificial: "Don't travel out of current artificial world if none is stored",

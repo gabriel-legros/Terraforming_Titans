@@ -274,8 +274,26 @@ class AutomationManager extends EffectableEntity {
     }
 
     if (this.scriptAutomation) {
-      const appliedTravelScript = this.scriptAutomation.applyTravelScript();
-      appliedTravelAutomation = appliedTravelAutomation || appliedTravelScript;
+      const autoTravelScriptOverrideId = this.autoTravelAutomation
+        ? this.autoTravelAutomation.getSelectedPresetTravelScriptOverrideId()
+        : null;
+      if (autoTravelScriptOverrideId) {
+        const overrideScript = this.scriptAutomation.scripts.find((item) => item.id === Number(autoTravelScriptOverrideId));
+        if (overrideScript) {
+          this.scriptAutomation.enabled = true;
+          this.scriptAutomation.runScript(overrideScript.id);
+          this.scriptAutomation.lastStatus = 'Running (Travel script override)';
+          appliedTravelAutomation = true;
+        } else if (this.autoTravelAutomation) {
+          const selectedPreset = this.autoTravelAutomation.getSelectedPreset();
+          if (selectedPreset) {
+            selectedPreset.runScriptAfterTravelScriptId = null;
+          }
+        }
+      } else {
+        const appliedTravelScript = this.scriptAutomation.applyTravelScript();
+        appliedTravelAutomation = appliedTravelAutomation || appliedTravelScript;
+      }
     }
 
     if (appliedTravelAutomation) {

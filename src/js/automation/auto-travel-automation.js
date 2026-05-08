@@ -33,7 +33,9 @@ class AutoTravelAutomation {
       skipEquilibration: false,
       skipWorldVisualizerInitialization: false,
       blockIfNoStoredFromArtificial: true,
-      turnOffAfterTravel: false
+      turnOffAfterTravel: false,
+      runScriptAfterTravelEnabled: false,
+      runScriptAfterTravelScriptId: null
     });
     this.selectedPresetId = id;
   }
@@ -92,7 +94,9 @@ class AutoTravelAutomation {
       skipEquilibration: false,
       skipWorldVisualizerInitialization: false,
       blockIfNoStoredFromArtificial: true,
-      turnOffAfterTravel: false
+      turnOffAfterTravel: false,
+      runScriptAfterTravelEnabled: false,
+      runScriptAfterTravelScriptId: null
     };
   }
 
@@ -111,8 +115,22 @@ class AutoTravelAutomation {
       skipEquilibration: !!rawPreset.skipEquilibration,
       skipWorldVisualizerInitialization: !!rawPreset.skipWorldVisualizerInitialization,
       blockIfNoStoredFromArtificial: rawPreset.blockIfNoStoredFromArtificial !== false,
-      turnOffAfterTravel: !!rawPreset.turnOffAfterTravel
+      turnOffAfterTravel: !!rawPreset.turnOffAfterTravel,
+      runScriptAfterTravelEnabled: !!rawPreset.runScriptAfterTravelEnabled,
+      runScriptAfterTravelScriptId: rawPreset.runScriptAfterTravelScriptId ? Number(rawPreset.runScriptAfterTravelScriptId) : null
     };
+  }
+
+  getSelectedPresetTravelScriptOverrideId() {
+    const preset = this.getSelectedPreset();
+    if (!preset || !preset.runScriptAfterTravelEnabled) {
+      return null;
+    }
+    const scriptId = Number(preset.runScriptAfterTravelScriptId);
+    if (!Number.isFinite(scriptId) || scriptId <= 0) {
+      return null;
+    }
+    return scriptId;
   }
 
   _finishTravelAttempt(preset, traveled) {
@@ -499,7 +517,9 @@ class AutoTravelAutomation {
         skipEquilibration: !!preset.skipEquilibration,
         skipWorldVisualizerInitialization: !!preset.skipWorldVisualizerInitialization,
         blockIfNoStoredFromArtificial: preset.blockIfNoStoredFromArtificial !== false,
-        turnOffAfterTravel: !!preset.turnOffAfterTravel
+        turnOffAfterTravel: !!preset.turnOffAfterTravel,
+        runScriptAfterTravelEnabled: !!preset.runScriptAfterTravelEnabled,
+        runScriptAfterTravelScriptId: preset.runScriptAfterTravelScriptId ? Number(preset.runScriptAfterTravelScriptId) : null
       }))
     };
   }

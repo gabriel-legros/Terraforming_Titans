@@ -2,6 +2,7 @@ let autoTravelPresetSignature = '';
 let autoTravelTypeOptionsSignature = '';
 let autoTravelOrbitOptionsSignature = '';
 let autoTravelDominionOptionsSignature = '';
+let autoTravelScriptOptionsSignature = '';
 
 function getAutoTravelAutomation() {
   return automationManager ? automationManager.autoTravelAutomation : null;
@@ -122,6 +123,20 @@ function buildAutoTravelUI() {
   const dominionSelect = buildAutoTravelSelect(selectionRow, 'auto-travel-dominion-select', [{ value: 'random', label: getAutoTravelOptionText('dominion.random', 'Dominion: Random') }]);
   destinationSection.appendChild(selectionRow);
 
+  const scriptAfterTravelRow = document.createElement('label');
+  scriptAfterTravelRow.classList.add('auto-travel-checkbox-row');
+  const scriptAfterTravelToggle = document.createElement('input');
+  scriptAfterTravelToggle.type = 'checkbox';
+  scriptAfterTravelToggle.classList.add('auto-travel-script-after-travel-toggle');
+  const scriptAfterTravelText = document.createElement('span');
+  scriptAfterTravelText.textContent = getAutoTravelOptionText('runScriptAfterTravel', 'Run following automation script after travel');
+  const scriptAfterTravelSelect = document.createElement('select');
+  scriptAfterTravelSelect.classList.add('auto-travel-script-after-travel-select');
+  scriptAfterTravelText.appendChild(document.createTextNode(' '));
+  scriptAfterTravelText.appendChild(scriptAfterTravelSelect);
+  scriptAfterTravelRow.append(scriptAfterTravelToggle, scriptAfterTravelText);
+  destinationSection.appendChild(scriptAfterTravelRow);
+
   const hazardsSection = createSection(getAutoTravelOptionText('hazardsSection', 'Hazards'), 'auto-travel-hazards-section');
   const hazardsRow = document.createElement('div');
   hazardsRow.classList.add('auto-travel-hazards-row');
@@ -182,6 +197,8 @@ function buildAutoTravelUI() {
   automationElements.autoTravelTypeSelect = typeSelect;
   automationElements.autoTravelOrbitSelect = orbitSelect;
   automationElements.autoTravelDominionSelect = dominionSelect;
+  automationElements.autoTravelScriptAfterTravelToggle = scriptAfterTravelToggle;
+  automationElements.autoTravelScriptAfterTravelSelect = scriptAfterTravelSelect;
   automationElements.autoTravelSelectionRow = selectionRow;
   automationElements.autoTravelHazardsSection = hazardsSection;
   automationElements.autoTravelHazardsWrap = hazardsWrap;
@@ -282,6 +299,10 @@ function wireAutoTravelEvents() {
   els.autoTravelTypeSelect.addEventListener('change', (event) => setPresetField('type', event.target.value));
   els.autoTravelOrbitSelect.addEventListener('change', (event) => setPresetField('orbitPreset', event.target.value));
   els.autoTravelDominionSelect.addEventListener('change', (event) => setPresetField('dominion', event.target.value));
+  els.autoTravelScriptAfterTravelSelect.addEventListener('change', (event) => {
+    const value = event.target.value;
+    setPresetField('runScriptAfterTravelScriptId', value ? Number(value) : null);
+  });
 
   function setPresetFlag(field, checked) {
     const preset = getAutoTravelAutomation()?.getSelectedPreset();
@@ -296,6 +317,34 @@ function wireAutoTravelEvents() {
   els.autoTravelTurnOffAfterTravelToggle.addEventListener('change', (event) => setPresetFlag('turnOffAfterTravel', event.target.checked));
   els.autoTravelSkipEquilibrationToggle.addEventListener('change', (event) => setPresetFlag('skipEquilibration', event.target.checked));
   els.autoTravelSkipVisualizerToggle.addEventListener('change', (event) => setPresetFlag('skipWorldVisualizerInitialization', event.target.checked));
+  els.autoTravelScriptAfterTravelToggle.addEventListener('change', (event) => setPresetFlag('runScriptAfterTravelEnabled', event.target.checked));
+}
+
+function populateAutoTravelScriptOptions(select) {
+  if (!select) return;
+  const scriptAutomation = automationManager?.scriptAutomation;
+  const scripts = scriptAutomation?.scripts || [];
+  const options = [
+    { value: '', label: getAutoTravelOptionText('runScriptAfterTravelNone', 'Select script') }
+  ];
+  for (let index = 0; index < scripts.length; index += 1) {
+    const script = scripts[index];
+    options.push({
+      value: String(script.id),
+      label: script.name || getAutomationCardText('presetWithId', { id: script.id }, `Script ${script.id}`)
+    });
+  }
+  const signature = JSON.stringify(options);
+  if (signature !== autoTravelScriptOptionsSignature && document.activeElement !== select) {
+    select.innerHTML = '';
+    for (let index = 0; index < options.length; index += 1) {
+      const option = document.createElement('option');
+      option.value = options[index].value;
+      option.textContent = options[index].label;
+      select.appendChild(option);
+    }
+    autoTravelScriptOptionsSignature = signature;
+  }
 }
 
 function populateAutoTravelTypeOptions(select) {
@@ -455,6 +504,7 @@ function updateAutoTravelUI() {
     populateAutoTravelTypeOptions(automationElements.autoTravelTypeSelect);
     populateAutoTravelOrbitOptions(automationElements.autoTravelOrbitSelect);
     populateAutoTravelDominionOptions(automationElements.autoTravelDominionSelect);
+    populateAutoTravelScriptOptions(automationElements.autoTravelScriptAfterTravelSelect);
     if (document.activeElement !== automationElements.autoTravelTargetSelect) {
     automationElements.autoTravelTargetSelect.value = preset.target || 'random';
     }
@@ -467,6 +517,15 @@ function updateAutoTravelUI() {
     if (document.activeElement !== automationElements.autoTravelDominionSelect) {
       automationElements.autoTravelDominionSelect.value = preset.dominion || 'random';
     }
+    if (document.activeElement !== automationElements.autoTravelScriptAfterTravelSelect) {
+      const selectedScriptId = preset.runScriptAfterTravelScriptId ? String(preset.runScriptAfterTravelScriptId) : '';
+      automationElements.autoTravelScriptAfterTravelSelect.value = selectedScriptId;
+      if (automationElements.autoTravelScriptAfterTravelSelect.value !== selectedScriptId) {
+        preset.runScriptAfterTravelScriptId = null;
+        automationElements.autoTravelScriptAfterTravelSelect.value = '';
+      }
+    }
+    automationElements.autoTravelScriptAfterTravelToggle.checked = !!preset.runScriptAfterTravelEnabled;
     automationElements.autoTravelAutoCompleteToggle.checked = preset.autoCompleteTerraforming !== false;
     automationElements.autoTravelWaitSpecializationToggle.checked = !!preset.waitForSpecialization;
     automationElements.autoTravelBlockIfNoStoredToggle.checked = preset.blockIfNoStoredFromArtificial !== false;
@@ -491,6 +550,8 @@ function updateAutoTravelUI() {
       if (!control) return;
       control.disabled = disabled || storedOnlyTarget;
     });
+    const scriptSelectDisabled = disabled || !preset.runScriptAfterTravelEnabled;
+    automationElements.autoTravelScriptAfterTravelSelect.disabled = scriptSelectDisabled;
     if (automationElements.autoTravelHazardsSection) {
       automationElements.autoTravelHazardsSection.classList.toggle('hidden', storedOnlyTarget);
     }
@@ -501,6 +562,7 @@ function updateAutoTravelUI() {
     automationElements.autoTravelPresetSelect,
     automationElements.autoTravelPresetNameInput,
     automationElements.autoTravelTargetSelect,
+    automationElements.autoTravelScriptAfterTravelToggle,
     automationElements.autoTravelAutoCompleteToggle,
     automationElements.autoTravelWaitSpecializationToggle,
     automationElements.autoTravelBlockIfNoStoredToggle,
