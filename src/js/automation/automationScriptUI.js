@@ -407,7 +407,7 @@ function collectExpressionRefs(expression, refs) {
 }
 
 function collectScriptActionOptionsSignature() {
-  return ['buildings', 'projects', 'colony', 'research'].map(type => {
+  return ['buildings', 'projects', 'colony', 'research', 'autoTravel'].map(type => {
     const target = getScriptActionAutomationTarget(type);
     return `${type}:${(target?.presets || []).map(item => `${item.id}:${item.name}`).join(',')}:${(target?.combinations || []).map(item => `${item.id}:${item.name}`).join(',')}`;
   }).join('|');
@@ -1134,11 +1134,17 @@ function renderActionsEditor(automation, script, line, container, actions, title
 }
 
 function renderActionTargetPicker(action, row) {
+  function getAutomationTypeLabel(type) {
+    if (type === 'autoTravel') {
+      return getAutomationCardText('scriptAutoTravelAndTurnOn', {}, 'Auto Travel (and turn on)');
+    }
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  }
   const types = action.kind === 'applyCombination'
     ? ['buildings', 'projects', 'colony']
-    : ['buildings', 'projects', 'colony', 'research', 'ship', 'life'];
+    : ['buildings', 'projects', 'colony', 'research', 'ship', 'life', 'autoTravel'];
   if (!types.includes(action.automationType)) action.automationType = types[0];
-  const typeSelect = createSelect(types.map(type => ({ id: type, label: type.charAt(0).toUpperCase() + type.slice(1) })), action.automationType);
+  const typeSelect = createSelect(types.map(type => ({ id: type, label: getAutomationTypeLabel(type) })), action.automationType);
   typeSelect.addEventListener('change', event => {
     action.automationType = event.target.value;
     action.presetId = null;
@@ -1178,6 +1184,7 @@ function getScriptActionAutomationTarget(type) {
   if (type === 'research') return automationManager.researchAutomation;
   if (type === 'ship') return automationManager.spaceshipAutomation;
   if (type === 'life') return automationManager.lifeAutomation;
+  if (type === 'autoTravel') return automationManager.autoTravelAutomation;
   return null;
 }
 

@@ -32,7 +32,8 @@ class AutoTravelAutomation {
       waitForSpecialization: false,
       skipEquilibration: false,
       skipWorldVisualizerInitialization: false,
-      blockIfNoStoredFromArtificial: true
+      blockIfNoStoredFromArtificial: true,
+      turnOffAfterTravel: false
     });
     this.selectedPresetId = id;
   }
@@ -61,6 +62,22 @@ class AutoTravelAutomation {
     return true;
   }
 
+  getPresetById(id) {
+    const numericId = Number(id);
+    return this.presets.find((preset) => preset.id === numericId) || null;
+  }
+
+  applyPresetOnce(presetId) {
+    const preset = this.getPresetById(presetId);
+    if (!preset) {
+      return false;
+    }
+    this.selectedPresetId = preset.id;
+    this.enabled = true;
+    queueAutomationUIRefresh();
+    return true;
+  }
+
   _buildDefaultPreset(id, name = '') {
     return {
       id,
@@ -74,7 +91,8 @@ class AutoTravelAutomation {
       waitForSpecialization: false,
       skipEquilibration: false,
       skipWorldVisualizerInitialization: false,
-      blockIfNoStoredFromArtificial: true
+      blockIfNoStoredFromArtificial: true,
+      turnOffAfterTravel: false
     };
   }
 
@@ -92,8 +110,20 @@ class AutoTravelAutomation {
       waitForSpecialization: !!rawPreset.waitForSpecialization,
       skipEquilibration: !!rawPreset.skipEquilibration,
       skipWorldVisualizerInitialization: !!rawPreset.skipWorldVisualizerInitialization,
-      blockIfNoStoredFromArtificial: rawPreset.blockIfNoStoredFromArtificial !== false
+      blockIfNoStoredFromArtificial: rawPreset.blockIfNoStoredFromArtificial !== false,
+      turnOffAfterTravel: !!rawPreset.turnOffAfterTravel
     };
+  }
+
+  _finishTravelAttempt(preset, traveled) {
+    if (!traveled) {
+      autoTravelContext.active = false;
+    } else if (preset.turnOffAfterTravel) {
+      this.enabled = false;
+    }
+    this._travelInProgress = false;
+    this._cooldownMs = 1000;
+    queueAutomationUIRefresh();
   }
 
   addPreset(name = '') {
@@ -293,12 +323,7 @@ class AutoTravelAutomation {
       const traveled = artificialManager && artificialManager.travelToStoredWorld
         ? artificialManager.travelToStoredWorld(seed)
         : false;
-      if (!traveled) {
-        autoTravelContext.active = false;
-      }
-      this._travelInProgress = false;
-      this._cooldownMs = 1000;
-      queueAutomationUIRefresh();
+      this._finishTravelAttempt(preset, traveled);
     });
     return true;
   }
@@ -364,12 +389,7 @@ class AutoTravelAutomation {
               const traveled = spaceManager && spaceManager.travelToRandomWorld
                 ? spaceManager.travelToRandomWorld(equilibratedRes, travelSeed)
                 : false;
-              if (!traveled) {
-                autoTravelContext.active = false;
-              }
-              this._travelInProgress = false;
-              this._cooldownMs = 1000;
-              queueAutomationUIRefresh();
+              this._finishTravelAttempt(preset, traveled);
             });
           })
           .catch((error) => {
@@ -396,12 +416,7 @@ class AutoTravelAutomation {
       const traveled = spaceManager && spaceManager.travelToRandomWorld
         ? spaceManager.travelToRandomWorld(res, travelSeed)
         : false;
-      if (!traveled) {
-        autoTravelContext.active = false;
-      }
-      this._travelInProgress = false;
-      this._cooldownMs = 1000;
-      queueAutomationUIRefresh();
+      this._finishTravelAttempt(preset, traveled);
     });
     return true;
   }
@@ -433,10 +448,14 @@ class AutoTravelAutomation {
     if (!automationManager?.enabled || !automationManager.hasFeature('automationAutoTravel')) {
       return;
     }
-    if (!this.enabled) {
+    if (globalGameIsTraveling || globalGameIsLoadingFromSave || isEquilibrating) {
       return;
     }
-    if (globalGameIsTraveling || globalGameIsLoadingFromSave || isEquilibrating) {
+    const preset = this.getSelectedPreset();
+    if (preset && preset.autoCompleteTerraforming && !this._isCurrentWorldTerraformed()) {
+      this._attemptAutoCompleteTerraforming();
+    }
+    if (!this.enabled) {
       return;
     }
     if (this._equilibrationInProgress) {
@@ -479,7 +498,8 @@ class AutoTravelAutomation {
         waitForSpecialization: !!preset.waitForSpecialization,
         skipEquilibration: !!preset.skipEquilibration,
         skipWorldVisualizerInitialization: !!preset.skipWorldVisualizerInitialization,
-        blockIfNoStoredFromArtificial: preset.blockIfNoStoredFromArtificial !== false
+        blockIfNoStoredFromArtificial: preset.blockIfNoStoredFromArtificial !== false,
+        turnOffAfterTravel: !!preset.turnOffAfterTravel
       }))
     };
   }
