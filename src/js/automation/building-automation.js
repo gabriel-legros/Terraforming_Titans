@@ -411,7 +411,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
   }
 
   captureAutomationSettings(building) {
-    return {
+    const settings = {
       autoBuildEnabled: building.autoBuildEnabled,
       autoBuildPriority: building.autoBuildPriority,
       autoBuildBasis: building.autoBuildBasis === 'initialLand' ? 'geometricLand' : building.autoBuildBasis,
@@ -422,6 +422,10 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       autoBuildFillResourceSecondary: building.autoBuildFillResourceSecondary,
       autoActiveEnabled: building.autoActiveEnabled
     };
+    if (building.name === 'dysonReceiver') {
+      settings.capActiveToDysonCapacity = building.capActiveToDysonCapacity === true;
+    }
+    return settings;
   }
 
   resolveAssignments() {
@@ -593,6 +597,14 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     }
     if (building.autoActiveEnabled !== automation.autoActiveEnabled) {
       building.autoActiveEnabled = automation.autoActiveEnabled;
+      changed = true;
+    }
+    if (
+      building.name === 'dysonReceiver' &&
+      'capActiveToDysonCapacity' in automation &&
+      building.capActiveToDysonCapacity !== automation.capActiveToDysonCapacity
+    ) {
+      building.capActiveToDysonCapacity = automation.capActiveToDysonCapacity === true;
       changed = true;
     }
     return changed;

@@ -665,6 +665,9 @@ setLanguageData({
           blackDust: 'Black Dust',
         },
       },
+      dysonReceiver: {
+        capToDysonCapacity: 'Cap to Dyson Capacity',
+      },
       aerostat: {
         buoyancyNotes: 'Aerostats ignore normal pressure colony penalties and use the dry-adiabatic 1 atm temperature floor for their own upkeep. They need at least 50 kPa of surface pressure and enough lift to stay airborne. If lift fails, active aerostats can land as Research Outposts if enough land remains.',
         buoyancyNotesPoweredFlight: 'Aerostats ignore normal pressure colony penalties and use the dry-adiabatic 1 atm temperature floor for their own upkeep. They need at least 50 kPa of surface pressure to stay airborne. On worlds with poor buoyancy, powered flight can keep them aloft for extra energy. If flight fails, active aerostats can land as Research Outposts if enough land remains.',
