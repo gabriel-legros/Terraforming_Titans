@@ -647,9 +647,17 @@ class TerraformingGraphsManager {
     this.draw();
   }
 
+  resetPhaseInteractionState() {
+    this.phaseViewport = {};
+    this.phasePanState.pointerId = null;
+    this.phasePanState.active = false;
+    this.ui.phaseCanvas.classList.remove('is-panning');
+  }
+
   hide() {
     this.ui.overlay?.classList.remove('is-visible');
     this.isOpen = false;
+    this.resetPhaseInteractionState();
   }
 
   selectGraph(graphId) {
