@@ -44,12 +44,24 @@
       return `${this.name}-space-energy-storage-source`;
     }
 
+    getAntimatterStorageEffectId() {
+      return `${this.name}-antimatter-storage`;
+    }
+
+    getAntimatterStorageEffectSourceId() {
+      return `${this.name}-antimatter-storage-source`;
+    }
+
     getTotalStorageBonus() {
       return spaceAntimatterCountToNumber(this.repeatCount) * SPACE_ANTIMATTER_STORAGE_PER_BATTERY;
     }
 
     getTotalStorageBonusCount() {
       return normalizeSpaceAntimatterCount(this.repeatCount) * SPACE_ANTIMATTER_STORAGE_PER_BATTERY_BIGINT;
+    }
+
+    getTotalAntimatterStorageBonus() {
+      return spaceAntimatterCountToNumber(this.repeatCount);
     }
 
     getSelectedBuildCount() {
@@ -84,6 +96,31 @@
       });
     }
 
+    applyAntimatterStorageEffect() {
+      const sourceId = this.getAntimatterStorageEffectSourceId();
+      const bonus = this.getTotalAntimatterStorageBonus();
+      if (bonus <= 0) {
+        removeEffect({
+          target: 'resource',
+          resourceType: 'special',
+          targetId: 'antimatter',
+          sourceId
+        });
+        return;
+      }
+
+      addEffect({
+        target: 'resource',
+        resourceType: 'special',
+        targetId: 'antimatter',
+        type: 'baseStorageBonus',
+        value: bonus,
+        effectId: this.getAntimatterStorageEffectId(),
+        sourceId,
+        name: `${this.displayName} Antimatter Storage`
+      });
+    }
+
     enable() {
       const wasUnlocked = this.unlocked;
       super.enable();
@@ -92,10 +129,12 @@
         this.startedCompleted = true;
       }
       this.applyBatteryStorageEffect();
+      this.applyAntimatterStorageEffect();
     }
 
     applyEffects() {
       this.applyBatteryStorageEffect();
+      this.applyAntimatterStorageEffect();
     }
 
     isVisible() {
@@ -180,6 +219,7 @@
       this.remainingTime = this.getEffectiveDuration();
       this.startingDuration = this.remainingTime;
       this.applyBatteryStorageEffect();
+      this.applyAntimatterStorageEffect();
     }
 
     renderUI(container) {
@@ -198,7 +238,7 @@
       body.classList.add('card-body');
 
       const summaryGrid = document.createElement('div');
-      summaryGrid.classList.add('stats-grid', 'three-col', 'project-summary-grid');
+      summaryGrid.classList.add('stats-grid', 'four-col', 'project-summary-grid');
 
       const createSummaryBox = (labelText) => {
         const box = document.createElement('div');
@@ -218,6 +258,7 @@
 
       const batteriesBuilt = createSummaryBox(getSpaceAntimatterText('batteriesBuilt', null, 'Batteries Built'));
       const storageBonus = createSummaryBox(getSpaceAntimatterText('spaceEnergyStorage', null, 'Space Energy Storage'));
+      const antimatterStorageBonus = createSummaryBox(getSpaceAntimatterText('specialAntimatterStorage', null, 'Special Antimatter Storage'));
       const buildAmount = createSummaryBox(getSpaceAntimatterText('buildAmount', null, 'Build Amount'));
 
       const multiplierControls = document.createElement('div');
@@ -264,6 +305,7 @@
       this.uiElements = {
         batteriesBuiltValue: batteriesBuilt.value,
         storageBonusValue: storageBonus.value,
+        antimatterStorageBonusValue: antimatterStorageBonus.value,
         buildButton
       };
 
@@ -277,6 +319,7 @@
       const selected = this.getSelectedBuildCount();
       this.uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, true);
       this.uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonusCount(), true);
+      this.uiElements.antimatterStorageBonusValue.textContent = formatNumber(this.getTotalAntimatterStorageBonus(), true);
       this.uiElements.buildButton.textContent = getSpaceAntimatterText(
         'buildButton',
         { count: formatNumber(selected, true) },
@@ -333,6 +376,7 @@
       this.buildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(state.buildCount || this.buildCount));
       this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0n || this.isCompleted === true;
       this.applyBatteryStorageEffect();
+      this.applyAntimatterStorageEffect();
     }
   }
 

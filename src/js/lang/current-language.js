@@ -1101,6 +1101,7 @@ setLanguageData({
         title: 'Battery Component',
         batteriesBuilt: 'Batteries Built',
         spaceEnergyStorage: 'Space Energy Storage',
+        specialAntimatterStorage: 'Military Antimatter Storage',
         buildAmount: 'Build Amount',
         divideTen: '/10',
         timesTen: 'x10',
