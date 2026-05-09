@@ -644,6 +644,73 @@
     color: #f0f7ff;
     border-color: rgba(124, 176, 244, 0.4);
 }
+.dark-mode .galactic-invasion__overlay {
+    background: rgba(2, 6, 23, 0.86);
+    color: #f8fafc;
+}
+
+.dark-mode .galactic-invasion-section {
+    border-color: rgba(100, 116, 139, 0.45);
+    background: rgba(15, 23, 42, 0.92);
+}
+
+.dark-mode .galactic-invasion-section__header {
+    background: rgba(51, 65, 85, 0.5);
+    color: #e2e8f0;
+}
+
+.dark-mode .galactic-invasion-section__description {
+    color: #94a3b8;
+}
+
+.dark-mode .galactic-invasion-card {
+    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.78);
+}
+
+.dark-mode .galactic-invasion-card.active {
+    border-color: #a855f7;
+    box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.42);
+}
+
+.dark-mode .galactic-invasion-card.completed {
+    background: rgba(20, 83, 45, 0.36);
+}
+
+.dark-mode .galactic-invasion-card__glyph {
+    color: #c084fc;
+}
+
+.dark-mode .galactic-invasion-card__status {
+    color: #86efac;
+}
+
+.dark-mode .galactic-invasion-card__power,
+.dark-mode .galactic-invasion-card__reward,
+.dark-mode .galactic-invasion-summary__empty,
+.dark-mode .galactic-invasion-summary__item {
+    color: #cbd5e1;
+}
+
+.dark-mode .galactic-invasion-card__button {
+    border-color: #a855f7;
+    background: #6d28d9;
+    color: #f8fafc;
+}
+
+.dark-mode .galactic-invasion-card__button:hover:not(:disabled) {
+    background: #7c3aed;
+}
+
+.dark-mode .galactic-invasion-card__button:disabled {
+    border-color: #475569;
+    background: #334155;
+    color: #94a3b8;
+}
+
+.dark-mode .galactic-invasion-summary {
+    border-top-color: rgba(100, 116, 139, 0.45);
+}
 .dark-mode .research-item {
     background-color: #2d2d2d;
     border-color: #444;
