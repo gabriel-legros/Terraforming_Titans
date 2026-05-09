@@ -515,6 +515,13 @@ function loadGame(slotOrCustomString, recreate = true) {
       }
     }
 
+    if (gameState.galaxyManager && typeof galaxyManager !== 'undefined' && galaxyManager) {
+      galaxyManager.loadState(gameState.galaxyManager);
+    }
+    if (gameState.galaxyInvasionManager && galaxyInvasionManager) {
+      galaxyInvasionManager.loadState(gameState.galaxyInvasionManager);
+    }
+
       // Load story progress
       if (gameState.story) {
         storyManager.loadState(gameState.story);
@@ -595,13 +602,6 @@ function loadGame(slotOrCustomString, recreate = true) {
     reconcileLandResourceValue();
     hazardManager?.syncHazardLandReservation?.(terraforming);
     recalculateLandUsage();
-
-    if (gameState.galaxyManager && typeof galaxyManager !== 'undefined' && galaxyManager) {
-      galaxyManager.loadState(gameState.galaxyManager);
-    }
-    if (gameState.galaxyInvasionManager && galaxyInvasionManager) {
-      galaxyInvasionManager.loadState(gameState.galaxyInvasionManager);
-    }
 
     if(gameState.solisManager){
       solisManager.loadState(gameState.solisManager);
