@@ -117,7 +117,9 @@ class GalacticInvasionManager extends EffectableEntity {
 
   defeatActiveInvasion(preserveLetter = true) {
     const letterKey = preserveLetter ? this.currentLetterKey : null;
+    const invadedSectorKeys = this.getInvadedSectorKeys();
     galaxyManager.removeOperationsForFaction(PROMETHEAN_INVASION_FACTION_ID);
+    this.removeUhfOperationsForSectors(invadedSectorKeys);
     galaxyManager.transferFactionControlToUhf(PROMETHEAN_INVASION_FACTION_ID);
     const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
     faction.setFleetPower(0);
@@ -129,6 +131,37 @@ class GalacticInvasionManager extends EffectableEntity {
     this.externalFailurePending = false;
     this.invasionTimerMs = 0;
     updateGalaxyUI({ force: true });
+  }
+
+  getInvadedSectorKeys() {
+    const keys = [];
+    galaxyManager.getSectors().forEach((sector) => {
+      const invadedControl = Number(sector.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (invadedControl > 0) {
+        keys.push(sector.key);
+      }
+    });
+    return keys;
+  }
+
+  removeUhfOperationsForSectors(sectorKeys) {
+    if (!Array.isArray(sectorKeys) || !sectorKeys.length) {
+      return;
+    }
+    const operations = galaxyManager.operationManager?.operations;
+    if (!operations) {
+      return;
+    }
+    const keysToRemove = [];
+    operations.forEach((operation, key) => {
+      if (operation?.factionId !== UHF_FACTION_ID) {
+        return;
+      }
+      if (sectorKeys.includes(operation.sectorKey)) {
+        keysToRemove.push(key);
+      }
+    });
+    keysToRemove.forEach((key) => operations.delete(key));
   }
 
   handlePrometheanOperationResult(operation) {
