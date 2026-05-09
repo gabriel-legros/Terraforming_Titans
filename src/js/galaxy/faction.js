@@ -45,7 +45,8 @@ function normalizeDefenseStepValue(value) {
 }
 
 class GalaxyFaction {
-    constructor({ id, name, color, startingSectors } = {}) {
+    constructor(options = {}) {
+        const { id, name, color, startingSectors } = options;
         this.id = id || '';
         this.name = name || '';
         this.color = color || '#ffffff';
@@ -78,6 +79,8 @@ class GalaxyFaction {
         this.autoDefenseAssignments = new Map();
         this.autoDefenseTotal = 0;
         this.defenseStepSizes = new Map();
+        this.noFleetRegeneration = options.noFleetRegeneration === true;
+        this.ignoreSectorBaseDefense = options.ignoreSectorBaseDefense === true;
     }
 
     getStartingSectors() {
@@ -220,6 +223,10 @@ class GalaxyFaction {
             return;
         }
         const currentPower = Math.max(0, this.fleetPower);
+        if (this.noFleetRegeneration) {
+            this.fleetPower = currentPower;
+            return;
+        }
         const reserved = manager?.getReservedOperationPower?.(this.id) ?? 0;
         const activeReserve = Number.isFinite(reserved) && reserved > 0 ? reserved : 0;
         const effectivePower = currentPower + activeReserve;
@@ -620,6 +627,9 @@ class GalaxyFaction {
             return 0;
         }
         if (this.id !== UHF_FACTION_ID) {
+            if (this.ignoreSectorBaseDefense) {
+                return 0;
+            }
             const beneficiary = sector?.getLastFullControllerId?.()
                 || sector?.lastFullControllerId
                 || sector?.originalControllerId

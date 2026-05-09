@@ -29,6 +29,16 @@ const galaxyFactionParameters = [
         defensiveness: null
     },
     {
+        id: 'prometheanInvasion',
+        name: getFactionName('prometheanInvasion', 'INV'),
+        color: '#3b0764',
+        startingSectors: [],
+        defensiveness: 0,
+        autoOperationDisabled: true,
+        noFleetRegeneration: true,
+        ignoreSectorBaseDefense: true
+    },
+    {
         id: 'cewinsii',
         name: getFactionName('cewinsii', 'Cewinsii'),
         color: '#f97316',

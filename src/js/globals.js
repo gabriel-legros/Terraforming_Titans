@@ -100,6 +100,7 @@ let solisManager;
 let warpGateCommand;
 let patienceManager;
 let galaxyManager;
+let galaxyInvasionManager;
 let nanotechManager;
 let followersManager;
 let playTimeSeconds = 0;
@@ -113,6 +114,12 @@ let gameSpeed = 1;
 Object.defineProperty(globalThis, 'galaxyManager', {
   get: () => galaxyManager,
   set: (value) => { galaxyManager = value; },
+  configurable: true,
+});
+
+Object.defineProperty(globalThis, 'galaxyInvasionManager', {
+  get: () => galaxyInvasionManager,
+  set: (value) => { galaxyInvasionManager = value; },
   configurable: true,
 });
 

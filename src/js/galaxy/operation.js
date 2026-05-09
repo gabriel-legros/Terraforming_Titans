@@ -52,6 +52,7 @@ class GalaxyOperationManager {
         getDefenseSummary,
         resolveTargetFaction,
         onOperationSuccess,
+        onOperationComplete,
         refreshUI,
         operations
     } = {}) {
@@ -70,6 +71,7 @@ class GalaxyOperationManager {
         this.getDefenseSummary = getDefenseSummary;
         this.resolveTargetFaction = resolveTargetFaction;
         this.onOperationSuccess = onOperationSuccess;
+        this.onOperationComplete = onOperationComplete;
         this.refreshUI = refreshUI;
         if (this.manager) {
             this.manager.operations = this.operations;
@@ -361,7 +363,7 @@ class GalaxyOperationManager {
         return total;
     }
 
-    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance, targetFactionId }) {
+    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance, targetFactionId, externalInvasion, originHex }) {
         if (!sectorKey || !Number.isFinite(assignedPower) || assignedPower <= 0) {
             return null;
         }
@@ -391,13 +393,14 @@ class GalaxyOperationManager {
         if (attackerId !== this.uhfFactionId && this.isSectorTargetingRestricted && this.isSectorTargetingRestricted(sector)) {
             return null;
         }
+        const isExternalInvasion = externalInvasion === true;
         const hasStronghold = this.hasNeighboringStronghold
             ? this.hasNeighboringStronghold(sector, attackerId)
             : false;
         const hasPresence = this.hasFactionPresence
             ? this.hasFactionPresence(sector, attackerId)
             : false;
-        if (!hasStronghold && !hasPresence) {
+        if (!isExternalInvasion && !hasStronghold && !hasPresence) {
             return null;
         }
         const targetId = this.#resolveOperationTarget(sector, attackerId, targetFactionId);
@@ -418,7 +421,7 @@ class GalaxyOperationManager {
         const sanitizedSuccess = Number.isFinite(successChance)
             ? Math.max(0, Math.min(1, successChance))
             : this.#calculateSuccessChance(offensePower, defensePower);
-        const originHex = this.#selectOperationOrigin(sector, attackerId);
+        const resolvedOriginHex = this.#sanitizeOperationOrigin(originHex) || this.#selectOperationOrigin(sector, attackerId);
         const operation = {
             sectorKey,
             factionId: attackerId,
@@ -432,7 +435,8 @@ class GalaxyOperationManager {
             defensePower,
             offensePower,
             status: 'running',
-            originHex,
+            originHex: resolvedOriginHex,
+            externalInvasion: isExternalInvasion,
             defenderLosses: []
         };
         faction.setFleetPower(currentFleetPower - offensePower);
@@ -545,6 +549,7 @@ class GalaxyOperationManager {
         operation.targetFactionId = targetFactionId;
         operation.result = isSuccessful ? 'success' : 'failure';
         operation.status = 'completed';
+        this.onOperationComplete?.(operation);
 
         if (attackerId !== this.uhfFactionId && targetFactionId === this.uhfFactionId) {
             const attackerName = this.manager.getFaction(attackerId)?.name || attackerId;
@@ -708,7 +713,8 @@ class GalaxyOperationManager {
             result: operation.result,
             losses: operation.losses,
             originHex: this.#serializeOperationOrigin(operation.originHex),
-            defenderLosses: this.#serializeDefenderLosses(operation.defenderLosses)
+            defenderLosses: this.#serializeDefenderLosses(operation.defenderLosses),
+            externalInvasion: operation.externalInvasion === true
         };
     }
 
@@ -760,7 +766,8 @@ class GalaxyOperationManager {
             losses: Number.isFinite(Number(state.losses)) ? Number(state.losses) : undefined,
             targetFactionId,
             originHex,
-            defenderLosses: this.#restoreDefenderLosses(state.defenderLosses)
+            defenderLosses: this.#restoreDefenderLosses(state.defenderLosses),
+            externalInvasion: state.externalInvasion === true
         };
 
         this.operations.set(this.#getOperationKey(operation.sectorKey, operation.factionId), operation);

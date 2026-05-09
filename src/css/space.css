@@ -1086,3 +1086,173 @@
   color: var(--space-fg-muted);
   font-size: 13px;
 }
+
+.galactic-invasion {
+  position: relative;
+  min-height: 420px;
+}
+
+.galactic-invasion__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.galactic-invasion__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.galactic-invasion__overlay.hidden {
+  display: none;
+}
+
+.galactic-invasion-section {
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+}
+
+.galactic-invasion-section__header {
+  width: 100%;
+  border: 0;
+  background: rgba(30, 41, 59, 0.08);
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.galactic-invasion-section__body {
+  padding: 14px;
+}
+
+.galactic-invasion-section.collapsed .galactic-invasion-section__body {
+  display: none;
+}
+
+.galactic-invasion-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.galactic-invasion-card {
+  border: 1px solid rgba(100, 116, 139, 0.32);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  background: #fff;
+}
+
+.galactic-invasion-card.active {
+  border-color: #581c87;
+  box-shadow: inset 0 0 0 1px rgba(88, 28, 135, 0.35);
+}
+
+.galactic-invasion-card.completed {
+  background: rgba(240, 253, 244, 0.95);
+}
+
+.galactic-invasion-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.galactic-invasion-card__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.galactic-invasion-card__glyph {
+  font-size: 1.25rem;
+  color: #3b0764;
+  width: 22px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.galactic-invasion-card__status {
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.galactic-invasion-card__power,
+.galactic-invasion-card__reward {
+  color: #475569;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+.galactic-invasion-card__button {
+  margin-top: auto;
+  border: 1px solid #3b0764;
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: #4c1d95;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.galactic-invasion-card__button:disabled {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.galactic-invasion-summary {
+  margin-top: 14px;
+  border-top: 1px solid rgba(100, 116, 139, 0.28);
+  padding-top: 12px;
+}
+
+.galactic-invasion-summary__title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.galactic-invasion-summary__empty,
+.galactic-invasion-summary__item {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .galactic-invasion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .galactic-invasion-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2723,6 +2723,25 @@ setLanguageData({
       artificial: 'Artificial',
       atlas: 'Atlas',
       galaxy: 'Galaxy',
+      invasion: {
+        tab: 'Invasion',
+        trainingTitle: 'Invasion Training',
+        mysteryTitle: '????',
+        conquestRequired: 'To avoid unnecessary casualties as a result of confusion from these training exercises, you must conquer the Galaxy first.',
+        fleetPower: 'Fleet Power: {value}',
+        startButton: 'Start Invasion',
+        cancelButton: 'Cancel Invasion',
+        cooldownButton: 'Cooldown: {value}',
+        completedButton: 'Completed',
+        complete: 'Complete',
+        active: 'Active',
+        rewardNone: 'Reward: none configured',
+        summaryTitle: 'Compiled Rewards',
+        summaryEmpty: 'No invasion rewards completed.',
+        rewards: {
+          nuclearAlchemyThroughput: '+{value}% Nuclear Alchemy throughput',
+        },
+      },
       statisticsTitle: 'Statistics',
       statisticsSubtitle: 'Track how far the campaign has spread.',
       uniqueWorldsTerraforming: 'Unique worlds terraformed',
@@ -4930,6 +4949,9 @@ setLanguageData({
     factions: {
       uhf: {
         name: 'UHF',
+      },
+      prometheanInvasion: {
+        name: 'INV',
       },
       cewinsii: {
         name: 'Cewinsii',

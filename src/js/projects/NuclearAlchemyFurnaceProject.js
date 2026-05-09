@@ -84,10 +84,21 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
   getAlchemyParameter() {
     const parsed = Number(this.attributes?.alchemyParameter);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      return parsed;
+    const baseParameter = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+    let throughputMultiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect?.type !== 'nuclearAlchemyThroughputMultiplier') {
+        return;
+      }
+      const value = Number(effect.value);
+      if (Number.isFinite(value) && value > 0) {
+        throughputMultiplier += value;
+      }
+    });
+    if (throughputMultiplier > 0) {
+      return baseParameter * throughputMultiplier;
     }
-    return 1;
+    return baseParameter;
   }
 
   getTotalFurnaces() {

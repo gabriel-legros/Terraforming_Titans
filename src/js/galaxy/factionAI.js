@@ -28,6 +28,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         this.defensiveness = this.#sanitizeDefensiveness(options?.defensiveness);
         this.pendingOperationPower = 0;
         this.autoOperationRange = this.#sanitizeOperationRange(options?.autoOperationRange);
+        this.autoOperationDisabled = options?.autoOperationDisabled === true;
         const startingCount = Number.isFinite(this.startingSectors?.size)
             ? this.startingSectors.size
             : 0;
@@ -50,7 +51,9 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             this.borderFleetAssignments.clear();
             return;
         }
-        this.#updateAutoOperations(deltaTime, manager);
+        if (!this.autoOperationDisabled) {
+            this.#updateAutoOperations(deltaTime, manager);
+        }
         this.#distributeFleetToBorders(manager);
     }
 
@@ -69,6 +72,9 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
 
     updateFleetCapacity(manager) {
         super.updateFleetCapacity(manager);
+        if (this.noFleetRegeneration) {
+            return;
+        }
         const doctrine = this.#updateDoctrineAdoption(manager);
         const baseCapacity = Number.isFinite(this.fleetCapacity) ? Math.max(0, this.fleetCapacity) : 0;
         if (!(baseCapacity > 0)) {

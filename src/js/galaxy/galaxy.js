@@ -46,6 +46,9 @@ class GalaxyManager extends EffectableEntity {
             onOperationSuccess: () => {
                 this.successfulOperations += 1;
             },
+            onOperationComplete: (operation) => {
+                this.galacticInvasionManager?.handlePrometheanOperationResult?.(operation);
+            },
             refreshUI: () => {
                 if (typeof updateGalaxyUI === 'function') {
                     updateGalaxyUI();
@@ -208,6 +211,7 @@ class GalaxyManager extends EffectableEntity {
             faction.updateFleetCapacity(this);
         });
         this.refreshUIVisibility();
+        galaxyInvasionManager?.refreshUIVisibility?.();
         this.#updateIncomingAttackWarning();
         artificialManager?.refreshConditionalRingStarCoreUnlocks?.();
     }
@@ -644,7 +648,7 @@ class GalaxyManager extends EffectableEntity {
         return this.operationManager.getReservedOperationPower(factionId);
     }
 
-    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance, targetFactionId }) {
+    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance, targetFactionId, externalInvasion, originHex }) {
         if (!this.operationManager) {
             return null;
         }
@@ -654,10 +658,43 @@ class GalaxyManager extends EffectableEntity {
             assignedPower,
             durationMs,
             successChance,
-            targetFactionId
+            targetFactionId,
+            externalInvasion,
+            originHex
         });
         this.#updateIncomingAttackWarning();
         return operation;
+    }
+
+    removeOperationsForFaction(factionId) {
+        if (!factionId || !this.operationManager?.operations) {
+            return;
+        }
+        const keys = [];
+        this.operationManager.operations.forEach((operation, key) => {
+            if (operation?.factionId === factionId) {
+                keys.push(key);
+            }
+        });
+        keys.forEach((key) => this.operationManager.operations.delete(key));
+        this.#updateIncomingAttackWarning();
+    }
+
+    transferFactionControlToUhf(factionId) {
+        if (!factionId || factionId === UHF_FACTION_ID) {
+            return;
+        }
+        this.sectors.forEach((sector) => {
+            const invadedControl = Number(sector.getControlValue?.(factionId)) || 0;
+            if (!(invadedControl > 0)) {
+                return;
+            }
+            this.#updateSectorControl(sector, (target) => {
+                const uhfControl = Number(target.getControlValue?.(UHF_FACTION_ID)) || 0;
+                target.clearControl(factionId);
+                target.setControl(UHF_FACTION_ID, uhfControl + invadedControl);
+            });
+        });
     }
 
     getFleetCapacityWorldCount() {

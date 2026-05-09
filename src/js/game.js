@@ -174,6 +174,8 @@ function initializeDefaultGlobals(){
   spaceManager = new SpaceManager(planetParameters);
   globalThis.spaceManager = spaceManager;
   galaxyManager = new GalaxyManager();
+  galaxyInvasionManager = new GalacticInvasionManager();
+  galaxyManager.galacticInvasionManager = galaxyInvasionManager;
   artificialManager = setArtificialManager(new ArtificialManager());
   atlasManager = new AtlasManager();
   initializeHopeUI();
@@ -211,6 +213,7 @@ function registerDefaultTabActivationHandlers() {
   registerTabActivationHandler('space', () => {
     updateSpaceUI();
     updateGalaxyUI({ force: true });
+    updateGalacticInvasionUI({ force: true });
   });
   registerTabActivationHandler('settings', () => {
     updateStatisticsDisplay();
@@ -573,6 +576,10 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !galaxyManager) {
     galaxyManager = new GalaxyManager();
   }
+  if (!preserveManagers || !galaxyInvasionManager) {
+    galaxyInvasionManager = new GalacticInvasionManager();
+  }
+  galaxyManager.galacticInvasionManager = galaxyInvasionManager;
   if (typeof galaxyManager.initialize === 'function') {
     galaxyManager.initialize();
   }
@@ -632,6 +639,7 @@ function initializeGameState(options = {}) {
   } else if (typeof updateGalaxyUI === 'function') {
     updateGalaxyUI();
   }
+  galaxyInvasionManager.refreshUIVisibility();
     updateLifeUI();
 
   // When keeping existing managers, reapplied story effects need to
@@ -665,6 +673,9 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && atlasManager && typeof atlasManager.reapplyEffects === 'function') {
     atlasManager.reapplyEffects();
+  }
+  if (preserveManagers && galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
+    galaxyInvasionManager.reapplyEffects();
   }
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
@@ -703,6 +714,7 @@ function updateLogic(delta) {
   if (galaxyManager && typeof galaxyManager.update === 'function') {
     galaxyManager.update(delta);
   }
+  galaxyInvasionManager.update(delta);
   rwgManager.updateDominionUnlocksFromGalaxy(galaxyManager);
   warpGateNetworkManager.update(delta);
 

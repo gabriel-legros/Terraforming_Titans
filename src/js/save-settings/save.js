@@ -182,6 +182,7 @@ function getGameState() {
     skills: (typeof skillManager !== 'undefined' && typeof skillManager.saveState === 'function') ? skillManager.saveState() : undefined,
     spaceManager: (typeof spaceManager !== 'undefined' && typeof spaceManager.saveState === 'function') ? spaceManager.saveState() : undefined,
     galaxyManager: (typeof galaxyManager !== 'undefined' && typeof galaxyManager.saveState === 'function') ? galaxyManager.saveState() : undefined,
+    galaxyInvasionManager: galaxyInvasionManager && galaxyInvasionManager.saveState ? galaxyInvasionManager.saveState() : undefined,
     selectedBuildCounts: typeof selectedBuildCounts !== 'undefined'
       ? Object.fromEntries(
           Object.entries(selectedBuildCounts).map(([key, value]) => [key, serializeSavedBuildCount(value)])
@@ -597,6 +598,9 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if (gameState.galaxyManager && typeof galaxyManager !== 'undefined' && galaxyManager) {
       galaxyManager.loadState(gameState.galaxyManager);
+    }
+    if (gameState.galaxyInvasionManager && galaxyInvasionManager) {
+      galaxyInvasionManager.loadState(gameState.galaxyInvasionManager);
     }
 
     if(gameState.solisManager){

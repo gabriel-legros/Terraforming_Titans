@@ -534,6 +534,9 @@ function initializeSpaceTabs() {
         if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
             updateGalaxyUI({ force: true });
         }
+        if (id === 'space-invasion') {
+            updateGalacticInvasionUI({ force: true });
+        }
         if (id === 'space-story') {
             markSpaceStoryAlertViewed();
         }
@@ -590,6 +593,11 @@ function initializeSpaceUI(spaceManager) {
         showSpaceAtlasTab();
     } else {
         hideSpaceAtlasTab();
+    }
+    if (galaxyInvasionManager && galaxyInvasionManager.enabled) {
+        showSpaceInvasionTab();
+    } else {
+        hideSpaceInvasionTab();
     }
     if (typeof setSpaceSlidersUIManager === 'function') {
         setSpaceSlidersUIManager(_spaceManagerInstance);
