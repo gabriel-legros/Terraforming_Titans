@@ -73,7 +73,13 @@ function buildScriptAutomationUI() {
   );
   autoRestartToggle.classList.add('script-automation-auto-restart-toggle');
 
-  controls.append(masterToggle, runButton, pauseButton, stepButton, resetButton, autoRestartToggle);
+  const goToRowOneOnTravelToggle = createAutomationToggle(
+    getAutomationCardText('scriptGoToRowOneOnTravelOn', {}, 'Go to Row 1 on travel: On'),
+    getAutomationCardText('scriptGoToRowOneOnTravelOff', {}, 'Go to Row 1 on travel: Off')
+  );
+  goToRowOneOnTravelToggle.classList.add('script-automation-go-to-row-one-on-travel-toggle');
+
+  controls.append(masterToggle, runButton, pauseButton, stepButton, resetButton, autoRestartToggle, goToRowOneOnTravelToggle);
   body.appendChild(controls);
 
   const nextTravelRow = document.createElement('div');
@@ -141,6 +147,7 @@ function buildScriptAutomationUI() {
   automationElements.scriptStepButton = stepButton;
   automationElements.scriptResetButton = resetButton;
   automationElements.scriptAutoRestartToggle = autoRestartToggle;
+  automationElements.scriptGoToRowOneOnTravelToggle = goToRowOneOnTravelToggle;
   automationElements.scriptNextTravelSelect = nextTravelSelect;
   automationElements.scriptNextTravelPersistToggle = nextTravelPersistToggle;
   automationElements.scriptStatusLine = statusLine;
@@ -201,6 +208,13 @@ function wireScriptAutomationEvents() {
     const automation = getScriptAutomation();
     if (!automation) return;
     automation.autoRestartOnCompletion = !automation.autoRestartOnCompletion;
+    queueAutomationUIRefresh();
+  });
+
+  els.scriptGoToRowOneOnTravelToggle.addEventListener('click', () => {
+    const automation = getScriptAutomation();
+    if (!automation) return;
+    automation.goToRowOneOnTravel = !automation.goToRowOneOnTravel;
     queueAutomationUIRefresh();
   });
 
@@ -285,6 +299,7 @@ function updateScriptAutomationUI() {
   automationElements.scriptCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
   setAutomationToggleState(automationElements.scriptMasterToggle, automation.enabled);
   setAutomationToggleState(automationElements.scriptAutoRestartToggle, automation.autoRestartOnCompletion);
+  setAutomationToggleState(automationElements.scriptGoToRowOneOnTravelToggle, automation.goToRowOneOnTravel);
 
   const script = automation.getSelectedScript();
   const nextTravelScriptId = automation.nextTravelScriptId;

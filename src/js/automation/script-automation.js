@@ -21,6 +21,7 @@ class ScriptAutomation {
     this.lastConditionResult = null;
     this.haltedReason = 'inactive';
     this.autoRestartOnCompletion = true;
+    this.goToRowOneOnTravel = false;
     this.nextTravelScriptId = null;
     this.nextTravelPersistent = false;
     this.sleepRemainingMs = 0;
@@ -216,11 +217,39 @@ class ScriptAutomation {
     this.enabled = true;
     this.selectedScriptId = script.id;
     this.runScript(script.id);
+    this.applyGoToRowOneOnTravel(script);
     this.lastStatus = 'Running (Travel script)';
     if (!this.nextTravelPersistent) {
       this.nextTravelScriptId = null;
     }
     return true;
+  }
+
+  runTravelScript(scriptId, statusText) {
+    const script = this.scripts.find(item => item.id === Number(scriptId));
+    if (!script) return false;
+    this.enabled = true;
+    this.selectedScriptId = script.id;
+    this.runScript(script.id);
+    this.applyGoToRowOneOnTravel(script);
+    this.lastStatus = statusText || 'Running (Travel script)';
+    return true;
+  }
+
+  applyTravelPointerResetIfEnabled() {
+    if (!this.goToRowOneOnTravel) return false;
+    const script = this.getActiveScript() || this.getSelectedScript();
+    if (!script) return false;
+    this.applyGoToRowOneOnTravel(script);
+    return true;
+  }
+
+  applyGoToRowOneOnTravel(script) {
+    if (!this.goToRowOneOnTravel) return;
+    this.pcLineId = script?.lines[0]?.id || null;
+    this.pcActionIndex = 0;
+    this.manualStepDisplayLineId = null;
+    this.manualStepPendingLineId = null;
   }
 
   pause() {
@@ -818,6 +847,7 @@ class ScriptAutomation {
       running: this.running,
       collapsed: this.collapsed,
       autoRestartOnCompletion: this.autoRestartOnCompletion,
+      goToRowOneOnTravel: this.goToRowOneOnTravel,
       nextTravelScriptId: this.nextTravelScriptId,
       nextTravelPersistent: this.nextTravelPersistent,
       sleepRemainingMs: this.sleepRemainingMs,
@@ -840,6 +870,7 @@ class ScriptAutomation {
     this.running = false;
     this.collapsed = data.collapsed === true;
     this.autoRestartOnCompletion = data.autoRestartOnCompletion !== false;
+    this.goToRowOneOnTravel = data.goToRowOneOnTravel === true;
     this.nextTravelScriptId = data.nextTravelScriptId ? Number(data.nextTravelScriptId) : null;
     this.nextTravelPersistent = data.nextTravelPersistent === true && !!this.nextTravelScriptId;
     this.sleepRemainingMs = this.registry.toNumber(data.sleepRemainingMs);

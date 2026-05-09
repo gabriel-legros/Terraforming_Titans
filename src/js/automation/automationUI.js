@@ -47,6 +47,7 @@ const automationElements = {
   scriptStepButton: null,
   scriptResetButton: null,
   scriptAutoRestartToggle: null,
+  scriptGoToRowOneOnTravelToggle: null,
   scriptStatusLine: null,
   scriptSelect: null,
   scriptNameInput: null,
@@ -430,6 +431,9 @@ function cacheAutomationElements() {
   }
   if (!automationElements.scriptAutoRestartToggle && automationElements.scriptAutomation) {
     automationElements.scriptAutoRestartToggle = automationElements.scriptAutomation.querySelector('.script-automation-auto-restart-toggle');
+  }
+  if (!automationElements.scriptGoToRowOneOnTravelToggle && automationElements.scriptAutomation) {
+    automationElements.scriptGoToRowOneOnTravelToggle = automationElements.scriptAutomation.querySelector('.script-automation-go-to-row-one-on-travel-toggle');
   }
   if (!automationElements.scriptStatusLine && automationElements.scriptAutomation) {
     automationElements.scriptStatusLine = automationElements.scriptAutomation.querySelector('.script-automation-status-line');

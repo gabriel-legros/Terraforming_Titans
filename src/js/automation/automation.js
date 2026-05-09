@@ -280,11 +280,10 @@ class AutomationManager extends EffectableEntity {
       if (autoTravelScriptOverrideId) {
         const overrideScript = this.scriptAutomation.scripts.find((item) => item.id === Number(autoTravelScriptOverrideId));
         if (overrideScript) {
-          this.scriptAutomation.enabled = true;
-          this.scriptAutomation.selectedScriptId = overrideScript.id;
-          this.scriptAutomation.runScript(overrideScript.id);
-          this.scriptAutomation.lastStatus = 'Running (Travel script override)';
-          appliedTravelAutomation = true;
+          appliedTravelAutomation = this.scriptAutomation.runTravelScript(
+            overrideScript.id,
+            'Running (Travel script override)'
+          ) || appliedTravelAutomation;
         } else if (this.autoTravelAutomation) {
           const selectedPreset = this.autoTravelAutomation.getSelectedPreset();
           if (selectedPreset) {
@@ -295,6 +294,8 @@ class AutomationManager extends EffectableEntity {
         const appliedTravelScript = this.scriptAutomation.applyTravelScript();
         appliedTravelAutomation = appliedTravelAutomation || appliedTravelScript;
       }
+      const appliedTravelPointerReset = this.scriptAutomation.applyTravelPointerResetIfEnabled();
+      appliedTravelAutomation = appliedTravelAutomation || appliedTravelPointerReset;
     }
 
     if (appliedTravelAutomation) {

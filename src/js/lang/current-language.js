@@ -3136,6 +3136,8 @@ setLanguageData({
         scriptReset: 'Reset',
         scriptAutoRestartOn: 'Auto Restart On',
         scriptAutoRestartOff: 'Auto Restart Off',
+        scriptGoToRowOneOnTravelOn: 'Go to Row 1 on travel',
+        scriptGoToRowOneOnTravelOff: 'Go to Row 1 on travel',
         scriptNamePlaceholder: 'Script name',
         scriptNew: 'New Script',
         scriptDuplicate: 'Duplicate',
