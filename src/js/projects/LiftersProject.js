@@ -167,7 +167,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   getEffectiveUnitRatePerLifter() {
-    return this.unitRatePerLifter * this.getEffectiveSuperchargeMultiplier();
+    return this.unitRatePerLifter
+      * this.getEffectiveSuperchargeMultiplier()
+      * this.getEffectiveThroughputMultiplier();
   }
 
   getEffectiveEnergyPerUnit() {

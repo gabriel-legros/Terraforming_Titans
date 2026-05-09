@@ -63,13 +63,66 @@ const GALACTIC_INVASION_LETTERS = [
 });
 
 const GALACTIC_INVASION_REWARDS = {
-  alphaLower: [
-    {
-      target: 'nuclearAlchemyFurnace',
-      type: 'throughputMultiplier',
-      value: 0.1,
-      labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput',
-      labelFallback: '+{value}% Nuclear Alchemy throughput'
-    }
+  alphaLower: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  alphaUpper: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  betaLower: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+  betaUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  gammaLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+
+  gammaUpper: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  deltaLower: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+  deltaUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  epsilonLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  epsilonUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+
+  zetaLower: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+  zetaUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  etaLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  etaUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  thetaLower: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+
+  thetaUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  iotaLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  iotaUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  kappaLower: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  kappaUpper: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+
+  lambdaLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  lambdaUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  muLower: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  muUpper: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+  nuLower: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+
+  nuUpper: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  xiLower: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+  xiUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  omicronLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  omicronUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+
+  piLower: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+  piUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  rhoLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  rhoUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  sigmaLower: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+
+  sigmaUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  tauLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  tauUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  upsilonLower: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  upsilonUpper: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+
+  phiLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  phiUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.1, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  chiLower: [{ target: 'lifters', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  chiUpper: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.2, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
+  psiLower: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
+  psiUpper: [{ target: 'lifters', type: 'throughputMultiplier', value: 1, labelKey: 'ui.space.invasion.rewards.liftersThroughput', labelFallback: '+{value}% Lifters throughput' }],
+  omegaLower: [
+    { target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 1, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' },
+    { target: 'manufacturingWorld', type: 'throughputMultiplier', value: 1, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }
+  ],
+  omegaUpper: [
+    { target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 1, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' },
+    { target: 'spaceChemistry', type: 'throughputMultiplier', value: 1, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }
   ]
 };

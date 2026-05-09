@@ -266,7 +266,8 @@
       if (!recipe) {
         return 1;
       }
-      let multiplier = 1 + (this.getShopPurchaseCount(recipe.shopId) * 0.01);
+      let multiplier = (1 + (this.getShopPurchaseCount(recipe.shopId) * 0.01))
+        * this.getEffectiveThroughputMultiplier();
       if (recipe.wgcUpgradeId) {
         try {
           multiplier *= warpGateCommand.getMultiplier(recipe.wgcUpgradeId);
