@@ -14,13 +14,6 @@ const HEX_STRIPE_HOVER_LIGHTEN = 0.26;
 const HEX_BORDER_LIGHTEN = 0.32;
 const GALAXY_UHF_FACTION_ID = 'uhf';
 const GALAXY_DEFENSE_ICON = '\u{1F6E1}\u{FE0F}';
-const FLEET_VALUE_FORMATTER = new Intl.NumberFormat('en-US', {
-    notation: 'compact',
-    maximumFractionDigits: 1
-});
-const GALAXY_DEFENSE_INT_FORMATTER = (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function')
-    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
-    : null;
 const GALAXY_ALIEN_ICON = '\u2620\uFE0F';
 const GALAXY_CONTROL_EPSILON = 1e-6;
 const WARP_GATE_NETWORK_MAX_LEVEL = 1000000;
@@ -170,11 +163,8 @@ function isGalaxySubtabActive() {
 }
 
 function formatFleetValue(value) {
-    if (!Number.isFinite(value)) {
-        return '0';
-    }
-    const normalized = value < 0 ? 0 : value;
-    return FLEET_VALUE_FORMATTER.format(normalized);
+    const normalized = Number.isFinite(value) ? Math.max(0, value) : 0;
+    return formatNumber(normalized, false, 2);
 }
 
 function formatFleetMultiplier(value) {
@@ -1596,11 +1586,8 @@ function clearHexControlStyles(hex) {
 
 function formatDefenseInteger(value) {
     const numeric = Number(value);
-    const rounded = Number.isFinite(numeric) ? Math.round(numeric) : 0;
-    if (GALAXY_DEFENSE_INT_FORMATTER) {
-        return GALAXY_DEFENSE_INT_FORMATTER.format(rounded);
-    }
-    return String(rounded);
+    const normalized = Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
+    return formatNumber(normalized, false, 2);
 }
 
 function formatHexFleetPowerValue(value) {

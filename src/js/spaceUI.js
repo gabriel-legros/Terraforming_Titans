@@ -722,6 +722,10 @@ function updateSpaceUI() {
     updateCurrentWorldUI();
     updateSpaceStatsUI();
     updateSpaceAlertUI();
+    const invasionSubtabContent = document.getElementById('space-invasion');
+    if (invasionSubtabContent?.classList?.contains('active') && typeof updateGalacticInvasionUI === 'function') {
+        updateGalacticInvasionUI();
+    }
 
     const statusContainer = document.getElementById('travel-status');
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
