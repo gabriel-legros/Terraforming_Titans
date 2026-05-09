@@ -2407,6 +2407,7 @@ setLanguageData({
         currentGlobalMean: 'Current global mean: {temperature} {unit} | Partial pressure: {pressure} Pa',
         labels: {
           temperature: 'Temperature',
+          gravity: 'Gravity',
           atmosphere: 'Atmosphere',
           water: 'Water',
           albedo: 'Albedo',
@@ -2414,6 +2415,7 @@ setLanguageData({
           life: 'Life Coverage',
           phase: 'Phase Diagrams',
           global: 'Global',
+          surfaceGravity: 'Surface Gravity',
           ground: 'Ground',
           surface: 'Surface',
           actual: 'Actual',
@@ -2427,6 +2429,7 @@ setLanguageData({
         },
         axis: {
           temperature: 'Temperature ({unit})',
+          gravity: 'Surface Gravity (m/s^2)',
           pressure: 'Pressure (Pa)',
           coverage: 'Coverage (%)',
           albedo: 'Albedo',

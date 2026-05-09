@@ -1,6 +1,13 @@
 // playTimeSeconds advances in in-game days for display, so 365 units = 1 year.
 const TERRAFORMING_GRAPH_YEAR_UNITS = 365;
 const TERRAFORMING_GRAPH_WINDOW_YEARS = 500;
+const TERRAFORMING_GRAPH_EARLY_CADENCE = [
+  { endDay: 100, stepDay: 1 },
+  { endDay: 200, stepDay: 2 },
+  { endDay: 1000, stepDay: 10 },
+  { endDay: 3000, stepDay: 30 },
+  { endDay: Infinity, stepDay: TERRAFORMING_GRAPH_YEAR_UNITS }
+];
 const TERRAFORMING_GRAPH_MIN_LOG = 1e-6;
 const TERRAFORMING_PHASE_ZOOM_STEP = 1.25;
 const TERRAFORMING_PHASE_MIN_SPAN_RATIO = 0.08;
@@ -17,6 +24,7 @@ function getTerraformingGraphZoneLabel(zone) {
 
 const TERRAFORMING_GRAPH_ORDER = [
   'temperature',
+  'gravity',
   'atmosphere',
   'water',
   'albedo',
@@ -118,6 +126,9 @@ function buildEmptyTerraformingGraphHistory() {
       temperate: [],
       polar: []
     },
+    gravity: {
+      surface: []
+    },
     atmosphere: {
       gases: {}
     },
@@ -145,10 +156,16 @@ function buildEmptyTerraformingGraphHistory() {
 function normalizeTerraformingGraphHistory(state) {
   const source = state || {};
   const history = buildEmptyTerraformingGraphHistory();
-  const maxLength = TERRAFORMING_GRAPH_WINDOW_YEARS;
   const rawYears = Array.isArray(source.years) ? source.years : [];
-  const startIndex = Math.max(0, rawYears.length - maxLength);
-  const years = rawYears.slice(startIndex, startIndex + maxLength);
+  let startIndex = 0;
+  if (rawYears.length > 0) {
+    const maxYear = rawYears[rawYears.length - 1];
+    const minYear = maxYear - TERRAFORMING_GRAPH_WINDOW_YEARS;
+    while (startIndex < rawYears.length && rawYears[startIndex] < minYear) {
+      startIndex += 1;
+    }
+  }
+  const years = rawYears.slice(startIndex);
   history.years = years;
   const length = years.length;
   const normalizeArray = (arr, fallback) => {
@@ -165,6 +182,8 @@ function normalizeTerraformingGraphHistory(state) {
   history.temperature.tropical = normalizeArray(tempSource.tropical, 0);
   history.temperature.temperate = normalizeArray(tempSource.temperate, 0);
   history.temperature.polar = normalizeArray(tempSource.polar, 0);
+  const gravitySource = source.gravity || {};
+  history.gravity.surface = normalizeArray(gravitySource.surface, 0);
   const waterSource = source.water || {};
   history.water.liquid = normalizeArray(waterSource.liquid, 0);
   history.water.ice = normalizeArray(waterSource.ice, 0);
@@ -209,6 +228,12 @@ function buildLogTicks(min, max) {
   return ticks;
 }
 
+function isAlignedCadencePoint(day, step) {
+  if (step <= 0) return true;
+  const ticks = day / step;
+  return Math.abs(ticks - Math.round(ticks)) < 1e-9;
+}
+
 const TERRAFORMING_GRAPH_DEFINITIONS = {
   temperature: {
     id: 'temperature',
@@ -246,6 +271,22 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
     logScale: true,
     formatTick: (value) => formatNumber(value, false, 2, true),
     buildSeries: (manager, history) => manager.buildAtmosphereSeries(history)
+  },
+  gravity: {
+    id: 'gravity',
+    label: getTerraformingGraphText('labels.gravity', 'Gravity'),
+    axisLabel: () => getTerraformingGraphText('axis.gravity', 'Surface Gravity (m/s^2)'),
+    note: () => getTerraformingGraphText('notes.yearlyRolling', 'Yearly snapshots. Rolling 500 years.'),
+    logScale: false,
+    formatTick: (value) => formatNumber(value, false, 3),
+    buildSeries: (manager, history) => ([
+      {
+        label: getTerraformingGraphText('labels.surfaceGravity', 'Surface Gravity'),
+        values: history.gravity.surface,
+        color: '#8e44ad',
+        transform: (value) => value
+      }
+    ])
   },
   water: {
     id: 'water',
@@ -363,7 +404,7 @@ class TerraformingGraphsManager {
     this.isOpen = false;
     this.needsRedraw = true;
     this.phaseNeedsRedraw = true;
-    this.lastSnapshotYear = null;
+    this.lastSnapshotDay = null;
     this.ui = {
       overlay: null,
       window: null,
@@ -407,7 +448,7 @@ class TerraformingGraphsManager {
     this.phaseSignature = '';
     this.needsRedraw = true;
     this.phaseNeedsRedraw = true;
-    this.lastSnapshotYear = null;
+    this.lastSnapshotDay = null;
     this.phaseViewport = {};
     this.phasePanState.pointerId = null;
     this.phasePanState.active = false;
@@ -424,8 +465,8 @@ class TerraformingGraphsManager {
     this.phaseSignature = '';
     this.needsRedraw = true;
     this.phaseNeedsRedraw = true;
-    this.lastSnapshotYear = this.history.years.length
-      ? this.history.years[this.history.years.length - 1]
+    this.lastSnapshotDay = this.history.years.length
+      ? this.history.years[this.history.years.length - 1] * TERRAFORMING_GRAPH_YEAR_UNITS
       : null;
   }
 
@@ -799,16 +840,21 @@ class TerraformingGraphsManager {
   }
 
   update() {
-    const currentYear = Math.floor(playTimeSeconds / TERRAFORMING_GRAPH_YEAR_UNITS);
+    const currentDay = playTimeSeconds;
     const startingLength = this.history.years.length;
-    if (this.lastSnapshotYear === null) {
-      this.lastSnapshotYear = -1;
+    if (this.lastSnapshotDay === null) {
+      this.lastSnapshotDay = -1;
     }
-    if (currentYear > this.lastSnapshotYear) {
-      for (let year = this.lastSnapshotYear + 1; year <= currentYear; year += 1) {
-        this.appendYearSnapshot(year);
+    if (currentDay >= 0) {
+      while (true) {
+        const nextSnapshotDay = this.getNextSnapshotDay(this.lastSnapshotDay);
+        if (nextSnapshotDay > currentDay) {
+          break;
+        }
+        this.appendDaySnapshot(nextSnapshotDay);
+        this.lastSnapshotDay = nextSnapshotDay;
       }
-      this.lastSnapshotYear = currentYear;
+      this.applyCadenceCompaction(currentDay);
       this.needsRedraw = true;
     }
     if (this.history.years.length !== startingLength) {
@@ -823,20 +869,88 @@ class TerraformingGraphsManager {
     }
   }
 
-  appendYearSnapshot(year) {
+  appendDaySnapshot(day) {
     const index = this.history.years.length;
-    this.history.years.push(year);
+    this.history.years.push(day / TERRAFORMING_GRAPH_YEAR_UNITS);
     this.writeSnapshotAt(index);
     this.trimHistoryToWindow();
   }
 
-  overwriteYearSnapshot(year) {
-    const index = this.history.years.indexOf(year);
-    if (index === -1) {
-      this.appendYearSnapshot(year);
+  getCadenceStepForDay(day) {
+    for (let i = 0; i < TERRAFORMING_GRAPH_EARLY_CADENCE.length; i += 1) {
+      const stage = TERRAFORMING_GRAPH_EARLY_CADENCE[i];
+      if (day < stage.endDay) {
+        return stage.stepDay;
+      }
+    }
+    return TERRAFORMING_GRAPH_YEAR_UNITS;
+  }
+
+  getNextSnapshotDay(lastDay) {
+    if (lastDay < 0) return 0;
+    const stepDay = this.getCadenceStepForDay(lastDay);
+    return lastDay + stepDay;
+  }
+
+  applyCadenceCompaction(currentDay) {
+    if (currentDay > 100) {
+      this.compactHistoryRange(0, 100, 2);
+    }
+    if (currentDay > 200) {
+      this.compactHistoryRange(0, 200, 10);
+    }
+    if (currentDay > 1000) {
+      this.compactHistoryRange(0, 1000, 30);
+    }
+  }
+
+  compactHistoryRange(startDay, endDay, stepDay) {
+    const years = this.history.years;
+    const keep = new Array(years.length).fill(true);
+    let removed = false;
+    for (let i = 0; i < years.length; i += 1) {
+      const day = years[i] * TERRAFORMING_GRAPH_YEAR_UNITS;
+      if (day < startDay || day > endDay) {
+        continue;
+      }
+      const keepPoint = isAlignedCadencePoint(day - startDay, stepDay) || Math.abs(day - endDay) < 1e-9;
+      if (!keepPoint) {
+        keep[i] = false;
+        removed = true;
+      }
+    }
+    if (!removed) {
       return;
     }
-    this.writeSnapshotAt(index);
+
+    const filterSeries = (series) => {
+      const filtered = [];
+      for (let i = 0; i < series.length; i += 1) {
+        if (keep[i]) filtered.push(series[i]);
+      }
+      return filtered;
+    };
+
+    this.history.years = filterSeries(this.history.years);
+    this.history.temperature.global = filterSeries(this.history.temperature.global);
+    this.history.temperature.tropical = filterSeries(this.history.temperature.tropical);
+    this.history.temperature.temperate = filterSeries(this.history.temperature.temperate);
+    this.history.temperature.polar = filterSeries(this.history.temperature.polar);
+    this.history.gravity.surface = filterSeries(this.history.gravity.surface);
+    this.history.water.liquid = filterSeries(this.history.water.liquid);
+    this.history.water.ice = filterSeries(this.history.water.ice);
+    this.history.albedo.ground = filterSeries(this.history.albedo.ground);
+    this.history.albedo.surface = filterSeries(this.history.albedo.surface);
+    this.history.albedo.actual = filterSeries(this.history.albedo.actual);
+    this.history.luminosity.flux = filterSeries(this.history.luminosity.flux);
+    this.history.life.global = filterSeries(this.history.life.global);
+    this.history.life.tropical = filterSeries(this.history.life.tropical);
+    this.history.life.temperate = filterSeries(this.history.life.temperate);
+    this.history.life.polar = filterSeries(this.history.life.polar);
+    const gases = this.history.atmosphere.gases;
+    for (const key in gases) {
+      gases[key] = filterSeries(gases[key]);
+    }
   }
 
   writeSnapshotAt(index) {
@@ -845,6 +959,7 @@ class TerraformingGraphsManager {
     history.temperature.tropical[index] = terraforming.temperature.zones.tropical.value;
     history.temperature.temperate[index] = terraforming.temperature.zones.temperate.value;
     history.temperature.polar[index] = terraforming.temperature.zones.polar.value;
+    history.gravity.surface[index] = terraforming.celestialParameters.gravity || 0;
 
     history.water.liquid[index] = (calculateAverageCoverage(terraforming, 'liquidWater') || 0) * 100;
     history.water.ice[index] = (calculateAverageCoverage(terraforming, 'ice') || 0) * 100;
@@ -878,12 +993,18 @@ class TerraformingGraphsManager {
 
   trimHistoryToWindow() {
     const history = this.history;
-    while (history.years.length > TERRAFORMING_GRAPH_WINDOW_YEARS) {
+    if (history.years.length === 0) {
+      return;
+    }
+    const maxYear = history.years[history.years.length - 1];
+    const minYear = maxYear - TERRAFORMING_GRAPH_WINDOW_YEARS;
+    while (history.years.length && history.years[0] < minYear) {
       history.years.shift();
       history.temperature.global.shift();
       history.temperature.tropical.shift();
       history.temperature.temperate.shift();
       history.temperature.polar.shift();
+      history.gravity.surface.shift();
       history.water.liquid.shift();
       history.water.ice.shift();
       history.albedo.ground.shift();
@@ -1035,9 +1156,23 @@ class TerraformingGraphsManager {
       });
     }
 
-    const xTicks = 5;
-    for (let i = 0; i <= xTicks; i += 1) {
-      const yearValue = Math.round(minYear + (xSpan / xTicks) * i);
+    let xTickValues = [];
+    if (xSpan < 2) {
+      const monthStepYears = 1 / 12;
+      const startTick = Math.floor(minYear / monthStepYears) * monthStepYears;
+      const endTick = Math.ceil(maxYear / monthStepYears) * monthStepYears;
+      for (let yearValue = startTick; yearValue <= endTick + 1e-9; yearValue += monthStepYears) {
+        xTickValues.push(yearValue);
+      }
+    } else {
+      const xTicks = 5;
+      for (let i = 0; i <= xTicks; i += 1) {
+        xTickValues.push(minYear + (xSpan / xTicks) * i);
+      }
+    }
+
+    for (let i = 0; i < xTickValues.length; i += 1) {
+      const yearValue = xTickValues[i];
       const x = padding.left + ((yearValue - minYear) / xSpan) * plotWidth;
       ctx.beginPath();
       ctx.moveTo(x, chartBottom);
@@ -1045,7 +1180,10 @@ class TerraformingGraphsManager {
       ctx.stroke();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillText(String(yearValue), x, chartBottom + 8);
+      const label = xSpan < 2
+        ? formatNumber(yearValue, false, 2)
+        : String(Math.round(yearValue));
+      ctx.fillText(label, x, chartBottom + 8);
     }
 
     ctx.textAlign = 'left';

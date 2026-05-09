@@ -208,13 +208,15 @@ class ScriptAutomation {
   }
 
   applyTravelScript() {
+    if (!this.enabled) {
+      return false;
+    }
     const script = this.scripts.find(item => item.id === Number(this.nextTravelScriptId));
     if (!script) {
       this.nextTravelScriptId = null;
       this.nextTravelPersistent = false;
       return false;
     }
-    this.enabled = true;
     this.selectedScriptId = script.id;
     this.runScript(script.id);
     this.applyGoToRowOneOnTravel(script);

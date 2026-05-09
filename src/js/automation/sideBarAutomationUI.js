@@ -358,6 +358,13 @@ function setJournalAutomationMode(enabled) {
   elements.toggle.title = sidebarAutomationMode
     ? t('ui.journal.returnToJournal', null, 'Return to journal')
     : t('ui.journal.automationShortcuts', null, 'Automation shortcuts');
+  if (sidebarAutomationMode) {
+    journal.scrollTop = 0;
+  } else {
+    requestAnimationFrame(() => {
+      journal.scrollTop = journal.scrollHeight;
+    });
+  }
 }
 
 function toggleJournalAutomationMode() {
