@@ -24,12 +24,12 @@ function getTerraformingGraphZoneLabel(zone) {
 
 const TERRAFORMING_GRAPH_ORDER = [
   'temperature',
-  'gravity',
   'atmosphere',
   'water',
   'albedo',
   'luminosity',
   'life',
+  'gravity',
   'phase'
 ];
 
