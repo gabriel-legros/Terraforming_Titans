@@ -284,9 +284,35 @@
       return Math.max(1, workerPotential / WORKERS_PER_HEAT_SINK);
     }
 
-    getEffectiveDuration() {
-      const duration = Project.prototype.getEffectiveDuration.call(this);
+    applyDurationEffects(baseDuration, options) {
+      const duration = Project.prototype.applyDurationEffects.call(this, baseDuration, options);
       return duration / this.getSpeedBoost();
+    }
+
+    updateDurationFromEffects() {
+      const newDuration = this.applyDurationEffects(this.getBaseDuration());
+      if (this.isActive && this.isContinuous()) {
+        this.startingDuration = Infinity;
+        this.remainingTime = Infinity;
+        return;
+      }
+      if (this.isActive) {
+        const canCarryProgress =
+          Number.isFinite(this.startingDuration) &&
+          Number.isFinite(this.remainingTime) &&
+          this.startingDuration > 0;
+        if (!canCarryProgress) {
+          this.startingDuration = newDuration;
+          this.remainingTime = newDuration;
+          return;
+        }
+        const progressRatio =
+          (this.startingDuration - this.remainingTime) / this.startingDuration;
+        this.startingDuration = newDuration;
+        this.remainingTime = newDuration * (1 - progressRatio);
+      } else {
+        this.startingDuration = newDuration;
+      }
     }
 
     getExpansionPerSecond() {
