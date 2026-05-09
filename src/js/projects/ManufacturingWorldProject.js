@@ -24,6 +24,48 @@
     'superalloys',
   ];
   const MANUFACTURING_UNASSIGNED_KEY = 'idleUnassigned';
+  const MANUFACTURING_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
+
+  function normalizeManufacturingInteger(value) {
+    if (value === undefined || value === null || value === '') {
+      return 0n;
+    }
+    if (Object.prototype.toString.call(value) === '[object BigInt]') {
+      return value < 0n ? 0n : value;
+    }
+    if (Object.prototype.toString.call(value) === '[object String]') {
+      const trimmed = value.trim();
+      if (/^\d+$/.test(trimmed)) {
+        return BigInt(trimmed);
+      }
+    }
+    const numeric = Number(value) || 0;
+    if (numeric <= 0) {
+      return 0n;
+    }
+    if (Number.isSafeInteger(numeric)) {
+      return BigInt(numeric);
+    }
+    return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
+      useGrouping: false,
+      maximumFractionDigits: 0
+    }));
+  }
+
+  function serializeManufacturingInteger(value) {
+    const normalized = normalizeManufacturingInteger(value);
+    return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
+      ? Number(normalized)
+      : normalized.toString();
+  }
+
+  function serializeManufacturingAssignments(assignments = {}) {
+    const serialized = {};
+    Object.keys(assignments).forEach((key) => {
+      serialized[key] = serializeManufacturingInteger(assignments[key]);
+    });
+    return serialized;
+  }
 
   const MANUFACTURING_RECIPES = {
     glass: {
@@ -181,7 +223,7 @@
       });
       this.cumulativePopulation = 0;
       this.manufacturingAssignments = {};
-      this.assignmentStep = 1;
+      this.assignmentStep = 1n;
       this.autoAssignFlags = {};
       this.autoAssignWeights = {};
       this.isRunning = false;
@@ -380,10 +422,10 @@
     normalizeAssignments() {
       const keys = this.getManagedAssignmentKeys();
       const keySet = new Set(keys);
-      const total = this.getTotalPotentialPopulation();
+      const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
 
       keys.forEach((key) => {
-        this.manufacturingAssignments[key] = Math.max(0, Math.floor(this.manufacturingAssignments[key] || 0));
+        this.manufacturingAssignments[key] = normalizeManufacturingInteger(this.manufacturingAssignments[key]);
         this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
         const weight = Number(this.autoAssignWeights[key]);
         this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
@@ -391,11 +433,11 @@
 
       Object.keys(this.manufacturingAssignments).forEach((key) => {
         if (!keySet.has(key)) {
-          this.manufacturingAssignments[key] = 0;
+          this.manufacturingAssignments[key] = 0n;
         }
       });
 
-      let usedManual = 0;
+      let usedManual = 0n;
       keys.forEach((key) => {
         if (!this.autoAssignFlags[key]) {
           usedManual += this.manufacturingAssignments[key];
@@ -403,7 +445,7 @@
       });
 
       const autoKeys = keys.filter((key) => this.autoAssignFlags[key]);
-      const remaining = Math.max(0, total - usedManual);
+      const remaining = total > usedManual ? (total - usedManual) : 0n;
       if (autoKeys.length > 0) {
         let totalWeight = 0;
         autoKeys.forEach((key) => {
@@ -412,25 +454,26 @@
 
         if (totalWeight <= 0) {
           autoKeys.forEach((key) => {
-            this.manufacturingAssignments[key] = 0;
+            this.manufacturingAssignments[key] = 0n;
           });
         } else {
         const remainders = [];
-        let assigned = 0;
+        let assigned = 0n;
         autoKeys.forEach((key) => {
-          const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
+          const exact = Number(remaining) * (this.autoAssignWeights[key] / totalWeight);
           const floorValue = Math.floor(exact);
-            this.manufacturingAssignments[key] = floorValue;
-            assigned += floorValue;
+            const floorBigInt = normalizeManufacturingInteger(floorValue);
+            this.manufacturingAssignments[key] = floorBigInt;
+            assigned += floorBigInt;
             remainders.push({ key, value: exact - floorValue });
           });
         let leftover = remaining - assigned;
         remainders.sort((left, right) => right.value - left.value);
-        for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
-          this.manufacturingAssignments[remainders[i].key] += 1;
-          leftover -= 1;
+        if (leftover > 0n && remainders.length > 0) {
+          this.manufacturingAssignments[remainders[0].key] += leftover;
+          leftover = 0n;
         }
-        if (leftover > 0 && autoKeys.length > 0) {
+        if (leftover > 0n && autoKeys.length > 0) {
           const idleKey = this.getUnassignedAssignmentKey();
           const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
           this.manufacturingAssignments[targetKey] += leftover;
@@ -438,31 +481,33 @@
       }
     }
 
-      let assignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0), 0);
+      let assignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0n), 0n);
       if (assignedTotal > total) {
         let excess = assignedTotal - total;
-        for (let i = keys.length - 1; i >= 0 && excess > 0; i -= 1) {
+        for (let i = keys.length - 1; i >= 0 && excess > 0n; i -= 1) {
           const key = keys[i];
-          const current = this.manufacturingAssignments[key] || 0;
-          const reduction = Math.min(current, excess);
+          const current = this.manufacturingAssignments[key] || 0n;
+          const reduction = current < excess ? current : excess;
           this.manufacturingAssignments[key] = current - reduction;
           excess -= reduction;
         }
-        assignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0), 0);
+        assignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0n), 0n);
       }
     }
 
     getAssignedTotal() {
       this.normalizeAssignments();
-      return this.getAssignmentKeys().reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0), 0);
+      return this.getAssignmentKeys().reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0n), 0n);
     }
 
     getAvailablePopulation() {
-      return Math.max(0, this.getTotalPotentialPopulation() - this.getAssignedTotal());
+      const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
+      const assigned = this.getAssignedTotal();
+      return total > assigned ? (total - assigned) : 0n;
     }
 
     getStoredAssignmentAmount(key) {
-      return this.manufacturingAssignments[key] || 0;
+      return this.manufacturingAssignments[key] || 0n;
     }
 
     getDisplayedAssignmentAmount(key) {
@@ -474,7 +519,7 @@
 
     getAssignmentMaxTarget(key) {
       const keys = this.getManagedAssignmentKeys();
-      const total = this.getTotalPotentialPopulation();
+      const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
       const usedOther = keys.reduce((sum, otherKey) => {
         if (otherKey === key) {
           return sum;
@@ -483,12 +528,46 @@
           return sum;
         }
         return sum + this.getStoredAssignmentAmount(otherKey);
-      }, 0);
-      return Math.max(0, total - usedOther);
+      }, 0n);
+      return total > usedOther ? (total - usedOther) : 0n;
     }
 
     setAssignmentStep(step) {
-      this.assignmentStep = Math.min(1e50, Math.max(1, Math.round(step)));
+      const next = normalizeManufacturingInteger(step);
+      this.assignmentStep = next < 1n ? 1n : (next > MANUFACTURING_ASSIGNMENT_STEP_MAX ? MANUFACTURING_ASSIGNMENT_STEP_MAX : next);
+    }
+
+    normalizeAssignmentStep() {
+      this.assignmentStep = normalizeManufacturingInteger(this.assignmentStep);
+      if (this.assignmentStep < 1n) {
+        this.assignmentStep = 1n;
+      }
+    }
+
+    getSignedAssignmentDelta(delta) {
+      const valueType = Object.prototype.toString.call(delta);
+      if (valueType === '[object BigInt]') {
+        return delta;
+      }
+      if (valueType === '[object String]') {
+        const trimmed = delta.trim();
+        if (!trimmed || trimmed === '-') {
+          return 0n;
+        }
+        const isNegative = trimmed.startsWith('-');
+        const digits = isNegative || trimmed.startsWith('+') ? trimmed.slice(1) : trimmed;
+        if (!/^\d+$/.test(digits)) {
+          return 0n;
+        }
+        const magnitude = BigInt(digits);
+        return isNegative ? -magnitude : magnitude;
+      }
+      const numeric = Number(delta);
+      if (!Number.isFinite(numeric) || numeric === 0) {
+        return 0n;
+      }
+      const magnitude = normalizeManufacturingInteger(Math.abs(numeric));
+      return numeric < 0 ? -magnitude : magnitude;
     }
 
     setAutoAssignTarget(key, enabled) {
@@ -502,9 +581,20 @@
         return;
       }
       this.normalizeAssignments();
+      const signedDelta = this.getSignedAssignmentDelta(delta);
+      if (signedDelta === 0n) {
+        return;
+      }
       const current = this.getStoredAssignmentAmount(key);
       const maxForKey = this.getAssignmentMaxTarget(key);
-      this.manufacturingAssignments[key] = Math.min(maxForKey, Math.max(0, current + delta));
+      let next = current + signedDelta;
+      if (next < 0n) {
+        next = 0n;
+      }
+      if (next > maxForKey) {
+        next = maxForKey;
+      }
+      this.manufacturingAssignments[key] = next;
       this.normalizeAssignments();
       this.updateUI();
     }
@@ -513,7 +603,7 @@
       if (this.autoAssignFlags[key]) {
         return;
       }
-      this.manufacturingAssignments[key] = 0;
+      this.manufacturingAssignments[key] = 0n;
       this.normalizeAssignments();
       this.updateUI();
     }
@@ -591,7 +681,7 @@
     }
 
     shouldOperate() {
-      return this.isRunning && this.getTotalPotentialPopulation() > 0;
+      return this.isRunning && this.getTotalPotentialPopulation() > 0 && this.getAssignedTotal() > 0n;
     }
 
     getRecipeOperationProductivity(key, productivity = 1) {
@@ -610,8 +700,8 @@
       const productivityByRecipe = {};
       this.normalizeAssignments();
       this.getAssignmentKeys().forEach((key) => {
-        const assigned = this.manufacturingAssignments[key] || 0;
-        if (assigned <= 0) {
+        const assigned = this.manufacturingAssignments[key] || 0n;
+        if (assigned <= 0n) {
           productivityByRecipe[key] = 0;
           return;
         }
@@ -691,18 +781,19 @@
       let hasInputShortfall = false;
 
       this.getAssignmentKeys().forEach((key) => {
-        const assigned = this.manufacturingAssignments[key] || 0;
-        if (assigned <= 0) {
+        const assigned = this.manufacturingAssignments[key] || 0n;
+        if (assigned <= 0n) {
           return;
         }
+        const assignedNumber = Number(assigned);
         const recipe = this.getRecipe(key);
         const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
         const outputMultiplier = this.getRecipeOutputMultiplier(key);
         const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key);
-        const desiredOutput = ((assigned * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
+        const desiredOutput = ((assignedNumber * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
         const desiredInputs = {};
         Object.keys(recipe.inputs).forEach((inputKey) => {
-          const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
+          const amount = ((assignedNumber * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
           desiredInputs[inputKey] = amount;
           if (!hasInputShortfall && amount > 0 && recipeProductivity < 1) {
             hasInputShortfall = true;
@@ -746,8 +837,9 @@
       });
 
       if (MANUFACTURING_FLAT_HYDROGEN_PER_WORKER > 0) {
-        const assignedTotal = entries.reduce((sum, entry) => sum + (entry.assigned || 0), 0);
-        const desiredHydrogen = assignedTotal * MANUFACTURING_FLAT_HYDROGEN_PER_WORKER * seconds;
+        const assignedTotal = entries.reduce((sum, entry) => sum + (entry.assigned || 0n), 0n);
+        const assignedTotalNumber = Number(assignedTotal);
+        const desiredHydrogen = assignedTotalNumber * MANUFACTURING_FLAT_HYDROGEN_PER_WORKER * seconds;
         if (desiredHydrogen > 0) {
           const hydrogenSpent = Math.min(
             desiredHydrogen,
@@ -844,18 +936,19 @@
       const entries = [];
 
       this.getAssignmentKeys().forEach((key) => {
-        const assigned = this.manufacturingAssignments[key] || 0;
-        if (assigned <= 0) {
+        const assigned = this.manufacturingAssignments[key] || 0n;
+        if (assigned <= 0n) {
           return;
         }
+        const assignedNumber = Number(assigned);
         const recipe = this.getRecipe(key);
         const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
         const outputMultiplier = this.getRecipeOutputMultiplier(key);
         const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key);
-        const desiredOutput = ((assigned * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
+        const desiredOutput = ((assignedNumber * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
         const desiredInputs = {};
         Object.keys(recipe.inputs).forEach((inputKey) => {
-          const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
+          const amount = ((assignedNumber * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
           desiredInputs[inputKey] = amount;
         });
         entries.push({
@@ -1012,13 +1105,18 @@
       const stepDownButton = document.createElement('button');
       stepDownButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.divideTen') || '/10';
       stepDownButton.addEventListener('click', () => {
-        this.setAssignmentStep(this.assignmentStep / 10);
+        this.normalizeAssignmentStep();
+        this.assignmentStep = this.assignmentStep > 1n ? (this.assignmentStep / 10n) : 1n;
         this.updateUI();
       });
       const stepUpButton = document.createElement('button');
       stepUpButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.timesTen') || 'x10';
       stepUpButton.addEventListener('click', () => {
-        this.setAssignmentStep(this.assignmentStep * 10);
+        this.normalizeAssignmentStep();
+        this.assignmentStep = this.assignmentStep * 10n;
+        if (this.assignmentStep > MANUFACTURING_ASSIGNMENT_STEP_MAX) {
+          this.assignmentStep = MANUFACTURING_ASSIGNMENT_STEP_MAX;
+        }
         this.updateUI();
       });
 
@@ -1277,9 +1375,11 @@
       }
 
       this.normalizeAssignments();
+      this.normalizeAssignmentStep();
       const total = this.getTotalPotentialPopulation();
+      const totalBigInt = normalizeManufacturingInteger(total);
       const assigned = this.getAssignedTotal();
-      const available = Math.max(0, total - assigned);
+      const available = totalBigInt > assigned ? (totalBigInt - assigned) : 0n;
       const step = this.assignmentStep;
       const bonus = this.getCylindersHopePopulationBonus();
 
@@ -1296,9 +1396,9 @@
         return `${formatNumber(this.lastInputRates[inputKey] || 0, true, 3)} ${label}/s`;
       }).join(', ');
       elements.runCheckbox.checked = this.isRunning;
-      elements.runCheckbox.disabled = total <= 0;
-      elements.stepDownButton.disabled = total <= 0;
-      elements.stepUpButton.disabled = total <= 0;
+      elements.runCheckbox.disabled = totalBigInt <= 0n;
+      elements.stepDownButton.disabled = totalBigInt <= 0n;
+      elements.stepUpButton.disabled = totalBigInt <= 0n;
       const productivityByRecipe = this.getOperationProductivityForTick();
 
       this.getManagedAssignmentKeys().forEach((key) => {
@@ -1319,20 +1419,20 @@
         row.minusButton.textContent = `-${formatNumber(step, true)}`;
         row.plusButton.textContent = `+${formatNumber(step, true)}`;
         row.autoAssign.checked = this.autoAssignFlags[key] === true;
-        row.autoAssign.disabled = total <= 0;
+        row.autoAssign.disabled = totalBigInt <= 0n;
         if (document.activeElement !== row.weightInput) {
           row.weightInput.value = String(
             Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
           );
         }
-        row.weightInput.disabled = total <= 0;
-        row.zeroButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-        row.maxButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
-        row.minusButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-        row.plusButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
+        row.weightInput.disabled = totalBigInt <= 0n;
+        row.zeroButton.disabled = storedCurrent <= 0n || this.autoAssignFlags[key];
+        row.maxButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || this.autoAssignFlags[key];
+        row.minusButton.disabled = storedCurrent <= 0n || this.autoAssignFlags[key];
+        row.plusButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || this.autoAssignFlags[key];
         row.rate.textContent = recipe ? `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s` : '';
         const recipeProductivity = recipe ? (productivityByRecipe[key] ?? 1) : 1;
-        const productivityLimited = !!recipe && this.isRunning && storedCurrent > 0 && recipeProductivity < 1;
+        const productivityLimited = !!recipe && this.isRunning && storedCurrent > 0n && recipeProductivity < 1;
         row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
         if (row.recipeTooltip) {
           setTooltipText(
@@ -1351,8 +1451,8 @@
       return {
         ...super.saveAutomationSettings(),
         isRunning: this.isRunning === true,
-        manufacturingAssignments: { ...this.manufacturingAssignments },
-        assignmentStep: this.assignmentStep,
+        manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
+        assignmentStep: serializeManufacturingInteger(this.assignmentStep),
         autoAssignFlags: { ...this.autoAssignFlags },
         autoAssignWeights: { ...this.autoAssignWeights },
       };
@@ -1376,6 +1476,7 @@
         this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
       }
       this.normalizeAssignments();
+      this.normalizeAssignmentStep();
     }
 
     saveState() {
@@ -1383,8 +1484,8 @@
         ...super.saveState(),
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
-        manufacturingAssignments: { ...this.manufacturingAssignments },
-        assignmentStep: this.assignmentStep,
+        manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
+        assignmentStep: serializeManufacturingInteger(this.assignmentStep),
         autoAssignFlags: { ...this.autoAssignFlags },
         autoAssignWeights: { ...this.autoAssignWeights },
       };
@@ -1404,6 +1505,7 @@
         ? getManufacturingText('catalogs.specializations.manufacturing.status.idle')
         : getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
       this.normalizeAssignments();
+      this.normalizeAssignmentStep();
     }
 
     saveTravelState() {
@@ -1411,8 +1513,8 @@
         ...super.saveTravelState(),
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
-        manufacturingAssignments: { ...this.manufacturingAssignments },
-        assignmentStep: this.assignmentStep,
+        manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
+        assignmentStep: serializeManufacturingInteger(this.assignmentStep),
         autoAssignFlags: { ...this.autoAssignFlags },
         autoAssignWeights: { ...this.autoAssignWeights },
       };
@@ -1431,6 +1533,7 @@
         ? getManufacturingText('catalogs.specializations.manufacturing.status.idle')
         : getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
       this.normalizeAssignments();
+      this.normalizeAssignmentStep();
     }
   }
 
