@@ -66,7 +66,7 @@ const GALACTIC_INVASION_REWARDS = {
   alphaLower: [
     {
       target: 'nuclearAlchemyFurnace',
-      type: 'nuclearAlchemyThroughputMultiplier',
+      type: 'throughputMultiplier',
       value: 0.1,
       labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput',
       labelFallback: '+{value}% Nuclear Alchemy throughput'

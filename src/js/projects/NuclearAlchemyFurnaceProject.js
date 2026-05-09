@@ -82,23 +82,24 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return this.getDurationWithTerraformBonus(this.duration);
   }
 
-  getAlchemyParameter() {
-    const parsed = Number(this.attributes?.alchemyParameter);
-    const baseParameter = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
-    let throughputMultiplier = 1;
+  getEffectiveThroughputMultiplier() {
+    let multiplier = 1;
     this.activeEffects.forEach((effect) => {
-      if (effect?.type !== 'nuclearAlchemyThroughputMultiplier') {
+      if (effect?.type !== 'throughputMultiplier') {
         return;
       }
       const value = Number(effect.value);
       if (Number.isFinite(value) && value > 0) {
-        throughputMultiplier += value;
+        multiplier += value;
       }
     });
-    if (throughputMultiplier > 0) {
-      return baseParameter * throughputMultiplier;
-    }
-    return baseParameter;
+    return multiplier > 0 ? multiplier : 1;
+  }
+
+  getAlchemyParameter() {
+    const parsed = Number(this.attributes?.alchemyParameter);
+    const baseParameter = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+    return baseParameter * this.getEffectiveThroughputMultiplier();
   }
 
   getTotalFurnaces() {

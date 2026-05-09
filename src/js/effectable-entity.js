@@ -272,6 +272,9 @@ class EffectableEntity {
         case 'happinessPenalty':
           this.applyHappinessPenalty(effect);
           break;
+        case 'throughputMultiplier':
+          this.applyThroughputMultiplier(effect);
+          break;
         // Add other effect types here as needed
         default:
           break;
@@ -595,6 +598,10 @@ class EffectableEntity {
     // penalty effects are computed on demand in Colony
   }
 
+  applyThroughputMultiplier(effect) {
+    // throughput multipliers are computed on demand by consumers
+  }
+
 
     applyPermanentProjectDisable(effect) {
     }
@@ -700,6 +707,20 @@ class EffectableEntity {
       });
 
       return multiplier;
+    }
+
+    getEffectiveThroughputMultiplier() {
+      let multiplier = 1;
+      this.activeEffects.forEach((effect) => {
+        if (effect.type !== 'throughputMultiplier') {
+          return;
+        }
+        const value = Number(effect.value);
+        if (Number.isFinite(value) && value > 0) {
+          multiplier += value;
+        }
+      });
+      return multiplier > 0 ? multiplier : 1;
     }
 }
 

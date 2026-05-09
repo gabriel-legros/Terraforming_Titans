@@ -8,6 +8,7 @@ class GalacticInvasionManager extends EffectableEntity {
     this.invasionTimerMs = 0;
     this.externalFailurePending = false;
     this.rewardSignature = '';
+    this.rewardTargets = new Set();
   }
 
   enable(targetId) {
@@ -50,7 +51,7 @@ class GalacticInvasionManager extends EffectableEntity {
       return;
     }
     if (this.externalFailurePending) {
-      this.defeatActiveInvasion(false);
+      this.completeActiveInvasion();
       return;
     }
     if (this.isActiveInvasionDefeated()) {
@@ -322,18 +323,25 @@ class GalacticInvasionManager extends EffectableEntity {
       return;
     }
     this.rewardSignature = signature;
-    const project = projectManager.projects.nuclearAlchemyFurnace;
-    project.activeEffects = project.activeEffects.filter((effect) => effect.sourceId !== 'galacticInvasion');
+    this.rewardTargets.forEach((targetId) => {
+      addOrRemoveEffect({
+        target: 'project',
+        targetId,
+        sourceId: 'galacticInvasion'
+      }, 'removeEffect');
+    });
+    this.rewardTargets.clear();
     summary.forEach((entry) => {
-      if (entry.target !== 'nuclearAlchemyFurnace') {
-        return;
-      }
-      project.activeEffects.push({
+      const effect = {
+        target: 'project',
+        targetId: entry.target,
         sourceId: 'galacticInvasion',
-        effectId: `galacticInvasion-${entry.type}`,
+        effectId: `galacticInvasion-${entry.target}-${entry.type}`,
         type: entry.type,
         value: entry.value
-      });
+      };
+      addOrRemoveEffect(effect, 'addAndReplace');
+      this.rewardTargets.add(entry.target);
     });
   }
 
