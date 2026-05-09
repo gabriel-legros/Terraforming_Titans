@@ -737,6 +737,9 @@ class ScriptAutomation {
 
   applyAutomationAction(action) {
     if (!action || action.constructor !== Object) return false;
+    if (action.kind === 'toggleAutomation') {
+      return this.applyAutomationToggleAction(action);
+    }
     const target = this.getAutomationTarget(action.automationType);
     if (!target) return false;
     if (action.kind === 'applyPreset' && action.presetId) {
@@ -759,6 +762,27 @@ class ScriptAutomation {
     if (type === 'life') return automationManager.lifeAutomation;
     if (type === 'autoTravel') return automationManager.autoTravelAutomation;
     return null;
+  }
+
+  applyAutomationToggleAction(action) {
+    if (!action.automationType) return false;
+    const value = action.toggleValue || 'toggle';
+    if (action.automationType === 'scripting') {
+      const scriptAutomation = automationManager.scriptAutomation;
+      if (!scriptAutomation) return false;
+      if (value === 'on') scriptAutomation.enable();
+      else if (value === 'off') scriptAutomation.disable();
+      else if (scriptAutomation.enabled) scriptAutomation.disable();
+      else scriptAutomation.enable();
+      return true;
+    }
+
+    const target = this.getAutomationTarget(action.automationType);
+    if (!target || target.enabled === undefined) return false;
+    if (value === 'on') target.setEnabled(true);
+    else if (value === 'off') target.setEnabled(false);
+    else target.setEnabled(!target.enabled);
+    return true;
   }
 
   evaluateCondition(condition) {
@@ -825,6 +849,9 @@ class ScriptAutomation {
 
   describeAction(action) {
     if (action.kind === 'sleep') return `Sleep ${formatNumber(this.registry.toNumber(action.durationMs), false, 0)} ms`;
+    if (action.kind === 'toggleAutomation') {
+      return `Set ${action.automationType} automation ${action.toggleValue || 'toggle'}`;
+    }
     const target = this.getAutomationTarget(action.automationType);
     if (!target) return 'Action';
     if (action.kind === 'applyPreset') {

@@ -75,7 +75,6 @@ class AutoTravelAutomation {
       return false;
     }
     this.selectedPresetId = preset.id;
-    this.enabled = true;
     queueAutomationUIRefresh();
     return true;
   }
