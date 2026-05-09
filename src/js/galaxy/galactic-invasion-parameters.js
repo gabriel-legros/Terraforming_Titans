@@ -54,7 +54,12 @@ const GALACTIC_INVASION_LETTERS = [
   { key: 'omegaUpper', label: 'Ω', name: 'Omega' }
 ].map((entry, index) => {
   const mantissas = [1, 2, 5];
-  const power = PROMETHEAN_INVASION_BASE_POWER * mantissas[index % 3] * Math.pow(10, Math.floor(index / 3));
+  let power = PROMETHEAN_INVASION_BASE_POWER * mantissas[index % 3] * Math.pow(10, Math.floor(index / 3));
+  if (entry.key === 'omegaLower') {
+    power = 1e23;
+  } else if (entry.key === 'omegaUpper') {
+    power = 1e24;
+  }
   return {
     ...entry,
     index,

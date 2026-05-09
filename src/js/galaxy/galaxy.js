@@ -243,7 +243,8 @@ class GalaxyManager extends EffectableEntity {
             if (!Number.isFinite(count) || count <= 0) {
                 return;
             }
-            this.fleetUpgradePurchases[entry.key] = count;
+            const maxPurchases = this.getFleetUpgradeMaxPurchases(entry.key);
+            this.fleetUpgradePurchases[entry.key] = Math.min(maxPurchases, Math.floor(count));
         });
     }
 
@@ -810,6 +811,15 @@ class GalaxyManager extends EffectableEntity {
         return count;
     }
 
+    getFleetUpgradeMaxPurchases(key) {
+        const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
+        const maxPurchases = Number(definition?.maxPurchases);
+        if (!Number.isFinite(maxPurchases) || maxPurchases <= 0) {
+            return Infinity;
+        }
+        return Math.floor(maxPurchases);
+    }
+
     getFleetUpgradeIncrement(key) {
         const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
         const increment = Number(definition?.increment);
@@ -867,9 +877,41 @@ class GalaxyManager extends EffectableEntity {
         return definition.baseCost * nextIndex;
     }
 
+    getFleetUpgradeBulkCost(key, targetCount) {
+        const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
+        if (!definition) {
+            return 0;
+        }
+        const desiredCount = Math.max(1, Math.floor(Number(targetCount) || 1));
+        const currentCount = this.getFleetUpgradeCount(key);
+        const maxPurchases = this.getFleetUpgradeMaxPurchases(key);
+        const remaining = Math.max(0, maxPurchases - currentCount);
+        const actualCount = Math.min(desiredCount, remaining);
+        if (actualCount <= 0) {
+            return 0;
+        }
+        if (definition.costType === 'skill') {
+            return actualCount;
+        }
+        if (definition.costType === 'resource') {
+            const firstIndex = currentCount + 1;
+            const lastIndex = currentCount + actualCount;
+            const sumSquares = (lastIndex * (lastIndex + 1) * ((2 * lastIndex) + 1))
+                - ((firstIndex - 1) * firstIndex * ((2 * (firstIndex - 1)) + 1));
+            return definition.baseCost * (sumSquares / 6);
+        }
+        const firstIndex = currentCount + 1;
+        const lastIndex = currentCount + actualCount;
+        const sumLinear = ((firstIndex + lastIndex) * actualCount) / 2;
+        return definition.baseCost * sumLinear;
+    }
+
     canPurchaseFleetUpgrade(key) {
         const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
         if (!definition) {
+            return false;
+        }
+        if (this.getFleetUpgradeCount(key) >= this.getFleetUpgradeMaxPurchases(key)) {
             return false;
         }
         const cost = this.getFleetUpgradeCost(key);
@@ -933,6 +975,15 @@ class GalaxyManager extends EffectableEntity {
         return true;
     }
 
+    purchaseFleetUpgradeBulk(key, targetCount) {
+        const desiredCount = Math.max(1, Math.floor(Number(targetCount) || 1));
+        let purchased = 0;
+        while (purchased < desiredCount && this.purchaseFleetUpgrade(key)) {
+            purchased += 1;
+        }
+        return purchased;
+    }
+
     getFleetUpgradeSummaries() {
         return GALAXY_FLEET_UPGRADE_KEYS.map((key) => {
             const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
@@ -945,6 +996,7 @@ class GalaxyManager extends EffectableEntity {
                 description: definition.description,
                 increment: this.getFleetUpgradeIncrement(key),
                 purchases,
+                maxPurchases: this.getFleetUpgradeMaxPurchases(key),
                 multiplier,
                 cost,
                 costLabel: definition.costLabel,

@@ -43,11 +43,11 @@ const FLEET_UPGRADE_FALLBACKS = [
         label: 'Military R&D',
         description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
         increment: 0.1,
-        costLabel: 'Advanced Research'
+        costLabel: 'Adv. Research'
     },
     {
         key: 'micOutsource',
-        label: 'MIC Outsource',
+        label: 'MIC Contracts',
         description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
         increment: 0.1,
         costLabel: 'Solis Points'
@@ -89,6 +89,11 @@ const GALAXY_MAP_REFRESH_INTERVAL_MS = 1000;
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
 const operationsAutoStates = new Map();
+const fleetUpgradeBulkSteps = new Map();
+const FLEET_UPGRADE_BULK_STEP_MAX = {
+    militaryResearch: 1e12,
+    pandoraBox: 1e6
+};
 
 function getGalaxyText(path, fallback, vars) {
     try {
@@ -184,6 +189,38 @@ function formatFleetUpgradeCost(value) {
         return formatter(value, true, 2);
     }
     return value.toLocaleString('en-US');
+}
+
+function normalizeFleetUpgradeBulkStep(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return 1;
+    }
+    const floored = Math.max(1, Math.floor(numeric));
+    let normalized = 1;
+    while (normalized * 10 <= floored) {
+        normalized *= 10;
+    }
+    return normalized;
+}
+
+function getFleetUpgradeBulkStep(upgradeKey) {
+    if (!upgradeKey) {
+        return 1;
+    }
+    return normalizeFleetUpgradeBulkStep(fleetUpgradeBulkSteps.get(upgradeKey) || 1);
+}
+
+function setFleetUpgradeBulkStep(upgradeKey, nextStep) {
+    if (!upgradeKey) {
+        return;
+    }
+    const normalized = normalizeFleetUpgradeBulkStep(nextStep);
+    const maxStep = FLEET_UPGRADE_BULK_STEP_MAX[upgradeKey];
+    const clamped = Number.isFinite(maxStep) && maxStep > 0
+        ? Math.min(normalized, maxStep)
+        : normalized;
+    fleetUpgradeBulkSteps.set(upgradeKey, clamped);
 }
 
 function formatAttackCountdown(milliseconds) {
@@ -776,9 +813,32 @@ function handleFleetUpgradePurchase(event) {
     if (!upgradeKey || !manager?.purchaseFleetUpgrade) {
         return;
     }
-    if (!manager.purchaseFleetUpgrade(upgradeKey)) {
+    const bulkStep = getFleetUpgradeBulkStep(upgradeKey);
+    const purchased = manager.purchaseFleetUpgradeBulk
+        ? manager.purchaseFleetUpgradeBulk(upgradeKey, bulkStep)
+        : (manager.purchaseFleetUpgrade(upgradeKey) ? 1 : 0);
+    if (purchased <= 0) {
         return;
     }
+}
+
+function handleFleetUpgradeBulkStepButton(event) {
+    const button = event?.currentTarget;
+    const action = button?.dataset?.action;
+    const upgradeKey = button?.dataset?.upgrade;
+    if (!upgradeKey) {
+        return;
+    }
+    const currentStep = getFleetUpgradeBulkStep(upgradeKey);
+    let nextStep = action === 'divide'
+        ? Math.max(1, Math.floor(currentStep / 10))
+        : currentStep * 10;
+    const maxStep = FLEET_UPGRADE_BULK_STEP_MAX[upgradeKey];
+    if (Number.isFinite(maxStep) && maxStep > 0) {
+        nextStep = Math.min(nextStep, maxStep);
+    }
+    setFleetUpgradeBulkStep(upgradeKey, nextStep);
+    updateFleetShopDisplay(galaxyManager, galaxyUICache);
 }
 
 function handleSectorLockToggle() {
@@ -2700,6 +2760,25 @@ function cacheGalaxyElements() {
         label.textContent = entry.label;
         labelRow.appendChild(label);
 
+        const bulkControls = doc.createElement('div');
+        bulkControls.className = 'galaxy-upgrades-shop__bulk-controls';
+        const bulkDivideButton = doc.createElement('button');
+        bulkDivideButton.type = 'button';
+        bulkDivideButton.className = 'galaxy-upgrades-shop__bulk-button';
+        bulkDivideButton.dataset.action = 'divide';
+        bulkDivideButton.dataset.upgrade = entry.key;
+        bulkDivideButton.textContent = '/10';
+        bulkDivideButton.addEventListener('click', handleFleetUpgradeBulkStepButton);
+        const bulkMultiplyButton = doc.createElement('button');
+        bulkMultiplyButton.type = 'button';
+        bulkMultiplyButton.className = 'galaxy-upgrades-shop__bulk-button';
+        bulkMultiplyButton.dataset.action = 'multiply';
+        bulkMultiplyButton.dataset.upgrade = entry.key;
+        bulkMultiplyButton.textContent = getGalaxyText('common.timesTen', 'x10');
+        bulkMultiplyButton.addEventListener('click', handleFleetUpgradeBulkStepButton);
+        bulkControls.append(bulkDivideButton, bulkMultiplyButton);
+        labelRow.appendChild(bulkControls);
+
         const statsRow = doc.createElement('div');
         statsRow.className = 'galaxy-upgrades-shop__stats';
         const multiplierValue = doc.createElement('span');
@@ -2743,7 +2822,9 @@ function cacheGalaxyElements() {
             multiplier: multiplierValue,
             purchases: purchasesValue,
             button,
-            costValue
+            costValue,
+            bulkDivideButton,
+            bulkMultiplyButton
         };
     });
 
@@ -2891,6 +2972,14 @@ function updateFleetShopDisplay(manager, cache) {
         const multiplierValue = entry?.multiplier ?? 1;
         const increment = Number(entry?.increment);
         const purchaseCount = Number(entry?.purchases) || 0;
+        const maxPurchases = Number(entry?.maxPurchases);
+        const hasMaxPurchases = Number.isFinite(maxPurchases) && maxPurchases > 0;
+        const purchasesRemaining = hasMaxPurchases ? Math.max(0, maxPurchases - purchaseCount) : Infinity;
+        const currentStep = getFleetUpgradeBulkStep(key);
+        const effectiveStep = hasMaxPurchases ? Math.max(1, Math.min(currentStep, purchasesRemaining || 1)) : currentStep;
+        if (effectiveStep !== currentStep) {
+            setFleetUpgradeBulkStep(key, effectiveStep);
+        }
         if (nodes.multiplier) {
             nodes.multiplier.textContent = `${formatFleetMultiplier(multiplierValue)}x`;
         }
@@ -2900,13 +2989,36 @@ function updateFleetShopDisplay(manager, cache) {
         }
         if (nodes.button) {
             const buttonIncrement = Number.isFinite(increment) && increment > 0 ? increment : 0.1;
-            nodes.button.textContent = getGalaxyText('shop.capacityButton', '+{value}x Capacity', { value: buttonIncrement.toFixed(2) });
+            if (hasMaxPurchases && purchaseCount >= maxPurchases) {
+                nodes.button.textContent = getGalaxyText('shop.maxed', 'Maxed');
+            } else {
+                const totalIncrement = buttonIncrement * effectiveStep;
+                nodes.button.textContent = getGalaxyText('shop.capacityButton', '+{value}x Capacity', { value: totalIncrement.toFixed(2) });
+            }
         }
         if (nodes.costValue) {
-            nodes.costValue.textContent = formatFleetUpgradeCost(entry?.cost);
+            const displayedCost = manager?.getFleetUpgradeBulkCost
+                ? manager.getFleetUpgradeBulkCost(key, effectiveStep)
+                : entry?.cost;
+            nodes.costValue.textContent = formatFleetUpgradeCost(displayedCost);
         }
         if (nodes.button) {
             nodes.button.disabled = !(entry?.affordable);
+        }
+        if (nodes.bulkDivideButton) {
+            nodes.bulkDivideButton.disabled = effectiveStep <= 1;
+        }
+        if (nodes.bulkMultiplyButton) {
+            const isCappedUpgrade = hasMaxPurchases;
+            const maxStep = FLEET_UPGRADE_BULK_STEP_MAX[key];
+            const hitsStepCap = Number.isFinite(maxStep) && maxStep > 0 && effectiveStep >= maxStep;
+            if (isCappedUpgrade && effectiveStep >= 10) {
+                nodes.bulkMultiplyButton.disabled = true;
+            } else if (hitsStepCap) {
+                nodes.bulkMultiplyButton.disabled = true;
+            } else {
+                nodes.bulkMultiplyButton.disabled = purchasesRemaining <= effectiveStep;
+            }
         }
     });
 }

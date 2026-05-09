@@ -1103,9 +1103,9 @@
   inset: 0;
   z-index: 5;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 32px;
+  padding: 24px 32px 32px;
   background: rgba(15, 23, 42, 0.78);
   color: #fff;
   text-align: center;
@@ -1140,6 +1140,13 @@
 
 .galactic-invasion-section__body {
   padding: 14px;
+}
+
+.galactic-invasion-section__description {
+  margin: 0 0 12px;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .galactic-invasion-section.collapsed .galactic-invasion-section__body {

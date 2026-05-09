@@ -175,6 +175,30 @@
   color: #63a6ff;
 }
 
+.galaxy-upgrades-shop__bulk-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.galaxy-upgrades-shop__bulk-button {
+  min-width: 30px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  border: 1px solid rgba(118, 170, 236, 0.35);
+  background: rgba(46, 78, 136, 0.45);
+  color: #dcecff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.galaxy-upgrades-shop__bulk-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .galaxy-upgrades-shop__stats {
   display: flex;
   align-items: baseline;

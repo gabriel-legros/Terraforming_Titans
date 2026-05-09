@@ -196,6 +196,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Space, Projects, and Hazards
 - Galactic Invasion is a preserved/save-loaded manager with an opt-in Space subtab to the right of Galaxy. It uses the special `prometheanInvasion` galaxy faction (`INV`, deep purple), 10s operations, no fleet regeneration, rim-entry invasion rules, cancel-to-UHF cleanup with 1h cooldown, and completed-letter rewards that reapply as summarized effects.
+- Galactic Invasion Omega fleet power values are `10 Sx` for Lower Omega and `100 Sx` for Upper Omega.
 - Atlas featured challenge world `Hermes` now occupies the second featured slot and uses Mercury-accurate orbital/body data around star `Helios`; it permanently disables Space Mirror Facility, Space Mirrors, Hyperion Lanterns, and Tractor Beams through reusable target effects rather than Pulsar-only hardcoding, and its completion reward unlocks RWG `Very Hot` orbits. RWG `Very Hot` is a distinct locked orbit preset above `Hot`.
 - Kessler Skies gained richer failure/debris modeling, warnings/tooltips, and capped Solis storage bonuses.
 - Kessler debris bins store/display altitude relative to the world's initial radius, while drag density and decay on dynamic-mass worlds adjust those bins by the current radius change before sampling the atmosphere.

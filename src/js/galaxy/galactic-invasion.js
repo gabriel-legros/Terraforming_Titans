@@ -104,7 +104,12 @@ class GalacticInvasionManager extends EffectableEntity {
     if (!letterKey) {
       return;
     }
-    this.completedLetters.add(letterKey);
+    const letter = this.getLetter(letterKey);
+    if (letter) {
+      for (let i = 0; i <= letter.index; i += 1) {
+        this.completedLetters.add(GALACTIC_INVASION_LETTERS[i].key);
+      }
+    }
     this.defeatActiveInvasion(false);
     this.refreshRewardEffects();
     updateGalacticInvasionUI({ force: true });

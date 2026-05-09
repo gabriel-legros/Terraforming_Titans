@@ -28,16 +28,17 @@ const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
         costType: 'resource',
         resourceCategory: 'colony',
         resourceId: 'advancedResearch',
-        costLabel: 'Advanced Research'
+        costLabel: 'Adv. Research'
     },
     micOutsource: {
         key: 'micOutsource',
-        label: 'MIC Outsourcing',
+        label: 'MIC Contracts',
         description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
         increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 1000,
         costType: 'solis',
-        costLabel: 'Solis Points'
+        costLabel: 'Solis Points',
+        maxPurchases: 100
     },
     enemyLessons: {
         key: 'enemyLessons',
@@ -46,7 +47,8 @@ const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
         increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 100,
         costType: 'artifact',
-        costLabel: 'Alien Artifacts'
+        costLabel: 'Alien Artifacts',
+        maxPurchases: 100
     },
     pandoraBox: {
         key: 'pandoraBox',

@@ -413,6 +413,18 @@ progressZeus.chapters.push(
       { type: "collection", resourceType: "colony", resource: "colonists", quantity: 500_000_000_000_000 }
     ],
     reward: [
+      { target: 'galaxyInvasionManager', type: 'enable', targetId: 'space-invasion' },
+      { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false, onTravel: false },
+      {
+        target: 'global',
+        type: 'activateSubtab',
+        subtabClass: 'space-subtab',
+        contentClass: 'space-subtab-content',
+        targetId: 'space-invasion',
+        unhide: true,
+        onLoad: false,
+        onTravel: false
+      }
     ]
   },
   {

@@ -10,7 +10,11 @@ function formatGalacticInvasionPower(value) {
 
 function formatGalacticInvasionPercent(value) {
   const numeric = Number(value) || 0;
-  return formatNumber(numeric * 100, true, 2);
+  const percent = numeric * 100;
+  const normalizedPercent = Math.abs(percent - Math.round(percent)) < 1e-9
+    ? Math.round(percent)
+    : percent;
+  return formatNumber(normalizedPercent, true, 2);
 }
 
 function formatGalacticInvasionDuration(milliseconds) {
@@ -98,6 +102,14 @@ function initializeGalacticInvasionUI() {
   content.className = 'galactic-invasion__content';
 
   const training = createGalacticInvasionSection('training', getGalacticInvasionText('trainingTitle', 'Invasion Training'));
+  const trainingDescription = document.createElement('p');
+  trainingDescription.className = 'galactic-invasion-section__description';
+  trainingDescription.textContent = getGalacticInvasionText(
+    'trainingDescription',
+    'Invasion Training lets you deploy your available Fleet Power against the Promethean lettered formations in controlled operations. Each operation commits the selected fleet until the timer completes, and that committed force cannot be used elsewhere during the run. Stronger fleet assignments generally improve operation success and reduce expected losses, while weaker assignments are riskier but cheaper to field. Every completed letter grants a permanent campaign reward, and those rewards are shown in Compiled Rewards below. Progress is cumulative across worlds and persists like other galactic systems. Important rule: clearing an invasion tier also clears every lower tier automatically, so pushing into higher letters is the fastest way to secure earlier ranks.'
+  );
+  training.body.appendChild(trainingDescription);
+
   const grid = document.createElement('div');
   grid.className = 'galactic-invasion-grid';
   training.body.appendChild(grid);

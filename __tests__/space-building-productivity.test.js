@@ -339,6 +339,20 @@ function setupHarness(initialStorage = {}) {
     isBooleanFlagSet(flag) {
       return this.booleanFlags.has(flag);
     }
+
+    getEffectiveThroughputMultiplier() {
+      let multiplier = 1;
+      this.activeEffects.forEach((effect) => {
+        if (effect.type !== 'throughputMultiplier') {
+          return;
+        }
+        const value = Number(effect.value);
+        if (Number.isFinite(value) && value > 0) {
+          multiplier += value;
+        }
+      });
+      return multiplier > 0 ? multiplier : 1;
+    }
   }
 
   class BaseProject extends EffectableEntity {

@@ -2726,6 +2726,7 @@ setLanguageData({
       invasion: {
         tab: 'Invasion',
         trainingTitle: 'Invasion Training',
+        trainingDescription: 'Even a master grows rusty without practice.  To ensure the Empire stays strong, Prometheus was tasked with setting up invasion fleets in dwarf galaxies.  They are harmless but ready to invade at any moment for War practice.  Since they rely on complex megastructures to maintain themselves, much can be learned from defeating them.  Triggering an invasion will begin an attack on the galaxy map.  To clear it and claim the reward, repel the invaders.  Clearing any invasion also clears the easier ones.',
         mysteryTitle: '????',
         conquestRequired: 'To avoid unnecessary casualties as a result of confusion from these training exercises, you must conquer the Galaxy first.',
         fleetPower: 'Fleet Power: {value}',
