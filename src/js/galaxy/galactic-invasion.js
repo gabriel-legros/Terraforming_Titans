@@ -342,12 +342,14 @@ class GalacticInvasionManager extends EffectableEntity {
     const summary = new Map();
     this.completedLetters.forEach((letterKey) => {
       this.getRewardEntries(letterKey).forEach((reward) => {
-        const key = `${reward.target}|${reward.type}|${reward.labelKey}`;
+        const targetType = reward.targetType || 'project';
+        const valueFormat = reward.valueFormat || 'percent';
+        const key = `${targetType}|${reward.target}|${reward.type}|${reward.labelKey}|${valueFormat}`;
         const existing = summary.get(key);
         if (existing) {
           existing.value += reward.value;
         } else {
-          summary.set(key, { ...reward });
+          summary.set(key, { ...reward, targetType, valueFormat });
         }
       });
     });
@@ -356,30 +358,34 @@ class GalacticInvasionManager extends EffectableEntity {
 
   refreshRewardEffects() {
     const summary = this.getCompletedRewardSummary();
-    const signature = JSON.stringify(summary.map((entry) => [entry.target, entry.type, entry.value]));
+    const signature = JSON.stringify(summary.map((entry) => [entry.targetType || 'project', entry.target, entry.type, entry.value]));
     if (signature === this.rewardSignature) {
       return;
     }
     this.rewardSignature = signature;
-    this.rewardTargets.forEach((targetId) => {
+    this.rewardTargets.forEach((targetKey) => {
+      const separatorIndex = targetKey.indexOf(':');
+      const targetType = separatorIndex > 0 ? targetKey.slice(0, separatorIndex) : 'project';
+      const targetId = separatorIndex > 0 ? targetKey.slice(separatorIndex + 1) : targetKey;
       addOrRemoveEffect({
-        target: 'project',
+        target: targetType,
         targetId,
         sourceId: 'galacticInvasion'
       }, 'removeEffect');
     });
     this.rewardTargets.clear();
     summary.forEach((entry) => {
+      const targetType = entry.targetType || 'project';
       const effect = {
-        target: 'project',
+        target: targetType,
         targetId: entry.target,
         sourceId: 'galacticInvasion',
-        effectId: `galacticInvasion-${entry.target}-${entry.type}`,
+        effectId: `galacticInvasion-${targetType}-${entry.target}-${entry.type}`,
         type: entry.type,
         value: entry.value
       };
       addOrRemoveEffect(effect, 'addAndReplace');
-      this.rewardTargets.add(entry.target);
+      this.rewardTargets.add(`${targetType}:${entry.target}`);
     });
   }
 

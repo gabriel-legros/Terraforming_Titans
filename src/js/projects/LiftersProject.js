@@ -136,28 +136,59 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return this.isBooleanFlagSet('starLifting');
   }
 
+  getEffectiveSuperchargeMaxMultiplier() {
+    let bonus = 0;
+    this.activeEffects.forEach((effect) => {
+      if (effect?.type !== 'superchargeMaxBonus') {
+        return;
+      }
+      const value = Number(effect.value);
+      if (Number.isFinite(value) && value > 0) {
+        bonus += value;
+      }
+    });
+    return Math.max(10, Math.round(10 + bonus));
+  }
+
+  getEffectiveSuperchargeExponent() {
+    let reduction = 0;
+    this.activeEffects.forEach((effect) => {
+      if (effect?.type !== 'superchargeExponentReduction') {
+        return;
+      }
+      const value = Number(effect.value);
+      if (Number.isFinite(value) && value > 0) {
+        reduction += value;
+      }
+    });
+    return Math.max(2, Math.min(3, 3 - reduction));
+  }
+
   getEffectiveSuperchargeMultiplier() {
     if (!this.hasSuperchargeUnlocked()) {
       return 1;
     }
+    const maxMultiplier = this.getEffectiveSuperchargeMaxMultiplier();
     const parsed = Number(this.superchargeMultiplier);
     if (Number.isFinite(parsed) && parsed >= 1) {
-      return Math.max(1, Math.min(10, Math.round(parsed)));
+      return Math.max(1, Math.min(maxMultiplier, Math.round(parsed)));
     }
     return 1;
   }
 
   normalizeSuperchargeForFlags() {
+    const maxMultiplier = this.getEffectiveSuperchargeMaxMultiplier();
     const parsed = Number(this.superchargeMultiplier);
     if (Number.isFinite(parsed) && parsed >= 1) {
-      this.superchargeMultiplier = Math.max(1, Math.min(10, Math.round(parsed)));
+      this.superchargeMultiplier = Math.max(1, Math.min(maxMultiplier, Math.round(parsed)));
       return;
     }
     this.superchargeMultiplier = 1;
   }
 
   setSuperchargeMultiplier(value) {
-    const next = Math.max(1, Math.min(10, Math.round(Number(value) || 1)));
+    const maxMultiplier = this.getEffectiveSuperchargeMaxMultiplier();
+    const next = Math.max(1, Math.min(maxMultiplier, Math.round(Number(value) || 1)));
     const resolved = this.hasSuperchargeUnlocked() ? next : 1;
     if (this.superchargeMultiplier === resolved) {
       return;
@@ -174,7 +205,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   getEffectiveEnergyPerUnit() {
     const multiplier = this.getEffectiveSuperchargeMultiplier();
-    return this.energyPerUnit * multiplier * multiplier * multiplier;
+    return this.energyPerUnit * Math.pow(multiplier, this.getEffectiveSuperchargeExponent());
   }
 
   getBaseDuration() {

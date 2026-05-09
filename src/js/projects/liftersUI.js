@@ -112,7 +112,7 @@ function renderLiftersUI(project, container) {
   const superchargeSlider = document.createElement('input');
   superchargeSlider.type = 'range';
   superchargeSlider.min = '1';
-  superchargeSlider.max = '10';
+  superchargeSlider.max = String(project.getEffectiveSuperchargeMaxMultiplier());
   superchargeSlider.step = '1';
   superchargeSlider.classList.add('lifters-supercharge-slider');
   superchargeSlider.addEventListener('input', () => {
@@ -350,7 +350,8 @@ function updateLiftersUI(project) {
   const expansionRate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
   elements.expansionRateValue.textContent = `${formatNumber(expansionRate, true, 3)} lifters/s`;
   const supercharge = project.getEffectiveSuperchargeMultiplier();
-  const energyMultiplier = supercharge * supercharge * supercharge;
+  const energyMultiplier = Math.pow(supercharge, project.getEffectiveSuperchargeExponent());
+  elements.superchargeSlider.max = String(project.getEffectiveSuperchargeMaxMultiplier());
   elements.superchargeContainer.style.display = project.hasSuperchargeUnlocked() ? 'grid' : 'none';
   elements.superchargeValue.textContent = `x${formatNumber(project.getEffectiveSuperchargeMultiplier(), true, 0)}`;
   elements.superchargeSlider.value = String(project.getEffectiveSuperchargeMultiplier());

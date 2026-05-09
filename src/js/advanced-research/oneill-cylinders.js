@@ -96,19 +96,35 @@ function getLocalizedOneillText(path, vars, fallback) {
   }
 }
 
+function getOneillSectorCapMultiplier(space) {
+  let bonus = 0;
+  const activeEffects = space?.activeEffects || [];
+  activeEffects.forEach((effect) => {
+    if (effect?.type !== 'oneillSectorCapMultiplier') {
+      return;
+    }
+    const value = Number(effect.value);
+    if (Number.isFinite(value) && value > 0) {
+      bonus += value;
+    }
+  });
+  return Math.max(1, Math.min(10, 1 + bonus));
+}
+
 function getOneillCylinderCapacity(galaxy, space) {
+  const capacityPerSector = ONEILL_CAPACITY_PER_SECTOR * getOneillSectorCapMultiplier(space);
   const sectors = getUhfControlledSectors(galaxy);
   if (!sectors.length) {
-    return ONEILL_CAPACITY_PER_SECTOR;
+    return capacityPerSector;
   }
   if (!space?.isBooleanFlagSet?.(HYPERLANE_FLAG)) {
-    return sectors.length * ONEILL_CAPACITY_PER_SECTOR;
+    return sectors.length * capacityPerSector;
   }
   let total = 0;
   sectors.forEach((sector) => {
-    total += ONEILL_CAPACITY_PER_SECTOR * getWarpGateCapacityMultiplier(sector);
+    total += capacityPerSector * getWarpGateCapacityMultiplier(sector);
   });
-  return total > 0 ? total : ONEILL_CAPACITY_PER_SECTOR;
+  return total > 0 ? total : capacityPerSector;
 }
 
 function formatCylinderCount(value) {

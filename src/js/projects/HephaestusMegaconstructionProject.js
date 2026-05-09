@@ -354,17 +354,32 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     return 'Hephaestus Yard expansion';
   }
 
+  getEffectiveYardAssignmentMultiplier() {
+    let bonus = 0;
+    this.activeEffects.forEach((effect) => {
+      if (effect?.type !== 'yardEffectivenessMultiplier') {
+        return;
+      }
+      const value = Number(effect.value);
+      if (Number.isFinite(value) && value > 0) {
+        bonus += value;
+      }
+    });
+    return Math.max(1, 1 + bonus);
+  }
+
   applyYardEffects() {
     this.normalizeAssignments();
     const targets = this.getAllAssignableKeys();
     const activeKeySet = new Set(this.getAssignmentKeys());
+    const multiplier = this.getEffectiveYardAssignmentMultiplier();
 
     targets.forEach((key) => {
       const project = projectManager.projects[key];
       if (!project) {
         return;
       }
-      const assigned = activeKeySet.has(key) ? (this.yardAssignments[key] || 0) : 0;
+      const assigned = activeKeySet.has(key) ? (this.yardAssignments[key] || 0) * multiplier : 0;
       project.addAndReplace({
         type: 'effectiveTerraformedWorlds',
         value: assigned,

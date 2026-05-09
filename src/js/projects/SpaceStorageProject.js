@@ -108,8 +108,22 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.repeatCount + this.expansionProgress;
   }
 
+  getEffectiveStorageCapacityMultiplier() {
+    let bonus = 0;
+    this.activeEffects.forEach((effect) => {
+      if (effect?.type !== 'spaceStorageCapacityMultiplier') {
+        return;
+      }
+      const value = Number(effect.value);
+      if (Number.isFinite(value) && value > 0) {
+        bonus += value;
+      }
+    });
+    return Math.max(1, 1 + bonus);
+  }
+
   get maxStorage() {
-    return this.getTotalExpansions() * this.capacityPerCompletion;
+    return this.getTotalExpansions() * this.capacityPerCompletion * this.getEffectiveStorageCapacityMultiplier();
   }
 
   getExpansionRecipeKeys() {

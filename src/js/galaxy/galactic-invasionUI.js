@@ -273,7 +273,12 @@ function getGalacticInvasionRewardText(letterKey) {
 }
 
 function formatGalacticInvasionReward(reward) {
-  return t(reward.labelKey, { value: formatGalacticInvasionPercent(reward.value) }, reward.labelFallback);
+  const valueFormat = reward?.valueFormat || 'percent';
+  let formattedValue = formatGalacticInvasionPercent(reward.value);
+  if (valueFormat === 'number') {
+    formattedValue = formatNumber(reward.value, true, 2);
+  }
+  return t(reward.labelKey, { value: formattedValue }, reward.labelFallback);
 }
 
 function updateGalacticInvasionRewardSummary(container) {
