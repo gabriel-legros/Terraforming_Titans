@@ -176,11 +176,16 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return 1;
   }
 
-  normalizeSuperchargeForFlags() {
+  normalizeSuperchargeForFlags(options = {}) {
+    const skipMaxClamp = options.skipMaxClamp === true;
     const maxMultiplier = this.getEffectiveSuperchargeMaxMultiplier();
     const parsed = Number(this.superchargeMultiplier);
     if (Number.isFinite(parsed) && parsed >= 1) {
-      this.superchargeMultiplier = Math.max(1, Math.min(maxMultiplier, Math.round(parsed)));
+      if (skipMaxClamp) {
+        this.superchargeMultiplier = Math.max(1, Math.round(parsed));
+      } else {
+        this.superchargeMultiplier = Math.max(1, Math.min(maxMultiplier, Math.round(parsed)));
+      }
       return;
     }
     this.superchargeMultiplier = 1;
@@ -1732,7 +1737,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
     this.normalizeModeForFlags();
-    this.normalizeSuperchargeForFlags();
+    this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.applyPendingHarvestRecipe();
     this.normalizeAssignments();
     this.updateUI();
@@ -1795,7 +1800,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     this.normalizeModeForFlags();
-    this.normalizeSuperchargeForFlags();
+    this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
   }
@@ -1847,7 +1852,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     this.normalizeModeForFlags();
-    this.normalizeSuperchargeForFlags();
+    this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
 
