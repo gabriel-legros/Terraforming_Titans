@@ -568,9 +568,11 @@ function applyRingBounds() {
   }
 }
 
-function applyStarContextBounds() {
+function applyStarContextBounds(force = false) {
   if (!artificialUICache.starContext) return;
   if (getSelectedArtificialType(null) !== 'shell') return;
+  const starContextFocused = document.activeElement === artificialUICache.starContext;
+  if (!force && starContextFocused) return;
   const coreValue = artificialUICache.core ? artificialUICache.core.value : null;
   const coreConfig = typeof getArtificialCoreConfig === 'function' ? getArtificialCoreConfig(coreValue) : null;
   const allowStar = coreConfig ? coreConfig.allowStar !== false : true;
@@ -585,9 +587,12 @@ function applyStarContextBounds() {
     const opt = artificialUICache.starContext.options[i];
     const cfg = starOptions.find((entry) => entry.value === opt.value) || {};
     const isStarred = cfg.hasStar !== false;
-    opt.disabled = cfg.disabled || (isStarred && !allowStar);
+    const nextDisabled = cfg.disabled || (isStarred && !allowStar);
+    if (opt.disabled !== nextDisabled) {
+      opt.disabled = nextDisabled;
+    }
   }
-  if (!allowStar) {
+  if (!allowStar && artificialUICache.starContext.value !== starlessValue) {
     artificialUICache.starContext.value = starlessValue;
   }
 }
@@ -2310,11 +2315,33 @@ function updateArtificialUI(options = {}) {
   if (artificialUICache.starContext) {
     const options = getArtificialStarContexts();
     const fallback = options.find((entry) => !entry.disabled) || options[0];
+    const starFocused = document.activeElement === artificialUICache.starContext;
+    const signature = JSON.stringify(options.map((option) => ({
+      value: option.value,
+      disabled: !!option.disabled,
+      label: option.label,
+      source: option.disabledSource || ''
+    })));
+    if ((!starFocused || force) && artificialUICache.starContext.dataset.optionSignature !== signature) {
+      const currentValue = artificialUICache.starContext.value;
+      artificialUICache.starContext.innerHTML = '';
+      options.forEach((option) => {
+        artificialUICache.starContext.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+      });
+      artificialUICache.starContext.dataset.optionSignature = signature;
+      const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
+      artificialUICache.starContext.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
+    }
     if (project && project.starContext) {
-      artificialUICache.starContext.value = project.starContext;
-    } else if (!project && draft.starContext && (force || !artificialUICache.starContext.value)) {
+      if (artificialUICache.starContext.value !== project.starContext) {
+        artificialUICache.starContext.value = project.starContext;
+      }
+    } else if (!project && draft.starContext && (force || !starFocused || !artificialUICache.starContext.value)) {
       const hasDraft = options.some((entry) => entry.value === draft.starContext);
-      artificialUICache.starContext.value = hasDraft ? draft.starContext : (fallback ? fallback.value : '');
+      const nextValue = hasDraft ? draft.starContext : (fallback ? fallback.value : '');
+      if (artificialUICache.starContext.value !== nextValue) {
+        artificialUICache.starContext.value = nextValue;
+      }
     } else if (!artificialUICache.starContext.value && fallback) {
       artificialUICache.starContext.value = fallback.value;
     }
@@ -2394,7 +2421,7 @@ function updateArtificialUI(options = {}) {
     artificialUICache.ringAreaBox.style.display = isRing ? '' : 'none';
   }
 
-  applyStarContextBounds();
+  applyStarContextBounds(force);
   applyRadiusBounds();
   applyRingBounds();
   if (artificialUICache.priority) {
