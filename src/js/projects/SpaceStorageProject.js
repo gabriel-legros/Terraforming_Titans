@@ -686,10 +686,20 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getUsedStorageForTick(accumulatedChanges = null) {
-    let used = this.usedStorage;
+    let used = 0;
+    const storageResources = resources?.spaceStorage;
+    if (storageResources) {
+      for (const resourceKey in storageResources) {
+        const entry = storageResources[resourceKey];
+        const value = Number(entry?.value);
+        if (Number.isFinite(value) && value > 0) {
+          used += value;
+        }
+      }
+    }
     const pendingStorage = accumulatedChanges?.spaceStorage || null;
     if (!pendingStorage) {
-      return used;
+      return Math.max(0, used);
     }
     for (const resourceKey in pendingStorage) {
       used += pendingStorage[resourceKey] || 0;
@@ -707,6 +717,55 @@ class SpaceStorageProject extends SpaceshipProject {
       return Infinity;
     }
     return Math.max(0, capLimit - this.getStoredResourceValueForTick(resourceKey, accumulatedChanges));
+  }
+
+  computeStorageIntakePlan(gainMap = null, accumulatedChanges = null, scale = 1) {
+    const allowedByResource = {};
+    const limitedResources = [];
+    if (!gainMap || !(scale > 0)) {
+      return {
+        ratio: 1,
+        desiredTotal: 0,
+        allowedTotal: 0,
+        allowedByResource,
+        limitedResources,
+      };
+    }
+
+    let ratio = 1;
+    let desiredTotal = 0;
+    let allowedTotal = 0;
+    let remainingStorageSpace = this.getStorageFreeSpaceForTick(accumulatedChanges);
+
+    for (const resourceKey in gainMap) {
+      const baseAmount = gainMap[resourceKey];
+      const desired = baseAmount * scale;
+      if (!(desired > 0)) {
+        allowedByResource[resourceKey] = 0;
+        continue;
+      }
+
+      desiredTotal += desired;
+      const perResourceRemaining = this.getStorageCapRemainingForTick(resourceKey, accumulatedChanges);
+      const allowed = Math.max(0, Math.min(desired, perResourceRemaining, remainingStorageSpace));
+      allowedByResource[resourceKey] = allowed;
+      allowedTotal += allowed;
+      remainingStorageSpace = Math.max(0, remainingStorageSpace - allowed);
+
+      if (allowed + 1e-12 < desired) {
+        limitedResources.push(resourceKey);
+      }
+      const resourceRatio = desired > 0 ? Math.max(0, Math.min(1, allowed / desired)) : 1;
+      ratio = Math.min(ratio, resourceRatio);
+    }
+
+    return {
+      ratio,
+      desiredTotal,
+      allowedTotal,
+      allowedByResource,
+      limitedResources,
+    };
   }
 
   getTransferSourceAvailableForTick(entry, accumulatedChanges = null) {

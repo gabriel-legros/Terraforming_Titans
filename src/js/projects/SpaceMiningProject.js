@@ -1289,6 +1289,23 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
     let ratio = super.getContinuousGainScaleLimit(context, gainBase, accumulatedChanges, productivity);
+    if (gainBase.spaceStorage) {
+      const spaceStorageProject = projectManager.projects?.spaceStorage;
+      if (spaceStorageProject) {
+        const gainRatio = context.fraction * context.successChance * productivity;
+        if (gainRatio > 0 && spaceStorageProject.computeStorageIntakePlan) {
+          const intakePlan = spaceStorageProject.computeStorageIntakePlan(
+            gainBase.spaceStorage,
+            accumulatedChanges,
+            gainRatio
+          );
+          ratio = Math.min(ratio, intakePlan.ratio);
+          intakePlan.limitedResources.forEach((resourceKey) => {
+            resources.spaceStorage[resourceKey].automationLimited = true;
+          });
+        }
+      }
+    }
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (!hasMonitoring || !this.disableAbovePressure || !gainBase.atmospheric || !this.isAtmosphericImportTargetSelected()) {
       return ratio;
@@ -1372,6 +1389,29 @@ class SpaceMiningProject extends SpaceshipProject {
       } else {
         const scale = fraction * productivity;
         entry[gas] = scale > 0 ? applied / scale : 0;
+      }
+    }
+    if (gain.spaceStorage) {
+      const spaceStorageProject = projectManager.projects?.spaceStorage;
+      if (spaceStorageProject && spaceStorageProject.computeStorageIntakePlan) {
+        const scale = fraction * productivity;
+        const intakePlan = spaceStorageProject.computeStorageIntakePlan(
+          gain.spaceStorage,
+          accumulatedChanges,
+          scale
+        );
+        for (const resourceKey in gain.spaceStorage) {
+          const allowed = intakePlan.allowedByResource[resourceKey] || 0;
+          if (!(allowed > 0)) {
+            delete gain.spaceStorage[resourceKey];
+            continue;
+          }
+          gain.spaceStorage[resourceKey] = scale > 0 ? (allowed / scale) : 0;
+        }
+        intakePlan.limitedResources.forEach((resourceKey) => {
+          resources.spaceStorage[resourceKey].automationLimited = true;
+        });
+        if (!Object.keys(gain.spaceStorage).length) delete gain.spaceStorage;
       }
     }
     super.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity, accumulatedSpecialChanges);
