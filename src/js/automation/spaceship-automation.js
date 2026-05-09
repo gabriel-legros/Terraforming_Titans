@@ -27,6 +27,7 @@ class SpaceshipAutomation {
   constructor() {
     this.presets = [];
     this.activePresetId = null;
+    this.enabled = false;
     this.disabledProjects = new Set();
     this.seenProjectTargets = new Set();
     this.collapsed = false;
@@ -105,7 +106,6 @@ class SpaceshipAutomation {
     const preset = {
       id: this.nextPresetId++,
       name: 'Default',
-      enabled: false,
       showInSidebar: true,
       steps: []
     };
@@ -147,20 +147,14 @@ class SpaceshipAutomation {
     const preset = this.presets.find(item => item.id === id);
     if (!preset) return;
     this.activePresetId = preset.id;
-    if (!preset.enabled) {
-      preset.enabled = true;
-    }
-    if (preset.enabled) {
+    if (this.enabled) {
       this.disableAutoAssignForProjects();
     }
   }
 
-  togglePresetEnabled(id, enabled) {
-    const preset = this.presets.find(item => item.id === id);
-    if (!preset) return;
-    preset.enabled = !!enabled;
-    if (preset.enabled) {
-      this.activePresetId = preset.id;
+  setEnabled(enabled) {
+    this.enabled = !!enabled;
+    if (this.enabled) {
       this.disableAutoAssignForProjects();
     }
   }
@@ -169,7 +163,6 @@ class SpaceshipAutomation {
     const preset = {
       id: this.nextPresetId++,
       name: name || `Preset ${this.nextPresetId - 1}`,
-      enabled: false,
       showInSidebar: true,
       steps: []
     };
@@ -337,7 +330,7 @@ class SpaceshipAutomation {
 
   isActive() {
     const preset = this.getActivePreset();
-    return automationManager && automationManager.enabled && automationManager.hasFeature('automationShipAssignment') && preset && preset.enabled;
+    return automationManager && automationManager.enabled && automationManager.hasFeature('automationShipAssignment') && preset && this.enabled;
   }
 
   disableAutoAssignForProjects() {
@@ -595,7 +588,7 @@ class SpaceshipAutomation {
 
   applyAssignments() {
     const preset = this.getActivePreset();
-    if (preset && preset.enabled) {
+    if (preset && this.enabled) {
       this.disableAutoAssignForProjects();
     }
     if (!preset || preset.steps.length === 0) {
@@ -1109,6 +1102,7 @@ class SpaceshipAutomation {
       }))
     })),
       activePresetId: this.activePresetId,
+      enabled: this.enabled,
       disabledProjects: Array.from(this.disabledProjects),
       seenProjectTargets: Array.from(this.seenProjectTargets),
       collapsed: this.collapsed,
@@ -1117,10 +1111,11 @@ class SpaceshipAutomation {
   }
 
   loadState(data = {}) {
-    this.presets = Array.isArray(data.presets) ? data.presets.map(preset => ({
+    const savedPresets = Array.isArray(data.presets) ? data.presets : [];
+    let migratedEnabled = false;
+    this.presets = savedPresets.map(preset => ({
       id: preset.id,
       name: preset.name || 'Preset',
-      enabled: !!preset.enabled,
       showInSidebar: preset.showInSidebar !== false,
       steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
         const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
@@ -1144,8 +1139,15 @@ class SpaceshipAutomation {
           }) : []
         };
       }) : []
-    })) : [];
+    }));
+    for (let index = 0; index < savedPresets.length; index += 1) {
+      if (savedPresets[index].enabled) {
+        migratedEnabled = true;
+        break;
+      }
+    }
     this.activePresetId = data.activePresetId || null;
+    this.enabled = data.enabled !== undefined ? !!data.enabled : migratedEnabled;
     this.disabledProjects = new Set(Array.isArray(data.disabledProjects) ? data.disabledProjects : []);
     this.seenProjectTargets = new Set(Array.isArray(data.seenProjectTargets) ? data.seenProjectTargets : []);
     this.collapsed = !!data.collapsed;

@@ -157,7 +157,7 @@ function updateShipAutomationUI() {
     if (document.activeElement !== presetNameInput) {
       presetNameInput.value = activePreset.name || '';
     }
-    setAutomationToggleState(enablePresetCheckbox, !!activePreset.enabled);
+    setAutomationToggleState(enablePresetCheckbox, !!automation.enabled);
     showPresetInSidebarCheckbox.checked = activePreset.showInSidebar !== false;
   } else {
     presetNameInput.value = '';
@@ -264,9 +264,7 @@ function attachAutomationHandlers() {
     enablePresetCheckbox.addEventListener('click', () => {
       if (!automationManager || !automationManager.spaceshipAutomation) return;
       const automation = automationManager.spaceshipAutomation;
-      const preset = automation.getActivePreset();
-      if (!preset) return;
-      automation.togglePresetEnabled(preset.id, !preset.enabled);
+      automation.setEnabled(!automation.enabled);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });

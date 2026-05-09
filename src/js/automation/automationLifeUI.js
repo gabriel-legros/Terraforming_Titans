@@ -186,7 +186,7 @@ function updateLifeAutomationUI() {
   if (document.activeElement !== lifePresetNameInput) {
     lifePresetNameInput.value = activePreset.name || '';
   }
-  setAutomationToggleState(lifeEnablePresetCheckbox, !!activePreset.enabled);
+  setAutomationToggleState(lifeEnablePresetCheckbox, !!automation.enabled);
   lifeShowPresetInSidebarCheckbox.checked = activePreset.showInSidebar !== false;
   const activePresetIndex = automation.presets.findIndex(preset => preset.id === activePreset.id);
   lifePresetMoveUpButton.disabled = activePresetIndex <= 0;
@@ -313,8 +313,7 @@ function attachLifeAutomationHandlers() {
   });
   lifeEnablePresetCheckbox.addEventListener('click', () => {
     const automation = automationManager.lifeAutomation;
-    const preset = automation.getActivePreset();
-    automation.togglePresetEnabled(preset.id, !preset.enabled);
+    automation.setEnabled(!automation.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

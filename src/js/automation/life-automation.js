@@ -17,6 +17,7 @@ class LifeAutomation {
   constructor() {
     this.presets = [];
     this.activePresetId = null;
+    this.enabled = false;
     this.collapsed = false;
     this.nextPresetId = 1;
     this.elapsed = 0;
@@ -118,7 +119,6 @@ class LifeAutomation {
     const preset = {
       id: this.nextPresetId++,
       name: 'Default',
-      enabled: false,
       showInSidebar: true,
       purchaseSettings: this.createDefaultPurchaseSettings(),
       purchaseEnabled: true,
@@ -164,24 +164,16 @@ class LifeAutomation {
   setActivePreset(id) {
     const preset = this.presets.find(item => item.id === id) || this.presets[0];
     this.activePresetId = preset.id;
-    if (!preset.enabled) {
-      preset.enabled = true;
-    }
   }
 
-  togglePresetEnabled(id, enabled) {
-    const preset = this.presets.find(item => item.id === id) || this.presets[0];
-    preset.enabled = !!enabled;
-    if (preset.enabled) {
-      this.activePresetId = preset.id;
-    }
+  setEnabled(enabled) {
+    this.enabled = !!enabled;
   }
 
   addPreset(name = '') {
     const preset = {
       id: this.nextPresetId++,
       name: name || `Preset ${this.nextPresetId - 1}`,
-      enabled: false,
       showInSidebar: true,
       purchaseSettings: this.createDefaultPurchaseSettings(),
       purchaseEnabled: true,
@@ -449,7 +441,7 @@ class LifeAutomation {
     const preset = this.getActivePreset();
     return automationManager.enabled
       && automationManager.hasFeature('automationLifeDesign')
-      && preset.enabled
+      && this.enabled
       && lifeDesigner.enabled;
   }
 
@@ -774,7 +766,6 @@ class LifeAutomation {
       presets: this.presets.map(preset => ({
         id: preset.id,
         name: preset.name,
-        enabled: !!preset.enabled,
         showInSidebar: preset.showInSidebar !== false,
         purchaseSettings: Object.fromEntries(
           Object.entries(preset.purchaseSettings).map(([key, value]) => [key, { ...value }])
@@ -791,13 +782,16 @@ class LifeAutomation {
         designEnabled: !!preset.designEnabled
       })),
       activePresetId: this.activePresetId,
+      enabled: this.enabled,
       collapsed: this.collapsed,
       nextPresetId: this.nextPresetId
     };
   }
 
   loadState(data = {}) {
-    this.presets = (data.presets || []).map(preset => {
+    const savedPresets = Array.isArray(data.presets) ? data.presets : [];
+    let migratedEnabled = false;
+    this.presets = savedPresets.map(preset => {
       const purchaseSettings = this.createDefaultPurchaseSettings();
       const savedSettings = preset.purchaseSettings || {};
       Object.keys(purchaseSettings).forEach(category => {
@@ -837,7 +831,6 @@ class LifeAutomation {
       return {
         id: preset.id,
         name: preset.name || 'Preset',
-        enabled: !!preset.enabled,
         showInSidebar: preset.showInSidebar !== false,
         purchaseSettings,
         purchaseEnabled: preset.purchaseEnabled !== false,
@@ -846,8 +839,15 @@ class LifeAutomation {
         designEnabled: preset.designEnabled !== false
       };
     });
+    for (let index = 0; index < savedPresets.length; index += 1) {
+      if (savedPresets[index].enabled) {
+        migratedEnabled = true;
+        break;
+      }
+    }
     this.presets.forEach(preset => this.normalizeRemainingSteps(preset));
     this.activePresetId = data.activePresetId || null;
+    this.enabled = data.enabled !== undefined ? !!data.enabled : migratedEnabled;
     this.collapsed = !!data.collapsed;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.ensureDefaultPreset();

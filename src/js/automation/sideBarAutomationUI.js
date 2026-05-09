@@ -492,7 +492,8 @@ function initializeSidebarAutomationUI() {
     if (!automationItemShowsInSidebar(preset)) {
       return;
     }
-    automationManager.spaceshipAutomation.togglePresetEnabled(preset.id, !preset.enabled);
+    const automation = automationManager.spaceshipAutomation;
+    automation.setEnabled(!automation.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -511,7 +512,8 @@ function initializeSidebarAutomationUI() {
     if (!automationItemShowsInSidebar(preset)) {
       return;
     }
-    automationManager.lifeAutomation.togglePresetEnabled(preset.id, !preset.enabled);
+    const automation = automationManager.lifeAutomation;
+    automation.setEnabled(!automation.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -710,7 +712,7 @@ function updateSidebarAutomationUI() {
     );
     const activePreset = shipAutomation.getActivePreset();
     elements.shipPresetToggle.disabled = !automationItemShowsInSidebar(activePreset);
-    setToggleButtonState(elements.shipPresetToggle, !!activePreset.enabled);
+    setToggleButtonState(elements.shipPresetToggle, !!shipAutomation.enabled);
   }
 
   const lifeAutomation = manager.lifeAutomation;
@@ -736,7 +738,7 @@ function updateSidebarAutomationUI() {
     elements.lifePresetToggle.disabled = !activeLifePresetVisible;
     elements.lifePurchaseToggle.disabled = !activeLifePresetVisible;
     elements.lifeDesignToggle.disabled = !activeLifePresetVisible;
-    setToggleButtonState(elements.lifePresetToggle, !!activePreset.enabled);
+    setToggleButtonState(elements.lifePresetToggle, !!lifeAutomation.enabled);
     setToggleButtonState(elements.lifePurchaseToggle, activePreset.purchaseEnabled !== false);
     setToggleButtonState(elements.lifeDesignToggle, activePreset.designEnabled !== false);
   }
