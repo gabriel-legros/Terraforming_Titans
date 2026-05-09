@@ -992,11 +992,18 @@ function renderSelectedSectorDetails() {
         const warpGateTrack = doc.createElement('div');
         warpGateTrack.className = 'galaxy-sector-panel__warp-gate-track';
 
+        const warpGateMaxTrack = doc.createElement('div');
+        warpGateMaxTrack.className = 'galaxy-sector-panel__warp-gate-max-track';
+
+        const warpGateMaxFill = doc.createElement('div');
+        warpGateMaxFill.className = 'galaxy-sector-panel__warp-gate-max-fill';
+
         const warpGateFill = doc.createElement('div');
         warpGateFill.className = 'galaxy-sector-panel__warp-gate-fill';
 
         warpGateTrack.appendChild(warpGateFill);
-        warpGateRow.append(warpGateHeader, warpGateTrack);
+        warpGateMaxTrack.appendChild(warpGateMaxFill);
+        warpGateRow.append(warpGateHeader, warpGateTrack, warpGateMaxTrack);
 
         managementSection.append(worldRow.stat, fleetDefenseRow.stat, totalDefenseRow.stat, warpGateRow);
 
@@ -1055,8 +1062,10 @@ function renderSelectedSectorDetails() {
                 fleetDefenseValue: fleetDefenseRow.statValue,
                 totalDefenseValue: totalDefenseRow.statValue,
                 warpGateRow,
+                warpGateTrack,
                 warpGateInfo,
                 warpGateValue,
+                warpGateMaxFill,
                 warpGateFill
             },
             enemySection,
@@ -1235,7 +1244,13 @@ function renderSelectedSectorDetails() {
     const warpGateRatio = warpGateLevel >= WARP_GATE_NETWORK_MAX_LEVEL
         ? 1
         : Math.min(1, Math.max(0, warpGateProgress / (warpGateLevel + 1)));
-    details.management.warpGateFill.style.width = `${warpGateRatio * 100}%`;
+    const warpGateMaxRatio = WARP_GATE_NETWORK_MAX_LEVEL <= 0
+        ? 0
+        : Math.min(1, Math.max(0, warpGateLevel / WARP_GATE_NETWORK_MAX_LEVEL));
+    const warpGateMaxed = warpGateLevel >= WARP_GATE_NETWORK_MAX_LEVEL;
+    details.management.warpGateMaxFill.style.width = `${warpGateMaxRatio * 100}%`;
+    details.management.warpGateTrack.classList.toggle('is-hidden', warpGateMaxed);
+    details.management.warpGateFill.style.width = warpGateMaxed ? '0%' : `${warpGateRatio * 100}%`;
 
     const lockAvailable = !!spaceManagerInstance?.setRwgSectorLock;
     details.lockOption.classList.toggle('is-hidden', !lockAvailable);

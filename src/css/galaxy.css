@@ -644,7 +644,6 @@
 }
 
 .galaxy-sector-panel__warp-gate-track {
-  position: relative;
   height: 6px;
   border-radius: 999px;
   background: rgba(16, 28, 48, 0.7);
@@ -652,11 +651,31 @@
   box-shadow: inset 0 0 4px rgba(8, 16, 28, 0.6);
 }
 
+.galaxy-sector-panel__warp-gate-track.is-hidden {
+  display: none;
+}
+
 .galaxy-sector-panel__warp-gate-fill {
   height: 100%;
   width: 0;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(112, 178, 255, 0.75), rgba(180, 220, 255, 0.95));
+  transition: width 0.2s ease;
+}
+
+.galaxy-sector-panel__warp-gate-max-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(16, 28, 48, 0.7);
+  overflow: hidden;
+  box-shadow: inset 0 0 4px rgba(8, 16, 28, 0.6);
+}
+
+.galaxy-sector-panel__warp-gate-max-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(76, 170, 106, 0.75), rgba(124, 219, 145, 0.95));
   transition: width 0.2s ease;
 }
 
