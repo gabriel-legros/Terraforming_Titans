@@ -1267,7 +1267,8 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
           : isBooleanLeaf
             ? event.target.value === 'true'
             : parseAutomationPresetJsonFieldValue(event.target.value);
-        const baseValue = getAutomationPresetValueAtPath(preset, path);
+        const basePreset = details._activePresetRef || preset;
+        const baseValue = getAutomationPresetValueAtPath(basePreset, path);
         if (JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
           delete details._jsonDraftMap[pathKey];
         } else {
@@ -1551,6 +1552,10 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       }
       details._jsonDraftMap = {};
       details._jsonDirty = false;
+      details._basePresetSignature = JSON.stringify(currentPreset);
+      details._boundPresetId = null;
+      details._renderedFieldKeySignature = '';
+      details._renderedPresetJson = '';
       clearAutomationPresetJsonDraftStore(details, currentPreset.id);
       details._saveButton.disabled = true;
       if (details._saveButtonStarNode) {
