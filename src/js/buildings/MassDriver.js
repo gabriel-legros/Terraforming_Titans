@@ -14,12 +14,14 @@ class MassDriver extends Building {
     if (this.active === 0n) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
+      this.displayProductivity = 0;
       return;
     }
 
     if (!MassDriver.isResourceDisposalProjectActive()) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
+      this.displayProductivity = 0;
       return;
     }
 
@@ -27,6 +29,11 @@ class MassDriver extends Building {
 
     this.productivity = this.applyProductivityDamping(
       this.productivity,
+      targetProductivity,
+      deltaTime
+    );
+    this.displayProductivity = this.applyProductivityDamping(
+      this.displayProductivity,
       targetProductivity,
       deltaTime
     );
