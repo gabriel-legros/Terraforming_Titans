@@ -704,6 +704,29 @@ function renderLifeAutomationSteps(automation, preset, container) {
       amountInput.value = stepSpends[step.id] ?? 0;
     }
 
+    const updateModeControls = () => {
+      const normalizedMode = step.mode === 'remaining' && isLast
+        ? 'remaining'
+        : step.mode === 'max'
+          ? 'max'
+          : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
+            ? 'needed'
+            : 'fixed';
+      modeSelect.value = normalizedMode;
+      updateSubtitle(isTempTolerance, isRadiationTolerance);
+      amountInput.disabled = (normalizedMode === 'remaining' || normalizedMode === 'max' || normalizedMode === 'needed')
+        && !isOptimal;
+      minButton.disabled = amountInput.disabled;
+      maxButton.disabled = amountInput.disabled;
+      if (amountInput.disabled) {
+        const updatedSpends = automation.getDesignStepSpends(preset);
+        amountInput.value = updatedSpends[step.id] ?? 0;
+      } else if (document.activeElement !== amountInput) {
+        amountInput.value = step.amount;
+      }
+      zoneRow.style.display = normalizedMode === 'needed' && isTempTolerance ? '' : 'none';
+    };
+
     amountInput.addEventListener('change', (event) => {
       automation.updateDesignStep(preset.id, step.id, { amount: event.target.value });
       queueAutomationUIRefresh();
@@ -711,6 +734,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     });
     modeSelect.addEventListener('change', (event) => {
       automation.updateDesignStep(preset.id, step.id, { mode: event.target.value });
+      updateModeControls();
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
