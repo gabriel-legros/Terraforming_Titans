@@ -356,7 +356,7 @@ function updateLiftersUI(project) {
   elements.superchargeValue.textContent = `x${formatNumber(project.getEffectiveSuperchargeMultiplier(), true, 0)}`;
   elements.superchargeSlider.value = String(project.getEffectiveSuperchargeMultiplier());
   elements.superchargeSlider.disabled = !project.hasSuperchargeUnlocked();
-  elements.superchargeEnergyValue.textContent = `Energy x${formatNumber(energyMultiplier, true, 0)}`;
+  elements.superchargeEnergyValue.textContent = `Energy x${formatNumber(energyMultiplier, false, 2)}`;
 
   elements.runCheckbox.checked = project.isRunning;
   elements.runCheckbox.disabled = totalBigInt <= 0n;
