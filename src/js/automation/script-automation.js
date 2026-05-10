@@ -310,6 +310,32 @@ class ScriptAutomation {
     return line.id;
   }
 
+  insertLine(scriptId, lineId, direction, kind = 'if') {
+    const script = this.scripts.find(item => item.id === Number(scriptId));
+    if (!script) return null;
+    const index = script.lines.findIndex(line => line.id === Number(lineId));
+    if (index < 0) return null;
+    const insertIndex = direction < 0 ? index : index + 1;
+    const line = this.createLine(kind);
+    script.lines.splice(insertIndex, 0, line);
+    this.assignDefaultLinkedIf(script, line);
+    this.relinkInsertedElseIfContinuation(script, line);
+    if (!this.pcLineId) this.pcLineId = line.id;
+    return line.id;
+  }
+
+  relinkInsertedElseIfContinuation(script, line) {
+    if (line.kind !== 'elseIf' || !line.linkedIfLineId) return;
+    const lineIndex = this.getLineIndex(script, line.id);
+    const nextContinuation = script.lines.find((item, index) =>
+      index > lineIndex
+      && ['elseIf', 'else'].includes(item.kind)
+      && item.id !== line.id
+      && Number(item.linkedIfLineId) === Number(line.linkedIfLineId)
+    );
+    if (nextContinuation) nextContinuation.linkedIfLineId = line.id;
+  }
+
   removeLine(scriptId, lineId) {
     const script = this.scripts.find(item => item.id === Number(scriptId));
     if (!script || script.lines.length <= 1) return false;

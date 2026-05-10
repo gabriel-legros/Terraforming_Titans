@@ -3167,6 +3167,8 @@ setLanguageData({
         scriptDuplicate: 'Duplicate',
         scriptDelete: 'Delete',
         scriptAddLine: '+ Line',
+        scriptInsertLineAbove: 'Insert line above',
+        scriptInsertLineBelow: 'Insert line below',
         scriptLineNamePlaceholder: 'Line name',
         scriptLineDescriptionPlaceholder: 'Description',
         scriptLineEnabled: 'Line enabled',

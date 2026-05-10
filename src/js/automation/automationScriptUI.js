@@ -466,6 +466,14 @@ function renderScriptLines(automation, script, container) {
 
     const controls = document.createElement('div');
     controls.classList.add('script-line-header-controls');
+    const insertAbove = document.createElement('button');
+    insertAbove.textContent = '+';
+    insertAbove.title = getAutomationCardText('scriptInsertLineAbove', {}, 'Insert line above');
+    insertAbove.addEventListener('click', () => {
+      automation.insertLine(script.id, line.id, -1);
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
     const up = document.createElement('button');
     up.textContent = '↑';
     up.disabled = index === 0;
@@ -482,6 +490,14 @@ function renderScriptLines(automation, script, container) {
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
+    const insertBelow = document.createElement('button');
+    insertBelow.textContent = '+';
+    insertBelow.title = getAutomationCardText('scriptInsertLineBelow', {}, 'Insert line below');
+    insertBelow.addEventListener('click', () => {
+      automation.insertLine(script.id, line.id, 1);
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
     const remove = document.createElement('button');
     remove.textContent = '×';
     remove.disabled = script.lines.length <= 1;
@@ -490,7 +506,7 @@ function renderScriptLines(automation, script, container) {
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
-    controls.append(up, down, remove);
+    controls.append(insertAbove, up, down, insertBelow, remove);
     header.append(enabledToggle, expand, summary, controls);
     card.appendChild(header);
 
