@@ -4154,7 +4154,7 @@ setLanguageData({
         },
         fission_plant1_upgrade2: {
           name: 'Adapted fission power',
-          description: 'Doubles the production of nuclear reactors.',
+          description: 'Doubles nuclear reactor output and metal fuel use.',
         },
         fusion: {
           name: 'Fusion reactor MkI',

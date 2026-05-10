@@ -128,6 +128,14 @@ const researchParameters = {
             targetId: 'nuclearPowerPlant',
             type: 'resourceConsumptionMultiplier',
             resourceCategory: 'colony',
+            resourceTarget: 'metal',
+            value: 2
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'resourceConsumptionMultiplier',
+            resourceCategory: 'colony',
             resourceTarget: 'water',
             value: 2
           }
