@@ -1,6 +1,6 @@
 // playTimeSeconds advances in in-game days for display, so 365 units = 1 year.
 const TERRAFORMING_GRAPH_YEAR_UNITS = 365;
-const TERRAFORMING_GRAPH_WINDOW_YEARS = 500;
+const TERRAFORMING_GRAPH_WINDOW_YEARS = 100;
 const TERRAFORMING_GRAPH_EARLY_CADENCE = [
   { endDay: 100, stepDay: 1 },
   { endDay: 200, stepDay: 2 },

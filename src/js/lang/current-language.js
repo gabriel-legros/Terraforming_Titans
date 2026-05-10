@@ -2425,8 +2425,8 @@ setLanguageData({
           iceCoverage: 'Ice',
         },
         notes: {
-          yearlyRolling: 'Yearly snapshots. Rolling 500 years.',
-          logPressureRolling: 'Log scale pressure. Rolling 500 years.',
+          yearlyRolling: 'Yearly snapshots. Rolling 100 years.',
+          logPressureRolling: 'Log scale pressure. Rolling 100 years.',
         },
         axis: {
           temperature: 'Temperature ({unit})',
