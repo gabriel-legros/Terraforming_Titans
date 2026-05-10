@@ -356,10 +356,10 @@ class GalacticInvasionManager extends EffectableEntity {
     return Array.from(summary.values());
   }
 
-  refreshRewardEffects() {
+  refreshRewardEffects(force = false) {
     const summary = this.getCompletedRewardSummary();
     const signature = JSON.stringify(summary.map((entry) => [entry.targetType || 'project', entry.target, entry.type, entry.value]));
-    if (signature === this.rewardSignature) {
+    if (!force && signature === this.rewardSignature) {
       return;
     }
     this.rewardSignature = signature;
@@ -412,7 +412,7 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   reapplyEffects() {
-    this.refreshRewardEffects();
+    this.refreshRewardEffects(true);
     this.refreshUIVisibility();
   }
 }
