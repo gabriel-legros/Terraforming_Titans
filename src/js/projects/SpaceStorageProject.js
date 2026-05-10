@@ -241,9 +241,8 @@ class SpaceStorageProject extends SpaceshipProject {
 
   getHazardousMachineryWorkerLoadActive() {
     const hasShips = this.getActiveShipCount() > 0;
-    const expansionActive = this.isActive && !this.isCompleted && !this.isPaused && hasShips;
     const transferActive = this.shipOperationIsActive && !this.shipOperationIsPaused && hasShips;
-    return expansionActive || transferActive;
+    return transferActive;
   }
 
   getSpaceStorageResource(resourceKey) {
@@ -1218,7 +1217,6 @@ class SpaceStorageProject extends SpaceshipProject {
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
-    const effectiveProductivity = productivity * this.getHazardousMachineryWorkerAvailabilityRatio();
 
     const tick = this.getContinuousExpansionTickState(deltaTime);
     if (!tick.duration || tick.duration === Infinity) {
@@ -1230,7 +1228,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
 
     const result = this.applyRequestedExpansionProgress(
-      tick.requestedProgress * effectiveProductivity,
+      tick.requestedProgress * productivity,
       this.getScaledCost(),
       accumulatedChanges,
       {
@@ -1419,7 +1417,7 @@ class SpaceStorageProject extends SpaceshipProject {
     const effectiveProductivity = productivity * workerRatio;
     if (this.isActive) {
       const duration = this.getEffectiveDuration();
-      const fraction = (deltaTime / duration) * workerRatio;
+      const fraction = (deltaTime / duration) * productivity;
       const cost = this.getScaledCost();
       const storageState = this.createExpansionStorageState(accumulatedChanges);
       const effectiveFraction = this.isContinuous()
