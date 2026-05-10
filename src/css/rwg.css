@@ -272,9 +272,9 @@
 .rwg-effects-list { margin-top: 4px; max-width: 1200px; margin-left: auto; margin-right: auto; }
 .rwg-effects-row {
   display: grid;
-  grid-template-columns: minmax(400px, 1fr) 40px minmax(100px, auto) minmax(700px, auto);
-  gap: 6px;
-  padding: 4px 10px;
+  grid-template-columns: minmax(400px, 1fr) 40px minmax(144px, auto) minmax(740px, auto);
+  gap: 14px;
+  padding: 4px 14px;
   align-items: center;
   color: var(--rwg-fg);
 }
@@ -283,7 +283,7 @@
 .rwg-effects-table-head { font-weight: 700; border-bottom: 1px solid var(--rwg-border); background: transparent; padding-top: 2px; padding-bottom: 6px; color: var(--rwg-fg); }
 .rwg-effects-row .col-count { text-align: right; color: var(--rwg-fg); }
 .rwg-effects-row .col-effect { text-align: right; font-weight: 600; color: var(--rwg-fg); }
-.rwg-effects-row .col-count { min-width: 64px; max-width: 64px; }
+.rwg-effects-row .col-count { min-width: 104px; max-width: 104px; }
 
 /* Compact helpers */
 @media (max-width: 900px) {
