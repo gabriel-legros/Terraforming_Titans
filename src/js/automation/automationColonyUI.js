@@ -33,6 +33,30 @@ function getColonyAutomationJsonModeForPath(preset, fieldPath) {
   return (automation && automation.autoBuildBasis) || '';
 }
 
+function getColonyAutomationPrioritySelectOptions(fieldPath) {
+  if (fieldPath[0] === 'targets' && fieldPath[2] === 'control' && fieldPath[3] === 'workerPriority') {
+    return {
+      selectOptions: [
+        { value: '-1', label: getAutomationCardText('priorityLow', {}, 'Low (-1)') },
+        { value: '0', label: getAutomationCardText('priorityNormal', {}, 'Normal (0)') },
+        { value: '1', label: getAutomationCardText('priorityHigh', {}, 'High (1)') }
+      ]
+    };
+  }
+  if (fieldPath[0] === 'targets' && fieldPath[2] === 'automation' && fieldPath[3] === 'autoBuildPriority') {
+    return {
+      selectOptions: [
+        { value: '-2', label: getAutomationCardText('priorityVeryLow', {}, 'Very Low (-2)') },
+        { value: '-1', label: getAutomationCardText('priorityLow', {}, 'Low (-1)') },
+        { value: '0', label: getAutomationCardText('priorityNormal', {}, 'Normal (0)') },
+        { value: '1', label: getAutomationCardText('priorityHigh', {}, 'High (1)') },
+        { value: '2', label: getAutomationCardText('priorityVeryHigh', {}, 'Very High (2)') }
+      ]
+    };
+  }
+  return null;
+}
+
 function buildAutomationColonyUI() {
   const card = automationElements.colonyAutomation || document.getElementById('automation-colony');
 
@@ -323,6 +347,10 @@ function updateColonyAutomationUI() {
       return true;
     },
     getFieldOptions: (fieldPath, value) => {
+      const priorityOptions = getColonyAutomationPrioritySelectOptions(fieldPath);
+      if (priorityOptions) {
+        return priorityOptions;
+      }
       if (fieldPath[0] === 'targets' && fieldPath[2] === 'automation' && fieldPath[3] === 'autoBuildBasis') {
         const targetId = fieldPath[1];
         const structure = automationManager.colonyAutomation.getColonyTarget(targetId);
@@ -337,6 +365,15 @@ function updateColonyAutomationUI() {
         return;
       }
       applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+        normalizeValue: (path, value) => {
+          if (path[0] === 'targets' && path[2] === 'control' && path[3] === 'workerPriority') {
+            return Number.parseInt(value, 10);
+          }
+          if (path[0] === 'targets' && path[2] === 'automation' && path[3] === 'autoBuildPriority') {
+            return Number.parseInt(value, 10);
+          }
+          return value;
+        },
         onApplied: (appliedPath, appliedValue, rootKey) => {
           if (rootKey === 'showInSidebar') {
             colonyAutomationUIState.builderShowInSidebar = appliedValue !== false;

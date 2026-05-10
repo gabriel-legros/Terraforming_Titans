@@ -45,6 +45,30 @@ function getBuildingAutomationJsonModeForPath(preset, fieldPath) {
   return (automation && automation.autoBuildBasis) || '';
 }
 
+function getBuildingAutomationPrioritySelectOptions(fieldPath) {
+  if (fieldPath[0] === 'buildings' && fieldPath[2] === 'control' && fieldPath[3] === 'workerPriority') {
+    return {
+      selectOptions: [
+        { value: '-1', label: getAutomationCardText('priorityLow', {}, 'Low (-1)') },
+        { value: '0', label: getAutomationCardText('priorityNormal', {}, 'Normal (0)') },
+        { value: '1', label: getAutomationCardText('priorityHigh', {}, 'High (1)') }
+      ]
+    };
+  }
+  if (fieldPath[0] === 'buildings' && fieldPath[2] === 'automation' && fieldPath[3] === 'autoBuildPriority') {
+    return {
+      selectOptions: [
+        { value: '-2', label: getAutomationCardText('priorityVeryLow', {}, 'Very Low (-2)') },
+        { value: '-1', label: getAutomationCardText('priorityLow', {}, 'Low (-1)') },
+        { value: '0', label: getAutomationCardText('priorityNormal', {}, 'Normal (0)') },
+        { value: '1', label: getAutomationCardText('priorityHigh', {}, 'High (1)') },
+        { value: '2', label: getAutomationCardText('priorityVeryHigh', {}, 'Very High (2)') }
+      ]
+    };
+  }
+  return null;
+}
+
 function buildAutomationBuildingsUI() {
   const card = automationElements.buildingsAutomation || document.getElementById('automation-buildings');
 
@@ -343,6 +367,10 @@ function updateBuildingsAutomationUI() {
       return true;
     },
     getFieldOptions: (fieldPath, value, preset) => {
+      const priorityOptions = getBuildingAutomationPrioritySelectOptions(fieldPath);
+      if (priorityOptions) {
+        return priorityOptions;
+      }
       if (fieldPath[0] === 'buildings' && fieldPath[2] === 'automation' && fieldPath[3] === 'autoBuildBasis') {
         const buildingId = fieldPath[1];
         const structure = buildings[buildingId];
@@ -357,6 +385,15 @@ function updateBuildingsAutomationUI() {
         return;
       }
       applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+        normalizeValue: (path, value) => {
+          if (path[0] === 'buildings' && path[2] === 'control' && path[3] === 'workerPriority') {
+            return Number.parseInt(value, 10);
+          }
+          if (path[0] === 'buildings' && path[2] === 'automation' && path[3] === 'autoBuildPriority') {
+            return Number.parseInt(value, 10);
+          }
+          return value;
+        },
         onApplied: (appliedPath, appliedValue, rootKey) => {
           if (rootKey === 'showInSidebar') {
             buildingAutomationUIState.builderShowInSidebar = appliedValue !== false;

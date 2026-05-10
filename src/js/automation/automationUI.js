@@ -1263,7 +1263,7 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     input.addEventListener('change', (event) => {
       try {
         const nextValue = hasCustomSelectOptions
-          ? event.target.value
+          ? parseAutomationPresetJsonFieldValue(event.target.value)
           : isBooleanLeaf
             ? event.target.value === 'true'
             : parseAutomationPresetJsonFieldValue(event.target.value);
