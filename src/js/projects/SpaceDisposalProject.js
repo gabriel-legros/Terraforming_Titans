@@ -1289,7 +1289,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const shipCount = this.getSpaceshipOnlyCount();
     const massDriverCount = this.getMassDriverContribution();
     const perSecondMultiplier = perSecond ? (1000 / duration) : 1;
-    const shipMultiplier = perSecond ? shipCount * perSecondMultiplier : 1;
+    const shipMultiplier = perSecond
+      ? shipCount * perSecondMultiplier
+      : (shipCount > 0 ? 1 : 0);
     const energyMultiplier = perSecond ? (shipCount + massDriverCount) * perSecondMultiplier : 1;
     for (const category in costPerShip) {
       totalCost[category] = {};
@@ -1306,7 +1308,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (!activeTargets.length) {
       return [];
     }
-    const transportShare = this.getTargetTransportCount(activeTargets[0], this.getActiveShipCount(), activeTargets);
+    const transportShare = this.getTargetTransportCount(activeTargets[0], 1, activeTargets);
     const requestedAmount = this.getShipCapacity() * transportShare;
     return activeTargets.map(target => ({
       targetId: target.id,
