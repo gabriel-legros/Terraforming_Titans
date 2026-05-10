@@ -1057,14 +1057,14 @@ class ScriptVariableRegistry {
       const attribute = attributes.find(item => item.id === ref.attribute);
       const options = this.getCelestialAttributeOptions(ref.attribute);
       const option = options.find(item => item.id === ref.option);
-      return [source?.label, attribute?.label, option?.label].filter(Boolean).join(' / ');
+      return this.joinReferenceLabels(source?.label, attribute?.label, option?.label);
     }
     if (ref.source === 'hazards') {
       const targets = this.getTargets(ref.source, ref.category);
       const target = targets.find(item => item.id === ref.target);
       const attributes = this.getAttributes(ref.source, ref.category, ref.target);
       const attribute = attributes.find(item => item.id === ref.attribute);
-      return [source?.label, target?.label, attribute?.label].filter(Boolean).join(' / ');
+      return this.joinReferenceLabels(source?.label, target?.label, attribute?.label);
     }
     const categories = this.getCategories(ref.source);
     const category = categories.find(item => item.id === ref.category);
@@ -1076,11 +1076,24 @@ class ScriptVariableRegistry {
       const option = options.find(item => item.id === resolvedOptionId);
       const attributes = this.getAttributes(ref.source, ref.category, ref.target, resolvedOptionId);
       const attribute = attributes.find(item => item.id === ref.attribute);
-      return [source?.label, category?.label, target?.label, option?.label, attribute?.label].filter(Boolean).join(' / ');
+      return this.joinReferenceLabels(source?.label, category?.label, target?.label, option?.label, attribute?.label);
     }
     const attributes = this.getAttributes(ref.source, ref.category, ref.target, ref.option);
     const attribute = attributes.find(item => item.id === ref.attribute);
-    return [source?.label, category?.label, target?.label, attribute?.label].filter(Boolean).join(' / ');
+    return this.joinReferenceLabels(source?.label, category?.label, target?.label, attribute?.label);
+  }
+
+  joinReferenceLabels() {
+    const labels = [];
+    for (let index = 0; index < arguments.length; index += 1) {
+      const value = arguments[index];
+      if (!value) continue;
+      const text = String(value).trim();
+      if (!text) continue;
+      if (labels.length > 0 && labels[labels.length - 1] === text) continue;
+      labels.push(text);
+    }
+    return labels.join(' / ');
   }
 
   formatResolvedValue(ref, value) {
