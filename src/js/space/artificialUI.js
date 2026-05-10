@@ -1272,7 +1272,6 @@ function ensureArtificialLayout() {
   const storeBtn = document.createElement('button');
   storeBtn.className = 'artificial-secondary';
   storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
-  artificialUICache.storeBtnTooltipContent = attachDynamicInfoTooltip(storeBtn, '', false);
   artificialUICache.storeBtn = storeBtn;
   actions.appendChild(storeBtn);
   progressPanel.appendChild(actions);
@@ -1715,7 +1714,6 @@ function renderProgress(project, prepayState) {
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
-      setTooltipText(artificialUICache.storeBtnTooltipContent, '');
     }
     return;
   }
@@ -1734,7 +1732,6 @@ function renderProgress(project, prepayState) {
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
-      setTooltipText(artificialUICache.storeBtnTooltipContent, '');
     }
     return;
   }
@@ -1750,10 +1747,6 @@ function renderProgress(project, prepayState) {
     artificialUICache.travelBtn.disabled = false;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = false;
-      setTooltipText(
-        artificialUICache.storeBtnTooltipContent,
-        getArtificialText('actions.storeWorldTitle', 'Store this completed world for later travel.')
-      );
     }
     return;
   }
@@ -1764,7 +1757,6 @@ function renderProgress(project, prepayState) {
   artificialUICache.travelBtn.disabled = true;
   if (artificialUICache.storeBtn) {
     artificialUICache.storeBtn.disabled = true;
-    setTooltipText(artificialUICache.storeBtnTooltipContent, '');
   }
 }
 

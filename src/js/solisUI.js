@@ -14,6 +14,8 @@ const solisUIElements = {
   silenceToggle: null,
   pointsValue: null,
   rewardValue: null,
+  rewardTooltip: null,
+  rewardTooltipContent: null,
   questContainer: null,
   questMessage: null,
   questDetail: null,
@@ -158,6 +160,9 @@ function cacheSolisUIElements() {
   }
   if (!solisUIElements.rewardValue || !solisUIElements.rewardValue.isConnected) {
     solisUIElements.rewardValue = document.getElementById('solis-reward');
+  }
+  if (!solisUIElements.rewardTooltip || !solisUIElements.rewardTooltip.isConnected) {
+    solisUIElements.rewardTooltip = document.getElementById('solis-reward-tooltip');
   }
   if (!solisUIElements.questContainer || !solisUIElements.questContainer.isConnected) {
     solisUIElements.questContainer = document.getElementById('solis-quest-text');
@@ -674,6 +679,12 @@ function initializeSolisUI() {
   hideSolisTab();
   initializeSolisControls();
   ensureSolisSections();
+  if (solisUIElements.rewardTooltip && !solisUIElements.rewardTooltipContent) {
+    solisUIElements.rewardTooltipContent = attachDynamicInfoTooltip(
+      solisUIElements.rewardTooltip,
+      t('ui.hope.rewardTooltip', {}, 'Multiplied by square root of worlds terraformed')
+    );
+  }
   solisUIInitialized = true;
 }
 
