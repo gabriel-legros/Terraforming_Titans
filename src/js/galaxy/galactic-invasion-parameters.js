@@ -68,16 +68,16 @@ const GALACTIC_INVASION_LETTERS = [
 });
 
 const GALACTIC_INVASION_REWARDS = {
-  alphaLower: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.3, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  alphaLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.3, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
   alphaUpper: [{ target: 'lifters', type: 'superchargeMaxBonus', value: 10, valueFormat: 'number', labelKey: 'ui.space.invasion.rewards.liftersSuperchargeMax', labelFallback: '+{value} Lifters supercharge max' }],
   betaLower: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.3, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
   betaUpper: [{ target: 'spaceChemistry', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.spaceChemistryThroughput', labelFallback: '+{value}% Space Chemistry throughput' }],
-  gammaLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
+  gammaLower: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
   gammaUpper: [{ target: 'spaceManager', targetType: 'spaceManager', type: 'oneillSectorCapMultiplier', value: 1, valueFormat: 'number', labelKey: 'ui.space.invasion.rewards.oneillSectorCap', labelFallback: 'O\'Neill Cap Multiplier +{value}' }],
   deltaLower: [{ target: 'hephaestusMegaconstruction', type: 'yardEffectivenessMultiplier', value: 0.25, labelKey: 'ui.space.invasion.rewards.hephaestusYardEffectiveness', labelFallback: '+{value}% Hephaestus yard effectiveness' }],
   deltaUpper: [{ target: 'spaceStorage', type: 'spaceStorageCapacityMultiplier', value: 1, labelKey: 'ui.space.invasion.rewards.spaceStorageCapacity', labelFallback: '+{value}% Space storage capacity' }],
-  epsilonLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.3, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
-  epsilonUpper: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  epsilonLower: [{ target: 'nuclearAlchemyFurnace', type: 'throughputMultiplier', value: 0.3, labelKey: 'ui.space.invasion.rewards.nuclearAlchemyThroughput', labelFallback: '+{value}% Nuclear Alchemy throughput' }],
+  epsilonUpper: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.5, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
   zetaLower: [{ target: 'superalloyGigafoundry', type: 'throughputMultiplier', value: 0.3, labelKey: 'ui.space.invasion.rewards.gigafoundryThroughput', labelFallback: '+{value}% Gigafoundry throughput' }],
   zetaUpper: [{ target: 'lifters', type: 'superchargeExponentReduction', value: 0.2, valueFormat: 'number', labelKey: 'ui.space.invasion.rewards.liftersSuperchargeExponent', labelFallback: 'Lifters supercharge exponent -{value}' }],
   etaLower: [{ target: 'manufacturingWorld', type: 'throughputMultiplier', value: 0.3, labelKey: 'ui.space.invasion.rewards.manufacturingWorldThroughput', labelFallback: '+{value}% Manufacturing World throughput' }],
