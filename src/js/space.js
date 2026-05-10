@@ -2562,11 +2562,12 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
-        // prepareForTravel is now called within recordDepartureSnapshot via changeCurrentPlanet
-        if (!this.changeCurrentPlanet(targetKey)) {
+        // Preserve departure context for rewards/state before switching worlds.
+        this.recordDepartureSnapshot();
+        this._grantDepartureSkillPoint();
+        if (!this._setCurrentPlanetKey(targetKey)) {
             return false;
         }
-        this._grantDepartureSkillPoint();
         this.currentArtificialKey = null;
 
         this.currentRandomSeed = null;
