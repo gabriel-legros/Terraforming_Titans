@@ -443,10 +443,10 @@ class GalaxyOperationManager {
             }
             return existing;
         }
-        if (attackerId !== this.uhfFactionId && this.isSectorTargetingRestricted && this.isSectorTargetingRestricted(sector)) {
+        const isExternalInvasion = externalInvasion === true;
+        if (!isExternalInvasion && attackerId !== this.uhfFactionId && this.isSectorTargetingRestricted && this.isSectorTargetingRestricted(sector)) {
             return null;
         }
-        const isExternalInvasion = externalInvasion === true;
         const hasStronghold = this.hasNeighboringStronghold
             ? this.hasNeighboringStronghold(sector, attackerId)
             : false;
@@ -729,6 +729,9 @@ class GalaxyOperationManager {
         if (!sector || !operation) {
             return false;
         }
+        if (this.#hasGalaxyConquest()) {
+            return false;
+        }
         const attackerId = operation.factionId || this.uhfFactionId;
         if (attackerId === this.uhfFactionId) {
             return false;
@@ -753,10 +756,26 @@ class GalaxyOperationManager {
         if (factionId !== this.uhfFactionId) {
             return 0;
         }
+        if (this.#hasGalaxyConquest()) {
+            return 0;
+        }
         if (!this.#isProtectedUhfSector(sector)) {
             return 0;
         }
         return R507_UHF_CONTROL_FLOOR;
+    }
+
+    #hasGalaxyConquest() {
+        if (!this.manager) {
+            return false;
+        }
+        if (this.manager.hasEverControlledWholeGalaxyFlag === true) {
+            return true;
+        }
+        if (typeof this.manager.hasEverControlledWholeGalaxy === 'function') {
+            return this.manager.hasEverControlledWholeGalaxy() === true;
+        }
+        return false;
     }
 
     #serializeOperation(operation) {

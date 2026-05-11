@@ -467,9 +467,11 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             this.borderFleetAssignments = assignments;
             return;
         }
+        const hasGalaxyConquest = manager?.hasEverControlledWholeGalaxyFlag === true
+            || manager?.hasEverControlledWholeGalaxy?.() === true;
         const uhfFaction = manager?.getFaction?.(uhfFactionId);
         const uhfCapacity = Number.isFinite(uhfFaction?.fleetCapacity) ? uhfFaction.fleetCapacity : 0;
-        const r507Cap = uhfCapacity > 0 ? uhfCapacity / 4 : 0;
+        const r507Cap = !hasGalaxyConquest && uhfCapacity > 0 ? uhfCapacity / 4 : 0;
         borderKeys.forEach((key, index) => {
             const weight = weights[index];
             if (weight <= 0) {
