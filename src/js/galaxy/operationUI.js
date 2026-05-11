@@ -50,7 +50,18 @@ const GalaxyOperationUI = (() => {
     }
 
 
-    function getDefaultOperationDurationMs() {
+    function getDefaultOperationDurationMs(manager, sectorKey, factionId, targetFactionId) {
+        if (
+            manager
+            && sectorKey
+            && galaxyInvasionManager
+            && galaxyInvasionManager.hasActiveTrait('commandBypass')
+        ) {
+            const resolvedTargetFactionId = targetFactionId || manager.getOperationTargetFaction?.(sectorKey, factionId) || null;
+            if (resolvedTargetFactionId === PROMETHEAN_INVASION_FACTION_ID) {
+                return PROMETHEAN_INVASION_OPERATION_MS;
+            }
+        }
         const provided = GALAXY_OPERATION_DURATION_MS;
         if (Number.isFinite(provided) && provided > 0) {
             return provided;
@@ -465,11 +476,12 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const targetFactionId = manager.getOperationTargetFaction?.(sectorKey, uhfFactionId) || null;
+        const durationMs = getDefaultOperationDurationMs(manager, sectorKey, uhfFactionId, targetFactionId);
         const operation = manager.startOperation({
             sectorKey,
             factionId: uhfFactionId,
             assignedPower: assignment,
-            durationMs: getDefaultOperationDurationMs(),
+            durationMs,
             targetFactionId
         });
         if (!operation) {
@@ -820,8 +832,12 @@ const GalaxyOperationUI = (() => {
         const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
         const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
         const selectedKey = enabled && selection ? selection.key : null;
+        const defaultFactionId = UHF_FACTION_ID || 'uhf';
+        const selectedTargetFactionId = selectedKey
+            ? manager?.getOperationTargetFaction?.(selectedKey, defaultFactionId) || null
+            : null;
         const stepSize = getStoredStep(selectedKey);
-        const defaultDurationMs = getDefaultOperationDurationMs();
+        const defaultDurationMs = getDefaultOperationDurationMs(manager, selectedKey, defaultFactionId, selectedTargetFactionId);
 
         operationsStatusMessage.textContent = '';
 

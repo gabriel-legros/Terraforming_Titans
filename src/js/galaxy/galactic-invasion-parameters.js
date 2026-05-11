@@ -35,7 +35,7 @@ const GALACTIC_INVASION_TRAIT_DEFINITIONS = {
     nameKey: 'ui.space.invasion.traits.commandBypass.name',
     nameFallback: 'Command Bypass',
     descriptionKey: 'ui.space.invasion.traits.commandBypass.description',
-    descriptionFallback: 'Ignores UHF defensive fleet assignments when attacking and only fights sector base defense.'
+    descriptionFallback: 'Ignores UHF defensive fleet assignments when attacking and only fights sector base defense. UHF operations against INV also take 10 seconds.'
   },
   occupationBastions: {
     nameKey: 'ui.space.invasion.traits.occupationBastions.name',
