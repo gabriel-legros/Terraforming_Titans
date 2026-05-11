@@ -1020,6 +1020,22 @@ describe('Space building productivity via produceResources', () => {
     cleanup();
   });
 
+  test('Space storage clamps stored resources to shared max storage', () => {
+    const harness = setupHarness({
+      hydrogen: 100,
+      metal: 300,
+      spaceStorageMaxStorage: 200,
+    });
+    const { produceResources, resources, projectManager, cleanup } = harness;
+
+    produceResources(1000, {});
+
+    expectApprox(resources.spaceStorage.hydrogen.value, 50);
+    expectApprox(resources.spaceStorage.metal.value, 150);
+    expectApprox(projectManager.projects.spaceStorage.usedStorage, 200);
+    cleanup();
+  });
+
   test('Lifters preserve supercharge across save/load before Star Lifting effects are reapplied', () => {
     const harness = setupHarness({ hydrogen: 0, spaceEnergy: 100 });
     const { LiftersProject, cleanup } = harness;

@@ -1751,6 +1751,10 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  if (spaceStorageProject) {
+    clampSpaceStorageResourcesToSharedCap(spaceStorageProject);
+  }
+
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
   applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges);
   if (hasDynamicMassEnabledSafe(terraforming, planetParameters)) {
@@ -1800,6 +1804,68 @@ function recalculateTotalRates(){
     for (const resourceName in resources[category]) {
       resources[category][resourceName].recalculateTotalRates();
     }
+  }
+}
+
+function clampSpaceStorageResourcesToSharedCap(spaceStorageProject) {
+  const maxStorage = Number(spaceStorageProject.maxStorage);
+  if (!Number.isFinite(maxStorage)) {
+    if (spaceStorageProject.reconcileUsedStorage) {
+      spaceStorageProject.reconcileUsedStorage();
+    }
+    return;
+  }
+
+  const storageResources = resources.spaceStorage;
+  const entries = [];
+  let total = 0;
+  for (const resourceName in storageResources) {
+    const resource = storageResources[resourceName];
+    const value = Number(resource.value);
+    if (!Number.isFinite(value) || value <= 0) {
+      resource.value = 0;
+      continue;
+    }
+    entries.push({ resource, value });
+    total += value;
+  }
+
+  if (total <= maxStorage) {
+    if (spaceStorageProject.reconcileUsedStorage) {
+      spaceStorageProject.reconcileUsedStorage();
+    }
+    return;
+  }
+
+  if (maxStorage <= 0) {
+    entries.forEach(({ resource }) => {
+      resource.value = 0;
+    });
+    if (spaceStorageProject.reconcileUsedStorage) {
+      spaceStorageProject.reconcileUsedStorage();
+    }
+    return;
+  }
+
+  const ratio = maxStorage / total;
+  let clampedTotal = 0;
+  let largestEntry = entries[0];
+  entries.forEach((entry) => {
+    const nextValue = entry.value * ratio;
+    entry.resource.value = nextValue;
+    clampedTotal += nextValue;
+    if (entry.value > largestEntry.value) {
+      largestEntry = entry;
+    }
+  });
+
+  const roundingDifference = maxStorage - clampedTotal;
+  if (roundingDifference !== 0) {
+    largestEntry.resource.value = Math.max(0, largestEntry.resource.value + roundingDifference);
+  }
+
+  if (spaceStorageProject.reconcileUsedStorage) {
+    spaceStorageProject.reconcileUsedStorage();
   }
 }
 
