@@ -372,8 +372,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     const control = {
       workerPriority: colony.workerPriority,
       hidden: colony.isHidden === true,
-      luxuryResourcesEnabled: this.deepClone(colony.luxuryResourcesEnabled),
-      autoUpgradeEnabled: colony.autoUpgradeEnabled === true
+      luxuryResourcesEnabled: this.deepClone(colony.luxuryResourcesEnabled)
     };
     if (colony.name === 'aerostat_colony') {
       control.landAsResearchOutpost = colony.landAsResearchOutpost === true;
@@ -397,7 +396,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       autoBuildFillPercent: colony.autoBuildFillPercent,
       autoBuildFillResourcePrimary: colony.autoBuildFillResourcePrimary,
       autoBuildFillResourceSecondary: colony.autoBuildFillResourceSecondary,
-      autoActiveEnabled: colony.autoActiveEnabled
+      autoActiveEnabled: colony.autoActiveEnabled,
+      autoUpgradeEnabled: colony.autoUpgradeEnabled === true
     };
   }
 
@@ -624,10 +624,6 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         changed = true;
       }
     }
-    if ('autoUpgradeEnabled' in control && colony.autoUpgradeEnabled !== control.autoUpgradeEnabled) {
-      colony.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
-      changed = true;
-    }
     if ('landAsResearchOutpost' in control && colony.landAsResearchOutpost !== control.landAsResearchOutpost) {
       colony.landAsResearchOutpost = control.landAsResearchOutpost === true;
       changed = true;
@@ -691,6 +687,10 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     }
     if (colony.autoActiveEnabled !== automation.autoActiveEnabled) {
       colony.autoActiveEnabled = automation.autoActiveEnabled;
+      changed = true;
+    }
+    if ('autoUpgradeEnabled' in automation && colony.autoUpgradeEnabled !== automation.autoUpgradeEnabled) {
+      colony.autoUpgradeEnabled = automation.autoUpgradeEnabled === true;
       changed = true;
     }
     return changed;
@@ -970,13 +970,21 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       scopeAll: preset.scopeAll === true,
       targets: Object.fromEntries(
         Object.entries(preset.targets || {}).map(([targetId, entry]) => {
-          const automation = entry?.automation ? { ...entry.automation } : null;
+          const control = entry?.control ? { ...entry.control } : null;
+          let automation = entry?.automation ? { ...entry.automation } : null;
+          if (control && 'autoUpgradeEnabled' in control && !automation) {
+            automation = {};
+          }
+          if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
+            automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
+            delete control.autoUpgradeEnabled;
+          }
           if (automation && automation.autoBuildBasis === 'initialLand') {
             automation.autoBuildBasis = 'geometricLand';
           }
           return [targetId, {
             categoryId: entry?.categoryId || this.getTargetCategoryId(targetId),
-            control: entry?.control || null,
+            control,
             automation
           }];
         })

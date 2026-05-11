@@ -420,7 +420,8 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       autoBuildFillPercent: building.autoBuildFillPercent,
       autoBuildFillResourcePrimary: building.autoBuildFillResourcePrimary,
       autoBuildFillResourceSecondary: building.autoBuildFillResourceSecondary,
-      autoActiveEnabled: building.autoActiveEnabled
+      autoActiveEnabled: building.autoActiveEnabled,
+      autoUpgradeEnabled: building.autoUpgradeEnabled === true
     };
     if (building.name === 'dysonReceiver') {
       settings.capActiveToDysonCapacity = building.capActiveToDysonCapacity === true;
@@ -599,6 +600,10 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       building.autoActiveEnabled = automation.autoActiveEnabled;
       changed = true;
     }
+    if ('autoUpgradeEnabled' in automation && building.autoUpgradeEnabled !== automation.autoUpgradeEnabled) {
+      building.autoUpgradeEnabled = automation.autoUpgradeEnabled === true;
+      changed = true;
+    }
     if (
       building.name === 'dysonReceiver' &&
       'capActiveToDysonCapacity' in automation &&
@@ -683,12 +688,20 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       scopeAll: preset.scopeAll === true,
       buildings: Object.fromEntries(
         Object.entries(preset.buildings || {}).map(([buildingId, entry]) => {
-          const automation = entry?.automation ? { ...entry.automation } : null;
+          const control = entry?.control ? { ...entry.control } : null;
+          let automation = entry?.automation ? { ...entry.automation } : null;
+          if (control && 'autoUpgradeEnabled' in control && !automation) {
+            automation = {};
+          }
+          if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
+            automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
+            delete control.autoUpgradeEnabled;
+          }
           if (automation && automation.autoBuildBasis === 'initialLand') {
             automation.autoBuildBasis = 'geometricLand';
           }
           return [buildingId, {
-            control: entry?.control || null,
+            control,
             automation
           }];
         })
