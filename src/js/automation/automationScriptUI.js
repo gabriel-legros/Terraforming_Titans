@@ -601,6 +601,13 @@ function createScriptAction() {
   return { kind: 'applyPreset', automationType: 'buildings', presetId: null };
 }
 
+function normalizeScriptSleepDuration(action) {
+  if (action.kind !== 'sleep') return;
+  if (action.durationMs === null || action.durationMs === undefined || action.durationMs === '') {
+    action.durationMs = 1000;
+  }
+}
+
 function createLineKindSelect(selectedKind) {
   return createSelect([
     { id: 'if', label: getAutomationCardText('scriptLineTypeIf', {}, 'IF') },
@@ -1079,15 +1086,17 @@ function renderActionsEditor(automation, script, line, container, actions, title
     const kind = createSelect(getScriptActionKinds(), action.kind || 'applyPreset');
     kind.addEventListener('change', event => {
       action.kind = event.target.value;
+      normalizeScriptSleepDuration(action);
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
     row.appendChild(kind);
 
     if (action.kind === 'sleep') {
+      normalizeScriptSleepDuration(action);
       const duration = document.createElement('input');
       duration.type = 'text';
-      duration.value = action.durationMs ?? 1000;
+      duration.value = action.durationMs;
       duration.addEventListener('input', event => {
         action.durationMs = event.target.value;
         queueAutomationUIRefresh();
