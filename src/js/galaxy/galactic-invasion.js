@@ -12,6 +12,7 @@ class GalacticInvasionManager extends EffectableEntity {
     this.initialFleetPower = 0;
     this.deepStrikeUsed = false;
     this.monolithCooldownMs = 0;
+    this.monolithSectorKey = null;
     this.occupationBastions = {};
     this.beachheadSectorKey = null;
     this.beachheadDefensePower = 0;
@@ -100,6 +101,7 @@ class GalacticInvasionManager extends EffectableEntity {
     this.initialFleetPower = letter.fleetPower;
     this.deepStrikeUsed = false;
     this.monolithCooldownMs = 0;
+    this.monolithSectorKey = null;
     this.occupationBastions = {};
     this.beachheadSectorKey = null;
     this.beachheadDefensePower = 0;
@@ -149,6 +151,7 @@ class GalacticInvasionManager extends EffectableEntity {
     this.initialFleetPower = preserveLetter ? this.initialFleetPower : 0;
     this.deepStrikeUsed = false;
     this.monolithCooldownMs = 0;
+    this.monolithSectorKey = null;
     this.occupationBastions = {};
     this.beachheadSectorKey = null;
     this.beachheadDefensePower = 0;
@@ -224,6 +227,9 @@ class GalacticInvasionManager extends EffectableEntity {
     const sector = galaxyManager.sectors.get(operation.sectorKey);
     if (!this.isSectorFullyControlledByInvasion(sector)) {
       return;
+    }
+    if (this.hasActiveTrait('monolithArmada')) {
+      this.monolithSectorKey = sector.key;
     }
     if (this.hasActiveTrait('occupationBastions')) {
       this.occupationBastions[sector.key] = this.initialFleetPower / 10;
@@ -574,18 +580,32 @@ class GalacticInvasionManager extends EffectableEntity {
     }
     if (targetFactionId === PROMETHEAN_INVASION_FACTION_ID || !targetFactionId) {
       const bonus = this.getSectorDefenseBonus(sector.key);
+      const monolithHeldFleet = this.getMonolithHeldFleetPower(sector.key);
       let foundInvasionContribution = false;
       contributions.forEach((entry) => {
         if (entry.factionId !== PROMETHEAN_INVASION_FACTION_ID) {
           return;
         }
         foundInvasionContribution = true;
+        if (this.monolithSectorKey && this.monolithCooldownMs > 0) {
+          entry.fleetPower = sector.key === this.monolithSectorKey ? monolithHeldFleet : 0;
+          entry.totalPower = entry.basePower + entry.fleetPower;
+        }
         if (bonus > 0) {
           entry.basePower += bonus;
           entry.totalPower += bonus;
         }
       });
       const control = Number(sector.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (!foundInvasionContribution && monolithHeldFleet > 0 && control > FULL_CONTROL_EPSILON) {
+        foundInvasionContribution = true;
+        contributions.push({
+          factionId: PROMETHEAN_INVASION_FACTION_ID,
+          basePower: 0,
+          fleetPower: monolithHeldFleet,
+          totalPower: monolithHeldFleet
+        });
+      }
       if (!foundInvasionContribution && bonus > 0 && control > FULL_CONTROL_EPSILON) {
         contributions.push({
           factionId: PROMETHEAN_INVASION_FACTION_ID,
@@ -596,6 +616,15 @@ class GalacticInvasionManager extends EffectableEntity {
       }
     }
     return contributions;
+  }
+
+  getMonolithHeldFleetPower(sectorKey) {
+    if (!this.hasActiveTrait('monolithArmada') || this.monolithCooldownMs <= 0 || sectorKey !== this.monolithSectorKey) {
+      return 0;
+    }
+    const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
+    const fleetPower = Number(faction.fleetPower) || 0;
+    return fleetPower > 0 ? fleetPower : 0;
   }
 
   getSectorDefenseBonus(sectorKey) {
@@ -624,6 +653,13 @@ class GalacticInvasionManager extends EffectableEntity {
       if (control <= FULL_CONTROL_EPSILON) {
         this.beachheadSectorKey = null;
         this.beachheadDefensePower = 0;
+      }
+    }
+    if (this.monolithSectorKey) {
+      const sector = galaxyManager.sectors.get(this.monolithSectorKey);
+      const control = Number(sector?.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (control <= FULL_CONTROL_EPSILON) {
+        this.monolithSectorKey = null;
       }
     }
   }
@@ -719,6 +755,7 @@ class GalacticInvasionManager extends EffectableEntity {
       initialFleetPower: this.initialFleetPower,
       deepStrikeUsed: this.deepStrikeUsed,
       monolithCooldownMs: this.monolithCooldownMs,
+      monolithSectorKey: this.monolithSectorKey,
       occupationBastions: this.occupationBastions,
       beachheadSectorKey: this.beachheadSectorKey,
       beachheadDefensePower: this.beachheadDefensePower
@@ -735,6 +772,7 @@ class GalacticInvasionManager extends EffectableEntity {
     this.initialFleetPower = Math.max(0, Number(state.initialFleetPower) || 0);
     this.deepStrikeUsed = state.deepStrikeUsed === true;
     this.monolithCooldownMs = Math.max(0, Number(state.monolithCooldownMs) || 0);
+    this.monolithSectorKey = state.monolithSectorKey || null;
     this.occupationBastions = state.occupationBastions || {};
     this.beachheadSectorKey = state.beachheadSectorKey || null;
     this.beachheadDefensePower = Math.max(0, Number(state.beachheadDefensePower) || 0);
