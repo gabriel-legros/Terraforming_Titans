@@ -1153,6 +1153,20 @@
   display: none;
 }
 
+.galactic-invasion-subsection {
+  margin-top: 12px;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.galactic-invasion-subsection .galactic-invasion-section__header {
+  padding: 9px 12px;
+  font-size: 0.9rem;
+}
+
+.galactic-invasion-subsection .galactic-invasion-section__body {
+  padding: 12px;
+}
+
 .galactic-invasion-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1241,20 +1255,12 @@
   cursor: not-allowed;
 }
 
-.galactic-invasion-traits,
-.galactic-invasion-special-status,
 .galactic-invasion-summary {
   margin-top: 14px;
   border-top: 1px solid rgba(100, 116, 139, 0.28);
   padding-top: 12px;
 }
 
-.galactic-invasion-special-status.hidden {
-  display: none;
-}
-
-.galactic-invasion-traits__title,
-.galactic-invasion-special-status__title,
 .galactic-invasion-summary__title {
   font-weight: 700;
   margin-bottom: 6px;
@@ -1279,7 +1285,6 @@
 }
 
 .galactic-invasion-summary__empty,
-.galactic-invasion-special-status__item,
 .galactic-invasion-summary__item {
   color: #475569;
   font-size: 0.9rem;

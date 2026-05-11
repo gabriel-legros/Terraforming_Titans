@@ -114,13 +114,10 @@ function initializeGalacticInvasionUI() {
   grid.className = 'galactic-invasion-grid';
   training.body.appendChild(grid);
 
-  const traitSummary = document.createElement('div');
-  traitSummary.className = 'galactic-invasion-traits';
-  training.body.appendChild(traitSummary);
-
-  const specialStatus = document.createElement('div');
-  specialStatus.className = 'galactic-invasion-special-status hidden';
-  training.body.appendChild(specialStatus);
+  const traits = createGalacticInvasionSection('traits', getGalacticInvasionText('traitSummaryTitle', 'Special Traits'));
+  traits.section.classList.add('galactic-invasion-subsection');
+  traits.body.classList.add('galactic-invasion-traits');
+  training.body.appendChild(traits.section);
 
   const rewardSummary = document.createElement('div');
   rewardSummary.className = 'galactic-invasion-summary';
@@ -144,8 +141,8 @@ function initializeGalacticInvasionUI() {
     overlay,
     training,
     grid,
-    traitSummary,
-    specialStatus,
+    traits,
+    traitSummary: traits.body,
     rewardSummary,
     mystery,
     cards: new Map()
@@ -276,7 +273,6 @@ function updateGalacticInvasionUI() {
     }
   });
   updateGalacticInvasionTraitSummary(refreshedCache.traitSummary);
-  updateGalacticInvasionSpecialStatus(refreshedCache.specialStatus);
   updateGalacticInvasionRewardSummary(refreshedCache.rewardSummary);
 }
 
@@ -316,11 +312,6 @@ function formatGalacticInvasionReward(reward) {
 
 function updateGalacticInvasionTraitSummary(container) {
   container.textContent = '';
-  const title = document.createElement('div');
-  title.className = 'galactic-invasion-traits__title';
-  title.textContent = getGalacticInvasionText('traitSummaryTitle', 'Special Traits');
-  container.appendChild(title);
-
   const activeTraits = new Set();
   GALACTIC_INVASION_LETTERS.forEach((letter) => {
     letter.traits.forEach((traitKey) => activeTraits.add(traitKey));
@@ -344,43 +335,6 @@ function updateGalacticInvasionTraitSummary(container) {
     list.appendChild(item);
   });
   container.appendChild(list);
-}
-
-function updateGalacticInvasionSpecialStatus(container) {
-  container.textContent = '';
-  container.classList.add('hidden');
-  if (!galaxyInvasionManager.currentLetterKey) {
-    return;
-  }
-  const entries = [];
-  if (galaxyInvasionManager.beachheadSectorKey) {
-    const sector = galaxyManager.sectors.get(galaxyInvasionManager.beachheadSectorKey);
-    const sectorName = sector?.getDisplayName?.() || galaxyInvasionManager.beachheadSectorKey;
-    entries.push(getGalacticInvasionText('beachheadStatus', 'Fortified Beachhead: {sector} ({power} defense)', {
-      sector: sectorName,
-      power: formatGalacticInvasionPower(galaxyInvasionManager.beachheadDefensePower)
-    }));
-  }
-  const bastionCount = Object.keys(galaxyInvasionManager.occupationBastions).length;
-  if (bastionCount > 0) {
-    entries.push(getGalacticInvasionText('bastionStatus', 'Occupation Bastions: {count}', {
-      count: formatNumber(bastionCount, true, 0)
-    }));
-  }
-  if (!entries.length) {
-    return;
-  }
-  const title = document.createElement('div');
-  title.className = 'galactic-invasion-special-status__title';
-  title.textContent = getGalacticInvasionText('activeSpecialStatusTitle', 'Active Special Defenses');
-  container.appendChild(title);
-  entries.forEach((text) => {
-    const item = document.createElement('div');
-    item.className = 'galactic-invasion-special-status__item';
-    item.textContent = text;
-    container.appendChild(item);
-  });
-  container.classList.remove('hidden');
 }
 
 function updateGalacticInvasionRewardSummary(container) {
