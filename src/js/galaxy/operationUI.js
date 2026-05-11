@@ -1215,9 +1215,8 @@ const GalaxyOperationUI = (() => {
                 operationsDurationValue.textContent = remainingLabel;
             }
             operationsProgressLabel.textContent = getOperationsText('deploymentProgress', { percent, remaining: remainingLabel }, `Launch in progress - ${percent}% (${remainingLabel} remaining)`);
-            operationsStatusMessage.textContent = getOperationsText('deploymentUnderway', {}, 'Deployment underway. Fleet power returns upon completion.');
             launchBlocked = true;
-            statusMessage = getOperationsText('deploymentUnderway', {}, 'Deployment underway. Fleet power returns upon completion.');
+            statusMessage = '';
         } else {
             operationsLaunchButton.classList.remove('is-hidden');
             operationsProgress.classList.add('is-hidden');
