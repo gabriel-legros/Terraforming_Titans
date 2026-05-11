@@ -3364,6 +3364,7 @@ function updateGalaxyUI(options = {}) {
     updateFleetShopDisplay(manager, cache);
     updateIncomingAttackPanel(manager, cache);
     updateSectorDefenseSection();
+    galaxyOperationUI?.updateOperationsPanel?.(manager, cache);
     const mapState = cache.mapState;
     const now = Date.now();
     let shouldRefreshMap = force;

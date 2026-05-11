@@ -1147,6 +1147,21 @@
   gap: 16px;
 }
 
+.galaxy-operations-launch__auto-header {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8fb6f9;
+  margin-top: 2px;
+}
+
+.galaxy-operations-launch__auto-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .galaxy-operations-launch__auto-threshold {
   width: 62px;
   min-width: 62px;
@@ -1157,6 +1172,11 @@
   color: #f0f7ff;
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
+}
+
+.galaxy-operations-launch__auto-mode-select {
+  width: 170px;
+  min-width: 170px;
 }
 
 .galaxy-operations-launch__button {

@@ -1,4 +1,5 @@
 let operationAutoThresholdDefault = DEFAULT_OPERATION_AUTO_THRESHOLD;
+let operationAutoModeDefault = 'off';
 
 function generateSectorCoordinates(radius) {
     const coordinates = [];
@@ -136,7 +137,8 @@ class GalaxyManager extends EffectableEntity {
                 operations: [],
                 operationSteps: [],
                 operationAutoSectors: [],
-                operationAutoThreshold: operationAutoThresholdDefault
+                operationAutoThreshold: operationAutoThresholdDefault,
+                operationAutoMode: operationAutoModeDefault
             };
         return {
             sectors,
@@ -147,7 +149,8 @@ class GalaxyManager extends EffectableEntity {
             hasEverControlledWholeGalaxyFlag: this.hasEverControlledWholeGalaxy(),
             operationSteps: operationState.operationSteps,
             operationAutoSectors: operationState.operationAutoSectors,
-            operationAutoThreshold: operationState.operationAutoThreshold
+            operationAutoThreshold: operationState.operationAutoThreshold,
+            operationAutoMode: operationState.operationAutoMode
         };
     }
 
@@ -578,6 +581,26 @@ class GalaxyManager extends EffectableEntity {
             return operationAutoThresholdDefault;
         }
         return this.operationManager.setOperationAutoThreshold(value);
+    }
+
+    getOperationAutoMode() {
+        if (!this.operationManager) {
+            return operationAutoModeDefault;
+        }
+        return this.operationManager.getOperationAutoMode();
+    }
+
+    setOperationAutoMode(value) {
+        if (!this.operationManager) {
+            const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+            if (normalized === 'all' || normalized === 'off' || normalized === 'forceoff') {
+                operationAutoModeDefault = normalized === 'forceoff' ? 'forceOff' : normalized;
+            } else {
+                operationAutoModeDefault = 'off';
+            }
+            return operationAutoModeDefault;
+        }
+        return this.operationManager.setOperationAutoMode(value);
     }
 
     getOperationSuccessChance({ sectorKey, factionId, assignedPower, targetFactionId }) {

@@ -1,4 +1,5 @@
 const DEFAULT_OPERATION_AUTO_THRESHOLD = 2.1;
+const DEFAULT_OPERATION_AUTO_MODE = 'off';
 
 const R507_SECTOR_LABEL = 'R5-07';
 const R507_SECTOR_KEY = '4,-5';
@@ -66,6 +67,7 @@ class GalaxyOperationManager {
         this.stepSizes = new Map();
         this.autoSectors = new Set();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
+        this.autoMode = DEFAULT_OPERATION_AUTO_MODE;
         this.hasNeighboringStronghold = hasNeighboringStronghold;
         this.hasFactionPresence = hasFactionPresence;
         this.isFactionFullControlSector = isFactionFullControlSector;
@@ -127,7 +129,8 @@ class GalaxyOperationManager {
             operations: Array.from(this.operations.values()).map((operation) => this.#serializeOperation(operation)),
             operationSteps: Array.from(this.stepSizes.entries()),
             operationAutoSectors: Array.from(this.autoSectors),
-            operationAutoThreshold: this.getOperationAutoThreshold()
+            operationAutoThreshold: this.getOperationAutoThreshold(),
+            operationAutoMode: this.getOperationAutoMode()
         };
     }
 
@@ -169,6 +172,7 @@ class GalaxyOperationManager {
         } else {
             this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         }
+        this.autoMode = this.#normalizeAutoMode(state?.operationAutoMode);
         const operationUI = getOperationUI();
         operationUI?.syncCacheFromManager?.(this.manager);
         operationUI?.updateOperationsPanel?.(this.manager);
@@ -184,6 +188,7 @@ class GalaxyOperationManager {
         this.stepSizes.clear();
         this.autoSectors.clear();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
+        this.autoMode = DEFAULT_OPERATION_AUTO_MODE;
     }
 
     #getOperationKey(sectorKey, factionId) {
@@ -274,6 +279,15 @@ class GalaxyOperationManager {
         }
         this.autoThreshold = numeric;
         return this.autoThreshold;
+    }
+
+    getOperationAutoMode() {
+        return this.#normalizeAutoMode(this.autoMode);
+    }
+
+    setOperationAutoMode(value) {
+        this.autoMode = this.#normalizeAutoMode(value);
+        return this.autoMode;
     }
 
     getOperationDurationMs({ sectorKey, factionId, durationMs, targetFactionId, externalInvasion } = {}) {
@@ -1045,7 +1059,11 @@ class GalaxyOperationManager {
     }
 
     #processAutoLaunch() {
-        if (!this.autoSectors.size || !this.manager || !this.manager.enabled) {
+        if (!this.manager || !this.manager.enabled) {
+            return;
+        }
+        const autoMode = this.getOperationAutoMode();
+        if (autoMode === 'forceOff') {
             return;
         }
         const faction = this.manager.getFaction?.(this.uhfFactionId);
@@ -1069,11 +1087,11 @@ class GalaxyOperationManager {
             && typeof globalThis.GalaxyOperationUI.applyExternalAllocation === 'function')
             ? globalThis.GalaxyOperationUI.applyExternalAllocation
             : null;
-        this.autoSectors.forEach((rawKey) => {
-            if (!rawKey) {
-                return;
-            }
-            const sectorKey = String(rawKey);
+        const candidates = autoMode === 'all'
+            ? this.#getAutoLaunchCandidates(threshold)
+            : this.#getSelectedAutoLaunchCandidates(threshold);
+        candidates.forEach((candidate) => {
+            const sectorKey = candidate.sectorKey;
             const currentOperation = this.getOperationForSector(sectorKey, this.uhfFactionId);
             if (currentOperation && currentOperation.status === 'running') {
                 return;
@@ -1091,15 +1109,8 @@ class GalaxyOperationManager {
             if (!sector) {
                 return;
             }
-            if (this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
-                return;
-            }
-            const targetFactionId = this.#resolveOperationTarget(sector, this.uhfFactionId);
-            const sectorDefense = this.manager.getSectorDefensePower
-                ? this.manager.getSectorDefensePower(sectorKey, this.uhfFactionId, targetFactionId)
-                : 0;
-            const requiredPower = Math.max(100, sectorDefense * threshold);
-            const normalizedPower = Math.round(requiredPower * 100) / 100;
+            const targetFactionId = candidate.targetFactionId;
+            const normalizedPower = candidate.requiredPower;
             if (!(normalizedPower > 0) || normalizedPower > availablePower) {
                 return;
             }
@@ -1139,6 +1150,102 @@ class GalaxyOperationManager {
         if (launched && typeof this.refreshUI === 'function') {
             this.refreshUI();
         }
+    }
+
+    #getAutoLaunchCandidates(threshold) {
+        const sectors = this.manager?.sectors;
+        if (!sectors || !sectors.forEach) {
+            return [];
+        }
+        const candidates = [];
+        sectors.forEach((sector, sectorKey) => {
+            if (!sector || !sectorKey) {
+                return;
+            }
+            if (this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
+                return;
+            }
+            const hasStronghold = this.hasNeighboringStronghold
+                ? this.hasNeighboringStronghold(sector, this.uhfFactionId)
+                : false;
+            const hasPresence = this.hasFactionPresence
+                ? this.hasFactionPresence(sector, this.uhfFactionId)
+                : false;
+            if (!hasStronghold && !hasPresence) {
+                return;
+            }
+            const targetFactionId = this.#resolveOperationTarget(sector, this.uhfFactionId);
+            if (!targetFactionId) {
+                return;
+            }
+            const sectorDefense = this.manager.getSectorDefensePower
+                ? this.manager.getSectorDefensePower(String(sectorKey), this.uhfFactionId, targetFactionId)
+                : 0;
+            const requiredPower = Math.round(Math.max(100, sectorDefense * threshold) * 100) / 100;
+            if (!(requiredPower > 0)) {
+                return;
+            }
+            candidates.push({
+                sectorKey: String(sectorKey),
+                targetFactionId,
+                requiredPower
+            });
+        });
+        candidates.sort((a, b) => {
+            if (a.requiredPower !== b.requiredPower) {
+                return a.requiredPower - b.requiredPower;
+            }
+            return a.sectorKey.localeCompare(b.sectorKey);
+        });
+        return candidates;
+    }
+
+    #getSelectedAutoLaunchCandidates(threshold) {
+        const candidates = [];
+        this.autoSectors.forEach((rawKey) => {
+            if (!rawKey) {
+                return;
+            }
+            const sectorKey = String(rawKey);
+            const sector = this.manager?.sectors?.get?.(sectorKey);
+            if (!sector || this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
+                return;
+            }
+            const targetFactionId = this.#resolveOperationTarget(sector, this.uhfFactionId);
+            if (!targetFactionId) {
+                return;
+            }
+            const sectorDefense = this.manager.getSectorDefensePower
+                ? this.manager.getSectorDefensePower(sectorKey, this.uhfFactionId, targetFactionId)
+                : 0;
+            const requiredPower = Math.round(Math.max(100, sectorDefense * threshold) * 100) / 100;
+            if (!(requiredPower > 0)) {
+                return;
+            }
+            candidates.push({
+                sectorKey,
+                targetFactionId,
+                requiredPower
+            });
+        });
+        candidates.sort((a, b) => {
+            if (a.requiredPower !== b.requiredPower) {
+                return a.requiredPower - b.requiredPower;
+            }
+            return a.sectorKey.localeCompare(b.sectorKey);
+        });
+        return candidates;
+    }
+
+    #normalizeAutoMode(value) {
+        const mode = typeof value === 'string' ? value.trim().toLowerCase() : '';
+        if (mode === 'all' || mode === 'off' || mode === 'forceoff') {
+            if (mode === 'forceoff') {
+                return 'forceOff';
+            }
+            return mode;
+        }
+        return DEFAULT_OPERATION_AUTO_MODE;
     }
 }
 

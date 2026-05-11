@@ -290,6 +290,36 @@ const GalaxyOperationUI = (() => {
         return cachedAutoLaunchThreshold;
     }
 
+    function syncAutoThresholdInput(input, formattedThreshold) {
+        if (!input) {
+            return;
+        }
+        const activeInput = input.ownerDocument?.activeElement;
+        if (activeInput !== input || input.value.trim() === '') {
+            input.value = formattedThreshold;
+        }
+    }
+
+    function getOperationAutoMode() {
+        const manager = getManager();
+        if (manager && typeof manager.getOperationAutoMode === 'function') {
+            const mode = manager.getOperationAutoMode();
+            if (mode === 'all' || mode === 'off' || mode === 'forceOff') {
+                return mode;
+            }
+        }
+        return 'off';
+    }
+
+    function setOperationAutoMode(value) {
+        const manager = getManager();
+        const requestedMode = value === 'all' || value === 'off' || value === 'forceOff' ? value : 'off';
+        if (manager && typeof manager.setOperationAutoMode === 'function') {
+            return manager.setOperationAutoMode(requestedMode);
+        }
+        return requestedMode;
+    }
+
     function updateOperationsStepDisplay(step, formatter) {
         const cache = getCache();
         if (!cache || !cache.operationsButtons) {
@@ -430,13 +460,34 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const rawValue = input.value;
-        if (event.type === 'input' && rawValue.trim() === '') {
+        const isTypingEvent = event.type === 'input';
+        if (isTypingEvent && rawValue.trim() === '') {
             return;
         }
-        const numeric = Number(rawValue);
-        const sanitized = Number.isFinite(numeric) && numeric > 0 ? numeric : DEFAULT_OPERATION_AUTO_THRESHOLD;
+        const numeric = parseFlexibleNumber(rawValue);
+        if (isTypingEvent) {
+            if (Number.isFinite(numeric) && numeric > 0) {
+                setAutoLaunchThreshold(numeric);
+            }
+            return;
+        }
+        const sanitized = Number.isFinite(numeric) && numeric > 0
+            ? numeric
+            : DEFAULT_OPERATION_AUTO_THRESHOLD;
         const applied = setAutoLaunchThreshold(sanitized);
-        input.value = formatAutoThresholdDisplay(applied);
+        input.value = formatAutoThresholdDisplay(applied || DEFAULT_OPERATION_AUTO_THRESHOLD);
+        updateOperationsPanel();
+    }
+
+    function handleGlobalAutoModeChange(event) {
+        const select = event?.target;
+        if (!select) {
+            return;
+        }
+        const mode = select.value === 'all' || select.value === 'off' || select.value === 'forceOff'
+            ? select.value
+            : 'off';
+        setOperationAutoMode(mode);
         updateOperationsPanel();
     }
 
@@ -599,6 +650,49 @@ const GalaxyOperationUI = (() => {
         launchControls.className = 'galaxy-operations-launch__controls';
         launchContainer.appendChild(launchControls);
 
+        const autoModeHeader = doc.createElement('div');
+        autoModeHeader.className = 'galaxy-operations-launch__auto-header';
+        autoModeHeader.textContent = getOperationsText('globalAutoOperationsHeader', {}, 'Global Auto Operations');
+
+        const autoModeRow = doc.createElement('div');
+        autoModeRow.className = 'galaxy-operations-launch__auto-row';
+
+        const autoModeSelect = doc.createElement('select');
+        autoModeSelect.className = 'galaxy-operations-launch__auto-threshold galaxy-operations-launch__auto-mode-select';
+        autoModeSelect.addEventListener('change', handleGlobalAutoModeChange);
+        [
+            { value: 'off', label: getOperationsText('autoOperationsOff', {}, 'Off') },
+            { value: 'all', label: getOperationsText('autoOperationsAll', {}, 'All sectors') },
+            { value: 'forceOff', label: getOperationsText('autoOperationsForceOff', {}, 'Force all off') }
+        ].forEach(({ value, label }) => {
+            const option = doc.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            autoModeSelect.appendChild(option);
+        });
+        autoModeSelect.value = getOperationAutoMode();
+        autoModeRow.appendChild(autoModeSelect);
+
+        const autoModeThresholdPrefix = doc.createElement('span');
+        autoModeThresholdPrefix.className = 'galaxy-operations-launch__auto-prefix';
+        autoModeThresholdPrefix.textContent = getOperationsText('autoWithPrefix', {}, ' with ');
+        autoModeRow.appendChild(autoModeThresholdPrefix);
+
+        const autoModeThresholdInput = doc.createElement('input');
+        autoModeThresholdInput.type = 'text';
+        autoModeThresholdInput.inputMode = 'decimal';
+        autoModeThresholdInput.className = 'galaxy-operations-launch__auto-threshold';
+        autoModeThresholdInput.value = formatAutoThresholdDisplay(DEFAULT_OPERATION_AUTO_THRESHOLD);
+        autoModeThresholdInput.addEventListener('change', handleAutoThresholdChange);
+        autoModeThresholdInput.addEventListener('blur', handleAutoThresholdChange);
+        autoModeThresholdInput.addEventListener('input', handleAutoThresholdChange);
+        autoModeRow.appendChild(autoModeThresholdInput);
+
+        const autoModeThresholdSuffix = doc.createElement('span');
+        autoModeThresholdSuffix.className = 'galaxy-operations-launch__auto-suffix';
+        autoModeThresholdSuffix.textContent = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
+        autoModeRow.appendChild(autoModeThresholdSuffix);
+
         const autoLaunchLabel = doc.createElement('label');
         autoLaunchLabel.className = 'galaxy-operations-launch__auto';
 
@@ -619,10 +713,10 @@ const GalaxyOperationUI = (() => {
         autoLaunchLabel.appendChild(autoLaunchThresholdPrefix);
 
         const autoLaunchThresholdInput = doc.createElement('input');
-        autoLaunchThresholdInput.type = 'number';
-        autoLaunchThresholdInput.step = '0.01';
-        autoLaunchThresholdInput.min = '0';
+        autoLaunchThresholdInput.type = 'text';
+        autoLaunchThresholdInput.inputMode = 'decimal';
         autoLaunchThresholdInput.className = 'galaxy-operations-launch__auto-threshold';
+        autoLaunchThresholdInput.value = formatAutoThresholdDisplay(DEFAULT_OPERATION_AUTO_THRESHOLD);
         autoLaunchThresholdInput.addEventListener('change', handleAutoThresholdChange);
         autoLaunchThresholdInput.addEventListener('blur', handleAutoThresholdChange);
         autoLaunchThresholdInput.addEventListener('input', handleAutoThresholdChange);
@@ -712,6 +806,8 @@ const GalaxyOperationUI = (() => {
             summary.appendChild(item);
             summaryItems[key] = itemValue;
         });
+        form.appendChild(autoModeHeader);
+        form.appendChild(autoModeRow);
 
         const statusMessage = doc.createElement('div');
         statusMessage.className = 'galaxy-operations-form__status';
@@ -725,6 +821,9 @@ const GalaxyOperationUI = (() => {
             operationsInput: powerInput,
             operationsButtons,
             operationsLaunchButton: launchButton,
+            operationsAutoModeHeader: autoModeHeader,
+            operationsAutoModeSelect: autoModeSelect,
+            operationsAutoModeThresholdInput: autoModeThresholdInput,
             operationsAutoCheckbox: autoLaunchCheckbox,
             operationsAutoThresholdInput: autoLaunchThresholdInput,
             operationsProgress: progressContainer,
@@ -798,6 +897,9 @@ const GalaxyOperationUI = (() => {
             operationsInput,
             operationsButtons,
             operationsLaunchButton,
+            operationsAutoModeHeader,
+            operationsAutoModeSelect,
+            operationsAutoModeThresholdInput,
             operationsAutoCheckbox,
             operationsAutoThresholdInput,
             operationsProgress,
@@ -848,15 +950,25 @@ const GalaxyOperationUI = (() => {
         if (operationsDurationValue) {
             operationsDurationValue.textContent = formatOperationDurationDisplay(defaultDurationMs);
         }
+        const thresholdValue = getAutoLaunchThreshold();
+        const formattedThreshold = formatAutoThresholdDisplay(thresholdValue || DEFAULT_OPERATION_AUTO_THRESHOLD);
+        syncAutoThresholdInput(operationsAutoThresholdInput, formattedThreshold);
+        syncAutoThresholdInput(operationsAutoModeThresholdInput, formattedThreshold);
         if (operationsAutoThresholdInput) {
-            const thresholdValue = getAutoLaunchThreshold();
-            operationsAutoThresholdInput.value = formatAutoThresholdDisplay(thresholdValue);
             operationsAutoThresholdInput.disabled = false;
         }
-
         const storedAutoEnabled = selectedKey ? getOperationAutoState(selectedKey) : false;
+        const autoMode = getOperationAutoMode();
+        const autoModeOverridingCards = autoMode === 'all' || autoMode === 'forceOff';
+        const effectiveAutoEnabled = autoMode === 'all'
+            ? true
+            : (autoMode === 'forceOff' ? false : storedAutoEnabled);
+        if (operationsAutoModeSelect) {
+            operationsAutoModeSelect.value = autoMode;
+            operationsAutoModeSelect.disabled = false;
+        }
         if (operationsAutoCheckbox) {
-            operationsAutoCheckbox.checked = storedAutoEnabled;
+            operationsAutoCheckbox.checked = effectiveAutoEnabled;
         }
 
         const disableAllControls = () => {
@@ -873,8 +985,17 @@ const GalaxyOperationUI = (() => {
                 operationsAutoCheckbox.disabled = true;
                 operationsAutoCheckbox.checked = false;
             }
+            if (operationsAutoModeSelect) {
+                operationsAutoModeSelect.disabled = true;
+            }
+            if (operationsAutoModeHeader) {
+                operationsAutoModeHeader.classList.remove('is-hidden');
+            }
             if (operationsAutoThresholdInput) {
                 operationsAutoThresholdInput.disabled = true;
+            }
+            if (operationsAutoModeThresholdInput) {
+                operationsAutoModeThresholdInput.disabled = true;
             }
         };
 
@@ -1011,7 +1132,7 @@ const GalaxyOperationUI = (() => {
         if (operationsTargetDefense) {
             operationsTargetDefense.textContent = formatNumber(sectorPower, false, 2);
         }
-        if (!operationRunning && storedAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
+        if (!operationRunning && effectiveAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
             const adjusted = clampAssignment(requiredThreshold, availablePower);
             const normalizedAdjustment = normalizeAssignment(adjusted);
             if (normalizedAdjustment > assignment) {
@@ -1118,7 +1239,7 @@ const GalaxyOperationUI = (() => {
             } else if (!hasChance) {
                 statusMessage = getOperationsText('assignMoreThan', { value: formatNumber(sectorPower, false, 0) }, `Assign more than ${formatNumber(sectorPower, false, 0)} power for a chance of success.`);
             }
-            if (statusMessage === '' && storedAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
+            if (statusMessage === '' && effectiveAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
                 statusMessage = getOperationsText('autoLaunchRequires', { value: formatNumber(requiredAutoPower, false, 2) }, `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`);
             }
         }
@@ -1126,9 +1247,12 @@ const GalaxyOperationUI = (() => {
 
         operationsLaunchButton.disabled = launchBlocked;
         if (operationsAutoCheckbox) {
-            const autoDisabled = !enabled || !selection;
+            const autoDisabled = !enabled || !selection || autoModeOverridingCards;
             operationsAutoCheckbox.disabled = autoDisabled;
-            operationsAutoCheckbox.checked = !!(selection && storedAutoEnabled);
+            operationsAutoCheckbox.checked = !!(selection && effectiveAutoEnabled);
+        }
+        if (operationsAutoModeThresholdInput) {
+            operationsAutoModeThresholdInput.disabled = !enabled;
         }
     }
 
