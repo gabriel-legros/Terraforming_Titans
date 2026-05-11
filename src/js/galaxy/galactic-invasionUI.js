@@ -118,6 +118,10 @@ function initializeGalacticInvasionUI() {
   traitSummary.className = 'galactic-invasion-traits';
   training.body.appendChild(traitSummary);
 
+  const specialStatus = document.createElement('div');
+  specialStatus.className = 'galactic-invasion-special-status hidden';
+  training.body.appendChild(specialStatus);
+
   const rewardSummary = document.createElement('div');
   rewardSummary.className = 'galactic-invasion-summary';
   training.body.appendChild(rewardSummary);
@@ -141,6 +145,7 @@ function initializeGalacticInvasionUI() {
     training,
     grid,
     traitSummary,
+    specialStatus,
     rewardSummary,
     mystery,
     cards: new Map()
@@ -271,6 +276,7 @@ function updateGalacticInvasionUI() {
     }
   });
   updateGalacticInvasionTraitSummary(refreshedCache.traitSummary);
+  updateGalacticInvasionSpecialStatus(refreshedCache.specialStatus);
   updateGalacticInvasionRewardSummary(refreshedCache.rewardSummary);
 }
 
@@ -338,6 +344,43 @@ function updateGalacticInvasionTraitSummary(container) {
     list.appendChild(item);
   });
   container.appendChild(list);
+}
+
+function updateGalacticInvasionSpecialStatus(container) {
+  container.textContent = '';
+  container.classList.add('hidden');
+  if (!galaxyInvasionManager.currentLetterKey) {
+    return;
+  }
+  const entries = [];
+  if (galaxyInvasionManager.beachheadSectorKey) {
+    const sector = galaxyManager.sectors.get(galaxyInvasionManager.beachheadSectorKey);
+    const sectorName = sector?.getDisplayName?.() || galaxyInvasionManager.beachheadSectorKey;
+    entries.push(getGalacticInvasionText('beachheadStatus', 'Fortified Beachhead: {sector} ({power} defense)', {
+      sector: sectorName,
+      power: formatGalacticInvasionPower(galaxyInvasionManager.beachheadDefensePower)
+    }));
+  }
+  const bastionCount = Object.keys(galaxyInvasionManager.occupationBastions).length;
+  if (bastionCount > 0) {
+    entries.push(getGalacticInvasionText('bastionStatus', 'Occupation Bastions: {count}', {
+      count: formatNumber(bastionCount, true, 0)
+    }));
+  }
+  if (!entries.length) {
+    return;
+  }
+  const title = document.createElement('div');
+  title.className = 'galactic-invasion-special-status__title';
+  title.textContent = getGalacticInvasionText('activeSpecialStatusTitle', 'Active Special Defenses');
+  container.appendChild(title);
+  entries.forEach((text) => {
+    const item = document.createElement('div');
+    item.className = 'galactic-invasion-special-status__item';
+    item.textContent = text;
+    container.appendChild(item);
+  });
+  container.classList.remove('hidden');
 }
 
 function updateGalacticInvasionRewardSummary(container) {

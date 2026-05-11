@@ -89,9 +89,9 @@ function generateGalacticInvasionTraitSets() {
       sets.push([GALACTIC_INVASION_TRAIT_ORDER[first], GALACTIC_INVASION_TRAIT_ORDER[second]]);
     }
   }
-  sets.push(['quadrantIncursion', 'deepStrike', 'shieldedCore']);
+  sets.push(['quadrantIncursion', 'deepStrike', 'commandBypass']);
   sets.push(['monolithArmada', 'occupationBastions', 'fortifiedBeachhead']);
-  sets.push(['assimilationSwarm', 'selfReconstitutingFleet', 'overrunProtocol', 'commandBypass']);
+  sets.push(['assimilationSwarm', 'selfReconstitutingFleet', 'overrunProtocol', 'shieldedCore']);
   return sets;
 }
 

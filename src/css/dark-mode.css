@@ -690,6 +690,7 @@
 .dark-mode .galactic-invasion-card__reward,
 .dark-mode .galactic-invasion-traits__item,
 .dark-mode .galactic-invasion-summary__empty,
+.dark-mode .galactic-invasion-special-status__item,
 .dark-mode .galactic-invasion-summary__item {
     color: #cbd5e1;
 }
@@ -716,6 +717,7 @@
 }
 
 .dark-mode .galactic-invasion-traits,
+.dark-mode .galactic-invasion-special-status,
 .dark-mode .galactic-invasion-summary {
     border-top-color: rgba(100, 116, 139, 0.45);
 }

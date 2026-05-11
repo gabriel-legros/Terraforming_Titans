@@ -534,6 +534,9 @@ class GalacticInvasionManager extends EffectableEntity {
     if (this.hasActiveTrait('monolithArmada')) {
       return 1;
     }
+    if (this.hasActiveTrait('fortifiedBeachhead') && operation.externalInvasion === true && !this.beachheadSectorKey) {
+      return 1;
+    }
     if (this.hasActiveTrait('overrunProtocol')) {
       return 0.5;
     }

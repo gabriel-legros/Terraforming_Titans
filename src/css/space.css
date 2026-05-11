@@ -1242,13 +1242,19 @@
 }
 
 .galactic-invasion-traits,
+.galactic-invasion-special-status,
 .galactic-invasion-summary {
   margin-top: 14px;
   border-top: 1px solid rgba(100, 116, 139, 0.28);
   padding-top: 12px;
 }
 
+.galactic-invasion-special-status.hidden {
+  display: none;
+}
+
 .galactic-invasion-traits__title,
+.galactic-invasion-special-status__title,
 .galactic-invasion-summary__title {
   font-weight: 700;
   margin-bottom: 6px;
@@ -1273,6 +1279,7 @@
 }
 
 .galactic-invasion-summary__empty,
+.galactic-invasion-special-status__item,
 .galactic-invasion-summary__item {
   color: #475569;
   font-size: 0.9rem;
