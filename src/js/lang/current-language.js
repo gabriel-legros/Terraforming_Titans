@@ -2756,7 +2756,7 @@ setLanguageData({
           },
           quadrantIncursion: {
             name: 'Quadrant Incursion',
-            description: 'Begins with four simultaneous rim attacks from different sectors, each using one quarter of the initial fleet. With Monolith Armada, the four vectors are scouted but the monolith commits to one at full power.',
+            description: 'Begins with four simultaneous rim attacks from different sectors, each using one quarter of the initial fleet.',
           },
           selfReconstitutingFleet: {
             name: 'Self-Reconstituting Fleet',

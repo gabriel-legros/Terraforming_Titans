@@ -23,7 +23,7 @@ const GALACTIC_INVASION_TRAIT_DEFINITIONS = {
     nameKey: 'ui.space.invasion.traits.quadrantIncursion.name',
     nameFallback: 'Quadrant Incursion',
     descriptionKey: 'ui.space.invasion.traits.quadrantIncursion.description',
-    descriptionFallback: 'Begins with four simultaneous rim attacks from different sectors, each using one quarter of the initial fleet. With Monolith Armada, the four vectors are scouted but the monolith commits to one at full power.'
+    descriptionFallback: 'Begins with four simultaneous rim attacks from different sectors, each using one quarter of the initial fleet.'
   },
   selfReconstitutingFleet: {
     nameKey: 'ui.space.invasion.traits.selfReconstitutingFleet.name',
@@ -84,10 +84,16 @@ const GALACTIC_INVASION_TRAIT_ORDER = [
 
 function generateGalacticInvasionTraitSets() {
   const sets = [];
-  for (let first = 0; first < GALACTIC_INVASION_TRAIT_ORDER.length; first += 1) {
-    for (let second = first + 1; second < GALACTIC_INVASION_TRAIT_ORDER.length; second += 1) {
-      sets.push([GALACTIC_INVASION_TRAIT_ORDER[first], GALACTIC_INVASION_TRAIT_ORDER[second]]);
+  const rotatingTraits = GALACTIC_INVASION_TRAIT_ORDER.slice();
+  for (let round = 0; round < GALACTIC_INVASION_TRAIT_ORDER.length - 1; round += 1) {
+    for (let index = 0; index < GALACTIC_INVASION_TRAIT_ORDER.length / 2; index += 1) {
+      sets.push([
+        rotatingTraits[index],
+        rotatingTraits[GALACTIC_INVASION_TRAIT_ORDER.length - 1 - index]
+      ]);
     }
+    const movedTrait = rotatingTraits.pop();
+    rotatingTraits.splice(1, 0, movedTrait);
   }
   sets.push(['quadrantIncursion', 'deepStrike', 'commandBypass']);
   sets.push(['monolithArmada', 'occupationBastions', 'fortifiedBeachhead']);
