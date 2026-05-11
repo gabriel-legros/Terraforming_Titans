@@ -2,6 +2,100 @@ const PROMETHEAN_INVASION_FACTION_ID = 'prometheanInvasion';
 const PROMETHEAN_INVASION_OPERATION_MS = 10000;
 const PROMETHEAN_INVASION_CANCEL_COOLDOWN_MS = 60 * 60 * 1000;
 const PROMETHEAN_INVASION_BASE_POWER = 10000000;
+const PROMETHEAN_INVASION_MONOLITH_OPERATION_MS = 5 * 60 * 1000;
+const PROMETHEAN_INVASION_MONOLITH_COOLDOWN_MS = 5 * 60 * 1000;
+const PROMETHEAN_INVASION_RECONSTITUTION_MS = 60 * 60 * 1000;
+
+const GALACTIC_INVASION_TRAIT_DEFINITIONS = {
+  assimilationSwarm: {
+    nameKey: 'ui.space.invasion.traits.assimilationSwarm.name',
+    nameFallback: 'Assimilation Swarm',
+    descriptionKey: 'ui.space.invasion.traits.assimilationSwarm.description',
+    descriptionFallback: 'Whenever this invasion destroys defending fleet power, it adds that destroyed power to its own fleet.'
+  },
+  monolithArmada: {
+    nameKey: 'ui.space.invasion.traits.monolithArmada.name',
+    nameFallback: 'Monolith Armada',
+    descriptionKey: 'ui.space.invasion.traits.monolithArmada.description',
+    descriptionFallback: 'Does not split up, spends 5 minutes on a single operation, waits 5 minutes after each operation, and conquers the entire sector on victory.'
+  },
+  quadrantIncursion: {
+    nameKey: 'ui.space.invasion.traits.quadrantIncursion.name',
+    nameFallback: 'Quadrant Incursion',
+    descriptionKey: 'ui.space.invasion.traits.quadrantIncursion.description',
+    descriptionFallback: 'Begins with four simultaneous rim attacks from different sectors, each using one quarter of the initial fleet. With Monolith Armada, the four vectors are scouted but the monolith commits to one at full power.'
+  },
+  selfReconstitutingFleet: {
+    nameKey: 'ui.space.invasion.traits.selfReconstitutingFleet.name',
+    nameFallback: 'Self-Reconstituting Fleet',
+    descriptionKey: 'ui.space.invasion.traits.selfReconstitutingFleet.description',
+    descriptionFallback: 'Regenerates destroyed fleet power over 1 hour, up to the invasion fleet power it started with.'
+  },
+  commandBypass: {
+    nameKey: 'ui.space.invasion.traits.commandBypass.name',
+    nameFallback: 'Command Bypass',
+    descriptionKey: 'ui.space.invasion.traits.commandBypass.description',
+    descriptionFallback: 'Ignores UHF defensive fleet assignments when attacking and only fights sector base defense.'
+  },
+  occupationBastions: {
+    nameKey: 'ui.space.invasion.traits.occupationBastions.name',
+    nameFallback: 'Occupation Bastions',
+    descriptionKey: 'ui.space.invasion.traits.occupationBastions.description',
+    descriptionFallback: 'Each fully conquered sector gains INV defenses equal to 10% of the invasion initial fleet power until UHF retakes it.'
+  },
+  fortifiedBeachhead: {
+    nameKey: 'ui.space.invasion.traits.fortifiedBeachhead.name',
+    nameFallback: 'Fortified Beachhead',
+    descriptionKey: 'ui.space.invasion.traits.fortifiedBeachhead.description',
+    descriptionFallback: 'The first fully conquered rim sector gains INV defenses equal to half the initial fleet power and must be retaken before the invasion is defeated.'
+  },
+  shieldedCore: {
+    nameKey: 'ui.space.invasion.traits.shieldedCore.name',
+    nameFallback: 'Shielded Core',
+    descriptionKey: 'ui.space.invasion.traits.shieldedCore.description',
+    descriptionFallback: 'UHF attacks cannot damage INV fleet power unless their assigned offense is at least 5x the INV sector defense used by the operation.'
+  },
+  overrunProtocol: {
+    nameKey: 'ui.space.invasion.traits.overrunProtocol.name',
+    nameFallback: 'Overrun Protocol',
+    descriptionKey: 'ui.space.invasion.traits.overrunProtocol.description',
+    descriptionFallback: 'Successful INV attacks gain 50% sector control instead of 10%.'
+  },
+  deepStrike: {
+    nameKey: 'ui.space.invasion.traits.deepStrike.name',
+    nameFallback: 'Deep Strike',
+    descriptionKey: 'ui.space.invasion.traits.deepStrike.description',
+    descriptionFallback: 'The opening attack may target any UHF-controlled sector in the galaxy. After that, normal adjacency rules resume.'
+  }
+};
+
+const GALACTIC_INVASION_TRAIT_ORDER = [
+  'assimilationSwarm',
+  'monolithArmada',
+  'quadrantIncursion',
+  'selfReconstitutingFleet',
+  'commandBypass',
+  'occupationBastions',
+  'fortifiedBeachhead',
+  'shieldedCore',
+  'overrunProtocol',
+  'deepStrike'
+];
+
+function generateGalacticInvasionTraitSets() {
+  const sets = [];
+  for (let first = 0; first < GALACTIC_INVASION_TRAIT_ORDER.length; first += 1) {
+    for (let second = first + 1; second < GALACTIC_INVASION_TRAIT_ORDER.length; second += 1) {
+      sets.push([GALACTIC_INVASION_TRAIT_ORDER[first], GALACTIC_INVASION_TRAIT_ORDER[second]]);
+    }
+  }
+  sets.push(['quadrantIncursion', 'deepStrike', 'shieldedCore']);
+  sets.push(['monolithArmada', 'occupationBastions', 'fortifiedBeachhead']);
+  sets.push(['assimilationSwarm', 'selfReconstitutingFleet', 'overrunProtocol', 'commandBypass']);
+  return sets;
+}
+
+const GALACTIC_INVASION_TRAIT_SETS = generateGalacticInvasionTraitSets();
 
 const GALACTIC_INVASION_LETTERS = [
   { key: 'alphaLower', label: 'α', name: 'alpha' },
@@ -63,7 +157,8 @@ const GALACTIC_INVASION_LETTERS = [
   return {
     ...entry,
     index,
-    fleetPower: power
+    fleetPower: power,
+    traits: GALACTIC_INVASION_TRAIT_SETS[index] || []
   };
 });
 

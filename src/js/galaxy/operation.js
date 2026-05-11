@@ -51,6 +51,8 @@ class GalaxyOperationManager {
         updateSectorControl,
         getDefenseSummary,
         resolveTargetFaction,
+        getControlGainFraction,
+        shouldSuppressDefenderLosses,
         onOperationSuccess,
         onOperationComplete,
         refreshUI,
@@ -70,6 +72,8 @@ class GalaxyOperationManager {
         this.updateSectorControl = updateSectorControl;
         this.getDefenseSummary = getDefenseSummary;
         this.resolveTargetFaction = resolveTargetFaction;
+        this.getControlGainFraction = getControlGainFraction;
+        this.shouldSuppressDefenderLosses = shouldSuppressDefenderLosses;
         this.onOperationSuccess = onOperationSuccess;
         this.onOperationComplete = onOperationComplete;
         this.refreshUI = refreshUI;
@@ -526,6 +530,7 @@ class GalaxyOperationManager {
 
         const defenderLosses = this.#applyDefenderLosses({
             sector,
+            operation,
             attackerId,
             targetFactionId,
             offensePower,
@@ -586,11 +591,17 @@ class GalaxyOperationManager {
             if (!(otherTotal > 0)) {
                 return;
             }
-            const targetGain = totalControl * 0.1;
+            const fraction = this.getControlGainFraction
+                ? this.getControlGainFraction(operation)
+                : 0.1;
+            const targetGain = totalControl * Math.max(0, fraction);
             gain = Math.min(otherTotal, targetGain);
         } else {
             const sectorValue = sector.getValue?.() ?? 0;
-            gain = Number.isFinite(sectorValue) && sectorValue > 0 ? sectorValue * 0.1 : 0;
+            const fraction = this.getControlGainFraction
+                ? this.getControlGainFraction(operation)
+                : 0.1;
+            gain = Number.isFinite(sectorValue) && sectorValue > 0 ? sectorValue * Math.max(0, fraction) : 0;
         }
         if (!(gain > 0)) {
             return;
@@ -832,7 +843,7 @@ class GalaxyOperationManager {
         }));
     }
 
-    #applyDefenderLosses({ sector, attackerId, targetFactionId, offensePower, defensePower, attackSucceeded }) {
+    #applyDefenderLosses({ sector, operation, attackerId, targetFactionId, offensePower, defensePower, attackSucceeded }) {
         if (!sector) {
             return [];
         }
@@ -847,6 +858,9 @@ class GalaxyOperationManager {
         const contributions = this.#getDefenseContributions(sector, attackerId, targetFactionId);
         if (!contributions.length) {
             return [];
+        }
+        if (this.shouldSuppressDefenderLosses?.(operation, defense, offense)) {
+            return contributions.map(({ factionId }) => ({ factionId, loss: 0 }));
         }
         const totalContribution = contributions.reduce((sum, entry) => {
             const value = Number(entry.power);

@@ -114,6 +114,10 @@ function initializeGalacticInvasionUI() {
   grid.className = 'galactic-invasion-grid';
   training.body.appendChild(grid);
 
+  const traitSummary = document.createElement('div');
+  traitSummary.className = 'galactic-invasion-traits';
+  training.body.appendChild(traitSummary);
+
   const rewardSummary = document.createElement('div');
   rewardSummary.className = 'galactic-invasion-summary';
   training.body.appendChild(rewardSummary);
@@ -136,6 +140,7 @@ function initializeGalacticInvasionUI() {
     overlay,
     training,
     grid,
+    traitSummary,
     rewardSummary,
     mystery,
     cards: new Map()
@@ -199,6 +204,9 @@ function createGalacticInvasionCard(letter) {
   const reward = document.createElement('div');
   reward.className = 'galactic-invasion-card__reward';
 
+  const traits = document.createElement('div');
+  traits.className = 'galactic-invasion-card__traits';
+
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'galactic-invasion-card__button';
@@ -208,8 +216,8 @@ function createGalacticInvasionCard(letter) {
     updateGalacticInvasionUI({ force: true });
   });
 
-  element.append(top, power, reward, button);
-  return { element, status, power, reward, button };
+  element.append(top, power, traits, reward, button);
+  return { element, status, power, traits, reward, button };
 }
 
 function updateGalacticInvasionUI() {
@@ -246,6 +254,7 @@ function updateGalacticInvasionUI() {
     card.power.textContent = getGalacticInvasionText('fleetPower', 'Fleet Power: {value}', {
       value: formatGalacticInvasionPower(letter.fleetPower)
     });
+    card.traits.textContent = getGalacticInvasionTraitListText(letter.traits);
     card.reward.textContent = getGalacticInvasionRewardText(letter.key);
     card.button.disabled = completed || blockedByActive || blockedByCooldown || !conquered;
     if (active) {
@@ -261,7 +270,25 @@ function updateGalacticInvasionUI() {
       card.button.textContent = getGalacticInvasionText('startButton', 'Start Invasion');
     }
   });
+  updateGalacticInvasionTraitSummary(refreshedCache.traitSummary);
   updateGalacticInvasionRewardSummary(refreshedCache.rewardSummary);
+}
+
+function getGalacticInvasionTraitName(traitKey) {
+  const definition = GALACTIC_INVASION_TRAIT_DEFINITIONS[traitKey];
+  return t(definition.nameKey, {}, definition.nameFallback);
+}
+
+function getGalacticInvasionTraitDescription(traitKey) {
+  const definition = GALACTIC_INVASION_TRAIT_DEFINITIONS[traitKey];
+  return t(definition.descriptionKey, {}, definition.descriptionFallback);
+}
+
+function getGalacticInvasionTraitListText(traits) {
+  const names = traits.map((traitKey) => getGalacticInvasionTraitName(traitKey));
+  return getGalacticInvasionText('traitList', 'Traits: {value}', {
+    value: names.join(', ')
+  });
 }
 
 function getGalacticInvasionRewardText(letterKey) {
@@ -279,6 +306,38 @@ function formatGalacticInvasionReward(reward) {
     formattedValue = formatNumber(reward.value, true, 2);
   }
   return t(reward.labelKey, { value: formattedValue }, reward.labelFallback);
+}
+
+function updateGalacticInvasionTraitSummary(container) {
+  container.textContent = '';
+  const title = document.createElement('div');
+  title.className = 'galactic-invasion-traits__title';
+  title.textContent = getGalacticInvasionText('traitSummaryTitle', 'Special Traits');
+  container.appendChild(title);
+
+  const activeTraits = new Set();
+  GALACTIC_INVASION_LETTERS.forEach((letter) => {
+    letter.traits.forEach((traitKey) => activeTraits.add(traitKey));
+  });
+
+  const list = document.createElement('div');
+  list.className = 'galactic-invasion-traits__list';
+  GALACTIC_INVASION_TRAIT_ORDER.forEach((traitKey) => {
+    if (!activeTraits.has(traitKey)) {
+      return;
+    }
+    const item = document.createElement('div');
+    item.className = 'galactic-invasion-traits__item';
+    const name = document.createElement('span');
+    name.className = 'galactic-invasion-traits__name';
+    name.textContent = getGalacticInvasionTraitName(traitKey);
+    const description = document.createElement('span');
+    description.className = 'galactic-invasion-traits__description';
+    description.textContent = getGalacticInvasionTraitDescription(traitKey);
+    item.append(name, description);
+    list.appendChild(item);
+  });
+  container.appendChild(list);
 }
 
 function updateGalacticInvasionRewardSummary(container) {

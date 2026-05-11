@@ -43,6 +43,8 @@ class GalaxyManager extends EffectableEntity {
                 targetFactionId
             ),
             resolveTargetFaction: (sector, attackerId) => this.getOperationTargetFaction(sector, attackerId),
+            getControlGainFraction: (operation) => this.galacticInvasionManager?.getInvasionOperationControlFraction?.(operation) ?? 0.1,
+            shouldSuppressDefenderLosses: (operation, defensePower, offensePower) => this.galacticInvasionManager?.shouldSuppressDefenderLosses?.(operation, defensePower, offensePower) === true,
             onOperationSuccess: () => {
                 this.successfulOperations += 1;
             },
@@ -422,6 +424,7 @@ class GalaxyManager extends EffectableEntity {
             };
         }
         const contributions = this.#collectSectorDefenseEntries(sector, originFactionId, targetFactionId);
+        this.galacticInvasionManager?.adjustDefenseSummary?.(sector, originFactionId, targetFactionId, contributions);
         if (!contributions.length) {
             return {
                 basePower: 0,

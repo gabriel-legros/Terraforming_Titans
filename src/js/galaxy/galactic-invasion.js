@@ -9,6 +9,12 @@ class GalacticInvasionManager extends EffectableEntity {
     this.externalFailurePending = false;
     this.rewardSignature = '';
     this.rewardTargets = new Set();
+    this.initialFleetPower = 0;
+    this.deepStrikeUsed = false;
+    this.monolithCooldownMs = 0;
+    this.occupationBastions = {};
+    this.beachheadSectorKey = null;
+    this.beachheadDefensePower = 0;
   }
 
   enable(targetId) {
@@ -50,6 +56,11 @@ class GalacticInvasionManager extends EffectableEntity {
     if (!this.currentLetterKey) {
       return;
     }
+    if (this.monolithCooldownMs > 0) {
+      this.monolithCooldownMs = Math.max(0, this.monolithCooldownMs - deltaMs);
+    }
+    this.pruneInvasionDefenses();
+    this.regenerateActiveInvasionFleet(deltaMs);
     if (this.externalFailurePending) {
       this.completeActiveInvasion();
       return;
@@ -86,8 +97,14 @@ class GalacticInvasionManager extends EffectableEntity {
     faction.fleetCapacity = letter.fleetPower;
     this.currentLetterKey = letter.key;
     this.externalFailurePending = false;
+    this.initialFleetPower = letter.fleetPower;
+    this.deepStrikeUsed = false;
+    this.monolithCooldownMs = 0;
+    this.occupationBastions = {};
+    this.beachheadSectorKey = null;
+    this.beachheadDefensePower = 0;
     this.invasionTimerMs = 0;
-    this.launchExternalRimOperation();
+    this.launchInitialOperations();
     updateGalaxyUI({ force: true });
     updateGalacticInvasionUI({ force: true });
     return true;
@@ -129,6 +146,12 @@ class GalacticInvasionManager extends EffectableEntity {
       this.currentLetterKey = null;
     }
     this.externalFailurePending = false;
+    this.initialFleetPower = preserveLetter ? this.initialFleetPower : 0;
+    this.deepStrikeUsed = false;
+    this.monolithCooldownMs = 0;
+    this.occupationBastions = {};
+    this.beachheadSectorKey = null;
+    this.beachheadDefensePower = 0;
     this.invasionTimerMs = 0;
     updateGalaxyUI({ force: true });
   }
@@ -165,12 +188,165 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   handlePrometheanOperationResult(operation) {
-    if (!operation || operation.factionId !== PROMETHEAN_INVASION_FACTION_ID) {
+    if (!operation) {
       return;
     }
-    if (operation.externalInvasion === true && operation.result !== 'success') {
+    if (operation.factionId === PROMETHEAN_INVASION_FACTION_ID && operation.externalInvasion === true && operation.result !== 'success') {
       this.externalFailurePending = true;
     }
+    if (operation.factionId === PROMETHEAN_INVASION_FACTION_ID) {
+      this.handleInvasionAttackResult(operation);
+      return;
+    }
+    if (operation.factionId === UHF_FACTION_ID && operation.targetFactionId === PROMETHEAN_INVASION_FACTION_ID) {
+      this.pruneInvasionDefenses();
+    }
+  }
+
+  handleInvasionAttackResult(operation) {
+    if (this.hasActiveTrait('assimilationSwarm')) {
+      const absorbedPower = operation.defenderLosses.reduce((sum, entry) => {
+        const loss = Number(entry.loss);
+        return loss > 0 ? sum + loss : sum;
+      }, 0);
+      if (absorbedPower > 0) {
+        const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
+        faction.fleetCapacity += absorbedPower;
+        faction.setFleetPower(faction.fleetPower + absorbedPower);
+      }
+    }
+    if (this.hasActiveTrait('monolithArmada')) {
+      this.monolithCooldownMs = PROMETHEAN_INVASION_MONOLITH_COOLDOWN_MS;
+    }
+    if (operation.result !== 'success') {
+      return;
+    }
+    const sector = galaxyManager.sectors.get(operation.sectorKey);
+    if (!this.isSectorFullyControlledByInvasion(sector)) {
+      return;
+    }
+    if (this.hasActiveTrait('occupationBastions')) {
+      this.occupationBastions[sector.key] = this.initialFleetPower / 10;
+    }
+    if (this.hasActiveTrait('fortifiedBeachhead') && !this.beachheadSectorKey && this.isRimSector(sector)) {
+      this.beachheadSectorKey = sector.key;
+      this.beachheadDefensePower = this.initialFleetPower / 2;
+    }
+  }
+
+  launchInitialOperations() {
+    if (this.hasActiveTrait('quadrantIncursion') && this.hasActiveTrait('monolithArmada')) {
+      const operation = this.launchMonolithQuadrantIncursion();
+      if (operation) {
+        return;
+      }
+    }
+    if (this.hasActiveTrait('quadrantIncursion')) {
+      this.launchQuadrantIncursion();
+      return;
+    }
+    if (this.hasActiveTrait('deepStrike')) {
+      const operation = this.launchDeepStrikeOperation();
+      if (operation) {
+        return;
+      }
+    }
+    this.launchExternalRimOperation();
+  }
+
+  launchMonolithQuadrantIncursion() {
+    const candidates = [];
+    if (this.hasActiveTrait('deepStrike')) {
+      const deepSector = this.pickDeepStrikeTarget();
+      if (deepSector) {
+        candidates.push(deepSector);
+        this.deepStrikeUsed = true;
+      }
+    }
+    const rimSectors = galaxyManager.getSectors()
+      .filter((sector) => this.isRimSector(sector) && !candidates.includes(sector));
+    while (candidates.length < 4 && rimSectors.length) {
+      const index = Math.floor(Math.random() * rimSectors.length);
+      candidates.push(rimSectors[index]);
+      rimSectors.splice(index, 1);
+    }
+    const target = this.pickLeastResistanceSector(candidates);
+    return this.launchOperationOnSector(target, true);
+  }
+
+  launchQuadrantIncursion() {
+    const selectedSectors = [];
+    if (this.hasActiveTrait('deepStrike')) {
+      const deepSector = this.pickDeepStrikeTarget();
+      if (deepSector) {
+        selectedSectors.push(deepSector);
+        this.deepStrikeUsed = true;
+      }
+    }
+    const rimSectors = galaxyManager.getSectors()
+      .filter((sector) => this.isRimSector(sector) && !selectedSectors.includes(sector));
+    while (selectedSectors.length < 4 && rimSectors.length) {
+      const index = Math.floor(Math.random() * rimSectors.length);
+      selectedSectors.push(rimSectors[index]);
+      rimSectors.splice(index, 1);
+    }
+    const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
+    const assignedPower = this.initialFleetPower / 4;
+    selectedSectors.forEach((sector) => {
+      const targetFactionId = galaxyManager.getOperationTargetFaction(sector, PROMETHEAN_INVASION_FACTION_ID);
+      galaxyManager.startOperation({
+        sectorKey: sector.key,
+        factionId: PROMETHEAN_INVASION_FACTION_ID,
+        assignedPower: Math.min(assignedPower, faction.fleetPower),
+        durationMs: PROMETHEAN_INVASION_OPERATION_MS,
+        targetFactionId,
+        externalInvasion: true
+      });
+    });
+  }
+
+  pickLeastResistanceSector(sectors) {
+    if (!sectors.length) {
+      return null;
+    }
+    let bestResistance = Infinity;
+    const best = [];
+    sectors.forEach((sector) => {
+      const targetFactionId = galaxyManager.getOperationTargetFaction(sector, PROMETHEAN_INVASION_FACTION_ID);
+      const summary = galaxyManager.getSectorDefenseSummary(sector, PROMETHEAN_INVASION_FACTION_ID, targetFactionId);
+      const resistance = Number(summary.totalPower) || 0;
+      if (resistance < bestResistance) {
+        bestResistance = resistance;
+        best.length = 0;
+        best.push(sector);
+      } else if (resistance === bestResistance) {
+        best.push(sector);
+      }
+    });
+    return best[Math.floor(Math.random() * best.length)] || null;
+  }
+
+  launchDeepStrikeOperation() {
+    const sector = this.pickDeepStrikeTarget();
+    if (!sector) {
+      return null;
+    }
+    this.deepStrikeUsed = true;
+    return this.launchOperationOnSector(sector, true);
+  }
+
+  pickDeepStrikeTarget() {
+    const candidates = galaxyManager.getSectors().filter((sector) => {
+      const uhfControl = Number(sector.getControlValue?.(UHF_FACTION_ID)) || 0;
+      if (!(uhfControl > FULL_CONTROL_EPSILON)) {
+        return false;
+      }
+      return !galaxyManager.getOperationForSector(sector.key, PROMETHEAN_INVASION_FACTION_ID);
+    });
+    if (!candidates.length) {
+      return null;
+    }
+    return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
   launchExternalRimOperation() {
@@ -191,6 +367,12 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   launchAvailableOperations() {
+    if (this.hasActiveTrait('monolithArmada')) {
+      if (this.getRunningOperation() || this.monolithCooldownMs > 0) {
+        return null;
+      }
+      return this.launchNextOperation();
+    }
     let launched = null;
     let guard = 0;
     while (guard < GALACTIC_INVASION_LETTERS.length) {
@@ -213,7 +395,9 @@ class GalacticInvasionManager extends EffectableEntity {
     const targetFactionId = galaxyManager.getOperationTargetFaction(sector, PROMETHEAN_INVASION_FACTION_ID);
     const assignedPower = externalInvasion === true
       ? fleetPower
-      : this.getOperationPowerForTarget(sector, targetFactionId, fleetPower);
+      : this.hasActiveTrait('monolithArmada')
+        ? fleetPower
+        : this.getOperationPowerForTarget(sector, targetFactionId, fleetPower);
     if (!(assignedPower > 0)) {
       return null;
     }
@@ -221,7 +405,7 @@ class GalacticInvasionManager extends EffectableEntity {
       sectorKey: sector.key,
       factionId: PROMETHEAN_INVASION_FACTION_ID,
       assignedPower,
-      durationMs: PROMETHEAN_INVASION_OPERATION_MS,
+      durationMs: this.hasActiveTrait('monolithArmada') ? PROMETHEAN_INVASION_MONOLITH_OPERATION_MS : PROMETHEAN_INVASION_OPERATION_MS,
       targetFactionId,
       externalInvasion: externalInvasion === true
     });
@@ -315,7 +499,120 @@ class GalacticInvasionManager extends EffectableEntity {
     if (this.getRunningOperation()) {
       return false;
     }
+    if (this.hasActiveTrait('fortifiedBeachhead') && this.beachheadSectorKey) {
+      const sector = galaxyManager.sectors.get(this.beachheadSectorKey);
+      const control = Number(sector?.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (control > FULL_CONTROL_EPSILON) {
+        return false;
+      }
+    }
     return true;
+  }
+
+  regenerateActiveInvasionFleet(deltaMs) {
+    if (!this.hasActiveTrait('selfReconstitutingFleet')) {
+      return;
+    }
+    const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
+    const reserved = galaxyManager.getReservedOperationPower(PROMETHEAN_INVASION_FACTION_ID);
+    const currentFleet = Number(faction.fleetPower) || 0;
+    const activePower = currentFleet + reserved;
+    const cap = this.initialFleetPower;
+    if (!(cap > 0) || activePower >= cap) {
+      return;
+    }
+    const restored = cap * (deltaMs / PROMETHEAN_INVASION_RECONSTITUTION_MS);
+    const allowance = Math.max(0, cap - reserved);
+    faction.fleetCapacity = Math.max(faction.fleetCapacity, cap);
+    faction.setFleetPower(Math.min(allowance, currentFleet + restored));
+  }
+
+  getInvasionOperationControlFraction(operation) {
+    if (!operation || operation.factionId !== PROMETHEAN_INVASION_FACTION_ID) {
+      return 0.1;
+    }
+    if (this.hasActiveTrait('monolithArmada')) {
+      return 1;
+    }
+    if (this.hasActiveTrait('overrunProtocol')) {
+      return 0.5;
+    }
+    return 0.1;
+  }
+
+  shouldSuppressDefenderLosses(operation, defensePower, offensePower) {
+    if (!this.hasActiveTrait('shieldedCore')) {
+      return false;
+    }
+    if (operation.factionId !== UHF_FACTION_ID || operation.targetFactionId !== PROMETHEAN_INVASION_FACTION_ID) {
+      return false;
+    }
+    return offensePower < defensePower * 5;
+  }
+
+  adjustDefenseSummary(sector, originFactionId, targetFactionId, contributions) {
+    if (originFactionId === PROMETHEAN_INVASION_FACTION_ID && (targetFactionId === UHF_FACTION_ID || !targetFactionId)) {
+      contributions.forEach((entry) => {
+        if (entry.factionId === UHF_FACTION_ID && this.hasActiveTrait('commandBypass')) {
+          entry.fleetPower = 0;
+          entry.totalPower = entry.basePower;
+        }
+      });
+    }
+    if (targetFactionId === PROMETHEAN_INVASION_FACTION_ID || !targetFactionId) {
+      const bonus = this.getSectorDefenseBonus(sector.key);
+      let foundInvasionContribution = false;
+      contributions.forEach((entry) => {
+        if (entry.factionId !== PROMETHEAN_INVASION_FACTION_ID) {
+          return;
+        }
+        foundInvasionContribution = true;
+        if (bonus > 0) {
+          entry.basePower += bonus;
+          entry.totalPower += bonus;
+        }
+      });
+      const control = Number(sector.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (!foundInvasionContribution && bonus > 0 && control > FULL_CONTROL_EPSILON) {
+        contributions.push({
+          factionId: PROMETHEAN_INVASION_FACTION_ID,
+          basePower: bonus,
+          fleetPower: 0,
+          totalPower: bonus
+        });
+      }
+    }
+    return contributions;
+  }
+
+  getSectorDefenseBonus(sectorKey) {
+    let bonus = 0;
+    const bastionPower = Number(this.occupationBastions[sectorKey]) || 0;
+    if (bastionPower > 0) {
+      bonus += bastionPower;
+    }
+    if (sectorKey === this.beachheadSectorKey && this.beachheadDefensePower > 0) {
+      bonus += this.beachheadDefensePower;
+    }
+    return bonus;
+  }
+
+  pruneInvasionDefenses() {
+    Object.keys(this.occupationBastions).forEach((sectorKey) => {
+      const sector = galaxyManager.sectors.get(sectorKey);
+      const control = Number(sector?.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (control <= FULL_CONTROL_EPSILON) {
+        delete this.occupationBastions[sectorKey];
+      }
+    });
+    if (this.beachheadSectorKey) {
+      const sector = galaxyManager.sectors.get(this.beachheadSectorKey);
+      const control = Number(sector?.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (control <= FULL_CONTROL_EPSILON) {
+        this.beachheadSectorKey = null;
+        this.beachheadDefensePower = 0;
+      }
+    }
   }
 
   isRimSector(sector) {
@@ -325,6 +622,15 @@ class GalacticInvasionManager extends EffectableEntity {
 
   getLetter(letterKey) {
     return GALACTIC_INVASION_LETTERS.find((entry) => entry.key === letterKey) || null;
+  }
+
+  getActiveLetter() {
+    return this.getLetter(this.currentLetterKey);
+  }
+
+  hasActiveTrait(traitKey) {
+    const letter = this.getActiveLetter();
+    return Array.isArray(letter?.traits) && letter.traits.includes(traitKey);
   }
 
   hasGalaxyConquest() {
@@ -396,7 +702,13 @@ class GalacticInvasionManager extends EffectableEntity {
       completedLetters: Array.from(this.completedLetters),
       cooldownRemainingMs: this.cooldownRemainingMs,
       invasionTimerMs: this.invasionTimerMs,
-      externalFailurePending: this.externalFailurePending
+      externalFailurePending: this.externalFailurePending,
+      initialFleetPower: this.initialFleetPower,
+      deepStrikeUsed: this.deepStrikeUsed,
+      monolithCooldownMs: this.monolithCooldownMs,
+      occupationBastions: this.occupationBastions,
+      beachheadSectorKey: this.beachheadSectorKey,
+      beachheadDefensePower: this.beachheadDefensePower
     };
   }
 
@@ -407,6 +719,12 @@ class GalacticInvasionManager extends EffectableEntity {
     this.cooldownRemainingMs = Math.max(0, Number(state.cooldownRemainingMs) || 0);
     this.invasionTimerMs = Math.max(0, Number(state.invasionTimerMs) || 0);
     this.externalFailurePending = state.externalFailurePending === true;
+    this.initialFleetPower = Math.max(0, Number(state.initialFleetPower) || 0);
+    this.deepStrikeUsed = state.deepStrikeUsed === true;
+    this.monolithCooldownMs = Math.max(0, Number(state.monolithCooldownMs) || 0);
+    this.occupationBastions = state.occupationBastions || {};
+    this.beachheadSectorKey = state.beachheadSectorKey || null;
+    this.beachheadDefensePower = Math.max(0, Number(state.beachheadDefensePower) || 0);
     this.refreshRewardEffects();
     this.refreshUIVisibility();
   }

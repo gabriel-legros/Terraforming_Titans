@@ -2737,9 +2737,53 @@ setLanguageData({
         completedButton: 'Completed',
         complete: 'Complete',
         active: 'Active',
+        traitList: 'Traits: {value}',
+        traitSummaryTitle: 'Special Traits',
         rewardNone: 'Reward: none configured',
         summaryTitle: 'Compiled Rewards',
         summaryEmpty: 'No invasion rewards completed.',
+        traits: {
+          assimilationSwarm: {
+            name: 'Assimilation Swarm',
+            description: 'Whenever this invasion destroys defending fleet power, it adds that destroyed power to its own fleet.',
+          },
+          monolithArmada: {
+            name: 'Monolith Armada',
+            description: 'Does not split up, spends 5 minutes on a single operation, waits 5 minutes after each operation, and conquers the entire sector on victory.',
+          },
+          quadrantIncursion: {
+            name: 'Quadrant Incursion',
+            description: 'Begins with four simultaneous rim attacks from different sectors, each using one quarter of the initial fleet. With Monolith Armada, the four vectors are scouted but the monolith commits to one at full power.',
+          },
+          selfReconstitutingFleet: {
+            name: 'Self-Reconstituting Fleet',
+            description: 'Regenerates destroyed fleet power over 1 hour, up to the invasion fleet power it started with.',
+          },
+          commandBypass: {
+            name: 'Command Bypass',
+            description: 'Ignores UHF defensive fleet assignments when attacking and only fights sector base defense.',
+          },
+          occupationBastions: {
+            name: 'Occupation Bastions',
+            description: 'Each fully conquered sector gains INV defenses equal to 10% of the invasion initial fleet power until UHF retakes it.',
+          },
+          fortifiedBeachhead: {
+            name: 'Fortified Beachhead',
+            description: 'The first fully conquered rim sector gains INV defenses equal to half the initial fleet power and must be retaken before the invasion is defeated.',
+          },
+          shieldedCore: {
+            name: 'Shielded Core',
+            description: 'UHF attacks cannot damage INV fleet power unless their assigned offense is at least 5x the INV sector defense used by the operation.',
+          },
+          overrunProtocol: {
+            name: 'Overrun Protocol',
+            description: 'Successful INV attacks gain 50% sector control instead of 10%.',
+          },
+          deepStrike: {
+            name: 'Deep Strike',
+            description: 'The opening attack may target any UHF-controlled sector in the galaxy. After that, normal adjacency rules resume.',
+          },
+        },
         rewards: {
           nuclearAlchemyThroughput: '+{value}% Nuclear Alchemy throughput',
         },
