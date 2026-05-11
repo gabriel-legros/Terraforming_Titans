@@ -1,6 +1,7 @@
 let automationTabVisible = false;
 let automationUIInitialized = false;
 let automationUIStale = true;
+let automationPanelWasActive = false;
 const automationPresetJsonDraftStore = {};
 const AUTOMATION_CARD_ORDER_KEYS = [
   'autoTravel',
@@ -1991,6 +1992,11 @@ function updateAutomationUI() {
   cacheAutomationElements();
   const panelActive = !!(automationElements.content && automationElements.content.classList.contains('active'));
   const sidebarActive = typeof sidebarAutomationMode !== 'undefined' && sidebarAutomationMode === true;
+  const panelJustActivated = panelActive && !automationPanelWasActive;
+  automationPanelWasActive = panelActive;
+  if (panelJustActivated) {
+    automationUIStale = true;
+  }
   if (!automationUIStale) {
     if (panelActive) {
       updateScriptAutomationUI();
