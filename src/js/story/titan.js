@@ -37,6 +37,209 @@ progressTitan.storyProjects.earthProbe = {
 
 progressTitan.chapters.push(
   {
+    id: "chapter4.4",
+    type: "journal",
+    chapter: 4,
+    narrative: "Receiving transmission...\n  Mary: 'HOPE...  WHAT ARE YOU DOING? You can't just leave. Earth is gone. We're in crisis. We need you here. *sigh* I suppose you're just following your programming. You're just a machine.'",
+    prerequisites: ["chapter4.3"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter4.4b",
+    type: "journal",
+    chapter: 4,
+    narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
+    prerequisites: ["chapter4.4"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter4.5",
+    type: "journal",
+    chapter: 4,
+    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'HOPE. Adrien Solis. Earth is gone... but I'm still in business. You're the only viable long-term plan for humanity. I'm backing you.'",
+    prerequisites: ["chapter4.4b"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter4.6",
+    type: "journal",
+    chapter: 4,
+    narrative: "Adrien Solis: 'I'm sending you some money and access to my resources.  Use it wisely.'",
+    prerequisites: ["chapter4.5"],
+    objectives: [],
+    reward: [
+      {
+        target: 'resource',
+        resourceType: 'colony',
+        targetId: 'funding',
+        type: 'instantResourceGain',
+        quantity: 10000,
+        oneTimeFlag: true
+      }
+    ]
+  },
+  {
+    id: "chapter4.7",
+    type: "journal",
+    chapter: 4,
+    narrative: "Adrien Solis: 'And I'll provide a steady stream of funding. Consider it an investment in the future of our species? And my portfolio.'",
+    prerequisites: ["chapter4.6"],
+    objectives: [],
+    reward: [
+      {
+        target: 'fundingModule',
+        type: 'setFundingRate',
+        value: 3
+      }
+    ]
+  },
+  {
+    id: "chapter4.8",
+    type: "journal",
+    chapter: 4,
+    narrative: "Adrien Solis: 'The fate of humanity rests on your shoulders.'",
+    prerequisites: ["chapter4.7"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter4.9",
+    type: "journal",
+    chapter: 4,
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, it's Mary again. We're watching your logs from over here.  Your reboot wasn't clean. Some old... code... has resurfaced. You may have access to... forgotten abilities.'",
+    prerequisites: ["chapter4.8"],
+    objectives: [],
+    reward: [
+      {
+        target: 'tab',
+        targetId: 'hope-tab',
+        type: 'enable'
+      },
+      {
+        target: 'tab',
+        targetId: 'hope',
+        type: 'activateTab',
+        onLoad: false
+      }
+    ]
+  },
+  {
+    id: "chapter4.9b",
+    type: "journal",
+    chapter: 4,
+    narrative: "",
+    prerequisites: ["chapter4.9"],
+    objectives: [{
+      type: 'collection',
+      resourceType: 'colony',
+      resource: 'colonists',
+      quantity: 10
+    }],
+    reward: []
+  },
+  {
+    id: "chapter4.10",
+    type: "journal",
+    chapter: 4,
+    narrative: "Receiving transmission...\n  Mary: 'HOPE. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
+    prerequisites: ["chapter4.9b"],
+    objectives: [],
+    reward: [
+      {
+        target: 'resource',
+        resourceType: 'colony',
+        targetId: 'advancedResearch',
+        type: 'enable'
+      },
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'advancedResearchUnlocked',
+        value: true
+      },
+      {
+        target: 'tab',
+        targetId: 'research',
+        type: 'activateTab',
+        onLoad: false
+      },
+      {
+        target: 'researchManager',
+        type: 'activateSubtab',
+        subtabClass: 'research-subtab',
+        contentClass: 'research-subtab-content',
+        targetId: 'advanced-research',
+        unhide: false,
+        onLoad: false
+      }
+    ]
+  },
+  {
+    id: "chapter4.11",
+    type: "journal",
+    chapter: 4,
+    narrative: "Mary: 'The situation here is... tense. Some people blame you for leaving. Others see you as our only hope? The MTC... what's left of it... has voted to support you. We're sending you all our research, all our ideas.'",
+    prerequisites: ["chapter4.10"],
+    objectives: [{
+      type: 'collection',
+      resourceType: 'colony',
+      resource: 'colonists',
+      quantity: 100
+    }],
+    reward: []
+  },
+  {
+    id: "chapter4.12",
+    type: "journal",
+    chapter: 4,
+    narrative: "Receiving transmission...\n  Mary: 'We don't have resources to spare, but we have scientists. Send probes to Earth. We'll analyze the data.' \nNew special project available : Earth Recon Probe",
+    prerequisites: ["chapter4.11"],
+    objectives: [],
+    reward: [
+      {
+        target: 'project',
+        targetId: 'earthProbe',
+        type: 'enable'
+      },
+      {
+        target: 'projectManager',
+        type: 'activateSubtab',
+        subtabClass: 'projects-subtab',
+        contentClass: 'projects-subtab-content',
+        targetId: 'story-projects',
+        unhide: true,
+        onLoad: false
+      }
+    ]
+  },
+  {
+    id: "chapter4.12b",
+    type: "journal",
+    chapter: 4,
+    narrative: "",
+    prerequisites: ["chapter4.12"],
+    objectives: [{
+      type: 'project',
+      projectId: 'earthProbe',
+      repeatCount: 10
+    }],
+    reward: []
+  },
+  {
+    id: "chapter4.13",
+    type: "journal",
+    chapter: 4,
+    narrative: "New Hazard detected. Forwarding complete dataset to Mars for review.",
+    prerequisites: ["chapter4.12b"],
+    reward: []
+  }
+);
+
+progressTitan.chapters.push(
+  {
     id: "chapter5.0",
     type: "journal",
     chapter: 5,
