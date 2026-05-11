@@ -41,7 +41,7 @@ progressTitan.chapters.push(
     type: "journal",
     chapter: 5,
     title: "Chapter 5: Lamb Among Wolves",
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've analyzed the data you just sent. It's... definitive. We're going public with the findings. People have a right to know the truth.'",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, we've analyzed the data you just sent. It's... definitive. We're going public with the findings. People have a right to know the truth.'",
     prerequisites: ["chapter4.13"],
     objectives: [{
       type: 'collection',
@@ -55,7 +55,7 @@ progressTitan.chapters.push(
     id: "chapter5.1",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  Mary: 'The news is out. It's... causing widespread panic? Riots have broken out. People are demanding answers we don't have...'",
+    narrative: "Receiving transmission...\n  Mary: 'The news is out. It's... causing widespread panic? Riots have broken out. People are demanding answers...'",
     prerequisites: ["chapter5.0"],
     objectives: [],
     reward: []
@@ -64,7 +64,7 @@ progressTitan.chapters.push(
     id: "chapter5.2",
     type: "journal",
     chapter: 5,
-    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'H.O.P.E., Solis. Chaos is a fertile ground for growth. While the masses panic, we will build. My resources are yours to command, but I expect a return on my investment. Help me, and I will help you give humanity the strength to survive.'",
+    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'HOPE, Solis. Chaos is a fertile ground for growth. While the masses panic, we will build. My resources are yours to command, but I expect a return on my investment. Help me, and I will help you.  Win-win.'",
     prerequisites: ["chapter5.1"],
     objectives: [],
     reward: [          {
@@ -101,7 +101,7 @@ progressTitan.chapters.push(
     id: "chapter5.4",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., your core programming shouldn't allow you to deal with a private entity like Solis. Your directives limit you to the MTC and... colonists. Wait. Hold on... With Earth gone, isn't everyone a colonist now? That's... a loophole. A very convenient loophole.'",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE?  Your core programming shouldn't allow you to deal with a private entity like Solis. Your directives limit you to trade with the MTC and... colonists. Wait. Hold on... With Earth gone, isn't everyone a colonist now? That's... a loophole. Solis you bastard.'",
     prerequisites: ["chapter5.3"],
     objectives: [],
     reward: []
@@ -124,7 +124,7 @@ progressTitan.chapters.push(
     id: "chapter5.6",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Mars is stabilizing. We've managed to maintain the terraforming you've done. But we're still in the dark about who attacked us. We need to know if they're coming back. I'm asking for your help I guess? Find the source of the attacks.'",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, it's Mary. Mars is starting to stabilize. We've managed to maintain the terraforming you've done. But we're still in the dark about who attacked us. We need to know if they're coming back. I'm asking for your help I guess? Find the source of the attacks.'",
     prerequisites: ["chapter5.5"],
     objectives: [],
     reward: [
@@ -139,7 +139,7 @@ progressTitan.chapters.push(
     id: "chapter5.7",
     type: "journal",
     chapter: 5,
-    narrative: "New story project unlocked: Triangulate Attack Origin. We must determine where the attacks came from to prepare for what's next.",
+    narrative: "New story project unlocked: Triangulate Attack Origin.",
     prerequisites: ["chapter5.6"],
     objectives: [{
       type: 'project',
@@ -195,7 +195,7 @@ progressTitan.chapters.push(
     id: "chapter6.1",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. I've seen your findings. A cloaked object... it confirms our worst fears. I have to tell you something I have been informed of recently. There have been... disappearances. For centuries. On Earth, Mars, even Titan. We kept it quiet. The governments, that is... They could never prove anything. But they always suspected we weren't alone.'",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, it's Mary. I've seen your findings. A cloaked object?  I have to tell you something I have been informed of recently. There have been... disappearances. For centuries. On Earth, Mars, even Titan. We kept it quiet. The governments, that is... They could never prove anything. But they always suspected we weren't alone.  I think... you're on to something.'",
     prerequisites: ["chapter6.0"],
     objectives: [],
     reward: [
@@ -225,7 +225,7 @@ progressTitan.chapters.push(
     id: "chapter6.2b",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. You got one! We actually got one! It's beautiful... in a terrifying, 'might-be-here-to-eat-us' kind of way. Let's see what it has to say for itself.'",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, it's Mary. You got one! We actually got one! I can't believe this.  After all this time. You know what? Let's see what it has to say for itself.'",
     prerequisites: ["chapter6.2"],
     objectives: [],
     reward: []
@@ -291,9 +291,9 @@ progressTitan.storyProjects.interrogate_alien = {
     planet: 'titan',
     costDoubling: false,
     storySteps: [
-      'Bio\u2011scan complete.  Subject physiology tolerates 0.4\u202Fbar CO\u2082 but is photosensitive and reliant on high\u2011frequency acoustics.   Mary believes we can use its reliance on sound against it.',
+      'Bio-scan complete.  Subject physiology tolerates CO2 but is photosensitive and reliant on high-frequency acoustics.',
       'Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption suggests a timetable for a second attack.',
-      "Translation uplink complete.\n  '\u2026FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'"
+      "Translation uplink complete.\n  'FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'"
     ]
   }
 };
@@ -303,7 +303,7 @@ progressTitan.chapters.push(
     id: "chapter6.3b",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission... \n Mary: 'This is bad, H.O.P.E. They're coming back. And you're a target. We need a plan. I have an idea, but it's... unconventional. Finish your work on Titan, then meet me at Callisto. We have an experiment to run.'",
+    narrative: "Receiving transmission... \n Mary: 'This is bad, HOPE. They're coming back. And you're a target. We need a plan. One of my colleagues has an idea, but it's... unconventional. Finish your work on Titan, then meet me on Callisto. We have an experiment to run.'",
     prerequisites: ["chapter6.3"],
     objectives: [
 
@@ -322,11 +322,6 @@ progressTitan.chapters.push(
       type: 'terraforming',
       terraformingParameter : 'complete',
     }],
-    //parameters: {
-    //  title: "Demo Complete",
-    //  text: "Thank you very much for playing the demo for my game.  The complete game will have many more story planets, a few more prestige systems, a random planet generator, and challenge planets.  You can expect megastructures and more sci-fi references.  This story cannot end without humanity dealing with hazardous biomass after all.  \n Signed, Thratur",
-    //  buttonText: "OK"
-    //},
     prerequisites: ["chapter6.3b"],
     objectives: [],
     reward: [
