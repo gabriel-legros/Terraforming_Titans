@@ -545,7 +545,7 @@ var progressMars = {
         id: "chapter1.24",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'A thousand colonists! You're cooking with colonists now—quite literally! The planet's even starting to notice. A little less ice, a little more... well, dust. Your workforce is the backbone of this project.  The more people, the better.  Anything feels too slow?  Get more people.  How to get more people?  Meet their needs, improve your colony designs and have a lot of free housing.  People don't want to live in cramped spaces.'",
+        narrative: "Receiving transmission...\n  'A thousand colonists! You're cooking with colonists now. Quite literally! The planet's even starting to notice. A little less ice, a little more... well, dust. Your workforce is the backbone of this project.  The more people, the better.  Anything feels too slow?  Get more people.  How to get more people?  Meet their needs, improve your colony designs and have a lot of free housing.  People don't want to live in cramped spaces.'",
         prerequisites: ["chapter1.23"],
         objectives: [{
           type: 'collection',
@@ -573,7 +573,7 @@ var progressMars = {
         id: "chapter1.24b",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror, like a mirror.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
+        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror, like a mirror.  0 absorbs all the light, like a sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help.  Think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
         prerequisites: ["chapter1.24a"],
         objectives: [{
           type: 'collection',
@@ -609,7 +609,7 @@ var progressMars = {
         id: "chapter2.1",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows, radiating visible light like a lightbulb.  Mars... not so much.  It can only radiate in the infrared, like a sad dying lightbulb.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6, the stuff your factories produce, are transparent to visible light, they are not transparent to infrared.  That means light can get in, but can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. How much this happens is measured by the atmospheric optical depth. It's atmospheric entrapment at its finest!'",
+        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend.  Talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows, radiating visible light like a lightbulb.  Mars... not so much.  It can only radiate in the infrared, like... a dying lightbulb.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6, the stuff your factories produce, are transparent to visible light, they are not transparent to infrared.  That means light can get in, but can't get out that easily.  It's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. How much this happens is measured by the atmospheric optical depth.'",
         prerequisites: ["chapter2.0"],
         objectives: [{
           type: 'collection',
@@ -637,7 +637,7 @@ var progressMars = {
         id: "chapter2.3",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'The temperature's barely moving. Don't worry about it. You can't terraform a planet in a day. It's a marathon, not a sprint. A very, very cold marathon. Just keep building.'",
+        narrative: "Receiving transmission...\n  'The temperature's barely moving. Don't worry about it. You can't terraform a planet in a day. It's a marathon, not a sprint. Just keep building.'",
         prerequisites: ["chapter2.2"],
         objectives: [{
           type: 'terraforming',
@@ -691,7 +691,7 @@ var progressMars = {
         id: "chapter3.1",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way—like nature's questionable fashion choice, but hey, it's working!  Here's the problem though : life on Earth, as we know, simply won't grow without liquid water.  It can survive fine, for very long durations even, but growing?  Nope.  It's time to make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2: Electric Boogaloo.  One more thing : as life begins to properly convert CO2 into O2, the planet might end up cooling again, with CO2 being a greenhouse gas and all.  Be careful, it's best to be a bit too hot than too cold at this stage, because if it starts snowing all over the planet the albedo will skyrocket, causing even more cooling. It's a chilly domino effect we don't want!'",
+        narrative: "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way.  Like nature's questionable fashion choice, but hey, it's working!  Here's the problem though : life on Earth, as we know, simply won't grow without liquid water.  It can survive fine, for very long durations even, but growing?  Nope.  It's time to make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2: Electric Boogaloo.  One more thing : as life begins to properly convert CO2 into O2, the planet might end up cooling again, with CO2 being a greenhouse gas and all.  Be careful, it's best to be a bit too hot than too cold at this stage, because if it starts snowing all over the planet the albedo will skyrocket, causing even more cooling. It's a chilly domino effect we don't want!'",
         prerequisites: ["chapter3.0"],
         objectives: [{
           type: 'terraforming',
@@ -717,7 +717,7 @@ var progressMars = {
 	        id: "chapter3.3",
 	        type: "journal",
 	        chapter: 3,
-	        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Soon we can have grass, or even trees.  Next, we should start talking about air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.   Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water or silica. It's not rocket science... well, it is, but you get the idea.  You should start thinking about importing a bunch of it!'",
+	        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Soon we can have grass, or even trees.  Next, we should start talking about air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.   Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water or silica. It's not rocket science... well, the shipyard part kind of is, but you get the idea.  You should start thinking about importing a bunch of it!'",
 	        prerequisites: ["chapter3.2"],
 	        objectives: [{
 	          type: 'terraforming',
@@ -789,7 +789,7 @@ var progressMars = {
         id: "chapter4.2",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'H.O.P.E.? This is Mary. Martin's daughter. I'm on Mars. Something's happened to Earth. There was a light... and then nothing. All our communications are down. Your systems are showing critical errors. Please, stand by.'",
+        narrative: "Receiving transmission...\n  'HOPE? This is Mary. Martin's daughter. I'm on Mars. We've never spoken before...  Something's happened to Earth. There was a light... and then nothing. All our communications are down. Your systems are showing critical errors. Stand by.'",
         prerequisites: ["chapter4.1"],
         objectives: [],
         reward: [
@@ -828,7 +828,7 @@ var progressMars = {
         id: "chapter4.4",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., what are you doing? You can't just leave. Earth is gone. We're in crisis. We need you here. *sigh* I suppose you're just following your programming. You're just a machine.'",
+        narrative: "Receiving transmission...\n  Mary: 'HOPE...  WHAT ARE YOU DOING? You can't just leave. Earth is gone. We're in crisis. We need you here. *sigh* I suppose you're just following your programming. You're just a machine.'",
         prerequisites: ["chapter4.3"],
         objectives: [],
         reward: []
@@ -837,7 +837,7 @@ var progressMars = {
         id: "chapter4.4b",
         type: "journal",
         chapter: 4,
-        narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
+        narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
         prerequisites: ["chapter4.4"],
         objectives: [],
         reward: []
@@ -846,7 +846,7 @@ var progressMars = {
         id: "chapter4.5",
         type: "journal",
         chapter: 4,
-        narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'H.O.P.E. Adrien Solis. Earth is a memory, but I'm still in business. You're the only viable long-term plan for humanity. I'm backing you.'",
+        narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'HOPE. Adrien Solis. Earth is gone... but I'm still in business. You're the only viable long-term plan for humanity. I'm backing you.'",
         prerequisites: ["chapter4.4b"],
         objectives: [],
         reward: []
@@ -855,7 +855,7 @@ var progressMars = {
         id: "chapter4.6",
         type: "journal",
         chapter: 4,
-        narrative: "Adrien Solis: 'I'm sending you some seed money. Use it to build something impressive. Don't disappoint me.'",
+        narrative: "Adrien Solis: 'I'm sending you some money and access to my resources.  Use it wisely.'",
         prerequisites: ["chapter4.5"],
         objectives: [],
         reward: [
@@ -873,7 +873,7 @@ var progressMars = {
         id: "chapter4.7",
         type: "journal",
         chapter: 4,
-        narrative: "Adrien Solis: 'And I'll provide a steady stream of funding. Consider it an investment in the future of our species. And my portfolio.'",
+        narrative: "Adrien Solis: 'And I'll provide a steady stream of funding. Consider it an investment in the future of our species? And my portfolio.'",
         prerequisites: ["chapter4.6"],
         objectives: [],
         reward: [
@@ -888,7 +888,7 @@ var progressMars = {
         id: "chapter4.8",
         type: "journal",
         chapter: 4,
-        narrative: "Adrien Solis: 'The fate of humanity rests on your shoulders. Don't buckle.'",
+        narrative: "Adrien Solis: 'The fate of humanity rests on your shoulders.'",
         prerequisites: ["chapter4.7"],
         objectives: [],
         reward: []
@@ -897,7 +897,7 @@ var progressMars = {
         id: "chapter4.9",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Your reboot wasn't clean. Some old code has resurfaced. You may have access to... forgotten abilities. Be careful.'",
+        narrative: "Receiving transmission...\n  Mary: 'HOPE, it's Mary again. We're watching your logs from over here.  Your reboot wasn't clean. Some old... code... has resurfaced. You may have access to... forgotten abilities.'",
         prerequisites: ["chapter4.8"],
         objectives: [],
         reward: [
@@ -932,7 +932,7 @@ var progressMars = {
         id: "chapter4.10",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
+        narrative: "Receiving transmission...\n  Mary: 'HOPE. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
         prerequisites: ["chapter4.9b"],
         objectives: [],
         reward: [          {
@@ -968,7 +968,7 @@ var progressMars = {
         id: "chapter4.11",
         type: "journal",
         chapter: 4,
-        narrative: "Mary: 'H.O.P.E., the situation here is... tense. Some people blame you for leaving. Others see you as our only hope. The MTC has voted to support you. We're sending you all our research, all our ideas. We need you to succeed.'",
+        narrative: "Mary: 'The situation here is... tense. Some people blame you for leaving. Others see you as our only hope? The MTC... what's left of it... has voted to support you. We're sending you all our research, all our ideas.'",
         prerequisites: ["chapter4.10"],
         objectives: [{
           type: 'collection',
