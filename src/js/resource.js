@@ -1752,7 +1752,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (spaceStorageProject) {
-    clampSpaceStorageResourcesToSharedCap(spaceStorageProject);
+    clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorageCapLimits);
   }
 
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
@@ -1807,7 +1807,7 @@ function recalculateTotalRates(){
   }
 }
 
-function clampSpaceStorageResourcesToSharedCap(spaceStorageProject) {
+function clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorageCapLimits = null) {
   const maxStorage = Number(spaceStorageProject.maxStorage);
   if (!Number.isFinite(maxStorage)) {
     if (spaceStorageProject.reconcileUsedStorage) {
@@ -1826,7 +1826,19 @@ function clampSpaceStorageResourcesToSharedCap(spaceStorageProject) {
       resource.value = 0;
       continue;
     }
-    entries.push({ resource, value });
+    let capLimit = Infinity;
+    if (spaceStorageCapLimits && Object.prototype.hasOwnProperty.call(spaceStorageCapLimits, resourceName)) {
+      capLimit = Number(spaceStorageCapLimits[resourceName]);
+    } else if (spaceStorageProject.getResourceCapLimit) {
+      capLimit = Number(spaceStorageProject.getResourceCapLimit(resourceName));
+    }
+    const hasSetCap = Number.isFinite(capLimit);
+    entries.push({
+      resource,
+      value,
+      capLimit: hasSetCap ? Math.max(0, capLimit) : Infinity,
+      hasSetCap,
+    });
     total += value;
   }
 
@@ -1847,26 +1859,66 @@ function clampSpaceStorageResourcesToSharedCap(spaceStorageProject) {
     return;
   }
 
-  const ratio = maxStorage / total;
-  let clampedTotal = 0;
-  let largestEntry = entries[0];
+  let remainingOverflow = total - maxStorage;
   entries.forEach((entry) => {
-    const nextValue = entry.value * ratio;
-    entry.resource.value = nextValue;
-    clampedTotal += nextValue;
-    if (entry.value > largestEntry.value) {
-      largestEntry = entry;
+    if (remainingOverflow <= 0 || !entry.hasSetCap || entry.resource.value <= entry.capLimit) {
+      return;
     }
+    const reduction = Math.min(remainingOverflow, entry.resource.value - entry.capLimit);
+    entry.resource.value -= reduction;
+    remainingOverflow -= reduction;
   });
 
-  const roundingDifference = maxStorage - clampedTotal;
-  if (roundingDifference !== 0) {
-    largestEntry.resource.value = Math.max(0, largestEntry.resource.value + roundingDifference);
+  if (remainingOverflow > 0) {
+    remainingOverflow = reduceSpaceStorageEntriesByAmount(
+      entries.filter(entry => !entry.hasSetCap),
+      remainingOverflow
+    );
+  }
+
+  if (remainingOverflow > 0) {
+    reduceSpaceStorageEntriesByAmount(entries, remainingOverflow);
   }
 
   if (spaceStorageProject.reconcileUsedStorage) {
     spaceStorageProject.reconcileUsedStorage();
   }
+}
+
+function reduceSpaceStorageEntriesByAmount(entries, amount) {
+  let available = 0;
+  entries.forEach((entry) => {
+    available += Math.max(0, entry.resource.value);
+  });
+  if (available <= 0) {
+    return amount;
+  }
+  if (available <= amount) {
+    entries.forEach((entry) => {
+      entry.resource.value = 0;
+    });
+    return amount - available;
+  }
+
+  const targetTotal = available - amount;
+  const ratio = targetTotal / available;
+  let reducedTotal = 0;
+  let largestEntry = entries[0];
+  entries.forEach((entry) => {
+    const currentValue = Math.max(0, entry.resource.value);
+    const nextValue = currentValue * ratio;
+    entry.resource.value = nextValue;
+    reducedTotal += nextValue;
+    if (currentValue > Math.max(0, largestEntry.resource.value)) {
+      largestEntry = entry;
+    }
+  });
+
+  const roundingDifference = targetTotal - reducedTotal;
+  if (roundingDifference !== 0) {
+    largestEntry.resource.value = Math.max(0, largestEntry.resource.value + roundingDifference);
+  }
+  return 0;
 }
 
 function calculateResourceAvailabilityRatio(resource, deltaTime) {
