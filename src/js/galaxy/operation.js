@@ -52,6 +52,7 @@ class GalaxyOperationManager {
         getDefenseSummary,
         resolveTargetFaction,
         getControlGainFraction,
+        getOperationDurationOverride,
         shouldSuppressDefenderLosses,
         onOperationSuccess,
         onOperationComplete,
@@ -73,6 +74,7 @@ class GalaxyOperationManager {
         this.getDefenseSummary = getDefenseSummary;
         this.resolveTargetFaction = resolveTargetFaction;
         this.getControlGainFraction = getControlGainFraction;
+        this.getOperationDurationOverride = getOperationDurationOverride;
         this.shouldSuppressDefenderLosses = shouldSuppressDefenderLosses;
         this.onOperationSuccess = onOperationSuccess;
         this.onOperationComplete = onOperationComplete;
@@ -274,6 +276,39 @@ class GalaxyOperationManager {
         return this.autoThreshold;
     }
 
+    getOperationDurationMs({ sectorKey, factionId, durationMs, targetFactionId, externalInvasion } = {}) {
+        const sector = sectorKey ? this.manager.sectors.get(sectorKey) : null;
+        const attackerId = factionId || this.uhfFactionId;
+        const targetId = sector
+            ? this.#resolveOperationTarget(sector, attackerId, targetFactionId)
+            : targetFactionId || null;
+        return this.#resolveOperationDuration({
+            sector,
+            attackerId,
+            targetFactionId: targetId,
+            durationMs,
+            externalInvasion
+        });
+    }
+
+    #resolveOperationDuration({ sector, attackerId, targetFactionId, durationMs, externalInvasion }) {
+        const overrideDuration = this.getOperationDurationOverride
+            ? this.getOperationDurationOverride({
+                sector,
+                attackerId,
+                targetFactionId,
+                externalInvasion: externalInvasion === true
+            })
+            : 0;
+        if (Number.isFinite(overrideDuration) && overrideDuration > 0) {
+            return overrideDuration;
+        }
+        if (Number.isFinite(durationMs) && durationMs > 0) {
+            return durationMs;
+        }
+        return resolveOperationDuration();
+    }
+
     getOperationSuccessChance({ sectorKey, factionId, assignedPower, targetFactionId }) {
         if (!sectorKey) {
             return 0;
@@ -419,7 +454,13 @@ class GalaxyOperationManager {
         if (assignedPower > operationalPower) {
             return null;
         }
-        const duration = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : resolveOperationDuration();
+        const duration = this.#resolveOperationDuration({
+            sector,
+            attackerId,
+            targetFactionId: targetId,
+            durationMs,
+            externalInvasion: isExternalInvasion
+        });
         const offensePower = Math.max(0, assignedPower);
         const defensePower = this.#computeDefensePower(sector, attackerId, targetId);
         const sanitizedSuccess = Number.isFinite(successChance)

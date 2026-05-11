@@ -51,16 +51,12 @@ const GalaxyOperationUI = (() => {
 
 
     function getDefaultOperationDurationMs(manager, sectorKey, factionId, targetFactionId) {
-        if (
-            manager
-            && sectorKey
-            && galaxyInvasionManager
-            && galaxyInvasionManager.hasActiveTrait('commandBypass')
-        ) {
-            const resolvedTargetFactionId = targetFactionId || manager.getOperationTargetFaction?.(sectorKey, factionId) || null;
-            if (resolvedTargetFactionId === PROMETHEAN_INVASION_FACTION_ID) {
-                return PROMETHEAN_INVASION_OPERATION_MS;
-            }
+        if (manager && manager.getOperationDurationMs) {
+            return manager.getOperationDurationMs({
+                sectorKey,
+                factionId,
+                targetFactionId
+            });
         }
         const provided = GALAXY_OPERATION_DURATION_MS;
         if (Number.isFinite(provided) && provided > 0) {

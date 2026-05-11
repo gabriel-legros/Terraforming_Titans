@@ -553,6 +553,16 @@ class GalacticInvasionManager extends EffectableEntity {
     return offensePower < defensePower * 5;
   }
 
+  getOperationDurationOverrideMs({ attackerId, targetFactionId }) {
+    if (!this.hasActiveTrait('commandBypass')) {
+      return 0;
+    }
+    if (attackerId !== UHF_FACTION_ID || targetFactionId !== PROMETHEAN_INVASION_FACTION_ID) {
+      return 0;
+    }
+    return PROMETHEAN_INVASION_OPERATION_MS;
+  }
+
   adjustDefenseSummary(sector, originFactionId, targetFactionId, contributions) {
     if (originFactionId === PROMETHEAN_INVASION_FACTION_ID && (targetFactionId === UHF_FACTION_ID || !targetFactionId)) {
       contributions.forEach((entry) => {

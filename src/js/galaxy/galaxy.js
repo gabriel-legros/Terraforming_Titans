@@ -44,6 +44,7 @@ class GalaxyManager extends EffectableEntity {
             ),
             resolveTargetFaction: (sector, attackerId) => this.getOperationTargetFaction(sector, attackerId),
             getControlGainFraction: (operation) => this.galacticInvasionManager?.getInvasionOperationControlFraction?.(operation) ?? 0.1,
+            getOperationDurationOverride: (context) => this.galacticInvasionManager?.getOperationDurationOverrideMs?.(context) || 0,
             shouldSuppressDefenderLosses: (operation, defensePower, offensePower) => this.galacticInvasionManager?.shouldSuppressDefenderLosses?.(operation, defensePower, offensePower) === true,
             onOperationSuccess: () => {
                 this.successfulOperations += 1;
@@ -668,6 +669,19 @@ class GalaxyManager extends EffectableEntity {
         });
         this.#updateIncomingAttackWarning();
         return operation;
+    }
+
+    getOperationDurationMs({ sectorKey, factionId, durationMs, targetFactionId, externalInvasion }) {
+        if (!this.operationManager) {
+            return GALAXY_OPERATION_DURATION_MS;
+        }
+        return this.operationManager.getOperationDurationMs({
+            sectorKey,
+            factionId,
+            durationMs,
+            targetFactionId,
+            externalInvasion
+        });
     }
 
     removeOperationsForFaction(factionId) {
