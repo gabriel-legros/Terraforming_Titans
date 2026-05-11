@@ -303,7 +303,7 @@ progressTitan.chapters.push(
     id: "chapter6.3b",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission... \n Mary: 'This is bad, HOPE. They're coming back. And you're a target. We need a plan. One of my colleagues has an idea, but it's... unconventional. Finish your work on Titan, then meet me on Callisto. We have an experiment to run.'",
+    narrative: "Receiving transmission... \n Mary: 'This is bad, HOPE. They're coming back. And you're a target too. We need a plan. One of my colleagues has an idea, but it's... unconventional. Finish your work on Titan, then meet me on Callisto. We have an experiment to run.'",
     prerequisites: ["chapter6.3"],
     objectives: [
 

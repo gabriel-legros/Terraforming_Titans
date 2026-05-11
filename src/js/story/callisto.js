@@ -110,7 +110,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 7,
     title: "Chapter 7: Cold Dawn",
-    narrative: "Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  Mary: 'We see you, H.O.P.E. A perfect landing. My team is ready. President Bob on Titan also pledges his support. We're all in this together.'",
+    narrative: "Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  Mary: 'We see you, HOPE. A perfect landing. It's been a while since I've last seen you in person. My team is ready. President Bob on Titan also pledges his support. We're all in this together.'",
     prerequisites: ["chapter6.4"],
     objectives: [],
     reward: []
@@ -119,7 +119,7 @@ progressCallisto.chapters.push(
     id: "chapter7.0b",
     type: "journal",
     chapter: 7,
-    narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
+    narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
     prerequisites: ["chapter7.0"],
     objectives: [],
     reward: []
@@ -128,7 +128,7 @@ progressCallisto.chapters.push(
     id: "chapter7.1",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., I'm patching you into a new channel. Dr. Evelyn Hart has a proposal. It's... audacious.'\n  Dr. Hart: 'H.O.P.E., years ago, a committee with more funding than sense cooked up a 'Climate Control' system using planetary thrusters for orbital shifts. It was idiotic—the energy costs were astronomical. But the foundations they built on Callisto are real. We're resurrecting it as 'Operation Sidestep.'\n  Dr. Hart: 'Think of it like this: if someone is trying to shoot a target from a kilometer away, you don't need to leap out of the way. You just need to take a single step to the side. From light-years away, the same principle applies on a cosmic scale. We don't need a massive, sudden shift. We just need to introduce a tiny, sustained change to our orbital velocity—a few centimeters per second. Over years, that 'step' becomes thousands of kilometers. The enemy's attack will arrive exactly where we *would have been*.\n  Dr. Hart: 'We'll execute coordinated, pseudo-random burns from here, Mars, and Titan. It's not a dodge; it's a system-wide orbital drift—subtle, unpredictable, and enough to make their long-range targeting models completely useless. We'll mask the energy signatures as a 'Seismic Resonance Study,' but we need to be careful. This is our one shot.'\nNew directive received. Operation 'Sidestep' initiated. Public designation: 'Seismic Resonance Study'.",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, I'm patching you into a new channel. Dr. Evelyn Hart has a proposal. It's... audacious.'\n  Dr. Hart: 'HOPE, years ago, a committee with more funding than sense cooked up a 'Climate Control' system using planetary thrusters for orbital shifts. It was idiotic... the energy costs were astronomical. But the foundations they built on Callisto are real. We're resurrecting it as 'Operation Sidestep.'\n  Dr. Hart: 'Think of it like this: if someone is trying to shoot a target from a kilometer away, you don't need to leap out of the way. You just need to take a single step to the side. From light-years away, the same principle applies on a cosmic scale. We don't need a massive, sudden shift. We just need to introduce a tiny, sustained change to our orbital velocity—a few centimeters per second. Over years, that 'step' becomes thousands of kilometers. The enemy's attack will arrive exactly where we *would have been*.\n  Dr. Hart: 'We'll execute coordinated, pseudo-random burns from here, Mars, and Titan. Enough to make their long-range targeting models completely useless. For now, we'll mask the energy signatures as a 'Seismic Resonance Study,' but we need to be careful. This is our one shot.'\nNew directive received. Operation 'Sidestep' initiated. Public designation: 'Seismic Resonance Study'.",
     prerequisites: ["chapter7.0b"],
     objectives: [],
     reward: [
@@ -139,7 +139,7 @@ progressCallisto.chapters.push(
     id: "chapter7.2",
     type: "journal",
     chapter: 7,
-    narrative: "Objective: Excavate buried thruster pylons. Commencing operation.\nReceiving transmission...\n  Mary: 'The project schematics are on their way, encrypted. Titan is sending deep-core drills under escort. We need to keep this project under wraps. Good luck, H.O.P.E.'",
+    narrative: "Objective: Excavate buried thruster pylons. Commencing operation.\nReceiving transmission...\n  Mary: 'The project schematics are on their way, encrypted. Titan is sending deep-core drills under escort. We need to keep this project under wraps. Good luck, HOPE.'",
     prerequisites: ["chapter7.1"],
     objectives: [
       { type: 'project', projectId: 'sidestep_excavation', repeatCount: 3 }
@@ -163,7 +163,7 @@ progressCallisto.chapters.push(
     id: "chapter7.4",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'We have a complication. A man named Elias Kane has started a movement, the 'Cult of Three Wounds.' They're preaching that the aliens are a cleansing fire and that our work is blasphemy. Intel reports they're trying to recruit from our technical staff. They're becoming a security risk.'\nThreat assessment updated. Civilian group 'Cult of Three Wounds' is actively obstructing primary directives and attempting to infiltrate project personnel. Monitoring for escalation.",
+    narrative: "Receiving transmission...\n  Mary: 'We have a complication. A man named Elias Kane has started a movement, the 'Cult of Three Wounds.' They're preaching that the aliens are a cleansing fire and that you in particular need cleansing.  Intel reports they're trying to recruit from our technical staff. They're becoming a security risk.'\nThreat assessment updated. Civilian group 'Cult of Three Wounds' is actively obstructing primary directives and attempting to infiltrate project personnel. Monitoring for escalation.",
     prerequisites: ["chapter7.3"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -177,7 +177,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 8,
     title: "Chapter 8: Gathering Storm",
-    narrative: "Receiving transmission...\n  President Bob (Titan): 'Mary, we have a major security breach! Kane's followers have compromised the alien's containment facility. It's out. We're seeing... bio-luminescence and reports of acute psychological distress among personnel in the lower domes. We have riots, and comms are becoming unreliable.'\n  Mary: 'Bob, lock down your sector and stay safe. H.O.P.E., this is a disaster, but the chaos provides a useful distraction. The enemy will be focused on Titan, giving us the window we need. It's time to accelerate the fabrication schedule.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
+    narrative: "Receiving transmission...\n  President Bob (Titan): 'Mary, we have a major security breach! Kane's followers have compromised the alien's containment facility. It's out. We're seeing... bio-luminescence and reports of acute psychological distress among personnel. We have riots, and comms are becoming unreliable.'\n  Mary: 'Bob, lock down your sector and stay safe. HOPE, this is a disaster but... The enemy will be focused on Titan, giving us the window we need. It's time to accelerate the fabrication schedule.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
     prerequisites: ["chapter7.4"],
     objectives: [],
     reward: []
@@ -186,7 +186,7 @@ progressCallisto.chapters.push(
     id: "chapter8.1",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is a major problem. We need to fabricate the engine components now, while their forces are spread thin. It's time to build.'\nAcknowledged. Coordinated fabrication of Sidestep Engine components initiated under covert protocols.",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is a major problem. We need to fabricate the engine components now, while their forces are spread thin. It's time to build.'\nAcknowledged. Coordinated fabrication of Sidestep Engine components initiated under covert protocols.",
     prerequisites: ["chapter8.0"],
     objectives: [
       { type: 'project', projectId: 'sidestep_fabrication', repeatCount: 3 }
