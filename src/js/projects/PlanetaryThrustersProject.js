@@ -194,6 +194,28 @@ class PlanetaryThrustersProject extends Project{
       && !this.isBooleanFlagSet('disableTractorBeams');
   }
 
+  hasLiquidHydrogenBlocker() {
+    return resources.surface.liquidHydrogen.value > 0;
+  }
+
+  getWarningState() {
+    if (!this.hasLiquidHydrogenBlocker() || this.isCompleted) {
+      return null;
+    }
+    return {
+      blocksStart: true,
+      blocksProgress: true,
+      message: getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.liquidHydrogenWarning',
+        'Liquid hydrogen blocks Planetary Thrusters construction. Remove it before starting or continuing this project.'
+      ),
+      statusText: getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.liquidHydrogenStatus',
+        'Blocked: remove liquid hydrogen first'
+      )
+    };
+  }
+
   isPulsarHazardActive() {
     try {
       const pulsar = hazardManager.parameters.pulsar;

@@ -1347,6 +1347,8 @@ setLanguageData({
         },
       },
       planetaryThrusters: {
+        liquidHydrogenWarning: 'Liquid hydrogen blocks Planetary Thrusters construction. Remove it before starting or continuing this project.',
+        liquidHydrogenStatus: 'Blocked: remove liquid hydrogen first',
         spin: {
           title: 'Spin',
           tooltip: 'Use planetary thrusters to change the world\'s rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony energy per second. Progress is measured in equivalent delta-v; when the target is reached, investment stops automatically.',
