@@ -76,6 +76,56 @@ function getCoreHeatTooltipText() {
   );
 }
 
+const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
+  carbonDioxide: 44.01,
+  atmosphericWater: 18.01528,
+  atmosphericMethane: 16.04,
+  atmosphericAmmonia: 17.031,
+  oxygen: 31.9988,
+  inertGas: 28.0134,
+  greenhouseGas: 146.06,
+  sulfuricAcid: 98.079,
+  hydrogen: 2.016,
+  helium: 4.0026,
+  argon: 39.948
+};
+
+function buildAtmosphereTooltipText() {
+  const intro = getTerraformingSummaryText(
+    'atmosphere.tooltip',
+    'The atmosphere is the gaseous envelope of the planet, critical for life and climate.'
+  );
+  const gasLines = [];
+  const gasKeys = Object.keys(resources.atmospheric || {});
+
+  for (const gas of gasKeys) {
+    const resource = resources.atmospheric[gas];
+    const molecularWeight = ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS[gas];
+    if (!molecularWeight) continue;
+    gasLines.push({
+      name: resource.displayName || resource.name || gas,
+      molecularWeight
+    });
+  }
+
+  gasLines.sort((a, b) => b.molecularWeight - a.molecularWeight || a.name.localeCompare(b.name));
+
+  const lines = [intro, '', getTerraformingSummaryText('atmosphere.molarDensityTitle', 'Molar mass by gas (g/mol):')];
+  if (gasLines.length === 0) {
+    lines.push(getTerraformingSummaryText('atmosphere.molarDensityEmpty', 'No atmospheric gases present.'));
+  } else {
+    for (const entry of gasLines) {
+      lines.push(getTerraformingSummaryText(
+        'atmosphere.molarDensityLine',
+        '{name}: {value} g/mol',
+        { name: entry.name, value: formatNumber(entry.molecularWeight, false, 2) }
+      ));
+    }
+  }
+
+  return lines.join('\n');
+}
+
 function getTerraformingSubtabManager() {
   return terraformingSubtabManager;
 }
@@ -1261,10 +1311,7 @@ function createTemperatureBox(row) {
     atmosphereBox.id = 'atmosphere-box';
     const atmInfo = document.createElement('span');
     atmInfo.classList.add('info-tooltip-icon');
-    const atmTooltipText = getTerraformingSummaryText(
-      'atmosphere.tooltip',
-      'The atmosphere is the gaseous envelope of the planet, critical for life and climate.'
-    );
+    const atmTooltipText = buildAtmosphereTooltipText();
     const atmTooltip = attachDynamicInfoTooltip(atmInfo, atmTooltipText);
     const gasTargets = terraforming.gasTargets || {};
     const targetGasKeys = Object.keys(gasTargets);
@@ -1369,7 +1416,8 @@ function createTemperatureBox(row) {
       gases: gasElements,
       nextGasOrder: gasKeys.length,
       tooltipCache: {
-        opticalDepth: ''
+        opticalDepth: '',
+        atmosphere: ''
       }
     };
     const els = terraformingUICache.atmosphere;
@@ -1514,6 +1562,9 @@ function createTemperatureBox(row) {
         });
       lines.unshift(intro);
       setTooltipText(els.opticalDepthTooltip, lines.join('\n'), els.tooltipCache, 'opticalDepth');
+    }
+    if (els.infoTooltip) {
+      setTooltipText(els.infoTooltip, buildAtmosphereTooltipText(), els.tooltipCache, 'atmosphere');
     }
 
     if (els.windMultiplier) {
