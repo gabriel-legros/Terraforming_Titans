@@ -8,6 +8,9 @@ let historyListEl;
 let historyCollapsed = false;
 let historyData = [];
 let lastHistoryState = '';
+let historyHeaderRowEl;
+let historyRowEls = [];
+const RWG_HISTORY_ROW_LIMIT = 10;
 let rwgSeedEl;
 let rwgTargetEl;
 let rwgTypeEl;
@@ -1874,7 +1877,8 @@ function renderHistory() {
       if (aCur && !bCur) return -1;
       if (bCur && !aCur) return 1;
       return b.departedAt - a.departedAt;
-    });
+    })
+    .slice(0, RWG_HISTORY_ROW_LIMIT);
   const newState = JSON.stringify(entries);
   if (newState === lastHistoryState) return;
   lastHistoryState = newState;
@@ -1889,16 +1893,52 @@ function renderHistory() {
 function renderHistoryPage() {
   if (!historyListEl) return;
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
-  const header = `<div class="rwg-history-head"><span>${getRwgUiText('history.name', 'Name')}</span><span>${getRwgUiText('history.type', 'Type')}</span><span>${getRwgUiText('history.seed', 'Seed')}</span><span>${getRwgUiText('history.population', 'Population')}</span><span>${getRwgUiText('history.state', 'State')}</span><span>${getRwgUiText('history.departed', 'Departed')}</span></div>`;
-  const rows = historyData.map(r => {
+  if (!historyHeaderRowEl || historyHeaderRowEl.parentElement !== historyListEl) {
+    historyListEl.replaceChildren();
+    historyHeaderRowEl = document.createElement('div');
+    historyHeaderRowEl.className = 'rwg-history-head';
+    ['name', 'type', 'seed', 'population', 'state', 'departed'].forEach((key) => {
+      const span = document.createElement('span');
+      span.textContent = getRwgUiText(`history.${key}`, key);
+      historyHeaderRowEl.appendChild(span);
+    });
+    historyListEl.appendChild(historyHeaderRowEl);
+    historyRowEls = [];
+  }
+
+  while (historyRowEls.length < historyData.length) {
+    const row = document.createElement('div');
+    row.className = 'rwg-history-row';
+    ['name', 'type', 'seed', 'pop', 'state', 'departed'].forEach((className) => {
+      const span = document.createElement('span');
+      if (className !== 'type' && className !== 'state' && className !== 'departed') {
+        span.className = className;
+      }
+      row.appendChild(span);
+    });
+    historyRowEls.push(row);
+    historyListEl.appendChild(row);
+  }
+  while (historyRowEls.length > historyData.length) {
+    const row = historyRowEls.pop();
+    row.remove();
+  }
+
+  historyData.forEach((r, index) => {
+    const row = historyRowEls[index];
+    const cells = row.children;
     const displayType = RWG_WORLD_TYPES[r.type]?.displayName || r.type;
     const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
     const pop = fmt(r.colonists || 0);
-    const stateCls = r.stateKey === 'current' ? 'state-current' : '';
     const stateLabel = getRwgUiText(`history.${r.stateKey}`, r.stateKey);
-    return `<div class="rwg-history-row"><span class="name">${r.name}</span><span>${displayType}</span><span class="seed">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${stateLabel}</span><span>${d}</span></div>`;
-  }).join('');
-  historyListEl.innerHTML = header + rows;
+    cells[0].textContent = r.name;
+    cells[1].textContent = displayType;
+    cells[2].textContent = r.seed;
+    cells[3].textContent = pop;
+    cells[4].textContent = stateLabel;
+    cells[4].className = r.stateKey === 'current' ? 'state-current' : '';
+    cells[5].textContent = d;
+  });
 }
 
 // Hook into Space UI whenever Random subtab is shown

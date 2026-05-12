@@ -219,8 +219,10 @@ function installEventListenerTracker(window) {
   };
 }
 
-function setupBrowserStubs(window) {
-  installEventListenerTracker(window);
+function setupBrowserStubs(window, options = {}) {
+  if (options.trackEventListeners !== false) {
+    installEventListenerTracker(window);
+  }
 
   window.console.log = () => {};
   window.console.warn = () => {};
@@ -327,7 +329,7 @@ async function waitForWindowLoad(window, timeoutMs = DEFAULT_LOAD_TIMEOUT_MS) {
       }));
 }
 
-async function createGameDom() {
+async function createGameDom(options = {}) {
   const indexPath = path.resolve(REPO_ROOT, 'index.html');
   const dom = await JSDOM.fromFile(indexPath, {
     runScripts: 'dangerously',
@@ -335,7 +337,7 @@ async function createGameDom() {
     pretendToBeVisual: true,
     url: `file://${indexPath}`,
     beforeParse(window) {
-      setupBrowserStubs(window);
+      setupBrowserStubs(window, options);
     }
   });
 
