@@ -268,6 +268,11 @@ class SpaceshipAutomation {
       step.limit = null;
       return;
     }
+    if (mode === 'remainingPercent') {
+      step.mode = mode;
+      step.limit = step.limit === null || step.limit === undefined ? 100 : this.sanitizeShipCount(step.limit);
+      return;
+    }
     step.mode = 'fill';
   }
 
@@ -670,6 +675,7 @@ class SpaceshipAutomation {
       const stepHasNonMassEntries = entries.some(entry => entry.projectId !== massDriverTargetId);
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
+      const isRemainingPercent = step.mode === 'remainingPercent';
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
       const stepPoolLimit = stepHasMassDrivers
         ? (stepHasNonMassEntries ? getMixedStepPoolLimit() : remainingTotal)
@@ -710,6 +716,10 @@ class SpaceshipAutomation {
             stepLimit = Math.min(stepLimit, weightedLimit);
           }
         }
+      }
+      if (isRemainingPercent) {
+        const remainingPercent = Math.min(Math.max(limitValue === null ? 100 : limitValue, 0), 100);
+        stepLimit = Math.floor(stepPoolLimit * remainingPercent / 100);
       }
       let stepRemaining = stepLimit;
       if (entries.length === 0) continue;
@@ -1120,12 +1130,14 @@ class SpaceshipAutomation {
       steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
         const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
         let stepMode = step.mode || 'fill';
-        if (stepMode !== 'cappedMin' && stepMode !== 'cappedMax' && limitValue === null) {
+        if (stepMode !== 'cappedMin' && stepMode !== 'cappedMax' && stepMode !== 'remainingPercent' && limitValue === null) {
           stepMode = 'cappedMax';
         }
         return {
           id: step.id,
-          limit: (stepMode === 'cappedMin' || stepMode === 'cappedMax') ? null : limitValue,
+          limit: (stepMode === 'cappedMin' || stepMode === 'cappedMax') ? null : (stepMode === 'remainingPercent'
+            ? (limitValue === null ? 100 : Math.min(Math.max(limitValue, 0), 100))
+            : limitValue),
           mode: stepMode,
           entries: Array.isArray(step.entries) ? step.entries.map(entry => {
             const weight = Number(entry.weight);

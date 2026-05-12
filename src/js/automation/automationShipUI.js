@@ -323,11 +323,15 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     subtitle.classList.add('automation-step-subtitle');
     const usingCappedMin = step.mode === 'cappedMin';
     const usingCappedMax = step.mode === 'cappedMax';
+    const usingRemainingPercent = step.mode === 'remainingPercent';
     const usingCapped = usingCappedMin || usingCappedMax;
     if (usingCappedMin) {
       subtitle.textContent = getAutomationCardText('shipStepSubtitleSmallestMax', {}, 'Balance ships with the smallest max');
     } else if (usingCappedMax) {
       subtitle.textContent = getAutomationCardText('shipStepSubtitleLargestMax', {}, 'Balance ships with the largest max');
+    } else if (usingRemainingPercent) {
+      const percentText = Number(step.limit === null || step.limit === undefined ? 100 : step.limit).toLocaleString();
+      subtitle.textContent = getAutomationCardText('shipStepSubtitleRemainingPercent', { percent: percentText }, 'Assign {percent}% of remaining ships');
     } else if (step.limit !== null && step.limit !== undefined) {
       const limitText = Number(step.limit || 0).toLocaleString();
       subtitle.textContent = getAutomationCardText('shipStepSubtitleAssignUpTo', { count: limitText }, `Assign up to ${limitText} ships`);
@@ -344,7 +348,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     limitInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       limitInfo,
-      getAutomationCardText('shipLimitTooltip', {}, 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".')
+      getAutomationCardText('shipLimitTooltip', {}, 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".')
     );
     const limitMode = document.createElement('select');
     const fixedOpt = document.createElement('option');
@@ -359,7 +363,11 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     cappedMaxOpt.value = 'cappedMax';
     cappedMaxOpt.textContent = getAutomationCardText('shipCappedByLargestMax', {}, 'Capped by largest max');
     limitMode.appendChild(cappedMaxOpt);
-    limitMode.value = usingCappedMin ? 'cappedMin' : usingCappedMax ? 'cappedMax' : 'fixed';
+    const remainingPercentOpt = document.createElement('option');
+    remainingPercentOpt.value = 'remainingPercent';
+    remainingPercentOpt.textContent = getAutomationCardText('shipPercentRemainingShips', {}, '% of remaining ships');
+    limitMode.appendChild(remainingPercentOpt);
+    limitMode.value = usingCappedMin ? 'cappedMin' : usingCappedMax ? 'cappedMax' : usingRemainingPercent ? 'remainingPercent' : 'fixed';
     const limitInput = document.createElement('input');
     limitInput.type = 'text';
     limitInput.min = '0';
@@ -377,6 +385,13 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
         automation.setStepLimit(preset.id, step.id, null);
         limitInput.disabled = true;
         limitInput.value = '';
+      } else if (mode === 'remainingPercent') {
+        automation.setStepMode(preset.id, step.id, mode);
+        const parsed = parseFlexibleNumber(limitInput.value);
+        const percent = Number.isFinite(parsed) ? Math.min(Math.max(Math.floor(parsed), 0), 100) : 100;
+        automation.setStepLimit(preset.id, step.id, percent);
+        limitInput.disabled = false;
+        limitInput.value = formatNumber(percent, true, 3);
       } else {
         automation.setStepMode(preset.id, step.id, 'fill');
         const parsed = parseFlexibleNumber(limitInput.value);
@@ -389,13 +404,23 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     wireStringNumberInput(limitInput, {
       parseValue: (value) => {
         const parsed = parseFlexibleNumber(value);
-        return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+        if (!Number.isFinite(parsed) || parsed < 0) {
+          return 0;
+        }
+        if (limitMode.value === 'remainingPercent') {
+          return Math.min(Math.max(Math.floor(parsed), 0), 100);
+        }
+        return Math.floor(parsed);
       },
       formatValue: (value) => {
         return value > 0 ? formatNumber(value, true, 3) : '';
       },
       onValue: (parsed) => {
-        automation.setStepLimit(preset.id, step.id, parsed > 0 ? parsed : null);
+        if (limitMode.value === 'remainingPercent') {
+          automation.setStepLimit(preset.id, step.id, Math.min(Math.max(Math.floor(parsed), 0), 100));
+        } else {
+          automation.setStepLimit(preset.id, step.id, parsed > 0 ? parsed : null);
+        }
         queueAutomationUIRefresh();
       }
     });
