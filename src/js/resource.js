@@ -1416,6 +1416,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
 }
 
 function produceResources(deltaTime, buildings) {
+  if (typeof spaceManager !== 'undefined') {
+    spaceManager.beginTerraformedWorldCountCache?.();
+  }
   const isDay = dayNightCycle.isDay();
   let projectEntries = [];
   let projectProductivityMap = {};
@@ -1769,6 +1772,9 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  if (typeof spaceManager !== 'undefined') {
+    spaceManager.clearTerraformedWorldCountCache?.();
+  }
   recalculateTotalRates();
 }
 

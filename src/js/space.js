@@ -180,6 +180,7 @@ class SpaceManager extends EffectableEntity {
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
         this.worldStatsCache = this._createEmptyWorldStatsCache();
+        this.terraformedWorldCountCache = null;
         this.travelPerfLoggingEnabled = true;
         this.travelPerfStats = {
             totalCount: 0,
@@ -1827,6 +1828,10 @@ class SpaceManager extends EffectableEntity {
      * @returns {number}
      */
     getTerraformedPlanetCount() {
+        const cachedBase = this.terraformedWorldCountCache?.base;
+        if (Number.isFinite(cachedBase)) {
+            return cachedBase;
+        }
         const base = (this.worldStatsCache.storyTerraformed || 0)
             + this._getTotalRandomTerraformedCount()
             + this._getTotalArtificialTerraformedCount();
@@ -1840,7 +1845,11 @@ class SpaceManager extends EffectableEntity {
         const sectorBonus = Number.isFinite(sectorWorlds) ? Math.max(0, sectorWorlds) : 0;
         const artificialBonus = this._getTotalArtificialTerraformBonus();
         const cylinders = this.getOneillCylinderEffectiveWorldCount();
-        return base + rings + extra + sectorBonus + artificialBonus + cylinders;
+        const total = base + rings + extra + sectorBonus + artificialBonus + cylinders;
+        if (this.terraformedWorldCountCache) {
+            this.terraformedWorldCountCache.base = total;
+        }
+        return total;
     }
 
     getArtificialFleetCapacityWorlds() {
@@ -1917,17 +1926,42 @@ class SpaceManager extends EffectableEntity {
      * @returns {number}
      */
     getTerraformedPlanetCountIncludingCurrent() {
+        const cachedIncludingCurrent = this.terraformedWorldCountCache?.includingCurrent;
+        if (Number.isFinite(cachedIncludingCurrent)) {
+            return cachedIncludingCurrent;
+        }
         const count = this.getTerraformedPlanetCount();
         const hasRing = this.currentWorldHasOrbitalRing();
+        let total = count;
         if (this.currentRandomSeed !== null) {
-            return (this.isSeedTerraformed(String(this.currentRandomSeed)) || hasRing) ? count : count + 1;
-        }
-        if (this.currentArtificialKey !== null) {
+            total = (this.isSeedTerraformed(String(this.currentRandomSeed)) || hasRing) ? count : count + 1;
+        } else if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
             const terraformed = !!this.artificialWorldStatuses[key]?.terraformed;
-            return (terraformed || hasRing) ? count : count + 1;
+            total = (terraformed || hasRing) ? count : count + 1;
+        } else {
+            total = (this.isPlanetTerraformed(this.currentPlanetKey) || hasRing) ? count : count + 1;
         }
-        return (this.isPlanetTerraformed(this.currentPlanetKey) || hasRing) ? count : count + 1;
+        if (this.terraformedWorldCountCache) {
+            this.terraformedWorldCountCache.includingCurrent = total;
+        }
+        return total;
+    }
+
+    beginTerraformedWorldCountCache() {
+        if (!this.terraformedWorldCountCache) {
+            this.terraformedWorldCountCache = {
+                base: NaN,
+                includingCurrent: NaN
+            };
+            return;
+        }
+        this.terraformedWorldCountCache.base = NaN;
+        this.terraformedWorldCountCache.includingCurrent = NaN;
+    }
+
+    clearTerraformedWorldCountCache() {
+        this.terraformedWorldCountCache = null;
     }
 
     /**
