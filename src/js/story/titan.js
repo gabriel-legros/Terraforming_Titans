@@ -67,7 +67,7 @@ progressTitan.chapters.push(
     id: "chapter4.5",
     type: "journal",
     chapter: 4,
-    narrative: "Solis : 'I have forwarded you some serious funding.  Don't spend it all at once.  Furthermore...  I will provide you with you with some passive income.  What I can spare for now.  There's somewhat of a depression going on...'",
+    narrative: "Solis : 'I have forwarded you some serious funding.  Don't spend it all at once.  Furthermore...  I will provide you with some passive income.  What I can spare for now.  There's somewhat of a depression going on...'",
     prerequisites: ["chapter4.4b"],
     objectives: [],
     reward: [
