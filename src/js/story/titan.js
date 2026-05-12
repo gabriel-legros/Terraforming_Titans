@@ -543,7 +543,7 @@ progressTitan.chapters.push(
     id: "chapter6.3b",
     type: "journal",
     chapter: 6,
-    narrative: "Mary : 'It's... deliberate.  And they're going to attack again.  They want us dead...  I've discussed this with a colleague.  They have an idea.  It's crazy but it might actually work.  Finish what you started here then come on Callisto.  We have an insane experiment to run.' ",
+    narrative: "Mary : 'It's... deliberate.  And they're going to attack again.  They want us dead...  and you too apparently.  I've discussed this with a colleague.  They have an idea.  It's crazy but it might actually work.  Finish what you started here then come on Callisto.  We have an insane experiment to run.' ",
     prerequisites: ["chapter6.3"],
     objectives: [
 
