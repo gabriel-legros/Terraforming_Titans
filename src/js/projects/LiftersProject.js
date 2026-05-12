@@ -109,6 +109,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.autoAssignWeights = {};
 
     this.isRunning = false;
+    this.disableStripBelowPressure = false;
+    this.stripPressureThreshold = 0;
     this.lastUnitsPerSecond = 0;
     this.lastEnergyPerSecond = 0;
     this.lastHarvestPerSecond = 0;
@@ -130,6 +132,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.expansionProgress = 0;
     this.continuousThreshold = 1000;
     this.operationPreRunThisTick = false;
+    this.stripPressureAutomationElements = null;
   }
 
   hasSuperchargeUnlocked() {
@@ -813,6 +816,28 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return gases.reduce((sum, gas) => sum + gas.value, 0);
   }
 
+  getStripPressureFloorAmount() {
+    const gravity = terraforming.celestialParameters.gravity;
+    const radius = terraforming.celestialParameters.radius;
+    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius);
+    if (pressurePerUnitPa <= 0) {
+      return 0;
+    }
+    return this.stripPressureThreshold / pressurePerUnitPa;
+  }
+
+  getStripAvailableAtmosphere(accumulatedChanges = null) {
+    const total = this.getAtmosphereTotal(accumulatedChanges);
+    if (!(total > 0)) {
+      return 0;
+    }
+    if (!this.disableStripBelowPressure) {
+      return total;
+    }
+    const floorAmount = this.getStripPressureFloorAmount();
+    return Math.max(0, total - floorAmount);
+  }
+
   removeAtmosphere(amount, accumulatedChanges, seconds) {
     if (!(amount > 0)) {
       return 0;
@@ -1025,7 +1050,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   planOperation(seconds, productivity = 1, accumulatedChanges = null) {
     const entries = this.buildOperationEntries(seconds, productivity);
     const storage = this.getSpaceStorageProject();
-    const atmosphereAvailable = this.getAtmosphereTotal(accumulatedChanges);
+    let stripAvailableAtmosphere = this.getStripAvailableAtmosphere(accumulatedChanges);
 
     const plan = {
       entries,
@@ -1048,6 +1073,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         storageLimited: false,
         capLimited: false,
         atmosphereLimited: false,
+        pressureLimited: false,
         energyLimited: false,
       },
     };
@@ -1061,10 +1087,14 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       plan.desiredAssignedLifters += entry.assignedNumber * (entry.requestedProductivity || 0);
       if (entry.recipe.type === LIFTER_RECIPE_TYPES.STRIP) {
         plan.hasStripAssignments = true;
-        const limited = Math.min(entry.desiredUnits, atmosphereAvailable);
+        const limited = Math.min(entry.desiredUnits, stripAvailableAtmosphere);
         if (limited < entry.desiredUnits) {
           plan.reasons.atmosphereLimited = true;
+          if (this.disableStripBelowPressure && stripAvailableAtmosphere <= 0) {
+            plan.reasons.pressureLimited = true;
+          }
         }
+        stripAvailableAtmosphere = Math.max(0, stripAvailableAtmosphere - limited);
         entry.limitedUnits = Math.max(0, limited);
         return;
       }
@@ -1208,6 +1238,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
     if (plan.reasons.capLimited) {
       return getLiftersProjectText('status.storageCapReached', null, 'Storage cap reached');
+    }
+    if (plan.reasons.pressureLimited) {
+      return getLiftersProjectText('status.pressureLimitReached', null, 'Pressure limiter reached');
     }
     if (plan.hasStripAssignments && this.getAtmosphereTotal() <= 0) {
       return getLiftersProjectText('status.noAtmosphereToStrip', null, 'No atmosphere to strip');
@@ -1722,6 +1755,82 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return this.mergeEstimateTotals(totals, operationTotals);
   }
 
+  createStripPressureControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'lifters-strip-pressure-control');
+    control.id = `${this.name}-strip-pressure-control`;
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-strip-pressure-checkbox`;
+    checkbox.addEventListener('change', () => {
+      this.disableStripBelowPressure = checkbox.checked;
+      this.updateUI();
+    });
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = getLiftersProjectText(
+      'disableStripBelowPressure',
+      null,
+      'Disable atmospheric stripping below:'
+    );
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'decimal';
+    input.classList.add('lifters-strip-pressure-input');
+    wireStringNumberInput(input, {
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (value) => formatNumber(Math.max(0, value), true, 2),
+      onValue: (value) => {
+        this.stripPressureThreshold = Math.max(0, value);
+      },
+      datasetKey: 'pressurePa',
+    });
+
+    const unit = document.createElement('span');
+    unit.classList.add('lifters-strip-pressure-unit');
+    unit.textContent = getLiftersProjectText('pa', null, 'Pa');
+
+    checkbox.checked = this.disableStripBelowPressure === true;
+    input.value = formatNumber(this.stripPressureThreshold || 0, true, 2);
+
+    control.append(checkbox, label, input, unit);
+
+    this.stripPressureAutomationElements = {
+      control,
+      checkbox,
+      input,
+      unit,
+    };
+
+    return control;
+  }
+
+  renderAutomationUI(container) {
+    const elements = this.stripPressureAutomationElements || {};
+    const control = elements.control || this.createStripPressureControl();
+    if (elements.checkbox) {
+      elements.checkbox.checked = this.disableStripBelowPressure === true;
+    }
+    if (elements.input) {
+      if (document.activeElement !== elements.input) {
+        elements.input.value = formatNumber(this.stripPressureThreshold || 0, true, 2);
+      }
+    }
+    if (elements.unit) {
+      elements.unit.textContent = getLiftersProjectText('pa', null, 'Pa');
+    }
+    if (control.parentNode !== container) {
+      container.appendChild(control);
+      window.invalidateAutomationSettingsCache?.(this.name);
+    }
+  }
+
   renderUI(container) {
     if (typeof renderLiftersUI === 'function') {
       renderLiftersUI(this, container);
@@ -1752,6 +1861,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
       superchargeMultiplier: this.superchargeMultiplier,
+      disableStripBelowPressure: this.disableStripBelowPressure === true,
+      stripPressureThreshold: this.stripPressureThreshold,
       mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
@@ -1769,7 +1880,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       || Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')
       || Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')
-      || Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier');
+      || Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')
+      || Object.prototype.hasOwnProperty.call(settings, 'disableStripBelowPressure')
+      || Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold');
 
     if (hasAssignmentState) {
       if (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')) {
@@ -1786,6 +1899,12 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')) {
         this.superchargeMultiplier = settings.superchargeMultiplier || 1;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'disableStripBelowPressure')) {
+        this.disableStripBelowPressure = settings.disableStripBelowPressure === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold')) {
+        this.stripPressureThreshold = Math.max(0, Number(settings.stripPressureThreshold) || 0);
       }
     } else {
       if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
@@ -1815,6 +1934,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
       superchargeMultiplier: this.superchargeMultiplier,
+      disableStripBelowPressure: this.disableStripBelowPressure === true,
+      stripPressureThreshold: this.stripPressureThreshold,
       mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
@@ -1830,7 +1951,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights')
-      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier');
+      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier')
+      || Object.prototype.hasOwnProperty.call(state, 'disableStripBelowPressure')
+      || Object.prototype.hasOwnProperty.call(state, 'stripPressureThreshold');
 
     if (hasAssignmentState) {
       this.lifterAssignments = { ...(state.lifterAssignments || {}) };
@@ -1838,6 +1961,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
       this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
       this.superchargeMultiplier = state.superchargeMultiplier || 1;
+      this.disableStripBelowPressure = state.disableStripBelowPressure === true;
+      this.stripPressureThreshold = Math.max(0, Number(state.stripPressureThreshold) || 0);
       this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
       this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
       this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
@@ -1871,6 +1996,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
       superchargeMultiplier: this.superchargeMultiplier,
+      disableStripBelowPressure: this.disableStripBelowPressure === true,
+      stripPressureThreshold: this.stripPressureThreshold,
       mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
@@ -1891,7 +2018,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights')
-      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier');
+      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier')
+      || Object.prototype.hasOwnProperty.call(state, 'disableStripBelowPressure')
+      || Object.prototype.hasOwnProperty.call(state, 'stripPressureThreshold');
 
     if (hasAssignmentState) {
       this.lifterAssignments = { ...(state.lifterAssignments || {}) };
@@ -1899,6 +2028,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
       this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
       this.superchargeMultiplier = state.superchargeMultiplier || 1;
+      this.disableStripBelowPressure = state.disableStripBelowPressure === true;
+      this.stripPressureThreshold = Math.max(0, Number(state.stripPressureThreshold) || 0);
       this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
       this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
       this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();

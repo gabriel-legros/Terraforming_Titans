@@ -362,7 +362,6 @@ function updateLiftersUI(project) {
   elements.runCheckbox.disabled = totalBigInt <= 0n;
   elements.stepDownButton.disabled = totalBigInt <= 0n;
   elements.stepUpButton.disabled = totalBigInt <= 0n;
-
   const displayKeys = [project.getUnassignedAssignmentKey()].concat(project.getRecipeKeys());
   displayKeys.forEach((key) => {
     const isUnassigned = project.isUnassignedAssignmentKey(key);

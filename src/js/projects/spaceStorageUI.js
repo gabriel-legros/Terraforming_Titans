@@ -222,6 +222,11 @@ function renderSpaceStorageUI(project, container) {
       <span class="card-title">${getSpaceStorageUIText('ui.projects.spaceStorage.title', 'Space Storage')}</span>
     </div>
     <div class="card-body">
+      <div id="ss-kessler-warning" class="project-kessler-warning" style="display: none;">
+        <span class="project-kessler-warning__icon">⚠</span>
+        <span id="ss-kessler-warning-text"></span>
+        <span class="project-kessler-warning__icon">⚠</span>
+      </div>
       <div class="stats-grid two-col project-summary-grid">
         <div class="stat-item project-summary-box"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.usedStorage', 'Used Storage:')}</span><span id="ss-used" class="stat-value"></span></div>
         <div class="stat-item project-summary-box"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.maxStorage', 'Max Storage:')}</span><span id="ss-max" class="stat-value"></span></div>
@@ -1106,6 +1111,8 @@ function renderSpaceStorageUI(project, container) {
     reserveDraft: projectElements[project.name].reserveDraft,
     reserveDraftDirty: projectElements[project.name].reserveDraftDirty,
     capHandlersBound: true,
+    kesslerWarning: card.querySelector('#ss-kessler-warning'),
+    kesslerWarningText: card.querySelector('#ss-kessler-warning-text'),
     artificialEcosystemsCard,
     artificialEcosystemsContainer,
     artificialEcosystemsCheckbox,
@@ -1144,6 +1151,26 @@ function updateSpaceStorageUI(project) {
   }
   if (els.maxDisplay) {
     els.maxDisplay.textContent = formatNumber(project.maxStorage, false, 2);
+  }
+  if (els.kesslerWarning && els.kesslerWarningText) {
+    const hazardActive = hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+    const isCollapsed = els.storageCard?.classList?.contains('collapsed');
+    if (hazardActive && !isCollapsed) {
+      const failureChance = project.getKesslerFailureChance();
+      const percent = Math.max(0, Math.min(1, failureChance)) * 100;
+      if (percent <= 0) {
+        els.kesslerWarning.style.display = 'none';
+        return;
+      }
+      els.kesslerWarningText.textContent = getSpaceStorageUIText(
+        'ui.projects.spaceStorage.kesslerWarning',
+        'Kessler Skies: {value}% chance of project failure.',
+        { value: formatNumber(percent, false, 2) }
+      );
+      els.kesslerWarning.style.display = 'flex';
+    } else {
+      els.kesslerWarning.style.display = 'none';
+    }
   }
   if (els.expansionRecipeRow && els.expansionRecipeSelect) {
     const activeRecipeKey = project.getExpansionRecipeKey();
