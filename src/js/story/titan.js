@@ -531,8 +531,8 @@ progressTitan.storyProjects.interrogate_alien = {
     planet: 'titan',
     costDoubling: false,
     storySteps: [
-      'Bio-scan complete.  Subject physiology tolerates CO2 but is photosensitive and reliant on high-frequency acoustics.',
-      'Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption suggests a timetable for a second attack.',
+      'Bio-scan complete.  Subject HB-01 physiology tolerates CO2 but is photosensitive and reliant on high-frequency acoustics.',
+      'Subject responded to acoustic patterns with a stream of tonal data.   Decryption is looking increasingly likely.',
       "Translation uplink complete.\n  'FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'"
     ]
   }
