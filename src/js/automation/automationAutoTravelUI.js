@@ -367,9 +367,22 @@ function populateAutoTravelTypeOptions(select) {
   }
 }
 
-function populateAutoTravelOrbitOptions(select) {
+function getAutoTravelTypeOrbitLockState(typeId) {
+  const rawEntry = rwgManager?.params?.orbit?.typeOrbitLocks?.[typeId];
+  const normalizedEntry = Array.isArray(rawEntry) ? { presets: rawEntry } : rawEntry || {};
+  return {
+    presets: Array.isArray(normalizedEntry.presets) ? normalizedEntry.presets.filter(Boolean) : [],
+    excludedPresets: Array.isArray(normalizedEntry.excludedPresets) ? normalizedEntry.excludedPresets.filter(Boolean) : []
+  };
+}
+
+function populateAutoTravelOrbitOptions(select, selectedType = 'random') {
   if (!select) return;
-  const options = [
+  const typeOrbitLock = selectedType && selectedType !== 'random'
+    ? getAutoTravelTypeOrbitLockState(selectedType)
+    : { presets: [], excludedPresets: [] };
+  const allowedByType = typeOrbitLock.presets.length ? typeOrbitLock.presets : null;
+  const allOptions = [
     { value: 'random', label: getAutoTravelOptionText('orbit.random', 'Orbit: Random') },
     { value: 'very-hot', label: getAutoTravelOptionText('orbit.veryHot', 'Orbit: Very Hot') },
     { value: 'hot', label: getAutoTravelOptionText('orbit.hot', 'Orbit: Hot') },
@@ -379,6 +392,24 @@ function populateAutoTravelOrbitOptions(select) {
     { value: 'cold', label: getAutoTravelOptionText('orbit.cold', 'Orbit: Cold') },
     { value: 'very-cold', label: getAutoTravelOptionText('orbit.veryCold', 'Orbit: Very Cold') }
   ];
+  const options = [];
+  for (let index = 0; index < allOptions.length; index += 1) {
+    const option = allOptions[index];
+    if (option.value === 'random') {
+      options.push(option);
+      continue;
+    }
+    if (rwgManager?.isOrbitLocked(option.value)) {
+      continue;
+    }
+    const typeLocked = allowedByType
+      ? !allowedByType.includes(option.value)
+      : typeOrbitLock.excludedPresets.includes(option.value);
+    if (typeLocked) {
+      continue;
+    }
+    options.push(option);
+  }
   const signature = JSON.stringify(options);
   if (signature !== autoTravelOrbitOptionsSignature && document.activeElement !== select) {
     select.innerHTML = '';
@@ -500,7 +531,7 @@ function updateAutoTravelUI() {
       automationElements.autoTravelPresetNameInput.value = preset.name || '';
     }
     populateAutoTravelTypeOptions(automationElements.autoTravelTypeSelect);
-    populateAutoTravelOrbitOptions(automationElements.autoTravelOrbitSelect);
+    populateAutoTravelOrbitOptions(automationElements.autoTravelOrbitSelect, preset.type || 'random');
     populateAutoTravelDominionOptions(automationElements.autoTravelDominionSelect);
     populateAutoTravelScriptOptions(automationElements.autoTravelScriptAfterTravelSelect);
     if (document.activeElement !== automationElements.autoTravelTargetSelect) {
@@ -511,6 +542,10 @@ function updateAutoTravelUI() {
     }
     if (document.activeElement !== automationElements.autoTravelOrbitSelect) {
       automationElements.autoTravelOrbitSelect.value = preset.orbitPreset || 'random';
+      if (automationElements.autoTravelOrbitSelect.value !== (preset.orbitPreset || 'random')) {
+        preset.orbitPreset = 'random';
+        automationElements.autoTravelOrbitSelect.value = 'random';
+      }
     }
     if (document.activeElement !== automationElements.autoTravelDominionSelect) {
       automationElements.autoTravelDominionSelect.value = preset.dominion || 'random';
