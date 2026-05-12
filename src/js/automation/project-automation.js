@@ -27,7 +27,8 @@ const PROJECT_AUTOMATION_EXPANSION_KEYS = new Set([
   'undergroundStorage',
   'selectedRadiusMeters',
   'radiusStepMeters',
-  'expansionRecipeKey'
+  'expansionRecipeKey',
+  'spaceStorageResourceMode'
 ]);
 
 const PROJECT_AUTOMATION_PROJECT_EXPANSION_KEYS = {

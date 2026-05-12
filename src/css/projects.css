@@ -58,6 +58,23 @@
     gap: 10px;
 }
 
+.project-advanced-settings-button {
+    align-self: center;
+    margin-left: auto;
+    border: 1px solid #cbd3db;
+    background: #f8f9fb;
+    color: #475569;
+    border-radius: 4px;
+    padding: 3px 7px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.project-advanced-settings-button:hover {
+    background: #e9ecef;
+}
+
 /* --- Generic Project Card Content --- */
 .project-description {
     font-size: 0.9em;

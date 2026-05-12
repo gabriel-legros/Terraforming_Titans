@@ -57,7 +57,7 @@ function resolveMegaProjectResourceMode(storageProj) {
 
 function getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable) {
   const storageAvailable = storageProj?.getAvailableStoredResource?.(storageKey) || 0;
-  const mode = storageProj ? resolveMegaProjectResourceMode(storageProj) : MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY;
+  const mode = storageProj?.megaProjectResourceMode || (storageProj ? resolveMegaProjectResourceMode(storageProj) : MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY);
   if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY) {
     return storageAvailable;
   }
@@ -69,7 +69,7 @@ function getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvail
 
 function getMegaProjectResourceAllocation(storageProj, storageKey, amount, colonyAvailable) {
   const storageAvailable = storageProj?.getAvailableStoredResource?.(storageKey) || 0;
-  const mode = storageProj ? resolveMegaProjectResourceMode(storageProj) : MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY;
+  const mode = storageProj?.megaProjectResourceMode || (storageProj ? resolveMegaProjectResourceMode(storageProj) : MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY);
   let fromStorage = 0;
   let fromColony = 0;
   if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY) {
@@ -111,6 +111,9 @@ class Project extends EffectableEntity {
     this.kesslerRollElapsed = 0;
     this.kesslerRollPending = false;
     this.kesslerStartCost = null;
+    this.spaceStorageResourceMode = '';
+    this.ignoreSpaceStorageReserveExpansion = false;
+    this.ignoreSpaceStorageReserveOperations = false;
   }
 
   initializeFromConfig(config, name) {
@@ -478,7 +481,7 @@ class Project extends EffectableEntity {
     }
 
     const cost = this.getScaledCost();
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const storageProj = this.createSpaceStorageAccess('expansions');
     for (const category in cost) {
       for (const resource in cost[category]) {
         const required = cost[category][resource];
@@ -504,7 +507,7 @@ class Project extends EffectableEntity {
 
   deductResources(resources) {
     const cost = this.getScaledCost();
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const storageProj = this.createSpaceStorageAccess('expansions', { reconcileOnDirectSpend: true });
 
     for (const category in cost) {
       for (const resource in cost[category]) {
@@ -517,10 +520,8 @@ class Project extends EffectableEntity {
             resources[category][resource].decrease(allocation.fromColony);
           }
           if (allocation.fromStorage > 0) {
-            if (typeof storageProj.spendStoredResource === 'function') {
-              storageProj.spendStoredResource(key, allocation.fromStorage);
-              storageProj.reconcileUsedStorage?.();
-            }
+            storageProj.spendStoredResource(key, allocation.fromStorage);
+            storageProj.reconcileUsedStorage?.();
           }
         } else {
           resources[category][resource].decrease(amount);
@@ -529,7 +530,7 @@ class Project extends EffectableEntity {
     }
 
     if (storageProj && typeof updateSpaceStorageUI === 'function') {
-      updateSpaceStorageUI(storageProj);
+      updateSpaceStorageUI(storageProj.storageProject || storageProj);
     }
   }
 
@@ -801,12 +802,11 @@ class Project extends EffectableEntity {
   }
 
   usesSpaceStorageForResource(category, resource, amount, accumulatedChanges = null) {
-    if (!this.attributes.canUseSpaceStorage) return false;
-    const storageProj = projectManager?.projects?.spaceStorage;
+    const storageProj = this.createSpaceStorageAccess('consumption');
     if (!storageProj) return false;
     const key = resource === 'water' ? 'liquidWater' : resource;
     const usable = storageProj.getAvailableStoredResource(key);
-    const mode = resolveMegaProjectResourceMode(storageProj);
+    const mode = storageProj.megaProjectResourceMode;
     if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY) {
       return true;
     }
@@ -832,7 +832,7 @@ class Project extends EffectableEntity {
       const timeFraction = deltaTime / duration; // fraction of project processed this tick
 
       const cost = this.getScaledCost();
-      const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+      const storageProj = this.createSpaceStorageAccess('consumption');
       for (const category in cost) {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
@@ -909,6 +909,13 @@ class Project extends EffectableEntity {
       autoStart: this.autoStart === true,
       autoStartUncheckOnTravel: this.autoStartUncheckOnTravel === true
     };
+    if (this.attributes?.canUseSpaceStorage) {
+      settings.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[this.spaceStorageResourceMode]
+        ? this.spaceStorageResourceMode
+        : '';
+      settings.ignoreSpaceStorageReserveExpansion = this.ignoreSpaceStorageReserveExpansion === true;
+      settings.ignoreSpaceStorageReserveOperations = this.ignoreSpaceStorageReserveOperations === true;
+    }
     if ('autoContinuousOperation' in this) {
       settings.autoContinuousOperation = this.autoContinuousOperation === true;
     }
@@ -931,6 +938,19 @@ class Project extends EffectableEntity {
     if ('autoDeployCollectors' in this && Object.prototype.hasOwnProperty.call(settings, 'autoDeployCollectors')) {
       this.autoDeployCollectors = settings.autoDeployCollectors === true;
     }
+    if (this.attributes?.canUseSpaceStorage) {
+      if (Object.prototype.hasOwnProperty.call(settings, 'spaceStorageResourceMode')) {
+        this.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[settings.spaceStorageResourceMode]
+          ? settings.spaceStorageResourceMode
+          : '';
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'ignoreSpaceStorageReserveExpansion')) {
+        this.ignoreSpaceStorageReserveExpansion = settings.ignoreSpaceStorageReserveExpansion === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'ignoreSpaceStorageReserveOperations')) {
+        this.ignoreSpaceStorageReserveOperations = settings.ignoreSpaceStorageReserveOperations === true;
+      }
+    }
     if (
       'autoContinuousOperation' in this &&
       !Object.prototype.hasOwnProperty.call(settings, 'autoContinuousOperation') &&
@@ -948,6 +968,75 @@ class Project extends EffectableEntity {
 
   }
 
+  getSpaceStorageResourceMode(storageProj = null) {
+    if (MEGA_PROJECT_RESOURCE_MODE_MAP[this.spaceStorageResourceMode]) {
+      return this.spaceStorageResourceMode;
+    }
+    return resolveMegaProjectResourceMode(storageProj || projectManager?.projects?.spaceStorage);
+  }
+
+  getSpaceStorageReserveScope(scope) {
+    if (scope === 'expansions' && this.ignoreSpaceStorageReserveExpansion === true) {
+      return 'ignoreReserve';
+    }
+    if (scope === 'consumption' && this.ignoreSpaceStorageReserveOperations === true) {
+      return 'ignoreReserve';
+    }
+    return scope || null;
+  }
+
+  createSpaceStorageAccess(scope = 'expansions', options = {}) {
+    if (!this.attributes?.canUseSpaceStorage) {
+      return null;
+    }
+    const storageProj = projectManager?.projects?.spaceStorage;
+    if (!storageProj) {
+      return null;
+    }
+    const reserveScope = this.getSpaceStorageReserveScope(scope);
+    const accumulatedChanges = options.accumulatedChanges || null;
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const getAvailable = (resourceKey) => {
+      const stored = reserveScope === 'ignoreReserve'
+        ? storageProj.getStoredResourceValue(resourceKey)
+        : storageProj.getAvailableStoredResource(resourceKey, reserveScope);
+      return Math.max(0, stored + getStoragePending(resourceKey));
+    };
+    return {
+      storageProject: storageProj,
+      megaProjectResourceMode: this.getSpaceStorageResourceMode(storageProj),
+      getAvailableStoredResource: getAvailable,
+      spendStoredResource: (resourceKey, amount) => {
+        if (!(amount > 0)) {
+          return 0;
+        }
+        if (!accumulatedChanges) {
+          const available = getAvailable(resourceKey);
+          const spent = Math.min(amount, available);
+          if (spent > 0) {
+            storageProj.removeStoredResource(resourceKey, spent);
+            if (options.reconcileOnDirectSpend === true) {
+              storageProj.reconcileUsedStorage?.();
+            }
+          }
+          return spent;
+        }
+        const available = getAvailable(resourceKey);
+        const spent = Math.min(amount, available);
+        if (!(spent > 0)) {
+          return 0;
+        }
+        accumulatedChanges.spaceStorage ||= {};
+        if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+          accumulatedChanges.spaceStorage[resourceKey] = 0;
+        }
+        accumulatedChanges.spaceStorage[resourceKey] -= spent;
+        return spent;
+      },
+      reconcileUsedStorage: () => storageProj.reconcileUsedStorage?.(),
+    };
+  }
+
   saveState() {
     const state = {
       isActive: this.isActive,
@@ -962,6 +1051,11 @@ class Project extends EffectableEntity {
       shownStorySteps: Array.from(this.shownStorySteps),
       alertedWhenUnlocked: this.alertedWhenUnlocked,
     };
+    if (this.attributes?.canUseSpaceStorage) {
+      state.spaceStorageResourceMode = this.spaceStorageResourceMode || '';
+      state.ignoreSpaceStorageReserveExpansion = this.ignoreSpaceStorageReserveExpansion === true;
+      state.ignoreSpaceStorageReserveOperations = this.ignoreSpaceStorageReserveOperations === true;
+    }
     if (this.kesslerDebrisSize) {
       state.kesslerRollElapsed = this.kesslerRollElapsed;
       state.kesslerRollPending = this.kesslerRollPending === true;
@@ -972,6 +1066,11 @@ class Project extends EffectableEntity {
 
   saveTravelState() {
     const state = {};
+    if (this.attributes?.canUseSpaceStorage) {
+      state.spaceStorageResourceMode = this.spaceStorageResourceMode || '';
+      state.ignoreSpaceStorageReserveExpansion = this.ignoreSpaceStorageReserveExpansion === true;
+      state.ignoreSpaceStorageReserveOperations = this.ignoreSpaceStorageReserveOperations === true;
+    }
     if (this.attributes?.preserveProgressOnTravel) {
       state.remainingTime = this.remainingTime;
       state.startingDuration = this.startingDuration;
@@ -1002,6 +1101,13 @@ class Project extends EffectableEntity {
     this.effects = [];
     this.autoStart = state.autoStart;
     this.autoStartUncheckOnTravel = state.autoStartUncheckOnTravel === true;
+    if (this.attributes?.canUseSpaceStorage) {
+      this.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[state.spaceStorageResourceMode]
+        ? state.spaceStorageResourceMode
+        : '';
+      this.ignoreSpaceStorageReserveExpansion = state.ignoreSpaceStorageReserveExpansion === true;
+      this.ignoreSpaceStorageReserveOperations = state.ignoreSpaceStorageReserveOperations === true;
+    }
     this.shownStorySteps = new Set(state.shownStorySteps || []);
     this.alertedWhenUnlocked = state.alertedWhenUnlocked || false;
     if (this.kesslerDebrisSize) {
@@ -1015,6 +1121,13 @@ class Project extends EffectableEntity {
   }
 
   loadTravelState(state = {}) {
+    if (this.attributes?.canUseSpaceStorage) {
+      this.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[state.spaceStorageResourceMode]
+        ? state.spaceStorageResourceMode
+        : '';
+      this.ignoreSpaceStorageReserveExpansion = state.ignoreSpaceStorageReserveExpansion === true;
+      this.ignoreSpaceStorageReserveOperations = state.ignoreSpaceStorageReserveOperations === true;
+    }
     if (!this.attributes?.preserveProgressOnTravel) {
       return;
     }
@@ -1621,6 +1734,11 @@ class ProjectManager extends EffectableEntity {
       if (resetAuto) {
         state.autoStartUncheckOnTravel = true;
       }
+      if (project.attributes?.canUseSpaceStorage) {
+        state.spaceStorageResourceMode = project.spaceStorageResourceMode || '';
+        state.ignoreSpaceStorageReserveExpansion = project.ignoreSpaceStorageReserveExpansion === true;
+        state.ignoreSpaceStorageReserveOperations = project.ignoreSpaceStorageReserveOperations === true;
+      }
       if (typeof project.saveTravelState === 'function') {
         Object.assign(state, project.saveTravelState());
       }
@@ -1688,6 +1806,13 @@ class ProjectManager extends EffectableEntity {
           projectState.autoContinuousOperation = false;
         }
         project.loadTravelState(projectState);
+      }
+      if (project.attributes?.canUseSpaceStorage) {
+        project.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[state.spaceStorageResourceMode]
+          ? state.spaceStorageResourceMode
+          : '';
+        project.ignoreSpaceStorageReserveExpansion = state.ignoreSpaceStorageReserveExpansion === true;
+        project.ignoreSpaceStorageReserveOperations = state.ignoreSpaceStorageReserveOperations === true;
       }
       if (Object.prototype.hasOwnProperty.call(state, 'autoStartUncheckOnTravel')) {
         project.autoStartUncheckOnTravel = state.autoStartUncheckOnTravel === true;

@@ -41,7 +41,7 @@ function renderDysonSwarmUI(project, container) {
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="ds-start" class="progress-button"></button></div>
-      <div class="checkbox-container">
+      <div class="checkbox-container dyson-collector-settings-row">
         <input type="checkbox" id="ds-auto">
         <label for="ds-auto">${getDysonSwarmText('ui.projects.autoStart', 'Auto start')}</label>
         <input type="checkbox" id="ds-auto-travel-reset">
@@ -53,6 +53,15 @@ function renderDysonSwarmUI(project, container) {
 
   const autoCheckbox = card.querySelector('#ds-auto');
   const travelResetCheckbox = card.querySelector('#ds-auto-travel-reset');
+  const collectorSettingsRow = card.querySelector('.dyson-collector-settings-row');
+  const advancedSettingsButton = document.createElement('button');
+  advancedSettingsButton.type = 'button';
+  advancedSettingsButton.classList.add('project-advanced-settings-button');
+  advancedSettingsButton.innerHTML = '&#9881;&#xFE0E;';
+  advancedSettingsButton.setAttribute('aria-label', getDysonSwarmText('ui.projects.advancedSettings.button', 'Advanced settings'));
+  advancedSettingsButton.title = getDysonSwarmText('ui.projects.advancedSettings.button', 'Advanced settings');
+  advancedSettingsButton.addEventListener('click', () => openProjectAdvancedSettings(project));
+  collectorSettingsRow.appendChild(advancedSettingsButton);
 
   projectElements[project.name] = {
     ...projectElements[project.name],
@@ -66,6 +75,7 @@ function renderDysonSwarmUI(project, container) {
     autoCheckbox,
     autoStartTravelResetCheckbox: travelResetCheckbox,
     collectorAutoStartTravelResetCheckbox: travelResetCheckbox,
+    collectorAdvancedSettingsButton: advancedSettingsButton,
   };
 
   card.querySelector('#ds-start').addEventListener('click', () => project.startCollector());
@@ -78,8 +88,7 @@ function renderDysonSwarmUI(project, container) {
 
 function updateCollectorCostDisplay(project, costDisplay) {
   const items = [];
-  const attributes = project.attributes || {};
-  const storageProj = attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
+  const storageProj = project.createSpaceStorageAccess('expansions');
 
   for (const category in project.collectorCost) {
     const categoryCost = project.collectorCost[category];
@@ -88,7 +97,7 @@ function updateCollectorCostDisplay(project, costDisplay) {
       const displayName = resourceData.displayName || `${resource.charAt(0).toUpperCase()}${resource.slice(1)}`;
       const required = categoryCost[resource];
       const storageKey = resource === 'water' ? 'liquidWater' : resource;
-      const available = (resourceData.value || 0) + (storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0);
+      const available = getMegaProjectResourceAvailability(storageProj, storageKey, resourceData.value || 0);
       items.push({
         key: `${category}.${resource}`,
         text: `${displayName}: ${formatNumber(required, true)}`,

@@ -78,7 +78,7 @@ function updateOrbitalRingUI(project) {
   
   const maxPrepay = project.getMaxPrepayableRings();
   const cost = project.getScaledCost();
-  const storageProj = project.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+  const storageProj = project.createSpaceStorageAccess('expansions');
   
   let canAfford = true;
   for (const category in cost) {

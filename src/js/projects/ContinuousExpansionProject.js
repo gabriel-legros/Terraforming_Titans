@@ -70,6 +70,12 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 
   createExpansionStorageState(accumulatedChanges = null, options = {}) {
+    if (this.createSpaceStorageAccess) {
+      return this.createSpaceStorageAccess('expansions', {
+        accumulatedChanges,
+        reconcileOnDirectSpend: options.reconcileOnDirectSpend === true,
+      });
+    }
     if (!this.attributes?.canUseSpaceStorage) {
       return null;
     }

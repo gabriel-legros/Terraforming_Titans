@@ -63,7 +63,7 @@ class OrbitalRingProject extends TerraformingDurationProject {
     }
     
     const cost = this.getScaledCost();
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const storageProj = this.createSpaceStorageAccess('expansions');
     for (const category in cost) {
       for (const resource in cost[category]) {
         const required = cost[category][resource];
@@ -131,7 +131,7 @@ class OrbitalRingProject extends TerraformingDurationProject {
     if (maxPrepay <= 0) return false;
     
     const cost = this.getScaledCost();
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const storageProj = this.createSpaceStorageAccess('expansions');
     
     for (const category in cost) {
       for (const resource in cost[category]) {

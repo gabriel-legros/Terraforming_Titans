@@ -872,6 +872,7 @@ function createProjectItem(project) {
     extraSettingsContainer,
     autoStartTravelResetCheckbox: autoStartTravelResetCheckbox,
     autoStartTravelResetLabel: autoStartTravelResetLabel,
+    advancedSettingsButton: null,
     automationSettingsContainer: automationSettingsContainer,
     cardFooter: cardFooter,
     upButton: upButton,
@@ -879,6 +880,17 @@ function createProjectItem(project) {
   };
   if (typeof project.renderAutomationUI === 'function') {
     project.renderAutomationUI(automationSettingsContainer);
+  }
+  if (project.attributes?.canUseSpaceStorage && project.name !== 'dysonSwarmReceiver' && project.name !== 'dysonSphere') {
+    const advancedSettingsButton = document.createElement('button');
+    advancedSettingsButton.type = 'button';
+    advancedSettingsButton.classList.add('project-advanced-settings-button');
+    advancedSettingsButton.innerHTML = '&#9881;&#xFE0E;';
+    advancedSettingsButton.setAttribute('aria-label', getProjectsUIText('ui.projects.advancedSettings.button', 'Advanced settings'));
+    advancedSettingsButton.title = getProjectsUIText('ui.projects.advancedSettings.button', 'Advanced settings');
+    advancedSettingsButton.addEventListener('click', () => openProjectAdvancedSettings(project));
+    automationSettingsContainer.appendChild(advancedSettingsButton);
+    projectElements[project.name].advancedSettingsButton = advancedSettingsButton;
   }
   // Always cache automation items so projects without custom automation UI
   // (e.g., simple one-off projects) still show their auto-start controls.
@@ -1184,6 +1196,121 @@ function updateSustainCostDisplay(project) {
   }
 }
 
+function createProjectAdvancedSettingsWindow(project) {
+  const overlay = document.createElement('div');
+  overlay.classList.add('space-storage-settings-overlay');
+
+  const win = document.createElement('div');
+  win.classList.add('space-storage-settings-window', 'project-advanced-settings-window');
+
+  const header = document.createElement('div');
+  header.classList.add('space-storage-settings-header');
+  const title = document.createElement('div');
+  title.classList.add('space-storage-settings-title');
+  title.textContent = getProjectsUIText('ui.projects.advancedSettings.title', 'Advanced Settings');
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.classList.add('space-storage-settings-close');
+  close.textContent = getProjectsUIText('ui.projects.spaceStorage.close', 'X');
+  header.append(title, close);
+
+  const modeRow = document.createElement('div');
+  modeRow.classList.add('space-storage-settings-row');
+  const modeLabel = document.createElement('label');
+  modeLabel.classList.add('space-storage-settings-label');
+  modeLabel.htmlFor = `${project.name}-space-storage-mode`;
+  modeLabel.textContent = getProjectsUIText('ui.projects.advancedSettings.resourceMode', 'Resource mode:');
+  const modeSelect = document.createElement('select');
+  modeSelect.id = `${project.name}-space-storage-mode`;
+  modeSelect.classList.add('space-storage-settings-select');
+  const globalOption = document.createElement('option');
+  globalOption.value = '';
+  globalOption.textContent = getProjectsUIText('ui.projects.advancedSettings.globalResourceMode', 'Use Space Storage setting');
+  modeSelect.appendChild(globalOption);
+  MEGA_PROJECT_RESOURCE_MODE_OPTIONS.forEach((option) => {
+    const entry = document.createElement('option');
+    entry.value = option.value;
+    entry.textContent = option.label;
+    modeSelect.appendChild(entry);
+  });
+  modeSelect.addEventListener('change', (event) => {
+    project.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[event.target.value]
+      ? event.target.value
+      : '';
+    updateCostDisplay(project);
+    project.updateCostAndGains?.(projectElements[project.name]);
+  });
+  modeRow.append(modeLabel, modeSelect);
+
+  const expansionRow = document.createElement('div');
+  expansionRow.classList.add('space-storage-settings-row');
+  const expansionLabel = document.createElement('label');
+  expansionLabel.classList.add('space-storage-settings-label');
+  expansionLabel.htmlFor = `${project.name}-ignore-reserve-expansion`;
+  expansionLabel.textContent = getProjectsUIText('ui.projects.advancedSettings.ignoreReserveExpansion', 'Ignore reserve on expansion:');
+  const expansionCheckbox = document.createElement('input');
+  expansionCheckbox.type = 'checkbox';
+  expansionCheckbox.id = `${project.name}-ignore-reserve-expansion`;
+  expansionCheckbox.addEventListener('change', (event) => {
+    project.ignoreSpaceStorageReserveExpansion = event.target.checked;
+    updateCostDisplay(project);
+  });
+  expansionRow.append(expansionLabel, expansionCheckbox);
+
+  const operationsRow = document.createElement('div');
+  operationsRow.classList.add('space-storage-settings-row');
+  const operationsLabel = document.createElement('label');
+  operationsLabel.classList.add('space-storage-settings-label');
+  operationsLabel.htmlFor = `${project.name}-ignore-reserve-operations`;
+  operationsLabel.textContent = getProjectsUIText('ui.projects.advancedSettings.ignoreReserveOperations', 'Ignore reserve on operations:');
+  const operationsCheckbox = document.createElement('input');
+  operationsCheckbox.type = 'checkbox';
+  operationsCheckbox.id = `${project.name}-ignore-reserve-operations`;
+  operationsCheckbox.addEventListener('change', (event) => {
+    project.ignoreSpaceStorageReserveOperations = event.target.checked;
+    project.updateCostAndGains?.(projectElements[project.name]);
+  });
+  operationsRow.append(operationsLabel, operationsCheckbox);
+
+  const confirm = document.createElement('button');
+  confirm.type = 'button';
+  confirm.classList.add('space-storage-settings-confirm');
+  confirm.textContent = getProjectsUIText('ui.projects.spaceStorage.confirm', 'Confirm');
+
+  win.append(header, modeRow, expansionRow, operationsRow, confirm);
+  overlay.appendChild(win);
+  document.body.appendChild(overlay);
+
+  const closeWindow = () => overlay.classList.remove('is-visible');
+  close.addEventListener('click', closeWindow);
+  confirm.addEventListener('click', closeWindow);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      closeWindow();
+    }
+  });
+
+  return { overlay, modeSelect, expansionCheckbox, operationsCheckbox };
+}
+
+function openProjectAdvancedSettings(project) {
+  const elements = projectElements[project.name];
+  if (!elements) return;
+  if (!elements.advancedSettingsOverlay || !elements.advancedSettingsOverlay.isConnected) {
+    const advanced = createProjectAdvancedSettingsWindow(project);
+    elements.advancedSettingsOverlay = advanced.overlay;
+    elements.advancedSettingsModeSelect = advanced.modeSelect;
+    elements.advancedSettingsExpansionCheckbox = advanced.expansionCheckbox;
+    elements.advancedSettingsOperationsCheckbox = advanced.operationsCheckbox;
+  }
+  elements.advancedSettingsModeSelect.value = MEGA_PROJECT_RESOURCE_MODE_MAP[project.spaceStorageResourceMode]
+    ? project.spaceStorageResourceMode
+    : '';
+  elements.advancedSettingsExpansionCheckbox.checked = project.ignoreSpaceStorageReserveExpansion === true;
+  elements.advancedSettingsOperationsCheckbox.checked = project.ignoreSpaceStorageReserveOperations === true;
+  elements.advancedSettingsOverlay.classList.add('is-visible');
+}
+
 function updateTotalCostDisplay(project) {
   if (globalThis.GalacticMarketProject && project instanceof globalThis.GalacticMarketProject) {
     const elements = projectElements[project.name] || {};
@@ -1401,6 +1528,22 @@ function updateProjectUI(projectName) {
   // Set the auto-start checkbox state based on the project data
   if (elements.autoStartCheckbox) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
+  }
+  if (elements.advancedSettingsButton) {
+    elements.advancedSettingsButton.style.display = project.attributes?.canUseSpaceStorage ? '' : 'none';
+  }
+  if (elements.advancedSettingsOverlay && elements.advancedSettingsOverlay.classList.contains('is-visible')) {
+    if (elements.advancedSettingsModeSelect) {
+      elements.advancedSettingsModeSelect.value = MEGA_PROJECT_RESOURCE_MODE_MAP[project.spaceStorageResourceMode]
+        ? project.spaceStorageResourceMode
+        : '';
+    }
+    if (elements.advancedSettingsExpansionCheckbox) {
+      elements.advancedSettingsExpansionCheckbox.checked = project.ignoreSpaceStorageReserveExpansion === true;
+    }
+    if (elements.advancedSettingsOperationsCheckbox) {
+      elements.advancedSettingsOperationsCheckbox.checked = project.ignoreSpaceStorageReserveOperations === true;
+    }
   }
   if (elements.extraSettingsCheckbox) {
     elements.extraSettingsCheckbox.checked = project.extraSettingsEnabled === true;

@@ -261,7 +261,7 @@ class ParticleAcceleratorProject extends Project {
   }
 
   calculateMaxAffordableRadius() {
-    const storage = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+    const storage = this.createSpaceStorageAccess('expansions');
     const availableSuperalloys = this.getAvailableMaterialAmount('superalloys', storage);
     const availableSuperconductors = this.getAvailableMaterialAmount('superconductors', storage);
     const superalloyMultiplier = this.getEffectiveCostMultiplier('colony', 'superalloys');

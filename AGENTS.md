@@ -220,6 +220,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Hazardous Machinery growth factors now use biomass-style range entries with severity for invasiveness, oxygen, and temperature; Styx keeps the separate water-based max-coverage cap and applies its machinery decay through those range preferences.
 - Space storage resources are canonical under `resources.spaceStorage` (no parallel runtime usage map), support additional resource types, and keep per-resource cap controls.
 - Space Storage cap modes now include `All Remaining`: after fixed `Amount` and `%` caps are applied, leftover storage is split evenly across resources set to `All Remaining`; if no resource uses `All Remaining`, leftover storage follows `By Weight`.
+- Projects that can pay from Space Storage now show a footer gear for per-project advanced settings: resource payment priority can override the global Space Storage mode, and expansion/operation spending can individually ignore Space Storage strategic reserves.
 - Advanced research `Artificial Ecosystems` (750M) requires `Biostorage`, adds a persisted Space Storage operations toggle, and lets stored biomass grow at `0.5%/s` toward its configured biomass cap by consuming stored water and carbon dioxide with the standard photosynthesis stoichiometry; oxygen output can overflow into the normal clamp.
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.
 - Dyson Swarm/Receiver/Sphere, Lifters, mega/giga projects, and continuous ops gained stronger persistence and UI clarity.

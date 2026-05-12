@@ -863,6 +863,14 @@ setLanguageData({
         spaceOnly: 'Only use space resources for mega+ projects',
         colonyOnly: 'Only use colony resources for mega+ projects',
       },
+      advancedSettings: {
+        button: 'Advanced settings',
+        title: 'Advanced Settings',
+        resourceMode: 'Resource mode:',
+        globalResourceMode: 'Use Space Storage setting',
+        ignoreReserveExpansion: 'Ignore reserve on expansion:',
+        ignoreReserveOperations: 'Ignore reserve on operations:',
+      },
       common: {
         amount: 'Amount',
         max: 'Max',

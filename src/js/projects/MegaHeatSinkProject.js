@@ -383,7 +383,7 @@
       const progress = (deltaTime / duration) * productivity;
       const rate = 1000 / duration;
       const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+      const storageProj = this.createSpaceStorageAccess('consumption');
       for (const category in cost) {
         if (!totals.cost[category]) {
           totals.cost[category] = {};
@@ -428,7 +428,7 @@
       }
 
       const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+      const storageProj = this.createSpaceStorageAccess('consumption', { accumulatedChanges });
       let paidProgress = requestedProgress;
       for (const category in cost) {
         for (const resource in cost[category]) {
@@ -473,7 +473,7 @@
         }
       }
       if (storageProj && typeof updateSpaceStorageUI === 'function') {
-        updateSpaceStorageUI(storageProj);
+        updateSpaceStorageUI(storageProj.storageProject || storageProj);
       }
 
       this.repeatCount += paidProgress;

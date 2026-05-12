@@ -117,7 +117,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     if (headroom <= 0) return false;
     if (!this.isCollectorContinuous() && headroom < 1) return false;
     const collectorCost = this.getCollectorCost();
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const storageProj = this.createSpaceStorageAccess('expansions');
     for (const cat in collectorCost) {
       for (const res in collectorCost[cat]) {
         const required = collectorCost[cat][res];
@@ -131,7 +131,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
   }
 
   deductCollectorResources() {
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const storageProj = this.createSpaceStorageAccess('expansions', { reconcileOnDirectSpend: true });
     const collectorCost = this.getCollectorCost();
     const colonyCost = {};
     for (const cat in collectorCost) {

@@ -46,7 +46,7 @@ function renderDysonSphereUI(project, container) {
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="dsph-start" class="progress-button"></button></div>
-      <div class="checkbox-container">
+      <div class="checkbox-container dyson-collector-settings-row">
         <input type="checkbox" id="dsph-auto">
         <label for="dsph-auto">${getDysonSphereText('ui.projects.autoStart', 'Auto start')}</label>
         <input type="checkbox" id="dsph-auto-travel-reset">
@@ -58,6 +58,15 @@ function renderDysonSphereUI(project, container) {
 
   const autoCheckbox = card.querySelector('#dsph-auto');
   const travelResetCheckbox = card.querySelector('#dsph-auto-travel-reset');
+  const collectorSettingsRow = card.querySelector('.dyson-collector-settings-row');
+  const advancedSettingsButton = document.createElement('button');
+  advancedSettingsButton.type = 'button';
+  advancedSettingsButton.classList.add('project-advanced-settings-button');
+  advancedSettingsButton.innerHTML = '&#9881;&#xFE0E;';
+  advancedSettingsButton.setAttribute('aria-label', getDysonSphereText('ui.projects.advancedSettings.button', 'Advanced settings'));
+  advancedSettingsButton.title = getDysonSphereText('ui.projects.advancedSettings.button', 'Advanced settings');
+  advancedSettingsButton.addEventListener('click', () => openProjectAdvancedSettings(project));
+  collectorSettingsRow.appendChild(advancedSettingsButton);
   const startButton = card.querySelector('#dsph-start');
   const collectorCostLabel = card.querySelector('#dsph-collector-cost-label');
   let collectorCostTooltipContent = null;
@@ -88,6 +97,7 @@ function renderDysonSphereUI(project, container) {
     autoCheckbox,
     autoStartTravelResetCheckbox: travelResetCheckbox,
     collectorAutoStartTravelResetCheckbox: travelResetCheckbox,
+    collectorAdvancedSettingsButton: advancedSettingsButton,
   };
 
   startButton.addEventListener('click', () => {
@@ -110,8 +120,7 @@ function renderDysonSphereUI(project, container) {
 
 function updateCollectorCostDisplay(project, costDisplay) {
   const items = [];
-  const attributes = project.attributes || {};
-  const storageProj = attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
+  const storageProj = project.createSpaceStorageAccess('expansions');
   const collectorCost = typeof project.getCollectorCost === 'function'
     ? project.getCollectorCost()
     : project.collectorCost;
@@ -123,7 +132,7 @@ function updateCollectorCostDisplay(project, costDisplay) {
       const displayName = resourceData.displayName || `${resource.charAt(0).toUpperCase()}${resource.slice(1)}`;
       const required = categoryCost[resource];
       const storageKey = resource === 'water' ? 'liquidWater' : resource;
-      const available = (resourceData.value || 0) + (storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0);
+      const available = getMegaProjectResourceAvailability(storageProj, storageKey, resourceData.value || 0);
       items.push({
         key: `${category}.${resource}`,
         text: `${displayName}: ${formatNumber(required, true)}`,
