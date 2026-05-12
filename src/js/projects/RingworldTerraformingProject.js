@@ -110,13 +110,13 @@ class RingworldTerraformingProject extends Project {
 
   getConstructionMassTons() {
     const storedCost = currentPlanetParameters.specialAttributes.ringConstructionCostTons || 0;
-    if (storedCost > 0) {
+    const storedCostIncludesMetal = currentPlanetParameters.specialAttributes.ringConstructionCostIncludesMetal === true;
+    if (storedCost > 0 && storedCostIncludesMetal) {
       return storedCost;
     }
     const landHa = calculateRingLandHectares(this.getRingOrbitRadiusAU(), this.getRingWidthKm());
-    const radiusEarth = artificialManager.calculateRadiusEarthFromLandHectares(landHa);
-    const cost = artificialManager.calculateCost(radiusEarth);
-    return cost.superalloys || 0;
+    const cost = artificialManager.calculateRingworldCost(landHa, this.getRingWidthKm());
+    return (cost.superalloys || 0) + (cost.metal || 0);
   }
 
   getResourceMassTons(category) {
