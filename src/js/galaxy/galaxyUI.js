@@ -765,8 +765,9 @@ function updateHexStoryRequirement(hex, sector) {
     if (!storyIcon) {
         return;
     }
+    const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
     const requiredWorld = getSectorStoryRequirementWorld(sector);
-    if (!requiredWorld || !sector || isUhfFullControlSector(sector)) {
+    if (hasGalaxyConquest || !requiredWorld || !sector || isUhfFullControlSector(sector)) {
         storyIcon.classList.add('is-hidden');
         storyIcon.removeAttribute('title');
         return;
