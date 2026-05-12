@@ -425,6 +425,7 @@ progressTitan.chapters.push(
     id: "chapter6.0",
     type: "journal",
     chapter: 6,
+    title: "Chapter 6: The first piece of the puzzle",
     narrative: "Mary : 'A... cloaked object?  What?  HOPE I have to let you in on a secret now.  Something I just learned recently myself.  We've had reports of cloaked objects before.  Obviously it's not the same one but... there have been... kidnappings.  For centuries.  On Earth, on Mars and now on Titan.  People just vanishing.  The data points at a cloaked object there too.  We were... never able to catch it.  If it's on Titan... maybe you can come up with something?'",
     prerequisites: ["chapter5.7"],
     objectives: [],
