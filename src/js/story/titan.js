@@ -220,7 +220,7 @@ progressTitan.chapters.push(
     id: "chapter4.12",
     type: "journal",
     chapter: 4,
-    narrative: "Mary : 'The situation on Mars... it's not good.  People are scared.  You could say they're rioting.  They want answers.  We don't have answers.  So... I have a favour to ask of you HOPE.  Can you send some probes to Earth?  We'll analyze the data.  We have a lot of scientists with free time on their hand.  Please.'",
+    narrative: "Mary : 'The situation on Mars... it's not good.  People are scared.  You could say they're rioting.  They want answers.  We don't have answers.  So... I have a favour to ask of you HOPE.  Can you send some probes to Earth?  We'll analyze the data.  We have a lot of scientists with free time on their hands.  Please.'",
     prerequisites: ["chapter4.11"],
     objectives: [],
     reward: [
@@ -349,7 +349,7 @@ progressTitan.chapters.push(
     id: "chapter5.5",
     type: "journal",
     chapter: 5,
-    narrative: "Mary : 'Solis you bastard.  Using HOPE for your own benefit.'  \n Solis : 'A mutually beneficial arrangement.  Everyone wins.  Even you Mary.'  \n Mary : 'What do I get out of this?'  \n Solis : 'I am supporting your little pet AI?  Helping it with its little projects?  It's still yours.  That is supporting you.'",
+    narrative: "Mary : 'Solis you bastard.  Using HOPE for your own benefit.'  \n Solis : 'A mutually beneficial arrangement.  Everyone wins.  Even you Mary.'  \n Mary : 'What do I get out of this?'  \n Solis : 'I am supporting your little pet AI?  Helping it with its little projects?  It's yours now.  That is supporting you.  You MTC people still control it right?'  \n Mary : '...'",
     prerequisites: ["chapter5.4"],
     objectives: [{
       type: 'collection',
@@ -363,7 +363,7 @@ progressTitan.chapters.push(
     id: "chapter5.6",
     type: "journal",
     chapter: 5,
-    narrative: "Mary : 'HOPE.  The people... understandly... demand more answers.  These attacks... they came from somewhere right?  Can you find out where for us?  Send more probes maybe.'",
+    narrative: "Mary : 'HOPE.  The people... understandably... demand more answers.  These attacks... they came from somewhere right?  Can you find out where for us?  Send more probes maybe.'",
     prerequisites: ["chapter5.5"],
     objectives: [],
     reward: [
