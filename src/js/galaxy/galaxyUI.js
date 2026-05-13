@@ -1274,8 +1274,8 @@ function renderSelectedSectorDetails() {
         const baseWorlds = Math.max(0, Math.round(worldCount));
         const rewardDisplay = Math.max(0, Math.round(rewardWorldsForDefense));
         details.management.worldsValue.textContent = rewardDisplay > 0
-            ? `${baseWorlds}+${rewardDisplay}`
-            : String(baseWorlds);
+            ? `${formatNumber(baseWorlds, true, 2)}+${formatNumber(rewardDisplay, true, 2)}`
+            : formatNumber(baseWorlds, true, 2);
         details.management.fleetDefenseValue.textContent = formatDefenseInteger(fleetDefense);
         details.management.totalDefenseValue.textContent = formatNumber(totalDefense, false, 2);
     } else {
