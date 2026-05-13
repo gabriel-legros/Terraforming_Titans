@@ -228,13 +228,11 @@ function updateLifeAutomationUI() {
   const stepsHasFocus = lifeDesignStepsContainer.contains(document.activeElement) &&
     (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT');
   if (!stepsHasFocus) {
-    const spendPreview = automation.getDesignStepSpends(activePreset);
     const stepsSignature = JSON.stringify({
       presetId: activePreset.id,
       designEnabled: activePreset.designEnabled !== false,
       maxSteps: automation.maxSteps,
       lifeDesignerEnabled: !!lifeDesigner.enabled,
-      spendPreview,
       designSteps: activePreset.designSteps.map(step => ({
         id: step.id,
         mode: step.mode,
@@ -255,9 +253,8 @@ function updateLifeAutomationUI() {
       renderLifeAutomationSteps(automation, activePreset, lifeDesignStepsContainer);
       lifeDesignStepsContainer._renderSignature = stepsSignature;
     }
-  } else {
-    updateLifeAutomationSpendPreview(automation, activePreset, lifeDesignStepsContainer);
   }
+  updateLifeAutomationSpendPreview(automation, activePreset, lifeDesignStepsContainer);
 
   lifeAddStepButton.disabled = activePreset.designSteps.length >= automation.maxSteps;
   lifeAddStepButton.style.display = '';
