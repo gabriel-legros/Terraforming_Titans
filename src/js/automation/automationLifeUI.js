@@ -646,10 +646,14 @@ function renderLifeAutomationSteps(automation, preset, container) {
         fixedCapOpt.value = 'fixed';
         fixedCapOpt.textContent = getAutomationCardText('lifeModeFixedPoints', {}, 'Fixed points');
         capMode.appendChild(fixedCapOpt);
+        const uncappedCapOpt = document.createElement('option');
+        uncappedCapOpt.value = 'uncapped';
+        uncappedCapOpt.textContent = getAutomationCardText('lifeModeUncapped', {}, 'Uncapped');
+        capMode.appendChild(uncappedCapOpt);
         if (attributeName !== 'optimalGrowthTemperature') {
           const maxCapOpt = document.createElement('option');
           maxCapOpt.value = 'max';
-          maxCapOpt.textContent = getAutomationCardText('lifeModeMaxOut', {}, 'Max out');
+          maxCapOpt.textContent = getAutomationCardText('lifeModeMaxOut', {}, 'Max');
           capMode.appendChild(maxCapOpt);
           if (attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance' || attributeName === 'radiationTolerance') {
             const neededCapOpt = document.createElement('option');

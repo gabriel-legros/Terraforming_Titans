@@ -61,6 +61,9 @@ class LifeAutomation {
   }
 
   normalizeEntryCapMode(attributeName, capMode) {
+    if (capMode === 'uncapped') {
+      return 'uncapped';
+    }
     if (attributeName === 'optimalGrowthTemperature') {
       return 'fixed';
     }
@@ -638,6 +641,9 @@ class LifeAutomation {
     const maxUpgrades = attribute.maxUpgrades;
     const maximumSpendValue = attribute.getMaximumSpendValue();
     const capMode = this.normalizeEntryCapMode(attributeName, entry.capMode);
+    if (capMode === 'uncapped') {
+      return lifeManager.isBooleanFlagSet('quantumBiology') ? maximumSpendValue : Math.min(maxUpgrades, maximumSpendValue);
+    }
     if (capMode === 'max') {
       return Math.min(maxUpgrades, maximumSpendValue);
     }
