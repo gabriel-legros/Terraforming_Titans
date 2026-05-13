@@ -437,6 +437,13 @@
         }
       });
 
+      // Save loading restores projects before all space, galaxy, and research
+      // effects are available. Do not permanently trim cylinder-backed
+      // assignments against that incomplete capacity snapshot.
+      if (globalGameIsLoadingFromSave) {
+        return;
+      }
+
       let usedManual = 0n;
       keys.forEach((key) => {
         if (!this.autoAssignFlags[key]) {

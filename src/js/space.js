@@ -1816,8 +1816,11 @@ class SpaceManager extends EffectableEntity {
     }
 
     getSpaceSliderRuntimeProductivity(sliderId) {
-        const productivity = Number(this.spaceSliderRuntime?.[sliderId]?.productivity);
-        if (!Number.isFinite(productivity)) {
+        const runtime = this.spaceSliderRuntime && this.spaceSliderRuntime[sliderId];
+        if (!runtime || !Object.prototype.hasOwnProperty.call(runtime, 'productivity')) {
+            return this.getSpaceSliderTick(sliderId) > 0 ? 1 : 0;
+        }
+        const productivity = Number(runtime.productivity);        if (!Number.isFinite(productivity)) {
             return 0;
         }
         return Math.max(0, Math.min(1, productivity));

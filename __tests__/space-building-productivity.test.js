@@ -500,6 +500,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('calculateSurfaceAreaHectaresFromRadius', () => 0, originalGlobals);
   setGlobal('getDynamicWorldPlanetaryMassAvailableTons', () => 0, originalGlobals);
   setGlobal('hasDynamicMassEnabled', () => false, originalGlobals);
+  setGlobal('globalGameIsLoadingFromSave', false, originalGlobals);
 
   const projectManager = {
     projects: {},
