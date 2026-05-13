@@ -249,6 +249,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Advanced research `Cylinders-HOPE Collaboration Agreement` (300M) unlocks the first `Space Sliders` section under Space -> Story (shown below Statistics when any space slider is unlocked). Its `Cylinders-HOPE Collaboration` slider (`0-10`) consumes `0` at tick `0`, then `1Q * 10^(tick-1)` space energy per O'Neill cylinder per second at ticks `1..10`, and applies two productivity-scaled bonuses based on space-energy availability: extra Manufacturing World capacity of `1T * cylinders * (tick/10)` and extra Warp Gate Network growth per fully controlled sector of `(cylinders / fully controlled sectors) * tick`.
 - Galactic Market uses fixed 1x estimates for cost/gain (ignores productivity).
 - Galactic Market runtime trades now execute in the post-project end-of-tick pass (after regular project cost/gain application, alongside other post-project ship operations), so sell proceeds can use same-tick late resource changes before buy scaling.
+- Galactic Market resource tooltips keep ideal consumption from selected trades, but replace market production with actual post-trade output after resource and funding limits are applied.
 - Projects can set `attributes.ignoreDurationModifiers: true` to lock runtime to base duration and ignore all project duration modifiers.
 
 ### Automation and UI

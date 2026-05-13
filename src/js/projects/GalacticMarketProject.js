@@ -915,6 +915,42 @@ class GalacticMarketProject extends Project {
     return totals;
   }
 
+  applyActualProductionRateDisplay(actualProductionRates) {
+    const touchedResources = {};
+
+    this.buySelections.forEach(({ category, resource }) => {
+      if (this.isSelectionResourceUnlocked(category, resource)) {
+        if (!touchedResources[category]) touchedResources[category] = {};
+        touchedResources[category][resource] = true;
+      }
+    });
+    touchedResources.colony = touchedResources.colony || {};
+    touchedResources.colony.funding = true;
+
+    for (const category in actualProductionRates) {
+      for (const resource in actualProductionRates[category]) {
+        if (!touchedResources[category]) touchedResources[category] = {};
+        touchedResources[category][resource] = true;
+      }
+    }
+
+    for (const category in touchedResources) {
+      for (const resource in touchedResources[category]) {
+        const resourceObject = resources[category][resource];
+        const rate = actualProductionRates[category] ? actualProductionRates[category][resource] || 0 : 0;
+        if (!resourceObject.productionRateByType.project) {
+          resourceObject.productionRateByType.project = {};
+        }
+        if (rate > 0) {
+          resourceObject.productionRateByType.project['Galactic Market'] = rate;
+        } else {
+          delete resourceObject.productionRateByType.project['Galactic Market'];
+        }
+        resourceObject.recalculateTotalRates();
+      }
+    }
+  }
+
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (accumulatedChanges) {
       this._deferredTradeTickDelta = deltaTime;
@@ -939,6 +975,7 @@ class GalacticMarketProject extends Project {
     const effectiveProductivity = 1;
     const tradeScale = this.getKesslerTradeScale();
     const sellTransactions = [];
+    const actualProductionRates = {};
 
     this.sellSelections.forEach(({ category, resource, quantity }) => {
       if (!this.isSelectionResourceUnlocked(category, resource)) {
@@ -971,6 +1008,7 @@ class GalacticMarketProject extends Project {
     });
 
     const totalSellRevenue = totalSellRevenuePerSecond * seconds * effectiveProductivity;
+    actualProductionRates.colony = { funding: totalSellRevenuePerSecond * effectiveProductivity };
 
     sellTransactions.forEach((transaction) => {
       const amount = transaction.quantity * seconds * effectiveProductivity;
@@ -1055,10 +1093,15 @@ class GalacticMarketProject extends Project {
       } else {
         resources[transaction.category][transaction.resource].increase(amount);
       }
+      if (!actualProductionRates[transaction.category]) actualProductionRates[transaction.category] = {};
+      actualProductionRates[transaction.category][transaction.resource] =
+        (actualProductionRates[transaction.category][transaction.resource] || 0) + transaction.quantity * effectiveProductivity;
       if (transaction.resource === 'spaceships') {
         this.applySpaceshipPurchase(amount);
       }
     });
+
+    this.applyActualProductionRateDisplay(actualProductionRates);
 
     if (manualRunActive) {
       this.manualRunRemainingTime = Math.max(0, this.manualRunRemainingTime - effectiveDeltaTime);
