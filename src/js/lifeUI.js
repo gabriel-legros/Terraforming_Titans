@@ -213,7 +213,7 @@ function isLifeShopCategoryUnlocked(category) {
 
 function getConvertedDisplay(attributeName, attribute) {
   if (tempAttributes.includes(attributeName)) {
-    const requirements = getActiveLifeDesignRequirementsForUI();
+      const requirements = getActiveLifeDesignRequirementsForUI();
     const effectiveValue = attribute.getEffectiveValue();
     let kelvin = 0;
     switch (attributeName) {
@@ -237,6 +237,12 @@ function getConvertedDisplay(attributeName, attribute) {
 }
 
 function getLifeAttributeMaxDisplay(attribute) {
+  if (attribute.name === 'minTemperatureTolerance') {
+    const maximumSpendValue = attribute.getMaximumSpendValue();
+    return Number.isFinite(maximumSpendValue)
+      ? formatNumber(Math.floor(maximumSpendValue), true)
+      : `${attribute.maxUpgrades}+`;
+  }
   if (isLifeFlagActive('quantumBiology')) {
     return `${attribute.maxUpgrades}+`;
   }
@@ -703,6 +709,7 @@ function initializeLifeTerraformingDesignerUI() {
           const tentativeValueDisplay = ac.tentativeDisplay || document.querySelector(`#${attributeName}-tentative-value .life-tentative-display`);
           const currentTentativeValue = tentativeValueDisplay ? parseInt(tentativeValueDisplay.textContent, 10) : 0;
           const maxUpgrades = lifeDesigner.tentativeDesign[attributeName].maxUpgrades;
+          const maximumSpendValue = lifeDesigner.tentativeDesign[attributeName].getMaximumSpendValue();
           const quantumBiology = isLifeFlagActive('quantumBiology');
 
           const spendablePoints = getSpendableLifeDesignPoints();
@@ -728,7 +735,7 @@ function initializeLifeTerraformingDesignerUI() {
                   if (attributeName === 'optimalGrowthTemperature') {
                       newValue = quantumBiology ? available : Math.min(maxUpgrades, available);
                   } else {
-                      newValue = remainingPoints;
+                      newValue = Math.min(maximumSpendValue, remainingPoints);
                   }
               } else {
                   newValue = 0;
@@ -745,7 +752,8 @@ function initializeLifeTerraformingDesignerUI() {
               newValue = Math.sign(newValue) * allowed;
           } else {
               // Clamp the value between 0 and the allowed maximum and available points
-              newValue = quantumBiology ? Math.max(0, newValue) : Math.max(0, Math.min(maxUpgrades, newValue));
+              const upperLimit = quantumBiology ? maximumSpendValue : Math.min(maxUpgrades, maximumSpendValue);
+              newValue = Math.max(0, Math.min(upperLimit, newValue));
               newValue = Math.min(newValue, remainingPoints);
           }
 

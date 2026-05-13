@@ -197,6 +197,18 @@ function calculateQuantumLifeAttributeValue(value, maxUpgrades) {
   return sign * max * (2 - max / magnitude);
 }
 
+function calculateRawLifeAttributeValueForEffectiveValue(effectiveValue, maxUpgrades) {
+  const effective = Math.max(0, Number(effectiveValue) || 0);
+  const max = Number(maxUpgrades) || 0;
+  if (max <= 0 || effective <= max) {
+    return effective;
+  }
+  if (effective >= max * 2) {
+    return Infinity;
+  }
+  return (max * max) / (2 * max - effective);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   ({ getEcumenopolisLandFraction, getLifeLandMultiplier } = require('./advanced-research/ecumenopolis.js'));
 }
@@ -212,6 +224,22 @@ class LifeAttribute {
 
   getEffectiveValue() {
     return calculateQuantumLifeAttributeValue(this.value, this.maxUpgrades);
+  }
+
+  getMaximumSpendValue() {
+    if (this.name !== 'minTemperatureTolerance') {
+      return isQuantumBiologyUnlocked() ? Infinity : this.maxUpgrades;
+    }
+    const requirements = getActiveLifeDesignRequirements();
+    const survivalTemperatureRangeK = requirements.survivalTemperatureRangeK
+      ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.survivalTemperatureRangeK;
+    const zeroKelvinLimit = calculateRawLifeAttributeValueForEffectiveValue(
+      survivalTemperatureRangeK.min,
+      this.maxUpgrades
+    );
+    return isQuantumBiologyUnlocked()
+      ? zeroKelvinLimit
+      : Math.min(this.maxUpgrades, zeroKelvinLimit);
   }
 
   getConvertedValue() {

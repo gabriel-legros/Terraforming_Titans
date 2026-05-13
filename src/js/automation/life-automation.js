@@ -112,7 +112,9 @@ class LifeAutomation {
     const attribute = LIFE_AUTOMATION_ATTRIBUTES.includes(entry.attribute)
       ? entry.attribute
       : LIFE_AUTOMATION_ATTRIBUTES[0];
-    const maxUpgrades = lifeDesigner.currentDesign[attribute].maxUpgrades;
+    const attributeState = lifeDesigner.currentDesign[attribute];
+    const maxUpgrades = attributeState.maxUpgrades;
+    const maximumSpendValue = attributeState.getMaximumSpendValue();
     const quantumBiology = lifeManager.isBooleanFlagSet('quantumBiology');
     const capMode = this.normalizeEntryCapMode(attribute, entry.capMode || 'fixed');
     const parsedCap = entry.cap === null || entry.cap === undefined || entry.cap === ''
@@ -121,10 +123,10 @@ class LifeAutomation {
     let cap = null;
     if (parsedCap !== null) {
       cap = quantumBiology
-        ? (attribute === 'optimalGrowthTemperature' ? parsedCap : Math.max(0, parsedCap))
+        ? (attribute === 'optimalGrowthTemperature' ? parsedCap : Math.min(maximumSpendValue, Math.max(0, parsedCap)))
         : attribute === 'optimalGrowthTemperature'
         ? Math.max(-maxUpgrades, Math.min(maxUpgrades, parsedCap))
-        : Math.max(0, Math.min(maxUpgrades, parsedCap));
+        : Math.max(0, Math.min(maxUpgrades, maximumSpendValue, parsedCap));
     }
     const weight = Number(entry.weight);
     return {
@@ -466,14 +468,16 @@ class LifeAutomation {
       if (updates.cap === null || updates.cap === undefined || updates.cap === '') {
         entry.cap = null;
       } else {
-        const maxUpgrades = lifeDesigner.currentDesign[entry.attribute].maxUpgrades;
+        const attributeState = lifeDesigner.currentDesign[entry.attribute];
+        const maxUpgrades = attributeState.maxUpgrades;
+        const maximumSpendValue = attributeState.getMaximumSpendValue();
         const quantumBiology = lifeManager.isBooleanFlagSet('quantumBiology');
         const parsed = Math.floor(Number(updates.cap) || 0);
         entry.cap = quantumBiology
-          ? (entry.attribute === 'optimalGrowthTemperature' ? parsed : Math.max(0, parsed))
+          ? (entry.attribute === 'optimalGrowthTemperature' ? parsed : Math.min(maximumSpendValue, Math.max(0, parsed)))
           : entry.attribute === 'optimalGrowthTemperature'
           ? Math.max(-maxUpgrades, Math.min(maxUpgrades, parsed))
-          : Math.max(0, Math.min(maxUpgrades, parsed));
+          : Math.max(0, Math.min(maxUpgrades, maximumSpendValue, parsed));
       }
     }
     if (Object.prototype.hasOwnProperty.call(updates, 'capMode')) {
@@ -546,11 +550,12 @@ class LifeAutomation {
       if (isMetabolism && !hasValue && steps.length === 0) {
         continue;
       }
+      const maximumSpendValue = attribute.getMaximumSpendValue();
       const amount = lifeManager.isBooleanFlagSet('quantumBiology')
-        ? (isOptimal ? value : Math.max(0, value))
+        ? (isOptimal ? value : Math.min(maximumSpendValue, Math.max(0, value)))
         : isOptimal
         ? Math.max(-maxUpgrades, Math.min(maxUpgrades, value))
-        : Math.max(0, Math.min(maxUpgrades, value));
+        : Math.max(0, Math.min(maxUpgrades, maximumSpendValue, value));
       steps.push({
         id: Date.now() + Math.floor(Math.random() * 1000) + index,
         limit: isMetabolism ? null : Math.abs(amount),
@@ -631,30 +636,31 @@ class LifeAutomation {
     const attributeName = entry.attribute;
     const attribute = candidate[attributeName];
     const maxUpgrades = attribute.maxUpgrades;
+    const maximumSpendValue = attribute.getMaximumSpendValue();
     const capMode = this.normalizeEntryCapMode(attributeName, entry.capMode);
     if (capMode === 'max') {
-      return maxUpgrades;
+      return Math.min(maxUpgrades, maximumSpendValue);
     }
     if (capMode === 'needed' && this.isTemperatureToleranceAttribute(attributeName)) {
       const zoneNames = this.getTemperatureZoneNames(entry);
-      return Math.min(maxUpgrades, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
+      return Math.min(maxUpgrades, maximumSpendValue, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
     }
     if (capMode === 'needed' && this.isRadiationToleranceAttribute(attributeName)) {
       return Math.min(maxUpgrades, this.getRadiationToleranceTarget());
     }
     if (entry.cap === null || entry.cap === undefined) {
-      return lifeManager.isBooleanFlagSet('quantumBiology') ? Infinity : maxUpgrades;
+      return lifeManager.isBooleanFlagSet('quantumBiology') ? maximumSpendValue : Math.min(maxUpgrades, maximumSpendValue);
     }
     if (lifeManager.isBooleanFlagSet('quantumBiology')) {
       if (attributeName === 'optimalGrowthTemperature') {
         return Math.abs(Math.floor(Number(entry.cap) || 0));
       }
-      return Math.max(0, Math.floor(Number(entry.cap) || 0));
+      return Math.min(maximumSpendValue, Math.max(0, Math.floor(Number(entry.cap) || 0)));
     }
     if (attributeName === 'optimalGrowthTemperature') {
       return Math.min(maxUpgrades, Math.abs(Math.floor(Number(entry.cap) || 0)));
     }
-    return Math.min(maxUpgrades, Math.max(0, Math.floor(Number(entry.cap) || 0)));
+    return Math.min(maxUpgrades, maximumSpendValue, Math.max(0, Math.floor(Number(entry.cap) || 0)));
   }
 
   getEntryRemainingCapacity(entry, candidate) {
