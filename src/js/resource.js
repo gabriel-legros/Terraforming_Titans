@@ -1415,6 +1415,23 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   debug_consumption = localConsumption;
 }
 
+function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
+  for (const [, data] of entries) {
+    const { project } = data;
+    const isContinuousAsBuilding = project.attributes?.continuousAsBuilding && project.isContinuous();
+    const productivity = isContinuousAsBuilding ? project.continuousProductivity : 1;
+    const shouldEstimate =
+      project.autoStart !== false ||
+      isProjectAutoContinuousEnabled(project);
+    if (!shouldEstimate) {
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
+      continue;
+    }
+    project.estimateCostAndGain(deltaTime, true, productivity, accumulatedChanges);
+    project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
+  }
+}
+
 function produceResources(deltaTime, buildings) {
   if (typeof spaceManager !== 'undefined') {
     spaceManager.beginTerraformedWorldCountCache?.();
@@ -1424,6 +1441,9 @@ function produceResources(deltaTime, buildings) {
   let projectProductivityMap = {};
   let spaceEnergyProducerOperations = [];
   let otherSpaceBuildingOperations = [];
+  let standardContinuousProjectEntries = [];
+  let standardRegularProjectEntries = [];
+  let deprioritizedProjectEntries = [];
   const externalProductivityOperations = getExternalProductivityOperations();
 
   terraforming?.refreshDynamicWorldGeometry?.(currentPlanetParameters);
@@ -1548,6 +1568,9 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  const galacticMarketProject = projectManager?.projects?.galactic_market;
+  const spaceStorageProject = projectManager?.projects?.spaceStorage;
+
   //Productivity has now been calculated and applied
 
   //Reset production and consumption rates for all resources because we want to display actuals
@@ -1615,38 +1638,31 @@ function produceResources(deltaTime, buildings) {
 
     applyExternalProductivityOperations(externalProductivityOperations, deltaTime, accumulatedChanges);
 
+    standardContinuousProjectEntries = [];
+    standardRegularProjectEntries = [];
+    deprioritizedProjectEntries = [];
     for (const [, data] of projectEntries) {
       const { project } = data;
-      if (!project.isContinuous() || !project.attributes?.continuousAsBuilding) {
-        continue;
+      if (project.attributes?.deprioritized) {
+        deprioritizedProjectEntries.push([project.name, data]);
+      } else if (project.attributes?.continuousAsBuilding && project.isContinuous()) {
+        standardContinuousProjectEntries.push([project.name, data]);
+      } else {
+        standardRegularProjectEntries.push([project.name, data]);
       }
-      const productivity = project.continuousProductivity;
-      const shouldEstimateContinuous =
-        project.autoStart !== false ||
-        isProjectAutoContinuousEnabled(project);
-      if (!shouldEstimateContinuous) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
-        continue;
-      }
-      project.estimateCostAndGain(deltaTime, true, productivity, accumulatedChanges);
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
     }
-    for (const [, data] of projectEntries) {
-      const { project } = data;
-      if (project.attributes?.continuousAsBuilding && project.isContinuous()) {
-        continue;
-      }
-//      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
-      const shouldEstimate =
-        project.autoStart !== false ||
-        isProjectAutoContinuousEnabled(project);
-      if (!shouldEstimate) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges, 1, accumulatedSpecialChanges);
-        continue;
-      }
-      project.estimateCostAndGain(deltaTime, true, 1, accumulatedChanges);
-      project.applyCostAndGain(deltaTime, accumulatedChanges, 1, accumulatedSpecialChanges);
-    }
+    applyProjectResourceEntries(
+      standardContinuousProjectEntries,
+      deltaTime,
+      accumulatedChanges,
+      accumulatedSpecialChanges
+    );
+    applyProjectResourceEntries(
+      standardRegularProjectEntries,
+      deltaTime,
+      accumulatedChanges,
+      accumulatedSpecialChanges
+    );
   }
 
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.produceResources === 'function') {
@@ -1664,6 +1680,20 @@ function produceResources(deltaTime, buildings) {
     }
     fundingModule.update(deltaTime); // Update funding module state if needed
   }
+
+  if (spaceStorageProject?.applyPostProjectShipOperation) {
+    spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
+  }
+  if (galacticMarketProject?.applyPostProjectTrade) {
+    galacticMarketProject.applyPostProjectTrade(deltaTime, accumulatedChanges);
+  }
+
+  applyProjectResourceEntries(
+    deprioritizedProjectEntries,
+    deltaTime,
+    accumulatedChanges,
+    accumulatedSpecialChanges
+  );
 
   // Call terraforming.updateResources AFTER accumulating building/funding changes
   // but BEFORE applying accumulatedChanges to resource values.
@@ -1700,15 +1730,6 @@ function produceResources(deltaTime, buildings) {
 
   if (produceAntimatter) {
     produceAntimatter(deltaTime, resources, accumulatedChanges);
-  }
-
-  const spaceStorageProject = projectManager?.projects?.spaceStorage;
-  if (spaceStorageProject?.applyPostProjectShipOperation) {
-    spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
-  }
-  const galacticMarketProject = projectManager?.projects?.galactic_market;
-  if (galacticMarketProject?.applyPostProjectTrade) {
-    galacticMarketProject.applyPostProjectTrade(deltaTime, accumulatedChanges);
   }
 
   if (terraforming) {

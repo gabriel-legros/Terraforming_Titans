@@ -184,6 +184,7 @@ const projectParameters = {
     repeatable: false,
     unlocked: false,
     attributes: {
+      deprioritized: true,
       energyRequired: 1e21,
       shipEnergyMultiplier: 0.1,
       power: 0,
@@ -679,6 +680,7 @@ const projectParameters = {
     repeatable: false,
     unlocked: false,
     attributes: {
+      deprioritized: true,
       disableWhenHazard: ['kessler']
     }
   },
