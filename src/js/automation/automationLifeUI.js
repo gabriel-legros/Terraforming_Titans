@@ -237,10 +237,16 @@ function updateLifeAutomationUI() {
       stepSpends,
       designSteps: activePreset.designSteps.map(step => ({
         id: step.id,
-        attribute: step.attribute,
-        amount: step.amount,
         mode: step.mode,
-        zones: step.zones
+        limit: step.limit,
+        entries: step.entries.map(entry => ({
+          id: entry.id,
+          attribute: entry.attribute,
+          weight: entry.weight,
+          cap: entry.cap,
+          capMode: entry.capMode,
+          zones: entry.zones
+        }))
       }))
     });
     if (lifeDesignStepsContainer._renderSignature !== stepsSignature) {
@@ -397,8 +403,12 @@ function normalizeLifeAutomationStepAttributes(automation, preset) {
   const fallback = attributeOptions[0].value;
   for (let index = 0; index < preset.designSteps.length; index += 1) {
     const step = preset.designSteps[index];
-    if (!allowed.has(step.attribute)) {
-      automation.updateDesignStep(preset.id, step.id, { attribute: fallback });
+    const entries = Array.isArray(step.entries) ? step.entries : [];
+    for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+      const entry = entries[entryIndex];
+      if (!allowed.has(entry.attribute)) {
+        automation.updateDesignEntry(preset.id, step.id, entry.id, { attribute: fallback });
+      }
     }
   }
 }
@@ -487,9 +497,14 @@ function renderLifeAutomationSteps(automation, preset, container) {
     return;
   }
   const stepSpends = automation.getDesignStepSpends(preset);
+  const zoneOptions = [
+    { key: 'tropical', label: getAutomationCardText('lifeZoneTropical', {}, 'Tropical') },
+    { key: 'temperate', label: getAutomationCardText('lifeZoneTemperate', {}, 'Temperate') },
+    { key: 'polar', label: getAutomationCardText('lifeZonePolar', {}, 'Polar') }
+  ];
+
   for (let index = 0; index < preset.designSteps.length; index += 1) {
     const step = preset.designSteps[index];
-    const isLast = index === preset.designSteps.length - 1;
     const stepCard = document.createElement('div');
     stepCard.classList.add('automation-step');
 
@@ -502,25 +517,63 @@ function renderLifeAutomationSteps(automation, preset, container) {
     title.textContent = getAutomationCardText('stepWithIndex', { index: index + 1 }, `Step ${index + 1}`);
     const subtitle = document.createElement('span');
     subtitle.classList.add('automation-step-subtitle');
-    const updateSubtitle = (isTempTolerance, isRadiationTolerance) => {
-      subtitle.textContent = step.mode === 'remaining' && isLast
-        ? getAutomationCardText('lifeStepSubtitleRemaining', {}, 'Spend all remaining points')
-        : step.mode === 'max'
-          ? getAutomationCardText('lifeStepSubtitleMax', {}, 'Max out attribute')
-          : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
-            ? (isTempTolerance
-              ? getAutomationCardText('lifeStepSubtitleNeededZones', {}, 'As needed for selected zones')
-              : getAutomationCardText('lifeStepSubtitleNeededRadiation', {}, 'As needed for radiation dose'))
-            : getAutomationCardText('lifeStepSubtitleFixed', {}, 'Spend fixed points');
-    };
-    let isTempTolerance = step.attribute === 'minTemperatureTolerance' || step.attribute === 'maxTemperatureTolerance';
-    let isRadiationTolerance = step.attribute === 'radiationTolerance';
-    updateSubtitle(isTempTolerance, isRadiationTolerance);
+    if (step.mode === 'cappedMax') {
+      subtitle.textContent = getAutomationCardText('lifeStepSubtitleCappedMax', {}, 'Distribute points until the highest substep cap');
+    } else {
+      const limitText = Number(step.limit || 0).toLocaleString();
+      subtitle.textContent = getAutomationCardText('lifeStepSubtitleAssignUpTo', { count: limitText }, `Spend up to ${limitText} points`);
+    }
     heading.append(title, subtitle);
     header.appendChild(heading);
 
     const controlWrap = document.createElement('div');
     controlWrap.classList.add('automation-step-controls');
+    const limitRow = document.createElement('div');
+    limitRow.classList.add('automation-limit-row');
+    const limitInfo = document.createElement('span');
+    limitInfo.className = 'info-tooltip-icon';
+    limitInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      limitInfo,
+      getAutomationCardText('lifeStepLimitTooltip', {}, 'Step cap:\n- Spend Amount distributes up to the entered life design points by substep weight.\n- Capped by highest max distributes by weight until the highest finite substep cap is reached.\n\nSubstep caps:\n- Fixed uses the entered cap. Blank means uncapped.\n- Max uses the attribute max.\n- As needed is available for temperature tolerance and radiation tolerance.')
+    );
+    const limitMode = document.createElement('select');
+    const fixedStepOpt = document.createElement('option');
+    fixedStepOpt.value = 'fixed';
+    fixedStepOpt.textContent = getAutomationCardText('lifeSpendAmount', {}, 'Spend Amount');
+    const cappedStepOpt = document.createElement('option');
+    cappedStepOpt.value = 'cappedMax';
+    cappedStepOpt.textContent = getAutomationCardText('shipCappedByLargestMax', {}, 'Capped by largest max');
+    limitMode.append(fixedStepOpt, cappedStepOpt);
+    limitMode.value = step.mode === 'cappedMax' ? 'cappedMax' : 'fixed';
+    const limitInput = document.createElement('input');
+    limitInput.type = 'text';
+    limitInput.min = '0';
+    limitInput.placeholder = getAutomationCardText('lifeAmountPlaceholder', {}, 'Points');
+    limitInput.value = step.mode === 'cappedMax' ? '' : (step.limit > 0 ? formatNumber(step.limit, true, 3) : '');
+    limitInput.disabled = step.mode === 'cappedMax';
+    limitMode.addEventListener('change', (event) => {
+      const mode = event.target.value;
+      automation.updateDesignStep(preset.id, step.id, { mode });
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    wireStringNumberInput(limitInput, {
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+      },
+      formatValue: (value) => {
+        return value > 0 ? formatNumber(value, true, 3) : '';
+      },
+      onValue: (parsed) => {
+        automation.updateDesignStep(preset.id, step.id, { limit: parsed });
+        queueAutomationUIRefresh();
+      }
+    });
+    limitRow.append(limitInfo, limitMode, limitInput);
+    controlWrap.appendChild(limitRow);
+
     const orderWrap = document.createElement('div');
     orderWrap.classList.add('automation-step-order');
     const canInsert = preset.designSteps.length < automation.maxSteps;
@@ -562,212 +615,194 @@ function renderLifeAutomationSteps(automation, preset, container) {
     });
     orderWrap.append(insertAbove, moveUp, moveDown, insertBelow);
     controlWrap.appendChild(orderWrap);
-    const removeButton = document.createElement('button');
-    removeButton.textContent = '✕';
-    removeButton.title = getAutomationCardText('removeStep', {}, 'Remove step');
-    removeButton.addEventListener('click', () => {
+    const removeStep = document.createElement('button');
+    removeStep.textContent = '✕';
+    removeStep.title = getAutomationCardText('removeStep', {}, 'Remove step');
+    removeStep.addEventListener('click', () => {
       automation.removeDesignStep(preset.id, step.id);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
-    controlWrap.appendChild(removeButton);
+    controlWrap.appendChild(removeStep);
     header.appendChild(controlWrap);
     stepCard.appendChild(header);
 
-    const row = document.createElement('div');
-    row.classList.add('life-automation-step-row');
+    const entriesContainer = document.createElement('div');
+    entriesContainer.classList.add('automation-step-entries');
+    for (let entryIndex = 0; entryIndex < step.entries.length; entryIndex += 1) {
+      const entry = step.entries[entryIndex];
+      const row = document.createElement('div');
+      row.classList.add('automation-entry', 'life-automation-entry');
+      let capMode = null;
+      let capInput = null;
+      let zoneRow = null;
 
-    const attributeSelect = document.createElement('select');
-    attributeOptions.forEach(optionData => {
-      const option = document.createElement('option');
-      option.value = optionData.value;
-      option.textContent = optionData.label;
-      if (optionData.value === step.attribute) {
-        option.selected = true;
-      }
-      attributeSelect.appendChild(option);
-    });
-    attributeSelect.addEventListener('change', (event) => {
-      const attributeName = event.target.value;
-      const isTempToleranceAttribute = attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance';
-      const isRadiationToleranceAttribute = attributeName === 'radiationTolerance';
-      const mode = (!isTempToleranceAttribute && !isRadiationToleranceAttribute && step.mode === 'needed') ? 'fixed' : step.mode;
-      automation.updateDesignStep(preset.id, step.id, { attribute: attributeName, mode });
-      isTempTolerance = isTempToleranceAttribute;
-      isRadiationTolerance = isRadiationToleranceAttribute;
-      updateSubtitle(isTempTolerance, isRadiationTolerance);
-      const attribute = lifeDesigner.currentDesign[attributeName];
-      maxUpgrades = attribute.maxUpgrades;
-      isOptimal = attributeName === 'optimalGrowthTemperature';
-      amountInput.min = isOptimal ? `-${maxUpgrades}` : '0';
-      amountInput.max = `${maxUpgrades}`;
-      amountInput.value = step.amount;
-      minButton.style.display = isOptimal ? '' : 'none';
-      if (isTempTolerance || isRadiationTolerance) {
-        if (neededOpt.parentElement !== modeSelect) {
-          modeSelect.insertBefore(neededOpt, remainingOpt);
+      const rebuildCapModeOptions = (attributeName) => {
+        const currentMode = entry.capMode || 'fixed';
+        capMode.textContent = '';
+        const fixedCapOpt = document.createElement('option');
+        fixedCapOpt.value = 'fixed';
+        fixedCapOpt.textContent = getAutomationCardText('lifeModeFixedPoints', {}, 'Fixed points');
+        capMode.appendChild(fixedCapOpt);
+        if (attributeName !== 'optimalGrowthTemperature') {
+          const maxCapOpt = document.createElement('option');
+          maxCapOpt.value = 'max';
+          maxCapOpt.textContent = getAutomationCardText('lifeModeMaxOut', {}, 'Max out');
+          capMode.appendChild(maxCapOpt);
+          if (attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance' || attributeName === 'radiationTolerance') {
+            const neededCapOpt = document.createElement('option');
+            neededCapOpt.value = 'needed';
+            neededCapOpt.textContent = getAutomationCardText('lifeModeAsNeeded', {}, 'As needed');
+            capMode.appendChild(neededCapOpt);
+          }
         }
-      } else if (neededOpt.parentElement === modeSelect) {
-        modeSelect.removeChild(neededOpt);
+        capMode.value = currentMode;
+        if (capMode.value !== currentMode) {
+          capMode.value = 'fixed';
+        }
+        capInput.disabled = capMode.value !== 'fixed';
+        zoneRow.style.display = capMode.value === 'needed' && (attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance') ? '' : 'none';
+      };
+
+      const attributeSelect = document.createElement('select');
+      for (let optionIndex = 0; optionIndex < attributeOptions.length; optionIndex += 1) {
+        const optionData = attributeOptions[optionIndex];
+        const option = document.createElement('option');
+        option.value = optionData.value;
+        option.textContent = optionData.label;
+        option.selected = optionData.value === entry.attribute;
+        attributeSelect.appendChild(option);
       }
-      if (!isTempTolerance && !isRadiationTolerance && modeSelect.value === 'needed') {
-        modeSelect.value = 'fixed';
-      }
-      amountInput.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-        && !isOptimal;
-      minButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-        && !isOptimal;
-      maxButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-        && !isOptimal;
-      if (amountInput.disabled) {
-        const updatedSpends = automation.getDesignStepSpends(preset);
-        amountInput.value = updatedSpends[step.id] ?? 0;
-      }
-      zoneRow.style.display = modeSelect.value === 'needed' && isTempTolerance ? '' : 'none';
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-    row.appendChild(attributeSelect);
-
-    const amountLabel = document.createElement('label');
-    amountLabel.classList.add('life-automation-field');
-    const amountText = document.createElement('span');
-    amountText.textContent = getAutomationCardText('lifePointsLabel', {}, 'Points');
-    const amountInput = document.createElement('input');
-    amountInput.type = 'number';
-    let isOptimal = step.attribute === 'optimalGrowthTemperature';
-    const attribute = lifeDesigner.currentDesign[step.attribute];
-    let maxUpgrades = attribute.maxUpgrades;
-    amountInput.min = isOptimal ? `-${maxUpgrades}` : '0';
-    amountInput.max = `${maxUpgrades}`;
-    amountInput.value = step.amount;
-    const minButton = document.createElement('button');
-    minButton.classList.add('life-automation-max-button');
-    minButton.textContent = t('ui.common.min', {}, 'Min');
-    minButton.style.display = isOptimal ? '' : 'none';
-    minButton.addEventListener('click', () => {
-      automation.updateDesignStep(preset.id, step.id, { amount: -maxUpgrades });
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-    const maxButton = document.createElement('button');
-    maxButton.classList.add('life-automation-max-button');
-    maxButton.textContent = t('ui.common.max', {}, 'Max');
-    maxButton.addEventListener('click', () => {
-      automation.updateDesignStep(preset.id, step.id, { amount: maxUpgrades });
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-    amountLabel.append(amountText, amountInput, minButton, maxButton);
-    row.appendChild(amountLabel);
-
-    const modeLabel = document.createElement('label');
-    modeLabel.classList.add('life-automation-field');
-    const modeText = document.createElement('span');
-    modeText.textContent = getAutomationCardText('lifeModeLabel', {}, 'Mode');
-    const modeSelect = document.createElement('select');
-    const fixedOpt = document.createElement('option');
-    fixedOpt.value = 'fixed';
-    fixedOpt.textContent = getAutomationCardText('lifeModeFixedPoints', {}, 'Fixed points');
-    const maxOpt = document.createElement('option');
-    maxOpt.value = 'max';
-    maxOpt.textContent = getAutomationCardText('lifeModeMaxOut', {}, 'Max out');
-    const neededOpt = document.createElement('option');
-    neededOpt.value = 'needed';
-    neededOpt.textContent = getAutomationCardText('lifeModeAsNeeded', {}, 'As needed');
-    const remainingOpt = document.createElement('option');
-    remainingOpt.value = 'remaining';
-    remainingOpt.textContent = getAutomationCardText('lifeModeAllRemaining', {}, 'All remaining');
-    remainingOpt.disabled = !isLast;
-    if (isTempTolerance || isRadiationTolerance) {
-      modeSelect.append(fixedOpt, maxOpt, neededOpt, remainingOpt);
-    } else {
-      modeSelect.append(fixedOpt, maxOpt, remainingOpt);
-    }
-    modeSelect.value = step.mode === 'remaining' && isLast
-      ? 'remaining'
-      : step.mode === 'max'
-        ? 'max'
-        : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
-          ? 'needed'
-          : 'fixed';
-    modeLabel.append(modeText, modeSelect);
-    row.appendChild(modeLabel);
-
-    amountInput.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-      && !isOptimal;
-    minButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-      && !isOptimal;
-    maxButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-      && !isOptimal;
-    if (amountInput.disabled) {
-      amountInput.value = stepSpends[step.id] ?? 0;
-    }
-
-    const updateModeControls = () => {
-      const normalizedMode = step.mode === 'remaining' && isLast
-        ? 'remaining'
-        : step.mode === 'max'
-          ? 'max'
-          : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
-            ? 'needed'
-            : 'fixed';
-      modeSelect.value = normalizedMode;
-      updateSubtitle(isTempTolerance, isRadiationTolerance);
-      amountInput.disabled = (normalizedMode === 'remaining' || normalizedMode === 'max' || normalizedMode === 'needed')
-        && !isOptimal;
-      minButton.disabled = amountInput.disabled;
-      maxButton.disabled = amountInput.disabled;
-      if (amountInput.disabled) {
-        const updatedSpends = automation.getDesignStepSpends(preset);
-        amountInput.value = updatedSpends[step.id] ?? 0;
-      } else if (document.activeElement !== amountInput) {
-        amountInput.value = step.amount;
-      }
-      zoneRow.style.display = normalizedMode === 'needed' && isTempTolerance ? '' : 'none';
-    };
-
-    amountInput.addEventListener('change', (event) => {
-      automation.updateDesignStep(preset.id, step.id, { amount: event.target.value });
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-    modeSelect.addEventListener('change', (event) => {
-      automation.updateDesignStep(preset.id, step.id, { mode: event.target.value });
-      updateModeControls();
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-
-    stepCard.appendChild(row);
-    const zoneRow = document.createElement('div');
-    zoneRow.classList.add('life-automation-zone-row');
-    const zoneLabel = document.createElement('span');
-    zoneLabel.textContent = getAutomationCardText('lifeIncludeZonesLabel', {}, 'Include zones');
-    zoneRow.appendChild(zoneLabel);
-    const zoneOptions = [
-      { key: 'tropical', label: getAutomationCardText('lifeZoneTropical', {}, 'Tropical') },
-      { key: 'temperate', label: getAutomationCardText('lifeZoneTemperate', {}, 'Temperate') },
-      { key: 'polar', label: getAutomationCardText('lifeZonePolar', {}, 'Polar') }
-    ];
-    zoneOptions.forEach(option => {
-      const label = document.createElement('label');
-      label.classList.add('life-automation-zone-option');
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = !!step.zones[option.key];
-      const text = document.createElement('span');
-      text.textContent = option.label;
-      label.append(checkbox, text);
-      checkbox.addEventListener('change', (event) => {
-        automation.setDesignStepZone(preset.id, step.id, option.key, event.target.checked);
+      attributeSelect.addEventListener('change', (event) => {
+        const attributeName = event.target.value;
+        automation.updateDesignEntry(preset.id, step.id, entry.id, { attribute: attributeName });
+        rebuildCapModeOptions(attributeName);
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
-      zoneRow.appendChild(label);
+      row.appendChild(attributeSelect);
+
+      const weightWrapper = document.createElement('div');
+      weightWrapper.classList.add('automation-weight');
+      const weightLabel = document.createElement('span');
+      weightLabel.textContent = getAutomationCardText('shipWeightLabel', {}, 'Weight');
+      const weightInput = document.createElement('input');
+      weightInput.type = 'text';
+      weightInput.min = '0';
+      weightInput.value = formatNumber(entry.weight, true, 3);
+      wireStringNumberInput(weightInput, {
+        parseValue: (value) => {
+          const parsed = parseFlexibleNumber(value);
+          return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+        },
+        formatValue: (value) => {
+          return value > 0 ? formatNumber(value, true, 3) : '0';
+        },
+        onValue: (parsed) => {
+          automation.updateDesignEntry(preset.id, step.id, entry.id, { weight: parsed });
+          queueAutomationUIRefresh();
+        }
+      });
+      weightWrapper.append(weightLabel, weightInput);
+      row.appendChild(weightWrapper);
+
+      const capWrapper = document.createElement('div');
+      capWrapper.classList.add('automation-max-wrapper');
+      capMode = document.createElement('select');
+      capInput = document.createElement('input');
+      capInput.type = 'text';
+      capInput.placeholder = getAutomationCardText('lifeNoMaxPlaceholder', {}, 'No max');
+      capInput.value = entry.cap === null || entry.cap === undefined ? '' : formatNumber(entry.cap, true, 3);
+      capMode.addEventListener('change', (event) => {
+        const nextMode = event.target.value;
+        automation.updateDesignEntry(preset.id, step.id, entry.id, { capMode: nextMode });
+        entry.capMode = nextMode;
+        capInput.disabled = nextMode !== 'fixed';
+        zoneRow.style.display = nextMode === 'needed' && (entry.attribute === 'minTemperatureTolerance' || entry.attribute === 'maxTemperatureTolerance') ? '' : 'none';
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+      wireStringNumberInput(capInput, {
+        parseValue: (value) => {
+          const parsed = parseFlexibleNumber(value);
+          if (!Number.isFinite(parsed)) {
+            return 0;
+          }
+          return Math.floor(parsed);
+        },
+        formatValue: (value) => {
+          return value !== 0 ? formatNumber(value, true, 3) : '';
+        },
+        onValue: (parsed) => {
+          automation.updateDesignEntry(preset.id, step.id, entry.id, { cap: parsed === 0 ? null : parsed });
+          queueAutomationUIRefresh();
+        }
+      });
+      capWrapper.append(capMode, capInput);
+      row.appendChild(capWrapper);
+
+      const spent = document.createElement('span');
+      spent.classList.add('life-automation-entry-spend');
+      spent.textContent = getAutomationCardText('lifeEntrySpendPreview', { count: stepSpends[entry.id] || 0 }, `{count} pts`);
+      row.appendChild(spent);
+
+      const remove = document.createElement('button');
+      remove.textContent = '✕';
+      remove.title = getAutomationCardText('lifeRemoveSubstep', {}, 'Remove substep');
+      remove.addEventListener('click', () => {
+        automation.removeDesignEntry(preset.id, step.id, entry.id);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+      row.appendChild(remove);
+      entriesContainer.appendChild(row);
+
+      zoneRow = document.createElement('div');
+      zoneRow.classList.add('life-automation-zone-row');
+      const zoneLabel = document.createElement('span');
+      zoneLabel.textContent = getAutomationCardText('lifeIncludeZonesLabel', {}, 'Include zones');
+      zoneRow.appendChild(zoneLabel);
+      for (let zoneIndex = 0; zoneIndex < zoneOptions.length; zoneIndex += 1) {
+        const option = zoneOptions[zoneIndex];
+        const label = document.createElement('label');
+        label.classList.add('life-automation-zone-option');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = !!entry.zones[option.key];
+        const text = document.createElement('span');
+        text.textContent = option.label;
+        label.append(checkbox, text);
+        checkbox.addEventListener('change', (event) => {
+          automation.setDesignStepZone(preset.id, step.id, entry.id, option.key, event.target.checked);
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        zoneRow.appendChild(label);
+      }
+      rebuildCapModeOptions(entry.attribute);
+      entriesContainer.appendChild(zoneRow);
+    }
+
+    const addRow = document.createElement('div');
+    addRow.classList.add('automation-add-entry-row');
+    const addSelect = document.createElement('select');
+    for (let optionIndex = 0; optionIndex < attributeOptions.length; optionIndex += 1) {
+      const optionData = attributeOptions[optionIndex];
+      const option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.label;
+      addSelect.appendChild(option);
+    }
+    const addEntryButton = document.createElement('button');
+    addEntryButton.textContent = getAutomationCardText('lifeAddSubstepButton', {}, '+ Substep');
+    addEntryButton.addEventListener('click', () => {
+      automation.addDesignEntry(preset.id, step.id, addSelect.value);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
     });
-    zoneRow.style.display = modeSelect.value === 'needed' && isTempTolerance ? '' : 'none';
-    stepCard.appendChild(zoneRow);
+    addRow.append(addSelect, addEntryButton);
+
+    stepCard.append(entriesContainer, addRow);
     container.appendChild(stepCard);
   }
 }

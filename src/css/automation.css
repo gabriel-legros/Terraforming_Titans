@@ -534,6 +534,23 @@
   max-width: 110px;
 }
 
+.life-automation-entry {
+  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(280px, 1.6fr) 64px 56px;
+}
+
+.life-automation-entry .automation-max-wrapper {
+  grid-template-columns: minmax(160px, 1fr) 100px;
+}
+
+.life-automation-entry-spend {
+  color: #4c5872;
+  display: inline-block;
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+  width: 64px;
+}
+
 .automation-entry-exclude {
   display: flex;
   gap: 2px;

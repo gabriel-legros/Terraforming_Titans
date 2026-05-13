@@ -1077,6 +1077,10 @@
     color: #e7ecf7;
 }
 
+.dark-mode .life-automation-entry-spend {
+    color: #cbd4e2;
+}
+
 .dark-mode .automation-entry-exclude {
     color: #cbd4e2;
 }
