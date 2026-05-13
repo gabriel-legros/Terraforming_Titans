@@ -1230,6 +1230,19 @@ class ProjectManager extends EffectableEntity {
     }
   }
 
+  isHighAgilityFreightersAvailable() {
+    return this.isBooleanFlagSet('highAgilityFreighters') &&
+      hazardManager.parameters.kessler &&
+      !hazardManager.kesslerHazard.isCleared();
+  }
+
+  getHighAgilityFreighterResearchCost() {
+    if (!this.isHighAgilityFreightersAvailable()) {
+      return 0;
+    }
+    return 100 * hazardManager.kesslerHazard.getCostMultiplier(true);
+  }
+
   applySpaceshipCostMultiplier(effect) {
     const resourceCategory = effect.resourceCategory;
     const resourceId = effect.resourceId;
@@ -1325,6 +1338,9 @@ class ProjectManager extends EffectableEntity {
   updateProjects(deltaTime) {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
+      if (project.highAgilityFreightersEnabled === true && !this.isHighAgilityFreightersAvailable()) {
+        project.highAgilityFreightersEnabled = false;
+      }
 
       if (project?.isPermanentlyDisabled?.()) {
         continue;

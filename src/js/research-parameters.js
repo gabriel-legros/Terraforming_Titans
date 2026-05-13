@@ -2623,6 +2623,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'high_agility_freighters',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 200_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'projectManager',
+            type: 'booleanFlag',
+            flagId: 'highAgilityFreighters',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'planet_cracking',
         name: '',
         description: '',

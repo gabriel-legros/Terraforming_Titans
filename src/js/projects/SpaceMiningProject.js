@@ -698,6 +698,10 @@ class SpaceMiningProject extends SpaceshipProject {
     if (this.hasOxygenPressureControl && !projectElements[this.name]?.oxygenPressureControl) {
       container.appendChild(this.createGasPressureControl('oxygen', 'disableAboveOxygenPressure', 'disableOxygenPressureThreshold', 'oxygenPressure'));
     }
+    const highAgilityControl = this.createHighAgilityFreightersCheckbox();
+    if (highAgilityControl.parentNode !== container) {
+      container.appendChild(highAgilityControl);
+    }
   }
 
   renderUI(container) {

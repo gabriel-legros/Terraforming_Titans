@@ -1494,6 +1494,10 @@ setLanguageData({
         importExportCap: 'This project is currently being capped due to Kessler Skies. Imports and exports are limited to 100 per second through a small warpgate.',
         failureChance: 'Kessler Skies: {value}% chance of project failure.',
       },
+      highAgilityFreighters: {
+        label: 'High-agility',
+        tooltip: 'When Kessler Skies is active, spend extra research on this project\'s spaceship operations to avoid debris generation and project failure. The research cost is 100 multiplied by the current large-debris cost multiplier per ship activity. This turns off automatically when Kessler Skies is cleared.',
+      },
       dysonSwarm: {
         title: 'Dyson Swarm Collectors',
         collectors: 'Collectors:',
@@ -4759,6 +4763,10 @@ setLanguageData({
         quantum_biology: {
           name: 'Quantum Biology',
           description: 'Certain unusual biochemical processes can interact with quantum fields directly.  Enables the spending of life points above the cap to push life even further, with diminishing returns.',
+        },
+        high_agility_freighters: {
+          name: 'High-agility freighters',
+          description: 'Dodging rain *is* possible... for an agile robot.  Our freighters may be able to dodge debris as well... if we can detect, catalogue and track them.  Provides optional per-project checkboxes to add a research cost to ship activities in exchange for Kessler immunity.',
         },
         planet_cracking: {
           name: 'Planet Cracking',

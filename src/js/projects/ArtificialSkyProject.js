@@ -117,7 +117,13 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   calculateSpaceshipCost() {
-    return this.getScaledCost();
+    const cost = this.getScaledCost();
+    const agilityResearchCost = this.getHighAgilityFreighterResearchCost();
+    if (agilityResearchCost > 0) {
+      cost.colony ||= {};
+      cost.colony.research = (cost.colony.research || 0) + agilityResearchCost;
+    }
+    return cost;
   }
 
   calculateSpaceshipGainPerShip() {
@@ -154,6 +160,10 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   applyKesslerShipFailure() {
+    if (this.isHighAgilityFreightersActive()) {
+      this.resetKesslerShipRoll();
+      return;
+    }
     const cost = this.kesslerShipCostSnapshot || this.calculateSpaceshipTotalCost();
     const debris = this.getDebrisEligibleCostAmount(cost) + this.getKesslerShipDebrisPerShip();
     this.addKesslerDebris(debris);
@@ -309,6 +319,9 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   applyContinuousKesslerConsequences(costPerSegment, failedProgress, seconds) {
+    if (this.isHighAgilityFreightersActive()) {
+      return;
+    }
     if (failedProgress <= 0) {
       return;
     }

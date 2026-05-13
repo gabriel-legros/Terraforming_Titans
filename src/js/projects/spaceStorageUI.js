@@ -97,6 +97,8 @@ if (typeof SpaceStorageProject !== 'undefined') {
     label.htmlFor = checkbox.id;
     label.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
     container.append(checkbox, label);
+    const highAgility = this.createHighAgilityFreightersCheckbox();
+    container.appendChild(highAgility);
     projectElements[this.name] = {
       ...projectElements[this.name],
       shipAutoStartCheckbox: checkbox,
@@ -200,6 +202,9 @@ if (typeof SpaceStorageProject !== 'undefined') {
       }
       container.appendChild(prioritizeRow);
     } else {
+      if (els.highAgilityFreightersContainer && els.highAgilityFreightersContainer.parentElement !== els.shipAutoStartContainer) {
+        els.shipAutoStartContainer.appendChild(els.highAgilityFreightersContainer);
+      }
       const placed = this.attachShipAutoStartToAssignment(els.shipAutoStartContainer);
       if (!placed && els.shipAutoStartContainer.parentElement !== container) {
         container.appendChild(els.shipAutoStartContainer);
@@ -209,6 +214,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
       }
     }
 
+    this.updateHighAgilityFreightersCheckbox();
     invalidateAutomationSettingsCache(this.name);
   };
 }
@@ -1327,10 +1333,11 @@ function updateSpaceStorageUI(project) {
       }
     });
   }
-  if (els.shipAutoStartCheckbox) {
-    els.shipAutoStartCheckbox.checked = project.shipOperationAutoStart;
-  }
-  if (els.artificialEcosystemsContainer && els.artificialEcosystemsCheckbox) {
+	  if (els.shipAutoStartCheckbox) {
+	    els.shipAutoStartCheckbox.checked = project.shipOperationAutoStart;
+	  }
+	  project.updateHighAgilityFreightersCheckbox();
+	  if (els.artificialEcosystemsContainer && els.artificialEcosystemsCheckbox) {
     const enabled = project.isBooleanFlagSet('artificialEcosystems');
     if (els.artificialEcosystemsCard) {
       els.artificialEcosystemsCard.style.display = enabled ? '' : 'none';

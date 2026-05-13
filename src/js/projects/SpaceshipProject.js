@@ -83,6 +83,7 @@ class SpaceshipProject extends Project {
     this.kesslerShipRollPending = false;
     this.kesslerShipCostSnapshot = null;
     this.kesslerShipLossCarry = 0;
+    this.highAgilityFreightersEnabled = false;
     this.costShortfallLastTick = false;
     this.disposalShortfallLastTick = false;
     this.continuousExecutionPlanCache = null;
@@ -157,6 +158,9 @@ class SpaceshipProject extends Project {
   }
 
   getKesslerSuccessChance() {
+    if (this.isHighAgilityFreightersActive()) {
+      return 1;
+    }
     try {
       return hazardManager.kesslerHazard.getSuccessChance(true);
     } catch (error) {
@@ -166,6 +170,25 @@ class SpaceshipProject extends Project {
 
   getKesslerFailureChance() {
     return 1 - this.getKesslerSuccessChance();
+  }
+
+  isHighAgilityFreightersAvailable() {
+    return projectManager.isHighAgilityFreightersAvailable();
+  }
+
+  isHighAgilityFreightersActive() {
+    return this.highAgilityFreightersEnabled === true && this.isHighAgilityFreightersAvailable();
+  }
+
+  setHighAgilityFreightersEnabled(enabled) {
+    this.highAgilityFreightersEnabled = enabled === true && this.isHighAgilityFreightersAvailable();
+  }
+
+  getHighAgilityFreighterResearchCost() {
+    if (!this.isHighAgilityFreightersActive()) {
+      return 0;
+    }
+    return projectManager.getHighAgilityFreighterResearchCost();
   }
 
   _checkKesslerFailure() {
@@ -417,6 +440,11 @@ class SpaceshipProject extends Project {
       if (Object.keys(totalCost[category]).length === 0) {
         delete totalCost[category];
       }
+    }
+    const agilityResearchCost = this.getHighAgilityFreighterResearchCost();
+    if (agilityResearchCost > 0) {
+      totalCost.colony ||= {};
+      totalCost.colony.research = (totalCost.colony.research || 0) + agilityResearchCost;
     }
     return totalCost;
   }
@@ -714,6 +742,75 @@ class SpaceshipProject extends Project {
     return autoAssignCheckboxContainer;
   }
 
+  createHighAgilityFreightersCheckbox() {
+    const existing = projectElements[this.name]?.highAgilityFreightersContainer;
+    if (existing && existing.isConnected) {
+      return existing;
+    }
+
+    const row = document.createElement('div');
+    row.classList.add('checkbox-container', 'high-agility-freighters-container');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-high-agility-freighters`;
+    checkbox.checked = this.isHighAgilityFreightersActive();
+    checkbox.addEventListener('change', () => {
+      this.setHighAgilityFreightersEnabled(checkbox.checked);
+      this.updateHighAgilityFreightersCheckbox();
+      updateProjectUI(this.name);
+      const storageProject = projectManager.projects.spaceStorage;
+      if (storageProject) {
+        updateSpaceStorageUI(storageProject);
+      }
+    });
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = getSpaceshipProjectText(
+      'ui.projects.highAgilityFreighters.label',
+      'High-agility'
+    );
+
+    const info = document.createElement('span');
+    info.classList.add('info-tooltip-icon');
+    info.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      info,
+      getSpaceshipProjectText(
+        'ui.projects.highAgilityFreighters.tooltip',
+        'When Kessler Skies is active, spend extra research on this project\'s spaceship operations to avoid debris generation and project failure. The research cost is 100 multiplied by the current large-debris cost multiplier per ship activity. This turns off automatically when Kessler Skies is cleared.'
+      )
+    );
+
+    row.append(checkbox, label, info);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      highAgilityFreightersContainer: row,
+      highAgilityFreightersCheckbox: checkbox,
+    };
+    this.updateHighAgilityFreightersCheckbox();
+    return row;
+  }
+
+  renderAutomationUI(container) {
+    const row = this.createHighAgilityFreightersCheckbox();
+    container.appendChild(row);
+    this.updateHighAgilityFreightersCheckbox();
+  }
+
+  updateHighAgilityFreightersCheckbox() {
+    const elements = projectElements[this.name];
+    if (!elements?.highAgilityFreightersContainer || !elements.highAgilityFreightersCheckbox) {
+      return;
+    }
+    const available = this.isHighAgilityFreightersAvailable();
+    elements.highAgilityFreightersContainer.style.display = available ? 'flex' : 'none';
+    elements.highAgilityFreightersCheckbox.checked = this.isHighAgilityFreightersActive();
+    elements.highAgilityFreightersCheckbox.disabled = !available;
+  }
+
   renderUI(container) {
     if (this.attributes.spaceMining || this.attributes.spaceExport) {
       const topSection = document.createElement('div');
@@ -729,6 +826,7 @@ class SpaceshipProject extends Project {
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements) return;
+    this.updateHighAgilityFreightersCheckbox();
     if (elements.assignedSpaceshipsDisplay && !elements.isImportProject) {
         const maxShips = typeof this.getMaxAssignableShips === 'function'
           ? this.getMaxAssignableShips()
@@ -1822,6 +1920,7 @@ class SpaceshipProject extends Project {
 
   saveAutomationSettings() {
     const settings = super.saveAutomationSettings();
+    settings.highAgilityFreightersEnabled = this.highAgilityFreightersEnabled === true;
     settings.waitForCapacity = this.waitForCapacity !== false;
     settings.selectedDisposalResource = this.selectedDisposalResource
       ? {
@@ -1834,6 +1933,10 @@ class SpaceshipProject extends Project {
 
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'highAgilityFreightersEnabled')) {
+      this.setHighAgilityFreightersEnabled(settings.highAgilityFreightersEnabled === true);
+      this.updateHighAgilityFreightersCheckbox();
+    }
     if (Object.prototype.hasOwnProperty.call(settings, 'waitForCapacity')) {
       this.waitForCapacity = settings.waitForCapacity !== false;
     }
@@ -1848,6 +1951,20 @@ class SpaceshipProject extends Project {
     }
   }
 
+  saveTravelState() {
+    return {
+      ...super.saveTravelState(),
+      highAgilityFreightersEnabled: this.highAgilityFreightersEnabled === true
+    };
+  }
+
+  loadTravelState(state = {}) {
+    super.loadTravelState(state);
+    if (Object.prototype.hasOwnProperty.call(state, 'highAgilityFreightersEnabled')) {
+      this.highAgilityFreightersEnabled = state.highAgilityFreightersEnabled === true;
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),
@@ -1856,6 +1973,7 @@ class SpaceshipProject extends Project {
       selectedDisposalResource: this.selectedDisposalResource,
       waitForCapacity: this.waitForCapacity,
       assignmentMultiplier: this.assignmentMultiplier,
+      highAgilityFreightersEnabled: this.highAgilityFreightersEnabled === true,
       kesslerShipRollElapsed: this.kesslerShipRollElapsed,
       kesslerShipRollPending: this.kesslerShipRollPending,
       kesslerShipCostSnapshot: this.kesslerShipCostSnapshot,
@@ -1874,6 +1992,7 @@ class SpaceshipProject extends Project {
     if (state.assignmentMultiplier !== undefined) {
       this.assignmentMultiplier = state.assignmentMultiplier;
     }
+    this.highAgilityFreightersEnabled = state.highAgilityFreightersEnabled === true;
     this.kesslerShipRollElapsed = state.kesslerShipRollElapsed || 0;
     this.kesslerShipRollPending = state.kesslerShipRollPending === true;
     this.kesslerShipCostSnapshot = state.kesslerShipCostSnapshot || null;

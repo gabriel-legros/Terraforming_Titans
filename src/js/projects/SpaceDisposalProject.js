@@ -674,7 +674,16 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.rebuildDisposalTargetList();
   }
 
-  renderAutomationUI() {}
+  renderAutomationUI(container) {
+    const row = this.createHighAgilityFreightersCheckbox();
+    const elements = projectElements[this.name];
+    if (elements.autoAssignCheckboxContainer) {
+      elements.autoAssignCheckboxContainer.appendChild(row);
+    } else {
+      container.appendChild(row);
+    }
+    this.updateHighAgilityFreightersCheckbox();
+  }
 
   addDisposalTarget() {
     if (this.disposalTargets.length >= this.maxDisposalTargets) {

@@ -507,6 +507,8 @@ function setupHarness(initialStorage = {}) {
     projectOrder: [],
     isProjectRelevantToCurrentPlanet: () => true,
     isBooleanFlagSet: () => false,
+    isHighAgilityFreightersAvailable: () => false,
+    getHighAgilityFreighterResearchCost: () => 0,
   };
   setGlobal('projectManager', projectManager, originalGlobals);
 

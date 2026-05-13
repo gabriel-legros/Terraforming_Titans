@@ -99,7 +99,11 @@ function createHarness() {
   setGlobal('Project', MockProject, originalGlobals);
   setGlobal('shipEfficiency', 1, originalGlobals);
   setGlobal('projectElements', {}, originalGlobals);
-  setGlobal('projectManager', { projects: {} }, originalGlobals);
+  setGlobal('projectManager', {
+    projects: {},
+    isHighAgilityFreightersAvailable: () => false,
+    getHighAgilityFreighterResearchCost: () => 0,
+  }, originalGlobals);
   setGlobal('updateProjectUI', () => {}, originalGlobals);
   setGlobal('hazardManager', {
     parameters: { kessler: {}, pulsar: false },
