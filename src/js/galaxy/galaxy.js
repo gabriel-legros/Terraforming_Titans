@@ -694,6 +694,15 @@ class GalaxyManager extends EffectableEntity {
         return operation;
     }
 
+    cancelOperation(operation) {
+        if (!this.operationManager) {
+            return false;
+        }
+        const cancelled = this.operationManager.cancelOperation(operation);
+        this.#updateIncomingAttackWarning();
+        return cancelled;
+    }
+
     getOperationDurationMs({ sectorKey, factionId, durationMs, targetFactionId, externalInvasion }) {
         if (!this.operationManager) {
             return GALAXY_OPERATION_DURATION_MS;

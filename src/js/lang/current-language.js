@@ -389,6 +389,7 @@ setLanguageData({
         autoWithPrefix: ' with ',
         autoThresholdSuffix: 'times enemy defense',
         launchOperationButton: 'Launch Operation',
+        cancelOperationButton: 'Cancel',
         antimatterCostLabel: 'Antimatter Cost',
         durationLabel: 'Duration',
         timeRemainingLabel: 'Time Remaining',

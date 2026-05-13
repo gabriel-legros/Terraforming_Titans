@@ -277,7 +277,7 @@ class GalacticInvasionManager extends EffectableEntity {
       rimSectors.splice(index, 1);
     }
     const target = this.pickLeastResistanceSector(candidates);
-    return this.launchOperationOnSector(target, true);
+    return this.launchOperationOnSector(target, true, true);
   }
 
   launchQuadrantIncursion() {
@@ -300,7 +300,7 @@ class GalacticInvasionManager extends EffectableEntity {
     const assignedPower = this.initialFleetPower / 4;
     selectedSectors.forEach((sector) => {
       const targetFactionId = galaxyManager.getOperationTargetFaction(sector, PROMETHEAN_INVASION_FACTION_ID);
-      galaxyManager.startOperation({
+      const operation = galaxyManager.startOperation({
         sectorKey: sector.key,
         factionId: PROMETHEAN_INVASION_FACTION_ID,
         assignedPower: Math.min(assignedPower, faction.fleetPower),
@@ -308,6 +308,7 @@ class GalacticInvasionManager extends EffectableEntity {
         targetFactionId,
         externalInvasion: true
       });
+      galaxyManager.operationManager.completeOperationNow(operation);
     });
   }
 
@@ -338,7 +339,7 @@ class GalacticInvasionManager extends EffectableEntity {
       return null;
     }
     this.deepStrikeUsed = true;
-    return this.launchOperationOnSector(sector, true);
+    return this.launchOperationOnSector(sector, true, true);
   }
 
   pickDeepStrikeTarget() {
@@ -361,7 +362,7 @@ class GalacticInvasionManager extends EffectableEntity {
       return null;
     }
     const sector = rimSectors[Math.floor(Math.random() * rimSectors.length)];
-    return this.launchOperationOnSector(sector, true);
+    return this.launchOperationOnSector(sector, true, true);
   }
 
   launchNextOperation() {
@@ -392,7 +393,7 @@ class GalacticInvasionManager extends EffectableEntity {
     return launched;
   }
 
-  launchOperationOnSector(sector, externalInvasion) {
+  launchOperationOnSector(sector, externalInvasion, completeInstantly) {
     const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
     const fleetPower = Number(faction.fleetPower);
     if (!sector || !Number.isFinite(fleetPower) || fleetPower <= 0) {
@@ -407,7 +408,7 @@ class GalacticInvasionManager extends EffectableEntity {
     if (!(assignedPower > 0)) {
       return null;
     }
-    return galaxyManager.startOperation({
+    const operation = galaxyManager.startOperation({
       sectorKey: sector.key,
       factionId: PROMETHEAN_INVASION_FACTION_ID,
       assignedPower,
@@ -415,6 +416,10 @@ class GalacticInvasionManager extends EffectableEntity {
       targetFactionId,
       externalInvasion: externalInvasion === true
     });
+    if (completeInstantly === true) {
+      galaxyManager.operationManager.completeOperationNow(operation);
+    }
+    return operation;
   }
 
   getOperationPowerForTarget(sector, targetFactionId, availableFleetPower) {

@@ -545,6 +545,26 @@ const GalaxyOperationUI = (() => {
         setStoredAllocation(sectorKey, assignment);
     }
 
+    function handleOperationsCancel() {
+        const cache = getCache();
+        const manager = getManager();
+        if (!manager || !manager.enabled || !cache?.selectedSector?.key || !manager.cancelOperation) {
+            return;
+        }
+        const sectorKey = cache.selectedSector.key;
+        const fallbackFactionId = manager.operationManager?.uhfFactionId || UHF_FACTION_ID || 'uhf';
+        const operation = manager.getOperationForSector?.(sectorKey, fallbackFactionId);
+        if (!operation || operation.status !== 'running') {
+            return;
+        }
+        setOperationAutoState(sectorKey, false);
+        if (manager.setOperationAutoEnabled) {
+            manager.setOperationAutoEnabled({ sectorKey, value: false });
+        }
+        manager.cancelOperation(operation);
+        updateOperationsPanel(manager, cache);
+    }
+
     function populateSection({ doc, container, createInfoTooltip }) {
         const panel = doc.createElement('div');
         panel.className = 'galaxy-operations-panel';
@@ -780,6 +800,13 @@ const GalaxyOperationUI = (() => {
         progressLabel.className = 'galaxy-operations-progress__label';
         progressContainer.appendChild(progressLabel);
 
+        const progressCancelButton = doc.createElement('button');
+        progressCancelButton.type = 'button';
+        progressCancelButton.className = 'galaxy-operations-launch__button galaxy-operations-progress__cancel-button is-hidden';
+        progressCancelButton.textContent = getOperationsText('cancelOperationButton', {}, 'Cancel');
+        progressCancelButton.addEventListener('click', handleOperationsCancel);
+        progressContainer.appendChild(progressCancelButton);
+
         const summary = doc.createElement('div');
         summary.className = 'galaxy-operations-summary';
         form.appendChild(summary);
@@ -829,6 +856,7 @@ const GalaxyOperationUI = (() => {
             operationsProgress: progressContainer,
             operationsProgressFill: progressFill,
             operationsProgressLabel: progressLabel,
+            operationsProgressCancelButton: progressCancelButton,
             operationsCostValue: costValue,
             operationsDurationRow: durationRow,
             operationsDurationLabel: durationLabel,
@@ -885,8 +913,27 @@ const GalaxyOperationUI = (() => {
         return cache;
     }
 
+    function ensureProgressCancelButton(cache) {
+        if (!cache || cache.operationsProgressCancelButton) {
+            return cache;
+        }
+        const progressContainer = cache.operationsProgress;
+        if (!progressContainer) {
+            return cache;
+        }
+        const doc = progressContainer.ownerDocument || globalThis.document;
+        const progressCancelButton = doc.createElement('button');
+        progressCancelButton.type = 'button';
+        progressCancelButton.className = 'galaxy-operations-launch__button galaxy-operations-progress__cancel-button is-hidden';
+        progressCancelButton.textContent = getOperationsText('cancelOperationButton', {}, 'Cancel');
+        progressCancelButton.addEventListener('click', handleOperationsCancel);
+        progressContainer.appendChild(progressCancelButton);
+        cache.operationsProgressCancelButton = progressCancelButton;
+        return cache;
+    }
+
     function updateOperationsPanel(managerOverride, cacheOverride) {
-        const cache = ensureTargetCache(cacheOverride || getCache());
+        const cache = ensureProgressCancelButton(ensureTargetCache(cacheOverride || getCache()));
         if (!cache) {
             return;
         }
@@ -905,6 +952,7 @@ const GalaxyOperationUI = (() => {
             operationsProgress,
             operationsProgressFill,
             operationsProgressLabel,
+            operationsProgressCancelButton,
             operationsCostValue,
             operationsDurationRow,
             operationsDurationLabel,
@@ -981,6 +1029,10 @@ const GalaxyOperationUI = (() => {
             operationsProgress.classList.add('is-hidden');
             operationsProgressFill.style.width = '0%';
             operationsProgressLabel.textContent = '';
+            if (operationsProgressCancelButton) {
+                operationsProgressCancelButton.classList.add('is-hidden');
+                operationsProgressCancelButton.disabled = true;
+            }
             if (operationsAutoCheckbox) {
                 operationsAutoCheckbox.disabled = true;
                 operationsAutoCheckbox.checked = false;
@@ -1196,6 +1248,10 @@ const GalaxyOperationUI = (() => {
             operationsLaunchButton.disabled = true;
             operationsLaunchButton.classList.add('is-hidden');
             operationsProgress.classList.remove('is-hidden');
+            if (operationsProgressCancelButton) {
+                operationsProgressCancelButton.classList.remove('is-hidden');
+                operationsProgressCancelButton.disabled = false;
+            }
             const duration = Number.isFinite(operation.durationMs) && operation.durationMs > 0
                 ? operation.durationMs
                 : defaultDurationMs;
@@ -1222,6 +1278,10 @@ const GalaxyOperationUI = (() => {
             operationsProgress.classList.add('is-hidden');
             operationsProgressFill.style.width = '0%';
             operationsProgressLabel.textContent = '';
+            if (operationsProgressCancelButton) {
+                operationsProgressCancelButton.classList.add('is-hidden');
+                operationsProgressCancelButton.disabled = true;
+            }
 
             operationsInput.disabled = !hasFleetPower;
             Object.values(operationsButtons).forEach((button) => {

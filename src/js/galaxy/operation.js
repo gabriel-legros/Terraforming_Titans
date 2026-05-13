@@ -503,6 +503,45 @@ class GalaxyOperationManager {
         return operation;
     }
 
+    completeOperationNow(operation) {
+        if (!operation || operation.status !== 'running') {
+            return false;
+        }
+        const key = this.#getOperationKey(operation.sectorKey, operation.factionId || this.uhfFactionId);
+        const activeOperation = this.operations.get(key);
+        if (!activeOperation || activeOperation.status !== 'running') {
+            return false;
+        }
+        activeOperation.elapsedMs = activeOperation.durationMs;
+        this.#completeOperation(activeOperation);
+        this.operations.delete(key);
+        this.#refreshFactionDefenseStates();
+        return true;
+    }
+
+    cancelOperation(operation) {
+        if (!operation || operation.status !== 'running') {
+            return false;
+        }
+        const key = this.#getOperationKey(operation.sectorKey, operation.factionId || this.uhfFactionId);
+        const activeOperation = this.operations.get(key);
+        if (!activeOperation || activeOperation.status !== 'running') {
+            return false;
+        }
+        const faction = this.manager.getFaction(activeOperation.factionId || this.uhfFactionId);
+        if (!faction) {
+            return false;
+        }
+        const reservedPower = Number(activeOperation.reservedPower);
+        const recoveredPower = Number.isFinite(reservedPower) && reservedPower > 0 ? reservedPower : 0;
+        const currentFleetPower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0 ? faction.fleetPower : 0;
+        faction.setFleetPower(currentFleetPower + recoveredPower);
+        activeOperation.status = 'cancelled';
+        this.operations.delete(key);
+        this.#refreshFactionDefenseStates();
+        return true;
+    }
+
     #completeOperation(operation) {
         const faction = this.manager.getFaction(operation.factionId || this.uhfFactionId);
         if (operation.status !== 'running') {
