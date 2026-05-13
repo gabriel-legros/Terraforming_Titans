@@ -143,7 +143,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
-    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  Please listen and stay calm.  A cloaked thermonuclear ICBM is on your way to your location.  My team and I have managed to steal its transponder data.  There is no time to discuss the implication of them using electronics in an ICBM.  I am forwarding this data to you right now and you need to hand it over to those *crusaders* around you immediately.' \n Mary : 'Oh!  Yes.  Of course.  Thank you.'",
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  Please listen and stay calm.  A cloaked thermonuclear ICBM is on the way to your location.  My team and I have managed to steal its transponder data.  There is no time to discuss the implication of them using electronics in an ICBM.  I am forwarding this data to you right now and you need to hand it over to those *crusaders* around you immediately.' \n Mary : 'Oh!  Yes.  Of course.  Thank you.'",
     prerequisites: ['chapter21.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 2000 }
