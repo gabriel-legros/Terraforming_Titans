@@ -364,6 +364,11 @@ class LifeDesign {
     return Math.max(0, surfaceDose - mitigationDose);
   }
 
+  getMaxBiomassDensity() {
+    const requirements = getActiveLifeDesignRequirements();
+    return (requirements.baseMaxBiomassDensityTPerM2 || 0) * (1 + this.spaceEfficiency.getEffectiveValue());
+  }
+
   getRadiationGrowthPenalty() {
     if (terraforming.getMagnetosphereStatus()) {
       return 0;
@@ -1224,8 +1229,7 @@ class LifeManager extends EffectableEntity {
     };
 
     const canGrowByZone = {};
-    const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
-    const densityMultiplier = 1 + design.spaceEfficiency.getEffectiveValue();
+    const maxBiomassDensity = design.getMaxBiomassDensity();
     const effectiveGrowthMultiplier = this.getEffectiveLifeGrowthMultiplier();
     let radPenalty = design.getRadiationGrowthPenalty();
     if (radPenalty < 0.0001) radPenalty = 0;
@@ -1235,7 +1239,7 @@ class LifeManager extends EffectableEntity {
       const tempMult = design.temperatureGrowthMultiplierZone(zoneName);
       const liquidMult = liquidRequirementKeys.every((resourceKey) => (liquidByZone[zoneName][resourceKey] || 0) > 1e-9) ? 1 : 0;
       const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
-      const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
+      const maxBiomassForZone = zoneArea * maxBiomassDensity;
       const growthRate = baseGrowthRate * lumMult * tempMult * radMult * liquidMult * effectiveGrowthMultiplier;
       canGrowByZone[zoneName] = growthRate > 0 && maxBiomassForZone > 0;
     });
@@ -1253,7 +1257,7 @@ class LifeManager extends EffectableEntity {
       if (zonalBiomass <= 0) return;
 
       const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
-      const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
+      const maxBiomassForZone = zoneArea * maxBiomassDensity;
 
       if (zonalBiomass > maxBiomassForZone) {
         const overflowDecay = Math.min(zonalBiomass, zonalBiomass * 0.01 * secondsMultiplier);

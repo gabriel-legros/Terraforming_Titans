@@ -383,7 +383,7 @@ class PopulationModule extends EffectableEntity {
       if (!design || !design.bioworkforce) {
         return 0;
       }
-      const points = design.bioworkforce.value;
+      const points = design.bioworkforce.getEffectiveValue();
       if (points <= 0) {
         return 0;
       }
@@ -402,8 +402,7 @@ class PopulationModule extends EffectableEntity {
       if (activeBiomass <= 0) {
         return 0;
       }
-      const requirements = getActiveLifeDesignRequirements();
-      const maxBiomassDensity = (requirements.baseMaxBiomassDensityTPerM2 || 0) * (1 + design.spaceEfficiency.value);
+      const maxBiomassDensity = design.getMaxBiomassDensity();
       const landAreaM2 = resolveWorldGeometricLand(terraforming, resources.surface.land) * 10000;
       const maxBiomass = landAreaM2 > 0 ? landAreaM2 * maxBiomassDensity : 0;
       const cappedBiomass = Math.min(activeBiomass, maxBiomass);
