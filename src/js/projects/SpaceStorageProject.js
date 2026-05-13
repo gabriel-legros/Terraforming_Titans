@@ -1524,7 +1524,12 @@ class SpaceStorageProject extends SpaceshipProject {
       for (const category in totalCost) {
         for (const resource in totalCost[category]) {
           const requiredAmount = totalCost[category][resource];
-          const availableAmount = getAvailableProjectCostAmount(this, category, resource);
+          let availableAmount = getAvailableProjectCostAmount(this, category, resource);
+          // Space storage ship operations always spend colony energy, never stored space energy.
+          // Keep UI shortfall highlighting aligned with the real payment source.
+          if (category === 'colony' && resource === 'energy') {
+            availableAmount = resources.colony.energy.value;
+          }
           const resourceDisplayName = resources[category][resource].displayName ||
             resource.charAt(0).toUpperCase() + resource.slice(1);
           costParts.push(`${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`);
