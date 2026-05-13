@@ -177,9 +177,13 @@ function updateShipAutomationUI() {
   const nextStepsSignature = getShipStepsSignature(automation, activePreset, targets);
   const needsStepsRefresh = forceShipStepsRefresh || nextStepsSignature !== shipStepsSignature;
   if (needsStepsRefresh && (!hasFocusedChild || forceShipStepsRefresh)) {
+    cleanupTrackedUIListeners(stepsContainer);
+    cleanupDynamicTooltipsIn(stepsContainer);
     stepsContainer.textContent = '';
     if (activePreset) {
-      renderAutomationSteps(automation, activePreset, stepsContainer, targets);
+      runWithTrackedUIListeners(stepsContainer, () => {
+        renderAutomationSteps(automation, activePreset, stepsContainer, targets);
+      });
     }
     shipStepsSignature = nextStepsSignature;
     forceShipStepsRefresh = false;

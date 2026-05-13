@@ -18,6 +18,13 @@ function createBuildingCategoryTabs() {
     if (!subtabsContainer || !contentWrapper) return;
 
     // Clear existing tabs and content
+    if (buildingSubtabManager) {
+        buildingSubtabManager._unregister();
+    }
+    cleanupTrackedUIListeners(subtabsContainer);
+    cleanupTrackedUIListeners(contentWrapper);
+    cleanupDynamicTooltipsIn(subtabsContainer);
+    cleanupDynamicTooltipsIn(contentWrapper);
     subtabsContainer.innerHTML = '';
     contentWrapper.innerHTML = '';
 

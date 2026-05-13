@@ -1677,10 +1677,14 @@ function renderArtificialHistory(force = false) {
   if (!force && sig === artificialHistorySig) return;
   artificialHistorySig = sig;
 
+  cleanupTrackedUIListeners(artificialUICache.historyList);
+  cleanupDynamicTooltipsIn(artificialUICache.historyList);
   artificialUICache.historyList.innerHTML = '';
-  artificialUICache.historyList.appendChild(buildHistoryHeader());
-  slice.forEach((entry) => {
-    artificialUICache.historyList.appendChild(buildHistoryRow(entry));
+  runWithTrackedUIListeners(artificialUICache.historyList, () => {
+    artificialUICache.historyList.appendChild(buildHistoryHeader());
+    slice.forEach((entry) => {
+      artificialUICache.historyList.appendChild(buildHistoryRow(entry));
+    });
   });
   artificialUICache.historyPage.textContent = `${entries.length ? artificialHistoryPage + 1 : 0}/${Math.max(maxPage + 1, 1)}`;
   if (artificialUICache.historyPrev) {

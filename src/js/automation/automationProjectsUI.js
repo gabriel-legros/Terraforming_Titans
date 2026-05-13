@@ -534,8 +534,11 @@ function updateProjectsAutomationUI() {
       }))
     });
     if (projectsApplyList._renderSignature !== applySignature) {
+      cleanupTrackedUIListeners(projectsApplyList);
+      cleanupDynamicTooltipsIn(projectsApplyList);
       projectsApplyList.textContent = '';
-      assignments.forEach((assignment, index) => {
+      runWithTrackedUIListeners(projectsApplyList, () => {
+        assignments.forEach((assignment, index) => {
         const row = document.createElement('div');
         row.classList.add('project-automation-apply-row', 'building-automation-apply-row');
         const primary = document.createElement('div');
@@ -622,7 +625,8 @@ function updateProjectsAutomationUI() {
         controls.append(moveUp, moveDown, remove);
         primary.append(toggle, select);
         row.append(primary, detail, controls);
-        projectsApplyList.appendChild(row);
+          projectsApplyList.appendChild(row);
+        });
       });
       projectsApplyList._renderSignature = applySignature;
     }

@@ -416,7 +416,10 @@ function renderProjects(activeSubtabId) {
   projectsArray.forEach(project => {
     const isActive = !activeId || getProjectSubtabIdForProject(project) === activeId;
     if (isActive && !projectElements[project.name]) {
-      createProjectItem(project);
+      const categoryContainer = getOrCreateCategoryContainer(project.category || 'resources');
+      runWithTrackedUIListeners(categoryContainer, () => {
+        createProjectItem(project);
+      });
     }
   });
 
@@ -444,6 +447,8 @@ function initializeProjectsUI() {
   // Clear only the project lists, not the subtab containers
   const lists = Array.from(document.getElementsByClassName('projects-list'));
   lists.forEach(container => {
+    cleanupTrackedUIListeners(container);
+    cleanupDynamicTooltipsIn(container);
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }

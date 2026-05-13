@@ -258,6 +258,8 @@ function createSkillTree() {
     // Cache container
     skillTreeContainerEl = container;
 
+    cleanupTrackedUIListeners(container);
+    cleanupDynamicTooltipsIn(container);
     container.innerHTML = ''; // Clear previous content
     for (const key in skillPaths) {
         delete skillPaths[key];
@@ -269,37 +271,39 @@ function createSkillTree() {
     // Cache SVG element
     skillSVGEl = svg;
 
-    for (const id in skillManager.skills) {
-        const skill = skillManager.skills[id];
-        const pos = skillLayout[id];
-        if (!pos) continue;
+    runWithTrackedUIListeners(container, () => {
+        for (const id in skillManager.skills) {
+            const skill = skillManager.skills[id];
+            const pos = skillLayout[id];
+            if (!pos) continue;
 
-        const button = document.createElement('button');
-        button.id = `skill-${id}`;
-        button.classList.add('skill-button');
-        button.style.gridRow = pos.row + 1;
-        button.style.gridColumn = pos.col + 1;
+            const button = document.createElement('button');
+            button.id = `skill-${id}`;
+            button.classList.add('skill-button');
+            button.style.gridRow = pos.row + 1;
+            button.style.gridColumn = pos.col + 1;
 
-        const nameEl = document.createElement('strong');
-        const descEl = document.createElement('span');
-        const previewEl = document.createElement('span');
-        const rankEl = document.createElement('span');
-        const costEl = document.createElement('span');
+            const nameEl = document.createElement('strong');
+            const descEl = document.createElement('span');
+            const previewEl = document.createElement('span');
+            const rankEl = document.createElement('span');
+            const costEl = document.createElement('span');
 
-        button.appendChild(nameEl);
-        button.appendChild(descEl);
-        button.appendChild(previewEl);
-        button.appendChild(rankEl);
-        button.appendChild(costEl);
+            button.appendChild(nameEl);
+            button.appendChild(descEl);
+            button.appendChild(previewEl);
+            button.appendChild(rankEl);
+            button.appendChild(costEl);
 
-        button._skillEls = { name: nameEl, desc: descEl, preview: previewEl, rank: rankEl, cost: costEl };
+            button._skillEls = { name: nameEl, desc: descEl, preview: previewEl, rank: rankEl, cost: costEl };
 
-        button.addEventListener('click', () => purchaseSkill(id));
-        container.appendChild(button);
-        // Cache button element
-        skillButtonEls[id] = button;
-        updateSkillButton(skill);
-    }
+            button.addEventListener('click', () => purchaseSkill(id));
+            container.appendChild(button);
+            // Cache button element
+            skillButtonEls[id] = button;
+            updateSkillButton(skill);
+        }
+    });
 
     // Observe container resize to keep lines aligned during zoom/layout changes
     try {

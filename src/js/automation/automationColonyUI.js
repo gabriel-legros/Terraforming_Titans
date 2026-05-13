@@ -583,8 +583,11 @@ function updateColonyAutomationUI() {
     if (applySignature === colonyApplyRenderSignature) {
       // Keep existing rows and listeners when nothing changed.
     } else {
-    colonyApplyList.textContent = '';
-    assignments.forEach((assignment, index) => {
+      cleanupTrackedUIListeners(colonyApplyList);
+      cleanupDynamicTooltipsIn(colonyApplyList);
+      colonyApplyList.textContent = '';
+      runWithTrackedUIListeners(colonyApplyList, () => {
+        assignments.forEach((assignment, index) => {
       const row = document.createElement('div');
       row.classList.add('building-automation-apply-row');
       const primary = document.createElement('div');
@@ -671,8 +674,9 @@ function updateColonyAutomationUI() {
       controls.append(moveUp, moveDown, remove);
       primary.append(toggle, select);
       row.append(primary, detail, controls);
-      colonyApplyList.appendChild(row);
-    });
+          colonyApplyList.appendChild(row);
+        });
+      });
       colonyApplyRenderSignature = applySignature;
     }
   }

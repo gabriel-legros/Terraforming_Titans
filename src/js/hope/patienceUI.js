@@ -35,8 +35,13 @@ const PatienceUI = {
      */
     initialize() {
         this.cacheElements();
+        cleanupTrackedUIListeners(this.container);
+        cleanupDynamicTooltipsIn(this.container);
         this.buildUI();
-        this.setupEventListeners();
+        if (!this.container) return;
+        runWithTrackedUIListeners(this.container, () => {
+            this.setupEventListeners();
+        });
     },
 
     /**

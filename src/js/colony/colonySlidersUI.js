@@ -24,6 +24,8 @@ let warpnetRefresh;
 function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
   if (!container) return;
+  cleanupTrackedUIListeners(container);
+  cleanupDynamicTooltipsIn(container);
   container.innerHTML = '';
   // Ensure sliders start hidden until unlocked via research
   container.classList.add('invisible');
@@ -111,13 +113,13 @@ function initializeColonySlidersUI() {
   } catch (e) {}
   updateValue(startVal);
 
-  input.addEventListener('input', () => {
+  addTrackedUIListener(container, input, 'input', () => {
     let v = parseFloat(input.value);
     if (isNaN(v)) v = colonySliderSettings.workerRatio * 100;
     updateValue(v);
   });
 
-  input.addEventListener('change', () => {
+  addTrackedUIListener(container, input, 'change', () => {
     let v = parseFloat(input.value);
     if (isNaN(v)) v = colonySliderSettings.workerRatio * 100;
     setWorkforceRatio(v / 100);
@@ -184,13 +186,13 @@ function initializeColonySlidersUI() {
   try { initialFood = parseFloat(foodInput.value); } catch (e) { initialFood = NaN; }
   if (isNaN(initialFood)) initialFood = colonySliderSettings.foodConsumption;
   updateFoodValue(initialFood);
-  foodInput.addEventListener('input', () => {
+  addTrackedUIListener(container, foodInput, 'input', () => {
     let v;
     try { v = parseFloat(foodInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.foodConsumption;
     updateFoodValue(v);
   });
-  foodInput.addEventListener('change', () => {
+  addTrackedUIListener(container, foodInput, 'change', () => {
     let v;
     try { v = parseFloat(foodInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.foodConsumption;
@@ -258,13 +260,13 @@ function initializeColonySlidersUI() {
   try { initialWater = parseFloat(waterInput.value); } catch (e) { initialWater = NaN; }
   if (isNaN(initialWater)) initialWater = colonySliderSettings.luxuryWater;
   updateWaterValue(initialWater);
-  waterInput.addEventListener('input', () => {
+  addTrackedUIListener(container, waterInput, 'input', () => {
     let v;
     try { v = parseFloat(waterInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.luxuryWater;
     updateWaterValue(v);
   });
-  waterInput.addEventListener('change', () => {
+  addTrackedUIListener(container, waterInput, 'change', () => {
     let v;
     try { v = parseFloat(waterInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.luxuryWater;
@@ -583,13 +585,13 @@ function initializeColonySlidersUI() {
   try { initialOre = parseFloat(oreInput.value); } catch (e) { initialOre = NaN; }
   if (isNaN(initialOre)) initialOre = colonySliderSettings.oreMineWorkers;
   updateOreValue(initialOre);
-  oreInput.addEventListener('input', () => {
+  addTrackedUIListener(container, oreInput, 'input', () => {
     let v;
     try { v = parseFloat(oreInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.oreMineWorkers;
     updateOreValue(v);
   });
-  oreInput.addEventListener('change', () => {
+  addTrackedUIListener(container, oreInput, 'change', () => {
     let v;
     try { v = parseFloat(oreInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.oreMineWorkers;
@@ -601,14 +603,14 @@ function initializeColonySlidersUI() {
   if (isNaN(initialMech)) initialMech = colonySliderSettings.mechanicalAssistance;
   mechInput.value = initialMech;
   refreshMechanicalAssistanceDetails();
-  mechInput.addEventListener('input', () => {
+  addTrackedUIListener(container, mechInput, 'input', () => {
     let v;
     try { v = parseFloat(mechInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.mechanicalAssistance;
     mechInput.value = v;
     refreshMechanicalAssistanceDetails();
   });
-  mechInput.addEventListener('change', () => {
+  addTrackedUIListener(container, mechInput, 'change', () => {
     let v;
     try { v = parseFloat(mechInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.mechanicalAssistance;
@@ -622,14 +624,14 @@ function initializeColonySlidersUI() {
   if (isNaN(initialWarpnet)) initialWarpnet = colonySliderSettings.warpnetLevel;
   warpnetInput.value = initialWarpnet;
   refreshWarpnetDetails();
-  warpnetInput.addEventListener('input', () => {
+  addTrackedUIListener(container, warpnetInput, 'input', () => {
     let v;
     try { v = parseInt(warpnetInput.value, 10); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.warpnetLevel;
     warpnetInput.value = v;
     refreshWarpnetDetails();
   });
-  warpnetInput.addEventListener('change', () => {
+  addTrackedUIListener(container, warpnetInput, 'change', () => {
     let v;
     try { v = parseInt(warpnetInput.value, 10); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.warpnetLevel;

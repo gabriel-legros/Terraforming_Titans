@@ -548,18 +548,21 @@ function createColonyButtons(colonies) {
 // Create buttons for buildings and colonies
 function createStructureButtons(structures, containerId, buildCallback, toggleCallback, isColony = false) {
   const buttonsContainer = document.getElementById(containerId);
+  cleanupTrackedUIListeners(buttonsContainer);
+  cleanupDynamicTooltipsIn(buttonsContainer);
   while (buttonsContainer.firstChild) {
     buttonsContainer.removeChild(buttonsContainer.firstChild);
   }
   const rows = [];
-  structures.forEach((structure) => {
-    // Create structure row (shared for buildings and colonies)
-    const structureRow = createStructureRow(structure, buildCallback, toggleCallback, isColony);
+  runWithTrackedUIListeners(buttonsContainer, () => {
+    structures.forEach((structure) => {
+      // Create structure row (shared for buildings and colonies)
+      const structureRow = createStructureRow(structure, buildCallback, toggleCallback, isColony);
 
-    // Append the structure row to the container
-    buttonsContainer.appendChild(structureRow);
-    rows.push(structureRow);
-
+      // Append the structure row to the container
+      buttonsContainer.appendChild(structureRow);
+      rows.push(structureRow);
+    });
   });
   combinedBuildingRowCache[containerId] = rows;
   structureContainerMap[containerId] = structures;
@@ -2260,6 +2263,8 @@ function updateDecreaseButtonText(button, buildCount) {
     const keyString = items.map(i => i.key).sort().join(',');
     let list = costElement._list;
     if (costElement.dataset.keys !== keyString) {
+      cleanupTrackedUIListeners(costElement);
+      cleanupDynamicTooltipsIn(costElement);
       costElement.dataset.keys = keyString;
       costElement.textContent = '';
       const label = document.createElement('strong');
@@ -2290,9 +2295,9 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._costTooltipCache, 'text');
           };
-          span.addEventListener('mouseenter', span._updateCostTooltip);
-          span.addEventListener('focusin', span._updateCostTooltip);
-          span.addEventListener('pointerdown', span._updateCostTooltip);
+            addTrackedUIListener(costElement, span, 'mouseenter', span._updateCostTooltip);
+            addTrackedUIListener(costElement, span, 'focusin', span._updateCostTooltip);
+            addTrackedUIListener(costElement, span, 'pointerdown', span._updateCostTooltip);
         }
         costElement._spans.set(item.key, span);
         list.appendChild(span);
@@ -2925,6 +2930,7 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function buildProdConsElement(element, sections) {
+    cleanupDynamicTooltipsIn(element);
     element.textContent = '';
     element._sections = {};
 
@@ -3202,11 +3208,7 @@ function initializeUnhideButtons() {
   categories.forEach(cat => {
     const btn = document.getElementById(`${cat}-unhide-button`);
     if (btn) {
-      // Remove any existing listeners by cloning the button
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      
-      newBtn.addEventListener('click', () => {
+      btn.onclick = () => {
         if (typeof buildings === 'undefined') return;
         Object.values(buildings).forEach(b => {
           if (b.category === cat) {
@@ -3215,7 +3217,7 @@ function initializeUnhideButtons() {
           }
         });
         updateBuildingDisplay(buildings);
-      });
+      };
     }
   });
 }

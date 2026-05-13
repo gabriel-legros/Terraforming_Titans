@@ -747,14 +747,18 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
 
     elements.disposalTargetRows = {};
+    cleanupTrackedUIListeners(elements.disposalTargetList);
+    cleanupDynamicTooltipsIn(elements.disposalTargetList);
     elements.disposalTargetList.textContent = '';
 
-    for (let i = 0; i < this.disposalTargets.length; i += 1) {
-      const target = this.disposalTargets[i];
-      const row = this.createDisposalTargetRow(target, i);
-      elements.disposalTargetRows[target.id] = row;
-      elements.disposalTargetList.appendChild(row.card);
-    }
+    runWithTrackedUIListeners(elements.disposalTargetList, () => {
+      for (let i = 0; i < this.disposalTargets.length; i += 1) {
+        const target = this.disposalTargets[i];
+        const row = this.createDisposalTargetRow(target, i);
+        elements.disposalTargetRows[target.id] = row;
+        elements.disposalTargetList.appendChild(row.card);
+      }
+    });
 
     this.refreshDisposalTargetSelects();
   }

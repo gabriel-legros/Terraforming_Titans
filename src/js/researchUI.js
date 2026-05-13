@@ -295,6 +295,8 @@ function loadResearchCategory(category) {
     }
 
     // Clear the current research list
+    cleanupTrackedUIListeners(researchListContainer);
+    cleanupDynamicTooltipsIn(researchListContainer);
     while (researchListContainer.firstChild) {
         researchListContainer.removeChild(researchListContainer.firstChild);
     }
@@ -309,126 +311,128 @@ function loadResearchCategory(category) {
         return;
     }
 
-    researches.forEach((research) => {
-        if (research.disabled) {
-            return;
-        }
-        const researchContainer = document.createElement('div');
-        researchContainer.classList.add('research-item');
+    runWithTrackedUIListeners(researchListContainer, () => {
+        researches.forEach((research) => {
+            if (research.disabled) {
+                return;
+            }
+            const researchContainer = document.createElement('div');
+            researchContainer.classList.add('research-item');
 
-        const researchButton = document.createElement('button');
-        researchButton.classList.add('research-button');
-        researchButton.id = `research-${research.id}`;
-        const isVisible = visibleIds.has(research.id);
-        updateResearchButtonText(researchButton, research, isVisible);
+            const researchButton = document.createElement('button');
+            researchButton.classList.add('research-button');
+            researchButton.id = `research-${research.id}`;
+            const isVisible = visibleIds.has(research.id);
+            updateResearchButtonText(researchButton, research, isVisible);
 
-        researchButton.addEventListener('click', () => {
-            researchManager.completeResearch(research.id);
-            updateResearchUI();
-        });
+            researchButton.addEventListener('click', () => {
+                researchManager.completeResearch(research.id);
+                updateResearchUI();
+            });
 
-        const hideToggle = document.createElement('button');
-        hideToggle.type = 'button';
-        hideToggle.classList.add('research-hide-toggle');
-        hideToggle.textContent = research.hiddenByUser ? 'Unhide' : 'Hide';
-        hideToggle.addEventListener('click', (event) => {
-            event.stopPropagation();
-            setResearchHiddenByUser(research, !research.hiddenByUser);
-            updateAllResearchButtons(researchManager.researches);
-            updateCompletedResearchVisibility();
-        });
-
-        const researchDescription = document.createElement('p');
-        researchDescription.classList.add('research-description');
-        if (isVisible) {
-            researchDescription.textContent = research.description;
-        } else {
-            researchDescription.textContent = '???';
-        }
-
-        const researchCost = document.createElement('p');
-        researchCost.classList.add('research-cost');
-        researchCost.textContent = isVisible ? `Cost: ${formatResearchCost(research.cost)}` : 'Cost: ???';
-
-        if (!research.isResearched && hasActiveDisableFlag(research)) {
-            researchContainer.style.display = 'none';
-        }
-
-        let autoCheckbox = null;
-        let autoLabel = null;
-        let autoPrioritySelect = null;
-        if (category !== 'advanced') {
-            autoCheckbox = document.createElement('input');
-            autoCheckbox.type = 'checkbox';
-            autoCheckbox.classList.add('research-auto-checkbox');
-            autoCheckbox.checked = researchManager.getAutoResearchEnabled(research.id);
-            autoCheckbox.addEventListener('click', (event) => {
+            const hideToggle = document.createElement('button');
+            hideToggle.type = 'button';
+            hideToggle.classList.add('research-hide-toggle');
+            hideToggle.textContent = research.hiddenByUser ? 'Unhide' : 'Hide';
+            hideToggle.addEventListener('click', (event) => {
                 event.stopPropagation();
+                setResearchHiddenByUser(research, !research.hiddenByUser);
+                updateAllResearchButtons(researchManager.researches);
+                updateCompletedResearchVisibility();
             });
-            autoCheckbox.addEventListener('change', () => {
-                const applied = researchManager.setAutoResearchEnabled(research.id, autoCheckbox.checked);
-                if (!applied) {
-                    autoCheckbox.checked = false;
-                }
+
+            const researchDescription = document.createElement('p');
+            researchDescription.classList.add('research-description');
+            if (isVisible) {
+                researchDescription.textContent = research.description;
+            } else {
+                researchDescription.textContent = '???';
+            }
+
+            const researchCost = document.createElement('p');
+            researchCost.classList.add('research-cost');
+            researchCost.textContent = isVisible ? `Cost: ${formatResearchCost(research.cost)}` : 'Cost: ???';
+
+            if (!research.isResearched && hasActiveDisableFlag(research)) {
+                researchContainer.style.display = 'none';
+            }
+
+            let autoCheckbox = null;
+            let autoLabel = null;
+            let autoPrioritySelect = null;
+            if (category !== 'advanced') {
+                autoCheckbox = document.createElement('input');
+                autoCheckbox.type = 'checkbox';
+                autoCheckbox.classList.add('research-auto-checkbox');
+                autoCheckbox.checked = researchManager.getAutoResearchEnabled(research.id);
+                autoCheckbox.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                });
+                autoCheckbox.addEventListener('change', () => {
+                    const applied = researchManager.setAutoResearchEnabled(research.id, autoCheckbox.checked);
+                    if (!applied) {
+                        autoCheckbox.checked = false;
+                    }
+                });
+                const unlocked = researchManager.autoResearchEnabled ||
+                    researchManager.isBooleanFlagSet('autoResearchEnabled');
+                autoCheckbox.style.display = unlocked ? '' : 'none';
+                autoLabel = document.createElement('label');
+                autoLabel.classList.add('research-auto-label');
+                autoLabel.textContent = 'Auto Research ';
+                autoLabel.appendChild(autoCheckbox);
+                autoLabel.style.display = unlocked ? '' : 'none';
+
+                autoPrioritySelect = document.createElement('select');
+                autoPrioritySelect.classList.add('research-auto-priority');
+                ['1', '2', '3', '4'].forEach((value) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = `P${value}`;
+                    autoPrioritySelect.appendChild(option);
+                });
+                autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(research.id)}`;
+                autoPrioritySelect.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                });
+                autoPrioritySelect.addEventListener('change', () => {
+                    const applied = researchManager.setAutoResearchPriority(research.id, Number.parseInt(autoPrioritySelect.value, 10));
+                    if (!applied) {
+                        autoPrioritySelect.value = '4';
+                    }
+                });
+                autoPrioritySelect.style.display = unlocked ? '' : 'none';
+
+                const autoRow = document.createElement('div');
+                autoRow.classList.add('research-auto-row');
+                autoRow.appendChild(autoLabel);
+                autoRow.appendChild(autoPrioritySelect);
+
+                const autoControls = document.createElement('div');
+                autoControls.classList.add('research-auto-controls');
+                autoControls.appendChild(autoRow);
+                researchContainer.appendChild(autoControls);
+            }
+
+            // Append button, cost, and description to the research container
+            researchContainer.appendChild(researchButton);
+            researchContainer.appendChild(researchCost);
+            researchContainer.appendChild(researchDescription);
+            researchContainer.appendChild(hideToggle);
+
+            // Append the research container to the research list
+            researchListContainer.appendChild(researchContainer);
+
+            researchElementCache.set(research.id, {
+                container: researchContainer,
+                button: researchButton,
+                costEl: researchCost,
+                descEl: researchDescription,
+                hideToggle,
+                autoCheckbox,
+                autoLabel,
+                autoPrioritySelect,
             });
-            const unlocked = researchManager.autoResearchEnabled ||
-                researchManager.isBooleanFlagSet('autoResearchEnabled');
-            autoCheckbox.style.display = unlocked ? '' : 'none';
-            autoLabel = document.createElement('label');
-            autoLabel.classList.add('research-auto-label');
-            autoLabel.textContent = 'Auto Research ';
-            autoLabel.appendChild(autoCheckbox);
-            autoLabel.style.display = unlocked ? '' : 'none';
-
-            autoPrioritySelect = document.createElement('select');
-            autoPrioritySelect.classList.add('research-auto-priority');
-            ['1', '2', '3', '4'].forEach((value) => {
-                const option = document.createElement('option');
-                option.value = value;
-                option.textContent = `P${value}`;
-                autoPrioritySelect.appendChild(option);
-            });
-            autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(research.id)}`;
-            autoPrioritySelect.addEventListener('click', (event) => {
-                event.stopPropagation();
-            });
-            autoPrioritySelect.addEventListener('change', () => {
-                const applied = researchManager.setAutoResearchPriority(research.id, Number.parseInt(autoPrioritySelect.value, 10));
-                if (!applied) {
-                    autoPrioritySelect.value = '4';
-                }
-            });
-            autoPrioritySelect.style.display = unlocked ? '' : 'none';
-
-            const autoRow = document.createElement('div');
-            autoRow.classList.add('research-auto-row');
-            autoRow.appendChild(autoLabel);
-            autoRow.appendChild(autoPrioritySelect);
-
-            const autoControls = document.createElement('div');
-            autoControls.classList.add('research-auto-controls');
-            autoControls.appendChild(autoRow);
-            researchContainer.appendChild(autoControls);
-        }
-
-        // Append button, cost, and description to the research container
-        researchContainer.appendChild(researchButton);
-        researchContainer.appendChild(researchCost);
-        researchContainer.appendChild(researchDescription);
-        researchContainer.appendChild(hideToggle);
-
-        // Append the research container to the research list
-        researchListContainer.appendChild(researchContainer);
-
-        researchElementCache.set(research.id, {
-            container: researchContainer,
-            button: researchButton,
-            costEl: researchCost,
-            descEl: researchDescription,
-            hideToggle,
-            autoCheckbox,
-            autoLabel,
-            autoPrioritySelect,
         });
     });
 }

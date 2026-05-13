@@ -57,6 +57,8 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
   }
 }
 
+const dynamicTooltipAnchors = new Set();
+
 function addTooltipHover(anchor, tooltip, options = {}) {
   if (!anchor) return;
   if (anchor._cleanupTooltipHover) {
@@ -262,6 +264,7 @@ function addTooltipHover(anchor, tooltip, options = {}) {
     anchor.removeEventListener('focusin', handleFocusIn);
     anchor.removeEventListener('focusout', handleFocusOut);
     anchor.removeEventListener('pointerdown', handlePointerDown);
+    dynamicTooltipAnchors.delete(anchor);
     if (anchor._cleanupTooltipHover === cleanup) {
       anchor._cleanupTooltipHover = null;
     }
@@ -273,6 +276,7 @@ function addTooltipHover(anchor, tooltip, options = {}) {
   anchor.addEventListener('focusout', handleFocusOut);
   anchor.addEventListener('pointerdown', handlePointerDown);
   anchor._cleanupTooltipHover = cleanup;
+  dynamicTooltipAnchors.add(anchor);
 }
 
 function setTooltipText(node, text, cache, key) {
@@ -300,6 +304,89 @@ function attachDynamicInfoTooltip(iconElement, text, clickToPin = true) {
     tooltip._dynamicHoverAttached = true;
   }
   return tooltip;
+}
+
+function cleanupDynamicTooltipsIn(root) {
+  if (!root || !root.querySelectorAll) return;
+  dynamicTooltipAnchors.forEach(anchor => {
+    if (!anchor.isConnected && anchor._cleanupTooltipHover) {
+      anchor._cleanupTooltipHover();
+    }
+  });
+  const anchors = [];
+  if (root.matches && root.matches('.info-tooltip-icon, .inline-tooltip-anchor, .resource-item')) {
+    anchors.push(root);
+  }
+  root.querySelectorAll('.info-tooltip-icon, .inline-tooltip-anchor, .resource-item').forEach(anchor => anchors.push(anchor));
+  const dynamicTooltipListeners = [
+    '_updateCostTooltip',
+    '_updateWorkerTooltip',
+    '_updateMaintenanceTooltip',
+    '_updateProductionTooltip',
+    '_updateConsumptionTooltip'
+  ];
+  for (let i = 0; i < anchors.length; i += 1) {
+    const anchor = anchors[i];
+    if (anchor._cleanupTooltipHover) {
+      anchor._cleanupTooltipHover();
+    }
+    for (let listenerIndex = 0; listenerIndex < dynamicTooltipListeners.length; listenerIndex += 1) {
+      const key = dynamicTooltipListeners[listenerIndex];
+      const listener = anchor[key];
+      if (listener) {
+        anchor.removeEventListener('mouseenter', listener);
+        anchor.removeEventListener('focusin', listener);
+        anchor.removeEventListener('pointerdown', listener);
+        anchor[key] = null;
+      }
+    }
+  }
+}
+
+function cleanupTrackedUIListeners(root) {
+  if (!root) return;
+  const cleanupNode = (node) => {
+    if (!node._uiListenerCleanups) return;
+    const cleanups = node._uiListenerCleanups;
+    for (let i = 0; i < cleanups.length; i += 1) {
+      cleanups[i]();
+    }
+    node._uiListenerCleanups = [];
+  };
+  cleanupNode(root);
+  if (!root.querySelectorAll) return;
+  const descendants = root.querySelectorAll('*');
+  for (let i = 0; i < descendants.length; i += 1) {
+    cleanupNode(descendants[i]);
+  }
+}
+
+function addTrackedUIListener(root, target, type, listener, options) {
+  target.addEventListener(type, listener, options);
+  if (!root) return;
+  const cleanups = root._uiListenerCleanups || [];
+  cleanups.push(() => {
+    target.removeEventListener(type, listener, options);
+  });
+  root._uiListenerCleanups = cleanups;
+}
+
+function runWithTrackedUIListeners(root, callback) {
+  const originalAddEventListener = EventTarget.prototype.addEventListener;
+  const cleanups = [];
+  EventTarget.prototype.addEventListener = function addTrackedEventListener(type, listener, options) {
+    cleanups.push(() => {
+      this.removeEventListener(type, listener, options);
+    });
+    return originalAddEventListener.call(this, type, listener, options);
+  };
+  try {
+    return callback();
+  } finally {
+    EventTarget.prototype.addEventListener = originalAddEventListener;
+    const existingCleanups = root._uiListenerCleanups || [];
+    root._uiListenerCleanups = existingCleanups.concat(cleanups);
+  }
 }
 
 function wireStringNumberInput(input, options = {}) {

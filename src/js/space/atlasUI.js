@@ -358,13 +358,19 @@ function updateAtlasUI(options = {}) {
         : getAtlasText('ready', 'Challenge worlds can always be revisited after completion.');
     status.classList.toggle('atlas-status-warning', spaceManager.isRandomTravelLocked());
 
+    cleanupTrackedUIListeners(featuredList);
+    cleanupDynamicTooltipsIn(featuredList);
     featuredList.replaceChildren();
-    featured.forEach((definition) => {
-        featuredList.appendChild(buildAtlasWorldCard(definition, 'featured'));
+    runWithTrackedUIListeners(featuredList, () => {
+        featured.forEach((definition) => {
+            featuredList.appendChild(buildAtlasWorldCard(definition, 'featured'));
+        });
     });
 
     communitySection.style.display = community.length ? '' : 'none';
     if (community.length) {
+        cleanupTrackedUIListeners(communityContent);
+        cleanupDynamicTooltipsIn(communityContent);
         communityContent.replaceChildren();
         const rewardNote = document.createElement('p');
         rewardNote.className = 'space-card-subtitle atlas-community-note';
@@ -373,8 +379,10 @@ function updateAtlasUI(options = {}) {
         communityList.className = 'planet-grid atlas-community-list';
         communityContent.appendChild(rewardNote);
         communityContent.appendChild(communityList);
-        community.forEach((definition) => {
-            communityList.appendChild(buildAtlasWorldCard(definition, 'community'));
+        runWithTrackedUIListeners(communityContent, () => {
+            community.forEach((definition) => {
+                communityList.appendChild(buildAtlasWorldCard(definition, 'community'));
+            });
         });
     }
     setAtlasCommunityVisibility();

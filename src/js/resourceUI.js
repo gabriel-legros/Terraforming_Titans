@@ -341,93 +341,96 @@ function getLiquidCoverageTargetAmount(terraformingState, coverageKey, targetCov
 
 function createResourceContainers(resourcesData) {
   const resourcesContainer = document.getElementById('resources-container');
-  const existingTooltipAnchors = resourcesContainer.querySelectorAll('.resource-item, .info-tooltip-icon');
-  for (let i = 0; i < existingTooltipAnchors.length; i += 1) {
-    const anchor = existingTooltipAnchors[i];
-    if (anchor._cleanupTooltipHover) {
-      anchor._cleanupTooltipHover();
-    }
-  }
-  resourcesContainer.innerHTML = ''; // Clear the main container first
   resourceUICache.viewToggles = {};
 
   const categories = getResourceCategoriesForDisplay(resourcesData);
-  for (let i = 0; i < categories.length; i += 1) {
-    const category = categories[i];
-    // Create a new container for each category
-    const categoryContainer = document.createElement('div');
-    categoryContainer.classList.add('resource-display');
-    categoryContainer.style.display = 'none'; // Initially hidden
+  runWithTrackedUIListeners(resourcesContainer, () => {
+    for (let i = 0; i < categories.length; i += 1) {
+      const category = categories[i];
+      const resourceListId = `${category}-resources-resources-container`;
+      const existingList = document.getElementById(resourceListId);
+      if (existingList) {
+        const existingToggle = existingList.parentElement.querySelector('.resource-view-toggle');
+        if (existingToggle) {
+          resourceUICache.viewToggles[category] = existingToggle;
+        }
+        continue;
+      }
+      // Create a new container for each category
+      const categoryContainer = document.createElement('div');
+      categoryContainer.classList.add('resource-display');
+      categoryContainer.style.display = 'none'; // Initially hidden
 
-    // Create and append the header for the category
-    const header = document.createElement('h3');
-    header.id = `${category}-resources-header`;
-    header.classList.add('resource-category-header');
-    header.style.display = 'none'; // Initially hidden
+      // Create and append the header for the category
+      const header = document.createElement('h3');
+      header.id = `${category}-resources-header`;
+      header.classList.add('resource-category-header');
+      header.style.display = 'none'; // Initially hidden
 
-    const collapseTarget = document.createElement('span');
-    collapseTarget.classList.add('resource-category-toggle-target');
+      const collapseTarget = document.createElement('span');
+      collapseTarget.classList.add('resource-category-toggle-target');
 
-    const arrow = document.createElement('span');
-    arrow.classList.add('collapse-arrow');
-    arrow.innerHTML = '&#9660;';
-    collapseTarget.appendChild(arrow);
+      const arrow = document.createElement('span');
+      arrow.classList.add('collapse-arrow');
+      arrow.innerHTML = '&#9660;';
+      collapseTarget.appendChild(arrow);
 
-    const label = document.createElement('span');
-    label.classList.add('resource-category-label');
-    if (category === 'spaceStorage') {
-      label.textContent = getResourceUICommonText('spaceResources', 'Space Resources');
-    } else {
-      label.textContent = getResourceUICommonText('categoryResources', '{name} Resources', {
-        name: capitalizeFirstLetter(category),
-      });
-    }
-    collapseTarget.appendChild(label);
-    header.appendChild(collapseTarget);
+      const label = document.createElement('span');
+      label.classList.add('resource-category-label');
+      if (category === 'spaceStorage') {
+        label.textContent = getResourceUICommonText('spaceResources', 'Space Resources');
+      } else {
+        label.textContent = getResourceUICommonText('categoryResources', '{name} Resources', {
+          name: capitalizeFirstLetter(category),
+        });
+      }
+      collapseTarget.appendChild(label);
+      header.appendChild(collapseTarget);
 
-    if (category === 'colony' || category === 'spaceStorage') {
-      const controls = document.createElement('span');
-      controls.classList.add('resource-category-controls');
-      const toggle = createToggleButton({
-        onLabel: '',
-        offLabel: '',
-        isOn: isSpaceStorageViewActive()
-      });
-      toggle.classList.add('resource-view-toggle');
-      const toggleLabel = getResourceUICommonText('toggleView', 'Toggle colony/space resource view');
-      toggle.title = toggleLabel;
-      toggle.setAttribute('aria-label', toggleLabel);
-      toggle.addEventListener('click', (event) => {
-        event.stopPropagation();
-        setResourcePanelViewMode(!isSpaceStorageViewActive());
-      });
-      controls.appendChild(toggle);
-      header.appendChild(controls);
-      resourceUICache.viewToggles[category] = toggle;
-    }
-    categoryContainer.appendChild(header);
+      if (category === 'colony' || category === 'spaceStorage') {
+        const controls = document.createElement('span');
+        controls.classList.add('resource-category-controls');
+        const toggle = createToggleButton({
+          onLabel: '',
+          offLabel: '',
+          isOn: isSpaceStorageViewActive()
+        });
+        toggle.classList.add('resource-view-toggle');
+        const toggleLabel = getResourceUICommonText('toggleView', 'Toggle colony/space resource view');
+        toggle.title = toggleLabel;
+        toggle.setAttribute('aria-label', toggleLabel);
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          setResourcePanelViewMode(!isSpaceStorageViewActive());
+        });
+        controls.appendChild(toggle);
+        header.appendChild(controls);
+        resourceUICache.viewToggles[category] = toggle;
+      }
+      categoryContainer.appendChild(header);
 
-    // Create and append the resource list container
-    const resourceList = document.createElement('div');
-    resourceList.id = `${category}-resources-resources-container`;
-    categoryContainer.appendChild(resourceList);
+      // Create and append the resource list container
+      const resourceList = document.createElement('div');
+      resourceList.id = resourceListId;
+      categoryContainer.appendChild(resourceList);
 
-    const applyCollapsedState = () => {
-      const collapsed = resourceCategoryCollapsedState[category] === true;
-      resourceList.style.display = collapsed ? 'none' : '';
-      arrow.innerHTML = collapsed ? '&#9654;' : '&#9660;';
-    };
-    applyCollapsedState();
-
-    collapseTarget.addEventListener('click', () => {
-      const collapsed = resourceList.style.display !== 'none';
-      resourceCategoryCollapsedState[category] = collapsed;
+      const applyCollapsedState = () => {
+        const collapsed = resourceCategoryCollapsedState[category] === true;
+        resourceList.style.display = collapsed ? 'none' : '';
+        arrow.innerHTML = collapsed ? '&#9654;' : '&#9660;';
+      };
       applyCollapsedState();
-    });
 
-    // Append the complete category container to the main container
-    resourcesContainer.appendChild(categoryContainer);
-  }
+      collapseTarget.addEventListener('click', () => {
+        const collapsed = resourceList.style.display !== 'none';
+        resourceCategoryCollapsedState[category] = collapsed;
+        applyCollapsedState();
+      });
+
+      // Append the complete category container to the main container
+      resourcesContainer.appendChild(categoryContainer);
+    }
+  });
   updateResourceViewToggleState(resourcesData);
 }
 
@@ -1502,13 +1505,25 @@ function populateResourceElements(resources) {
         ensureSpaceStorageTotalElement(container);
       }
       const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
+      const currentIds = new Set();
       for (let i = 0; i < resourceNames.length; i += 1) {
         const resourceName = resourceNames[i];
         const resourceObj = getDisplayResourceObject(resources, category, resourceName);
         if (!resourceObj) continue;
-        if (!document.getElementById(getResourceDomId(category, resourceName, 'container'))) {
+        const resourceContainerId = getResourceDomId(category, resourceName, 'container');
+        currentIds.add(resourceContainerId);
+        if (!document.getElementById(resourceContainerId)) {
           const resourceElement = createResourceElement(category, resourceObj, resourceName);
           container.appendChild(resourceElement);
+        }
+      }
+      const existingResourceElements = container.querySelectorAll('.resource-item');
+      for (let j = 0; j < existingResourceElements.length; j += 1) {
+        const element = existingResourceElements[j];
+        if (!currentIds.has(element.id)) {
+          cleanupTrackedUIListeners(element);
+          cleanupDynamicTooltipsIn(element);
+          element.remove();
         }
       }
       if (category === 'spaceStorage') {

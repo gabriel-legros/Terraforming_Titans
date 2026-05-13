@@ -367,7 +367,7 @@ function createNeedBox(needKey, displayName, value, isLuxury, structure) {
     checkbox.id = `${structure.name}-${needKey}-checkbox`;
     checkbox.checked = structure.isLuxuryResourceActive(needKey);
     checkbox.disabled = structure.isLuxuryResourceTemporarilyDisabled(needKey);
-    checkbox.addEventListener('change', () => {
+    addTrackedUIListener(needBox, checkbox, 'change', () => {
       structure.luxuryResourcesEnabled[needKey] = checkbox.checked;
       updateNeedBox(structure.needBoxCache[needKey], displayName, needKey, structure.filledNeeds[needKey], isLuxury, structure);
     });
@@ -424,6 +424,8 @@ function updateNeedBox(cacheEntry, displayName, needKey, value, isLuxury, struct
 function rebuildColonyNeedCache(structureRow, structure) {
   const oldDetails = structureRow.querySelector('.colony-details');
   if (oldDetails) {
+    cleanupTrackedUIListeners(oldDetails);
+    cleanupDynamicTooltipsIn(oldDetails);
     oldDetails.replaceWith(createColonyDetails(structure));
   } else {
     structureRow.appendChild(createColonyDetails(structure));
