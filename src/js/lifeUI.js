@@ -214,25 +214,33 @@ function isLifeShopCategoryUnlocked(category) {
 function getConvertedDisplay(attributeName, attribute) {
   if (tempAttributes.includes(attributeName)) {
     const requirements = getActiveLifeDesignRequirementsForUI();
+    const effectiveValue = attribute.getEffectiveValue();
     let kelvin = 0;
     switch (attributeName) {
       case 'minTemperatureTolerance':
-        kelvin = requirements.survivalTemperatureRangeK.min - attribute.value;
+        kelvin = requirements.survivalTemperatureRangeK.min - effectiveValue;
         break;
       case 'maxTemperatureTolerance':
-        kelvin = requirements.survivalTemperatureRangeK.max + attribute.value;
+        kelvin = requirements.survivalTemperatureRangeK.max + effectiveValue;
         break;
       case 'optimalGrowthTemperature':
-        kelvin = requirements.optimalGrowthTemperatureBaseK + attribute.value;
+        kelvin = requirements.optimalGrowthTemperatureBaseK + effectiveValue;
         break;
     }
     return `${formatNumber(toDisplayTemperature(kelvin), false, 2)}${getTemperatureUnit()}`;
   }
   if (attributeName === 'photosynthesisEfficiency') {
     const requirements = getActiveLifeDesignRequirementsForUI();
-    return (requirements.photosynthesisRatePerPoint * attribute.value).toFixed(5);
+    return (requirements.photosynthesisRatePerPoint * attribute.getEffectiveValue()).toFixed(5);
   }
   return attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-';
+}
+
+function getLifeAttributeMaxDisplay(attribute) {
+  if (isLifeFlagActive('quantumBiology')) {
+    return `${attribute.maxUpgrades}+`;
+  }
+  return attribute.maxUpgrades;
 }
 
 const lifeUICache = {
@@ -636,7 +644,7 @@ function initializeLifeTerraformingDesignerUI() {
         rows += `
           <tr id="life-attribute-row-${attributeName}"${lifeAttributeUnlockFlags[attributeName] ? ` data-life-attribute-ui="${attributeName}"` : ''}${rowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
-              ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${attribute.maxUpgrades}</span>)
+              ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${getLifeAttributeMaxDisplay(attribute)}</span>)
               <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'radiationTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}${attributeName === 'bioships' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.lifeDesigner.attributes.bioships.tooltip', 'Each point converts {percent}% of global biomass per second into spaceships after life growth and decay are resolved.', { percent: bioshipsPercentPerPoint })}">&#9432;</span>` : ''}`}</div>
             </td>
             <td>
@@ -695,6 +703,7 @@ function initializeLifeTerraformingDesignerUI() {
           const tentativeValueDisplay = ac.tentativeDisplay || document.querySelector(`#${attributeName}-tentative-value .life-tentative-display`);
           const currentTentativeValue = tentativeValueDisplay ? parseInt(tentativeValueDisplay.textContent, 10) : 0;
           const maxUpgrades = lifeDesigner.tentativeDesign[attributeName].maxUpgrades;
+          const quantumBiology = isLifeFlagActive('quantumBiology');
 
           const spendablePoints = getSpendableLifeDesignPoints();
           const remainingPoints =
@@ -717,7 +726,7 @@ function initializeLifeTerraformingDesignerUI() {
           } else if (event.shiftKey) {
               if (changeAmount > 0) {
                   if (attributeName === 'optimalGrowthTemperature') {
-                      newValue = Math.min(maxUpgrades, available);
+                      newValue = quantumBiology ? available : Math.min(maxUpgrades, available);
                   } else {
                       newValue = remainingPoints;
                   }
@@ -729,12 +738,14 @@ function initializeLifeTerraformingDesignerUI() {
           }
 
           if (attributeName === 'optimalGrowthTemperature') {
-              newValue = Math.max(-maxUpgrades, Math.min(maxUpgrades, newValue));
+              if (!quantumBiology) {
+                newValue = Math.max(-maxUpgrades, Math.min(maxUpgrades, newValue));
+              }
               const allowed = Math.min(Math.abs(newValue), Math.max(0, available));
               newValue = Math.sign(newValue) * allowed;
           } else {
               // Clamp the value between 0 and the allowed maximum and available points
-              newValue = Math.max(0, Math.min(maxUpgrades, newValue));
+              newValue = quantumBiology ? Math.max(0, newValue) : Math.max(0, Math.min(maxUpgrades, newValue));
               newValue = Math.min(newValue, remainingPoints);
           }
 
@@ -1082,7 +1093,7 @@ function updateLifeUI() {
           currentValueDiv.textContent = 'N/A';
         }
 
-        ac.maxSpan.textContent = currentAttribute.maxUpgrades;
+        ac.maxSpan.textContent = getLifeAttributeMaxDisplay(currentAttribute);
 
         // Update Tentative Design Value (if applicable, cached)
         const tentativeAttribute = lifeDesigner.tentativeDesign ? lifeDesigner.tentativeDesign[attributeName] : null;
@@ -1206,7 +1217,7 @@ function updateLifeStatusTable() {
     // Calculate max density based on space efficiency
     const spaceEfficiencyAttr = designToCheck.spaceEfficiency;
     const requirements = getActiveLifeDesignRequirementsForUI();
-    const densityMultiplier = 1 + (spaceEfficiencyAttr?.value || 0);
+    const densityMultiplier = 1 + (spaceEfficiencyAttr?.getEffectiveValue() || 0);
     const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
 
     // Get biomass and area info
@@ -1239,7 +1250,7 @@ function updateLifeStatusTable() {
     lifeUICache.tempUnits.forEach(el => el.textContent = unit);
 
     const survivalRange = designToCheck.getTemperatureRanges().survival;
-    const optimal = requirements.optimalGrowthTemperatureBaseK + designToCheck.optimalGrowthTemperature.value;
+    const optimal = requirements.optimalGrowthTemperatureBaseK + designToCheck.optimalGrowthTemperature.getEffectiveValue();
     const tolerance = designToCheck.getGrowthTemperatureToleranceWidth();
     const calcGrowthMult = temp => {
         if (tolerance <= 0) return temp === optimal ? 1 : 0;
@@ -1368,7 +1379,7 @@ function updateLifeStatusTable() {
                 }
                 return;
             }
-            const baseRate = designToCheck.photosynthesisEfficiency.value * requirements.photosynthesisRatePerPoint;
+            const baseRate = designToCheck.photosynthesisEfficiency.getEffectiveValue() * requirements.photosynthesisRatePerPoint;
             const metabolismProcess = getActiveLifeMetabolismProcessForUI();
             const usesLuminosity = metabolismProcess?.growth?.usesLuminosity === true;
             const lumMult = usesLuminosity

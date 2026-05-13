@@ -164,7 +164,8 @@ function calculateGrowthTemperatureTolerance(points) {
 
 const lifeDesignerConfig = {
   maxPoints : 0,
-  attributeMaxBonuses: {}
+  attributeMaxBonuses: {},
+  quantumBiology: false
 }
 
 function getAttributeMaxUpgrades(attributeName) {
@@ -173,6 +174,27 @@ function getAttributeMaxUpgrades(attributeName) {
     ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.attributeMaxUpgrades[attributeName];
   const bonus = lifeDesignerConfig.attributeMaxBonuses[attributeName] || 0;
   return baseMax + bonus;
+}
+
+function isQuantumBiologyUnlocked() {
+  return lifeDesignerConfig.quantumBiology;
+}
+
+function calculateQuantumLifeAttributeValue(value, maxUpgrades) {
+  const raw = Number(value) || 0;
+  const max = Number(maxUpgrades) || 0;
+  if (max <= 0) {
+    return raw;
+  }
+  const sign = raw < 0 ? -1 : 1;
+  const magnitude = Math.abs(raw);
+  if (magnitude <= max) {
+    return raw;
+  }
+  if (!isQuantumBiologyUnlocked()) {
+    return sign * max;
+  }
+  return sign * max * (2 - max / magnitude);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -188,46 +210,51 @@ class LifeAttribute {
     this.maxUpgrades = maxUpgrades;
   }
 
+  getEffectiveValue() {
+    return calculateQuantumLifeAttributeValue(this.value, this.maxUpgrades);
+  }
+
   getConvertedValue() {
     const requirements = getActiveLifeDesignRequirements();
     const survivalTemperatureRangeK = requirements.survivalTemperatureRangeK
       ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.survivalTemperatureRangeK;
+    const effectiveValue = this.getEffectiveValue();
     switch (this.name) {
       case 'minTemperatureTolerance':
-        return (survivalTemperatureRangeK.min - this.value).toFixed(2) + 'K';
+        return (survivalTemperatureRangeK.min - effectiveValue).toFixed(2) + 'K';
       case 'maxTemperatureTolerance':
-        return (survivalTemperatureRangeK.max + this.value).toFixed(2) + 'K';
+        return (survivalTemperatureRangeK.max + effectiveValue).toFixed(2) + 'K';
       case 'optimalGrowthTemperature':
         return (
-          requirements.optimalGrowthTemperatureBaseK + this.value
+          requirements.optimalGrowthTemperatureBaseK + effectiveValue
         ).toFixed(2) + 'K';
       case 'growthTemperatureTolerance':
-        return calculateGrowthTemperatureTolerance(this.value).toFixed(2);
+        return calculateGrowthTemperatureTolerance(effectiveValue).toFixed(2);
       case 'photosynthesisEfficiency':
-        return (requirements.photosynthesisRatePerPoint * this.value).toFixed(5);
+        return (requirements.photosynthesisRatePerPoint * effectiveValue).toFixed(5);
       case 'radiationTolerance':
-        return `${formatNumber(this.value * this.value * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
+        return `${formatNumber(effectiveValue * effectiveValue * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
       case 'invasiveness':
-        return this.value;
+        return effectiveValue;
       case 'spaceEfficiency':
         // Calculate and display the actual max density
-        const densityMultiplier = 1 + this.value; // Each point adds 100% of base density
+        const densityMultiplier = 1 + effectiveValue; // Each point adds 100% of base density
         const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
         return formatNumber(maxDensity, false, 1) + ' tons/m²'; // Display calculated density with 1 decimal place
       case 'geologicalBurial':
         // Calculate rate: starts at 0, adds 0.0001 per point, max 0.001 at 10 points
-        const burialRate = this.value * 0.0001;
+        const burialRate = effectiveValue * 0.0001;
         return burialRate.toFixed(4); // Display rate with 4 decimal places
       case 'bioworkforce':
         const bioworkersPerBiomassPerPoint = requirements.bioworkersPerBiomassPerPoint
           ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.bioworkersPerBiomassPerPoint
           ?? 0.00001;
-        return `${(this.value * bioworkersPerBiomassPerPoint).toFixed(5)} workers per ton biomass`;
+        return `${(effectiveValue * bioworkersPerBiomassPerPoint).toFixed(5)} workers per ton biomass`;
       case 'bioships':
         return getLifeText(
           'ui.lifeDesigner.attributes.bioships.convertedValue',
           '{percent}% biomass/s to spaceships',
-          { percent: formatNumber(this.value * BIOSHIPS_FRACTION_PER_POINT_PER_SECOND * 100, false, 2) }
+          { percent: formatNumber(effectiveValue * BIOSHIPS_FRACTION_PER_POINT_PER_SECOND * 100, false, 2) }
         );
       default:
         return null;
@@ -292,11 +319,11 @@ class LifeDesign {
   }
 
   getGrowthTemperatureToleranceWidth() {
-    return calculateGrowthTemperatureTolerance(this.growthTemperatureTolerance.value);
+    return calculateGrowthTemperatureTolerance(this.growthTemperatureTolerance.getEffectiveValue());
   }
 
   getRadiationMitigationDose() {
-    const points = Math.max(0, this.radiationTolerance.value || 0);
+    const points = Math.max(0, this.radiationTolerance.getEffectiveValue() || 0);
     return points * points * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY;
   }
 
@@ -642,7 +669,7 @@ class LifeDesign {
   temperatureGrowthMultiplierZone(zoneName) {
       const zoneData = terraforming.temperature.zones[zoneName];
       const requirements = getActiveLifeDesignRequirements();
-      const optimal = requirements.optimalGrowthTemperatureBaseK + this.optimalGrowthTemperature.value;
+      const optimal = requirements.optimalGrowthTemperatureBaseK + this.optimalGrowthTemperature.getEffectiveValue();
       const tolerance = this.getGrowthTemperatureToleranceWidth();
       if (tolerance <= 0) {
           return zoneData.day === optimal ? 1 : 0;
@@ -670,8 +697,8 @@ class LifeDesign {
     const survivalTemperatureRangeK = requirements.survivalTemperatureRangeK
       ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.survivalTemperatureRangeK;
     const survivalRange = {
-      min: survivalTemperatureRangeK.min - this.minTemperatureTolerance.value,
-      max: survivalTemperatureRangeK.max + this.maxTemperatureTolerance.value
+      min: survivalTemperatureRangeK.min - this.minTemperatureTolerance.getEffectiveValue(),
+      max: survivalTemperatureRangeK.max + this.maxTemperatureTolerance.getEffectiveValue()
     };
   
     return {
@@ -874,7 +901,7 @@ class LifeDesigner extends EffectableEntity {
 
   getTentativeDuration() {
     if(this.tentativeDesign){
-        return this.baseApplyDuration * (Math.log10(Math.max(resources.surface.biomass.value,1)) + 1) / (this.tentativeDesign.invasiveness.value + 1);
+        return this.baseApplyDuration * (Math.log10(Math.max(resources.surface.biomass.value,1)) + 1) / (this.tentativeDesign.invasiveness.getEffectiveValue() + 1);
     } else {
       return this.baseApplyDuration * (Math.log10(Math.max(resources.surface.biomass.value,1)) + 1);
     }
@@ -1058,6 +1085,14 @@ class LifeManager extends EffectableEntity {
   constructor() {
     super({description : 'Life Manager'})
     this.biomassGrowthLimiters = {};
+    lifeDesignerConfig.quantumBiology = false;
+  }
+
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    if (effect.flagId === 'quantumBiology') {
+      lifeDesignerConfig.quantumBiology = !!effect.value;
+    }
   }
 
   getEngineeredNitrogenFixationInfo() {
@@ -1162,7 +1197,7 @@ class LifeManager extends EffectableEntity {
 
     const canGrowByZone = {};
     const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
-    const densityMultiplier = 1 + design.spaceEfficiency.value;
+    const densityMultiplier = 1 + design.spaceEfficiency.getEffectiveValue();
     const effectiveGrowthMultiplier = this.getEffectiveLifeGrowthMultiplier();
     let radPenalty = design.getRadiationGrowthPenalty();
     if (radPenalty < 0.0001) radPenalty = 0;
@@ -1687,7 +1722,7 @@ class LifeManager extends EffectableEntity {
 
     // Global resource object amounts are updated directly, modifyRate updates UI tracking.
 
-    const bioshipsValue = design.bioships.value;
+    const bioshipsValue = design.bioships.getEffectiveValue();
     if (bioshipsValue > 0 && secondsMultiplier > 0) {
       const biomassToSpaceshipsRate = bioshipsValue * BIOSHIPS_FRACTION_PER_POINT_PER_SECOND;
       let totalConvertedBiomass = 0;
@@ -1720,7 +1755,7 @@ class LifeManager extends EffectableEntity {
     }
 
     // --- Geological Burial Step (after growth/decay) ---
-    const burialValue = design.geologicalBurial.value;
+    const burialValue = design.geologicalBurial.getEffectiveValue();
     if (burialValue > 0 && secondsMultiplier > 0) {
       // Base burial rate is 0.01% per point per day
       let burialRatePerDay = burialValue * 0.0001;

@@ -973,7 +973,7 @@ class HazardousBiomassHazard {
       return 0;
     }
 
-    const value = designer.currentDesign.invasiveness.value;
+    const value = designer.currentDesign.invasiveness.getEffectiveValue();
     return Number.isFinite(value) ? value : 0;
   }
 

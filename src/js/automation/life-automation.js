@@ -113,13 +113,16 @@ class LifeAutomation {
       ? entry.attribute
       : LIFE_AUTOMATION_ATTRIBUTES[0];
     const maxUpgrades = lifeDesigner.currentDesign[attribute].maxUpgrades;
+    const quantumBiology = lifeManager.isBooleanFlagSet('quantumBiology');
     const capMode = this.normalizeEntryCapMode(attribute, entry.capMode || 'fixed');
     const parsedCap = entry.cap === null || entry.cap === undefined || entry.cap === ''
       ? null
       : Math.floor(Number(entry.cap) || 0);
     let cap = null;
     if (parsedCap !== null) {
-      cap = attribute === 'optimalGrowthTemperature'
+      cap = quantumBiology
+        ? (attribute === 'optimalGrowthTemperature' ? parsedCap : Math.max(0, parsedCap))
+        : attribute === 'optimalGrowthTemperature'
         ? Math.max(-maxUpgrades, Math.min(maxUpgrades, parsedCap))
         : Math.max(0, Math.min(maxUpgrades, parsedCap));
     }
@@ -464,8 +467,11 @@ class LifeAutomation {
         entry.cap = null;
       } else {
         const maxUpgrades = lifeDesigner.currentDesign[entry.attribute].maxUpgrades;
+        const quantumBiology = lifeManager.isBooleanFlagSet('quantumBiology');
         const parsed = Math.floor(Number(updates.cap) || 0);
-        entry.cap = entry.attribute === 'optimalGrowthTemperature'
+        entry.cap = quantumBiology
+          ? (entry.attribute === 'optimalGrowthTemperature' ? parsed : Math.max(0, parsed))
+          : entry.attribute === 'optimalGrowthTemperature'
           ? Math.max(-maxUpgrades, Math.min(maxUpgrades, parsed))
           : Math.max(0, Math.min(maxUpgrades, parsed));
       }
@@ -540,7 +546,9 @@ class LifeAutomation {
       if (isMetabolism && !hasValue && steps.length === 0) {
         continue;
       }
-      const amount = isOptimal
+      const amount = lifeManager.isBooleanFlagSet('quantumBiology')
+        ? (isOptimal ? value : Math.max(0, value))
+        : isOptimal
         ? Math.max(-maxUpgrades, Math.min(maxUpgrades, value))
         : Math.max(0, Math.min(maxUpgrades, value));
       steps.push({
@@ -635,7 +643,13 @@ class LifeAutomation {
       return Math.min(maxUpgrades, this.getRadiationToleranceTarget());
     }
     if (entry.cap === null || entry.cap === undefined) {
-      return maxUpgrades;
+      return lifeManager.isBooleanFlagSet('quantumBiology') ? Infinity : maxUpgrades;
+    }
+    if (lifeManager.isBooleanFlagSet('quantumBiology')) {
+      if (attributeName === 'optimalGrowthTemperature') {
+        return Math.abs(Math.floor(Number(entry.cap) || 0));
+      }
+      return Math.max(0, Math.floor(Number(entry.cap) || 0));
     }
     if (attributeName === 'optimalGrowthTemperature') {
       return Math.min(maxUpgrades, Math.abs(Math.floor(Number(entry.cap) || 0)));
@@ -671,7 +685,7 @@ class LifeAutomation {
     }
     if (attributeName === 'optimalGrowthTemperature') {
       const direction = entry.cap < 0 ? -1 : 1;
-      const targetAbs = Math.min(attribute.maxUpgrades, Math.abs(attribute.value) + spend);
+      const targetAbs = Math.abs(attribute.value) + spend;
       attribute.value = targetAbs * direction;
       return spend;
     }

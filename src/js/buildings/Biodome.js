@@ -94,7 +94,7 @@ class Biodome extends Building {
 
   getMaxBiomassCapacity() {
     const requirements = getActiveLifeDesignRequirements();
-    const densityMultiplier = 1 + lifeDesigner.currentDesign.spaceEfficiency.value;
+    const densityMultiplier = 1 + lifeDesigner.currentDesign.spaceEfficiency.getEffectiveValue();
     const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
     const landMultiplier = getLifeLandMultiplier(terraforming);
     return terraforming.celestialParameters.surfaceArea * landMultiplier * maxDensity;

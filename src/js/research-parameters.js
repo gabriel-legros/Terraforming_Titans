@@ -2608,6 +2608,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'quantum_biology',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 80_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'quantumBiology',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'planet_cracking',
         name: '',
         description: '',

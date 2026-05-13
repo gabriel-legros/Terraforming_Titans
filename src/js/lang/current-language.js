@@ -4755,6 +4755,10 @@ setLanguageData({
           name: 'Artificial Stars',
           description: 'Regular stars are wasteful and inefficient.  Our engineers can do so much better.',
         },
+        quantum_biology: {
+          name: 'Quantum Biology',
+          description: 'Certain unusual biochemical processes can interact with quantum fields directly.  Enables the spending of life points to push life even further, with diminishing returns.',
+        },
         planet_cracking: {
           name: 'Planet Cracking',
           description: 'There is still so much metal out there... if we can get to it.',
