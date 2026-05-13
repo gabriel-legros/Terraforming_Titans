@@ -4757,7 +4757,7 @@ setLanguageData({
         },
         quantum_biology: {
           name: 'Quantum Biology',
-          description: 'Certain unusual biochemical processes can interact with quantum fields directly.  Enables the spending of life points to push life even further, with diminishing returns.',
+          description: 'Certain unusual biochemical processes can interact with quantum fields directly.  Enables the spending of life points above the cap to push life even further, with diminishing returns.',
         },
         planet_cracking: {
           name: 'Planet Cracking',
