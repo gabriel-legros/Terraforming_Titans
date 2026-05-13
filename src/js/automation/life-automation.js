@@ -812,9 +812,10 @@ class LifeAutomation {
   getDesignStepSpends(preset) {
     const maxPoints = Math.floor(lifeDesigner.maxLifeDesignPoints());
     let remaining = Math.max(0, maxPoints);
-    const spends = {};
+    const entrySpends = {};
+    const stepSpends = {};
     if (remaining <= 0) {
-      return spends;
+      return { entries: entrySpends, steps: stepSpends };
     }
     const candidate = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
@@ -824,11 +825,11 @@ class LifeAutomation {
       }
       const step = preset.designSteps[index];
       const before = remaining;
-      remaining = this.allocateDesignStep(step, candidate, remaining, spends);
-      spends[step.id] = Math.max(0, before - remaining);
+      remaining = this.allocateDesignStep(step, candidate, remaining, entrySpends);
+      stepSpends[step.id] = Math.max(0, before - remaining);
     }
 
-    return spends;
+    return { entries: entrySpends, steps: stepSpends };
   }
 
   getAttributePointCost(attributeName, value) {

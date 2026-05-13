@@ -228,13 +228,13 @@ function updateLifeAutomationUI() {
   const stepsHasFocus = lifeDesignStepsContainer.contains(document.activeElement) &&
     (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT');
   if (!stepsHasFocus) {
-    const stepSpends = automation.getDesignStepSpends(activePreset);
+    const spendPreview = automation.getDesignStepSpends(activePreset);
     const stepsSignature = JSON.stringify({
       presetId: activePreset.id,
       designEnabled: activePreset.designEnabled !== false,
       maxSteps: automation.maxSteps,
       lifeDesignerEnabled: !!lifeDesigner.enabled,
-      stepSpends,
+      spendPreview,
       designSteps: activePreset.designSteps.map(step => ({
         id: step.id,
         mode: step.mode,
@@ -255,6 +255,8 @@ function updateLifeAutomationUI() {
       renderLifeAutomationSteps(automation, activePreset, lifeDesignStepsContainer);
       lifeDesignStepsContainer._renderSignature = stepsSignature;
     }
+  } else {
+    updateLifeAutomationSpendPreview(automation, activePreset, lifeDesignStepsContainer);
   }
 
   lifeAddStepButton.disabled = activePreset.designSteps.length >= automation.maxSteps;
@@ -496,7 +498,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
   if (attributeOptions.length === 0) {
     return;
   }
-  const stepSpends = automation.getDesignStepSpends(preset);
+  const spendPreview = automation.getDesignStepSpends(preset);
   const zoneOptions = [
     { key: 'tropical', label: getAutomationCardText('lifeZoneTropical', {}, 'Tropical') },
     { key: 'temperate', label: getAutomationCardText('lifeZoneTemperate', {}, 'Temperate') },
@@ -743,7 +745,8 @@ function renderLifeAutomationSteps(automation, preset, container) {
 
       const spent = document.createElement('span');
       spent.classList.add('life-automation-entry-spend');
-      spent.textContent = getAutomationCardText('lifeEntrySpendPreview', { count: stepSpends[entry.id] || 0 }, `{count} pts`);
+      spent.dataset.entryId = String(entry.id);
+      spent.textContent = getAutomationCardText('lifeEntrySpendPreview', { count: spendPreview.entries[entry.id] || 0 }, `{count} pts`);
       row.appendChild(spent);
 
       const remove = document.createElement('button');
@@ -805,4 +808,16 @@ function renderLifeAutomationSteps(automation, preset, container) {
     stepCard.append(entriesContainer, addRow);
     container.appendChild(stepCard);
   }
+}
+
+function updateLifeAutomationSpendPreview(automation, preset, container) {
+  const spendPreview = automation.getDesignStepSpends(preset);
+  container.querySelectorAll('.life-automation-entry-spend').forEach(span => {
+    const entryId = span.dataset.entryId;
+    span.textContent = getAutomationCardText(
+      'lifeEntrySpendPreview',
+      { count: spendPreview.entries[entryId] || 0 },
+      `{count} pts`
+    );
+  });
 }
