@@ -125,7 +125,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       id: overrides.id ?? this.nextDisposalTargetId++,
       selectedDisposalResource: selection,
       autoStart: overrides.autoStart === true,
-      waitForCapacity: overrides.waitForCapacity !== false,
       disableBelowTemperature: overrides.disableBelowTemperature === true,
       disableTemperatureThreshold: overrides.disableTemperatureThreshold ?? defaults.disableTemperatureThreshold,
       disableBelowPressure: overrides.disableBelowPressure === true,
@@ -165,7 +164,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return this.createDisposalTarget({
       selectedDisposalResource: legacySelection,
       autoStart: this.autoStart === true,
-      waitForCapacity: this.waitForCapacity !== false,
       disableBelowTemperature: settings.disableBelowTemperature === true,
       disableTemperatureThreshold: settings.disableTemperatureThreshold,
       disableBelowPressure: settings.disableBelowPressure === true,
@@ -202,7 +200,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   syncLegacySelectionState() {
     const firstTarget = this.disposalTargets[0];
     this.selectedDisposalResource = firstTarget ? this.cloneSelection(firstTarget.selectedDisposalResource) : null;
-    this.waitForCapacity = firstTarget ? firstTarget.waitForCapacity !== false : true;
+    this.waitForCapacity = false;
     this.disableBelowTemperature = firstTarget ? firstTarget.disableBelowTemperature === true : false;
     this.disableTemperatureThreshold = firstTarget ? firstTarget.disableTemperatureThreshold : 303.15;
     this.disableBelowPressure = firstTarget ? firstTarget.disableBelowPressure === true : false;
@@ -217,7 +215,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       id: target.id,
       selectedDisposalResource: this.cloneSelection(target.selectedDisposalResource),
       autoStart: target.autoStart === true,
-      waitForCapacity: target.waitForCapacity !== false,
       disableBelowTemperature: target.disableBelowTemperature === true,
       disableTemperatureThreshold: target.disableTemperatureThreshold,
       disableBelowPressure: target.disableBelowPressure === true,
@@ -251,7 +248,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       parts.push([
         this.getTargetSelectionKey(target),
         target.autoStart ? 1 : 0,
-        target.waitForCapacity ? 1 : 0,
         target.disableBelowTemperature ? 1 : 0,
         target.disableTemperatureThreshold,
         target.disableBelowPressure ? 1 : 0,
@@ -283,12 +279,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const selection = target.selectedDisposalResource;
     const available = this.getSelectionAvailableAmount(selection);
-    if (target.waitForCapacity) {
-      const key = `${selection.category}:${selection.resource}`;
-      const requirements = this.getTargetWaitRequirementMap([target], 1);
-      return available >= (requirements[key] || 0);
-    }
-
     return this.getTargetClampedDisposalAmount(
       target,
       this.getShipCapacity(),
@@ -444,37 +434,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       );
     }
     return this.getSpaceDisposalText('ui.projects.spaceDisposal.statusDetail.unavailable', 'Unavailable.');
-  }
-
-  getTargetWaitRequirementMap(targets, transportCount) {
-    const requirements = {};
-    if (!targets.length || transportCount <= 0) {
-      return requirements;
-    }
-
-    const shipCost = this.calculateSpaceshipCost();
-    const projectCost = this.getScaledCost();
-
-    for (let i = 0; i < targets.length; i += 1) {
-      const target = targets[i];
-      if (!target.waitForCapacity) {
-        continue;
-      }
-      const selection = target.selectedDisposalResource;
-      const key = `${selection.category}:${selection.resource}`;
-      requirements[key] = (requirements[key] || 0) + this.getShipCapacity();
-    }
-
-    for (const key in requirements) {
-      const [category, resource] = key.split(':');
-      if (category === 'special') {
-        continue;
-      }
-      requirements[key] += shipCost[category]?.[resource] || 0;
-      requirements[key] += projectCost[category]?.[resource] || 0;
-    }
-
-    return requirements;
   }
 
   createResourceDisposalUI() {
@@ -894,20 +853,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       }
     );
 
-    const waitToggle = this.createTargetCheckbox(
-      target,
-      'waitForCapacity',
-      this.getSpaceDisposalText('ui.projects.spaceDisposal.waitForFullCapacity', 'Wait for full capacity'),
-      (checked) => {
-        const activeTarget = this.getTargetById(target.id);
-        activeTarget.waitForCapacity = checked;
-        this.syncLegacySelectionState();
-        this.clearContinuousExecutionPlanCache();
-        this.updateUI();
-      }
-    );
-
-    controls.append(autoToggle.container, waitToggle.container);
+    controls.append(autoToggle.container);
 
     const temperatureControl = this.createTargetThresholdControl(target.id, {
       key: 'temperature',
@@ -957,7 +903,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       share,
       removeButton,
       autoToggle,
-      waitToggle,
       temperatureControl,
       pressureControl,
       coverageControl,
@@ -1542,14 +1487,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
 
     if (this.isContinuous()) {
-      const requirements = this.getTargetWaitRequirementMap(activeTargets, this.getActiveShipCount());
-      for (const key in requirements) {
-        const [category, resource] = key.split(':');
-        const selection = { category, resource };
-        if (this.getSelectionAvailableAmount(selection) < requirements[key]) {
-          return false;
-        }
-      }
       return true;
     }
 
@@ -1562,15 +1499,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         if (resources[category][resource].value < totalSpaceshipCost[category][resource]) {
           return false;
         }
-      }
-    }
-
-    const requirements = this.getTargetWaitRequirementMap(activeTargets, this.getActiveShipCount());
-    for (const key in requirements) {
-      const [category, resource] = key.split(':');
-      const selection = { category, resource };
-      if (this.getSelectionAvailableAmount(selection) < requirements[key]) {
-        return false;
       }
     }
 
@@ -1905,7 +1833,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       row.share.textContent = share > 0 ? `${formatNumber(transportCount, true)} ships eq` : '';
 
       row.autoToggle.checkbox.checked = target.autoStart === true;
-      row.waitToggle.checkbox.checked = target.waitForCapacity !== false;
 
       row.temperatureControl.checkbox.checked = target.disableBelowTemperature === true;
       if (document.activeElement !== row.temperatureControl.input) {
