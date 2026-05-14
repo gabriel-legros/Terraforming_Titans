@@ -553,7 +553,7 @@ const toi3693bOverrides = {
         initialValue: 0
       },
       liquidHydrogen: {
-        initialValue: 1.6305400223685466e+24
+        initialValue: 1.6932223190081314e+24
       },
       liquidMethane: {
         initialValue: 0
@@ -624,7 +624,7 @@ const toi3693bOverrides = {
       dryIce: 0,
       buriedDryIce: 0,
       liquidCO2: 0,
-      liquidHydrogen: 6.50176315764808e+23,
+      liquidHydrogen: 6.751708231879386e+23,
       biomass: 0,
       hazardousBiomass: 0,
       liquidMethane: 0,
@@ -644,7 +644,7 @@ const toi3693bOverrides = {
       dryIce: 0,
       buriedDryIce: 0,
       liquidCO2: 0,
-      liquidHydrogen: 8.451268384364132e+23,
+      liquidHydrogen: 8.776157626322107e+23,
       biomass: 0,
       hazardousBiomass: 0,
       liquidMethane: 0,
@@ -664,7 +664,7 @@ const toi3693bOverrides = {
       dryIce: 0,
       buriedDryIce: 0,
       liquidCO2: 0,
-      liquidHydrogen: 1.3523686816732544e+23,
+      liquidHydrogen: 1.4043573318798218e+23,
       biomass: 0,
       hazardousBiomass: 0,
       liquidMethane: 0,
