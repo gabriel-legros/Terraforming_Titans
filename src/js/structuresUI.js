@@ -1885,15 +1885,26 @@ function updateDecreaseButtonText(button, buildCount) {
     const keyString = items.map(i => i.key).sort().join(',');
     let list = button._list;
     const amountString = `${amount}`;
-    if (button.dataset.keys !== keyString || button.dataset.amount !== amountString) {
-      button.dataset.keys = keyString;
-      button.dataset.amount = amountString;
+    if (!button._upgradePrefixNode) {
       button.textContent = '';
-      button.append('Upgrade ');
-      button.append(`${formatNumber(amount, true)} \u2192 ${formatNumber(upgradeCount, true)} `);
-      list = document.createElement('span');
-      button.appendChild(list);
-      button._list = list;
+      button._upgradePrefixNode = document.createTextNode('Upgrade ');
+      button._upgradeAmountNode = document.createTextNode('');
+      button.append(button._upgradePrefixNode, button._upgradeAmountNode);
+    }
+    const amountText = `${formatNumber(amount, true)} \u2192 ${formatNumber(upgradeCount, true)} `;
+    if (button._upgradeAmountNode.nodeValue !== amountText) {
+      button._upgradeAmountNode.nodeValue = amountText;
+    }
+    button.dataset.amount = amountString;
+    if (button.dataset.keys !== keyString) {
+      button.dataset.keys = keyString;
+      if (list) {
+        list.textContent = '';
+      } else {
+        list = document.createElement('span');
+        button.appendChild(list);
+        button._list = list;
+      }
       button._spans = new Map();
       items.forEach((item, idx) => {
         const span = document.createElement('span');
@@ -2337,13 +2348,8 @@ function updateDecreaseButtonText(button, buildCount) {
       });
     }
 
-    const keyString = items.map(i => i.key).sort().join(',');
     let list = costElement._list;
-    if (costElement.dataset.keys !== keyString) {
-      cleanupTrackedUIListeners(costElement);
-      cleanupDynamicTooltipsIn(costElement);
-      costElement.dataset.keys = keyString;
-      costElement.textContent = '';
+    if (!list) {
       const label = document.createElement('strong');
       label.textContent = getStructuresUIText('ui.structures.labels.cost', 'Cost:');
       costElement.append(label, ' ');
@@ -2351,8 +2357,16 @@ function updateDecreaseButtonText(button, buildCount) {
       costElement.appendChild(list);
       costElement._list = list;
       costElement._spans = new Map();
-      items.forEach((item, idx) => {
-        const span = document.createElement('span');
+    }
+
+    const activeKeys = new Set(items.map(item => item.key));
+    items.forEach(item => {
+      let span = costElement._spans.get(item.key);
+      if (!span) {
+        span = document.createElement('span');
+        const separator = document.createTextNode('');
+        span._separator = separator;
+        span.appendChild(separator);
         if (item.isCostResource) {
           const textSpan = document.createElement('span');
           span.classList.add('info-tooltip-icon', 'inline-tooltip-anchor');
@@ -2378,11 +2392,25 @@ function updateDecreaseButtonText(button, buildCount) {
         }
         costElement._spans.set(item.key, span);
         list.appendChild(span);
-        if (idx < items.length - 1) {
-          list.appendChild(document.createTextNode(getStructuresUIText('ui.structures.common.commaSeparator', ', ')));
+      }
+      span.style.display = '';
+    });
+
+    costElement._spans.forEach((span, key) => {
+      if (!activeKeys.has(key)) {
+        span.style.display = 'none';
+      }
+    });
+
+    items.forEach((item, idx) => {
+      const span = costElement._spans.get(item.key);
+      if (span && span._separator) {
+        const separator = idx === 0 ? '' : getStructuresUIText('ui.structures.common.commaSeparator', ', ');
+        if (span._separator.nodeValue !== separator) {
+          span._separator.nodeValue = separator;
         }
-      });
-    }
+      }
+    });
 
     items.forEach(item => {
       const requiredAmount = item.isCostResource ? item.required : item.required * buildCount;
@@ -2396,7 +2424,12 @@ function updateDecreaseButtonText(button, buildCount) {
         if (!textSpan) {
           textSpan = document.createElement('span');
           span._textSpan = textSpan;
-          span.textContent = '';
+          while (span.firstChild) {
+            span.removeChild(span.firstChild);
+          }
+          if (span._separator) {
+            span.appendChild(span._separator);
+          }
           span.appendChild(textSpan);
 
           span.classList.add('info-tooltip-icon');
@@ -2464,9 +2497,19 @@ function updateDecreaseButtonText(button, buildCount) {
           buildCount
         };
       } else {
-        const textSpan = span._textSpan || span;
-        if (textSpan.textContent !== text) {
-          textSpan.textContent = text;
+        const textSpan = span._textSpan;
+        if (textSpan) {
+          if (textSpan.textContent !== text) {
+            textSpan.textContent = text;
+          }
+        } else {
+          if (!span._valueNode) {
+            span._valueNode = document.createTextNode('');
+            span.appendChild(span._valueNode);
+          }
+          if (span._valueNode.nodeValue !== text) {
+            span._valueNode.nodeValue = text;
+          }
         }
         span._costTooltipContext = {
           structure,

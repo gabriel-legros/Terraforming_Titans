@@ -424,9 +424,45 @@ function updateNeedBox(cacheEntry, displayName, needKey, value, isLuxury, struct
 function rebuildColonyNeedCache(structureRow, structure) {
   const oldDetails = structureRow.querySelector('.colony-details');
   if (oldDetails) {
-    cleanupTrackedUIListeners(oldDetails);
-    cleanupDynamicTooltipsIn(oldDetails);
-    oldDetails.replaceWith(createColonyDetails(structure));
+    structure.needBoxCache = {};
+
+    const ensureNeedBox = (needKey, displayName, value, isLuxury) => {
+      let box = oldDetails.querySelector(`#${structure.name}-${needKey}`);
+      if (!box) {
+        box = createNeedBox(needKey, displayName, value, isLuxury, structure);
+        oldDetails.appendChild(box);
+        return;
+      }
+      structure.needBoxCache[needKey] = {
+        box,
+        fill: box.querySelector('.need-fill'),
+        text: box.querySelector('.text-container span'),
+        checkbox: box.querySelector('input[type="checkbox"]')
+      };
+      updateNeedBox(structure.needBoxCache[needKey], displayName, needKey, value, isLuxury, structure);
+    };
+
+    ensureNeedBox('happiness', getColonyUIText('ui.colony.needs.happiness', 'Happiness'), structure.happiness, false);
+    ensureNeedBox('comfort', getColonyUIText('ui.colony.needs.comfort', 'Comfort'), structure.getComfort(), false);
+
+    for (const need in structure.filledNeeds) {
+      if (!shouldDisplayNeedBox(need, structure)) continue;
+      ensureNeedBox(need, resources.colony[need].displayName, structure.filledNeeds[need], luxuryResources[need]);
+    }
+
+    oldDetails.querySelectorAll('.need-box').forEach(box => {
+      const prefix = `${structure.name}-`;
+      const needKey = box.id.startsWith(prefix) ? box.id.slice(prefix.length) : '';
+      if (!structure.needBoxCache[needKey]) {
+        cleanupTrackedUIListeners(box);
+        cleanupDynamicTooltipsIn(box);
+        box.remove();
+      }
+    });
+
+    if (Aerostat.attachBuoyancySection) {
+      Aerostat.attachBuoyancySection(oldDetails, structure);
+    }
   } else {
     structureRow.appendChild(createColonyDetails(structure));
   }

@@ -1501,6 +1501,22 @@ function formatAerostatLimit(value) {
   return formatNumber(value, false, 2);
 }
 
+function setAerostatBuoyancyText(textElement, summaryText) {
+  const text = summaryText ?? '';
+  if (textElement._summaryText === text) {
+    return;
+  }
+  textElement._summaryText = text;
+  textElement.textContent = '';
+  const lines = text.split('\n');
+  lines.forEach((line, index) => {
+    if (index > 0) {
+      textElement.appendChild(document.createElement('br'));
+    }
+    textElement.appendChild(document.createTextNode(line));
+  });
+}
+
 function attachAerostatBuoyancySection(container, structure) {
   if (!(structure instanceof Aerostat)) {
     return;
@@ -1550,7 +1566,7 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const text = document.createElement('div');
     text.classList.add('colony-buoyancy-text');
-    text.innerHTML = (summaryText ?? '').replace(/\n/g, '<br>');
+    setAerostatBuoyancyText(text, summaryText);
     body.appendChild(text);
 
     const liftRow = document.createElement('div');
@@ -1803,7 +1819,7 @@ function attachAerostatBuoyancySection(container, structure) {
     card.appendChild(body);
     structure.buoyancyUI = uiState;
   } else {
-    existing.text.textContent = summaryText;
+    setAerostatBuoyancyText(existing.text, summaryText);
     structure.buoyancyUI = existing;
   }
 
@@ -1820,7 +1836,7 @@ function updateAerostatBuoyancySection(structure) {
   const summaryText =
     structure.getBuoyancySummary?.() ??
     getAerostatText('ui.buildings.aerostat.buoyancyTelemetryPending', 'Buoyancy telemetry pending.');
-  ui.text.innerHTML = (summaryText ?? '').replace(/\n/g, '<br>');
+  setAerostatBuoyancyText(ui.text, summaryText);
 
   const expanded = ui.expanded !== false;
   ui.container.classList.toggle('collapsed', !expanded);

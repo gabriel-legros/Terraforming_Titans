@@ -182,25 +182,23 @@ function getBuildingAutomationApplyRow(container, automation, assignmentId) {
 function syncBuildingAutomationApplyRows(container, automation, presets, assignments) {
   container._applyRows ||= new Map();
   const activeIds = new Set();
-  assignments.forEach((assignment, index) => {
-    activeIds.add(assignment.id);
-    const row = getBuildingAutomationApplyRow(container, automation, assignment.id);
-    prepareBuildingAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
-  });
+  assignments.forEach(assignment => activeIds.add(assignment.id));
   container._applyRows.forEach((row, assignmentId) => {
     if (!activeIds.has(assignmentId)) {
+      if (String(assignmentId).indexOf('spare-') === 0) {
+        container._applyRows.delete(assignmentId);
+        if (row.parentNode === container) {
+          container.removeChild(row);
+        }
+        return;
+      }
       prepareBuildingAutomationApplySpareRow(row, presets);
     }
   });
-
-  const spareCount = Array.from(container._applyRows.values()).filter(row => row.style.display === 'none').length;
-  if (spareCount === 0) {
-    const spareKey = `spare-${Date.now()}-${container._applyRows.size}`;
-    const row = createBuildingAutomationApplyRow(automation);
-    container._applyRows.set(spareKey, row);
-    container.appendChild(row);
-    prepareBuildingAutomationApplySpareRow(row, presets);
-  }
+  assignments.forEach((assignment, index) => {
+    const row = getBuildingAutomationApplyRow(container, automation, assignment.id);
+    prepareBuildingAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
+  });
 }
 
 function getBuildingAutomationAutoBuildBasisOptions(structure, currentValue) {

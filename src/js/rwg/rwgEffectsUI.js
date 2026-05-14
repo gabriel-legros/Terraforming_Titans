@@ -212,16 +212,14 @@ function updateRWGEffectsUI() {
   if (key === _rwgEffectsLastKey) return;
   _rwgEffectsLastKey = key;
 
-  // Build markup as 3-column rows: Type/Desc | Terraformed | Effect
-  const parts = [];
-  // Table header
-  parts.push(`
-    <div class="rwg-effects-row rwg-effects-table-head">
-      <span class="col-type">Type</span>
-      <span class="col-count">Amount</span>
-      <span class="col-effect">Value</span>
-    </div>
-  `);
+  const rows = [];
+  rows.push({
+    kind: 'table-head',
+    className: 'rwg-effects-row rwg-effects-table-head',
+    type: 'Type',
+    count: 'Amount',
+    effect: 'Value'
+  });
   let altFlip = false; // alternate background per group (header + effects)
   for (const entry of summary) {
     const nice = (globalThis.RWG_WORLD_TYPES && globalThis.RWG_WORLD_TYPES[entry.type]?.displayName)
@@ -230,25 +228,97 @@ function updateRWGEffectsUI() {
     altFlip = !altFlip;
     const groupAlt = altFlip ? ' alt' : '';
     const countText = entry.hazardBonus ? `${entry.count}+${entry.hazardBonus}` : `${entry.count}`;
-    // Header row per type
-    parts.push(`
-      <div class="rwg-effects-row rwg-effects-head${groupAlt}" data-type="${entry.type}">
-        <span class="col-type"><strong>${nice}</strong></span>
-        <span class="col-count"></span>
-        <span class="col-effect"></span>
-      </div>
-    `);
+    rows.push({
+      kind: 'head',
+      className: `rwg-effects-row rwg-effects-head${groupAlt}`,
+      dataType: entry.type,
+      type: nice,
+      strongType: true,
+      count: '',
+      effect: ''
+    });
     for (const eff of entry.effects) {
-      parts.push(`
-        <div class="rwg-effects-row rwg-effects-body${groupAlt}" data-effect="${eff.effectId}">
-          <span class="col-desc"><small>${eff.description || ''}</small></span>
-          <span class="col-count">${countText}</span>
-          <span class="col-effect">${eff.display || ''}</span>
-        </div>
-      `);
+      rows.push({
+        kind: 'body',
+        className: `rwg-effects-row rwg-effects-body${groupAlt}`,
+        dataEffect: eff.effectId,
+        type: eff.description || '',
+        smallType: true,
+        count: countText,
+        effect: eff.display || ''
+      });
     }
   }
-  _rwgEffectsListEl.innerHTML = parts.join('');
+
+  _rwgEffectsListEl._rows ||= [];
+  rows.forEach((rowData, index) => {
+    let row = _rwgEffectsListEl._rows[index];
+    if (!row) {
+      row = document.createElement('div');
+      const type = document.createElement('span');
+      const count = document.createElement('span');
+      const effect = document.createElement('span');
+      row.append(type, count, effect);
+      row._refs = { type, count, effect };
+      _rwgEffectsListEl._rows[index] = row;
+      _rwgEffectsListEl.appendChild(row);
+    }
+    row.style.display = '';
+    if (row.className !== rowData.className) {
+      row.className = rowData.className;
+    }
+    if (rowData.dataType) {
+      row.dataset.type = rowData.dataType;
+    } else {
+      delete row.dataset.type;
+    }
+    if (rowData.dataEffect) {
+      row.dataset.effect = rowData.dataEffect;
+    } else {
+      delete row.dataset.effect;
+    }
+
+    const typeClass = rowData.kind === 'body' ? 'col-desc' : 'col-type';
+    if (row._refs.type.className !== typeClass) {
+      row._refs.type.className = typeClass;
+    }
+    row._refs.count.className = 'col-count';
+    row._refs.effect.className = 'col-effect';
+
+    if (rowData.strongType) {
+      if (!row._strongType) {
+        row._refs.type.textContent = '';
+        row._strongType = document.createElement('strong');
+        row._refs.type.appendChild(row._strongType);
+      }
+      row._strongType.textContent = rowData.type;
+      row._smallType = null;
+    } else if (rowData.smallType) {
+      if (!row._smallType) {
+        row._refs.type.textContent = '';
+        row._smallType = document.createElement('small');
+        row._refs.type.appendChild(row._smallType);
+      }
+      row._smallType.textContent = rowData.type;
+      row._strongType = null;
+    } else {
+      row._strongType = null;
+      row._smallType = null;
+      if (row._refs.type.textContent !== rowData.type) {
+        row._refs.type.textContent = rowData.type;
+      }
+    }
+    if (row._refs.count.textContent !== rowData.count) {
+      row._refs.count.textContent = rowData.count;
+    }
+    if (row._refs.effect.textContent !== rowData.effect) {
+      row._refs.effect.textContent = rowData.effect;
+    }
+  });
+
+  for (let index = rows.length; index < _rwgEffectsListEl._rows.length; index += 1) {
+    _rwgEffectsListEl._rows[index].style.display = 'none';
+  }
 }
 
 try { module.exports = { updateRWGEffectsUI, resetRWGEffectsUI }; } catch(_) {}
