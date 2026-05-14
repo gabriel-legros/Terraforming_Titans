@@ -166,7 +166,7 @@
   function copyBackToOverrideFromSandbox(override, sandboxResources, terra) {
     const out = JSON.parse(JSON.stringify(override));
     // Write atmospheric and surface resources back into override
-    const atmoKeys = ['carbonDioxide','inertGas','oxygen','atmosphericWater','greenhouseGas','atmosphericMethane','atmosphericAmmonia','hydrogen','sulfuricAcid','calciteAerosol'];
+    const atmoKeys = ['carbonDioxide','inertGas','oxygen','atmosphericWater','greenhouseGas','atmosphericMethane','atmosphericAmmonia','hydrogen','sulfuricAcid','calciteAerosol','vanadiumAerosol'];
     out.resources = out.resources || {};
     out.resources.atmospheric = out.resources.atmospheric || {};
     atmoKeys.forEach(k => {
@@ -231,7 +231,7 @@
     const surf = terra.resources.surface || {};
     function g(obj, k) { return obj[k] ? (obj[k].value || 0) : 0; }
     const metrics = [
-      g(atmo,'carbonDioxide'), g(atmo,'inertGas'), g(atmo,'oxygen'), g(atmo,'atmosphericWater'), g(atmo,'greenhouseGas'), g(atmo,'atmosphericMethane'), g(atmo,'atmosphericAmmonia'), g(atmo,'hydrogen'), g(atmo,'sulfuricAcid'), g(atmo,'calciteAerosol'),
+      g(atmo,'carbonDioxide'), g(atmo,'inertGas'), g(atmo,'oxygen'), g(atmo,'atmosphericWater'), g(atmo,'greenhouseGas'), g(atmo,'atmosphericMethane'), g(atmo,'atmosphericAmmonia'), g(atmo,'hydrogen'), g(atmo,'sulfuricAcid'), g(atmo,'calciteAerosol'), g(atmo,'vanadiumAerosol'),
       g(surf,'ice'), g(surf,'liquidWater'), g(surf,'dryIce'), g(surf,'liquidCO2'), g(surf,'liquidHydrogen'), g(surf,'liquidMethane'), g(surf,'hydrocarbonIce'), g(surf,'liquidAmmonia'), g(surf,'ammoniaIce'),
       g(surf,'liquidOxygen'), g(surf,'oxygenIce'), g(surf,'liquidNitrogen'), g(surf,'nitrogenIce')
     ];

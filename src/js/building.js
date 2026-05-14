@@ -1707,6 +1707,7 @@ const constructors = {
   oreMine: 'OreMine',
   sandQuarry: 'SandQuarry',
   sandSeeder: 'SandSeeder',
+  vanadiumHazeSeeder: 'VanadiumHazeSeeder',
   androidFactory: 'AndroidFactory',
   cloningFacility: 'CloningFacility',
   dustFactory: 'DustFactory',

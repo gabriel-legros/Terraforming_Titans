@@ -284,7 +284,8 @@
       atmosphericAmmonia: { name: '', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       hydrogen: { name: '', initialValue: 0, unlocked: true, unit: 'ton', hideWhenSmall: true },
       sulfuricAcid: { name: '', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      calciteAerosol: { name: '', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
+      calciteAerosol: { name: '', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      vanadiumAerosol: { name: '', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
     special: {
       // Dust caps derive from land area during resource creation

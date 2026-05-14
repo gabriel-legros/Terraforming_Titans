@@ -762,7 +762,7 @@ const RWG_HAZARD_PRESETS = {
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery'];
-const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek'];
+const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
 
@@ -1289,7 +1289,7 @@ function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   const pressureBar = tpl ? tpl.pressureBar * randRange(rng, band[0], band[1]) : randRange(rng, 0.001, 2.0);
   const totalTons = totalAtmosphereMassTons(pressureBar, radius_km, gravity);
   const baseMix = (tpl && tpl.mix) ? tpl.mix : {};
-  const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","greenhouseGas","atmosphericMethane","atmosphericAmmonia","hydrogen","sulfuricAcid"];
+  const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","greenhouseGas","atmosphericMethane","atmosphericAmmonia","hydrogen","sulfuricAcid","vanadiumAerosol"];
   const jittered = {}; let sum = 0;
   for (const k of mixKeys) { const base = baseMix[k] || 0; if (base <= 0) { jittered[k] = 0; continue; } const jitter = 1 + randRange(rng, -0.25, 0.25); const val = Math.max(0, base * jitter); jittered[k] = val; sum += val; }
   let defaults = {};

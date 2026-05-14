@@ -85,6 +85,7 @@ const METABOLISM_EQUATION_SPECIES = {
   inertGas: { key: 'n2', label: 'N₂ (g)' },
   atmosphericMethane: { key: 'ch4', label: 'CH₄ (g)' },
   atmosphericWater: { key: 'h2o_atm', label: 'H₂O (g)' },
+  vanadiumAerosol: { key: 'v_aerosol', label: 'V aerosol' },
   liquidWater: { key: 'h2o_liq', label: 'H₂O (l)' },
   liquidCO2: { key: 'co2_liq', label: 'CO₂ (l)' },
   biomass: { key: 'biomass', label: 'Biomass' },
@@ -94,7 +95,10 @@ const METABOLISM_EQUATION_SPECIES = {
 };
 
 function formatMetabolismCoefficient(value) {
-  const rounded = Math.abs(value).toFixed(2);
+  const absValue = Math.abs(value);
+  const rounded = absValue > 0 && absValue < 0.01
+    ? absValue.toFixed(4)
+    : absValue.toFixed(2);
   return rounded.endsWith('.00') ? rounded.slice(0, -3) : rounded;
 }
 
@@ -136,7 +140,7 @@ function formatMetabolismGrowthEquation(process, options = {}) {
   const left = [];
   const right = [];
 
-  const order = ['co2', 'co2_liq', 'h2', 'nh3', 'h2o_liq', 'h2o_atm', 'ch4', 'n2', 'o2', 'metal', 'silica', 'energy', 'biomass'];
+  const order = ['co2', 'co2_liq', 'h2', 'nh3', 'h2o_liq', 'h2o_atm', 'ch4', 'n2', 'o2', 'metal', 'silica', 'energy', 'v_aerosol', 'biomass'];
   const entries = order
     .filter(key => normalized[key])
     .map(key => [key, normalized[key]]);

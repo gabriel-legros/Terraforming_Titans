@@ -556,6 +556,93 @@ const terraformingRequirements = {
       },
     },
   },
+  vanadophore: {
+    id: 'vanadophore',
+    displayName: '',
+    lore: '',
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 50 },
+    temperatureRangeK: { min: 0, max: 100_000 },
+    luminosityRange: { min: 0, max: 1_000_000_000 },
+    totalPressureRangeKPa: { min: 500_000, max: 50_000_000 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 0, max: 100_000_000 },
+      oxygen: { min: 0, max: 10_000 },
+      inertGas: { min: 10_000_000, max: 5_000_000_000 },
+      atmosphericWater: { min: 20_000_000, max: 2_000_000_000 },
+      atmosphericMethane: { min: 40_000_000, max: 4_000_000_000 },
+      atmosphericAmmonia: { min: 300_000_000, max: 8_000_000_000 },
+      hydrogen: { min: 500_000_000, max: 50_000_000_000 },
+      vanadiumAerosol: { min: 1_000, max: 5_000_000 },
+    },
+    liquidCoverageTargets: [],
+    lifeCoverageTarget: 0.03,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    appliedEffects: [
+      { target: 'building', targetId: 'vanadiumHazeSeeder', type: 'enable' },
+      { target: 'resource', resourceType: 'atmospheric', targetId: 'vanadiumAerosol', type: 'enable' },
+    ],
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 0, max: 100_000 },
+      optimalGrowthTemperatureBaseK: 220.15,
+      growthTemperatureToleranceBaseC: 20,
+      growthTemperatureTolerancePerPointC: 2,
+      photosynthesisRatePerPoint: 0.00001,
+      bioworkersPerBiomassPerPoint: 0.00001,
+      baseMaxBiomassDensityTPerM2: 0.02,
+      radiationToleranceThresholdPoints: 100,
+      minimumBiomassDecayRateTPerS: 1,
+      requiresLiquidWaterForGrowth: false,
+      metabolism: {
+        primaryProcessId: 'vanadiumRedoxChemistry',
+        processes: {
+          vanadiumRedoxChemistry: {
+            id: 'vanadiumRedoxChemistry',
+            displayName: '',
+            growth: {
+              usesLuminosity: false,
+              perBiomass: {
+                surface: { biomass: 1 },
+                atmospheric: {
+                  atmosphericMethane: -0.7084301513490575,
+                  atmosphericAmmonia: -0.15041169242193853,
+                  atmosphericWater: -0.3182040560132961,
+                  hydrogen: 0.17804589978429222,
+                  vanadiumAerosol: -0.001,
+                },
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: {
+                  atmosphericMethane: 0.7084301513490575,
+                  atmosphericAmmonia: 0.15041169242193853,
+                  atmosphericWater: 0.3182040560132961,
+                  hydrogen: -0.17804589978429222,
+                  vanadiumAerosol: 0.001,
+                },
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 100,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+        bioships: 1000,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {

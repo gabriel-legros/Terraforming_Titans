@@ -245,6 +245,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Preserve compatibility: append new generation logic at the end only.
 - Supports dominion selector and dominion-specific terraforming requirements.
 - RWG dominion `Shrilek` unlocks at 40 fully controlled sectors and uses a methane-desert terraforming profile: methane atmosphere, 100% fine sand coverage via the dominion-only `Sand Seeder`, a required `Deep Hydrocarbon Reserves` project, and a minimum 30-Earth-day day-night cycle.
+- RWG dominion `Vanadophore` unlocks at 50 fully controlled sectors and uses a gas/ice-giant atmospheric profile: broad pressure and temperature tolerance, strongly ammonia-rich hydrogen atmosphere, trace `Vanadium Aerosol` requirement, no liquid-surface terraforming target, and a dominion-only `Vanadium Haze Seeder` building that maintains the aerosol supply.
 - Some dominions/world types are story/sector gated.
 - Special seeds can define world-specific effects (project/building flags), are replayable by seed, and surface effect descriptions in RWG world details.
 - RWG `Dynamic Mass` is no longer available by default; show that control only when `rwgManager` has boolean flag `enableDynamicMass`, and hide the RWG settings card when none of its controls are unlocked.

@@ -22,7 +22,8 @@ const MOLECULAR_WEIGHTS = {
   H2O: 18.01528,
   SF6: 146.06,
   H2SO4: 98.079,
-  CaCO3: 100.0869
+  CaCO3: 100.0869,
+  V2O5: 181.88
 };
 
 const SPECIFIC_HEAT_CAPACITIES = {
@@ -37,7 +38,8 @@ const SPECIFIC_HEAT_CAPACITIES = {
   H2O: 1870,
   SF6: 658,
   H2SO4: 1400,
-  CaCO3: 820
+  CaCO3: 820,
+  V2O5: 690
 };
 
 const MOLECULAR_WEIGHT_ALIASES = {
@@ -58,6 +60,8 @@ const MOLECULAR_WEIGHT_ALIASES = {
   ammonia: 'NH3',
   nh3: 'NH3',
   greenhousegas: 'SF6',
+  vanadiumaerosol: 'V2O5',
+  vanadium: 'V2O5',
   sf6: 'SF6',
   sulfuricacid: 'H2SO4',
   h2so4: 'H2SO4',

@@ -76,7 +76,8 @@ const DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS = [
   'atmosphericAmmonia',
   'hydrogen',
   'sulfuricAcid',
-  'calciteAerosol'
+  'calciteAerosol',
+  'vanadiumAerosol'
 ];
 
 const DYNAMIC_WORLD_PLANETARY_IMPORT_DENSITIES = {

@@ -86,6 +86,7 @@ const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
   greenhouseGas: 146.06,
   sulfuricAcid: 98.079,
   hydrogen: 2.016,
+  vanadiumAerosol: 181.88,
   helium: 4.0026,
   argon: 39.948
 };

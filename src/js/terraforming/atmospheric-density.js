@@ -105,11 +105,12 @@
     hydrogen: 2.016,
     greenhouseGas: 146.06,       // SF6 (your “safe GHG”)
     sulfuricAcid: 98.079,
-    calciteAerosol: 100.0869
+    calciteAerosol: 100.0869,
+    vanadiumAerosol: 181.88
   };
 
   // Heavy / aerosol / trace species that should not control upper-atmosphere scale height.
-  const HEAVY_TRACE_KEYS = ['greenhouseGas', 'sulfuricAcid', 'calciteAerosol'];
+  const HEAVY_TRACE_KEYS = ['greenhouseGas', 'sulfuricAcid', 'calciteAerosol', 'vanadiumAerosol'];
 
   function getAtmosphericMassBreakdownTons(atmosphericResources) {
     const byKey = {};

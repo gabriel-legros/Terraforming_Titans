@@ -619,6 +619,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  vanadiumHazeSeeder: {
+    name: '',
+    category: 'terraforming',
+    description: '',
+    cost: { colony: { metal: 5000, components: 500, electronics: 100 } },
+    consumption: { colony: { energy: 5000000, metal: 0.001 }, atmospheric: { atmosphericAmmonia: 0.05 } },
+    production: { atmospheric: { vanadiumAerosol: 5 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   dustFactory: {
     name: '',
     category: 'terraforming',

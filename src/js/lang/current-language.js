@@ -90,6 +90,7 @@ setLanguageData({
         klishy: 'Klishy',
         kerati: 'Kerati',
         shrilek: 'Shrilek',
+        vanadophore: 'Vanadophore',
         random: 'Random',
         tooltip: 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.',
       },
@@ -3814,6 +3815,10 @@ setLanguageData({
         name: 'Sand Seeder',
         description: 'Crushes regolith into fine sand, suitable for Shrilek ecosystems.',
       },
+      vanadiumHazeSeeder: {
+        name: 'Vanadium Haze Seeder',
+        description: 'Injects trace vanadium-rich aerosols into the upper atmosphere for Vanadophore metabolism.',
+      },
       spaceMirror: {
         name: 'Space Mirror',
         description: 'Expands the space mirror facility.  Increases the effective luminosity.  Will cost only glass and energy after the space elevator is built.  May need billions to have any meaningful effect.',
@@ -4229,6 +4234,22 @@ setLanguageData({
           shrilekHydrocarbonReserves: {
             label: 'Deep Hydrocarbon Reserves',
             targetText: 'Complete Deep Hydrocarbon Reserves project.',
+          },
+        },
+      },
+      vanadophore: {
+        displayName: 'Vanadophore',
+        lore: [
+          'The Vanadophores are an ammonia-water lifeform unlike any other known dominion: they live in the ammonia cloud decks of gas giants. Their homeworld, Nhalassa, is unusually rich in ammonia even by gas-giant standards.',
+          'Their bodies resemble jellyfish, with long trailing tentacles suspended in the clouds. The lightness of their environment made technological civilization difficult, but not impossible. By forming vast living webs, Vanadophores can generate enough buoyancy and coordination to support structures built from local solid material.',
+          'Their biochemistry depends on vanadium aerosol as a catalyst, normally supplied by the deep interior of Nhalassa. Fearing that this supply would eventually fail, their proudest achievement became rocketry: vehicles built to harvest vanadium from nearby asteroids and return it to the cloud decks.',
+          'That achievement led to their discovery by the Empire. Unable or unwilling to find a use for them, Imperial authorities reduced Nhalassa to a hunting preserve. Imperial nobles still travel there to hunt Vanadophores for sport. The hatred they feel for the Empire is deep.'
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            vanadiumRedoxChemistry: {
+              displayName: 'Vanadium Redox Chemistry',
+            },
           },
         },
       },
@@ -4868,6 +4889,7 @@ setLanguageData({
         hydrogen: { name: 'Hydrogen' },
         sulfuricAcid: { name: 'Sulfuric Acid' },
         calciteAerosol: { name: 'Calcite Aerosol' },
+        vanadiumAerosol: { name: 'Vanadium Aerosol' },
       },
       special: {
         albedoUpgrades: { name: 'Black Dust', displayName: 'Black Dust' },

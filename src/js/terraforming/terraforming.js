@@ -1009,7 +1009,7 @@ class Terraforming extends EffectableEntity{
           const atmosphericMassKeys = [
             'carbonDioxide', 'inertGas', 'oxygen', 'atmosphericWater',
             'greenhouseGas', 'atmosphericMethane', 'atmosphericAmmonia',
-            'hydrogen', 'sulfuricAcid', 'calciteAerosol'
+            'hydrogen', 'sulfuricAcid', 'calciteAerosol', 'vanadiumAerosol'
           ];
           let derivedBaseSurfaceMassKg = 0;
           let derivedBaseAtmosphericMassKg = 0;
