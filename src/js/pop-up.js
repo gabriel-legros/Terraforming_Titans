@@ -120,7 +120,7 @@ function createSystemPopup(title, text, buttonText) {
   document.body.appendChild(overlay);
 }
 
-function createSystemChoicePopup(title, text, yesText, noText, onYes, onNo) {
+function createSystemChoicePopup(title, text, yesText, noText, onYes, onNo, options = {}) {
   window.popupActive = true;
   game.scene.pause('mainScene');
 
@@ -145,6 +145,21 @@ function createSystemChoicePopup(title, text, yesText, noText, onYes, onNo) {
   const buttonRow = document.createElement('div');
   buttonRow.classList.add('system-choice-popup-buttons');
 
+  const checkboxLabelText = options.checkboxLabel || '';
+  const disableYesWhenChecked = options.disableYesWhenChecked === true;
+  let checkboxInput = null;
+  if (checkboxLabelText) {
+    const checkboxRow = document.createElement('label');
+    checkboxRow.classList.add('system-choice-popup-checkbox-row');
+    checkboxInput = document.createElement('input');
+    checkboxInput.type = 'checkbox';
+    checkboxInput.checked = options.checkboxChecked === true;
+    const checkboxText = document.createElement('span');
+    checkboxText.textContent = checkboxLabelText;
+    checkboxRow.append(checkboxInput, checkboxText);
+    popupWindow.appendChild(checkboxRow);
+  }
+
   const yesButton = document.createElement('button');
   yesButton.classList.add('system-choice-popup-button', 'system-choice-popup-button-yes');
   yesButton.textContent = yesText || 'Yes';
@@ -164,11 +179,33 @@ function createSystemChoicePopup(title, text, yesText, noText, onYes, onNo) {
     }
   };
 
+  const updateYesButtonEnabled = () => {
+    if (!disableYesWhenChecked || !checkboxInput) {
+      yesButton.disabled = false;
+      return;
+    }
+    yesButton.disabled = checkboxInput.checked;
+  };
+
+  if (checkboxInput) {
+    checkboxInput.addEventListener('change', () => {
+      updateYesButtonEnabled();
+      if (typeof options.onCheckboxChange === 'function') {
+        options.onCheckboxChange(checkboxInput.checked);
+      }
+    });
+  }
+
+  updateYesButtonEnabled();
+
   yesButton.addEventListener('click', () => closeChoicePopup(onYes));
   noButton.addEventListener('click', () => closeChoicePopup(onNo));
 
   buttonRow.append(yesButton, noButton);
   popupWindow.appendChild(buttonRow);
+  if (checkboxInput) {
+    popupWindow.appendChild(checkboxInput.parentNode);
+  }
   overlay.appendChild(popupWindow);
   document.body.appendChild(overlay);
 }

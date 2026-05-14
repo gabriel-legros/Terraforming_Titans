@@ -3551,6 +3551,7 @@ setLanguageData({
       automationSafetyRestoreText: 'We turned off your auto-travel and/or scripting automation for soft-lock protection.  Would you like them back on right now?',
       automationSafetyRestoreYes: 'Yes',
       automationSafetyRestoreNo: 'No',
+      automationSafetyRestoreAlwaysOff: 'Always turn off automation and do not appear again.',
       autobuildSetActive: 'Checking autobuild also checks Set Active to Target',
       colonyUpgradeUnchecksAutobuild: 'Checking Colony Upgrade unchecks autobuild',
       roundBuildingConstruction: 'Round building construction',

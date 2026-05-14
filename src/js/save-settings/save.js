@@ -99,6 +99,10 @@ function showAutomationSafetyRestorePromptIfNeeded() {
   if (!restoreState) {
     return;
   }
+  if (gameSettings.alwaysDisableAutomationOnLoad) {
+    applyAutomationSafetyRestoreState(restoreState, false);
+    return;
+  }
 
   const title = t('ui.settings.automationSafetyRestoreTitle', null, 'Automation Safety Check');
   const text = t(
@@ -108,13 +112,26 @@ function showAutomationSafetyRestorePromptIfNeeded() {
   );
   const yesText = t('ui.settings.automationSafetyRestoreYes', null, 'Yes');
   const noText = t('ui.settings.automationSafetyRestoreNo', null, 'No');
+  const checkboxText = t(
+    'ui.settings.automationSafetyRestoreAlwaysOff',
+    null,
+    'Always turn off automation and do not appear again.'
+  );
   createSystemChoicePopup(
     title,
     text,
     yesText,
     noText,
     () => applyAutomationSafetyRestoreState(restoreState, true),
-    () => applyAutomationSafetyRestoreState(restoreState, false)
+    () => applyAutomationSafetyRestoreState(restoreState, false),
+    {
+      checkboxLabel: checkboxText,
+      checkboxChecked: !!gameSettings.alwaysDisableAutomationOnLoad,
+      disableYesWhenChecked: true,
+      onCheckboxChange: (checked) => {
+        gameSettings.alwaysDisableAutomationOnLoad = !!checked;
+      }
+    }
   );
 }
 
@@ -725,6 +742,9 @@ function loadGame(slotOrCustomString, recreate = true) {
       }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noSpecializationWarningOnTravel')) {
         gameSettings.noSpecializationWarningOnTravel = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'alwaysDisableAutomationOnLoad')) {
+        gameSettings.alwaysDisableAutomationOnLoad = false;
       }
       setPauseKeybindCode(gameSettings.pauseKeybind);
       if (gameSettings.showSpaceStorageInDefaultPanel) {

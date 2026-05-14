@@ -73,6 +73,7 @@ let gameSettings = {
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
   noSpecializationWarningOnTravel: false,
+  alwaysDisableAutomationOnLoad: false,
   showSpaceStorageResources: false,
   showSpaceStorageInDefaultPanel: false,
   simplifyGoldenAsteroid: false,
