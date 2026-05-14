@@ -980,6 +980,7 @@ const buildingsParameters = {
     displayConsumptionAtMaxProductivity: true,
     ignoreResourceForProductivityResourceDisplay: { surface: { radioactiveWaste: true } },
     requiresMaintenance: true,
+    aerostatReduction: 0.001,
     maintenanceFactor: 1,
     unlocked: false
   },
