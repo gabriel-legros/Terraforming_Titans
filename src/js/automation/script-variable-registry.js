@@ -211,8 +211,8 @@ class ScriptVariableRegistry {
     return targets;
   }
 
-  getProjectAttributes() {
-    return [
+  getProjectAttributes(targetId) {
+    const attributes = [
       { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
       { id: 'visible', label: 'Visible', valueType: 'boolean' },
       { id: 'completed', label: 'Completed', valueType: 'boolean' },
@@ -226,6 +226,10 @@ class ScriptVariableRegistry {
       { id: 'autoStart', label: 'Auto-start Construction', valueType: 'boolean' },
       { id: 'autoContinuousOperation', label: 'Auto Operation Enabled', valueType: 'boolean' }
     ];
+    if (targetId === 'ringworldTerraforming') {
+      attributes.push({ id: 'currentMass', label: 'Current Mass', valueType: 'number' });
+    }
+    return attributes;
   }
 
   getTerraformingCategories() {
@@ -639,6 +643,9 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'maxRepeatCount') return this.toNumber(project.maxRepeatCount);
     if (ref.attribute === 'autoStart') return project.autoStart ? 1 : 0;
     if (ref.attribute === 'autoContinuousOperation') return project.autoContinuousOperation ? 1 : 0;
+    if (ref.attribute === 'currentMass' && ref.target === 'ringworldTerraforming') {
+      return this.toNumber(project.getTotalRingworldMassTons());
+    }
     return 0;
   }
 
@@ -842,16 +849,16 @@ class ScriptVariableRegistry {
 
   getCurrentWorldTypeKey() {
     const classification = currentPlanetParameters.classification || {};
-    const direct = classification.archetype || classification.type || '';
+    const direct = classification.type || classification.archetype || '';
     if (direct) return direct;
     const original = spaceManager.getCurrentWorldOriginal ? spaceManager.getCurrentWorldOriginal() : null;
-    const originalType = original?.archetype
+    const originalType = original?.classification?.type
       || original?.classification?.archetype
-      || original?.classification?.type
-      || original?.merged?.classification?.archetype
       || original?.merged?.classification?.type
-      || original?.override?.classification?.archetype
+      || original?.merged?.classification?.archetype
       || original?.override?.classification?.type
+      || original?.override?.classification?.archetype
+      || original?.archetype
       || '';
     if (originalType) return originalType;
     return this.getStoryWorldTypeKey(spaceManager.currentPlanetKey);
