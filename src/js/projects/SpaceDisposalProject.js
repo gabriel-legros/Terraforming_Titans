@@ -11,7 +11,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     super(config, name);
     this.massDriverEnabled = false;
     this.massDriverShipEquivalency = this.attributes.massDriverShipEquivalency ?? 10;
-    this.maxDisposalTargets = 10;
+    this.maxDisposalTargets = 15;
     this.nextDisposalTargetId = 1;
     this.disposalTargets = [];
     this.ensureDisposalTargets();
@@ -621,7 +621,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const builderSubheading = document.createElement('div');
     builderSubheading.classList.add('resource-disposal-builder-subheading');
-    builderSubheading.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.disposalTargetsSubheading', 'Configure up to 10 resources. Active auto-start targets split assigned disposal evenly.');
+    builderSubheading.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.disposalTargetsSubheading', 'Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.');
 
     builderCopy.append(builderHeading, builderSubheading);
 

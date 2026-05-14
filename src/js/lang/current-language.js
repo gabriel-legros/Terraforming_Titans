@@ -1457,7 +1457,7 @@ setLanguageData({
         setActiveToTarget: 'Set active to target',
         massDriverNote: 'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.',
         disposalTargets: 'Disposal Targets',
-        disposalTargetsSubheading: 'Configure up to 10 resources. Active auto-start targets split assigned disposal evenly.',
+        disposalTargetsSubheading: 'Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.',
         addTarget: '+ Add target',
         phase: 'Phase',
         none: '—',
