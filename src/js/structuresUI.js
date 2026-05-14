@@ -3204,7 +3204,7 @@ function updateDecreaseButtonText(button, buildCount) {
       });
       info.keys = nextKeys;
       const expectedChildren = [];
-      info.spans.forEach((_, key) => {
+      nextKeys.forEach(key => {
         expectedChildren.push(info.separators.get(key));
         expectedChildren.push(info.spans.get(key));
       });
