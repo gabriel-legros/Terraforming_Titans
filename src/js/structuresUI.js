@@ -563,6 +563,7 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
     if (structureRow && cached && cached.setStructure) {
       structure = rebindStructureInstance(structure, cached, isColony);
       cached.setStructure(structure);
+      cached.collapsed = !!structureDisplayState.collapsed[structure.name];
       refreshStructureRowStaticText(structure, cached);
     } else {
       structureRow = createStructureRow(structure, buildCallback, toggleCallback, isColony);
