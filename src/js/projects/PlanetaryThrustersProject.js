@@ -610,6 +610,10 @@ class PlanetaryThrustersProject extends Project{
 
 /* ---------- UI refresh ------------------------------------------------ */
   updateUI(){
+    if(!this.el.rotNow || !this.el.distNow || !this.el.pwrVal){
+      return;
+    }
+
     if(this.el.spinCard){
       const vis = this.isCompleted ? 'block' : 'none';
       this.el.spinCard.style.display = vis;
