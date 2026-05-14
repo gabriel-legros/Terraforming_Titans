@@ -605,8 +605,14 @@ function rebindStructureInstance(nextStructure, cached, isColony) {
 
   if (isColony) {
     colonies[currentStructure.name] = currentStructure;
+    if (structures) {
+      structures[currentStructure.name] = currentStructure;
+    }
   } else {
     buildings[currentStructure.name] = currentStructure;
+    if (structures) {
+      structures[currentStructure.name] = currentStructure;
+    }
   }
   cached.boundStructure = currentStructure;
   return currentStructure;
