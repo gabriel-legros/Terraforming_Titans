@@ -1482,6 +1482,12 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         label: getAutomationCardText('filterAllOption', {}, 'All selected items')
       }].concat(filterOptions);
       syncAutomationSelectOptions(details._filterSelectNode, selectOptions, selectedFilterValue || '');
+      if (!selectedFilterValue) {
+        details._filterSelectNode.value = '';
+        if (details._filterSelectNode.selectedIndex < 0 && details._filterSelectNode.options.length > 0) {
+          details._filterSelectNode.selectedIndex = 0;
+        }
+      }
       details._filterClearButtonNode.disabled = !selectedFilterValue;
       if (!details._filterSelectNode._boundFilterChange) {
         details._filterSelectNode.addEventListener('change', (event) => {
