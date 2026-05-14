@@ -275,6 +275,9 @@
 
     updateUI() {
       const elements = this.shopElements;
+      if (!elements || !elements.pointsValue || !elements.potentialValue || !elements.shopRows) {
+        return;
+      }
       elements.pointsValue.textContent = formatNumber(this.getSpecializationPoints(), true, 2, false, true);
       elements.potentialValue.textContent = formatNumber(this.getTravelPointGain(), true, 2);
       this.shopItems.forEach((item) => {
