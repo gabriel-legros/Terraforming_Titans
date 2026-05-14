@@ -2,6 +2,8 @@ const PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
 const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
+const PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_ID = 'spaceStorageSingleResource';
+const PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX = `${PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_ID}:`;
 const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
@@ -498,7 +500,17 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   isSpaceStorageProxyProjectId(projectId) {
     return projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID
       || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID
-      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID;
+      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID
+      || (projectId && projectId.indexOf(PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX) === 0);
+  }
+
+  parseSpaceStorageSingleResourceProjectId(projectId) {
+    const normalizedProjectId = this.resolveProjectAutomationId(projectId);
+    if (!normalizedProjectId || normalizedProjectId.indexOf(PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX) !== 0) {
+      return null;
+    }
+    const resourceKey = normalizedProjectId.slice(PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX.length);
+    return resourceKey || null;
   }
 
   resolveProjectAutomationId(projectId) {
@@ -572,6 +584,13 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   splitProjectSettings(projectId, settings = {}) {
     const source = settings || {};
     const normalizedProjectId = this.normalizeProjectId(projectId);
+    const singleResourceKey = this.parseSpaceStorageSingleResourceProjectId(normalizedProjectId);
+    if (singleResourceKey) {
+      return {
+        expansion: {},
+        operations: this.filterSpaceStorageSingleResourceSettings(source, singleResourceKey)
+      };
+    }
     if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
       return {
         expansion: {},
@@ -642,6 +661,48 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         continue;
       }
       filtered[key] = this.deepClone(source[key]);
+    }
+    return filtered;
+  }
+
+  filterSpaceStorageSingleResourceSettings(settings = {}, resourceKey = '') {
+    const source = settings || {};
+    const filtered = {};
+    filtered.spaceStorageSingleResourceKey = resourceKey;
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceTransferMode')) {
+      filtered.spaceStorageSingleResourceTransferMode = source.spaceStorageSingleResourceTransferMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceSelected')) {
+      filtered.spaceStorageSingleResourceSelected = source.spaceStorageSingleResourceSelected === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourceStrategicReserves')) {
+      const reserveSource = source.resourceStrategicReserves || {};
+      if (Object.prototype.hasOwnProperty.call(reserveSource, resourceKey)) {
+        filtered.resourceStrategicReserves = {
+          [resourceKey]: this.deepClone(reserveSource[resourceKey])
+        };
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourceCaps')) {
+      const capSource = source.resourceCaps || {};
+      if (Object.prototype.hasOwnProperty.call(capSource, resourceKey)) {
+        filtered.resourceCaps = {
+          [resourceKey]: this.deepClone(capSource[resourceKey])
+        };
+      }
+    }
+    if (!Object.prototype.hasOwnProperty.call(filtered, 'spaceStorageSingleResourceTransferMode')
+      && Object.prototype.hasOwnProperty.call(source, 'resourceTransferModes')) {
+      const transferSource = source.resourceTransferModes || {};
+      filtered.spaceStorageSingleResourceTransferMode = Object.prototype.hasOwnProperty.call(transferSource, resourceKey)
+        ? transferSource[resourceKey]
+        : null;
+    }
+    if (!Object.prototype.hasOwnProperty.call(filtered, 'spaceStorageSingleResourceSelected')
+      && Object.prototype.hasOwnProperty.call(source, 'selectedResources')) {
+      const selectedSource = Array.isArray(source.selectedResources) ? source.selectedResources : [];
+      const isSelected = selectedSource.some((entry) => entry?.category === 'colony' && entry?.resource === resourceKey);
+      filtered.spaceStorageSingleResourceSelected = isSelected;
     }
     return filtered;
   }
@@ -765,6 +826,10 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   }
 
   applyProjectSettings(project, settings) {
+    if (project?.name === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID
+      && Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceKey')) {
+      return this.applySpaceStorageSingleResourceSettings(project, settings);
+    }
     const savedBefore = project.saveAutomationSettings
       ? project.saveAutomationSettings()
       : this.captureFallbackSettings(project);
@@ -780,6 +845,75 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       : this.captureFallbackSettings(project);
 
     return !this.areSettingsEqual(savedBefore, savedAfter);
+  }
+
+  applySpaceStorageSingleResourceSettings(project, settings = {}) {
+    const resourceKey = settings.spaceStorageSingleResourceKey || '';
+    if (!resourceKey) {
+      return false;
+    }
+    const capsSource = settings.resourceCaps || {};
+    const reserveSource = settings.resourceStrategicReserves || {};
+    const hasTransferMode = Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
+    const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceSelected');
+    const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
+    const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
+    if (!capsHasKey && !reserveHasKey && !hasTransferMode && !hasSelectedFlag) {
+      return false;
+    }
+
+    const beforeCaps = project.resourceCaps?.[resourceKey];
+    const beforeReserve = project.resourceStrategicReserves?.[resourceKey];
+    const beforeTransfer = project.resourceTransferModes?.[resourceKey];
+    const beforeSelected = Array.isArray(project.selectedResources)
+      ? project.selectedResources.some((entry) => entry?.category === 'colony' && entry?.resource === resourceKey)
+      : false;
+    let changed = false;
+
+    if (capsHasKey) {
+      if (!project.resourceCaps) {
+        project.resourceCaps = {};
+      }
+      project.resourceCaps[resourceKey] = this.deepClone(capsSource[resourceKey]);
+      project.sanitizeResourceCaps();
+      changed = changed || !this.areSettingsEqual(beforeCaps, project.resourceCaps[resourceKey]);
+    }
+    if (reserveHasKey) {
+      if (!project.resourceStrategicReserves) {
+        project.resourceStrategicReserves = {};
+      }
+      project.resourceStrategicReserves[resourceKey] = this.deepClone(reserveSource[resourceKey]);
+      project.sanitizeResourceStrategicReserves();
+      changed = changed || !this.areSettingsEqual(beforeReserve, project.resourceStrategicReserves[resourceKey]);
+    }
+    if (hasTransferMode) {
+      const transferMode = settings.spaceStorageSingleResourceTransferMode;
+      if (!project.resourceTransferModes) {
+        project.resourceTransferModes = {};
+      }
+      if (transferMode === 'store' || transferMode === 'withdraw') {
+        project.resourceTransferModes[resourceKey] = transferMode;
+      } else {
+        delete project.resourceTransferModes[resourceKey];
+      }
+      project.sanitizeTransferModes();
+      changed = changed || !this.areSettingsEqual(beforeTransfer, project.resourceTransferModes[resourceKey]);
+    }
+    if (hasSelectedFlag) {
+      if (!Array.isArray(project.selectedResources)) {
+        project.selectedResources = [];
+      }
+      const shouldSelect = settings.spaceStorageSingleResourceSelected === true;
+      const selectedIndex = project.selectedResources.findIndex((entry) => entry?.category === 'colony' && entry?.resource === resourceKey);
+      if (shouldSelect && selectedIndex < 0) {
+        project.selectedResources.push({ category: 'colony', resource: resourceKey });
+      } else if (!shouldSelect && selectedIndex >= 0) {
+        project.selectedResources.splice(selectedIndex, 1);
+      }
+      const afterSelected = project.selectedResources.some((entry) => entry?.category === 'colony' && entry?.resource === resourceKey);
+      changed = changed || beforeSelected !== afterSelected;
+    }
+    return changed;
   }
 
   applyFallbackSettings(project, settings = {}) {

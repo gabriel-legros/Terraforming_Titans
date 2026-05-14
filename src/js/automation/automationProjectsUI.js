@@ -9,6 +9,7 @@ const projectAutomationUIState = {
   jsonFilterProjectId: '',
   builderCategoryValue: 'all',
   builderProjectValue: '',
+  builderSpaceStorageResourceValue: '',
   combinationId: null,
   combinationSyncedId: null,
   combinationName: '',
@@ -23,6 +24,58 @@ const PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID = 'spaceStorageSingleResource';
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX = `${PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID}:`;
+
+function getSpaceStorageSingleResourceProjectId(resourceKey) {
+  return `${PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX}${resourceKey}`;
+}
+
+function getSpaceStorageSingleResourceKey(projectId) {
+  if (!projectId || projectId.indexOf(PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX) !== 0) {
+    return '';
+  }
+  return projectId.slice(PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX.length);
+}
+
+function getSpaceStorageSingleResourceOptions() {
+  const options = [];
+  const spaceStorageResources = resources?.spaceStorage || {};
+  Object.keys(spaceStorageResources).forEach((key) => {
+    const resource = spaceStorageResources[key];
+    if (!resource) {
+      return;
+    }
+    options.push({
+      value: key,
+      label: resource.displayName || key
+    });
+  });
+  return options;
+}
+
+function getProjectPresetJsonFieldOptions(fieldPath) {
+  if (!Array.isArray(fieldPath) || fieldPath.length < 4) {
+    return null;
+  }
+  if (fieldPath[0] !== 'projects') {
+    return null;
+  }
+  const projectId = fieldPath[1];
+  if (!projectId || getSpaceStorageSingleResourceKey(projectId) === '') {
+    return null;
+  }
+  if (fieldPath[2] !== 'operations' || fieldPath[3] !== 'spaceStorageSingleResourceTransferMode') {
+    return null;
+  }
+  return {
+    selectOptions: [
+      { value: 'null', label: getAutomationCardText('spaceStorageSingleResourceModeInherit', {}, 'Inherit global mode') },
+      { value: 'store', label: getAutomationCardText('spaceStorageSingleResourceModeStore', {}, 'Store') },
+      { value: 'withdraw', label: getAutomationCardText('spaceStorageSingleResourceModeWithdraw', {}, 'Withdraw') }
+    ]
+  };
+}
 
 function formatProjectAutomationPresetType(preset) {
   if (!preset) {
@@ -125,6 +178,8 @@ function buildAutomationProjectsUI() {
   categorySelect.classList.add('project-automation-builder-category');
   const projectSelect = document.createElement('select');
   projectSelect.classList.add('project-automation-builder-project');
+  const resourceSelect = document.createElement('select');
+  resourceSelect.classList.add('project-automation-builder-resource');
   const addButton = document.createElement('button');
   addButton.textContent = getAutomationCardText('addProjectButton', {}, '+ Project');
   addButton.classList.add('project-automation-builder-add');
@@ -134,7 +189,7 @@ function buildAutomationProjectsUI() {
   const clearButton = document.createElement('button');
   clearButton.textContent = getAutomationCardText('clearAllButton', {}, '- All');
   clearButton.classList.add('project-automation-builder-clear');
-  pickerRow.append(categorySelect, projectSelect, addButton, addCategoryButton, clearButton);
+  pickerRow.append(categorySelect, projectSelect, resourceSelect, addButton, addCategoryButton, clearButton);
   builderSection.appendChild(pickerRow);
 
   const selectedList = document.createElement('div');
@@ -188,6 +243,7 @@ function buildAutomationProjectsUI() {
   automationElements.projectsBuilderScopeSelect = scopeSelect;
   automationElements.projectsBuilderCategorySelect = categorySelect;
   automationElements.projectsBuilderProjectSelect = projectSelect;
+  automationElements.projectsBuilderResourceSelect = resourceSelect;
   automationElements.projectsBuilderAddButton = addButton;
   automationElements.projectsBuilderAddCategoryButton = addCategoryButton;
   automationElements.projectsBuilderClearButton = clearButton;
@@ -403,6 +459,7 @@ function updateProjectsAutomationUI() {
     projectsBuilderScopeSelect,
     projectsBuilderCategorySelect,
     projectsBuilderProjectSelect,
+    projectsBuilderResourceSelect,
     projectsBuilderAddButton,
     projectsBuilderAddCategoryButton,
     projectsBuilderClearButton,
@@ -480,6 +537,14 @@ function updateProjectsAutomationUI() {
         : 'operations';
     projectAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
     projectAutomationUIState.builderSelectedProjects = names.slice();
+    projectAutomationUIState.builderSpaceStorageResourceValue = '';
+    for (let index = 0; index < names.length; index += 1) {
+      const resourceKey = getSpaceStorageSingleResourceKey(names[index]);
+      if (resourceKey) {
+        projectAutomationUIState.builderSpaceStorageResourceValue = resourceKey;
+        break;
+      }
+    }
     projectAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
     projectAutomationUIState.jsonFilterProjectId = '';
     projectAutomationUIState.syncedPresetId = activePresetId;
@@ -519,6 +584,7 @@ function updateProjectsAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
+    getFieldOptions: (fieldPath) => getProjectPresetJsonFieldOptions(fieldPath),
     onFieldChange: (fieldPath, nextValue) => {
       if (!activePreset) {
         return;
@@ -625,6 +691,30 @@ function updateProjectsAutomationUI() {
     }
     projectAutomationUIState.builderProjectValue = projectsBuilderProjectSelect.value || '';
     projectsBuilderProjectSignature = projectSignature;
+  }
+  const selectedProjectId = projectAutomationUIState.builderProjectValue || projectsBuilderProjectSelect.value || '';
+  const needsSpaceStorageResource = selectedProjectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID;
+  projectsBuilderResourceSelect.style.display = needsSpaceStorageResource ? '' : 'none';
+  if (needsSpaceStorageResource) {
+    const resourceOptions = getSpaceStorageSingleResourceOptions();
+    const preferredResource = projectAutomationUIState.builderSpaceStorageResourceValue || resourceOptions[0]?.value || '';
+    const resourceSignature = resourceOptions.map((entry) => `${entry.value}:${entry.label}`).join('|');
+    if (document.activeElement !== projectsBuilderResourceSelect
+      || projectsBuilderResourceSelect.dataset.signature !== resourceSignature) {
+      syncAutomationSelectOptions(
+        projectsBuilderResourceSelect,
+        resourceOptions.map((entry) => ({
+          value: entry.value,
+          label: entry.label
+        })),
+        preferredResource
+      );
+      projectsBuilderResourceSelect.dataset.signature = resourceSignature;
+    }
+    if (!projectsBuilderResourceSelect.value && resourceOptions.length > 0) {
+      projectsBuilderResourceSelect.value = resourceOptions[0].value;
+    }
+    projectAutomationUIState.builderSpaceStorageResourceValue = projectsBuilderResourceSelect.value || '';
   }
 
   projectsBuilderAddButton.disabled = available.length === 0;
@@ -770,6 +860,7 @@ function attachProjectsAutomationHandlers() {
     projectsBuilderShowInSidebarCheckbox,
     projectsBuilderCategorySelect,
     projectsBuilderProjectSelect,
+    projectsBuilderResourceSelect,
     projectsBuilderAddButton,
     projectsBuilderApplyOnceButton,
     projectsBuilderAddCategoryButton,
@@ -846,6 +937,7 @@ function attachProjectsAutomationHandlers() {
     projectAutomationUIState.builderSelectedProjects = [];
     projectAutomationUIState.builderCategoryValue = 'all';
     projectAutomationUIState.builderProjectValue = '';
+    projectAutomationUIState.builderSpaceStorageResourceValue = '';
     if (presetId) {
       resetAutomationPresetJsonDetailsState(automationElements.projectsPresetJsonDetails, Number(presetId));
     }
@@ -884,6 +976,15 @@ function attachProjectsAutomationHandlers() {
 
   projectsBuilderProjectSelect.addEventListener('change', () => {
     projectAutomationUIState.builderProjectValue = projectsBuilderProjectSelect.value || '';
+    if (projectAutomationUIState.builderProjectValue !== PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID) {
+      projectAutomationUIState.builderSpaceStorageResourceValue = '';
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  projectsBuilderResourceSelect.addEventListener('change', () => {
+    projectAutomationUIState.builderSpaceStorageResourceValue = projectsBuilderResourceSelect.value || '';
   });
 
   projectsBuilderAddButton.addEventListener('click', () => {
@@ -891,10 +992,19 @@ function attachProjectsAutomationHandlers() {
     if (!projectId) {
       return;
     }
+    let selectedProjectId = projectId;
+    if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID) {
+      const resourceKey = projectsBuilderResourceSelect.value || projectAutomationUIState.builderSpaceStorageResourceValue || '';
+      if (!resourceKey) {
+        return;
+      }
+      selectedProjectId = getSpaceStorageSingleResourceProjectId(resourceKey);
+      projectAutomationUIState.builderSpaceStorageResourceValue = resourceKey;
+    }
     projectAutomationUIState.builderCategoryValue = projectsBuilderCategorySelect.value || 'all';
     projectAutomationUIState.builderProjectValue = projectId;
-    if (!projectAutomationUIState.builderSelectedProjects.includes(projectId)) {
-      projectAutomationUIState.builderSelectedProjects.push(projectId);
+    if (!projectAutomationUIState.builderSelectedProjects.includes(selectedProjectId)) {
+      projectAutomationUIState.builderSelectedProjects.push(selectedProjectId);
     }
     let presetId = automationManager.projectsAutomation.getSelectedPresetId();
     if (!presetId) {
@@ -910,7 +1020,7 @@ function attachProjectsAutomationHandlers() {
       projectAutomationUIState.syncedPresetId = null;
     }
     if (presetId) {
-      automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(Number(presetId), [projectId]);
+      automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(Number(presetId), [selectedProjectId]);
       projectAutomationUIState.syncedPresetId = null;
     }
     queueAutomationUIRefresh();
@@ -921,7 +1031,8 @@ function attachProjectsAutomationHandlers() {
     const selectedCategory = projectsBuilderCategorySelect.value || 'all';
     const projects = getAutomatableProjects(projectAutomationUIState.builderSelectedProjects);
     const additions = projects.filter(project => (
-      selectedCategory === 'all' || (project.category || 'general') === selectedCategory
+      (selectedCategory === 'all' || (project.category || 'general') === selectedCategory)
+      && project.name !== PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID
     ));
     if (!additions.length) {
       return;
@@ -1107,6 +1218,11 @@ function getAutomatableProjects(extraProjectIds = []) {
         displayName: 'Space Storage (Operations)',
         category: project.category || 'general'
       });
+      projects.push({
+        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID,
+        displayName: getAutomationCardText('spaceStorageSingleResourcePreset', {}, 'Space Storage (Single Resource)'),
+        category: project.category || 'general'
+      });
       return;
     }
     seen[project.name] = true;
@@ -1159,6 +1275,11 @@ function getProjectAutomationCatalog() {
         displayName: 'Space Storage (Operations)',
         category: project.category || 'general'
       });
+      projects.push({
+        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID,
+        displayName: getAutomationCardText('spaceStorageSingleResourcePreset', {}, 'Space Storage (Single Resource)'),
+        category: project.category || 'general'
+      });
       return;
     }
     seen[project.name] = true;
@@ -1177,6 +1298,18 @@ function getProjectAutomationCatalog() {
 }
 
 function getAutomatableProjectDisplayName(projectId, projectLookup = null) {
+  const singleResourceKey = getSpaceStorageSingleResourceKey(projectId);
+  if (singleResourceKey) {
+    const resourceName = resources?.spaceStorage?.[singleResourceKey]?.displayName || singleResourceKey;
+    return getAutomationCardText(
+      'spaceStorageSingleResourcePresetWithResource',
+      { resource: resourceName },
+      `Space Storage (Single Resource): ${resourceName}`
+    );
+  }
+  if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID) {
+    return getAutomationCardText('spaceStorageSingleResourcePreset', {}, 'Space Storage (Single Resource)');
+  }
   if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID) {
     return 'Space Storage (Expansion)';
   }
