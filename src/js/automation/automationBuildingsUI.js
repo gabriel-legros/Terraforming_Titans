@@ -6,6 +6,7 @@ const buildingAutomationUIState = {
   builderType: 'both',
   builderShowInSidebar: true,
   builderSelectedBuildings: [],
+  jsonFilterBuildingId: '',
   builderCategoryValue: 'all',
   builderBuildingValue: '',
   combinationId: null,
@@ -505,13 +506,24 @@ function updateBuildingsAutomationUI() {
           ? 'control'
           : 'automation';
     buildingAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
+    buildingAutomationUIState.jsonFilterBuildingId = '';
     buildingAutomationUIState.syncedPresetId = activePresetId;
   }
   if (!activePreset && buildingAutomationUIState.syncedPresetId) {
     buildingAutomationUIState.syncedPresetId = null;
+    buildingAutomationUIState.jsonFilterBuildingId = '';
+  }
+  const selectedBuildingIds = activePreset ? Object.keys(activePreset.buildings) : [];
+  if (buildingAutomationUIState.jsonFilterBuildingId
+    && selectedBuildingIds.indexOf(buildingAutomationUIState.jsonFilterBuildingId) < 0) {
+    buildingAutomationUIState.jsonFilterBuildingId = '';
   }
   updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset, {
     isLeafVisible: (fieldPath, preset) => {
+      const selectedBuildingId = buildingAutomationUIState.jsonFilterBuildingId;
+      if (selectedBuildingId && fieldPath[0] === 'buildings' && fieldPath[1] !== selectedBuildingId) {
+        return false;
+      }
       if (fieldPath[0] !== 'buildings' || fieldPath[2] !== 'automation') {
         return true;
       }
@@ -548,6 +560,27 @@ function updateBuildingsAutomationUI() {
         };
       }
       return null;
+    },
+    getFilterOptions: () => selectedBuildingIds.map((buildingId) => {
+      const building = buildings[buildingId];
+      return {
+        value: buildingId,
+        label: building ? (building.displayName || buildingId) : buildingId
+      };
+    }),
+    selectedFilterValue: buildingAutomationUIState.jsonFilterBuildingId,
+    onFilterChange: (nextValue) => {
+      buildingAutomationUIState.jsonFilterBuildingId = nextValue || '';
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    },
+    onClearFilter: () => {
+      if (!buildingAutomationUIState.jsonFilterBuildingId) {
+        return;
+      }
+      buildingAutomationUIState.jsonFilterBuildingId = '';
+      queueAutomationUIRefresh();
+      updateAutomationUI();
     },
     onFieldChange: (fieldPath, nextValue) => {
       if (!activePreset) {
@@ -698,31 +731,48 @@ function updateBuildingsAutomationUI() {
   const selectedSignature = buildingAutomationUIState.builderSelectedBuildings.join('|');
   if (!selectedHasFocus && selectedSignature !== buildingsBuilderSelectedSignature) {
     buildingsBuilderSelectedList.textContent = '';
-    buildingAutomationUIState.builderSelectedBuildings.forEach(name => {
-      const building = buildings[name];
-      const pill = document.createElement('div');
-      pill.classList.add('building-automation-builder-pill');
-      const label = document.createElement('span');
-      label.textContent = building.displayName || name;
-      const remove = document.createElement('button');
-      remove.textContent = '✕';
-      remove.title = getAutomationCardText('removeBuilding', {}, 'Remove building');
-      remove.addEventListener('click', () => {
-        buildingAutomationUIState.builderSelectedBuildings = buildingAutomationUIState.builderSelectedBuildings.filter(id => id !== name);
-        const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
-        if (presetId) {
-          const preset = automationManager.buildingsAutomation.getPresetById(Number(presetId));
-          if (preset && preset.buildings[name]) {
-            delete preset.buildings[name];
-            buildingAutomationUIState.syncedPresetId = null;
+    if (buildingAutomationUIState.builderSelectedBuildings.length === 0) {
+      const emptyState = document.createElement('span');
+      emptyState.classList.add('automation-empty-selection');
+      emptyState.textContent = getAutomationCardText('nothingSelected', {}, 'Nothing selected');
+      buildingsBuilderSelectedList.appendChild(emptyState);
+    } else {
+      buildingAutomationUIState.builderSelectedBuildings.forEach(name => {
+        const building = buildings[name];
+        const pill = document.createElement('div');
+        pill.classList.add('building-automation-builder-pill');
+        const label = document.createElement('span');
+        label.textContent = building.displayName || name;
+        label.style.cursor = 'pointer';
+        label.title = getAutomationCardText('filterSelectionOption', {}, 'Filter selection');
+        label.addEventListener('click', () => {
+          buildingAutomationUIState.jsonFilterBuildingId = name;
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        const remove = document.createElement('button');
+        remove.textContent = '✕';
+        remove.title = getAutomationCardText('removeBuilding', {}, 'Remove building');
+        remove.addEventListener('click', (event) => {
+          event.stopPropagation();
+        });
+        remove.addEventListener('click', () => {
+          buildingAutomationUIState.builderSelectedBuildings = buildingAutomationUIState.builderSelectedBuildings.filter(id => id !== name);
+          const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+          if (presetId) {
+            const preset = automationManager.buildingsAutomation.getPresetById(Number(presetId));
+            if (preset && preset.buildings[name]) {
+              delete preset.buildings[name];
+              buildingAutomationUIState.syncedPresetId = null;
+            }
           }
-        }
-        queueAutomationUIRefresh();
-        updateAutomationUI();
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        pill.append(label, remove);
+        buildingsBuilderSelectedList.appendChild(pill);
       });
-      pill.append(label, remove);
-      buildingsBuilderSelectedList.appendChild(pill);
-    });
+    }
     buildingsBuilderSelectedSignature = selectedSignature;
   }
 

@@ -897,6 +897,18 @@
   gap: 6px;
 }
 
+.automation-empty-selection {
+  color: #c12d2d;
+  font-weight: 600;
+}
+
+.automation-preset-json-filter-row {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 8px;
+}
+
 .building-automation-builder-pill {
   display: inline-flex;
   align-items: center;

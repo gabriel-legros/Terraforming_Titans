@@ -6,6 +6,7 @@ const projectAutomationUIState = {
   builderScope: 'all',
   builderShowInSidebar: true,
   builderSelectedProjects: [],
+  jsonFilterProjectId: '',
   builderCategoryValue: 'all',
   builderProjectValue: '',
   combinationId: null,
@@ -480,12 +481,44 @@ function updateProjectsAutomationUI() {
     projectAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
     projectAutomationUIState.builderSelectedProjects = names.slice();
     projectAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
+    projectAutomationUIState.jsonFilterProjectId = '';
     projectAutomationUIState.syncedPresetId = activePresetId;
   }
   if (!activePreset && projectAutomationUIState.syncedPresetId) {
     projectAutomationUIState.syncedPresetId = null;
+    projectAutomationUIState.jsonFilterProjectId = '';
+  }
+  const selectedProjectIds = activePreset ? Object.keys(activePreset.projects) : [];
+  if (projectAutomationUIState.jsonFilterProjectId
+    && selectedProjectIds.indexOf(projectAutomationUIState.jsonFilterProjectId) < 0) {
+    projectAutomationUIState.jsonFilterProjectId = '';
   }
   updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
+    isLeafVisible: (fieldPath) => {
+      const selectedProjectId = projectAutomationUIState.jsonFilterProjectId;
+      if (selectedProjectId && fieldPath[0] === 'projects' && fieldPath[1] !== selectedProjectId) {
+        return false;
+      }
+      return true;
+    },
+    getFilterOptions: () => selectedProjectIds.map((projectId) => ({
+      value: projectId,
+      label: getAutomatableProjectDisplayName(projectId, automatableProjectLookup)
+    })),
+    selectedFilterValue: projectAutomationUIState.jsonFilterProjectId,
+    onFilterChange: (nextValue) => {
+      projectAutomationUIState.jsonFilterProjectId = nextValue || '';
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    },
+    onClearFilter: () => {
+      if (!projectAutomationUIState.jsonFilterProjectId) {
+        return;
+      }
+      projectAutomationUIState.jsonFilterProjectId = '';
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    },
     onFieldChange: (fieldPath, nextValue) => {
       if (!activePreset) {
         return;
@@ -631,31 +664,48 @@ function updateProjectsAutomationUI() {
   const selectedSignature = projectAutomationUIState.builderSelectedProjects.join('|');
   if (!selectedHasFocus && selectedSignature !== projectsBuilderSelectedSignature) {
     projectsBuilderSelectedList.textContent = '';
-    projectAutomationUIState.builderSelectedProjects.forEach(name => {
-      const pill = document.createElement('div');
-      pill.classList.add('project-automation-builder-pill', 'building-automation-builder-pill');
-      const label = document.createElement('span');
-      label.textContent = getAutomatableProjectDisplayName(name, automatableProjectLookup);
-      const remove = document.createElement('button');
-      remove.textContent = '✕';
-      remove.title = getAutomationCardText('removeProject', {}, 'Remove project');
-      remove.addEventListener('click', () => {
-        projectAutomationUIState.builderSelectedProjects = projectAutomationUIState.builderSelectedProjects.filter(id => id !== name);
-        const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-        if (presetId) {
-          const normalizedProjectId = automationManager.projectsAutomation.normalizeProjectId(name);
-          const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
-          if (preset && preset.projects[normalizedProjectId]) {
-            delete preset.projects[normalizedProjectId];
-            projectAutomationUIState.syncedPresetId = null;
+    if (projectAutomationUIState.builderSelectedProjects.length === 0) {
+      const emptyState = document.createElement('span');
+      emptyState.classList.add('automation-empty-selection');
+      emptyState.textContent = getAutomationCardText('nothingSelected', {}, 'Nothing selected');
+      projectsBuilderSelectedList.appendChild(emptyState);
+    } else {
+      projectAutomationUIState.builderSelectedProjects.forEach(name => {
+        const pill = document.createElement('div');
+        pill.classList.add('project-automation-builder-pill', 'building-automation-builder-pill');
+        const label = document.createElement('span');
+        label.textContent = getAutomatableProjectDisplayName(name, automatableProjectLookup);
+        label.style.cursor = 'pointer';
+        label.title = getAutomationCardText('filterSelectionOption', {}, 'Filter selection');
+        label.addEventListener('click', () => {
+          projectAutomationUIState.jsonFilterProjectId = name;
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        const remove = document.createElement('button');
+        remove.textContent = '✕';
+        remove.title = getAutomationCardText('removeProject', {}, 'Remove project');
+        remove.addEventListener('click', (event) => {
+          event.stopPropagation();
+        });
+        remove.addEventListener('click', () => {
+          projectAutomationUIState.builderSelectedProjects = projectAutomationUIState.builderSelectedProjects.filter(id => id !== name);
+          const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+          if (presetId) {
+            const normalizedProjectId = automationManager.projectsAutomation.normalizeProjectId(name);
+            const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
+            if (preset && preset.projects[normalizedProjectId]) {
+              delete preset.projects[normalizedProjectId];
+              projectAutomationUIState.syncedPresetId = null;
+            }
           }
-        }
-        queueAutomationUIRefresh();
-        updateAutomationUI();
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+        });
+        pill.append(label, remove);
+        projectsBuilderSelectedList.appendChild(pill);
       });
-      pill.append(label, remove);
-      projectsBuilderSelectedList.appendChild(pill);
-    });
+    }
     projectsBuilderSelectedSignature = selectedSignature;
   }
 

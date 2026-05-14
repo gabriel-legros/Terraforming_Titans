@@ -1003,10 +1003,29 @@ function createAutomationPresetJsonDetails(extraClassName) {
     event.preventDefault();
     event.stopPropagation();
   });
-  summary.appendChild(saveButton);
+
+  const filterRow = document.createElement('div');
+  filterRow.classList.add('automation-preset-json-filter-row');
+  filterRow.style.display = 'none';
+  const filterSelect = document.createElement('select');
+  filterSelect.classList.add('automation-preset-json-filter-select');
+  filterSelect.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+  const filterClearButton = document.createElement('button');
+  filterClearButton.type = 'button';
+  filterClearButton.classList.add('automation-preset-json-filter-clear');
+  filterClearButton.textContent = getAutomationCardText('clearFilterButton', {}, 'Clear filter');
+  filterClearButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+  filterRow.append(filterSelect, filterClearButton);
+
+  summary.append(summaryText, filterRow, saveButton);
   details.appendChild(summary);
   details.addEventListener('toggle', () => {
     saveButton.style.display = details.open ? '' : 'none';
+    filterRow.style.display = details.open && filterRow._hasFilters ? 'inline-flex' : 'none';
   });
 
   const pre = document.createElement('pre');
@@ -1019,6 +1038,9 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._saveButtonTextNode = saveButtonText;
   details._saveButtonStarNode = saveButtonStar;
   details._contentNode = pre;
+  details._filterRowNode = filterRow;
+  details._filterSelectNode = filterSelect;
+  details._filterClearButtonNode = filterClearButton;
   details._renderedSummaryText = '';
   details._renderedPresetJson = '';
   details._renderedFieldKeySignature = '';
@@ -1030,6 +1052,7 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._boundPresetId = null;
   details._activePresetRef = null;
   details._activeOnFieldChange = null;
+  details._filterOptionSignature = '';
   details.style.display = 'none';
   return details;
 }
@@ -1397,6 +1420,10 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const onDirtyChange = options.onDirtyChange;
   const isLeafVisible = options.isLeafVisible;
   const fieldOptionsResolver = options.getFieldOptions;
+  const filterOptionsResolver = options.getFilterOptions;
+  const selectedFilterValue = options.selectedFilterValue || '';
+  const onFilterChange = options.onFilterChange;
+  const onClearFilter = options.onClearFilter;
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
@@ -1414,6 +1441,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     details._jsonDraftMap = {};
     details._jsonDirty = false;
     details._basePresetSignature = '';
+    details._filterOptionSignature = '';
     if (details._saveButton) {
       details._saveButton.style.display = 'none';
       details._saveButton.disabled = true;
@@ -1424,6 +1452,9 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     if (details._renderedPresetJson) {
       details._contentNode.textContent = '';
       details._renderedPresetJson = '';
+    }
+    if (details._filterRowNode) {
+      details._filterRowNode.style.display = 'none';
     }
     return;
   }
@@ -1440,6 +1471,38 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     details._renderedSummaryText = summaryText;
   }
   details._saveButton.style.display = details.open ? '' : 'none';
+  const filterOptions = filterOptionsResolver ? filterOptionsResolver(preset) : [];
+  if (details._filterRowNode && details._filterSelectNode && details._filterClearButtonNode) {
+    const hasFilters = Array.isArray(filterOptions) && filterOptions.length > 0;
+    details._filterRowNode._hasFilters = hasFilters;
+    details._filterRowNode.style.display = hasFilters && details.open ? 'inline-flex' : 'none';
+    if (hasFilters) {
+      const selectOptions = [{
+        value: '',
+        label: getAutomationCardText('filterAllOption', {}, 'All selected items')
+      }].concat(filterOptions);
+      syncAutomationSelectOptions(details._filterSelectNode, selectOptions, selectedFilterValue || '');
+      details._filterClearButtonNode.disabled = !selectedFilterValue;
+      if (!details._filterSelectNode._boundFilterChange) {
+        details._filterSelectNode.addEventListener('change', (event) => {
+          if (onFilterChange) {
+            onFilterChange(event.target.value || '');
+          }
+        });
+        details._filterSelectNode._boundFilterChange = true;
+      }
+      if (!details._filterClearButtonNode._boundFilterClick) {
+        details._filterClearButtonNode.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (onClearFilter) {
+            onClearFilter();
+          }
+        });
+        details._filterClearButtonNode._boundFilterClick = true;
+      }
+    }
+  }
 
   if (details._boundPresetId !== preset.id) {
     const storedDraft = loadAutomationPresetJsonDraftStore(details, preset.id);
