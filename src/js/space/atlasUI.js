@@ -215,7 +215,7 @@ function buildAtlasRewardsList(definition) {
     return wrapper;
 }
 
-function buildAtlasWorldCard(definition, category) {
+function buildAtlasWorldCard(definition, category, attachHandlers = true) {
     const result = atlasManager.buildChallengeWorldResult(definition.key) || { merged: { celestialParameters: {} }, hazards: [] };
     const completion = atlasManager.getCompletion(definition.key);
     const currentSeedKey = atlasManager.getCurrentChallengeSeedKey();
@@ -282,9 +282,11 @@ function buildAtlasWorldCard(definition, category) {
         ? getAtlasText('current', 'Current')
         : getAtlasText('travel', 'Travel');
     button.disabled = travelLocked || isCurrent;
-    button.addEventListener('click', () => {
-        atlasManager.travelToChallengeWorld(definition.key);
-    });
+    if (attachHandlers) {
+        button.addEventListener('click', () => {
+            atlasManager.travelToChallengeWorld(definition.key);
+        });
+    }
     card.appendChild(button);
     return card;
 }
@@ -334,6 +336,7 @@ function morphAtlasChildren(currentParent, nextParent) {
 
 function syncAtlasWorldList(container, definitions, category) {
     container._atlasCards ||= new Map();
+    container._uiListenerCleanups = [];
     Array.from(container.children).forEach((child) => {
         const key = child.dataset?.atlasWorldKey;
         if (key && !container._atlasCards.has(key)) {
@@ -341,22 +344,20 @@ function syncAtlasWorldList(container, definitions, category) {
         }
     });
     const usedCards = new Set();
-    runWithTrackedUIListeners(container, () => {
-        definitions.forEach((definition, index) => {
-            let card = container._atlasCards.get(definition.key);
-            const nextCard = buildAtlasWorldCard(definition, category);
-            if (!card) {
-                card = nextCard;
-                container._atlasCards.set(definition.key, card);
-            } else {
-                morphAtlasNode(card, nextCard);
-            }
-            card.style.display = '';
-            usedCards.add(card);
-            if (container.children[index] !== card) {
-                container.insertBefore(card, container.children[index] || null);
-            }
-        });
+    definitions.forEach((definition, index) => {
+        let card = container._atlasCards.get(definition.key);
+        const nextCard = buildAtlasWorldCard(definition, category, !card);
+        if (!card) {
+            card = nextCard;
+            container._atlasCards.set(definition.key, card);
+        } else {
+            morphAtlasNode(card, nextCard);
+        }
+        card.style.display = '';
+        usedCards.add(card);
+        if (container.children[index] !== card) {
+            container.insertBefore(card, container.children[index] || null);
+        }
     });
     container._atlasCards.forEach((card) => {
         if (!usedCards.has(card)) {

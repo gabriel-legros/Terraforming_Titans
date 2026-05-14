@@ -1517,6 +1517,16 @@ function setAerostatBuoyancyText(textElement, summaryText) {
   });
 }
 
+function removeStaleAerostatBuoyancyCards(container, activeCard) {
+  container.querySelectorAll('.colony-buoyancy-card').forEach((card) => {
+    if (card !== activeCard) {
+      cleanupTrackedUIListeners(card);
+      cleanupDynamicTooltipsIn(card);
+      card.remove();
+    }
+  });
+}
+
 function attachAerostatBuoyancySection(container, structure) {
   if (!(structure instanceof Aerostat)) {
     return;
@@ -1540,6 +1550,8 @@ function attachAerostatBuoyancySection(container, structure) {
     !existing.capacityIncreaseButton;
 
   if (needsRebuild) {
+    removeStaleAerostatBuoyancyCards(container, null);
+
     const card = document.createElement('div');
     card.classList.add('project-card', 'colony-buoyancy-card');
     card.style.flexBasis = '100%';
@@ -1823,6 +1835,7 @@ function attachAerostatBuoyancySection(container, structure) {
     structure.buoyancyUI = existing;
   }
 
+  removeStaleAerostatBuoyancyCards(container, structure.buoyancyUI.container);
   container.appendChild(structure.buoyancyUI.container);
   updateAerostatBuoyancySection(structure);
 }
