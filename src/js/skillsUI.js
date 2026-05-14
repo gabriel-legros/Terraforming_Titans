@@ -258,16 +258,12 @@ function createSkillTree() {
     // Cache container
     skillTreeContainerEl = container;
 
-    cleanupTrackedUIListeners(container);
-    cleanupDynamicTooltipsIn(container);
-    container.innerHTML = ''; // Clear previous content
-    for (const key in skillPaths) {
-        delete skillPaths[key];
+    let svg = skillSVGEl || document.getElementById('skill-lines');
+    if (!svg) {
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.id = 'skill-lines';
+        container.appendChild(svg);
     }
-
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.id = 'skill-lines';
-    container.appendChild(svg);
     // Cache SVG element
     skillSVGEl = svg;
 
@@ -277,28 +273,29 @@ function createSkillTree() {
             const pos = skillLayout[id];
             if (!pos) continue;
 
-            const button = document.createElement('button');
-            button.id = `skill-${id}`;
-            button.classList.add('skill-button');
+            let button = skillButtonEls[id] || document.getElementById(`skill-${id}`);
+            if (!button) {
+                button = document.createElement('button');
+                button.id = `skill-${id}`;
+                button.classList.add('skill-button');
+                const nameEl = document.createElement('strong');
+                const descEl = document.createElement('span');
+                const previewEl = document.createElement('span');
+                const rankEl = document.createElement('span');
+                const costEl = document.createElement('span');
+
+                button.appendChild(nameEl);
+                button.appendChild(descEl);
+                button.appendChild(previewEl);
+                button.appendChild(rankEl);
+                button.appendChild(costEl);
+
+                button._skillEls = { name: nameEl, desc: descEl, preview: previewEl, rank: rankEl, cost: costEl };
+                button.addEventListener('click', () => purchaseSkill(id));
+                container.appendChild(button);
+            }
             button.style.gridRow = pos.row + 1;
             button.style.gridColumn = pos.col + 1;
-
-            const nameEl = document.createElement('strong');
-            const descEl = document.createElement('span');
-            const previewEl = document.createElement('span');
-            const rankEl = document.createElement('span');
-            const costEl = document.createElement('span');
-
-            button.appendChild(nameEl);
-            button.appendChild(descEl);
-            button.appendChild(previewEl);
-            button.appendChild(rankEl);
-            button.appendChild(costEl);
-
-            button._skillEls = { name: nameEl, desc: descEl, preview: previewEl, rank: rankEl, cost: costEl };
-
-            button.addEventListener('click', () => purchaseSkill(id));
-            container.appendChild(button);
             // Cache button element
             skillButtonEls[id] = button;
             updateSkillButton(skill);

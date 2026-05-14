@@ -21,6 +21,7 @@ let spaceSubtabManager = null;
 // Cache the last rendered world so we can skip redundant updates
 let lastWorldKey = null;
 let lastWorldSeed = null;
+let currentWorldDetailsDirty = true;
 let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
 let spaceStatUniqueTooltipEl = null;
@@ -556,6 +557,7 @@ function activateSpaceSubtab(subtabId) {
 function resetCurrentWorldCache() {
     lastWorldKey = null;
     lastWorldSeed = null;
+    currentWorldDetailsDirty = true;
 }
 
 /**
@@ -703,6 +705,9 @@ function initializeSpaceUI(spaceManager) {
             header.addEventListener('click', () => {
                 content.classList.toggle('hidden');
                 arrow.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+                if (!content.classList.contains('hidden') && currentWorldDetailsDirty) {
+                    updateCurrentWorldUI(true);
+                }
             });
         }
     }
@@ -872,15 +877,118 @@ function selectPlanet(planetKey, force, skipCurrentWorldWarnings){
     resetGameFrameClock(true);
 }
 
-function updateCurrentWorldUI() {
+function prepareCurrentWorldDetailsFragment(wrapper, html, seedArg) {
+    wrapper.innerHTML = html;
+    const eqBtn = wrapper.querySelector('#rwg-equilibrate-btn');
+    if (eqBtn) {
+        eqBtn.nextElementSibling?.remove();
+        eqBtn.remove();
+    }
+    wrapper.querySelector('#rwg-travel-btn')?.remove();
+    wrapper.querySelector('#rwg-travel-warning')?.remove();
+    wrapper.querySelector('#rwg-dominion')?.remove();
+    wrapper.querySelector('#rwg-dominion-lore-btn')?.remove();
+    wrapper.querySelectorAll('[id]').forEach(el => {
+        if (el.id !== 'current-world-details') el.removeAttribute('id');
+    });
+    if (seedArg === undefined) {
+        wrapper.querySelectorAll('.rwg-chip').forEach(chip => {
+            const label = chip.querySelector('.label')?.textContent;
+            if (label === 'Seed' || label === 'Type') {
+                chip.remove();
+            }
+        });
+    }
+}
+
+function canReuseWorldDetailNode(current, next) {
+    return current.nodeType === next.nodeType
+        && (current.nodeType !== 1 || (
+            current.tagName === next.tagName
+            && current.className === next.className
+        ));
+}
+
+function syncWorldDetailAttributes(current, next) {
+    Array.from(current.attributes).forEach(attr => {
+        if (!next.hasAttribute(attr.name)) {
+            current.removeAttribute(attr.name);
+        }
+    });
+    Array.from(next.attributes).forEach(attr => {
+        if (current.getAttribute(attr.name) !== attr.value) {
+            current.setAttribute(attr.name, attr.value);
+        }
+    });
+}
+
+function morphWorldDetailNode(current, next) {
+    if (current._morphHidden) {
+        current.style.display = '';
+        current._morphHidden = false;
+    }
+    if (!canReuseWorldDetailNode(current, next)) {
+        current.replaceWith(next.cloneNode(true));
+        return;
+    }
+    if (current.nodeType === 3) {
+        if (current.nodeValue !== next.nodeValue) {
+            current.nodeValue = next.nodeValue;
+        }
+        return;
+    }
+    syncWorldDetailAttributes(current, next);
+    morphWorldDetailChildren(current, next);
+}
+
+function morphWorldDetailChildren(currentParent, nextParent) {
+    const nextChildren = Array.from(nextParent.childNodes);
+    const reusableHidden = Array.from(currentParent.childNodes)
+        .filter(child => child._morphHidden);
+    for (let index = 0; index < nextChildren.length; index += 1) {
+        const nextChild = nextChildren[index];
+        const currentChild = currentParent.childNodes[index];
+        if (!currentChild) {
+            const reusable = reusableHidden.find(child => canReuseWorldDetailNode(child, nextChild));
+            if (reusable) {
+                reusableHidden.splice(reusableHidden.indexOf(reusable), 1);
+                currentParent.appendChild(reusable);
+                morphWorldDetailNode(reusable, nextChild);
+            } else {
+                currentParent.appendChild(nextChild.cloneNode(true));
+            }
+        } else if (!canReuseWorldDetailNode(currentChild, nextChild)) {
+            const reusable = reusableHidden.find(child => canReuseWorldDetailNode(child, nextChild));
+            if (reusable) {
+                reusableHidden.splice(reusableHidden.indexOf(reusable), 1);
+                currentParent.insertBefore(reusable, currentChild);
+                morphWorldDetailNode(reusable, nextChild);
+            } else {
+                morphWorldDetailNode(currentChild, nextChild);
+            }
+        } else {
+            morphWorldDetailNode(currentChild, nextChild);
+        }
+    }
+    for (let index = nextChildren.length; index < currentParent.childNodes.length; index += 1) {
+        const child = currentParent.childNodes[index];
+        if (child.nodeType === 1) {
+            child.style.display = 'none';
+            child._morphHidden = true;
+            continue;
+        }
+        child.remove();
+        index -= 1;
+    }
+}
+
+function updateCurrentWorldUI(forceDetailsRender = false) {
     if (!_spaceManagerInstance) return;
     const key = _spaceManagerInstance.getCurrentPlanetKey();
     const seed = _spaceManagerInstance.getCurrentRandomSeed();
-    if (key === lastWorldKey && seed === lastWorldSeed) {
+    if (!forceDetailsRender && !currentWorldDetailsDirty && key === lastWorldKey && seed === lastWorldSeed) {
         return;
     }
-    lastWorldKey = key;
-    lastWorldSeed = seed;
 
     const nameSpan = document.getElementById('current-world-name');
     const detailsBox = document.getElementById('current-world-details');
@@ -888,40 +996,41 @@ function updateCurrentWorldUI() {
         nameSpan.textContent = _spaceManagerInstance.getCurrentWorldName();
     }
     if (detailsBox) {
+        if (detailsBox.classList.contains('hidden') && !forceDetailsRender) {
+            currentWorldDetailsDirty = true;
+            lastWorldKey = key;
+            lastWorldSeed = seed;
+            return;
+        }
         const data = _spaceManagerInstance.getCurrentWorldOriginal();
         const seedArg = seed === null ? undefined : seed;
         if (data && typeof renderWorldDetail === 'function') {
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = renderWorldDetail(data, seedArg, undefined, { showDominion: false });
-            const eqBtn = wrapper.querySelector('#rwg-equilibrate-btn');
-            if (eqBtn) {
-                eqBtn.nextElementSibling?.remove();
-                eqBtn.remove();
-            }
-            wrapper.querySelector('#rwg-travel-btn')?.remove();
-            wrapper.querySelector('#rwg-travel-warning')?.remove();
-            wrapper.querySelector('#rwg-dominion')?.remove();
-            wrapper.querySelector('#rwg-dominion-lore-btn')?.remove();
-            wrapper.querySelectorAll('[id]').forEach(el => {
-                if(el.id !== 'current-world-details') el.removeAttribute('id')
-            });
-            if (seedArg === undefined) {
-                wrapper.querySelectorAll('.rwg-chip').forEach(chip => {
-                    const label = chip.querySelector('.label')?.textContent;
-                    if (label === 'Seed' || label === 'Type') {
-                        chip.remove();
-                    }
-                });
-            }
             const detailsContent = detailsBox.querySelector('.details-content') || detailsBox;
-            detailsContent.replaceChildren(wrapper);
+            let wrapper = detailsContent._currentWorldDetailsWrapper;
+            if (!wrapper) {
+                wrapper = document.createElement('div');
+                detailsContent._currentWorldDetailsWrapper = wrapper;
+                detailsContent.appendChild(wrapper);
+            }
+            wrapper.style.display = '';
+            const nextWrapper = document.createElement('div');
+            prepareCurrentWorldDetailsFragment(nextWrapper, renderWorldDetail(data, seedArg, undefined, { showDominion: false }), seedArg);
+            morphWorldDetailChildren(wrapper, nextWrapper);
             if (typeof attachPendingRwgTooltips === 'function') {
                 attachPendingRwgTooltips(wrapper);
             }
         } else {
             const detailsContent = detailsBox.querySelector('.details-content') || detailsBox;
-            detailsContent.textContent = '';
+            const wrapper = detailsContent._currentWorldDetailsWrapper;
+            if (wrapper) {
+                wrapper.style.display = 'none';
+            } else {
+                detailsContent.textContent = '';
+            }
         }
+        currentWorldDetailsDirty = false;
+        lastWorldKey = key;
+        lastWorldSeed = seed;
     }
     if (typeof updateSpaceSlidersUI === 'function') {
         updateSpaceSlidersUI({ space: _spaceManagerInstance, galaxy: galaxyManager });

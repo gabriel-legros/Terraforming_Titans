@@ -746,19 +746,33 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       return;
     }
 
-    elements.disposalTargetRows = {};
-    cleanupTrackedUIListeners(elements.disposalTargetList);
-    cleanupDynamicTooltipsIn(elements.disposalTargetList);
-    elements.disposalTargetList.textContent = '';
+    const previousRows = elements.disposalTargetRows || {};
+    const nextRows = {};
+    const usedRows = new Set();
 
     runWithTrackedUIListeners(elements.disposalTargetList, () => {
       for (let i = 0; i < this.disposalTargets.length; i += 1) {
         const target = this.disposalTargets[i];
-        const row = this.createDisposalTargetRow(target, i);
+        let row = previousRows[target.id];
+        if (!row) {
+          row = this.createDisposalTargetRow(target, i);
+        }
+        usedRows.add(row);
         elements.disposalTargetRows[target.id] = row;
+        nextRows[target.id] = row;
         elements.disposalTargetList.appendChild(row.card);
+        row.badge.textContent = `${i + 1}`;
       }
     });
+    Object.keys(previousRows).forEach(targetId => {
+      const row = previousRows[targetId];
+      if (!usedRows.has(row)) {
+        cleanupTrackedUIListeners(row.card);
+        cleanupDynamicTooltipsIn(row.card);
+        row.card.remove();
+      }
+    });
+    elements.disposalTargetRows = nextRows;
 
     this.refreshDisposalTargetSelects();
   }
@@ -909,6 +923,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return {
       card,
       marker,
+      badge,
       typeSelect,
       phaseSelect,
       phaseContainer,
@@ -984,6 +999,25 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return { container, checkbox, input, unit };
   }
 
+  syncSelectOptions(select, options) {
+    while (select.options.length < options.length) {
+      select.appendChild(document.createElement('option'));
+    }
+    while (select.options.length > options.length) {
+      select.removeChild(select.options[select.options.length - 1]);
+    }
+    options.forEach((optionData, index) => {
+      const option = select.options[index];
+      if (option.value !== optionData.value) {
+        option.value = optionData.value;
+      }
+      if (option.textContent !== optionData.label) {
+        option.textContent = optionData.label;
+      }
+      option.disabled = optionData.disabled === true;
+    });
+  }
+
   handleTargetGroupChange(targetId, groupKey) {
     const target = this.getTargetById(targetId);
     if (!target) {
@@ -1053,40 +1087,39 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
       const selectionKey = this.getTargetSelectionKey(target);
       const groupKey = disposalGroupData.resourceGroupLookup[selectionKey] || '';
-      row.typeSelect.textContent = '';
-      const noGroupOption = document.createElement('option');
-      noGroupOption.value = '';
-      noGroupOption.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.none', '—');
-      row.typeSelect.appendChild(noGroupOption);
-
+      const typeOptions = [{
+        value: '',
+        label: this.getSpaceDisposalText('ui.projects.spaceDisposal.none', '—')
+      }];
       for (let groupIndex = 0; groupIndex < disposalGroupData.groupList.length; groupIndex += 1) {
         const group = disposalGroupData.groupList[groupIndex];
-        const option = document.createElement('option');
-        option.value = group.key;
-        option.textContent = group.label;
-        row.typeSelect.appendChild(option);
+        typeOptions.push({
+          value: group.key,
+          label: group.label
+        });
       }
+      this.syncSelectOptions(row.typeSelect, typeOptions);
 
       row.typeSelect.value = groupKey;
       const group = disposalGroupData.groupMap[groupKey];
-      row.phaseSelect.textContent = '';
-      const noPhaseOption = document.createElement('option');
-      noPhaseOption.value = '';
-      noPhaseOption.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.none', '—');
-      row.phaseSelect.appendChild(noPhaseOption);
+      const phaseOptions = [{
+        value: '',
+        label: this.getSpaceDisposalText('ui.projects.spaceDisposal.none', '—')
+      }];
 
       if (group) {
         for (let optionIndex = 0; optionIndex < group.options.length; optionIndex += 1) {
           const optionData = group.options[optionIndex];
-          const option = document.createElement('option');
-          option.value = `${optionData.category}:${optionData.resource}`;
-          option.textContent = optionData.label;
-          const optionKey = option.value;
+          const optionKey = `${optionData.category}:${optionData.resource}`;
           const selectedByOther = usedKeys[optionKey] && optionKey !== selectionKey;
-          option.disabled = selectedByOther;
-          row.phaseSelect.appendChild(option);
+          phaseOptions.push({
+            value: optionKey,
+            label: optionData.label,
+            disabled: selectedByOther
+          });
         }
       }
+      this.syncSelectOptions(row.phaseSelect, phaseOptions);
 
       row.phaseSelect.value = selectionKey || '';
       row.phaseLabel.textContent = group && group.key === 'storageDepotResource' ? 'Which one' : 'Phase';

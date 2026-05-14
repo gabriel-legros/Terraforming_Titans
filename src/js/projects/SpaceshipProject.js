@@ -532,11 +532,7 @@ class SpaceshipProject extends Project {
         }
         elements.totalCostElement.style.color = hasShortfall ? 'red' : '';
       } else {
-        const totalCostHtml = formatTotalCostDisplay(totalCost, this, perSecond);
-        if (elements._cachedTotalCostHtml !== totalCostHtml) {
-          elements.totalCostElement.innerHTML = totalCostHtml;
-          elements._cachedTotalCostHtml = totalCostHtml;
-        }
+        updateTotalCostDisplayElement(elements.totalCostElement, totalCost, this, perSecond);
       }
     }
 

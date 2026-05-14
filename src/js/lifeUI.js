@@ -76,6 +76,7 @@ function ensureDynamicInfoTooltip(iconElement, cachedTooltip, text) {
   if (!existing) return attachDynamicInfoTooltip(iconElement, text);
   if (existing.textContent !== text) existing.textContent = text;
   if (existing.style && existing.style.whiteSpace !== 'pre-line') existing.style.whiteSpace = 'pre-line';
+  if (existing.style && existing.style.display === 'none') existing.style.display = '';
   return existing;
 }
 
@@ -95,7 +96,8 @@ function ensureStatusCellElements(cell) {
     cell.append(icon, suffix);
     cell.statusIcon = icon;
     cell.statusSuffix = suffix;
-    cell.statusTooltip = null;
+    cell.statusTooltip = attachDynamicInfoTooltip(icon, '');
+    cell.statusTooltip.style.display = 'none';
   }
   return cell.statusIcon;
 }
@@ -121,8 +123,8 @@ function updateStatusCellIcon(cell, symbol, tooltipText, suffixText) {
   if (tooltipText) {
     cell.statusTooltip = ensureDynamicInfoTooltip(icon, cell.statusTooltip, tooltipText);
   } else if (cell.statusTooltip) {
-    cell.statusTooltip.remove();
-    cell.statusTooltip = null;
+    cell.statusTooltip.textContent = '';
+    cell.statusTooltip.style.display = 'none';
   }
 }
 
@@ -142,8 +144,8 @@ function updateStatusSpan(statusEntry, symbol, tooltipText) {
   if (tooltipText) {
     statusEntry.tooltipEl = ensureDynamicInfoTooltip(statusEntry.status, statusEntry.tooltipEl, tooltipText);
   } else if (statusEntry.tooltipEl) {
-    statusEntry.tooltipEl.remove();
-    statusEntry.tooltipEl = null;
+    statusEntry.tooltipEl.textContent = '';
+    statusEntry.tooltipEl.style.display = 'none';
   }
 }
 

@@ -170,16 +170,14 @@ function updateLifeAutomationUI() {
 
   // Only rebuild preset dropdown if not currently focused
   if (document.activeElement !== lifePresetSelect) {
-    while (lifePresetSelect.firstChild) lifePresetSelect.removeChild(lifePresetSelect.firstChild);
-    automation.presets.forEach(preset => {
-      const option = document.createElement('option');
-      option.value = preset.id;
-      option.textContent = getLifeAutomationPresetLabel(preset);
-      if (preset.id === automation.getSelectedPresetId()) {
-        option.selected = true;
-      }
-      lifePresetSelect.appendChild(option);
-    });
+    syncAutomationSelectOptions(
+      lifePresetSelect,
+      automation.presets.map(preset => ({
+        value: preset.id,
+        label: getLifeAutomationPresetLabel(preset)
+      })),
+      automation.getSelectedPresetId()
+    );
   }
 
   const activePreset = automation.getActivePreset();

@@ -17,7 +17,242 @@ let colonyBuilderPresetSignature = '';
 let colonyBuilderCategorySignature = '';
 let colonyBuilderTargetSignature = '';
 let colonyBuilderSelectedSignature = '';
-let colonyApplyRenderSignature = '';
+
+function getColonyAutomationTargetCatalog(automation) {
+  const targets = [];
+  Object.values(colonies || {}).forEach(colony => {
+    if (!colony) {
+      return;
+    }
+    targets.push({
+      id: `colony:${colony.name}`,
+      categoryId: 'colonyBuildings',
+      categoryLabel: automation.getCategoryLabel('colonyBuildings'),
+      label: colony.displayName || colony.name,
+      supportsAutomation: true
+    });
+  });
+
+  for (const sliderId in COLONY_AUTOMATION_SLIDER_TARGETS) {
+    const config = COLONY_AUTOMATION_SLIDER_TARGETS[sliderId];
+    targets.push({
+      id: `slider:${sliderId}`,
+      categoryId: 'colonySliders',
+      categoryLabel: automation.getCategoryLabel('colonySliders'),
+      label: config.label,
+      supportsAutomation: false
+    });
+  }
+
+  targets.push(
+    {
+      id: 'constructionOffice',
+      categoryId: 'constructionOffice',
+      categoryLabel: automation.getCategoryLabel('constructionOffice'),
+      label: 'Construction Office',
+      supportsAutomation: false
+    },
+    {
+      id: 'nanocolony',
+      categoryId: 'nanocolony',
+      categoryLabel: automation.getCategoryLabel('nanocolony'),
+      label: 'Nanocolony',
+      supportsAutomation: false
+    },
+    {
+      id: 'orbitals',
+      categoryId: 'orbitals',
+      categoryLabel: automation.getCategoryLabel('orbitals'),
+      label: 'Orbitals',
+      supportsAutomation: false
+    }
+  );
+
+  targets.sort((left, right) => {
+    const leftCategory = COLONY_AUTOMATION_CATEGORY_ORDER.indexOf(left.categoryId);
+    const rightCategory = COLONY_AUTOMATION_CATEGORY_ORDER.indexOf(right.categoryId);
+    if (leftCategory !== rightCategory) {
+      return leftCategory - rightCategory;
+    }
+    return left.label.localeCompare(right.label);
+  });
+
+  return targets;
+}
+
+function formatColonyAutomationPresetType(preset) {
+  if (!preset) {
+    return getAutomationCardText('selectPreset', {}, 'Select a preset');
+  }
+  if (preset.includeControl && preset.includeAutomation) {
+    return getAutomationCardText('controlAutobuild', {}, 'Control + Autobuild');
+  }
+  if (preset.includeControl) {
+    return getAutomationCardText('controlOnly', {}, 'Control only');
+  }
+  return getAutomationCardText('autobuildOnly', {}, 'Autobuild only');
+}
+
+function updateColonyAutomationApplyDetail(detail, automation, presetId) {
+  const preset = automation.getPresetById(presetId);
+  const detailText = formatColonyAutomationPresetType(preset);
+  const targetList = preset
+    ? preset.scopeAll
+      ? getAutomationCardText('allAvailableTargets', {}, 'All available targets')
+      : Object.keys(preset.targets).map(targetId => automation.getTargetLabel(targetId)).join(', ')
+    : '';
+  detail.textContent = targetList ? `${detailText} / ${targetList}` : detailText;
+}
+
+function getColonyAutomationPresetOptionData(presets) {
+  if (presets.length) {
+    return presets.map(preset => ({
+      value: preset.id,
+      label: getDefaultAutomationPresetLabel(preset)
+    }));
+  }
+  return [{ value: '', label: getAutomationCardText('noPresetsSaved', {}, 'No presets saved'), disabled: true }];
+}
+
+function createColonyAutomationApplyRow(automation) {
+  const row = document.createElement('div');
+  row.classList.add('building-automation-apply-row');
+  const primary = document.createElement('div');
+  primary.classList.add('building-automation-apply-primary');
+  const toggle = createToggleButton({
+    onLabel: getAutomationCardText('applyOn', {}, 'Apply On'),
+    offLabel: getAutomationCardText('applyOff', {}, 'Apply Off'),
+    isOn: false
+  });
+  toggle.classList.add('building-automation-apply-toggle');
+  toggle.addEventListener('click', () => {
+    const assignmentId = Number(row.dataset.assignmentId);
+    const assignment = automation.getAssignments().find(entry => entry.id === assignmentId);
+    if (!assignment) {
+      return;
+    }
+    automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  const select = document.createElement('select');
+  select.addEventListener('change', (event) => {
+    const assignmentId = Number(row.dataset.assignmentId);
+    const presetId = Number(event.target.value);
+    automation.setAssignmentPreset(assignmentId, presetId);
+    updateColonyAutomationApplyDetail(row._refs.detail, automation, presetId);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  const detail = document.createElement('span');
+  detail.classList.add('building-automation-apply-detail');
+  const controls = document.createElement('div');
+  controls.classList.add('building-automation-apply-controls');
+  const moveUp = document.createElement('button');
+  moveUp.textContent = '↑';
+  moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
+  moveUp.addEventListener('click', () => {
+    automation.moveAssignment(Number(row.dataset.assignmentId), -1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  const moveDown = document.createElement('button');
+  moveDown.textContent = '↓';
+  moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
+  moveDown.addEventListener('click', () => {
+    automation.moveAssignment(Number(row.dataset.assignmentId), 1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  const remove = document.createElement('button');
+  remove.textContent = '✕';
+  remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
+  remove.addEventListener('click', () => {
+    automation.removeAssignment(Number(row.dataset.assignmentId));
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  controls.append(moveUp, moveDown, remove);
+  primary.append(toggle, select);
+  row.append(primary, detail, controls);
+  row._refs = { toggle, select, detail, moveUp, moveDown, remove };
+  return row;
+}
+
+function prepareColonyAutomationApplyRow(row, automation, presets, assignment, index, assignmentCount) {
+  row.dataset.assignmentId = String(assignment.id);
+  row.style.display = '';
+  setToggleButtonState(row._refs.toggle, assignment.enabled);
+  syncAutomationSelectOptions(
+    row._refs.select,
+    getColonyAutomationPresetOptionData(presets),
+    presets.length ? assignment.presetId : ''
+  );
+  updateColonyAutomationApplyDetail(row._refs.detail, automation, assignment.presetId);
+  row._refs.moveUp.disabled = index === 0;
+  row._refs.moveDown.disabled = index === assignmentCount - 1;
+}
+
+function prepareColonyAutomationApplySpareRow(row, presets) {
+  row.dataset.assignmentId = '';
+  row.style.display = 'none';
+  setToggleButtonState(row._refs.toggle, false);
+  syncAutomationSelectOptions(
+    row._refs.select,
+    getColonyAutomationPresetOptionData(presets),
+    presets.length ? presets[0].id : ''
+  );
+  row._refs.detail.textContent = '';
+  row._refs.moveUp.disabled = true;
+  row._refs.moveDown.disabled = true;
+}
+
+function getColonyAutomationApplyRow(container, automation, assignmentId) {
+  let row = container._applyRows.get(assignmentId);
+  if (row) {
+    return row;
+  }
+  let reusableKey = null;
+  container._applyRows.forEach((candidate, key) => {
+    if (reusableKey === null && candidate.style.display === 'none') {
+      reusableKey = key;
+      row = candidate;
+    }
+  });
+  if (row) {
+    container._applyRows.delete(reusableKey);
+    container._applyRows.set(assignmentId, row);
+    return row;
+  }
+  row = createColonyAutomationApplyRow(automation);
+  container._applyRows.set(assignmentId, row);
+  container.appendChild(row);
+  return row;
+}
+
+function syncColonyAutomationApplyRows(container, automation, presets, assignments) {
+  container._applyRows ||= new Map();
+  const activeIds = new Set();
+  assignments.forEach((assignment, index) => {
+    activeIds.add(assignment.id);
+    const row = getColonyAutomationApplyRow(container, automation, assignment.id);
+    prepareColonyAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
+  });
+  container._applyRows.forEach((row, assignmentId) => {
+    if (!activeIds.has(assignmentId)) {
+      prepareColonyAutomationApplySpareRow(row, presets);
+    }
+  });
+
+  const spareCount = Array.from(container._applyRows.values()).filter(row => row.style.display === 'none').length;
+  if (spareCount === 0) {
+    const spareKey = `spare-${Date.now()}-${container._applyRows.size}`;
+    const row = createColonyAutomationApplyRow(automation);
+    container._applyRows.set(spareKey, row);
+    container.appendChild(row);
+    prepareColonyAutomationApplySpareRow(row, presets);
+  }
+}
 
 function getColonyAutomationAutoBuildBasisOptions(structure, currentValue) {
   return getAutomationAutoBuildBasisOptions(structure, currentValue);
@@ -293,18 +528,17 @@ function updateColonyAutomationUI() {
   const selectedPresetIdForSignature = automation.getSelectedPresetId() || '';
   const presetSignature = `${selectedPresetIdForSignature}|${presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|')}`;
   if (document.activeElement !== colonyBuilderPresetSelect && presetSignature !== colonyBuilderPresetSignature) {
-    colonyBuilderPresetSelect.textContent = '';
-    presets.forEach(preset => {
-      const option = document.createElement('option');
-      option.value = String(preset.id);
-      option.textContent = getDefaultAutomationPresetLabel(preset);
-      colonyBuilderPresetSelect.appendChild(option);
-    });
     colonyBuilderPresetSignature = presetSignature;
     const selectedPresetId = automation.getSelectedPresetId();
-    if (selectedPresetId) {
-      colonyBuilderPresetSelect.value = String(selectedPresetId);
-    } else {
+    syncAutomationSelectOptions(
+      colonyBuilderPresetSelect,
+      presets.map(preset => ({
+        value: preset.id,
+        label: getDefaultAutomationPresetLabel(preset)
+      })),
+      selectedPresetId || ''
+    );
+    if (!selectedPresetId) {
       colonyBuilderPresetSelect.selectedIndex = -1;
     }
   }
@@ -415,18 +649,14 @@ function updateColonyAutomationUI() {
   const categoryIds = automation.getCategoryIds();
   const categorySignature = categoryIds.map((categoryId) => `${categoryId}:${automation.getCategoryLabel(categoryId)}`).join('|');
   if (document.activeElement !== colonyBuilderCategorySelect && categorySignature !== colonyBuilderCategorySignature) {
-    colonyBuilderCategorySelect.textContent = '';
-    const allOption = document.createElement('option');
-    allOption.value = 'all';
-    allOption.textContent = getAutomationCardText('allCategoriesOption', {}, 'All categories');
-    colonyBuilderCategorySelect.appendChild(allOption);
-    categoryIds.forEach(categoryId => {
-      const option = document.createElement('option');
-      option.value = categoryId;
-      option.textContent = automation.getCategoryLabel(categoryId);
-      colonyBuilderCategorySelect.appendChild(option);
-    });
-    colonyBuilderCategorySelect.value = colonyAutomationUIState.builderCategoryValue || 'all';
+    syncAutomationSelectOptions(
+      colonyBuilderCategorySelect,
+      [{ value: 'all', label: getAutomationCardText('allCategoriesOption', {}, 'All categories') }].concat(categoryIds.map(categoryId => ({
+        value: categoryId,
+        label: automation.getCategoryLabel(categoryId)
+      }))),
+      colonyAutomationUIState.builderCategoryValue || 'all'
+    );
     if (!colonyBuilderCategorySelect.value) {
       colonyBuilderCategorySelect.value = 'all';
     }
@@ -438,26 +668,40 @@ function updateColonyAutomationUI() {
   const filteredTargets = availableTargets.filter(target => (
     selectedCategory === 'all' || target.categoryId === selectedCategory
   ));
-  const targetSignature = `${selectedCategory}|${filteredTargets.map((target) => `${target.id}:${target.label}`).join('|')}`;
+  const availableTargetSet = new Set(filteredTargets.map(target => target.id));
+  const targetCatalog = getColonyAutomationTargetCatalog(automation).filter(target => (
+    selectedCategory === 'all' || target.categoryId === selectedCategory
+  ));
+  const targetSignature = `${selectedCategory}|${targetCatalog.map((target) => `${target.id}:${target.label}:${availableTargetSet.has(target.id) ? 1 : 0}`).join('|')}`;
   if (document.activeElement !== colonyBuilderTargetSelect && targetSignature !== colonyBuilderTargetSignature) {
-    colonyBuilderTargetSelect.textContent = '';
     if (!filteredTargets.length) {
-      const empty = document.createElement('option');
-      empty.textContent = getAutomationCardText('noTargetsAvailable', {}, 'No targets available');
-      empty.disabled = true;
-      empty.selected = true;
-      colonyBuilderTargetSelect.appendChild(empty);
+      syncAutomationSelectOptions(
+        colonyBuilderTargetSelect,
+        [{ value: '', label: getAutomationCardText('noTargetsAvailable', {}, 'No targets available'), disabled: true }]
+          .concat(targetCatalog.map(target => ({
+            value: target.id,
+            label: target.label,
+            disabled: true,
+            hidden: true
+          }))),
+        ''
+      );
+      colonyBuilderTargetSelect.selectedIndex = 0;
     } else {
-      filteredTargets.forEach(target => {
-        const option = document.createElement('option');
-        option.value = target.id;
-        option.textContent = target.label;
-        colonyBuilderTargetSelect.appendChild(option);
-      });
+      syncAutomationSelectOptions(
+        colonyBuilderTargetSelect,
+        targetCatalog.map(target => ({
+          value: target.id,
+          label: target.label,
+          disabled: !availableTargetSet.has(target.id),
+          hidden: !availableTargetSet.has(target.id)
+        })),
+        colonyAutomationUIState.builderTargetValue || filteredTargets[0].id
+      );
       if (colonyAutomationUIState.builderTargetValue) {
         colonyBuilderTargetSelect.value = colonyAutomationUIState.builderTargetValue;
       }
-      if (!colonyBuilderTargetSelect.value) {
+      if (!colonyBuilderTargetSelect.value || !availableTargetSet.has(colonyBuilderTargetSelect.value)) {
         colonyBuilderTargetSelect.value = filteredTargets[0].id;
       }
     }
@@ -465,8 +709,7 @@ function updateColonyAutomationUI() {
     colonyBuilderTargetSignature = targetSignature;
   }
 
-  colonyBuilderAddButton.disabled = colonyBuilderTargetSelect.options.length === 0
-    || colonyBuilderTargetSelect.options[0].disabled;
+  colonyBuilderAddButton.disabled = filteredTargets.length === 0;
   colonyBuilderAddCategoryButton.disabled = colonyBuilderCategorySelect.options.length === 0
     || !availableTargets.length;
   colonyBuilderClearButton.disabled = colonyAutomationUIState.builderSelectedTargets.length === 0;
@@ -565,120 +808,7 @@ function updateColonyAutomationUI() {
   const applyHasFocus = colonyApplyList.contains(document.activeElement)
     && document.activeElement.tagName === 'SELECT';
   if (!applyHasFocus) {
-    const applySignature = JSON.stringify({
-      presets: presets.map(preset => ({
-        id: preset.id,
-        name: preset.name,
-        includeControl: preset.includeControl,
-        includeAutomation: preset.includeAutomation,
-        scopeAll: preset.scopeAll,
-        targets: Object.keys(preset.targets)
-      })),
-      assignments: assignments.map(assignment => ({
-        id: assignment.id,
-        presetId: assignment.presetId,
-        enabled: assignment.enabled
-      }))
-    });
-    if (applySignature === colonyApplyRenderSignature) {
-      // Keep existing rows and listeners when nothing changed.
-    } else {
-      cleanupTrackedUIListeners(colonyApplyList);
-      cleanupDynamicTooltipsIn(colonyApplyList);
-      colonyApplyList.textContent = '';
-      runWithTrackedUIListeners(colonyApplyList, () => {
-        assignments.forEach((assignment, index) => {
-      const row = document.createElement('div');
-      row.classList.add('building-automation-apply-row');
-      const primary = document.createElement('div');
-      primary.classList.add('building-automation-apply-primary');
-      const toggle = createToggleButton({
-        onLabel: getAutomationCardText('applyOn', {}, 'Apply On'),
-        offLabel: getAutomationCardText('applyOff', {}, 'Apply Off'),
-        isOn: assignment.enabled
-      });
-      toggle.classList.add('building-automation-apply-toggle');
-      toggle.addEventListener('click', () => {
-        automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      const select = document.createElement('select');
-      presets.forEach(preset => {
-        const option = document.createElement('option');
-        option.value = String(preset.id);
-        option.textContent = getDefaultAutomationPresetLabel(preset);
-        if (assignment.presetId === preset.id) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
-      if (!presets.length) {
-        const empty = document.createElement('option');
-        empty.textContent = getAutomationCardText('noPresetsSaved', {}, 'No presets saved');
-        empty.disabled = true;
-        empty.selected = true;
-        select.appendChild(empty);
-      }
-      const detail = document.createElement('span');
-      detail.classList.add('building-automation-apply-detail');
-      const updateDetail = (presetId) => {
-        const preset = automation.getPresetById(presetId);
-        const detailText = preset
-          ? formatColonyAutomationPresetType(preset)
-          : getAutomationCardText('selectPreset', {}, 'Select a preset');
-        const targetList = preset
-          ? preset.scopeAll
-            ? getAutomationCardText('allAvailableTargets', {}, 'All available targets')
-            : Object.keys(preset.targets).map(targetId => automation.getTargetLabel(targetId)).join(', ')
-          : '';
-        detail.textContent = targetList ? `${detailText} / ${targetList}` : detailText;
-      };
-      updateDetail(assignment.presetId);
-      select.addEventListener('change', (event) => {
-        const presetId = Number(event.target.value);
-        automation.setAssignmentPreset(assignment.id, presetId);
-        updateDetail(presetId);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-
-      const controls = document.createElement('div');
-      controls.classList.add('building-automation-apply-controls');
-      const moveUp = document.createElement('button');
-      moveUp.textContent = '↑';
-      moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
-      moveUp.disabled = index === 0;
-      moveUp.addEventListener('click', () => {
-        automation.moveAssignment(assignment.id, -1);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      const moveDown = document.createElement('button');
-      moveDown.textContent = '↓';
-      moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
-      moveDown.disabled = index === assignments.length - 1;
-      moveDown.addEventListener('click', () => {
-        automation.moveAssignment(assignment.id, 1);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      const remove = document.createElement('button');
-      remove.textContent = '✕';
-      remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
-      remove.addEventListener('click', () => {
-        automation.removeAssignment(assignment.id);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-      });
-      controls.append(moveUp, moveDown, remove);
-      primary.append(toggle, select);
-      row.append(primary, detail, controls);
-          colonyApplyList.appendChild(row);
-        });
-      });
-      colonyApplyRenderSignature = applySignature;
-    }
+    syncColonyAutomationApplyRows(colonyApplyList, automation, presets, assignments);
   }
 
   colonyAddApplyButton.disabled = presets.length === 0;
@@ -1005,17 +1135,4 @@ function attachColonyAutomationHandlers() {
 
 function getColonyAutomationTargets() {
   return automationManager?.colonyAutomation?.getAvailableTargets?.() || [];
-}
-
-function formatColonyAutomationPresetType(preset) {
-  if (!preset) {
-    return getAutomationCardText('selectPreset', {}, 'Select a preset');
-  }
-  if (preset.includeControl && preset.includeAutomation) {
-    return getAutomationCardText('controlAutobuild', {}, 'Control + Autobuild');
-  }
-  if (preset.includeControl) {
-    return getAutomationCardText('controlOnly', {}, 'Control only');
-  }
-  return getAutomationCardText('autobuildOnly', {}, 'Autobuild only');
 }

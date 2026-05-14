@@ -17,43 +17,73 @@ function createBuildingCategoryTabs() {
     
     if (!subtabsContainer || !contentWrapper) return;
 
-    // Clear existing tabs and content
     if (buildingSubtabManager) {
         buildingSubtabManager._unregister();
     }
-    cleanupTrackedUIListeners(subtabsContainer);
-    cleanupTrackedUIListeners(contentWrapper);
-    cleanupDynamicTooltipsIn(subtabsContainer);
-    cleanupDynamicTooltipsIn(contentWrapper);
-    subtabsContainer.innerHTML = '';
-    contentWrapper.innerHTML = '';
+    const categorySet = new Set(categories.map(category => `${category}-buildings`));
 
     // Create tabs and content for each category
     categories.forEach(category => {
         const categoryId = `${category}-buildings`;
+        const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
         
         // Create tab button
-        const tab = document.createElement('div');
-        tab.id = `${categoryId}-tab`;
-        tab.className = 'building-subtab';
-        tab.dataset.subtab = categoryId;
-        tab.innerHTML = `${category.charAt(0).toUpperCase() + category.slice(1)}<span id="${categoryId}-alert" class="unlock-alert">!</span>`;
-        subtabsContainer.appendChild(tab);
+        let tab = document.getElementById(`${categoryId}-tab`);
+        if (!tab) {
+            tab = document.createElement('div');
+            tab.id = `${categoryId}-tab`;
+            tab.className = 'building-subtab';
+            tab.dataset.subtab = categoryId;
+            const label = document.createTextNode(categoryLabel);
+            const alert = document.createElement('span');
+            alert.id = `${categoryId}-alert`;
+            alert.className = 'unlock-alert';
+            alert.textContent = '!';
+            tab.append(label, alert);
+            subtabsContainer.appendChild(tab);
+        }
 
         // Create content section
-        const content = document.createElement('div');
-        content.id = categoryId;
-        content.className = 'building-subtab-content';
-        content.innerHTML = `
-            <div class="category-header">
-                <h3>${category.charAt(0).toUpperCase() + category.slice(1)} Buildings</h3>
-                <div class="unhide-obsolete-container" id="${category}-unhide-container" style="display: none;">
-                    <button id="${category}-unhide-button" class="unhide-obsolete-button">Unhide Obsolete Buildings</button>
-                </div>
-            </div>
-            <div class="building-list" id="${categoryId}-buttons"></div>
-        `;
-        contentWrapper.appendChild(content);
+        let content = document.getElementById(categoryId);
+        if (!content) {
+            content = document.createElement('div');
+            content.id = categoryId;
+            content.className = 'building-subtab-content';
+
+            const header = document.createElement('div');
+            header.className = 'category-header';
+            const title = document.createElement('h3');
+            title.textContent = `${categoryLabel} Buildings`;
+            const unhideContainer = document.createElement('div');
+            unhideContainer.className = 'unhide-obsolete-container';
+            unhideContainer.id = `${category}-unhide-container`;
+            unhideContainer.style.display = 'none';
+            const unhideButton = document.createElement('button');
+            unhideButton.id = `${category}-unhide-button`;
+            unhideButton.className = 'unhide-obsolete-button';
+            unhideButton.textContent = 'Unhide Obsolete Buildings';
+            unhideContainer.appendChild(unhideButton);
+            header.append(title, unhideContainer);
+
+            const list = document.createElement('div');
+            list.className = 'building-list';
+            list.id = `${categoryId}-buttons`;
+            content.append(header, list);
+            contentWrapper.appendChild(content);
+        }
+    });
+
+    Array.from(subtabsContainer.children).forEach(tab => {
+        if (tab.dataset && tab.dataset.subtab && !categorySet.has(tab.dataset.subtab)) {
+            tab.remove();
+        }
+    });
+    Array.from(contentWrapper.children).forEach(content => {
+        if (content.id && !categorySet.has(content.id)) {
+            cleanupTrackedUIListeners(content);
+            cleanupDynamicTooltipsIn(content);
+            content.remove();
+        }
     });
 }
 

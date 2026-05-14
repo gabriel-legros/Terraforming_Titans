@@ -681,8 +681,7 @@ function updateRateTable(container, entries, formatter) {
       info.totalRow.style.display = 'none';
     }
   }
-  // Sort descending and then render rows in that order; always re-append
-  // existing rows so DOM order matches sorted order.
+  const orderedRows = [info.totalRow];
   validEntries.sort((a, b) => b[1] - a[1]).forEach(([name, val]) => {
     let rowInfo = info.rows.get(name);
     if (!rowInfo) {
@@ -707,14 +706,18 @@ function updateRateTable(container, entries, formatter) {
     if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
     if (rowInfo.right.textContent !== text) rowInfo.right.textContent = text;
     rowInfo.row.style.display = 'table-row';
-    // Always append to enforce the desired order
-    info.table.appendChild(rowInfo.row);
+    orderedRows.push(rowInfo.row);
     used.add(name);
   });
   info.rows.forEach((rowInfo, name) => {
     if (!used.has(name)) {
-      if (rowInfo.row.parentNode) rowInfo.row.parentNode.removeChild(rowInfo.row);
-      info.rows.delete(name);
+      rowInfo.row.style.display = 'none';
+      orderedRows.push(rowInfo.row);
+    }
+  });
+  orderedRows.forEach((row, index) => {
+    if (row && info.table.childNodes[index] !== row) {
+      info.table.insertBefore(row, info.table.childNodes[index] || null);
     }
   });
 }
@@ -743,6 +746,7 @@ function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings
   }
 
   const entries = Array.from(breakdownMap.entries());
+  const orderedRows = [];
   entries.sort((a, b) => b[1] - a[1]);
   for (let i = 0; i < entries.length; i += 1) {
     const name = entries[i][0];
@@ -783,14 +787,19 @@ function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings
     if (rowInfo.markerSpan.textContent !== markerText) rowInfo.markerSpan.textContent = markerText;
     rowInfo.markerSpan.style.color = throttled ? 'orange' : '';
     rowInfo.row.style.display = 'table-row';
-    info.table.appendChild(rowInfo.row);
+    orderedRows.push(rowInfo.row);
     used.add(name);
   }
 
   info.rows.forEach((rowInfo, name) => {
     if (!used.has(name)) {
-      if (rowInfo.row.parentNode) rowInfo.row.parentNode.removeChild(rowInfo.row);
-      info.rows.delete(name);
+      rowInfo.row.style.display = 'none';
+      orderedRows.push(rowInfo.row);
+    }
+  });
+  orderedRows.forEach((row, index) => {
+    if (info.table.childNodes[index] !== row) {
+      info.table.insertBefore(row, info.table.childNodes[index] || null);
     }
   });
 }
@@ -860,6 +869,7 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta) 
   }
 
   const used = new Set();
+  const orderedRows = [info.totalRow];
   displayEntries.sort((a, b) => {
     const aVal = a[1] !== 0 ? a[1] : a[2];
     const bVal = b[1] !== 0 ? b[1] : b[2];
@@ -890,14 +900,19 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta) 
     if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
     if (rowInfo.right.textContent !== text) rowInfo.right.textContent = text;
     rowInfo.row.style.display = 'table-row';
-    info.table.appendChild(rowInfo.row);
+    orderedRows.push(rowInfo.row);
     used.add(name);
   });
 
   info.rows.forEach((rowInfo, name) => {
     if (!used.has(name)) {
-      if (rowInfo.row.parentNode) rowInfo.row.parentNode.removeChild(rowInfo.row);
-      info.rows.delete(name);
+      rowInfo.row.style.display = 'none';
+      orderedRows.push(rowInfo.row);
+    }
+  });
+  orderedRows.forEach((row, index) => {
+    if (row && info.table.childNodes[index] !== row) {
+      info.table.insertBefore(row, info.table.childNodes[index] || null);
     }
   });
 

@@ -69,6 +69,68 @@ function getDefaultAutomationCombinationLabel(combination) {
   return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
 }
 
+function syncAutomationSelectOptions(select, options, selectedValue) {
+  const selectedString = selectedValue !== undefined ? String(selectedValue) : null;
+  const optionSignature = options.map(optionData => [
+    String(optionData.value),
+    optionData.label,
+    optionData.disabled ? '1' : '0',
+    optionData.hidden ? '1' : '0'
+  ].join('|')).join('\u001f');
+  if (select._automationOptionsSignature === optionSignature
+    && (selectedString === null || select.value === selectedString)) {
+    return;
+  }
+
+  const existingOptions = Array.from(select.options);
+  const available = new Map();
+  const desiredValues = new Set(options.map(optionData => String(optionData.value)));
+  existingOptions.forEach((option) => {
+    if (!available.has(option.value)) {
+      available.set(option.value, []);
+    }
+    available.get(option.value).push(option);
+  });
+
+  const usedOptions = new Set();
+  options.forEach((optionData) => {
+    const value = String(optionData.value);
+    const matching = available.get(value);
+    const option = matching && matching.length > 0
+      ? matching.shift()
+      : document.createElement('option');
+    usedOptions.add(option);
+    const isNewOption = option.parentNode !== select;
+    if (isNewOption) {
+      select.appendChild(option);
+    }
+    if (option.value !== value) {
+      option.value = value;
+    }
+    if (option.textContent !== optionData.label) {
+      option.textContent = optionData.label;
+    }
+    option.disabled = !!optionData.disabled;
+    option.hidden = !!optionData.hidden;
+  });
+
+  existingOptions.forEach((option) => {
+    if (!usedOptions.has(option)) {
+      if (desiredValues.has(option.value) && option.parentNode === select) {
+        select.removeChild(option);
+        return;
+      }
+      option.disabled = true;
+      option.hidden = true;
+    }
+  });
+
+  select._automationOptionsSignature = optionSignature;
+  if (selectedString !== null) {
+    select.value = selectedString;
+  }
+}
+
 function buildAutomationPresetBuilderRow(config = {}) {
   const row = document.createElement('div');
   (config.rowClasses || []).forEach(className => row.classList.add(className));
@@ -535,20 +597,14 @@ function updateAutomationNextTravelPresetControls(config = {}) {
   automation.nextTravelPersistent = automation.nextTravelPersistent && !!automation.nextTravelPresetId;
 
   if (document.activeElement !== select) {
-    select.textContent = '';
-    const noneOption = document.createElement('option');
-    noneOption.value = '';
-    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
-    select.appendChild(noneOption);
-    presets.forEach((preset) => {
-      const option = document.createElement('option');
-      option.value = String(preset.id);
-      option.textContent = getDefaultAutomationPresetLabel(preset);
-      select.appendChild(option);
-    });
-    select.value = automation.nextTravelPresetId
-      ? String(automation.nextTravelPresetId)
-      : '';
+    syncAutomationSelectOptions(
+      select,
+      [{ value: '', label: getAutomationCardText('noneOption', {}, 'None') }].concat(presets.map((preset) => ({
+        value: preset.id,
+        label: getDefaultAutomationPresetLabel(preset)
+      }))),
+      automation.nextTravelPresetId ? String(automation.nextTravelPresetId) : ''
+    );
   }
 
   persistToggle.checked = automation.nextTravelPersistent;

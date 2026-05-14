@@ -22,9 +22,11 @@ class MultiRecipesBuilding extends Building {
 
   _getRecipeOptions() {
     const defs = this.recipes || {};
-    return this._getAllowedRecipeKeys().map(key => ({
+    const allowedKeys = this._getAllowedRecipeKeys();
+    return Object.keys(defs).map(key => ({
       key,
-      label: defs[key].shortName || defs[key].displayName || key
+      label: defs[key].shortName || defs[key].displayName || key,
+      allowed: allowedKeys.includes(key)
     }));
   }
 
@@ -193,25 +195,27 @@ class MultiRecipesBuilding extends Building {
     }
 
     const options = this._getRecipeOptions();
-    container?.style && (container.style.display = options.length > 1 ? '' : 'none');
-    const keyString = options.map(opt => `${opt.key}:${opt.label}`).join('|');
-    if (select.dataset.optionKey !== keyString) {
-      select.textContent = '';
-      options.forEach(opt => {
-        const optionEl = document.createElement('option');
-        optionEl.value = opt.key;
-        optionEl.textContent = opt.label;
-        select.appendChild(optionEl);
-      });
-      select.dataset.optionKey = keyString;
-    } else {
-      options.forEach((opt, index) => {
-        const optionEl = select.options[index];
-        if (optionEl && optionEl.textContent !== opt.label) {
-          optionEl.textContent = opt.label;
-        }
-      });
+    const allowedCount = options.filter(opt => opt.allowed !== false).length;
+    container?.style && (container.style.display = allowedCount > 1 ? '' : 'none');
+    const keyString = options.map(opt => `${opt.key}:${opt.label}:${opt.allowed}`).join('|');
+    while (select.options.length < options.length) {
+      select.appendChild(document.createElement('option'));
     }
+    while (select.options.length > options.length) {
+      select.removeChild(select.options[select.options.length - 1]);
+    }
+    options.forEach((opt, index) => {
+      const optionEl = select.options[index];
+      if (optionEl.value !== opt.key) {
+        optionEl.value = opt.key;
+      }
+      if (optionEl.textContent !== opt.label) {
+        optionEl.textContent = opt.label;
+      }
+      optionEl.hidden = opt.allowed === false;
+      optionEl.disabled = opt.allowed === false;
+    });
+    select.dataset.optionKey = keyString;
 
     if (select.value !== this.currentRecipeKey) {
       select.value = this.currentRecipeKey;

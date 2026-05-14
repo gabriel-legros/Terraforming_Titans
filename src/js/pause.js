@@ -75,13 +75,26 @@
     }
     if(paused){
       if(btn){ btn.textContent = 'Resume'; }
-      if(alertBox){ alertBox.innerHTML = '<div class="pause-message">PAUSED</div>'; }
+      if(alertBox){
+        let pauseMessage = alertBox._pauseMessage;
+        if (!pauseMessage) {
+          pauseMessage = document.createElement('div');
+          pauseMessage.classList.add('pause-message');
+          pauseMessage.textContent = 'PAUSED';
+          alertBox._pauseMessage = pauseMessage;
+        }
+        if (!pauseMessage.parentNode) {
+          alertBox.appendChild(pauseMessage);
+        }
+      }
       if (typeof updateRender === 'function') {
         updateRender(true);
       }
     } else {
       if(btn){ btn.textContent = getPauseButtonLabel(); }
-      if(alertBox){ alertBox.innerHTML = ''; }
+      if(alertBox && alertBox._pauseMessage && alertBox._pauseMessage.parentNode){
+        alertBox._pauseMessage.remove();
+      }
       if (typeof updateRender === 'function') {
         updateRender(true);
       }

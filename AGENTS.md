@@ -77,6 +77,91 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Load: `loadGame()` -> `initializeGameState({ skipStoryInitialization: true })`
   - Travel: `selectPlanet(key)` -> `initializeGameState({ preserveManagers: true })` then `updateSpaceUI()`
 
+## UI DOM Stability and Reconciliation
+### Why This Matters
+- This game has dense UI panels that refresh often during `updateRender`, travel, load, automation updates, and hover/tooltip interactions.
+- Avoid DOM churn in hot paths. Repeatedly clearing and rebuilding nodes causes unnecessary layout work, flicker risk, focus loss, scroll instability, broken tooltip positioning, and noisy mutation-observer diagnostics.
+- Treat repeated observer reports of identical inserted nodes as a real performance bug unless the node is a genuinely new user-facing item.
+- Prefer React-style reconciliation by hand: keep stable parent containers, key repeated children by stable ids, update text/classes/attributes in place, and only create/remove nodes when the underlying data actually changes.
+
+### General Rule
+- Do not use `innerHTML = ''`, `replaceChildren()`, or unconditional `appendChild(document.createElement(...))` inside frequently called UI update functions.
+- Creating static layout once during `build...UI` / `initialize...UI` is fine. Recreating the same layout during `update...UI` is not.
+- If a UI element can appear in more than one update tick with the same semantic identity, cache it and update it in place.
+- Use stable keys from game data, not list position, for repeated rows/cards wherever possible:
+  - Good: project id, building id, colony target id, automation assignment id, preset id, world key, resource id.
+  - Acceptable only for fixed-shape detail rows: small row indices inside a cached tooltip/table where the row meaning is controlled by the same function.
+  - Avoid `Date.now()`, random ids, incrementing spare keys, or `nth-of-type` assumptions for reusable UI identity.
+- Keep caches attached to the owning DOM container or local module cache, for example `container._rowCache`, `select._automationOptionsSignature`, or a module-level `uiCache`.
+- When a panel is rebuilt intentionally, clear or replace its associated cache at the same time so stale references do not point at detached nodes.
+
+### Repeated Lists, Cards, and Rows
+- Reconcile repeated children instead of rebuilding them:
+  1. Build or reuse a `Map` from stable id to row/card.
+  2. Mark active ids from current data.
+  3. Update active rows in current order.
+  4. Hide or remove inactive rows based on whether reuse is valuable.
+  5. Append only rows that did not already exist.
+- Preserve order without recreating nodes. If order matters, append the existing row in the desired order; moving an existing node is cheaper and cleaner than creating a new one.
+- Do not prewarm large pools of hidden rows. Hidden spare pools showed up as extra DOM and made diagnostics noisy. Reuse hidden stale rows only when they already exist naturally, or remove extras.
+- If data ids can be regenerated across travel/load, mark stale rows reusable before processing active rows. Otherwise the update may create a fresh row before old rows are available.
+- Hide inactive rows only when preserving their controls is useful. Remove inactive rows when the cache is speculative, large, or unlikely to be reused.
+- For selected-item chips, stat lines, project cards, atlas cards, invasion summaries, skill buttons, and automation apply rows, prefer keyed reconciliation over clearing the parent.
+
+### Selects and Options
+- Use `syncAutomationSelectOptions(select, options, selectedValue)` for automation selects and follow the same pattern elsewhere.
+- Select reconciliation must:
+  - Reuse existing `<option>` nodes by value.
+  - Update `value`, `textContent`, `disabled`, and `hidden` only when changed.
+  - Remove duplicate options for values that are still desired, especially placeholder values like `''`.
+  - Keep or hide stale unique options only when needed to preserve legacy/current selections.
+  - Short-circuit when the option signature and selected value are unchanged.
+- Do not rebuild select options with `select.innerHTML = ''` in update loops.
+- Do not append placeholder options like `None`, `Select preset`, `Select script`, or `Select combination` every refresh. These must remain single reused options.
+- Do not overwrite `select.value` while the select has focus unless the user action requires it. Focus guards prevent dropdown jumps and accidental selection changes.
+
+### Tooltips
+- Tooltip icons must be stable and attached to the owning UI control. Use the established dynamic tooltip pattern from `attachDynamicInfoTooltip`.
+- Do not clear and rebuild tooltip bodies on every hover/update if the tooltip has structured rows.
+- For structured dynamic tooltips:
+  - Cache the tooltip content element returned by `attachDynamicInfoTooltip`, or cache rows on the tooltip element itself.
+  - Reuse header, summary, row, and value spans.
+  - Update `textContent` in place.
+  - Hide unused rows when optional sections disappear.
+- Plain text tooltip updates can set `textContent` directly on the existing tooltip content.
+- Avoid creating detached tooltip spans or body-level duplicate tooltips for the same icon.
+
+### Hot UI Areas Already Converted
+- Automation cards use shared select reconciliation for presets, combinations, next-travel presets, builder targets, and sidebar automation shortcuts.
+- Buildings, Projects, and Colony automation apply lists use reusable apply rows rather than rebuilding all controls.
+- Project automation must not create speculative spare apply rows; stale assignment rows are prepared for reuse before current assignments are rendered.
+- Atlas world cards, skill tree buttons, invasion trait/reward summaries, resource tooltip rows, statistics rows, artificial world history, import/export rule rows, and several project/space controls now use cached/reconciled DOM.
+- The fleet capacity tooltip in Galaxy Logistics reuses its header, source rows, and total row instead of clearing `innerHTML`.
+- When extending these systems, preserve the reconciliation strategy already in the file.
+
+### Mutation-Observer Report Triage
+- Observer reports usually include a signature, parent selector, extra count, baseline count, and sometimes a stack.
+- Prioritize entries with:
+  - High `extraCount` for the same signature under the same parent.
+  - Placeholder options repeatedly inserted into the same select.
+  - Repeated cards/rows under hot panels such as automation, atlas, galaxy, resources, projects, or settings.
+  - Stack traces pointing to `update...UI`, `updateRender`, `updateHopeUI`, or per-tick functions.
+- Lower priority:
+  - One-time nodes created when unlocking a feature.
+  - Intentional new rows for genuinely new data.
+  - Static layout created during first initialization.
+- If `extraCount` and `baselineCount` are both nonzero, check whether hidden stale nodes or spare rows remain in the DOM. Hidden nodes still count as DOM churn/noise.
+- If the stack is unavailable but the parent selector is precise, search by ids/classes/text from the signature and inspect the nearest update function.
+
+### Implementation Pitfalls
+- Do not solve churn by adding broad guards that skip required UI updates. Update existing nodes instead.
+- Do not add fallback shims, `try/catch`, or global probing just to make reconciliation code tolerant of missing required globals.
+- Do not create tiny helper chains that only rename existing values. Shared helpers are worthwhile only when they centralize real reconciliation logic.
+- Do not retain stale event listeners by recreating controls. Build controls once and attach listeners once; updates should change state, labels, disabled flags, and classes.
+- When using cached rows with buttons or inputs, store references on the row such as `row._refs` so updates do not query descendants repeatedly.
+- Keep player-facing labels localized even when moving text into cached update paths.
+- After changing DOM reconciliation, run `node --check` on touched JS files and then the Windows test command.
+
 ## Localization
 - Do not add new player-facing English strings directly in HTML or JS. Put them in `src/js/lang/current-language.js`.
 - Keep internal ids, save keys, automation ids, resource ids, project ids, and effect ids stable and in English-like code form. Localize display text only.

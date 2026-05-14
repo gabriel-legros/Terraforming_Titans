@@ -434,7 +434,9 @@ function rebuildColonyNeedCache(structureRow, structure) {
 
 function invalidateColonyNeedCache() {
   Object.values(colonies).forEach(colony => {
-    colony.needBoxCache = undefined;
+    if (colony.needBoxCache) {
+      colony.needBoxCache.__invalidated = true;
+    }
   });
 }
 

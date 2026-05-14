@@ -224,6 +224,7 @@ function buildAtlasWorldCard(definition, category) {
     const travelLocked = spaceManager.isRandomTravelLocked();
     const card = document.createElement('div');
     card.className = 'planet-option atlas-world-card';
+    card.dataset.atlasWorldKey = definition.key;
     if (isCurrent) {
         card.classList.add('current');
     }
@@ -286,6 +287,87 @@ function buildAtlasWorldCard(definition, category) {
     });
     card.appendChild(button);
     return card;
+}
+
+function canReuseAtlasNode(current, next) {
+    return current.nodeType === next.nodeType
+        && (current.nodeType !== 1 || current.tagName === next.tagName);
+}
+
+function syncAtlasAttributes(current, next) {
+    Array.from(current.attributes).forEach(attr => {
+        if (!next.hasAttribute(attr.name)) current.removeAttribute(attr.name);
+    });
+    Array.from(next.attributes).forEach(attr => {
+        if (current.getAttribute(attr.name) !== attr.value) current.setAttribute(attr.name, attr.value);
+    });
+}
+
+function morphAtlasNode(current, next) {
+    if (!canReuseAtlasNode(current, next)) {
+        current.replaceWith(next.cloneNode(true));
+        return;
+    }
+    if (current.nodeType === 3) {
+        if (current.nodeValue !== next.nodeValue) current.nodeValue = next.nodeValue;
+        return;
+    }
+    syncAtlasAttributes(current, next);
+    morphAtlasChildren(current, next);
+}
+
+function morphAtlasChildren(currentParent, nextParent) {
+    const nextChildren = Array.from(nextParent.childNodes);
+    for (let index = 0; index < nextChildren.length; index += 1) {
+        const nextChild = nextChildren[index];
+        const currentChild = currentParent.childNodes[index];
+        if (!currentChild) {
+            currentParent.appendChild(nextChild.cloneNode(true));
+        } else {
+            morphAtlasNode(currentChild, nextChild);
+        }
+    }
+    while (currentParent.childNodes.length > nextChildren.length) {
+        currentParent.lastChild.remove();
+    }
+}
+
+function syncAtlasWorldList(container, definitions, category) {
+    container._atlasCards ||= new Map();
+    Array.from(container.children).forEach((child) => {
+        const key = child.dataset?.atlasWorldKey;
+        if (key && !container._atlasCards.has(key)) {
+            container._atlasCards.set(key, child);
+        }
+    });
+    const usedCards = new Set();
+    runWithTrackedUIListeners(container, () => {
+        definitions.forEach((definition, index) => {
+            let card = container._atlasCards.get(definition.key);
+            const nextCard = buildAtlasWorldCard(definition, category);
+            if (!card) {
+                card = nextCard;
+                container._atlasCards.set(definition.key, card);
+            } else {
+                morphAtlasNode(card, nextCard);
+            }
+            card.style.display = '';
+            usedCards.add(card);
+            if (container.children[index] !== card) {
+                container.insertBefore(card, container.children[index] || null);
+            }
+        });
+    });
+    container._atlasCards.forEach((card) => {
+        if (!usedCards.has(card)) {
+            card.style.display = 'none';
+        }
+    });
+    Array.from(container.children).forEach((child) => {
+        if (child.classList.contains('atlas-world-card') && !usedCards.has(child)) {
+            child.style.display = 'none';
+        }
+    });
 }
 
 function initializeAtlasUI() {
@@ -358,32 +440,27 @@ function updateAtlasUI(options = {}) {
         : getAtlasText('ready', 'Challenge worlds can always be revisited after completion.');
     status.classList.toggle('atlas-status-warning', spaceManager.isRandomTravelLocked());
 
-    cleanupTrackedUIListeners(featuredList);
-    cleanupDynamicTooltipsIn(featuredList);
-    featuredList.replaceChildren();
-    runWithTrackedUIListeners(featuredList, () => {
-        featured.forEach((definition) => {
-            featuredList.appendChild(buildAtlasWorldCard(definition, 'featured'));
-        });
-    });
+    syncAtlasWorldList(featuredList, featured, 'featured');
 
     communitySection.style.display = community.length ? '' : 'none';
     if (community.length) {
-        cleanupTrackedUIListeners(communityContent);
-        cleanupDynamicTooltipsIn(communityContent);
-        communityContent.replaceChildren();
-        const rewardNote = document.createElement('p');
-        rewardNote.className = 'space-card-subtitle atlas-community-note';
-        rewardNote.textContent = getAtlasText('communityRewardNote', 'These do not grant awakening bonus, but grant 1000 alien artifacts on first completion.');
-        const communityList = document.createElement('div');
-        communityList.className = 'planet-grid atlas-community-list';
-        communityContent.appendChild(rewardNote);
-        communityContent.appendChild(communityList);
-        runWithTrackedUIListeners(communityContent, () => {
-            community.forEach((definition) => {
-                communityList.appendChild(buildAtlasWorldCard(definition, 'community'));
-            });
-        });
+        let rewardNote = communityContent._rewardNote;
+        if (!rewardNote) {
+            rewardNote = document.createElement('p');
+            rewardNote.className = 'space-card-subtitle atlas-community-note';
+            communityContent._rewardNote = rewardNote;
+            communityContent.appendChild(rewardNote);
+        }
+        const rewardText = getAtlasText('communityRewardNote', 'These do not grant awakening bonus, but grant 1000 alien artifacts on first completion.');
+        if (rewardNote.textContent !== rewardText) rewardNote.textContent = rewardText;
+        let communityList = communityContent._communityList;
+        if (!communityList) {
+            communityList = document.createElement('div');
+            communityList.className = 'planet-grid atlas-community-list';
+            communityContent._communityList = communityList;
+            communityContent.appendChild(communityList);
+        }
+        syncAtlasWorldList(communityList, community, 'community');
     }
     setAtlasCommunityVisibility();
 }

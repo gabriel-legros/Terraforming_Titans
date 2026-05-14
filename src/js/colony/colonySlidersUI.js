@@ -21,9 +21,23 @@ let warpnetValue;
 let warpnetInput;
 let warpnetRefresh;
 
+function refreshColonySliderInputs() {
+  setWorkforceRatio(colonySliderSettings.workerRatio);
+  setFoodConsumptionMultiplier(colonySliderSettings.foodConsumption);
+  setLuxuryWaterMultiplier(colonySliderSettings.luxuryWater);
+  setOreMineWorkerAssist(colonySliderSettings.oreMineWorkers);
+  setMechanicalAssistance(colonySliderSettings.mechanicalAssistance);
+  setWarpnetLevel(colonySliderSettings.warpnetLevel);
+  updateColonySlidersUI();
+}
+
 function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
   if (!container) return;
+  if (container.dataset.rendered === 'true') {
+    refreshColonySliderInputs();
+    return;
+  }
   cleanupTrackedUIListeners(container);
   cleanupDynamicTooltipsIn(container);
   container.innerHTML = '';
@@ -565,6 +579,7 @@ function initializeColonySlidersUI() {
 
   card.appendChild(body);
   container.appendChild(card);
+  container.dataset.rendered = 'true';
 
   const updateOreValue = (val) => {
     if (oreValue && oreEffect) {

@@ -195,6 +195,36 @@ function buildOption(value, label, disabled = false, disabledSource) {
   return opt;
 }
 
+function applyOptionData(opt, option) {
+  const disabled = !!option.disabled;
+  const text = disabled && option.disabledSource
+    ? getArtificialText('common.lockedBy', '{value} (Locked by {source})', { value: option.label, source: option.disabledSource })
+    : option.label;
+  if (opt.value !== option.value) {
+    opt.value = option.value;
+  }
+  if (opt.textContent !== text) {
+    opt.textContent = text;
+  }
+  if (opt.disabled !== disabled) {
+    opt.disabled = disabled;
+  }
+}
+
+function syncSelectOptions(select, options) {
+  options.forEach((option, index) => {
+    let opt = select.options[index];
+    if (!opt) {
+      opt = document.createElement('option');
+      select.appendChild(opt);
+    }
+    applyOptionData(opt, option);
+  });
+  while (select.options.length > options.length) {
+    select.removeChild(select.options[select.options.length - 1]);
+  }
+}
+
 function buildCostRow(label, valueId) {
   const row = document.createElement('div');
   row.className = 'artificial-cost-row';
@@ -314,7 +344,55 @@ function buildHistoryRow(entry) {
   row.appendChild(land);
   row.appendChild(effective);
   row.appendChild(status);
+  row._historyCells = {
+    name,
+    nameText,
+    editBtn,
+    type,
+    sector,
+    land,
+    effective,
+    status
+  };
   return row;
+}
+
+function updateHistoryRow(row, entry) {
+  const cells = row._historyCells;
+  if (!cells) return;
+  if (cells.nameText.textContent !== entry.name) cells.nameText.textContent = entry.name;
+  const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
+  if (cells.type.textContent !== typeLabel) cells.type.textContent = typeLabel;
+  const sectorValue = entry.sector || '';
+  const sectorLabel = sectorValue && sectorValue.getDisplayName
+    ? sectorValue.getDisplayName()
+    : (sectorValue && sectorValue.key ? sectorValue.key : (sectorValue || '—'));
+  if (cells.sector.textContent !== sectorLabel) cells.sector.textContent = sectorLabel;
+  const landValue = entry.landHa !== undefined ? entry.landHa : (entry.radiusEarth && artificialManager ? artificialManager.calculateAreaHectares(entry.radiusEarth) : undefined);
+  const landText = landValue !== undefined ? (formatNumber ? formatNumber(landValue, false, 2) : landValue) : '—';
+  if (cells.land.textContent !== landText) cells.land.textContent = landText;
+  const effectiveValue = entry.terraformedValue !== undefined
+    ? entry.terraformedValue
+    : (landValue !== undefined ? Math.max(1, Math.floor((landValue || 0) / 50_000_000_000)) : undefined);
+  const effectiveText = effectiveValue !== undefined ? (formatNumber ? formatNumber(effectiveValue, true, 2) : effectiveValue) : '—';
+  if (cells.effective.textContent !== effectiveText) cells.effective.textContent = effectiveText;
+  const statusKey = entry.status || '';
+  const statusLabelMap = {
+    building: getArtificialText('history.status.building', 'Under construction'),
+    completed: getArtificialText('history.status.completed', 'Ready for Terraforming'),
+    current: getArtificialText('history.status.current', 'Current'),
+    terraformed: getArtificialText('history.status.terraformed', 'Terraformed'),
+    stored: getArtificialText('history.status.stored', 'Stored'),
+    abandoned: getArtificialText('history.status.abandoned', 'Abandoned')
+  };
+  const statusLabel = statusLabelMap[statusKey] || (statusKey ? statusKey.charAt(0).toUpperCase() + statusKey.slice(1) : '');
+  if (cells.status.firstChild) {
+    if (cells.status.firstChild.nodeValue !== statusLabel) cells.status.firstChild.nodeValue = statusLabel;
+  } else {
+    cells.status.appendChild(document.createTextNode(statusLabel));
+  }
+  const statusClass = `artificial-history-status artificial-history-${statusKey}`;
+  if (cells.status.className !== statusClass) cells.status.className = statusClass;
 }
 
 function buildHistoryHeader() {
@@ -333,6 +411,26 @@ function buildHistoryHeader() {
     header.appendChild(cell);
   });
   return header;
+}
+
+function updateHistoryHeader(header) {
+  const labels = [
+    getArtificialText('history.columns.name', 'Name'),
+    getArtificialText('history.columns.type', 'Type'),
+    getArtificialText('history.columns.sector', 'Sector'),
+    getArtificialText('history.columns.land', 'Land'),
+    getArtificialText('history.columns.value', 'Value'),
+    getArtificialText('history.columns.status', 'Status')
+  ];
+  while (header.children.length < labels.length) {
+    header.appendChild(document.createElement('span'));
+  }
+  while (header.children.length > labels.length) {
+    header.removeChild(header.lastChild);
+  }
+  labels.forEach((label, index) => {
+    if (header.children[index].textContent !== label) header.children[index].textContent = label;
+  });
 }
 
 function createProgressBar() {
@@ -1677,13 +1775,38 @@ function renderArtificialHistory(force = false) {
   if (!force && sig === artificialHistorySig) return;
   artificialHistorySig = sig;
 
-  cleanupTrackedUIListeners(artificialUICache.historyList);
-  cleanupDynamicTooltipsIn(artificialUICache.historyList);
-  artificialUICache.historyList.innerHTML = '';
+  const list = artificialUICache.historyList;
+  list._historyRows ||= new Map();
   runWithTrackedUIListeners(artificialUICache.historyList, () => {
-    artificialUICache.historyList.appendChild(buildHistoryHeader());
+    let header = list._historyHeader;
+    if (!header) {
+      header = buildHistoryHeader();
+      list._historyHeader = header;
+    } else {
+      updateHistoryHeader(header);
+    }
+    if (header.parentNode !== list) {
+      list.appendChild(header);
+    }
+    const usedRows = new Set();
     slice.forEach((entry) => {
-      artificialUICache.historyList.appendChild(buildHistoryRow(entry));
+      let row = list._historyRows.get(entry.id);
+      if (!row) {
+        row = buildHistoryRow(entry);
+        list._historyRows.set(entry.id, row);
+      } else {
+        updateHistoryRow(row, entry);
+      }
+      if (row.parentNode !== list) {
+        list.appendChild(row);
+      }
+      row.style.display = '';
+      usedRows.add(row);
+    });
+    list._historyRows.forEach((row) => {
+      if (!usedRows.has(row)) {
+        row.style.display = 'none';
+      }
     });
   });
   artificialUICache.historyPage.textContent = `${entries.length ? artificialHistoryPage + 1 : 0}/${Math.max(maxPage + 1, 1)}`;
@@ -2115,19 +2238,14 @@ function updateArtificialUI(options = {}) {
     filterReady = filterResources.length > 0;
     const filterSig = JSON.stringify(filterResources);
     if ((!filterFocused || force) && artificialUICache.sectorFilter.dataset.lastFilterList !== filterSig) {
-      const filterFrag = document.createDocumentFragment();
-      const allOpt = document.createElement('option');
-      allOpt.value = 'all';
-      allOpt.textContent = getArtificialText('controls.allResources', 'All resources');
-      filterFrag.appendChild(allOpt);
-      filterResources.forEach(resource => {
-        const opt = document.createElement('option');
-        opt.value = resource;
-        opt.textContent = `+${formatArtificialSectorResourceLabel(resource)}`;
-        filterFrag.appendChild(opt);
-      });
-      artificialUICache.sectorFilter.innerHTML = '';
-      artificialUICache.sectorFilter.appendChild(filterFrag);
+      const filterOptions = [
+        { value: 'all', label: getArtificialText('controls.allResources', 'All resources') },
+        ...filterResources.map(resource => ({
+          value: resource,
+          label: `+${formatArtificialSectorResourceLabel(resource)}`
+        }))
+      ];
+      syncSelectOptions(artificialUICache.sectorFilter, filterOptions);
       artificialUICache.sectorFilter.dataset.lastFilterList = filterSig;
     }
     if ((!filterFocused || force) && !artificialUICache.sectorFilter.value) {
@@ -2163,22 +2281,19 @@ function updateArtificialUI(options = {}) {
       }))
     });
     if ((!sectorFocused || force) && artificialUICache.sector.dataset.lastSectorList !== sectorSig) {
-      const frag = document.createDocumentFragment();
-      const autoOpt = document.createElement('option');
-      autoOpt.value = 'auto';
-      autoOpt.textContent = getArtificialText('common.auto', 'Auto');
-      frag.appendChild(autoOpt);
-      filteredSectors.forEach(sector => {
-        const sectorName = getArtificialSectorDisplayName(sector);
-        const resourceSuffix = buildArtificialSectorResourceSuffix(sector);
-        const worldsSuffix = buildArtificialSectorWorldCountSuffix(manager, sector);
-        const opt = document.createElement('option');
-        opt.value = sectorName;
-        opt.textContent = `${sectorName}${resourceSuffix}${worldsSuffix}`;
-        frag.appendChild(opt);
-      });
-      artificialUICache.sector.innerHTML = '';
-      artificialUICache.sector.appendChild(frag);
+      const sectorOptions = [
+        { value: 'auto', label: getArtificialText('common.auto', 'Auto') },
+        ...filteredSectors.map(sector => {
+          const sectorName = getArtificialSectorDisplayName(sector);
+          const resourceSuffix = buildArtificialSectorResourceSuffix(sector);
+          const worldsSuffix = buildArtificialSectorWorldCountSuffix(manager, sector);
+          return {
+            value: sectorName,
+            label: `${sectorName}${resourceSuffix}${worldsSuffix}`
+          };
+        })
+      ];
+      syncSelectOptions(artificialUICache.sector, sectorOptions);
       artificialUICache.sector.dataset.lastSectorList = sectorSig;
     }
     if (!project && draft.sector) {
@@ -2261,10 +2376,7 @@ function updateArtificialUI(options = {}) {
     })));
     if (artificialUICache.type.dataset.optionSignature !== signature) {
       const currentValue = artificialUICache.type.value;
-      artificialUICache.type.innerHTML = '';
-      options.forEach((option) => {
-        artificialUICache.type.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
-      });
+      syncSelectOptions(artificialUICache.type, options);
       artificialUICache.type.dataset.optionSignature = signature;
       const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
       artificialUICache.type.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
@@ -2290,10 +2402,7 @@ function updateArtificialUI(options = {}) {
     })));
     if (artificialUICache.core.dataset.optionSignature !== signature) {
       const currentValue = artificialUICache.core.value;
-      artificialUICache.core.innerHTML = '';
-      options.forEach((option) => {
-        artificialUICache.core.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
-      });
+      syncSelectOptions(artificialUICache.core, options);
       artificialUICache.core.dataset.optionSignature = signature;
       const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
       artificialUICache.core.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
@@ -2320,10 +2429,7 @@ function updateArtificialUI(options = {}) {
     })));
     if ((!starFocused || force) && artificialUICache.starContext.dataset.optionSignature !== signature) {
       const currentValue = artificialUICache.starContext.value;
-      artificialUICache.starContext.innerHTML = '';
-      options.forEach((option) => {
-        artificialUICache.starContext.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
-      });
+      syncSelectOptions(artificialUICache.starContext, options);
       artificialUICache.starContext.dataset.optionSignature = signature;
       const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
       artificialUICache.starContext.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
@@ -2356,10 +2462,7 @@ function updateArtificialUI(options = {}) {
     })));
     if (artificialUICache.ringStarCore.dataset.optionSignature !== signature) {
       const currentValue = artificialUICache.ringStarCore.value;
-      artificialUICache.ringStarCore.innerHTML = '';
-      options.forEach((option) => {
-        artificialUICache.ringStarCore.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
-      });
+      syncSelectOptions(artificialUICache.ringStarCore, options);
       artificialUICache.ringStarCore.dataset.optionSignature = signature;
       const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
       artificialUICache.ringStarCore.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');

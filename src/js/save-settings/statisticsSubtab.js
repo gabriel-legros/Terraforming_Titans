@@ -76,6 +76,26 @@ function buildRecentTerraformAverageText(history) {
   );
 }
 
+function syncStatisticsLines(container, lines) {
+  container._statLineNodes ||= [];
+  while (container._statLineNodes.length < lines.length) {
+    const line = document.createElement('p');
+    line.className = 'settings-stat-line';
+    container._statLineNodes.push(line);
+    container.appendChild(line);
+  }
+  container._statLineNodes.forEach((line, index) => {
+    if (index >= lines.length) {
+      line.style.display = 'none';
+      return;
+    }
+    line.style.display = '';
+    if (line.textContent !== lines[index]) {
+      line.textContent = lines[index];
+    }
+  });
+}
+
 function updateStatisticsDisplay() {
   const cached = cacheStatisticsElements();
   const playtimeElement = cached ? cached.totalPlaytime : null;
@@ -111,14 +131,10 @@ function updateStatisticsDisplay() {
     );
     cached.fastestTerraformByTypeTitle.style.display = worldTypes.length ? '' : 'none';
     cached.fastestTerraformByTypeList.style.display = worldTypes.length ? '' : 'none';
-    cached.fastestTerraformByTypeList.replaceChildren();
-
-    worldTypes.forEach((worldType) => {
-      const line = document.createElement('p');
-      line.className = 'settings-stat-line';
-      line.textContent = buildFastestTerraformByTypeText(worldType, byType[worldType]);
-      cached.fastestTerraformByTypeList.appendChild(line);
-    });
+    syncStatisticsLines(
+      cached.fastestTerraformByTypeList,
+      worldTypes.map((worldType) => buildFastestTerraformByTypeText(worldType, byType[worldType]))
+    );
   }
 
   const history = spaceManager.getRecentTerraformHistory().slice().reverse();
@@ -127,20 +143,16 @@ function updateStatisticsDisplay() {
     { count: 10 },
     'Last {count} Terraformed Worlds'
   );
-  cached.recentTerraformHistoryList.replaceChildren();
   if (cached.recentTerraformAverageDisplay) {
     cached.recentTerraformAverageDisplay.textContent = '';
   }
 
   if (!history.length) {
-    const emptyLine = document.createElement('p');
-    emptyLine.className = 'settings-stat-line';
-    emptyLine.textContent = t(
+    syncStatisticsLines(cached.recentTerraformHistoryList, [t(
       'ui.settings.recentTerraformHistoryEmpty',
       null,
       'No terraformed worlds recorded yet.'
-    );
-    cached.recentTerraformHistoryList.appendChild(emptyLine);
+    )]);
     return;
   }
 
@@ -148,12 +160,10 @@ function updateStatisticsDisplay() {
     cached.recentTerraformAverageDisplay.textContent = buildRecentTerraformAverageText(history);
   }
 
-  history.forEach((entry) => {
-    const line = document.createElement('p');
-    line.className = 'settings-stat-line';
-    line.textContent = buildTerraformHistoryText(entry);
-    cached.recentTerraformHistoryList.appendChild(line);
-  });
+  syncStatisticsLines(
+    cached.recentTerraformHistoryList,
+    history.map((entry) => buildTerraformHistoryText(entry))
+  );
 }
 
 function initializeStatisticsSubtab() {

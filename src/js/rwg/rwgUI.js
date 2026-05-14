@@ -306,21 +306,24 @@ function refreshDominionSelect() {
     : dominions[0];
   rwgSelectedDominion = selected;
   if (rwgDominionEl.dataset.lastDominionList !== signature) {
-    const frag = document.createDocumentFragment();
-    entries.forEach((entry) => {
-      const opt = document.createElement('option');
-      opt.value = entry.id;
+    while (rwgDominionEl.options.length < entries.length) {
+      rwgDominionEl.appendChild(document.createElement('option'));
+    }
+    while (rwgDominionEl.options.length > entries.length) {
+      rwgDominionEl.removeChild(rwgDominionEl.options[rwgDominionEl.options.length - 1]);
+    }
+    entries.forEach((entry, index) => {
+      const opt = rwgDominionEl.options[index];
+      if (opt.value !== entry.id) opt.value = entry.id;
       const displayName = getRwgDominionDisplayName(entry.id);
       const locked = !entry.unlocked;
       const label = locked && entry.requirementLabel
         ? `${displayName} (${entry.requirementLabel})`
         : displayName;
-      opt.textContent = getRwgUiText('controls.dominionOption', 'Dominion: {value}', { value: label });
+      const text = getRwgUiText('controls.dominionOption', 'Dominion: {value}', { value: label });
+      if (opt.textContent !== text) opt.textContent = text;
       opt.disabled = locked;
-      frag.appendChild(opt);
     });
-    rwgDominionEl.innerHTML = '';
-    rwgDominionEl.appendChild(frag);
     rwgDominionEl.dataset.lastDominionList = signature;
   }
   rwgDominionEl.value = selected;

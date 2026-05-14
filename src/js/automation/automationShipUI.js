@@ -19,11 +19,7 @@ function getShipTargetsSignature(targets) {
   const parts = [];
   for (let index = 0; index < targets.length; index += 1) {
     const target = targets[index];
-    const visible = target.isVisible ? target.isVisible() !== false : true;
-    const disabled = target.isPermanentlyDisabled ? target.isPermanentlyDisabled() : false;
-    parts.push(
-      `${target.name}:${target.displayName || target.name}:${target.enabled === false ? 0 : 1}:${target.unlocked === false ? 0 : 1}:${visible ? 1 : 0}:${disabled ? 1 : 0}`
-    );
+    parts.push(`${target.name}:${target.displayName || target.name}`);
   }
   return parts.join('|');
 }

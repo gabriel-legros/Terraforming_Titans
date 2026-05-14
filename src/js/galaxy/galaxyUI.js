@@ -2220,30 +2220,49 @@ function updateFleetCapacityTooltip(manager, cache) {
         : 0;
     const totalWorlds = baseWorlds + ringWorlds + sectorWorlds + artificialWorlds + bonusWorlds;
 
-    tooltip.innerHTML = '';
-    const header = doc.createElement('div');
-    header.className = 'resource-tooltip-header';
-    header.textContent = getGalaxyText('logistics.fleetCapacitySources', 'Fleet capacity sources');
-    tooltip.appendChild(header);
+    const tooltipCache = tooltip._fleetCapacityRows || {};
+    tooltip._fleetCapacityRows = tooltipCache;
 
-    const summary = doc.createElement('div');
-    summary.className = 'resource-tooltip-row';
+    let header = tooltipCache.header;
+    if (!header) {
+        header = doc.createElement('div');
+        header.className = 'resource-tooltip-header';
+        tooltipCache.header = header;
+        tooltip.appendChild(header);
+    }
+    header.textContent = getGalaxyText('logistics.fleetCapacitySources', 'Fleet capacity sources');
+
+    let summary = tooltipCache.summary;
+    if (!summary) {
+        summary = doc.createElement('div');
+        summary.className = 'resource-tooltip-row';
+        tooltipCache.summary = summary;
+        tooltip.appendChild(summary);
+    }
     summary.textContent = getGalaxyText('logistics.baseCapacity', 'Base capacity = 100 per world.');
-    tooltip.appendChild(summary);
+
+    tooltipCache.rows ||= [];
+    let rowIndex = 0;
 
     const addRow = (label, value) => {
         if (!(value > 0)) {
             return;
         }
-        const row = doc.createElement('div');
-        row.className = 'resource-tooltip-row';
-        const left = doc.createElement('span');
-        left.textContent = label;
-        const right = doc.createElement('span');
-        right.textContent = ` ${format(value)}`;
-        row.appendChild(left);
-        row.appendChild(right);
-        tooltip.appendChild(row);
+        let row = tooltipCache.rows[rowIndex];
+        if (!row) {
+            row = doc.createElement('div');
+            row.className = 'resource-tooltip-row';
+            const left = doc.createElement('span');
+            const right = doc.createElement('span');
+            row.appendChild(left);
+            row.appendChild(right);
+            tooltipCache.rows[rowIndex] = row;
+            tooltip.insertBefore(row, tooltipCache.totalRow || null);
+        }
+        row.style.display = '';
+        row.children[0].textContent = label;
+        row.children[1].textContent = ` ${format(value)}`;
+        rowIndex += 1;
     };
 
     addRow(getGalaxyText('logistics.terraformedWorlds', 'Terraformed worlds'), baseWorlds);
@@ -2252,15 +2271,25 @@ function updateFleetCapacityTooltip(manager, cache) {
     addRow(getGalaxyText('logistics.artificialWorlds', 'Artificial worlds'), artificialWorlds);
     addRow(getGalaxyText('logistics.otherBonuses', 'Other bonuses'), bonusWorlds);
 
-    const totalRow = doc.createElement('div');
-    totalRow.className = 'resource-tooltip-row';
-    const totalLabel = doc.createElement('span');
+    for (let index = rowIndex; index < tooltipCache.rows.length; index += 1) {
+        tooltipCache.rows[index].style.display = 'none';
+    }
+
+    let totalRow = tooltipCache.totalRow;
+    if (!totalRow) {
+        totalRow = doc.createElement('div');
+        totalRow.className = 'resource-tooltip-row';
+        const totalLabel = doc.createElement('span');
+        const totalValue = doc.createElement('span');
+        totalRow.appendChild(totalLabel);
+        totalRow.appendChild(totalValue);
+        tooltipCache.totalRow = totalRow;
+        tooltip.appendChild(totalRow);
+    }
+    const totalLabel = totalRow.children[0];
     totalLabel.textContent = getGalaxyText('logistics.totalWorldsForFleetCapacity', 'Total worlds for fleet capacity');
-    const totalValue = doc.createElement('span');
+    const totalValue = totalRow.children[1];
     totalValue.textContent = ` ${format(totalWorlds)}`;
-    totalRow.appendChild(totalLabel);
-    totalRow.appendChild(totalValue);
-    tooltip.appendChild(totalRow);
 
     if (typeof addTooltipHover === 'function' && !anchor._fleetCapacityTooltipBound) {
         addTooltipHover(anchor, tooltip);

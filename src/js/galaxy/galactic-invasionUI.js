@@ -311,53 +311,100 @@ function formatGalacticInvasionReward(reward) {
 }
 
 function updateGalacticInvasionTraitSummary(container) {
-  container.textContent = '';
   const activeTraits = new Set();
   GALACTIC_INVASION_LETTERS.forEach((letter) => {
     letter.traits.forEach((traitKey) => activeTraits.add(traitKey));
   });
 
-  const list = document.createElement('div');
-  list.className = 'galactic-invasion-traits__list';
+  let list = container._traitList;
+  if (!list) {
+    list = document.createElement('div');
+    list.className = 'galactic-invasion-traits__list';
+    container._traitList = list;
+    container.appendChild(list);
+  }
+  list._traitItems ||= new Map();
+  const usedItems = new Set();
   GALACTIC_INVASION_TRAIT_ORDER.forEach((traitKey) => {
     if (!activeTraits.has(traitKey)) {
       return;
     }
-    const item = document.createElement('div');
-    item.className = 'galactic-invasion-traits__item';
-    const name = document.createElement('span');
-    name.className = 'galactic-invasion-traits__name';
-    name.textContent = getGalacticInvasionTraitName(traitKey);
-    const description = document.createElement('span');
-    description.className = 'galactic-invasion-traits__description';
-    description.textContent = getGalacticInvasionTraitDescription(traitKey);
-    item.append(name, description);
+    let item = list._traitItems.get(traitKey);
+    if (!item) {
+      item = document.createElement('div');
+      item.className = 'galactic-invasion-traits__item';
+      const name = document.createElement('span');
+      name.className = 'galactic-invasion-traits__name';
+      const description = document.createElement('span');
+      description.className = 'galactic-invasion-traits__description';
+      item.append(name, description);
+      item._name = name;
+      item._description = description;
+      list._traitItems.set(traitKey, item);
+    }
+    const nameText = getGalacticInvasionTraitName(traitKey);
+    const descriptionText = getGalacticInvasionTraitDescription(traitKey);
+    if (item._name.textContent !== nameText) item._name.textContent = nameText;
+    if (item._description.textContent !== descriptionText) item._description.textContent = descriptionText;
+    item.style.display = '';
+    usedItems.add(item);
     list.appendChild(item);
   });
-  container.appendChild(list);
+  list._traitItems.forEach((item) => {
+    if (!usedItems.has(item)) {
+      item.style.display = 'none';
+    }
+  });
 }
 
 function updateGalacticInvasionRewardSummary(container) {
   const summary = galaxyInvasionManager.getCompletedRewardSummary();
-  container.textContent = '';
-  const title = document.createElement('div');
-  title.className = 'galactic-invasion-summary__title';
-  title.textContent = getGalacticInvasionText('summaryTitle', 'Compiled Rewards');
-  container.appendChild(title);
-  if (!summary.length) {
-    const empty = document.createElement('div');
+  let title = container._summaryTitle;
+  if (!title) {
+    title = document.createElement('div');
+    title.className = 'galactic-invasion-summary__title';
+    container._summaryTitle = title;
+    container.appendChild(title);
+  }
+  const titleText = getGalacticInvasionText('summaryTitle', 'Compiled Rewards');
+  if (title.textContent !== titleText) title.textContent = titleText;
+  let empty = container._summaryEmpty;
+  if (!empty) {
+    empty = document.createElement('div');
     empty.className = 'galactic-invasion-summary__empty';
-    empty.textContent = getGalacticInvasionText('summaryEmpty', 'No invasion rewards completed.');
+    container._summaryEmpty = empty;
     container.appendChild(empty);
+  }
+  let list = container._summaryList;
+  if (!list) {
+    list = document.createElement('div');
+    list.className = 'galactic-invasion-summary__list';
+    list._rewardItems = [];
+    container._summaryList = list;
+    container.appendChild(list);
+  }
+  if (!summary.length) {
+    const emptyText = getGalacticInvasionText('summaryEmpty', 'No invasion rewards completed.');
+    if (empty.textContent !== emptyText) empty.textContent = emptyText;
+    empty.style.display = '';
+    list.style.display = 'none';
     return;
   }
-  const list = document.createElement('div');
-  list.className = 'galactic-invasion-summary__list';
-  summary.forEach((reward) => {
+  empty.style.display = 'none';
+  list.style.display = '';
+  while (list._rewardItems.length < summary.length) {
     const item = document.createElement('div');
     item.className = 'galactic-invasion-summary__item';
-    item.textContent = formatGalacticInvasionReward(reward);
+    list._rewardItems.push(item);
     list.appendChild(item);
+  }
+  summary.forEach((reward, index) => {
+    const item = list._rewardItems[index];
+    const text = formatGalacticInvasionReward(reward);
+    if (item.textContent !== text) item.textContent = text;
+    item.style.display = '';
   });
-  container.appendChild(list);
+  for (let index = summary.length; index < list._rewardItems.length; index += 1) {
+    list._rewardItems[index].style.display = 'none';
+  }
 }

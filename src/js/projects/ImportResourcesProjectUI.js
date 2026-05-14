@@ -309,6 +309,7 @@ class ImportResourcesProjectUI {
 
     const projectElements = this.getProjectElements();
     const headerElements = projectElements[this.headerProjectName] || {};
+    headerElements.boundProject = project;
     headerElements.projectItem = card;
     headerElements.cardBody = cardBody;
     headerElements.collapseArrow = arrow;
@@ -458,6 +459,13 @@ class ImportResourcesProjectUI {
     const rulesList = document.createElement('ul');
     rulesList.classList.add('import-cap-rules');
     summary.appendChild(rulesList);
+    const ruleItems = [];
+    for (let i = 0; i < 8; i += 1) {
+      const item = document.createElement('li');
+      item.style.display = 'none';
+      rulesList.appendChild(item);
+      ruleItems.push(item);
+    }
 
     const fullControl = document.createElement('div');
     fullControl.classList.add('import-cap-line');
@@ -486,6 +494,7 @@ class ImportResourcesProjectUI {
       baseCap,
       ratios,
       rulesList,
+      ruleItems,
       fullControl,
       table,
       rows: {},
@@ -528,14 +537,26 @@ class ImportResourcesProjectUI {
 
     const nextRulesSignature = data.ruleLines.join('\n');
     if (this.capRulesSignature !== nextRulesSignature) {
-      while (elements.rulesList.firstChild) {
-        elements.rulesList.removeChild(elements.rulesList.firstChild);
-      }
-      data.ruleLines.forEach((line) => {
+      while (elements.ruleItems.length < data.ruleLines.length) {
         const item = document.createElement('li');
-        item.textContent = line;
+        item.style.display = 'none';
         elements.rulesList.appendChild(item);
+        elements.ruleItems.push(item);
+      }
+      data.ruleLines.forEach((line, index) => {
+        const item = elements.ruleItems[index];
+        if (item.textContent !== line) {
+          item.textContent = line;
+        }
+        item.style.display = '';
       });
+      for (let index = data.ruleLines.length; index < elements.ruleItems.length; index += 1) {
+        const item = elements.ruleItems[index];
+        if (item.textContent !== '') {
+          item.textContent = '';
+        }
+        item.style.display = 'none';
+      }
       this.capRulesSignature = nextRulesSignature;
     }
     elements.rulesList.style.display = data.ruleLines.length ? 'block' : 'none';
@@ -744,6 +765,7 @@ class ImportResourcesProjectUI {
     this.insertRow(mainRow, detailRow, project.name);
 
     const elements = projectElements[project.name];
+    elements.boundProject = project;
     elements.projectItem = this.card;
     elements.cardBody = this.cardBody;
     elements.collapseArrow = this.collapseArrow;

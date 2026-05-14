@@ -35,13 +35,23 @@ const PatienceUI = {
      */
     initialize() {
         this.cacheElements();
-        cleanupTrackedUIListeners(this.container);
-        cleanupDynamicTooltipsIn(this.container);
-        this.buildUI();
         if (!this.container) return;
-        runWithTrackedUIListeners(this.container, () => {
-            this.setupEventListeners();
-        });
+
+        const existingShell = this.container.querySelector('.patience-shell');
+        if (existingShell) {
+            this.cacheBuiltElements();
+        } else {
+            cleanupTrackedUIListeners(this.container);
+            cleanupDynamicTooltipsIn(this.container);
+            this.buildUI();
+        }
+
+        if (!this.container._patienceListenersBound) {
+            runWithTrackedUIListeners(this.container, () => {
+                this.setupEventListeners();
+            });
+            this.container._patienceListenersBound = true;
+        }
     },
 
     /**
@@ -53,10 +63,36 @@ const PatienceUI = {
     },
 
     /**
+     * Re-cache static patience UI nodes when the shell already exists
+     */
+    cacheBuiltElements() {
+        const cards = this.container.querySelectorAll('.patience-stats .patience-card');
+        this.currentValueEl = document.getElementById('patience-current-value');
+        this.maxValueEl = document.getElementById('patience-max-value');
+        this.timerValueEl = document.getElementById('patience-timer-value');
+        this.timerMetaEl = cards[2] ? cards[2].querySelector('.patience-card-meta') : null;
+        this.spendInputEl = document.getElementById('patience-spend-input');
+        this.spendButtonEl = document.getElementById('patience-spend-button');
+        this.spendPreviewEl = document.getElementById('patience-spend-preview');
+        this.meterFillEl = this.container.querySelector('.patience-meter-fill');
+        this.gainValueEl = cards[1] ? cards[1].querySelector('.patience-card-value') : null;
+        this.gainMetaEl = cards[1] ? cards[1].querySelector('.patience-card-meta') : null;
+        this.worldValueEl = document.getElementById('patience-world-value');
+        this.worldMetaEl = cards[3] ? cards[3].querySelector('.patience-card-meta') : null;
+        this.saveFileButtonEl = document.getElementById('patience-save-file-button');
+        this.saveClipboardButtonEl = document.getElementById('patience-save-clipboard-button');
+    },
+
+    /**
      * Build the UI dynamically
      */
     buildUI() {
         if (!this.container) return;
+        if (this.container.querySelector('.patience-shell')) {
+            this.cacheBuiltElements();
+            this.updateSpendPreview();
+            return;
+        }
 
         // Clear existing content
         this.container.innerHTML = '';
@@ -335,6 +371,53 @@ const PatienceUI = {
         }
     },
 
+    setSpendPreviewEntries(entries) {
+        const preview = this.spendPreviewEl;
+        const signature = JSON.stringify(entries);
+        if (preview._entrySignature === signature) return;
+
+        if (!preview._entryNodes) {
+            preview.textContent = '';
+            preview._entryNodes = [];
+        }
+
+        while (preview._entryNodes.length < entries.length) {
+            const row = document.createElement('div');
+            preview.appendChild(row);
+            preview._entryNodes.push(row);
+        }
+        while (preview._entryNodes.length > entries.length) {
+            const row = preview._entryNodes.pop();
+            preview.removeChild(row);
+        }
+
+        entries.forEach((entry, index) => {
+            const row = preview._entryNodes[index];
+            row._partNodes ||= [];
+            while (row._partNodes.length < entry.length) {
+                const span = document.createElement('span');
+                row.appendChild(span);
+                row._partNodes.push(span);
+            }
+            while (row._partNodes.length > entry.length) {
+                const span = row._partNodes.pop();
+                row.removeChild(span);
+            }
+            entry.forEach((part, partIndex) => {
+                const span = row._partNodes[partIndex];
+                if (part.className) {
+                    span.className = part.className;
+                } else if (span.className) {
+                    span.className = '';
+                }
+                if (span.textContent !== part.text) {
+                    span.textContent = part.text;
+                }
+            });
+        });
+        preview._entrySignature = signature;
+    },
+
     /**
      * Update the spend preview text
      */
@@ -358,52 +441,67 @@ const PatienceUI = {
         const superconductorResource = resources.colony.superconductors;
 
         if (metalGain > 0) {
-            let line = `${formatNumber(metalGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.metal', 'metal')}`;
+            const line = [{ text: `${formatNumber(metalGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.metal', 'metal')}` }];
             if (metalResource.hasCap) {
                 const metalOverflow = metalResource.value + metalGain - metalResource.cap;
                 if (metalOverflow > 0) {
-                    line += ` (<span class="patience-warning">${getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
+                    line.push({ text: ' (' });
+                    line.push({
+                        className: 'patience-warning',
+                        text: getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
                         value: formatNumber(metalOverflow, true)
-                    })}</span>)`;
+                        })
+                    });
+                    line.push({ text: ')' });
                 }
             }
             lines.push(line);
         }
         if (superalloyGain > 0) {
-            let line = `${formatNumber(superalloyGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.superalloys', 'superalloys')}`;
+            const line = [{ text: `${formatNumber(superalloyGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.superalloys', 'superalloys')}` }];
             if (superalloyResource.hasCap) {
                 const superalloyOverflow = superalloyResource.value + superalloyGain - superalloyResource.cap;
                 if (superalloyOverflow > 0) {
-                    line += ` (<span class="patience-warning">${getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
+                    line.push({ text: ' (' });
+                    line.push({
+                        className: 'patience-warning',
+                        text: getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
                         value: formatNumber(superalloyOverflow, true)
-                    })}</span>)`;
+                        })
+                    });
+                    line.push({ text: ')' });
                 }
             }
             lines.push(line);
         }
         if (superconductorGain > 0) {
-            let line = `${formatNumber(superconductorGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.superconductors', 'superconductors')}`;
+            const line = [{ text: `${formatNumber(superconductorGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.superconductors', 'superconductors')}` }];
             if (superconductorResource.hasCap) {
                 const superconductorOverflow = superconductorResource.value + superconductorGain - superconductorResource.cap;
                 if (superconductorOverflow > 0) {
-                    line += ` (<span class="patience-warning">${getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
+                    line.push({ text: ' (' });
+                    line.push({
+                        className: 'patience-warning',
+                        text: getPatienceText('ui.hope.patiencePanel.preview.storageWarning', 'warning: {value} over storage', {
                         value: formatNumber(superconductorOverflow, true)
-                    })}</span>)`;
+                        })
+                    });
+                    line.push({ text: ')' });
                 }
             }
             lines.push(line);
         }
         if (advancedResearchGain > 0) {
-            lines.push(`${formatNumber(advancedResearchGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.advancedResearch', 'advanced research')}`);
+            lines.push([{ text: `${formatNumber(advancedResearchGain, true)} ${getPatienceText('ui.hope.patiencePanel.preview.advancedResearch', 'advanced research')}` }]);
         }
         if (oneillGain > 0) {
-            lines.push(`${oneillGain.toFixed(2)} ${getPatienceText('ui.hope.patiencePanel.preview.oneillCylinders', 'O\'Neill cylinders')}`);
+            lines.push([{ text: `${oneillGain.toFixed(2)} ${getPatienceText('ui.hope.patiencePanel.preview.oneillCylinders', 'O\'Neill cylinders')}` }]);
         }
         if (faithGains.worldBelieverGain > 0) {
             const faithKey = faithGains.fillsWorldCap
                 ? 'ui.hope.patiencePanel.preview.worldFaithCapped'
                 : 'ui.hope.patiencePanel.preview.worldFaith';
-            lines.push(getPatienceText(
+            lines.push([{ text: getPatienceText(
                 faithKey,
                 faithGains.fillsWorldCap
                     ? '+{count} world believers (+{percent}%, reaches current cap)'
@@ -412,29 +510,33 @@ const PatienceUI = {
                     count: formatNumber(faithGains.worldBelieverGain, true),
                     percent: formatNumber(faithGains.worldPercentGain * 100, false, 4)
                 }
-            ));
+            ) }]);
         }
         if (faithGains.galacticBelieverGain > 0) {
-            lines.push(getPatienceText(
+            lines.push([{ text: getPatienceText(
                 'ui.hope.patiencePanel.preview.galacticFaith',
                 '+{count} galactic believers (+{percent}%)',
                 {
                     count: formatNumber(faithGains.galacticBelieverGain, true),
                     percent: formatNumber(faithGains.galacticPercentGain * 100, false, 4)
                 }
-            ));
+            ) }]);
         }
 
         if (lines.length === 0 && !wgcAdvance) {
+            this.spendPreviewEl._entrySignature = '';
+            this.spendPreviewEl._entryNodes = null;
             this.spendPreviewEl.textContent = getPatienceText('ui.hope.patiencePanel.noGains', 'No gains available');
             return;
         }
 
-        const header = lines.length > 0
-            ? [getPatienceText('ui.hope.patiencePanel.gainHeader', 'Gain:')]
+        const entries = lines.length > 0
+            ? [[{ text: getPatienceText('ui.hope.patiencePanel.gainHeader', 'Gain:') }]].concat(lines)
             : [];
-        const footer = wgcAdvance ? [wgcAdvance] : [];
-        this.spendPreviewEl.innerHTML = header.concat(lines, footer).join('<br>');
+        if (wgcAdvance) {
+            entries.push([{ text: wgcAdvance }]);
+        }
+        this.setSpendPreviewEntries(entries);
     },
 
     /**

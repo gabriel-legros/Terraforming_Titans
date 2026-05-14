@@ -403,20 +403,10 @@ function fillSelect(select, options, selectedValue, emptyLabel) {
   if (document.activeElement === select) {
     return;
   }
-  select.textContent = '';
-  if (emptyLabel) {
-    const empty = document.createElement('option');
-    empty.value = '';
-    empty.textContent = emptyLabel;
-    select.appendChild(empty);
-  }
-  options.forEach(optionData => {
-    const option = document.createElement('option');
-    option.value = String(optionData.value);
-    option.textContent = optionData.label;
-    select.appendChild(option);
-  });
-  select.value = String(selectedValue ?? '');
+  const optionList = emptyLabel
+    ? [{ value: '', label: emptyLabel }].concat(options)
+    : options;
+  syncAutomationSelectOptions(select, optionList, selectedValue ?? '');
 }
 
 function initializeSidebarAutomationUI() {

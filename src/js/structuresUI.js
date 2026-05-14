@@ -548,31 +548,100 @@ function createColonyButtons(colonies) {
 // Create buttons for buildings and colonies
 function createStructureButtons(structures, containerId, buildCallback, toggleCallback, isColony = false) {
   const buttonsContainer = document.getElementById(containerId);
-  cleanupTrackedUIListeners(buttonsContainer);
-  cleanupDynamicTooltipsIn(buttonsContainer);
-  while (buttonsContainer.firstChild) {
-    buttonsContainer.removeChild(buttonsContainer.firstChild);
-  }
+  if (!buttonsContainer) return;
+  const existingRows = {};
+  Array.from(buttonsContainer.children).forEach(row => {
+    if (row.dataset && row.dataset.structureName) {
+      existingRows[row.dataset.structureName] = row;
+    }
+  });
   const rows = [];
-  runWithTrackedUIListeners(buttonsContainer, () => {
-    structures.forEach((structure) => {
-      // Create structure row (shared for buildings and colonies)
-      const structureRow = createStructureRow(structure, buildCallback, toggleCallback, isColony);
-
-      // Append the structure row to the container
-      buttonsContainer.appendChild(structureRow);
-      rows.push(structureRow);
-    });
+  const liveStructures = [];
+  structures.forEach((structure) => {
+    let structureRow = existingRows[structure.name];
+    const cached = structureUIElements[structure.name];
+    if (structureRow && cached && cached.setStructure) {
+      structure = rebindStructureInstance(structure, cached, isColony);
+      cached.setStructure(structure);
+      refreshStructureRowStaticText(structure, cached);
+    } else {
+      structureRow = createStructureRow(structure, buildCallback, toggleCallback, isColony);
+    }
+    buttonsContainer.appendChild(structureRow);
+    rows.push(structureRow);
+    liveStructures.push(structure);
+    delete existingRows[structure.name];
+  });
+  Object.keys(existingRows).forEach(structureName => {
+    const row = existingRows[structureName];
+    cleanupTrackedUIListeners(row);
+    cleanupDynamicTooltipsIn(row);
+    row.remove();
+    delete structureUIElements[structureName];
   });
   combinedBuildingRowCache[containerId] = rows;
-  structureContainerMap[containerId] = structures;
+  structureContainerMap[containerId] = liveStructures;
   structureUICacheInvalidated = false;
+}
+
+function rebindStructureInstance(nextStructure, cached, isColony) {
+  const currentStructure = cached.boundStructure;
+  if (!currentStructure || currentStructure === nextStructure) {
+    cached.boundStructure = nextStructure;
+    return nextStructure;
+  }
+
+  Object.keys(currentStructure).forEach(key => {
+    if (!Object.prototype.hasOwnProperty.call(nextStructure, key)) {
+      if (key === 'needBoxCache') {
+        return;
+      }
+      delete currentStructure[key];
+    }
+  });
+  Object.setPrototypeOf(currentStructure, Object.getPrototypeOf(nextStructure));
+  Object.assign(currentStructure, nextStructure);
+
+  if (isColony) {
+    colonies[currentStructure.name] = currentStructure;
+  } else {
+    buildings[currentStructure.name] = currentStructure;
+  }
+  cached.boundStructure = currentStructure;
+  return currentStructure;
+}
+
+function refreshStructureRowStaticText(structure, cached) {
+  if (!cached) return;
+  if (cached.combinedRow) {
+    cached.combinedRow.classList.toggle('hidden', !structure.unlocked || structure.isHidden);
+  }
+  if (cached.row) {
+    cached.row.classList.toggle('obsolete-building', !!structure.obsolete);
+  }
+  if (cached.descriptionElement && cached.descriptionElement.textContent !== structure.description) {
+    cached.descriptionElement.textContent = structure.description;
+  }
+  if (cached.buildButton) {
+    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    updateStructureButtonText(cached.buildButton, structure, manualBuildCount);
+  }
+  if (cached.autoBuildWire && cached.autoBuildInput && document.activeElement !== cached.autoBuildInput) {
+    cached.autoBuildInput.value = getAutoBuildInputValue(structure);
+  }
+  if (cached.costElement) {
+    updateStructureCostDisplay(cached.costElement, structure, getManualBuildCount(structure, selectedBuildCounts[structure.name]));
+  }
+  if (cached.productionDetails) {
+    updateProductionConsumptionDetails(structure, cached.productionDetails, getManualBuildCount(structure, selectedBuildCounts[structure.name]));
+  }
 }
   
 // Create a structure row for both buildings and colonies
 function createStructureRow(structure, buildCallback, toggleCallback, isColony) {
   const combinedStructureRow = document.createElement('div');
   combinedStructureRow.classList.add('combined-building-row', 'project-card', 'building-card');
+  combinedStructureRow.dataset.structureName = structure.name;
 
   const structureRow = document.createElement('div');
   structureRow.classList.add('building-row', 'building-card-column', 'building-card-primary');
@@ -633,8 +702,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   // Initialize and seed per-structure UI cache
   structureUIElements[structure.name] = structureUIElements[structure.name] || {};
   const cached = structureUIElements[structure.name];
+  cached.boundStructure = structure;
   cached.combinedRow = combinedStructureRow;
   cached.row = structureRow;
+  cached.setStructure = nextStructure => {
+    structure = nextStructure;
+    cached.boundStructure = nextStructure;
+  };
   cached.collapsed = !!structureDisplayState.collapsed[structure.name];
   cached.collapseArrow = collapseArrow;
   cached.headerActive = headerActive;
@@ -1038,7 +1112,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     productivityContainer.classList.add('productivity-container');
 
     const productivityLabel = document.createElement('span');
-    productivityLabel.innerHTML = `<strong>${getStructuresUIText('ui.structures.labels.productivity', 'Productivity')}:</strong> `;
+    const productivityStrong = document.createElement('strong');
+    productivityStrong.textContent = `${getStructuresUIText('ui.structures.labels.productivity', 'Productivity')}:`;
+    productivityLabel.appendChild(productivityStrong);
+    productivityLabel.appendChild(document.createTextNode(' '));
     productivityContainer.appendChild(productivityLabel);
 
     const productivityValue = document.createElement('span');
@@ -2571,8 +2648,10 @@ function updateDecreaseButtonText(button, buildCount) {
         ? structure.isVisible()
         : structure.unlocked && !structure.isHidden;
       if (isVisible && structureRow) {
+        combinedStructureRow.classList.remove('hidden');
         combinedStructureRow.style.display = 'flex'; // Show the building when unlocked
       } else {
+        combinedStructureRow.classList.add('hidden');
         combinedStructureRow.style.display = 'none';
         continue;
       }
@@ -2930,10 +3009,6 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function buildProdConsElement(element, sections) {
-    cleanupDynamicTooltipsIn(element);
-    element.textContent = '';
-    element._sections = {};
-
     const keyString = sections
       .map(sec => {
         const keys = sec.key === 'provides'
@@ -2945,107 +3020,196 @@ function updateDecreaseButtonText(button, buildCount) {
 
     const hasProduction = sections.some(s => s.key === 'production');
     const hasConsumption = sections.some(s => s.key === 'consumption');
+    const previousSections = element._sections || {};
+    const nextSections = {};
+    const separators = element._sectionSeparators || [];
 
-    sections.forEach((sec, idx) => {
-      const container = document.createElement('span');
-      const label = document.createElement('strong');
-      label.textContent = `${sec.label}:`;
-      container.appendChild(label);
-      container.appendChild(document.createTextNode(' '));
-      const list = document.createElement('span');
-      container.appendChild(list);
-      element.appendChild(container);
-      if (idx < sections.length - 1) {
-        const nextSec = sections[idx + 1];
-        if (hasProduction && hasConsumption && nextSec.key === 'maintenance') {
-          element.appendChild(document.createElement('br'));
+    function createResourceSpan(sectionKey) {
+      const span = document.createElement('span');
+      if (sectionKey === 'maintenance' || sectionKey === 'production' || sectionKey === 'consumption') {
+        const textSpan = document.createElement('span');
+        span.classList.add('info-tooltip-icon', 'inline-tooltip-anchor');
+        span.appendChild(textSpan);
+        span._textSpan = textSpan;
+
+        const tooltip = attachDynamicInfoTooltip(span, '');
+        if (sectionKey === 'maintenance') {
+          span._maintenanceTooltip = tooltip;
+          span._maintenanceTooltipCache = {};
+          span._updateMaintenanceTooltip = () => {
+            const context = span._maintenanceTooltipContext;
+            const text = buildStructureMaintenanceTooltip(
+              context.structure,
+              context.resource,
+              context.buildCount
+            );
+            setTooltipText(tooltip, text, span._maintenanceTooltipCache, 'text');
+          };
+          span.addEventListener('mouseenter', span._updateMaintenanceTooltip);
+          span.addEventListener('focusin', span._updateMaintenanceTooltip);
+          span.addEventListener('pointerdown', span._updateMaintenanceTooltip);
+        } else if (sectionKey === 'production') {
+          span._productionTooltip = tooltip;
+          span._productionTooltipCache = {};
+          span._updateProductionTooltip = () => {
+            const context = span._productionTooltipContext;
+            const text = buildStructureProductionTooltip(
+              context.structure,
+              context.category,
+              context.resource,
+              context.buildCount
+            );
+            setTooltipText(tooltip, text, span._productionTooltipCache, 'text');
+          };
+          span.addEventListener('mouseenter', span._updateProductionTooltip);
+          span.addEventListener('focusin', span._updateProductionTooltip);
+          span.addEventListener('pointerdown', span._updateProductionTooltip);
         } else {
-          element.appendChild(document.createTextNode(', '));
+          span._consumptionTooltip = tooltip;
+          span._consumptionTooltipCache = {};
+          span._updateConsumptionTooltip = () => {
+            const context = span._consumptionTooltipContext;
+            const text = buildStructureConsumptionTooltip(
+              context.structure,
+              context.category,
+              context.resource,
+              context.buildCount
+            );
+            setTooltipText(tooltip, text, span._consumptionTooltipCache, 'text');
+          };
+          span.addEventListener('mouseenter', span._updateConsumptionTooltip);
+          span.addEventListener('focusin', span._updateConsumptionTooltip);
+          span.addEventListener('pointerdown', span._updateConsumptionTooltip);
         }
       }
+      return span;
+    }
 
-      const info = { list, spans: new Map() };
-      if (sec.key === 'provides') {
-        sec.data.forEach((_, i) => {
-          const span = document.createElement('span');
-          info.spans.set(String(i), span);
-          list.appendChild(span);
-          if (i < sec.data.length - 1) {
-            list.appendChild(document.createTextNode(', '));
-          }
-        });
-        info.keys = sec.data.map((_, i) => String(i));
-      } else {
-        sec.keys.forEach((key, i) => {
-          const span = document.createElement('span');
-          if (sec.key === 'maintenance' || sec.key === 'production' || sec.key === 'consumption') {
-            const textSpan = document.createElement('span');
-            span.classList.add('info-tooltip-icon', 'inline-tooltip-anchor');
-            span.appendChild(textSpan);
-            span._textSpan = textSpan;
-
-            const tooltip = attachDynamicInfoTooltip(span, '');
-            if (sec.key === 'maintenance') {
-              span._maintenanceTooltip = tooltip;
-              span._maintenanceTooltipCache = {};
-              span._updateMaintenanceTooltip = () => {
-                const context = span._maintenanceTooltipContext;
-                const text = buildStructureMaintenanceTooltip(
-                  context.structure,
-                  context.resource,
-                  context.buildCount
-                );
-                setTooltipText(tooltip, text, span._maintenanceTooltipCache, 'text');
-              };
-              span.addEventListener('mouseenter', span._updateMaintenanceTooltip);
-              span.addEventListener('focusin', span._updateMaintenanceTooltip);
-              span.addEventListener('pointerdown', span._updateMaintenanceTooltip);
-            } else if (sec.key === 'production') {
-              span._productionTooltip = tooltip;
-              span._productionTooltipCache = {};
-              span._updateProductionTooltip = () => {
-                const context = span._productionTooltipContext;
-                const text = buildStructureProductionTooltip(
-                  context.structure,
-                  context.category,
-                  context.resource,
-                  context.buildCount
-                );
-                setTooltipText(tooltip, text, span._productionTooltipCache, 'text');
-              };
-              span.addEventListener('mouseenter', span._updateProductionTooltip);
-              span.addEventListener('focusin', span._updateProductionTooltip);
-              span.addEventListener('pointerdown', span._updateProductionTooltip);
-            } else {
-              span._consumptionTooltip = tooltip;
-              span._consumptionTooltipCache = {};
-              span._updateConsumptionTooltip = () => {
-                const context = span._consumptionTooltipContext;
-                const text = buildStructureConsumptionTooltip(
-                  context.structure,
-                  context.category,
-                  context.resource,
-                  context.buildCount
-                );
-                setTooltipText(tooltip, text, span._consumptionTooltipCache, 'text');
-              };
-              span.addEventListener('mouseenter', span._updateConsumptionTooltip);
-              span.addEventListener('focusin', span._updateConsumptionTooltip);
-              span.addEventListener('pointerdown', span._updateConsumptionTooltip);
-            }
-          }
-          info.spans.set(key, span);
-          list.appendChild(span);
-          if (i < sec.keys.length - 1) {
-            list.appendChild(document.createTextNode(', '));
-          }
-        });
-        info.keys = sec.keys;
+    function reconcileChildren(parent, expectedChildren) {
+      for (let i = 0; i < expectedChildren.length; i++) {
+        const expected = expectedChildren[i];
+        if (parent.childNodes[i] !== expected) {
+          parent.insertBefore(expected, parent.childNodes[i] || null);
+        }
       }
+      while (parent.childNodes.length > expectedChildren.length) {
+        const child = parent.childNodes[parent.childNodes.length - 1];
+        cleanupDynamicTooltipsIn(child);
+        child.remove();
+      }
+    }
 
-      element._sections[sec.key] = info;
+    function getSectionInfo(sec) {
+      let info = previousSections[sec.key];
+      if (!info || !info.container) {
+        const container = document.createElement('span');
+        const label = document.createElement('strong');
+        const space = document.createTextNode(' ');
+        const list = document.createElement('span');
+        container.append(label, space, list);
+        info = {
+          container,
+          label,
+          list,
+          spans: new Map(),
+          separators: new Map()
+        };
+      }
+      if (info.label.textContent !== `${sec.label}:`) {
+        info.label.textContent = `${sec.label}:`;
+      }
+      return info;
+    }
+
+    function syncSectionItems(info, sec) {
+      const nextKeys = sec.key === 'provides'
+        ? sec.data.map((_, i) => String(i))
+        : sec.keys;
+      const nextKeySet = new Set(nextKeys);
+      info.spans.forEach((span, key) => {
+        if (!nextKeySet.has(key)) {
+          const separator = info.separators.get(key);
+          if (separator) {
+            separator.nodeValue = '';
+            separator._inactive = true;
+          }
+          span.style.display = 'none';
+        }
+      });
+      nextKeys.forEach((key, index) => {
+        let separator = info.separators.get(key);
+        if (!separator) {
+          separator = document.createTextNode('');
+          info.separators.set(key, separator);
+        }
+        separator.nodeValue = index === 0 ? '' : ', ';
+        separator._inactive = false;
+
+        let span = info.spans.get(key);
+        if (!span) {
+          span = createResourceSpan(sec.key);
+          info.spans.set(key, span);
+        }
+        span.style.display = '';
+      });
+      info.keys = nextKeys;
+      const expectedChildren = [];
+      info.spans.forEach((_, key) => {
+        expectedChildren.push(info.separators.get(key));
+        expectedChildren.push(info.spans.get(key));
+      });
+      reconcileChildren(info.list, expectedChildren);
+    }
+
+    const expectedChildren = [];
+    sections.forEach((sec, idx) => {
+      const info = getSectionInfo(sec);
+      syncSectionItems(info, sec);
+      nextSections[sec.key] = info;
+      info.container.style.display = '';
+      expectedChildren.push(info.container);
+      if (idx < sections.length - 1) {
+        const nextSec = sections[idx + 1];
+        let separator = separators[idx];
+        if (!separator) {
+          separator = document.createTextNode('');
+          separators[idx] = separator;
+        }
+        if (hasProduction && hasConsumption && nextSec.key === 'maintenance') {
+          if (separator.nodeType !== 3) {
+            separator.remove();
+            separator = document.createTextNode('');
+            separators[idx] = separator;
+          }
+          separator.nodeValue = ' ';
+        } else {
+          if (separator.nodeType !== 3) {
+            separator.remove();
+            separator = document.createTextNode('');
+            separators[idx] = separator;
+          }
+          separator.nodeValue = ', ';
+        }
+        expectedChildren.push(separator);
+      }
     });
+    for (let i = sections.length - 1; i < separators.length; i++) {
+      if (separators[i]) {
+        separators[i].remove();
+      }
+    }
+    separators.length = Math.max(0, sections.length - 1);
+    Object.keys(previousSections).forEach(key => {
+      if (!nextSections[key]) {
+        previousSections[key].container.style.display = 'none';
+        nextSections[key] = previousSections[key];
+        expectedChildren.push(previousSections[key].container);
+      }
+    });
+    reconcileChildren(element, expectedChildren);
 
+    element._sections = nextSections;
+    element._sectionSeparators = separators;
     element.dataset.sectionKeys = keyString;
   }
   
@@ -3100,6 +3264,13 @@ function formatStorageDetails(storageObject) {
     if (!container) return;
     const messageId = `${id}-empty-message`;
     let message = document.getElementById(messageId);
+    if (!message) {
+      message = document.createElement('p');
+      message.id = messageId;
+      message.classList.add('empty-message');
+      message.style.display = 'none';
+      container.appendChild(message);
+    }
 
     const rows = combinedBuildingRowCache[id] || [];
     const hasVisible = rows.some(row => row.style.display !== 'none');
@@ -3108,17 +3279,12 @@ function formatStorageDetails(storageObject) {
     const messageText = hasHidden ? 'Everything hidden' : 'Nothing available for now.';
 
     if (!hasVisible) {
-      if (!message) {
-        message = document.createElement('p');
-        message.id = messageId;
-        message.classList.add('empty-message');
-        message.textContent = messageText;
-        container.appendChild(message);
-      } else if (message.textContent !== messageText) {
+      if (message.textContent !== messageText) {
         message.textContent = messageText;
       }
-    } else if (message) {
-      message.remove();
+      message.style.display = '';
+    } else {
+      message.style.display = 'none';
     }
   });
 }

@@ -407,8 +407,10 @@ function setProjectSubtabSelection(subtabId, fireCallbacks = true) {
 }
 
 function renderProjects(activeSubtabId) {
-  const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
+  const projectsArray = projectManager.getProjectStatuses()
+    .map(project => rebindExistingProjectInstance(project)); // Get projects through projectManager
   const activeId = activeSubtabId || getActiveProjectSubtabId();
+  const currentProjectNames = new Set(projectsArray.map(project => project.name));
 
   syncProjectGroupState();
 
@@ -436,6 +438,41 @@ function renderProjects(activeSubtabId) {
   updateMegaProjectsVisibility();
   updateGigaProjectsVisibility();
   updateTeraProjectsVisibility();
+  hideStaleProjectCards(currentProjectNames);
+}
+
+function rebindExistingProjectInstance(nextProject) {
+  const elements = projectElements[nextProject.name];
+  const currentProject = elements?.boundProject;
+  if (!currentProject || currentProject === nextProject) {
+    if (elements) {
+      elements.boundProject = nextProject;
+    }
+    return nextProject;
+  }
+
+  Object.keys(currentProject).forEach(key => {
+    if (!Object.prototype.hasOwnProperty.call(nextProject, key)) {
+      delete currentProject[key];
+    }
+  });
+  Object.setPrototypeOf(currentProject, Object.getPrototypeOf(nextProject));
+  Object.assign(currentProject, nextProject);
+  projectManager.projects[currentProject.name] = currentProject;
+  elements.boundProject = currentProject;
+  return currentProject;
+}
+
+function hideStaleProjectCards(currentProjectNames) {
+  Object.keys(projectElements).forEach(projectName => {
+    if (currentProjectNames.has(projectName)) {
+      return;
+    }
+    const elements = projectElements[projectName];
+    if (elements?.projectItem) {
+      elements.projectItem.style.display = 'none';
+    }
+  });
 }
 
 function initializeProjectsUI() {
@@ -444,20 +481,22 @@ function initializeProjectsUI() {
     projectsSubtabState.preferredSubtabId = previouslyActiveSubtabId;
   }
   initializeProjectTabs();
-  // Clear only the project lists, not the subtab containers
-  const lists = Array.from(document.getElementsByClassName('projects-list'));
-  lists.forEach(container => {
-    cleanupTrackedUIListeners(container);
-    cleanupDynamicTooltipsIn(container);
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
-    }
-  });
-  projectElements = {};
+  if (!globalGameIsTraveling) {
+    // Clear only the project lists, not the subtab containers
+    const lists = Array.from(document.getElementsByClassName('projects-list'));
+    lists.forEach(container => {
+      cleanupTrackedUIListeners(container);
+      cleanupDynamicTooltipsIn(container);
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+    });
+    projectElements = {};
+  }
   if (!globalGameIsTraveling) {
     resetProjectGroupState();
   }
-  if (importResourcesController) {
+  if (importResourcesController && !globalGameIsTraveling) {
     importResourcesController.reset();
   }
   // Reset list cache; wrapper and content caches persist
@@ -864,6 +903,7 @@ function createProjectItem(project) {
   // Store elements
   projectElements[project.name] = {
     ...projectElements[project.name],
+    boundProject: project,
     projectItem: projectCard,
     cardBody: cardBody,
     collapseArrow: arrow,
@@ -1945,6 +1985,91 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
     }
   }
   return getProjectsUIText('ui.projects.totalCost', 'Total Cost: {items}', { items: costArray.join(', ') });
+}
+
+function updateTotalCostDisplayElement(element, totalCost, project, perSecond = false, labelText = null) {
+  const suffix = perSecond ? '/s' : '';
+  const entries = [];
+  for (const category in totalCost) {
+    for (const resource in totalCost[category]) {
+      const requiredAmount = totalCost[category][resource];
+      const availableAmount = getAvailableProjectCostAmount(project, category, resource);
+      const resourceDisplayName = resources[category][resource].displayName ||
+        resource.charAt(0).toUpperCase() + resource.slice(1);
+      entries.push({
+        text: `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`,
+        highlight: project
+          ? shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount)
+          : availableAmount < requiredAmount
+      });
+    }
+  }
+
+  const marker = '\u0000ITEMS\u0000';
+  const template = getProjectsUIText('ui.projects.totalCost', 'Total Cost: {items}', { items: marker });
+  const markerIndex = template.indexOf(marker);
+  const prefix = labelText || (markerIndex === -1 ? 'Total Cost: ' : template.slice(0, markerIndex));
+  const postfix = markerIndex === -1 ? '' : template.slice(markerIndex + marker.length);
+  const signature = JSON.stringify({
+    prefix,
+    postfix,
+    entries: entries.map(entry => [entry.text, entry.highlight])
+  });
+  if (element._cachedTotalCostDomSignature === signature) {
+    return;
+  }
+
+  if (!element._totalCostDisplayNodes) {
+    element.textContent = '';
+    element._totalCostDisplayNodes = {
+      prefix: document.createTextNode(''),
+      entries: [],
+      separators: [],
+      postfix: document.createTextNode('')
+    };
+    element.appendChild(element._totalCostDisplayNodes.prefix);
+    element.appendChild(element._totalCostDisplayNodes.postfix);
+  }
+
+  const nodes = element._totalCostDisplayNodes;
+  if (nodes.prefix.nodeValue !== prefix) {
+    nodes.prefix.nodeValue = prefix;
+  }
+  if (nodes.postfix.nodeValue !== postfix) {
+    nodes.postfix.nodeValue = postfix;
+  }
+
+  while (nodes.entries.length < entries.length) {
+    const separator = document.createTextNode(nodes.entries.length === 0 ? '' : ', ');
+    const entry = document.createElement('span');
+    element.insertBefore(separator, nodes.postfix);
+    element.insertBefore(entry, nodes.postfix);
+    nodes.separators.push(separator);
+    nodes.entries.push(entry);
+  }
+  while (nodes.entries.length > entries.length) {
+    const entry = nodes.entries.pop();
+    const separator = nodes.separators.pop();
+    element.removeChild(entry);
+    element.removeChild(separator);
+  }
+  entries.forEach((entry, index) => {
+    const entryNode = nodes.entries[index];
+    const separatorNode = nodes.separators[index];
+    const separatorText = index === 0 ? '' : ', ';
+    if (separatorNode.nodeValue !== separatorText) {
+      separatorNode.nodeValue = separatorText;
+    }
+    if (entryNode.textContent !== entry.text) {
+      entryNode.textContent = entry.text;
+    }
+    const color = entry.highlight ? 'red' : '';
+    if (entryNode.style.color !== color) {
+      entryNode.style.color = color;
+    }
+  });
+
+  element._cachedTotalCostDomSignature = signature;
 }
 
 
