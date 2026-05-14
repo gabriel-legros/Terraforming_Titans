@@ -516,6 +516,265 @@ const hermesOverrides = {
   ]
 };
 
+const toi3693bOverrides = {
+  name: 'TOI-3693 b',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: false,
+    dynamicMass: true
+  },
+  star: {
+    name: 'TOI-3693',
+    spectralType: 'G',
+    luminositySolar: 0.45,
+    massSolar: 0.87,
+    radiusSolar: 0.79,
+    temperatureK: 5321,
+    habitableZone: {
+      inner: 0.67,
+      outer: 1.05
+    }
+  },
+  visualization: {
+    baseColor: '#c28a52'
+  },
+  resources: {
+    surface: {
+      ice: {
+        initialValue: 0
+      },
+      liquidWater: {
+        initialValue: 0
+      },
+      dryIce: {
+        initialValue: 0
+      },
+      liquidCO2: {
+        initialValue: 0
+      },
+      liquidHydrogen: {
+        initialValue: 1.6305400223685466e+24
+      },
+      liquidMethane: {
+        initialValue: 0
+      },
+      hydrocarbonIce: {
+        initialValue: 0
+      },
+      liquidOxygen: {
+        initialValue: 0
+      },
+      oxygenIce: {
+        initialValue: 0
+      },
+      liquidNitrogen: {
+        initialValue: 0
+      },
+      nitrogenIce: {
+        initialValue: 0
+      },
+      land: {
+        initialValue: 6291545240475.356
+      }
+    },
+    underground: {
+      ore: {
+        initialValue: 0,
+        maxDeposits: 0,
+        areaTotal: 0
+      },
+      geothermal: {
+        initialValue: 0,
+        maxDeposits: 0,
+        areaTotal: 0
+      }
+    },
+    atmospheric: {
+      carbonDioxide: {
+        initialValue: 0
+      },
+      atmosphericWater: {
+        initialValue: 183600000000000000
+      },
+      atmosphericMethane: {
+        initialValue: 742000000000000000
+      },
+      atmosphericAmmonia: {
+        initialValue: 0
+      },
+      oxygen: {
+        initialValue: 0
+      },
+      inertGas: {
+        initialValue: 52700000000000000000
+      },
+      hydrogen: {
+        initialValue: 2.44912245678809e+22
+      },
+      sulfuricAcid: {
+        initialValue: 0
+      }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 6.50176315764808e+23,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    temperate: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 8.451268384364132e+23,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    polar: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 1.3523686816732544e+23,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    }
+  },
+  zonalTemperatures: {
+    tropical: {
+      value: 2957.5591517739394,
+      day: 2957.5591583742544,
+      night: 2957.5591451736245
+    },
+    temperate: {
+      value: 2957.5589662377447,
+      day: 2957.5589711514504,
+      night: 2957.558961324039
+    },
+    polar: {
+      value: 2957.5586259608326,
+      day: 2957.558627781265,
+      night: 2957.5586241404003
+    }
+  },
+  celestialParameters: {
+    distanceFromSun: 0.0813,
+    hasNaturalMagnetosphere: true,
+    albedo: 0.487,
+    rotationPeriod: 218.273784,
+    spinPeriod: 218.273784,
+    starLuminosity: 0.46,
+    coreHeatFlux: 4112684,
+    sector: 'R5-07',
+    baseLand: 6291545240475.356,
+    baseRadius: 70738,
+    baseMass: 1.8726e+27,
+    baseGravity: 24.977282698856314,
+    basePlanetaryMass: 2.182328308239878e+26,
+    basePlanetaryVolumeM3: 5.361937984673442e+22,
+    baseSurfaceMassKg: 1.6305400223685466e+27,
+    baseAtmosphericMassKg: 2.45448501678809e+25,
+    dynamicDirectMassDeltaKg: 0,
+    dynamicDirectVolumeDeltaM3: 0,
+    dynamicMassDeltaKg: 7.177033604151992e+23,
+    dynamicSurfaceVolumeDeltaM3: 1.2393178671461328e+21,
+    currentPlanetaryMassKg: 2.182328308239878e+26,
+    currentSurfaceMassKg: 1.6305400223685466e+27,
+    currentAtmosphericMassKg: 2.45448501678809e+25,
+    currentPlanetaryVolumeM3: 5.361937984673442e+22,
+    currentSurfaceVolumeM3: 1.4302982652355672e+24,
+    mass: 1.8733177033604153e+27,
+    radius: 70757.70363387793,
+    gravity: 24.97294157927566
+  },
+  hazards: {
+    pulsar: {
+      pulsePeriodSeconds: 1.337,
+      stormDurationSeconds: 2,
+      stormIntervalSeconds: 7.094741,
+      severity: 0.25,
+      orbitalDoseBoost_mSvPerDay: 50,
+      description: 'Intense solar flares generate periodic radiation bursts across the system.'
+    }
+  },
+  effects: [
+    {
+      target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'hermes-disable-space-mirror-facility'
+    },
+    {
+      target: 'building',
+      targetId: 'spaceMirror',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'hermes-disable-space-mirrors'
+    },
+    {
+      target: 'building',
+      targetId: 'hyperionLantern',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'hermes-disable-hyperion-lanterns'
+    },
+    {
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'booleanFlag',
+      flagId: 'disableTractorBeams',
+      value: true,
+      effectId: 'hermes-disable-tractor-beams'
+    },
+    {
+      target: 'building',
+      targetId: 'ghgFactory',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'hermes-disable-calcite-factory'
+    }
+  ]
+};
+
 const theRealPoseidonOverrides = {
   name: 'TheRealPoseidon',
   star: {
@@ -1231,6 +1490,34 @@ const specialSeedDefinitions = {
       }
     ],
     overrides: theRealPoseidonOverrides
+  },
+  toi3693b: {
+    key: 'toi3693b',
+    seed: 'TOI3693B',
+    name: 'TOI-3693 b',
+    designer: 'JamesM',
+    replayable: true,
+    target: 'planet',
+    archetype: 'jupiter-like',
+    orbitPreset: 'very-hot',
+    specialEffects: [
+      {
+        id: 'star-proximity-disables-systems',
+        descriptionKey: 'catalogs.specialSeeds.hermes.effects.starProximityDisablesSystems',
+        description: 'Space Mirror Facility, Space Mirrors, Hyperion Lanterns, and Tractor Beams are permanently disabled on this world due to star proximity.'
+      },
+      {
+        id: 'intense-solar-flares',
+        descriptionKey: 'catalogs.specialSeeds.toi3693b.effects.intenseSolarFlares',
+        description: 'Intense solar flares disrupt operations, generating a weaker version of the pulsar hazard.'
+      },
+      {
+        id: 'real-hot-jupiter',
+        descriptionKey: 'catalogs.specialSeeds.toi3693b.effects.realHotJupiter',
+        description: 'A real hot-jupiter exoplanet discovered in 2022.'
+      }
+    ],
+    overrides: toi3693bOverrides
   },
   sculkbioworld: {
     key: 'sculkbioworld',

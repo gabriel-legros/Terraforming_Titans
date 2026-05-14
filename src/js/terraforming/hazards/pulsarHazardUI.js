@@ -67,13 +67,21 @@ function getPulsarStormDurationSeconds(pulsarParameters) {
   return PULSAR_UI_STORM_DEFAULT_DURATION_SECONDS;
 }
 
+function getPulsarStormIntervalSeconds(pulsarParameters) {
+  if (pulsarParameters && Number.isFinite(pulsarParameters.stormIntervalSeconds) && pulsarParameters.stormIntervalSeconds > 0) {
+    return pulsarParameters.stormIntervalSeconds;
+  }
+  return PULSAR_UI_STORM_PERIOD_SECONDS;
+}
+
 function getPulsarStormProjectText(pulsarParameters) {
+  const intervalSeconds = getPulsarStormIntervalSeconds(pulsarParameters);
   const durationSeconds = getPulsarStormDurationSeconds(pulsarParameters);
   return getPulsarHazardText(
     'stormProjects',
     'Electromagnetic storms repeat every {period}s for {duration}s and pause spaceship projects while active.',
     {
-      period: formatNumber(PULSAR_UI_STORM_PERIOD_SECONDS, false, 0),
+      period: formatNumber(intervalSeconds, false, 2),
       duration: formatNumber(durationSeconds, false, 2),
     }
   );

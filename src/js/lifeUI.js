@@ -96,8 +96,7 @@ function ensureStatusCellElements(cell) {
     cell.append(icon, suffix);
     cell.statusIcon = icon;
     cell.statusSuffix = suffix;
-    cell.statusTooltip = attachDynamicInfoTooltip(icon, '');
-    cell.statusTooltip.style.display = 'none';
+    cell.statusTooltip = null;
   }
   return cell.statusIcon;
 }

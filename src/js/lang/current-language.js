@@ -3627,6 +3627,13 @@ setLanguageData({
           revealOptimizedHeatSinks: 'Reveals a new Awakening skill',
         },
       },
+      toi3693b: {
+        name: 'TOI-3693 b',
+        effects: {
+          intenseSolarFlares: 'Intense solar flares disrupt operations, generating a weaker version of the pulsar hazard.',
+          realHotJupiter: 'A real hot-jupiter exoplanet discovered in 2022.',
+        },
+      },
       therealposeidon: {
         name: 'TheRealPoseidon',
         difficulty: 'Very Hard',

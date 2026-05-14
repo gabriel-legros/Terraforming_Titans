@@ -18,6 +18,9 @@ function normalizePulsarParameters(parameters = {}) {
       : 4900 * severity);
   return {
     pulsePeriodSeconds: Number.isFinite(parameters.pulsePeriodSeconds) ? Math.max(1, parameters.pulsePeriodSeconds) : 1.337,
+    stormIntervalSeconds: Number.isFinite(parameters.stormIntervalSeconds) && parameters.stormIntervalSeconds > 0
+      ? parameters.stormIntervalSeconds
+      : PULSAR_STORM_PERIOD_SECONDS,
     stormDurationSeconds: Number.isFinite(parameters.stormDurationSeconds)
       ? Math.max(0, parameters.stormDurationSeconds)
       : PULSAR_STORM_DEFAULT_DURATION_SECONDS,
@@ -387,7 +390,17 @@ class PulsarHazard {
     if (this.isStormActive()) {
       return 0;
     }
-    return Math.max(0, PULSAR_STORM_PERIOD_SECONDS - this.stormTimerSeconds);
+    const stormInterval = this.getStormIntervalSeconds();
+    return Math.max(0, stormInterval - this.stormTimerSeconds);
+  }
+
+  getStormIntervalSeconds(pulsarParameters = null) {
+    const activeParameters = pulsarParameters
+      || (this.manager && this.manager.parameters ? this.manager.parameters.pulsar : null);
+    if (activeParameters && Number.isFinite(activeParameters.stormIntervalSeconds) && activeParameters.stormIntervalSeconds > 0) {
+      return activeParameters.stormIntervalSeconds;
+    }
+    return PULSAR_STORM_PERIOD_SECONDS;
   }
 
   getStormDurationSeconds(pulsarParameters = null) {
@@ -420,10 +433,11 @@ class PulsarHazard {
   }
 
   load(data) {
+    const stormIntervalSeconds = this.getStormIntervalSeconds();
     const stormDurationSeconds = this.getStormDurationSeconds();
     const timer = data && Number.isFinite(data.stormTimerSeconds) ? data.stormTimerSeconds : 0;
     const remaining = data && Number.isFinite(data.stormRemainingSeconds) ? data.stormRemainingSeconds : 0;
-    this.stormTimerSeconds = Math.max(0, Math.min(PULSAR_STORM_PERIOD_SECONDS, timer));
+    this.stormTimerSeconds = Math.max(0, Math.min(stormIntervalSeconds, timer));
     this.stormRemainingSeconds = Math.max(0, Math.min(stormDurationSeconds, remaining));
     const strength = data && Number.isFinite(data.hazardStrength) ? data.hazardStrength : 0;
     this.hazardStrength = clampRatio(strength);
@@ -441,6 +455,7 @@ class PulsarHazard {
 
   advanceStormState(deltaSeconds, pulsarParameters = null) {
     let remaining = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
+    const stormIntervalSeconds = this.getStormIntervalSeconds(pulsarParameters);
     while (remaining > 0) {
       if (this.stormRemainingSeconds > 0) {
         const activeSlice = Math.min(remaining, this.stormRemainingSeconds);
@@ -450,7 +465,7 @@ class PulsarHazard {
         continue;
       }
 
-      const timeUntilStorm = Math.max(0, PULSAR_STORM_PERIOD_SECONDS - this.stormTimerSeconds);
+      const timeUntilStorm = Math.max(0, stormIntervalSeconds - this.stormTimerSeconds);
       if (timeUntilStorm <= 0) {
         this.stormTimerSeconds = 0;
         this.startStorm(pulsarParameters);
@@ -460,7 +475,7 @@ class PulsarHazard {
       const quietSlice = Math.min(remaining, timeUntilStorm);
       this.stormTimerSeconds += quietSlice;
       remaining -= quietSlice;
-      if (this.stormTimerSeconds >= PULSAR_STORM_PERIOD_SECONDS) {
+      if (this.stormTimerSeconds >= stormIntervalSeconds) {
         this.stormTimerSeconds = 0;
         this.startStorm(pulsarParameters);
       }
