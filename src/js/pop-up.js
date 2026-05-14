@@ -119,3 +119,56 @@ function createSystemPopup(title, text, buttonText) {
   overlay.appendChild(popupWindow);
   document.body.appendChild(overlay);
 }
+
+function createSystemChoicePopup(title, text, yesText, noText, onYes, onNo) {
+  window.popupActive = true;
+  game.scene.pause('mainScene');
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('system-popup-overlay', 'system-choice-popup-overlay');
+
+  const popupWindow = document.createElement('div');
+  popupWindow.classList.add('system-popup-window', 'system-choice-popup-window');
+
+  if (title) {
+    const popupTitle = document.createElement('h2');
+    popupTitle.classList.add('system-popup-title');
+    popupTitle.textContent = title;
+    popupWindow.appendChild(popupTitle);
+  }
+
+  const popupText = document.createElement('p');
+  popupText.classList.add('system-popup-text', 'system-choice-popup-text');
+  popupText.textContent = text;
+  popupWindow.appendChild(popupText);
+
+  const buttonRow = document.createElement('div');
+  buttonRow.classList.add('system-choice-popup-buttons');
+
+  const yesButton = document.createElement('button');
+  yesButton.classList.add('system-choice-popup-button', 'system-choice-popup-button-yes');
+  yesButton.textContent = yesText || 'Yes';
+
+  const noButton = document.createElement('button');
+  noButton.classList.add('system-choice-popup-button', 'system-choice-popup-button-no');
+  noButton.textContent = noText || 'No';
+
+  const closeChoicePopup = (action) => {
+    if (overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
+    }
+    window.popupActive = false;
+    game.scene.resume('mainScene');
+    if (action) {
+      action();
+    }
+  };
+
+  yesButton.addEventListener('click', () => closeChoicePopup(onYes));
+  noButton.addEventListener('click', () => closeChoicePopup(onNo));
+
+  buttonRow.append(yesButton, noButton);
+  popupWindow.appendChild(buttonRow);
+  overlay.appendChild(popupWindow);
+  document.body.appendChild(overlay);
+}

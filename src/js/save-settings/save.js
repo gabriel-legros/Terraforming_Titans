@@ -3,6 +3,7 @@ globalGameIsTraveling = false;
 
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
+let pendingAutomationSafetyRestoreState = null;
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -46,6 +47,75 @@ function serializeSavedBuildCount(value) {
   return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
     ? Number(normalized)
     : normalized.toString();
+}
+
+function captureAutomationSafetyRestoreState(gameState) {
+  pendingAutomationSafetyRestoreState = null;
+  const automationState = gameState && gameState.automationManager;
+  if (!automationState) {
+    return;
+  }
+  const savedAutoTravelEnabled = !!(automationState.autoTravelAutomation && automationState.autoTravelAutomation.enabled);
+  const savedScriptingEnabled = !!(automationState.scriptAutomation && automationState.scriptAutomation.enabled);
+  const savedScriptingRunning = !!(automationState.scriptAutomation && automationState.scriptAutomation.running);
+  if (!savedAutoTravelEnabled && !savedScriptingEnabled && !savedScriptingRunning) {
+    return;
+  }
+  pendingAutomationSafetyRestoreState = {
+    autoTravelEnabled: savedAutoTravelEnabled,
+    scriptingEnabled: savedScriptingEnabled,
+    scriptingRunning: savedScriptingRunning
+  };
+}
+
+function applyAutomationSafetyRestoreState(restoreState, restoreEnabled) {
+  if (!automationManager) {
+    return;
+  }
+  const autoTravelAutomation = automationManager.autoTravelAutomation;
+  const scriptAutomation = automationManager.scriptAutomation;
+  if (autoTravelAutomation) {
+    autoTravelAutomation.enabled = restoreEnabled ? !!restoreState.autoTravelEnabled : false;
+  }
+  if (scriptAutomation) {
+    if (restoreEnabled) {
+      scriptAutomation.enabled = !!restoreState.scriptingEnabled;
+      scriptAutomation.running = !!restoreState.scriptingEnabled && !!restoreState.scriptingRunning;
+    } else {
+      scriptAutomation.enabled = false;
+      scriptAutomation.running = false;
+    }
+  }
+  queueAutomationUIRefresh();
+  updateAutomationUI();
+  if (typeof updateSidebarAutomationUI === 'function') {
+    updateSidebarAutomationUI();
+  }
+}
+
+function showAutomationSafetyRestorePromptIfNeeded() {
+  const restoreState = pendingAutomationSafetyRestoreState;
+  pendingAutomationSafetyRestoreState = null;
+  if (!restoreState) {
+    return;
+  }
+
+  const title = t('ui.settings.automationSafetyRestoreTitle', null, 'Automation Safety Check');
+  const text = t(
+    'ui.settings.automationSafetyRestoreText',
+    null,
+    'We turned off your auto-travel and/or scripting automation for soft-lock protection.  Would you like them back on right now?'
+  );
+  const yesText = t('ui.settings.automationSafetyRestoreYes', null, 'Yes');
+  const noText = t('ui.settings.automationSafetyRestoreNo', null, 'No');
+  createSystemChoicePopup(
+    title,
+    text,
+    yesText,
+    noText,
+    () => applyAutomationSafetyRestoreState(restoreState, true),
+    () => applyAutomationSafetyRestoreState(restoreState, false)
+  );
 }
 
 function recalculateLandUsage() {
@@ -234,6 +304,7 @@ function loadGame(slotOrCustomString, recreate = true) {
 
   try {
     const gameState = JSON.parse(savedState);
+    captureAutomationSafetyRestoreState(gameState);
     resetStructureDisplayState();
     resetProjectDisplayState();
     resetResourceCategoryCollapseState();
@@ -786,6 +857,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     globalGameIsLoadingFromSave = false;
     hideLoadingOverlay();
     resetGameFrameClock(true);
+    showAutomationSafetyRestorePromptIfNeeded();
   }
 }
 
