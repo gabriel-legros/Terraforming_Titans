@@ -797,8 +797,8 @@ const sculkBioworldOverrides = {
         surface: {
           trash: 0.6,
           junk: 0.3,
-          scrapMetal: 0.995,
-          radioactiveWaste: 0.005
+          scrapMetal: 0.0995,
+          radioactiveWaste: 0.0005
         }
       },
       penalties: {
@@ -1015,7 +1015,7 @@ const earthOverrunOverrides = {
   },
   star: {
     name: 'Sun',
-    spectralType: 'G',
+    spectralType: 'G2V',
     luminositySolar: 1,
     massSolar: 1,
     radiusSolar: 1,
