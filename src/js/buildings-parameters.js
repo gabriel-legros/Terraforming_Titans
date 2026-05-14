@@ -630,7 +630,7 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
-    requiresWorker: 0,
+    requiresWorker: 100,
     maintenanceFactor: 1,
     unlocked: false
   },
