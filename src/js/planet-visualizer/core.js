@@ -645,8 +645,55 @@
 
   window.PlanetVisualizer = PlanetVisualizer;
 
+  function reportPlanetVisualizerFailure(error) {
+    const message = error && error.message ? error.message : '';
+    suppressPlanetVisualizerRuntime = true;
+    planetVisualizerRuntimeFailed = true;
+    planetVisualizerRuntimeFailureReason = message;
+    if (typeof updateWorldVisualizerDisabledPrompt === 'function') {
+      updateWorldVisualizerDisabledPrompt();
+    }
+    if (typeof updateWorldVisualizerFailurePrompt === 'function') {
+      updateWorldVisualizerFailurePrompt();
+    }
+  }
+
+  window.destroyPlanetVisualizerUI = function destroyPlanetVisualizerUI() {
+    const viz = window.planetVisualizer;
+    if (!viz) {
+      return;
+    }
+    try {
+      window.removeEventListener('resize', viz.onResize);
+    } catch (e) {}
+    try {
+      if (viz.renderer && viz.renderer.domElement && viz.renderer.domElement.parentNode) {
+        viz.renderer.domElement.parentNode.removeChild(viz.renderer.domElement);
+      }
+    } catch (e) {}
+    try {
+      if (viz.renderer && typeof viz.renderer.dispose === 'function') {
+        viz.renderer.dispose();
+      }
+    } catch (e) {}
+    window.planetVisualizer = null;
+  };
+
   window.initializePlanetVisualizerUI = function initializePlanetVisualizerUI() {
-    window.planetVisualizer = new PlanetVisualizer();
-    window.planetVisualizer.init();
+    try {
+      if (typeof window.destroyPlanetVisualizerUI === 'function') {
+        window.destroyPlanetVisualizerUI();
+      }
+      window.planetVisualizer = new PlanetVisualizer();
+      window.planetVisualizer.init();
+      planetVisualizerRuntimeFailed = false;
+      planetVisualizerRuntimeFailureReason = '';
+      if (typeof updateWorldVisualizerFailurePrompt === 'function') {
+        updateWorldVisualizerFailurePrompt();
+      }
+    } catch (e) {
+      window.planetVisualizer = null;
+      reportPlanetVisualizerFailure(e);
+    }
   };
 })();

@@ -683,9 +683,14 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
       break;
     case 'world-terraforming': {
       updateWorldVisualizerDisabledPrompt();
+      updateWorldVisualizerFailurePrompt();
       const viz = typeof window !== 'undefined' ? window.planetVisualizer : null;
       if (!suppressPlanetVisualizerRuntime && terraformingWorldInitialized && isTerraformingWorldSubtabActive() && viz && viz.animate) {
-        viz.animate(deltaSeconds);
+        try {
+          viz.animate(deltaSeconds);
+        } catch (e) {
+          setWorldVisualizerRuntimeFailure(e && e.message ? e.message : '');
+        }
       }
       break;
     }
@@ -728,8 +733,46 @@ function updateWorldVisualizerDisabledPrompt() {
   prompt.style.display = suppressPlanetVisualizerRuntime ? 'flex' : 'none';
 }
 
+function updateWorldVisualizerFailurePrompt() {
+  const worldCache = terraformingUICache.world;
+  const prompt = worldCache ? worldCache.failurePrompt : null;
+  if (!prompt) {
+    return;
+  }
+  if (!planetVisualizerRuntimeFailed) {
+    prompt.style.display = 'none';
+    return;
+  }
+  const reason = planetVisualizerRuntimeFailureReason || t(
+    'ui.terraforming.visualizerFailureReasonUnknown',
+    null,
+    'Unknown error'
+  );
+  prompt.textContent = t(
+    'ui.terraforming.visualizerFailurePrompt',
+    { reason },
+    'World visualizer failed ({reason}). Click to retry.'
+  );
+  prompt.style.display = 'flex';
+}
+
+function setWorldVisualizerRuntimeFailure(reason) {
+  suppressPlanetVisualizerRuntime = true;
+  planetVisualizerRuntimeFailed = true;
+  planetVisualizerRuntimeFailureReason = reason || '';
+  updateWorldVisualizerDisabledPrompt();
+  updateWorldVisualizerFailurePrompt();
+}
+
+function clearWorldVisualizerRuntimeFailure() {
+  planetVisualizerRuntimeFailed = false;
+  planetVisualizerRuntimeFailureReason = '';
+  updateWorldVisualizerFailurePrompt();
+}
+
 function enableWorldVisualizerForCurrentWorld() {
   suppressPlanetVisualizerRuntime = false;
+  clearWorldVisualizerRuntimeFailure();
   if (typeof window !== 'undefined' && !window.planetVisualizer && typeof window.initializePlanetVisualizerUI === 'function') {
     try {
       window.initializePlanetVisualizerUI();
@@ -743,6 +786,26 @@ function enableWorldVisualizerForCurrentWorld() {
   } catch (e) {}
   updateWorldVisualizerDisabledPrompt();
   forceWorldSurfaceRefresh();
+}
+
+function retryWorldVisualizerAfterFailure() {
+  suppressPlanetVisualizerRuntime = false;
+  clearWorldVisualizerRuntimeFailure();
+  if (typeof window !== 'undefined' && typeof window.destroyPlanetVisualizerUI === 'function') {
+    try {
+      window.destroyPlanetVisualizerUI();
+    } catch (e) {}
+  } else if (typeof window !== 'undefined') {
+    window.planetVisualizer = null;
+  }
+  if (typeof window !== 'undefined' && typeof window.initializePlanetVisualizerUI === 'function') {
+    try {
+      window.initializePlanetVisualizerUI();
+    } catch (e) {
+      setWorldVisualizerRuntimeFailure(e && e.message ? e.message : '');
+    }
+  }
+  updateWorldVisualizerDisabledPrompt();
 }
 
 function markTerraformingMilestonesIfActive() {
@@ -882,13 +945,20 @@ function createTerraformingWorldUI() {
   );
   disabledPrompt.addEventListener('click', enableWorldVisualizerForCurrentWorld);
 
+  const failurePrompt = document.createElement('button');
+  failurePrompt.type = 'button';
+  failurePrompt.className = 'planet-visualizer-failure-prompt';
+  failurePrompt.addEventListener('click', retryWorldVisualizerAfterFailure);
+
   host.appendChild(container);
   container.appendChild(disabledPrompt);
+  container.appendChild(failurePrompt);
   host.appendChild(overlay);
 
-  terraformingUICache.world = { container, overlay, disabledPrompt };
+  terraformingUICache.world = { container, overlay, disabledPrompt, failurePrompt };
   terraformingWorldInitialized = true;
   updateWorldVisualizerDisabledPrompt();
+  updateWorldVisualizerFailurePrompt();
 }
 
 function createTerraformingSummaryUI() {

@@ -2089,6 +2089,8 @@ setLanguageData({
       playTimeDefault: '0 seconds',
       playTimeLabel: 'Time since awakening :',
       visualizerDisabledPrompt: 'Disabled by auto-travel. Click to enable.',
+      visualizerFailureReasonUnknown: 'Unknown error',
+      visualizerFailurePrompt: 'World visualizer failed ({reason}). Click to retry.',
       lifeTitle: 'Life',
       milestonesTitle: 'Milestones',
       silenceMilestoneAlert: 'Silence milestone alert',

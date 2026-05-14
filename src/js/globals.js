@@ -52,6 +52,8 @@ let autoTravelContext = {
 };
 let autoTravelLoadingPopupElement = null;
 let suppressPlanetVisualizerRuntime = false;
+let planetVisualizerRuntimeFailed = false;
+let planetVisualizerRuntimeFailureReason = '';
 
 let gameSettings = {
   autosaveIntervalSeconds: 300,
