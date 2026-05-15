@@ -1,0 +1,258 @@
+(() => {
+  if (window.objectGrowthProbe) {
+    window.objectGrowthProbe.stop();
+  }
+
+  const originals = {
+    arrayPush: Array.prototype.push,
+    arrayUnshift: Array.prototype.unshift,
+    arraySplice: Array.prototype.splice,
+    mapSet: Map.prototype.set,
+    mapDelete: Map.prototype.delete,
+    mapClear: Map.prototype.clear,
+    setAdd: Set.prototype.add,
+    setDelete: Set.prototype.delete,
+    setClear: Set.prototype.clear,
+  };
+
+  const watched = new Map(); // label -> getter
+  const watchedTargets = new WeakMap(); // target -> label
+  const history = []; // mutation history
+  let baseline = new Map();
+
+  function now() {
+    return performance.now();
+  }
+
+  function getStack() {
+    return new Error().stack
+      .split("\n")
+      .slice(2)
+      .filter(line => !line.includes("objectGrowthProbe"))
+      .slice(0, 8)
+      .join("\n");
+  }
+
+  function sizeOf(value) {
+    if (Array.isArray(value)) return value.length;
+    if (value instanceof Map || value instanceof Set) return value.size;
+    if (value && value.constructor === Object) return Object.keys(value).length;
+    return null;
+  }
+
+  function classify(value) {
+    if (Array.isArray(value)) return "Array";
+    if (value instanceof Map) return "Map";
+    if (value instanceof Set) return "Set";
+    if (value && value.constructor === Object) return "Object";
+    return "Unsupported";
+  }
+
+  function refreshWatchedTargets() {
+    watchedTargets.clear?.(); // Firefox WeakMap has no clear; harmless if undefined
+    for (const [label, getter] of watched.entries()) {
+      const target = getter();
+      if (target) watchedTargets.set(target, label);
+    }
+  }
+
+  function noteMutation(target, op, delta) {
+    const label = watchedTargets.get(target);
+    if (!label) return;
+    history.push({
+      at: now(),
+      label,
+      op,
+      delta,
+      stack: getStack(),
+    });
+  }
+
+  Array.prototype.push = function wrapped(...args) {
+    const before = this.length;
+    const out = originals.arrayPush.apply(this, args);
+    if (this.length !== before) noteMutation(this, "Array.push", this.length - before);
+    return out;
+  };
+
+  Array.prototype.unshift = function wrapped(...args) {
+    const before = this.length;
+    const out = originals.arrayUnshift.apply(this, args);
+    if (this.length !== before) noteMutation(this, "Array.unshift", this.length - before);
+    return out;
+  };
+
+  Array.prototype.splice = function wrapped(...args) {
+    const before = this.length;
+    const out = originals.arraySplice.apply(this, args);
+    if (this.length !== before) noteMutation(this, "Array.splice", this.length - before);
+    return out;
+  };
+
+  Map.prototype.set = function wrapped(key, value) {
+    const before = this.size;
+    const out = originals.mapSet.call(this, key, value);
+    if (this.size !== before) noteMutation(this, "Map.set", this.size - before);
+    return out;
+  };
+
+  Map.prototype.delete = function wrapped(key) {
+    const before = this.size;
+    const out = originals.mapDelete.call(this, key);
+    if (this.size !== before) noteMutation(this, "Map.delete", this.size - before);
+    return out;
+  };
+
+  Map.prototype.clear = function wrapped() {
+    const before = this.size;
+    const out = originals.mapClear.call(this);
+    if (before) noteMutation(this, "Map.clear", -before);
+    return out;
+  };
+
+  Set.prototype.add = function wrapped(value) {
+    const before = this.size;
+    const out = originals.setAdd.call(this, value);
+    if (this.size !== before) noteMutation(this, "Set.add", this.size - before);
+    return out;
+  };
+
+  Set.prototype.delete = function wrapped(value) {
+    const before = this.size;
+    const out = originals.setDelete.call(this, value);
+    if (this.size !== before) noteMutation(this, "Set.delete", this.size - before);
+    return out;
+  };
+
+  Set.prototype.clear = function wrapped() {
+    const before = this.size;
+    const out = originals.setClear.call(this);
+    if (before) noteMutation(this, "Set.clear", -before);
+    return out;
+  };
+
+  function mark() {
+    refreshWatchedTargets();
+    baseline = new Map();
+    for (const [label, getter] of watched.entries()) {
+      const target = getter();
+      baseline.set(label, {
+        type: classify(target),
+        size: sizeOf(target),
+      });
+    }
+    history.length = 0;
+    console.log("[objectGrowthProbe] baseline captured");
+  }
+
+  function report({ limit = 30 } = {}) {
+    refreshWatchedTargets();
+
+    const rows = [];
+    for (const [label, getter] of watched.entries()) {
+      const target = getter();
+      const currentSize = sizeOf(target);
+      const base = baseline.get(label);
+      const baseSize = base ? base.size : null;
+      rows.push({
+        label,
+        type: classify(target),
+        baseline: baseSize,
+        current: currentSize,
+        growth: baseSize === null || currentSize === null ? null : currentSize - baseSize,
+      });
+    }
+
+    rows.sort((a, b) => (b.growth || -Infinity) - (a.growth || -Infinity));
+    console.table(rows.slice(0, limit));
+
+    const byLabel = new Map();
+    for (const h of history) {
+      const key = `${h.label} :: ${h.op}`;
+      byLabel.set(key, (byLabel.get(key) || 0) + h.delta);
+    }
+
+    const mutationRows = Array.from(byLabel.entries())
+      .map(([k, v]) => ({ source: k, netDelta: v }))
+      .sort((a, b) => b.netDelta - a.netDelta);
+
+    console.log("[objectGrowthProbe] mutation summary");
+    console.table(mutationRows.slice(0, limit));
+
+    const topEvents = history.slice(-10);
+    console.log("[objectGrowthProbe] last mutation events");
+    for (const e of topEvents) {
+      console.log(`${e.label} ${e.op} delta=${e.delta}\n${e.stack}\n---`);
+    }
+
+    return { rows, mutationRows, topEvents };
+  }
+
+  function watch(label, getter) {
+    watched.set(label, getter);
+    console.log(`[objectGrowthProbe] watching: ${label}`);
+  }
+
+  function unwatch(label) {
+    watched.delete(label);
+  }
+
+  function stop() {
+    Array.prototype.push = originals.arrayPush;
+    Array.prototype.unshift = originals.arrayUnshift;
+    Array.prototype.splice = originals.arraySplice;
+    Map.prototype.set = originals.mapSet;
+    Map.prototype.delete = originals.mapDelete;
+    Map.prototype.clear = originals.mapClear;
+    Set.prototype.add = originals.setAdd;
+    Set.prototype.delete = originals.setDelete;
+    Set.prototype.clear = originals.setClear;
+    delete window.objectGrowthProbe;
+    console.log("[objectGrowthProbe] stopped");
+  }
+
+  window.objectGrowthProbe = { watch, unwatch, mark, report, stop };
+
+  console.log("[objectGrowthProbe] installed");
+  console.log("Example:");
+  console.log("objectGrowthProbe.watch('projectAssignments', () => window.projectAssignments)");
+  console.log("objectGrowthProbe.watch('automationCache', () => window.automationCache)");
+  console.log("objectGrowthProbe.mark(); // do actions, then objectGrowthProbe.report()");
+})();
+
+///////////
+
+const r = objectGrowthProbe.report({ limit: 200 });
+
+JSON.stringify(
+  {
+    counts: {
+      watchedCount: r.rows.length,
+      growingCount: r.rows.filter(x => (x.growth || 0) > 0).length,
+      shrinkingCount: r.rows.filter(x => (x.growth || 0) < 0).length,
+      unchangedCount: r.rows.filter(x => (x.growth || 0) === 0).length,
+      mutationSourceCount: r.mutationRows.length,
+      sampledEvents: r.topEvents.length
+    },
+    growth: r.rows.slice(0, 20).map(x => ({
+      label: x.label,
+      type: x.type,
+      baseline: x.baseline,
+      current: x.current,
+      growth: x.growth
+    })),
+    mutations: r.mutationRows.slice(0, 20).map(x => ({
+      source: x.source,
+      netDelta: x.netDelta
+    })),
+    recentEvents: r.topEvents.map(e => ({
+      at: e.at,
+      label: e.label,
+      op: e.op,
+      delta: e.delta,
+      stack: e.stack
+    }))
+  },
+  null,
+  2
+);

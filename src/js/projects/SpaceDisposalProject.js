@@ -750,20 +750,19 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const nextRows = {};
     const usedRows = new Set();
 
-    runWithTrackedUIListeners(elements.disposalTargetList, () => {
-      for (let i = 0; i < this.disposalTargets.length; i += 1) {
-        const target = this.disposalTargets[i];
-        let row = previousRows[target.id];
-        if (!row) {
-          row = this.createDisposalTargetRow(target, i);
-        }
-        usedRows.add(row);
-        elements.disposalTargetRows[target.id] = row;
-        nextRows[target.id] = row;
-        elements.disposalTargetList.appendChild(row.card);
-        row.badge.textContent = `${i + 1}`;
+    elements.disposalTargetList._uiListenerCleanups = [];
+    for (let i = 0; i < this.disposalTargets.length; i += 1) {
+      const target = this.disposalTargets[i];
+      let row = previousRows[target.id];
+      if (!row) {
+        row = this.createDisposalTargetRow(target, i);
       }
-    });
+      usedRows.add(row);
+      elements.disposalTargetRows[target.id] = row;
+      nextRows[target.id] = row;
+      elements.disposalTargetList.appendChild(row.card);
+      row.badge.textContent = `${i + 1}`;
+    }
     Object.keys(previousRows).forEach(targetId => {
       const row = previousRows[targetId];
       if (!usedRows.has(row)) {
