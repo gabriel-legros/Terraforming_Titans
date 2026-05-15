@@ -65,7 +65,8 @@ function getProjectPresetJsonFieldOptions(fieldPath) {
   if (!projectId || getSpaceStorageSingleResourceKey(projectId) === '') {
     return null;
   }
-  if (fieldPath[2] !== 'operations' || fieldPath[3] !== 'spaceStorageSingleResourceTransferMode') {
+  if (fieldPath[2] !== 'operations'
+    || (fieldPath[3] !== 'mode' && fieldPath[3] !== 'spaceStorageSingleResourceTransferMode')) {
     return null;
   }
   return {

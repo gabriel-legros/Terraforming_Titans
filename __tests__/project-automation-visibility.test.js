@@ -54,6 +54,41 @@ function createProjectManager(coreHeatFlux) {
   };
 }
 
+function createSpaceStorageProject(selectedResources = []) {
+  return {
+    name: 'spaceStorage',
+    displayName: 'Space Storage',
+    category: 'mega',
+    selectedResources: selectedResources.map(entry => ({ ...entry })),
+    resourceTransferModes: {},
+    resourceCaps: {},
+    resourceStrategicReserves: {},
+    saveAutomationSettings() {
+      return {
+        selectedResources: this.selectedResources.map(entry => ({ ...entry })),
+        resourceTransferModes: { ...this.resourceTransferModes },
+        resourceCaps: { ...this.resourceCaps },
+        resourceStrategicReserves: { ...this.resourceStrategicReserves }
+      };
+    },
+    sanitizeTransferModes() {},
+    sanitizeResourceCaps() {},
+    sanitizeResourceStrategicReserves() {}
+  };
+}
+
+function createSpaceStorageProjectManager(spaceStorageProject) {
+  return {
+    projectOrder: ['spaceStorage'],
+    projects: {
+      spaceStorage: spaceStorageProject
+    },
+    isProjectRelevantToCurrentPlanet() {
+      return true;
+    }
+  };
+}
+
 describe('Project automation visibility', () => {
   let originalGlobals;
 
@@ -120,5 +155,62 @@ describe('Project automation visibility', () => {
 
     expect(automation.hasSeenProject('artificialCrust')).toBe(true);
     expect(getAutomatableProjects().map(project => project.name)).toContain('artificialCrust');
+  });
+
+  it('snapshots Space Storage single-resource checkbox state using the UI category/resource identity', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject([
+      { category: 'colony', resource: 'liquidWater' }
+    ]);
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+
+    const presetId = automation.addPreset('Water single resource', ['spaceStorageSingleResource:liquidWater'], {
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false
+    });
+
+    const preset = automation.getPresetById(presetId);
+    expect(preset.projects['spaceStorageSingleResource:liquidWater'].operations).toMatchObject({
+      spaceStorageSingleResourceKey: 'liquidWater',
+      category: 'surface',
+      selected: false
+    });
+  });
+
+  it('applies Space Storage single-resource selected state to the actual checkbox entry', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject([
+      { category: 'colony', resource: 'liquidWater' }
+    ]);
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+    automation.presets = [{
+      id: 1,
+      name: 'Water single resource',
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false,
+      projects: {
+        'spaceStorageSingleResource:liquidWater': {
+          operations: {
+            spaceStorageSingleResourceKey: 'liquidWater',
+            mode: 'withdraw',
+            selected: true
+          }
+        }
+      }
+    }];
+
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.resourceTransferModes.liquidWater).toBe('withdraw');
+    expect(spaceStorage.selectedResources).toEqual([
+      { category: 'surface', resource: 'liquidWater' }
+    ]);
+
+    automation.presets[0].projects['spaceStorageSingleResource:liquidWater'].operations.selected = false;
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.selectedResources).toEqual([]);
   });
 });

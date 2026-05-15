@@ -10,6 +10,24 @@ const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceStrategicReserves',
   'resourceCaps'
 ]);
+const PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY = {
+  metal: 'colony',
+  silicon: 'colony',
+  graphite: 'surface',
+  glass: 'colony',
+  components: 'colony',
+  electronics: 'colony',
+  superconductors: 'colony',
+  superalloys: 'colony',
+  liquidWater: 'surface',
+  biomass: 'surface',
+  carbonDioxide: 'atmospheric',
+  inertGas: 'atmospheric',
+  oxygen: 'atmospheric',
+  atmosphericMethane: 'atmospheric',
+  atmosphericAmmonia: 'atmospheric',
+  hydrogen: 'atmospheric'
+};
 
 const PROJECT_AUTOMATION_BASE_EXPANSION_KEYS = new Set([
   'autoStart',
@@ -668,12 +686,25 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   filterSpaceStorageSingleResourceSettings(settings = {}, resourceKey = '') {
     const source = settings || {};
     const filtered = {};
+    const resourceCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     filtered.spaceStorageSingleResourceKey = resourceKey;
+    if (Object.prototype.hasOwnProperty.call(source, 'mode')) {
+      filtered.mode = source.mode;
+    }
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceTransferMode')) {
-      filtered.spaceStorageSingleResourceTransferMode = source.spaceStorageSingleResourceTransferMode;
+      filtered.mode = source.spaceStorageSingleResourceTransferMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'selected')) {
+      filtered.selected = source.selected === true;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceSelected')) {
-      filtered.spaceStorageSingleResourceSelected = source.spaceStorageSingleResourceSelected === true;
+      filtered.selected = source.spaceStorageSingleResourceSelected === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'category')) {
+      filtered.category = source.category;
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceCategory')) {
+      filtered.category = source.spaceStorageSingleResourceCategory;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceStrategicReserves')) {
       const reserveSource = source.resourceStrategicReserves || {};
@@ -691,18 +722,25 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         };
       }
     }
-    if (!Object.prototype.hasOwnProperty.call(filtered, 'spaceStorageSingleResourceTransferMode')
+    if (!Object.prototype.hasOwnProperty.call(filtered, 'mode')
       && Object.prototype.hasOwnProperty.call(source, 'resourceTransferModes')) {
       const transferSource = source.resourceTransferModes || {};
-      filtered.spaceStorageSingleResourceTransferMode = Object.prototype.hasOwnProperty.call(transferSource, resourceKey)
+      filtered.mode = Object.prototype.hasOwnProperty.call(transferSource, resourceKey)
         ? transferSource[resourceKey]
         : null;
     }
-    if (!Object.prototype.hasOwnProperty.call(filtered, 'spaceStorageSingleResourceSelected')
+    if (!Object.prototype.hasOwnProperty.call(filtered, 'selected')
       && Object.prototype.hasOwnProperty.call(source, 'selectedResources')) {
       const selectedSource = Array.isArray(source.selectedResources) ? source.selectedResources : [];
-      const isSelected = selectedSource.some((entry) => entry?.category === 'colony' && entry?.resource === resourceKey);
-      filtered.spaceStorageSingleResourceSelected = isSelected;
+      const selectedEntry = selectedSource.find((entry) => entry?.category === resourceCategory && entry?.resource === resourceKey);
+      const isSelected = !!selectedEntry;
+      filtered.selected = isSelected;
+      if (selectedEntry?.category) {
+        filtered.category = selectedEntry.category;
+      }
+    }
+    if (!Object.prototype.hasOwnProperty.call(filtered, 'category')) {
+      filtered.category = resourceCategory;
     }
     return filtered;
   }
@@ -854,8 +892,10 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     }
     const capsSource = settings.resourceCaps || {};
     const reserveSource = settings.resourceStrategicReserves || {};
-    const hasTransferMode = Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
-    const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceSelected');
+    const hasTransferMode = Object.prototype.hasOwnProperty.call(settings, 'mode')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
+    const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'selected')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceSelected');
     const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
     const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
     if (!capsHasKey && !reserveHasKey && !hasTransferMode && !hasSelectedFlag) {
@@ -865,8 +905,12 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const beforeCaps = project.resourceCaps?.[resourceKey];
     const beforeReserve = project.resourceStrategicReserves?.[resourceKey];
     const beforeTransfer = project.resourceTransferModes?.[resourceKey];
+    const canonicalCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
+    const beforeSelectedResourceCount = Array.isArray(project.selectedResources)
+      ? project.selectedResources.filter((entry) => entry?.resource === resourceKey).length
+      : 0;
     const beforeSelected = Array.isArray(project.selectedResources)
-      ? project.selectedResources.some((entry) => entry?.category === 'colony' && entry?.resource === resourceKey)
+      ? project.selectedResources.some((entry) => entry?.category === canonicalCategory && entry?.resource === resourceKey)
       : false;
     let changed = false;
 
@@ -887,7 +931,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       changed = changed || !this.areSettingsEqual(beforeReserve, project.resourceStrategicReserves[resourceKey]);
     }
     if (hasTransferMode) {
-      const transferMode = settings.spaceStorageSingleResourceTransferMode;
+      const transferMode = Object.prototype.hasOwnProperty.call(settings, 'mode')
+        ? settings.mode
+        : settings.spaceStorageSingleResourceTransferMode;
       if (!project.resourceTransferModes) {
         project.resourceTransferModes = {};
       }
@@ -903,15 +949,16 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       if (!Array.isArray(project.selectedResources)) {
         project.selectedResources = [];
       }
-      const shouldSelect = settings.spaceStorageSingleResourceSelected === true;
-      const selectedIndex = project.selectedResources.findIndex((entry) => entry?.category === 'colony' && entry?.resource === resourceKey);
-      if (shouldSelect && selectedIndex < 0) {
-        project.selectedResources.push({ category: 'colony', resource: resourceKey });
-      } else if (!shouldSelect && selectedIndex >= 0) {
-        project.selectedResources.splice(selectedIndex, 1);
+      const shouldSelect = Object.prototype.hasOwnProperty.call(settings, 'selected')
+        ? settings.selected === true
+        : settings.spaceStorageSingleResourceSelected === true;
+      project.selectedResources = project.selectedResources.filter((entry) => entry?.resource !== resourceKey);
+      if (shouldSelect) {
+        project.selectedResources.push({ category: canonicalCategory, resource: resourceKey });
       }
-      const afterSelected = project.selectedResources.some((entry) => entry?.category === 'colony' && entry?.resource === resourceKey);
-      changed = changed || beforeSelected !== afterSelected;
+      const afterSelectedResourceCount = project.selectedResources.filter((entry) => entry?.resource === resourceKey).length;
+      const afterSelected = project.selectedResources.some((entry) => entry?.category === canonicalCategory && entry?.resource === resourceKey);
+      changed = changed || beforeSelected !== afterSelected || beforeSelectedResourceCount !== afterSelectedResourceCount;
     }
     return changed;
   }
