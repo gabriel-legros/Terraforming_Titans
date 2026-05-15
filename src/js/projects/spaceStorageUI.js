@@ -1278,8 +1278,9 @@ function updateSpaceStorageUI(project) {
   }
   if (els.waterDestinationSelect) {
     els.waterDestinationSelect.value = project.waterWithdrawTarget || 'colony';
-    els.waterDestinationSelect.style.display =
-      project.getResourceTransferMode('liquidWater') === 'withdraw' ? '' : 'none';
+    const hasWaterSelected = Array.isArray(project.selectedResources)
+      && project.selectedResources.some(entry => entry?.resource === 'liquidWater');
+    els.waterDestinationSelect.style.display = hasWaterSelected ? '' : 'none';
   }
   if (els.transferButtons) {
     const withdrawalDisabled = project.isWithdrawalDisabled && project.isWithdrawalDisabled();
