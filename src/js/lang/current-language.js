@@ -4243,7 +4243,7 @@ setLanguageData({
         },
       },
       vanadophore: {
-        displayName: 'Vanadophore',
+        displayName: 'Vanado',
         lore: [
           'The Vanadophores are an ammonia-water lifeform unlike any other known dominion: they live in the ammonia cloud decks of gas giants. Their homeworld, Nhalassa, is unusually rich in ammonia even by gas-giant standards.',
           'Their bodies resemble jellyfish, with long trailing tentacles suspended in the clouds. The lightness of their environment made technological civilization difficult, but not impossible. By forming vast living webs, Vanadophores can generate enough buoyancy and coordination to support structures built from local solid material.',
