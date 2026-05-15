@@ -987,18 +987,27 @@ function initializeRandomWorldUI() {
     const typeSel = rwgTypeEl;
     refreshHazardSelect();
     if (seedInput) {
-      const { seed, options } = decodeSeedOptions(seedInput);
-      if (targetSel) targetSel.value = options.target;
-      if (orbitSel) orbitSel.value = options.orbitPreset;
-      if (typeSel) typeSel.value = options.type;
-      if (rwgDynamicMassEl) rwgDynamicMassEl.checked = (isDynamicMassRwgControlUnlocked() && options.dynamicMass === true) || options.type === 'jupiter-like';
-      const hazards = normalizeHazardList(options.hazards);
-      if (rwgHazardEl) {
-        rwgHazardEl.value = hazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
-        setSelectedHazards(hazards);
-        updateHazardListVisibility();
+      if (seedInput.includes('|')) {
+        const { seed, options } = decodeSeedOptions(seedInput);
+        if (targetSel) targetSel.value = options.target;
+        if (orbitSel) orbitSel.value = options.orbitPreset;
+        if (typeSel) typeSel.value = options.type;
+        if (rwgDynamicMassEl) rwgDynamicMassEl.checked = (isDynamicMassRwgControlUnlocked() && options.dynamicMass === true) || options.type === 'jupiter-like';
+        const hazards = normalizeHazardList(options.hazards);
+        if (rwgHazardEl) {
+          rwgHazardEl.value = hazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
+          setSelectedHazards(hazards);
+          updateHazardListVisibility();
+        }
+        drawSingle(seed, { ...options, hazards, dynamicMass: options.dynamicMass === true });
+      } else {
+        const target = targetSel.value;
+        const orbit = orbitSel.value;
+        const type = typeSel.value;
+        const hazards = getSelectedHazards();
+        const dynamicMass = rwgDynamicMassEl?.checked === true;
+        drawSingle(seedInput, { target, orbitPreset: orbit, type, hazards, dynamicMass });
       }
-      drawSingle(seed, { ...options, hazards, dynamicMass: options.dynamicMass === true });
     } else {
       const target = targetSel.value;
       const orbit = orbitSel.value;
