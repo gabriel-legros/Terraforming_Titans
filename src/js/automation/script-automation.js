@@ -752,6 +752,8 @@ class ScriptAutomation {
 
       if (this.applyAutomationAction(action)) {
         summaries.push(this.describeAction(action));
+      } else if (this.lastError) {
+        summaries.push(this.lastError);
       }
       actionsUsed += 1;
       nextActionIndex = index + 1;
@@ -769,7 +771,16 @@ class ScriptAutomation {
     const target = this.getAutomationTarget(action.automationType);
     if (!target) return false;
     if (action.kind === 'applyPreset' && action.presetId) {
-      target.applyPresetOnce(Number(action.presetId));
+      const presetId = Number(action.presetId);
+      if (target.getPresetById && !target.getPresetById(presetId)) {
+        this.lastError = t(
+          'ui.automation.cards.scriptMissingPresetError',
+          { type: action.automationType, id: presetId },
+          `Script error: missing ${action.automationType} preset #${presetId}`
+        );
+        return false;
+      }
+      target.applyPresetOnce(presetId);
       return true;
     }
     if (action.kind === 'applyCombination' && action.combinationId && target.applyCombinationPresets) {

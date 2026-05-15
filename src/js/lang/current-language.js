@@ -3466,6 +3466,7 @@ setLanguageData({
         removeProject: 'Remove project',
         removeTarget: 'Remove target',
         removePresetFromApply: 'Remove preset',
+        scriptMissingPresetError: 'Script error: missing {type} preset #{id}',
         presetOn: 'Preset On',
         presetOff: 'Preset Off',
         stepWithIndex: 'Step {index}',

@@ -471,9 +471,12 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
 
   applyPresetOnce(presetId) {
     const preset = this.getPresetById(presetId);
+    if (!preset) {
+      return;
+    }
     const controlMap = {};
     const automationMap = {};
-    const entries = preset.buildings;
+    const entries = preset.buildings || {};
     for (const buildingId in entries) {
       const entry = entries[buildingId];
       if (preset.includeControl && entry.control) {
