@@ -888,7 +888,14 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!Array.isArray(this.selectedResources) || this.selectedResources.length === 0) {
       return [];
     }
-    return this.selectedResources.filter(r => this.isResourceUnlocked(r.resource));
+    return this.selectedResources
+      .map((entry) => {
+        if (entry.resource === 'liquidWater' || entry.resource === 'biomass') {
+          return { category: 'surface', resource: entry.resource };
+        }
+        return entry;
+      })
+      .filter(r => this.isResourceUnlocked(r.resource));
   }
 
   getResourceTransferMode(resourceKey) {
@@ -1110,7 +1117,9 @@ class SpaceStorageProject extends SpaceshipProject {
       if (t.mode !== 'store' && (!includeWithdraw || t.mode !== 'withdraw')) return;
       if (!Number.isFinite(t.amount) || t.amount <= 0) return;
       const spaceResource = this.getSpaceStorageResource(t.storageKey || t.resource);
-      const res = resources[t.category][t.resource];
+      const res = t.resource === 'liquidWater'
+        ? resources.surface.liquidWater
+        : resources[t.category][t.resource];
       const rate = t.amount / durationSeconds;
       if (spaceResource?.modifyRate) {
         spaceResource.modifyRate(
@@ -1262,7 +1271,7 @@ class SpaceStorageProject extends SpaceshipProject {
           this.addBiomassToZones(delivered);
           resources.surface.biomass?.modifyRate(deliveredRate, 'Space storage transfer', 'project');
           storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
-        } else if (t.resource === 'liquidWater' && t.category === 'surface') {
+        } else if (t.resource === 'liquidWater') {
           this.addLiquidWaterToZones(delivered);
           resources.surface.liquidWater.modifyRate(deliveredRate, 'Space storage transfer', 'project');
           storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
@@ -1280,7 +1289,7 @@ class SpaceStorageProject extends SpaceshipProject {
             this.applyAccumulatedResourceDelta('spaceStorage', t.resource, deliveredRemoved, accumulatedChanges);
             storageResource?.modifyRate?.(deliveredRate, 'Space storage transfer', 'project');
           }
-        } else if (t.resource === 'liquidWater' && t.category === 'surface') {
+        } else if (t.resource === 'liquidWater') {
           const removed = this.removeLiquidWaterFromZones(t.amount);
           if (removed > 0) {
             const deliveredRemoved = removed * successChance;
@@ -1685,7 +1694,12 @@ class SpaceStorageProject extends SpaceshipProject {
       const selected = Array.isArray(settings.selectedResources) ? settings.selectedResources : [];
       this.selectedResources = selected
         .filter(entry => entry && entry.category && entry.resource)
-        .map(entry => ({ category: entry.category, resource: entry.resource }));
+        .map((entry) => {
+          if (entry.resource === 'liquidWater' || entry.resource === 'biomass') {
+            return { category: 'surface', resource: entry.resource };
+          }
+          return { category: entry.category, resource: entry.resource };
+        });
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'shipOperationAutoStart')) {
       this.shipOperationAutoStart = settings.shipOperationAutoStart === true;
