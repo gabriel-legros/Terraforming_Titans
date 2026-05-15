@@ -1662,10 +1662,9 @@ function formatHexFleetPowerValue(value) {
 function formatDefenseDisplayValue(value) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric) || numeric <= 0) {
-        return '0.00';
+        return '0';
     }
-    const rounded = Math.round(numeric * 100) / 100;
-    return rounded.toFixed(2);
+    return formatNumber(numeric, true, 2);
 }
 
 function getHexDefenseEntries(sector, manager, uhfFaction) {

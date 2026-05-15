@@ -114,9 +114,9 @@ const GalaxyOperationUI = (() => {
     function formatOperationsInputValue(value) {
         const normalized = normalizeAssignment(value);
         if (normalized <= 0) {
-            return '0.00';
+            return '0';
         }
-        return normalized.toFixed(2);
+        return formatNumber(normalized, true, 2);
     }
 
     function setStoredAllocation(key, value) {
