@@ -3,6 +3,31 @@
     color: #ffffff;
 }
 
+body.dark-mode {
+    scrollbar-color: #8a8a8a #1a1a1a;
+    scrollbar-width: thin;
+}
+
+.dark-mode ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-left: 1px solid #2a2a2a;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+    background: #7f7f7f;
+    border-radius: 6px;
+    border: 2px solid #1a1a1a;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #9b9b9b;
+}
+
 .dark-mode .tabs,
 .dark-mode .buildings-subtabs,
 .dark-mode .colonies-subtabs,
