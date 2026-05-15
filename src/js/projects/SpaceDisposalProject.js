@@ -812,7 +812,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     typeLabel.classList.add('resource-disposal-target-select-label');
     typeLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.export', 'Export');
     const typeSelect = document.createElement('select');
-    typeSelect.addEventListener('change', () => {
+    addTrackedUIListener(card, typeSelect, 'change', () => {
       this.handleTargetGroupChange(target.id, typeSelect.value);
     });
     typeContainer.append(typeLabel, typeSelect);
@@ -823,7 +823,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     phaseLabel.classList.add('resource-disposal-target-select-label');
     phaseLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.phase', 'Phase');
     const phaseSelect = document.createElement('select');
-    phaseSelect.addEventListener('change', () => {
+    addTrackedUIListener(card, phaseSelect, 'change', () => {
       const activeTarget = this.getTargetById(target.id);
       if (!phaseSelect.value) {
         activeTarget.selectedDisposalResource = null;
@@ -856,7 +856,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const removeButton = document.createElement('button');
     removeButton.classList.add('resource-disposal-remove-target-button');
     removeButton.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.remove', 'Remove');
-    removeButton.addEventListener('click', () => {
+    addTrackedUIListener(card, removeButton, 'click', () => {
       this.removeDisposalTarget(target.id);
     });
 
@@ -943,7 +943,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = target[key] === true;
-    checkbox.addEventListener('change', () => {
+    addTrackedUIListener(container, checkbox, 'change', () => {
       onChange(checkbox.checked);
     });
     const label = document.createElement('span');
@@ -961,7 +961,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.addEventListener('change', () => {
+    addTrackedUIListener(container, checkbox, 'change', () => {
       const target = this.getTargetById(targetId);
       target[config.checkboxKey] = checkbox.checked;
       this.syncLegacySelectionState();
@@ -976,7 +976,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const input = document.createElement('input');
     input.type = 'text';
     input.inputMode = 'decimal';
-    wireStringNumberInput(input, {
+    runWithTrackedUIListeners(container, () => wireStringNumberInput(input, {
       parseValue: (value) => {
         const parsed = parseFlexibleNumber(value);
         return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
@@ -989,7 +989,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         this.clearContinuousExecutionPlanCache();
         this.updateUI();
       },
-    });
+    }));
 
     const unit = document.createElement('span');
     unit.classList.add('resource-disposal-target-limit-unit');
