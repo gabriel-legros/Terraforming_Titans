@@ -298,6 +298,7 @@
     return amount;
   }
 
+  //fastForwardToEquilibrium(options = {stepMs : 1000, updateStep : 1000, maxSteps : 1000})
   function fastForwardToEquilibrium(options = {}) {
     let stepMs = options.stepMs || 1000; // The "jump" size, e.g., 1 hour
     const fixedUpdateStep = options.updateStep || 100; // The actual step for updateLogic, hardcoded to 1s

@@ -11,7 +11,6 @@ class EffectableEntity {
         this.clearTickEffectCache();
       }
       this.activeEffects.push(effect);
-      console.log(`Added effect: ${effect.type} with value ${effect.value} to ${this.name}`);
       this.applyEffect(effect);
     }
 

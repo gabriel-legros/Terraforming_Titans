@@ -589,141 +589,143 @@ const toi3693bOverrides = {
         areaTotal: 0
       }
     },
-    atmospheric: {
-      carbonDioxide: {
-        initialValue: 0
+"atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 0
       },
-      atmosphericWater: {
-        initialValue: 183600000000000000
+      "atmosphericWater": {
+        "initialValue": 183600000000000000
       },
-      atmosphericMethane: {
-        initialValue: 742000000000000000
+      "atmosphericMethane": {
+        "initialValue": 742000000000000000
       },
-      atmosphericAmmonia: {
-        initialValue: 0
+      "atmosphericAmmonia": {
+        "initialValue": 0
       },
-      oxygen: {
-        initialValue: 0
+      "oxygen": {
+        "initialValue": 0
       },
-      inertGas: {
-        initialValue: 52700000000000000000
+      "inertGas": {
+        "initialValue": 52700000000000000000
       },
-      hydrogen: {
-        initialValue: 2.44912245678809e+22
+      "hydrogen": {
+        "initialValue": 2.4921255605318254e+22
       },
-      sulfuricAcid: {
-        initialValue: 0
+      "sulfuricAcid": {
+        "initialValue": 0
       }
     }
   },
-  zonalSurface: {
-    tropical: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      liquidHydrogen: 6.751708231879386e+23,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 6.749993487125215e+23,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    temperate: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      liquidHydrogen: 8.776157626322107e+23,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+    "temperate": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 8.773928728132986e+23,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    polar: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      liquidHydrogen: 1.4043573318798218e+23,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+    "polar": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 1.4040006644580202e+23,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     }
   },
-  zonalTemperatures: {
-    tropical: {
-      value: 2957.5591517739394,
-      day: 2957.5591583742544,
-      night: 2957.5591451736245
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 2960.7434990025017,
+      "day": 2960.800788804981,
+      "night": 2960.6862092000224
     },
-    temperate: {
-      value: 2957.5589662377447,
-      day: 2957.5589711514504,
-      night: 2957.558961324039
+    "temperate": {
+      "value": 2960.7423204746906,
+      "day": 2960.784996204368,
+      "night": 2960.6996447450133
     },
-    polar: {
-      value: 2957.5586259608326,
-      day: 2957.558627781265,
-      night: 2957.5586241404003
+    "polar": {
+      "value": 2960.74015536921,
+      "day": 2960.755983248225,
+      "night": 2960.7243274901944
     }
   },
-  celestialParameters: {
-    distanceFromSun: 0.0813,
-    hasNaturalMagnetosphere: true,
-    albedo: 0.487,
-    rotationPeriod: 218.273784,
-    spinPeriod: 218.273784,
-    starLuminosity: 0.46,
-    coreHeatFlux: 4112684,
-    sector: 'R5-07',
-    baseLand: 6291545240475.356,
-    baseRadius: 70738,
-    baseMass: 1.8726e+27,
-    baseGravity: 24.977282698856314,
-    basePlanetaryMass: 2.182328308239878e+26,
-    basePlanetaryVolumeM3: 5.361937984673442e+22,
-    baseSurfaceMassKg: 1.6305400223685466e+27,
-    baseAtmosphericMassKg: 2.45448501678809e+25,
-    dynamicDirectMassDeltaKg: 0,
-    dynamicDirectVolumeDeltaM3: 0,
-    dynamicMassDeltaKg: 7.177033604151992e+23,
-    dynamicSurfaceVolumeDeltaM3: 1.2393178671461328e+21,
-    currentPlanetaryMassKg: 2.182328308239878e+26,
-    currentSurfaceMassKg: 1.6305400223685466e+27,
-    currentAtmosphericMassKg: 2.45448501678809e+25,
-    currentPlanetaryVolumeM3: 5.361937984673442e+22,
-    currentSurfaceVolumeM3: 1.4302982652355672e+24,
-    mass: 1.8733177033604153e+27,
-    radius: 70757.70363387793,
-    gravity: 24.97294157927566
+  "celestialParameters": {
+    "distanceFromSun": 0.0813,
+    "hasNaturalMagnetosphere": true,
+    "albedo": 0.487,
+    "rotationPeriod": 218.273784,
+    "spinPeriod": 218.273784,
+    "starLuminosity": 0.46,
+    "coreHeatFlux": 4112684,
+    "surfaceArea": 64449637145711544,
+    "crossSectionArea": 16112409286427886,
+    "baseLand": 6446017135381.483,
+    "baseRadius": 70738,
+    "baseMass": 1.8726e+27,
+    "baseGravity": 24.977282698856314,
+    "basePlanetaryMass": 2.182328308239878e+26,
+    "basePlanetaryVolumeM3": 5.361937984673442e+22,
+    "baseSurfaceMassKg": 1.6932223190081315e+27,
+    "baseAtmosphericMassKg": 2.45448501678809e+25,
+    "dynamicDirectMassDeltaKg": 0,
+    "dynamicDirectVolumeDeltaM3": 0,
+    "dynamicMassDeltaKg": 6.34000000009281e+25,
+    "dynamicSurfaceVolumeDeltaM3": 5.5846568396159575e+22,
+    "currentPlanetaryMassKg": 2.182328308239878e+26,
+    "currentSurfaceMassKg": 1.692792287971622e+27,
+    "currentAtmosphericMassKg": 2.4974881205318252e+25,
+    "currentPlanetaryVolumeM3": 5.361937984673442e+22,
+    "currentSurfaceVolumeM3": 1.4849055157645806e+24,
+    "mass": 1.9360000000009282e+27,
+    "radius": 71615.21602361828,
+    "gravity": 25.194193702402615,
+    "sector": "R5-07"
   },
   hazards: {
     pulsar: {
