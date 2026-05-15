@@ -806,7 +806,7 @@ function decodeSeedOptions(str) {
   const ty = parts[2] ?? 'auto';
   const o = parts[3] ?? 'auto';
   const h = parts[4] ?? 'auto';
-  const dm = parts[5] === '1';
+  const dm = parts.length > 5 ? parts[5] === '1' : null;
   const hazards = normalizeHazardList(h);
   return { seed, options: { target: t, type: ty, orbitPreset: o, hazards, dynamicMass: dm } };
 }
@@ -992,14 +992,17 @@ function initializeRandomWorldUI() {
         if (targetSel) targetSel.value = options.target;
         if (orbitSel) orbitSel.value = options.orbitPreset;
         if (typeSel) typeSel.value = options.type;
-        if (rwgDynamicMassEl) rwgDynamicMassEl.checked = (isDynamicMassRwgControlUnlocked() && options.dynamicMass === true) || options.type === 'jupiter-like';
+        const requestedDynamicMass = options.dynamicMass === null
+          ? (rwgDynamicMassEl?.checked === true)
+          : options.dynamicMass === true;
+        if (rwgDynamicMassEl) rwgDynamicMassEl.checked = (isDynamicMassRwgControlUnlocked() && requestedDynamicMass) || options.type === 'jupiter-like';
         const hazards = normalizeHazardList(options.hazards);
         if (rwgHazardEl) {
           rwgHazardEl.value = hazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
           setSelectedHazards(hazards);
           updateHazardListVisibility();
         }
-        drawSingle(seed, { ...options, hazards, dynamicMass: options.dynamicMass === true });
+        drawSingle(seed, { ...options, hazards, dynamicMass: requestedDynamicMass });
       } else {
         const target = targetSel.value;
         const orbit = orbitSel.value;
