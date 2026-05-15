@@ -653,10 +653,10 @@ class DeeperMiningProject extends AndroidProject {
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
     if (Object.prototype.hasOwnProperty.call(settings, 'underworldMiningLevel')) {
-      this.underworldMiningLevel = settings.underworldMiningLevel || 0;
+      this.setUnderworldMiningLevel(settings.underworldMiningLevel || 0);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'superchargedMiningLevel')) {
-      this.superchargedMiningLevel = settings.superchargedMiningLevel || 0;
+      this.setSuperchargedMiningLevel(settings.superchargedMiningLevel || 0);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'createGeothermalDeposits')) {
       this.createGeothermalDeposits = settings.createGeothermalDeposits === true;
@@ -695,8 +695,8 @@ class DeeperMiningProject extends AndroidProject {
         : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
     this.oreMineCount = state.oreMineCount || built;
     this.averageDepth = state.averageDepth || (this.repeatCount || 0) + 1;
-    this.underworldMiningLevel = state.underworldMiningLevel || 0;
-    this.superchargedMiningLevel = state.superchargedMiningLevel || 0;
+    this.setUnderworldMiningLevel(state.underworldMiningLevel || 0);
+    this.setSuperchargedMiningLevel(state.superchargedMiningLevel || 0);
     this.createGeothermalDeposits = state.createGeothermalDeposits || false;
     this.undergroundStorage = state.undergroundStorage || false;
     this.lastGeothermalDepth = state.lastGeothermalDepth || 0;
@@ -705,11 +705,9 @@ class DeeperMiningProject extends AndroidProject {
       ? this.underworldMiningLevel
       : -1;
     this.isContinuousRun = this.isActive && this.remainingTime === Infinity;
-    this.updateUnderworldMiningMaxDepth();
     if (this.attributes?.completionEffect) {
       this.applyCompletionEffect();
     }
-    this.adjustActiveDuration();
   }
 
   loadTravelState(state = {}) {
