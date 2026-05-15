@@ -4245,7 +4245,7 @@ setLanguageData({
       vanadophore: {
         displayName: 'Vanado',
         lore: [
-          'The Vanadophores are an ammonia-water lifeform unlike any other known dominion: they live in the ammonia cloud decks of gas giants. Their homeworld, Nhalassa, is unusually rich in ammonia even by gas-giant standards.',
+          'The Vanadophores are an ammonia-water lifeform unlike any other known dominion: they live in the ammonia cloud decks of a gas giant. Their homeworld, Nhalassa, is unusually rich in ammonia even by gas-giant standards.',
           'Their bodies resemble jellyfish, with long trailing tentacles suspended in the clouds. The lightness of their environment made technological civilization difficult, but not impossible. By forming vast living webs, Vanadophores can generate enough buoyancy and coordination to support structures built from local solid material.',
           'Their biochemistry depends on vanadium aerosol as a catalyst, normally supplied by the deep interior of Nhalassa. Fearing that this supply would eventually fail, their proudest achievement became rocketry: vehicles built to harvest vanadium from nearby asteroids and return it to the cloud decks.',
           'That achievement led to their discovery by the Empire. Unable or unwilling to find a use for them, Imperial authorities reduced Nhalassa to a hunting preserve. Imperial nobles still travel there to hunt Vanadophores for sport. The hatred they feel for the Empire is deep.'
