@@ -34,7 +34,7 @@ function buildScriptAutomationUI() {
     getAutomationCardText(
       'scriptAutomationTooltip',
       {},
-      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line, which is useful for loops or shared cleanup steps.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
+      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line, while GOTO Script jumps to row 1 of another script. Both use the same one-GOTO-per-tick limit.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
     )
   );
 
@@ -567,6 +567,11 @@ function describeScriptActions(automation, script, actions) {
       const target = script.lines.find(targetLine => targetLine.id === Number(action.targetLineId));
       return target ? `GOTO ${automation.getLineLabel(script, target)}` : 'GOTO ?';
     }
+    if (action.kind === 'gotoScript') {
+      const targetScript = automation.scripts.find(item => item.id === Number(action.targetScriptId));
+      if (!targetScript) return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ?`;
+      return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ${targetScript.name || `Script ${targetScript.id}`} #1`;
+    }
     return automation.describeAction(action);
   }).join('; ');
 }
@@ -660,6 +665,7 @@ function getScriptActionKinds() {
     { id: 'applyCombination', label: getAutomationCardText('scriptApplyCombination', {}, 'Apply Combination') },
     { id: 'toggleAutomation', label: getAutomationCardText('scriptToggleAutomation', {}, 'Toggle Automation') },
     { id: 'goto', label: 'GOTO' },
+    { id: 'gotoScript', label: getAutomationCardText('scriptGotoScript', {}, 'GOTO Script') },
     { id: 'sleep', label: getAutomationCardText('scriptSleep', {}, 'Sleep') }
   ];
 }
@@ -1123,6 +1129,20 @@ function renderActionsEditor(automation, script, line, container, actions, title
         queueAutomationUIRefresh();
       });
       row.appendChild(lineSelect);
+    } else if (action.kind === 'gotoScript') {
+      const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
+      const scriptOptions = scripts.map(targetScript => ({
+        id: targetScript.id,
+        label: targetScript.name || `Script ${targetScript.id}`
+      }));
+      const defaultScriptId = action.targetScriptId || script.id || scriptOptions[0]?.id || '';
+      const scriptSelect = createSelect(scriptOptions, defaultScriptId);
+      action.targetScriptId = scriptSelect.value ? Number(scriptSelect.value) : null;
+      scriptSelect.addEventListener('change', event => {
+        action.targetScriptId = Number(event.target.value);
+        queueAutomationUIRefresh();
+      });
+      row.appendChild(scriptSelect);
     } else {
       renderActionTargetPicker(action, row);
     }

@@ -749,6 +749,23 @@ class ScriptAutomation {
         nextActionIndex = 0;
         break;
       }
+      if (action.kind === 'gotoScript') {
+        if (gotoUsed) continue;
+        const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+        const targetLine = targetScript?.lines?.[0] || null;
+        if (targetScript && targetLine) {
+          this.activeScriptId = targetScript.id;
+          this.selectedScriptId = targetScript.id;
+          this.pcLineId = targetLine.id;
+          this.pcActionIndex = 0;
+          gotoUsed = true;
+          gotoTriggered = true;
+          summaries.push(`GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`);
+        }
+        actionsUsed += 1;
+        nextActionIndex = 0;
+        break;
+      }
 
       if (this.applyAutomationAction(action)) {
         summaries.push(this.describeAction(action));
@@ -886,6 +903,11 @@ class ScriptAutomation {
 
   describeAction(action) {
     if (action.kind === 'sleep') return `Sleep ${formatNumber(this.registry.toNumber(action.durationMs), false, 0)} ms`;
+    if (action.kind === 'gotoScript') {
+      const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+      if (!targetScript) return 'GOTO Script ?';
+      return `GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`;
+    }
     if (action.kind === 'toggleAutomation') {
       return `Set ${action.automationType} automation ${action.toggleValue || 'toggle'}`;
     }
