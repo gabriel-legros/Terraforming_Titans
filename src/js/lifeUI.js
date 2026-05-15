@@ -234,6 +234,9 @@ function getConvertedDisplay(attributeName, attribute) {
     const requirements = getActiveLifeDesignRequirementsForUI();
     return (requirements.photosynthesisRatePerPoint * attribute.getEffectiveValue()).toFixed(5);
   }
+  if (attributeName === 'invasiveness') {
+    return formatNumber(attribute.getEffectiveValue(), false, 2);
+  }
   return attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-';
 }
 
@@ -259,6 +262,8 @@ const lifeUICache = {
   pointShopQuantityDisplay: null,
   pointShopDecreaseButton: null,
   pointShopIncreaseButton: null,
+  modifyStepDecreaseButton: null,
+  modifyStepIncreaseButton: null,
   tentativeCells: [],
   gatedAttributeElements: [],
   attributeCells: {}, // { [attributeName]: { row, currentDiv, tentativeDiv, tentativeDisplay, tentativeCell, modifyCell } }
@@ -279,6 +284,7 @@ const lifeUICache = {
 };
 
 let lifePointPurchaseQuantity = 1;
+let lifeModifyStep = 1;
 
 function getSpendableLifeDesignPoints() {
   return Math.floor(lifeDesigner.maxLifeDesignPoints());
@@ -467,6 +473,8 @@ function invalidateLifeUICache() {
   lifeUICache.pointShopQuantityDisplay = null;
   lifeUICache.pointShopDecreaseButton = null;
   lifeUICache.pointShopIncreaseButton = null;
+  lifeUICache.modifyStepDecreaseButton = null;
+  lifeUICache.modifyStepIncreaseButton = null;
   lifeUICache.tentativeCells = [];
   lifeUICache.gatedAttributeElements = [];
   lifeUICache.attributeCells = {};
@@ -491,7 +499,7 @@ function initializeLifeTerraformingDesignerUI() {
                 <th>Attribute</th>
                 <th>Current Design</th>
                 <th id="tentative-design-header" style="display: none;">Tentative Design</th>
-                <th id="modify-header" style="display: none;">Modify <span id="life-modify-tooltip" class="info-tooltip-icon">&#9432;</span></th>
+                <th id="modify-header" style="display: none;"><button id="life-modify-step-divide">/10</button> <button id="life-modify-step-multiply">x10</button> <span id="life-modify-tooltip" class="info-tooltip-icon">&#9432;</span></th>
                 </tr>
             </thead>
             <tbody id="life-attributes-body">
@@ -662,12 +670,12 @@ function initializeLifeTerraformingDesignerUI() {
                   <span class="life-tentative-display">0 / -</span>
               </div>
             </td>
-            <td class="modify-buttons-cell" style="display: none;">
-                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10">-10</button>
+            <td class="modify-buttons-cell" style="display: none; text-align: center;">
+              <div class="life-modify-controls" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                  <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1">-1</button>
                  <button class="life-tentative-btn life-tentative-zero" data-attribute="${attributeName}" data-change="0">0</button>
                  <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1">+1</button>
-                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10">+10</button>
+              </div>
             </td>
           </tr>
         `;
@@ -705,7 +713,8 @@ function initializeLifeTerraformingDesignerUI() {
     document.getElementById('life-attributes-body').addEventListener('click', (event) => {
       if (event.target.classList.contains('life-tentative-btn') && ! lifeDesigner.isActive) {
           const attributeName = event.target.dataset.attribute;
-          const changeAmount = parseInt(event.target.dataset.change, 10);
+          const baseChangeAmount = parseInt(event.target.dataset.change, 10);
+          const changeAmount = baseChangeAmount === 0 ? 0 : baseChangeAmount * lifeModifyStep;
           const ac = lifeUICache.attributeCells[attributeName] || {};
           const tentativeValueDisplay = ac.tentativeDisplay || document.querySelector(`#${attributeName}-tentative-value .life-tentative-display`);
           const currentTentativeValue = tentativeValueDisplay ? parseInt(tentativeValueDisplay.textContent, 10) : 0;
@@ -762,6 +771,29 @@ function initializeLifeTerraformingDesignerUI() {
           updateLifeUI();
       }
   });
+
+  lifeUICache.modifyStepDecreaseButton = document.getElementById('life-modify-step-divide');
+  lifeUICache.modifyStepIncreaseButton = document.getElementById('life-modify-step-multiply');
+
+  const modifyStepDecreaseButton = lifeUICache.modifyStepDecreaseButton;
+  if (modifyStepDecreaseButton) {
+    modifyStepDecreaseButton.addEventListener('click', () => {
+      if (lifeModifyStep > 1) {
+        lifeModifyStep = Math.max(1, Math.floor(lifeModifyStep / 10));
+        updateLifeUI();
+      }
+    });
+  }
+
+  const modifyStepIncreaseButton = lifeUICache.modifyStepIncreaseButton;
+  if (modifyStepIncreaseButton) {
+    modifyStepIncreaseButton.addEventListener('click', () => {
+      if (lifeModifyStep < 1000) {
+        lifeModifyStep = Math.min(1000, lifeModifyStep * 10);
+        updateLifeUI();
+      }
+    });
+  }
 
   // Generate the point shop buttons (Target the moved div)
   const lifePointShopDiv = document.getElementById('life-point-shop');
@@ -938,6 +970,26 @@ function updateLifeUI() {
     if (increaseButton) {
       increaseButton.disabled = lifePointPurchaseQuantity === 100;
     }
+
+    const modifyStepDecreaseButton = lifeUICache.modifyStepDecreaseButton;
+    if (modifyStepDecreaseButton) {
+      modifyStepDecreaseButton.disabled = lifeModifyStep === 1;
+    }
+
+    const modifyStepIncreaseButton = lifeUICache.modifyStepIncreaseButton;
+    if (modifyStepIncreaseButton) {
+      modifyStepIncreaseButton.disabled = lifeModifyStep === 1000;
+    }
+
+    modifyButtons.forEach((btn) => {
+      const baseChangeAmount = parseInt(btn.dataset.change, 10);
+      if (baseChangeAmount === 0) {
+        btn.textContent = '0';
+      } else {
+        const signedStep = baseChangeAmount > 0 ? lifeModifyStep : -lifeModifyStep;
+        btn.textContent = signedStep > 0 ? `+${formatNumber(signedStep, true)}` : `${formatNumber(signedStep, true)}`;
+      }
+    });
 
     if (lifeDesigner.tentativeDesign) {
         tentativeDesignHeader.style.display = 'table-cell';
