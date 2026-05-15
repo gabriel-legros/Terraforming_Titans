@@ -1,0 +1,602 @@
+(() => {
+  if (window.domLeakProbe) {
+    window.domLeakProbe.stop();
+  }
+
+  const nodeInfo = new WeakMap();
+  const trackedRefs = [];
+  const baselineWeak = new WeakSet();
+  let baselineCount = 0;
+  let baselineSigs = new Map();
+  let nextId = 1;
+
+  const originals = {
+    appendChild: Node.prototype.appendChild,
+    insertBefore: Node.prototype.insertBefore,
+    replaceChild: Node.prototype.replaceChild,
+    removeChild: Node.prototype.removeChild,
+    append: Element.prototype.append,
+    prepend: Element.prototype.prepend,
+    before: Element.prototype.before,
+    after: Element.prototype.after,
+    replaceWith: Element.prototype.replaceWith,
+    replaceChildren: Element.prototype.replaceChildren,
+    remove: Element.prototype.remove,
+    insertAdjacentHTML: Element.prototype.insertAdjacentHTML,
+    createElement: Document.prototype.createElement,
+    createElementNS: Document.prototype.createElementNS,
+    cloneNode: Node.prototype.cloneNode,
+    innerHTML: Object.getOwnPropertyDescriptor(Element.prototype, "innerHTML"),
+  };
+
+  function now() {
+    return performance.now();
+  }
+
+  function stack() {
+    return new Error().stack
+      .split("\n")
+      .slice(2)
+      .filter(line =>
+        !line.includes("domLeakProbe") &&
+        !line.includes("wrapped") &&
+        !line.includes("stack@")
+      )
+      .join("\n");
+  }
+
+  function shortText(node) {
+    const text = (node && node.textContent || "").replace(/\s+/g, " ").trim();
+    return text.length > 100 ? text.slice(0, 100) + "..." : text;
+  }
+
+  function cssPath(node) {
+    if (!node || node.nodeType !== 1) return String(node);
+    const parts = [];
+    let cur = node;
+
+    while (cur && cur.nodeType === 1 && parts.length < 9) {
+      let part = cur.tagName.toLowerCase();
+
+      if (cur.id) {
+        part += "#" + cur.id;
+        parts.unshift(part);
+        break;
+      }
+
+      if (cur.className && typeof cur.className === "string") {
+        const classes = cur.className.trim().split(/\s+/).slice(0, 4);
+        if (classes.length) part += "." + classes.join(".");
+      }
+
+      const parent = cur.parentElement;
+      if (parent) {
+        const sameTag = Array.from(parent.children).filter(child => child.tagName === cur.tagName);
+        if (sameTag.length > 1) {
+          part += `:nth-of-type(${sameTag.indexOf(cur) + 1})`;
+        }
+      }
+
+      parts.unshift(part);
+      cur = parent;
+    }
+
+    return parts.join(" > ");
+  }
+
+  function sig(node) {
+    if (!node) return "null";
+    if (node.nodeType === 3) return `#text|${shortText(node)}`;
+    if (node.nodeType !== 1) return `${node.nodeName}|${shortText(node)}`;
+
+    const attrs = [];
+    if (node.id) attrs.push(`id=${node.id}`);
+    if (node.className && typeof node.className === "string") {
+      attrs.push(`class=${node.className.trim().replace(/\s+/g, ".")}`);
+    }
+
+    for (const name of ["data-i18n", "data-tab", "data-subtab", "role", "aria-label", "type"]) {
+      if (node.hasAttribute(name)) attrs.push(`${name}=${node.getAttribute(name)}`);
+    }
+
+    return [
+      node.tagName.toLowerCase(),
+      attrs.join(";"),
+      shortText(node),
+      "parent:" + cssPath(node.parentElement),
+    ].join("|");
+  }
+
+  function getTree(node) {
+    if (!node || !node.nodeType) return [];
+    const nodes = [node];
+
+    if (node.nodeType === 11) {
+      for (const child of node.childNodes) {
+        nodes.push(...getTree(child));
+      }
+      return nodes;
+    }
+
+    if (node.querySelectorAll) {
+      for (const child of node.querySelectorAll("*")) {
+        nodes.push(child);
+      }
+    }
+
+    return nodes;
+  }
+
+  function markNode(node, reason, parent, s) {
+    if (!node || !node.nodeType) return;
+    let info = nodeInfo.get(node);
+
+    if (!info) {
+      info = {
+        id: nextId++,
+        firstSeenAt: now(),
+        createReason: reason,
+        createStack: s,
+        insertions: [],
+        removals: [],
+        lastSig: "",
+        lastPath: "",
+      };
+      nodeInfo.set(node, info);
+      trackedRefs.push(new WeakRef(node));
+    }
+
+    info.lastSig = sig(node);
+    info.lastPath = cssPath(node);
+    info.insertions.push({
+      at: now(),
+      reason,
+      parentPath: cssPath(parent || node.parentNode),
+      stack: s,
+    });
+  }
+
+  function markTree(node, reason, parent, s) {
+    for (const n of getTree(node)) {
+      markNode(n, reason, parent || n.parentNode, s);
+    }
+  }
+
+  function markRemovedTree(node, reason, parent, s) {
+    for (const n of getTree(node)) {
+      let info = nodeInfo.get(n);
+      if (!info) {
+        info = {
+          id: nextId++,
+          firstSeenAt: now(),
+          createReason: "first seen on removal",
+          createStack: s,
+          insertions: [],
+          removals: [],
+          lastSig: sig(n),
+          lastPath: cssPath(n),
+        };
+        nodeInfo.set(n, info);
+        trackedRefs.push(new WeakRef(n));
+      }
+      info.lastSig = sig(n);
+      info.lastPath = cssPath(n);
+      info.removals.push({
+        at: now(),
+        reason,
+        parentPath: cssPath(parent || n.parentNode),
+        stack: s,
+      });
+    }
+  }
+
+  function snapshotArgs(args) {
+    return args
+      .filter(arg => arg && arg.nodeType)
+      .map(arg => ({ node: arg, tree: getTree(arg) }));
+  }
+
+  function markArgSnapshots(snaps, reason, parent, s) {
+    for (const snap of snaps) {
+      for (const n of snap.tree) {
+        markNode(n, reason, parent || n.parentNode, s);
+      }
+    }
+  }
+
+  function wrapInsert(name, fn) {
+    return function wrapped(...args) {
+      const s = stack();
+      const snaps = snapshotArgs(args);
+      const result = fn.apply(this, args);
+      markArgSnapshots(snaps, name, this, s);
+      return result;
+    };
+  }
+
+  Node.prototype.appendChild = wrapInsert("appendChild", originals.appendChild);
+  Node.prototype.insertBefore = wrapInsert("insertBefore", originals.insertBefore);
+
+  Node.prototype.replaceChild = function wrapped(newChild, oldChild) {
+    const s = stack();
+    const snaps = snapshotArgs([newChild]);
+    markRemovedTree(oldChild, "replaceChild removed", this, s);
+    const result = originals.replaceChild.call(this, newChild, oldChild);
+    markArgSnapshots(snaps, "replaceChild inserted", this, s);
+    return result;
+  };
+
+  Node.prototype.removeChild = function wrapped(child) {
+    const s = stack();
+    markRemovedTree(child, "removeChild", this, s);
+    return originals.removeChild.call(this, child);
+  };
+
+  Element.prototype.append = function wrapped(...args) {
+    const s = stack();
+    const snaps = snapshotArgs(args);
+    const result = originals.append.apply(this, args);
+    markArgSnapshots(snaps, "append", this, s);
+    return result;
+  };
+
+  Element.prototype.prepend = function wrapped(...args) {
+    const s = stack();
+    const snaps = snapshotArgs(args);
+    const result = originals.prepend.apply(this, args);
+    markArgSnapshots(snaps, "prepend", this, s);
+    return result;
+  };
+
+  Element.prototype.before = function wrapped(...args) {
+    const s = stack();
+    const parent = this.parentElement;
+    const snaps = snapshotArgs(args);
+    const result = originals.before.apply(this, args);
+    markArgSnapshots(snaps, "before", parent, s);
+    return result;
+  };
+
+  Element.prototype.after = function wrapped(...args) {
+    const s = stack();
+    const parent = this.parentElement;
+    const snaps = snapshotArgs(args);
+    const result = originals.after.apply(this, args);
+    markArgSnapshots(snaps, "after", parent, s);
+    return result;
+  };
+
+  Element.prototype.replaceWith = function wrapped(...args) {
+    const s = stack();
+    const parent = this.parentElement;
+    const snaps = snapshotArgs(args);
+    markRemovedTree(this, "replaceWith removed", parent, s);
+    const result = originals.replaceWith.apply(this, args);
+    markArgSnapshots(snaps, "replaceWith inserted", parent, s);
+    return result;
+  };
+
+  Element.prototype.replaceChildren = function wrapped(...args) {
+    const s = stack();
+    const oldChildren = Array.from(this.childNodes);
+    const snaps = snapshotArgs(args);
+    for (const child of oldChildren) {
+      markRemovedTree(child, "replaceChildren removed", this, s);
+    }
+    const result = originals.replaceChildren.apply(this, args);
+    markArgSnapshots(snaps, "replaceChildren inserted", this, s);
+    return result;
+  };
+
+  Element.prototype.remove = function wrapped() {
+    const s = stack();
+    const parent = this.parentElement;
+    markRemovedTree(this, "remove", parent, s);
+    return originals.remove.call(this);
+  };
+
+  Element.prototype.insertAdjacentHTML = function wrapped(position, html) {
+    const s = stack();
+    const before = new WeakSet();
+    this.querySelectorAll("*").forEach(node => before.add(node));
+    const result = originals.insertAdjacentHTML.call(this, position, html);
+    this.querySelectorAll("*").forEach(node => {
+      if (!before.has(node)) markNode(node, `insertAdjacentHTML(${position})`, node.parentElement, s);
+    });
+    return result;
+  };
+
+  if (originals.innerHTML && originals.innerHTML.set && originals.innerHTML.get) {
+    Object.defineProperty(Element.prototype, "innerHTML", {
+      configurable: true,
+      enumerable: originals.innerHTML.enumerable,
+      get: function wrapped() {
+        return originals.innerHTML.get.call(this);
+      },
+      set: function wrapped(value) {
+        const s = stack();
+        const oldChildren = Array.from(this.childNodes);
+        for (const child of oldChildren) {
+          markRemovedTree(child, "innerHTML removed", this, s);
+        }
+        originals.innerHTML.set.call(this, value);
+        for (const node of this.querySelectorAll("*")) {
+          markNode(node, "innerHTML inserted", node.parentElement, s);
+        }
+      },
+    });
+  }
+
+  Document.prototype.createElement = function wrapped(...args) {
+    const s = stack();
+    const node = originals.createElement.apply(this, args);
+    markNode(node, "createElement(" + args[0] + ")", null, s);
+    return node;
+  };
+
+  Document.prototype.createElementNS = function wrapped(...args) {
+    const s = stack();
+    const node = originals.createElementNS.apply(this, args);
+    markNode(node, "createElementNS(" + args[1] + ")", null, s);
+    return node;
+  };
+
+  Node.prototype.cloneNode = function wrapped(...args) {
+    const s = stack();
+    const node = originals.cloneNode.apply(this, args);
+    markTree(node, "cloneNode", null, s);
+    return node;
+  };
+
+  const observer = new MutationObserver(records => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        markTree(node, "MutationObserver addedNode", record.target, "Observed after insertion; stack unavailable");
+      }
+      for (const node of record.removedNodes) {
+        markRemovedTree(node, "MutationObserver removedNode", record.target, "Observed after removal; stack unavailable");
+      }
+    }
+  });
+
+  function pruneDeadRefs() {
+    let write = 0;
+    let dead = 0;
+    for (let read = 0; read < trackedRefs.length; read++) {
+      const node = trackedRefs[read].deref();
+      if (node) {
+        trackedRefs[write++] = trackedRefs[read];
+      } else {
+        dead++;
+      }
+    }
+    trackedRefs.length = write;
+    return dead;
+  }
+
+  function takeBaseline() {
+    baselineCount = 0;
+    baselineSigs = new Map();
+
+    for (const node of document.querySelectorAll("*")) {
+      baselineWeak.add(node);
+      baselineCount++;
+      const key = sig(node);
+      baselineSigs.set(key, (baselineSigs.get(key) || 0) + 1);
+      markNode(node, "baseline", node.parentElement, "Baseline capture");
+    }
+
+    console.log(`[domLeakProbe] baseline captured: ${baselineCount} elements`);
+  }
+
+  function addGroup(groups, node, mode) {
+    const info = nodeInfo.get(node);
+    const key = sig(node);
+    let group = groups.get(key);
+
+    if (!group) {
+      group = {
+        count: 0,
+        baselineCount: baselineSigs.get(key) || 0,
+        signature: key,
+        parents: new Map(),
+        stacks: new Map(),
+        removalStacks: new Map(),
+        examples: [],
+      };
+      groups.set(key, group);
+    }
+
+    group.count++;
+    group.parents.set(cssPath(node.parentElement), (group.parents.get(cssPath(node.parentElement)) || 0) + 1);
+
+    const latestInsertion = info && info.insertions[info.insertions.length - 1];
+    const latestRemoval = info && info.removals[info.removals.length - 1];
+
+    const st = latestInsertion ? latestInsertion.stack : info ? info.createStack : "unknown";
+    group.stacks.set(st, (group.stacks.get(st) || 0) + 1);
+
+    if (latestRemoval) {
+      group.removalStacks.set(latestRemoval.stack, (group.removalStacks.get(latestRemoval.stack) || 0) + 1);
+    }
+
+    if (group.examples.length < 5) {
+      group.examples.push({
+        mode,
+        path: cssPath(node),
+        connected: node.isConnected,
+        reason: latestInsertion ? latestInsertion.reason : info ? info.createReason : "unknown",
+        removalReason: latestRemoval ? latestRemoval.reason : "",
+        createdStack: info ? info.createStack : "unknown",
+        insertedStack: latestInsertion ? latestInsertion.stack : "unknown",
+        removedStack: latestRemoval ? latestRemoval.stack : "",
+      });
+    }
+  }
+
+  function summarizeNodes(nodes, mode) {
+    const groups = new Map();
+    for (const node of nodes) {
+      addGroup(groups, node, mode);
+    }
+
+    return Array.from(groups.values())
+      .sort((a, b) => b.count - a.count)
+      .map(group => ({
+        extraCount: group.count,
+        baselineCount: group.baselineCount,
+        totalNow: group.count + group.baselineCount,
+        signature: group.signature,
+        parents: Array.from(group.parents.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+        topStacks: Array.from(group.stacks.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3),
+        topRemovalStacks: Array.from(group.removalStacks.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3),
+        examples: group.examples,
+      }));
+  }
+
+  function report(options = {}) {
+    const deadPruned = pruneDeadRefs();
+    const current = Array.from(document.querySelectorAll("*"));
+    const connectedExtra = current.filter(node => !baselineWeak.has(node));
+
+    const trackedAlive = [];
+    const detachedAlive = [];
+
+    for (const ref of trackedRefs) {
+      const node = ref.deref();
+      if (!node || node.nodeType !== 1) continue;
+      trackedAlive.push(node);
+      if (!node.isConnected) detachedAlive.push(node);
+    }
+
+    const connectedSummary = summarizeNodes(connectedExtra, "connected-extra");
+    const detachedSummary = summarizeNodes(detachedAlive, "detached-alive");
+
+    console.log(`[domLeakProbe] baseline connected elements: ${baselineCount}`);
+    console.log(`[domLeakProbe] current connected elements: ${current.length}`);
+    console.log(`[domLeakProbe] connected extras since baseline: ${connectedExtra.length}`);
+    console.log(`[domLeakProbe] tracked alive elements: ${trackedAlive.length}`);
+    console.log(`[domLeakProbe] tracked detached alive elements: ${detachedAlive.length}`);
+    console.log(`[domLeakProbe] weak refs pruned since last report: ${deadPruned}`);
+
+    const limit = options.limit || 40;
+
+    console.log("[domLeakProbe] connected extras");
+    console.table(connectedSummary.slice(0, limit).map(group => ({
+      extraCount: group.extraCount,
+      baselineCount: group.baselineCount,
+      signature: group.signature.slice(0, 180),
+      topParent: group.parents[0] && group.parents[0][0],
+      topParentCount: group.parents[0] && group.parents[0][1],
+    })));
+
+    console.log("[domLeakProbe] detached alive");
+    console.table(detachedSummary.slice(0, limit).map(group => ({
+      detachedCount: group.extraCount,
+      baselineCount: group.baselineCount,
+      signature: group.signature.slice(0, 180),
+      lastParent: group.parents[0] && group.parents[0][0],
+      lastParentCount: group.parents[0] && group.parents[0][1],
+    })));
+
+    window.domLeakProbe.lastReport = {
+      baselineCount,
+      currentConnectedCount: current.length,
+      connectedExtraCount: connectedExtra.length,
+      trackedAliveCount: trackedAlive.length,
+      detachedAliveCount: detachedAlive.length,
+      connectedSummary,
+      detachedSummary,
+      deadPruned,
+    };
+
+    return window.domLeakProbe.lastReport;
+  }
+
+  function stop() {
+    observer.disconnect();
+    Node.prototype.appendChild = originals.appendChild;
+    Node.prototype.insertBefore = originals.insertBefore;
+    Node.prototype.replaceChild = originals.replaceChild;
+    Node.prototype.removeChild = originals.removeChild;
+    Element.prototype.append = originals.append;
+    Element.prototype.prepend = originals.prepend;
+    Element.prototype.before = originals.before;
+    Element.prototype.after = originals.after;
+    Element.prototype.replaceWith = originals.replaceWith;
+    Element.prototype.replaceChildren = originals.replaceChildren;
+    Element.prototype.remove = originals.remove;
+    Element.prototype.insertAdjacentHTML = originals.insertAdjacentHTML;
+    Document.prototype.createElement = originals.createElement;
+    Document.prototype.createElementNS = originals.createElementNS;
+    Node.prototype.cloneNode = originals.cloneNode;
+
+    if (originals.innerHTML) {
+      Object.defineProperty(Element.prototype, "innerHTML", originals.innerHTML);
+    }
+
+    delete window.report;
+    console.log("[domLeakProbe] stopped and DOM methods restored");
+  }
+
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+
+  window.domLeakProbe = {
+    mark: takeBaseline,
+    report,
+    stop,
+    lastReport: null,
+    trackedRefs,
+  };
+
+  window.report = report;
+  takeBaseline();
+
+  console.log("[domLeakProbe] installed. Travel now, then run report(). Use domLeakProbe.mark() to reset baseline.");
+})();
+
+
+
+
+
+
+
+
+/////// 
+
+Then Use
+
+const r = report();
+
+JSON.stringify(
+  {
+    counts: {
+      baselineCount: r.baselineCount,
+      currentConnectedCount: r.currentConnectedCount,
+      connectedExtraCount: r.connectedExtraCount,
+      trackedAliveCount: r.trackedAliveCount,
+      detachedAliveCount: r.detachedAliveCount,
+      deadPruned: r.deadPruned
+    },
+    connected: r.connectedSummary.slice(0, 20).map(g => ({
+      extraCount: g.extraCount,
+      baselineCount: g.baselineCount,
+      signature: g.signature,
+      parents: g.parents,
+      topStacks: g.topStacks
+    })),
+    detached: r.detachedSummary.slice(0, 20).map(g => ({
+      detachedCount: g.extraCount,
+      baselineCount: g.baselineCount,
+      signature: g.signature,
+      parents: g.parents,
+      topStacks: g.topStacks,
+      topRemovalStacks: g.topRemovalStacks
+    }))
+  },
+  null,
+  2
+)

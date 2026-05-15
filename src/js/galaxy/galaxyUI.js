@@ -1637,7 +1637,7 @@ function clearHexControlStyles(hex) {
     hex.dataset.storySignature = '';
     hex.dataset.defenseSignature = '';
     if (hex.galaxyDefenseElement) {
-        hex.galaxyDefenseElement.textContent = '';
+        updateHexDefenseDisplay(hex, []);
     }
     if (hex.galaxyStoryIcon) {
         hex.galaxyStoryIcon.classList.add('is-hidden');
@@ -1768,25 +1768,30 @@ function buildDefenseSignature(entries) {
 function updateHexDefenseDisplay(hex, entries) {
     const defenseNode = hex.galaxyDefenseElement;
     const doc = defenseNode.ownerDocument;
-    defenseNode.replaceChildren();
-    if (!entries.length) {
-        return;
-    }
-    entries.forEach(({ icon, total, modifier }) => {
-        const entryNode = doc.createElement('span');
+    entries.forEach(({ icon, total, modifier }, index) => {
+        let entryNode = defenseNode.children[index];
+        if (!entryNode) {
+            entryNode = doc.createElement('span');
+            entryNode.className = 'galaxy-hex__defense-entry';
+            const iconNode = doc.createElement('span');
+            iconNode.className = 'galaxy-hex__defense-icon';
+            const valueNode = doc.createElement('span');
+            valueNode.className = 'galaxy-hex__defense-text';
+            entryNode.append(iconNode, valueNode);
+            defenseNode.appendChild(entryNode);
+        }
         entryNode.className = 'galaxy-hex__defense-entry';
         if (modifier) {
             entryNode.classList.add(`galaxy-hex__defense-entry--${modifier}`);
         }
-        const iconNode = doc.createElement('span');
-        iconNode.className = 'galaxy-hex__defense-icon';
+        const iconNode = entryNode.children[0];
         iconNode.textContent = icon;
-        const valueNode = doc.createElement('span');
-        valueNode.className = 'galaxy-hex__defense-text';
+        const valueNode = entryNode.children[1];
         valueNode.textContent = formatHexFleetPowerValue(total);
-        entryNode.append(iconNode, valueNode);
-        defenseNode.appendChild(entryNode);
     });
+    while (defenseNode.children.length > entries.length) {
+        defenseNode.lastElementChild.remove();
+    }
 }
 
 function updateGalaxyHexControlColors(manager, cache) {
