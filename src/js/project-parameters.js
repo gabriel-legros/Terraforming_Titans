@@ -1224,7 +1224,8 @@ const projectParameters = {
           'liquidOxygen',
           'oxygenIce',
           'liquidNitrogen',
-          'nitrogenIce'
+          'nitrogenIce',
+          'fineSand'
         ],
         atmospheric: [
           'atmosphericWater',
@@ -1235,7 +1236,9 @@ const projectParameters = {
           'greenhouseGas',
           'atmosphericMethane',
           'hydrogen',
-          'sulfuricAcid'
+          'sulfuricAcid',
+          'calciteAerosol',
+          'vanadiumAerosol'
         ]
       },
       massDriverShipEquivalency: 10,
