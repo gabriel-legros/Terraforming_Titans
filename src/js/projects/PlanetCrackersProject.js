@@ -596,16 +596,25 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     const firstKey = keys[0];
     const firstRow = firstKey ? rows[firstKey] : null;
     const headerRow = firstRow?.value?.parentElement?.previousElementSibling?.previousElementSibling;
-    if (headerRow && !headerRow.classList.contains('planet-crackers-assignment-row')) {
+    if (headerRow) {
       headerRow.classList.add('planet-crackers-assignment-row');
-      const crackedHeader = document.createElement('span');
-      crackedHeader.classList.add('stat-label');
+      let crackedHeader = headerRow.querySelector('[data-planet-cracker-ui="cracked-header"]');
+      if (!crackedHeader) {
+        crackedHeader = document.createElement('span');
+        crackedHeader.dataset.planetCrackerUi = 'cracked-header';
+        crackedHeader.classList.add('stat-label');
+        headerRow.insertBefore(crackedHeader, headerRow.children[3]);
+      }
       crackedHeader.textContent = this.getText('crackedHeader', null, 'Cracked');
-      const remainingHeader = document.createElement('span');
-      remainingHeader.classList.add('stat-label');
+
+      let remainingHeader = headerRow.querySelector('[data-planet-cracker-ui="remaining-header"]');
+      if (!remainingHeader) {
+        remainingHeader = document.createElement('span');
+        remainingHeader.dataset.planetCrackerUi = 'remaining-header';
+        remainingHeader.classList.add('stat-label');
+        headerRow.insertBefore(remainingHeader, headerRow.children[4]);
+      }
       remainingHeader.textContent = this.getText('remainingHeader', null, 'Remaining');
-      headerRow.insertBefore(crackedHeader, headerRow.children[3]);
-      headerRow.insertBefore(remainingHeader, headerRow.children[4]);
     }
 
     for (let index = 0; index < keys.length; index += 1) {
@@ -622,17 +631,23 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       if (!rowElement.classList.contains('planet-crackers-assignment-row')) {
         rowElement.classList.add('planet-crackers-assignment-row');
       }
+      if (!row.crackedValue || !row.crackedValue.isConnected) {
+        row.crackedValue = rowElement.querySelector('[data-planet-cracker-ui="cracked-value"]');
+      }
       if (!row.crackedValue) {
-        const crackedValue = document.createElement('span');
-        crackedValue.classList.add('stat-value');
-        rowElement.insertBefore(crackedValue, rowElement.children[3]);
-        row.crackedValue = crackedValue;
+        row.crackedValue = document.createElement('span');
+        row.crackedValue.dataset.planetCrackerUi = 'cracked-value';
+        row.crackedValue.classList.add('stat-value');
+        rowElement.insertBefore(row.crackedValue, rowElement.children[3]);
+      }
+      if (!row.remainingValue || !row.remainingValue.isConnected) {
+        row.remainingValue = rowElement.querySelector('[data-planet-cracker-ui="remaining-value"]');
       }
       if (!row.remainingValue) {
-        const remainingValue = document.createElement('span');
-        remainingValue.classList.add('stat-value');
-        rowElement.insertBefore(remainingValue, rowElement.children[4]);
-        row.remainingValue = remainingValue;
+        row.remainingValue = document.createElement('span');
+        row.remainingValue.dataset.planetCrackerUi = 'remaining-value';
+        row.remainingValue.classList.add('stat-value');
+        rowElement.insertBefore(row.remainingValue, rowElement.children[4]);
       }
     }
   }
