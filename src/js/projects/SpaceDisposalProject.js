@@ -711,6 +711,24 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.updateUI();
   }
 
+  moveDisposalTarget(targetId, direction) {
+    const fromIndex = this.disposalTargets.findIndex(target => target.id === targetId);
+    if (fromIndex < 0) {
+      return;
+    }
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= this.disposalTargets.length) {
+      return;
+    }
+    const movingTarget = this.disposalTargets[fromIndex];
+    this.disposalTargets[fromIndex] = this.disposalTargets[toIndex];
+    this.disposalTargets[toIndex] = movingTarget;
+    this.syncLegacySelectionState();
+    this.clearContinuousExecutionPlanCache();
+    this.rebuildDisposalTargetList();
+    this.updateUI();
+  }
+
   getNextAvailableSelection(excludeTargetId = null) {
     const usedKeys = {};
     for (let i = 0; i < this.disposalTargets.length; i += 1) {
@@ -861,7 +879,26 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       this.removeDisposalTarget(target.id);
     });
 
-    side.append(share, removeButton);
+    const reorderButtons = document.createElement('div');
+    reorderButtons.classList.add('reorder-buttons', 'resource-disposal-target-reorder-buttons');
+
+    const moveUpButton = document.createElement('button');
+    moveUpButton.type = 'button';
+    moveUpButton.innerHTML = '&#9650;';
+    addTrackedUIListener(card, moveUpButton, 'click', () => {
+      this.moveDisposalTarget(target.id, 'up');
+    });
+
+    const moveDownButton = document.createElement('button');
+    moveDownButton.type = 'button';
+    moveDownButton.innerHTML = '&#9660;';
+    addTrackedUIListener(card, moveDownButton, 'click', () => {
+      this.moveDisposalTarget(target.id, 'down');
+    });
+
+    reorderButtons.append(moveUpButton, moveDownButton);
+
+    side.append(share, removeButton, reorderButtons);
     topRow.append(marker, selects, side);
 
     const controls = document.createElement('div');
@@ -930,6 +967,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       phaseLabel,
       share,
       removeButton,
+      moveUpButton,
+      moveDownButton,
       autoToggle,
       temperatureControl,
       pressureControl,
@@ -1125,6 +1164,12 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       row.phaseLabel.textContent = group && group.key === 'storageDepotResource' ? 'Which one' : 'Phase';
       row.phaseContainer.style.display = group && group.options.length > 1 ? 'flex' : 'none';
       row.removeButton.disabled = this.disposalTargets.length <= 1;
+      const isFirst = i === 0;
+      const isLast = i === this.disposalTargets.length - 1;
+      row.moveUpButton.disabled = isFirst;
+      row.moveDownButton.disabled = isLast;
+      row.moveUpButton.classList.toggle('disabled', isFirst);
+      row.moveDownButton.classList.toggle('disabled', isLast);
     }
   }
 

@@ -417,7 +417,9 @@ function renderProjects(activeSubtabId) {
   // Create all project items initially
   projectsArray.forEach(project => {
     const isActive = !activeId || getProjectSubtabIdForProject(project) === activeId;
-    if (isActive && !projectElements[project.name]) {
+    const existingElements = projectElements[project.name];
+    const hasConnectedCard = existingElements?.projectItem && existingElements.projectItem.isConnected;
+    if (isActive && !hasConnectedCard) {
       const categoryContainer = getOrCreateCategoryContainer(project.category || 'resources');
       runWithTrackedUIListeners(categoryContainer, () => {
         createProjectItem(project);

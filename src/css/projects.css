@@ -2518,11 +2518,15 @@
 
 .resource-disposal-target-side {
     display: grid;
-    grid-template-rows: 1.2em auto;
+    grid-template-rows: 1.2em auto auto;
     align-items: flex-end;
     gap: 4px;
     width: 16ch;
     min-width: 16ch;
+}
+
+.resource-disposal-target-reorder-buttons {
+    align-items: flex-end;
 }
 
 .resource-disposal-target-share {
