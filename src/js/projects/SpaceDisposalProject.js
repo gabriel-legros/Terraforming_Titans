@@ -880,18 +880,18 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     });
 
     const reorderButtons = document.createElement('div');
-    reorderButtons.classList.add('reorder-buttons', 'resource-disposal-target-reorder-buttons');
+    reorderButtons.classList.add('resource-disposal-target-reorder-buttons');
 
     const moveUpButton = document.createElement('button');
     moveUpButton.type = 'button';
-    moveUpButton.innerHTML = '&#9650;';
+    moveUpButton.textContent = '↑';
     addTrackedUIListener(card, moveUpButton, 'click', () => {
       this.moveDisposalTarget(target.id, 'up');
     });
 
     const moveDownButton = document.createElement('button');
     moveDownButton.type = 'button';
-    moveDownButton.innerHTML = '&#9660;';
+    moveDownButton.textContent = '↓';
     addTrackedUIListener(card, moveDownButton, 'click', () => {
       this.moveDisposalTarget(target.id, 'down');
     });

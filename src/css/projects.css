@@ -2526,7 +2526,30 @@
 }
 
 .resource-disposal-target-reorder-buttons {
-    align-items: flex-end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.resource-disposal-target-reorder-buttons button {
+    min-width: 28px;
+    border: 1px solid #c4cad7;
+    background: #f1f4f9;
+    border-radius: 4px;
+    padding: 4px 8px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.resource-disposal-target-reorder-buttons button:hover {
+    background: #e2e7f2;
+}
+
+.resource-disposal-target-reorder-buttons button:disabled {
+    background: #eef1f7;
+    color: #7b8496;
+    cursor: not-allowed;
 }
 
 .resource-disposal-target-share {

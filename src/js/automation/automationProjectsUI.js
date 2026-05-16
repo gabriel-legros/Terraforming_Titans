@@ -532,6 +532,7 @@ function updateProjectsAutomationUI() {
     const names = Object.keys(activePreset.projects);
     const includeExpansion = activePreset.includeExpansion !== false;
     const includeOperations = activePreset.includeOperations !== false;
+    const previousSpaceStorageResourceValue = projectAutomationUIState.builderSpaceStorageResourceValue || '';
     projectAutomationUIState.builderType = includeExpansion && includeOperations
       ? 'both'
       : includeExpansion
@@ -539,7 +540,7 @@ function updateProjectsAutomationUI() {
         : 'operations';
     projectAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
     projectAutomationUIState.builderSelectedProjects = names.slice();
-    projectAutomationUIState.builderSpaceStorageResourceValue = '';
+    projectAutomationUIState.builderSpaceStorageResourceValue = previousSpaceStorageResourceValue;
     for (let index = 0; index < names.length; index += 1) {
       const resourceKey = getSpaceStorageSingleResourceKey(names[index]);
       if (resourceKey) {
