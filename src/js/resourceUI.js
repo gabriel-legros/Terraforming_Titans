@@ -91,12 +91,23 @@ function getResourceCategoriesForDisplay(resourceSet) {
     return categories;
   }
   const colonyIndex = categories.indexOf('colony');
+  const surfaceIndex = categories.indexOf('surface');
   const spaceStorageIndex = categories.indexOf('spaceStorage');
-  if (colonyIndex === -1 || spaceStorageIndex === -1 || spaceStorageIndex === colonyIndex + 1) {
+  if (spaceStorageIndex === -1) {
     return categories;
   }
   categories.splice(spaceStorageIndex, 1);
-  categories.splice(colonyIndex + 1, 0, 'spaceStorage');
+  if (colonyIndex !== -1 && surfaceIndex !== -1 && colonyIndex < surfaceIndex) {
+    const updatedSurfaceIndex = categories.indexOf('surface');
+    categories.splice(updatedSurfaceIndex, 0, 'spaceStorage');
+    return categories;
+  }
+  if (colonyIndex !== -1) {
+    const updatedColonyIndex = categories.indexOf('colony');
+    categories.splice(updatedColonyIndex + 1, 0, 'spaceStorage');
+    return categories;
+  }
+  categories.push('spaceStorage');
   return categories;
 }
 
@@ -350,6 +361,10 @@ function createResourceContainers(resourcesData) {
       const resourceListId = `${category}-resources-resources-container`;
       const existingList = document.getElementById(resourceListId);
       if (existingList) {
+        const existingContainer = existingList.parentElement;
+        if (existingContainer && existingContainer.parentElement === resourcesContainer) {
+          resourcesContainer.appendChild(existingContainer);
+        }
         const existingToggle = existingList.parentElement.querySelector('.resource-view-toggle');
         if (existingToggle) {
           resourceUICache.viewToggles[category] = existingToggle;
@@ -1521,6 +1536,9 @@ function populateResourceElements(resources) {
       }
       const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
       const currentIds = new Set();
+      if (category === 'spaceStorage') {
+        currentIds.add('space-storage-total-container');
+      }
       for (let i = 0; i < resourceNames.length; i += 1) {
         const resourceName = resourceNames[i];
         const resourceObj = getDisplayResourceObject(resources, category, resourceName);
