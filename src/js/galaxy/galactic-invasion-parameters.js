@@ -35,7 +35,7 @@ const GALACTIC_INVASION_TRAIT_DEFINITIONS = {
     nameKey: 'ui.space.invasion.traits.commandBypass.name',
     nameFallback: 'Command Bypass',
     descriptionKey: 'ui.space.invasion.traits.commandBypass.description',
-    descriptionFallback: 'Ignores UHF defensive fleet assignments when attacking and only fights sector base defense. UHF operations against INV also take 10 seconds.'
+    descriptionFallback: 'Ignores UHF defensive fleet assignments when attacking, but remaining UHF control still provides proportional sector base defense. UHF operations against INV also take 10 seconds.'
   },
   occupationBastions: {
     nameKey: 'ui.space.invasion.traits.occupationBastions.name',
@@ -47,7 +47,7 @@ const GALACTIC_INVASION_TRAIT_DEFINITIONS = {
     nameKey: 'ui.space.invasion.traits.fortifiedBeachhead.name',
     nameFallback: 'Fortified Beachhead',
     descriptionKey: 'ui.space.invasion.traits.fortifiedBeachhead.description',
-    descriptionFallback: 'The first fully conquered rim sector gains INV defenses equal to half the initial fleet power and must be retaken before the invasion is defeated.'
+    descriptionFallback: 'The first fully conquered rim sector gains attritable INV defenses equal to half the initial fleet power and must be retaken or worn down before the invasion is defeated.'
   },
   shieldedCore: {
     nameKey: 'ui.space.invasion.traits.shieldedCore.name',

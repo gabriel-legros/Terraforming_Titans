@@ -2795,7 +2795,7 @@ setLanguageData({
           },
           commandBypass: {
             name: 'Command Bypass',
-            description: 'Ignores UHF defensive fleet assignments when attacking and only fights sector base defense. UHF operations against INV also take 10 seconds.',
+            description: 'Ignores UHF defensive fleet assignments when attacking, but remaining UHF control still provides proportional sector base defense. UHF operations against INV also take 10 seconds.',
           },
           occupationBastions: {
             name: 'Occupation Bastions',
@@ -2803,7 +2803,7 @@ setLanguageData({
           },
           fortifiedBeachhead: {
             name: 'Fortified Beachhead',
-            description: 'The first fully conquered rim sector gains INV defenses equal to half the initial fleet power and must be retaken before the invasion is defeated.',
+            description: 'The first fully conquered rim sector gains attritable INV defenses equal to half the initial fleet power and must be retaken before the invasion is defeated.',
           },
           shieldedCore: {
             name: 'Shielded Core',

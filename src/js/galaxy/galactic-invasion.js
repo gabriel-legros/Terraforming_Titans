@@ -202,6 +202,7 @@ class GalacticInvasionManager extends EffectableEntity {
       return;
     }
     if (operation.factionId === UHF_FACTION_ID && operation.targetFactionId === PROMETHEAN_INVASION_FACTION_ID) {
+      this.applyBeachheadAttrition(operation);
       this.pruneInvasionDefenses();
     }
   }
@@ -586,12 +587,27 @@ class GalacticInvasionManager extends EffectableEntity {
 
   adjustDefenseSummary(sector, originFactionId, targetFactionId, contributions) {
     if (originFactionId === PROMETHEAN_INVASION_FACTION_ID && (targetFactionId === UHF_FACTION_ID || !targetFactionId)) {
+      let foundUhfContribution = false;
       contributions.forEach((entry) => {
-        if (entry.factionId === UHF_FACTION_ID && this.hasActiveTrait('commandBypass')) {
-          entry.fleetPower = 0;
-          entry.totalPower = entry.basePower;
+        if (entry.factionId !== UHF_FACTION_ID || !this.hasActiveTrait('commandBypass')) {
+          return;
         }
+        foundUhfContribution = true;
+        entry.basePower = this.getCommandBypassUhfSectorDefense(sector, entry.basePower);
+        entry.fleetPower = 0;
+        entry.totalPower = entry.basePower;
       });
+      if (!foundUhfContribution && this.hasActiveTrait('commandBypass')) {
+        const basePower = this.getCommandBypassUhfSectorDefense(sector, 0);
+        if (basePower > 0) {
+          contributions.push({
+            factionId: UHF_FACTION_ID,
+            basePower,
+            fleetPower: 0,
+            totalPower: basePower
+          });
+        }
+      }
     }
     if (targetFactionId === PROMETHEAN_INVASION_FACTION_ID || !targetFactionId) {
       const bonus = this.getSectorDefenseBonus(sector.key);
@@ -633,6 +649,19 @@ class GalacticInvasionManager extends EffectableEntity {
     return contributions;
   }
 
+  getCommandBypassUhfSectorDefense(sector, currentBasePower) {
+    const totalControl = Number(sector?.getTotalControlValue?.()) || 0;
+    const uhfControl = Number(sector?.getControlValue?.(UHF_FACTION_ID)) || 0;
+    if (!(totalControl > 0) || !(uhfControl > 0)) {
+      return 0;
+    }
+    const sectorValue = Number(sector.getValue?.()) || 0;
+    const controlShare = Math.max(0, Math.min(1, uhfControl / totalControl));
+    const sectorDefense = sectorValue > 0 && controlShare > 0 ? sectorValue * controlShare : 0;
+    const existingBase = Number(currentBasePower) || 0;
+    return Math.max(0, sectorDefense, existingBase);
+  }
+
   getMonolithHeldFleetPower(sectorKey) {
     if (!this.hasActiveTrait('monolithArmada') || this.monolithCooldownMs <= 0 || sectorKey !== this.monolithSectorKey) {
       return 0;
@@ -652,6 +681,36 @@ class GalacticInvasionManager extends EffectableEntity {
       bonus += this.beachheadDefensePower;
     }
     return bonus;
+  }
+
+  applyBeachheadAttrition(operation) {
+    if (!this.hasActiveTrait('fortifiedBeachhead')) {
+      return;
+    }
+    if (!this.beachheadSectorKey || operation.sectorKey !== this.beachheadSectorKey) {
+      return;
+    }
+    if (!(this.beachheadDefensePower > 0)) {
+      return;
+    }
+    const defensePower = Number(operation.defensePower) || 0;
+    const offensePower = Number(operation.offensePower) || 0;
+    if (!(defensePower > 0) || !(offensePower > 0)) {
+      return;
+    }
+    const baseLoss = (offensePower * offensePower) / (offensePower + defensePower);
+    const modifier = operation.result === 'success' ? 1 : Math.min(1, offensePower / defensePower);
+    const rawLoss = baseLoss * (modifier > 0 ? modifier : 0);
+    if (!(rawLoss > 0)) {
+      return;
+    }
+    const cappedLoss = Math.min(defensePower, rawLoss);
+    const beachheadShare = Math.max(0, Math.min(1, this.beachheadDefensePower / defensePower));
+    const beachheadLoss = Math.min(this.beachheadDefensePower, cappedLoss * beachheadShare);
+    if (!(beachheadLoss > 0)) {
+      return;
+    }
+    this.beachheadDefensePower = Math.max(0, this.beachheadDefensePower - beachheadLoss);
   }
 
   pruneInvasionDefenses() {

@@ -2604,7 +2604,7 @@ const researchParameters = {
         id: 'artificial_stars',
         name: '',
         description: '',
-        cost: { advancedResearch: 50_000_000_000 },
+        cost: { advancedResearch: 500_000_000_000 },
         prerequisites: [],
         effects: [
           {
