@@ -84,8 +84,8 @@ const BASE_SHELL_COST = (() => {
         metal: superalloyBase * 20
     };
 })();
-const DISK_METAL_PER_HECTARE = 25_000_000_000;
-const DISK_SUPERALLOYS_PER_HECTARE = 10_000_000_000;
+const DISK_METAL_PER_HECTARE = 10_000_000_000;
+const DISK_SUPERALLOYS_PER_HECTARE = 5_000_000_000;
 
 function mulberry32(seed) {
     let t = seed >>> 0;

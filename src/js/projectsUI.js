@@ -452,9 +452,17 @@ function rebindExistingProjectInstance(nextProject) {
   }
 
   const preservedUiElements = currentProject.el;
+  const preservedUiProperties = {};
   Object.keys(currentProject).forEach(key => {
     if (!Object.prototype.hasOwnProperty.call(nextProject, key)) {
       delete currentProject[key];
+    } else if (
+      key !== 'el' &&
+      currentProject[key] != null &&
+      nextProject[key] == null &&
+      (typeof currentProject[key] === 'object' || typeof currentProject[key] === 'function')
+    ) {
+      preservedUiProperties[key] = currentProject[key];
     }
   });
   Object.setPrototypeOf(currentProject, Object.getPrototypeOf(nextProject));
@@ -462,6 +470,9 @@ function rebindExistingProjectInstance(nextProject) {
   if (preservedUiElements && Object.keys(preservedUiElements).length > 0) {
     currentProject.el = preservedUiElements;
   }
+  Object.keys(preservedUiProperties).forEach(key => {
+    currentProject[key] = preservedUiProperties[key];
+  });
   projectManager.projects[currentProject.name] = currentProject;
   elements.boundProject = currentProject;
   return currentProject;
