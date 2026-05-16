@@ -304,8 +304,15 @@ function createColonyDetails(structure) {
     colonyDetails.appendChild(needBox);
   }
 
-  if (Aerostat.attachBuoyancySection) {
+  const isAerostatStructure = structure instanceof Aerostat;
+  if (Aerostat.attachBuoyancySection && isAerostatStructure) {
     Aerostat.attachBuoyancySection(colonyDetails, structure);
+  } else {
+    colonyDetails.querySelectorAll('.colony-buoyancy-card').forEach(card => {
+      cleanupTrackedUIListeners(card);
+      cleanupDynamicTooltipsIn(card);
+      card.remove();
+    });
   }
 
   return colonyDetails;
@@ -460,8 +467,15 @@ function rebuildColonyNeedCache(structureRow, structure) {
       }
     });
 
-    if (Aerostat.attachBuoyancySection) {
+    const isAerostatStructure = structure instanceof Aerostat;
+    if (Aerostat.attachBuoyancySection && isAerostatStructure) {
       Aerostat.attachBuoyancySection(oldDetails, structure);
+    } else {
+      oldDetails.querySelectorAll('.colony-buoyancy-card').forEach(card => {
+        cleanupTrackedUIListeners(card);
+        cleanupDynamicTooltipsIn(card);
+        card.remove();
+      });
     }
   } else {
     structureRow.appendChild(createColonyDetails(structure));

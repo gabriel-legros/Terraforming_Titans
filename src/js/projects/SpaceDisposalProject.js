@@ -651,6 +651,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     projectElements[this.name] = {
       ...elements,
       massDriverInfoSection: sectionContainer,
+      massDriverTitleElement: title,
       massDriverInfoElement: infoContent,
       massDriverActiveElement: activeValue,
       massDriverBuiltElement: builtValue,
@@ -1783,6 +1784,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     if (elements.massDriverInfoSection && elements.massDriverInfoElement) {
       if (this.isBooleanFlagSet('massDriverEnabled')) {
+        if (elements.massDriverTitleElement) {
+          elements.massDriverTitleElement.style.display = '';
+        }
         const structure = this.getMassDriverStructure();
         if (elements.massDriverActiveElement) {
           elements.massDriverActiveElement.textContent = formatBuildingCount(structure.active);
@@ -1804,6 +1808,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         elements.massDriverInfoNoteElement.style.display = '';
         this.updateMassDriverButtonLabels();
       } else {
+        if (elements.massDriverTitleElement) {
+          elements.massDriverTitleElement.style.display = 'none';
+        }
         elements.massDriverInfoElement.style.display = 'none';
         elements.massDriverInfoNoteElement.style.display = 'none';
       }

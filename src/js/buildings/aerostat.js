@@ -1536,9 +1536,11 @@ function attachAerostatBuoyancySection(container, structure) {
     structure.getBuoyancySummary?.() ??
     getAerostatText('ui.buildings.aerostat.buoyancyTelemetryPending', 'Buoyancy telemetry pending.');
   const existing = structure.buoyancyUI ?? {};
+  const expandedState = structure.buoyancyDetailsExpanded !== false;
   const needsRebuild =
     !existing.container ||
     !existing.container.isConnected ||
+    existing.ownerStructure !== structure ||
     !existing.liftValue ||
     !existing.poweredFlightRow ||
     !existing.poweredFlightValue ||
@@ -1819,11 +1821,13 @@ function attachAerostatBuoyancySection(container, structure) {
       capacityTooltip,
       capacityDecreaseButton,
       capacityIncreaseButton,
-      expanded: true
+      expanded: expandedState,
+      ownerStructure: structure
     };
 
     header.addEventListener('click', () => {
       uiState.expanded = !uiState.expanded;
+      structure.buoyancyDetailsExpanded = uiState.expanded;
       updateAerostatBuoyancySection(structure);
     });
 
@@ -1831,6 +1835,10 @@ function attachAerostatBuoyancySection(container, structure) {
     card.appendChild(body);
     structure.buoyancyUI = uiState;
   } else {
+    existing.ownerStructure = structure;
+    if (existing.expanded !== false && existing.expanded !== true) {
+      existing.expanded = expandedState;
+    }
     setAerostatBuoyancyText(existing.text, summaryText);
     structure.buoyancyUI = existing;
   }
@@ -1852,6 +1860,7 @@ function updateAerostatBuoyancySection(structure) {
   setAerostatBuoyancyText(ui.text, summaryText);
 
   const expanded = ui.expanded !== false;
+  structure.buoyancyDetailsExpanded = expanded;
   ui.container.classList.toggle('collapsed', !expanded);
   ui.arrow.textContent = expanded ? '\u25BC' : '\u25B6';
   if (ui.body) {
