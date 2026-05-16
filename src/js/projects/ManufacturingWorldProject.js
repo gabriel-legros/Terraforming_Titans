@@ -38,6 +38,16 @@
       if (/^\d+$/.test(trimmed)) {
         return BigInt(trimmed);
       }
+      const parsed = parseFlexibleNumber(trimmed);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        if (Number.isSafeInteger(parsed)) {
+          return BigInt(parsed);
+        }
+        return BigInt(Math.floor(parsed).toLocaleString('fullwide', {
+          useGrouping: false,
+          maximumFractionDigits: 0
+        }));
+      }
     }
     const numeric = Number(value) || 0;
     if (numeric <= 0) {

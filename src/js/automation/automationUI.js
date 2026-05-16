@@ -1290,7 +1290,9 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
           ? parseAutomationPresetJsonFieldValue(event.target.value)
           : isBooleanLeaf
             ? event.target.value === 'true'
-            : parseAutomationPresetJsonFieldValue(event.target.value);
+            : isString
+              ? event.target.value
+              : parseAutomationPresetJsonFieldValue(event.target.value);
         const basePreset = details._activePresetRef || preset;
         const baseValue = getAutomationPresetValueAtPath(basePreset, path);
         if (JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
