@@ -503,11 +503,21 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   isActiveInvasionDefeated() {
-    const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
-    if ((Number(faction.fleetPower) || 0) > FULL_CONTROL_EPSILON) {
+    if (this.getRunningOperation()) {
       return false;
     }
-    if (this.getRunningOperation()) {
+    let hasControlledSector = false;
+    galaxyManager.getSectors().forEach((sector) => {
+      const control = Number(sector.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
+      if (control > FULL_CONTROL_EPSILON) {
+        hasControlledSector = true;
+      }
+    });
+    if (!hasControlledSector) {
+      return true;
+    }
+    const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
+    if ((Number(faction.fleetPower) || 0) > FULL_CONTROL_EPSILON) {
       return false;
     }
     if (this.hasActiveTrait('fortifiedBeachhead') && this.beachheadSectorKey) {
