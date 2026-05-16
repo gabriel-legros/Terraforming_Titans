@@ -26,14 +26,17 @@ const artificialUICache = {
   ringOrbitInput: null,
   ringAuto: null,
   ringOrbitBox: null,
+  ringOrbitText: null,
   ringOrbitLabel: null,
   ringWidthRange: null,
   ringWidthInput: null,
   ringWidthBox: null,
+  ringWidthText: null,
   ringWidthLabel: null,
   ringFluxRange: null,
   ringFluxInput: null,
   ringFluxBox: null,
+  ringFluxText: null,
   ringFluxLabel: null,
   ringAreaBox: null,
   ringAreaLabel: null,
@@ -461,7 +464,17 @@ function getRingStarCoreOptions() {
   return fn ? fn() : [];
 }
 
+function getDiskStarCoreOptions() {
+  return artificialManager?.getDiskStarCoreOptions ? artificialManager.getDiskStarCoreOptions() : [];
+}
+
 function getRingOrbitBoundsAU() {
+  if (getSelectedArtificialType(null) === 'disk') {
+    if (artificialUICache.ringStarCore) {
+      return getDiskStarCoreBounds(artificialUICache.ringStarCore.value);
+    }
+    return { min: 0.042, max: 0.354 };
+  }
   if (typeof getRingStarCoreBounds === 'function' && artificialUICache.ringStarCore) {
     return getRingStarCoreBounds(artificialUICache.ringStarCore.value);
   }
@@ -566,6 +579,13 @@ function setRingFluxFields(value, force = false) {
   }
 }
 
+function updateArtificialTextNodeLabel(node, text) {
+  if (!node || !node.firstChild) return;
+  if (node.firstChild.nodeValue !== text) {
+    node.firstChild.nodeValue = text;
+  }
+}
+
 function storeDraftSelection(manager, options = {}) {
   const preserveSector = !!options.preserveSector;
   const preserveFilter = !!options.preserveFilter;
@@ -575,8 +595,10 @@ function storeDraftSelection(manager, options = {}) {
     core: artificialUICache.core ? artificialUICache.core.value : selection.core,
     starContext: artificialUICache.starContext ? artificialUICache.starContext.value : selection.starContext,
     ringStarCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : selection.starCore,
+    diskStarCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : selection.diskStarCore,
     radiusEarth: selection.radiusEarth,
     orbitRadiusAU: selection.orbitRadiusAU,
+    diskRadiusAU: selection.diskRadiusAU,
     widthKm: selection.widthKm,
     targetFluxWm2: selection.targetFluxWm2,
     name: artificialUICache.nameInput ? artificialUICache.nameInput.value : ''
@@ -602,6 +624,12 @@ function getAutoRingOrbitValue(widthKm) {
   const bounds = getRingOrbitBoundsAU();
   const manager = artificialManager;
   return manager.getAutoRingOrbit(bounds, widthKm);
+}
+
+function getAutoDiskRadiusValue() {
+  const bounds = getRingOrbitBoundsAU();
+  const manager = artificialManager;
+  return manager.getAutoDiskRadius(bounds);
 }
 
 function applyRadiusBounds() {
@@ -931,6 +959,7 @@ function ensureArtificialLayout() {
   ringOrbitTop.appendChild(ringOrbitValue);
   ringOrbitBox.appendChild(ringOrbitTop);
   artificialUICache.ringOrbitLabel = ringOrbitValue;
+  artificialUICache.ringOrbitText = ringOrbitText;
 
   const ringOrbitControls = document.createElement('div');
   ringOrbitControls.className = 'artificial-radius-controls';
@@ -982,6 +1011,7 @@ function ensureArtificialLayout() {
   ringWidthTop.appendChild(ringWidthValue);
   ringWidthBox.appendChild(ringWidthTop);
   artificialUICache.ringWidthLabel = ringWidthValue;
+  artificialUICache.ringWidthText = ringWidthText;
 
   const ringWidthControls = document.createElement('div');
   ringWidthControls.className = 'artificial-radius-controls';
@@ -1021,6 +1051,7 @@ function ensureArtificialLayout() {
   ringFluxTop.appendChild(ringFluxValue);
   ringFluxBox.appendChild(ringFluxTop);
   artificialUICache.ringFluxLabel = ringFluxValue;
+  artificialUICache.ringFluxText = ringFluxText;
 
   const ringFluxControls = document.createElement('div');
   ringFluxControls.className = 'artificial-radius-controls';
@@ -1477,6 +1508,12 @@ function ensureArtificialLayout() {
   ringAuto.addEventListener('click', () => {
     artificialRingOrbitEditing = false;
     artificialRingWidthEditing = false;
+    if (getSelectedArtificialType(null) === 'disk') {
+      const value = getAutoDiskRadiusValue();
+      setRingOrbitFields(value, true);
+      updateArtificialUI();
+      return;
+    }
     const widthBounds = getRingWidthBounds();
     const orbitBounds = getRingOrbitBoundsAU();
     const selection = artificialManager.getAutoRingSelection(orbitBounds, widthBounds);
@@ -1553,7 +1590,7 @@ function ensureArtificialLayout() {
     const selection = buildArtificialSelection(null, manager);
     const cost = type === 'ring'
       ? manager.calculateRingworldCost(manager.calculateRingWorldAreaHectares(selection.orbitRadiusAU, selection.widthKm), selection.widthKm)
-      : manager.calculateCost(selection.radiusEarth);
+      : (type === 'disk' ? manager.calculateDiskCost(manager.calculateDiskWorldAreaHectares(selection.diskRadiusAU)) : manager.calculateCost(selection.radiusEarth));
     const durationContext = manager.getDurationContext(selection.radiusEarth);
     if (manager.exceedsDurationLimit(durationContext.durationMs)) return;
     const prepayState = manager.getPrepayState(selection, cost);
@@ -1580,6 +1617,16 @@ function ensureArtificialLayout() {
         orbitRadiusAU: selection.orbitRadiusAU,
         widthKm: selection.widthKm,
         targetFluxWm2: selection.targetFluxWm2,
+        name: chosenName,
+        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
+        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
+      });
+      return;
+    }
+    if (type === 'disk') {
+      artificialManager.startDiskConstruction({
+        starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
+        diskRadiusAU: selection.diskRadiusAU,
         name: chosenName,
         sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
         sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
@@ -1989,8 +2036,10 @@ function buildArtificialSelection(project, manager) {
       type: project.type || 'shell',
       radiusEarth: project.radiusEarth,
       orbitRadiusAU: project.orbitRadiusAU || project.distanceFromStarAU,
+      diskRadiusAU: project.diskRadiusAU || project.orbitRadiusAU || project.distanceFromStarAU,
       widthKm: project.widthKm || project.ringWidthKm,
       starCore: project.starCore || project.core,
+      diskStarCore: project.diskStarCore || project.starCore || project.core,
       targetFluxWm2: project.targetFluxWm2,
       core: project.core,
       starContext: project.starContext
@@ -2012,6 +2061,19 @@ function buildArtificialSelection(project, manager) {
       starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : ''
     };
   }
+  if (type === 'disk') {
+    const diskRadiusAU = getRingOrbitRadiusAUValue();
+    const landHa = manager.calculateDiskWorldAreaHectares(diskRadiusAU);
+    const radiusEarth = manager.calculateRadiusEarthFromLandHectares(landHa);
+    return {
+      type,
+      radiusEarth,
+      diskRadiusAU,
+      orbitRadiusAU: diskRadiusAU,
+      targetFluxWm2: ARTIFICIAL_RING_FLUX_DEFAULT_WM2,
+      diskStarCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : ''
+    };
+  }
   return {
     type,
     radiusEarth: getRadiusValue(),
@@ -2027,7 +2089,7 @@ function renderCosts(project, selection, manager) {
   const widthKm = selection?.widthKm || project?.widthKm || project?.ringWidthKm;
   const cost = type === 'ring'
     ? (project ? project.cost : manager.calculateRingworldCost(area, widthKm))
-    : (project ? project.cost : manager.calculateCost(r));
+    : (type === 'disk' ? (project ? project.cost : manager.calculateDiskCost(area)) : (project ? project.cost : manager.calculateCost(r)));
   const durationContext = project
     ? { durationMs: project.durationMs, worldCount: project.worldDivisor || 1 }
     : manager.getDurationContext(r);
@@ -2038,6 +2100,7 @@ function renderCosts(project, selection, manager) {
     artificialUICache.costMetalRow.classList.remove('hidden');
   }
   if (type === 'ring') {
+    updateArtificialTextNodeLabel(artificialUICache.ringOrbitText, getArtificialText('blueprint.orbitalRadius', 'Orbital radius (AU)'));
     const orbitAU = project?.orbitRadiusAU || selection?.orbitRadiusAU || project?.distanceFromStarAU || 0.1;
     const widthKm = project?.widthKm || selection?.widthKm || project?.ringWidthKm || 10_000;
     const targetFluxWm2 = project?.targetFluxWm2 || selection?.targetFluxWm2 || ARTIFICIAL_RING_FLUX_DEFAULT_WM2;
@@ -2049,13 +2112,21 @@ function renderCosts(project, selection, manager) {
       artificialUICache.ringWidthLabel.textContent = `${fmt(widthKm, false, 0)} km`;
     }
     artificialUICache.ringFluxLabel.textContent = `${fmt(targetFluxWm2, false, 3)} W/m²`;
+  } else if (type === 'disk') {
+    updateArtificialTextNodeLabel(artificialUICache.ringOrbitText, getArtificialText('blueprint.diskRadius', 'Disk radius (AU)'));
+    const diskRadiusAU = project?.diskRadiusAU || selection?.diskRadiusAU || project?.orbitRadiusAU || project?.distanceFromStarAU || 0.1;
+    if (artificialUICache.ringOrbitLabel) {
+      const earthRadii = diskRadiusAU * ARTIFICIAL_AU_TO_EARTH_RADII;
+      artificialUICache.ringOrbitLabel.textContent = `${diskRadiusAU.toFixed(3)} AU (${fmt(earthRadii, false, 0)} R⊕)`;
+    }
   } else if (artificialUICache.radiusLabel) {
+    updateArtificialTextNodeLabel(artificialUICache.ringOrbitText, getArtificialText('blueprint.orbitalRadius', 'Orbital radius (AU)'));
     artificialUICache.radiusLabel.textContent = `${r.toFixed(2)} Rₑ`;
   }
   if (artificialUICache.areaLabel) {
     artificialUICache.areaLabel.textContent = `${fmt(area, false, 2)} land`;
   }
-  if (type === 'ring' && artificialUICache.ringAreaLabel) {
+  if ((type === 'ring' || type === 'disk') && artificialUICache.ringAreaLabel) {
     artificialUICache.ringAreaLabel.textContent = `${fmt(area, false, 2)} land`;
   }
   if (artificialUICache.costMetal) {
@@ -2151,12 +2222,17 @@ function renderEffects(project, selection) {
     artificialUICache.effectShipEnergyRow.classList.toggle('hidden', false);
   }
   if (artificialUICache.effectShipEnergyLabel) {
-    artificialUICache.effectShipEnergyLabel.textContent = type === 'ring'
-      ? getArtificialText('effects.ringworldSpinProject', 'You will have to spin the Ringworld via an infrastructure special project.')
-      : getArtificialText('effects.spaceshipEnergyCosts', 'Spaceship energy costs:');
+    let effectLabel = getArtificialText('effects.spaceshipEnergyCosts', 'Spaceship energy costs:');
+    if (type === 'ring') {
+      effectLabel = getArtificialText('effects.ringworldSpinProject', 'You will have to spin the Ringworld via an infrastructure special project.');
+    }
+    if (type === 'disk') {
+      effectLabel = getArtificialText('effects.diskFixedFlux', 'Alderson disk stellar flux is fixed at 1300 W/m².');
+    }
+    artificialUICache.effectShipEnergyLabel.textContent = effectLabel;
   }
   if (artificialUICache.effectShipEnergy) {
-    artificialUICache.effectShipEnergy.textContent = type === 'ring' ? '' : `x${r.toFixed(2)}`;
+    artificialUICache.effectShipEnergy.textContent = (type === 'ring' || type === 'disk') ? '' : `x${r.toFixed(2)}`;
   }
 }
 
@@ -2174,7 +2250,7 @@ function renderStartButton(project, manager, preview) {
   const canPrepay = prepayState.canPrepay;
   const durationBlocked = preview.exceedsLimit;
   const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
-  const supported = type === 'shell' || type === 'ring';
+  const supported = type === 'shell' || type === 'ring' || type === 'disk';
   btn.disabled = durationBlocked || !supported || (!canStart && !canPrepay);
   if (durationBlocked) {
     btn.textContent = getArtificialText('actions.exceedsLimit', 'Exceeds 5-hour limit');
@@ -2358,7 +2434,7 @@ function updateArtificialUI(options = {}) {
       }
       if (!artificialUICache.nameInput.value) {
         const typeValue = artificialUICache.type ? artificialUICache.type.value : 'shell';
-        const defaultName = manager?.getDefaultWorldName(typeValue === 'ring' ? 'ring' : 'shell');
+        const defaultName = manager?.getDefaultWorldName(typeValue === 'ring' ? 'ring' : (typeValue === 'disk' ? 'disk' : 'shell'));
         artificialUICache.nameInput.placeholder = defaultName || `Artificial World ${manager.nextId}`;
       }
     }
@@ -2449,9 +2525,12 @@ function updateArtificialUI(options = {}) {
   }
 
   if (artificialUICache.ringStarCore) {
-    const options = getRingStarCoreOptions();
+    const selectedTypeForCore = getSelectedArtificialType(project);
+    const options = selectedTypeForCore === 'disk' ? getDiskStarCoreOptions() : getRingStarCoreOptions();
     const fallback = options.find((entry) => !entry.disabled) || options[0];
-    const draftRingCore = draft.ringStarCore || (draft.type === 'ring' ? draft.core : '');
+    const draftRingCore = selectedTypeForCore === 'disk'
+      ? (draft.diskStarCore || (draft.type === 'disk' ? draft.core : ''))
+      : (draft.ringStarCore || (draft.type === 'ring' ? draft.core : ''));
     const signature = JSON.stringify(options.map((option) => ({
       value: option.value,
       disabled: !!option.disabled,
@@ -2465,8 +2544,8 @@ function updateArtificialUI(options = {}) {
       const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
       artificialUICache.ringStarCore.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
     }
-    if (project && project.type === 'ring') {
-      artificialUICache.ringStarCore.value = project.starCore || project.core || artificialUICache.ringStarCore.value;
+    if (project && (project.type === 'ring' || project.type === 'disk')) {
+      artificialUICache.ringStarCore.value = project.diskStarCore || project.starCore || project.core || artificialUICache.ringStarCore.value;
     } else if (!project && draftRingCore) {
       const hasDraft = options.some((entry) => entry.value === draftRingCore);
       const shouldHydrateFromDraft = force
@@ -2487,6 +2566,7 @@ function updateArtificialUI(options = {}) {
   const selectedType = getSelectedArtificialType(project);
   const isShell = selectedType === 'shell';
   const isRing = selectedType === 'ring';
+  const isDisk = selectedType === 'disk';
   if (artificialUICache.coreField) {
     artificialUICache.coreField.classList.toggle('hidden', !isShell);
     artificialUICache.coreField.style.display = isShell ? '' : 'none';
@@ -2500,12 +2580,12 @@ function updateArtificialUI(options = {}) {
     artificialUICache.radiusBox.style.display = isShell ? '' : 'none';
   }
   if (artificialUICache.ringStarCoreField) {
-    artificialUICache.ringStarCoreField.classList.toggle('hidden', !isRing);
-    artificialUICache.ringStarCoreField.style.display = isRing ? '' : 'none';
+    artificialUICache.ringStarCoreField.classList.toggle('hidden', !(isRing || isDisk));
+    artificialUICache.ringStarCoreField.style.display = (isRing || isDisk) ? '' : 'none';
   }
   if (artificialUICache.ringOrbitBox) {
-    artificialUICache.ringOrbitBox.classList.toggle('hidden', !isRing);
-    artificialUICache.ringOrbitBox.style.display = isRing ? '' : 'none';
+    artificialUICache.ringOrbitBox.classList.toggle('hidden', !(isRing || isDisk));
+    artificialUICache.ringOrbitBox.style.display = (isRing || isDisk) ? '' : 'none';
   }
   if (artificialUICache.ringWidthBox) {
     artificialUICache.ringWidthBox.classList.toggle('hidden', !isRing);
@@ -2514,8 +2594,8 @@ function updateArtificialUI(options = {}) {
   artificialUICache.ringFluxBox.classList.toggle('hidden', !isRing);
   artificialUICache.ringFluxBox.style.display = isRing ? '' : 'none';
   if (artificialUICache.ringAreaBox) {
-    artificialUICache.ringAreaBox.classList.toggle('hidden', !isRing);
-    artificialUICache.ringAreaBox.style.display = isRing ? '' : 'none';
+    artificialUICache.ringAreaBox.classList.toggle('hidden', !(isRing || isDisk));
+    artificialUICache.ringAreaBox.style.display = (isRing || isDisk) ? '' : 'none';
   }
 
   applyStarContextBounds(force);
@@ -2532,21 +2612,21 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.radiusRange) artificialUICache.radiusRange.disabled = !isShell;
     if (artificialUICache.radiusInput) artificialUICache.radiusInput.disabled = !isShell;
     if (artificialUICache.radiusAuto) artificialUICache.radiusAuto.disabled = !isShell;
-    if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = !isRing;
-    if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = !isRing;
-    if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = !isRing;
+    if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = !(isRing || isDisk);
+    if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = !(isRing || isDisk);
+    if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = !(isRing || isDisk);
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = !isRing;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = !isRing;
     artificialUICache.ringFluxRange.disabled = !isRing;
     artificialUICache.ringFluxInput.disabled = !isRing;
-    artificialUICache.ringAuto.disabled = !isRing;
+    artificialUICache.ringAuto.disabled = !(isRing || isDisk);
     artificialUICache.sector.disabled = false;
     artificialUICache.sectorFilter.disabled = false;
     if (force && !artificialRadiusEditing) {
       setRadiusFields(draft.radiusEarth, true);
     }
     if (force && !artificialRingOrbitEditing) {
-      setRingOrbitFields(draft.orbitRadiusAU, true);
+      setRingOrbitFields(isDisk ? draft.diskRadiusAU : draft.orbitRadiusAU, true);
     }
     const shouldHydrateRingWidth = force && !artificialRingWidthEditing;
     if (shouldHydrateRingWidth) {
@@ -2573,7 +2653,7 @@ function updateArtificialUI(options = {}) {
     artificialUICache.sector.disabled = true;
     artificialUICache.sectorFilter.disabled = true;
     setRadiusFields(project.radiusEarth, true);
-    setRingOrbitFields(project.orbitRadiusAU || project.distanceFromStarAU || 0.1, true);
+    setRingOrbitFields(project.diskRadiusAU || project.orbitRadiusAU || project.distanceFromStarAU || 0.1, true);
     setRingWidthFields(project.widthKm || project.ringWidthKm || 10_000, true);
     setRingFluxFields(project.targetFluxWm2 || ARTIFICIAL_RING_FLUX_DEFAULT_WM2, true);
   }
@@ -2594,14 +2674,14 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.radiusRange) artificialUICache.radiusRange.disabled = prepayLocked || !isShell;
     if (artificialUICache.radiusInput) artificialUICache.radiusInput.disabled = prepayLocked || !isShell;
     if (artificialUICache.radiusAuto) artificialUICache.radiusAuto.disabled = prepayLocked || !isShell;
-    if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = prepayLocked || !isRing;
-    if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = prepayLocked || !isRing;
-    if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = prepayLocked || !isRing;
+    if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = prepayLocked || !(isRing || isDisk);
+    if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = prepayLocked || !(isRing || isDisk);
+    if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = prepayLocked || !(isRing || isDisk);
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = prepayLocked || !isRing;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = prepayLocked || !isRing;
     artificialUICache.ringFluxRange.disabled = prepayLocked || !isRing;
     artificialUICache.ringFluxInput.disabled = prepayLocked || !isRing;
-    artificialUICache.ringAuto.disabled = prepayLocked || !isRing;
+    artificialUICache.ringAuto.disabled = prepayLocked || !(isRing || isDisk);
     artificialUICache.sector.disabled = prepayLocked;
     artificialUICache.sectorFilter.disabled = prepayLocked;
     const sectorHasOption = artificialUICache.sector

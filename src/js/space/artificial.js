@@ -3,7 +3,7 @@ const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
 const ARTIFICIAL_TYPES = [
     { value: 'shell', label: 'Shellworld', disabled: false },
     { value: 'ring', label: 'Ringworld', disabled: true, disabledSource: 'World 10' },
-    { value: 'disk', label: 'Artificial disk (Coming Soon)', disabled: true }
+    { value: 'disk', label: 'Alderson disk', disabled: true }
 ];
 const ARTIFICIAL_CORES = [
     { value: 'super-earth', label: 'Super Earth', disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
@@ -34,6 +34,16 @@ const RINGWORLD_STAR_CORES = [
     { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 300_000 },
     { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 600_000 },
     { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", baseDisabledSource: "World 14 & Galactic Conquest", requiresFullGalaxyControl: true, minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 1_500_000 }
+];
+const DISK_TARGET_FLUX_WM2 = 1_300;
+const DISK_STAR_CORES = [
+    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.042, maxRadiusAU: 0.354 },
+    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: false, minRadiusAU: 0.424, maxRadiusAU: 1.131 },
+    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: false, minRadiusAU: 1.202, maxRadiusAU: 2.263 },
+    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: false, minRadiusAU: 2.404, maxRadiusAU: 4.243 },
+    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: false, minRadiusAU: 4.525, maxRadiusAU: 11.314 },
+    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: false, minRadiusAU: 12.021, maxRadiusAU: 169.706 },
+    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: false, requiresFullGalaxyControl: true, minRadiusAU: 180, maxRadiusAU: 250 }
 ];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
@@ -74,6 +84,8 @@ const BASE_SHELL_COST = (() => {
         metal: superalloyBase * 20
     };
 })();
+const DISK_METAL_PER_HECTARE = 25_000_000_000;
+const DISK_SUPERALLOYS_PER_HECTARE = 10_000_000_000;
 
 function mulberry32(seed) {
     let t = seed >>> 0;
@@ -197,6 +209,30 @@ function getRingStarCores() {
 function getRingStarCoreConfig(value) {
     const fallback = RINGWORLD_STAR_CORES[0];
     return RINGWORLD_STAR_CORES.find((entry) => entry.value === value) || fallback;
+}
+
+function getDiskStarCores() {
+    if (artificialManager && artificialManager.getDiskStarCoreOptions) {
+        return artificialManager.getDiskStarCoreOptions();
+    }
+    return DISK_STAR_CORES.map((entry) => ({ ...entry }));
+}
+
+function getDiskStarCoreConfig(value) {
+    const fallback = DISK_STAR_CORES[0];
+    return DISK_STAR_CORES.find((entry) => entry.value === value) || fallback;
+}
+
+function getDiskRadiusBoundsAU(coreValue) {
+    const core = getDiskStarCoreConfig(coreValue);
+    const min = Math.max(core.minRadiusAU || 0.042, 0.001);
+    const max = Math.max(core.maxRadiusAU || min, min);
+    return { min, max };
+}
+
+function clampDiskRadiusAU(value, bounds) {
+    const next = Math.max(0, Number(value) || 0);
+    return Math.min(Math.max(next, bounds.min), bounds.max);
 }
 
 function getRingRadiusBoundsAU(coreValue) {
@@ -323,6 +359,32 @@ function calculateRingLandHectares(orbitRadiusAU, widthKm) {
     const areaKm2 = circumferenceKm * width;
     return Math.max(0, areaKm2 * 100);
 }
+
+function generateDiskStar({ seed, spectralType, diskRadiusAU, targetFluxWm2 }) {
+    const rng = mulberry32(seed);
+    const massRange = ARTIFICIAL_STAR_MASS_RANGES[spectralType] || ARTIFICIAL_STAR_MASS_RANGES.M;
+    const mass = massRange[0] + (massRange[1] - massRange[0]) * rng();
+    const radius = radiusFromMassSolar(mass);
+    const diskRadius = Math.max(diskRadiusAU || 0, 0);
+    const targetFlux = Math.max(targetFluxWm2 || DISK_TARGET_FLUX_WM2, 1);
+    const luminosity = (diskRadius * diskRadius * targetFlux) / (2 * SOLAR_CONSTANT_WM2);
+    const core = `${spectralType.toLowerCase()}disk`;
+    return {
+        name: `${core.charAt(0).toUpperCase()}${core.slice(1)}-${String((seed >>> 0) % 1000).padStart(3, '0')}`,
+        spectralType,
+        luminositySolar: luminosity,
+        massSolar: mass,
+        radiusSolar: radius,
+        temperatureK: calculateStarTemperatureK(luminosity, radius),
+        habitableZone: buildHabitableZone(luminosity)
+    };
+}
+
+function calculateDiskLandHectares(radiusAU) {
+    const radiusKm = Math.max(radiusAU || 0, 0) * AU_IN_KM;
+    const areaKm2 = 2 * Math.PI * radiusKm * radiusKm;
+    return Math.max(0, areaKm2 * 100);
+}
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
 const ARTIFICIAL_FLEET_CAPACITY_UNCAPPED = 'uncapped';
@@ -349,7 +411,13 @@ class ArtificialManager extends EffectableEntity {
                 .filter((entry) => entry.disabled !== true && entry.requiresFullGalaxyControl !== true)
                 .map((entry) => entry.value)
         );
+        this.unlockedDiskStarCores = new Set(
+            DISK_STAR_CORES
+                .filter((entry) => entry.disabled !== true && entry.requiresFullGalaxyControl !== true)
+                .map((entry) => entry.value)
+        );
         this.storyUnlockedRingStarCores = new Set();
+        this.storyUnlockedDiskStarCores = new Set();
         this.draftSelection = this.normalizeDraftSelection(this.createDefaultDraftSelection());
         this.prepay = {
             signature: '',
@@ -396,9 +464,32 @@ class ArtificialManager extends EffectableEntity {
         return this.unlockedRingStarCores.has(coreId);
     }
 
+    isDiskStarCoreUnlocked(coreId) {
+        const entry = DISK_STAR_CORES.find((core) => core.value === coreId);
+        if (!entry) {
+            return false;
+        }
+        if (entry.requiresFullGalaxyControl) {
+            return this.storyUnlockedDiskStarCores.has(coreId)
+                && galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
+        }
+        return this.unlockedDiskStarCores.has(coreId);
+    }
+
     getRingStarCoreOptions() {
         return RINGWORLD_STAR_CORES.map((entry) => {
             const unlocked = this.isRingStarCoreUnlocked(entry.value);
+            return {
+                ...entry,
+                disabled: !unlocked,
+                disabledSource: unlocked ? null : (entry.baseDisabledSource || entry.disabledSource || null)
+            };
+        });
+    }
+
+    getDiskStarCoreOptions() {
+        return DISK_STAR_CORES.map((entry) => {
+            const unlocked = this.isDiskStarCoreUnlocked(entry.value);
             return {
                 ...entry,
                 disabled: !unlocked,
@@ -416,8 +507,11 @@ class ArtificialManager extends EffectableEntity {
         const starDefault = starContexts.find((entry) => !entry.disabled) || starContexts[0];
         const ringCores = this.getRingStarCoreOptions();
         const ringDefault = ringCores.find((entry) => !entry.disabled) || ringCores[0];
+        const diskCores = this.getDiskStarCoreOptions();
+        const diskDefault = diskCores.find((entry) => !entry.disabled) || diskCores[0];
         const coreBounds = getArtificialCoreBounds(coreDefault.value);
         const orbitBounds = getRingRadiusBoundsAU(ringDefault.value);
+        const diskBounds = getDiskRadiusBoundsAU(diskDefault.value);
         return {
             type: typeDefault.value,
             core: coreDefault.value,
@@ -427,6 +521,8 @@ class ArtificialManager extends EffectableEntity {
             orbitRadiusAU: clampRingOrbitRadiusAU(orbitBounds.min, orbitBounds),
             widthKm: clampRingWidthKm(10_000, ringDefault.value),
             targetFluxWm2: clampRingTargetFluxWm2(RINGWORLD_TARGET_FLUX_WM2),
+            diskStarCore: diskDefault.value,
+            diskRadiusAU: clampDiskRadiusAU(diskBounds.min, diskBounds),
             sector: 'auto',
             sectorFilter: 'all',
             name: ''
@@ -455,8 +551,15 @@ class ArtificialManager extends EffectableEntity {
         const ringValue = ringCores.some((entry) => entry.value === requestedRingCore)
             ? requestedRingCore
             : ringDefault.value;
+        const diskCores = this.getDiskStarCoreOptions();
+        const diskDefault = diskCores.find((entry) => !entry.disabled) || diskCores[0];
+        const requestedDiskCore = selection.diskStarCore || (typeValue === 'disk' ? selection.core : null);
+        const diskValue = diskCores.some((entry) => entry.value === requestedDiskCore)
+            ? requestedDiskCore
+            : diskDefault.value;
         const coreBounds = getArtificialCoreBounds(coreValue);
         const orbitBounds = getRingRadiusBoundsAU(ringValue);
+        const diskBounds = getDiskRadiusBoundsAU(diskValue);
         return {
             type: typeValue,
             core: coreValue,
@@ -466,6 +569,8 @@ class ArtificialManager extends EffectableEntity {
             orbitRadiusAU: clampRingOrbitRadiusAU(selection.orbitRadiusAU, orbitBounds),
             widthKm: clampRingWidthKm(selection.widthKm, ringValue),
             targetFluxWm2: clampRingTargetFluxWm2(selection.targetFluxWm2),
+            diskStarCore: diskValue,
+            diskRadiusAU: clampDiskRadiusAU(selection.diskRadiusAU, diskBounds),
             sector: selection.sector || 'auto',
             sectorFilter: selection.sectorFilter || 'all',
             name: selection.name || ''
@@ -546,6 +651,19 @@ class ArtificialManager extends EffectableEntity {
         this.updateUI(true);
     }
 
+    unlockDiskStarCore(coreId) {
+        const entry = DISK_STAR_CORES.find((core) => core.value === coreId);
+        if (!entry) return;
+        if (entry.requiresFullGalaxyControl) {
+            this.storyUnlockedDiskStarCores.add(coreId);
+            this.refreshConditionalRingStarCoreUnlocks();
+            return;
+        }
+        if (this.unlockedDiskStarCores.has(coreId)) return;
+        this.unlockedDiskStarCores.add(coreId);
+        this.updateUI(true);
+    }
+
     refreshConditionalRingStarCoreUnlocks() {
         const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
         this._lastGalaxyConquestUnlockState = hasGalaxyConquest;
@@ -615,6 +733,10 @@ class ArtificialManager extends EffectableEntity {
             this.unlockRingStarCore(effect.targetId);
             return;
         }
+        if (effect.type === 'unlockDiskStarCore') {
+            this.unlockDiskStarCore(effect.targetId);
+            return;
+        }
         if (effect.type === 'setFleetCapacityWorldCap') {
             this.setFleetCapacityWorldCap(effect.value);
             return;
@@ -647,6 +769,18 @@ class ArtificialManager extends EffectableEntity {
 
     calculateRingWorldAreaHectares(orbitRadiusAU, widthKm) {
         return calculateRingLandHectares(orbitRadiusAU, widthKm);
+    }
+
+    calculateDiskWorldAreaHectares(radiusAU) {
+        return calculateDiskLandHectares(radiusAU);
+    }
+
+    calculateDiskCost(landHa) {
+        const land = Math.max(landHa || 0, 0);
+        return {
+            metal: land * DISK_METAL_PER_HECTARE,
+            superalloys: land * DISK_SUPERALLOYS_PER_HECTARE
+        };
     }
 
     calculateRadiusEarthFromLandHectares(landHa) {
@@ -807,6 +941,44 @@ class ArtificialManager extends EffectableEntity {
         return this.getDurationContext(radiusEarth).durationMs;
     }
 
+    getDiskConstructionDurationMs(radiusAU) {
+        const landHa = calculateDiskLandHectares(radiusAU);
+        const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
+        return this.getDurationContext(radiusEarth).durationMs;
+    }
+
+    getAutoDiskRadius(bounds) {
+        const targetMs = MAX_SHELL_DURATION_MS;
+        let low = bounds.min;
+        let high = bounds.max;
+        const lowDuration = this.getDiskConstructionDurationMs(low);
+        const highDuration = this.getDiskConstructionDurationMs(high);
+        let candidate = high;
+        if (lowDuration >= targetMs) {
+            candidate = low;
+        } else if (highDuration <= targetMs) {
+            candidate = high;
+        } else {
+            for (let i = 0; i < AUTO_RADIUS_ITERATIONS; i += 1) {
+                const mid = (low + high) / 2;
+                const midDuration = this.getDiskConstructionDurationMs(mid);
+                if (midDuration > targetMs) {
+                    high = mid;
+                } else {
+                    low = mid;
+                }
+            }
+            candidate = high;
+        }
+        let snapped = Math.round(candidate / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
+        let durationMs = this.getDiskConstructionDurationMs(snapped);
+        while (durationMs > targetMs && snapped > bounds.min) {
+            snapped = Math.round((snapped - AUTO_RING_ORBIT_STEP) / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
+            durationMs = this.getDiskConstructionDurationMs(snapped);
+        }
+        return Math.min(Math.max(Number(snapped.toFixed(3)), bounds.min), bounds.max);
+    }
+
     exceedsDurationLimit(durationMs) {
         return Math.max(durationMs || 0, 0) > MAX_SHELL_DURATION_MS;
     }
@@ -825,7 +997,7 @@ class ArtificialManager extends EffectableEntity {
     }
 
     getDefaultWorldName(type) {
-        const baseName = type === 'ring' ? 'Ringworld' : 'Shellworld';
+        const baseName = type === 'ring' ? 'Ringworld' : (type === 'disk' ? 'Alderson Disk' : 'Shellworld');
         const pattern = new RegExp(`^${baseName} \\d+$`);
         const statuses = spaceManager?.artificialWorldStatuses || {};
         const count = Object.values(statuses).reduce((total, status) => {
@@ -867,9 +1039,11 @@ class ArtificialManager extends EffectableEntity {
             radiusEarth: selection?.radiusEarth || 0,
             orbitRadiusAU: selection?.orbitRadiusAU || 0,
             widthKm: selection?.widthKm || 0,
+            diskRadiusAU: selection?.diskRadiusAU || 0,
             targetFluxWm2: selection?.targetFluxWm2 || 0,
             core: selection?.core || '',
             starCore: selection?.starCore || '',
+            diskStarCore: selection?.diskStarCore || '',
             starContext: selection?.starContext || '',
             cost: {
                 metal: Math.max(cost?.metal || 0, 0),
@@ -1209,6 +1383,95 @@ class ArtificialManager extends EffectableEntity {
       return true;
     }
 
+    startDiskConstruction(options) {
+      if (!this.enabled || this.activeProject) return false;
+      if (!this.isArtificialTypeUnlocked('disk')) return false;
+
+      const starCore = options?.starCore || DISK_STAR_CORES[0].value;
+      if (!this.isDiskStarCoreUnlocked(starCore)) return false;
+      const starCoreConfig = getDiskStarCoreConfig(starCore);
+
+      const bounds = getDiskRadiusBoundsAU(starCore);
+      const diskRadiusAU = clampDiskRadiusAU(options?.diskRadiusAU, bounds);
+      const landHa = this.calculateDiskWorldAreaHectares(diskRadiusAU);
+      const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
+
+      const chosenName = (options?.name && String(options.name).trim()) || this.getDefaultWorldName('disk');
+      const cost = this.calculateDiskCost(landHa);
+      const durationContext = this.getDurationContext(radiusEarth);
+      if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
+      const selection = {
+        type: 'disk',
+        radiusEarth,
+        diskRadiusAU,
+        targetFluxWm2: DISK_TARGET_FLUX_WM2,
+        diskStarCore: starCore
+      };
+      const prepayState = this.getPrepayState(selection, cost);
+      const remainingCost = this.getRemainingCost(cost, prepayState.paid);
+      if (!this.canCoverCost(remainingCost)) return false;
+      const deduction = this.pullResources(remainingCost);
+      if (!deduction) return false;
+      this.resetPrepay();
+
+      const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
+      const { durationMs, worldCount } = durationContext;
+
+      let sector = options?.sector || 'auto';
+      if (sector === 'auto') {
+        sector = this.resolveAutoSector(options?.sectorFilter || 'all');
+      }
+
+      const now = Date.now();
+      const generationSeed = (this.nextId * 0x6a09e667) >>> 0;
+      const star = generateDiskStar({
+        seed: generationSeed,
+        spectralType: starCoreConfig.spectralType,
+        diskRadiusAU,
+        targetFluxWm2: DISK_TARGET_FLUX_WM2
+      });
+
+      this.activeProject = {
+          id: this.nextId,
+          seed: this.createSeed(),
+          name: chosenName,
+          type: 'disk',
+          core: starCore,
+          starCore,
+          diskStarCore: starCore,
+          spectralType: starCoreConfig.spectralType,
+          diskRadiusAU,
+          orbitRadiusAU: diskRadiusAU,
+          orbitRadiusEarth: diskRadiusAU * AU_TO_EARTH_RADII,
+          radiusEarth,
+          areaHa: landHa,
+          landHa,
+          durationMs,
+          remainingMs: durationMs,
+          status: 'building',
+          startedAt: now,
+          completedAt: null,
+          cost,
+          terraformedValue,
+          fleetCapacityValue: this.calculateFleetCapacityWorldValue(radiusEarth, terraformedValue),
+          distanceFromStarAU: diskRadiusAU,
+          targetFluxWm2: DISK_TARGET_FLUX_WM2,
+          isRogue: false,
+          hasStar: true,
+          allowStar: true,
+          starContext: ARTIFICIAL_STAR_CONTEXTS[0].value,
+          sector,
+          star,
+          stockpile: { metal: 0, silicon: 0 },
+          builtFrom: spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : 'unknown',
+          worldDivisor: worldCount
+      };
+
+      this.nextId += 1;
+      this.updateUI(true);
+      return true;
+    }
+
     cancelConstruction() {
         if (!this.activeProject || this.activeProject.status !== 'building') return false;
         this.recordHistoryEntry('cancelled');
@@ -1364,11 +1627,11 @@ class ArtificialManager extends EffectableEntity {
             || params.celestialParameters.baseLand
             || this.calculateAreaHectares(radiusEarth);
         const type = params.classification?.type || 'shell';
-        const core = params.classification?.core || (type === 'ring' ? RINGWORLD_STAR_CORES[0].value : 'super-earth');
-        const coreConfig = type === 'ring' ? null : getArtificialCoreConfig(core);
+        const core = params.classification?.core || (type === 'ring' ? RINGWORLD_STAR_CORES[0].value : (type === 'disk' ? DISK_STAR_CORES[0].value : 'super-earth'));
+        const coreConfig = (type === 'ring' || type === 'disk') ? null : getArtificialCoreConfig(core);
         const isRogue = params.celestialParameters.rogue === true;
-        const allowStar = type === 'ring' ? true : coreConfig.allowStar !== false;
-        const hasStar = type === 'ring' ? true : (allowStar && !isRogue);
+        const allowStar = (type === 'ring' || type === 'disk') ? true : coreConfig.allowStar !== false;
+        const hasStar = (type === 'ring' || type === 'disk') ? true : (allowStar && !isRogue);
         return {
             name: params.name,
             type,
@@ -1383,6 +1646,7 @@ class ArtificialManager extends EffectableEntity {
             allowStar,
             hasStar,
             orbitRadiusAU: params.celestialParameters?.distanceFromSun,
+            diskRadiusAU: params.specialAttributes?.diskRadiusAU || params.specialAttributes?.disk?.radiusAU || undefined,
             widthKm: params.specialAttributes?.ringWidthKm || params.specialAttributes?.ring?.widthKm || undefined,
             celestialParameters: {
                 hasNaturalMagnetosphere: params.celestialParameters?.hasNaturalMagnetosphere === true
@@ -1399,16 +1663,30 @@ class ArtificialManager extends EffectableEntity {
         const gravity = 9.81;
         const sector = project.sector || currentPlanetParameters?.celestialParameters?.sector || 'R5-07';
         const isRing = project.type === 'ring';
+        const isDisk = project.type === 'disk';
         const radiusKm = (project.radiusEarth || 1) * EARTH_RADIUS_KM;
-        const allowStar = isRing ? true : (project.hasStar !== false && project.allowStar !== false);
+        const allowStar = (isRing || isDisk) ? true : (project.hasStar !== false && project.allowStar !== false);
         let star = project.star ? JSON.parse(JSON.stringify(project.star)) : null;
         const stockpileMetal = project.stockpile?.metal || project.initialDeposit?.metal || 0;
         const stockpileSilicon = project.stockpile?.silicon || project.initialDeposit?.silicon || 0;
-        const isRogue = isRing ? false : (project.isRogue === true || !allowStar);
-        const distanceFromStarAU = isRogue ? 0 : (isRing ? (project.orbitRadiusAU || project.distanceFromStarAU || 1) : (project.distanceFromStarAU || 1));
+        const isRogue = (isRing || isDisk) ? false : (project.isRogue === true || !allowStar);
+        const distanceFromStarAU = isRogue
+            ? 0
+            : (isRing ? (project.orbitRadiusAU || project.distanceFromStarAU || 1) : (isDisk ? (project.diskRadiusAU || project.orbitRadiusAU || project.distanceFromStarAU || 1) : (project.distanceFromStarAU || 1)));
         const targetFluxWm2 = isRing
             ? clampRingTargetFluxWm2(project.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2)
-            : project.targetFluxWm2;
+            : (isDisk ? DISK_TARGET_FLUX_WM2 : project.targetFluxWm2);
+        const diskRadiusAU = isDisk ? (project.diskRadiusAU || project.orbitRadiusAU || distanceFromStarAU) : 0;
+        if (isDisk && !star) {
+            const diskCore = getDiskStarCoreConfig(project.diskStarCore || project.starCore || project.core);
+            const seed = (project.id || 1) * 0x6a09e667;
+            star = generateDiskStar({
+                seed,
+                spectralType: diskCore.spectralType,
+                diskRadiusAU,
+                targetFluxWm2
+            });
+        }
         if (isRing && !star) {
             const ringCore = getRingStarCoreConfig(project.starCore || project.core);
             const seed = (project.id || 1) * 0x517cc1b7;
@@ -1438,6 +1716,13 @@ class ArtificialManager extends EffectableEntity {
             base.specialAttributes.ringConstructionCostTons = (project.cost?.superalloys || 0) + (project.cost?.metal || 0);
             base.specialAttributes.ringConstructionCostIncludesMetal = true;
         }
+        if (isDisk) {
+            base.specialAttributes.zoneKeys = ['tropical'];
+            base.specialAttributes.diskRadiusAU = diskRadiusAU;
+            base.specialAttributes.disk = { radiusAU: diskRadiusAU, targetFluxWm2: DISK_TARGET_FLUX_WM2 };
+            base.specialAttributes.diskConstructionCostTons = (project.cost?.superalloys || 0) + (project.cost?.metal || 0);
+            base.specialAttributes.diskConstructionCostIncludesMetal = true;
+        }
         base.classification = {
             archetype: 'artificial',
             type: project.type,
@@ -1459,47 +1744,47 @@ class ArtificialManager extends EffectableEntity {
             targetFluxWm2,
             hasNaturalMagnetosphere: project.celestialParameters?.hasNaturalMagnetosphere === true
         };
-        base.effects = isRing
+        base.effects = (isRing || isDisk)
             ? [
                 {
                     target: 'project',
                     targetId: 'spaceMirrorFacility',
                     type: 'permanentProjectDisable',
                     value: true,
-                    effectId: 'ringworld-disable-space-mirror-facility'
+                    effectId: isDisk ? 'alderson-disk-disable-space-mirror-facility' : 'ringworld-disable-space-mirror-facility'
                 },
                 {
                     target: 'building',
                     targetId: 'spaceMirror',
                     type: 'permanentBuildingDisable',
                     value: true,
-                    effectId: 'ringworld-disable-space-mirrors'
+                    effectId: isDisk ? 'alderson-disk-disable-space-mirrors' : 'ringworld-disable-space-mirrors'
                 },
                 {
                     target: 'building',
                     targetId: 'hyperionLantern',
                     type: 'permanentBuildingDisable',
                     value: true,
-                    effectId: 'ringworld-disable-hyperion-lanterns'
+                    effectId: isDisk ? 'alderson-disk-disable-hyperion-lanterns' : 'ringworld-disable-hyperion-lanterns'
                 },
                 {
                     target: 'project',
                     targetId: 'planetaryThruster',
                     type: 'permanentProjectDisable',
                     value: true,
-                    effectId: 'ringworld-disable-planetary-thrusters'
+                    effectId: isDisk ? 'alderson-disk-disable-planetary-thrusters' : 'ringworld-disable-planetary-thrusters'
                 },
                 {
                     target: 'researchManager',
                     targetId: 'space_elevator',
                     type: 'researchDisable',
-                    effectId: 'ringworld-disable-space-elevator-research'
+                    effectId: isDisk ? 'alderson-disk-disable-space-elevator-research' : 'ringworld-disable-space-elevator-research'
                 },
                 {
                     target: 'project',
                     targetId: 'ringworldTerraforming',
                     type: 'enable',
-                    effectId: 'ringworld-enable-terraforming-protocol'
+                    effectId: isDisk ? 'alderson-disk-enable-terraforming-protocol' : 'ringworld-enable-terraforming-protocol'
                 },
                 ...spaceElevatorEffects
             ]
@@ -1863,6 +2148,8 @@ class ArtificialManager extends EffectableEntity {
             unlockedCores: Array.from(this.unlockedCores),
             unlockedRingStarCores: Array.from(this.unlockedRingStarCores),
             storyUnlockedRingStarCores: Array.from(this.storyUnlockedRingStarCores),
+            unlockedDiskStarCores: Array.from(this.unlockedDiskStarCores),
+            storyUnlockedDiskStarCores: Array.from(this.storyUnlockedDiskStarCores),
             draftSelection: { ...this.draftSelection },
             prepay: this.prepay
         };
@@ -1882,6 +2169,12 @@ class ArtificialManager extends EffectableEntity {
         }
         if (Array.isArray(state.storyUnlockedRingStarCores)) {
             this.storyUnlockedRingStarCores = new Set(state.storyUnlockedRingStarCores);
+        }
+        if (Array.isArray(state.unlockedDiskStarCores)) {
+            this.unlockedDiskStarCores = new Set(state.unlockedDiskStarCores);
+        }
+        if (Array.isArray(state.storyUnlockedDiskStarCores)) {
+            this.storyUnlockedDiskStarCores = new Set(state.storyUnlockedDiskStarCores);
         }
         const existingFleetCap = this.fleetCapacityWorldCap;
         const hasSavedFleetCap = Object.prototype.hasOwnProperty.call(state, 'fleetCapacityWorldCap');
@@ -1934,6 +2227,7 @@ class ArtificialManager extends EffectableEntity {
                     : terraformedValue
             );
             const isRing = this.activeProject.type === 'ring';
+            const isDisk = this.activeProject.type === 'disk';
             if (this.activeProject.hasStar === undefined) {
                 this.activeProject.hasStar = true;
             }
@@ -1972,6 +2266,33 @@ class ArtificialManager extends EffectableEntity {
                 }
                 this.activeProject.isRogue = false;
                 this.activeProject.allowStar = true;
+            } else if (isDisk) {
+                if (this.activeProject.diskRadiusAU === undefined) {
+                    this.activeProject.diskRadiusAU = this.activeProject.orbitRadiusAU || this.activeProject.distanceFromStarAU || DISK_STAR_CORES[0].minRadiusAU;
+                }
+                const diskCore = getDiskStarCoreConfig(this.activeProject.diskStarCore || this.activeProject.starCore || this.activeProject.core);
+                this.activeProject.diskRadiusAU = clampDiskRadiusAU(this.activeProject.diskRadiusAU, getDiskRadiusBoundsAU(diskCore.value));
+                this.activeProject.orbitRadiusAU = this.activeProject.diskRadiusAU;
+                if (!this.activeProject.landHa) {
+                    this.activeProject.landHa = this.activeProject.areaHa || this.calculateDiskWorldAreaHectares(this.activeProject.diskRadiusAU);
+                }
+                if (!this.activeProject.radiusEarth) {
+                    this.activeProject.radiusEarth = this.calculateRadiusEarthFromLandHectares(this.activeProject.landHa);
+                }
+                if (!this.activeProject.star) {
+                    const seed = (this.activeProject.id || this.nextId || 1) * 0x6a09e667;
+                    this.activeProject.star = generateDiskStar({
+                        seed,
+                        spectralType: diskCore.spectralType,
+                        diskRadiusAU: this.activeProject.diskRadiusAU,
+                        targetFluxWm2: DISK_TARGET_FLUX_WM2
+                    });
+                }
+                this.activeProject.distanceFromStarAU = this.activeProject.diskRadiusAU;
+                this.activeProject.targetFluxWm2 = DISK_TARGET_FLUX_WM2;
+                this.activeProject.isRogue = false;
+                this.activeProject.allowStar = true;
+                this.activeProject.hasStar = true;
             } else {
                 if (this.activeProject.allowStar === undefined) {
                     const cfg = getArtificialCoreConfig(this.activeProject.core);
@@ -2041,6 +2362,10 @@ function getRingStarCoreBounds(coreValue) {
     return getRingRadiusBoundsAU(coreValue);
 }
 
+function getDiskStarCoreBounds(coreValue) {
+    return getDiskRadiusBoundsAU(coreValue);
+}
+
 function getArtificialCoreConfig(coreValue) {
     const fallback = ARTIFICIAL_CORES[0];
     return ARTIFICIAL_CORES.find((entry) => entry.value === coreValue) || fallback;
@@ -2080,6 +2405,8 @@ if (typeof window !== 'undefined') {
     window.getRingStarCores = getRingStarCores;
     window.getRingStarCoreBounds = getRingStarCoreBounds;
     window.getRingWidthBoundsKm = getRingWidthBoundsKm;
+    window.getDiskStarCores = getDiskStarCores;
+    window.getDiskStarCoreBounds = getDiskStarCoreBounds;
     window.getArtificialStarContexts = getArtificialStarContexts;
     window.getArtificialCoreBounds = getArtificialCoreBounds;
     window.getArtificialCoreConfig = getArtificialCoreConfig;
@@ -2093,6 +2420,8 @@ if (typeof window !== 'undefined') {
         getRingStarCores,
         getRingStarCoreBounds,
         getRingWidthBoundsKm,
+        getDiskStarCores,
+        getDiskStarCoreBounds,
         getArtificialStarContexts,
         getArtificialCoreBounds,
         getArtificialCoreConfig,
