@@ -918,7 +918,7 @@ setLanguageData({
       },
       lifters: {
         title: 'Lifter Controls',
-        titleTooltip: 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. Gas recipes push output into space storage. Multi-output recipes add each output separately before normal resource cap handling. Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. Strip Atmosphere removes all gases proportionally.',
+        titleTooltip: 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. Multi-output recipes add each output separately before normal resource cap handling. Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. Strip Atmosphere removes all gases proportionally.',
         totalLifters: 'Total Lifters',
         runLifters: 'Run lifters',
         energyPerLifter: 'Energy per lifter',
@@ -931,6 +931,8 @@ setLanguageData({
         supercharge: 'Supercharge',
         recipe: 'Recipe',
         complexity: 'Complexity',
+        maxAssignment: 'Max',
+        operationNote: 'Per recipe rate uses (Assigned / Complexity) x {value} units/s. Max is the current assignment cap after Warp Gate Network access, complexity, throughput, and supercharge.',
         starLiftingTooltip: 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.',
         status: {
           idle: 'Idle',

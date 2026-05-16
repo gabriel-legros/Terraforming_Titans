@@ -11,6 +11,13 @@ const LIFTER_RECIPE_TYPES = {
 const LIFTER_STRIP_RECIPE_KEY = 'stripAtmosphere';
 const LIFTERS_UNASSIGNED_KEY = 'idleUnassigned';
 const LIFTER_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
+const LIFTER_GAS_GIANT_CAP_WARP_GATE_LEVEL = 1_000_000;
+const LIFTER_GAS_GIANT_CAP_RATE_DIVISOR = 10000 * 365;
+const LIFTER_GAS_GIANT_RESOURCE_POOLS = {
+  hydrogen: 5e34,
+  methane: 3e33,
+  ammonia: 8e32,
+};
 
 const DEFAULT_LIFTER_HARVEST_RECIPES = {
   hydrogen: {
@@ -481,6 +488,65 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }];
   }
 
+  getGasGiantCapResourceKey(recipeKey, recipe = null) {
+    const resolved = recipe || this.getRecipe(recipeKey);
+    if (recipeKey === 'hydrogen' || resolved?.storageKey === 'hydrogen') {
+      return recipeKey === 'starLifting' ? null : 'hydrogen';
+    }
+    if (recipeKey === 'methane' || resolved?.storageKey === 'atmosphericMethane') {
+      return 'methane';
+    }
+    if (recipeKey === 'ammonia' || resolved?.storageKey === 'atmosphericAmmonia') {
+      return 'ammonia';
+    }
+    return null;
+  }
+
+  getGasGiantCapMultiplier() {
+    const averageLevel = warpGateNetworkManager.getAverageWarpGateLevelAllSectors();
+    return Math.max(1, averageLevel) / LIFTER_GAS_GIANT_CAP_WARP_GATE_LEVEL;
+  }
+
+  getGasGiantCapRateForRecipe(recipeKey, recipe = null) {
+    const resourceKey = this.getGasGiantCapResourceKey(recipeKey, recipe);
+    if (!resourceKey) {
+      return Infinity;
+    }
+    return (LIFTER_GAS_GIANT_RESOURCE_POOLS[resourceKey] / LIFTER_GAS_GIANT_CAP_RATE_DIVISOR)
+      * this.getGasGiantCapMultiplier();
+  }
+
+  getGasGiantMaxAssignmentForRecipe(recipeKey, recipe = null) {
+    const resolved = recipe || this.getRecipe(recipeKey);
+    if (!resolved) {
+      return 0n;
+    }
+    const capRate = this.getGasGiantCapRateForRecipe(recipeKey, resolved);
+    if (capRate === Infinity) {
+      return null;
+    }
+    const unitRate = this.getEffectiveUnitRatePerLifter();
+    if (!(unitRate > 0)) {
+      return 0n;
+    }
+    const complexity = this.getRecipeComplexity(resolved);
+    const outputMultiplier = Math.max(1, this.getRecipeTotalOutputMultiplier(resolved));
+    const maxAssigned = Math.floor((capRate * complexity) / (unitRate * outputMultiplier));
+    return normalizeLifterInteger(maxAssigned);
+  }
+
+  getAssignmentCapForKey(key, total = normalizeLifterInteger(this.repeatCount)) {
+    if (this.isUnassignedAssignmentKey(key)) {
+      return total;
+    }
+    const recipe = this.getRecipe(key);
+    const cap = this.getGasGiantMaxAssignmentForRecipe(key, recipe);
+    if (cap === null) {
+      return total;
+    }
+    return cap < total ? cap : total;
+  }
+
   getRecipeTotalOutputMultiplier(recipe) {
     const outputs = this.getRecipeOutputs(recipe);
     if (outputs.length === 0) {
@@ -514,6 +580,13 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
     });
 
+    availableKeys.forEach((key) => {
+      const cap = this.getAssignmentCapForKey(key, total);
+      if ((this.lifterAssignments[key] || 0n) > cap) {
+        this.lifterAssignments[key] = cap;
+      }
+    });
+
     let usedManual = 0n;
     availableKeys.forEach((key) => {
       if (!this.autoAssignFlags[key]) {
@@ -525,37 +598,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     const remaining = total > usedManual ? (total - usedManual) : 0n;
 
     if (autoKeys.length > 0) {
-      let totalWeight = 0;
-      autoKeys.forEach((key) => {
-        totalWeight += this.autoAssignWeights[key];
-      });
-
-      if (totalWeight <= 0) {
-        autoKeys.forEach((key) => {
-          this.lifterAssignments[key] = 0n;
-        });
-      } else {
-        const remainders = [];
-        let assigned = 0n;
-        autoKeys.forEach((key) => {
-          const exact = Number(remaining) * (this.autoAssignWeights[key] / totalWeight);
-          const floorValue = Math.floor(exact);
-          const floorBigInt = normalizeLifterInteger(floorValue);
-          this.lifterAssignments[key] = floorBigInt;
-          assigned += floorBigInt;
-          remainders.push({ key, value: exact - floorValue });
-        });
-        let leftover = remaining - assigned;
-        remainders.sort((left, right) => right.value - left.value);
-        if (leftover > 0n && remainders.length > 0) {
-          this.lifterAssignments[remainders[0].key] += leftover;
-          leftover = 0n;
-        }
-        if (leftover > 0n && autoKeys.length > 0) {
-          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
-          this.lifterAssignments[targetKey] += leftover;
-        }
-      }
+      this.distributeAutoAssignments(autoKeys, remaining, total);
     }
 
     let assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
@@ -569,6 +612,66 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         excess -= reduction;
       }
       assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
+    }
+  }
+
+  distributeAutoAssignments(autoKeys, remaining, total) {
+    autoKeys.forEach((key) => {
+      this.lifterAssignments[key] = 0n;
+    });
+
+    let unallocated = remaining;
+    let eligibleKeys = autoKeys.filter((key) => {
+      return this.autoAssignWeights[key] > 0 && this.getAssignmentCapForKey(key, total) > 0n;
+    });
+
+    while (unallocated > 0n && eligibleKeys.length > 0) {
+      let totalWeight = 0;
+      eligibleKeys.forEach((key) => {
+        totalWeight += this.autoAssignWeights[key];
+      });
+      if (!(totalWeight > 0)) {
+        break;
+      }
+
+      const remainders = [];
+      let assignedThisPass = 0n;
+      eligibleKeys.forEach((key) => {
+        const current = this.lifterAssignments[key] || 0n;
+        const cap = this.getAssignmentCapForKey(key, total);
+        const room = cap > current ? (cap - current) : 0n;
+        if (room <= 0n) {
+          remainders.push({ key, value: 0 });
+          return;
+        }
+        const exact = Number(unallocated) * (this.autoAssignWeights[key] / totalWeight);
+        const desired = normalizeLifterInteger(Math.floor(exact));
+        const addition = desired < room ? desired : room;
+        this.lifterAssignments[key] = current + addition;
+        assignedThisPass += addition;
+        remainders.push({ key, value: exact - Math.floor(exact) });
+      });
+
+      unallocated -= assignedThisPass;
+      remainders.sort((left, right) => right.value - left.value);
+      for (let index = 0; index < remainders.length && unallocated > 0n; index += 1) {
+        const key = remainders[index].key;
+        const current = this.lifterAssignments[key] || 0n;
+        const cap = this.getAssignmentCapForKey(key, total);
+        if (current >= cap) {
+          continue;
+        }
+        this.lifterAssignments[key] = current + 1n;
+        unallocated -= 1n;
+        assignedThisPass += 1n;
+      }
+
+      eligibleKeys = eligibleKeys.filter((key) => {
+        return (this.lifterAssignments[key] || 0n) < this.getAssignmentCapForKey(key, total);
+      });
+      if (assignedThisPass <= 0n) {
+        break;
+      }
     }
   }
 
@@ -606,7 +709,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
       return sum + this.getStoredAssignmentAmount(otherKey);
     }, 0n);
-    return total > usedOther ? (total - usedOther) : 0n;
+    const availableByTotal = total > usedOther ? (total - usedOther) : 0n;
+    const cap = this.getAssignmentCapForKey(key, total);
+    return cap < availableByTotal ? cap : availableByTotal;
   }
 
   setAssignmentStep(step) {

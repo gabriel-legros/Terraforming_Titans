@@ -491,6 +491,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('produceAntimatter', null, originalGlobals);
   setGlobal('updateSpaceStorageUI', () => {}, originalGlobals);
   setGlobal('warpGateCommand', { getMultiplier: () => 1 }, originalGlobals);
+  setGlobal('warpGateNetworkManager', { getAverageWarpGateLevelAllSectors: () => 1000000 }, originalGlobals);
   setGlobal('formatNumber', (value) => `${value}`, originalGlobals);
   setGlobal('attachDynamicInfoTooltip', () => {}, originalGlobals);
   setGlobal('getZones', () => [], originalGlobals);

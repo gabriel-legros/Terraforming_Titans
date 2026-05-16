@@ -42,7 +42,8 @@ function renderLiftersUI(project, container) {
   attachDynamicInfoTooltip(
     titleInfo,
     getLiftersUIText('ui.projects.lifters.titleTooltip', 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. '
-    + 'Gas recipes push output into space storage. Multi-output recipes add each output separately before normal resource cap handling. '
+    + 'Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. '
+    + 'Multi-output recipes add each output separately before normal resource cap handling. '
     + 'Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. '
     + 'Strip Atmosphere removes all gases proportionally.')
   );
@@ -153,6 +154,9 @@ function renderLiftersUI(project, container) {
   const headerAssigned = document.createElement('span');
   headerAssigned.classList.add('stat-label');
   headerAssigned.textContent = getLiftersUIText('ui.projects.common.assigned', 'Assigned');
+  const headerMax = document.createElement('span');
+  headerMax.classList.add('stat-label');
+  headerMax.textContent = getLiftersUIText('ui.projects.lifters.maxAssignment', 'Max');
   const headerControls = document.createElement('div');
   headerControls.classList.add('hephaestus-assignment-controls');
   const headerButtons = document.createElement('div');
@@ -165,7 +169,7 @@ function renderLiftersUI(project, container) {
   const headerRate = document.createElement('div');
   headerRate.classList.add('stat-label', 'nuclear-alchemy-rate-cell');
   headerRate.textContent = getLiftersUIText('ui.projects.common.rate', 'Rate');
-  headerRow.append(headerName, headerComplexity, headerAssigned, headerControls, headerRate);
+  headerRow.append(headerName, headerComplexity, headerAssigned, headerMax, headerControls, headerRate);
   assignmentGrid.appendChild(headerRow);
 
   const headerDivider = document.createElement('div');
@@ -205,6 +209,9 @@ function renderLiftersUI(project, container) {
 
     const amountEl = document.createElement('span');
     amountEl.classList.add('stat-value');
+
+    const maxEl = document.createElement('span');
+    maxEl.classList.add('stat-value');
 
     const zeroButton = document.createElement('button');
     zeroButton.textContent = getLiftersUIText('ui.projects.common.zero', '0');
@@ -268,13 +275,14 @@ function renderLiftersUI(project, container) {
     const rateEl = document.createElement('div');
     rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
 
-    row.append(nameWrap, complexityEl, amountEl, controls, rateEl);
+    row.append(nameWrap, complexityEl, amountEl, maxEl, controls, rateEl);
     assignmentGrid.appendChild(row);
 
     rowElements[key] = {
       wrapper: row,
       complexity: complexityEl,
       value: amountEl,
+      maxValue: maxEl,
       zeroButton,
       minusButton,
       plusButton,
@@ -380,9 +388,11 @@ function updateLiftersUI(project) {
     const storedCurrent = project.getStoredAssignmentAmount(key);
     const displayedCurrent = project.getDisplayedAssignmentAmount(key);
     const maxForKey = project.getAssignmentMaxTarget(key);
+    const displayedCap = isUnassigned ? null : project.getGasGiantMaxAssignmentForRecipe(key, recipe);
 
     row.complexity.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
     row.value.textContent = formatNumber(displayedCurrent, true, 2);
+    row.maxValue.textContent = displayedCap === null ? '' : formatNumber(displayedCap, true, 2);
     row.minusButton.textContent = `-${formatNumber(step, true)}`;
     row.plusButton.textContent = `+${formatNumber(step, true)}`;
     row.autoAssign.checked = project.autoAssignFlags[key] === true;
@@ -407,7 +417,11 @@ function updateLiftersUI(project) {
 
   if (elements.note) {
     const unitRate = formatNumber(project.getEffectiveUnitRatePerLifter(), true);
-    elements.note.textContent = `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s.`;
+    elements.note.textContent = getLiftersUIText(
+      'ui.projects.lifters.operationNote',
+      `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. Max is the current assignment cap after Warp Gate Network access, complexity, throughput, and supercharge.`,
+      { value: unitRate }
+    );
   }
 }
 
