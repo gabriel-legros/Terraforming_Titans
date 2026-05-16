@@ -2113,7 +2113,20 @@ class ArtificialManager extends EffectableEntity {
             }
         });
 
+        const getHistorySortRank = (entry) => {
+            if (entry.status === 'building' || entry.status === 'completed') return 0;
+            if (entry.status === 'current') return 1;
+            if (entry.status === 'stored') return 2;
+            if (entry.status === 'terraformed' || entry.status === 'abandoned') return 3;
+            return 4;
+        };
+
         entries.sort((a, b) => {
+            const aRank = getHistorySortRank(a);
+            const bRank = getHistorySortRank(b);
+            if (aRank !== bRank) {
+                return aRank - bRank;
+            }
             const aRecent = a.departedAt
                 || a.traveledAt
                 || a.completedAt

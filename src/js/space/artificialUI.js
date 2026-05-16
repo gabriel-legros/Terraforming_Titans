@@ -241,9 +241,59 @@ function buildCostRow(label, valueId) {
   return { row, valueEl: val };
 }
 
+function syncHistoryActionButtons(row, entry) {
+  const cells = row._historyCells;
+  if (!cells) return;
+
+  if (entry.canDiscard) {
+    if (!cells.discardBtn) {
+      const discardBtn = document.createElement('button');
+      discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
+      discardBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        artificialManager.discardStoredWorld(row.dataset.historyId);
+      });
+      cells.discardBtn = discardBtn;
+      cells.status.appendChild(discardBtn);
+    }
+    cells.discardBtn.textContent = getArtificialText('history.discard', 'Discard');
+    if (cells.discardBtn.parentNode !== cells.status) {
+      cells.status.appendChild(cells.discardBtn);
+    }
+  } else if (cells.discardBtn) {
+    cells.discardBtn.remove();
+  }
+
+  if (entry.canTravel) {
+    if (!cells.travelBtn) {
+      const travelBtn = document.createElement('button');
+      travelBtn.className = 'artificial-history-travel-btn';
+      travelBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const attemptTravel = (skipCurrentWorldWarnings) => {
+          if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
+            return;
+          }
+          artificialManager.travelToStoredWorld(row.dataset.historyId);
+        };
+        attemptTravel(false);
+      });
+      cells.travelBtn = travelBtn;
+      cells.status.appendChild(travelBtn);
+    }
+    cells.travelBtn.textContent = getArtificialText('history.travel', 'Travel');
+    if (cells.travelBtn.parentNode !== cells.status) {
+      cells.status.appendChild(cells.travelBtn);
+    }
+  } else if (cells.travelBtn) {
+    cells.travelBtn.remove();
+  }
+}
+
 function buildHistoryRow(entry) {
   const row = document.createElement('div');
   row.className = 'artificial-history-row';
+  row.dataset.historyId = String(entry.id);
   const name = document.createElement('span');
   name.className = 'artificial-history-name';
   const nameText = document.createElement('span');
@@ -286,32 +336,6 @@ function buildHistoryRow(entry) {
   const statusLabel = statusLabelMap[statusKey] || (statusKey ? statusKey.charAt(0).toUpperCase() + statusKey.slice(1) : '');
   status.textContent = statusLabel;
   status.className = `artificial-history-status artificial-history-${statusKey}`;
-  if (entry.canDiscard) {
-    const discardBtn = document.createElement('button');
-    discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
-    discardBtn.textContent = getArtificialText('history.discard', 'Discard');
-    discardBtn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      artificialManager.discardStoredWorld(entry.id);
-    });
-    status.appendChild(discardBtn);
-  }
-  if (entry.canTravel) {
-    const travelBtn = document.createElement('button');
-    travelBtn.className = 'artificial-history-travel-btn';
-    travelBtn.textContent = getArtificialText('history.travel', 'Travel');
-    travelBtn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      const attemptTravel = (skipCurrentWorldWarnings) => {
-        if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
-          return;
-        }
-        artificialManager.travelToStoredWorld(entry.id);
-      };
-      attemptTravel(false);
-    });
-    status.appendChild(travelBtn);
-  }
   editBtn.addEventListener('click', (event) => {
     event.stopPropagation();
     if (name.dataset.editing === 'true') return;
@@ -355,14 +379,18 @@ function buildHistoryRow(entry) {
     sector,
     land,
     effective,
-    status
+    status,
+    discardBtn: null,
+    travelBtn: null
   };
+  syncHistoryActionButtons(row, entry);
   return row;
 }
 
 function updateHistoryRow(row, entry) {
   const cells = row._historyCells;
   if (!cells) return;
+  row.dataset.historyId = String(entry.id);
   if (cells.nameText.textContent !== entry.name) cells.nameText.textContent = entry.name;
   const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
   if (cells.type.textContent !== typeLabel) cells.type.textContent = typeLabel;
@@ -396,6 +424,7 @@ function updateHistoryRow(row, entry) {
   }
   const statusClass = `artificial-history-status artificial-history-${statusKey}`;
   if (cells.status.className !== statusClass) cells.status.className = statusClass;
+  syncHistoryActionButtons(row, entry);
 }
 
 function buildHistoryHeader() {
