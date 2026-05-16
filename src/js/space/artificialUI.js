@@ -2256,7 +2256,10 @@ function renderEffects(project, selection) {
       effectLabel = getArtificialText('effects.ringworldSpinProject', 'You will have to spin the Ringworld via an infrastructure special project.');
     }
     if (type === 'disk') {
-      effectLabel = getArtificialText('effects.diskFixedFlux', 'Alderson disk stellar flux is fixed at 1300 W/m².');
+      effectLabel = getArtificialText(
+        'effects.diskPreparationWarning',
+        'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will be very expensive to use.  Be prepared.'
+      );
     }
     artificialUICache.effectShipEnergyLabel.textContent = effectLabel;
   }

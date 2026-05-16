@@ -599,6 +599,10 @@
   color: #ff6b6b;
 }
 
+.artificial-effect-penalty span:first-child {
+  white-space: pre-line;
+}
+
 .artificial-priority {
   display: flex;
   align-items: center;
