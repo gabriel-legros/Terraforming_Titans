@@ -261,7 +261,12 @@ class ScriptVariableRegistry {
       return [
         { id: 'pending', label: 'Pending', valueType: 'boolean' },
         { id: 'readyForCompletion', label: 'Ready for completion', valueType: 'boolean' },
-        { id: 'complete', label: 'Complete', valueType: 'boolean' }
+        { id: 'complete', label: 'Complete', valueType: 'boolean' },
+        {
+          id: 'timeSinceAwakeningSeconds',
+          label: t('ui.hope.automationCards.scriptVariables.terraforming.status.timeSinceAwakeningSeconds', {}, 'Time since awakening (seconds)'),
+          valueType: 'number'
+        }
       ];
     }
     if (categoryId === 'dominion') {
@@ -727,6 +732,7 @@ class ScriptVariableRegistry {
     if (attribute === 'pending') return !complete && !ready ? 1 : 0;
     if (attribute === 'readyForCompletion') return ready ? 1 : 0;
     if (attribute === 'complete') return complete ? 1 : 0;
+    if (attribute === 'timeSinceAwakeningSeconds') return this.toNumber(playTimeSeconds);
     return 0;
   }
 

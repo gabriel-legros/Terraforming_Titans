@@ -3223,6 +3223,9 @@ setLanguageData({
             },
           },
           terraforming: {
+            status: {
+              timeSinceAwakeningSeconds: 'Time since awakening (seconds)',
+            },
             dominion: {
               category: 'Dominion',
               target: 'Dominion',

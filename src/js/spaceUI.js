@@ -448,6 +448,9 @@ function hasCompletedSpecializationProject() {
     if (manufacturing.isCompleted) {
         return true;
     }
+    if (followersManager.isCurrentWorldHolyConsecrated()) {
+        return true;
+    }
     return false;
 }
 
