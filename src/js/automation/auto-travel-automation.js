@@ -162,6 +162,9 @@ class AutoTravelAutomation {
       return false;
     }
     this.presets.splice(index, 1);
+    if (automationManager && automationManager.scriptAutomation) {
+      automationManager.scriptAutomation.clearDeletedAutomationTargetReference('autoTravel', 'preset', numericId);
+    }
     if (!this.presets.find((preset) => preset.id === Number(this.selectedPresetId))) {
       this.selectedPresetId = this.presets[Math.max(0, index - 1)].id;
     }

@@ -320,6 +320,9 @@ class LifeAutomation {
       return;
     }
     this.presets.splice(index, 1);
+    if (automationManager && automationManager.scriptAutomation) {
+      automationManager.scriptAutomation.clearDeletedAutomationTargetReference('life', 'preset', id);
+    }
     if (this.activePresetId === id) {
       const next = this.presets[0];
       this.activePresetId = next ? next.id : null;

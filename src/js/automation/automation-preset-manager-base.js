@@ -112,9 +112,27 @@ class AutomationPresetManagerBase {
     return true;
   }
 
+  getScriptAutomationType() {
+    if (this.featureKey === 'automationBuildings') return 'buildings';
+    if (this.featureKey === 'automationProjects') return 'projects';
+    if (this.featureKey === 'automationColony') return 'colony';
+    if (this.featureKey === 'automationResearch') return 'research';
+    return null;
+  }
+
+  clearDeletedScriptReferences(targetKind, targetId) {
+    const automationType = this.getScriptAutomationType();
+    const scriptAutomation = automationManager?.scriptAutomation;
+    if (!automationType || !scriptAutomation) {
+      return false;
+    }
+    return scriptAutomation.clearDeletedAutomationTargetReference(automationType, targetKind, targetId);
+  }
+
   deletePreset(id) {
     const numericId = Number(id);
     this.presets = this.presets.filter((preset) => preset.id !== numericId);
+    this.clearDeletedScriptReferences('preset', numericId);
     if (this.useAssignments) {
       this.assignments = this.assignments.filter((item) => item.presetId !== numericId);
     }
@@ -301,6 +319,7 @@ class AutomationPresetManagerBase {
     }
     const numericId = Number(id);
     this.combinations = this.combinations.filter((combo) => combo.id !== numericId);
+    this.clearDeletedScriptReferences('combination', numericId);
     if (this.selectedCombinationId === numericId) {
       this.selectedCombinationId = null;
     }

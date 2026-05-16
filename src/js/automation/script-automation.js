@@ -190,6 +190,36 @@ class ScriptAutomation {
     return true;
   }
 
+  clearDeletedAutomationTargetReference(automationType, targetKind, targetId) {
+    const numericId = Number(targetId);
+    if (!automationType || !targetKind || !Number.isFinite(numericId)) {
+      return false;
+    }
+    let changed = false;
+    for (let scriptIndex = 0; scriptIndex < this.scripts.length; scriptIndex += 1) {
+      const script = this.scripts[scriptIndex];
+      const lines = Array.isArray(script.lines) ? script.lines : [];
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+        const line = lines[lineIndex];
+        const actions = Array.isArray(line.actions) ? line.actions : [];
+        for (let actionIndex = 0; actionIndex < actions.length; actionIndex += 1) {
+          const action = actions[actionIndex];
+          if (action.automationType !== automationType) {
+            continue;
+          }
+          if (targetKind === 'preset' && action.kind === 'applyPreset' && Number(action.presetId) === numericId) {
+            action.presetId = null;
+            changed = true;
+          } else if (targetKind === 'combination' && action.kind === 'applyCombination' && Number(action.combinationId) === numericId) {
+            action.combinationId = null;
+            changed = true;
+          }
+        }
+      }
+    }
+    return changed;
+  }
+
   runScript(id) {
     const script = this.scripts.find(item => item.id === Number(id));
     if (!script) return false;

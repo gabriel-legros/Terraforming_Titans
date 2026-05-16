@@ -186,6 +186,9 @@ class SpaceshipAutomation {
     const index = this.presets.findIndex(item => item.id === id);
     if (index === -1) return;
     this.presets.splice(index, 1);
+    if (automationManager && automationManager.scriptAutomation) {
+      automationManager.scriptAutomation.clearDeletedAutomationTargetReference('ship', 'preset', id);
+    }
     if (this.activePresetId === id) {
       const next = this.presets[0];
       this.activePresetId = next ? next.id : null;

@@ -1238,19 +1238,41 @@ function renderActionTargetPicker(action, row) {
   const target = getScriptActionAutomationTarget(action.automationType);
   if (action.kind === 'applyCombination') {
     const combinations = target?.getCombinations ? target.getCombinations() : [];
-    const comboSelect = createSelect(combinations.map(combo => ({ id: combo.id, label: combo.name || `Combination ${combo.id}` })), action.combinationId || combinations[0]?.id || '');
-    action.combinationId = comboSelect.value ? Number(comboSelect.value) : null;
+    const comboOptions = [{
+      id: '',
+      label: getAutomationCardText('scriptNullTargetOption', {}, '(null)')
+    }];
+    for (let index = 0; index < combinations.length; index += 1) {
+      const combo = combinations[index];
+      comboOptions.push({ id: combo.id, label: combo.name || `Combination ${combo.id}` });
+    }
+    const selectedCombinationId = action.combinationId === null || action.combinationId === undefined
+      ? ''
+      : action.combinationId;
+    const comboSelect = createSelect(comboOptions, selectedCombinationId);
+    action.combinationId = comboSelect.value === '' ? null : Number(comboSelect.value);
     comboSelect.addEventListener('change', event => {
-      action.combinationId = Number(event.target.value);
+      action.combinationId = event.target.value === '' ? null : Number(event.target.value);
       queueAutomationUIRefresh();
     });
     row.appendChild(comboSelect);
   } else {
     const presets = target?.presets || [];
-    const presetSelect = createSelect(presets.map(preset => ({ id: preset.id, label: preset.name || `Preset ${preset.id}` })), action.presetId || presets[0]?.id || '');
-    action.presetId = presetSelect.value ? Number(presetSelect.value) : null;
+    const presetOptions = [{
+      id: '',
+      label: getAutomationCardText('scriptNullTargetOption', {}, '(null)')
+    }];
+    for (let index = 0; index < presets.length; index += 1) {
+      const preset = presets[index];
+      presetOptions.push({ id: preset.id, label: preset.name || `Preset ${preset.id}` });
+    }
+    const selectedPresetId = action.presetId === null || action.presetId === undefined
+      ? ''
+      : action.presetId;
+    const presetSelect = createSelect(presetOptions, selectedPresetId);
+    action.presetId = presetSelect.value === '' ? null : Number(presetSelect.value);
     presetSelect.addEventListener('change', event => {
-      action.presetId = Number(event.target.value);
+      action.presetId = event.target.value === '' ? null : Number(event.target.value);
       queueAutomationUIRefresh();
     });
     row.appendChild(presetSelect);
