@@ -594,7 +594,7 @@ function rebindStructureInstance(nextStructure, cached, isColony) {
 
   Object.keys(currentStructure).forEach(key => {
     if (!Object.prototype.hasOwnProperty.call(nextStructure, key)) {
-      if (key === 'needBoxCache') {
+      if (key === 'needBoxCache' || key === 'buoyancyUI' || key === 'buoyancyDetailsExpanded') {
         return;
       }
       delete currentStructure[key];

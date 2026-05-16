@@ -1576,7 +1576,7 @@ function attachAerostatBuoyancySection(container, structure) {
     header.appendChild(title);
 
     const body = document.createElement('div');
-    body.classList.add('card-body');
+    body.classList.add('colony-buoyancy-body');
 
     const text = document.createElement('div');
     text.classList.add('colony-buoyancy-text');
@@ -1686,9 +1686,10 @@ function attachAerostatBuoyancySection(container, structure) {
     workerCapCheckbox.type = 'checkbox';
     workerCapCheckbox.classList.add('colony-buoyancy-worker-cap-checkbox');
     workerCapCheckbox.addEventListener('change', () => {
-      structure.capWorkersToAerostatCapacity = workerCapCheckbox.checked;
-      structure.refreshWorkerCapacityCapState();
-      updateAerostatBuoyancySection(structure);
+      const activeStructure = uiState.ownerStructure;
+      activeStructure.capWorkersToAerostatCapacity = workerCapCheckbox.checked;
+      activeStructure.refreshWorkerCapacityCapState();
+      updateAerostatBuoyancySection(activeStructure);
     });
     workerCapLabel.appendChild(workerCapCheckbox);
 
@@ -1780,8 +1781,9 @@ function attachAerostatBuoyancySection(container, structure) {
     capacityDecreaseButton.classList.add('colony-buoyancy-capacity-button');
     capacityDecreaseButton.textContent = '-';
     capacityDecreaseButton.addEventListener('click', () => {
-      structure.setAndroidCapacityShare(structure.getAndroidCapacityShare() - 1);
-      updateAerostatBuoyancySection(structure);
+      const activeStructure = uiState.ownerStructure;
+      activeStructure.setAndroidCapacityShare(activeStructure.getAndroidCapacityShare() - 1);
+      updateAerostatBuoyancySection(activeStructure);
     });
     capacityControls.appendChild(capacityDecreaseButton);
 
@@ -1790,8 +1792,9 @@ function attachAerostatBuoyancySection(container, structure) {
     capacityIncreaseButton.classList.add('colony-buoyancy-capacity-button');
     capacityIncreaseButton.textContent = '+';
     capacityIncreaseButton.addEventListener('click', () => {
-      structure.setAndroidCapacityShare(structure.getAndroidCapacityShare() + 1);
-      updateAerostatBuoyancySection(structure);
+      const activeStructure = uiState.ownerStructure;
+      activeStructure.setAndroidCapacityShare(activeStructure.getAndroidCapacityShare() + 1);
+      updateAerostatBuoyancySection(activeStructure);
     });
     capacityControls.appendChild(capacityIncreaseButton);
 
@@ -1825,10 +1828,13 @@ function attachAerostatBuoyancySection(container, structure) {
       ownerStructure: structure
     };
 
-    header.addEventListener('click', () => {
+    header.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const activeStructure = uiState.ownerStructure;
       uiState.expanded = !uiState.expanded;
-      structure.buoyancyDetailsExpanded = uiState.expanded;
-      updateAerostatBuoyancySection(structure);
+      activeStructure.buoyancyDetailsExpanded = uiState.expanded;
+      updateAerostatBuoyancySection(activeStructure);
     });
 
     card.appendChild(header);
@@ -1861,9 +1867,11 @@ function updateAerostatBuoyancySection(structure) {
 
   const expanded = ui.expanded !== false;
   structure.buoyancyDetailsExpanded = expanded;
+  ui.container.classList.toggle('colony-buoyancy-card--collapsed', !expanded);
   ui.container.classList.toggle('collapsed', !expanded);
   ui.arrow.textContent = expanded ? '\u25BC' : '\u25B6';
   if (ui.body) {
+    ui.body.classList.add('colony-buoyancy-body');
     ui.body.style.display = expanded ? '' : 'none';
   }
 

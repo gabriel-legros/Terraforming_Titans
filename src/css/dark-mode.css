@@ -1460,7 +1460,7 @@ body.dark-mode {
     border-bottom-color: #444;
 }
 
-.dark-mode .colony-buoyancy-card .card-body {
+.dark-mode .colony-buoyancy-card .colony-buoyancy-body {
     color: #dddddd;
 }
 

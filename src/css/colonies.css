@@ -503,9 +503,16 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   min-width: 70px;
   text-align: right;
 }
-.colony-buoyancy-card .card-body {
+.colony-buoyancy-card .colony-buoyancy-body {
+  padding: 12px;
+  padding-bottom: 5px;
+  flex-grow: 1;
   font-size: 0.9em;
   color: #495057;
+}
+
+.colony-buoyancy-card.colony-buoyancy-card--collapsed .colony-buoyancy-body {
+  display: none;
 }
 
 .colony-buoyancy-card .colony-buoyancy-text {
