@@ -114,6 +114,7 @@ function buildAutomationLifeUI() {
   automationElements.lifePresetMoveDownButton = presetRow.presetMoveDown;
   automationElements.lifePresetNameInput = presetRow.presetName;
   automationElements.lifeNewPresetButton = presetRow.newPreset;
+  automationElements.lifeDuplicatePresetButton = presetRow.duplicatePreset;
   automationElements.lifeDeletePresetButton = presetRow.deletePreset;
   automationElements.lifeEnablePresetCheckbox = presetRow.enableCheckbox;
   automationElements.lifeShowPresetInSidebarCheckbox = presetRow.showInSidebarCheckbox;
@@ -141,6 +142,7 @@ function updateLifeAutomationUI() {
     lifePresetMoveDownButton,
     lifePresetNameInput,
     lifeNewPresetButton,
+    lifeDuplicatePresetButton,
     lifeDeletePresetButton,
     lifeEnablePresetCheckbox,
     lifeShowPresetInSidebarCheckbox,
@@ -189,6 +191,7 @@ function updateLifeAutomationUI() {
   const activePresetIndex = automation.presets.findIndex(preset => preset.id === activePreset.id);
   lifePresetMoveUpButton.disabled = activePresetIndex <= 0;
   lifePresetMoveDownButton.disabled = activePresetIndex >= automation.presets.length - 1;
+  lifeDuplicatePresetButton.disabled = !activePreset;
   setAutomationToggleState(lifePurchaseEnableCheckbox, activePreset.purchaseEnabled !== false);
   setAutomationToggleState(lifeDesignEnableCheckbox, activePreset.designEnabled !== false);
   if (document.activeElement !== lifeDeployInput) {
@@ -265,6 +268,7 @@ function attachLifeAutomationHandlers() {
     lifePresetMoveDownButton,
     lifePresetNameInput,
     lifeNewPresetButton,
+    lifeDuplicatePresetButton,
     lifeDeletePresetButton,
     lifeEnablePresetCheckbox,
     lifeShowPresetInSidebarCheckbox,
@@ -304,6 +308,14 @@ function attachLifeAutomationHandlers() {
   });
   lifeNewPresetButton.addEventListener('click', () => {
     automationManager.lifeAutomation.addPreset('');
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  lifeDuplicatePresetButton.addEventListener('click', () => {
+    const automation = automationManager.lifeAutomation;
+    const preset = automation.getActivePreset();
+    if (!preset) return;
+    automation.duplicatePreset(preset.id);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

@@ -86,6 +86,7 @@ function buildAutomationShipUI() {
   automationElements.presetMoveDownButton = presetRow.presetMoveDown;
   automationElements.presetNameInput = presetRow.presetName;
   automationElements.newPresetButton = presetRow.newPreset;
+  automationElements.duplicatePresetButton = presetRow.duplicatePreset;
   automationElements.deletePresetButton = presetRow.deletePreset;
   automationElements.enablePresetCheckbox = presetRow.enableCheckbox;
   automationElements.showPresetInSidebarCheckbox = presetRow.showInSidebarCheckbox;
@@ -107,6 +108,7 @@ function updateShipAutomationUI() {
     presetMoveDownButton,
     presetNameInput,
     newPresetButton,
+    duplicatePresetButton,
     deletePresetButton,
     enablePresetCheckbox,
     showPresetInSidebarCheckbox,
@@ -125,7 +127,7 @@ function updateShipAutomationUI() {
     ? getAutomationCardText('shipAssignmentDescriptionUnlocked', {}, 'Automatically assigns cargo ships based on available routes.')
     : getAutomationCardText('shipAssignmentDescriptionLocked', {}, 'Purchase the Solis Ship Assignment upgrade to enable ship automation.');
 
-  if (!automation || !panelBody || !collapseButton || !presetSelect || !presetMoveUpButton || !presetMoveDownButton || !presetNameInput || !newPresetButton || !deletePresetButton || !enablePresetCheckbox || !showPresetInSidebarCheckbox || !stepsContainer || !addStepButton) {
+  if (!automation || !panelBody || !collapseButton || !presetSelect || !presetMoveUpButton || !presetMoveDownButton || !presetNameInput || !newPresetButton || !duplicatePresetButton || !deletePresetButton || !enablePresetCheckbox || !showPresetInSidebarCheckbox || !stepsContainer || !addStepButton) {
     return;
   }
 
@@ -165,6 +167,7 @@ function updateShipAutomationUI() {
     : -1;
   presetMoveUpButton.disabled = activePresetIndex <= 0;
   presetMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= automation.presets.length - 1;
+  duplicatePresetButton.disabled = !activePreset;
 
   // Only rebuild steps if no dropdown/input within is focused
   const hasFocusedChild = stepsContainer.contains(document.activeElement) &&
@@ -194,6 +197,7 @@ function attachAutomationHandlers() {
     presetMoveDownButton,
     presetNameInput,
     newPresetButton,
+    duplicatePresetButton,
     deletePresetButton,
     enablePresetCheckbox,
     showPresetInSidebarCheckbox,
@@ -245,6 +249,17 @@ function attachAutomationHandlers() {
     newPresetButton.addEventListener('click', () => {
       if (!automationManager || !automationManager.spaceshipAutomation) return;
       automationManager.spaceshipAutomation.addPreset('');
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+  }
+  if (duplicatePresetButton) {
+    duplicatePresetButton.addEventListener('click', () => {
+      if (!automationManager || !automationManager.spaceshipAutomation) return;
+      const automation = automationManager.spaceshipAutomation;
+      const preset = automation.getActivePreset();
+      if (!preset) return;
+      automation.duplicatePreset(preset.id);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });

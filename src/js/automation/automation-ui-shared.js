@@ -169,6 +169,10 @@ function buildAutomationPresetBuilderRow(config = {}) {
   deleteButton.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   (config.deleteButtonClasses || []).forEach(className => deleteButton.classList.add(className));
 
+  const duplicateButton = document.createElement('button');
+  duplicateButton.textContent = getAutomationCardText('duplicatePresetButton', {}, 'Duplicate');
+  (config.duplicateButtonClasses || []).forEach(className => duplicateButton.classList.add(className));
+
   const transferButtons = createAutomationPresetTransferButtons(config.transferKey || 'automation-preset');
 
   const applyOnceButton = document.createElement('button');
@@ -184,6 +188,7 @@ function buildAutomationPresetBuilderRow(config = {}) {
     newButton,
     saveButton,
     deleteButton,
+    duplicateButton,
     transferButtons.importButton,
     transferButtons.exportButton,
     applyOnceButton,
@@ -199,6 +204,7 @@ function buildAutomationPresetBuilderRow(config = {}) {
     newButton,
     saveButton,
     deleteButton,
+    duplicateButton,
     importButton: transferButtons.importButton,
     exportButton: transferButtons.exportButton,
     applyOnceButton,

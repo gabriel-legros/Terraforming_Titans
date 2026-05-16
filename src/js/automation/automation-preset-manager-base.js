@@ -112,6 +112,20 @@ class AutomationPresetManagerBase {
     return true;
   }
 
+  duplicatePreset(id) {
+    const source = this.getPresetById(id);
+    if (!source) {
+      return null;
+    }
+    const copyId = this.nextPresetId++;
+    const duplicate = this.deepClone(source);
+    duplicate.id = copyId;
+    duplicate.name = `${source.name || this.presetLabel} Copy`;
+    this.presets.push(duplicate);
+    this.selectedPresetId = copyId;
+    return copyId;
+  }
+
   getScriptAutomationType() {
     if (this.featureKey === 'automationBuildings') return 'buildings';
     if (this.featureKey === 'automationProjects') return 'projects';

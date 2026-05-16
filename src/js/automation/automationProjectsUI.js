@@ -234,6 +234,7 @@ function buildAutomationProjectsUI() {
   automationElements.projectsBuilderPresetNameInput = builderRowParts.presetNameInput;
   automationElements.projectsBuilderNewButton = builderRowParts.newButton;
   automationElements.projectsBuilderSaveButton = builderRowParts.saveButton;
+  automationElements.projectsBuilderDuplicateButton = builderRowParts.duplicateButton;
   automationElements.projectsBuilderDeleteButton = builderRowParts.deleteButton;
   automationElements.projectsBuilderImportButton = builderRowParts.importButton;
   automationElements.projectsBuilderExportButton = builderRowParts.exportButton;
@@ -451,6 +452,7 @@ function updateProjectsAutomationUI() {
     projectsBuilderPresetNameInput,
     projectsBuilderNewButton,
     projectsBuilderSaveButton,
+    projectsBuilderDuplicateButton,
     projectsBuilderDeleteButton,
     projectsBuilderImportButton,
     projectsBuilderExportButton,
@@ -725,6 +727,7 @@ function updateProjectsAutomationUI() {
     || !automatableProjects.length;
   projectsBuilderClearButton.disabled = projectAutomationUIState.builderSelectedProjects.length === 0;
   projectsBuilderDeleteButton.disabled = !activePreset;
+  projectsBuilderDuplicateButton.disabled = !activePreset;
   projectsBuilderImportButton.disabled = false;
   projectsBuilderExportButton.disabled = !activePreset;
   projectsBuilderApplyOnceButton.disabled = !activePreset;
@@ -855,6 +858,7 @@ function attachProjectsAutomationHandlers() {
     projectsBuilderPresetNameInput,
     projectsBuilderNewButton,
     projectsBuilderSaveButton,
+    projectsBuilderDuplicateButton,
     projectsBuilderDeleteButton,
     projectsBuilderImportButton,
     projectsBuilderExportButton,
@@ -1111,6 +1115,18 @@ function attachProjectsAutomationHandlers() {
       projectAutomationUIState.syncedPresetId = null;
       projectAutomationUIState.builderName = '';
     }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  projectsBuilderDuplicateButton.addEventListener('click', () => {
+    const automation = getAutomation();
+    const activePreset = automation.getSelectedPreset();
+    if (!activePreset) {
+      return;
+    }
+    automation.duplicatePreset(activePreset.id);
+    projectAutomationUIState.builderName = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

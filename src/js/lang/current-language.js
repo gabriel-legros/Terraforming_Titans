@@ -3429,6 +3429,7 @@ setLanguageData({
         filterSelectionOption: 'Filter selection',
         clearFilterButton: 'Clear filter',
         saveCombinationButton: 'Save',
+        duplicatePresetButton: 'Duplicate',
         deletePresetButton: 'Delete',
         deleteCombinationButton: 'Delete',
         importPresetButton: 'Import',

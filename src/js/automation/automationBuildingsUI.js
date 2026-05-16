@@ -380,6 +380,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderPresetNameInput = builderRowParts.presetNameInput;
   automationElements.buildingsBuilderNewButton = builderRowParts.newButton;
   automationElements.buildingsBuilderSaveButton = builderRowParts.saveButton;
+  automationElements.buildingsBuilderDuplicateButton = builderRowParts.duplicateButton;
   automationElements.buildingsBuilderDeleteButton = builderRowParts.deleteButton;
   automationElements.buildingsBuilderImportButton = builderRowParts.importButton;
   automationElements.buildingsBuilderExportButton = builderRowParts.exportButton;
@@ -425,6 +426,7 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderPresetNameInput,
     buildingsBuilderNewButton,
     buildingsBuilderSaveButton,
+    buildingsBuilderDuplicateButton,
     buildingsBuilderDeleteButton,
     buildingsBuilderImportButton,
     buildingsBuilderExportButton,
@@ -701,6 +703,7 @@ function updateBuildingsAutomationUI() {
     || !automatableBuildings.length;
   buildingsBuilderClearButton.disabled = buildingAutomationUIState.builderSelectedBuildings.length === 0;
   buildingsBuilderDeleteButton.disabled = !activePreset;
+  buildingsBuilderDuplicateButton.disabled = !activePreset;
   buildingsBuilderImportButton.disabled = false;
   buildingsBuilderExportButton.disabled = !activePreset;
   buildingsBuilderApplyOnceButton.disabled = !activePreset;
@@ -830,6 +833,7 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderPresetNameInput,
     buildingsBuilderNewButton,
     buildingsBuilderSaveButton,
+    buildingsBuilderDuplicateButton,
     buildingsBuilderDeleteButton,
     buildingsBuilderImportButton,
     buildingsBuilderExportButton,
@@ -1063,6 +1067,18 @@ function attachBuildingsAutomationHandlers() {
       buildingAutomationUIState.syncedPresetId = null;
       buildingAutomationUIState.builderName = '';
     }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  buildingsBuilderDuplicateButton.addEventListener('click', () => {
+    const automation = getAutomation();
+    const activePreset = automation.getSelectedPreset();
+    if (!activePreset) {
+      return;
+    }
+    automation.duplicatePreset(activePreset.id);
+    buildingAutomationUIState.builderName = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

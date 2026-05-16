@@ -90,6 +90,7 @@ function buildAutomationResearchUI() {
   automationElements.researchPresetNameInput = presetRowParts.presetNameInput;
   automationElements.researchNewPresetButton = presetRowParts.newButton;
   automationElements.researchSavePresetButton = presetRowParts.saveButton;
+  automationElements.researchDuplicatePresetButton = presetRowParts.duplicateButton;
   automationElements.researchDeletePresetButton = presetRowParts.deleteButton;
   automationElements.researchImportPresetButton = presetRowParts.importButton;
   automationElements.researchExportPresetButton = presetRowParts.exportButton;
@@ -115,6 +116,7 @@ function updateResearchAutomationUI() {
     researchPresetNameInput,
     researchNewPresetButton,
     researchSavePresetButton,
+    researchDuplicatePresetButton,
     researchDeletePresetButton,
     researchImportPresetButton,
     researchExportPresetButton,
@@ -191,6 +193,7 @@ function updateResearchAutomationUI() {
   researchPresetMoveUpButton.disabled = selectedPresetIndex <= 0;
   researchPresetMoveDownButton.disabled = selectedPresetIndex < 0 || selectedPresetIndex >= presets.length - 1;
   researchDeletePresetButton.disabled = !selectedPreset;
+  researchDuplicatePresetButton.disabled = !selectedPreset;
   researchImportPresetButton.disabled = false;
   researchExportPresetButton.disabled = !selectedPreset;
   researchNewPresetButton.disabled = false;
@@ -227,6 +230,7 @@ function attachResearchAutomationHandlers() {
     researchPresetNameInput,
     researchNewPresetButton,
     researchSavePresetButton,
+    researchDuplicatePresetButton,
     researchDeletePresetButton,
     researchImportPresetButton,
     researchExportPresetButton,
@@ -321,6 +325,19 @@ function attachResearchAutomationHandlers() {
       automation.setPresetShowInSidebar(presetId, researchAutomationUIState.builderShowInSidebar);
       researchAutomationUIState.builderName = '';
     }
+    researchAutomationUIState.builderIsCreatingNewPreset = false;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  researchDuplicatePresetButton.addEventListener('click', () => {
+    const automation = getAutomation();
+    const preset = automation.getSelectedPreset();
+    if (!preset) {
+      return;
+    }
+    automation.duplicatePreset(preset.id);
+    researchAutomationUIState.builderName = '';
     researchAutomationUIState.builderIsCreatingNewPreset = false;
     queueAutomationUIRefresh();
     updateAutomationUI();

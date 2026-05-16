@@ -303,6 +303,30 @@ class LifeAutomation {
     return preset.id;
   }
 
+  duplicatePreset(id) {
+    const source = this.getPresetById(id);
+    if (!source) {
+      return null;
+    }
+    const duplicate = JSON.parse(JSON.stringify(source));
+    duplicate.id = this.nextPresetId++;
+    duplicate.name = `${source.name || 'Preset'} Copy`;
+    duplicate.showInSidebar = source.showInSidebar !== false;
+    duplicate.designSteps = (duplicate.designSteps || []).map((step) => ({
+      ...step,
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      entries: Array.isArray(step.entries)
+        ? step.entries.map((entry) => ({
+          ...entry,
+          id: Date.now() + Math.floor(Math.random() * 1000)
+        }))
+        : []
+    }));
+    this.presets.push(duplicate);
+    this.activePresetId = duplicate.id;
+    return duplicate.id;
+  }
+
   movePreset(id, direction) {
     const index = this.presets.findIndex(item => item.id === id);
     const nextIndex = index + direction;

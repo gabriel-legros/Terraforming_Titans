@@ -1950,7 +1950,10 @@ function createAutomationPresetRow(body) {
   const deletePreset = document.createElement('button');
   deletePreset.textContent = getAutomationCardText('deletePresetButton', {}, 'Delete');
   deletePreset.classList.add('automation-preset-delete');
-  presetButtons.append(newPreset, deletePreset);
+  const duplicatePreset = document.createElement('button');
+  duplicatePreset.textContent = getAutomationCardText('duplicatePresetButton', {}, 'Duplicate');
+  duplicatePreset.classList.add('automation-preset-duplicate');
+  presetButtons.append(newPreset, duplicatePreset, deletePreset);
   presetRow.appendChild(presetButtons);
 
   return {
@@ -1962,6 +1965,7 @@ function createAutomationPresetRow(body) {
     enableCheckbox: enableToggle,
     showInSidebarCheckbox: showSidebar.checkbox,
     newPreset,
+    duplicatePreset,
     deletePreset
   };
 }

@@ -433,6 +433,7 @@ function buildAutomationColonyUI() {
   automationElements.colonyBuilderPresetNameInput = builderRowParts.presetNameInput;
   automationElements.colonyBuilderNewButton = builderRowParts.newButton;
   automationElements.colonyBuilderSaveButton = builderRowParts.saveButton;
+  automationElements.colonyBuilderDuplicateButton = builderRowParts.duplicateButton;
   automationElements.colonyBuilderDeleteButton = builderRowParts.deleteButton;
   automationElements.colonyBuilderImportButton = builderRowParts.importButton;
   automationElements.colonyBuilderExportButton = builderRowParts.exportButton;
@@ -478,6 +479,7 @@ function updateColonyAutomationUI() {
     colonyBuilderPresetNameInput,
     colonyBuilderNewButton,
     colonyBuilderSaveButton,
+    colonyBuilderDuplicateButton,
     colonyBuilderDeleteButton,
     colonyBuilderImportButton,
     colonyBuilderExportButton,
@@ -745,6 +747,7 @@ function updateColonyAutomationUI() {
     || !availableTargets.length;
   colonyBuilderClearButton.disabled = colonyAutomationUIState.builderSelectedTargets.length === 0;
   colonyBuilderDeleteButton.disabled = !activePreset;
+  colonyBuilderDuplicateButton.disabled = !activePreset;
   colonyBuilderImportButton.disabled = false;
   colonyBuilderExportButton.disabled = !activePreset;
   colonyBuilderApplyOnceButton.disabled = !activePreset;
@@ -873,6 +876,7 @@ function attachColonyAutomationHandlers() {
     colonyBuilderPresetNameInput,
     colonyBuilderNewButton,
     colonyBuilderSaveButton,
+    colonyBuilderDuplicateButton,
     colonyBuilderDeleteButton,
     colonyBuilderImportButton,
     colonyBuilderExportButton,
@@ -1107,6 +1111,18 @@ function attachColonyAutomationHandlers() {
       colonyAutomationUIState.syncedPresetId = null;
       colonyAutomationUIState.builderName = '';
     }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  colonyBuilderDuplicateButton.addEventListener('click', () => {
+    const automation = getAutomation();
+    const activePreset = automation.getSelectedPreset();
+    if (!activePreset) {
+      return;
+    }
+    automation.duplicatePreset(activePreset.id);
+    colonyAutomationUIState.builderName = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
