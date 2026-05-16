@@ -238,6 +238,7 @@ function syncColonyAutomationApplyRows(container, automation, presets, assignmen
     activeIds.add(assignment.id);
     const row = getColonyAutomationApplyRow(container, automation, assignment.id);
     prepareColonyAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
+    container.appendChild(row);
   });
   container._applyRows.forEach((row, assignmentId) => {
     if (!activeIds.has(assignmentId)) {

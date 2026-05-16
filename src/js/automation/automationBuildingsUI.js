@@ -199,6 +199,7 @@ function syncBuildingAutomationApplyRows(container, automation, presets, assignm
   assignments.forEach((assignment, index) => {
     const row = getBuildingAutomationApplyRow(container, automation, assignment.id);
     prepareBuildingAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
+    container.appendChild(row);
   });
 }
 

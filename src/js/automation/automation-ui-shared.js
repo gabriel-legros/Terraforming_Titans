@@ -333,20 +333,13 @@ function updateAutomationNextTravelCombinationControls(config = {}) {
   }
   automation.nextTravelCombinationPersistent = automation.nextTravelCombinationPersistent && !!automation.nextTravelCombinationId;
 
-  const optionSignature = JSON.stringify(combinations.map((combo) => [combo.id, combo.name || '']));
-  if (document.activeElement !== select && select._optionSignature !== optionSignature) {
-    select.textContent = '';
-    const noneOption = document.createElement('option');
-    noneOption.value = '';
-    noneOption.textContent = getAutomationCardText('noneOption', {}, 'None');
-    select.appendChild(noneOption);
-    combinations.forEach((combo) => {
-      const option = document.createElement('option');
-      option.value = String(combo.id);
-      option.textContent = getDefaultAutomationCombinationLabel(combo);
-      select.appendChild(option);
-    });
-    select._optionSignature = optionSignature;
+  const combinationOptions = [{ value: '', label: getAutomationCardText('noneOption', {}, 'None') }];
+  combinations.forEach(combo => combinationOptions.push({
+    value: combo.id,
+    label: getDefaultAutomationCombinationLabel(combo)
+  }));
+  if (document.activeElement !== select) {
+    syncAutomationSelectOptions(select, combinationOptions, automation.nextTravelCombinationId || '');
   }
   if (document.activeElement !== select) {
     select.value = automation.nextTravelCombinationId
@@ -372,20 +365,13 @@ function updateAutomationCombinationControls(config = {}) {
     return null;
   }
 
-  const optionSignature = JSON.stringify(combinations.map((combo) => [combo.id, combo.name || '']));
-  if (document.activeElement !== select && select._optionSignature !== optionSignature) {
-    select.textContent = '';
-    const newOption = document.createElement('option');
-    newOption.value = '';
-    newOption.textContent = getAutomationCardText('newCombinationOption', {}, 'New combination');
-    select.appendChild(newOption);
-    combinations.forEach((combo) => {
-      const option = document.createElement('option');
-      option.value = String(combo.id);
-      option.textContent = getDefaultAutomationCombinationLabel(combo);
-      select.appendChild(option);
-    });
-    select._optionSignature = optionSignature;
+  const combinationOptions = [{ value: '', label: getAutomationCardText('newCombinationOption', {}, 'New combination') }];
+  combinations.forEach(combo => combinationOptions.push({
+    value: combo.id,
+    label: getDefaultAutomationCombinationLabel(combo)
+  }));
+  if (document.activeElement !== select) {
+    syncAutomationSelectOptions(select, combinationOptions, automation.getSelectedCombinationId() || '');
   }
   if (document.activeElement !== select) {
     select.value = automation.getSelectedCombinationId() || '';

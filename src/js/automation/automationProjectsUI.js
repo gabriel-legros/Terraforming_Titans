@@ -435,6 +435,7 @@ function syncProjectsApplyRows(container, automation, presets, assignments, auto
   assignments.forEach((assignment, index) => {
     const row = getProjectsApplyRow(container, automation, assignment.id);
     updateProjectsApplyRow(row, automation, assignment, index, assignments, presets, automatableProjectLookup);
+    container.appendChild(row);
   });
 }
 
