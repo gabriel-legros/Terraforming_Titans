@@ -2518,26 +2518,35 @@
 
 .resource-disposal-target-side {
     display: grid;
-    grid-template-rows: 1.2em auto auto;
+    grid-template-rows: 1.2em auto;
     align-items: flex-end;
     gap: 4px;
     width: 16ch;
     min-width: 16ch;
 }
 
-.resource-disposal-target-reorder-buttons {
+.resource-disposal-target-actions-row {
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
+    gap: 6px;
+    width: 100%;
+}
+
+.resource-disposal-target-reorder-buttons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     gap: 4px;
 }
 
 .resource-disposal-target-reorder-buttons button {
-    min-width: 28px;
+    min-width: 22px;
     border: 1px solid #c4cad7;
     background: #f1f4f9;
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 2px 5px;
+    font-size: 12px;
     line-height: 1;
     cursor: pointer;
 }

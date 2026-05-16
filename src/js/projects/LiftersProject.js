@@ -1916,20 +1916,27 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return control;
   }
 
-  renderAutomationUI(container) {
-    const elements = this.stripPressureAutomationElements || {};
-    const control = elements.control || this.createStripPressureControl();
+  syncStripPressureAutomationUI() {
+    const elements = this.stripPressureAutomationElements;
+    if (!elements) {
+      return;
+    }
+
     if (elements.checkbox) {
       elements.checkbox.checked = this.disableStripBelowPressure === true;
     }
-    if (elements.input) {
-      if (document.activeElement !== elements.input) {
-        elements.input.value = formatNumber(this.stripPressureThreshold || 0, true, 2);
-      }
+    if (elements.input && document.activeElement !== elements.input) {
+      elements.input.value = formatNumber(this.stripPressureThreshold || 0, true, 2);
     }
     if (elements.unit) {
       elements.unit.textContent = getLiftersProjectText('pa', null, 'Pa');
     }
+  }
+
+  renderAutomationUI(container) {
+    const elements = this.stripPressureAutomationElements || {};
+    const control = elements.control || this.createStripPressureControl();
+    this.syncStripPressureAutomationUI();
     if (control.parentNode !== container) {
       container.appendChild(control);
       window.invalidateAutomationSettingsCache?.(this.name);
@@ -1943,6 +1950,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   updateUI() {
+    this.syncStripPressureAutomationUI();
     if (typeof updateLiftersUI === 'function') {
       updateLiftersUI(this);
     }
@@ -2027,6 +2035,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
+    this.syncStripPressureAutomationUI();
   }
 
   saveState() {

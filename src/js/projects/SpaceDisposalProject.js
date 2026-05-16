@@ -879,6 +879,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       this.removeDisposalTarget(target.id);
     });
 
+    const actionsRow = document.createElement('div');
+    actionsRow.classList.add('resource-disposal-target-actions-row');
+
     const reorderButtons = document.createElement('div');
     reorderButtons.classList.add('resource-disposal-target-reorder-buttons');
 
@@ -898,7 +901,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     reorderButtons.append(moveUpButton, moveDownButton);
 
-    side.append(share, removeButton, reorderButtons);
+    actionsRow.append(removeButton, reorderButtons);
+    side.append(share, actionsRow);
     topRow.append(marker, selects, side);
 
     const controls = document.createElement('div');
