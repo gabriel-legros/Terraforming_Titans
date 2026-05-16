@@ -1994,7 +1994,7 @@ class ArtificialManager extends EffectableEntity {
         const seed = String(key);
         if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
         const status = spaceManager.artificialWorldStatuses[seed];
-        if (!status || !status.stored) return false;
+        if (!status || (!status.stored && !status.abandoned)) return false;
         const discarded = spaceManager.discardStoredArtificialWorld(seed);
         if (!discarded) return false;
         this.updateUI(true);
@@ -2057,7 +2057,7 @@ class ArtificialManager extends EffectableEntity {
                 landHa
             });
             const canTravel = (label === 'abandoned' || label === 'stored') && !!snapshot;
-            const canDiscard = label === 'stored';
+            const canDiscard = label === 'stored' || label === 'abandoned';
             entries.push({
                 id: key,
                 seed: key,

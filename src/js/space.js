@@ -1390,7 +1390,7 @@ class SpaceManager extends EffectableEntity {
     discardStoredArtificialWorld(key) {
         const resolvedKey = String(key);
         const status = this.artificialWorldStatuses[resolvedKey];
-        if (!status || !status.stored) {
+        if (!status || (!status.stored && !status.abandoned)) {
             return false;
         }
         if (this.currentArtificialKey !== null && String(this.currentArtificialKey) === resolvedKey) {
