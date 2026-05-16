@@ -2795,7 +2795,7 @@ setLanguageData({
           },
           commandBypass: {
             name: 'Command Bypass',
-            description: 'Ignores UHF defensive fleet assignments when attacking, but remaining UHF control still provides proportional sector base defense. UHF operations against INV also take 10 seconds.',
+            description: 'Ignores UHF defensive fleet assignments when attacking, but partial UHF control always provides proportional sector base defense. UHF operations against INV also take 10 seconds.',
           },
           occupationBastions: {
             name: 'Occupation Bastions',
