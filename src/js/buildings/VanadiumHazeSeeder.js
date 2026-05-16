@@ -146,7 +146,6 @@ class VanadiumHazeSeeder extends Building {
   }
 
   updateUI(elements) {
-    super.updateUI(elements);
     const vanadiumElements = elements?.vanadium;
     if (!vanadiumElements || !vanadiumElements.container) {
       return;
