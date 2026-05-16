@@ -310,7 +310,8 @@
       if (!recipe) {
         return 1;
       }
-      return 1 + (this.getShopPurchaseCount(recipe.shopId) * 0.01);
+      return (1 + (this.getShopPurchaseCount(recipe.shopId) * 0.01))
+        * this.getEffectiveThroughputMultiplier();
     }
 
     getRecipeOutputMultiplier(key) {
