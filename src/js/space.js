@@ -2703,6 +2703,7 @@ class SpaceManager extends EffectableEntity {
                 || 'unknown'
             )
             : null;
+        const arrivedAt = Date.now();
         const targetType = isArtificial ? 'artificial' : 'random';
         this._updateWorldCacheForStatusMutation(targetType, s, (status, map, key) => {
             if (!status) {
@@ -2724,6 +2725,7 @@ class SpaceManager extends EffectableEntity {
                     abandoned: false,
                     stored: false,
                     departedAt: null,
+                    arrivedAt,
                     ecumenopolisPercent: 0,
                     naturalMagnetosphere: false,
                     artificial: artificialWorld,
@@ -2751,6 +2753,7 @@ class SpaceManager extends EffectableEntity {
             if (status.departureSkillPointGranted !== true) {
                 status.departureSkillPointGranted = false;
             }
+            status.arrivedAt = arrivedAt;
             if (isArtificial) {
                 status.stored = false;
                 status.abandoned = false;
