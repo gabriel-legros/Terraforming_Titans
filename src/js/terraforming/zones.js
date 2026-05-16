@@ -1,8 +1,8 @@
 const ZONES = ['tropical', 'temperate', 'polar'];
 const DISK_ZONE_FLUX_FACTORS = {
-  tropical: 1.9565217391304348,
-  temperate: 0.6521739130434783,
-  polar: 0.391304347826087
+  tropical: 6,
+  temperate: 2,
+  polar: 1.2
 };
 
 // Function to calculate the surface area of a spherical segment between two latitudes (in radians)

@@ -35,7 +35,6 @@ const RINGWORLD_STAR_CORES = [
     { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 600_000 },
     { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", baseDisabledSource: "World 14 & Galactic Conquest", requiresFullGalaxyControl: true, minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 1_500_000 }
 ];
-const DISK_TARGET_FLUX_WM2 = 1_300;
 const DISK_STAR_CORES = [
     { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.042, maxRadiusAU: 0.354 },
     { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: false, minRadiusAU: 0.424, maxRadiusAU: 1.131 },
@@ -360,24 +359,31 @@ function calculateRingLandHectares(orbitRadiusAU, widthKm) {
     return Math.max(0, areaKm2 * 100);
 }
 
-function generateDiskStar({ seed, spectralType, diskRadiusAU, targetFluxWm2 }) {
+function generateDiskStar({ seed, spectralType }) {
     const rng = mulberry32(seed);
-    const massRange = ARTIFICIAL_STAR_MASS_RANGES[spectralType] || ARTIFICIAL_STAR_MASS_RANGES.M;
+    const spec = spectralType || 'G';
+    const massRange = ARTIFICIAL_STAR_MASS_RANGES[spec] || ARTIFICIAL_STAR_MASS_RANGES.M;
     const mass = massRange[0] + (massRange[1] - massRange[0]) * rng();
     const radius = radiusFromMassSolar(mass);
-    const diskRadius = Math.max(diskRadiusAU || 0, 0);
-    const targetFlux = Math.max(targetFluxWm2 || DISK_TARGET_FLUX_WM2, 1);
-    const luminosity = (diskRadius * diskRadius * targetFlux) / (2 * SOLAR_CONSTANT_WM2);
-    const core = `${spectralType.toLowerCase()}disk`;
+    const luminosity = luminosityFromMassSolar(mass);
+    const buildSegment = () => {
+        const index = Math.floor(rng() * ARTIFICIAL_STAR_SYLLABLES.length);
+        return ARTIFICIAL_STAR_SYLLABLES[index] || 'sol';
+    };
+    const core = `${buildSegment()}${buildSegment()}${buildSegment()}`;
     return {
         name: `${core.charAt(0).toUpperCase()}${core.slice(1)}-${String((seed >>> 0) % 1000).padStart(3, '0')}`,
-        spectralType,
+        spectralType: spec,
         luminositySolar: luminosity,
         massSolar: mass,
         radiusSolar: radius,
         temperatureK: calculateStarTemperatureK(luminosity, radius),
         habitableZone: buildHabitableZone(luminosity)
     };
+}
+
+function isLegacyFixedFluxDiskStar(star) {
+    return /^[OMKGFAB]disk-\d{3}$/i.test(star?.name || '');
 }
 
 function calculateDiskLandHectares(radiusAU) {
@@ -1404,7 +1410,6 @@ class ArtificialManager extends EffectableEntity {
         type: 'disk',
         radiusEarth,
         diskRadiusAU,
-        targetFluxWm2: DISK_TARGET_FLUX_WM2,
         diskStarCore: starCore
       };
       const prepayState = this.getPrepayState(selection, cost);
@@ -1426,9 +1431,7 @@ class ArtificialManager extends EffectableEntity {
       const generationSeed = (this.nextId * 0x6a09e667) >>> 0;
       const star = generateDiskStar({
         seed: generationSeed,
-        spectralType: starCoreConfig.spectralType,
-        diskRadiusAU,
-        targetFluxWm2: DISK_TARGET_FLUX_WM2
+        spectralType: starCoreConfig.spectralType
       });
 
       this.activeProject = {
@@ -1455,7 +1458,6 @@ class ArtificialManager extends EffectableEntity {
           terraformedValue,
           fleetCapacityValue: this.calculateFleetCapacityWorldValue(radiusEarth, terraformedValue),
           distanceFromStarAU: diskRadiusAU,
-          targetFluxWm2: DISK_TARGET_FLUX_WM2,
           isRogue: false,
           hasStar: true,
           allowStar: true,
@@ -1675,16 +1677,17 @@ class ArtificialManager extends EffectableEntity {
             : (isRing ? (project.orbitRadiusAU || project.distanceFromStarAU || 1) : (isDisk ? (project.diskRadiusAU || project.orbitRadiusAU || project.distanceFromStarAU || 1) : (project.distanceFromStarAU || 1)));
         const targetFluxWm2 = isRing
             ? clampRingTargetFluxWm2(project.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2)
-            : (isDisk ? DISK_TARGET_FLUX_WM2 : project.targetFluxWm2);
+            : (isDisk ? undefined : project.targetFluxWm2);
         const diskRadiusAU = isDisk ? (project.diskRadiusAU || project.orbitRadiusAU || distanceFromStarAU) : 0;
+        if (isDisk && isLegacyFixedFluxDiskStar(star)) {
+            star = null;
+        }
         if (isDisk && !star) {
             const diskCore = getDiskStarCoreConfig(project.diskStarCore || project.starCore || project.core);
             const seed = (project.id || 1) * 0x6a09e667;
             star = generateDiskStar({
                 seed,
-                spectralType: diskCore.spectralType,
-                diskRadiusAU,
-                targetFluxWm2
+                spectralType: diskCore.spectralType
             });
         }
         if (isRing && !star) {
@@ -1720,7 +1723,7 @@ class ArtificialManager extends EffectableEntity {
             base.specialAttributes.zoneKeys = ['tropical', 'temperate', 'polar'];
             base.specialAttributes.zoneLayout = 'aldersonDisk';
             base.specialAttributes.diskRadiusAU = diskRadiusAU;
-            base.specialAttributes.disk = { radiusAU: diskRadiusAU, targetFluxWm2: DISK_TARGET_FLUX_WM2 };
+            base.specialAttributes.disk = { radiusAU: diskRadiusAU };
             base.specialAttributes.diskConstructionCostTons = (project.cost?.superalloys || 0) + (project.cost?.metal || 0);
             base.specialAttributes.diskConstructionCostIncludesMetal = true;
         }
@@ -1742,7 +1745,7 @@ class ArtificialManager extends EffectableEntity {
             sector,
             distanceFromSun: distanceFromStarAU,
             rogue: isRogue,
-            targetFluxWm2,
+            ...(targetFluxWm2 !== undefined ? { targetFluxWm2 } : {}),
             hasNaturalMagnetosphere: project.celestialParameters?.hasNaturalMagnetosphere === true
         };
         base.effects = isRing
@@ -2278,6 +2281,9 @@ class ArtificialManager extends EffectableEntity {
                 if (!this.activeProject.radiusEarth) {
                     this.activeProject.radiusEarth = this.calculateRadiusEarthFromLandHectares(this.activeProject.landHa);
                 }
+                if (isLegacyFixedFluxDiskStar(this.activeProject.star)) {
+                    this.activeProject.star = null;
+                }
                 if (!this.activeProject.star) {
                     const seed = (this.activeProject.id || this.nextId || 1) * 0x517cc1b7;
                     const ringCore = getRingStarCoreConfig(this.activeProject.starCore || this.activeProject.core);
@@ -2313,13 +2319,11 @@ class ArtificialManager extends EffectableEntity {
                     const seed = (this.activeProject.id || this.nextId || 1) * 0x6a09e667;
                     this.activeProject.star = generateDiskStar({
                         seed,
-                        spectralType: diskCore.spectralType,
-                        diskRadiusAU: this.activeProject.diskRadiusAU,
-                        targetFluxWm2: DISK_TARGET_FLUX_WM2
+                        spectralType: diskCore.spectralType
                     });
                 }
                 this.activeProject.distanceFromStarAU = this.activeProject.diskRadiusAU;
-                this.activeProject.targetFluxWm2 = DISK_TARGET_FLUX_WM2;
+                delete this.activeProject.targetFluxWm2;
                 this.activeProject.isRogue = false;
                 this.activeProject.allowStar = true;
                 this.activeProject.hasStar = true;

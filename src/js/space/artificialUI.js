@@ -2099,7 +2099,6 @@ function buildArtificialSelection(project, manager) {
       radiusEarth,
       diskRadiusAU,
       orbitRadiusAU: diskRadiusAU,
-      targetFluxWm2: ARTIFICIAL_RING_FLUX_DEFAULT_WM2,
       diskStarCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : ''
     };
   }

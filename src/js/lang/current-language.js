@@ -2424,7 +2424,7 @@ setLanguageData({
             averageByZone: 'Average Solar Flux by zone',
             zoneFlux: '{label}: {value}',
             ringworldExplanation: 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.',
-            diskExplanation: 'Modified solar flux uses disk annulus flux directly.',
+            diskExplanation: 'Modified solar flux uses disk annulus flux derived from stellar luminosity and radius.',
             standardExplanation: 'Modified solar flux is 4× the average across all zones.',
             surfaceFluxExplanation: 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.',
           },
