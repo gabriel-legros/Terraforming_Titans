@@ -687,6 +687,46 @@
       });
     }
 
+    syncShopLayout() {
+      const shopElements = this.shopElements || this.resolveShopElements();
+      if (!shopElements || !shopElements.wrapper) {
+        return;
+      }
+
+      const projectCard = projectElements?.[this.name]?.projectItem;
+      const controlsCard = this.uiElements?.controlsCard?.isConnected
+        ? this.uiElements.controlsCard
+        : projectCard?.querySelector('[data-manufacturing-ui="controlsCard"]');
+      if (controlsCard && shopElements.wrapper.previousElementSibling !== controlsCard) {
+        controlsCard.insertAdjacentElement('afterend', shopElements.wrapper);
+      }
+
+      const titleGroup = shopElements.wrapper.querySelector('.bioworld-shop-title');
+      const itemsContainer = shopElements.wrapper.querySelector('.bioworld-shop-items');
+      if (!titleGroup || !itemsContainer) {
+        shopElements.collapseButton = null;
+        shopElements.itemsContainer = null;
+        return;
+      }
+
+      let collapseButton = titleGroup.querySelector('[data-manufacturing-ui="shopCollapseButton"]');
+      if (!collapseButton) {
+        collapseButton = document.createElement('button');
+        collapseButton.type = 'button';
+        collapseButton.classList.add('bioworld-shop-button', 'bioworld-shop-collapse-button');
+        collapseButton.dataset.manufacturingUi = 'shopCollapseButton';
+        collapseButton.addEventListener('click', () => {
+          this.shopCollapsed = !this.shopCollapsed;
+          this.updateUI();
+        });
+        titleGroup.appendChild(collapseButton);
+      }
+
+      shopElements.collapseButton = collapseButton;
+      shopElements.itemsContainer = itemsContainer;
+      this.shopElements = shopElements;
+    }
+
     resolveUIElements() {
       if (this.uiElements?.runCheckbox?.isConnected) {
         return this.uiElements;
@@ -721,6 +761,7 @@
         };
       });
       this.uiElements = {
+        controlsCard: card.querySelector('[data-manufacturing-ui="controlsCard"]'),
         assignmentLayout,
         cumulativeValue: card.querySelector('[data-manufacturing-ui="cumulativeValue"]'),
         assignedValue: card.querySelector('[data-manufacturing-ui="assignedValue"]'),
@@ -1090,6 +1131,7 @@
 
       const card = document.createElement('div');
       card.classList.add('info-card', 'nuclear-alchemy-card', 'manufacturing-world-card');
+      card.dataset.manufacturingUi = 'controlsCard';
 
       const header = document.createElement('div');
       header.classList.add('card-header');
@@ -1416,27 +1458,8 @@
       card.appendChild(body);
       container.appendChild(card);
 
-      if (this.shopElements && this.shopElements.wrapper) {
-        const shopWrapper = this.shopElements.wrapper;
-        const titleGroup = shopWrapper.querySelector('.bioworld-shop-title');
-        const itemsContainer = shopWrapper.querySelector('.bioworld-shop-items');
-        if (titleGroup && itemsContainer) {
-          const collapseButton = document.createElement('button');
-          collapseButton.type = 'button';
-          collapseButton.classList.add('bioworld-shop-button', 'bioworld-shop-collapse-button');
-          collapseButton.addEventListener('click', () => {
-            this.shopCollapsed = !this.shopCollapsed;
-            this.updateUI();
-          });
-          titleGroup.appendChild(collapseButton);
-          this.shopElements.collapseButton = collapseButton;
-          this.shopElements.itemsContainer = itemsContainer;
-        }
-        // Move the MP shop below manufacturing controls.
-        container.appendChild(shopWrapper);
-      }
-
       this.uiElements = {
+        controlsCard: card,
         assignmentLayout,
         cumulativeValue,
         assignedValue,
@@ -1454,6 +1477,7 @@
 
     updateUI() {
       super.updateUI();
+      this.syncShopLayout();
 
       if (this.shopElements) {
         const collapsed = this.shopCollapsed === true;
