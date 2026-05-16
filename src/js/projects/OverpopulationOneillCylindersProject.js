@@ -14,6 +14,31 @@
       this.uiElements = null;
     }
 
+    resolveUIElements() {
+      if (this.uiElements?.buildButton?.isConnected) {
+        return this.uiElements;
+      }
+      const card = projectElements?.[this.name]?.projectItem;
+      if (!card || !card.isConnected) {
+        this.uiElements = null;
+        return null;
+      }
+      const nextElements = {
+        lostPopulationValue: card.querySelector('[data-overpop-oneill-ui="lostPopulationValue"]'),
+        requiredCylindersValue: card.querySelector('[data-overpop-oneill-ui="requiredCylindersValue"]'),
+        cylindersBuiltValue: card.querySelector('[data-overpop-oneill-ui="cylindersBuiltValue"]'),
+        travelConversionValue: card.querySelector('[data-overpop-oneill-ui="travelConversionValue"]'),
+        buildAmountValue: card.querySelector('[data-overpop-oneill-ui="buildAmountValue"]'),
+        buildButton: card.querySelector('[data-overpop-oneill-ui="buildButton"]')
+      };
+      if (!nextElements.buildButton) {
+        this.uiElements = null;
+        return null;
+      }
+      this.uiElements = nextElements;
+      return this.uiElements;
+    }
+
     getTrackedPopulationLoss() {
       return Math.max(0, populationModule.currentWorldOverpopulationLossTotal || 0);
     }
@@ -196,6 +221,11 @@
       const cylindersBuilt = createSummaryBox(getOverpopulationOneillText('cylindersBuilt', null, 'Cylinders Built'));
       const travelConversion = createSummaryBox(getOverpopulationOneillText('travelConversion', null, 'Travel Conversion'));
       const buildAmount = createSummaryBox(getOverpopulationOneillText('buildAmount', null, 'Build Amount'));
+      lostPopulation.value.dataset.overpopOneillUi = 'lostPopulationValue';
+      requiredCylinders.value.dataset.overpopOneillUi = 'requiredCylindersValue';
+      cylindersBuilt.value.dataset.overpopOneillUi = 'cylindersBuiltValue';
+      travelConversion.value.dataset.overpopOneillUi = 'travelConversionValue';
+      buildAmount.value.dataset.overpopOneillUi = 'buildAmountValue';
 
       const multiplierControls = document.createElement('div');
       multiplierControls.classList.add('scanner-mult-controls');
@@ -212,6 +242,7 @@
       buildAmount.content.appendChild(multiplierControls);
 
       const buildButton = document.createElement('button');
+      buildButton.dataset.overpopOneillUi = 'buildButton';
       buildButton.classList.add('progress-button');
       buildButton.style.width = '100%';
       buildButton.style.marginTop = '10px';
@@ -262,23 +293,24 @@
     }
 
     updateUI() {
-      if (!this.uiElements) {
+      const uiElements = this.resolveUIElements();
+      if (!uiElements) {
         return;
       }
       const required = this.getRequiredCylinderCount();
       const travelConversion = this.getTravelConversionCount();
       const selected = this.getSelectedBuildCount();
-      this.uiElements.lostPopulationValue.textContent = formatNumber(this.getTrackedPopulationLoss(), true);
-      this.uiElements.requiredCylindersValue.textContent = formatNumber(required, true, 3);
-      this.uiElements.cylindersBuiltValue.textContent = formatNumber(this.getBuiltCylinderCount(), true, 3);
-      this.uiElements.travelConversionValue.textContent = formatNumber(travelConversion, true, 3);
-      this.uiElements.buildAmountValue.textContent = formatNumber(selected, true, 3);
-      this.uiElements.buildButton.textContent = getOverpopulationOneillText(
+      uiElements.lostPopulationValue.textContent = formatNumber(this.getTrackedPopulationLoss(), true);
+      uiElements.requiredCylindersValue.textContent = formatNumber(required, true, 3);
+      uiElements.cylindersBuiltValue.textContent = formatNumber(this.getBuiltCylinderCount(), true, 3);
+      uiElements.travelConversionValue.textContent = formatNumber(travelConversion, true, 3);
+      uiElements.buildAmountValue.textContent = formatNumber(selected, true, 3);
+      uiElements.buildButton.textContent = getOverpopulationOneillText(
         'buildButton',
         { count: formatNumber(selected, true, 3) },
         `Build ${formatNumber(selected, true, 3)} Cylinders`
       );
-      this.uiElements.buildButton.disabled = !this.canStart();
+      uiElements.buildButton.disabled = !this.canStart();
     }
 
     saveState() {

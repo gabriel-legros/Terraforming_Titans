@@ -521,8 +521,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
 
     this.ensurePlanetCrackerTableColumns();
 
-    const elements = projectElements[this.name] || {};
-    const statusElement = elements.planetCrackerStatus;
+    const statusElement = this.resolvePlanetCrackerStatusElement();
     if (statusElement) {
       statusElement.textContent = this.getText(
         'planetProgress',
@@ -564,6 +563,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     }
 
     const status = document.createElement('p');
+    status.dataset.planetCrackerUi = 'status';
     status.classList.add('project-description');
     cardBody.appendChild(status);
     elements.planetCrackerStatus = status;
@@ -572,6 +572,19 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     projectElements[this.name] = elements;
 
     this.updateUI();
+  }
+
+  resolvePlanetCrackerStatusElement() {
+    const elements = projectElements[this.name] || {};
+    let statusElement = elements.planetCrackerStatus;
+    if (statusElement && statusElement.isConnected) {
+      return statusElement;
+    }
+    const card = elements.projectItem;
+    statusElement = card ? card.querySelector('[data-planet-cracker-ui="status"]') : null;
+    elements.planetCrackerStatus = statusElement || null;
+    projectElements[this.name] = elements;
+    return statusElement;
   }
 
   ensurePlanetCrackerTableColumns() {

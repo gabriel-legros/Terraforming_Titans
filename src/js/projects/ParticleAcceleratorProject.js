@@ -35,6 +35,32 @@ class ParticleAcceleratorProject extends Project {
     }
   }
 
+  resolveUIElements() {
+    if (this.uiElements?.radiusValue?.isConnected) {
+      return this.uiElements;
+    }
+    const card = projectElements?.[this.name]?.projectItem;
+    if (!card || !card.isConnected) {
+      this.uiElements = null;
+      return null;
+    }
+    const radiusValue = card.querySelector('[data-particle-ui="radiusValue"]');
+    if (!radiusValue) {
+      this.uiElements = null;
+      return null;
+    }
+    this.uiElements = {
+      radiusValue,
+      bestValue: card.querySelector('[data-particle-ui="bestValue"]'),
+      researchBoostValue: card.querySelector('[data-particle-ui="researchBoostValue"]'),
+      minusButton: card.querySelector('[data-particle-ui="minusButton"]'),
+      plusButton: card.querySelector('[data-particle-ui="plusButton"]'),
+      buttons: Array.from(card.querySelectorAll('[data-particle-ui-button="1"]')),
+      notice: card.querySelector('[data-particle-ui="notice"]')
+    };
+    return this.uiElements;
+  }
+
   renderUI(container) {
     const card = document.createElement('div');
     card.classList.add('info-card');
@@ -71,6 +97,7 @@ class ParticleAcceleratorProject extends Project {
 
     const radiusBox = createSummaryBox(this.getText('targetRadius', null, 'Target Radius'));
     const radiusValue = radiusBox.value;
+    radiusValue.dataset.particleUi = 'radiusValue';
 
     const buttonRow = document.createElement('div');
     buttonRow.classList.add('main-buttons');
@@ -85,7 +112,9 @@ class ParticleAcceleratorProject extends Project {
 
     const zeroButton = createButton(this.getText('zero', null, '0'), () => this.setRadiusMeters(this.minimumRadiusMeters));
     const minusButton = createButton('', () => this.adjustRadiusBySteps(-1));
+    minusButton.dataset.particleUi = 'minusButton';
     const plusButton = createButton('', () => this.adjustRadiusBySteps(1));
+    plusButton.dataset.particleUi = 'plusButton';
 
     const multiplierRow = document.createElement('div');
     multiplierRow.classList.add('multiplier-container');
@@ -93,6 +122,9 @@ class ParticleAcceleratorProject extends Project {
     const mulButton = createButton(this.getText('timesTen', null, 'x10'), () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
 
     const maxButton = createButton(this.getText('auto', null, 'Auto'), () => this.setMaxAffordableRadius(), multiplierRow);
+    [zeroButton, minusButton, plusButton, divButton, mulButton, maxButton].forEach((button) => {
+      button.dataset.particleUiButton = '1';
+    });
 
     const controlsWrapper = document.createElement('div');
     controlsWrapper.classList.add('project-radius-controls');
@@ -102,14 +134,17 @@ class ParticleAcceleratorProject extends Project {
     radiusBox.content.appendChild(controlsWrapper);
 
     const { value: bestValue } = createSummaryBox(this.getText('largestBuilt', null, 'Largest Built'));
+    bestValue.dataset.particleUi = 'bestValue';
     const { value: researchBoostValue } = createSummaryBox(
       this.getText('advancedResearchBoost', null, 'Advanced Research Boost (New / Current)')
     );
+    researchBoostValue.dataset.particleUi = 'researchBoostValue';
 
     body.appendChild(summaryGrid);
 
     const notice = document.createElement('div');
     notice.classList.add('project-warning');
+    notice.dataset.particleUi = 'notice';
     body.appendChild(notice);
 
     card.appendChild(body);
@@ -130,7 +165,7 @@ class ParticleAcceleratorProject extends Project {
   }
 
   updateUI() {
-    const elements = this.uiElements;
+    const elements = this.resolveUIElements();
     if (!elements) {
       return;
     }

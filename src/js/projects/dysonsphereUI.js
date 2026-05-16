@@ -170,8 +170,37 @@ function updateCollectorCostDisplay(project, costDisplay) {
 }
 
 function updateDysonSphereUI(project) {
-  const els = projectElements[project.name];
+  let els = projectElements[project.name];
   if (!els) return;
+  if (!els.sphereCard || !els.sphereCard.isConnected) {
+    const projectCard = els.projectItem || projectElements[project.name]?.projectItem;
+    const sphereCard = projectCard ? projectCard.querySelector('.dyson-sphere-card') : null;
+    if (!sphereCard || !sphereCard.isConnected) {
+      return;
+    }
+    const startButton = sphereCard.querySelector('#dsph-start');
+    const autoCheckbox = sphereCard.querySelector('#dsph-auto');
+    const travelResetCheckbox = sphereCard.querySelector('#dsph-auto-travel-reset');
+    const collectorCostInfo = sphereCard.querySelector('#dsph-collector-cost-label .info-tooltip-icon');
+    projectElements[project.name] = {
+      ...els,
+      sphereCard,
+      collectorsDisplay: sphereCard.querySelector('#dsph-collectors'),
+      powerPerDisplay: sphereCard.querySelector('#dsph-power-per'),
+      totalPowerDisplay: sphereCard.querySelector('#dsph-total-power'),
+      sphereCountDisplay: sphereCard.querySelector('#dsph-sphere-count'),
+      maxSpheresDisplay: sphereCard.querySelector('#dsph-max-spheres'),
+      maxPowerDisplay: sphereCard.querySelector('#dsph-max-power'),
+      costDisplay: sphereCard.querySelector('#dsph-collector-cost'),
+      costTooltipContent: collectorCostInfo ? collectorCostInfo.querySelector('.resource-tooltip.dynamic-tooltip-content') : null,
+      expansionRateDisplay: sphereCard.querySelector('#dsph-expansion-rate'),
+      startButton,
+      autoCheckbox,
+      autoStartTravelResetCheckbox: travelResetCheckbox,
+      collectorAutoStartTravelResetCheckbox: travelResetCheckbox
+    };
+    els = projectElements[project.name];
+  }
   const showCard = project.unlocked || project.collectors > 0 || project.isCompleted;
   if (els.sphereCard) {
     els.sphereCard.style.display = showCard ? 'block' : 'none';

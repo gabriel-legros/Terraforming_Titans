@@ -78,6 +78,50 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.uiElements = null;
   }
 
+  resolveUIElements() {
+    if (this.uiElements?.runCheckbox?.isConnected) {
+      return this.uiElements;
+    }
+    const card = projectElements?.[this.name]?.projectItem;
+    if (!card || !card.isConnected) {
+      this.uiElements = null;
+      return null;
+    }
+    const runCheckbox = card.querySelector('[data-nuclear-ui="runCheckbox"]');
+    if (!runCheckbox) {
+      this.uiElements = null;
+      return null;
+    }
+    const rowElements = {};
+    const rowNodes = card.querySelectorAll('[data-nuclear-assignment-key]');
+    rowNodes.forEach((rowNode) => {
+      const key = rowNode.dataset.nuclearAssignmentKey;
+      rowElements[key] = {
+        value: rowNode.querySelector('[data-nuclear-role="value"]'),
+        zeroButton: rowNode.querySelector('[data-nuclear-role="zeroButton"]'),
+        minusButton: rowNode.querySelector('[data-nuclear-role="minusButton"]'),
+        plusButton: rowNode.querySelector('[data-nuclear-role="plusButton"]'),
+        maxButton: rowNode.querySelector('[data-nuclear-role="maxButton"]'),
+        autoAssign: rowNode.querySelector('[data-nuclear-role="autoAssign"]'),
+        weightInput: rowNode.querySelector('[data-nuclear-role="weightInput"]'),
+        rate: rowNode.querySelector('[data-nuclear-role="rate"]')
+      };
+    });
+    this.uiElements = {
+      totalValue: card.querySelector('[data-nuclear-ui="totalValue"]'),
+      freeValue: card.querySelector('[data-nuclear-ui="freeValue"]'),
+      hydrogenRateValue: card.querySelector('[data-nuclear-ui="hydrogenRateValue"]'),
+      expansionRateValue: card.querySelector('[data-nuclear-ui="expansionRateValue"]'),
+      statusValue: card.querySelector('[data-nuclear-ui="statusValue"]'),
+      runCheckbox,
+      note: card.querySelector('[data-nuclear-ui="note"]'),
+      rowElements,
+      stepDownButton: card.querySelector('[data-nuclear-ui="stepDownButton"]'),
+      stepUpButton: card.querySelector('[data-nuclear-ui="stepUpButton"]')
+    };
+    return this.uiElements;
+  }
+
   getBaseDuration() {
     return this.getDurationWithTerraformBonus(this.duration);
   }
@@ -845,8 +889,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     };
 
     const totalValue = createStatBox(this.getTotalUnitsLabelText());
+    totalValue.dataset.nuclearUi = 'totalValue';
     const freeValue = createStatBox('Unassigned');
+    freeValue.dataset.nuclearUi = 'freeValue';
     const expansionRateValue = createStatBox('Expansion');
+    expansionRateValue.dataset.nuclearUi = 'expansionRateValue';
     body.appendChild(summaryGrid);
 
     const controlsGrid = document.createElement('div');
@@ -856,6 +903,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     runField.classList.add('stat-item');
     const runCheckbox = document.createElement('input');
     runCheckbox.type = 'checkbox';
+    runCheckbox.dataset.nuclearUi = 'runCheckbox';
     runCheckbox.id = `${this.name}-run`;
     const runLabel = document.createElement('label');
     runLabel.htmlFor = runCheckbox.id;
@@ -870,6 +918,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     statusLabel.textContent = getNuclearAlchemyText('ui.projects.common.status', 'Status');
     const statusValue = document.createElement('span');
     statusValue.classList.add('stat-value');
+    statusValue.dataset.nuclearUi = 'statusValue';
     statusField.append(statusLabel, statusValue);
     controlsGrid.appendChild(statusField);
 
@@ -880,6 +929,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     hydrogenLabel.textContent = this.getPrimaryRateLabelText();
     const hydrogenRateValue = document.createElement('span');
     hydrogenRateValue.classList.add('stat-value');
+    hydrogenRateValue.dataset.nuclearUi = 'hydrogenRateValue';
     hydrogenField.append(hydrogenLabel, hydrogenRateValue);
     controlsGrid.appendChild(hydrogenField);
     body.appendChild(controlsGrid);
@@ -888,12 +938,14 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list');
 
     const stepDownButton = document.createElement('button');
+    stepDownButton.dataset.nuclearUi = 'stepDownButton';
     stepDownButton.textContent = getNuclearAlchemyText('ui.projects.common.divideTen', '/10');
     stepDownButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep / 10);
       this.updateUI();
     });
     const stepUpButton = document.createElement('button');
+    stepUpButton.dataset.nuclearUi = 'stepUpButton';
     stepUpButton.textContent = getNuclearAlchemyText('ui.projects.common.timesTen', 'x10');
     stepUpButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep * 10);
@@ -941,6 +993,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       const isUnassigned = this.isUnassignedAssignmentKey(key);
       const recipe = isUnassigned ? null : this.getRecipe(key);
       const row = document.createElement('div');
+      row.dataset.nuclearAssignmentKey = key;
       row.classList.add('hephaestus-assignment-row', 'nuclear-alchemy-assignment-row');
       if (isUnassigned) {
         row.classList.add('assignment-divider-row');
@@ -971,20 +1024,25 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
       const amountEl = document.createElement('span');
       amountEl.classList.add('stat-value');
+      amountEl.dataset.nuclearRole = 'value';
 
       const zeroButton = document.createElement('button');
+      zeroButton.dataset.nuclearRole = 'zeroButton';
       zeroButton.textContent = getNuclearAlchemyText('ui.projects.common.zero', '0');
       zeroButton.addEventListener('click', () => {
         this.clearAssignment(key);
       });
 
       const minusButton = document.createElement('button');
+      minusButton.dataset.nuclearRole = 'minusButton';
       minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
 
       const plusButton = document.createElement('button');
+      plusButton.dataset.nuclearRole = 'plusButton';
       plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
 
       const maxButton = document.createElement('button');
+      maxButton.dataset.nuclearRole = 'maxButton';
       maxButton.textContent = getNuclearAlchemyText('ui.projects.common.max', 'Max');
       maxButton.addEventListener('click', () => {
         this.maximizeAssignment(key);
@@ -994,6 +1052,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       autoAssignContainer.classList.add('hephaestus-auto-assign');
       const autoAssign = document.createElement('input');
       autoAssign.type = 'checkbox';
+      autoAssign.dataset.nuclearRole = 'autoAssign';
       autoAssign.addEventListener('change', () => {
         this.setAutoAssignTarget(key, autoAssign.checked);
       });
@@ -1013,6 +1072,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
       );
       weightInput.classList.add('hephaestus-weight-input');
+      weightInput.dataset.nuclearRole = 'weightInput';
       weightInput.addEventListener('input', () => {
         const value = Number(weightInput.value);
         this.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
@@ -1029,6 +1089,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
       const rateEl = document.createElement('div');
       rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
+      rateEl.dataset.nuclearRole = 'rate';
 
       row.append(nameEl, complexityEl, amountEl, controls, rateEl);
       assignmentGrid.appendChild(row);
@@ -1050,6 +1111,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
     const note = document.createElement('p');
     note.classList.add('project-description');
+    note.dataset.nuclearUi = 'note';
     note.textContent = '';
     body.appendChild(note);
 
@@ -1077,7 +1139,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   updateUI() {
-    const elements = this.uiElements;
+    const elements = this.resolveUIElements();
     if (!elements) {
       return;
     }

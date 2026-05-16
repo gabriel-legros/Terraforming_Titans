@@ -20,6 +20,31 @@
       this.uiElements = null;
     }
 
+    resolveUIElements() {
+      if (this.uiElements?.actionButton?.isConnected) {
+        return this.uiElements;
+      }
+      const card = projectElements?.[this.name]?.projectItem;
+      if (!card || !card.isConnected) {
+        this.uiElements = null;
+        return null;
+      }
+      const actionButton = card.querySelector('[data-apollo-ui="actionButton"]');
+      if (!actionButton) {
+        this.uiElements = null;
+        return null;
+      }
+      this.uiElements = {
+        costValue: card.querySelector('[data-apollo-ui="costValue"]'),
+        durationValue: card.querySelector('[data-apollo-ui="durationValue"]'),
+        statusValue: card.querySelector('[data-apollo-ui="statusValue"]'),
+        actionButton,
+        actionLabel: card.querySelector('[data-apollo-ui="actionLabel"]'),
+        autoCheckbox: card.querySelector('[data-apollo-ui="autoCheckbox"]')
+      };
+      return this.uiElements;
+    }
+
     isArtificialWorld() {
       return spaceManager.isArtificialWorld();
     }
@@ -180,6 +205,9 @@
       const costValue = createSummaryBox(getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.activationCost', 'Activation Cost'));
       const durationValue = createSummaryBox(getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.surgeryTime', 'Surgery Time'));
       const statusValue = createSummaryBox(getApolloCoreSurgeryText('ui.projects.common.status', 'Status'));
+      costValue.dataset.apolloUi = 'costValue';
+      durationValue.dataset.apolloUi = 'durationValue';
+      statusValue.dataset.apolloUi = 'statusValue';
 
       const actionWrapper = document.createElement('div');
       actionWrapper.style.position = 'relative';
@@ -187,6 +215,7 @@
       actionWrapper.style.marginTop = '10px';
 
       const actionButton = document.createElement('button');
+      actionButton.dataset.apolloUi = 'actionButton';
       actionButton.classList.add('progress-button', 'apollo-core-surgery-button');
       actionButton.style.width = '100%';
       actionButton.style.display = 'flex';
@@ -212,10 +241,12 @@
 
       const autoCheckbox = document.createElement('input');
       autoCheckbox.type = 'checkbox';
+      autoCheckbox.dataset.apolloUi = 'autoCheckbox';
       autoCheckbox.setAttribute('aria-label', getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.autoStartAriaLabel', 'Automatically perform core surgery when possible'));
       autoToggle.appendChild(autoCheckbox);
 
       const actionLabel = document.createElement('span');
+      actionLabel.dataset.apolloUi = 'actionLabel';
       actionLabel.style.fontWeight = '400';
 
       autoToggle.addEventListener('click', (event) => {
@@ -273,28 +304,29 @@
     }
 
     updateUI() {
-      if (!this.uiElements) {
+      const uiElements = this.resolveUIElements();
+      if (!uiElements) {
         return;
       }
 
-      this.uiElements.costValue.textContent = getApolloCoreSurgeryText(
+      uiElements.costValue.textContent = getApolloCoreSurgeryText(
         'ui.projects.apolloCoreSurgery.spaceEnergyValue',
         `${formatNumber(CORE_SURGERY_ACTION_COST, true)} space energy`,
         { value: formatNumber(CORE_SURGERY_ACTION_COST, true) }
       );
-      this.uiElements.durationValue.textContent = formatSeconds(this.getCoreSurgeryDuration() / 1000);
-      this.uiElements.statusValue.textContent = this.getStatusText();
+      uiElements.durationValue.textContent = formatSeconds(this.getCoreSurgeryDuration() / 1000);
+      uiElements.statusValue.textContent = this.getStatusText();
 
       if (this.coreSurgeryActive) {
-        this.uiElements.actionLabel.textContent = getApolloCoreSurgeryText(
+        uiElements.actionLabel.textContent = getApolloCoreSurgeryText(
           'ui.projects.apolloCoreSurgery.action.inProgress',
           `Core Surgery in Progress (${Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2)}s)`,
           { time: Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2) }
         );
       } else if (this.hasNaturalMagnetosphere()) {
-        this.uiElements.actionLabel.textContent = getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.action.established', 'Natural Magnetosphere Established');
+        uiElements.actionLabel.textContent = getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.action.established', 'Natural Magnetosphere Established');
       } else {
-        this.uiElements.actionLabel.textContent = getApolloCoreSurgeryText(
+        uiElements.actionLabel.textContent = getApolloCoreSurgeryText(
           'ui.projects.apolloCoreSurgery.action.perform',
           `Perform Core Surgery (${formatNumber(CORE_SURGERY_ACTION_COST, true)} space energy)`,
           { value: formatNumber(CORE_SURGERY_ACTION_COST, true) }
@@ -311,10 +343,10 @@
         && this.isPulsarCleared()
         && !canAfford;
 
-      this.uiElements.actionButton.disabled = !canStart;
-      this.uiElements.actionButton.classList.toggle('apollo-core-surgery-button--ready', canStart);
-      this.uiElements.actionButton.classList.toggle('apollo-core-surgery-button--energy-blocked', energyBlockedOnly);
-      this.uiElements.autoCheckbox.checked = this.coreSurgeryAutoStart === true;
+      uiElements.actionButton.disabled = !canStart;
+      uiElements.actionButton.classList.toggle('apollo-core-surgery-button--ready', canStart);
+      uiElements.actionButton.classList.toggle('apollo-core-surgery-button--energy-blocked', energyBlockedOnly);
+      uiElements.autoCheckbox.checked = this.coreSurgeryAutoStart === true;
     }
 
     saveAutomationSettings() {

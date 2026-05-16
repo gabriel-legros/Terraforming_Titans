@@ -1196,6 +1196,10 @@
   cursor: not-allowed;
 }
 
+.galaxy-operations-launch__button.is-insufficient-antimatter {
+  color: #ff6b6b;
+}
+
 .galaxy-operations-progress {
   display: flex;
   flex-wrap: wrap;
@@ -1277,6 +1281,10 @@
   color: #f5f9ff;
 }
 
+.galaxy-operations-form__cost-value.is-insufficient-antimatter {
+  color: #ff6b6b;
+}
+
 .galaxy-operations-form__cost .info-tooltip-icon {
   display: inline-flex;
   align-items: center;
@@ -1347,6 +1355,11 @@
   min-height: 18px;
   font-size: 0.85rem;
   color: #a5c4f5;
+  text-align: center;
+}
+
+.galaxy-operations-form__status.is-insufficient-antimatter {
+  color: #ff6b6b;
 }
 
 @media (max-width: 1100px) {

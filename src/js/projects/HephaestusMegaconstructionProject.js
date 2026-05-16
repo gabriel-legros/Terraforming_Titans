@@ -58,6 +58,45 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     };
   }
 
+  resolveUIElements() {
+    if (this.uiElements?.assignmentGrid?.isConnected) {
+      return this.uiElements;
+    }
+    const card = projectElements?.[this.name]?.projectItem;
+    if (!card || !card.isConnected) {
+      return null;
+    }
+    const assignmentGrid = card.querySelector('[data-hephaestus-ui="assignmentGrid"]');
+    if (!assignmentGrid) {
+      return null;
+    }
+    const rowElements = {};
+    const rowNodes = assignmentGrid.querySelectorAll('[data-hephaestus-assignment-key]');
+    rowNodes.forEach((rowNode) => {
+      const key = rowNode.dataset.hephaestusAssignmentKey;
+      rowElements[key] = {
+        wrapper: rowNode,
+        value: rowNode.querySelector('[data-hephaestus-role="value"]'),
+        minusButton: rowNode.querySelector('[data-hephaestus-role="minusButton"]'),
+        plusButton: rowNode.querySelector('[data-hephaestus-role="plusButton"]'),
+        zeroButton: rowNode.querySelector('[data-hephaestus-role="zeroButton"]'),
+        maxButton: rowNode.querySelector('[data-hephaestus-role="maxButton"]'),
+        autoAssign: rowNode.querySelector('[data-hephaestus-role="autoAssign"]'),
+        weightInput: rowNode.querySelector('[data-hephaestus-role="weightInput"]')
+      };
+    });
+    this.uiElements = {
+      totalValue: card.querySelector('[data-hephaestus-ui="totalValue"]'),
+      freeValue: card.querySelector('[data-hephaestus-ui="freeValue"]'),
+      expansionRateValue: card.querySelector('[data-hephaestus-ui="expansionRateValue"]'),
+      rowElements,
+      stepDownButton: card.querySelector('[data-hephaestus-ui="stepDownButton"]'),
+      stepUpButton: card.querySelector('[data-hephaestus-ui="stepUpButton"]'),
+      assignmentGrid
+    };
+    return this.uiElements;
+  }
+
   getBaseDuration() {
     return this.getDurationWithTerraformBonus(this.duration);
   }
@@ -571,17 +610,23 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     const totalValue = createSummaryBox(getHephaestusText('ui.projects.hephaestus.totalYards', 'Total Yards')).value;
     const freeValue = createSummaryBox(getHephaestusText('ui.projects.common.unassigned', 'Unassigned')).value;
     const expansionRateValue = createSummaryBox(getHephaestusText('ui.projects.common.expansion', 'Expansion')).value;
+    totalValue.dataset.hephaestusUi = 'totalValue';
+    freeValue.dataset.hephaestusUi = 'freeValue';
+    expansionRateValue.dataset.hephaestusUi = 'expansionRateValue';
 
     const assignmentGrid = document.createElement('div');
     assignmentGrid.classList.add('hephaestus-assignment-list');
+    assignmentGrid.dataset.hephaestusUi = 'assignmentGrid';
 
     const stepDownButton = document.createElement('button');
+    stepDownButton.dataset.hephaestusUi = 'stepDownButton';
     stepDownButton.textContent = getHephaestusText('ui.projects.common.divideTen', '/10');
     stepDownButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep / 10);
       this.updateUI();
     });
     const stepUpButton = document.createElement('button');
+    stepUpButton.dataset.hephaestusUi = 'stepUpButton';
     stepUpButton.textContent = getHephaestusText('ui.projects.common.timesTen', 'x10');
     stepUpButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep * 10);
@@ -617,6 +662,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
 
     const createAssignmentRow = (key, labelText) => {
       const row = document.createElement('div');
+      row.dataset.hephaestusAssignmentKey = key;
       row.classList.add('hephaestus-assignment-row');
       if (this.isUnassignedAssignmentKey(key)) {
         row.classList.add('assignment-divider-row');
@@ -628,8 +674,10 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
 
       const amountEl = document.createElement('span');
       amountEl.classList.add('stat-value');
+      amountEl.dataset.hephaestusRole = 'value';
 
       const zeroButton = document.createElement('button');
+      zeroButton.dataset.hephaestusRole = 'zeroButton';
       zeroButton.textContent = getHephaestusText('ui.projects.common.zero', '0');
       zeroButton.addEventListener('click', () => {
         this.clearAssignment(key);
@@ -637,10 +685,13 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
 
       const minusButton = document.createElement('button');
       const plusButton = document.createElement('button');
+      minusButton.dataset.hephaestusRole = 'minusButton';
+      plusButton.dataset.hephaestusRole = 'plusButton';
       minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
       plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
 
       const maxButton = document.createElement('button');
+      maxButton.dataset.hephaestusRole = 'maxButton';
       maxButton.textContent = getHephaestusText('ui.projects.common.max', 'Max');
       maxButton.addEventListener('click', () => {
         this.maximizeAssignment(key);
@@ -650,6 +701,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       autoAssignContainer.classList.add('hephaestus-auto-assign');
       const autoAssign = document.createElement('input');
       autoAssign.type = 'checkbox';
+      autoAssign.dataset.hephaestusRole = 'autoAssign';
       autoAssign.addEventListener('change', () => {
         this.setAutoAssignTarget(key, autoAssign.checked);
       });
@@ -669,6 +721,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
       );
       weightInput.classList.add('hephaestus-weight-input');
+      weightInput.dataset.hephaestusRole = 'weightInput';
       weightInput.addEventListener('input', () => {
         this.autoAssignWeights[key] = Number(weightInput.value || 0);
         this.normalizeAssignments();
@@ -730,7 +783,10 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   }
 
   updateUI() {
-    const elements = this.uiElements;
+    const elements = this.resolveUIElements();
+    if (!elements) {
+      return;
+    }
     this.normalizeAssignments();
 
     const total = this.getTotalYards();

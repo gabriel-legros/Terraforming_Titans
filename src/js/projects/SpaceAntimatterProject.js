@@ -36,6 +36,29 @@
       this.uiElements = null;
     }
 
+    resolveUIElements() {
+      if (this.uiElements?.buildButton?.isConnected) {
+        return this.uiElements;
+      }
+      const card = projectElements?.[this.name]?.projectItem;
+      if (!card || !card.isConnected) {
+        this.uiElements = null;
+        return null;
+      }
+      const nextElements = {
+        batteriesBuiltValue: card.querySelector('[data-space-antimatter-ui="batteriesBuiltValue"]'),
+        storageBonusValue: card.querySelector('[data-space-antimatter-ui="storageBonusValue"]'),
+        antimatterStorageBonusValue: card.querySelector('[data-space-antimatter-ui="antimatterStorageBonusValue"]'),
+        buildButton: card.querySelector('[data-space-antimatter-ui="buildButton"]')
+      };
+      if (!nextElements.buildButton) {
+        this.uiElements = null;
+        return null;
+      }
+      this.uiElements = nextElements;
+      return this.uiElements;
+    }
+
     getStorageEffectId() {
       return `${this.name}-space-energy-storage`;
     }
@@ -260,6 +283,9 @@
       const storageBonus = createSummaryBox(getSpaceAntimatterText('spaceEnergyStorage', null, 'Space Energy Storage'));
       const antimatterStorageBonus = createSummaryBox(getSpaceAntimatterText('specialAntimatterStorage', null, 'Special Antimatter Storage'));
       const buildAmount = createSummaryBox(getSpaceAntimatterText('buildAmount', null, 'Build Amount'));
+      batteriesBuilt.value.dataset.spaceAntimatterUi = 'batteriesBuiltValue';
+      storageBonus.value.dataset.spaceAntimatterUi = 'storageBonusValue';
+      antimatterStorageBonus.value.dataset.spaceAntimatterUi = 'antimatterStorageBonusValue';
 
       const multiplierControls = document.createElement('div');
       multiplierControls.classList.add('scanner-mult-controls');
@@ -273,6 +299,7 @@
       buildAmount.content.appendChild(multiplierControls);
 
       const buildButton = document.createElement('button');
+      buildButton.dataset.spaceAntimatterUi = 'buildButton';
       buildButton.classList.add('progress-button');
       buildButton.style.width = '100%';
       buildButton.style.marginTop = '10px';
@@ -313,19 +340,20 @@
     }
 
     updateUI() {
-      if (!this.uiElements) {
+      const uiElements = this.resolveUIElements();
+      if (!uiElements) {
         return;
       }
       const selected = this.getSelectedBuildCount();
-      this.uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, true);
-      this.uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonusCount(), true);
-      this.uiElements.antimatterStorageBonusValue.textContent = formatNumber(this.getTotalAntimatterStorageBonus(), true);
-      this.uiElements.buildButton.textContent = getSpaceAntimatterText(
+      uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, true);
+      uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonusCount(), true);
+      uiElements.antimatterStorageBonusValue.textContent = formatNumber(this.getTotalAntimatterStorageBonus(), true);
+      uiElements.buildButton.textContent = getSpaceAntimatterText(
         'buildButton',
         { count: formatNumber(selected, true) },
         `Build ${formatNumber(selected, true)} Batteries`
       );
-      this.uiElements.buildButton.disabled = !this.canStart();
+      uiElements.buildButton.disabled = !this.canStart();
     }
 
     saveAutomationSettings() {

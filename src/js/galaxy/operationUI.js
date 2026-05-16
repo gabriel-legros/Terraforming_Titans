@@ -756,6 +756,11 @@ const GalaxyOperationUI = (() => {
         launchButton.addEventListener('click', handleOperationsLaunch);
         launchContainer.appendChild(launchButton);
 
+        const statusMessage = doc.createElement('div');
+        statusMessage.className = 'galaxy-operations-form__status';
+        statusMessage.textContent = '';
+        launchContainer.appendChild(statusMessage);
+
         const costRow = doc.createElement('div');
         costRow.className = 'galaxy-operations-form__cost';
         form.appendChild(costRow);
@@ -835,11 +840,6 @@ const GalaxyOperationUI = (() => {
         });
         form.appendChild(autoModeHeader);
         form.appendChild(autoModeRow);
-
-        const statusMessage = doc.createElement('div');
-        statusMessage.className = 'galaxy-operations-form__status';
-        statusMessage.textContent = '';
-        form.appendChild(statusMessage);
 
         const cache = {
             operationsPanel: panel,
@@ -1236,6 +1236,7 @@ const GalaxyOperationUI = (() => {
         const hasFleetPower = availablePower > 0;
         const hasAssignment = assignment > 0;
         const hasAntimatter = !!antimatterResource && antimatterValue >= antimatterCost;
+        const insufficientAntimatter = hasAssignment && !hasAntimatter;
         const hasChance = successChance > 0;
         let launchBlocked = !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
         let statusMessage = '';
@@ -1303,6 +1304,9 @@ const GalaxyOperationUI = (() => {
             }
         }
         operationsStatusMessage.textContent = statusMessage;
+        operationsLaunchButton.classList.toggle('is-insufficient-antimatter', insufficientAntimatter && !operationRunning);
+        operationsCostValue.classList.toggle('is-insufficient-antimatter', insufficientAntimatter);
+        operationsStatusMessage.classList.toggle('is-insufficient-antimatter', insufficientAntimatter && !operationRunning);
 
         operationsLaunchButton.disabled = launchBlocked;
         if (operationsAutoCheckbox) {
