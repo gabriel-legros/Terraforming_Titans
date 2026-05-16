@@ -501,6 +501,8 @@ function attachAutomationCombinationHandlers(config = {}) {
     }
     const combo = automation.getCombinationById(Number(comboId));
     combo.name = event.target.value || '';
+    queueAutomationUIRefresh();
+    updateAutomationUI();
   });
 
   combinationNewButton.addEventListener('click', () => {

@@ -920,6 +920,8 @@ function attachProjectsAutomationHandlers() {
       return;
     }
     automationManager.projectsAutomation.renamePreset(preset.id, event.target.value || '');
+    queueAutomationUIRefresh();
+    updateAutomationUI();
   });
 
   projectsBuilderNewButton.addEventListener('click', () => {

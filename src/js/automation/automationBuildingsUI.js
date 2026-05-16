@@ -894,6 +894,8 @@ function attachBuildingsAutomationHandlers() {
       return;
     }
     automationManager.buildingsAutomation.renamePreset(preset.id, event.target.value || '');
+    queueAutomationUIRefresh();
+    updateAutomationUI();
   });
 
   buildingsBuilderNewButton.addEventListener('click', () => {

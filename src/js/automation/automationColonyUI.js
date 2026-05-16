@@ -937,6 +937,8 @@ function attachColonyAutomationHandlers() {
       return;
     }
     automationManager.colonyAutomation.renamePreset(preset.id, event.target.value || '');
+    queueAutomationUIRefresh();
+    updateAutomationUI();
   });
 
   colonyBuilderNewButton.addEventListener('click', () => {

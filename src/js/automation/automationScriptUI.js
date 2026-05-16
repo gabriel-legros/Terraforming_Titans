@@ -248,6 +248,7 @@ function wireScriptAutomationEvents() {
     if (!automation || !script) return;
     automation.renameScript(script.id, event.target.value);
     queueAutomationUIRefresh();
+    updateAutomationUI();
   });
 
   els.scriptNewButton.addEventListener('click', () => {

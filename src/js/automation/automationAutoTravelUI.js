@@ -233,6 +233,7 @@ function wireAutoTravelEvents() {
     if (!automation) return;
     automation.renameSelectedPreset(event.target.value);
     queueAutomationUIRefresh();
+    updateAutomationUI();
   });
 
   els.autoTravelNewPresetButton.addEventListener('click', () => {
