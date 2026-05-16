@@ -1312,6 +1312,7 @@ class Terraforming extends EffectableEntity{
             applyRates: false
         });
 
+        const chemSurfaceChanges = {};
         for (const [key, delta] of Object.entries(chemTotals.changes)) {
             if (!delta) continue;
             const atmosphericRes = this.resources.atmospheric[key];
@@ -1321,9 +1322,10 @@ class Terraforming extends EffectableEntity{
             }
             const surfaceRes = this.resources.surface[key];
             if (surfaceRes) {
-                surfaceRes.value = Math.max(0, surfaceRes.value + delta);
+                chemSurfaceChanges[key] = (chemSurfaceChanges[key] || 0) + delta;
             }
         }
+        this.distributeSurfaceChangesToZones(chemSurfaceChanges);
 
         this.synchronizeGlobalResources();
         this.refreshDynamicWorldGeometry();
