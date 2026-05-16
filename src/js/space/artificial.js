@@ -43,7 +43,7 @@ const DISK_STAR_CORES = [
     { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: false, minRadiusAU: 2.404, maxRadiusAU: 4.243 },
     { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: false, minRadiusAU: 4.525, maxRadiusAU: 11.314 },
     { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: false, minRadiusAU: 12.021, maxRadiusAU: 169.706 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: false, requiresFullGalaxyControl: true, minRadiusAU: 180, maxRadiusAU: 250 }
+    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: false, minRadiusAU: 180, maxRadiusAU: 250 }
 ];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
