@@ -1717,7 +1717,8 @@ class ArtificialManager extends EffectableEntity {
             base.specialAttributes.ringConstructionCostIncludesMetal = true;
         }
         if (isDisk) {
-            base.specialAttributes.zoneKeys = ['tropical'];
+            base.specialAttributes.zoneKeys = ['tropical', 'temperate', 'polar'];
+            base.specialAttributes.zoneLayout = 'aldersonDisk';
             base.specialAttributes.diskRadiusAU = diskRadiusAU;
             base.specialAttributes.disk = { radiusAU: diskRadiusAU, targetFluxWm2: DISK_TARGET_FLUX_WM2 };
             base.specialAttributes.diskConstructionCostTons = (project.cost?.superalloys || 0) + (project.cost?.metal || 0);
@@ -1744,7 +1745,7 @@ class ArtificialManager extends EffectableEntity {
             targetFluxWm2,
             hasNaturalMagnetosphere: project.celestialParameters?.hasNaturalMagnetosphere === true
         };
-        base.effects = (isRing || isDisk)
+        base.effects = isRing
             ? [
                 {
                     target: 'project',
@@ -1787,6 +1788,22 @@ class ArtificialManager extends EffectableEntity {
                     effectId: isDisk ? 'alderson-disk-enable-terraforming-protocol' : 'ringworld-enable-terraforming-protocol'
                 },
                 ...spaceElevatorEffects
+            ]
+            : isDisk
+            ? [
+                {
+                    target: 'project',
+                    targetId: 'planetaryThruster',
+                    type: 'permanentProjectDisable',
+                    value: true,
+                    effectId: 'alderson-disk-disable-planetary-thrusters'
+                },
+                {
+                    target: 'researchManager',
+                    targetId: 'space_elevator',
+                    type: 'researchDisable',
+                    effectId: 'alderson-disk-disable-space-elevator-research'
+                }
             ]
             : [
                 {

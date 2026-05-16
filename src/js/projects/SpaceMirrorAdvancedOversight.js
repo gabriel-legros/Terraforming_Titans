@@ -22,6 +22,8 @@ class SpaceMirrorAdvancedOversight {
 
       const ZONES = getZones();
       const ZONES_WITH_FOCUS_ANY = ZONES.concat(['focus', 'any']);
+      const fluxDisplayDivisor = isAldersonDiskWorld() ? 1 : 4;
+      const facilityFluxScale = isAldersonDiskWorld() ? 1 : 4;
 
       const FOCUS_FLAG =
         (projectManager && projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
@@ -116,7 +118,7 @@ class SpaceMirrorAdvancedOversight {
         const mode = getZoneMode(zone);
         if (mode === 'flux') {
           const flux = terraforming.luminosity?.zonalFluxes?.[zone];
-          return Number.isFinite(flux) ? flux / 4 : NaN;
+          return Number.isFinite(flux) ? flux / fluxDisplayDivisor : NaN;
         }
 
         const data = terraforming.temperature?.zones?.[zone];
@@ -544,7 +546,7 @@ class SpaceMirrorAdvancedOversight {
       for (const zone of ZONES) {
         if (!(targets[zone] > 0)) continue;
         if (getZoneMode(zone) === 'flux') {
-          idealFluxes[zone] = Math.max(MIN_ZONE_FLUX, (targets[zone] || 0) * 4);
+          idealFluxes[zone] = Math.max(MIN_ZONE_FLUX, (targets[zone] || 0) * fluxDisplayDivisor);
         }
       }
 
@@ -600,7 +602,7 @@ class SpaceMirrorAdvancedOversight {
         const zoneArea = zoneAreas[zone] || 0;
         if (!(zoneArea > 0)) continue;
         const deltaFlux = (idealFluxes[zone] || 0) - (baseFluxes[zone] || 0);
-        const deltaPower = (deltaFlux * zoneArea) / 4;
+        const deltaPower = (deltaFlux * zoneArea) / facilityFluxScale;
         if (deltaPower > POWER_EPSILON) {
           demandBuckets.push({
             type: 'heating',

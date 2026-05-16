@@ -16,6 +16,13 @@ function getLifeUIText(path, fallback, vars) {
   }
 }
 
+function getLifeZoneLabel(zone) {
+  if (isAldersonDiskWorld()) {
+    return getLifeUIText(`ui.terraforming.summaryUi.diskZones.${zone}`, zone);
+  }
+  return getLifeUIText(`ui.terraforming.summaryUi.zones.${zone}`, zone);
+}
+
 const lifeShopCategoryLookup = Object.fromEntries(
   lifeShopCategories.map(category => [category.name, category])
 );
@@ -1218,6 +1225,17 @@ function updateLifeStatusTable() {
         buildLifeLiquidRequirementRows(['global', 'tropical', 'temperate', 'polar']);
     }
 
+    const setZoneHeaderLabel = (zone) => {
+        const header = lifeUICache.cells.headers?.[zone];
+        if (!header) return;
+        const label = getLifeZoneLabel(zone);
+        if (zone === 'polar' && header.firstChild && header.firstChild.nodeType === 3) {
+            header.firstChild.nodeValue = `${label} `;
+        } else if (header.textContent !== label) {
+            header.textContent = label;
+        }
+    };
+
     const toggleZoneColumn = (zone, isVisible) => {
         const header = lifeUICache.cells.headers?.[zone];
         if (header) header.style.display = isVisible ? '' : 'none';
@@ -1242,6 +1260,7 @@ function updateLifeStatusTable() {
         });
     };
     ['tropical', 'temperate', 'polar'].forEach(zone => {
+        setZoneHeaderLabel(zone);
         toggleZoneColumn(zone, zoneList.includes(zone));
     });
 

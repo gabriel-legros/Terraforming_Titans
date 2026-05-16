@@ -255,7 +255,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Artificial Worlds
 - Managed via `ArtificialManager` (shell/ring/disk-ready architecture).
 - Ringworld support includes custom controls, spin protocol, and low-gravity lock behavior.
-- Alderson disks use disk-radius selection, fixed `1300 W/m²` two-sided flux, star-core radius bands derived from ringworld tiers, two-sided land area, and linear disk-area construction costs calibrated from the SMBH shell.
+- Alderson disks use disk-radius selection, fixed `1300 W/m²` two-sided flux, star-core radius bands derived from ringworld tiers, two-sided land area, hardcoded linear disk-area construction costs, and three equal-area annulus zones displayed as Inner/Central/Outer.
 - Construction supports prepay, 5-hour hard cap, persistence, resume/discard, rename.
 - Artificial naming auto-increments by type.
 - Stored and abandoned artificial worlds now persist as compact `artificialSnapshot` records plus top-level metadata; travel/load regenerates full planet parameters from the snapshot, reuses saved ringworld star data, and no longer keeps duplicated `original.override` / `original.merged` payloads for inactive artificial worlds.

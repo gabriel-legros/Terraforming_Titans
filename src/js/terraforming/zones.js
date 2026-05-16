@@ -1,4 +1,9 @@
 const ZONES = ['tropical', 'temperate', 'polar'];
+const DISK_ZONE_FLUX_FACTORS = {
+  tropical: 1.9565217391304348,
+  temperate: 0.6521739130434783,
+  polar: 0.391304347826087
+};
 
 // Function to calculate the surface area of a spherical segment between two latitudes (in radians)
 function sphericalSegmentArea(phi1, phi2) {
@@ -66,6 +71,14 @@ function sphericalSegmentArea(phi1, phi2) {
     return currentPlanetParameters?.classification?.type === 'ring';
   }
 
+  function isAldersonDiskWorld() {
+    if (isEquilibrating) {
+      return false;
+    }
+    return currentPlanetParameters?.classification?.type === 'disk'
+      || currentPlanetParameters?.specialAttributes?.zoneLayout === 'aldersonDisk';
+  }
+
   function getZones(context) {
     const custom = currentPlanetParameters?.specialAttributes?.zoneKeys;
     if (isEquilibrating) {
@@ -80,6 +93,12 @@ function sphericalSegmentArea(phi1, phi2) {
     if (isRingWorld()) {
       const shadingStrength = projectManager?.projects?.ringworldTerraforming?.shadingStrength ?? 0.65;
       return 1 - shadingStrength;
+    }
+    if (isAldersonDiskWorld()) {
+      const factor = DISK_ZONE_FLUX_FACTORS[zone];
+      if (factor !== undefined) {
+        return factor;
+      }
     }
     switch (zone) {
       case 'tropical':
@@ -96,6 +115,9 @@ function sphericalSegmentArea(phi1, phi2) {
   function getZonePercentage(zone) {
     if (zone === 'global') {
       return 1.0;
+    }
+    if (isAldersonDiskWorld()) {
+      return ZONES.includes(zone) ? (1 / 3) : 0;
     }
     const area = zoneSurfaceAreas[zone];
     if (area === undefined) {
@@ -168,6 +190,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     ZONES,
     isRingWorld,
+    isAldersonDiskWorld,
     getZones,
     getZoneRatio,
     getZonePercentage,
@@ -177,6 +200,7 @@ if (typeof module !== "undefined" && module.exports) {
 } else {
   window.ZONES             = ZONES;
   window.isRingWorld       = isRingWorld;
+  window.isAldersonDiskWorld = isAldersonDiskWorld;
   window.getZones          = getZones;
   window.getZoneRatio      = getZoneRatio;
   window.getZonePercentage = getZonePercentage;

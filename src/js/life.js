@@ -1388,12 +1388,18 @@ class LifeManager extends EffectableEntity {
     const boundaryLengthTropicalTemperate = 4 * Math.PI * planetRadiusMeters * Math.cos(23.5 * Math.PI / 180);
     const boundaryLengthTemperatePolar = 4 * Math.PI * planetRadiusMeters * Math.cos(66.5 * Math.PI / 180);
     const defaultBoundaryLength = 4 * Math.PI * planetRadiusMeters;
+    const diskInnerCentralBoundary = 4 * Math.PI * planetRadiusMeters * Math.sqrt(1 / 3);
+    const diskCentralOuterBoundary = 4 * Math.PI * planetRadiusMeters * Math.sqrt(2 / 3);
     const getBoundaryLengthMeters = (zoneA, zoneB) => {
       const indexA = zones.indexOf(zoneA);
       const indexB = zones.indexOf(zoneB);
       if (indexA < 0 || indexB < 0 || Math.abs(indexA - indexB) !== 1) return 0;
       if (zones.length === 3 && zones[0] === 'tropical' && zones[1] === 'temperate' && zones[2] === 'polar') {
         const lowerIndex = Math.min(indexA, indexB);
+        if (isAldersonDiskWorld()) {
+          if (lowerIndex === 0) return diskInnerCentralBoundary;
+          if (lowerIndex === 1) return diskCentralOuterBoundary;
+        }
         if (lowerIndex === 0) return boundaryLengthTropicalTemperate;
         if (lowerIndex === 1) return boundaryLengthTemperatePolar;
       }

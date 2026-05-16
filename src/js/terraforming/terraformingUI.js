@@ -24,6 +24,9 @@ function getTerraformingSummaryText(path, fallback, vars) {
 }
 
 function getTerraformingZoneLabel(zone) {
+  if (isAldersonDiskWorld()) {
+    return getTerraformingSummaryText(`diskZones.${zone}`, formatTerraformingSummaryLabel(zone, zone));
+  }
   return getTerraformingSummaryText(`zones.${zone}`, formatTerraformingSummaryLabel(zone, zone));
 }
 
@@ -1223,17 +1226,20 @@ function createTemperatureBox(row) {
       coreHeatLine,
       coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
+      tropicalLabel: temperatureBox.querySelector('#tropical-temp')?.closest('tr')?.firstElementChild,
       tropicalTemp: temperatureBox.querySelector('#tropical-temp'),
       tropicalTrendTemp: temperatureBox.querySelector('#tropical-trend-temp'),
       tropicalDelta: temperatureBox.querySelector('#tropical-delta'),
       tropicalDay: temperatureBox.querySelector('#tropical-day'),
       tropicalNight: temperatureBox.querySelector('#tropical-night'),
+      temperateLabel: temperatureBox.querySelector('#temperate-temp')?.closest('tr')?.firstElementChild,
       temperateTemp: temperatureBox.querySelector('#temperate-temp'),
       temperateTrendTemp: temperatureBox.querySelector('#temperate-trend-temp'),
       temperateDelta: temperatureBox.querySelector('#temperate-delta'),
       temperateDay: temperatureBox.querySelector('#temperate-day'),
       temperateNight: temperatureBox.querySelector('#temperate-night'),
       temperateRow: temperatureBox.querySelector('#temperate-temp')?.closest('tr'),
+      polarLabel: temperatureBox.querySelector('#polar-temp')?.closest('tr')?.firstElementChild,
       polarTemp: temperatureBox.querySelector('#polar-temp'),
       polarTrendTemp: temperatureBox.querySelector('#polar-trend-temp'),
       polarDelta: temperatureBox.querySelector('#polar-delta'),
@@ -1266,6 +1272,9 @@ function createTemperatureBox(row) {
     if (els.polarRow) els.polarRow.style.display = showPolar ? '' : 'none';
 
     const unit = getTemperatureUnit();
+    if (els.tropicalLabel) els.tropicalLabel.textContent = getTerraformingZoneLabel('tropical');
+    if (els.temperateLabel) els.temperateLabel.textContent = getTerraformingZoneLabel('temperate');
+    if (els.polarLabel) els.polarLabel.textContent = getTerraformingZoneLabel('polar');
     els.tempUnits.forEach(el => el.textContent = unit);
     if (els.target) {
       const minTarget = terraforming.temperature.targetMin;
@@ -2782,10 +2791,11 @@ function updateLifeBox() {
     if (els.solarFluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
       const isRingworld = currentPlanetParameters?.classification?.type === 'ring';
+      const isDisk = isAldersonDiskWorld();
       const lines = [getTerraformingSummaryText('luminosity.solarFluxTooltip.averageByZone', 'Average Solar Flux by zone')];
       getZones().forEach(zone => {
-        const flux = isRingworld
-          ? terraforming.luminosity.solarFlux * getZoneRatio(zone)
+        const flux = isRingworld || isDisk
+          ? (z[zone] || terraforming.luminosity.solarFlux * getZoneRatio(zone))
           : (z[zone] || 0) / 4;
         lines.push(getTerraformingSummaryText('luminosity.solarFluxTooltip.zoneFlux', '{label}: {value}', { label: getTerraformingZoneLabel(zone), value: flux.toFixed(1) }));
       });
@@ -2793,7 +2803,9 @@ function updateLifeBox() {
         '',
         isRingworld
           ? getTerraformingSummaryText('luminosity.solarFluxTooltip.ringworldExplanation', 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.')
-          : getTerraformingSummaryText('luminosity.solarFluxTooltip.standardExplanation', 'Modified solar flux is 4× the average across all zones.'),
+          : isDisk
+            ? getTerraformingSummaryText('luminosity.solarFluxTooltip.diskExplanation', 'Modified solar flux uses disk annulus flux directly.')
+            : getTerraformingSummaryText('luminosity.solarFluxTooltip.standardExplanation', 'Modified solar flux is 4× the average across all zones.'),
         getTerraformingSummaryText('luminosity.solarFluxTooltip.surfaceFluxExplanation', 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.')
       );
       setTooltipText(els.solarFluxTooltip, lines.join('\n'), els.tooltips, 'solarFlux');

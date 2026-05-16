@@ -1790,7 +1790,8 @@ class Terraforming extends EffectableEntity{
         const capacity = z[zone].capacityPerArea;
         const greenhouseFactor = z[zone].greenhouseFactor || 1;
 
-        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (isRingWorld() ? 1 : 0.25)) + netSurfaceHeatFlux;
+        const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
+        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25)) + netSurfaceHeatFlux;
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;
@@ -1867,11 +1868,12 @@ class Terraforming extends EffectableEntity{
           diagnosticTau === 0 ? {} : greenhouseDiagnostics.contributions;
 
         const isRingworld = isRingWorld();
+        const usesFlatSurfaceFlux = isRingworld || isAldersonDiskWorld();
         const averageFlux = weightedFluxUnpenalized / 4;
         const ringworldFlux = this.luminosity.solarFlux;
         this.luminosity.modifiedSolarFluxUnpenalized = isRingworld
           ? ringworldFlux
-          : (averageFlux * 4);
+          : (usesFlatSurfaceFlux ? weightedFluxUnpenalized : (averageFlux * 4));
         const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
         this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
 
@@ -2421,7 +2423,10 @@ class Terraforming extends EffectableEntity{
       if (typeof globalThis.calculateZoneSolarFluxWithFacility === 'function' && !byPassFacility) {
         return globalThis.calculateZoneSolarFluxWithFacility(this, zone, angleAdjusted);
       }
-      const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
+      const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
+      const ratio = usesFlatSurfaceFlux
+        ? getZoneRatio(zone)
+        : (angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25));
       return this.luminosity.solarFlux * ratio;
     }
 
@@ -2434,6 +2439,11 @@ class Terraforming extends EffectableEntity{
         const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
         const baseFlux = this.luminosity.zonalFluxes?.tropical ?? this.luminosity.solarFlux;
         return (baseFlux * 4 * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
+      }
+      if (isAldersonDiskWorld()) {
+        const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+        const baseFlux = this.luminosity.zonalFluxes?.[zone] ?? this.calculateZoneSolarFlux(zone);
+        return (baseFlux * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
       }
       if (this.luminosity.zonalFluxes && Number.isFinite(this.luminosity.zonalFluxes[zone])) {
         const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));

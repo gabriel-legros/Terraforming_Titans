@@ -58,6 +58,16 @@ function getSpaceMirrorZoneLabel(zone) {
     unassigned: 'Unassigned',
     any: 'Any Zone',
   };
+  if (isAldersonDiskWorld()) {
+    const diskFallbackMap = {
+      tropical: 'Inner',
+      temperate: 'Central',
+      polar: 'Outer',
+    };
+    if (diskFallbackMap[zone]) {
+      return getSpaceMirrorText(`ui.projects.spaceMirrorFacility.diskZones.${zone}`, diskFallbackMap[zone]);
+    }
+  }
   return getSpaceMirrorText(keyMap[zone] || '', fallbackMap[zone] || zone);
 }
 
@@ -1318,6 +1328,10 @@ function rebuildMirrorOversightCache() {
   const advancedZoneRows = {};
   Array.from(container.querySelectorAll('#advanced-oversight-controls .stat-item[data-zone]'))
     .forEach(row => { advancedZoneRows[row.dataset.zone] = row; });
+  const advancedZoneLabels = {};
+  zoneKeys.forEach(zone => {
+    advancedZoneLabels[zone] = container.querySelector(`label[for="adv-target-${zone}"]`);
+  });
   const fluxZoneRows = {};
   Array.from(container.querySelectorAll('#mirror-flux-table tbody tr[data-zone]'))
     .forEach(row => { fluxZoneRows[row.dataset.zone] = row; });
@@ -1344,7 +1358,9 @@ function rebuildMirrorOversightCache() {
     fluxZoneRows,
     fluxCells,
     sliderZoneElements,
+    advancedZoneLabels,
     advancedZoneRows,
+    gridZoneLabels: Array.from(document.querySelectorAll('#assignment-grid .grid-zone-label[data-zone]')),
     sliderReverseBoxes: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reversal-checkbox')),
     sliderReverseLabels: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reverse-label')),
     lanternStepControls: document.querySelector('.lantern-step-controls') || null,
@@ -1367,9 +1383,20 @@ function applyMirrorZoneVisibility() {
   const zoneKeys = ['tropical', 'temperate', 'polar'];
   zoneKeys.forEach(zone => {
     const isVisible = activeZones.includes(zone);
+    const label = getSpaceMirrorZoneLabel(zone);
+    const sliderLabel = C.sliderZoneElements[zone][0];
+    if (sliderLabel) sliderLabel.textContent = `${label}:`;
+    const advancedLabel = C.advancedZoneLabels[zone];
+    if (advancedLabel) advancedLabel.textContent = label;
+    const fluxLabelCell = C.fluxZoneRows[zone]?.firstElementChild;
+    if (fluxLabelCell) fluxLabelCell.textContent = label;
     C.sliderZoneElements[zone].forEach(el => { el.style.display = isVisible ? '' : 'none'; });
     C.advancedZoneRows[zone].style.display = isVisible ? 'flex' : 'none';
     C.fluxZoneRows[zone].style.display = isVisible ? '' : 'none';
+  });
+  C.gridZoneLabels.forEach(label => {
+    const zone = label.dataset.zone;
+    if (zone) label.textContent = getSpaceMirrorZoneLabel(zone);
   });
 }
 
@@ -1598,6 +1625,7 @@ function updateZonalFluxTable() {
     { unit: tempUnit }
   );
   const zones = getZones();
+  const displayDivisor = isAldersonDiskWorld() || currentPlanetParameters?.classification?.type === 'ring' ? 1 : 4;
   zones.forEach(zone => {
     const cells = C.fluxCells[zone];
     const fluxCell = cells.flux;
@@ -1606,9 +1634,9 @@ function updateZonalFluxTable() {
     const projectedZone = projectedState?.temperature?.zones?.[zone] || null;
     let flux = 0;
     if (Number.isFinite(projectedState?.luminosity?.zonalFluxes?.[zone])) {
-      flux = projectedState.luminosity.zonalFluxes[zone] / 4;
+      flux = projectedState.luminosity.zonalFluxes[zone] / displayDivisor;
     } else if (typeof terraforming.calculateZoneSolarFlux === 'function') {
-      flux = terraforming.calculateZoneSolarFlux(zone) / 4;
+      flux = terraforming.calculateZoneSolarFlux(zone) / displayDivisor;
     }
     if (fluxCell) fluxCell.textContent = formatNumber(flux, false, 2);
 
@@ -1747,6 +1775,9 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
   if (currentPlanetParameters?.classification?.type === 'ring') {
     ratio = getZoneRatio('tropical');
   }
+  else if (isAldersonDiskWorld()) {
+    ratio = getZoneRatio(zone);
+  }
   else {
     ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
   }
@@ -1823,8 +1854,9 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
     const zoneArea = totalSurfaceArea * getZonePercentage(zone);
     if (zoneArea > 0) {
-      if (focusedMirrorPower > 0) focusedMirrorFlux = 4 * focusedMirrorPower / zoneArea;
-      if (focusedLanternPower > 0) focusedLanternFlux = 4 * focusedLanternPower / zoneArea;
+      const fluxScale = isAldersonDiskWorld() ? 1 : 4;
+      if (focusedMirrorPower > 0) focusedMirrorFlux = fluxScale * focusedMirrorPower / zoneArea;
+      if (focusedLanternPower > 0) focusedLanternFlux = fluxScale * focusedLanternPower / zoneArea;
     }
   }
 
@@ -1835,10 +1867,11 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     ? ((mirrorOversightSettings.assignments.mirrors?.[zone] || 0) < 0)
     : !!mirrorOversightSettings.assignments.reversalMode?.[zone];
 
+  const fluxScale = isAldersonDiskWorld() ? 1 : 4;
   const distributedMirrorFlux = totalSurfaceArea > 0
-    ? ((anyReverse ? -4 : 4) * distributedMirrorPower / totalSurfaceArea)
+    ? ((anyReverse ? -fluxScale : fluxScale) * distributedMirrorPower / totalSurfaceArea)
     : 0;
-  const distributedLanternFlux = totalSurfaceArea > 0 ? 4 * distributedLanternPower / totalSurfaceArea : 0;
+  const distributedLanternFlux = totalSurfaceArea > 0 ? fluxScale * distributedLanternPower / totalSurfaceArea : 0;
 
   if (focusedMirrorFlux && zoneReverse) {
     focusedMirrorFlux = -focusedMirrorFlux;
