@@ -100,9 +100,11 @@ function syncAutomationSelectOptions(select, options, selectedValue) {
       ? matching.shift()
       : document.createElement('option');
     usedOptions.add(option);
-    const isNewOption = option.parentNode !== select;
-    if (isNewOption) {
-      select.appendChild(option);
+    const targetNode = select.options[usedOptions.size - 1] || null;
+    if (option.parentNode !== select) {
+      select.insertBefore(option, targetNode);
+    } else if (option !== targetNode) {
+      select.insertBefore(option, targetNode);
     }
     if (option.value !== value) {
       option.value = value;
