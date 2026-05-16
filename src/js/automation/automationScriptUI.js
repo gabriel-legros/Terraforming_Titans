@@ -999,6 +999,7 @@ function renderReferencePicker(automation, ref, row) {
     const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
     attribute.addEventListener('change', event => {
       ref.attribute = event.target.value;
+      normalizeScriptRef(registry, ref);
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
@@ -1068,9 +1069,7 @@ function normalizeScriptRef(registry, ref) {
   if (!targets.find(item => item.id === ref.target)) ref.target = targets[0]?.id || null;
   const attributes = registry.getAttributes(ref.source, ref.category, ref.target);
   if (!attributes.find(item => item.id === ref.attribute)) ref.attribute = attributes[0]?.id || null;
-  const options = ref.source === 'celestial' && registry.getCelestialAttributeOptions
-    ? registry.getCelestialAttributeOptions(ref.attribute)
-    : [];
+  const options = registry.getReferenceOptions ? registry.getReferenceOptions(ref) : [];
   if (options.length > 0) {
     if (!options.find(option => option.id === ref.option)) ref.option = options[0].id;
   } else {

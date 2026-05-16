@@ -3205,6 +3205,11 @@ setLanguageData({
             },
           },
           terraforming: {
+            dominion: {
+              category: 'Dominion',
+              target: 'Dominion',
+              requirementMatch: 'Dominion Requirement',
+            },
             life: {
               category: 'Life',
               target: 'Life',

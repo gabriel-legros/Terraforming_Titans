@@ -235,6 +235,7 @@ class ScriptVariableRegistry {
   getTerraformingCategories() {
     return [
       { id: 'status', label: 'Status' },
+      { id: 'dominion', label: t('ui.hope.automationCards.scriptVariables.terraforming.dominion.category', {}, 'Dominion') },
       { id: 'specialization', label: 'Specialization' },
       { id: 'life', label: t('ui.hope.automationCards.scriptVariables.terraforming.life.category', {}, 'Life') },
       { id: 'temperature', label: 'Temperature' },
@@ -247,6 +248,9 @@ class ScriptVariableRegistry {
 
   getTerraformingTargets(categoryId) {
     if (categoryId === 'status') return [{ id: 'status', label: 'Status' }];
+    if (categoryId === 'dominion') {
+      return [{ id: 'dominion', label: t('ui.hope.automationCards.scriptVariables.terraforming.dominion.target', {}, 'Dominion') }];
+    }
     if (categoryId === 'specialization') return [{ id: 'specialization', label: 'Current Specialization' }];
     if (categoryId === 'life') return [{ id: 'life', label: t('ui.hope.automationCards.scriptVariables.terraforming.life.target', {}, 'Life') }];
     return [{ id: categoryId, label: this.formatIdLabel(categoryId) }];
@@ -259,6 +263,14 @@ class ScriptVariableRegistry {
         { id: 'readyForCompletion', label: 'Ready for completion', valueType: 'boolean' },
         { id: 'complete', label: 'Complete', valueType: 'boolean' }
       ];
+    }
+    if (categoryId === 'dominion') {
+      const requirementOptions = this.getTerraformingRequirementOptions();
+      return requirementOptions.map(option => ({
+        id: `requirement-${option.id}`,
+        label: option.label,
+        valueType: 'boolean'
+      }));
     }
     if (categoryId === 'specialization') {
       return [
@@ -659,6 +671,7 @@ class ScriptVariableRegistry {
   resolveTerraformingValue(ref) {
     const attribute = ref.attribute;
     if (ref.category === 'status') return this.resolveTerraformingStatusValue(attribute);
+    if (ref.category === 'dominion') return this.resolveTerraformingDominionValue(ref);
     if (ref.category === 'specialization') return this.resolveTerraformingSpecializationValue(attribute);
     if (ref.category === 'life') return this.resolveTerraformingLifeValue(attribute);
     if (attribute === 'averageTemperatureK') return this.toNumber(terraforming.temperature.value);
@@ -695,6 +708,12 @@ class ScriptVariableRegistry {
     if (attribute === 'surfaceRadiation') return this.toNumber(terraforming.surfaceRadiation);
     if (attribute === 'orbitalRadiation') return this.toNumber(terraforming.orbitalRadiation);
     return 0;
+  }
+
+  resolveTerraformingDominionValue(ref) {
+    if (!String(ref.attribute || '').startsWith('requirement-')) return 0;
+    const requirementId = String(ref.attribute).slice('requirement-'.length);
+    return terraforming.requirementId === requirementId ? 1 : 0;
   }
 
   hasArtificialMagnetosphere() {
@@ -810,6 +829,28 @@ class ScriptVariableRegistry {
         { id: 'disk', label: 'Disk World', value: 16 }
       ];
     }
+    return [];
+  }
+
+  getTerraformingRequirementOptions() {
+    const requirements = terraformingRequirements || {};
+    const options = [];
+    for (const requirementId in requirements) {
+      options.push({
+        id: requirementId,
+        label: t(
+          `catalogs.terraformingRequirements.${requirementId}.displayName`,
+          {},
+          this.formatIdLabel(requirementId)
+        )
+      });
+    }
+    return options;
+  }
+
+  getReferenceOptions(ref) {
+    if (!ref) return [];
+    if (ref.source === 'celestial') return this.getCelestialAttributeOptions(ref.attribute);
     return [];
   }
 
@@ -1062,7 +1103,7 @@ class ScriptVariableRegistry {
     if (ref.source === 'celestial') {
       const attributes = this.getCelestialAttributes();
       const attribute = attributes.find(item => item.id === ref.attribute);
-      const options = this.getCelestialAttributeOptions(ref.attribute);
+      const options = this.getReferenceOptions(ref);
       const option = options.find(item => item.id === ref.option);
       return this.joinReferenceLabels(source?.label, attribute?.label, option?.label);
     }
@@ -1087,7 +1128,9 @@ class ScriptVariableRegistry {
     }
     const attributes = this.getAttributes(ref.source, ref.category, ref.target, ref.option);
     const attribute = attributes.find(item => item.id === ref.attribute);
-    return this.joinReferenceLabels(source?.label, category?.label, target?.label, attribute?.label);
+    const options = this.getReferenceOptions(ref);
+    const option = options.find(item => item.id === ref.option);
+    return this.joinReferenceLabels(source?.label, category?.label, target?.label, attribute?.label, option?.label);
   }
 
   joinReferenceLabels() {
