@@ -629,7 +629,7 @@ setLanguageData({
         pressureUnit: 'Pa',
       },
       vanadiumHazeSeeder: {
-        disableIfPressureAbove: 'Disable if V aerosol P > ',
+        disableIfPressureAbove: 'Disable if P > ',
         pressureUnit: 'Pa',
       },
       ghgFactory: {

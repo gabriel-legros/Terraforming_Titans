@@ -7,7 +7,7 @@ function getVanadiumHazeSeederText(path, fallback, vars) {
   return t(path, vars, fallback);
 }
 
-function sanitizeNumber(value, fallback) {
+function sanitizeVanadiumAutomationNumber(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
@@ -193,7 +193,7 @@ class VanadiumHazeSeeder extends Building {
     const settings = this.getAutomationSettings();
     return {
       autoDisableAbovePressure: settings.autoDisableAbovePressure === true,
-      disablePressureThreshold: sanitizeNumber(
+      disablePressureThreshold: sanitizeVanadiumAutomationNumber(
         settings.disablePressureThreshold,
         DEFAULT_VANADIUM_AUTOMATION_SETTINGS.disablePressureThreshold
       )
@@ -207,7 +207,7 @@ class VanadiumHazeSeeder extends Building {
       ? saved.autoDisableAbovePressure === true
       : DEFAULT_VANADIUM_AUTOMATION_SETTINGS.autoDisableAbovePressure;
     settings.disablePressureThreshold = hasData && 'disablePressureThreshold' in saved
-      ? sanitizeNumber(saved.disablePressureThreshold, DEFAULT_VANADIUM_AUTOMATION_SETTINGS.disablePressureThreshold)
+      ? sanitizeVanadiumAutomationNumber(saved.disablePressureThreshold, DEFAULT_VANADIUM_AUTOMATION_SETTINGS.disablePressureThreshold)
       : DEFAULT_VANADIUM_AUTOMATION_SETTINGS.disablePressureThreshold;
     return settings;
   }
@@ -222,9 +222,11 @@ function getVanadiumAutomationSettings(context) {
 
 const vanadiumHazeSeederSettings = VanadiumHazeSeeder.getAutomationSettings();
 
-try {
+registerBuildingConstructor('vanadiumHazeSeeder', VanadiumHazeSeeder);
+
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = { VanadiumHazeSeeder, vanadiumHazeSeederSettings };
-} catch (error) {
+} else {
   window.VanadiumHazeSeeder = VanadiumHazeSeeder;
   window.vanadiumHazeSeederSettings = vanadiumHazeSeederSettings;
 }

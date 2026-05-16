@@ -1178,6 +1178,13 @@ const researchParameters = {
           },
           {
             target: 'building',
+            targetId: 'vanadiumHazeSeeder',
+            type: 'booleanFlag',
+            flagId: 'terraformingBureauFeature',
+            value: true
+          },
+          {
+            target: 'building',
             targetId: 'boschReactor',
             type: 'booleanFlag',
             flagId: 'terraformingBureauFeature',
