@@ -1797,9 +1797,7 @@ function renderArtificialHistory(force = false) {
       } else {
         updateHistoryRow(row, entry);
       }
-      if (row.parentNode !== list) {
-        list.appendChild(row);
-      }
+      list.appendChild(row);
       row.style.display = '';
       usedRows.add(row);
     });

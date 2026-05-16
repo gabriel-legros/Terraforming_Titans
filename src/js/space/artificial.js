@@ -1829,12 +1829,20 @@ class ArtificialManager extends EffectableEntity {
         });
 
         entries.sort((a, b) => {
-            const aDeparture = a.departedAt || null;
-            const bDeparture = b.departedAt || null;
-            if (aDeparture === null && bDeparture === null) return 0;
-            if (aDeparture === null) return -1;
-            if (bDeparture === null) return 1;
-            return bDeparture - aDeparture;
+            const aRecent = a.departedAt
+                || a.traveledAt
+                || a.completedAt
+                || a.constructedAt
+                || 0;
+            const bRecent = b.departedAt
+                || b.traveledAt
+                || b.completedAt
+                || b.constructedAt
+                || 0;
+            if (bRecent !== aRecent) {
+                return bRecent - aRecent;
+            }
+            return String(b.id).localeCompare(String(a.id), undefined, { numeric: true });
         });
 
         return entries;
