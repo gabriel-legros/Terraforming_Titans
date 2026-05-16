@@ -653,7 +653,7 @@
     }
 
     syncAssignmentRowHeights() {
-      const elements = this.uiElements;
+      const elements = this.resolveUIElements();
       if (!elements || !elements.rowElements || !elements.assignmentLayout) {
         return;
       }
@@ -684,6 +684,54 @@
         row.rowB.style.minHeight = heightText;
         row.rowC.style.minHeight = heightText;
       });
+    }
+
+    resolveUIElements() {
+      if (this.uiElements?.runCheckbox?.isConnected) {
+        return this.uiElements;
+      }
+      const card = projectElements?.[this.name]?.projectItem;
+      if (!card || !card.isConnected) {
+        return null;
+      }
+      const assignmentLayout = card.querySelector('[data-manufacturing-ui="assignmentLayout"]');
+      if (!assignmentLayout) {
+        return null;
+      }
+      const rowElements = {};
+      const rowNodes = assignmentLayout.querySelectorAll('[data-manufacturing-role="rowA"][data-manufacturing-assignment-key]');
+      rowNodes.forEach((rowNode) => {
+        const key = rowNode.dataset.manufacturingAssignmentKey;
+        rowElements[key] = {
+          rowA: rowNode,
+          rowB: assignmentLayout.querySelector(`[data-manufacturing-role="rowB"][data-manufacturing-assignment-key="${key}"]`),
+          rowC: assignmentLayout.querySelector(`[data-manufacturing-role="rowC"][data-manufacturing-assignment-key="${key}"]`),
+          unitProduction: rowNode.querySelector('[data-manufacturing-role="unitProduction"]'),
+          value: assignmentLayout.querySelector(`[data-manufacturing-role="value"][data-manufacturing-assignment-key="${key}"]`),
+          zeroButton: assignmentLayout.querySelector(`[data-manufacturing-role="zeroButton"][data-manufacturing-assignment-key="${key}"]`),
+          minusButton: assignmentLayout.querySelector(`[data-manufacturing-role="minusButton"][data-manufacturing-assignment-key="${key}"]`),
+          plusButton: assignmentLayout.querySelector(`[data-manufacturing-role="plusButton"][data-manufacturing-assignment-key="${key}"]`),
+          maxButton: assignmentLayout.querySelector(`[data-manufacturing-role="maxButton"][data-manufacturing-assignment-key="${key}"]`),
+          autoAssign: assignmentLayout.querySelector(`[data-manufacturing-role="autoAssign"][data-manufacturing-assignment-key="${key}"]`),
+          weightInput: assignmentLayout.querySelector(`[data-manufacturing-role="weightInput"][data-manufacturing-assignment-key="${key}"]`),
+          rate: assignmentLayout.querySelector(`[data-manufacturing-role="rate"][data-manufacturing-assignment-key="${key}"]`),
+          recipeTooltip: null,
+          recipeTooltipCache: null
+        };
+      });
+      this.uiElements = {
+        assignmentLayout,
+        cumulativeValue: card.querySelector('[data-manufacturing-ui="cumulativeValue"]'),
+        assignedValue: card.querySelector('[data-manufacturing-ui="assignedValue"]'),
+        freeValue: card.querySelector('[data-manufacturing-ui="freeValue"]'),
+        inputValue: card.querySelector('[data-manufacturing-ui="inputValue"]'),
+        statusValue: card.querySelector('[data-manufacturing-ui="statusValue"]'),
+        runCheckbox: card.querySelector('[data-manufacturing-ui="runCheckbox"]'),
+        stepDownButton: card.querySelector('[data-manufacturing-ui="stepDownButton"]'),
+        stepUpButton: card.querySelector('[data-manufacturing-ui="stepUpButton"]'),
+        rowElements
+      };
+      return this.uiElements;
     }
 
     setLastRunStats(inputRates = {}, outputRates = {}) {
@@ -1079,6 +1127,9 @@
       const cumulativeValue = createStatBox(getManufacturingText('catalogs.specializations.manufacturing.ui.summary.cumulativePopulation'));
       const assignedValue = createStatBox(getManufacturingText('catalogs.specializations.manufacturing.ui.summary.assigned'));
       const freeValue = createStatBox(getManufacturingText('catalogs.specializations.manufacturing.ui.summary.unassigned'));
+      cumulativeValue.dataset.manufacturingUi = 'cumulativeValue';
+      assignedValue.dataset.manufacturingUi = 'assignedValue';
+      freeValue.dataset.manufacturingUi = 'freeValue';
       body.appendChild(summaryGrid);
 
       const controlsGrid = document.createElement('div');
@@ -1088,6 +1139,7 @@
       runField.classList.add('stat-item');
       const runCheckbox = document.createElement('input');
       runCheckbox.type = 'checkbox';
+      runCheckbox.dataset.manufacturingUi = 'runCheckbox';
       runCheckbox.id = `${this.name}-run`;
       const runLabel = document.createElement('label');
       runLabel.htmlFor = runCheckbox.id;
@@ -1102,6 +1154,7 @@
       statusLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.status');
       const statusValue = document.createElement('span');
       statusValue.classList.add('stat-value');
+      statusValue.dataset.manufacturingUi = 'statusValue';
       statusField.append(statusLabel, statusValue);
       controlsGrid.appendChild(statusField);
 
@@ -1112,6 +1165,7 @@
       inputLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.inputUse');
       const inputValue = document.createElement('span');
       inputValue.classList.add('stat-value');
+      inputValue.dataset.manufacturingUi = 'inputValue';
       inputField.append(inputLabel, inputValue);
       controlsGrid.appendChild(inputField);
       body.appendChild(controlsGrid);
@@ -1120,6 +1174,7 @@
       assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'manufacturing-assignment-list');
 
       const stepDownButton = document.createElement('button');
+      stepDownButton.dataset.manufacturingUi = 'stepDownButton';
       stepDownButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.divideTen') || '/10';
       stepDownButton.addEventListener('click', () => {
         this.normalizeAssignmentStep();
@@ -1127,6 +1182,7 @@
         this.updateUI();
       });
       const stepUpButton = document.createElement('button');
+      stepUpButton.dataset.manufacturingUi = 'stepUpButton';
       stepUpButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.timesTen') || 'x10';
       stepUpButton.addEventListener('click', () => {
         this.normalizeAssignmentStep();
@@ -1143,6 +1199,7 @@
 
       const assignmentLayout = document.createElement('div');
       assignmentLayout.classList.add('manufacturing-assignment-layout');
+      assignmentLayout.dataset.manufacturingUi = 'assignmentLayout';
 
       const blockA = document.createElement('div');
       blockA.classList.add('manufacturing-assignment-block', 'manufacturing-block-a');
@@ -1200,6 +1257,8 @@
         const isUnassigned = this.isUnassignedAssignmentKey(key);
         const recipe = isUnassigned ? null : this.getRecipe(key);
         const rowA = document.createElement('div');
+        rowA.dataset.manufacturingRole = 'rowA';
+        rowA.dataset.manufacturingAssignmentKey = key;
         rowA.classList.add('manufacturing-block-row', 'manufacturing-block-grid-a');
         if (isUnassigned) {
           rowA.classList.add('assignment-divider-row');
@@ -1227,24 +1286,35 @@
 
         const unitProductionEl = document.createElement('span');
         unitProductionEl.classList.add('stat-value');
+        unitProductionEl.dataset.manufacturingRole = 'unitProduction';
         rowA.append(nameWrap, complexityEl, unitProductionEl);
 
         const amountEl = document.createElement('span');
         amountEl.classList.add('stat-value');
+        amountEl.dataset.manufacturingRole = 'value';
+        amountEl.dataset.manufacturingAssignmentKey = key;
 
         const zeroButton = document.createElement('button');
+        zeroButton.dataset.manufacturingRole = 'zeroButton';
+        zeroButton.dataset.manufacturingAssignmentKey = key;
         zeroButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.zero') || '0';
         zeroButton.addEventListener('click', () => {
           this.clearAssignment(key);
         });
 
         const minusButton = document.createElement('button');
+        minusButton.dataset.manufacturingRole = 'minusButton';
+        minusButton.dataset.manufacturingAssignmentKey = key;
         minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
 
         const plusButton = document.createElement('button');
+        plusButton.dataset.manufacturingRole = 'plusButton';
+        plusButton.dataset.manufacturingAssignmentKey = key;
         plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
 
         const maxButton = document.createElement('button');
+        maxButton.dataset.manufacturingRole = 'maxButton';
+        maxButton.dataset.manufacturingAssignmentKey = key;
         maxButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.max') || 'Max';
         maxButton.addEventListener('click', () => {
           this.maximizeAssignment(key);
@@ -1254,6 +1324,8 @@
         autoAssignContainer.classList.add('hephaestus-auto-assign');
         const autoAssign = document.createElement('input');
         autoAssign.type = 'checkbox';
+        autoAssign.dataset.manufacturingRole = 'autoAssign';
+        autoAssign.dataset.manufacturingAssignmentKey = key;
         autoAssign.addEventListener('change', () => {
           this.setAutoAssignTarget(key, autoAssign.checked);
         });
@@ -1273,6 +1345,8 @@
           Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
         );
         weightInput.classList.add('hephaestus-weight-input');
+        weightInput.dataset.manufacturingRole = 'weightInput';
+        weightInput.dataset.manufacturingAssignmentKey = key;
         weightInput.addEventListener('input', () => {
           const value = Number(weightInput.value);
           this.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
@@ -1289,8 +1363,12 @@
 
         const rateEl = document.createElement('div');
         rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
+        rateEl.dataset.manufacturingRole = 'rate';
+        rateEl.dataset.manufacturingAssignmentKey = key;
 
         const rowB = document.createElement('div');
+        rowB.dataset.manufacturingRole = 'rowB';
+        rowB.dataset.manufacturingAssignmentKey = key;
         rowB.classList.add('manufacturing-block-row', 'manufacturing-block-grid-b');
         if (isUnassigned) {
           rowB.classList.add('assignment-divider-row');
@@ -1298,6 +1376,8 @@
         rowB.append(amountEl, controls);
 
         const rowC = document.createElement('div');
+        rowC.dataset.manufacturingRole = 'rowC';
+        rowC.dataset.manufacturingAssignmentKey = key;
         rowC.classList.add('manufacturing-block-row', 'manufacturing-block-grid-c');
         if (isUnassigned) {
           rowC.classList.add('assignment-divider-row');
@@ -1386,7 +1466,7 @@
         }
       }
 
-      const elements = this.uiElements;
+      const elements = this.resolveUIElements();
       if (!elements) {
         return;
       }

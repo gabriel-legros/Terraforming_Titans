@@ -135,8 +135,32 @@ function updateCollectorCostDisplay(project, costDisplay) {
 }
 
 function updateDysonSwarmUI(project) {
-  const els = projectElements[project.name];
+  let els = projectElements[project.name];
   if (!els) return;
+  if (!els.swarmCard || !els.swarmCard.isConnected) {
+    const projectCard = els.projectItem || projectElements[project.name]?.projectItem;
+    const swarmCard = projectCard ? projectCard.querySelector('.dyson-swarm-card') : null;
+    if (!swarmCard || !swarmCard.isConnected) {
+      return;
+    }
+    const startButton = swarmCard.querySelector('#ds-start');
+    const autoCheckbox = swarmCard.querySelector('#ds-auto');
+    const travelResetCheckbox = swarmCard.querySelector('#ds-auto-travel-reset');
+    projectElements[project.name] = {
+      ...els,
+      swarmCard,
+      collectorsDisplay: swarmCard.querySelector('#ds-collectors'),
+      powerPerDisplay: swarmCard.querySelector('#ds-power-per'),
+      totalPowerDisplay: swarmCard.querySelector('#ds-total-power'),
+      costDisplay: swarmCard.querySelector('#ds-collector-cost'),
+      expansionRateDisplay: swarmCard.querySelector('#ds-expansion-rate'),
+      startButton,
+      autoCheckbox,
+      autoStartTravelResetCheckbox: travelResetCheckbox,
+      collectorAutoStartTravelResetCheckbox: travelResetCheckbox
+    };
+    els = projectElements[project.name];
+  }
   const showCard = project.isCompleted || project.collectors > 0;
   if (els.swarmCard) {
     els.swarmCard.style.display = showCard ? 'block' : 'none';
