@@ -734,45 +734,17 @@ const toi3693bOverrides = {
       stormIntervalSeconds: 7.094741,
       severity: 0.25,
       orbitalDoseBoost_mSvPerDay: 50,
-      description: 'Intense solar flares generate periodic radiation bursts across the system.'
+      clearAtDistanceAU: 1,
+      description: 'Intense solar flares generate periodic radiation bursts across the system. The hazard can be cleared by moving the world beyond 1 AU.'
     }
   },
   effects: [
     {
       target: 'project',
-      targetId: 'spaceMirrorFacility',
+      targetId: 'artificialSky',
       type: 'permanentProjectDisable',
       value: true,
-      effectId: 'hermes-disable-space-mirror-facility'
-    },
-    {
-      target: 'building',
-      targetId: 'spaceMirror',
-      type: 'permanentBuildingDisable',
-      value: true,
-      effectId: 'hermes-disable-space-mirrors'
-    },
-    {
-      target: 'building',
-      targetId: 'hyperionLantern',
-      type: 'permanentBuildingDisable',
-      value: true,
-      effectId: 'hermes-disable-hyperion-lanterns'
-    },
-    {
-      target: 'project',
-      targetId: 'planetaryThruster',
-      type: 'booleanFlag',
-      flagId: 'disableTractorBeams',
-      value: true,
-      effectId: 'hermes-disable-tractor-beams'
-    },
-    {
-      target: 'building',
-      targetId: 'ghgFactory',
-      type: 'permanentBuildingDisable',
-      value: true,
-      effectId: 'hermes-disable-calcite-factory'
+      effectId: 'toi3693b-disable-artificial-sky'
     }
   ]
 };
@@ -1504,14 +1476,14 @@ const specialSeedDefinitions = {
     orbitPreset: 'very-hot',
     specialEffects: [
       {
-        id: 'star-proximity-disables-systems',
-        descriptionKey: 'catalogs.specialSeeds.hermes.effects.starProximityDisablesSystems',
-        description: 'Space Mirror Facility, Space Mirrors, Hyperion Lanterns, and Tractor Beams are permanently disabled on this world due to star proximity.'
+        id: 'artificial-sky-disabled',
+        descriptionKey: 'catalogs.specialSeeds.toi3693b.effects.artificialSkyDisabled',
+        description: 'Artificial Sky is permanently disabled on this world.'
       },
       {
         id: 'intense-solar-flares',
         descriptionKey: 'catalogs.specialSeeds.toi3693b.effects.intenseSolarFlares',
-        description: 'Intense solar flares disrupt operations, generating a weaker version of the pulsar hazard.'
+        description: 'Intense solar flares disrupt operations, generating a weaker version of the pulsar hazard. The hazard can be cleared by moving the world beyond 1 AU.'
       },
       {
         id: 'real-hot-jupiter',

@@ -26,6 +26,9 @@ function normalizePulsarParameters(parameters = {}) {
       : PULSAR_STORM_DEFAULT_DURATION_SECONDS,
     severity: severity,
     orbitalDoseBoost_mSvPerDay: orbitalDoseBoost,
+    clearAtDistanceAU: Number.isFinite(parameters.clearAtDistanceAU) && parameters.clearAtDistanceAU > 0
+      ? parameters.clearAtDistanceAU
+      : 0,
     description: parameters.description || 'Pulsar hazard detected. Extreme radiation floods the planet.'
   };
 }
@@ -101,11 +104,22 @@ function getPulsarHazardStrength(terraforming, pulsarParameters) {
   if (isRogueWorld(terraforming)) {
     return 0;
   }
+  if (isPulsarClearedByDistance(terraforming, pulsarParameters)) {
+    return 0;
+  }
   return 1 - getArtificialSkyCompletionRatio();
 }
 
 function isArtificialSkyCompleted(terraforming, pulsarParameters) {
   return getPulsarHazardStrength(terraforming, pulsarParameters) <= 0;
+}
+
+function isPulsarClearedByDistance(terraforming, pulsarParameters) {
+  if (!pulsarParameters || !(pulsarParameters.clearAtDistanceAU > 0)) {
+    return false;
+  }
+  const distanceAU = resolveDistanceFromSunAU(terraforming);
+  return distanceAU >= pulsarParameters.clearAtDistanceAU;
 }
 
 function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
@@ -338,6 +352,9 @@ class PulsarHazard {
       return true;
     }
     if (isRogueWorld(terraforming)) {
+      return true;
+    }
+    if (isPulsarClearedByDistance(terraforming, pulsarParameters)) {
       return true;
     }
     return isArtificialSkyCompleted(terraforming, pulsarParameters);

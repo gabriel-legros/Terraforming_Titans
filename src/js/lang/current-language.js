@@ -3680,7 +3680,8 @@ setLanguageData({
       toi3693b: {
         name: 'TOI-3693 b',
         effects: {
-          intenseSolarFlares: 'Intense solar flares disrupt operations, generating a weaker version of the pulsar hazard.',
+          artificialSkyDisabled: 'Artificial Sky is permanently disabled on this world.',
+          intenseSolarFlares: 'Intense solar flares disrupt operations, generating a weaker version of the pulsar hazard. The hazard can be cleared by moving the world beyond 1 AU.',
           realHotJupiter: 'A real hot-jupiter exoplanet discovered in 2022.',
         },
       },
