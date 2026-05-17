@@ -392,6 +392,9 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     const control = {};
     control.workerPriority = building.workerPriority;
     control.hidden = building.isHidden === true;
+    if (building.name === 'antimatterBattery') {
+      control.autoFillingEnabled = building.autoFillingEnabled === true;
+    }
     if (building instanceof MultiRecipesBuildingClass) {
       control.recipeKey = building.currentRecipeKey;
     }
@@ -555,6 +558,14 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     if (control.dustFactory && building instanceof DustFactoryClass) {
       if (!this.areSettingsEqual(DustFactoryClass.saveAutomationSettings(), control.dustFactory)) {
         DustFactoryClass.loadAutomationSettings(control.dustFactory);
+        changed = true;
+      }
+    }
+    if (building.name === 'antimatterBattery' && 'autoFillingEnabled' in control) {
+      const nextAutoFillingEnabled = control.autoFillingEnabled === true;
+      if (building.autoFillingEnabled !== nextAutoFillingEnabled) {
+        building.autoFillingEnabled = nextAutoFillingEnabled;
+        building.updateUI(building._cachedUI || {});
         changed = true;
       }
     }
