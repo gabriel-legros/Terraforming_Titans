@@ -11,13 +11,24 @@ function getStructuresUIText(path, fallback, vars) {
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+function normalizeSelectedBuildCountValue(buildCount) {
+  const normalized = typeof normalizeBuildStepCount === 'function'
+    ? normalizeBuildStepCount(buildCount)
+    : normalizeBuildingCount(buildCount);
+  return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
+    ? Number(normalized)
+    : normalized.toString();
+}
+
 function getSelectedBuildCount(structureName) {
   const buildCount = selectedBuildCounts[structureName];
-  if (Number.isFinite(buildCount) && buildCount > 0) {
-    return buildCount;
+  if (buildCount === undefined || buildCount === null || buildCount === '') {
+    selectedBuildCounts[structureName] = 1;
+    return 1;
   }
-  selectedBuildCounts[structureName] = 1;
-  return 1;
+  const normalized = normalizeSelectedBuildCountValue(buildCount);
+  selectedBuildCounts[structureName] = normalized;
+  return normalized;
 }
 
 function getStructureCountNumber(value) {
@@ -58,9 +69,7 @@ function normalizeSignedStructureChange(value) {
 }
 
 function getManualBuildCount(structure, buildCount) {
-  const normalizedBuildCount = Number.isFinite(buildCount) && buildCount > 0
-    ? buildCount
-    : 1;
+  const normalizedBuildCount = normalizeSelectedBuildCountValue(buildCount);
   if (!gameSettings.roundBuildingConstruction) {
     return normalizedBuildCount;
   }
@@ -1825,14 +1834,12 @@ function createStructureControls(structure, toggleCallback) {
 
 // Update the text of the increase button based on the selected build count
 function updateIncreaseButtonText(button, buildCount) {
-  const normalizedBuildCount = Number.isFinite(buildCount) && buildCount > 0 ? buildCount : 1;
-  button.textContent = `+${formatNumber(normalizedBuildCount, true)}`;
+  button.textContent = `+${formatBuildingCount(normalizeSelectedBuildCountValue(buildCount))}`;
 }
 
 // Update the text of the decrease button based on the selected build count
 function updateDecreaseButtonText(button, buildCount) {
-  const normalizedBuildCount = Number.isFinite(buildCount) && buildCount > 0 ? buildCount : 1;
-  button.textContent = `-${formatNumber(normalizedBuildCount, true)}`;
+  button.textContent = `-${formatBuildingCount(normalizeSelectedBuildCountValue(buildCount))}`;
 }
   
   function updateBuildingDisplay(buildings) {
