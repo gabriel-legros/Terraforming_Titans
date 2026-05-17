@@ -1053,6 +1053,10 @@
     column-gap: 10px;
 }
 
+.hephaestus-yards-assignment-list .hephaestus-assignment-row {
+    grid-template-columns: minmax(130px, 0.9fr) minmax(55px, 0.3fr) 470px minmax(0, 0.45fr);
+}
+
 .assignment-divider-row {
     padding-bottom: 8px;
     margin-bottom: 4px;
@@ -1317,6 +1321,10 @@
     width: 100%;
 }
 
+.hephaestus-yards-assignment-list .hephaestus-assignment-controls {
+    grid-template-columns: 430px 48px;
+}
+
 .hephaestus-control-buttons {
     display: flex;
     align-items: center;
@@ -1324,6 +1332,12 @@
     flex-wrap: wrap;
     justify-content: center;
     width: 260px;
+}
+
+.hephaestus-yards-assignment-list .hephaestus-control-buttons {
+    width: 430px;
+    flex-wrap: nowrap;
+    gap: 4px;
 }
 
 .hephaestus-step-header {
@@ -2216,6 +2230,11 @@
     align-items: flex-start;
     gap: 6px;
     font-size: 0.85em;
+}
+
+.hephaestus-yards-assignment-list .hephaestus-auto-assign {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .android-auto-assign-row {

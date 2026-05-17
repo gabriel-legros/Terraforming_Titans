@@ -334,7 +334,13 @@ class ScriptVariableRegistry {
         { id: 'temperateTemperatureK', label: 'Temperate Temperature K', valueType: 'number' },
         { id: 'temperateTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.temperateTemperatureC', {}, 'Temperate Temperature C'), valueType: 'number' },
         { id: 'polarTemperatureK', label: 'Polar Temperature K', valueType: 'number' },
-        { id: 'polarTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.polarTemperatureC', {}, 'Polar Temperature C'), valueType: 'number' }
+        { id: 'polarTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.polarTemperatureC', {}, 'Polar Temperature C'), valueType: 'number' },
+        { id: 'coreHeatFlux', label: 'Core Heat Flux', valueType: 'number' },
+        {
+          id: 'netCoreHeatFlux',
+          label: t('ui.terraformingSummary.temperature.labels.netCoreHeatFlux', {}, 'Net Core Heat Flux'),
+          valueType: 'number'
+        }
       ];
     }
     if (categoryId === 'atmosphere') {
@@ -361,8 +367,7 @@ class ScriptVariableRegistry {
         { id: 'solarFlux', label: 'Solar Flux', valueType: 'number' },
         { id: 'modifiedSolarFlux', label: 'Modified Solar Flux', valueType: 'number' },
         { id: 'albedo', label: 'Albedo', valueType: 'number' },
-        { id: 'opticalDepth', label: 'Optical Depth', valueType: 'number' },
-        { id: 'coreHeatFlux', label: 'Core Heat Flux', valueType: 'number' }
+        { id: 'opticalDepth', label: 'Optical Depth', valueType: 'number' }
       ];
     }
     return [
@@ -707,6 +712,7 @@ class ScriptVariableRegistry {
     if (attribute === 'albedo') return this.toNumber(terraforming.luminosity.surfaceAlbedo);
     if (attribute === 'opticalDepth') return this.toNumber(terraforming.temperature.opticalDepth);
     if (attribute === 'coreHeatFlux') return this.toNumber(terraforming.celestialParameters.coreHeatFlux);
+    if (attribute === 'netCoreHeatFlux') return this.toNumber(terraforming.getNetCoreHeatFlux());
     if (attribute === 'hasNaturalMagnetosphere') return terraforming.celestialParameters.hasNaturalMagnetosphere ? 1 : 0;
     if (attribute === 'hasArtificialMagnetosphere') return this.hasArtificialMagnetosphere() ? 1 : 0;
     if (attribute === 'magnetosphereStatus') return terraforming.celestialParameters.hasNaturalMagnetosphere || this.hasArtificialMagnetosphere() ? 1 : 0;

@@ -28,6 +28,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     this.assignmentStep = 1;
     this.autoAssignFlags = {};
     this.autoAssignWeights = {};
+    this.releaseIfDisabledFlags = {};
     this.shortfallLastTick = false;
     const dummyText = { textContent: '' };
     const dummyButton = { textContent: '', disabled: false };
@@ -42,6 +43,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         zeroButton: dummyButton,
         maxButton: dummyButton,
         autoAssign: { checked: false, disabled: false },
+        releaseIfDisabled: { checked: false, disabled: false },
         weightInput: { value: '1', disabled: false },
         buttons: [dummyButton, dummyButton, dummyButton, dummyButton]
       };
@@ -82,6 +84,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         zeroButton: rowNode.querySelector('[data-hephaestus-role="zeroButton"]'),
         maxButton: rowNode.querySelector('[data-hephaestus-role="maxButton"]'),
         autoAssign: rowNode.querySelector('[data-hephaestus-role="autoAssign"]'),
+        releaseIfDisabled: rowNode.querySelector('[data-hephaestus-role="releaseIfDisabled"]'),
         weightInput: rowNode.querySelector('[data-hephaestus-role="weightInput"]')
       };
     });
@@ -217,11 +220,20 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     const total = this.getTotalYards();
     const activeKey = this.getActiveDysonKey();
     let usedManual = 0;
+    const blockedAutoKeys = {};
 
     keys.forEach((key) => {
+      if (this.isUnassignedAssignmentKey(key)) {
+        return;
+      }
       if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
         const targetKey = key === activeKey ? key : activeKey;
         this.autoAssignFlags[targetKey] = this.autoAssignFlags[targetKey] || false;
+      }
+      if (this.releaseIfDisabledFlags[key] && !this.isAssignmentExpansionEnabled(key)) {
+        this.yardAssignments[key] = 0;
+        blockedAutoKeys[key] = true;
+        return;
       }
       if (this.autoAssignFlags[key]) {
         this.yardAssignments[key] = Math.max(0, this.yardAssignments[key] || 0);
@@ -240,7 +252,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       }
     }
 
-    const autoKeys = keys.filter((key) => this.autoAssignFlags[key]);
+    const autoKeys = keys.filter((key) => this.autoAssignFlags[key] && !blockedAutoKeys[key]);
     const remaining = Math.max(0, total - usedManual);
     if (autoKeys.length > 0) {
       let totalWeight = 0;
@@ -341,6 +353,33 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     this.applyYardEffects();
     this.updateUI();
     this.refreshProjectUI();
+  }
+
+  setReleaseIfDisabledTarget(key, enabled) {
+    this.releaseIfDisabledFlags[key] = enabled === true;
+    this.normalizeAssignments();
+    this.applyYardEffects();
+    this.updateUI();
+    this.refreshProjectUI();
+  }
+
+  isAssignmentExpansionEnabled(key) {
+    const project = projectManager.projects[key];
+    if (!project) {
+      return false;
+    }
+    if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
+      if (project.isCollectorContinuous()) {
+        return project.autoContinuousOperation === true
+          && (project.isCompleted || project.collectors > 0);
+      }
+      return (project.collectorProgress || 0) > 0;
+    }
+    const isExpansionContinuous = project.isExpansionContinuous && project.isExpansionContinuous();
+    if (isExpansionContinuous) {
+      return project.isActive && !project.isPaused && project.autoStart;
+    }
+    return project.isActive && !project.isPaused;
   }
 
   adjustAssignment(key, delta) {
@@ -615,7 +654,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     expansionRateValue.dataset.hephaestusUi = 'expansionRateValue';
 
     const assignmentGrid = document.createElement('div');
-    assignmentGrid.classList.add('hephaestus-assignment-list');
+    assignmentGrid.classList.add('hephaestus-assignment-list', 'hephaestus-yards-assignment-list');
     assignmentGrid.dataset.hephaestusUi = 'assignmentGrid';
 
     const stepDownButton = document.createElement('button');
@@ -712,6 +751,21 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         this.setAutoAssignTarget(key, autoAssign.checked);
       });
       autoAssignContainer.append(autoAssign, autoAssignLabel);
+      const releaseIfDisabledContainer = document.createElement('div');
+      releaseIfDisabledContainer.classList.add('hephaestus-auto-assign');
+      const releaseIfDisabled = document.createElement('input');
+      releaseIfDisabled.type = 'checkbox';
+      releaseIfDisabled.dataset.hephaestusRole = 'releaseIfDisabled';
+      releaseIfDisabled.addEventListener('change', () => {
+        this.setReleaseIfDisabledTarget(key, releaseIfDisabled.checked);
+      });
+      const releaseIfDisabledLabel = document.createElement('span');
+      releaseIfDisabledLabel.textContent = getHephaestusText('ui.projects.hephaestus.releaseIfDisabled', 'Release if disabled');
+      releaseIfDisabledLabel.addEventListener('click', () => {
+        releaseIfDisabled.checked = !releaseIfDisabled.checked;
+        this.setReleaseIfDisabledTarget(key, releaseIfDisabled.checked);
+      });
+      releaseIfDisabledContainer.append(releaseIfDisabled, releaseIfDisabledLabel);
 
       const weightInput = document.createElement('input');
       weightInput.type = 'number';
@@ -734,7 +788,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       controlBox.classList.add('hephaestus-assignment-controls');
       const controlButtons = document.createElement('div');
       controlButtons.classList.add('hephaestus-control-buttons');
-      controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
+      controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer, releaseIfDisabledContainer);
       controlBox.append(controlButtons, weightInput);
       const rowSpacer = document.createElement('div');
       rowSpacer.classList.add('hephaestus-row-spacer');
@@ -747,6 +801,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         zeroButton,
         maxButton,
         autoAssign,
+        releaseIfDisabled,
         weightInput,
         minusButton,
         plusButton
@@ -815,6 +870,8 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       row.plusButton.textContent = `+${formatNumber(step, true)}`;
       row.autoAssign.checked = this.autoAssignFlags[key] === true;
       row.autoAssign.disabled = total === 0;
+      row.releaseIfDisabled.checked = this.releaseIfDisabledFlags[key] === true;
+      row.releaseIfDisabled.disabled = this.isUnassignedAssignmentKey(key);
       if (document.activeElement !== row.weightInput) {
         row.weightInput.value = String(
           Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
@@ -854,7 +911,8 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       yardAssignments: { ...this.yardAssignments },
       assignmentStep: this.assignmentStep,
       autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      autoAssignWeights: { ...this.autoAssignWeights },
+      releaseIfDisabledFlags: { ...this.releaseIfDisabledFlags }
     };
   }
 
@@ -872,6 +930,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
       this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'releaseIfDisabledFlags')) {
+      this.releaseIfDisabledFlags = { ...(settings.releaseIfDisabledFlags || {}) };
+    }
     this.normalizeAssignments();
   }
 
@@ -882,7 +943,8 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       yardAssignments: { ...this.yardAssignments },
       assignmentStep: this.assignmentStep,
       autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      autoAssignWeights: { ...this.autoAssignWeights },
+      releaseIfDisabledFlags: { ...this.releaseIfDisabledFlags }
     };
   }
 
@@ -893,6 +955,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     this.assignmentStep = state.assignmentStep || 1;
     this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
     this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.releaseIfDisabledFlags = { ...(state.releaseIfDisabledFlags || {}) };
     this.normalizeAssignments();
   }
 
@@ -903,6 +966,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       assignmentStep: this.assignmentStep,
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
+      releaseIfDisabledFlags: { ...this.releaseIfDisabledFlags },
       fractionalRepeatCount: this.fractionalRepeatCount
     };
     if (this.isActive) {
@@ -919,6 +983,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     this.assignmentStep = state.assignmentStep || 1;
     this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
     this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.releaseIfDisabledFlags = { ...(state.releaseIfDisabledFlags || {}) };
     this.fractionalRepeatCount = state.fractionalRepeatCount || 0;
     if (state.isActive) {
       this.isActive = true;

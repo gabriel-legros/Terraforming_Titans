@@ -1009,6 +1009,7 @@ setLanguageData({
         title: 'Hephaestus Yards',
         totalYards: 'Total Yards',
         project: 'Project',
+        releaseIfDisabled: 'Release if disabled',
         yardsPerSecond: '{value} yards/s',
       },
       cargoRocket: {
