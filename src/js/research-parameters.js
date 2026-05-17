@@ -2601,6 +2601,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'antimatter_warp_logistics',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 50_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'antimatterBattery',
+            type: 'booleanFlag',
+            flagId: 'antimatterWarpLogistics',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'artificial_stars',
         name: '',
         description: '',

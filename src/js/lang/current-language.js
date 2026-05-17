@@ -4842,6 +4842,10 @@ setLanguageData({
           name: 'Core Surgery',
           description: 'Enables a new gigastructure capable of creating artificial natural magnetospheres.',
         },
+        antimatter_warp_logistics: {
+          name: 'Antimatter Warp-Logistics',
+          description: 'Antimatter is an extremely dense energy source but extremely dangerous to store and transport.  So far we have been limited to HOPE-supervised transportation.  By transporting it through the warp itself from and into specialized containers, we will never need to beam energy again.  Provides an option for auto-filling of antimatter batteries.',
+        },
         artificial_stars: {
           name: 'Artificial Stars',
           description: 'Regular stars are wasteful and inefficient.  Our engineers can do so much better.',

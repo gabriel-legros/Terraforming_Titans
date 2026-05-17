@@ -721,6 +721,7 @@ function updateLogic(delta) {
   const allStructures = {...buildings, ...colonies};
 
   produceResources(delta, allStructures);
+  buildings.antimatterBattery.updateAutoFillAfterProductionTick(delta);
 
   // Update happiness for each colony
   for (const colonyName in colonies) {
