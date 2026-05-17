@@ -535,6 +535,43 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return normalizeLifterInteger(maxAssigned);
   }
 
+  getGasGiantMaxAssignmentTooltipText(recipeKey, recipe = null) {
+    const resolved = recipe || this.getRecipe(recipeKey);
+    const resourceKey = this.getGasGiantCapResourceKey(recipeKey, resolved);
+    if (!resourceKey || !resolved) {
+      return '';
+    }
+    const pool = LIFTER_GAS_GIANT_RESOURCE_POOLS[resourceKey];
+    const averageLevel = warpGateNetworkManager.getAverageWarpGateLevelAllSectors();
+    const networkScale = Math.max(1, averageLevel) / LIFTER_GAS_GIANT_CAP_WARP_GATE_LEVEL;
+    const capRate = this.getGasGiantCapRateForRecipe(recipeKey, resolved);
+    const unitRate = this.getEffectiveUnitRatePerLifter();
+    const complexity = this.getRecipeComplexity(resolved);
+    const outputMultiplier = Math.max(1, this.getRecipeTotalOutputMultiplier(resolved));
+    const maxAssigned = this.getGasGiantMaxAssignmentForRecipe(recipeKey, resolved);
+    return getLiftersProjectText(
+      'maxAssignmentTooltip',
+      {
+        pool: formatNumber(pool, true, 3),
+        divisor: formatNumber(LIFTER_GAS_GIANT_CAP_RATE_DIVISOR, true),
+        averageLevel: formatNumber(averageLevel, true, 3),
+        levelCap: formatNumber(LIFTER_GAS_GIANT_CAP_WARP_GATE_LEVEL, true),
+        networkScale: formatNumber(networkScale, true, 6),
+        capRate: formatNumber(capRate, true, 3),
+        unitRate: formatNumber(unitRate, true, 3),
+        complexity: formatNumber(complexity, true, 3),
+        outputMultiplier: formatNumber(outputMultiplier, true, 3),
+        max: formatNumber(maxAssigned, true, 2),
+      },
+      `Pool: ${formatNumber(pool, true, 3)}
+Time divisor: ${formatNumber(LIFTER_GAS_GIANT_CAP_RATE_DIVISOR, true)} (10000 years)
+Warp Gate Network scale: max(1, ${formatNumber(averageLevel, true, 3)}) / ${formatNumber(LIFTER_GAS_GIANT_CAP_WARP_GATE_LEVEL, true)} = ${formatNumber(networkScale, true, 6)}
+Max harvest rate: ${formatNumber(pool, true, 3)} / ${formatNumber(LIFTER_GAS_GIANT_CAP_RATE_DIVISOR, true)} x ${formatNumber(networkScale, true, 6)} = ${formatNumber(capRate, true, 3)}/s
+Per-lifter harvest rate: ${formatNumber(unitRate, true, 3)} x ${formatNumber(outputMultiplier, true, 3)} / ${formatNumber(complexity, true, 3)}
+Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complexity, true, 3)} / (${formatNumber(unitRate, true, 3)} x ${formatNumber(outputMultiplier, true, 3)})) = ${formatNumber(maxAssigned, true, 2)}`
+    );
+  }
+
   getAssignmentCapForKey(key, total = normalizeLifterInteger(this.repeatCount)) {
     if (this.isUnassignedAssignmentKey(key)) {
       return total;

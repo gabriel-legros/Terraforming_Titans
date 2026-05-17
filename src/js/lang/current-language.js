@@ -934,6 +934,7 @@ setLanguageData({
         complexity: 'Complexity',
         maxAssignment: 'Max',
         operationNote: 'Per recipe rate uses (Assigned / Complexity) x {value} units/s. Max is the current assignment cap after Warp Gate Network access, complexity, throughput, and supercharge.',
+        maxAssignmentTooltip: 'Pool: {pool}\nTime divisor: {divisor} (10000 years)\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nMax harvest rate: {pool} / {divisor} x {networkScale} = {capRate}/s\nPer-lifter harvest rate: {unitRate} x {outputMultiplier} / {complexity}\nMax assignment: floor({capRate} x {complexity} / ({unitRate} x {outputMultiplier})) = {max}',
         starLiftingTooltip: 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.',
         status: {
           idle: 'Idle',

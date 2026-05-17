@@ -210,8 +210,14 @@ function renderLiftersUI(project, container) {
     const amountEl = document.createElement('span');
     amountEl.classList.add('stat-value');
 
+    const maxWrap = document.createElement('span');
+    maxWrap.classList.add('stat-value', 'lifters-max-value');
     const maxEl = document.createElement('span');
-    maxEl.classList.add('stat-value');
+    const maxInfo = document.createElement('span');
+    maxInfo.classList.add('info-tooltip-icon');
+    maxInfo.innerHTML = '&#9432;';
+    const maxTooltip = attachDynamicInfoTooltip(maxInfo, '');
+    maxWrap.append(maxEl, maxInfo);
 
     const zeroButton = document.createElement('button');
     zeroButton.textContent = getLiftersUIText('ui.projects.common.zero', '0');
@@ -275,14 +281,17 @@ function renderLiftersUI(project, container) {
     const rateEl = document.createElement('div');
     rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
 
-    row.append(nameWrap, complexityEl, amountEl, maxEl, controls, rateEl);
+    row.append(nameWrap, complexityEl, amountEl, maxWrap, controls, rateEl);
     assignmentGrid.appendChild(row);
 
     rowElements[key] = {
       wrapper: row,
       complexity: complexityEl,
       value: amountEl,
+      maxWrap,
       maxValue: maxEl,
+      maxInfo,
+      maxTooltip,
       zeroButton,
       minusButton,
       plusButton,
@@ -389,10 +398,16 @@ function updateLiftersUI(project) {
     const displayedCurrent = project.getDisplayedAssignmentAmount(key);
     const maxForKey = project.getAssignmentMaxTarget(key);
     const displayedCap = isUnassigned ? null : project.getGasGiantMaxAssignmentForRecipe(key, recipe);
+    const showMaxTooltip = displayedCap !== null && displayedCap > 0n;
 
     row.complexity.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
     row.value.textContent = formatNumber(displayedCurrent, true, 2);
     row.maxValue.textContent = displayedCap === null ? '' : formatNumber(displayedCap, true, 2);
+    row.maxInfo.style.display = showMaxTooltip ? '' : 'none';
+    if (showMaxTooltip) {
+      row.maxTooltip.textContent = project.getGasGiantMaxAssignmentTooltipText(key, recipe);
+      row.maxTooltip.style.whiteSpace = 'pre-line';
+    }
     row.minusButton.textContent = `-${formatNumber(step, true)}`;
     row.plusButton.textContent = `+${formatNumber(step, true)}`;
     row.autoAssign.checked = project.autoAssignFlags[key] === true;

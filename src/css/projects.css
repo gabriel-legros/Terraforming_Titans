@@ -1279,6 +1279,13 @@
     min-width: 0;
 }
 
+.lifters-max-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
 .nuclear-alchemy-rate-cell {
     justify-self: end;
     text-align: right;
