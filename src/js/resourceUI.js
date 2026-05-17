@@ -473,6 +473,19 @@ function createTooltipElement(category, resourceName) {
   timeDiv.id = getResourceDomId(category, resourceName, 'tooltip-time');
   timeDiv.classList.add('resource-tooltip-time');
 
+  let syncDiv;
+  if (category === 'special' && resourceName === 'antimatter') {
+    syncDiv = document.createElement('div');
+    syncDiv.id = getResourceDomId(category, resourceName, 'tooltip-sync');
+    syncDiv.style.display = 'none';
+    syncDiv._lines = [];
+    for (let i = 0; i < 4; i += 1) {
+      const line = document.createElement('div');
+      syncDiv.appendChild(line);
+      syncDiv._lines.push(line);
+    }
+  }
+
   let noteDiv;
   let wasteNoteDiv;
   if (resourceName === 'land') {
@@ -538,6 +551,7 @@ function createTooltipElement(category, resourceName) {
   const headerDiv = document.createElement('div');
   headerDiv.appendChild(valueDiv);
   headerDiv.appendChild(timeDiv);
+  if (syncDiv) headerDiv.appendChild(syncDiv);
   if (noteDiv) headerDiv.appendChild(noteDiv);
   if (wasteNoteDiv) headerDiv.appendChild(wasteNoteDiv);
   headerDiv.appendChild(assignmentsDiv);
@@ -1885,12 +1899,18 @@ function updateResourceDisplay(resources, deltaSeconds) {
         // Update other resources
         const valEl = entry ? entry.valueEl : null;
         if (valEl) {
-          valEl.textContent = formatNumber(resourceObj.value);
+          const displayValue = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
+            ? getAntimatterEquivalentValue(resources)
+            : resourceObj.value;
+          valEl.textContent = formatNumber(displayValue);
         }
       
         const capElement = entry ? entry.capEl : null;
         if (capElement && (category !== 'spaceStorage' || resourceName === 'energy')) {
-          capElement.textContent = formatNumber(resourceObj.cap);
+          const displayCap = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
+            ? getAntimatterEquivalentCap(resources)
+            : resourceObj.cap;
+          capElement.textContent = formatNumber(displayCap);
         }
       
         updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
@@ -2033,6 +2053,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
   const valueDiv = entry?.tooltip?.valueDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-value'));
   const timeDiv = entry?.tooltip?.timeDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-time'));
+  const syncDiv = entry?.tooltip?.syncDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-sync'));
   const assignmentsDiv = entry?.tooltip?.assignmentsDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-assignments'));
   const zonesDiv = entry?.tooltip?.zonesDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-zones'));
   const netDiv = entry?.tooltip?.netDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-net'));
@@ -2045,6 +2066,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
   const consumptionDisplay = getDisplayConsumptionRates(resource);
   const netRate = resource.productionRate - consumptionDisplay.total;
+  const antimatterSynced = resource.category === 'special'
+    && resource.name === 'antimatter'
+    && isAntimatterSpaceEnergySyncActive();
 
   if (valueDiv) {
     if (resource.name === 'land') {
@@ -2112,6 +2136,12 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (planetaryDiv.textContent !== planetaryText) planetaryDiv.textContent = planetaryText;
       if (worldshellDiv.textContent !== worldshellText) worldshellDiv.textContent = worldshellText;
       if (breathingWorldDiv.textContent !== breathingWorldText) breathingWorldDiv.textContent = breathingWorldText;
+    } else if (antimatterSynced) {
+      const text = getResourceUICommonText('valueWithUnit', 'Value {value}{unit}', {
+        value: formatNumber(getAntimatterEquivalentValue(resources), false, 3),
+        unit: resource.unit ? ` ${resource.unit}` : '',
+      });
+      if (valueDiv.textContent !== text) valueDiv.textContent = text;
     } else {
       const text = getResourceUICommonText('valueWithUnit', 'Value {value}{unit}', {
         value: formatNumber(resource.value, false, 3),
@@ -2122,7 +2152,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   }
 
   if (timeDiv) {
-    if (resource.name !== 'land') {
+    if (antimatterSynced) {
+      timeDiv.innerHTML = '&nbsp;';
+    } else if (resource.name !== 'land') {
       let showDefaultTime = true;
       const unstableTimer = resourceUICache.unstableTimers[resourceKey] || 0;
       const rateUnstable = unstableTimer > 0;
@@ -2224,6 +2256,25 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       updateSpaceshipAssignments(assignmentsDiv);
     } else {
       clearElement(assignmentsDiv);
+    }
+  }
+
+  if (syncDiv) {
+    if (antimatterSynced) {
+      const lines = [
+        getResourceUIText('antimatter.sync.line1', 'Antimatter is synchronized with space energy.'),
+        getResourceUIText('antimatter.sync.line2', '1 antimatter equals 2Q space energy.'),
+        getResourceUIText('antimatter.sync.line3', 'Antimatter production and storage are routed to space energy.'),
+        getResourceUIText('antimatter.sync.line4', 'Antimatter costs spend space energy at the same conversion rate.'),
+      ];
+      for (let i = 0; i < syncDiv._lines.length; i += 1) {
+        const line = syncDiv._lines[i];
+        const text = lines[i] || '';
+        if (line.textContent !== text) line.textContent = text;
+      }
+      syncDiv.style.display = 'block';
+    } else {
+      syncDiv.style.display = 'none';
     }
   }
 
@@ -2356,7 +2407,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     }
   }
 
-  if (zonesDiv && resource.category !== 'spaceStorage' && typeof terraforming !== 'undefined') {
+  if (zonesDiv && !antimatterSynced && resource.category !== 'spaceStorage' && typeof terraforming !== 'undefined') {
     const zoneValues = {};
     const zoneBuried = {};
     getZones().forEach(zone => {
@@ -2441,12 +2492,22 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   if (netDiv) {
     const autoLine = netDiv._lineAuto || netDiv.firstChild;
     const baseLine = netDiv._lineBase || netDiv.lastChild;
-    const netRateWithAutobuild = netRate - autobuildAvg;
-    const displayNetRate = Math.abs(netRateWithAutobuild) < 1e-6 ? 0 : netRateWithAutobuild;
-    const baseText = `${formatNumber(displayNetRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    const autoText = isAutobuildTrackedResource(resource)
-      ? getResourceUICommonText('netIncludingAutobuild', 'Net Change (including autobuild):')
-      : '';
+    let baseText;
+    let autoText;
+    if (antimatterSynced) {
+      const spaceEnergyDisplay = resources.space.energy;
+      const spaceEnergyConsumption = getDisplayConsumptionRates(spaceEnergyDisplay);
+      const equivalentRate = (spaceEnergyDisplay.productionRate - spaceEnergyConsumption.total) / ANTIMATTER_SPACE_ENERGY_RATIO;
+      baseText = `${formatNumber(equivalentRate, false, 2)}/s`;
+      autoText = '';
+    } else {
+      const netRateWithAutobuild = netRate - autobuildAvg;
+      const displayNetRate = Math.abs(netRateWithAutobuild) < 1e-6 ? 0 : netRateWithAutobuild;
+      baseText = `${formatNumber(displayNetRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+      autoText = isAutobuildTrackedResource(resource)
+        ? getResourceUICommonText('netIncludingAutobuild', 'Net Change (including autobuild):')
+        : '';
+    }
     if (autoLine && autoLine.textContent !== autoText) autoLine.textContent = autoText;
     if (baseLine && baseLine.textContent !== baseText) baseLine.textContent = baseText;
   }
@@ -2463,7 +2524,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   }
 
   if (productionDiv) {
-    const productionEntries = Object.entries(resource.productionRateBySource)
+    const productionEntries = antimatterSynced ? [] : Object.entries(resource.productionRateBySource)
       .filter(([source, rate]) => rate !== 0 && source !== 'Overflow' && source !== 'Overflow (not summed)');
     const showProduction = updateRateTableWithCooldown(
       productionDiv,
@@ -2475,7 +2536,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   }
 
   if (consumptionDiv) {
-    const consumptionEntries = Object.entries(consumptionDisplay.bySource)
+    const consumptionEntries = antimatterSynced ? [] : Object.entries(consumptionDisplay.bySource)
       .filter(([source, rate]) => rate !== 0 && source !== 'Overflow (not summed)');
     const showConsumption = updateRateTableWithCooldown(
       consumptionDiv,
@@ -2487,7 +2548,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   }
 
   if (overflowDiv) {
-    const overflowEntries = [
+    const overflowEntries = antimatterSynced ? [] : [
       ...Object.entries(resource.consumptionRateByType?.overflow || {}),
       ...Object.entries(resource.productionRateByType?.overflow || {})
     ]
@@ -2498,7 +2559,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   }
 
   if (autobuildDiv) {
-    if (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource)) {
+    if (antimatterSynced) {
+      autobuildDiv.style.display = 'none';
+    } else if (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource)) {
       const avgCost = autobuildAvg;
       const shortageBuildings = resource.autobuildShortageBuildings;
       if (avgCost !== 0 || shortageBuildings) {
@@ -2587,6 +2650,7 @@ function cacheSingleResource(category, resourceName) {
       root: document.getElementById(`${domPrefix}-tooltip`),
       valueDiv: document.getElementById(`${domPrefix}-tooltip-value`),
       timeDiv: document.getElementById(`${domPrefix}-tooltip-time`),
+      syncDiv: document.getElementById(`${domPrefix}-tooltip-sync`),
       assignmentsDiv: document.getElementById(`${domPrefix}-tooltip-assignments`),
       zonesDiv: document.getElementById(`${domPrefix}-tooltip-zones`),
       netDiv: document.getElementById(`${domPrefix}-tooltip-net`),

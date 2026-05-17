@@ -1,6 +1,6 @@
 (function () {
-  const SPACE_ANTIMATTER_STORAGE_PER_BATTERY = 1e15;
-  const SPACE_ANTIMATTER_STORAGE_PER_BATTERY_BIGINT = 1000000000000000n;
+  const SPACE_ANTIMATTER_STORAGE_PER_BATTERY = 2e15;
+  const SPACE_ANTIMATTER_STORAGE_PER_BATTERY_BIGINT = 2000000000000000n;
   const SPACE_ANTIMATTER_MAX_BATCH_BIGINT = 100000000000000000000000000000000n;
 
   function normalizeSpaceAntimatterCount(value) {
@@ -84,7 +84,7 @@
     }
 
     getTotalAntimatterStorageBonus() {
-      return spaceAntimatterCountToNumber(this.repeatCount);
+      return spaceEnergyToAntimatter(this.getTotalStorageBonus());
     }
 
     getSelectedBuildCount() {
@@ -121,26 +121,11 @@
 
     applyAntimatterStorageEffect() {
       const sourceId = this.getAntimatterStorageEffectSourceId();
-      const bonus = this.getTotalAntimatterStorageBonus();
-      if (bonus <= 0) {
-        removeEffect({
-          target: 'resource',
-          resourceType: 'special',
-          targetId: 'antimatter',
-          sourceId
-        });
-        return;
-      }
-
-      addEffect({
+      removeEffect({
         target: 'resource',
         resourceType: 'special',
         targetId: 'antimatter',
-        type: 'baseStorageBonus',
-        value: bonus,
-        effectId: this.getAntimatterStorageEffectId(),
-        sourceId,
-        name: `${this.displayName} Antimatter Storage`
+        sourceId
       });
     }
 
@@ -281,7 +266,7 @@
 
       const batteriesBuilt = createSummaryBox(getSpaceAntimatterText('batteriesBuilt', null, 'Batteries Built'));
       const storageBonus = createSummaryBox(getSpaceAntimatterText('spaceEnergyStorage', null, 'Space Energy Storage'));
-      const antimatterStorageBonus = createSummaryBox(getSpaceAntimatterText('specialAntimatterStorage', null, 'Special Antimatter Storage'));
+      const antimatterStorageBonus = createSummaryBox(getSpaceAntimatterText('specialAntimatterStorage', null, 'Military Antimatter Equivalent'));
       const buildAmount = createSummaryBox(getSpaceAntimatterText('buildAmount', null, 'Build Amount'));
       batteriesBuilt.value.dataset.spaceAntimatterUi = 'batteriesBuiltValue';
       storageBonus.value.dataset.spaceAntimatterUi = 'storageBonusValue';

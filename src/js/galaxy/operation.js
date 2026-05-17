@@ -1135,7 +1135,7 @@ class GalaxyOperationManager {
         const antimatterResource = typeof resources === 'object' && resources !== null
             ? resources?.special?.antimatter
             : null;
-        let availableAntimatter = antimatterResource ? Number(antimatterResource.value) : 0;
+        let availableAntimatter = antimatterResource ? Number(getAntimatterEquivalentValue(resources)) : 0;
         if (!Number.isFinite(availableAntimatter) || availableAntimatter < 0) {
             availableAntimatter = 0;
         }
@@ -1185,6 +1185,12 @@ class GalaxyOperationManager {
             if (!(successChance > 0)) {
                 return;
             }
+            if (antimatterCost > 0 && antimatterResource) {
+                if (!spendAntimatterEquivalent(antimatterCost, resources)) {
+                    return;
+                }
+                availableAntimatter = Math.max(0, availableAntimatter - antimatterCost);
+            }
             const operation = this.startOperation({
                 sectorKey,
                 factionId: this.uhfFactionId,
@@ -1194,10 +1200,6 @@ class GalaxyOperationManager {
             });
             if (!operation) {
                 return;
-            }
-            if (antimatterCost > 0 && antimatterResource) {
-                availableAntimatter = Math.max(0, availableAntimatter - antimatterCost);
-                antimatterResource.value = availableAntimatter;
             }
             operation.launchCost = antimatterCost;
             if (uiAllocationUpdater) {

@@ -490,6 +490,10 @@ class Resource extends EffectableEntity {
       state.enabled = this.enabled;
     }
 
+    if (this.name === 'antimatter' && this.category === 'special' && this.syncedToSpaceEnergy) {
+      state.syncedToSpaceEnergy = true;
+    }
+
     if (!this.isExactLandResource() && this.reservedSources && this.reservedSources.constructor === Object) {
       const reservedSources = {};
 
@@ -538,6 +542,9 @@ class Resource extends EffectableEntity {
     if ('reserved' in state) this.reserved = state.reserved;
     if ('unlocked' in state) this.unlocked = state.unlocked;
     if ('enabled' in state) this.enabled = state.enabled;
+    if (this.name === 'antimatter' && this.category === 'special') {
+      this.syncedToSpaceEnergy = state.syncedToSpaceEnergy === true;
+    }
 
     if (state.reservedSources && state.reservedSources.constructor === Object) {
       for (const key in state.reservedSources) {
@@ -1336,10 +1343,11 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     for (const category in building.production) {
       for (const resource in building.production[category]) {
         const actualProduction = (building.production[category][resource] || 0) * building.activeNumber * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource) * automationMultiplier * workerRatio * productivityScale;
+        const target = routeAntimatterProductionTarget(category, resource, actualProduction);
         // Specify 'building' as the rateType
-        resources[category][resource].modifyRate(actualProduction, building.displayName, 'building');
+        resources[target.category][target.resource].modifyRate(target.amount, building.displayName, 'building');
         if (actualProduction) {
-          trackDebugRate(localProduction, category, resource, building.displayName, actualProduction);
+          trackDebugRate(localProduction, target.category, target.resource, building.displayName, target.amount);
         }
       }
     }
@@ -1365,17 +1373,18 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
       const base = maintenanceCost[resource] * building.activeNumber * automationMultiplier * (useProductivity ? productivityValue : 1);
-      const conversionValue = sourceData.conversionValue || 1;
-      for (const targetCategory in sourceData.maintenanceConversion) {
-        const targetResource = sourceData.maintenanceConversion[targetCategory];
-        const conversionRate = base * conversionValue;
-        resources[targetCategory][targetResource].modifyRate(
-          conversionRate,
+        const conversionValue = sourceData.conversionValue || 1;
+        for (const targetCategory in sourceData.maintenanceConversion) {
+          const targetResource = sourceData.maintenanceConversion[targetCategory];
+          const conversionRate = base * conversionValue;
+          const target = routeAntimatterProductionTarget(targetCategory, targetResource, conversionRate);
+        resources[target.category][target.resource].modifyRate(
+          target.amount,
           building.displayName,
           'building'
         );
         if (conversionRate) {
-          trackDebugRate(localProduction, targetCategory, targetResource, `${building.displayName} maintenance`, conversionRate);
+          trackDebugRate(localProduction, target.category, target.resource, `${building.displayName} maintenance`, target.amount);
         }
       }
     }
@@ -1732,6 +1741,14 @@ function produceResources(deltaTime, buildings) {
     produceAntimatter(deltaTime, resources, accumulatedChanges);
   }
 
+  if (isAntimatterSpaceEnergySyncActive()) {
+    const antimatterGain = Math.max(0, accumulatedChanges.special.antimatter || 0);
+    if (antimatterGain > 0) {
+      accumulatedChanges.special.antimatter -= antimatterGain;
+      accumulatedChanges.space.energy += antimatterToSpaceEnergy(antimatterGain);
+    }
+  }
+
   if (terraforming) {
     routeColonyWaterOverflow(deltaTime, accumulatedChanges);
     terraforming.distributeSurfaceChangesToZones(accumulatedChanges.surface);
@@ -1773,6 +1790,10 @@ function produceResources(deltaTime, buildings) {
       }
 
     }
+  }
+
+  if (typeof synchronizeAntimatterWithSpaceEnergy === 'function') {
+    synchronizeAntimatterWithSpaceEnergy(resources);
   }
 
   if (spaceStorageProject) {

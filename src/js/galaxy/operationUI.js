@@ -517,13 +517,16 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
-        const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
+        const antimatterValue = antimatterResource ? Number(getAntimatterEquivalentValue(resources)) : 0;
         const plannedCost = assignment * 1000;
         if (!antimatterResource || antimatterValue < plannedCost) {
             return;
         }
         const targetFactionId = manager.getOperationTargetFaction?.(sectorKey, uhfFactionId) || null;
         const durationMs = getDefaultOperationDurationMs(manager, sectorKey, uhfFactionId, targetFactionId);
+        if (!spendAntimatterEquivalent(plannedCost, resources)) {
+            return;
+        }
         const operation = manager.startOperation({
             sectorKey,
             factionId: uhfFactionId,
@@ -538,9 +541,6 @@ const GalaxyOperationUI = (() => {
             ? operation.assignedPower
             : assignment;
         const cost = appliedPower * 1000;
-        if (antimatterResource) {
-            antimatterResource.value = Math.max(0, antimatterValue - cost);
-        }
         operation.launchCost = cost;
         setStoredAllocation(sectorKey, assignment);
     }
@@ -976,7 +976,7 @@ const GalaxyOperationUI = (() => {
         const enabled = !!(manager && manager.enabled);
         updateOperationArrows(manager, cache);
         const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
-        const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
+        const antimatterValue = antimatterResource ? Number(getAntimatterEquivalentValue(resources)) : 0;
         const selectedKey = enabled && selection ? selection.key : null;
         const defaultFactionId = UHF_FACTION_ID || 'uhf';
         const selectedTargetFactionId = selectedKey

@@ -435,12 +435,6 @@ const buildingsParameters = {
         shortName: '',
         consumption: { colony: { energy: 2_000_000_000_000_000 } },
         production: { special: { antimatter: 1 } }
-      },
-      spaceEnergy: {
-        shortName: '',
-        requiresBuildingFlag: 'spaceEnergyTransferRecipe',
-        consumption: { colony: { energy: 2_000_000_000_000_000 } },
-        production: { space: { energy: 2_000_000_000_000_000 } }
       }
     }
   },

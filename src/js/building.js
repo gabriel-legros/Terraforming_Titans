@@ -1477,16 +1477,21 @@ class Building extends EffectableEntity {
         const baseProduction = this.activeNumber * this.production[category][resource] * effectiveMultiplier * this.getEffectiveResourceProductionMultiplier(category, resource);
         const scaledProduction = baseProduction * this.productivity * (deltaTime / 1000);
         const displayProduction = baseProduction * displayProductivity * (deltaTime / 1000);
+        const productionTarget = routeAntimatterProductionTarget(category, resource, scaledProduction);
+        const displayTarget = routeAntimatterProductionTarget(category, resource, displayProduction);
 
         // Track actual production in the building
-        this.currentProduction[category][resource] = scaledProduction;
+        if (!this.currentProduction[productionTarget.category]) {
+          this.currentProduction[productionTarget.category] = {};
+        }
+        this.currentProduction[productionTarget.category][productionTarget.resource] = productionTarget.amount;
 
         // Accumulate production changes
-        accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) + scaledProduction;
+        accumulatedChanges[productionTarget.category][productionTarget.resource] = (accumulatedChanges[productionTarget.category][productionTarget.resource] || 0) + productionTarget.amount;
 
         // Update production rate for the resource
-        resources[category][resource].modifyRate(
-          displayProduction * (1000 / deltaTime),
+        resources[displayTarget.category][displayTarget.resource].modifyRate(
+          displayTarget.amount * (1000 / deltaTime),
           this.displayName,
           'building'
         );

@@ -91,6 +91,9 @@ function createResources(initial = {}) {
     space: {
       energy: createResource('energy', initial.spaceEnergy || 0, true, initial.spaceEnergyCap || Infinity),
     },
+    special: {
+      antimatter: createResource('antimatter', initial.antimatter || 0, true, initial.antimatterCap || 0),
+    },
     spaceStorage: {
       hydrogen: createResource('hydrogen', initial.hydrogen || 0),
       metal: createResource('metal', initial.metal || 0),
@@ -489,6 +492,10 @@ function setupHarness(initialStorage = {}) {
   setGlobal('updateArtificialEcosystems', () => {}, originalGlobals);
   setGlobal('updateAntimatterStorageCap', () => {}, originalGlobals);
   setGlobal('produceAntimatter', null, originalGlobals);
+  setGlobal('isAntimatterSpaceEnergySyncActive', () => false, originalGlobals);
+  setGlobal('routeAntimatterProductionTarget', (category, resource, amount) => ({ category, resource, amount }), originalGlobals);
+  setGlobal('antimatterToSpaceEnergy', amount => Math.max(0, amount || 0) * 2_000_000_000_000_000, originalGlobals);
+  setGlobal('synchronizeAntimatterWithSpaceEnergy', () => {}, originalGlobals);
   setGlobal('updateSpaceStorageUI', () => {}, originalGlobals);
   setGlobal('warpGateCommand', { getMultiplier: () => 1 }, originalGlobals);
   setGlobal('warpGateNetworkManager', { getAverageWarpGateLevelAllSectors: () => 1000000 }, originalGlobals);

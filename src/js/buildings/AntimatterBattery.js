@@ -71,13 +71,16 @@ class AntimatterBattery extends Building {
     const energy = resources?.colony?.energy || null;
     const missingEnergy = energy ? Math.max(0, energy.cap - energy.value) : 0;
     const energyPerAntimatter = this.getEnergyPerAntimatter();
+    const availableAntimatter = antimatter && isAntimatterSpaceEnergySyncActive()
+      ? getAntimatterEquivalentValue(resources)
+      : (antimatter?.value || 0);
     const hasResources = antimatter && energy;
     const hasActiveBattery = this.active > 0n;
 
     button.disabled =
       !hasResources ||
       !hasActiveBattery ||
-      antimatter.value <= 0 ||
+      availableAntimatter <= 0 ||
       missingEnergy <= 0 ||
       energyPerAntimatter <= 0;
     button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
@@ -90,7 +93,13 @@ class AntimatterBattery extends Building {
   }
 
   getEnergyPerAntimatter() {
-    return ENERGY_PER_ANTIMATTER;
+    if (
+      exportedAntimatterHelpers &&
+      exportedAntimatterHelpers.ANTIMATTER_SPACE_ENERGY_RATIO !== undefined
+    ) {
+      return exportedAntimatterHelpers.ANTIMATTER_SPACE_ENERGY_RATIO;
+    }
+    return ANTIMATTER_SPACE_ENERGY_RATIO;
   }
 
   getAntimatterRatePerWorld() {
@@ -123,7 +132,9 @@ class AntimatterBattery extends Building {
       return;
     }
 
-    const availableAntimatter = antimatter.value;
+    const availableAntimatter = isAntimatterSpaceEnergySyncActive()
+      ? getAntimatterEquivalentValue(resources)
+      : antimatter.value;
     if (availableAntimatter <= 0) {
       return;
     }
@@ -135,8 +146,10 @@ class AntimatterBattery extends Building {
       return;
     }
 
-    const antimatterConsumed = missingEnergy / energyPerAntimatter;
-    antimatter.decrease(antimatterConsumed);
+    const antimatterConsumed = energyGain / energyPerAntimatter;
+    if (!spendAntimatterEquivalent(antimatterConsumed, resources)) {
+      return;
+    }
     energy.increase(energyGain);
     energy.enable?.();
 

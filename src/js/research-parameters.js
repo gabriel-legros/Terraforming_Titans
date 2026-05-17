@@ -2381,7 +2381,7 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           { target: 'project', targetId: 'spaceAntimatter', type: 'enable' },
-          { target: 'building', targetId: 'antimatterFarm', type: 'booleanFlag', flagId: 'spaceEnergyTransferRecipe', value: true }
+          { target: 'researchManager', type: 'booleanFlag', flagId: 'spaceAntimatterSynchronization', value: true }
         ]
       },
       {

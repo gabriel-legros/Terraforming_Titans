@@ -574,6 +574,14 @@ setLanguageData({
         worldEffects: 'World Effects',
         keratiTerritory: 'Kerati Territory',
       },
+      antimatter: {
+        sync: {
+          line1: 'Antimatter is synchronized with space energy.',
+          line2: '1 antimatter equals 2Q space energy.',
+          line3: 'Antimatter production and storage are routed to space energy.',
+          line4: 'Antimatter costs spend space energy at the same conversion rate.',
+        },
+      },
       planetaryMass: {
         planetary: 'Planetary Mass {value}{unit}',
         worldshell: '+ Surface Mass {value}{unit}',
@@ -1129,7 +1137,7 @@ setLanguageData({
         title: 'Battery Component',
         batteriesBuilt: 'Batteries Built',
         spaceEnergyStorage: 'Space Energy Storage',
-        specialAntimatterStorage: 'Military Antimatter Storage',
+        specialAntimatterStorage: 'Military Antimatter Equivalent',
         buildAmount: 'Build Amount',
         divideTen: '/10',
         timesTen: 'x10',
@@ -3811,7 +3819,6 @@ setLanguageData({
         description: 'Harvests microscopic antimatter using staggering amounts of power.',
         recipes: {
           antimatter: { shortName: 'Energy -> Antimatter' },
-          spaceEnergy: { shortName: 'Colony -> Space Energy' },
         },
       },
       battery: {
@@ -4096,7 +4103,7 @@ setLanguageData({
       },
       spaceAntimatter: {
         name: 'Space Antimatter',
-        description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 1Q to space energy storage.  Resources can be paid from space or colony storage, depending on space storage settings.',
+        description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 2Q to space energy storage, matching 1 antimatter equivalent. Resources can be paid from space or colony storage, depending on space storage settings.',
       },
       overpopulationOneillCylinders: {
         name: "Overpopulation O'Neill Cylinders",
@@ -4784,7 +4791,7 @@ setLanguageData({
         },
         space_antimatter_safety_regulations: {
           name: 'Space Antimatter Safety Regulations',
-          description: 'Standardize strict antimatter safety protocols for orbital containment, unlock modular Space Antimatter batteries, and add a safe orbital energy-transfer recipe for Antimatter Farms.',
+          description: 'Standardize strict antimatter safety protocols for orbital containment, unlock modular Space Antimatter batteries, and synchronize military antimatter against space energy.',
         },
         additional_dyson_spheres: {
           name: 'Additional Dyson Spheres',
