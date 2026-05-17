@@ -110,6 +110,12 @@ function resetStructureDisplayState() {
   structureDisplayState.hidden = {};
 }
 
+function resetSelectedBuildCounts() {
+  for (const name in selectedBuildCounts) {
+    delete selectedBuildCounts[name];
+  }
+}
+
 function updateStructureHiddenPreference(name, hidden) {
   if (hidden) {
     structureDisplayState.hidden[name] = true;
