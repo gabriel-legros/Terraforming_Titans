@@ -1060,6 +1060,14 @@ function capturePreservedTravelResourceState(resourceSet) {
           savedState[fieldName] = resource[fieldName];
         }
       }
+      if (
+        category === 'special' &&
+        resourceName === 'antimatter' &&
+        isAntimatterSpaceEnergySyncActive()
+      ) {
+        savedState.value = 0;
+        savedState.syncedToSpaceEnergy = true;
+      }
 
       if (!preservedState[category]) {
         preservedState[category] = {};
