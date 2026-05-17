@@ -665,6 +665,7 @@ function getScriptActionKinds() {
     { id: 'applyPreset', label: getAutomationCardText('scriptApplyPreset', {}, 'Apply Preset') },
     { id: 'applyCombination', label: getAutomationCardText('scriptApplyCombination', {}, 'Apply Combination') },
     { id: 'toggleAutomation', label: getAutomationCardText('scriptToggleAutomation', {}, 'Toggle Automation') },
+    { id: 'togglePause', label: getAutomationCardText('scriptTogglePause', {}, 'Toggle Pause') },
     { id: 'goto', label: 'GOTO' },
     { id: 'gotoScript', label: getAutomationCardText('scriptGotoScript', {}, 'GOTO Script') },
     { id: 'sleep', label: getAutomationCardText('scriptSleep', {}, 'Sleep') }
@@ -1196,6 +1197,24 @@ function renderActionsEditor(automation, script, line, container, actions, title
 }
 
 function renderActionTargetPicker(action, row) {
+  if (action.kind === 'togglePause') {
+    const modeSelect = createSelect([
+      { id: 'on', label: getAutomationCardText('scriptToggleModeOn', {}, 'On') },
+      { id: 'off', label: getAutomationCardText('scriptToggleModeOff', {}, 'Off') },
+      { id: 'toggle', label: getAutomationCardText('scriptToggleModeToggle', {}, 'Toggle') }
+    ], action.toggleValue || 'toggle');
+    action.toggleValue = modeSelect.value;
+    action.automationType = null;
+    action.presetId = null;
+    action.combinationId = null;
+    modeSelect.addEventListener('change', event => {
+      action.toggleValue = event.target.value;
+      queueAutomationUIRefresh();
+    });
+    row.appendChild(modeSelect);
+    return;
+  }
+
   function getAutomationTypeLabel(type) {
     if (type === 'scripting') return getAutomationCardText('scriptAutomationTypeScripting', {}, 'Scripting');
     if (type === 'autoTravel') return getAutomationCardText('scriptAutomationTypeAutoTravel', {}, 'Auto Travel');

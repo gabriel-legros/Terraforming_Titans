@@ -815,6 +815,9 @@ class ScriptAutomation {
     if (action.kind === 'toggleAutomation') {
       return this.applyAutomationToggleAction(action);
     }
+    if (action.kind === 'togglePause') {
+      return this.applyPauseToggleAction(action);
+    }
     const target = this.getAutomationTarget(action.automationType);
     if (!target) return false;
     if (action.kind === 'applyPreset' && action.presetId) {
@@ -866,6 +869,21 @@ class ScriptAutomation {
     if (value === 'on') target.setEnabled(true);
     else if (value === 'off') target.setEnabled(false);
     else target.setEnabled(!target.enabled);
+    return true;
+  }
+
+  applyPauseToggleAction(action) {
+    const value = action.toggleValue || 'toggle';
+    const paused = isGamePaused();
+    if (value === 'on') {
+      if (!paused) togglePause();
+      return true;
+    }
+    if (value === 'off') {
+      if (paused) togglePause();
+      return true;
+    }
+    togglePause();
     return true;
   }
 
@@ -940,6 +958,9 @@ class ScriptAutomation {
     }
     if (action.kind === 'toggleAutomation') {
       return `Set ${action.automationType} automation ${action.toggleValue || 'toggle'}`;
+    }
+    if (action.kind === 'togglePause') {
+      return `Set pause ${action.toggleValue || 'toggle'}`;
     }
     const target = this.getAutomationTarget(action.automationType);
     if (!target) return 'Action';

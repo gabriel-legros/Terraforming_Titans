@@ -3299,6 +3299,7 @@ setLanguageData({
         scriptAutoTravelAndTurnOn: 'Auto Travel',
         scriptApplyCombination: 'Apply Combination',
         scriptToggleAutomation: 'Toggle Automation',
+        scriptTogglePause: 'Toggle Pause',
         scriptGotoScript: 'GOTO Script',
         scriptAutomationTypeScripting: 'Scripting',
         scriptAutomationTypeAutoTravel: 'Auto Travel',
