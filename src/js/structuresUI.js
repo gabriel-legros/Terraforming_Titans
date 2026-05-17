@@ -11,6 +11,15 @@ function getStructuresUIText(path, fallback, vars) {
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+function getSelectedBuildCount(structureName) {
+  const buildCount = selectedBuildCounts[structureName];
+  if (Number.isFinite(buildCount) && buildCount > 0) {
+    return buildCount;
+  }
+  selectedBuildCounts[structureName] = 1;
+  return 1;
+}
+
 function getStructureCountNumber(value) {
   return typeof buildingCountToNumber === 'function'
     ? buildingCountToNumber(value)
@@ -49,10 +58,13 @@ function normalizeSignedStructureChange(value) {
 }
 
 function getManualBuildCount(structure, buildCount) {
+  const normalizedBuildCount = Number.isFinite(buildCount) && buildCount > 0
+    ? buildCount
+    : 1;
   if (!gameSettings.roundBuildingConstruction) {
-    return buildCount;
+    return normalizedBuildCount;
   }
-  return getRoundedBuildCount(structure.count, buildCount);
+  return getRoundedBuildCount(structure.count, normalizedBuildCount);
 }
 
 function swapResourceRateColor(resource, color) {
@@ -782,9 +794,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   updateStructureButtonText(button, structure, manualBuildCount);
 
   button.addEventListener('click', function () {
-    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    const manualBuildCount = getManualBuildCount(structure, getSelectedBuildCount(structure.name));
     buildCallback(structure.name, manualBuildCount);
-    const refreshedBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    const refreshedBuildCount = getManualBuildCount(structure, getSelectedBuildCount(structure.name));
     updateStructureButtonText(button, structure, refreshedBuildCount);
     updateStructureCostDisplay(costElement, structure, refreshedBuildCount);
     updateProductionConsumptionDetails(structure, productionConsumptionDetails, refreshedBuildCount);
@@ -799,14 +811,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const divideButton = document.createElement('button');
   divideButton.textContent = '/10';
   divideButton.addEventListener('click', function () {
-    selectedBuildCounts[structure.name] = divideByTen(selectedBuildCounts[structure.name]);
-    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    selectedBuildCounts[structure.name] = divideByTen(getSelectedBuildCount(structure.name));
+    const manualBuildCount = getManualBuildCount(structure, getSelectedBuildCount(structure.name));
     updateStructureButtonText(button, structure, manualBuildCount);
     updateStructureCostDisplay(costElement, structure, manualBuildCount);
     updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
     if (structure.canBeToggled) {
-      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
-      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+      updateIncreaseButtonText(increaseButton, getSelectedBuildCount(structure.name));
+      updateDecreaseButtonText(decreaseButton, getSelectedBuildCount(structure.name));
     }
     if (upgradeButton) {
       updateUpgradeButton(upgradeButton, structure);
@@ -817,14 +829,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const multiplyButton = document.createElement('button');
   multiplyButton.textContent = 'x10';
   multiplyButton.addEventListener('click', function () {
-    selectedBuildCounts[structure.name] = multiplyByTen(selectedBuildCounts[structure.name]);
-    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    selectedBuildCounts[structure.name] = multiplyByTen(getSelectedBuildCount(structure.name));
+    const manualBuildCount = getManualBuildCount(structure, getSelectedBuildCount(structure.name));
     updateStructureButtonText(button, structure, manualBuildCount);
     updateStructureCostDisplay(costElement, structure, manualBuildCount);
     updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
     if (structure.canBeToggled) {
-      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
-      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+      updateIncreaseButtonText(increaseButton, getSelectedBuildCount(structure.name));
+      updateDecreaseButtonText(decreaseButton, getSelectedBuildCount(structure.name));
     }
     if (upgradeButton) {
       updateUpgradeButton(upgradeButton, structure);
@@ -1780,8 +1792,9 @@ function createStructureControls(structure, toggleCallback) {
     decreaseButton.id = `${structure.name}-decrease-button`;
     decreaseButton.textContent = '-1';
     decreaseButton.addEventListener('click', function () {
-      toggleCallback(structure, `-${selectedBuildCounts[structure.name]}`);
-      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+      const selectedBuildCount = getSelectedBuildCount(structure.name);
+      toggleCallback(structure, `-${selectedBuildCount}`);
+      updateDecreaseButtonText(decreaseButton, selectedBuildCount);
       disableAutoActive(structure);
     });
 
@@ -1789,8 +1802,9 @@ function createStructureControls(structure, toggleCallback) {
     increaseButton.id = `${structure.name}-increase-button`;
     increaseButton.textContent = '+1';
     increaseButton.addEventListener('click', function () {
-      toggleCallback(structure, selectedBuildCounts[structure.name]);
-      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
+      const selectedBuildCount = getSelectedBuildCount(structure.name);
+      toggleCallback(structure, selectedBuildCount);
+      updateIncreaseButtonText(increaseButton, selectedBuildCount);
       disableAutoActive(structure);
     });
 
@@ -1811,12 +1825,14 @@ function createStructureControls(structure, toggleCallback) {
 
 // Update the text of the increase button based on the selected build count
 function updateIncreaseButtonText(button, buildCount) {
-  button.textContent = `+${formatNumber(buildCount, true)}`;
+  const normalizedBuildCount = Number.isFinite(buildCount) && buildCount > 0 ? buildCount : 1;
+  button.textContent = `+${formatNumber(normalizedBuildCount, true)}`;
 }
 
 // Update the text of the decrease button based on the selected build count
 function updateDecreaseButtonText(button, buildCount) {
-  button.textContent = `-${formatNumber(buildCount, true)}`;
+  const normalizedBuildCount = Number.isFinite(buildCount) && buildCount > 0 ? buildCount : 1;
+  button.textContent = `-${formatNumber(normalizedBuildCount, true)}`;
 }
   
   function updateBuildingDisplay(buildings) {
@@ -2695,7 +2711,7 @@ function updateDecreaseButtonText(button, buildCount) {
       })();
       const countElement = document.getElementById(`${structureName}-count`);
       const countActiveElement = document.getElementById(`${structureName}-count-active`);
-      const selectedBuildCount = selectedBuildCounts[structureName];
+      const selectedBuildCount = getSelectedBuildCount(structureName);
       const manualBuildCount = getManualBuildCount(structure, selectedBuildCount);
       const isColony = structure instanceof Colony;
   

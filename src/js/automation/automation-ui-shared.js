@@ -78,6 +78,7 @@ function syncAutomationSelectOptions(select, options, selectedValue) {
     optionData.hidden ? '1' : '0'
   ].join('|')).join('\u001f');
   if (select._automationOptionsSignature === optionSignature
+    && select._automationOptionsRenderedCount === select.options.length
     && (selectedString === null || select.value === selectedString)) {
     return;
   }
@@ -106,19 +107,28 @@ function syncAutomationSelectOptions(select, options, selectedValue) {
     } else if (option !== targetNode) {
       select.insertBefore(option, targetNode);
     }
-    if (option.value !== value) {
-      option.value = value;
-    }
     if (option.textContent !== optionData.label) {
       option.textContent = optionData.label;
     }
-    option.disabled = !!optionData.disabled;
-    option.hidden = !!optionData.hidden;
+    if (option.value !== value || option.getAttribute('value') !== value) {
+      option.value = value;
+    }
+    const disabled = !!optionData.disabled;
+    const hidden = !!optionData.hidden;
+    if (option.disabled !== disabled) {
+      option.disabled = disabled;
+    }
+    if (option.hidden !== hidden) {
+      option.hidden = hidden;
+    }
   });
 
   existingOptions.forEach((option) => {
     if (!usedOptions.has(option)) {
-      if (desiredValues.has(option.value) && option.parentNode === select) {
+      if (option.parentNode !== select) {
+        return;
+      }
+      if (desiredValues.has(option.value) || selectedString === null || option.value !== selectedString) {
         select.removeChild(option);
         return;
       }
@@ -128,6 +138,7 @@ function syncAutomationSelectOptions(select, options, selectedValue) {
   });
 
   select._automationOptionsSignature = optionSignature;
+  select._automationOptionsRenderedCount = select.options.length;
   if (selectedString !== null) {
     select.value = selectedString;
   }
