@@ -2924,6 +2924,13 @@ function completeTerraformingNow() {
       return false;
     }
   }
+  const isDiskworld = currentPlanetParameters.classification?.type === 'disk';
+  if (isDiskworld) {
+    const diskProject = projectManager.projects.diskworldTerraforming;
+    if (!diskProject.isCompleted) {
+      return false;
+    }
+  }
   const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
     ? terraforming.getHazardClearanceStatus()
     : true;
@@ -3016,6 +3023,20 @@ function completeTerraformingNow() {
           button.textContent = getTerraformingSummaryText(
             'actions.spinRingworldFirst',
             'Spin Ringworld first'
+          );
+          button.style.backgroundColor = 'red';
+          button.style.cursor = 'not-allowed';
+          button.disabled = true;
+          return;
+      }
+  }
+  const isDiskworld = currentPlanetParameters.classification?.type === 'disk';
+  if (isDiskworld) {
+      const diskProject = projectManager.projects.diskworldTerraforming;
+      if (!diskProject.isCompleted) {
+          button.textContent = getTerraformingSummaryText(
+            'actions.fillDiskworldFirst',
+            'Fill Diskworld first'
           );
           button.style.backgroundColor = 'red';
           button.style.cursor = 'not-allowed';

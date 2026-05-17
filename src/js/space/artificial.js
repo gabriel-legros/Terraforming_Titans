@@ -1806,6 +1806,12 @@ class ArtificialManager extends EffectableEntity {
                     targetId: 'space_elevator',
                     type: 'researchDisable',
                     effectId: 'alderson-disk-disable-space-elevator-research'
+                },
+                {
+                    target: 'project',
+                    targetId: 'diskworldTerraforming',
+                    type: 'enable',
+                    effectId: 'alderson-disk-enable-terraforming'
                 }
             ]
             : [

@@ -191,6 +191,21 @@ const projectParameters = {
       powerStep: 1e21
     }
   },
+  diskworldTerraforming: {
+    type: 'DiskworldTerraformingProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 0,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      deprioritized: true,
+      pumpRate: 0,
+      pumpStep: 1
+    }
+  },
   deeperMining: {
     type: 'DeeperMiningProject',
     name: '',
