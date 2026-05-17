@@ -2099,9 +2099,12 @@ function calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, extr
   }
   const producedAmount = Math.max(0, getAvailabilityProductionRate(resource, extraReserve) * seconds);
   const hasUsableStorage = !resource.hasCap || resource.cap > 0;
-  const availableAmount = hasUsableStorage
-    ? Math.max(0, resource.value + producedAmount - (resource.reserved || 0) - (extraReserve || 0))
+  const storedAmount = hasUsableStorage
+    ? Math.max(0, resource.value - (resource.reserved || 0))
     : 0;
+  const availableAmount = extraReserve > 0
+    ? Math.max(0, storedAmount + producedAmount - extraReserve)
+    : storedAmount + producedAmount;
   return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
 }
 

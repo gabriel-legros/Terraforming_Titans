@@ -115,7 +115,7 @@ function createResources(initial = {}) {
       atmosphericWater: createResource('atmosphericWater', 0),
     },
     space: {
-      energy: createResource('energy', initial.spaceEnergy || 0, true, initial.spaceEnergyCap || Infinity),
+      energy: createResource('energy', initial.spaceEnergy || 0, true, initial.spaceEnergyCap ?? Infinity),
     },
     special: {
       antimatter: createResource('antimatter', initial.antimatter || 0, true, initial.antimatterCap || 0),
@@ -280,8 +280,13 @@ function createDysonCollectorProject(collectorPowerPerSecond = 0) {
     isContinuous() {
       return false;
     },
-    estimateCostAndGain() {
-      return { cost: {}, gain: {} };
+    estimateCostAndGain(deltaTime = 1000, applyRates = true) {
+      const seconds = deltaTime / 1000;
+      const amount = this.collectors * this.energyPerCollector * seconds;
+      if (applyRates && amount > 0) {
+        resources.space.energy.modifyRate(amount / seconds, 'Dyson Collectors', 'project');
+      }
+      return { cost: {}, gain: { space: { energy: amount } } };
     },
     applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges = null) {
       if (!accumulatedChanges || accumulatedChanges.dysonSpaceEnergyInjected === true) {
@@ -1154,6 +1159,27 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(resources.spaceStorage.hydrogen.value, 0);
     expectApprox(lifters.operationProductivity?.hydrogen, 0);
     expectApprox(lifters.lastEnergyPerSecond, 0);
+    cleanup();
+  });
+
+  test('Dyson Receivers use live Dyson collector power when space energy storage cap is zero', () => {
+    const harness = setupHarness({ hydrogen: 0, spaceEnergy: 0, spaceEnergyCap: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      cleanup,
+    } = harness;
+
+    buildings.dysonReceiver = createProductivityAwareSpaceEnergyConsumer(200_000_000_000, 'Dyson Receiver');
+    projectManager.projects.dysonSwarmReceiver = createDysonCollectorProject(8_990_000_000_000_000);
+    projectManager.projectOrder = ['dysonSwarmReceiver'];
+
+    produceResources(1000, buildings);
+
+    expect(buildings.dysonReceiver.productivity).toBeGreaterThan(0.99);
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['Dyson Collectors'] || 0, 8_990_000_000_000_000);
     cleanup();
   });
 
