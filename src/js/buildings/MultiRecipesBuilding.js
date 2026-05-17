@@ -198,28 +198,55 @@ class MultiRecipesBuilding extends Building {
     const allowedCount = options.filter(opt => opt.allowed !== false).length;
     container?.style && (container.style.display = allowedCount > 1 ? '' : 'none');
     const keyString = options.map(opt => `${opt.key}:${opt.label}:${opt.allowed}`).join('|');
-    while (select.options.length < options.length) {
-      select.appendChild(document.createElement('option'));
-    }
-    while (select.options.length > options.length) {
-      select.removeChild(select.options[select.options.length - 1]);
-    }
-    options.forEach((opt, index) => {
-      const optionEl = select.options[index];
-      if (optionEl.value !== opt.key) {
-        optionEl.value = opt.key;
-      }
-      if (optionEl.textContent !== opt.label) {
-        optionEl.textContent = opt.label;
-      }
-      optionEl.hidden = opt.allowed === false;
-      optionEl.disabled = opt.allowed === false;
-    });
-    select.dataset.optionKey = keyString;
+    const desiredValue = this.currentRecipeKey || '';
+    const activeElement = document.activeElement;
+    const selectIsFocused = activeElement === select;
+    const signatureChanged = select.dataset.optionKey !== keyString;
 
-    if (select.value !== this.currentRecipeKey) {
-      select.value = this.currentRecipeKey;
+    if (signatureChanged) {
+      while (select.options.length < options.length) {
+        select.appendChild(document.createElement('option'));
+      }
+      while (select.options.length > options.length) {
+        select.removeChild(select.options[select.options.length - 1]);
+      }
+      options.forEach((opt, index) => {
+        const optionEl = select.options[index];
+        if (optionEl.value !== opt.key) {
+          optionEl.value = opt.key;
+        }
+        if (optionEl.textContent !== opt.label) {
+          optionEl.textContent = opt.label;
+        }
+        const shouldDisable = opt.allowed === false;
+        if (optionEl.hidden !== shouldDisable) {
+          optionEl.hidden = shouldDisable;
+        }
+        if (optionEl.disabled !== shouldDisable) {
+          optionEl.disabled = shouldDisable;
+        }
+      });
+      select.dataset.optionKey = keyString;
     }
+
+    if (select.value === desiredValue) {
+      return;
+    }
+
+    if (selectIsFocused) {
+      let hasCurrentValue = false;
+      for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === select.value) {
+          hasCurrentValue = true;
+          break;
+        }
+      }
+      if (hasCurrentValue) {
+        return;
+      }
+    }
+
+    select.value = desiredValue;
   }
 }
 
