@@ -1729,8 +1729,13 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>${getRwgUiText('controls.travel', 'Travel')}</button>
       </div>
       ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">${getRwgUiText('warnings.inline', '⚠ {value} ⚠', { value: warningMsg })}</span></div>` : ''}
+      <div class="rwg-seed-row">
+        <div class="rwg-chip rwg-chip-seed">
+          <div class="label">${getRwgUiText('details.seed', 'Seed')}</div>
+          <div class="value rwg-seed-value">${seedString}</div>
+        </div>
+      </div>
       <div class="rwg-infobar">
-        <div class="rwg-chip"><div class="label">${getRwgUiText('details.seed', 'Seed')}</div><div class="value">${seedString}</div></div>
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.orbit', 'Orbit')}</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.radius', 'Radius')}</div><div class="value">${fmt(c.radius)} km</div></div>
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.gravity', 'Gravity')}</div><div class="value">${fmt(c.gravity)} m/s²${gWarn}</div></div>

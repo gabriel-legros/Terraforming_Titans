@@ -96,11 +96,12 @@ function createMilestonesUI() {
         button.classList.add('milestone-button');
         button.id = `milestone-button-${index}`;
 
-        // Add the milestone name and description to the button
-        button.innerHTML = `
-            <div class="milestone-name">${milestone.name}</div>
-            <div class="milestone-description">${milestone.description}</div>
-        `;
+        const name = document.createElement('div');
+        name.className = 'milestone-name';
+        const description = document.createElement('div');
+        description.className = 'milestone-description';
+        button._refs = { name, description };
+        button.append(name, description);
 
         // Attach click event to complete the milestone
         button.addEventListener('click', () => {
@@ -129,6 +130,14 @@ function updateMilestonesUI() {
     milestonesManager.milestones.forEach((milestone, index) => {
         const button = milestoneButtons[index];
         if (!button) return;
+
+        const displayInfo = getTerraformingMilestoneDisplayInfo(milestone);
+        if (button._refs.name.textContent !== displayInfo.name) {
+            button._refs.name.textContent = displayInfo.name;
+        }
+        if (button._refs.description.textContent !== displayInfo.description) {
+            button._refs.description.textContent = displayInfo.description;
+        }
 
         // Update the button's state
         if (milestone.isCompleted) {

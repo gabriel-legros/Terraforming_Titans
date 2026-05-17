@@ -220,6 +220,30 @@ const terraformingMilestones =
     }
     ];
 
+function getActiveTerraformingMilestoneResourceTarget() {
+    return getTerraformingMilestoneResourceTarget(terraforming.requirements);
+}
+
+function getTerraformingMilestoneTextKey(milestone) {
+    if (milestone.type !== 'water') {
+        return milestone.id;
+    }
+    const target = getActiveTerraformingMilestoneResourceTarget();
+    return milestone.id.replace('water', target.textPrefix);
+}
+
+function getTerraformingMilestoneDisplayInfo(milestone) {
+    const textKey = getTerraformingMilestoneTextKey(milestone);
+    return {
+        name: getMilestoneText(`catalogs.milestones.terraforming.${textKey}.name`),
+        description: getMilestoneText(`catalogs.milestones.terraforming.${textKey}.description`)
+    };
+}
+
+function getTerraformingMilestoneResourceAmount(target) {
+    return resources[target.category][target.resourceId].value;
+}
+
 class MilestonesManager {
     constructor() {
         this.milestones = terraformingMilestones.map(milestone => ({
@@ -323,8 +347,9 @@ class MilestonesManager {
                 const pressureDelta = terraforming.calculateTotalPressureDelta();
                 return pressureDelta > milestone.value;
             case 'water':
-                const waterAmount = resources.surface.liquidWater.value;
-                return waterAmount > milestone.value;
+                const target = getActiveTerraformingMilestoneResourceTarget();
+                const resourceAmount = getTerraformingMilestoneResourceAmount(target);
+                return resourceAmount > milestone.value;
             case 'life':
                 const lifeAmount = resources.surface.biomass.value;
                 return lifeAmount > milestone.value;

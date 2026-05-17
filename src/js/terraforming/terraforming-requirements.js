@@ -1,4 +1,9 @@
 const DEFAULT_TERRAFORMING_REQUIREMENT_ID = 'human';
+const DEFAULT_TERRAFORMING_MILESTONE_RESOURCE_TARGET = {
+  category: 'surface',
+  resourceId: 'liquidWater',
+  textPrefix: 'water'
+};
 
 const terraformingRequirements = {
   human: {
@@ -301,6 +306,11 @@ const terraformingRequirements = {
       inertGas: { min: 10_000, max: 1_000_000_000 },
       oxygen: { min: 0, max: 100 },
     },
+    milestoneResourceTarget: {
+      category: 'atmospheric',
+      resourceId: 'inertGas',
+      textPrefix: 'nitrogen'
+    },
     liquidCoverageTargets: [
       { liquidType: 'water', coverageTarget: 0.05, comparison: 'atMost' },
     ],
@@ -480,6 +490,11 @@ const terraformingRequirements = {
       { liquidType: 'ice', coverageKey: 'ice', coverageTarget: 0.001, comparison: 'atMost' },
       { liquidType: 'fineSand', coverageKey: 'fineSand', coverageTarget: 0.999 },
     ],
+    milestoneResourceTarget: {
+      category: 'surface',
+      resourceId: 'fineSand',
+      textPrefix: 'fineSand'
+    },
     lifeCoverageTarget: 0.01,
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
@@ -573,6 +588,11 @@ const terraformingRequirements = {
       vanadiumAerosol: { min: 1_000, max: 5_000_000 },
     },
     liquidCoverageTargets: [],
+    milestoneResourceTarget: {
+      category: 'atmospheric',
+      resourceId: 'vanadiumAerosol',
+      textPrefix: 'vanadiumHaze'
+    },
     lifeCoverageTarget: 0.03,
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
@@ -647,16 +667,24 @@ function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {
   return terraformingRequirements[id] || terraformingRequirements[DEFAULT_TERRAFORMING_REQUIREMENT_ID];
 }
 
+function getTerraformingMilestoneResourceTarget(requirements) {
+  return requirements.milestoneResourceTarget || DEFAULT_TERRAFORMING_MILESTONE_RESOURCE_TARGET;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DEFAULT_TERRAFORMING_REQUIREMENT_ID,
+    DEFAULT_TERRAFORMING_MILESTONE_RESOURCE_TARGET,
     terraformingRequirements,
-    getTerraformingRequirement
+    getTerraformingRequirement,
+    getTerraformingMilestoneResourceTarget
   };
 }
 
 if (typeof window !== 'undefined') {
   window.DEFAULT_TERRAFORMING_REQUIREMENT_ID = DEFAULT_TERRAFORMING_REQUIREMENT_ID;
+  window.DEFAULT_TERRAFORMING_MILESTONE_RESOURCE_TARGET = DEFAULT_TERRAFORMING_MILESTONE_RESOURCE_TARGET;
   window.terraformingRequirements = terraformingRequirements;
   window.getTerraformingRequirement = getTerraformingRequirement;
+  window.getTerraformingMilestoneResourceTarget = getTerraformingMilestoneResourceTarget;
 }

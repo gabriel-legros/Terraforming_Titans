@@ -199,6 +199,9 @@
 .rwg-chip .value { font-weight: 700; font-size: 14px; margin-top: 4px; }
 .rwg-gravity-warning { margin-left: 4px; color: #f0d85c; }
 .rwg-gravity-warning-high { color: #ff6161; }
+.rwg-seed-row { margin-bottom: 10px; }
+.rwg-chip-seed { width: 100%; box-sizing: border-box; }
+.rwg-seed-value { overflow-wrap: anywhere; word-break: break-word; }
 
 /* Inline equilibration progress */
 #rwg-eq-progress {
