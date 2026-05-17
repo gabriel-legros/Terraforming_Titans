@@ -220,7 +220,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   getEffectiveEnergyPerUnit() {
     const multiplier = this.getEffectiveSuperchargeMultiplier();
-    return this.energyPerUnit * Math.pow(multiplier, this.getEffectiveSuperchargeExponent());
+    return this.energyPerUnit
+      * Math.pow(multiplier, this.getEffectiveSuperchargeExponent())
+      * this.getEffectiveThroughputMultiplier();
   }
 
   getBaseDuration() {
