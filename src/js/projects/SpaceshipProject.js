@@ -9,54 +9,46 @@ function getSpaceshipProjectText(path, fallback, vars) {
 }
 
 function isSpecialProjectResource(category, resource) {
-  return category === 'special' && (
-    resource === 'planetaryMass' ||
-    resource === 'planetaryMassMetal' ||
-    resource === 'planetaryMassSilicon'
-  );
+  return category === 'special' && resource === 'planetaryMass';
 }
 
 function getSpaceshipProjectResourceDisplayName(category, resource) {
-  if (category === 'special' && resource === 'planetaryMass') {
-    return getSpaceshipProjectText('ui.projects.special.planetaryMass', 'Planetary Mass');
-  }
-  if (category === 'special' && resource === 'planetaryMassMetal') {
-    return getSpaceshipProjectText('ui.projects.special.planetaryMass', 'Planetary Mass');
-  }
-  if (category === 'special' && resource === 'planetaryMassSilicon') {
+  if (isSpecialProjectResource(category, resource)) {
     return getSpaceshipProjectText('ui.projects.special.planetaryMass', 'Planetary Mass');
   }
   return resources[category][resource].displayName || resource.charAt(0).toUpperCase() + resource.slice(1);
 }
 
-function applySpecialProjectResourceGain(category, resource, amount, source) {
+function applySpecialProjectResourceGain(project, category, resource, amount, source) {
   if (amount <= 0 || category !== 'special') {
     return false;
   }
-  if (resource === 'planetaryMassMetal') {
-    addDynamicWorldPlanetaryMaterial(terraforming, 'metal', amount);
-  } else if (resource === 'planetaryMassSilicon') {
-    addDynamicWorldPlanetaryMaterial(terraforming, 'silicon', amount);
-  } else {
+  if (resource !== 'planetaryMass') {
     return false;
   }
+  const material = project.getPlanetaryMassImportResource?.();
+  if (!material) {
+    return false;
+  }
+  addDynamicWorldPlanetaryMaterial(terraforming, material, amount);
   modifyPlanetaryMassRate(amount, source || getSpaceshipProjectText('ui.projects.export', 'Spaceship Export'));
   terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
   reconcileLandResourceValue();
   return true;
 }
 
-function accumulateSpecialProjectResourceGain(accumulatedSpecialChanges, category, resource, amount, source) {
+function accumulateSpecialProjectResourceGain(project, accumulatedSpecialChanges, category, resource, amount, source) {
   if (amount <= 0 || category !== 'special' || !accumulatedSpecialChanges) {
     return false;
   }
-  if (resource === 'planetaryMassMetal') {
-    accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source, 'metal', amount, false, 'project');
-  } else if (resource === 'planetaryMassSilicon') {
-    accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source, 'silicon', amount, false, 'project');
-  } else {
+  if (resource !== 'planetaryMass') {
     return false;
   }
+  const material = project.getPlanetaryMassImportResource?.();
+  if (!material) {
+    return false;
+  }
+  accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source, material, amount, false, 'project');
   return true;
 }
 
@@ -1227,10 +1219,10 @@ class SpaceshipProject extends Project {
       for (const resource in gain[category]) {
         const amount = gain[category][resource] * fraction * productivity;
         if (isSpecialProjectResource(category, resource)) {
-          if (accumulatedSpecialChanges && accumulateSpecialProjectResourceGain(accumulatedSpecialChanges, category, resource, amount, sourceLabel)) {
+          if (accumulatedSpecialChanges && accumulateSpecialProjectResourceGain(this, accumulatedSpecialChanges, category, resource, amount, sourceLabel)) {
             continue;
           }
-          applySpecialProjectResourceGain(category, resource, amount, sourceLabel);
+          applySpecialProjectResourceGain(this, category, resource, amount, sourceLabel);
           continue;
         }
         if (accumulatedChanges) {

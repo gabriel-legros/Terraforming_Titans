@@ -563,11 +563,8 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getPlanetaryMassGainResourceKey() {
     const resource = this.getPlanetaryMassImportResource();
-    if (resource === 'metal') {
-      return 'planetaryMassMetal';
-    }
-    if (resource === 'silicon') {
-      return 'planetaryMassSilicon';
+    if (resource === 'metal' || resource === 'silicon') {
+      return 'planetaryMass';
     }
     return null;
   }
@@ -1222,7 +1219,7 @@ class SpaceMiningProject extends SpaceshipProject {
       const resourceKey = this.getPlanetaryMassGainResourceKey();
       const resourceAmount = this.attributes.resourceGainPerShip?.colony?.metal || this.attributes.resourceGainPerShip?.colony?.silicon || 0;
       const capacity = this.getShipCapacity(resourceAmount);
-      return resourceKey ? { special: { [resourceKey]: capacity } } : {};
+      return resourceKey ? { underground: { [resourceKey]: capacity } } : {};
     }
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
@@ -1368,6 +1365,26 @@ class SpaceMiningProject extends SpaceshipProject {
         resources.surface[surfaceResource].value += amount;
         terraforming.distributeSurfaceChangesToZones({ [surfaceResource]: amount });
       }
+      return;
+    }
+    if (this.isPlanetaryMassImportSelected() && gain.underground?.planetaryMass) {
+      const material = this.getPlanetaryMassImportResource();
+      if (!material) {
+        return;
+      }
+      const sourceLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
+      const amount = gain.underground.planetaryMass * fraction * productivity;
+      if (!(amount > 0)) {
+        return;
+      }
+      if (accumulatedSpecialChanges) {
+        accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, sourceLabel, material, amount, false, 'project');
+        return;
+      }
+      addDynamicWorldPlanetaryMaterial(terraforming, material, amount);
+      modifyPlanetaryMassRate(amount, sourceLabel);
+      terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+      reconcileLandResourceValue();
       return;
     }
     if (!this.applyingContinuousPlanGain && hasMonitoring && this.disableAbovePressure && this.isAtmosphericImportTargetSelected() && gain.atmospheric) {
