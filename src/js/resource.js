@@ -1299,11 +1299,47 @@ function applyExternalProductivityOperations(externalOperations = [], deltaTime,
   }
 }
 
+function getResourceAmountFromTotals(totals, category, resource) {
+  return totals?.[category]?.[resource] || 0;
+}
+
+function setProjectProductionRateForAvailability(project, fullGain = {}, scaledGain = {}, deltaTime = 1000) {
+  const seconds = deltaTime / 1000;
+  if (!(seconds > 0)) {
+    return;
+  }
+  const source = project.displayName;
+  for (const category in fullGain) {
+    for (const resourceName in fullGain[category]) {
+      const resource = resources[category][resourceName];
+      const scaledAmount = getResourceAmountFromTotals(scaledGain, category, resourceName);
+      const desiredRate = Math.max(0, scaledAmount / seconds);
+      const projectRates = resource.productionRateByType.project || {};
+      const currentRate = projectRates[source] || 0;
+      const difference = desiredRate - currentRate;
+      if (difference === 0) {
+        continue;
+      }
+      resource.productionRate += difference;
+      if (!resource.productionRateBySource[source]) {
+        resource.productionRateBySource[source] = 0;
+      }
+      resource.productionRateBySource[source] += difference;
+      if (!resource.productionRateByType.project) {
+        resource.productionRateByType.project = {};
+      }
+      resource.productionRateByType.project[source] = desiredRate;
+    }
+  }
+}
+
 function calculateProductionRates(deltaTime, buildings, options = {}) {
   const {
     useProductivity = false,
     keepProjected = false,
-    productivityMap = {}
+    productivityMap = {},
+    projectProductivityMap = {},
+    projectRateMode = 'scaled'
   } = options;
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
@@ -1397,7 +1433,19 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
         continue;
       }
       if (shouldApplyProjectProductivity(project)) {
-        project.estimateCostAndGain(deltaTime, true, 1);
+        const projectProductivity = projectProductivityMap[name] ?? 1;
+        if (projectRateMode === 'availability') {
+          const fullTotals = project.estimateCostAndGain(deltaTime, true, 1) || {};
+          const scaledTotals = project.estimateCostAndGain(deltaTime, false, projectProductivity) || {};
+          setProjectProductionRateForAvailability(
+            project,
+            fullTotals.gain || {},
+            scaledTotals.gain || {},
+            deltaTime
+          );
+        } else {
+          project.estimateCostAndGain(deltaTime, true, projectProductivity);
+        }
       }
     }
   }
@@ -1422,6 +1470,26 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
 
   debug_production = localProduction;
   debug_consumption = localConsumption;
+}
+
+function buildProjectOperationProductivityMap(projectEntries, projectProductivityMap, deltaTime) {
+  const operationMap = {};
+  for (const [name, data] of projectEntries) {
+    const { project } = data;
+    const productivity = projectProductivityMap[name] ?? 1;
+    operationMap[name] = project.getOperationProductivityForTick
+      ? project.getOperationProductivityForTick(productivity, deltaTime)
+      : productivity;
+  }
+  return operationMap;
+}
+
+function saveCurrentRatesAsProjected(resources) {
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      resources[category][resourceName].saveProjectedRates();
+    }
+  }
 }
 
 function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -1453,6 +1521,8 @@ function produceResources(deltaTime, buildings) {
   let standardContinuousProjectEntries = [];
   let standardRegularProjectEntries = [];
   let deprioritizedProjectEntries = [];
+  let projectData = {};
+  let projectOperationProductivityMap = {};
   const externalProductivityOperations = getExternalProductivityOperations();
 
   terraforming?.refreshDynamicWorldGeometry?.(currentPlanetParameters);
@@ -1495,6 +1565,24 @@ function produceResources(deltaTime, buildings) {
   updateResourceAvailabilityRatios(resources, deltaTime);
   updateExternalOperationProductivities(externalProductivityOperations);
 
+  if (projectManager) {
+    const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
+    projectData = {};
+    for (const name of names) {
+      const project = projectManager.projects?.[name];
+      if (!project || project.treatAsBuilding) continue;
+      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
+        continue;
+      }
+      const estimateResult = project.estimateProductivityCostAndGain
+        ? project.estimateProductivityCostAndGain(deltaTime)
+        : project.estimateCostAndGain(deltaTime, false);
+      const { cost = {}, gain = {} } = estimateResult || {};
+      projectData[name] = { project, cost, gain };
+    }
+    projectEntries = Object.entries(projectData);
+  }
+
   const productivityIterations = 3;
   const productivityMap = {};
   for (let iteration = 0; iteration < productivityIterations; iteration++) {
@@ -1507,11 +1595,30 @@ function produceResources(deltaTime, buildings) {
       productivityMap[buildingName] = targetProductivity;
     }
 
+    const nextProjectProductivityMap = calculateProjectProductivities(
+      resources,
+      deltaTime,
+      projectData
+    );
+    for (const name in nextProjectProductivityMap) {
+      const previous = projectProductivityMap[name];
+      projectProductivityMap[name] = previous === undefined
+        ? nextProjectProductivityMap[name]
+        : Math.min(previous, nextProjectProductivityMap[name]);
+    }
+    projectOperationProductivityMap = buildProjectOperationProductivityMap(
+      projectEntries,
+      projectProductivityMap,
+      deltaTime
+    );
+
     if (iteration < productivityIterations - 1) {
       calculateProductionRates(deltaTime, buildings, {
         useProductivity: true,
         keepProjected: true,
-        productivityMap
+        productivityMap,
+        projectProductivityMap: projectOperationProductivityMap,
+        projectRateMode: 'availability'
       });
       applyProjectedExternalRates(deltaTime, externalProductivityOperations);
       updateResourceAvailabilityRatios(resources, deltaTime);
@@ -1533,32 +1640,18 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (projectManager) {
-    const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
-    const projectData = {};
-    for (const name of names) {
-      const project = projectManager.projects?.[name];
-      if (!project || project.treatAsBuilding) continue;
-      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
-        continue;
-      }
-      const estimateResult = project.estimateProductivityCostAndGain
-        ? project.estimateProductivityCostAndGain(deltaTime)
-        : project.estimateCostAndGain(deltaTime, false);
-      const { cost = {}, gain = {} } = estimateResult || {};
-      projectData[name] = { project, cost, gain };
-    }
-    projectProductivityMap = calculateProjectProductivities(
-      resources,
-      deltaTime,
-      projectData
-    );
-    projectEntries = Object.entries(projectData);
+    calculateProductionRates(deltaTime, buildings, {
+      useProductivity: true,
+      keepProjected: true,
+      productivityMap,
+      projectProductivityMap: projectOperationProductivityMap
+    });
+    applyProjectedExternalRates(deltaTime, externalProductivityOperations);
+    saveCurrentRatesAsProjected(resources);
     for (const [name, data] of projectEntries) {
       const productivity = projectProductivityMap[name] ?? 1;
       data.project.continuousProductivity = data.project.isContinuous() ? productivity : 1;
-      data.project.operationProductivity = data.project.getOperationProductivityForTick
-        ? data.project.getOperationProductivityForTick(productivity, deltaTime)
-        : productivity;
+      data.project.operationProductivity = projectOperationProductivityMap[name] ?? productivity;
     }
 
     const spaceBuildingOperations = projectEntries.filter(([, data]) => {
@@ -1973,18 +2066,34 @@ function calculateResourceAvailabilityRatio(resource, deltaTime) {
   return calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, 0);
 }
 
+function getAvailabilityProductionRate(resource, extraReserve) {
+  if (!(extraReserve > 0)) {
+    return resource.productionRate;
+  }
+  let productionRate = 0;
+  for (const rateType in resource.productionRateByType) {
+    if (rateType === 'project') {
+      continue;
+    }
+    const sources = resource.productionRateByType[rateType];
+    for (const source in sources) {
+      productionRate += sources[source] || 0;
+    }
+  }
+  return productionRate;
+}
+
 function calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, extraReserve) {
   const seconds = deltaTime / 1000;
   const requiredAmount = resource.consumptionRate * seconds;
   if (requiredAmount <= 0) {
     return 0;
   }
-  const producedAmount = Math.max(0, resource.productionRate * seconds);
+  const producedAmount = Math.max(0, getAvailabilityProductionRate(resource, extraReserve) * seconds);
   const hasUsableStorage = !resource.hasCap || resource.cap > 0;
-  const storedAmount = hasUsableStorage
-    ? Math.max(0, resource.value - (resource.reserved || 0) - (extraReserve || 0))
+  const availableAmount = hasUsableStorage
+    ? Math.max(0, resource.value + producedAmount - (resource.reserved || 0) - (extraReserve || 0))
     : 0;
-  const availableAmount = producedAmount + storedAmount;
   return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
 }
 

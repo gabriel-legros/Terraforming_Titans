@@ -31,6 +31,10 @@ function createResource(name, value = 0, hasCap = false, cap = Infinity) {
     projectedConsumptionRate: 0,
     productionRateByType: {},
     consumptionRateByType: {},
+    productionRateBySource: {},
+    consumptionRateBySource: {},
+    projectedProductionRateBySource: {},
+    projectedConsumptionRateBySource: {},
     increase(amount) {
       this.value += amount;
     },
@@ -42,9 +46,13 @@ function createResource(name, value = 0, hasCap = false, cap = Infinity) {
       this.consumptionRate = 0;
       this.productionRateByType = {};
       this.consumptionRateByType = {};
+      this.productionRateBySource = {};
+      this.consumptionRateBySource = {};
       if (!keepProjected) {
         this.projectedProductionRate = 0;
         this.projectedConsumptionRate = 0;
+        this.projectedProductionRateBySource = {};
+        this.projectedConsumptionRateBySource = {};
       }
     },
     modifyRate(amount, source = 'Unknown', rateType = 'unknown') {
@@ -53,6 +61,8 @@ function createResource(name, value = 0, hasCap = false, cap = Infinity) {
         this.productionRateByType[rateType] ||= {};
         this.productionRateByType[rateType][source] =
           (this.productionRateByType[rateType][source] || 0) + amount;
+        this.productionRateBySource[source] =
+          (this.productionRateBySource[source] || 0) + amount;
         return;
       }
       if (amount < 0) {
@@ -61,11 +71,27 @@ function createResource(name, value = 0, hasCap = false, cap = Infinity) {
         this.consumptionRateByType[rateType] ||= {};
         this.consumptionRateByType[rateType][source] =
           (this.consumptionRateByType[rateType][source] || 0) + abs;
+        this.consumptionRateBySource[source] =
+          (this.consumptionRateBySource[source] || 0) + abs;
       }
     },
     saveProjectedRates() {
       this.projectedProductionRate = this.productionRate;
       this.projectedConsumptionRate = this.consumptionRate;
+      this.projectedProductionRateBySource = {};
+      for (const rateType in this.productionRateByType) {
+        for (const source in this.productionRateByType[rateType]) {
+          this.projectedProductionRateBySource[source] =
+            (this.projectedProductionRateBySource[source] || 0) + this.productionRateByType[rateType][source];
+        }
+      }
+      this.projectedConsumptionRateBySource = {};
+      for (const rateType in this.consumptionRateByType) {
+        for (const source in this.consumptionRateByType[rateType]) {
+          this.projectedConsumptionRateBySource[source] =
+            (this.projectedConsumptionRateBySource[source] || 0) + this.consumptionRateByType[rateType][source];
+        }
+      }
     },
     recalculateTotalRates() {},
     updateStorageCap() {},
@@ -133,6 +159,61 @@ function createDysonReceiverBuilding(energyPerSecond = 0) {
       const amount = this.consumption.space.energy * this.active * this.productivity * seconds;
       accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) - amount;
       resources.space.energy.modifyRate(-(amount / seconds), 'Dyson Receiver', 'building');
+    },
+    applyMaintenance() {},
+  };
+}
+
+function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 'Dyson Receiver') {
+  return {
+    active: energyPerSecond > 0 ? 1n : 0n,
+    activeNumber: energyPerSecond > 0 ? 1 : 0,
+    productivity: energyPerSecond > 0 ? 1 : 0,
+    displayProductivity: energyPerSecond > 0 ? 1 : 0,
+    dayNightActivity: false,
+    displayName: name,
+    production: {},
+    consumption: { space: { energy: energyPerSecond } },
+    getAutomationActivityMultiplier() {
+      return 1;
+    },
+    getTotalWorkerNeed() {
+      return 0;
+    },
+    getConsumption() {
+      return this.consumption;
+    },
+    getConsumptionResource(category, resource) {
+      return { amount: this.consumption[category][resource] };
+    },
+    getConsumptionRatio() {
+      return 1;
+    },
+    getEffectiveConsumptionMultiplier() {
+      return 1;
+    },
+    getEffectiveResourceConsumptionMultiplier() {
+      return 1;
+    },
+    getTargetProductivity(resources) {
+      if (this.active <= 0n) {
+        return 0;
+      }
+      return Math.max(0, Math.min(1, resources.space.energy.availabilityRatio));
+    },
+    updateProductivity(resources) {
+      this.productivity = this.getTargetProductivity(resources);
+      this.displayProductivity = this.productivity;
+    },
+    produce() {},
+    consume(accumulatedChanges, deltaTime) {
+      if (!(this.activeNumber > 0) || !(this.productivity > 0) || !(deltaTime > 0)) {
+        return;
+      }
+      const seconds = deltaTime / 1000;
+      const amount = energyPerSecond * this.activeNumber * this.productivity * seconds;
+      accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) - amount;
+      resources.space.energy.modifyRate(-(amount / seconds), this.displayName, 'building');
     },
     applyMaintenance() {},
   };
@@ -253,6 +334,7 @@ function createSpaceStorageProject(resources) {
     megaProjectResourceMode: 'spaceFirst',
     maxStorage: resources._spaceStorageMaxStorage ?? Infinity,
     usedStorage: 0,
+    resourceStrategicReserves: {},
     isContinuous() {
       return false;
     },
@@ -260,7 +342,18 @@ function createSpaceStorageProject(resources) {
       return resources.spaceStorage[resourceKey]?.value || 0;
     },
     getAvailableStoredResource(resourceKey) {
-      return Math.max(0, this.getStoredResourceValue(resourceKey));
+      return Math.max(0, this.getStoredResourceValue(resourceKey) - this.getResourceStrategicReserveAmount(resourceKey));
+    },
+    getResourceStrategicReserveAmount(resourceKey, scopeFilter = null) {
+      const setting = this.resourceStrategicReserves[resourceKey];
+      if (!setting) {
+        return 0;
+      }
+      const scope = setting.scope || {};
+      if (scopeFilter && scope[scopeFilter] !== true) {
+        return 0;
+      }
+      return Math.max(0, Number(setting.value) || 0);
     },
     spendStoredResource(resourceKey, amount) {
       const resource = resources.spaceStorage[resourceKey];
@@ -500,6 +593,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('warpGateCommand', { getMultiplier: () => 1 }, originalGlobals);
   setGlobal('warpGateNetworkManager', { getAverageWarpGateLevelAllSectors: () => 1000000 }, originalGlobals);
   setGlobal('formatNumber', (value) => `${value}`, originalGlobals);
+  setGlobal('t', (key, vars, fallback) => fallback || key, originalGlobals);
   setGlobal('attachDynamicInfoTooltip', () => {}, originalGlobals);
   setGlobal('getZones', () => [], originalGlobals);
   setGlobal('getZonePercentage', () => 0, originalGlobals);
@@ -528,6 +622,11 @@ function setupHarness(initialStorage = {}) {
   const SuperalloyGigafoundryProject = require(path.resolve(__dirname, '../src/js/projects/SuperalloyGigafoundryProject.js'));
   const ManufacturingWorldProject = require(path.resolve(__dirname, '../src/js/projects/ManufacturingWorldProject.js'));
   const LiftersProject = require(path.resolve(__dirname, '../src/js/projects/LiftersProject.js'));
+  setGlobal('NuclearAlchemyFurnaceProject', NuclearAlchemyFurnaceProject, originalGlobals);
+  setGlobal('window', global, originalGlobals);
+  setGlobal('ArtificialStarsProject', global.ArtificialStarsProject, originalGlobals);
+  require(path.resolve(__dirname, '../src/js/projects/ArtificialStarsProject.js'));
+  const ArtificialStarsProject = global.ArtificialStarsProject;
 
   const spaceStorage = createSpaceStorageProject(resourcesObj);
   projectManager.projects.spaceStorage = spaceStorage;
@@ -540,6 +639,7 @@ function setupHarness(initialStorage = {}) {
     SuperalloyGigafoundryProject,
     ManufacturingWorldProject,
     LiftersProject,
+    ArtificialStarsProject,
     cleanup: () => restoreGlobals(originalGlobals),
   };
 }
@@ -1028,6 +1128,100 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(lifters.operationProductivity?.hydrogen, 1);
     expectApprox(lifters.lastEnergyPerSecond, 10);
     expectApprox(lifters.lastHydrogenPerSecond, 1);
+    cleanup();
+  });
+
+  test('Artificial Stars projected output respects hydrogen strategic reserve for consumption', () => {
+    const harness = setupHarness({ hydrogen: 50_000_000_000, spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialStarsProject,
+      cleanup,
+    } = harness;
+
+    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
+      mode: 'amount',
+      value: 50_000_000_000,
+      scope: { consumption: true },
+    };
+
+    const artificialStars = new ArtificialStarsProject({
+      name: 'Artificial Stars',
+      duration: 36000000,
+      cost: {},
+      attributes: {
+        canUseSpaceStorage: true,
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+        alchemyParameter: 1,
+      },
+    }, 'artificialStars');
+
+    artificialStars.repeatCount = 1;
+    artificialStars.furnaceAssignments.energy = 1;
+    artificialStars.isRunning = true;
+    artificialStars.autoStart = false;
+    artificialStars.isActive = false;
+
+    projectManager.projects.artificialStars = artificialStars;
+    projectManager.projectOrder = ['artificialStars'];
+
+    produceResources(1000, {});
+
+    expectApprox(artificialStars.operationProductivity, 0);
+    expectApprox(artificialStars.lastSpaceEnergyPerSecond, 0);
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
+    expectApprox(resources.spaceStorage.hydrogen.value, 50_000_000_000);
+    cleanup();
+  });
+
+  test('Dyson Receiver productivity iterates with Artificial Stars hydrogen reserve', () => {
+    const harness = setupHarness({ hydrogen: 50_000_000_000, spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialStarsProject,
+      cleanup,
+    } = harness;
+
+    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
+      mode: 'amount',
+      value: 50_000_000_000,
+      scope: { consumption: true },
+    };
+
+    const artificialStars = new ArtificialStarsProject({
+      name: 'Artificial Stars',
+      duration: 36000000,
+      cost: {},
+      attributes: {
+        canUseSpaceStorage: true,
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+        alchemyParameter: 1,
+      },
+    }, 'artificialStars');
+
+    artificialStars.repeatCount = 1;
+    artificialStars.furnaceAssignments.energy = 1;
+    artificialStars.isRunning = true;
+    artificialStars.autoStart = false;
+    artificialStars.isActive = false;
+
+    buildings.dysonReceiver = createProductivityAwareSpaceEnergyConsumer(1_000_000_000_000, 'Dyson Receiver');
+    projectManager.projects.artificialStars = artificialStars;
+    projectManager.projectOrder = ['artificialStars'];
+
+    produceResources(1000, buildings);
+
+    expectApprox(artificialStars.operationProductivity, 0);
+    expectApprox(buildings.dysonReceiver.productivity, 0);
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
     cleanup();
   });
 
