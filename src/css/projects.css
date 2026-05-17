@@ -261,6 +261,12 @@
     flex-wrap: wrap;
 }
 
+.bioworld-shop-item-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .bioworld-shop-item-costs {
     display: inline-flex;
     align-items: center;
@@ -279,6 +285,11 @@
     border-radius: 4px;
     background: #f1f3f5;
     cursor: pointer;
+}
+
+.bioworld-shop-max-button {
+    padding: 4px 6px;
+    font-size: 0.85em;
 }
 
 .bioworld-shop-button:disabled {

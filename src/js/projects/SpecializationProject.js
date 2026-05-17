@@ -26,6 +26,7 @@
       this.emptyShopText = options.emptyShopText;
       this.shopItems = options.shopItems;
       this.shopItemMap = options.shopItemMap;
+      this.maxButtonText = getSpecializationText('max', null, 'Max');
       this.specializationSourceId = options.specializationSourceId;
       this.otherSpecializationId = options.otherSpecializationId;
       this.otherSpecializationIds = Array.isArray(options.otherSpecializationIds)
@@ -61,7 +62,8 @@
         shopRows[id] = {
           cost: card.querySelector(`[data-specialization-ui-cost="${id}"]`),
           count: card.querySelector(`[data-specialization-ui-count="${id}"]`),
-          button: card.querySelector(`[data-specialization-ui-button="${id}"]`)
+          button: card.querySelector(`[data-specialization-ui-button="${id}"]`),
+          maxButton: card.querySelector(`[data-specialization-ui-max-button="${id}"]`)
         };
       });
       this.shopElements = { wrapper, pointsValue, potentialValue, shopRows };
@@ -283,17 +285,28 @@
           this.purchaseUpgrade(item.id, purchaseCount);
         });
 
+        const maxButton = document.createElement('button');
+        maxButton.classList.add('bioworld-shop-button', 'bioworld-shop-max-button');
+        maxButton.dataset.specializationUiMaxButton = item.id;
+        maxButton.textContent = this.maxButtonText;
+        maxButton.addEventListener('click', () => {
+          this.purchaseUpgrade(item.id, this.getMaxShopPurchases(item));
+        });
+
         const metaRow = document.createElement('div');
         metaRow.classList.add('bioworld-shop-item-meta');
         const metaGroup = document.createElement('div');
         metaGroup.classList.add('bioworld-shop-item-costs');
         metaGroup.append(cost, count);
-        metaRow.append(metaGroup, button);
+        const buttonGroup = document.createElement('div');
+        buttonGroup.classList.add('bioworld-shop-item-actions');
+        buttonGroup.append(button, maxButton);
+        metaRow.append(metaGroup, buttonGroup);
 
         row.append(labelRow, metaRow);
         items.appendChild(row);
 
-        shopRows[item.id] = { cost, count, button };
+        shopRows[item.id] = { cost, count, button, maxButton };
       });
 
       wrapper.appendChild(items);
@@ -320,7 +333,11 @@
         const purchases = this.getShopPurchaseCount(item.id);
         row.cost.textContent = `${formatNumber(item.cost, true)} ${this.pointsUnit}`;
         row.count.textContent = `${purchases}/${item.maxPurchases}`;
-        row.button.disabled = !this.canPurchaseUpgrade(item);
+        const canBuy = this.canPurchaseUpgrade(item);
+        row.button.disabled = !canBuy;
+        if (row.maxButton) {
+          row.maxButton.disabled = !canBuy;
+        }
         row.button.textContent = purchases >= item.maxPurchases ? 'Maxed' : 'Buy';
       });
     }

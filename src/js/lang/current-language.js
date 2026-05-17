@@ -907,6 +907,7 @@ setLanguageData({
         anotherCompleted: 'Another Specialization has been completed',
         potentialPoints: 'Potential Points:',
         buy: 'Buy',
+        max: 'Max',
       },
       spaceship: {
         assignment: 'Assignment',
