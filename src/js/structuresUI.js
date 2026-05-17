@@ -11,6 +11,12 @@ function getStructuresUIText(path, fallback, vars) {
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+function resetSelectedBuildCounts() {
+  for (const name in selectedBuildCounts) {
+    delete selectedBuildCounts[name];
+  }
+}
+
 function getStructureCountNumber(value) {
   return typeof buildingCountToNumber === 'function'
     ? buildingCountToNumber(value)
@@ -505,6 +511,7 @@ function applyCollapseState(structureName) {
 function createBuildingButtons() {
   // Update container IDs based on actual categories
   updateBuildingContainerIds();
+  resetSelectedBuildCounts();
   
   // Dynamically create categorized buildings object
   const categories = getBuildingCategories();
@@ -558,6 +565,9 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
   const rows = [];
   const liveStructures = [];
   structures.forEach((structure) => {
+    if (selectedBuildCounts[structure.name] === undefined) {
+      selectedBuildCounts[structure.name] = 1;
+    }
     let structureRow = existingRows[structure.name];
     const cached = structureUIElements[structure.name];
     if (structureRow && cached && cached.setStructure) {
