@@ -1,4 +1,5 @@
 const ENERGY_PER_ANTIMATTER = 2_000_000_000_000_000;
+const FILL_COOLDOWN_SECONDS = 60;
 
 function getAntimatterBatteryText(path, fallback, vars) {
   try {
@@ -21,6 +22,7 @@ class AntimatterBattery extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this._cachedUI = null;
+    this._fillCooldownEndsAtMs = 0;
     this._handleFillClick = event => {
       event.stopPropagation();
       this.fillFromAntimatter();
@@ -77,13 +79,36 @@ class AntimatterBattery extends Building {
     const hasResources = antimatter && energy;
     const hasActiveBattery = this.active > 0n;
 
+    const now = Date.now();
+    const cooldownSecondsRemaining = this.getFillCooldownSecondsRemaining(now);
+
     button.disabled =
       !hasResources ||
       !hasActiveBattery ||
       availableAntimatter <= 0 ||
       missingEnergy <= 0 ||
-      energyPerAntimatter <= 0;
+      energyPerAntimatter <= 0 ||
+      cooldownSecondsRemaining > 0;
+
+    button.textContent = cooldownSecondsRemaining > 0
+      ? getAntimatterBatteryText(
+          'ui.buildings.antimatterBattery.fillCooldown',
+          'Fill ({seconds})',
+          { seconds: cooldownSecondsRemaining }
+        )
+      : getAntimatterBatteryText(
+          'ui.buildings.antimatterBattery.fill',
+          'Fill'
+        );
     button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
+  }
+
+  getFillCooldownSecondsRemaining(now = Date.now()) {
+    const remainingMs = this._fillCooldownEndsAtMs - now;
+    if (remainingMs <= 0) {
+      return 0;
+    }
+    return Math.ceil(remainingMs / 1000);
   }
 
   getFillRate() {
@@ -152,6 +177,7 @@ class AntimatterBattery extends Building {
     }
     energy.increase(energyGain);
     energy.enable?.();
+    this._fillCooldownEndsAtMs = Date.now() + (FILL_COOLDOWN_SECONDS * 1000);
 
     globalThis.updateResourceDisplay?.(resources);
     globalThis.updateStructureDisplay?.(structures);

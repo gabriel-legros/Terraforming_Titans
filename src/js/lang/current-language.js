@@ -632,6 +632,7 @@ setLanguageData({
       },
       antimatterBattery: {
         fill: 'Fill',
+        fillCooldown: 'Fill ({seconds})',
       },
       oxygenFactory: {
         disableIfOxygenPressureAbove: 'Disable if O2 P > ',
