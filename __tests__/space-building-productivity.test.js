@@ -222,6 +222,7 @@ function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 
 function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, name = 'Space Storage Producer') {
   return {
     active: amountPerSecond > 0 ? 1 : 0,
+    activeNumber: amountPerSecond > 0 ? 1 : 0,
     productivity: amountPerSecond > 0 ? 1 : 0,
     displayProductivity: amountPerSecond > 0 ? 1 : 0,
     dayNightActivity: false,
@@ -420,6 +421,87 @@ class MockDemandProject {
   applyCostAndGain() {
     this.operationPreRunThisTick = false;
   }
+}
+
+class MockConsumingDemandProject extends MockDemandProject {
+  applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges = null, productivity = 1) {
+    if (!accumulatedChanges || !(this.demandPerTick > 0)) {
+      return;
+    }
+    const seconds = deltaTime / 1000;
+    const amount = this.demandPerTick * seconds * productivity;
+    accumulatedChanges.spaceStorage[this.resourceKey] =
+      (accumulatedChanges.spaceStorage[this.resourceKey] || 0) - amount;
+    resources.spaceStorage[this.resourceKey].modifyRate(-(amount / seconds), this.displayName, 'project');
+    this.operationPreRunThisTick = true;
+  }
+
+  applyCostAndGain() {
+    this.operationPreRunThisTick = false;
+  }
+}
+
+class MockProductionProject {
+  constructor(resourceKey, productionPerTick, projectName = '') {
+    this.name = projectName || `mockProduction-${resourceKey}`;
+    this.displayName = this.name;
+    this.attributes = { spaceBuilding: true, spaceBuildingProductivity: true };
+    this.resourceKey = resourceKey;
+    this.productionPerTick = productionPerTick;
+    this.autoStart = false;
+    this.operationPreRunThisTick = false;
+    this.unlocked = true;
+  }
+
+  isContinuous() {
+    return false;
+  }
+
+  applyOperationCostAndGain() {}
+
+  estimateCostAndGain(deltaTime = 1000, applyRates = true) {
+    const seconds = deltaTime / 1000;
+    const amount = this.productionPerTick * seconds;
+    const totals = { cost: {}, gain: { spaceStorage: {} } };
+    totals.gain.spaceStorage[this.resourceKey] = amount;
+    if (applyRates && amount > 0) {
+      resources.spaceStorage[this.resourceKey].modifyRate(this.productionPerTick, this.displayName, 'project');
+    }
+    return totals;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges = null) {
+    if (!accumulatedChanges || !(this.productionPerTick > 0)) {
+      return;
+    }
+    const seconds = deltaTime / 1000;
+    const amount = this.productionPerTick * seconds;
+    accumulatedChanges.spaceStorage[this.resourceKey] =
+      (accumulatedChanges.spaceStorage[this.resourceKey] || 0) + amount;
+    resources.spaceStorage[this.resourceKey].modifyRate(this.productionPerTick, this.displayName, 'project');
+    this.operationPreRunThisTick = false;
+  }
+}
+
+function createArtificialStarsProject(ArtificialStarsProject, assignment = 1) {
+  const artificialStars = new ArtificialStarsProject({
+    name: 'Artificial Stars',
+    duration: 36000000,
+    cost: {},
+    attributes: {
+      canUseSpaceStorage: true,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true,
+      alchemyParameter: 1,
+    },
+  }, 'artificialStars');
+
+  artificialStars.repeatCount = 1;
+  artificialStars.furnaceAssignments.energy = assignment;
+  artificialStars.isRunning = true;
+  artificialStars.autoStart = false;
+  artificialStars.isActive = false;
+  return artificialStars;
 }
 
 function setupHarness(initialStorage = {}) {
@@ -1147,23 +1229,7 @@ describe('Space building productivity via produceResources', () => {
       scope: { consumption: true },
     };
 
-    const artificialStars = new ArtificialStarsProject({
-      name: 'Artificial Stars',
-      duration: 36000000,
-      cost: {},
-      attributes: {
-        canUseSpaceStorage: true,
-        spaceBuilding: true,
-        spaceBuildingProductivity: true,
-        alchemyParameter: 1,
-      },
-    }, 'artificialStars');
-
-    artificialStars.repeatCount = 1;
-    artificialStars.furnaceAssignments.energy = 1;
-    artificialStars.isRunning = true;
-    artificialStars.autoStart = false;
-    artificialStars.isActive = false;
+    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
 
     projectManager.projects.artificialStars = artificialStars;
     projectManager.projectOrder = ['artificialStars'];
@@ -1194,23 +1260,7 @@ describe('Space building productivity via produceResources', () => {
       scope: { consumption: true },
     };
 
-    const artificialStars = new ArtificialStarsProject({
-      name: 'Artificial Stars',
-      duration: 36000000,
-      cost: {},
-      attributes: {
-        canUseSpaceStorage: true,
-        spaceBuilding: true,
-        spaceBuildingProductivity: true,
-        alchemyParameter: 1,
-      },
-    }, 'artificialStars');
-
-    artificialStars.repeatCount = 1;
-    artificialStars.furnaceAssignments.energy = 1;
-    artificialStars.isRunning = true;
-    artificialStars.autoStart = false;
-    artificialStars.isActive = false;
+    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
 
     buildings.dysonReceiver = createProductivityAwareSpaceEnergyConsumer(1_000_000_000_000, 'Dyson Receiver');
     projectManager.projects.artificialStars = artificialStars;
@@ -1222,6 +1272,127 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(buildings.dysonReceiver.productivity, 0);
     expectApprox(resources.space.energy.value, 0);
     expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
+    cleanup();
+  });
+
+  test('Project-produced hydrogen does not refill a consumption reserve for Artificial Stars in the same tick', () => {
+    const reserve = 50_000_000_000;
+    const harness = setupHarness({ hydrogen: reserve - 1, spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialStarsProject,
+      cleanup,
+    } = harness;
+
+    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
+      mode: 'amount',
+      value: reserve,
+      scope: { consumption: true },
+    };
+
+    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
+    projectManager.projects.lifting = new MockProductionProject('hydrogen', reserve * 2, 'Lifting');
+    projectManager.projects.artificialStars = artificialStars;
+    projectManager.projectOrder = ['lifting', 'artificialStars'];
+
+    produceResources(1000, {});
+
+    expectApprox(artificialStars.operationProductivity, 0);
+    expectApprox(artificialStars.lastSpaceEnergyPerSecond, 0);
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
+    expectApprox(resources.spaceStorage.hydrogen.value, reserve - 1 + reserve * 2);
+    cleanup();
+  });
+
+  test('Building-produced hydrogen can refill reserve before Artificial Stars consume surplus', () => {
+    const reserve = 50_000_000_000;
+    const harness = setupHarness({ hydrogen: reserve - 1, spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialStarsProject,
+      cleanup,
+    } = harness;
+
+    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
+      mode: 'amount',
+      value: reserve,
+      scope: { consumption: true },
+    };
+
+    buildings.hydrogenProducer = createSpaceStorageProducerBuilding('hydrogen', reserve + 1, 'Hydrogen Producer');
+    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
+    projectManager.projects.artificialStars = artificialStars;
+    projectManager.projectOrder = ['artificialStars'];
+
+    produceResources(1000, buildings);
+
+    expectApprox(artificialStars.operationProductivity, 1);
+    expectApprox(resources.space.energy.value, 25_000_000_000_000_000_000_000);
+    expectApprox(resources.spaceStorage.hydrogen.value, reserve);
+    cleanup();
+  });
+
+  test('Artificial Stars ignore strategic reserve when consumption scope is disabled', () => {
+    const reserve = 50_000_000_000;
+    const harness = setupHarness({ hydrogen: reserve, spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialStarsProject,
+      cleanup,
+    } = harness;
+
+    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
+      mode: 'amount',
+      value: reserve,
+      scope: { transfers: true, consumption: false },
+    };
+
+    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
+    projectManager.projects.artificialStars = artificialStars;
+    projectManager.projectOrder = ['artificialStars'];
+
+    produceResources(1000, {});
+
+    expectApprox(artificialStars.operationProductivity, 1);
+    expectApprox(resources.space.energy.value, 25_000_000_000_000_000_000_000);
+    expectApprox(resources.spaceStorage.hydrogen.value, 0);
+    cleanup();
+  });
+
+  test('Artificial Stars share hydrogen above reserve with other project consumption', () => {
+    const reserve = 50_000_000_000;
+    const harness = setupHarness({ hydrogen: reserve * 2, spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialStarsProject,
+      cleanup,
+    } = harness;
+
+    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
+      mode: 'amount',
+      value: reserve,
+      scope: { consumption: true },
+    };
+
+    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
+    projectManager.projects.artificialStars = artificialStars;
+    projectManager.projects.extraHydrogenDemand = new MockConsumingDemandProject('hydrogen', reserve, 'Extra Hydrogen Demand');
+    projectManager.projectOrder = ['artificialStars', 'extraHydrogenDemand'];
+
+    produceResources(1000, {});
+
+    expectApprox(artificialStars.operationProductivity, 0.5);
+    expectApprox(resources.space.energy.value, 12_500_000_000_000_000_000_000);
+    expectApprox(resources.spaceStorage.hydrogen.value, reserve);
     cleanup();
   });
 
