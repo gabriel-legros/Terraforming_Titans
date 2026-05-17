@@ -2564,7 +2564,7 @@ setLanguageData({
           smallChance: 'Small Chance',
           largeChance: 'Large Chance',
           projectFailureTooltip: 'Projects roll failure after 1s or on completion if they have a duration, or continuously for continuous projects. Buildings have increased cost and the difference is converted to debris on construction.',
-          debrisDecayTooltip: 'Drag line marks the altitude where the air density reaches about 1 ng/m^3. Chart altitudes are displayed relative to the world\'s initial radius. Atmospheric density depends on total gas in the atmosphere, gas mix, temperature, gravity, planet size, and upper-atmosphere heating from solar flux. To push the drag line higher, add light gases (especially hydrogen), remove heavy gases (especially CO2), warm the air or increase solar flux. Cooling the air, adding heavy gases, or removing light gases lowers the drag line. Water vapor is relatively light, but it condenses easily and therefore has very limited impact.',
+          debrisDecayTooltip: 'Drag line marks the altitude where the air density reaches about 1 ng/m^3. Chart altitudes are displayed relative to the world\'s initial radius. Atmospheric density depends on total gas in the atmosphere, gas mix, temperature, gravity, planet size, and upper-atmosphere heating from solar flux. To push the drag line higher, add light gases (especially hydrogen), remove heavy gases (especially CO2), warm the air, or increase solar flux. Cooling the air, adding heavy gases, or removing light gases lowers the drag line. Water vapor is relatively light, but it condenses easily and therefore has very limited impact.',
           chart: {
             drag: 'Drag {value}',
             orbitalDebrisCleared: 'Orbital debris cleared.',
