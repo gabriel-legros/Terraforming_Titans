@@ -61,7 +61,7 @@ function getSpaceMirrorZoneLabel(zone) {
   if (isAldersonDiskWorld()) {
     const diskFallbackMap = {
       tropical: 'Inner',
-      temperate: 'Central',
+      temperate: 'Cent.',
       polar: 'Outer',
     };
     if (diskFallbackMap[zone]) {
@@ -313,6 +313,14 @@ function canControlLanternDayNightCycle() {
   if (typeof terraforming === 'undefined' || !terraforming.celestialParameters) return false;
   return terraforming.celestialParameters.rogue === true
     || projectManager?.projects?.artificialSky?.isCompleted === true;
+}
+
+function isLanternMirrorFacilityAvailable() {
+  const lantern = buildings.hyperionLantern;
+  return !!(lantern
+    && lantern.unlocked
+    && !lantern.permanentlyDisabled
+    && !(lantern.isBooleanFlagSet && lantern.isBooleanFlagSet('disableMirrorFacilityActivation')));
 }
 
 var mirrorOversightSettings = null;
@@ -1454,7 +1462,7 @@ function updateMirrorOversightUI() {
   const lantern = document.getElementById('mirror-oversight-lantern');
   const lanternDiv = document.getElementById('mirror-oversight-lantern-div');
   if (lantern) lantern.checked = !!mirrorOversightSettings.applyToLantern;
-  const lanternUnlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
+  const lanternUnlocked = isLanternMirrorFacilityAvailable();
   if (lanternDiv) {
     lanternDiv.style.display = lanternUnlocked ? 'flex' : 'none';
     if (lanternUnlocked) {
@@ -1593,6 +1601,8 @@ function updateMirrorOversightUI() {
       el.style.display = 'none';
     } else if (el.classList.contains('grid-reversal-cell')) {
       el.style.display = reversalAvailable ? 'flex' : 'none';
+    } else if (el.classList.contains('assign-cell') && el.dataset.type === 'lanterns') {
+      el.style.display = lanternUnlocked ? 'flex' : 'none';
     } else if (el.classList.contains('assign-cell')) {
       el.style.display = 'flex';
     } else {
@@ -2281,8 +2291,7 @@ class SpaceMirrorFacilityProject extends Project {
 
     if (elements.lanternDetails) {
       const lantern = buildings.hyperionLantern;
-      const unlocked = lantern && lantern.unlocked;
-      const showLantern = this.isCompleted && unlocked;
+      const showLantern = this.isCompleted && isLanternMirrorFacilityAvailable();
       elements.lanternDetails.container.style.display = showLantern ? 'block' : 'none';
       if (elements.quickBuild && elements.quickBuild.lantern) {
         elements.quickBuild.lantern.container.style.display = showLantern ? 'grid' : 'none';

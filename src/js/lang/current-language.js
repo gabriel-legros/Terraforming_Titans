@@ -1323,7 +1323,7 @@ setLanguageData({
         },
         diskZones: {
           tropical: 'Inner',
-          temperate: 'Central',
+          temperate: 'Cent.',
           polar: 'Outer',
         },
         oversight: {
