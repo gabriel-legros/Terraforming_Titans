@@ -535,9 +535,6 @@ class DiskworldTerraformingProject extends Project {
       this.currentEnergyConsumptionRate = 0;
       return;
     }
-    if (this.autoStart === false) {
-      this.estimateCostAndGain(deltaTime, true, productivity);
-    }
     this.refreshMassState();
     const seconds = deltaTime / 1000;
     const requestedHydrogen = Math.min(this.pumpRate * seconds * productivity, Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0));
@@ -561,6 +558,17 @@ class DiskworldTerraformingProject extends Project {
     this.shortfallLastTick = usedHydrogen < requestedHydrogen;
     this.actualPumpRate = seconds > 0 ? usedHydrogen / seconds : 0;
     this.currentEnergyConsumptionRate = seconds > 0 ? usedEnergy / seconds : 0;
+    if (this.autoStart === false) {
+      const atmosphericRate = seconds > 0 ? usedAtmosphericHydrogen / seconds : 0;
+      const liquidHydrogenRate = seconds > 0 ? usedLiquidHydrogen / seconds : 0;
+      if (atmosphericRate > 0) {
+        resources.atmospheric.hydrogen.modifyRate(-atmosphericRate, this.displayName, 'project');
+      }
+      if (liquidHydrogenRate > 0) {
+        resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.displayName, 'project');
+      }
+      resources.colony.energy.modifyRate(-this.currentEnergyConsumptionRate, this.displayName, 'project');
+    }
     this.refreshMassState();
   }
 
