@@ -336,6 +336,7 @@ function buildAutomationColonyUI() {
     nameInputClasses: ['colony-automation-builder-name'],
     newButtonClasses: ['colony-automation-builder-new'],
     saveButtonClasses: ['colony-automation-builder-save', 'building-automation-builder-save'],
+    duplicateButtonClasses: ['colony-automation-builder-duplicate'],
     deleteButtonClasses: ['colony-automation-builder-delete'],
     transferKey: 'colony-automation-builder',
     applyOnceButtonClasses: ['colony-automation-builder-apply-once'],
@@ -902,6 +903,7 @@ function attachColonyAutomationHandlers() {
     colonyCombinationShowInSidebarCheckbox,
     colonyAddApplyButton
   } = automationElements;
+  const getAutomation = () => automationManager.colonyAutomation;
 
   colonyBuilderPresetSelect.addEventListener('change', (event) => {
     automationManager.colonyAutomation.setSelectedPresetId(event.target.value || null);

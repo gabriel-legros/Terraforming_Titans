@@ -135,6 +135,7 @@ function buildAutomationProjectsUI() {
     nameInputClasses: ['project-automation-builder-name'],
     newButtonClasses: ['project-automation-builder-new'],
     saveButtonClasses: ['project-automation-builder-save', 'building-automation-builder-save'],
+    duplicateButtonClasses: ['project-automation-builder-duplicate'],
     deleteButtonClasses: ['project-automation-builder-delete'],
     transferKey: 'project-automation-builder',
     applyOnceButtonClasses: ['project-automation-builder-apply-once'],
@@ -885,6 +886,7 @@ function attachProjectsAutomationHandlers() {
     projectsCombinationShowInSidebarCheckbox,
     projectsAddApplyButton
   } = automationElements;
+  const getAutomation = () => automationManager.projectsAutomation;
 
   projectsBuilderPresetSelect.addEventListener('change', (event) => {
     automationManager.projectsAutomation.setSelectedPresetId(event.target.value || null);

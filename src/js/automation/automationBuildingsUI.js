@@ -283,6 +283,7 @@ function buildAutomationBuildingsUI() {
     nameInputClasses: ['building-automation-builder-name'],
     newButtonClasses: ['building-automation-builder-new'],
     saveButtonClasses: ['building-automation-builder-save'],
+    duplicateButtonClasses: ['building-automation-builder-duplicate'],
     deleteButtonClasses: ['building-automation-builder-delete'],
     transferKey: 'building-automation-builder',
     applyOnceButtonClasses: ['building-automation-builder-apply-once'],
@@ -859,6 +860,7 @@ function attachBuildingsAutomationHandlers() {
     buildingsCombinationShowInSidebarCheckbox,
     buildingsAddApplyButton
   } = automationElements;
+  const getAutomation = () => automationManager.buildingsAutomation;
 
   buildingsBuilderPresetSelect.addEventListener('change', (event) => {
     automationManager.buildingsAutomation.setSelectedPresetId(event.target.value || null);

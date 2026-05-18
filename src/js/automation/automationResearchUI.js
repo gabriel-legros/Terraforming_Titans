@@ -47,6 +47,7 @@ function buildAutomationResearchUI() {
     nameInputClasses: ['research-automation-preset-name'],
     newButtonClasses: ['research-automation-preset-new'],
     saveButtonClasses: ['research-automation-preset-save'],
+    duplicateButtonClasses: ['research-automation-preset-duplicate'],
     deleteButtonClasses: ['research-automation-preset-delete'],
     transferKey: 'research-automation-preset',
     applyOnceButtonClasses: ['research-automation-preset-apply-once'],

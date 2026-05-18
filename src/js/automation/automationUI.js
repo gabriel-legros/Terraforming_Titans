@@ -105,6 +105,7 @@ const automationElements = {
   researchPresetNameInput: null,
   researchNewPresetButton: null,
   researchSavePresetButton: null,
+  researchDuplicatePresetButton: null,
   researchDeletePresetButton: null,
   researchImportPresetButton: null,
   researchExportPresetButton: null,
@@ -124,6 +125,7 @@ const automationElements = {
   buildingsBuilderPresetNameInput: null,
   buildingsBuilderNewButton: null,
   buildingsBuilderSaveButton: null,
+  buildingsBuilderDuplicateButton: null,
   buildingsBuilderDeleteButton: null,
   buildingsBuilderImportButton: null,
   buildingsBuilderExportButton: null,
@@ -163,6 +165,7 @@ const automationElements = {
   projectsBuilderPresetNameInput: null,
   projectsBuilderNewButton: null,
   projectsBuilderSaveButton: null,
+  projectsBuilderDuplicateButton: null,
   projectsBuilderDeleteButton: null,
   projectsBuilderImportButton: null,
   projectsBuilderExportButton: null,
@@ -201,6 +204,7 @@ const automationElements = {
   colonyBuilderPresetNameInput: null,
   colonyBuilderNewButton: null,
   colonyBuilderSaveButton: null,
+  colonyBuilderDuplicateButton: null,
   colonyBuilderDeleteButton: null,
   colonyBuilderImportButton: null,
   colonyBuilderExportButton: null,
@@ -598,6 +602,9 @@ function cacheAutomationElements() {
   if (!automationElements.researchSavePresetButton && automationElements.researchAutomation) {
     automationElements.researchSavePresetButton = automationElements.researchAutomation.querySelector('.research-automation-preset-save');
   }
+  if (!automationElements.researchDuplicatePresetButton && automationElements.researchAutomation) {
+    automationElements.researchDuplicatePresetButton = automationElements.researchAutomation.querySelector('.research-automation-preset-duplicate');
+  }
   if (!automationElements.researchDeletePresetButton && automationElements.researchAutomation) {
     automationElements.researchDeletePresetButton = automationElements.researchAutomation.querySelector('.research-automation-preset-delete');
   }
@@ -645,6 +652,9 @@ function cacheAutomationElements() {
   }
   if (!automationElements.buildingsBuilderSaveButton && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderSaveButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-save');
+  }
+  if (!automationElements.buildingsBuilderDuplicateButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderDuplicateButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-duplicate');
   }
   if (!automationElements.buildingsBuilderDeleteButton && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderDeleteButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-delete');
@@ -745,6 +755,9 @@ function cacheAutomationElements() {
   if (!automationElements.projectsBuilderSaveButton && automationElements.projectsAutomation) {
     automationElements.projectsBuilderSaveButton = automationElements.projectsAutomation.querySelector('.project-automation-builder-save');
   }
+  if (!automationElements.projectsBuilderDuplicateButton && automationElements.projectsAutomation) {
+    automationElements.projectsBuilderDuplicateButton = automationElements.projectsAutomation.querySelector('.project-automation-builder-duplicate');
+  }
   if (!automationElements.projectsBuilderDeleteButton && automationElements.projectsAutomation) {
     automationElements.projectsBuilderDeleteButton = automationElements.projectsAutomation.querySelector('.project-automation-builder-delete');
   }
@@ -843,6 +856,9 @@ function cacheAutomationElements() {
   }
   if (!automationElements.colonyBuilderSaveButton && automationElements.colonyAutomation) {
     automationElements.colonyBuilderSaveButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-save');
+  }
+  if (!automationElements.colonyBuilderDuplicateButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderDuplicateButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-duplicate');
   }
   if (!automationElements.colonyBuilderDeleteButton && automationElements.colonyAutomation) {
     automationElements.colonyBuilderDeleteButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-delete');
