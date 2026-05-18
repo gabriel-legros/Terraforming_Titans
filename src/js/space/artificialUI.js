@@ -1274,7 +1274,7 @@ function ensureArtificialLayout() {
   artificialUICache.priority = priorityCheckbox;
   priorityLabel.appendChild(priorityCheckbox);
   const priorityText = document.createElement('span');
-  priorityText.textContent = getArtificialText('costs.prioritizeSpaceStorage', 'Prioritize space storage payments');
+  priorityText.textContent = getArtificialText('costs.prioritizeSpaceStorage', 'Allow and prioritize space storage payments');
   priorityLabel.appendChild(priorityText);
   costs.appendChild(priorityLabel);
 
