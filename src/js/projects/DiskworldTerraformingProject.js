@@ -82,6 +82,7 @@ class DiskworldTerraformingProject extends Project {
     this.hydrogenFilledTons = 0;
     this.pumpRate = config.attributes?.pumpRate || 0;
     this.step = config.attributes?.pumpStep || DISKWORLD_RATE_STEP_MIN;
+    this.uncappedPumpRate = config.attributes?.uncappedPumpRate === true;
     this.pumping = false;
     this.shortfallLastTick = false;
     this.actualPumpRate = 0;
@@ -240,9 +241,12 @@ class DiskworldTerraformingProject extends Project {
   }
 
   getPumpEnergyPerTon() {
-    const pressure = Math.max(this.currentPressurePa, DISKWORLD_PRESSURE_REFERENCE_PA);
+    const pressure = Math.max(this.currentPressurePa, 0);
     const ratio = pressure / DISKWORLD_PRESSURE_REFERENCE_PA;
-    const joulesPerKg = DISKWORLD_HYDROGEN_GAS_CONSTANT * DISKWORLD_PUMP_TEMPERATURE_K * Math.log(ratio);
+    const gasTerm = DISKWORLD_HYDROGEN_GAS_CONSTANT * DISKWORLD_PUMP_TEMPERATURE_K;
+    const compressionJoulesPerKg = gasTerm * Math.log(Math.max(ratio, 1));
+    const transportOverheadJoulesPerKg = gasTerm * (0.05 + (0.45 * this.getSurfaceGravityRatio()));
+    const joulesPerKg = compressionJoulesPerKg + transportOverheadJoulesPerKg;
     return (joulesPerKg * DISKWORLD_TON_KG) / DISKWORLD_WATT_DAY_SECONDS;
   }
 
@@ -338,15 +342,17 @@ class DiskworldTerraformingProject extends Project {
     const rateZero = document.createElement('button');
     const rateMinus = document.createElement('button');
     const ratePlus = document.createElement('button');
+    const rateInfinity = document.createElement('button');
     rateZero.textContent = getDiskworldText('zero', null, '0');
-    mainButtons.append(rateZero, rateMinus, ratePlus);
+    rateInfinity.textContent = '∞';
+    mainButtons.append(rateZero, rateMinus, ratePlus, rateInfinity);
     const multiplierButtons = document.createElement('div');
     multiplierButtons.className = 'multiplier-container';
     const stepDown = document.createElement('button');
     stepDown.textContent = getDiskworldText('divideTen', null, '/10');
     const stepUp = document.createElement('button');
     stepUp.textContent = getDiskworldText('timesTen', null, 'x10');
-    multiplierButtons.append(stepDown, stepUp);
+    multiplierButtons.append(stepDown, stepUp, rateInfinity);
     rateControls.append(mainButtons, multiplierButtons);
     controls.appendChild(rateControls);
     const operationsPanel = document.createElement('div');
@@ -409,6 +415,7 @@ class DiskworldTerraformingProject extends Project {
       rateZero,
       rateMinus,
       ratePlus,
+      rateInfinity,
       stepDown,
       stepUp
     };
@@ -427,6 +434,10 @@ class DiskworldTerraformingProject extends Project {
     });
     ratePlus.addEventListener('click', () => {
       this.adjustPumpRate(this.step);
+      this.updateUI();
+    });
+    rateInfinity.addEventListener('click', () => {
+      this.setUncappedPumpRate(true);
       this.updateUI();
     });
     stepDown.addEventListener('click', () => {
@@ -469,12 +480,13 @@ class DiskworldTerraformingProject extends Project {
     this.el.progressEta.textContent = getDiskworldText('to100', { value: etaText }, `To 100%: ${etaText}`);
     this.el.progressLabel.textContent = `${formatNumber(progressPercent, true, 1)}%`;
     this.el.progressFill.style.width = `${progressPercent}%`;
-    this.el.rateValue.textContent = `${formatNumber(this.pumpRate, true)} t/s`;
+    this.el.rateValue.textContent = this.uncappedPumpRate ? '∞ t/s' : `${formatNumber(this.pumpRate, true)} t/s`;
     this.el.pumpToggle.checked = this.pumping;
     this.el.pumpToggle.disabled = this.isCompleted;
     this.el.rateZero.disabled = this.isCompleted;
     this.el.rateMinus.disabled = this.isCompleted;
     this.el.ratePlus.disabled = this.isCompleted;
+    this.el.rateInfinity.disabled = this.isCompleted;
     this.el.stepDown.disabled = this.isCompleted;
     this.el.stepUp.disabled = this.isCompleted;
     this.el.rateMinus.textContent = `-${formatNumber(this.step, true)}`;
@@ -487,7 +499,12 @@ class DiskworldTerraformingProject extends Project {
   }
 
   setPumpRate(value) {
+    this.uncappedPumpRate = false;
     this.pumpRate = Math.max(0, value);
+  }
+
+  setUncappedPumpRate(enabled) {
+    this.uncappedPumpRate = enabled === true;
   }
 
   adjustPumpRate(delta) {
@@ -505,10 +522,20 @@ class DiskworldTerraformingProject extends Project {
       return totals;
     }
     this.refreshMassState();
-    const hydrogenRate = this.pumpRate * productivity;
-    const energyRate = hydrogenRate * this.currentEnergyPerTon;
     const seconds = deltaTime / 1000;
-    const hydrogenAmount = hydrogenRate * seconds;
+    const remainingHydrogen = Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0);
+    let hydrogenAmount = 0;
+    if (this.uncappedPumpRate) {
+      const availableHydrogen = Math.max(resources.atmospheric.hydrogen.value, 0) + Math.max(getDiskworldLiquidHydrogenAvailable(), 0);
+      const availableEnergy = Math.max(resources.colony.energy.value, 0);
+      const hydrogenByEnergy = this.currentEnergyPerTon > 0 ? availableEnergy / this.currentEnergyPerTon : remainingHydrogen;
+      hydrogenAmount = Math.min(remainingHydrogen, availableHydrogen, hydrogenByEnergy);
+    } else {
+      const requestedHydrogen = this.pumpRate * seconds * productivity;
+      hydrogenAmount = Math.min(requestedHydrogen, remainingHydrogen);
+    }
+    const hydrogenRate = seconds > 0 ? hydrogenAmount / seconds : 0;
+    const energyRate = hydrogenRate * this.currentEnergyPerTon;
     const liquidHydrogenAmount = Math.min(hydrogenAmount, getDiskworldLiquidHydrogenAvailable());
     const atmosphericAmount = Math.max(hydrogenAmount - liquidHydrogenAmount, 0);
     const atmosphericRate = seconds > 0 ? atmosphericAmount / seconds : 0;
@@ -537,7 +564,10 @@ class DiskworldTerraformingProject extends Project {
     }
     this.refreshMassState();
     const seconds = deltaTime / 1000;
-    const requestedHydrogen = Math.min(this.pumpRate * seconds * productivity, Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0));
+    const remainingHydrogen = Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0);
+    const requestedHydrogen = this.uncappedPumpRate
+      ? remainingHydrogen
+      : Math.min(this.pumpRate * seconds * productivity, remainingHydrogen);
     const requestedEnergy = requestedHydrogen * this.currentEnergyPerTon;
     const pendingHydrogen = accumulatedChanges.atmospheric.hydrogen || 0;
     const pendingLiquidHydrogen = accumulatedChanges.surface.liquidHydrogen || 0;
@@ -605,6 +635,7 @@ class DiskworldTerraformingProject extends Project {
       ...super.saveAutomationSettings(),
       pumpRate: this.pumpRate,
       step: this.step,
+      uncappedPumpRate: this.uncappedPumpRate === true,
       pumping: this.pumping === true
     };
   }
@@ -616,6 +647,9 @@ class DiskworldTerraformingProject extends Project {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'step')) {
       this.step = settings.step || DISKWORLD_RATE_STEP_MIN;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'uncappedPumpRate')) {
+      this.uncappedPumpRate = settings.uncappedPumpRate === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'pumping')) {
       this.pumping = settings.pumping === true;
@@ -630,6 +664,7 @@ class DiskworldTerraformingProject extends Project {
       hydrogenFilledTons: this.hydrogenFilledTons,
       pumpRate: this.pumpRate,
       step: this.step,
+      uncappedPumpRate: this.uncappedPumpRate === true,
       pumping: this.pumping,
       currentMassTons: this.currentMassTons
     };
@@ -640,6 +675,7 @@ class DiskworldTerraformingProject extends Project {
     this.hydrogenFilledTons = state.hydrogenFilledTons || 0;
     this.pumpRate = state.pumpRate || 0;
     this.step = state.step || DISKWORLD_RATE_STEP_MIN;
+    this.uncappedPumpRate = state.uncappedPumpRate === true;
     this.pumping = state.pumping === true;
     this.isActive = this.pumping;
     this.currentMassTons = state.currentMassTons || 0;
