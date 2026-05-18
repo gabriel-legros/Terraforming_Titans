@@ -569,6 +569,14 @@ const GalaxyOperationUI = (() => {
         const panel = doc.createElement('div');
         panel.className = 'galaxy-operations-panel';
 
+        const panelHeader = doc.createElement('div');
+        panelHeader.className = 'galaxy-operations-panel__header';
+        const panelTitle = doc.createElement('span');
+        panelTitle.className = 'galaxy-operations-panel__title';
+        panelTitle.textContent = getOperationsText('title', {}, 'Operations');
+        panelHeader.appendChild(panelTitle);
+        panel.appendChild(panelHeader);
+
         const empty = doc.createElement('div');
         empty.className = 'galaxy-operations-panel__empty';
         empty.textContent = getOperationsText('emptySelectSector', {}, 'Select a contested sector to assign fleet power.');
@@ -710,7 +718,8 @@ const GalaxyOperationUI = (() => {
 
         const autoModeThresholdSuffix = doc.createElement('span');
         autoModeThresholdSuffix.className = 'galaxy-operations-launch__auto-suffix';
-        autoModeThresholdSuffix.textContent = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
+        autoModeThresholdSuffix.textContent = '\u2620';
+        autoModeThresholdSuffix.title = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
         autoModeRow.appendChild(autoModeThresholdSuffix);
 
         const autoLaunchLabel = doc.createElement('label');
@@ -744,7 +753,8 @@ const GalaxyOperationUI = (() => {
 
         const autoLaunchThresholdSuffix = doc.createElement('span');
         autoLaunchThresholdSuffix.className = 'galaxy-operations-launch__auto-suffix';
-        autoLaunchThresholdSuffix.textContent = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
+        autoLaunchThresholdSuffix.textContent = '\u2620';
+        autoLaunchThresholdSuffix.title = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
         autoLaunchLabel.appendChild(autoLaunchThresholdSuffix);
 
         launchControls.appendChild(autoLaunchLabel);
@@ -761,9 +771,13 @@ const GalaxyOperationUI = (() => {
         statusMessage.textContent = '';
         launchContainer.appendChild(statusMessage);
 
+        const metaPanel = doc.createElement('div');
+        metaPanel.className = 'galaxy-operations-meta';
+        form.appendChild(metaPanel);
+
         const costRow = doc.createElement('div');
         costRow.className = 'galaxy-operations-form__cost';
-        form.appendChild(costRow);
+        metaPanel.appendChild(costRow);
 
         const costLabel = doc.createElement('span');
         costLabel.className = 'galaxy-operations-form__cost-label';
@@ -777,7 +791,7 @@ const GalaxyOperationUI = (() => {
 
         const durationRow = doc.createElement('div');
         durationRow.className = 'galaxy-operations-form__duration';
-        form.appendChild(durationRow);
+        metaPanel.appendChild(durationRow);
 
         const durationLabel = doc.createElement('span');
         durationLabel.className = 'galaxy-operations-form__duration-label';
@@ -791,7 +805,7 @@ const GalaxyOperationUI = (() => {
 
         const progressContainer = doc.createElement('div');
         progressContainer.className = 'galaxy-operations-progress is-hidden';
-        form.appendChild(progressContainer);
+        metaPanel.appendChild(progressContainer);
 
         const progressTrack = doc.createElement('div');
         progressTrack.className = 'galaxy-operations-progress__track';
@@ -843,8 +857,10 @@ const GalaxyOperationUI = (() => {
 
         const cache = {
             operationsPanel: panel,
+            operationsPanelHeader: panelHeader,
             operationsEmpty: empty,
             operationsForm: form,
+            operationsFormHeader: formHeader,
             operationsInput: powerInput,
             operationsButtons,
             operationsLaunchButton: launchButton,

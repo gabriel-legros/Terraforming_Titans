@@ -595,6 +595,7 @@ function selectGalaxySector({ q, r, hex }) {
         displayName: hex && hex.dataset.displayName ? hex.dataset.displayName : formatSectorName(q, r)
     };
 
+    setGalaxySectorPopupsVisible(true);
     renderSelectedSectorDetails();
 }
 
@@ -607,6 +608,7 @@ function clearSelectedGalaxySector() {
     }
     galaxyUICache.selectedHex = null;
     galaxyUICache.selectedSector = null;
+    setGalaxySectorPopupsVisible(false);
 
     const panel = galaxyUICache.sectorContent;
     if (!panel) {
@@ -619,6 +621,22 @@ function clearSelectedGalaxySector() {
 
     updateSectorDefenseSection();
     galaxyOperationUI?.updateOperationsPanel?.();
+}
+
+function setGalaxySectorPopupsVisible(visible) {
+    const cache = galaxyUICache;
+    if (!cache) {
+        return;
+    }
+    [
+        cache.sectorPopup,
+        cache.operationsPopup,
+        cache.defensePopup
+    ].forEach((popup) => {
+        if (popup) {
+            popup.classList.toggle('is-hidden', !visible);
+        }
+    });
 }
 
 
@@ -934,9 +952,19 @@ function renderSelectedSectorDetails() {
         const container = doc.createElement('div');
         container.className = 'galaxy-sector-panel__details';
 
+        const titleRow = doc.createElement('div');
+        titleRow.className = 'galaxy-sector-panel__title-row';
+
         const title = doc.createElement('div');
         title.className = 'galaxy-sector-panel__title';
-        container.appendChild(title);
+        titleRow.appendChild(title);
+
+        const closeButton = galaxyUICache.sectorCloseButton || null;
+        if (closeButton) {
+            closeButton.classList.add('galaxy-sector-panel__close');
+            titleRow.appendChild(closeButton);
+        }
+        container.appendChild(titleRow);
 
         const subtitle = doc.createElement('div');
         subtitle.className = 'galaxy-sector-panel__subtitle';
@@ -2324,6 +2352,20 @@ function createGalaxySection(doc, title, description) {
     return { section, header, body };
 }
 
+function attachGalaxyPopupCloseButton(doc, sectionData) {
+    const button = doc.createElement('button');
+    button.type = 'button';
+    button.className = 'galaxy-map-popup__close';
+    button.textContent = 'x';
+    button.setAttribute('aria-label', getGalaxyText('sections.closePanel', 'Close panel'));
+    button.addEventListener('click', () => {
+        sectionData.section.classList.add('is-hidden');
+    });
+    sectionData.header.classList.add('galaxy-section__header--with-close');
+    sectionData.header.appendChild(button);
+    return button;
+}
+
 function cacheGalaxyElements() {
     if (galaxyUICache) {
         return galaxyUICache;
@@ -2342,11 +2384,12 @@ function cacheGalaxyElements() {
     const layout = doc.createElement('div');
     layout.className = 'galaxy-layout';
 
-    const firstRow = doc.createElement('div');
-    firstRow.className = 'galaxy-row galaxy-row--primary';
+    const overviewRow = doc.createElement('div');
+    overviewRow.className = 'galaxy-row galaxy-row--primary';
 
     const sectorDetails = createGalaxySection(doc, getGalaxyText('sections.sectorDetails', 'Sector Details'), '');
-    sectorDetails.section.classList.add('galaxy-section--sector');
+    sectorDetails.section.classList.add('galaxy-section--sector', 'galaxy-map-popup', 'galaxy-map-popup--sector', 'galaxy-map-popup--bare', 'is-hidden');
+    const sectorCloseButton = attachGalaxyPopupCloseButton(doc, sectorDetails);
     const sectorContent = doc.createElement('div');
     sectorContent.className = 'galaxy-sector-panel';
     sectorContent.dataset.emptyMessage = getGalaxyText('sections.noSectorSelected', 'No sector selected.');
@@ -2420,7 +2463,6 @@ function cacheGalaxyElements() {
     mapCanvas.appendChild(zoomControls);
     mapWrapper.appendChild(mapCanvas);
     mapWrapper.appendChild(mapOverlay);
-    overviewSection.body.appendChild(mapWrapper);
 
     const mapState = {
         scale: 1,
@@ -2481,38 +2523,37 @@ function cacheGalaxyElements() {
         }
     }, { passive: false });
 
-    firstRow.appendChild(sectorDetails.section);
-    firstRow.appendChild(overviewSection.section);
-
-    const secondRow = doc.createElement('div');
-    secondRow.className = 'galaxy-row galaxy-row--secondary';
-
     const operations = createGalaxySection(doc, getGalaxyText('sections.operations', 'Operations'), '');
-    operations.section.classList.add('galaxy-section--operations');
+    operations.section.classList.add('galaxy-section--operations', 'galaxy-map-popup', 'galaxy-map-popup--operations', 'galaxy-map-popup--bare', 'is-hidden');
+    const operationsCloseButton = attachGalaxyPopupCloseButton(doc, operations);
     const operationsCache = galaxyOperationUI.populateSection({
         doc,
         container: operations.body,
         createInfoTooltip
     });
+    if (operationsCache.operationsPanelHeader) {
+        operationsCloseButton.classList.add('galaxy-operations-panel__close');
+        operationsCache.operationsPanelHeader.appendChild(operationsCloseButton);
+    }
 
-    const incomingAttacks = createGalaxySection(doc, getGalaxyText('sections.incomingAttacks', 'Incoming Attacks'), '');
-    incomingAttacks.section.classList.add('galaxy-section--attacks');
+    const incomingAttacks = createGalaxySection(doc, getGalaxyText('defense.title', 'Sector Defense'), '');
+    incomingAttacks.section.classList.add('galaxy-section--attacks', 'galaxy-map-popup', 'galaxy-map-popup--defense', 'galaxy-map-popup--bare', 'is-hidden');
+    const defenseCloseButton = attachGalaxyPopupCloseButton(doc, incomingAttacks);
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
     attackContent.dataset.emptyMessage = getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
-    const attackPlaceholder = doc.createElement('p');
-    attackPlaceholder.className = 'galaxy-attack-panel__placeholder';
-    attackPlaceholder.textContent = attackContent.dataset.emptyMessage;
-    const attackList = doc.createElement('div');
-    attackList.className = 'galaxy-attack-panel__list';
-    attackContent.appendChild(attackPlaceholder);
-    attackContent.appendChild(attackList);
+    const attackPlaceholder = null;
+    const attackList = null;
 
     const defenseSection = doc.createElement('div');
     defenseSection.className = 'galaxy-defense-section is-hidden';
     const defenseTitle = doc.createElement('div');
     defenseTitle.className = 'galaxy-defense-section__title';
-    defenseTitle.textContent = getGalaxyText('defense.title', 'Sector Defense');
+    const defenseTitleText = doc.createElement('span');
+    defenseTitleText.textContent = getGalaxyText('defense.title', 'Sector Defense');
+    defenseTitle.appendChild(defenseTitleText);
+    defenseCloseButton.classList.add('galaxy-defense-section__close');
+    defenseTitle.appendChild(defenseCloseButton);
     defenseSection.appendChild(defenseTitle);
 
     const defenseWarning = doc.createElement('p');
@@ -2585,14 +2626,15 @@ function cacheGalaxyElements() {
     defenseRow.appendChild(defenseButtonsContainer);
 
     defenseForm.append(defenseMeta, defenseSummary, defenseRow);
-    defenseSection.appendChild(defenseForm);
 
     const defenseClearButton = doc.createElement('button');
     defenseClearButton.type = 'button';
     defenseClearButton.className = 'galaxy-defense-form__button galaxy-defense-section__clear-button';
-    defenseClearButton.textContent = getGalaxyText('defense.clearAll', 'Unassign all defensive assignments');
+    defenseClearButton.textContent = getGalaxyText('defense.clearAllShort', 'Unassign all');
     defenseClearButton.hidden = true;
-    defenseSection.appendChild(defenseClearButton);
+    defenseButtonsContainer.appendChild(defenseClearButton);
+
+    defenseSection.appendChild(defenseForm);
 
     const defenseHistory = doc.createElement('div');
     defenseHistory.className = 'galaxy-defense-history';
@@ -2639,7 +2681,6 @@ function cacheGalaxyElements() {
     defenseHistory.appendChild(defenseHistoryHeader);
     defenseHistoryRows.forEach((entry) => defenseHistory.appendChild(entry.row));
     defenseHistory.appendChild(defenseHistoryEmpty);
-    defenseSection.appendChild(defenseHistory);
 
     attackContent.appendChild(defenseSection);
     incomingAttacks.body.appendChild(attackContent);
@@ -2649,8 +2690,11 @@ function cacheGalaxyElements() {
     });
     defenseClearButton.addEventListener('click', handleDefenseClearAllClick);
 
-    secondRow.appendChild(operations.section);
-    secondRow.appendChild(incomingAttacks.section);
+    mapWrapper.appendChild(sectorDetails.section);
+    mapWrapper.appendChild(operations.section);
+    mapWrapper.appendChild(incomingAttacks.section);
+    overviewSection.body.appendChild(mapWrapper);
+    overviewRow.appendChild(overviewSection.section);
 
     const thirdRow = doc.createElement('div');
     thirdRow.className = 'galaxy-row galaxy-row--tertiary';
@@ -2869,8 +2913,7 @@ function cacheGalaxyElements() {
     thirdRow.appendChild(upgrades.section);
     thirdRow.appendChild(logistics.section);
 
-    layout.appendChild(firstRow);
-    layout.appendChild(secondRow);
+    layout.appendChild(overviewRow);
     layout.appendChild(thirdRow);
 
     container.replaceChildren(layout);
@@ -2887,8 +2930,10 @@ function cacheGalaxyElements() {
         zoomIn,
         zoomOut,
         operationsPanel: operationsCache.operationsPanel,
+        operationsPanelHeader: operationsCache.operationsPanelHeader,
         operationsEmpty: operationsCache.operationsEmpty,
         operationsForm: operationsCache.operationsForm,
+        operationsFormHeader: operationsCache.operationsFormHeader,
         operationsInput: operationsCache.operationsInput,
         operationsButtons: operationsCache.operationsButtons,
         operationsLaunchButton: operationsCache.operationsLaunchButton,
@@ -2939,6 +2984,12 @@ function cacheGalaxyElements() {
         defenseHistory,
         defenseHistoryRows,
         defenseHistoryEmpty,
+        sectorCloseButton,
+        operationsCloseButton,
+        defenseCloseButton,
+        sectorPopup: sectorDetails.section,
+        operationsPopup: operations.section,
+        defensePopup: incomingAttacks.section,
         sectorContent,
         sectorDetails: null,
         hexElements,
@@ -3203,7 +3254,7 @@ function updateRecentAttackHistory(manager, cache) {
 }
 
 function updateIncomingAttackPanel(manager, cache) {
-    if (!cache?.attackContent || !cache.attackList) {
+    if (!cache?.attackContent) {
         return;
     }
     const incomingAttacks = GalaxyFactionUI.getIncomingAttacks(manager);
@@ -3212,14 +3263,6 @@ function updateIncomingAttackPanel(manager, cache) {
 
     for (let index = 0; index < incomingAttacks.length; index += 1) {
         const attack = incomingAttacks[index];
-        const record = ensureAttackCard(cache, attack);
-        if (!record) {
-            continue;
-        }
-        record.factionNode.textContent = attack.attackerName;
-        record.timerNode.textContent = formatAttackCountdown(attack.remainingMs);
-        const formattedPower = formatFleetValue(attack.power);
-        record.powerNode.textContent = getGalaxyText('attacks.powerValue', 'Power: {value}', { value: formattedPower });
         const estimate = manager.operationManager.getOperationLossEstimate({
             sectorKey: attack.sectorKey,
             factionId: attack.attackerId,
@@ -3234,40 +3277,64 @@ function updateIncomingAttackPanel(manager, cache) {
         if (displayPercent > 0) {
             hasThreat = true;
         }
-        if (record.sectorButton) {
-            const sectorKey = attack.sectorKey || '';
-            const sectorName = attack.sectorName || getGalaxyText('attacks.unknownSector', 'Unknown sector');
-            record.sectorButton.textContent = sectorName;
-            record.sectorButton.dataset.sectorKey = sectorKey;
-            record.sectorButton.disabled = sectorKey === '';
-            if (sectorKey) {
-                record.sectorButton.setAttribute('aria-label', getGalaxyText('attacks.viewSector', 'View sector {value}', { value: sectorName }));
-            } else {
-                record.sectorButton.removeAttribute('aria-label');
-            }
-        }
-        if (record.element.parentNode !== cache.attackList) {
-            cache.attackList.appendChild(record.element);
-        }
         seen.add(attack.sectorKey || attack.attackerId);
     }
 
-    const entries = cache.attackEntries;
-    if (entries) {
-        Array.from(entries.keys()).forEach((key) => {
-            if (seen.has(key)) {
-                const existing = entries.get(key);
-                if (existing && existing.element.parentNode !== cache.attackList) {
-                    cache.attackList.appendChild(existing.element);
+    if (cache.attackList) {
+        for (let index = 0; index < incomingAttacks.length; index += 1) {
+            const attack = incomingAttacks[index];
+            const record = ensureAttackCard(cache, attack);
+            if (!record) {
+                continue;
+            }
+            record.factionNode.textContent = attack.attackerName;
+            record.timerNode.textContent = formatAttackCountdown(attack.remainingMs);
+            const formattedPower = formatFleetValue(attack.power);
+            record.powerNode.textContent = getGalaxyText('attacks.powerValue', 'Power: {value}', { value: formattedPower });
+            const estimate = manager.operationManager.getOperationLossEstimate({
+                sectorKey: attack.sectorKey,
+                factionId: attack.attackerId,
+                assignedPower: attack.power,
+                reservedPower: attack.reservedPower,
+                offensePower: attack.power,
+                targetFactionId: attack.targetFactionId
+            });
+            const successChance = estimate?.successChance || 0;
+            record.chanceNode.textContent = getGalaxyText('attacks.enemySuccess', 'Enemy success: {value}', { value: formatPercentDisplay(successChance) });
+            if (record.sectorButton) {
+                const sectorKey = attack.sectorKey || '';
+                const sectorName = attack.sectorName || getGalaxyText('attacks.unknownSector', 'Unknown sector');
+                record.sectorButton.textContent = sectorName;
+                record.sectorButton.dataset.sectorKey = sectorKey;
+                record.sectorButton.disabled = sectorKey === '';
+                if (sectorKey) {
+                    record.sectorButton.setAttribute('aria-label', getGalaxyText('attacks.viewSector', 'View sector {value}', { value: sectorName }));
+                } else {
+                    record.sectorButton.removeAttribute('aria-label');
                 }
-                return;
             }
-            const existing = entries.get(key);
-            if (existing?.element?.parentNode) {
-                existing.element.parentNode.removeChild(existing.element);
+            if (record.element.parentNode !== cache.attackList) {
+                cache.attackList.appendChild(record.element);
             }
-            entries.delete(key);
-        });
+        }
+
+        const entries = cache.attackEntries;
+        if (entries) {
+            Array.from(entries.keys()).forEach((key) => {
+                if (seen.has(key)) {
+                    const existing = entries.get(key);
+                    if (existing && existing.element.parentNode !== cache.attackList) {
+                        cache.attackList.appendChild(existing.element);
+                    }
+                    return;
+                }
+                const existing = entries.get(key);
+                if (existing?.element?.parentNode) {
+                    existing.element.parentNode.removeChild(existing.element);
+                }
+                entries.delete(key);
+            });
+        }
     }
 
     const hasEntries = incomingAttacks.length > 0;
