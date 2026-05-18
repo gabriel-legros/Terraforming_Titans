@@ -14,6 +14,8 @@ const HEX_STRIPE_HOVER_LIGHTEN = 0.26;
 const HEX_BORDER_LIGHTEN = 0.32;
 const GALAXY_UHF_FACTION_ID = 'uhf';
 const GALAXY_DEFENSE_ICON = '\u{1F6E1}\u{FE0F}';
+const GALAXY_OFFENSE_ICON = '\u2694\uFE0F';
+const GALAXY_DETAILS_ICON = '\u24D8';
 const GALAXY_ALIEN_ICON = '\u2620\uFE0F';
 const GALAXY_CONTROL_EPSILON = 1e-6;
 const WARP_GATE_NETWORK_MAX_LEVEL = 1000000;
@@ -85,6 +87,7 @@ const OPERATION_ARROW_LINE_WIDTH = 4;
 const OPERATION_ARROW_MARGIN = 24;
 const OPERATION_ARROW_MIN_LENGTH = 18;
 const GALAXY_MAP_REFRESH_INTERVAL_MS = 1000;
+const GALAXY_POPUP_DRAG_SELECTORS = '.galaxy-sector-panel__title-row, .galaxy-operations-panel__header, .galaxy-defense-section__title';
 
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
@@ -595,6 +598,7 @@ function selectGalaxySector({ q, r, hex }) {
         displayName: hex && hex.dataset.displayName ? hex.dataset.displayName : formatSectorName(q, r)
     };
 
+    clearPopupClosedStates();
     setGalaxySectorPopupsVisible(true);
     renderSelectedSectorDetails();
 }
@@ -623,20 +627,76 @@ function clearSelectedGalaxySector() {
     galaxyOperationUI?.updateOperationsPanel?.();
 }
 
+function updateGalaxyMapControlStates() {
+    const cache = galaxyUICache;
+    if (!cache || !cache.popupToggleButtons) {
+        return;
+    }
+    const visibility = cache.popupVisibility;
+    Object.entries(cache.popupToggleButtons).forEach(([key, button]) => {
+        const active = visibility[key] !== false;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+}
+
+function setPopupClosedState(popupKey, closed) {
+    const cache = galaxyUICache;
+    if (!cache || !popupKey) {
+        return;
+    }
+    cache.popupClosed[popupKey] = closed === true;
+}
+
+function clearPopupClosedStates() {
+    const cache = galaxyUICache;
+    if (!cache || !cache.popupClosed) {
+        return;
+    }
+    cache.popupClosed.sector = false;
+    cache.popupClosed.operations = false;
+    cache.popupClosed.defense = false;
+}
+
 function setGalaxySectorPopupsVisible(visible) {
     const cache = galaxyUICache;
     if (!cache) {
         return;
     }
-    [
-        cache.sectorPopup,
-        cache.operationsPopup,
-        cache.defensePopup
-    ].forEach((popup) => {
-        if (popup) {
-            popup.classList.toggle('is-hidden', !visible);
-        }
-    });
+    const visibility = cache.popupVisibility || { sector: true, operations: true, defense: true };
+    const closed = cache.popupClosed || { sector: false, operations: false, defense: false };
+    const selectedVisible = visible && cache.selectedSector;
+    if (cache.sectorPopup) {
+        cache.sectorPopup.classList.toggle('is-hidden', !(selectedVisible && visibility.sector !== false && closed.sector !== true));
+    }
+    if (cache.operationsPopup) {
+        cache.operationsPopup.classList.toggle('is-hidden', !(selectedVisible && visibility.operations !== false && closed.operations !== true));
+    }
+    if (cache.defensePopup) {
+        cache.defensePopup.classList.toggle('is-hidden', !(selectedVisible && visibility.defense !== false && closed.defense !== true));
+    }
+    updateGalaxyMapControlStates();
+}
+
+function handleGalaxyPopupToggle(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const button = event.currentTarget;
+    const popupKey = button?.dataset?.popupKey;
+    const cache = galaxyUICache;
+    if (!popupKey || !cache || !cache.popupVisibility) {
+        return;
+    }
+    cache.popupVisibility[popupKey] = cache.popupVisibility[popupKey] === false;
+    setGalaxySectorPopupsVisible(!!cache.selectedSector);
+}
+
+function showGalaxyPopupFromClose(section) {
+    if (!section || !galaxyUICache?.selectedSector) {
+        return;
+    }
+    setPopupClosedState(section.dataset.popupKey, true);
+    section.classList.add('is-hidden');
 }
 
 
@@ -2062,7 +2122,7 @@ function startGalaxyMapPan(event) {
         return;
     }
     const target = event.target;
-    if (target && target.closest('.galaxy-map-zoom')) {
+    if (target && target.closest('.galaxy-map-zoom, .galaxy-map-controls')) {
         return;
     }
 
@@ -2209,6 +2269,111 @@ function detachDocumentPanListeners() {
     legacyPanAttached = false;
 }
 
+function clampGalaxyPopupPosition(popup) {
+    const wrapper = galaxyUICache?.mapWrapper;
+    if (!popup || !wrapper) {
+        return;
+    }
+    const wrapperWidth = wrapper.clientWidth;
+    const wrapperHeight = wrapper.clientHeight;
+    const popupWidth = popup.offsetWidth;
+    const popupHeight = popup.offsetHeight;
+    const maxLeft = Math.max(0, wrapperWidth - popupWidth - 8);
+    const maxTop = Math.max(0, wrapperHeight - popupHeight - 8);
+    const left = Math.max(8, Math.min(maxLeft, Number(popup._galaxyDragLeft) || popup.offsetLeft));
+    const top = Math.max(8, Math.min(maxTop, Number(popup._galaxyDragTop) || popup.offsetTop));
+    popup._galaxyDragLeft = left;
+    popup._galaxyDragTop = top;
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+    popup.style.right = 'auto';
+    popup.style.bottom = 'auto';
+}
+
+function startGalaxyPopupDrag(event) {
+    const target = event.target;
+    if (!target || target.closest('button, input, select, textarea, a, .info-tooltip-icon')) {
+        return;
+    }
+    const handle = target.closest(GALAXY_POPUP_DRAG_SELECTORS);
+    const popup = handle?.closest?.('.galaxy-map-popup');
+    if (!popup || !galaxyUICache?.mapWrapper) {
+        return;
+    }
+    if (event.type === 'pointerdown' && event.pointerType === 'mouse' && event.button !== 0) {
+        return;
+    }
+    const coords = extractClientCoordinates(event);
+    if (!coords) {
+        return;
+    }
+    const popupRect = popup.getBoundingClientRect();
+    const wrapperRect = galaxyUICache.mapWrapper.getBoundingClientRect();
+    popup._galaxyDragStartX = coords.x;
+    popup._galaxyDragStartY = coords.y;
+    popup._galaxyDragLeft = popupRect.left - wrapperRect.left;
+    popup._galaxyDragTop = popupRect.top - wrapperRect.top;
+    popup.classList.add('is-dragging');
+    galaxyUICache.popupDrag = {
+        popup,
+        pointerId: getPointerId(event),
+        startX: coords.x,
+        startY: coords.y,
+        startLeft: popup._galaxyDragLeft,
+        startTop: popup._galaxyDragTop
+    };
+    if (supportsPointerEvents && typeof event.pointerId === 'number') {
+        popup.setPointerCapture(event.pointerId);
+    }
+    event.stopPropagation();
+    if (event.cancelable) {
+        event.preventDefault();
+    }
+}
+
+function moveGalaxyPopupDrag(event) {
+    const drag = galaxyUICache?.popupDrag;
+    if (!drag || getPointerId(event) !== drag.pointerId) {
+        return;
+    }
+    const coords = extractClientCoordinates(event);
+    if (!coords) {
+        return;
+    }
+    drag.popup._galaxyDragLeft = drag.startLeft + coords.x - drag.startX;
+    drag.popup._galaxyDragTop = drag.startTop + coords.y - drag.startY;
+    clampGalaxyPopupPosition(drag.popup);
+    if (event.cancelable) {
+        event.preventDefault();
+    }
+}
+
+function endGalaxyPopupDrag(event) {
+    const drag = galaxyUICache?.popupDrag;
+    if (!drag || getPointerId(event) !== drag.pointerId) {
+        return;
+    }
+    if (supportsPointerEvents && typeof event.pointerId === 'number' && drag.popup.hasPointerCapture(event.pointerId)) {
+        drag.popup.releasePointerCapture(event.pointerId);
+    }
+    drag.popup.classList.remove('is-dragging');
+    galaxyUICache.popupDrag = null;
+    if (event.cancelable) {
+        event.preventDefault();
+    }
+}
+
+function attachGalaxyPopupDrag(section) {
+    if (!section || section._galaxyPopupDragAttached || !supportsPointerEvents) {
+        return;
+    }
+    section.addEventListener('pointerdown', startGalaxyPopupDrag, { passive: false });
+    section.addEventListener('pointermove', moveGalaxyPopupDrag, { passive: false });
+    section.addEventListener('pointerup', endGalaxyPopupDrag, { passive: false });
+    section.addEventListener('pointercancel', endGalaxyPopupDrag, { passive: false });
+    section._galaxyPopupDragAttached = true;
+}
+
 function createInfoTooltip(doc, title) {
     const tooltip = doc.createElement('span');
     tooltip.className = 'info-tooltip-icon';
@@ -2352,14 +2517,17 @@ function createGalaxySection(doc, title, description) {
     return { section, header, body };
 }
 
-function attachGalaxyPopupCloseButton(doc, sectionData) {
+function attachGalaxyPopupCloseButton(doc, sectionData, popupKey) {
     const button = doc.createElement('button');
     button.type = 'button';
     button.className = 'galaxy-map-popup__close';
     button.textContent = 'x';
     button.setAttribute('aria-label', getGalaxyText('sections.closePanel', 'Close panel'));
+    if (popupKey) {
+        sectionData.section.dataset.popupKey = popupKey;
+    }
     button.addEventListener('click', () => {
-        sectionData.section.classList.add('is-hidden');
+        showGalaxyPopupFromClose(sectionData.section);
     });
     sectionData.header.classList.add('galaxy-section__header--with-close');
     sectionData.header.appendChild(button);
@@ -2389,7 +2557,7 @@ function cacheGalaxyElements() {
 
     const sectorDetails = createGalaxySection(doc, getGalaxyText('sections.sectorDetails', 'Sector Details'), '');
     sectorDetails.section.classList.add('galaxy-section--sector', 'galaxy-map-popup', 'galaxy-map-popup--sector', 'galaxy-map-popup--bare', 'is-hidden');
-    const sectorCloseButton = attachGalaxyPopupCloseButton(doc, sectorDetails);
+    const sectorCloseButton = attachGalaxyPopupCloseButton(doc, sectorDetails, 'sector');
     const sectorContent = doc.createElement('div');
     sectorContent.className = 'galaxy-sector-panel';
     sectorContent.dataset.emptyMessage = getGalaxyText('sections.noSectorSelected', 'No sector selected.');
@@ -2398,7 +2566,7 @@ function cacheGalaxyElements() {
 
     const overviewSection = createGalaxySection(doc, getGalaxyText('sections.galacticOverview', 'Galactic Overview'));
     overviewSection.section.classList.add('galaxy-section--overview');
-    overviewSection.header.classList.add('galaxy-section__header--with-icon');
+    overviewSection.header.classList.add('galaxy-section__header--with-icon', 'is-hidden');
     const overviewTooltipIcon = doc.createElement('span');
     overviewTooltipIcon.className = 'info-tooltip-icon';
     overviewTooltipIcon.innerHTML = '&#9432;';
@@ -2459,10 +2627,43 @@ function cacheGalaxyElements() {
     zoomControls.appendChild(zoomIn);
     zoomControls.appendChild(zoomOut);
 
+    const detailsControls = doc.createElement('div');
+    detailsControls.className = 'galaxy-map-controls galaxy-map-controls--details';
+    detailsControls.setAttribute('aria-label', getGalaxyText('map.sectorDetailsControls', 'Sector details controls'));
+    const detailsToggle = doc.createElement('button');
+    detailsToggle.type = 'button';
+    detailsToggle.className = 'galaxy-map-control-button';
+    detailsToggle.dataset.popupKey = 'sector';
+    detailsToggle.textContent = GALAXY_DETAILS_ICON;
+    detailsToggle.setAttribute('aria-label', getGalaxyText('map.toggleSectorDetails', 'Toggle sector details'));
+    detailsToggle.setAttribute('aria-pressed', 'true');
+    detailsControls.appendChild(detailsToggle);
+
+    const combatControls = doc.createElement('div');
+    combatControls.className = 'galaxy-map-controls galaxy-map-controls--combat';
+    combatControls.setAttribute('aria-label', getGalaxyText('map.combatPanelControls', 'Combat panel controls'));
+    const operationsToggle = doc.createElement('button');
+    operationsToggle.type = 'button';
+    operationsToggle.className = 'galaxy-map-control-button';
+    operationsToggle.dataset.popupKey = 'operations';
+    operationsToggle.textContent = GALAXY_OFFENSE_ICON;
+    operationsToggle.setAttribute('aria-label', getGalaxyText('map.toggleOperations', 'Toggle offense controls'));
+    operationsToggle.setAttribute('aria-pressed', 'true');
+    const defenseToggle = doc.createElement('button');
+    defenseToggle.type = 'button';
+    defenseToggle.className = 'galaxy-map-control-button';
+    defenseToggle.dataset.popupKey = 'defense';
+    defenseToggle.textContent = GALAXY_DEFENSE_ICON;
+    defenseToggle.setAttribute('aria-label', getGalaxyText('map.toggleDefense', 'Toggle defense controls'));
+    defenseToggle.setAttribute('aria-pressed', 'true');
+    combatControls.append(operationsToggle, defenseToggle);
+
     mapCanvas.appendChild(mapContent);
     mapCanvas.appendChild(zoomControls);
     mapWrapper.appendChild(mapCanvas);
     mapWrapper.appendChild(mapOverlay);
+    mapWrapper.appendChild(detailsControls);
+    mapWrapper.appendChild(combatControls);
 
     const mapState = {
         scale: 1,
@@ -2508,6 +2709,16 @@ function cacheGalaxyElements() {
         event.stopPropagation();
         adjustGalaxyMapScale(1 / HEX_SCALE_STEP);
     });
+    [detailsToggle, operationsToggle, defenseToggle].forEach((button) => {
+        button.addEventListener('click', handleGalaxyPopupToggle);
+        button.addEventListener('mousedown', (event) => event.stopPropagation());
+        button.addEventListener('touchstart', (event) => {
+            event.stopPropagation();
+            if (event.cancelable) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    });
     zoomIn.addEventListener('mousedown', (event) => event.stopPropagation());
     zoomOut.addEventListener('mousedown', (event) => event.stopPropagation());
     zoomIn.addEventListener('touchstart', (event) => {
@@ -2525,7 +2736,7 @@ function cacheGalaxyElements() {
 
     const operations = createGalaxySection(doc, getGalaxyText('sections.operations', 'Operations'), '');
     operations.section.classList.add('galaxy-section--operations', 'galaxy-map-popup', 'galaxy-map-popup--operations', 'galaxy-map-popup--bare', 'is-hidden');
-    const operationsCloseButton = attachGalaxyPopupCloseButton(doc, operations);
+    const operationsCloseButton = attachGalaxyPopupCloseButton(doc, operations, 'operations');
     const operationsCache = galaxyOperationUI.populateSection({
         doc,
         container: operations.body,
@@ -2538,7 +2749,7 @@ function cacheGalaxyElements() {
 
     const incomingAttacks = createGalaxySection(doc, getGalaxyText('defense.title', 'Sector Defense'), '');
     incomingAttacks.section.classList.add('galaxy-section--attacks', 'galaxy-map-popup', 'galaxy-map-popup--defense', 'galaxy-map-popup--bare', 'is-hidden');
-    const defenseCloseButton = attachGalaxyPopupCloseButton(doc, incomingAttacks);
+    const defenseCloseButton = attachGalaxyPopupCloseButton(doc, incomingAttacks, 'defense');
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
     attackContent.dataset.emptyMessage = getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
@@ -2689,6 +2900,10 @@ function cacheGalaxyElements() {
         button.addEventListener('click', handleDefenseButtonClick);
     });
     defenseClearButton.addEventListener('click', handleDefenseClearAllClick);
+
+    attachGalaxyPopupDrag(sectorDetails.section);
+    attachGalaxyPopupDrag(operations.section);
+    attachGalaxyPopupDrag(incomingAttacks.section);
 
     mapWrapper.appendChild(sectorDetails.section);
     mapWrapper.appendChild(operations.section);
@@ -2929,6 +3144,25 @@ function cacheGalaxyElements() {
         mapState,
         zoomIn,
         zoomOut,
+        detailsToggle,
+        operationsToggle,
+        defenseToggle,
+        popupToggleButtons: {
+            sector: detailsToggle,
+            operations: operationsToggle,
+            defense: defenseToggle
+        },
+        popupVisibility: {
+            sector: true,
+            operations: true,
+            defense: true
+        },
+        popupClosed: {
+            sector: false,
+            operations: false,
+            defense: false
+        },
+        popupDrag: null,
         operationsPanel: operationsCache.operationsPanel,
         operationsPanelHeader: operationsCache.operationsPanelHeader,
         operationsEmpty: operationsCache.operationsEmpty,
@@ -3478,6 +3712,7 @@ function updateGalaxyUI(options = {}) {
         galaxyOperationUI?.updateOperationArrows?.(manager, cache);
     }
     renderSelectedSectorDetails();
+    setGalaxySectorPopupsVisible(!!cache.selectedSector);
     refreshEmptyStates();
     if (cache.mapState.deferredCenter && cache.mapWrapper && cache.mapWrapper.offsetParent) {
         scheduleGalaxyMapCenter(cache);

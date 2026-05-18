@@ -1,12 +1,12 @@
 #space-galaxy {
-  padding: 16px;
+  padding: 4px;
   color: #e4f2ff;
 }
 
 .galaxy-layout {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .galaxy-row {
@@ -28,8 +28,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 18px;
-  border-radius: 14px;
+  padding: 10px;
+  border-radius: 12px;
   border: 1px solid rgba(96, 144, 208, 0.18);
   background: linear-gradient(155deg, rgba(18, 28, 48, 0.92), rgba(8, 12, 22, 0.92));
   box-shadow: 0 8px 20px rgba(4, 10, 22, 0.35);
@@ -46,7 +46,8 @@
 .galaxy-section--overview {
   flex: 1 1 0;
   background: linear-gradient(160deg, rgba(26, 42, 72, 0.95), rgba(10, 16, 28, 0.95));
-  min-height: max(620px, calc(100vh - 260px));
+  min-height: max(600px, calc(100vh - 240px));
+  padding: 6px;
 }
 
 .galaxy-section--operations,
@@ -291,12 +292,18 @@
 .galaxy-section__body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   background: rgba(8, 14, 24, 0.5);
   border: 1px solid rgba(76, 120, 184, 0.25);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 10px;
+  padding: 8px;
   flex: 1 1 auto;
+}
+
+.galaxy-section--overview > .galaxy-section__body {
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .galaxy-section__description {
@@ -337,12 +344,16 @@
   flex: 1 1 auto;
   width: 100%;
   aspect-ratio: auto;
-  min-height: max(560px, calc(100vh - 360px));
+  min-height: max(560px, calc(100vh - 260px));
   background: radial-gradient(circle at top, rgba(36, 60, 96, 0.65), rgba(8, 12, 20, 0.9));
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px solid rgba(70, 120, 190, 0.3);
   overflow: hidden;
   touch-action: none;
+}
+
+.galaxy-map-wrapper > .galaxy-map-controls {
+  position: absolute;
 }
 
 .galaxy-map {
@@ -502,10 +513,11 @@
 }
 
 .galaxy-map-popup--defense {
-  left: 20%;
-  right: 20%;
+  left: calc((100% - min(760px, calc(100% - 28px))) / 2);
+  right: auto;
   bottom: 14px;
-  width: auto;
+  width: min(760px, calc(100% - 28px));
+  max-width: calc(100% - 28px);
   max-height: none;
 }
 
@@ -519,12 +531,64 @@
   z-index: 5;
 }
 
+.galaxy-map-controls {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.galaxy-map-controls--details {
+  left: 14px;
+  bottom: 14px;
+}
+
+.galaxy-map-controls--combat {
+  right: 14px;
+  bottom: 14px;
+}
+
+.galaxy-map-control-button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(136, 188, 252, 0.4);
+  background: rgba(12, 22, 36, 0.7);
+  color: #e4f2ff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(4, 12, 22, 0.3);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+}
+
+.galaxy-map-control-button:hover {
+  transform: translateY(-1px);
+  background: rgba(20, 36, 56, 0.82);
+}
+
+.galaxy-map-control-button.is-active {
+  border-color: rgba(156, 216, 255, 0.8);
+  background: rgba(42, 86, 140, 0.88);
+  box-shadow: 0 0 14px rgba(120, 208, 255, 0.35);
+}
+
+.galaxy-map-control-button:not(.is-active) {
+  border-color: rgba(136, 188, 252, 0.42);
+  background: rgba(12, 22, 36, 0.18);
+  color: rgba(228, 242, 255, 0.72);
+  box-shadow: none;
+}
+
 .galaxy-map-zoom__button {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  border: 1px solid rgba(136, 188, 252, 0.4);
-  background: rgba(12, 22, 36, 0.7);
+  border: 1px solid rgba(156, 216, 255, 0.8);
+  background: rgba(42, 86, 140, 0.88);
   color: #e4f2ff;
   font-size: 1.2rem;
   font-weight: 600;
@@ -539,8 +603,21 @@
   background: rgba(20, 36, 56, 0.82);
 }
 
-.galaxy-map-zoom__button:active {
+.galaxy-map-zoom__button:active,
+.galaxy-map-control-button:active {
   transform: translateY(1px);
+}
+
+.galaxy-map-popup.is-dragging {
+  opacity: 0.92;
+  cursor: grabbing;
+}
+
+.galaxy-sector-panel__title-row,
+.galaxy-operations-panel__header,
+.galaxy-defense-section__title {
+  cursor: grab;
+  user-select: none;
 }
 
 .galaxy-hex {
@@ -1378,8 +1455,12 @@
 }
 
 .galaxy-operations-launch__auto-suffix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5f9ff;
   font-size: 0.82rem;
-  color: #f2a2a2;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -1609,6 +1690,16 @@
   .galaxy-map-wrapper {
     aspect-ratio: auto;
     min-height: 680px;
+  }
+
+  .galaxy-map-controls--details {
+    left: 12px;
+    bottom: 12px;
+  }
+
+  .galaxy-map-controls--combat {
+    right: 12px;
+    bottom: 12px;
   }
 
   .galaxy-map-popup {

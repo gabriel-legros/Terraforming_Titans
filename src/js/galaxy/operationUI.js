@@ -718,7 +718,7 @@ const GalaxyOperationUI = (() => {
 
         const autoModeThresholdSuffix = doc.createElement('span');
         autoModeThresholdSuffix.className = 'galaxy-operations-launch__auto-suffix';
-        autoModeThresholdSuffix.textContent = '\u2620';
+        autoModeThresholdSuffix.textContent = '\u2620\uFE0F';
         autoModeThresholdSuffix.title = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
         autoModeRow.appendChild(autoModeThresholdSuffix);
 
@@ -753,7 +753,7 @@ const GalaxyOperationUI = (() => {
 
         const autoLaunchThresholdSuffix = doc.createElement('span');
         autoLaunchThresholdSuffix.className = 'galaxy-operations-launch__auto-suffix';
-        autoLaunchThresholdSuffix.textContent = '\u2620';
+        autoLaunchThresholdSuffix.textContent = '\u2620\uFE0F';
         autoLaunchThresholdSuffix.title = getOperationsText('autoThresholdSuffix', {}, 'times enemy defense');
         autoLaunchLabel.appendChild(autoLaunchThresholdSuffix);
 
