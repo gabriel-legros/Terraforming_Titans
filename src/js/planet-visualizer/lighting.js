@@ -166,7 +166,7 @@
       if (this.isRingWorld()) {
         this.sunMesh.visible = false;
       } else if (this.isDiskWorld()) {
-        this.sunMesh.visible = illum >= 0.01;
+        this.sunMesh.visible = true;
         this.sunMesh.scale.setScalar(0.2);
       } else {
         this.sunMesh.visible = illum >= 0.01;

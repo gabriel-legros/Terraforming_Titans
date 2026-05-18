@@ -553,6 +553,8 @@
       if (isDisk) {
         this.sunMesh.position.set(0, 0.035, 0);
         this.sunMesh.scale.setScalar(0.2);
+        this.sunMesh.renderOrder = 20;
+        this.sunMesh.material.depthTest = false;
       } else {
         this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
       }
