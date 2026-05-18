@@ -777,9 +777,54 @@
     margin-left: 0;
 }
 
+.diskworld-stat-group {
+    margin-top: 12px;
+}
+
+.ringworld-terraforming-progress + .diskworld-stat-group {
+    margin-top: 0;
+}
+
+.diskworld-stat-group-title {
+    color: #6c757d;
+    font-size: 0.82em;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.diskworld-stat-group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.diskworld-operations-panel {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(300px, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.diskworld-operations-controls {
+    align-self: end;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.diskworld-terraforming-controls {
+    margin-top: 0;
+}
+
 @media (max-width: 900px) {
     .ringworld-terraforming-layout {
         flex-direction: column;
+    }
+
+    .diskworld-operations-panel {
+        grid-template-columns: 1fr;
     }
 }
 

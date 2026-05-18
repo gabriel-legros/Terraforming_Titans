@@ -277,6 +277,14 @@ body.dark-mode {
     color: #bbbbbb;
 }
 
+.dark-mode .diskworld-stat-group-title {
+    color: #bbbbbb;
+}
+
+.dark-mode .diskworld-operations-controls {
+    border-color: #444;
+}
+
 .dark-mode #nanocolony-container .nanotech-summary-card,
 .dark-mode #nanocolony-container .nanotech-slider-card {
     background-color: #1e1e1e;

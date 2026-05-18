@@ -31,6 +31,51 @@ function createDiskworldStat(labelText) {
   return { wrapper, value };
 }
 
+function createDiskworldStatGroup(titleText, stats) {
+  const group = document.createElement('div');
+  group.className = 'diskworld-stat-group';
+  const title = document.createElement('div');
+  title.className = 'diskworld-stat-group-title';
+  title.textContent = titleText;
+  const grid = document.createElement('div');
+  grid.className = 'diskworld-stat-group-grid';
+  stats.forEach(stat => grid.appendChild(stat.wrapper));
+  group.append(title, grid);
+  return group;
+}
+
+function getDiskworldLiquidHydrogenAvailable() {
+  let total = 0;
+  const zonalSurface = terraforming.zonalSurface;
+  for (const zone in zonalSurface) {
+    total += zonalSurface[zone].liquidHydrogen || 0;
+  }
+  return total;
+}
+
+function removeDiskworldLiquidHydrogen(amountTons) {
+  if (!(amountTons > 0)) {
+    return 0;
+  }
+  const zonalSurface = terraforming.zonalSurface;
+  const available = getDiskworldLiquidHydrogenAvailable();
+  if (!(available > 0)) {
+    return 0;
+  }
+  let remaining = Math.min(amountTons, available);
+  for (const zone in zonalSurface) {
+    const zoneStore = zonalSurface[zone];
+    const current = zoneStore.liquidHydrogen || 0;
+    if (!(current > 0)) {
+      continue;
+    }
+    const removal = Math.min(current, amountTons * (current / available), remaining);
+    zoneStore.liquidHydrogen = current - removal;
+    remaining -= removal;
+  }
+  return Math.min(amountTons, available) - remaining;
+}
+
 class DiskworldTerraformingProject extends Project {
   constructor(config, name) {
     super(config, name);
@@ -46,6 +91,7 @@ class DiskworldTerraformingProject extends Project {
     this.currentRequiredHydrogenTons = 0;
     this.currentPressurePa = 0;
     this.currentEnergyPerTon = 0;
+    this.currentEnergyConsumptionRate = 0;
     this.currentShipEnergyMultiplier = 1;
     this.shipEnergyMultiplierEffect = {
       target: 'projectManager',
@@ -178,7 +224,7 @@ class DiskworldTerraformingProject extends Project {
 
   getSurfaceGravityRatio() {
     return this.currentRequiredMassTons > 0
-      ? Math.min(this.currentMassTons / this.currentRequiredMassTons, 1)
+      ? Math.min((this.currentConstructionMassTons + this.hydrogenFilledTons) / this.currentRequiredMassTons, 1)
       : 1;
   }
 
@@ -249,30 +295,23 @@ class DiskworldTerraformingProject extends Project {
     progressBlock.append(progressMeta, progressBar);
     statusPanel.appendChild(progressBlock);
 
-    const stats = document.createElement('div');
-    stats.className = 'stats-grid five-col ringworld-terraforming-stats';
     const surfaceGravity = createDiskworldStat(getDiskworldText('surfaceGravity', null, 'Surface Gravity:'));
     const fillRate = createDiskworldStat(getDiskworldText('pumpRate', null, 'Pump Rate:'));
     const status = createDiskworldStat(getDiskworldText('status', null, 'Status:'));
     const pressure = createDiskworldStat(getDiskworldText('hydrogenPressure', null, 'Hydrogen Pressure:'));
     const energyPerTon = createDiskworldStat(getDiskworldText('energyPerTon', null, 'Energy per Ton:'));
+    const energyUse = createDiskworldStat(getDiskworldText('energyUse', null, 'Current Energy Use:'));
     const shipMultiplier = createDiskworldStat(getDiskworldText('shipEnergyMultiplier', null, 'Ship Energy Multiplier:'));
     const massTotal = createDiskworldStat(getDiskworldText('diskMass', null, 'Disk Mass:'));
     const hydrogenFilled = createDiskworldStat(getDiskworldText('hydrogenFilled', null, 'Hydrogen Filled:'));
-    stats.append(
-      surfaceGravity.wrapper,
-      fillRate.wrapper,
-      status.wrapper,
-      pressure.wrapper,
-      energyPerTon.wrapper,
-      shipMultiplier.wrapper,
-      massTotal.wrapper,
-      hydrogenFilled.wrapper
+    const overviewGroup = createDiskworldStatGroup(
+      getDiskworldText('groups.overview', null, 'Overview'),
+      [status, surfaceGravity, hydrogenFilled, massTotal]
     );
-    statusPanel.appendChild(stats);
+    statusPanel.appendChild(overviewGroup);
 
     const controls = document.createElement('div');
-    controls.className = 'ringworld-terraforming-controls';
+    controls.className = 'ringworld-terraforming-controls diskworld-terraforming-controls';
     const pumpContainer = document.createElement('div');
     pumpContainer.className = 'checkbox-container';
     const pumpLabel = document.createElement('label');
@@ -310,7 +349,23 @@ class DiskworldTerraformingProject extends Project {
     multiplierButtons.append(stepDown, stepUp);
     rateControls.append(mainButtons, multiplierButtons);
     controls.appendChild(rateControls);
-    statusPanel.appendChild(controls);
+    const operationsPanel = document.createElement('div');
+    operationsPanel.className = 'diskworld-operations-panel';
+    const operationsControls = document.createElement('div');
+    operationsControls.className = 'diskworld-operations-controls';
+    operationsControls.appendChild(controls);
+    const operationsStats = createDiskworldStatGroup(
+      getDiskworldText('groups.operations', null, 'Pumping'),
+      [fillRate, energyUse]
+    );
+    operationsPanel.append(operationsControls, operationsStats);
+    statusPanel.appendChild(operationsPanel);
+
+    const diagnosticsGroup = createDiskworldStatGroup(
+      getDiskworldText('groups.diagnostics', null, 'Pressure and Costs'),
+      [pressure, energyPerTon, shipMultiplier]
+    );
+    statusPanel.appendChild(diagnosticsGroup);
 
     const notesPanel = document.createElement('div');
     notesPanel.className = 'ringworld-terraforming-panel ringworld-terraforming-notes-panel';
@@ -342,6 +397,7 @@ class DiskworldTerraformingProject extends Project {
       status: status.value,
       pressure: pressure.value,
       energyPerTon: energyPerTon.value,
+      energyUse: energyUse.value,
       shipMultiplier: shipMultiplier.value,
       massTotal: massTotal.value,
       hydrogenFilled: hydrogenFilled.value,
@@ -406,6 +462,7 @@ class DiskworldTerraformingProject extends Project {
     this.el.status.textContent = statusLabel;
     this.el.pressure.textContent = `${formatNumber(this.currentPressurePa, true, 3)} Pa`;
     this.el.energyPerTon.textContent = `${formatNumber(this.currentEnergyPerTon, true, 3)} W-day/t`;
+    this.el.energyUse.textContent = `${formatNumber(this.currentEnergyConsumptionRate, true, 3)} energy/s`;
     this.el.shipMultiplier.textContent = `${formatNumber(this.currentShipEnergyMultiplier, true, 3)}x`;
     this.el.massTotal.textContent = `${formatNumber(this.currentMassTons, true, 3)} t`;
     this.el.hydrogenFilled.textContent = `${formatNumber(this.hydrogenFilledTons, true, 3)} / ${formatNumber(this.currentRequiredHydrogenTons, true, 3)} t`;
@@ -450,12 +507,24 @@ class DiskworldTerraformingProject extends Project {
     this.refreshMassState();
     const hydrogenRate = this.pumpRate * productivity;
     const energyRate = hydrogenRate * this.currentEnergyPerTon;
+    const seconds = deltaTime / 1000;
+    const hydrogenAmount = hydrogenRate * seconds;
+    const liquidHydrogenAmount = Math.min(hydrogenAmount, getDiskworldLiquidHydrogenAvailable());
+    const atmosphericAmount = Math.max(hydrogenAmount - liquidHydrogenAmount, 0);
+    const atmosphericRate = seconds > 0 ? atmosphericAmount / seconds : 0;
+    const liquidHydrogenRate = seconds > 0 ? liquidHydrogenAmount / seconds : 0;
     if (applyRates) {
-      resources.spaceStorage.hydrogen.modifyRate(-hydrogenRate, this.displayName, 'project');
+      if (atmosphericRate > 0) {
+        resources.atmospheric.hydrogen.modifyRate(-atmosphericRate, this.displayName, 'project');
+      }
+      if (liquidHydrogenRate > 0) {
+        resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.displayName, 'project');
+      }
       resources.colony.energy.modifyRate(-energyRate, this.displayName, 'project');
     }
-    totals.cost.spaceStorage = { hydrogen: hydrogenRate * (deltaTime / 1000) };
-    totals.cost.colony = { energy: energyRate * (deltaTime / 1000) };
+    totals.cost.atmospheric = { hydrogen: atmosphericAmount };
+    totals.cost.surface = { liquidHydrogen: liquidHydrogenAmount };
+    totals.cost.colony = { energy: energyRate * seconds };
     return totals;
   }
 
@@ -463,6 +532,7 @@ class DiskworldTerraformingProject extends Project {
     if (!this.unlocked || !this.pumping || this.isCompleted || this.pumpRate <= 0) {
       this.shortfallLastTick = false;
       this.actualPumpRate = 0;
+      this.currentEnergyConsumptionRate = 0;
       return;
     }
     if (this.autoStart === false) {
@@ -472,18 +542,25 @@ class DiskworldTerraformingProject extends Project {
     const seconds = deltaTime / 1000;
     const requestedHydrogen = Math.min(this.pumpRate * seconds * productivity, Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0));
     const requestedEnergy = requestedHydrogen * this.currentEnergyPerTon;
-    const pendingHydrogen = accumulatedChanges.spaceStorage.hydrogen || 0;
+    const pendingHydrogen = accumulatedChanges.atmospheric.hydrogen || 0;
+    const pendingLiquidHydrogen = accumulatedChanges.surface.liquidHydrogen || 0;
     const pendingEnergy = accumulatedChanges.colony.energy || 0;
-    const availableHydrogen = Math.max(resources.spaceStorage.hydrogen.value + pendingHydrogen, 0);
+    const availableHydrogen = Math.max(resources.atmospheric.hydrogen.value + pendingHydrogen, 0);
+    const availableLiquidHydrogen = Math.max(getDiskworldLiquidHydrogenAvailable() + Math.min(pendingLiquidHydrogen, 0), 0);
     const availableEnergy = Math.max(resources.colony.energy.value + pendingEnergy, 0);
     const hydrogenByEnergy = this.currentEnergyPerTon > 0 ? availableEnergy / this.currentEnergyPerTon : requestedHydrogen;
-    const usedHydrogen = Math.min(requestedHydrogen, availableHydrogen, hydrogenByEnergy);
+    const targetHydrogen = Math.min(requestedHydrogen, availableHydrogen + availableLiquidHydrogen, hydrogenByEnergy);
+    const usedLiquidHydrogen = removeDiskworldLiquidHydrogen(Math.min(targetHydrogen, availableLiquidHydrogen));
+    const usedAtmosphericHydrogen = Math.min(targetHydrogen - usedLiquidHydrogen, availableHydrogen);
+    const usedHydrogen = usedAtmosphericHydrogen + usedLiquidHydrogen;
     const usedEnergy = usedHydrogen * this.currentEnergyPerTon;
-    accumulatedChanges.spaceStorage.hydrogen = pendingHydrogen - usedHydrogen;
+    accumulatedChanges.atmospheric.hydrogen = pendingHydrogen - usedAtmosphericHydrogen;
+    accumulatedChanges.surface.liquidHydrogen = pendingLiquidHydrogen - usedLiquidHydrogen;
     accumulatedChanges.colony.energy = pendingEnergy - usedEnergy;
     this.hydrogenFilledTons += usedHydrogen;
     this.shortfallLastTick = usedHydrogen < requestedHydrogen;
     this.actualPumpRate = seconds > 0 ? usedHydrogen / seconds : 0;
+    this.currentEnergyConsumptionRate = seconds > 0 ? usedEnergy / seconds : 0;
     this.refreshMassState();
   }
 

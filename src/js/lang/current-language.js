@@ -999,7 +999,7 @@ setLanguageData({
         day: 'Day',
         night: 'Night',
         spinStatus: 'Spin Status',
-        surfaceGravity: 'Surface Gravity:',
+        surfaceGravity: 'Structural Gravity:',
         investRate: 'Invest Rate:',
         status: 'Status:',
         shipEnergyPenalty: 'Ship Energy Penalty:',
@@ -1033,6 +1033,7 @@ setLanguageData({
         status: 'Status:',
         hydrogenPressure: 'Hydrogen Pressure:',
         energyPerTon: 'Energy per Ton:',
+        energyUse: 'Current Energy Use:',
         shipEnergyMultiplier: 'Ship Energy Multiplier:',
         diskMass: 'Disk Mass:',
         hydrogenFilled: 'Hydrogen Filled:',
@@ -1048,11 +1049,16 @@ setLanguageData({
         idle: 'Idle',
         noProgress: 'No progress',
         to100: 'To 100%: {value}',
+        groups: {
+          overview: 'Overview',
+          operations: 'Pumping',
+          diagnostics: 'Pressure and Costs',
+        },
         notes: {
-          completeFill: 'You must fill the disk with hydrogen until structural gravity reaches 1g to complete terraforming.',
-          pressure: 'Pumping energy uses an isothermal hydrogen compression estimate, so each ton becomes more expensive as internal pressure rises.',
+          completeFill: 'You must fill the disk with atmospheric or liquid hydrogen until structural gravity reaches 1g to complete terraforming.',
+          pressure: 'Pumping energy uses an isothermal hydrogen compression estimate once internal pressure exceeds 1 atm, so each ton becomes more expensive after that point.',
           mass: 'Disk mass includes construction mass, filled hydrogen, and all colony, surface, and atmospheric resources measured in tons.',
-          shipPenalty: 'Spaceship energy cost scales from the total disk mass and updates automatically as mass changes.',
+          shipPenalty: 'Spaceship energy cost scales from the total disk mass.',
         },
       },
       hephaestus: {
@@ -4021,7 +4027,7 @@ setLanguageData({
       },
       diskworldTerraforming: {
         name: 'Diskworld Terraforming',
-        description: 'Pump hydrogen into the Alderson disk until its structural gravity reaches 1g.',
+        description: 'Pump hydrogen into the Alderson disk to fill it.',
       },
       deeperMining: {
         name: 'Deeper mining',
