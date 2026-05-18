@@ -29,6 +29,7 @@ const artificialUICache = {
   ringOrbitBox: null,
   ringOrbitText: null,
   ringOrbitLabel: null,
+  ringOrbitTooltipContent: null,
   diskInnerRange: null,
   diskInnerInput: null,
   diskInnerBox: null,
@@ -1032,9 +1033,11 @@ function ensureArtificialLayout() {
   ringOrbitTop.className = 'artificial-radius-row';
   const ringOrbitText = document.createElement('span');
   ringOrbitText.textContent = getArtificialText('blueprint.orbitalRadius', 'Orbital radius (AU)');
-  const ringOrbitInfo = createArtificialInfoIcon(
+  const ringOrbitTooltip = createArtificialInfoIcon(
     getArtificialText('blueprint.orbitTooltip', 'Ring orbital distance from the system star.')
-  ).icon;
+  );
+  const ringOrbitInfo = ringOrbitTooltip.icon;
+  artificialUICache.ringOrbitTooltipContent = ringOrbitTooltip.tooltip;
   ringOrbitText.appendChild(document.createTextNode(' '));
   ringOrbitText.appendChild(ringOrbitInfo);
   const ringOrbitValue = document.createElement('span');
@@ -2757,6 +2760,14 @@ function updateArtificialUI(options = {}) {
       isDisk
         ? getArtificialText('blueprint.diskOuterAutoTitle', 'Set the outer radius for a just-under-5h disk build using the current inner radius.')
         : getArtificialText('blueprint.orbitAutoTitle', 'Set a just-under-5h ringworld build by maximizing width at minimum orbit, then solving orbit radius.')
+    );
+  }
+  if (artificialUICache.ringOrbitTooltipContent) {
+    setTooltipText(
+      artificialUICache.ringOrbitTooltipContent,
+      isDisk
+        ? getArtificialText('blueprint.diskOuterRadiusTooltip', 'Outer edge of the usable disk annulus.')
+        : getArtificialText('blueprint.orbitTooltip', 'Ring orbital distance from the system star.')
     );
   }
   if (artificialUICache.coreField) {

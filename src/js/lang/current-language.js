@@ -282,6 +282,7 @@ setLanguageData({
         orbitAutoTitle: 'Set a just-under-5h ringworld build by maximizing width at minimum orbit, then solving orbit radius.',
         diskOuterAutoTitle: 'Set the outer radius for a just-under-5h disk build using the current inner radius.',
         diskOuterRadius: 'Outer radius (AU)',
+        diskOuterRadiusTooltip: 'Outer edge of the usable disk annulus.',
         diskInnerRadius: 'Inner radius (AU)',
         diskInnerRadiusTooltip: 'The clear central gap around the star. Minimum values are set by the selected stellar core.',
         widthKm: 'Width (km)',
