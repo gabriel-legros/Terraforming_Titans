@@ -978,7 +978,6 @@ function attachBuildingsAutomationHandlers() {
     }
     if (presetId) {
       automationManager.buildingsAutomation.mergeMissingBuildingsIntoPreset(Number(presetId), [buildingId]);
-      buildingAutomationUIState.syncedPresetId = null;
     }
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -1021,7 +1020,6 @@ function attachBuildingsAutomationHandlers() {
         Number(presetId),
         additionsFiltered.map(building => building.name)
       );
-      buildingAutomationUIState.syncedPresetId = null;
     }
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -1036,7 +1034,6 @@ function attachBuildingsAutomationHandlers() {
         for (let index = 0; index < selected.length; index += 1) {
           delete preset.buildings[selected[index]];
         }
-        buildingAutomationUIState.syncedPresetId = null;
       }
     }
     buildingAutomationUIState.builderSelectedBuildings = [];
