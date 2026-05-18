@@ -2342,6 +2342,7 @@ setLanguageData({
             liquidCo2Coverage: 'Liquid CO2 coverage',
             dryIceCoverage: 'Dry ice coverage',
             fineSandCoverage: 'Fine sand coverage',
+            noLiquidHydrogenWarning: 'x No liquid Hydrogen',
           },
           targetAtLeast: '{label} coverage >= {percent}% ({amount}).',
           targetAtMost: '{label} coverage <= {percent}% ({amount}).',

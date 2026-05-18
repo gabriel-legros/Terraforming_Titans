@@ -1794,6 +1794,7 @@ function createWaterBox(row) {
       <p class="no-margin" id="co2-liquid-row" style="display:none;">${getTerraformingSummaryText('water.labels.liquidCo2Coverage', 'Liquid CO2 coverage')}: <span id="co2-liquid-current">0.00</span>%</p>
       <p class="no-margin" id="co2-ice-row" style="display:none;">${getTerraformingSummaryText('water.labels.dryIceCoverage', 'Dry ice coverage')}: <span id="co2-ice-current">0.00</span>%</p>
       <p class="no-margin" id="fine-sand-row" style="display:none;">${getTerraformingSummaryText('water.labels.fineSandCoverage', 'Fine sand coverage')}: <span id="fine-sand-current">0.00</span>%</p>
+      <p class="no-margin" id="liquid-hydrogen-warning-row" style="display:none; color:red;">${getTerraformingSummaryText('water.labels.noLiquidHydrogenWarning', 'x No liquid Hydrogen')}</p>
     `;
 
     const waterHeading = waterBox.querySelector('h3');
@@ -1822,6 +1823,7 @@ function createWaterBox(row) {
       co2IceCurrent: waterBox.querySelector('#co2-ice-current'),
       fineSandRow: waterBox.querySelector('#fine-sand-row'),
       fineSandCurrent: waterBox.querySelector('#fine-sand-current'),
+      liquidHydrogenWarningRow: waterBox.querySelector('#liquid-hydrogen-warning-row'),
       evaporationRate: waterBox.querySelector('#evaporation-rate'),
       boilingRate: waterBox.querySelector('#boiling-rate'),
       sublimationRate: waterBox.querySelector('#sublimation-rate'),
@@ -1937,6 +1939,8 @@ function createWaterBox(row) {
     const avgCo2LiquidCoverage = calculateAverageCoverage(terraforming, 'liquidCO2') || 0;
     const avgDryIceCoverage = calculateAverageCoverage(terraforming, 'dryIce') || 0;
     const avgFineSandCoverage = calculateAverageCoverage(terraforming, 'fineSand') || 0;
+    const avgLiquidHydrogenCoverage = calculateAverageCoverage(terraforming, 'liquidHydrogen') || 0;
+    const hasLiquidHydrogen = avgLiquidHydrogenCoverage > 1e-9;
 
     const requiresCo2 = terraforming.liquidCoverageTargets.some((entry) => entry.liquidType === 'carbonDioxide');
     const requiresFineSand = terraforming.liquidCoverageTargets.some((entry) => entry.coverageKey === 'fineSand');
@@ -1957,8 +1961,11 @@ function createWaterBox(row) {
     }
 
     waterBox.style.borderColor = terraforming.liquidCoverageTargets.length
-      ? (allTargetsMet ? 'green' : 'red')
+      ? (allTargetsMet && !hasLiquidHydrogen ? 'green' : 'red')
       : '';
+    if (els.liquidHydrogenWarningRow) {
+      els.liquidHydrogenWarningRow.style.display = hasLiquidHydrogen ? '' : 'none';
+    }
 
     els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
     els.iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
