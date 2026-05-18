@@ -26,6 +26,11 @@ class GalaxyManager extends EffectableEntity {
         this.controlledSectorCacheVersion = 0;
         this.controlledSectorWorldCountCache = {};
         this.hasEverControlledWholeGalaxyFlag = false;
+        this.popupVisibility = {
+            sector: true,
+            operations: true,
+            defense: true
+        };
         this.fleetUpgradePurchases = {};
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
             this.fleetUpgradePurchases[key] = 0;
@@ -150,8 +155,26 @@ class GalaxyManager extends EffectableEntity {
             operationSteps: operationState.operationSteps,
             operationAutoSectors: operationState.operationAutoSectors,
             operationAutoThreshold: operationState.operationAutoThreshold,
-            operationAutoMode: operationState.operationAutoMode
+            operationAutoMode: operationState.operationAutoMode,
+            popupVisibility: this.getPopupVisibilityState()
         };
+    }
+
+    getPopupVisibilityState() {
+        return {
+            sector: this.popupVisibility.sector !== false,
+            operations: this.popupVisibility.operations !== false,
+            defense: this.popupVisibility.defense !== false
+        };
+    }
+
+    setPopupVisibilityState(state = {}) {
+        this.popupVisibility = {
+            sector: state.sector !== false,
+            operations: state.operations !== false,
+            defense: state.defense !== false
+        };
+        return this.getPopupVisibilityState();
     }
 
     loadState(state) {
@@ -204,6 +227,7 @@ class GalaxyManager extends EffectableEntity {
             }
         });
         this.hasEverControlledWholeGalaxyFlag = state?.hasEverControlledWholeGalaxyFlag === true;
+        this.setPopupVisibilityState(state?.popupVisibility || {});
         if (state && Number.isFinite(state.successfulOperations)) {
             this.successfulOperations = Math.max(0, state.successfulOperations);
         }

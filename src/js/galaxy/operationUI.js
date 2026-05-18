@@ -1141,7 +1141,7 @@ const GalaxyOperationUI = (() => {
         const uhfFactionId = faction?.id || fallbackFactionId;
         if (GalaxySector.isFullyControlled(sector, faction)) {
             operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = getOperationsText('sectorAlreadyControlled', {}, 'Sector already fully controlled by the UHF.');
+            operationsEmpty.textContent = getOperationsText('sectorAlreadyControlled', {}, 'Fully controlled by UHF.');
             operationsForm.classList.add('is-hidden');
             operationsCostValue.textContent = '0';
             operationsStatusMessage.textContent = '';

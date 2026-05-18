@@ -688,6 +688,7 @@ function handleGalaxyPopupToggle(event) {
         return;
     }
     cache.popupVisibility[popupKey] = cache.popupVisibility[popupKey] === false;
+    galaxyManager?.setPopupVisibilityState?.(cache.popupVisibility);
     setGalaxySectorPopupsVisible(!!cache.selectedSector);
 }
 
@@ -3133,6 +3134,12 @@ function cacheGalaxyElements() {
 
     container.replaceChildren(layout);
 
+    const popupVisibility = galaxyManager?.getPopupVisibilityState?.() || {
+        sector: true,
+        operations: true,
+        defense: true
+    };
+
     galaxyUICache = {
         container,
         layout,
@@ -3152,11 +3159,7 @@ function cacheGalaxyElements() {
             operations: operationsToggle,
             defense: defenseToggle
         },
-        popupVisibility: {
-            sector: true,
-            operations: true,
-            defense: true
-        },
+        popupVisibility,
         popupClosed: {
             sector: false,
             operations: false,
@@ -3234,6 +3237,7 @@ function cacheGalaxyElements() {
     };
     galaxyOperationUI.setContext({ manager: galaxyManager, cache: galaxyUICache });
 
+    updateGalaxyMapControlStates();
     refreshEmptyStates();
     if (!centerGalaxyMap(galaxyUICache)) {
         scheduleGalaxyMapCenter(galaxyUICache);

@@ -401,7 +401,7 @@ setLanguageData({
         projectedLossesValue: '-{value} power',
         offline: 'Galaxy operations are offline.',
         sectorDataUnavailable: 'Sector data unavailable.',
-        sectorAlreadyControlled: 'Sector already fully controlled by the UHF.',
+        sectorAlreadyControlled: 'Fully controlled by UHF.',
         deploymentProgress: 'Launch in progress - {percent}% ({remaining} remaining)',
         deploymentUnderway: 'Deployment underway. Fleet power returns upon completion.',
         noFleetPowerAvailable: 'No fleet power available for deployment.',
