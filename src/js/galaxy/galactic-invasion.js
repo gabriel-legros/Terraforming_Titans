@@ -409,13 +409,26 @@ class GalacticInvasionManager extends EffectableEntity {
     if (!(assignedPower > 0)) {
       return null;
     }
+    let successChance = null;
+    if (externalInvasion !== true) {
+      successChance = galaxyManager.getOperationSuccessChance({
+        sectorKey: sector.key,
+        factionId: PROMETHEAN_INVASION_FACTION_ID,
+        assignedPower,
+        targetFactionId
+      });
+      if (successChance < 1) {
+        return null;
+      }
+    }
     const operation = galaxyManager.startOperation({
       sectorKey: sector.key,
       factionId: PROMETHEAN_INVASION_FACTION_ID,
       assignedPower,
       durationMs: this.hasActiveTrait('monolithArmada') ? PROMETHEAN_INVASION_MONOLITH_OPERATION_MS : PROMETHEAN_INVASION_OPERATION_MS,
       targetFactionId,
-      externalInvasion: externalInvasion === true
+      externalInvasion: externalInvasion === true,
+      successChance: successChance === null ? undefined : successChance
     });
     if (completeInstantly === true) {
       galaxyManager.operationManager.completeOperationNow(operation);
