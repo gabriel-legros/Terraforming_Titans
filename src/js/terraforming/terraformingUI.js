@@ -53,6 +53,10 @@ function getTerraformingSummaryResourceLabel(key, fallback) {
   return getTerraformingSummaryText(`resources.${key}`, fallback || formatTerraformingSummaryLabel(key, key));
 }
 
+function getLuminositySurfaceFluxDisplayFactor() {
+  return isAldersonDiskWorld() ? 4 : 1;
+}
+
 const LIQUID_COVERAGE_LABEL_TYPES = {
   liquidWater: true,
   liquidCO2: true,
@@ -2527,7 +2531,7 @@ function updateLifeBox() {
           </tr>
           <tr>
             <td>${getTerraformingSummaryText('luminosity.labels.surfaceSolarFlux', 'Surface Solar Flux (W/m²)')}</td>
-            <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
+            <td><span id="modified-solar-flux">${(terraforming.luminosity.modifiedSolarFlux * getLuminositySurfaceFluxDisplayFactor()).toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
         </tbody>
@@ -2778,13 +2782,15 @@ function updateLifeBox() {
     setCloudHazeTooltipCompact();
 
     if (els.modifiedSolarFlux) {
-      els.modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
+      const fluxDisplayFactor = getLuminositySurfaceFluxDisplayFactor();
+      els.modifiedSolarFlux.textContent = (terraforming.luminosity.modifiedSolarFlux * fluxDisplayFactor).toFixed(1);
     }
     if (els.solarFluxDelta) {
+      const fluxDisplayFactor = getLuminositySurfaceFluxDisplayFactor();
       const baseFlux = (terraforming.luminosity.initialSolarFlux !== undefined)
         ? terraforming.luminosity.initialSolarFlux
         : terraforming.luminosity.solarFlux;
-      const deltaF = terraforming.luminosity.modifiedSolarFlux - baseFlux;
+      const deltaF = (terraforming.luminosity.modifiedSolarFlux - baseFlux) * fluxDisplayFactor;
       els.solarFluxDelta.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
     }
 

@@ -754,7 +754,10 @@ class Terraforming extends EffectableEntity{
   }
 
   getLuminosityStatus() {
-    return ((this.luminosity.modifiedSolarFlux >= this.luminosity.targetMin) && (this.luminosity.modifiedSolarFlux <= this.luminosity.targetMax));
+    const objectiveFlux = isAldersonDiskWorld()
+      ? (this.luminosity.modifiedSolarFlux * 4)
+      : this.luminosity.modifiedSolarFlux;
+    return ((objectiveFlux >= this.luminosity.targetMin) && (objectiveFlux <= this.luminosity.targetMax));
   }
 
   getLifeStatus() {
