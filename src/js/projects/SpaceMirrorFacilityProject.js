@@ -1771,18 +1771,18 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
 }
 
 function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = false) {
+  const isDisk = isAldersonDiskWorld();
   let ratio = 0;
   if (currentPlanetParameters?.classification?.type === 'ring') {
     ratio = getZoneRatio('tropical');
   }
-  else if (isAldersonDiskWorld()) {
-    ratio = getZoneRatio(zone);
-  }
-  else {
+  else if (!isDisk) {
     ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
   }
   const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-  const baseSolar = terraforming.luminosity.solarFlux; // W/m^²
+  const baseSolar = isDisk
+    ? terraforming.calculateDiskDirectSolarFlux(zone)
+    : terraforming.luminosity.solarFlux; // W/m^²
 
   const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
   const lantern = buildings?.hyperionLantern;
@@ -1854,7 +1854,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
     const zoneArea = totalSurfaceArea * getZonePercentage(zone);
     if (zoneArea > 0) {
-      const fluxScale = isAldersonDiskWorld() ? 1 : 4;
+      const fluxScale = isDisk ? 1 : 4;
       if (focusedMirrorPower > 0) focusedMirrorFlux = fluxScale * focusedMirrorPower / zoneArea;
       if (focusedLanternPower > 0) focusedLanternFlux = fluxScale * focusedLanternPower / zoneArea;
     }
@@ -1867,7 +1867,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     ? ((mirrorOversightSettings.assignments.mirrors?.[zone] || 0) < 0)
     : !!mirrorOversightSettings.assignments.reversalMode?.[zone];
 
-  const fluxScale = isAldersonDiskWorld() ? 1 : 4;
+  const fluxScale = isDisk ? 1 : 4;
   const distributedMirrorFlux = totalSurfaceArea > 0
     ? ((anyReverse ? -fluxScale : fluxScale) * distributedMirrorPower / totalSurfaceArea)
     : 0;
@@ -1877,7 +1877,9 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     focusedMirrorFlux = -focusedMirrorFlux;
   }
 
-  const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux) * ratio + focusedMirrorFlux + focusedLanternFlux;
+  const totalFluxForZone = isDisk
+    ? baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux
+    : (baseSolar + distributedMirrorFlux + distributedLanternFlux) * ratio + focusedMirrorFlux + focusedLanternFlux;
 
   return Math.max(totalFluxForZone, 2.4e-5);
 }

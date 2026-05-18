@@ -2794,8 +2794,10 @@ function updateLifeBox() {
       const isDisk = isAldersonDiskWorld();
       const lines = [getTerraformingSummaryText('luminosity.solarFluxTooltip.averageByZone', 'Average Solar Flux by zone')];
       getZones().forEach(zone => {
-        const flux = isRingworld || isDisk
-          ? (z[zone] || terraforming.luminosity.solarFlux * getZoneRatio(zone))
+        const flux = isDisk
+          ? (z[zone] || terraforming.calculateDiskDirectSolarFlux(zone))
+          : isRingworld
+            ? (z[zone] || terraforming.luminosity.solarFlux * getZoneRatio(zone))
           : (z[zone] || 0) / 4;
         lines.push(getTerraformingSummaryText('luminosity.solarFluxTooltip.zoneFlux', '{label}: {value}', { label: getTerraformingZoneLabel(zone), value: flux.toFixed(1) }));
       });
@@ -2804,7 +2806,7 @@ function updateLifeBox() {
         isRingworld
           ? getTerraformingSummaryText('luminosity.solarFluxTooltip.ringworldExplanation', 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.')
           : isDisk
-            ? getTerraformingSummaryText('luminosity.solarFluxTooltip.diskExplanation', 'Modified solar flux uses disk annulus flux directly.')
+            ? getTerraformingSummaryText('luminosity.solarFluxTooltip.diskExplanation', 'Disk natural flux is low grazing starlight by annulus; mirrors and lanterns add usable surface flux.')
             : getTerraformingSummaryText('luminosity.solarFluxTooltip.standardExplanation', 'Modified solar flux is 4× the average across all zones.'),
         getTerraformingSummaryText('luminosity.solarFluxTooltip.surfaceFluxExplanation', 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.')
       );

@@ -1,8 +1,8 @@
 const ZONES = ['tropical', 'temperate', 'polar'];
-const DISK_ZONE_FLUX_FACTORS = {
-  tropical: 6,
-  temperate: 2,
-  polar: 1.2
+const DISK_ZONE_RADIUS_RATIOS = {
+  tropical: 0.3849001794597504,
+  temperate: 0.7037619284438843,
+  polar: 0.9113378920963651
 };
 
 // Function to calculate the surface area of a spherical segment between two latitudes (in radians)
@@ -94,12 +94,6 @@ function sphericalSegmentArea(phi1, phi2) {
       const shadingStrength = projectManager?.projects?.ringworldTerraforming?.shadingStrength ?? 0.65;
       return 1 - shadingStrength;
     }
-    if (isAldersonDiskWorld()) {
-      const factor = DISK_ZONE_FLUX_FACTORS[zone];
-      if (factor !== undefined) {
-        return factor;
-      }
-    }
     switch (zone) {
       case 'tropical':
         return tropicalRatio;
@@ -110,6 +104,14 @@ function sphericalSegmentArea(phi1, phi2) {
       default:
         throw new Error(`Invalid zone: ${zone}`);
     }
+  }
+
+  function getDiskZoneRadiusRatio(zone) {
+    const ratio = DISK_ZONE_RADIUS_RATIOS[zone];
+    if (ratio !== undefined) {
+      return ratio;
+    }
+    throw new Error(`Invalid disk zone: ${zone}`);
   }
 
   function getZonePercentage(zone) {
@@ -191,6 +193,7 @@ if (typeof module !== "undefined" && module.exports) {
     ZONES,
     isRingWorld,
     isAldersonDiskWorld,
+    getDiskZoneRadiusRatio,
     getZones,
     getZoneRatio,
     getZonePercentage,
@@ -201,6 +204,7 @@ if (typeof module !== "undefined" && module.exports) {
   window.ZONES             = ZONES;
   window.isRingWorld       = isRingWorld;
   window.isAldersonDiskWorld = isAldersonDiskWorld;
+  window.getDiskZoneRadiusRatio = getDiskZoneRadiusRatio;
   window.getZones          = getZones;
   window.getZoneRatio      = getZoneRatio;
   window.getZonePercentage = getZonePercentage;
