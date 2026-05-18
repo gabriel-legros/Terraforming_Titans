@@ -1191,6 +1191,9 @@ class GalaxyManager extends EffectableEntity {
             if (!operation.factionId || operation.factionId === UHF_FACTION_ID) {
                 continue;
             }
+            if (operation.targetFactionId !== UHF_FACTION_ID) {
+                continue;
+            }
             const sector = this.sectors.get(operation.sectorKey);
             if (!sector) {
                 continue;
