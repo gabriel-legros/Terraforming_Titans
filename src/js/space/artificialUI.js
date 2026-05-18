@@ -25,9 +25,14 @@ const artificialUICache = {
   ringOrbitRange: null,
   ringOrbitInput: null,
   ringAuto: null,
+  ringAutoTooltipContent: null,
   ringOrbitBox: null,
   ringOrbitText: null,
   ringOrbitLabel: null,
+  diskInnerRange: null,
+  diskInnerInput: null,
+  diskInnerBox: null,
+  diskInnerLabel: null,
   ringWidthRange: null,
   ringWidthInput: null,
   ringWidthBox: null,
@@ -85,6 +90,7 @@ const artificialStashMultipliers = {
 };
 let artificialRadiusEditing = false;
 let artificialRingOrbitEditing = false;
+let artificialDiskInnerEditing = false;
 let artificialRingWidthEditing = false;
 let artificialRingFluxEditing = false;
 let artificialHistorySig = '';
@@ -512,6 +518,16 @@ function getRingOrbitBoundsAU() {
   return { min: 0.03, max: 0.25 };
 }
 
+function getDiskInnerBoundsAU() {
+  const fallbackCore = getDiskStarCoreOptions()[0] || {};
+  const coreValue = artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : fallbackCore.value;
+  const outerRadiusAU = getRingOrbitRadiusAUValue();
+  if (typeof getDiskInnerStarCoreBounds === 'function') {
+    return getDiskInnerStarCoreBounds(coreValue, outerRadiusAU);
+  }
+  return { min: 0.01, max: Math.max(outerRadiusAU - 0.001, 0.01) };
+}
+
 function getRingWidthBounds() {
   const options = getRingStarCoreOptions();
   const fallback = options[0] || {};
@@ -532,6 +548,12 @@ function clampRadiusValue(value) {
 
 function clampRingOrbitValue(value) {
   const bounds = getRingOrbitBoundsAU();
+  const next = Math.max(0, Number(value) || 0);
+  return Math.min(Math.max(next, bounds.min), bounds.max);
+}
+
+function clampDiskInnerValue(value) {
+  const bounds = getDiskInnerBoundsAU();
   const next = Math.max(0, Number(value) || 0);
   return Math.min(Math.max(next, bounds.min), bounds.max);
 }
@@ -557,6 +579,12 @@ function isRingOrbitFieldActive() {
   if (typeof document === 'undefined') return false;
   return document.activeElement === artificialUICache.ringOrbitInput
     || document.activeElement === artificialUICache.ringOrbitRange;
+}
+
+function isDiskInnerFieldActive() {
+  if (typeof document === 'undefined') return false;
+  return document.activeElement === artificialUICache.diskInnerInput
+    || document.activeElement === artificialUICache.diskInnerRange;
 }
 
 function isRingWidthFieldActive() {
@@ -587,6 +615,16 @@ function setRingOrbitFields(value, force = false) {
   }
   if (artificialUICache.ringOrbitInput && (force || (!artificialRingOrbitEditing && document.activeElement !== artificialUICache.ringOrbitInput))) {
     artificialUICache.ringOrbitInput.value = next;
+  }
+}
+
+function setDiskInnerFields(value, force = false) {
+  const next = clampDiskInnerValue(value);
+  if (artificialUICache.diskInnerRange && (force || (!isDiskInnerFieldActive() && !artificialDiskInnerEditing))) {
+    artificialUICache.diskInnerRange.value = next;
+  }
+  if (artificialUICache.diskInnerInput && (force || (!artificialDiskInnerEditing && document.activeElement !== artificialUICache.diskInnerInput))) {
+    artificialUICache.diskInnerInput.value = next;
   }
 }
 
@@ -629,6 +667,7 @@ function storeDraftSelection(manager, options = {}) {
     diskStarCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : selection.diskStarCore,
     radiusEarth: selection.radiusEarth,
     orbitRadiusAU: selection.orbitRadiusAU,
+    diskInnerRadiusAU: selection.diskInnerRadiusAU,
     diskRadiusAU: selection.diskRadiusAU,
     widthKm: selection.widthKm,
     targetFluxWm2: selection.targetFluxWm2,
@@ -660,7 +699,7 @@ function getAutoRingOrbitValue(widthKm) {
 function getAutoDiskRadiusValue() {
   const bounds = getRingOrbitBoundsAU();
   const manager = artificialManager;
-  return manager.getAutoDiskRadius(bounds);
+  return manager.getAutoDiskRadius(bounds, getDiskInnerRadiusAUValue());
 }
 
 function applyRadiusBounds() {
@@ -695,6 +734,20 @@ function applyRingBounds() {
   }
   if (!artificialRingOrbitEditing && document.activeElement !== artificialUICache.ringOrbitInput) {
     artificialUICache.ringOrbitInput.value = clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitInput.value) || orbit.min);
+  }
+
+  if (artificialUICache.diskInnerRange && artificialUICache.diskInnerInput) {
+    const innerBounds = getDiskInnerBoundsAU();
+    artificialUICache.diskInnerRange.min = innerBounds.min;
+    artificialUICache.diskInnerRange.max = innerBounds.max;
+    artificialUICache.diskInnerInput.min = innerBounds.min;
+    artificialUICache.diskInnerInput.max = innerBounds.max;
+    if (!isDiskInnerFieldActive() && !artificialDiskInnerEditing) {
+      artificialUICache.diskInnerRange.value = clampDiskInnerValue(parseFloat(artificialUICache.diskInnerRange.value) || innerBounds.min);
+    }
+    if (!artificialDiskInnerEditing && document.activeElement !== artificialUICache.diskInnerInput) {
+      artificialUICache.diskInnerInput.value = clampDiskInnerValue(parseFloat(artificialUICache.diskInnerInput.value) || innerBounds.min);
+    }
   }
 
   const widthBounds = getRingWidthBounds();
@@ -1014,16 +1067,55 @@ function ensureArtificialLayout() {
   ringAuto.type = 'button';
   ringAuto.className = 'artificial-secondary artificial-radius-auto';
   ringAuto.textContent = getArtificialText('common.auto', 'Auto');
-  attachDynamicInfoTooltip(
+  artificialUICache.ringAuto = ringAuto;
+  artificialUICache.ringAutoTooltipContent = attachDynamicInfoTooltip(
     ringAuto,
-    getArtificialText('blueprint.orbitAutoTitle', 'Set a just-under-5h build by maximizing width at minimum orbit, then solving orbit radius.'),
+    getArtificialText('blueprint.orbitAutoTitle', 'Set a just-under-5h ringworld build by maximizing width at minimum orbit, then solving orbit radius.'),
     false
   );
-  artificialUICache.ringAuto = ringAuto;
   ringOrbitControls.appendChild(ringAuto);
   ringOrbitBox.appendChild(ringOrbitControls);
   blueprint.appendChild(ringOrbitBox);
   artificialUICache.ringOrbitBox = ringOrbitBox;
+
+  const diskInnerBox = document.createElement('div');
+  diskInnerBox.className = 'artificial-radius artificial-disk-inner';
+  const diskInnerTop = document.createElement('div');
+  diskInnerTop.className = 'artificial-radius-row';
+  const diskInnerText = document.createElement('span');
+  diskInnerText.textContent = getArtificialText('blueprint.diskInnerRadius', 'Inner radius (AU)');
+  const diskInnerInfo = createArtificialInfoIcon(
+    getArtificialText('blueprint.diskInnerRadiusTooltip', 'The clear central gap around the star. Minimum values are set by the selected stellar core.')
+  ).icon;
+  diskInnerText.appendChild(document.createTextNode(' '));
+  diskInnerText.appendChild(diskInnerInfo);
+  const diskInnerValue = document.createElement('span');
+  diskInnerValue.className = 'artificial-radius-value';
+  diskInnerTop.appendChild(diskInnerText);
+  diskInnerTop.appendChild(diskInnerValue);
+  diskInnerBox.appendChild(diskInnerTop);
+  artificialUICache.diskInnerLabel = diskInnerValue;
+
+  const diskInnerControls = document.createElement('div');
+  diskInnerControls.className = 'artificial-radius-controls';
+  const diskInnerRange = document.createElement('input');
+  diskInnerRange.type = 'range';
+  diskInnerRange.step = '0.001';
+  diskInnerRange.value = '0.01';
+  diskInnerRange.className = 'artificial-radius-range';
+  artificialUICache.diskInnerRange = diskInnerRange;
+  diskInnerControls.appendChild(diskInnerRange);
+
+  const diskInnerInput = document.createElement('input');
+  diskInnerInput.type = 'number';
+  diskInnerInput.step = '0.001';
+  diskInnerInput.value = '0.01';
+  diskInnerInput.className = 'artificial-radius-input';
+  artificialUICache.diskInnerInput = diskInnerInput;
+  diskInnerControls.appendChild(diskInnerInput);
+  diskInnerBox.appendChild(diskInnerControls);
+  blueprint.appendChild(diskInnerBox);
+  artificialUICache.diskInnerBox = diskInnerBox;
 
   const ringWidthBox = document.createElement('div');
   ringWidthBox.className = 'artificial-radius artificial-ring-width';
@@ -1532,6 +1624,9 @@ function ensureArtificialLayout() {
     const value = clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0);
     ringOrbitRange.value = value;
     ringOrbitInput.value = value;
+    if (getSelectedArtificialType(null) === 'disk') {
+      setDiskInnerFields(getDiskInnerRadiusAUValue(), true);
+    }
     updateArtificialUI();
   });
   ringOrbitInput.addEventListener('input', () => {
@@ -1547,6 +1642,9 @@ function ensureArtificialLayout() {
     artificialRingOrbitEditing = false;
     const value = clampRingOrbitValue(parseFloat(ringOrbitInput.value) || 0);
     setRingOrbitFields(value, true);
+    if (getSelectedArtificialType(null) === 'disk') {
+      setDiskInnerFields(getDiskInnerRadiusAUValue(), true);
+    }
     updateArtificialUI();
   });
   ringAuto.addEventListener('click', () => {
@@ -1555,6 +1653,7 @@ function ensureArtificialLayout() {
     if (getSelectedArtificialType(null) === 'disk') {
       const value = getAutoDiskRadiusValue();
       setRingOrbitFields(value, true);
+      setDiskInnerFields(getDiskInnerRadiusAUValue(), true);
       updateArtificialUI();
       return;
     }
@@ -1584,6 +1683,27 @@ function ensureArtificialLayout() {
     artificialRingWidthEditing = false;
     const value = clampRingWidthValue(parseFloat(ringWidthInput.value) || 0);
     setRingWidthFields(value, true);
+    updateArtificialUI();
+  });
+  diskInnerRange.addEventListener('input', () => {
+    const value = clampDiskInnerValue(parseFloat(diskInnerRange.value) || 0);
+    diskInnerRange.value = value;
+    diskInnerInput.value = value;
+    updateArtificialUI();
+  });
+  diskInnerInput.addEventListener('input', () => {
+    if (artificialUICache.diskInnerRange) {
+      const value = parseFloat(diskInnerInput.value) || 0;
+      artificialUICache.diskInnerRange.value = clampDiskInnerValue(value);
+    }
+  });
+  diskInnerInput.addEventListener('focus', () => {
+    artificialDiskInnerEditing = true;
+  });
+  diskInnerInput.addEventListener('blur', () => {
+    artificialDiskInnerEditing = false;
+    const value = clampDiskInnerValue(parseFloat(diskInnerInput.value) || 0);
+    setDiskInnerFields(value, true);
     updateArtificialUI();
   });
   ringFluxRange.addEventListener('input', () => {
@@ -1634,7 +1754,7 @@ function ensureArtificialLayout() {
     const selection = buildArtificialSelection(null, manager);
     const cost = type === 'ring'
       ? manager.calculateRingworldCost(manager.calculateRingWorldAreaHectares(selection.orbitRadiusAU, selection.widthKm), selection.widthKm)
-      : (type === 'disk' ? manager.calculateDiskCost(manager.calculateDiskWorldAreaHectares(selection.diskRadiusAU)) : manager.calculateCost(selection.radiusEarth));
+      : (type === 'disk' ? manager.calculateDiskCost(manager.calculateDiskWorldAreaHectares(selection.diskRadiusAU, selection.diskInnerRadiusAU)) : manager.calculateCost(selection.radiusEarth));
     const durationContext = manager.getDurationContext(selection.radiusEarth);
     if (manager.exceedsDurationLimit(durationContext.durationMs)) return;
     const prepayState = manager.getPrepayState(selection, cost);
@@ -1670,6 +1790,7 @@ function ensureArtificialLayout() {
     if (type === 'disk') {
       artificialManager.startDiskConstruction({
         starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
+        diskInnerRadiusAU: selection.diskInnerRadiusAU,
         diskRadiusAU: selection.diskRadiusAU,
         name: chosenName,
         sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
@@ -1822,6 +1943,15 @@ function getRingOrbitRadiusAUValue() {
     return clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitInput.value) || 0.1);
   }
   return clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitRange.value) || 0.1);
+}
+
+function getDiskInnerRadiusAUValue() {
+  const bounds = getDiskInnerBoundsAU();
+  if (!artificialUICache.diskInnerRange) return bounds.min;
+  if (artificialDiskInnerEditing || document.activeElement === artificialUICache.diskInnerInput) {
+    return clampDiskInnerValue(parseFloat(artificialUICache.diskInnerInput.value) || bounds.min);
+  }
+  return clampDiskInnerValue(parseFloat(artificialUICache.diskInnerRange.value) || bounds.min);
 }
 
 function getRingWidthKmValue() {
@@ -2080,6 +2210,7 @@ function buildArtificialSelection(project, manager) {
       type: project.type || 'shell',
       radiusEarth: project.radiusEarth,
       orbitRadiusAU: project.orbitRadiusAU || project.distanceFromStarAU,
+      diskInnerRadiusAU: project.diskInnerRadiusAU || 0,
       diskRadiusAU: project.diskRadiusAU || project.orbitRadiusAU || project.distanceFromStarAU,
       widthKm: project.widthKm || project.ringWidthKm,
       starCore: project.starCore || project.core,
@@ -2107,11 +2238,13 @@ function buildArtificialSelection(project, manager) {
   }
   if (type === 'disk') {
     const diskRadiusAU = getRingOrbitRadiusAUValue();
-    const landHa = manager.calculateDiskWorldAreaHectares(diskRadiusAU);
+    const diskInnerRadiusAU = getDiskInnerRadiusAUValue();
+    const landHa = manager.calculateDiskWorldAreaHectares(diskRadiusAU, diskInnerRadiusAU);
     const radiusEarth = manager.calculateRadiusEarthFromLandHectares(landHa);
     return {
       type,
       radiusEarth,
+      diskInnerRadiusAU,
       diskRadiusAU,
       orbitRadiusAU: diskRadiusAU,
       diskStarCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : ''
@@ -2156,8 +2289,13 @@ function renderCosts(project, selection, manager) {
     }
     artificialUICache.ringFluxLabel.textContent = `${fmt(targetFluxWm2, false, 3)} W/m²`;
   } else if (type === 'disk') {
-    updateArtificialTextNodeLabel(artificialUICache.ringOrbitText, getArtificialText('blueprint.diskRadius', 'Disk radius (AU)'));
+    updateArtificialTextNodeLabel(artificialUICache.ringOrbitText, getArtificialText('blueprint.diskOuterRadius', 'Outer radius (AU)'));
+    const diskInnerRadiusAU = project?.diskInnerRadiusAU || selection?.diskInnerRadiusAU || 0;
     const diskRadiusAU = project?.diskRadiusAU || selection?.diskRadiusAU || project?.orbitRadiusAU || project?.distanceFromStarAU || 0.1;
+    if (artificialUICache.diskInnerLabel) {
+      const innerEarthRadii = diskInnerRadiusAU * ARTIFICIAL_AU_TO_EARTH_RADII;
+      artificialUICache.diskInnerLabel.textContent = `${diskInnerRadiusAU.toFixed(3)} AU (${fmt(innerEarthRadii, false, 0)} R⊕)`;
+    }
     if (artificialUICache.ringOrbitLabel) {
       const earthRadii = diskRadiusAU * ARTIFICIAL_AU_TO_EARTH_RADII;
       artificialUICache.ringOrbitLabel.textContent = `${diskRadiusAU.toFixed(3)} AU (${fmt(earthRadii, false, 0)} R⊕)`;
@@ -2613,6 +2751,14 @@ function updateArtificialUI(options = {}) {
   const isShell = selectedType === 'shell';
   const isRing = selectedType === 'ring';
   const isDisk = selectedType === 'disk';
+  if (artificialUICache.ringAutoTooltipContent) {
+    setTooltipText(
+      artificialUICache.ringAutoTooltipContent,
+      isDisk
+        ? getArtificialText('blueprint.diskOuterAutoTitle', 'Set the outer radius for a just-under-5h disk build using the current inner radius.')
+        : getArtificialText('blueprint.orbitAutoTitle', 'Set a just-under-5h ringworld build by maximizing width at minimum orbit, then solving orbit radius.')
+    );
+  }
   if (artificialUICache.coreField) {
     artificialUICache.coreField.classList.toggle('hidden', !isShell);
     artificialUICache.coreField.style.display = isShell ? '' : 'none';
@@ -2632,6 +2778,15 @@ function updateArtificialUI(options = {}) {
   if (artificialUICache.ringOrbitBox) {
     artificialUICache.ringOrbitBox.classList.toggle('hidden', !(isRing || isDisk));
     artificialUICache.ringOrbitBox.style.display = (isRing || isDisk) ? '' : 'none';
+  }
+  if (artificialUICache.diskInnerBox) {
+    artificialUICache.diskInnerBox.classList.toggle('hidden', !isDisk);
+    artificialUICache.diskInnerBox.style.display = isDisk ? '' : 'none';
+    if (isDisk && artificialUICache.ringOrbitBox && artificialUICache.diskInnerBox.nextSibling !== artificialUICache.ringOrbitBox) {
+      artificialUICache.ringOrbitBox.parentNode.insertBefore(artificialUICache.diskInnerBox, artificialUICache.ringOrbitBox);
+    } else if (isRing && artificialUICache.ringOrbitBox && artificialUICache.diskInnerBox.previousSibling !== artificialUICache.ringOrbitBox) {
+      artificialUICache.ringOrbitBox.parentNode.insertBefore(artificialUICache.ringOrbitBox, artificialUICache.diskInnerBox);
+    }
   }
   if (artificialUICache.ringWidthBox) {
     artificialUICache.ringWidthBox.classList.toggle('hidden', !isRing);
@@ -2665,6 +2820,8 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = !(isRing || isDisk);
     if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = !(isRing || isDisk);
     if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = !(isRing || isDisk);
+    if (artificialUICache.diskInnerRange) artificialUICache.diskInnerRange.disabled = !isDisk;
+    if (artificialUICache.diskInnerInput) artificialUICache.diskInnerInput.disabled = !isDisk;
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = !isRing;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = !isRing;
     artificialUICache.ringFluxRange.disabled = !isRing;
@@ -2677,6 +2834,9 @@ function updateArtificialUI(options = {}) {
     }
     if (force && !artificialRingOrbitEditing) {
       setRingOrbitFields(isDisk ? draft.diskRadiusAU : draft.orbitRadiusAU, true);
+    }
+    if (force && !artificialDiskInnerEditing) {
+      setDiskInnerFields(draft.diskInnerRadiusAU, true);
     }
     const shouldHydrateRingWidth = force && !artificialRingWidthEditing;
     if (shouldHydrateRingWidth) {
@@ -2695,6 +2855,8 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = true;
     if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = true;
     if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = true;
+    if (artificialUICache.diskInnerRange) artificialUICache.diskInnerRange.disabled = true;
+    if (artificialUICache.diskInnerInput) artificialUICache.diskInnerInput.disabled = true;
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = true;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = true;
     artificialUICache.ringFluxRange.disabled = true;
@@ -2704,6 +2866,7 @@ function updateArtificialUI(options = {}) {
     artificialUICache.sectorFilter.disabled = true;
     setRadiusFields(project.radiusEarth, true);
     setRingOrbitFields(project.diskRadiusAU || project.orbitRadiusAU || project.distanceFromStarAU || 0.1, true);
+    setDiskInnerFields(project.diskInnerRadiusAU || 0, true);
     setRingWidthFields(project.widthKm || project.ringWidthKm || 10_000, true);
     setRingFluxFields(project.targetFluxWm2 || ARTIFICIAL_RING_FLUX_DEFAULT_WM2, true);
   }
@@ -2727,6 +2890,8 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = prepayLocked || !(isRing || isDisk);
     if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = prepayLocked || !(isRing || isDisk);
     if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = prepayLocked || !(isRing || isDisk);
+    if (artificialUICache.diskInnerRange) artificialUICache.diskInnerRange.disabled = prepayLocked || !isDisk;
+    if (artificialUICache.diskInnerInput) artificialUICache.diskInnerInput.disabled = prepayLocked || !isDisk;
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = prepayLocked || !isRing;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = prepayLocked || !isRing;
     artificialUICache.ringFluxRange.disabled = prepayLocked || !isRing;

@@ -87,13 +87,24 @@ class DiskworldTerraformingProject extends Project {
       || 1;
   }
 
+  getDiskInnerRadiusAU() {
+    return currentPlanetParameters.specialAttributes.diskInnerRadiusAU
+      || currentPlanetParameters.specialAttributes.disk?.innerRadiusAU
+      || 0;
+  }
+
   getDiskRadiusMeters() {
     return this.getDiskRadiusAU() * DISKWORLD_AU_METERS;
   }
 
+  getDiskInnerRadiusMeters() {
+    return this.getDiskInnerRadiusAU() * DISKWORLD_AU_METERS;
+  }
+
   getTwoSidedAreaM2() {
-    const radius = this.getDiskRadiusMeters();
-    return 2 * Math.PI * radius * radius;
+    const outerRadius = this.getDiskRadiusMeters();
+    const innerRadius = Math.min(this.getDiskInnerRadiusMeters(), Math.max(outerRadius - 1, 0));
+    return 2 * Math.PI * Math.max((outerRadius * outerRadius) - (innerRadius * innerRadius), 0);
   }
 
   getConstructionMassTons() {
@@ -102,7 +113,7 @@ class DiskworldTerraformingProject extends Project {
     if (storedCost > 0 && storedCostIncludesMetal) {
       return storedCost;
     }
-    const landHa = calculateDiskLandHectares(this.getDiskRadiusAU());
+    const landHa = calculateDiskLandHectares(this.getDiskRadiusAU(), this.getDiskInnerRadiusAU());
     const cost = artificialManager.calculateDiskCost(landHa);
     return (cost.superalloys || 0) + (cost.metal || 0);
   }
@@ -126,8 +137,9 @@ class DiskworldTerraformingProject extends Project {
   }
 
   getRequiredMassTons() {
-    const radius = this.getDiskRadiusMeters();
-    const requiredKg = (DISKWORLD_GRAVITY * radius * radius) / (2 * DISKWORLD_GRAVITATIONAL_CONSTANT);
+    const outerRadius = this.getDiskRadiusMeters();
+    const innerRadius = Math.min(this.getDiskInnerRadiusMeters(), Math.max(outerRadius - 1, 0));
+    const requiredKg = (DISKWORLD_GRAVITY * Math.max((outerRadius * outerRadius) - (innerRadius * innerRadius), 0)) / (2 * DISKWORLD_GRAVITATIONAL_CONSTANT);
     return requiredKg / DISKWORLD_TON_KG;
   }
 

@@ -1,8 +1,8 @@
 const ZONES = ['tropical', 'temperate', 'polar'];
-const DISK_ZONE_RADIUS_RATIOS = {
-  tropical: 0.3849001794597504,
-  temperate: 0.7037619284438843,
-  polar: 0.9113378920963651
+const DISK_ZONE_INDEX = {
+  tropical: 0,
+  temperate: 1,
+  polar: 2
 };
 
 // Function to calculate the surface area of a spherical segment between two latitudes (in radians)
@@ -106,12 +106,37 @@ function sphericalSegmentArea(phi1, phi2) {
     }
   }
 
-  function getDiskZoneRadiusRatio(zone) {
-    const ratio = DISK_ZONE_RADIUS_RATIOS[zone];
-    if (ratio !== undefined) {
-      return ratio;
+  function getDiskInnerRadiusAU() {
+    return currentPlanetParameters?.specialAttributes?.diskInnerRadiusAU
+      || currentPlanetParameters?.specialAttributes?.disk?.innerRadiusAU
+      || 0;
+  }
+
+  function getDiskOuterRadiusAU() {
+    return currentPlanetParameters?.specialAttributes?.diskRadiusAU
+      || currentPlanetParameters?.specialAttributes?.disk?.radiusAU
+      || currentPlanetParameters?.celestialParameters?.distanceFromSun
+      || 1;
+  }
+
+  function getDiskZoneBoundsAU(zone) {
+    const index = DISK_ZONE_INDEX[zone];
+    if (index !== undefined) {
+      const outerRadiusAU = Math.max(getDiskOuterRadiusAU(), 0.001);
+      const innerRadiusAU = Math.min(Math.max(getDiskInnerRadiusAU(), 0), Math.max(outerRadiusAU - 0.001, 0));
+      const widthAU = Math.max(outerRadiusAU - innerRadiusAU, 0.001);
+      return {
+        innerRadiusAU: innerRadiusAU + (widthAU * index / 3),
+        outerRadiusAU: innerRadiusAU + (widthAU * (index + 1) / 3)
+      };
     }
     throw new Error(`Invalid disk zone: ${zone}`);
+  }
+
+  function getDiskZoneRadiusRatio(zone) {
+    const bounds = getDiskZoneBoundsAU(zone);
+    const outerRadiusAU = Math.max(getDiskOuterRadiusAU(), 0.001);
+    return ((bounds.innerRadiusAU + bounds.outerRadiusAU) / 2) / outerRadiusAU;
   }
 
   function getZonePercentage(zone) {
@@ -119,7 +144,18 @@ function sphericalSegmentArea(phi1, phi2) {
       return 1.0;
     }
     if (isAldersonDiskWorld()) {
-      return ZONES.includes(zone) ? (1 / 3) : 0;
+      if (!ZONES.includes(zone)) {
+        return 0;
+      }
+      const diskOuterRadiusAU = Math.max(getDiskOuterRadiusAU(), 0.001);
+      const diskInnerRadiusAU = Math.min(Math.max(getDiskInnerRadiusAU(), 0), Math.max(diskOuterRadiusAU - 0.001, 0));
+      const totalArea = Math.max((diskOuterRadiusAU * diskOuterRadiusAU) - (diskInnerRadiusAU * diskInnerRadiusAU), 0);
+      if (totalArea <= 0) {
+        return 0;
+      }
+      const bounds = getDiskZoneBoundsAU(zone);
+      const zoneArea = Math.max((bounds.outerRadiusAU * bounds.outerRadiusAU) - (bounds.innerRadiusAU * bounds.innerRadiusAU), 0);
+      return zoneArea / totalArea;
     }
     const area = zoneSurfaceAreas[zone];
     if (area === undefined) {
@@ -193,6 +229,7 @@ if (typeof module !== "undefined" && module.exports) {
     ZONES,
     isRingWorld,
     isAldersonDiskWorld,
+    getDiskZoneBoundsAU,
     getDiskZoneRadiusRatio,
     getZones,
     getZoneRatio,
@@ -204,6 +241,7 @@ if (typeof module !== "undefined" && module.exports) {
   window.ZONES             = ZONES;
   window.isRingWorld       = isRingWorld;
   window.isAldersonDiskWorld = isAldersonDiskWorld;
+  window.getDiskZoneBoundsAU = getDiskZoneBoundsAU;
   window.getDiskZoneRadiusRatio = getDiskZoneRadiusRatio;
   window.getZones          = getZones;
   window.getZoneRatio      = getZoneRatio;
