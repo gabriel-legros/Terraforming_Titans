@@ -4819,6 +4819,10 @@ setLanguageData({
           name: 'High-gravity adaptation',
           description: 'Complete a project initially started by PANDORA to acclimate to heavy worlds, automatically negating half of the happiness and population penalties from high gravity.  Stacks with Mechanical Assistance to cancel the rest.',
         },
+        alderson_disk_concept: {
+          name: 'Alderson Disks',
+          description: "A proposal so excessive it makes Ringworld engineering look conservative.  Very, very large.",
+        },
         biostorage: {
           name: 'Biostorage',
           description: 'Allows safe storage of biomass in space storage.  Hazardous Biomass should be stored at the nearest incinerator.',

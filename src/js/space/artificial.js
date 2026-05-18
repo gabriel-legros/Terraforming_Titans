@@ -3,7 +3,7 @@ const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
 const ARTIFICIAL_TYPES = [
     { value: 'shell', label: 'Shellworld', disabled: false },
     { value: 'ring', label: 'Ringworld', disabled: true, disabledSource: 'World 10' },
-    { value: 'disk', label: 'Alderson disk', disabled: true }
+    { value: 'disk', label: 'Alderson disk', disabled: true, disabledSource: 'Advanced Research & Galactic Conquest' }
 ];
 const ARTIFICIAL_CORES = [
     { value: 'super-earth', label: 'Super Earth', disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
@@ -451,10 +451,15 @@ class ArtificialManager extends EffectableEntity {
     }
 
     getArtificialTypeOptions() {
+        const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
         return ARTIFICIAL_TYPES.map((entry) => ({
             ...entry,
-            disabled: !this.unlockedTypes.has(entry.value),
-            disabledSource: this.unlockedTypes.has(entry.value) ? null : entry.disabledSource
+            disabled: entry.value === 'disk'
+                ? !(this.unlockedTypes.has('disk') && hasGalaxyConquest)
+                : !this.unlockedTypes.has(entry.value),
+            disabledSource: entry.value === 'disk'
+                ? ((this.unlockedTypes.has('disk') && hasGalaxyConquest) ? null : entry.disabledSource)
+                : (this.unlockedTypes.has(entry.value) ? null : entry.disabledSource)
         }));
     }
 
@@ -467,6 +472,9 @@ class ArtificialManager extends EffectableEntity {
     }
 
     isArtificialTypeUnlocked(typeId) {
+        if (typeId === 'disk') {
+            return this.unlockedTypes.has('disk') && galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
+        }
         return this.unlockedTypes.has(typeId);
     }
 
@@ -658,6 +666,12 @@ class ArtificialManager extends EffectableEntity {
         this.updateUI(true);
     }
 
+    enableAldersonDisk() {
+        if (this.unlockedTypes.has('disk')) return;
+        this.unlockedTypes.add('disk');
+        this.updateUI(true);
+    }
+
     unlockCore(coreId) {
         if (!ARTIFICIAL_CORES.some((core) => core.value === coreId)) return;
         if (this.unlockedCores.has(coreId)) return;
@@ -750,6 +764,10 @@ class ArtificialManager extends EffectableEntity {
         }
         if (effect.type === 'enableRingworld') {
             this.enableRingworld();
+            return;
+        }
+        if (effect.type === 'enableAldersonDisk') {
+            this.enableAldersonDisk();
             return;
         }
         if (effect.type === 'unlockCore') {

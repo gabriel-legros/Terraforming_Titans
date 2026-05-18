@@ -2661,6 +2661,19 @@ const researchParameters = {
         ]
       },
       {
+        id: 'alderson_disk_concept',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 1_000_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'artificialManager',
+            type: 'enableAldersonDisk'
+          }
+        ]
+      },
+      {
         id: 'planet_cracking',
         name: '',
         description: '',
