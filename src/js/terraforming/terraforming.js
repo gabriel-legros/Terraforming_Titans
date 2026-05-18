@@ -10,6 +10,7 @@ const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 const SOLAR_RADIUS_AU = 0.00465047;
+const DISK_GRAZING_FLUX_FACTOR = 2 / (3 * Math.PI);
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BACKGROUND_SOLAR_FLUX = 6e-6;
@@ -2377,7 +2378,7 @@ class Terraforming extends EffectableEntity{
       const diskRadiusAU = Math.max(this.getDiskOuterRadiusAU(), 0.000001);
       const annulusRadiusAU = Math.max(diskRadiusAU * getDiskZoneRadiusRatio(zone), 0.000001);
       const orbitalFlux = this.calculateSolarFlux(annulusRadiusAU * AU_METER);
-      const grazingFactor = Math.min(1, Math.max(0, this.getDiskStarRadiusAU()) / annulusRadiusAU);
+      const grazingFactor = Math.min(1, DISK_GRAZING_FLUX_FACTOR * Math.max(0, this.getDiskStarRadiusAU()) / annulusRadiusAU);
       return Math.max(orbitalFlux * grazingFactor, 2.4e-5);
     }
 

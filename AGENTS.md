@@ -255,7 +255,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Artificial Worlds
 - Managed via `ArtificialManager` (shell/ring/disk-ready architecture).
 - Ringworld support includes custom controls, spin protocol, and low-gravity lock behavior.
-- Alderson disks use disk-radius selection, random stars generated from the selected star core, two-sided land area, hardcoded linear disk-area construction costs, and three equal-area annulus zones displayed as Inner/Central/Outer. Natural disk flux is low grazing starlight derived from stellar luminosity, stellar radius, and annulus radius; mirrors and lanterns add usable surface flux without the grazing penalty.
+- Alderson disks use disk-radius selection, random stars generated from the selected star core, two-sided land area, hardcoded linear disk-area construction costs, and three equal-area annulus zones displayed as Inner/Central/Outer. Natural disk flux is low grazing starlight derived from stellar luminosity, stellar radius, and annulus radius using the finite-star half-disk factor `2 / (3 * Math.PI)`; Space Mirrors add usable surface flux without the grazing penalty, while Hyperion Lanterns are disabled.
 - Diskworld Terraforming is a disk-only project that pumps space-storage hydrogen into the disk until fill gravity reaches 1g; pumping energy scales with internal hydrogen pressure, disk gravity updates from fill progress, and spaceship energy costs scale as `(current mass / 1g mass) * disk radius in Earth radii`.
 - Construction supports prepay, 5-hour hard cap, persistence, resume/discard, rename.
 - Artificial naming auto-increments by type.

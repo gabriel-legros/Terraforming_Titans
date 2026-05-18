@@ -464,6 +464,10 @@
   font-size: 13px;
 }
 
+.artificial-note-text {
+  line-height: 1.4;
+}
+
 .artificial-surface-box {
   display: flex;
   align-items: center;

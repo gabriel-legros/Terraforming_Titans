@@ -284,6 +284,7 @@ setLanguageData({
         widthTooltip: 'Usable surface width for the ring band (1000 km to 1,000,000 km).',
         targetFlux: 'Target flux (W/m²)',
         fluxTooltip: 'Stellar flux at the ringworld orbit (1200–1400 W/m²).',
+        diskFluxNote: 'The star will be selected to provide enough total luminosity for the disk. Initial conditions rely on grazing starlight, so Space Mirrors will be required. Hyperion Lanterns are disabled.',
       },
       costs: {
         title: 'Materials & Time',
@@ -2472,7 +2473,7 @@ setLanguageData({
             averageByZone: 'Average Solar Flux by zone',
             zoneFlux: '{label}: {value}',
             ringworldExplanation: 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.',
-            diskExplanation: 'Disk natural flux is low grazing starlight by annulus; mirrors and lanterns add usable surface flux.',
+            diskExplanation: 'Disk natural flux is low grazing starlight by annulus; Space Mirrors add usable surface flux.',
             standardExplanation: 'Modified solar flux is 4× the average across all zones.',
             surfaceFluxExplanation: 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.',
           },

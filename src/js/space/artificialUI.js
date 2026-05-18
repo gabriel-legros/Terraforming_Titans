@@ -38,6 +38,8 @@ const artificialUICache = {
   ringFluxBox: null,
   ringFluxText: null,
   ringFluxLabel: null,
+  diskFluxNoteBox: null,
+  diskFluxNote: null,
   ringAreaBox: null,
   ringAreaLabel: null,
   durationValue: null,
@@ -1102,6 +1104,19 @@ function ensureArtificialLayout() {
   ringFluxBox.appendChild(ringFluxControls);
   blueprint.appendChild(ringFluxBox);
   artificialUICache.ringFluxBox = ringFluxBox;
+
+  const diskFluxNoteBox = document.createElement('div');
+  diskFluxNoteBox.className = 'artificial-surface-box artificial-disk-flux-note';
+  const diskFluxNote = document.createElement('div');
+  diskFluxNote.className = 'artificial-area artificial-note-text';
+  diskFluxNote.textContent = getArtificialText(
+    'blueprint.diskFluxNote',
+    'The star will be selected to provide enough total luminosity for the disk. Initial conditions rely on grazing starlight, so Space Mirrors will be required. Hyperion Lanterns are disabled.'
+  );
+  diskFluxNoteBox.appendChild(diskFluxNote);
+  blueprint.appendChild(diskFluxNoteBox);
+  artificialUICache.diskFluxNoteBox = diskFluxNoteBox;
+  artificialUICache.diskFluxNote = diskFluxNote;
 
   const ringAreaBox = document.createElement('div');
   ringAreaBox.className = 'artificial-surface-box artificial-ring-area';
@@ -2624,6 +2639,10 @@ function updateArtificialUI(options = {}) {
   }
   artificialUICache.ringFluxBox.classList.toggle('hidden', !isRing);
   artificialUICache.ringFluxBox.style.display = isRing ? '' : 'none';
+  if (artificialUICache.diskFluxNoteBox) {
+    artificialUICache.diskFluxNoteBox.classList.toggle('hidden', !isDisk);
+    artificialUICache.diskFluxNoteBox.style.display = isDisk ? '' : 'none';
+  }
   if (artificialUICache.ringAreaBox) {
     artificialUICache.ringAreaBox.classList.toggle('hidden', !(isRing || isDisk));
     artificialUICache.ringAreaBox.style.display = (isRing || isDisk) ? '' : 'none';

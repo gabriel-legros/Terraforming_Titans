@@ -2806,7 +2806,7 @@ function updateLifeBox() {
         isRingworld
           ? getTerraformingSummaryText('luminosity.solarFluxTooltip.ringworldExplanation', 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.')
           : isDisk
-            ? getTerraformingSummaryText('luminosity.solarFluxTooltip.diskExplanation', 'Disk natural flux is low grazing starlight by annulus; mirrors and lanterns add usable surface flux.')
+            ? getTerraformingSummaryText('luminosity.solarFluxTooltip.diskExplanation', 'Disk natural flux is low grazing starlight by annulus; Space Mirrors add usable surface flux.')
             : getTerraformingSummaryText('luminosity.solarFluxTooltip.standardExplanation', 'Modified solar flux is 4× the average across all zones.'),
         getTerraformingSummaryText('luminosity.solarFluxTooltip.surfaceFluxExplanation', 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.')
       );

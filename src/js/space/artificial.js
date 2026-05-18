@@ -1782,7 +1782,7 @@ class ArtificialManager extends EffectableEntity {
                     target: 'researchManager',
                     targetId: 'space_elevator',
                     type: 'researchDisable',
-                    effectId: isDisk ? 'alderson-disk-disable-space-elevator-research' : 'ringworld-disable-space-elevator-research'
+                    effectId: 'ringworld-disable-space-elevator-research'
                 },
                 {
                     target: 'project',
@@ -1795,17 +1795,18 @@ class ArtificialManager extends EffectableEntity {
             : isDisk
             ? [
                 {
+                    target: 'building',
+                    targetId: 'hyperionLantern',
+                    type: 'permanentBuildingDisable',
+                    value: true,
+                    effectId: 'alderson-disk-disable-hyperion-lanterns'
+                },
+                {
                     target: 'project',
                     targetId: 'planetaryThruster',
                     type: 'permanentProjectDisable',
                     value: true,
                     effectId: 'alderson-disk-disable-planetary-thrusters'
-                },
-                {
-                    target: 'researchManager',
-                    targetId: 'space_elevator',
-                    type: 'researchDisable',
-                    effectId: 'alderson-disk-disable-space-elevator-research'
                 },
                 {
                     target: 'project',
