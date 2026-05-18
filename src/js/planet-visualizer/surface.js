@@ -7,6 +7,7 @@
   const LAVA_WORLD_FULL_K = 1400;
   const HYDROGEN_VISUAL_MIN_KPA = 1e3;
   const HYDROGEN_VISUAL_MAX_KPA = 1e6;
+  const SURFACE_TEXTURE_UPDATE_INTERVAL_MS = 5000;
 
   const PLANET_TYPE_TEXTURES = {
     default: {
@@ -570,34 +571,42 @@
     }
     if (!force) {
       const now = performance.now();
-      if (now - (this._lastSurfaceTextureUpdate || 0) < 5000) return;
+      if (now - (this._lastSurfaceTextureUpdate || 0) < SURFACE_TEXTURE_UPDATE_INTERVAL_MS) return;
       this._lastSurfaceTextureUpdate = now;
     }
     const kPa = this.computeTotalPressureKPa();
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
     const water = (this.viz.coverage?.water || 0) / 100;
     const life = (this.viz.coverage?.life || 0) / 100;
-    const cloud = (this.viz.coverage?.cloud || 0) / 100;
     const z = this.viz.zonalCoverage || {};
     const zKey = ['tropical', 'temperate', 'polar']
       .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const dustBaseColor = this.normalizeHexColor(this.dustTintColor) || baseColorKey;
+    const dustRgb = this.hexToRgb(dustBaseColor);
+    const dustKey = [dustRgb.r, dustRgb.g, dustRgb.b]
+      .map(v => Math.round(v / 4))
+      .join('_');
     // Include planet type in cache key so palette changes (archetype) update texture
     let typeKey = 'default';
     try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${dustBaseColor}|${typeKey}|${fKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
     const tex = this.generateCraterTexture(factor, dustBaseColor);
+    if (!tex) return;
     const surface = this.surfaceMesh || this.sphere;
     if (surface && surface.material) {
+      const previousMap = surface.material.map;
       surface.material.map = tex;
       surface.material.needsUpdate = true;
+      if (previousMap && previousMap !== tex && previousMap.dispose) {
+        previousMap.dispose();
+      }
     }
   };
 
@@ -659,8 +668,20 @@
       }
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
+    if (!this._surfaceTextureCanvas) {
+      this._surfaceTextureCanvas = document.createElement('canvas');
+    }
+    const canvas = this._surfaceTextureCanvas;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      if (this._surfaceCanvasTexture && this._surfaceCanvasTexture.dispose) {
+        this._surfaceCanvasTexture.dispose();
+      }
+      this._surfaceCanvasTexture = null;
+      this._waterAlpha = null;
+      this._iceAlpha = null;
+    }
     const ctx = canvas.getContext('2d');
 
     const mix = (a, b, t) => {
@@ -722,9 +743,11 @@
     }
 
     if (!this.heightMap) this.generateHeightMap(w, h);
+    let timg = null;
+    let tdata = null;
     try {
-      const timg = ctx.getImageData(0, 0, w, h);
-      const tdata = timg.data;
+      timg = ctx.getImageData(0, 0, w, h);
+      tdata = timg.data;
 
       // Prepare large-scale feature noise (dark regions)
       let s = Math.floor((seed.x * 65535) ^ (seed.y * 524287)) >>> 0;
@@ -864,8 +887,8 @@
         tdata[idx + 1] = g;
         tdata[idx + 2] = b;
       }
-      ctx.putImageData(timg, 0, 0);
     } catch (e) {}
+    if (!timg || !tdata) return this._surfaceCanvasTexture || null;
 
     if (!this.heightMap || !this.heightZoneHists || !this._zoneRowIndex) {
       if (!this._zoneRowIndex) {
@@ -874,11 +897,26 @@
       if (!this.heightMap) this.generateHeightMap(w, h);
     }
 
-    const ocean = document.createElement('canvas');
-    ocean.width = w; ocean.height = h;
-    const octx = ocean.getContext('2d');
-    const oimg = octx.createImageData(w, h);
-    const odata = oimg.data;
+    const blendPixel = (data, idx, sr, sg, sb, alpha) => {
+      if (alpha <= 0) return;
+      if (alpha >= 1) {
+        data[idx] = sr;
+        data[idx + 1] = sg;
+        data[idx + 2] = sb;
+        data[idx + 3] = 255;
+        return;
+      }
+      const inv = 1 - alpha;
+      data[idx] = Math.round(sr * alpha + data[idx] * inv);
+      data[idx + 1] = Math.round(sg * alpha + data[idx + 1] * inv);
+      data[idx + 2] = Math.round(sb * alpha + data[idx + 2] * inv);
+      data[idx + 3] = 255;
+    };
+
+    if (!this._waterAlpha || this._waterAlpha.length !== w * h) {
+      this._waterAlpha = new Float32Array(w * h);
+    }
+    const waterAlpha = this._waterAlpha;
     const zc = this.viz.zonalCoverage || {};
     const covW = [
       Math.max(0, Math.min(1, (zc.tropical?.water ?? 0))),
@@ -913,20 +951,14 @@
         a = 1 - smoothstep(lower, upper, hgt);
       }
       const idx = i * 4;
-      const r = 10, g = 40, b = 120;
-      odata[idx] = r;
-      odata[idx + 1] = g;
-      odata[idx + 2] = b;
-      odata[idx + 3] = Math.floor(a * 255);
+      waterAlpha[i] = a;
+      blendPixel(tdata, idx, 10, 40, 120, a);
     }
-    octx.putImageData(oimg, 0, 0);
-    ctx.drawImage(ocean, 0, 0);
 
-    const iceCanvas = document.createElement('canvas');
-    iceCanvas.width = w; iceCanvas.height = h;
-    const ictx = iceCanvas.getContext('2d');
-    const iimg = ictx.createImageData(w, h);
-    const idata = iimg.data;
+    if (!this._iceAlpha || this._iceAlpha.length !== w * h) {
+      this._iceAlpha = new Float32Array(w * h);
+    }
+    const iceAlpha = this._iceAlpha;
     const zonalCoverage = this.viz.zonalCoverage || {};
     const zonalSets = [
       zonalCoverage.tropical || {},
@@ -956,8 +988,7 @@
       const latAbs = (isRing || this.isDiskWorld()) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
       const latTerm = startFromPoles ? (1 - latAbs) : latAbs;
       const latBias = Math.max(0, Math.min(1, Math.pow(latTerm, 0.85)));
-      const idx = i * 4;
-      const waterPresence = odata[idx + 3] / 255;
+      const waterPresence = waterAlpha[i];
       const hgt = this.heightMap ? this.heightMap[i] : 0.5;
       let score = latBias * 0.58 + iceNoise[i] * 0.3 + (1 - hgt) * 0.14 - waterPresence * 0.05;
       if (score < 0) score = 0; else if (score > 1) score = 1;
@@ -1036,22 +1067,13 @@
       if (alpha < 0.02) alpha = 0;
       if (alpha > 1) alpha = 1;
       const idx = i * 4;
-      idata[idx] = 200;
-      idata[idx + 1] = 220;
-      idata[idx + 2] = 255;
-      idata[idx + 3] = Math.floor(alpha * 255);
+      iceAlpha[i] = alpha;
+      blendPixel(tdata, idx, 200, 220, 255, alpha);
     }
-    ictx.putImageData(iimg, 0, 0);
-    ctx.drawImage(iceCanvas, 0, 0);
 
     const zcLife = this.viz.zonalCoverage || {};
     const bAny = ((zcLife.tropical?.life || 0) + (zcLife.temperate?.life || 0) + (zcLife.polar?.life || 0)) > 0;
     if (bAny) {
-      const bioCanvas = document.createElement('canvas');
-      bioCanvas.width = w; bioCanvas.height = h;
-      const bctx = bioCanvas.getContext('2d');
-      const bimg = bctx.createImageData(w, h);
-      const bdata = bimg.data;
       const bioSeed = this.hashSeedFromPlanet();
       const bioSeedVal = Math.floor((bioSeed.x * 65535) ^ (bioSeed.y * 131071)) >>> 0;
       const bioHash = (x, y) => {
@@ -1115,8 +1137,7 @@
           const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
           if (hbin <= thr) continue;
         }
-        const idx = i * 4;
-        const waterPresence = odata[idx + 3] / 255;
+        const waterPresence = waterAlpha[i];
         const latAbs = (isRing || this.isDiskWorld()) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const patch = patchNoise(x, y);
@@ -1202,27 +1223,25 @@
           const peakMask = smoothstep(mountainThreshold - 0.05, mountainThreshold + 0.02, hgt);
           alpha *= (1 - 0.7 * peakMask);
         }
-        const iceCover = idata[idx + 3] / 255;
+        const iceCover = iceAlpha[i];
         if (iceCover > 0) {
           alpha = Math.max(alpha, iceCover);
         }
-        bdata[idx] = r;
-        bdata[idx + 1] = g;
-        bdata[idx + 2] = b;
-        bdata[idx + 3] = Math.floor(alpha * 255);
+        blendPixel(tdata, idx, r, g, b, alpha);
       }
-      bctx.putImageData(bimg, 0, 0);
-      ctx.drawImage(bioCanvas, 0, 0);
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    if (THREE && THREE.SRGBColorSpace) {
-      texture.colorSpace = THREE.SRGBColorSpace;
+    ctx.putImageData(timg, 0, 0);
+    if (!this._surfaceCanvasTexture) {
+      this._surfaceCanvasTexture = new THREE.CanvasTexture(canvas);
+      if (THREE && THREE.SRGBColorSpace) {
+        this._surfaceCanvasTexture.colorSpace = THREE.SRGBColorSpace;
+      }
+      this._surfaceCanvasTexture.wrapS = THREE.RepeatWrapping;
+      this._surfaceCanvasTexture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
     }
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
-    texture.needsUpdate = true;
-    return texture;
+    this._surfaceCanvasTexture.needsUpdate = true;
+    return this._surfaceCanvasTexture;
   };
 
   PlanetVisualizer.prototype.generateLavaOverlayTexture = function generateLavaOverlayTexture(w, h) {

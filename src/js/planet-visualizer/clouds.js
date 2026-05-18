@@ -134,12 +134,16 @@
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
     tex.needsUpdate = true;
+    const previousMap = this.cloudMaterial.map;
     this.cloudMaterial.map = tex;
     if (this.cloudMaterial) {
       this.cloudMaterial.opacity = 0.45 + 0.55 * Math.pow(cov, 1.15);
     }
     this.cloudMaterial.needsUpdate = true;
-    this._lastCloudCoverageKey = `${cov.toFixed(4)}`;
+    if (previousMap && previousMap !== tex && previousMap.dispose) {
+      previousMap.dispose();
+    }
+    this._lastCloudCoverageKey = `${cov.toFixed(3)}`;
   };
 
   PlanetVisualizer.prototype.generateCloudCanvas = function generateCloudCanvas() {
@@ -226,7 +230,7 @@
     if (this.cloudMesh) this.cloudMesh.visible = true;
     if (this.cloudMesh && this.cloudMaterial) {
       const rawCov = Math.max(0, Math.min(1, (this.viz.coverage?.cloud || 0) / 100));
-      const keyNow = `${(rawCov * rawCov).toFixed(4)}`;
+      const keyNow = `${(rawCov * rawCov).toFixed(3)}`;
       if (this._lastCloudCoverageKey !== keyNow) {
         this.updateCloudMeshTexture();
       }
