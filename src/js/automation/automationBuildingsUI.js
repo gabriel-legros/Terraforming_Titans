@@ -664,16 +664,10 @@ function updateBuildingsAutomationUI() {
   const buildingCatalog = getBuildingAutomationPickerCatalog(selectedCategory);
   const buildingSignature = `${selectedCategory}|${buildingCatalog.map((building) => `${building.name}:${building.displayName || ''}:${availableSet.has(building.name) ? 1 : 0}`).join('|')}`;
   if (document.activeElement !== buildingsBuilderBuildingSelect && buildingSignature !== buildingsBuilderBuildingSignature) {
-    if (available.length === 0) {
+    if (buildingCatalog.length === 0) {
       syncAutomationSelectOptions(
         buildingsBuilderBuildingSelect,
-        [{ value: '', label: getAutomationCardText('noBuildingsAvailable', {}, 'No buildings available'), disabled: true }]
-          .concat(buildingCatalog.map(building => ({
-            value: building.name,
-            label: building.displayName || building.name,
-            disabled: true,
-            hidden: true
-          }))),
+        [{ value: '', label: getAutomationCardText('noBuildingsAvailable', {}, 'No buildings available'), disabled: true }],
         ''
       );
       buildingsBuilderBuildingSelect.selectedIndex = 0;
@@ -682,26 +676,24 @@ function updateBuildingsAutomationUI() {
         buildingsBuilderBuildingSelect,
         buildingCatalog.map(building => ({
           value: building.name,
-          label: building.displayName || building.name,
-          disabled: !availableSet.has(building.name),
-          hidden: !availableSet.has(building.name)
+          label: building.displayName || building.name
         })),
-        buildingAutomationUIState.builderBuildingValue || available[0].name
+        buildingAutomationUIState.builderBuildingValue || buildingCatalog[0].name
       );
       if (buildingAutomationUIState.builderBuildingValue) {
         buildingsBuilderBuildingSelect.value = buildingAutomationUIState.builderBuildingValue;
       }
-      if (!buildingsBuilderBuildingSelect.value || !availableSet.has(buildingsBuilderBuildingSelect.value)) {
-        buildingsBuilderBuildingSelect.value = available[0].name;
+      if (!buildingsBuilderBuildingSelect.value) {
+        buildingsBuilderBuildingSelect.value = buildingCatalog[0].name;
       }
     }
     buildingAutomationUIState.builderBuildingValue = buildingsBuilderBuildingSelect.value || '';
     buildingsBuilderBuildingSignature = buildingSignature;
   }
 
-  buildingsBuilderAddButton.disabled = available.length === 0;
+  buildingsBuilderAddButton.disabled = buildingCatalog.length === 0;
   buildingsBuilderAddCategoryButton.disabled = buildingsBuilderCategorySelect.options.length === 0
-    || !automatableBuildings.length;
+    || !buildingCatalog.length;
   buildingsBuilderClearButton.disabled = buildingAutomationUIState.builderSelectedBuildings.length === 0;
   buildingsBuilderDeleteButton.disabled = !activePreset;
   buildingsBuilderDuplicateButton.disabled = !activePreset;
@@ -994,14 +986,19 @@ function attachBuildingsAutomationHandlers() {
 
   buildingsBuilderAddCategoryButton.addEventListener('click', () => {
     const selectedCategory = buildingsBuilderCategorySelect.value || 'all';
-    const automatableBuildings = getAutomatableBuildings();
-    const additions = automatableBuildings.filter(building => (
+    const additions = getBuildingAutomationPickerCatalog(selectedCategory);
+    const additionsByName = {};
+    additions.forEach((building) => {
+      additionsByName[building.name] = building;
+    });
+    const uniqueAdditions = Object.values(additionsByName);
+    const additionsFiltered = uniqueAdditions.filter(building => (
       selectedCategory === 'all' || building.category === selectedCategory
     ));
-    if (!additions.length) {
+    if (!additionsFiltered.length) {
       return;
     }
-    additions.forEach(building => {
+    additionsFiltered.forEach(building => {
       if (!buildingAutomationUIState.builderSelectedBuildings.includes(building.name)) {
         buildingAutomationUIState.builderSelectedBuildings.push(building.name);
       }
@@ -1022,7 +1019,7 @@ function attachBuildingsAutomationHandlers() {
     if (presetId) {
       automationManager.buildingsAutomation.mergeMissingBuildingsIntoPreset(
         Number(presetId),
-        additions.map(building => building.name)
+        additionsFiltered.map(building => building.name)
       );
       buildingAutomationUIState.syncedPresetId = null;
     }
@@ -1056,7 +1053,7 @@ function attachBuildingsAutomationHandlers() {
     const scopeAll = buildingAutomationUIState.builderScope === 'all';
     const showInSidebar = buildingAutomationUIState.builderShowInSidebar;
     const buildingIds = buildingAutomationUIState.builderScope === 'all'
-      ? getAutomatableBuildings().map(building => building.name)
+      ? Object.values(buildings).map(building => building.name)
       : buildingAutomationUIState.builderSelectedBuildings.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {

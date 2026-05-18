@@ -708,16 +708,10 @@ function updateColonyAutomationUI() {
   ));
   const targetSignature = `${selectedCategory}|${targetCatalog.map((target) => `${target.id}:${target.label}:${availableTargetSet.has(target.id) ? 1 : 0}`).join('|')}`;
   if (document.activeElement !== colonyBuilderTargetSelect && targetSignature !== colonyBuilderTargetSignature) {
-    if (!filteredTargets.length) {
+    if (!targetCatalog.length) {
       syncAutomationSelectOptions(
         colonyBuilderTargetSelect,
-        [{ value: '', label: getAutomationCardText('noTargetsAvailable', {}, 'No targets available'), disabled: true }]
-          .concat(targetCatalog.map(target => ({
-            value: target.id,
-            label: target.label,
-            disabled: true,
-            hidden: true
-          }))),
+        [{ value: '', label: getAutomationCardText('noTargetsAvailable', {}, 'No targets available'), disabled: true }],
         ''
       );
       colonyBuilderTargetSelect.selectedIndex = 0;
@@ -726,26 +720,24 @@ function updateColonyAutomationUI() {
         colonyBuilderTargetSelect,
         targetCatalog.map(target => ({
           value: target.id,
-          label: target.label,
-          disabled: !availableTargetSet.has(target.id),
-          hidden: !availableTargetSet.has(target.id)
+          label: target.label
         })),
-        colonyAutomationUIState.builderTargetValue || filteredTargets[0].id
+        colonyAutomationUIState.builderTargetValue || targetCatalog[0].id
       );
       if (colonyAutomationUIState.builderTargetValue) {
         colonyBuilderTargetSelect.value = colonyAutomationUIState.builderTargetValue;
       }
-      if (!colonyBuilderTargetSelect.value || !availableTargetSet.has(colonyBuilderTargetSelect.value)) {
-        colonyBuilderTargetSelect.value = filteredTargets[0].id;
+      if (!colonyBuilderTargetSelect.value) {
+        colonyBuilderTargetSelect.value = targetCatalog[0].id;
       }
     }
     colonyAutomationUIState.builderTargetValue = colonyBuilderTargetSelect.value || '';
     colonyBuilderTargetSignature = targetSignature;
   }
 
-  colonyBuilderAddButton.disabled = filteredTargets.length === 0;
+  colonyBuilderAddButton.disabled = targetCatalog.length === 0;
   colonyBuilderAddCategoryButton.disabled = colonyBuilderCategorySelect.options.length === 0
-    || !availableTargets.length;
+    || !targetCatalog.length;
   colonyBuilderClearButton.disabled = colonyAutomationUIState.builderSelectedTargets.length === 0;
   colonyBuilderDeleteButton.disabled = !activePreset;
   colonyBuilderDuplicateButton.disabled = !activePreset;
@@ -1037,9 +1029,9 @@ function attachColonyAutomationHandlers() {
   });
 
   colonyBuilderAddCategoryButton.addEventListener('click', () => {
+    const automation = automationManager.colonyAutomation;
     const selectedCategory = colonyBuilderCategorySelect.value || 'all';
-    const availableTargets = getColonyAutomationTargets();
-    const additions = availableTargets.filter(target => (
+    const additions = getColonyAutomationTargetCatalog(automation).filter(target => (
       selectedCategory === 'all' || target.categoryId === selectedCategory
     ));
     if (!additions.length) {
@@ -1052,7 +1044,6 @@ function attachColonyAutomationHandlers() {
     });
     let presetId = automationManager.colonyAutomation.getSelectedPresetId();
     if (!presetId) {
-      const automation = automationManager.colonyAutomation;
       const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
       presetId = automation.addPreset(suggestedName, [], {
         createEmpty: true,
@@ -1100,7 +1091,7 @@ function attachColonyAutomationHandlers() {
     const scopeAll = colonyAutomationUIState.builderScope === 'all';
     const showInSidebar = colonyAutomationUIState.builderShowInSidebar;
     const targetIds = scopeAll
-      ? getColonyAutomationTargets().map(target => target.id)
+      ? getColonyAutomationTargetCatalog(automation).map(target => target.id)
       : colonyAutomationUIState.builderSelectedTargets.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
