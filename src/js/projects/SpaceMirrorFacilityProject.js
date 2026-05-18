@@ -844,9 +844,11 @@ function initializeMirrorOversightUI(container) {
       </div>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
-        <input type="checkbox" id="mirror-oversight-lantern">
-        <label for="mirror-oversight-lantern">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.applyToLantern', 'Apply Oversight to Hyperion Lantern')}</label>
-        <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.applyToLanternTooltip', 'Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.')}">&#9432;</span>
+        <span id="mirror-oversight-lantern-fields">
+          <input type="checkbox" id="mirror-oversight-lantern">
+          <label for="mirror-oversight-lantern">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.applyToLantern', 'Apply Oversight to Hyperion Lantern')}</label>
+          <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.applyToLanternTooltip', 'Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.')}">&#9432;</span>
+        </span>
       </div>
     </div>
   `;
@@ -1461,17 +1463,9 @@ function updateMirrorOversightUI() {
 
   const lantern = document.getElementById('mirror-oversight-lantern');
   const lanternDiv = document.getElementById('mirror-oversight-lantern-div');
+  const lanternFields = document.getElementById('mirror-oversight-lantern-fields');
   if (lantern) lantern.checked = !!mirrorOversightSettings.applyToLantern;
   const lanternUnlocked = isLanternMirrorFacilityAvailable();
-  if (lanternDiv) {
-    lanternDiv.style.display = lanternUnlocked ? 'flex' : 'none';
-    if (lanternUnlocked) {
-      lanternDiv.style.display = 'flex';
-      lanternDiv.style.alignItems = 'center';
-      lanternDiv.style.gap = '12px';
-      lanternDiv.style.flexWrap = 'wrap';
-    }
-  }
 
   const smfProject = (typeof projectManager !== 'undefined' && projectManager.projects)
     ? projectManager.projects.spaceMirrorFacility
@@ -1505,6 +1499,13 @@ function updateMirrorOversightUI() {
   const advDiv = document.getElementById('mirror-advanced-oversight-div');
   const advCheckbox = document.getElementById('mirror-advanced-oversight');
   if (advDiv) advDiv.style.display = advancedUnlocked ? 'flex' : 'none';
+  if (lanternFields) lanternFields.style.display = lanternUnlocked ? '' : 'none';
+  if (lanternDiv) {
+    lanternDiv.style.display = (lanternUnlocked || advancedUnlocked) ? 'flex' : 'none';
+    lanternDiv.style.alignItems = 'center';
+    lanternDiv.style.gap = '12px';
+    lanternDiv.style.flexWrap = 'wrap';
+  }
   if (advCheckbox) advCheckbox.checked = !!mirrorOversightSettings.advancedOversight;
   if (mirrorOversightCache?.allowHeatCheckbox) {
     mirrorOversightCache.allowHeatCheckbox.checked = mirrorOversightSettings.allowAvailableToHeat !== false;
