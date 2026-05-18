@@ -159,9 +159,15 @@
     const illumSource = useDebugIllum ? this.viz?.illum : this.getGameIllumination();
     const illum = Math.max(0, Math.min(3, Number(illumSource) || 0));
     if (this.sunLight) this.sunLight.intensity = illum;
+    if (this.isDiskWorld() && this.ambientLight) {
+      this.ambientLight.intensity = 0.8;
+    }
     if (this.sunMesh) {
       if (this.isRingWorld()) {
         this.sunMesh.visible = false;
+      } else if (this.isDiskWorld()) {
+        this.sunMesh.visible = illum >= 0.01;
+        this.sunMesh.scale.setScalar(0.2);
       } else {
         this.sunMesh.visible = illum >= 0.01;
         this.sunMesh.scale.setScalar(illum);
@@ -193,6 +199,14 @@
     if (this.isRingWorld()) {
       this.sunLight.position.set(0, 0, 0);
       this.sunMesh.visible = false;
+      return;
+    }
+    if (this.isDiskWorld()) {
+      this.sunLight.position.set(0, 0.04, 0);
+      if (this.sunMesh) {
+        this.sunMesh.position.set(0, 0.035, 0);
+        this.sunMesh.visible = true;
+      }
       return;
     }
     const deg = (this.viz?.inclinationDeg ?? 15);

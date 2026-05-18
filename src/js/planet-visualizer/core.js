@@ -13,6 +13,7 @@
       this.camera = null;
       this.sphere = null;
       this.ringMesh = null;
+      this.diskMesh = null;
       this.surfaceMesh = null;
       this.lavaOverlayMesh = null;
       this.lavaOverlayMaterial = null;
@@ -146,6 +147,80 @@
 
     isRingWorld() {
       return currentPlanetParameters?.classification?.type === 'ring';
+    }
+
+    isDiskWorld() {
+      return currentPlanetParameters?.classification?.type === 'disk'
+        || currentPlanetParameters?.specialAttributes?.zoneLayout === 'aldersonDisk';
+    }
+
+    isFlatWorld() {
+      return this.isRingWorld() || this.isDiskWorld();
+    }
+
+    getDiskInnerRatio() {
+      const attrs = currentPlanetParameters?.specialAttributes || {};
+      const disk = attrs.disk || {};
+      const outerRadiusAU = attrs.diskRadiusAU || disk.radiusAU || currentPlanetParameters?.celestialParameters?.distanceFromSun || 1;
+      const innerRadiusAU = attrs.diskInnerRadiusAU || disk.innerRadiusAU || 0;
+      return Math.max(0.16, Math.min(0.82, innerRadiusAU / outerRadiusAU));
+    }
+
+    getDiskTextureZoneIndex(x, y, w, h) {
+      const dx = (x / Math.max(1, w - 1)) * 2 - 1;
+      const dy = (y / Math.max(1, h - 1)) * 2 - 1;
+      const radius = Math.sqrt(dx * dx + dy * dy);
+      const inner = this.getDiskInnerRatio();
+      const width = Math.max(0.001, 1 - inner);
+      const annulusT = Math.max(0, Math.min(0.999999, (radius - inner) / width));
+      return Math.min(2, Math.floor(annulusT * 3));
+    }
+
+    getTextureZoneIndex(x, y, w, h) {
+      if (this.isRingWorld()) return 0;
+      if (this.isDiskWorld()) return this.getDiskTextureZoneIndex(x, y, w, h);
+      const v = y / Math.max(1, h - 1);
+      const latRad = (0.5 - v) * Math.PI;
+      const absDeg = Math.abs(latRad * (180 / Math.PI));
+      if (absDeg >= 66.5) return 2;
+      if (absDeg >= 23.5) return 1;
+      return 0;
+    }
+
+    createDiskAnnulusGeometry(innerRadius, outerRadius, radialSegments = 24, thetaSegments = 192) {
+      const positions = [];
+      const normals = [];
+      const uvs = [];
+      const indices = [];
+      for (let r = 0; r <= radialSegments; r++) {
+        const t = r / radialSegments;
+        const radius = innerRadius + (outerRadius - innerRadius) * t;
+        for (let s = 0; s <= thetaSegments; s++) {
+          const a = (s / thetaSegments) * Math.PI * 2;
+          const x = Math.cos(a) * radius;
+          const z = Math.sin(a) * radius;
+          positions.push(x, 0, z);
+          normals.push(0, 1, 0);
+          uvs.push(0.5 + x / (outerRadius * 2), 0.5 + z / (outerRadius * 2));
+        }
+      }
+      const stride = thetaSegments + 1;
+      for (let r = 0; r < radialSegments; r++) {
+        for (let s = 0; s < thetaSegments; s++) {
+          const a = r * stride + s;
+          const b = a + 1;
+          const c = (r + 1) * stride + s;
+          const d = c + 1;
+          indices.push(a, c, b, b, c, d);
+        }
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeBoundingSphere();
+      return geometry;
     }
 
     getZoneKeys() {
@@ -349,11 +424,12 @@
 
     createSurfaceMesh() {
       const isRing = this.isRingWorld();
+      const isDisk = this.isDiskWorld();
       const material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: isRing ? 0.85 : 0.9,
+        roughness: this.isFlatWorld() ? 0.85 : 0.9,
         metalness: 0.0,
-        side: isRing ? THREE.BackSide : THREE.FrontSide,
+        side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
       });
       if (isRing) {
         const ringRadius = 1;
@@ -365,8 +441,24 @@
         this.scene.add(this.ringMesh);
         this.surfaceMesh = this.ringMesh;
         this.sphere = null;
+        this.diskMesh = null;
         this.ringHeight = ringHeight;
         this.ringRadius = ringRadius;
+      } else if (isDisk) {
+        const diskOuterRadius = 1.18;
+        const diskInnerRadius = diskOuterRadius * this.getDiskInnerRatio();
+        const geometry = this.createDiskAnnulusGeometry(diskInnerRadius, diskOuterRadius);
+        this.diskMesh = new THREE.Mesh(geometry, material);
+        this.diskMesh.userData.baseRoughness = material.roughness;
+        this.diskMesh.userData.baseMetalness = material.metalness;
+        this.scene.add(this.diskMesh);
+        this.surfaceMesh = this.diskMesh;
+        this.sphere = null;
+        this.ringMesh = null;
+        this.ringHeight = 0;
+        this.ringRadius = 1;
+        this.diskOuterRadius = diskOuterRadius;
+        this.diskInnerRadius = diskInnerRadius;
       } else {
         const geometry = new THREE.SphereGeometry(1, 32, 32);
         this.sphere = new THREE.Mesh(geometry, material);
@@ -375,8 +467,11 @@
         this.scene.add(this.sphere);
         this.surfaceMesh = this.sphere;
         this.ringMesh = null;
+        this.diskMesh = null;
         this.ringHeight = 0;
         this.ringRadius = 1;
+        this.diskOuterRadius = 0;
+        this.diskInnerRadius = 0;
       }
     }
 
@@ -401,16 +496,24 @@
       this.scene = new THREE.Scene();
       this.createStarField();
       const isRing = this.isRingWorld();
+      const isDisk = this.isDiskWorld();
       if (isRing) {
         this.cameraDistance = 0;
         this.cameraHeight = 0;
+      } else if (isDisk) {
+        this.cameraDistance = 0;
+        this.cameraHeight = 2.45;
       } else {
         this.cameraDistance = 3.5;
         this.cameraHeight = 0.0;
       }
       this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
-      this.camera.position.z = this.cameraDistance;
-      this.camera.position.y = this.cameraHeight;
+      if (isDisk) {
+        this.camera.position.set(0, this.cameraHeight, 1.55);
+      } else {
+        this.camera.position.z = this.cameraDistance;
+        this.camera.position.y = this.cameraHeight;
+      }
       this.camera.lookAt(0, 0, 0);
 
       const initialIllum = this.getGameIllumination();
@@ -432,7 +535,7 @@
         f.scale = 12;      // default scale 12 for visibility/detail
         f.contrast = 2.0;  // higher contrast for visibility
       }
-      if (isRing) {
+      if (isRing || isDisk) {
         this.sunLight = new THREE.PointLight(0xffffff, initialIllum, 0, 2);
         this.sunLight.position.set(0, 0, 0);
       } else {
@@ -441,20 +544,25 @@
       }
       this.scene.add(this.sunLight);
       // Keep nightside visible with subtle ambient fill
-      this.ambientLight = new THREE.AmbientLight(0xffffff, 0.06);
+      this.ambientLight = new THREE.AmbientLight(0xffffff, isDisk ? 0.8 : 0.06);
       this.scene.add(this.ambientLight);
 
       const sunGeom = new THREE.SphereGeometry(0.15, 16, 16);
       const sunMat = new THREE.MeshBasicMaterial({ color: 0xfff5a6 });
       this.sunMesh = new THREE.Mesh(sunGeom, sunMat);
-      this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
+      if (isDisk) {
+        this.sunMesh.position.set(0, 0.035, 0);
+        this.sunMesh.scale.setScalar(0.2);
+      } else {
+        this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
+      }
       this.scene.add(this.sunMesh);
       this.updateSunFromInclination();
 
       this.createSurfaceMesh();
       this.createLavaOverlayMesh();
       this.createGasOverlayMesh();
-      if (!isRing) {
+      if (!this.isFlatWorld()) {
         this.createCityLights();
         this.createAtmosphere();
       }
@@ -499,8 +607,10 @@
         angle = this.planetAngle;
       }
       this.planetAngle = angle;
+      const isRing = this.isRingWorld();
+      const isDisk = this.isDiskWorld();
       if (this.surfaceMesh) {
-        this.surfaceMesh.rotation.y = angle;
+        this.surfaceMesh.rotation.y = isDisk ? 0 : angle;
       }
       if (this.cloudMesh) {
         const now = performance.now();
@@ -508,13 +618,15 @@
         const dt = Math.min(0.05, (now - this._lastCloudTime) / 1000);
         this._lastCloudTime = now;
         this.cloudDrift = (this.cloudDrift || 0) + (this.cloudDriftSpeed || 0.005) * dt;
-        this.cloudMesh.rotation.y = angle + this.cloudDrift;
+        this.cloudMesh.rotation.y = isDisk ? 0 : angle + this.cloudDrift;
       }
-      const isRing = this.isRingWorld();
       if (isRing) {
         this.camera.position.set(0, this.cameraHeight, 0);
         this.camera.lookAt(1, 0, 0);
         this.updateRingShadePanels(angle);
+      } else if (isDisk) {
+        this.camera.position.set(0, this.cameraHeight, 1.55);
+        this.camera.lookAt(0, 0, 0);
       } else {
         const ang = angle;
         this.camera.position.set(

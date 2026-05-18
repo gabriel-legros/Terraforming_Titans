@@ -4,13 +4,21 @@
 
   PlanetVisualizer.prototype.createCloudSphere = function createCloudSphere() {
     const isRing = this.isRingWorld();
+    const isDisk = this.isDiskWorld();
     const ringRadius = this.ringRadius || 1;
     const ringHeight = this.ringHeight || 0.23625;
     const cloudRadius = isRing ? Math.max(0.2, ringRadius - 0.015) : 1.022;
     const cloudHeight = ringHeight;
     const geo = isRing
       ? new THREE.CylinderGeometry(cloudRadius, cloudRadius, cloudHeight, 96, 1, true)
-      : new THREE.SphereGeometry(cloudRadius, 64, 48);
+      : (isDisk
+        ? this.createDiskAnnulusGeometry(
+          Math.max(0.01, this.diskInnerRadius || 0.18),
+          Math.max(0.1, (this.diskOuterRadius || 1.18) + 0.012),
+          24,
+          192
+        )
+        : new THREE.SphereGeometry(cloudRadius, 64, 48));
     const mat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
@@ -18,10 +26,13 @@
       depthWrite: false,
       depthTest: true,
       blending: THREE.NormalBlending,
-      side: isRing ? THREE.BackSide : THREE.FrontSide,
+      side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
     });
     this.cloudMaterial = mat;
     this.cloudMesh = new THREE.Mesh(geo, mat);
+    if (isDisk) {
+      this.cloudMesh.position.y = 0.009;
+    }
     this.cloudMesh.renderOrder = 5;
     this.scene.add(this.cloudMesh);
     this.updateCloudMeshTexture();
@@ -35,6 +46,9 @@
       if (h < 256) h = 256;
       if (h > 1024) h = 1024;
       return { w, h };
+    }
+    if (this.isDiskWorld()) {
+      return { w: 1024, h: 1024 };
     }
     return { w: 512, h: 256 };
   };
@@ -69,6 +83,7 @@
     const edge = 0.025;
     const overcastFloor = cov > 0.9 ? 0.35 * ((cov - 0.9) / 0.1) : 0;
     const isRing = this.isRingWorld();
+    const isDisk = this.isDiskWorld();
     const smoothstep = (a, b, t) => {
       const v = Math.max(0, Math.min(1, (t - a) / (b - a)));
       return v * v * (3 - 2 * v);
@@ -88,6 +103,14 @@
         const vy = y / (h - 1);
         const dist = Math.abs(vy - 0.5);
         bandMask = 1 - smoothstep(0.47, 0.5, dist);
+      } else if (isDisk) {
+        const x = i % w;
+        const y = (i - x) / w;
+        const dx = (x / Math.max(1, w - 1)) * 2 - 1;
+        const dy = (y / Math.max(1, h - 1)) * 2 - 1;
+        const r = Math.sqrt(dx * dx + dy * dy);
+        bandMask = smoothstep(this.getDiskInnerRatio(), this.getDiskInnerRatio() + 0.03, r)
+          * (1 - smoothstep(0.97, 1, r));
       }
       const alpha = Math.max(overcastFloor, alphaBase * density) * bandMask;
       const idx = i * 4;
@@ -109,7 +132,7 @@
     const tex = new THREE.CanvasTexture(canv);
     if (THREE && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
     tex.needsUpdate = true;
     this.cloudMaterial.map = tex;
     if (this.cloudMaterial) {
@@ -211,7 +234,7 @@
   };
 
   PlanetVisualizer.prototype.generateCloudMap = function generateCloudMap(w, h) {
-    if (this.isRingWorld()) {
+    if (this.isRingWorld() || this.isDiskWorld()) {
       const ringAspect = this.getRingUvAspect();
       const seed = this.hashSeedFromPlanet();
       let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;

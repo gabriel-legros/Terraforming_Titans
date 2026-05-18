@@ -251,6 +251,7 @@
     if (this.lavaOverlayMesh || !this.surfaceMesh) return;
 
     const isRing = this.isRingWorld();
+    const isDisk = this.isDiskWorld();
     const geometry = isRing
       ? new THREE.CylinderGeometry(
         Math.max(0.1, (this.ringRadius || 1) - 0.003),
@@ -260,7 +261,14 @@
         1,
         true
       )
-      : new THREE.SphereGeometry(1.003, 32, 32);
+      : (isDisk
+        ? this.createDiskAnnulusGeometry(
+          Math.max(0.01, this.diskInnerRadius || 0.18),
+          Math.max(0.1, this.diskOuterRadius || 1.18),
+          24,
+          192
+        )
+        : new THREE.SphereGeometry(1.003, 32, 32));
     const material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
@@ -268,9 +276,12 @@
       depthWrite: false,
       depthTest: true,
       blending: THREE.NormalBlending,
-      side: isRing ? THREE.BackSide : THREE.FrontSide,
+      side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
     });
     const mesh = new THREE.Mesh(geometry, material);
+    if (isDisk) {
+      mesh.position.y = 0.003;
+    }
     mesh.visible = false;
     mesh.renderOrder = 2;
     this.surfaceMesh.add(mesh);
@@ -333,6 +344,7 @@
     if (this.gasOverlayMesh || !this.surfaceMesh) return;
 
     const isRing = this.isRingWorld();
+    const isDisk = this.isDiskWorld();
     const geometry = isRing
       ? new THREE.CylinderGeometry(
         Math.max(0.1, (this.ringRadius || 1) + 0.055),
@@ -342,7 +354,14 @@
         1,
         true
       )
-      : new THREE.SphereGeometry(1.055, 32, 32);
+      : (isDisk
+        ? this.createDiskAnnulusGeometry(
+          Math.max(0.01, this.diskInnerRadius || 0.18),
+          Math.max(0.1, (this.diskOuterRadius || 1.18) + 0.01),
+          24,
+          192
+        )
+        : new THREE.SphereGeometry(1.055, 32, 32));
     const material = new THREE.ShaderMaterial({
       uniforms: {
         baseMap: { value: null },
@@ -382,9 +401,12 @@
       depthWrite: false,
       depthTest: true,
       blending: THREE.NormalBlending,
-      side: isRing ? THREE.BackSide : THREE.FrontSide,
+      side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
     });
     const mesh = new THREE.Mesh(geometry, material);
+    if (isDisk) {
+      mesh.position.y = 0.006;
+    }
     mesh.visible = false;
     mesh.renderOrder = 6;
     this.surfaceMesh.add(mesh);
@@ -526,6 +548,9 @@
       const h = Math.max(64, Math.round(w / aspect));
       return { w, h };
     }
+    if (this.isDiskWorld()) {
+      return { w: 1024, h: 1024 };
+    }
     return { w: 1024, h: 512 };
   };
 
@@ -625,7 +650,8 @@
         this.craterAlphaData[i] = a;
         if (a > 0) {
           const y = Math.floor(i / w);
-          const zi = this._zoneRowIndex[y];
+          const x = i - y * w;
+          const zi = this.getTextureZoneIndex(x, y, w, h);
           const bin = Math.max(0, Math.min(255, Math.floor(a * 255)));
           this.craterZoneHists[zi].counts[bin]++;
           this.craterZoneHists[zi].total++;
@@ -707,7 +733,7 @@
         return n - Math.floor(n);
       };
       const smooth = (t) => t * t * (3 - 2 * t);
-      const usePeriodic = this.isRingWorld();
+      const usePeriodic = this.isRingWorld() || this.isDiskWorld();
       const wrapIndex = (idx, period) => {
         const p = Math.max(1, Math.round(period));
         let v = idx % p;
@@ -875,7 +901,8 @@
     const waterEdgeSoftness = 0.06;
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
-      const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+      const x = i - y * w;
+      const zi = this.getTextureZoneIndex(x, y, w, h);
       const thr = thrIdx[zi];
       let a = 0;
       if (thr >= 0) {
@@ -924,8 +951,9 @@
     const zoneRowIndex = this._zoneRowIndex;
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
-      const zi = zoneRowIndex ? zoneRowIndex[y] : 0;
-      const latAbs = isRing ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+      const x = i - y * w;
+      const zi = this.isDiskWorld() ? this.getDiskTextureZoneIndex(x, y, w, h) : (zoneRowIndex ? zoneRowIndex[y] : 0);
+      const latAbs = (isRing || this.isDiskWorld()) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
       const latTerm = startFromPoles ? (1 - latAbs) : latAbs;
       const latBias = Math.max(0, Math.min(1, Math.pow(latTerm, 0.85)));
       const idx = i * 4;
@@ -967,9 +995,17 @@
     const softness = 0.08;
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
+      const x = i - y * w;
       let weights = null;
       if (isRing) {
         weights = [1, 0, 0];
+      } else if (this.isDiskWorld()) {
+        const zoneIndex = this.getDiskTextureZoneIndex(x, y, w, h);
+        weights = [
+          zoneIndex === 0 ? 1 : 0,
+          zoneIndex === 1 ? 1 : 0,
+          zoneIndex === 2 ? 1 : 0,
+        ];
       } else {
         const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, latAbs);
@@ -1073,7 +1109,7 @@
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
         const x = i - y * w;
-        const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+        const zi = this.getTextureZoneIndex(x, y, w, h);
         const thr = thrIdx[zi];
         if (thr >= 0) {
           const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
@@ -1081,7 +1117,7 @@
         }
         const idx = i * 4;
         const waterPresence = odata[idx + 3] / 255;
-        const latAbs = isRing ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+        const latAbs = (isRing || this.isDiskWorld()) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const patch = patchNoise(x, y);
         let score = lifeNoise[i] * 0.55 + patch * 0.25 + (1 - latAbs) * 0.1 + (1 - hgt) * 0.05 - waterPresence * 0.35;
@@ -1118,7 +1154,7 @@
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
         const x = i - y * w;
-        const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+        const zi = this.getTextureZoneIndex(x, y, w, h);
         const lifeFrac = lifeFracs[zi];
         if (lifeFrac <= 0) continue;
         const thr = thrIdx[zi];
@@ -1184,7 +1220,7 @@
       texture.colorSpace = THREE.SRGBColorSpace;
     }
     texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
     texture.needsUpdate = true;
     return texture;
   };
@@ -1265,7 +1301,7 @@
       texture.colorSpace = THREE.SRGBColorSpace;
     }
     texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
     texture.needsUpdate = true;
     return texture;
   };
@@ -1319,7 +1355,7 @@
       const d = hash(x1, yi + 1);
       return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
     };
-    const usePeriodic = this.isRingWorld();
+    const usePeriodic = this.isRingWorld() || this.isDiskWorld();
     const sample = (x, y, period) => (usePeriodic && period ? value2Periodic(x, y, period) : value2(x, y));
     const bandPeriod = ringAspect * 5.2;
     const stormPeriod = ringAspect * 9.4;
@@ -1537,7 +1573,7 @@
   PlanetVisualizer.prototype.generateWaterMask = function generateWaterMask(w, h) {
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
-    const usePeriodic = this.isRingWorld();
+    const usePeriodic = this.isRingWorld() || this.isDiskWorld();
     let s = Math.floor((seed.x * 65535) ^ (seed.y * 131071)) >>> 0;
     const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
     const hash = (x, y) => {
@@ -1601,7 +1637,7 @@
     if (cached?.w === w && cached?.h === h && cached.data) return cached.data;
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
-    const usePeriodic = this.isRingWorld();
+    const usePeriodic = this.isRingWorld() || this.isDiskWorld();
     let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;
     const hash = (x, y) => {
       const n = Math.sin(x * 157.3 + y * 289.1 + s * 0.00017) * 43758.5453;
@@ -1789,9 +1825,10 @@
     };
 
     const isRing = this.isRingWorld();
-    const scaleBase = isRing ? 1.1 : 1.6;
-    const scaleWarp = isRing ? 0.45 : 0.8;
-    const scaleRidge = isRing ? 4.2 : 7.0;
+    const isDisk = this.isDiskWorld();
+    const scaleBase = isRing ? 1.1 : (isDisk ? 1.35 : 1.6);
+    const scaleWarp = isRing ? 0.45 : (isDisk ? 0.6 : 0.8);
+    const scaleRidge = isRing ? 4.2 : (isDisk ? 5.4 : 7.0);
     const periodWarp = ringAspect * scaleWarp;
     const periodBase = ringAspect * scaleBase;
     const periodRidge = ringAspect * scaleRidge;
@@ -1808,8 +1845,8 @@
         const uy = vy * scaleBase + (wy - 0.5) * 0.4;
         const cont = fbm(ux, uy, 5, 2.0, 0.5, periodBase);
         const mont = ridged(ux * scaleRidge, uy * scaleRidge, 5, 2.0, 0.5, periodRidge);
-        const contWeight = isRing ? 0.9 : 0.75;
-        const ridgeWeight = isRing ? 0.3 : 0.5;
+        const contWeight = isRing ? 0.9 : (isDisk ? 0.82 : 0.75);
+        const ridgeWeight = isRing ? 0.3 : (isDisk ? 0.4 : 0.5);
         let hgt = cont * contWeight + mont * ridgeWeight - 0.25;
         const lat = Math.abs(0.5 - vy) * 2;
         hgt += (0.15 * (0.5 - Math.abs(lat - 0.5)));
@@ -1832,7 +1869,8 @@
     };
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
-      const zi = this._zoneRowIndex[y];
+      const x = i - y * w;
+      const zi = this.getTextureZoneIndex(x, y, w, h);
       const bin = Math.max(0, Math.min(255, Math.floor(arr[i] * 255)));
       this.heightZoneHists[zi].counts[bin]++;
       this.heightZoneHists[zi].total++;
