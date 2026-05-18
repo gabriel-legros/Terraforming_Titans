@@ -999,7 +999,7 @@ setLanguageData({
         day: 'Day',
         night: 'Night',
         spinStatus: 'Spin Status',
-        surfaceGravity: 'Structural Gravity:',
+        surfaceGravity: 'Surface Gravity:',
         investRate: 'Invest Rate:',
         status: 'Status:',
         shipEnergyPenalty: 'Ship Energy Penalty:',
@@ -1028,7 +1028,7 @@ setLanguageData({
       },
       diskworldTerraforming: {
         fillStatus: 'Fill Status',
-        surfaceGravity: 'Surface Gravity:',
+        surfaceGravity: 'Structural Gravity:',
         pumpRate: 'Pump Rate:',
         status: 'Status:',
         hydrogenPressure: 'Hydrogen Pressure:',
