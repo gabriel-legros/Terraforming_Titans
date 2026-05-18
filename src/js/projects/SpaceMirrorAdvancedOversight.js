@@ -78,10 +78,12 @@ class SpaceMirrorAdvancedOversight {
           )
         : 0;
 
-      const mirrorPowerPer = Math.max(
+      const mirrorResourceFactor = getFacilityResourceFactor(mirrorBuilding);
+      const getMirrorPowerPer = (zone) => Math.max(
         0,
-        (terraforming.calculateMirrorEffect()?.interceptedPower || 0) * getFacilityResourceFactor(mirrorBuilding)
+        (terraforming.calculateMirrorEffect(isAldersonDiskWorld() ? zone : undefined)?.interceptedPower || 0) * mirrorResourceFactor
       );
+      const mirrorPowerPer = getMirrorPowerPer();
       const lanternPowerPer = settings.applyToLantern
         ? Math.max(0, (lanternBuilding?.powerPerBuilding || 0) * getFacilityResourceFactor(lanternBuilding))
         : 0;
@@ -609,6 +611,7 @@ class SpaceMirrorAdvancedOversight {
             zone,
             priority: getZonePriority(zone),
             remainingPower: deltaPower,
+            mirrorPowerPer: getMirrorPowerPer(zone),
           });
         } else if (deltaPower < -POWER_EPSILON) {
           demandBuckets.push({
@@ -616,6 +619,7 @@ class SpaceMirrorAdvancedOversight {
             zone,
             priority: getZonePriority(zone),
             remainingPower: -deltaPower,
+            mirrorPowerPer: getMirrorPowerPer(zone),
           });
         }
       }
@@ -625,17 +629,22 @@ class SpaceMirrorAdvancedOversight {
           zone: 'focus',
           priority: getZonePriority('focus'),
           remainingPower: focusPowerTarget,
+          mirrorPowerPer,
         });
       }
 
-      const allocateUnits = (availableUnits, buckets, perUnitPower, applyUnits, useAllAvailableWhenScarce) => {
+      const allocateUnits = (availableUnits, buckets, perUnitPower, applyUnits, useAllAvailableWhenScarce, useBucketUnitPower = false) => {
         if (!(availableUnits > 0) || !(perUnitPower > 0)) return 0;
 
         const entries = buckets
-          .map((bucket) => ({
-            bucket,
-            demand: Math.max(0, bucket.remainingPower / perUnitPower),
-          }))
+          .map((bucket) => {
+            const unitPower = useBucketUnitPower ? (bucket.mirrorPowerPer || perUnitPower) : perUnitPower;
+            return {
+              bucket,
+              unitPower,
+              demand: unitPower > 0 ? Math.max(0, bucket.remainingPower / unitPower) : 0,
+            };
+          })
           .filter((entry) => entry.demand > COUNT_EPSILON);
 
         if (!entries.length) return 0;
@@ -705,8 +714,9 @@ class SpaceMirrorAdvancedOversight {
             mirrorPowerPer,
             (bucket, units) => {
               assignM[bucket.zone] = -(Number(assignM[bucket.zone]) || 0) - units;
-              bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * mirrorPowerPer));
+              bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * (bucket.mirrorPowerPer || mirrorPowerPer)));
             },
+            true,
             true
           );
           mirrorsLeft -= usedMirrors;
@@ -737,9 +747,10 @@ class SpaceMirrorAdvancedOversight {
             mirrorPowerPer,
             (bucket, units) => {
               assignM[bucket.zone] = (Number(assignM[bucket.zone]) || 0) + units;
-              bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * mirrorPowerPer));
+              bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * (bucket.mirrorPowerPer || mirrorPowerPer)));
             },
-            false
+            false,
+            true
           );
           mirrorsLeft -= usedMirrors;
         }

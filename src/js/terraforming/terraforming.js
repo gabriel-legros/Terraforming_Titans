@@ -2309,10 +2309,26 @@ class Terraforming extends EffectableEntity{
 
     // Removed redundant calculateCoverage function. Logic now resides in
     // calculateAverageCoverage within terraforming-utils.js.
+    getDiskMirrorDistanceAU(zone) {
+      if (zone) {
+        const bounds = getDiskZoneBoundsAU(zone);
+        return (bounds.innerRadiusAU + bounds.outerRadiusAU) / 2;
+      }
+      const outerRadiusAU = this.getDiskOuterRadiusAU();
+      const innerRadiusAU = currentPlanetParameters?.specialAttributes?.diskInnerRadiusAU
+        || currentPlanetParameters?.specialAttributes?.disk?.innerRadiusAU
+        || 0;
+      return (innerRadiusAU + outerRadiusAU) / 2;
+    }
+
     // Mirror Effect Calculation
-    calculateMirrorEffect() {
-      // Solar flux hitting the mirror (same as base flux at mirror's position)
-      const solarFluxAtMirror = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+    calculateMirrorEffect(zone) {
+      // Solar flux hitting the mirror (same as base flux at mirror's position).
+      let mirrorDistanceAU = this.celestialParameters.distanceFromSun;
+      if (isAldersonDiskWorld()) {
+        mirrorDistanceAU = this.getDiskMirrorDistanceAU(zone);
+      }
+      const solarFluxAtMirror = this.calculateSolarFlux(mirrorDistanceAU * AU_METER);
       const mirrorSurfaceArea = buildings['spaceMirror'].surfaceArea; // m^2
       
       // The total power intercepted by the mirror

@@ -1784,7 +1784,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     ? terraforming.calculateDiskDirectSolarFlux(zone)
     : terraforming.luminosity.solarFlux; // W/m^²
 
-  const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
+  const mirrorPowerPer = terraforming.calculateMirrorEffect(isDisk ? zone : undefined).interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
   const lantern = buildings?.hyperionLantern;
   const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
   const totalMirrorPower = mirrorPowerPer * (buildings?.spaceMirror?.activeNumber || 0);
