@@ -644,6 +644,8 @@ class SpaceshipProject extends Project {
       ...projectElements[this.name],
       assignedSpaceshipsDisplay: assignedDisplay,
       availableSpaceshipsDisplay: availableDisplay,
+      assignmentMinusButton: minusButton,
+      assignmentPlusButton: plusButton,
     };
   }
 
@@ -815,6 +817,16 @@ class SpaceshipProject extends Project {
     const elements = projectElements[this.name];
     if (!elements) return;
     this.updateHighAgilityFreightersCheckbox();
+    if (elements.assignmentMinusButton && elements.assignmentPlusButton) {
+      const minusText = `-${formatNumber(this.assignmentMultiplier, true)}`;
+      const plusText = `+${formatNumber(this.assignmentMultiplier, true)}`;
+      if (elements.assignmentMinusButton.textContent !== minusText) {
+        elements.assignmentMinusButton.textContent = minusText;
+      }
+      if (elements.assignmentPlusButton.textContent !== plusText) {
+        elements.assignmentPlusButton.textContent = plusText;
+      }
+    }
     if (elements.assignedSpaceshipsDisplay && !elements.isImportProject) {
         const maxShips = typeof this.getMaxAssignableShips === 'function'
           ? this.getMaxAssignableShips()

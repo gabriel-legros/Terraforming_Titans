@@ -43,6 +43,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Skills: `skills.js`, `skillsUI.js`
 - Life Designer: `life.js`, `lifeUI.js`
 - Space travel/systems: `space.js`, `spaceUI.js`
+- Import Resources centralized UI: `projects/ImportResourcesProjectUI.js` (shared card for space-mining/import spaceship projects; owns assignment step controls, assigned/available displays, and row-level project controls that persist/update across travel)
 - Autobuild: `autobuild.js`
 - Milestones: `milestones.js`, `milestonesUI.js`
 - Solis shop/quests: `solis.js`, `solisUI.js`

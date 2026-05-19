@@ -351,10 +351,16 @@ class ImportResourcesProjectUI {
       }
       const formatted = formatNumber(project.assignmentMultiplier, true);
       if (row.minusButton) {
-        row.minusButton.textContent = `-${formatted}`;
+        const minusText = `-${formatted}`;
+        if (row.minusButton.textContent !== minusText) {
+          row.minusButton.textContent = minusText;
+        }
       }
       if (row.plusButton) {
-        row.plusButton.textContent = `+${formatted}`;
+        const plusText = `+${formatted}`;
+        if (row.plusButton.textContent !== plusText) {
+          row.plusButton.textContent = plusText;
+        }
       }
     });
   }
@@ -392,6 +398,14 @@ class ImportResourcesProjectUI {
     if (!this.card || !this.card.isConnected) {
       return;
     }
+
+    if (project && project.assignmentMultiplier != null) {
+      const syncedMultiplier = Math.max(1, project.assignmentMultiplier);
+      if (this.multiplier !== syncedMultiplier) {
+        this.multiplier = syncedMultiplier;
+      }
+    }
+    this.updateAssignmentButtons();
 
     this.updateCapSummary(warpGateNetworkManager.getCapSummaryData());
     this.updateKesslerFailureWarning(project);
