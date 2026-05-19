@@ -671,7 +671,7 @@ class SpaceMiningProject extends SpaceshipProject {
     if (!diskProject || diskProject.unlocked === false || diskProject.enabled === false) {
       return false;
     }
-    if (currentPlanetParameters?.planetType !== 'diskworld') {
+    if (currentPlanetParameters?.classification?.type !== 'disk') {
       return false;
     }
     return true;
