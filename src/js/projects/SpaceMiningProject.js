@@ -718,7 +718,6 @@ class SpaceMiningProject extends SpaceshipProject {
     if (!diskProject || typeof diskProject.refreshMassState !== 'function') {
       return false;
     }
-    diskProject.refreshMassState();
     const remainingFillHydrogen = Math.max((diskProject.currentRequiredHydrogenTons || 0) - (diskProject.hydrogenFilledTons || 0), 0);
     const totalHydrogen = Math.max(resources.atmospheric.hydrogen.value || 0, 0) + Math.max(resources.surface.liquidHydrogen.value || 0, 0);
     return totalHydrogen >= remainingFillHydrogen;

@@ -191,6 +191,7 @@ class DiskworldTerraformingProject extends Project {
   }
 
   refreshMassState() {
+    if(!this.unlocked) return;
     const constructionMass = this.getConstructionMassTons();
     const requiredMass = this.getRequiredMassTons();
     const requiredHydrogen = Math.max(requiredMass - constructionMass, 0);
@@ -453,7 +454,6 @@ class DiskworldTerraformingProject extends Project {
   }
 
   updateUI() {
-    this.refreshMassState();
     const progressRatio = this.getFillProgressRatio();
     const progressPercent = progressRatio * 100;
     const remainingHydrogen = Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0);
@@ -521,7 +521,6 @@ class DiskworldTerraformingProject extends Project {
     if (!this.unlocked || !this.pumping || this.isCompleted || this.pumpRate <= 0) {
       return totals;
     }
-    this.refreshMassState();
     const seconds = deltaTime / 1000;
     const remainingHydrogen = Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0);
     let hydrogenAmount = 0;
@@ -562,7 +561,6 @@ class DiskworldTerraformingProject extends Project {
       this.currentEnergyConsumptionRate = 0;
       return;
     }
-    this.refreshMassState();
     const seconds = deltaTime / 1000;
     const remainingHydrogen = Math.max(this.currentRequiredHydrogenTons - this.hydrogenFilledTons, 0);
     const requestedHydrogen = this.uncappedPumpRate
@@ -608,7 +606,6 @@ class DiskworldTerraformingProject extends Project {
       removeEffect(this.lowGravityLifeEffect);
       return;
     }
-    this.refreshMassState();
     this.shipEnergyMultiplierEffect.value = this.currentShipEnergyMultiplier;
     projectManager.addAndReplace(this.shipEnergyMultiplierEffect);
     const gravityRatio = this.getSurfaceGravityRatio();
