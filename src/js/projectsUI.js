@@ -1319,27 +1319,12 @@ function createProjectAdvancedSettingsWindow(project) {
   });
   expansionRow.append(expansionLabel, expansionCheckbox);
 
-  const operationsRow = document.createElement('div');
-  operationsRow.classList.add('space-storage-settings-row');
-  const operationsLabel = document.createElement('label');
-  operationsLabel.classList.add('space-storage-settings-label');
-  operationsLabel.htmlFor = `${project.name}-ignore-reserve-operations`;
-  operationsLabel.textContent = getProjectsUIText('ui.projects.advancedSettings.ignoreReserveOperations', 'Ignore reserve on operations:');
-  const operationsCheckbox = document.createElement('input');
-  operationsCheckbox.type = 'checkbox';
-  operationsCheckbox.id = `${project.name}-ignore-reserve-operations`;
-  operationsCheckbox.addEventListener('change', (event) => {
-    project.ignoreSpaceStorageReserveOperations = event.target.checked;
-    project.updateCostAndGains?.(projectElements[project.name]);
-  });
-  operationsRow.append(operationsLabel, operationsCheckbox);
-
   const confirm = document.createElement('button');
   confirm.type = 'button';
   confirm.classList.add('space-storage-settings-confirm');
   confirm.textContent = getProjectsUIText('ui.projects.spaceStorage.confirm', 'Confirm');
 
-  win.append(header, modeRow, expansionRow, operationsRow, confirm);
+  win.append(header, modeRow, expansionRow, confirm);
   overlay.appendChild(win);
   document.body.appendChild(overlay);
 
@@ -1352,7 +1337,7 @@ function createProjectAdvancedSettingsWindow(project) {
     }
   });
 
-  return { overlay, modeSelect, expansionCheckbox, operationsCheckbox };
+  return { overlay, modeSelect, expansionCheckbox };
 }
 
 function openProjectAdvancedSettings(project) {
@@ -1363,13 +1348,11 @@ function openProjectAdvancedSettings(project) {
     elements.advancedSettingsOverlay = advanced.overlay;
     elements.advancedSettingsModeSelect = advanced.modeSelect;
     elements.advancedSettingsExpansionCheckbox = advanced.expansionCheckbox;
-    elements.advancedSettingsOperationsCheckbox = advanced.operationsCheckbox;
   }
   elements.advancedSettingsModeSelect.value = MEGA_PROJECT_RESOURCE_MODE_MAP[project.spaceStorageResourceMode]
     ? project.spaceStorageResourceMode
     : '';
   elements.advancedSettingsExpansionCheckbox.checked = project.ignoreSpaceStorageReserveExpansion === true;
-  elements.advancedSettingsOperationsCheckbox.checked = project.ignoreSpaceStorageReserveOperations === true;
   elements.advancedSettingsOverlay.classList.add('is-visible');
 }
 
@@ -1602,9 +1585,6 @@ function updateProjectUI(projectName) {
     }
     if (elements.advancedSettingsExpansionCheckbox) {
       elements.advancedSettingsExpansionCheckbox.checked = project.ignoreSpaceStorageReserveExpansion === true;
-    }
-    if (elements.advancedSettingsOperationsCheckbox) {
-      elements.advancedSettingsOperationsCheckbox.checked = project.ignoreSpaceStorageReserveOperations === true;
     }
   }
   if (elements.extraSettingsCheckbox) {
