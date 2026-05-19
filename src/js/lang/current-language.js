@@ -1314,8 +1314,8 @@ setLanguageData({
           build: 'Build {count} {name}',
         },
         zones: {
-          tropical: 'Tropical',
-          temperate: 'Temperate',
+          tropical: 'Trop.',
+          temperate: 'Temp.',
           polar: 'Polar',
           focus: 'Focusing',
           unassigned: 'Unassigned',
@@ -1394,6 +1394,7 @@ setLanguageData({
         waterIceAboveTarget: 'water+ice above target',
         liquidCo2CoverageAbove: 'liquid CO2 coverage above',
         liquidCo2DryIceAboveTarget: 'liquid CO2+dry ice above target',
+        disableIfDiskworldHydrogenFillCovered: 'Disable if total hydrogen above fill required',
         target: 'Target ',
         atmosphere: 'Atmosphere',
         surface: 'Surface',

@@ -64,6 +64,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveCo2Coverage = false;
     this.co2CoverageThreshold = 0.2;
     this.co2CoverageDisableMode = 'coverage';
+    this.disableIfDiskworldHydrogenFillCovered = false;
     this.hasOxygenPressureControl = false;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
@@ -662,6 +663,67 @@ class SpaceMiningProject extends SpaceshipProject {
     return control;
   }
 
+  isDiskworldHydrogenFillDisableControlAvailable() {
+    if (this.name !== 'hydrogenSpaceMining') {
+      return false;
+    }
+    const diskProject = projectManager.projects?.diskworldTerraforming;
+    if (!diskProject || diskProject.unlocked === false || diskProject.enabled === false) {
+      return false;
+    }
+    if (currentPlanetParameters?.planetType !== 'diskworld') {
+      return false;
+    }
+    return true;
+  }
+
+  createDiskworldHydrogenFillDisableControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'diskworld-hydrogen-fill-disable-control');
+    control.id = `${this.name}-diskworld-hydrogen-fill-disable-control`;
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-diskworld-hydrogen-fill-disable-checkbox`;
+    checkbox.classList.add('diskworld-hydrogen-fill-disable-checkbox');
+    checkbox.checked = this.disableIfDiskworldHydrogenFillCovered === true;
+    checkbox.addEventListener('change', () => {
+      this.disableIfDiskworldHydrogenFillCovered = checkbox.checked;
+    });
+    control.appendChild(checkbox);
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = getSpaceMiningText(
+      'ui.projects.spaceMining.disableIfDiskworldHydrogenFillCovered',
+      'Disable if total hydrogen above fill required'
+    );
+    control.appendChild(label);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      diskworldHydrogenFillDisableControl: control,
+      diskworldHydrogenFillDisableCheckbox: checkbox,
+      diskworldHydrogenFillDisableLabel: label,
+    };
+
+    return control;
+  }
+
+  isDiskworldHydrogenFillCovered() {
+    if (!this.isDiskworldHydrogenFillDisableControlAvailable()) {
+      return false;
+    }
+    const diskProject = projectManager.projects?.diskworldTerraforming;
+    if (!diskProject || typeof diskProject.refreshMassState !== 'function') {
+      return false;
+    }
+    diskProject.refreshMassState();
+    const remainingFillHydrogen = Math.max((diskProject.currentRequiredHydrogenTons || 0) - (diskProject.hydrogenFilledTons || 0), 0);
+    const totalHydrogen = Math.max(resources.atmospheric.hydrogen.value || 0, 0) + Math.max(resources.surface.liquidHydrogen.value || 0, 0);
+    return totalHydrogen >= remainingFillHydrogen;
+  }
+
   renderAutomationUI(container) {
     if (this.name === 'oreSpaceMining') {
       const replicationControl = projectElements[this.name]?.spaceshipReplicationControl || this.createSpaceshipReplicationControl();
@@ -691,6 +753,9 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.getTargetAtmosphericResource() === 'carbonDioxide' && !projectElements[this.name]?.co2CoverageControl) {
       container.appendChild(this.createCo2CoverageControl());
+    }
+    if (this.name === 'hydrogenSpaceMining' && !projectElements[this.name]?.diskworldHydrogenFillDisableControl) {
+      container.appendChild(this.createDiskworldHydrogenFillDisableControl());
     }
     if (this.hasOxygenPressureControl && !projectElements[this.name]?.oxygenPressureControl) {
       container.appendChild(this.createGasPressureControl('oxygen', 'disableAboveOxygenPressure', 'disableOxygenPressureThreshold', 'oxygenPressure'));
@@ -871,6 +936,18 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.oxygenPressureUnitLabel) {
       elements.oxygenPressureUnitLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.pa', 'Pa');
     }
+    if (elements.diskworldHydrogenFillDisableControl) {
+      elements.diskworldHydrogenFillDisableControl.style.display = this.isDiskworldHydrogenFillDisableControlAvailable() ? 'flex' : 'none';
+    }
+    if (elements.diskworldHydrogenFillDisableCheckbox) {
+      elements.diskworldHydrogenFillDisableCheckbox.checked = this.disableIfDiskworldHydrogenFillCovered === true;
+    }
+    if (elements.diskworldHydrogenFillDisableLabel) {
+      elements.diskworldHydrogenFillDisableLabel.textContent = getSpaceMiningText(
+        'ui.projects.spaceMining.disableIfDiskworldHydrogenFillCovered',
+        'Disable if total hydrogen above fill required'
+      );
+    }
   }
 
   getTargetAtmosphericResource() {
@@ -1017,6 +1094,10 @@ class SpaceMiningProject extends SpaceshipProject {
         return true;
       }
     }
+    if (this.disableIfDiskworldHydrogenFillCovered === true && this.isDiskworldHydrogenFillCovered()) {
+      resources.atmospheric.hydrogen.automationLimited = true;
+      return true;
+    }
     return false;
   }
 
@@ -1043,6 +1124,9 @@ class SpaceMiningProject extends SpaceshipProject {
         return false;
       }
     }
+    if (this.disableIfDiskworldHydrogenFillCovered === true && this.isDiskworldHydrogenFillCovered()) {
+      return false;
+    }
 
     return true;
   }
@@ -1060,6 +1144,7 @@ class SpaceMiningProject extends SpaceshipProject {
       disableAboveCo2Coverage: this.disableAboveCo2Coverage === true,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
+      disableIfDiskworldHydrogenFillCovered: this.disableIfDiskworldHydrogenFillCovered === true,
       waterImportTarget: this.waterImportTarget,
       materialImportTarget: this.materialImportTarget,
       gasImportTarget: this.gasImportTarget,
@@ -1105,6 +1190,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (Object.prototype.hasOwnProperty.call(settings, 'co2CoverageDisableMode')) {
       this.co2CoverageDisableMode = settings.co2CoverageDisableMode || this.co2CoverageDisableMode;
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'disableIfDiskworldHydrogenFillCovered')) {
+      this.disableIfDiskworldHydrogenFillCovered = settings.disableIfDiskworldHydrogenFillCovered === true;
+    }
     if (Object.prototype.hasOwnProperty.call(settings, 'waterImportTarget')) {
       this.waterImportTarget = normalizeWaterImportTarget(settings.waterImportTarget);
     }
@@ -1129,6 +1217,7 @@ class SpaceMiningProject extends SpaceshipProject {
       disableAboveCo2Coverage: this.disableAboveCo2Coverage,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
+      disableIfDiskworldHydrogenFillCovered: this.disableIfDiskworldHydrogenFillCovered === true,
       pressureUnit: 'Pa',
       oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
@@ -1158,6 +1247,7 @@ class SpaceMiningProject extends SpaceshipProject {
       this.co2CoverageThreshold = Math.max(0, Math.min(state.co2CoverageThreshold, 1));
     }
     this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;
+    this.disableIfDiskworldHydrogenFillCovered = state.disableIfDiskworldHydrogenFillCovered === true;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
@@ -1180,6 +1270,7 @@ class SpaceMiningProject extends SpaceshipProject {
       disableAboveCo2Coverage: this.disableAboveCo2Coverage,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
+      disableIfDiskworldHydrogenFillCovered: this.disableIfDiskworldHydrogenFillCovered === true,
       pressureUnit: 'Pa',
       oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
@@ -1207,6 +1298,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveCo2Coverage = state.disableAboveCo2Coverage ?? this.disableAboveCo2Coverage;
     this.co2CoverageThreshold = state.co2CoverageThreshold ?? this.co2CoverageThreshold;
     this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;
+    this.disableIfDiskworldHydrogenFillCovered = state.disableIfDiskworldHydrogenFillCovered === true;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
