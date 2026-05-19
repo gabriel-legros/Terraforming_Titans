@@ -2805,7 +2805,16 @@ function updateLifeBox() {
       const z = terraforming.luminosity.zonalFluxes;
       const isRingworld = currentPlanetParameters?.classification?.type === 'ring';
       const isDisk = isAldersonDiskWorld();
-      const lines = [getTerraformingSummaryText('luminosity.solarFluxTooltip.averageByZone', 'Average Solar Flux by zone')];
+      const lines = [getTerraformingSummaryText('luminosity.solarFluxTooltip.starAverageByZone', 'Average Solar Flux by zone (star only)')];
+      getZones().forEach(zone => {
+        const baseFlux = isDisk
+          ? terraforming.calculateDiskDirectSolarFlux(zone)
+          : isRingworld
+            ? terraforming.luminosity.solarFlux * getZoneRatio(zone)
+            : terraforming.calculateZoneSolarFlux(zone, false, true) / 4;
+        lines.push(getTerraformingSummaryText('luminosity.solarFluxTooltip.zoneFlux', '{label}: {value}', { label: getTerraformingZoneLabel(zone), value: baseFlux.toFixed(1) }));
+      });
+      lines.push('', getTerraformingSummaryText('luminosity.solarFluxTooltip.currentAverageByZone', 'Average Solar Flux by zone (modified by mirrors)'));
       getZones().forEach(zone => {
         const flux = isDisk
           ? (z[zone] || terraforming.calculateDiskDirectSolarFlux(zone))

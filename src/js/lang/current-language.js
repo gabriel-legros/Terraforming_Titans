@@ -2484,11 +2484,13 @@ setLanguageData({
           },
           solarFluxTooltip: {
             averageByZone: 'Average Solar Flux by zone',
+            starAverageByZone: 'Average Solar Flux by zone (star only)',
+            currentAverageByZone: 'Average Solar Flux by zone (modified by mirrors)',
             zoneFlux: '{label}: {value}',
             ringworldExplanation: 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.',
             diskExplanation: 'Disk natural flux is low grazing starlight by annulus; Space Mirrors add usable surface flux.',
-            standardExplanation: 'Modified solar flux is 4× the average across all zones.',
-            surfaceFluxExplanation: 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.',
+            standardExplanation: 'We then calculate an effect solar flux as 4× the average across all zones.',
+            surfaceFluxExplanation: 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from effective solar flux and then reduced by Cloud & Haze penalty.',
           },
           actualTooltip: {
             intro: 'Actual albedo applies each layer to the remaining headroom: Surface -> Clouds -> Haze -> Calcite',
