@@ -14,7 +14,7 @@ class SandQuarry extends Building {
         value: 'sandQuarry:glassSmelterPlus4ElectronicsFactory',
         label: getSandQuarryText(
           'ui.buildings.automationBasis.sandQuarryGlassAndElectronics',
-          '% of G.S. + 4*E.F.'
+          '% of G.S.+E.F. Demand'
         ),
       },
     ];
@@ -59,7 +59,9 @@ class SandQuarry extends Building {
         : (typeof buildingCountToNumber === 'function'
           ? buildingCountToNumber(targetCollection.electronicsFactory?.active)
           : Math.max(0, Math.floor(Number(targetCollection.electronicsFactory?.active) || 0)));
-      return glassSmelterActive + (4 * electronicsFactoryActive);
+      const hasInjectionMoldGlassSmelting = researchManager.getResearchById('massive_scale_glass_smelting')?.isResearched;
+      const glassSmelterDemandMultiplier = hasInjectionMoldGlassSmelting ? 2 : 1;
+      return (glassSmelterActive * glassSmelterDemandMultiplier) + (4 * electronicsFactoryActive);
     }
 
     return super.getAutoBuildBase(population, workerCap, collection);

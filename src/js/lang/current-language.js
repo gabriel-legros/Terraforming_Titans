@@ -628,7 +628,7 @@ setLanguageData({
         androidCount: '% of androids',
         androidCapacity: '% android capacity',
         colonistCapacity: '% colonist capacity',
-        sandQuarryGlassAndElectronics: '% of G.S. + 4*E.F.',
+        sandQuarryGlassAndElectronics: '% of G.S. + E.F. Demand',
       },
       solarPanel: {
         limitTooltip: 'Solar panels are limited to 2.5x the base land amount.',
