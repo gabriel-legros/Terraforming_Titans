@@ -1340,7 +1340,6 @@ function ensureArtificialLayout() {
   artificialUICache.gainFleetTooltipContent = fleetTooltip.tooltip;
   fleetRow.appendChild(fleetLabel);
   fleetRow.appendChild(fleetValue);
-  fleetInfo.style.color = '#63a6ff';
   fleetInfo.style.marginLeft = '6px';
   fleetRow.appendChild(fleetInfo);
   gainsList.appendChild(distinctRow);
