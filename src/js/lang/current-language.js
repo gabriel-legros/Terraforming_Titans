@@ -2489,7 +2489,7 @@ setLanguageData({
             zoneFlux: '{label}: {value}',
             ringworldExplanation: 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.',
             diskExplanation: 'Disk natural flux is low grazing starlight by annulus; Space Mirrors add usable surface flux.',
-            standardExplanation: 'We then calculate an effective solar flux as 4× the average across all zones.  For comparison, Earth\'s solar flux is around 1365W.',
+            standardExplanation: 'We then calculate an effective solar flux as 4× the average across all zones.  For comparison, Earth\'s solar flux is around 1365W/m^2.',
             surfaceFluxExplanation: 'Surface Solar Flux is the solar energy that reaches the ground. It is calculated from effective solar flux and then reduced by Cloud & Haze penalty.',
           },
           actualTooltip: {
