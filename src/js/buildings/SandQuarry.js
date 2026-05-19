@@ -59,8 +59,7 @@ class SandQuarry extends Building {
         : (typeof buildingCountToNumber === 'function'
           ? buildingCountToNumber(targetCollection.electronicsFactory?.active)
           : Math.max(0, Math.floor(Number(targetCollection.electronicsFactory?.active) || 0)));
-      const hasInjectionMoldGlassSmelting = researchManager.getResearchById('massive_scale_glass_smelting')?.isResearched;
-      const glassSmelterDemandMultiplier = hasInjectionMoldGlassSmelting ? 2 : 1;
+      const glassSmelterDemandMultiplier = Math.max(0, targetCollection.glassSmelter.getEffectiveConsumptionMultiplier());
       return (glassSmelterActive * glassSmelterDemandMultiplier) + (4 * electronicsFactoryActive);
     }
 
