@@ -3078,8 +3078,6 @@ function updateDecreaseButtonText(button, buildCount) {
       })
       .join(';');
 
-    const hasProduction = sections.some(s => s.key === 'production');
-    const hasConsumption = sections.some(s => s.key === 'consumption');
     const previousSections = element._sections || {};
     const nextSections = {};
     const separators = element._sectionSeparators || [];
@@ -3229,20 +3227,26 @@ function updateDecreaseButtonText(button, buildCount) {
       info.container.style.display = '';
       expectedChildren.push(info.container);
       if (idx < sections.length - 1) {
+        const currentSec = sections[idx];
         const nextSec = sections[idx + 1];
         let separator = separators[idx];
-        if (!separator) {
-          separator = document.createTextNode('');
-          separators[idx] = separator;
-        }
-        if (hasProduction && hasConsumption && nextSec.key === 'maintenance') {
-          if (separator.nodeType !== 3) {
-            separator.remove();
+        const shouldUseLineBreak = currentSec.key === 'consumption' && nextSec.key === 'maintenance';
+        if (shouldUseLineBreak) {
+          if (!separator || separator.nodeName !== 'BR') {
+            if (separator) {
+              separator.remove();
+            }
+            separator = document.createElement('br');
+            separators[idx] = separator;
+          }
+        } else {
+          if (!separator || separator.nodeType !== 3) {
+            if (separator) {
+              separator.remove();
+            }
             separator = document.createTextNode('');
             separators[idx] = separator;
           }
-          separator.nodeValue = ' ';
-        } else {
           if (separator.nodeType !== 3) {
             separator.remove();
             separator = document.createTextNode('');
