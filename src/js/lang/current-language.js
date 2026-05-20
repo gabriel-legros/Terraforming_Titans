@@ -4981,7 +4981,7 @@ setLanguageData({
         },
         warp_assembly: {
           name: 'Manufacturing Warp-assembly Lines',
-          description: 'What if we had a box that could transport objects between places?  What if we could pass trains through a warp-gate?  What if logistics robots could go from anywhere on a manufacturing world to anywhere else?  The factory will need refactoring.  Enables the ability to push the limits of manufacturing worlds further... at the cost of setbacks.',
+          description: 'What if we had a box that could transport objects between places?  What if we could send trains through a warp-gate?  What if logistics robots could go from anywhere on a manufacturing world to anywhere else?  The factory will need refactoring.  Enables the ability to push the limits of manufacturing worlds further... at the cost of setbacks.',
         },
         white_dwarf_harvesting: {
           name: 'White Dwarf Harvesting',
