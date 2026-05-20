@@ -34,6 +34,8 @@ function refreshColonySliderInputs() {
 function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
   if (!container) return;
+  // Always reset to hidden; research effects re-enable this when unlocked.
+  container.classList.add('invisible');
   if (container.dataset.rendered === 'true') {
     refreshColonySliderInputs();
     return;
@@ -42,7 +44,6 @@ function initializeColonySlidersUI() {
   cleanupDynamicTooltipsIn(container);
   container.innerHTML = '';
   // Ensure sliders start hidden until unlocked via research
-  container.classList.add('invisible');
 
   const card = document.createElement('div');
   card.classList.add('project-card');
