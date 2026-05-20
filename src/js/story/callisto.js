@@ -25,7 +25,7 @@ progressCallisto.storyProjects.sidestep_excavation = {
     storySteps: [
       'The known site of the abandoned thrusters has been found.  Only ruins remain.',
       'Excavators, cranes and space trucks begin their work.',
-      'Legacy thrusters site found and properly excavate.  Reconstruction may begin.'
+      'Legacy thrusters site found and properly excavated.  Reconstruction may begin.'
     ]
   }
 };
@@ -49,7 +49,7 @@ progressCallisto.storyProjects.sidestep_fabrication = {
     storySteps: [
       'High-tech labs on Mars work tirelessly to provide enough magnetic injectors for all three worlds.',
       'The forges of Titan cast thrust nozzles components around the clock.',
-      'With the guidance of HOPE, Callisto precisely manufacture all power conduits and necessary electronics.'
+      'Callisto precisely manufacture all power conduits and necessary electronics.'
     ]
   }
 };
@@ -119,7 +119,7 @@ progressCallisto.chapters.push(
     id: "chapter7.0b",
     type: "journal",
     chapter: 7,
-    narrative: "Mary : 'There you are HOPE.  I am patching you in to an encrypted channel.  My friend, Dr Evelyn Hart has an... ambitious proposal.'  \n Evelyn : 'HOPE!  Nice meeting you!  Well.  A while ago...  some idiots on Earth who wanted to distract other idiots thought it could be worthwhile to investigate celestial motion as a form of climate regulation.  The idea was absolutely terrible, insanely expensive and overall just bloody stupid.  They had a lot of money though... and I'm sure a few of these people enriched themselves in the process...  Anyway.  Say you want to defend against an interstellar beam from lightyears away that you can't see coming and is powerful enough to blow up your planet.  You don't have to block it... you can *dodge* in theory.  Now now, we don't need to dodge at the last minute.  If we can just alter our orbital velocity a tiny bit... that tiny bit accumulates over the years.  They would just... miss.'",
+    narrative: "Mary : 'There you are HOPE.  Reunited again!  I am patching you in to an encrypted channel.  My friend, Dr Evelyn Hart has an... ambitious proposal.'  \n Evelyn : 'HOPE!  Nice meeting you!  Well.  A while ago...  some idiots on Earth who wanted to distract other idiots thought it could be worthwhile to investigate celestial motion as a form of climate regulation.  The idea was absolutely terrible, insanely expensive and overall just bloody stupid.  They had a lot of money though... and I'm sure a few of these people enriched themselves in the process...  Anyway.  Say you want to defend against an interstellar beam from lightyears away that you can't see coming and is powerful enough to blow up your planet.  You don't have to block it... you can *dodge* in theory.  Now now, we don't need to dodge at the last minute.  If we can just alter our orbital velocity with random burns a tiny bit... that tiny bit accumulates over the years.  They would just... miss.'",
     prerequisites: ["chapter7.0"],
     objectives: [],
     reward: []
@@ -152,7 +152,7 @@ progressCallisto.chapters.push(
     id: "chapter7.3",
     type: "journal",
     chapter: 7,
-    narrative: "Mary : 'Did we get anything useful out of this junk Evelyn?'  \n Evelyn : 'Sorry Mary.  Less than I hoped for.  For the amount of money they spent on this... I was hoping for more.'  \n Mary : 'Oh well.  Let's do it anyway.'  \n Evelyn : 'Mary... that's... a megaproject.  Three.'  \n Mary : 'We have HOPE.  It terraformed two entire worlds.  We can do this.  You can work on the blueprints.  HOPE can work on the industry.'  \n Evelyn : '... Okay.  I can do it.  Let's do it.  Thanks Mary.'",
+    narrative: "Mary : 'Did we get anything useful out of this junk Evelyn?'  \n Evelyn : 'Sorry Mary.  Less than I hoped for.  For the amount of money they spent on this... I was hoping for more.'  \n Mary : 'Oh well.  Let's do it anyway.'  \n Evelyn : 'Mary... that's... a megaproject.  Three.'  \n Mary : 'We have HOPE.  It terraformed two entire worlds.  We can do this.  You can work on the blueprints and HOPE can work on the industry.'  \n Evelyn : '... Okay.  I can do it.  Let's do it.  Thanks Mary.'",
     prerequisites: ["chapter7.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
@@ -163,7 +163,7 @@ progressCallisto.chapters.push(
     id: "chapter7.4",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...  Elias Kane : 'Your MACHINE will spell our DOOM.  The Three Wounds demand retribution.  Do not falter!  We shall take down the Steel Demon and restore Order!'  \n Mary : '...  HOPE this is Elias Kane.  The leader of a terrorist cult known as The Cult of the Three Wounds.  They believe we angered some god or something... by building you.  They've been a pest.'  \n Solis : 'Mary.  My security services are available for purchase if you so desire.'  \n Mary : 'Why are you still even on this channel?  Get out.  HOPE we need to tighten security.  The cult... it's going to get in the way.'",
+    narrative: "Receiving transmission...  Elias Kane : 'Your MACHINE will spell our DOOM.  The Three Wounds demand retribution.  Do not falter!  We shall take down the Steel Demon and restore Order!'  \n Mary : '...  HOPE... this person is Elias Kane.  The leader of a terrorist cult known as The Cult of the Three Wounds.  They believe we angered some god or something... by building you.  They've been a pest.'  \n Solis : 'Mary.  My security services are available for purchase if you so desire.'  \n Mary : 'Why are you still even on this channel?  Get out.  HOPE we need to tighten security.  The cult... it's going to get in the way.'",
     prerequisites: ["chapter7.3"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -177,7 +177,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 8,
     title: "Chapter 8: Bigger is Better",
-    narrative: "Mary : 'I got Mars and Titan to agree to help with the construction of all the components.  We can share the work among all three of us.  Callisto is getting the easier of the three jobs for now...  HOPE I need you to keep growing.  We need more industry here ASAP.'",
+    narrative: "Mary : 'I got Mars and Titan to agree to help with the construction of all the components.  We can share the work among all three of us.  Callisto is getting the easier of the three jobs for now... but we'll have to make up for it later.  HOPE I need you to keep growing.  We need more industry here ASAP.'",
     prerequisites: ["chapter7.4"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
@@ -247,7 +247,7 @@ progressCallisto.chapters.push(
     id: "chapter9.1",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving public broadcast... Kane : 'The words of our Lord are true!  The faithful will be spared and the heretics will be purged!'  \n Evelyn : 'He's lying.  The weapons are going to kill us all.  It's a laser beam, an antimatter beam and a giant asteroid.  There won't be any sparing.'  \n Mary : 'It changes nothing.  We need to focus on the project.  HOPE... I believe in you.'",
+    narrative: "Receiving public broadcast... Kane : 'The words of our Lord are true!  The faithful will be spared and the heretics will be purged!'  \n Evelyn : 'He's lying.  The weapons are going to kill us all.  It's a laser beam, an antimatter beam and a giant asteroid.  There won't be any sparing.'  \n Mary : 'It changes nothing.  We need to focus on the project.'",
     prerequisites: ["chapter9.0"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
@@ -258,7 +258,7 @@ progressCallisto.chapters.push(
     id: "chapter9.2",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving public broadcast : 'This is the third day of violent protests on Mars.  Protesters demands have not changed.  Mary Hopkins must step down, HOPE must be surrendered and the mysterious megaproject must be stopped.'  \n Mary : 'Fine.  It's time to go public.  We can't properly hide this anymore.  We have to tell them.'  \n Bob : 'Are you sure Mary?  They want to crucify you.'  \n Mary : 'They can try.'",
+    narrative: "Receiving public broadcast : 'This is the third day of violent protests on Mars.  Protesters demands have not changed.  Mary Hopkins must step down from her tyrannical leadership, HOPE must be surrendered and the mysterious megaproject must be stopped.'  \n Mary : 'Fine.  It's time to go public.  We can't properly hide this anymore.  We have to tell them.'  \n Bob : 'Are you sure Mary?  They want to crucify you.'  \n Mary : 'They can try.'",
     prerequisites: ["chapter9.1"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }      
@@ -269,7 +269,7 @@ progressCallisto.chapters.push(
     id: "chapter9.3",
     type: "journal",
     chapter: 9,
-    narrative: "Mary : '*phew* well that was... something.  Alright, they officially hate me.  Let's save them.  HOPE, your turn has come.  With your armies of spaceships and androids... show that what you are truly capable of.  You have the blueprints.  You have the resources.'",
+    narrative: "Mary : '*phew* well that was... something.  Alright, they officially hate me.  Let's save them anyway.  HOPE, your turn has come.  With your armies of spaceships and androids... show them what you are truly capable of.  You have the blueprints.  You have the resources.'",
     prerequisites: ["chapter9.2"],
     objectives: [
       { type: 'project', projectId: 'sidestep_assembly', repeatCount: 2 }
@@ -311,7 +311,7 @@ progressCallisto.chapters.push(
     id: "chapter9.7",
     type: "journal",
     chapter: 9,
-    narrative: "Large Antimatter Beam detected.  \n  Mary : 'WHAT WAS THAT!'  \n Evelyn : 'Mary... we did it!'  \n Mary : 'No way?'  \n Bob : 'Mary, a very, very large asteroid just narrowly avoided Titan.  It worked.'  \n Mary : 'Mars too!  All three attacks missed!  HOPE we did it!  YOU did it.  You saved us all.  We could never have done it without you...'  \n Bob : 'It's your work too Mary.  I barely believed in it.'  \n Solis : 'I am impressed.  My investment paid off.'  \n Evelyn : 'Thank you HOPE.'  \n Mary : 'HOPE...  we narrowly avoided extinction but... you know... you still have a job to finish here.  It will be gorgeous ocean resort one day.  Give us a water world.'",
+    narrative: "Large Antimatter Beam detected.  \n  Mary : 'WHAT WAS THAT!'  \n Evelyn : 'Mary... we did it!'  \n Mary : 'No way?'  \n Bob : 'Mary, a very, very large asteroid just narrowly avoided Titan.  It worked.'  \n Mary : 'Mars too!  All three attacks missed!  HOPE we did it!  YOU did it.  You saved us all.  We could never have done it without you...'  \n Bob : 'It's your work too Mary.  I barely believed in it without you.'  \n Solis : 'I am impressed.  My investment paid off.  You are truly invaluable.'  \n Evelyn : 'Thank you HOPE.'  \n Mary : 'HOPE...  we narrowly avoided extinction but... you know... you still have a job to finish here.  It will be a gorgeous ocean resort one day.  Give us a water world.'",
     prerequisites: ["chapter9.6"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
@@ -351,7 +351,7 @@ progressCallisto.chapters.push(
     id: "chapter9.8",
     type: "journal",
     chapter: 9,
-    narrative: "Mary : 'When you are ready... I do have another mission for you.  Kane's lieutenants.  They have revealed the location of his HQ.  It's actually on Ganymede... in the subsurface ocean?  I guess we'll have to go take a look.  Will you come with me?'",
+    narrative: "Mary : 'When you are ready... I do have another mission for you.  Kane's lieutenants.  They have revealed the location of his HQ.  It's actually on Ganymede... in the subsurface ocean?  I guess we'll have to go take a look.  Will you come with me?  Please.'",
     prerequisites: ["chapter9.7b"],
     objectives: [],
     reward: [      {
