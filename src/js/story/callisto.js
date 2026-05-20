@@ -183,7 +183,17 @@ progressCallisto.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
     ],
     reward: [
-      { target: 'project', targetId: 'callisto_cult_security', type: 'enable' }
+      { target: 'project', targetId: 'callisto_cult_security', type: 'enable' },
+      { target: 'tab', targetId: 'special-projects', type: 'activateTab', onLoad: false },
+      {
+        target: 'projectManager',
+        type: 'activateSubtab',
+        subtabClass: 'projects-subtab',
+        contentClass: 'projects-subtab-content',
+        targetId: 'story-projects',
+        unhide: true,
+        onLoad: false
+      }
     ]
   },
   {
