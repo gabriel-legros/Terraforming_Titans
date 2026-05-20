@@ -276,7 +276,7 @@
       };
       const arr = new Float32Array(w * h);
       let minV = Infinity, maxV = -Infinity;
-      const scale = 4.4;
+      const scale = this.isDiskWorld() ? 70.4 : 4.4;
       const nyScale = scale * 1.2;
       const periodBase = scale * ringAspect;
       for (let y = 0; y < h; y++) {

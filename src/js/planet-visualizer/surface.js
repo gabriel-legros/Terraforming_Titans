@@ -700,6 +700,7 @@
     const palette = PLANET_TYPE_TEXTURES[planetType] || PLANET_TYPE_TEXTURES.default;
     const isArtificial = planetType === 'artificial';
     const isRing = this.isRingWorld();
+    const isDisk = this.isDiskWorld();
     const rand = createJitterRandom(seed.x, seed.y);
 
     let gradientBase = baseHex;
@@ -756,7 +757,7 @@
         return n - Math.floor(n);
       };
       const smooth = (t) => t * t * (3 - 2 * t);
-      const usePeriodic = this.isRingWorld() || this.isDiskWorld();
+      const usePeriodic = this.isRingWorld() || isDisk;
       const wrapIndex = (idx, period) => {
         const p = Math.max(1, Math.round(period));
         let v = idx % p;
@@ -791,7 +792,8 @@
       const feat = this.viz.surfaceFeatures || {};
       const fEnabled = !!feat.enabled;
       const fStrength = Math.max(0, Math.min(1, Number(feat.strength || 0)));
-      const fScale = Math.max(0.05, Number(feat.scale || 0.7));
+      const diskTextureScale = isDisk ? 16 : 1;
+      const fScale = Math.max(0.05, Number(feat.scale || 0.7)) * diskTextureScale;
       const fContrast = Math.max(0, Number(feat.contrast || 1.2));
       const fOffX = Number(feat.offsetX || 0);
       const fOffY = Number(feat.offsetY || 0);
@@ -813,8 +815,8 @@
         mountainThreshold = thrBin / 255;
       }
 
-      const stripeScale = 6 + rand() * 2.5;
-      const microScale = 90 + rand() * 40;
+      const stripeScale = (6 + rand() * 2.5) * diskTextureScale;
+      const microScale = (90 + rand() * 40) * diskTextureScale;
       const stripePhase = rand() * Math.PI * 2;
       const microPhase = rand() * 10;
       const featurePeriod = ringAspect * fScale;
@@ -984,8 +986,8 @@
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
       const x = i - y * w;
-      const zi = this.isDiskWorld() ? this.getDiskTextureZoneIndex(x, y, w, h) : (zoneRowIndex ? zoneRowIndex[y] : 0);
-      const latAbs = (isRing || this.isDiskWorld()) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+      const zi = isDisk ? this.getDiskTextureZoneIndex(x, y, w, h) : (zoneRowIndex ? zoneRowIndex[y] : 0);
+      const latAbs = (isRing || isDisk) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
       const latTerm = startFromPoles ? (1 - latAbs) : latAbs;
       const latBias = Math.max(0, Math.min(1, Math.pow(latTerm, 0.85)));
       const waterPresence = waterAlpha[i];
@@ -1030,12 +1032,20 @@
       let weights = null;
       if (isRing) {
         weights = [1, 0, 0];
-      } else if (this.isDiskWorld()) {
-        const zoneIndex = this.getDiskTextureZoneIndex(x, y, w, h);
+      } else if (isDisk) {
+        const dx = (x / Math.max(1, w - 1)) * 2 - 1;
+        const dy = (y / Math.max(1, h - 1)) * 2 - 1;
+        const radius = Math.sqrt(dx * dx + dy * dy);
+        const inner = this.getDiskInnerRatio();
+        const annulusT = Math.max(0, Math.min(0.999999, (radius - inner) / Math.max(0.001, 1 - inner)));
+        const grain = Math.sin(x * 37.719 + y * 91.173 + seed.x * 1103.7 + seed.y * 631.9);
+        const noiseOffset = (grain - Math.floor(grain)) * 0.05 - 0.025;
+        const firstBlend = smoothstep((1 / 3) - 0.035, (1 / 3) + 0.035, annulusT + noiseOffset);
+        const secondBlend = smoothstep((2 / 3) - 0.035, (2 / 3) + 0.035, annulusT + noiseOffset);
         weights = [
-          zoneIndex === 0 ? 1 : 0,
-          zoneIndex === 1 ? 1 : 0,
-          zoneIndex === 2 ? 1 : 0,
+          1 - firstBlend,
+          firstBlend * (1 - secondBlend),
+          secondBlend,
         ];
       } else {
         const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
@@ -1067,8 +1077,30 @@
       if (alpha < 0.02) alpha = 0;
       if (alpha > 1) alpha = 1;
       const idx = i * 4;
+      let iceR = 200;
+      let iceG = 220;
+      let iceB = 255;
+      if (isDisk && alpha > 0) {
+        const dx = (x / Math.max(1, w - 1)) * 2 - 1;
+        const dy = (y / Math.max(1, h - 1)) * 2 - 1;
+        const radius = Math.sqrt(dx * dx + dy * dy);
+        const inner = this.getDiskInnerRatio();
+        const annulusT = Math.max(0, Math.min(0.999999, (radius - inner) / Math.max(0.001, 1 - inner)));
+        const boundaryDist = Math.min(Math.abs(annulusT - (1 / 3)), Math.abs(annulusT - (2 / 3)));
+        const boundaryGrain = 1 - smoothstep(0.015, 0.07, boundaryDist);
+        if (boundaryGrain > 0) {
+          const grainA = Math.sin(x * 173.31 + y * 67.17 + seed.x * 3021.5);
+          const grainB = Math.sin(x * 53.91 - y * 149.43 + seed.y * 1741.3);
+          const grain = ((grainA - Math.floor(grainA)) * 0.65) + ((grainB - Math.floor(grainB)) * 0.35);
+          const speckle = boundaryGrain * (grain - 0.5);
+          alpha = Math.max(0, Math.min(1, alpha * (1 - boundaryGrain * 0.22) + boundaryGrain * grain * 0.18));
+          iceR = Math.max(170, Math.min(230, Math.round(198 + speckle * 62)));
+          iceG = Math.max(195, Math.min(238, Math.round(218 + speckle * 50)));
+          iceB = Math.max(232, Math.min(255, Math.round(250 + speckle * 26)));
+        }
+      }
       iceAlpha[i] = alpha;
-      blendPixel(tdata, idx, 200, 220, 255, alpha);
+      blendPixel(tdata, idx, iceR, iceG, iceB, alpha);
     }
 
     const zcLife = this.viz.zonalCoverage || {};
@@ -1081,7 +1113,7 @@
         return n - Math.floor(n);
       };
       const patchNoise = (x, y) => {
-        const scale = 0.07;
+        const scale = 0.07 * (isDisk ? 16 : 1);
         const warp = (bioHash(x * 0.18, y * 0.18) - 0.5) * 1.2;
         const warp2 = (bioHash(x * 0.18 + 41.7, y * 0.18 - 19.3) - 0.5) * 1.2;
         const px = (x + warp) * scale;
@@ -1138,7 +1170,7 @@
           if (hbin <= thr) continue;
         }
         const waterPresence = waterAlpha[i];
-        const latAbs = (isRing || this.isDiskWorld()) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+        const latAbs = (isRing || isDisk) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const patch = patchNoise(x, y);
         let score = lifeNoise[i] * 0.55 + patch * 0.25 + (1 - latAbs) * 0.1 + (1 - hgt) * 0.05 - waterPresence * 0.35;
@@ -1636,7 +1668,7 @@
       }
       return f;
     };
-    const scale = 3.0;
+    const scale = this.isDiskWorld() ? 48.0 : 3.0;
     const periodBase = scale * ringAspect;
     const arr = new Float32Array(w * h);
     for (let y = 0; y < h; y++) {
@@ -1770,7 +1802,7 @@
       }
       return f;
     };
-    const scale = 3.4;
+    const scale = this.isDiskWorld() ? 54.4 : 3.4;
     const periodBase = scale * ringAspect;
     const arr = new Float32Array(w * h);
     for (let y = 0; y < h; y++) {
@@ -1845,9 +1877,9 @@
 
     const isRing = this.isRingWorld();
     const isDisk = this.isDiskWorld();
-    const scaleBase = isRing ? 1.1 : (isDisk ? 1.35 : 1.6);
-    const scaleWarp = isRing ? 0.45 : (isDisk ? 0.6 : 0.8);
-    const scaleRidge = isRing ? 4.2 : (isDisk ? 5.4 : 7.0);
+    const scaleBase = isRing ? 1.1 : (isDisk ? 21.6 : 1.6);
+    const scaleWarp = isRing ? 0.45 : (isDisk ? 9.6 : 0.8);
+    const scaleRidge = isRing ? 4.2 : (isDisk ? 86.4 : 7.0);
     const periodWarp = ringAspect * scaleWarp;
     const periodBase = ringAspect * scaleBase;
     const periodRidge = ringAspect * scaleRidge;
