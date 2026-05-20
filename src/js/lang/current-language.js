@@ -877,6 +877,15 @@ setLanguageData({
       zeusBattle: {
         frameLabel: 'Frame {current} / {max}',
       },
+      cultSecurity: {
+        title: 'Security audit',
+        summary: 'Spend resources to tighten security.',
+        progress: '{percent}% hardened',
+        sublabel: '',
+        status: 'Penalty -{penalty}%',
+        button: 'Audit: {cost} {resource}',
+        secured: 'Secured',
+      },
       run: 'Run',
       enableExtraSettings: 'Enable extra settings',
       uncheckOnTravel: 'Uncheck on travelling',
@@ -4191,6 +4200,10 @@ setLanguageData({
       manufacturingWorld: {
         name: 'Manufacturing World',
         description: "Designate this world as a planet-scale manufacturing center. Completing it grants MP and banks this world's population permanently as manufacturing potential.  These benefits apply on travel.  All production is from space storage to space storage.",
+      },
+      callisto_cult_security: {
+        name: 'Factory Security',
+        description: "Cult sympathizers are sabotaging our component, electronics, superconductor, and android factories.",
       },
       disposeResources: {
         name: 'Resource Disposal',

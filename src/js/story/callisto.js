@@ -30,6 +30,31 @@ progressCallisto.storyProjects.sidestep_excavation = {
   }
 };
 
+progressCallisto.storyProjects.callisto_cult_security = {
+  type: 'CultSecurityProject',
+  name: '',
+  category: 'story',
+  chapter: 7,
+  cost: {},
+  duration: 0,
+  description: '',
+  repeatable: false,
+  unlocked: false,
+  attributes: {
+    planet: 'callisto',
+    hideAutoStart: true,
+    basePenalty: 0.2,
+    penaltyStep: 0.02,
+    maxPurchases: 10,
+    securityUpgrades: [
+      { resource: 'components', building: 'componentFactory' },
+      { resource: 'electronics', building: 'electronicsFactory' },
+      { resource: 'superconductors', building: 'superconductorFactory' },
+      { resource: 'androids', building: 'androidFactory' }
+    ]
+  }
+};
+
 progressCallisto.storyProjects.sidestep_fabrication = {
   type: 'Project',
   name: 'Fabricate Engine Components',
@@ -157,7 +182,9 @@ progressCallisto.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
     ],
-    reward: []
+    reward: [
+      { target: 'project', targetId: 'callisto_cult_security', type: 'enable' }
+    ]
   },
   {
     id: "chapter7.4",
@@ -311,7 +338,7 @@ progressCallisto.chapters.push(
     id: "chapter9.7",
     type: "journal",
     chapter: 9,
-    narrative: "Large Antimatter Beam detected.  \n  Mary : 'WHAT WAS THAT!'  \n Evelyn : 'Mary... we did it!'  \n Mary : 'No way?'  \n Bob : 'Mary, a very, very large asteroid just narrowly avoided Titan.  It worked.'  \n Mary : 'Mars too!  All three attacks missed!  HOPE we did it!  YOU did it.  You saved us all.  We could never have done it without you...'  \n Bob : 'It's your work too Mary.  I barely believed in it without you.'  \n Solis : 'I am impressed.  My investment paid off.  You are truly invaluable.'  \n Evelyn : 'Thank you HOPE.'  \n Mary : 'HOPE...  we narrowly avoided extinction but... you know... you still have a job to finish here.  It will be a gorgeous ocean resort one day.  Give us a water world.'",
+    narrative: "Large Antimatter Beam detected.  \n  Mary : 'WHAT WAS THAT!'  \n Evelyn : 'Mary... that was one of the beams.  We did it!'  \n Mary : 'No way?'  \n Bob : 'Mary, a very, very large asteroid just narrowly avoided Titan.  It worked.'  \n Mary : 'Mars too!  All three attacks missed!  HOPE we did it!  YOU did it.  You saved us all.  We could never have done it without you...'  \n Bob : 'It's your work too Mary.  I barely believed in it without you.'  \n Solis : 'I am impressed.  My investment paid off.  You are truly invaluable.'  \n Evelyn : 'Thank you HOPE.'  \n Mary : 'HOPE...  we narrowly avoided extinction but... you know... you still have a job to finish here.  It will be a gorgeous ocean resort one day.  Give us a water world.'",
     prerequisites: ["chapter9.6"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
