@@ -749,6 +749,8 @@ function setupHarness(initialStorage = {}) {
   const ManufacturingWorldProject = require(path.resolve(__dirname, '../src/js/projects/ManufacturingWorldProject.js'));
   const LiftersProject = require(path.resolve(__dirname, '../src/js/projects/LiftersProject.js'));
   setGlobal('NuclearAlchemyFurnaceProject', NuclearAlchemyFurnaceProject, originalGlobals);
+  setGlobal('LiftersProject', LiftersProject, originalGlobals);
+  const WhiteDwarfHarvestersProject = require(path.resolve(__dirname, '../src/js/projects/WhiteDwarfHarvestersProject.js'));
   setGlobal('window', global, originalGlobals);
   setGlobal('ArtificialStarsProject', global.ArtificialStarsProject, originalGlobals);
   require(path.resolve(__dirname, '../src/js/projects/ArtificialStarsProject.js'));
@@ -765,6 +767,7 @@ function setupHarness(initialStorage = {}) {
     SuperalloyGigafoundryProject,
     ManufacturingWorldProject,
     LiftersProject,
+    WhiteDwarfHarvestersProject,
     ArtificialStarsProject,
     cleanup: () => restoreGlobals(originalGlobals),
   };
@@ -1297,6 +1300,73 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(lifters.operationProductivity?.hydrogen, 1);
     expectApprox(lifters.lastEnergyPerSecond, 10);
     expectApprox(lifters.lastHydrogenPerSecond, 1);
+    cleanup();
+  });
+
+  test('White Dwarf Harvesters throttle by space energy and produce CO-ratio carbon and oxygen', () => {
+    const unitRate = 1_000;
+    const energyPerHarvester = 200;
+    const initialEnergy = 100;
+    const harness = setupHarness({
+      spaceEnergy: initialEnergy,
+      graphite: 0,
+    });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      WhiteDwarfHarvestersProject,
+      cleanup,
+    } = harness;
+
+    const harvesters = new WhiteDwarfHarvestersProject({
+      name: 'White Dwarf Harvesters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+        lifterUnitRate: unitRate,
+        lifterEnergyPerUnit: energyPerHarvester,
+        lifterHarvestRecipes: {
+          whiteDwarfHarvest: {
+            label: 'White Dwarf Harvesting',
+            storageKey: 'graphite',
+            complexity: 1,
+            displayOrder: 1,
+            outputs: {
+              graphite: 12 / 28,
+              oxygen: 16 / 28,
+            },
+          },
+        },
+      },
+    }, 'whiteDwarfHarvesters');
+
+    harvesters.repeatCount = 1;
+    harvesters.lifterAssignments.whiteDwarfHarvest = 1;
+    harvesters.isRunning = true;
+
+    harvesters.repeatCount = 20_000_000_000;
+    harvesters.lifterAssignments.whiteDwarfHarvest = 20_000_000_000n;
+    harvesters.normalizeAssignments();
+    expect(harvesters.getStoredAssignmentAmount('whiteDwarfHarvest')).toBe(10_000_000_000n);
+    harvesters.repeatCount = 1;
+    harvesters.lifterAssignments.whiteDwarfHarvest = 1;
+
+    projectManager.projects.whiteDwarfHarvesters = harvesters;
+    projectManager.projectOrder = ['whiteDwarfHarvesters'];
+
+    produceResources(1000, {});
+
+    const expectedProductivity = initialEnergy / energyPerHarvester;
+    expectApprox(harvesters.operationProductivity?.whiteDwarfHarvest, expectedProductivity);
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.spaceStorage.graphite.value, unitRate * expectedProductivity * (12 / 28));
+    expectApprox(resources.spaceStorage.oxygen.value, unitRate * expectedProductivity * (16 / 28));
+    expectApprox(resources.space.energy.projectedConsumptionRateBySource['White Dwarf Harvesting'] || 0, initialEnergy);
+    expectApprox(resources.spaceStorage.graphite.projectedProductionRateBySource['White Dwarf Harvesting'] || 0, unitRate * expectedProductivity * (12 / 28));
+    expectApprox(resources.spaceStorage.oxygen.projectedProductionRateBySource['White Dwarf Harvesting'] || 0, unitRate * expectedProductivity * (16 / 28));
     cleanup();
   });
 

@@ -6,6 +6,13 @@ function getLiftersUIText(path, fallback, vars) {
   }
 }
 
+function getProjectLiftersUIText(project, path, fallback, vars) {
+  if (project && project.getProjectText) {
+    return project.getProjectText(path, vars, fallback);
+  }
+  return getLiftersUIText(`ui.projects.lifters.${path}`, fallback, vars);
+}
+
 function buildStat(label) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('stat-item', 'project-summary-box');
@@ -35,13 +42,13 @@ function renderLiftersUI(project, container) {
   header.classList.add('card-header');
   const title = document.createElement('span');
   title.classList.add('card-title');
-  title.textContent = getLiftersUIText('ui.projects.lifters.title', 'Lifter Controls');
+  title.textContent = getProjectLiftersUIText(project, 'title', 'Lifter Controls');
   const titleInfo = document.createElement('span');
   titleInfo.classList.add('info-tooltip-icon');
   titleInfo.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(
     titleInfo,
-    getLiftersUIText('ui.projects.lifters.titleTooltip', 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. '
+    getProjectLiftersUIText(project, 'titleTooltip', 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. '
     + 'Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. '
     + 'Multi-output recipes add each output separately before normal resource cap handling. '
     + 'Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. '
@@ -55,7 +62,7 @@ function renderLiftersUI(project, container) {
 
   const summaryGrid = document.createElement('div');
   summaryGrid.classList.add('stats-grid', 'four-col', 'project-summary-grid');
-  const totalStat = buildStat(getLiftersUIText('ui.projects.lifters.totalLifters', 'Total Lifters'));
+  const totalStat = buildStat(getProjectLiftersUIText(project, 'totalLifters', 'Total Lifters'));
   const assignedStat = buildStat(getLiftersUIText('ui.projects.common.assigned', 'Assigned'));
   const unassignedStat = buildStat(getLiftersUIText('ui.projects.common.unassigned', 'Unassigned'));
   const expansionRateStat = buildStat(getLiftersUIText('ui.projects.common.expansion', 'Expansion'));
@@ -72,31 +79,31 @@ function renderLiftersUI(project, container) {
   runCheckbox.id = `${project.name}-lifters-run`;
   const runLabel = document.createElement('label');
   runLabel.htmlFor = runCheckbox.id;
-  runLabel.textContent = getLiftersUIText('ui.projects.lifters.runLifters', 'Run lifters');
+  runLabel.textContent = getProjectLiftersUIText(project, 'runLifters', 'Run lifters');
   runField.append(runCheckbox, runLabel);
   controlsGrid.appendChild(runField);
 
   const statusStat = buildStat(getLiftersUIText('ui.projects.common.status', 'Status'));
   controlsGrid.appendChild(statusStat.wrapper);
 
-  const energyPerLifterStat = buildStat(getLiftersUIText('ui.projects.lifters.energyPerLifter', 'Energy per lifter'));
+  const energyPerLifterStat = buildStat(getProjectLiftersUIText(project, 'energyPerLifter', 'Energy per lifter'));
   const energyPerLifterInfo = document.createElement('span');
   energyPerLifterInfo.classList.add('info-tooltip-icon');
   energyPerLifterInfo.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(
     energyPerLifterInfo,
-    getLiftersUIText('ui.projects.lifters.energyPerLifterTooltip', 'Each assigned lifter uses this much space energy per second, regardless of recipe.')
+    getProjectLiftersUIText(project, 'energyPerLifterTooltip', 'Each assigned lifter uses this much space energy per second, regardless of recipe.')
   );
   energyPerLifterStat.labelEl.appendChild(energyPerLifterInfo);
   controlsGrid.appendChild(energyPerLifterStat.wrapper);
 
-  const energyRateStat = buildStat(getLiftersUIText('ui.projects.lifters.energyUse', 'Energy Use'));
+  const energyRateStat = buildStat(getProjectLiftersUIText(project, 'energyUse', 'Energy Use'));
   const energyRateInfo = document.createElement('span');
   energyRateInfo.classList.add('info-tooltip-icon');
   energyRateInfo.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(
     energyRateInfo,
-    getLiftersUIText('ui.projects.lifters.energyUseTooltip', 'Each assigned lifter consumes energy while running. Can only use space energy.')
+    getProjectLiftersUIText(project, 'energyUseTooltip', 'Each assigned lifter consumes energy while running. Can only use space energy.')
   );
   energyRateStat.labelEl.appendChild(energyRateInfo);
   controlsGrid.appendChild(energyRateStat.wrapper);
@@ -106,7 +113,7 @@ function renderLiftersUI(project, container) {
   const superchargeLabel = document.createElement('div');
   superchargeLabel.classList.add('lifters-supercharge-label');
   const superchargeLabelText = document.createElement('span');
-  superchargeLabelText.textContent = getLiftersUIText('ui.projects.lifters.supercharge', 'Supercharge');
+  superchargeLabelText.textContent = getProjectLiftersUIText(project, 'supercharge', 'Supercharge');
   const superchargeValue = document.createElement('span');
   superchargeValue.classList.add('stat-value', 'lifters-supercharge-value');
   superchargeLabel.append(superchargeLabelText, superchargeValue);
@@ -147,16 +154,16 @@ function renderLiftersUI(project, container) {
   headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
   const headerName = document.createElement('span');
   headerName.classList.add('stat-label');
-  headerName.textContent = getLiftersUIText('ui.projects.lifters.recipe', 'Recipe');
+  headerName.textContent = getProjectLiftersUIText(project, 'recipe', 'Recipe');
   const headerComplexity = document.createElement('span');
   headerComplexity.classList.add('stat-label');
-  headerComplexity.textContent = getLiftersUIText('ui.projects.lifters.complexity', 'Complexity');
+  headerComplexity.textContent = getProjectLiftersUIText(project, 'complexity', 'Complexity');
   const headerAssigned = document.createElement('span');
   headerAssigned.classList.add('stat-label');
   headerAssigned.textContent = getLiftersUIText('ui.projects.common.assigned', 'Assigned');
   const headerMax = document.createElement('span');
   headerMax.classList.add('stat-label');
-  headerMax.textContent = getLiftersUIText('ui.projects.lifters.maxAssignment', 'Max');
+  headerMax.textContent = getProjectLiftersUIText(project, 'maxAssignment', 'Max');
   const headerControls = document.createElement('div');
   headerControls.classList.add('hephaestus-assignment-controls');
   const headerButtons = document.createElement('div');
@@ -198,7 +205,7 @@ function renderLiftersUI(project, container) {
       infoIcon.innerHTML = '&#9432;';
       attachDynamicInfoTooltip(
         infoIcon,
-        getLiftersUIText('ui.projects.lifters.starLiftingTooltip', 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.')
+        getProjectLiftersUIText(project, 'starLiftingTooltip', 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.')
       );
       nameWrap.appendChild(infoIcon);
     }
@@ -365,7 +372,9 @@ function updateLiftersUI(project) {
   elements.energyPerLifterValue.textContent = formatPerSecond(project.getEffectiveEnergyPerUnit());
   elements.energyRateValue.textContent = formatPerSecond(project.lastEnergyPerSecond);
   const expansionRate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
-  elements.expansionRateValue.textContent = `${formatNumber(expansionRate, true, 3)} lifters/s`;
+  elements.expansionRateValue.textContent = getProjectLiftersUIText(project, 'expansionRate', '{value} lifters/s', {
+    value: formatNumber(expansionRate, true, 3)
+  });
   const supercharge = project.getEffectiveSuperchargeMultiplier();
   const energyMultiplier = Math.pow(supercharge, project.getEffectiveSuperchargeExponent());
   elements.superchargeSlider.max = String(project.getEffectiveSuperchargeMaxMultiplier());
@@ -432,8 +441,9 @@ function updateLiftersUI(project) {
 
   if (elements.note) {
     const unitRate = formatNumber(project.getEffectiveUnitRatePerLifter(), true);
-    elements.note.textContent = getLiftersUIText(
-      'ui.projects.lifters.operationNote',
+    elements.note.textContent = getProjectLiftersUIText(
+      project,
+      'operationNote',
       `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. Max is the current assignment cap after Warp Gate Network access, complexity, throughput, and supercharge.`,
       { value: unitRate }
     );

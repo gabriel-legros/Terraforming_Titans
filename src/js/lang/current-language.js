@@ -981,6 +981,39 @@ setLanguageData({
           running: 'Running',
         },
       },
+      whiteDwarfHarvesters: {
+        title: 'White Dwarf Harvester Controls',
+        titleTooltip: 'Assign harvesters to process white dwarfs. Each assigned harvester consumes space energy, stores output in space storage, and counts against the 10B white dwarf assignment cap.',
+        totalLifters: 'Total Harvesters',
+        runLifters: 'Run harvesters',
+        energyPerLifter: 'Energy per harvester',
+        energyPerLifterTooltip: 'Each assigned harvester uses this much space energy per second.',
+        energyUse: 'Energy Use',
+        energyUseTooltip: 'Each assigned harvester consumes space energy while running.',
+        disableStripBelowPressure: 'Disable atmospheric stripping below:',
+        pa: 'Pa',
+        supercharge: 'Supercharge',
+        recipe: 'Target',
+        complexity: 'Complexity',
+        maxAssignment: 'Max',
+        expansionRate: '{value} harvesters/s',
+        operationNote: 'Each assigned harvester processes {value} tons of white dwarf CO per second, producing carbon and oxygen straight to space storage..',
+        maxAssignmentTooltip: 'Accessible white dwarf assignment cap: {max}',
+        starLiftingTooltip: '',
+        status: {
+          idle: 'Idle',
+          runDisabled: 'Run disabled',
+          buildSpaceStorage: 'Build space storage',
+          spaceStorageFull: 'Space storage is full',
+          storageCapReached: 'Storage cap reached',
+          pressureLimitReached: 'Pressure limiter reached',
+          noAtmosphereToStrip: 'No atmosphere to strip',
+          insufficientEnergy: 'Insufficient energy',
+          noAssignments: 'No assignments',
+          completeAtLeastOne: 'Complete at least one harvester',
+          running: 'Running',
+        },
+      },
       spaceExportBase: {
         whichOne: 'Which one : ',
         waitForFullCapacity: 'Wait for full capacity',
@@ -4146,6 +4179,16 @@ setLanguageData({
         name: 'Planet Crackers',
         description: 'Build tera-scale cracking platforms that shatter worlds into mining belts. Assign crackers and run them to consume space energy and permanently raise global import caps.  Not a weapon.  HOPE will purposefully set aside any planets it may be interested in terraforming present or future.  The amount of crackable worlds scale with your Warp Gate Level in each sector, up to the cap of 1M Warp Gate Level.',
       },
+      whiteDwarfHarvesters: {
+        name: 'White Dwarf Harvesters',
+        description: 'Build tera-scale harvesting platforms that harvest white dwarfs. Assign and run harvesters directly; up to 10B white dwarfs can be harvested at once.',
+        attributes: {
+          lifterStripRecipe: { label: 'Strip Atmosphere' },
+          lifterHarvestRecipes: {
+            whiteDwarfHarvest: { label: 'White Dwarf Harvesting' },
+          },
+        },
+      },
       orbitalRing: {
         name: 'Orbital Ring',
         description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.  You can prepay rings for each world without a ring.',
@@ -4935,6 +4978,10 @@ setLanguageData({
         planet_cracking: {
           name: 'Planet Cracking',
           description: 'There is still so much metal out there... if we can get to it.',
+        },
+        white_dwarf_harvesting: {
+          name: 'White Dwarf Harvesting',
+          description: 'Some stellar remnants are rich in carbon and oxygen.  Our lifters cannot get to it easily but if we charge them with enough positrons this task can be made more doable.  Unlocks a new terastructure.  (Special Thanks to Citizen Power for this research proposal)',
         },
         tractor_beams: {
           name: 'Tractor Beams',

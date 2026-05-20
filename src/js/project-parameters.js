@@ -941,6 +941,49 @@ const projectParameters = {
       }
     }
   },
+  whiteDwarfHarvesters: {
+    type: 'WhiteDwarfHarvestersProject',
+    name: '',
+    category: 'tera',
+    cost: {
+      colony: {
+        superalloys: 1_000_000_000_000_000_000_000,
+        components: 100_000_000_000_000_000_000,
+        electronics: 10_000_000_000_000_000_000,
+        superconductors: 100_000_000_000_000_000_000
+      }
+    },
+    duration: 36_000_000_000_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      lifterUnitRate: 3e20,
+      lifterEnergyPerUnit: 6e28,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true,
+      lifterStripRecipe: {
+        label: '',
+        complexity: 1,
+        displayOrder: 2
+      },
+      lifterHarvestRecipes: {
+        whiteDwarfHarvest: {
+          label: '',
+          storageKey: 'graphite',
+          outputMultiplier: 0.42857142857142855,
+          complexity: 1,
+          displayOrder: 1,
+          outputs: {
+            graphite: 0.42857142857142855,
+            oxygen: 0.5714285714285714
+          }
+        }
+      }
+    }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: '',

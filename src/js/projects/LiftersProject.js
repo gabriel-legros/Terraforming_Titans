@@ -142,6 +142,14 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.stripPressureAutomationElements = null;
   }
 
+  getLifterTextPath() {
+    return 'ui.projects.lifters';
+  }
+
+  getProjectText(path, vars, fallback = '') {
+    return t(`${this.getLifterTextPath()}.${path}`, vars, fallback);
+  }
+
   hasSuperchargeUnlocked() {
     return this.isBooleanFlagSet('starLifting');
   }
@@ -1015,7 +1023,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
       gas.ref?.modifyRate?.(
         -(removed > 0 && seconds > 0 ? removed / seconds : 0),
-        'Lifting',
+        this.getOperationRateSourceLabel(),
         'project'
       );
     });
@@ -1360,7 +1368,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       if (producedRate > 0) {
         resources?.spaceStorage?.[resourceKey]?.modifyRate?.(
           producedRate,
-          'Lifting',
+          this.getOperationRateSourceLabel(),
           'project'
         );
       }
@@ -1484,11 +1492,19 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       {
         applyRates: tick.seconds > 0 && this.showsInResourcesRate(),
         seconds: tick.seconds,
-        rateSourceLabel: 'Lifter expansion'
+        rateSourceLabel: this.getExpansionRateSourceLabel()
       }
     );
     this.expansionShortfallLastTick = result.shortfall;
     this.costShortfallLastTick = this.expansionShortfallLastTick;
+  }
+
+  getExpansionRateSourceLabel() {
+    return 'Lifter expansion';
+  }
+
+  getOperationRateSourceLabel() {
+    return 'Lifting';
   }
 
   applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -1646,7 +1662,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     const dysonPerSecond = energyResult.dysonEnergyUsed / seconds;
     const totalSpacePerSecond = storedSpacePerSecond + dysonPerSecond;
     if (totalSpacePerSecond > 0) {
-      resources?.space?.energy?.modifyRate?.(-totalSpacePerSecond, 'Lifting', 'project');
+      resources?.space?.energy?.modifyRate?.(-totalSpacePerSecond, this.getOperationRateSourceLabel(), 'project');
     }
 
     this.setLastTickStats({
@@ -1738,7 +1754,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
           storageState,
           {
             applyRates,
-            sourceLabel: 'Lifter expansion'
+            sourceLabel: this.getExpansionRateSourceLabel()
           }
         );
         this.mergeResourceTotals(totals.cost, expansionTotals);
@@ -1767,7 +1783,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     if (applyRates) {
       resources?.space?.energy?.modifyRate?.(
         -(totalEnergy / seconds),
-        'Lifting',
+        this.getOperationRateSourceLabel(),
         'project'
       );
     }
@@ -1803,7 +1819,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
           if (applyRates) {
             gas.ref?.modifyRate?.(
               -(removed / seconds),
-              'Lifting',
+              this.getOperationRateSourceLabel(),
               'project'
             );
           }
@@ -1823,7 +1839,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
         if (applyRates) {
           resources?.spaceStorage?.[resourceKey]?.modifyRate?.(
             amount / seconds,
-            'Lifting',
+            this.getOperationRateSourceLabel(),
             'project'
           );
         }
