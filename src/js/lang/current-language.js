@@ -4181,7 +4181,7 @@ setLanguageData({
       },
       whiteDwarfHarvesters: {
         name: 'White Dwarf Harvesters',
-        description: 'Build tera-scale harvesting platforms that harvest white dwarfs. Assign and run harvesters directly; up to 10B white dwarfs can be harvested at once.',
+        description: 'Build tera-scale harvesting platforms that harvest white dwarfs.',
         attributes: {
           lifterStripRecipe: { label: 'Strip Atmosphere' },
           lifterHarvestRecipes: {
