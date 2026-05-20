@@ -1305,7 +1305,8 @@ describe('Space building productivity via produceResources', () => {
 
   test('White Dwarf Harvesters throttle by space energy and produce CO-ratio carbon and oxygen', () => {
     const unitRate = 1_000;
-    const energyPerHarvester = 200;
+    const energyPerTon = 2e32 / 3e20;
+    const energyPerHarvester = unitRate * energyPerTon;
     const initialEnergy = 100;
     const harness = setupHarness({
       spaceEnergy: initialEnergy,

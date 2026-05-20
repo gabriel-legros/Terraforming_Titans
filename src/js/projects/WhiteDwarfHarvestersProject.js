@@ -31,6 +31,8 @@ class WhiteDwarfHarvestersProject extends WhiteDwarfHarvestersBase {
     return true;
   }
 
+  renderAutomationUI() {}
+
   getGasGiantCapResourceKey() {
     return 'whiteDwarf';
   }
