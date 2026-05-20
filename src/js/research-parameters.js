@@ -2637,7 +2637,7 @@ const researchParameters = {
         id: 'quantum_biology',
         name: '',
         description: '',
-        cost: { advancedResearch: 80_000_000_000 },
+        cost: { advancedResearch: 100_000_000_000 },
         prerequisites: [],
         effects: [
           {
