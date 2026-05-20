@@ -997,7 +997,7 @@ setLanguageData({
         complexity: 'Complexity',
         maxAssignment: 'Max',
         expansionRate: '{value} harvesters/s',
-        operationNote: 'Each assigned harvester processes {value} tons of white dwarf CO per second, producing carbon and oxygen straight to space storage..',
+        operationNote: 'Each assigned harvester processes {value} tons of white dwarf CO per second, producing carbon and oxygen straight to space storage.',
         maxAssignmentTooltip: 'Accessible white dwarf assignment cap: {max}',
         starLiftingTooltip: '',
         status: {
