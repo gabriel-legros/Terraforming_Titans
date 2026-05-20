@@ -1620,7 +1620,13 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
         const baseValue = getAutomationPresetValueAtPath(currentPreset, draftEntry.path);
-        if (!isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value)) {
+        const fieldOptions = fieldOptionsResolver
+          ? fieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
+          : null;
+        const hasCustomSelectOptions = !!(fieldOptions
+          && Array.isArray(fieldOptions.selectOptions)
+          && fieldOptions.selectOptions.length);
+        if (!hasCustomSelectOptions && !isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value)) {
           showAutomationImportStatus(
             getAutomationCardText(
               'importPresetInvalidJsonError',
