@@ -1199,10 +1199,11 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     return entries;
   }
 
-  planOperation(seconds, productivity = 1, accumulatedChanges = null) {
+  planOperation(seconds, productivity = 1, accumulatedChanges = null, options = {}) {
     const entries = this.buildOperationEntries(seconds, productivity);
     const storage = this.getSpaceStorageProject();
     let stripAvailableAtmosphere = this.getStripAvailableAtmosphere(accumulatedChanges);
+    const skipEnergyLimit = options.skipEnergyLimit === true;
 
     const plan = {
       entries,
@@ -1277,9 +1278,12 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return plan;
     }
 
-    plan.energyAvailability = this.getEnergyAvailabilityForTick(seconds * 1000, accumulatedChanges);
     plan.energyNeeded = plan.limitedAssignedLifters * this.getEffectiveEnergyPerUnit() * seconds;
-    if (plan.energyNeeded > 0) {
+    if (skipEnergyLimit) {
+      plan.energyAvailability = this.getEnergyAvailabilityForTick(seconds * 1000, accumulatedChanges);
+      plan.energyRatio = 1;
+    } else if (plan.energyNeeded > 0) {
+      plan.energyAvailability = this.getEnergyAvailabilityForTick(seconds * 1000, accumulatedChanges);
       plan.energyRatio = Math.max(0, Math.min(1, plan.energyAvailability.totalAvailable / plan.energyNeeded));
       if (plan.energyRatio < 1) {
         plan.reasons.energyLimited = true;
@@ -1315,7 +1319,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return productivities;
     }
 
-    const plan = this.planOperation(seconds, defaultProductivity, null);
+    const plan = this.planOperation(seconds, defaultProductivity, null, { skipEnergyLimit: true });
     plan.entries.forEach((entry) => {
       productivities[entry.key] = entry.productivityRatio;
     });
@@ -1529,7 +1533,10 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return;
     }
 
-    const plan = this.planOperation(seconds, productivity, accumulatedChanges);
+    const hasSharedOperationProductivity = productivity && typeof productivity === 'object';
+    const plan = this.planOperation(seconds, productivity, accumulatedChanges, {
+      skipEnergyLimit: hasSharedOperationProductivity
+    });
     const productivityByRecipe = {};
     const displayRatesByRecipe = {};
     const energyLimitedProductivityByRecipe = {};
@@ -1770,7 +1777,10 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return totals;
     }
 
-    const plan = this.planOperation(seconds, productivity, accumulatedChanges);
+    const hasSharedOperationProductivity = productivity && typeof productivity === 'object';
+    const plan = this.planOperation(seconds, productivity, accumulatedChanges, {
+      skipEnergyLimit: hasSharedOperationProductivity
+    });
     if (!(plan.plannedTotalUnits > 0)) {
       return totals;
     }

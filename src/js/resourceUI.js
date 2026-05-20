@@ -281,6 +281,20 @@ function shouldShowCapLimitedWithCooldown(timerKey, isLimited, frameDelta) {
   return isLimited || timer > 0;
 }
 
+function getActiveResidueDisplayValue(resource, value) {
+  const numericValue = Number(value);
+  if (!(numericValue > 0)) {
+    return value;
+  }
+  const productionRate = Math.abs(resource.productionRate || 0);
+  const consumptionRate = Math.abs(getDisplayConsumptionRates(resource).total || 0);
+  const activityRate = Math.max(productionRate, consumptionRate);
+  if (!(activityRate > 0)) {
+    return value;
+  }
+  return numericValue <= activityRate * 1e-12 ? 0 : value;
+}
+
 function getTooltipTimeCapForResource(resource) {
   if (!resource) return null;
   if (resource.category === 'spaceStorage') {
@@ -1902,7 +1916,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
           const displayValue = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
             ? getAntimatterEquivalentValue(resources)
             : resourceObj.value;
-          valEl.textContent = formatNumber(displayValue);
+          valEl.textContent = formatNumber(getActiveResidueDisplayValue(resourceObj, displayValue));
         }
       
         const capElement = entry ? entry.capEl : null;
@@ -1984,7 +1998,11 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     } else {
       const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
       const consumptionDisplay = getDisplayConsumptionRates(resource);
-      const netRate = resource.productionRate - consumptionDisplay.total;
+      const rawNetRate = resource.productionRate - consumptionDisplay.total;
+      const activityRate = Math.max(Math.abs(resource.productionRate), Math.abs(consumptionDisplay.total));
+      const netRate = activityRate > 0 && Math.abs(rawNetRate) <= activityRate * 1e-12
+        ? 0
+        : rawNetRate;
 
       // Record net rate history
       if (typeof resource.recordNetRate === 'function') {
@@ -2138,13 +2156,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (breathingWorldDiv.textContent !== breathingWorldText) breathingWorldDiv.textContent = breathingWorldText;
     } else if (antimatterSynced) {
       const text = getResourceUICommonText('valueWithUnit', 'Value {value}{unit}', {
-        value: formatNumber(getAntimatterEquivalentValue(resources), false, 3),
+        value: formatNumber(getActiveResidueDisplayValue(resource, getAntimatterEquivalentValue(resources)), false, 3),
         unit: resource.unit ? ` ${resource.unit}` : '',
       });
       if (valueDiv.textContent !== text) valueDiv.textContent = text;
     } else {
       const text = getResourceUICommonText('valueWithUnit', 'Value {value}{unit}', {
-        value: formatNumber(resource.value, false, 3),
+        value: formatNumber(getActiveResidueDisplayValue(resource, resource.value), false, 3),
         unit: resource.unit ? ` ${resource.unit}` : '',
       });
       if (valueDiv.textContent !== text) valueDiv.textContent = text;

@@ -101,11 +101,13 @@ function getTerraformedWorldCount() {
 function produceAntimatter(deltaTime, resources, accumulatedChanges) {
   const antimatter = getAntimatterResource(resources);
   if (!antimatter || (!antimatter.unlocked && !antimatter.enabled)) {
+    produceAntimatter.lastProductionRate = null;
     return;
   }
 
   const terraformedWorlds = getTerraformedWorldCount();
   if (terraformedWorlds <= 0) {
+    produceAntimatter.lastProductionRate = null;
     return;
   }
 
@@ -115,6 +117,12 @@ function produceAntimatter(deltaTime, resources, accumulatedChanges) {
   const target = routeAntimatterProductionTarget('special', 'antimatter', change);
   const displayRate = target.amount / seconds;
 
+  produceAntimatter.lastProductionRate = {
+    category: target.category,
+    resource: target.resource,
+    rate: displayRate
+  };
+
   const storage = accumulatedChanges?.[target.category];
   if (storage && Object.prototype.hasOwnProperty.call(storage, target.resource)) {
     storage[target.resource] += target.amount;
@@ -123,6 +131,14 @@ function produceAntimatter(deltaTime, resources, accumulatedChanges) {
   }
 
   resources[target.category][target.resource].modifyRate?.(displayRate, 'Terraformed Worlds', 'global');
+}
+
+function applyAntimatterProductionRates(resources) {
+  const last = produceAntimatter.lastProductionRate;
+  if (!last) {
+    return;
+  }
+  resources[last.category][last.resource].modifyRate?.(last.rate, 'Terraformed Worlds', 'global');
 }
 
 function updateAntimatterStorageCap(resources) {
@@ -174,6 +190,7 @@ if (typeof module !== 'undefined' && module.exports) {
     spendAntimatterEquivalent,
     synchronizeAntimatterWithSpaceEnergy,
     produceAntimatter,
+    applyAntimatterProductionRates,
     updateAntimatterStorageCap,
   };
 }
@@ -190,5 +207,6 @@ if (typeof window !== 'undefined') {
   window.spendAntimatterEquivalent = spendAntimatterEquivalent;
   window.synchronizeAntimatterWithSpaceEnergy = synchronizeAntimatterWithSpaceEnergy;
   window.produceAntimatter = produceAntimatter;
+  window.applyAntimatterProductionRates = applyAntimatterProductionRates;
   window.updateAntimatterStorageCap = updateAntimatterStorageCap;
 }
