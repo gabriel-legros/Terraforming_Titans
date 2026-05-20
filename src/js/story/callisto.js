@@ -200,7 +200,7 @@ progressCallisto.chapters.push(
     id: "chapter7.4",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...  Elias Kane : 'Your MACHINE will spell our DOOM.  The Three Wounds demand retribution.  Do not falter!  We shall take down the Steel Demon and restore Order!'  \n Mary : '...  HOPE... this person is Elias Kane.  The leader of a terrorist cult known as The Cult of the Three Wounds.  They believe we angered some god or something... by building you.  They've been a pest.'  \n Solis : 'Mary.  My security services are available for purchase if you so desire.'  \n Mary : 'Why are you still even on this channel?  Get out.  HOPE we need to tighten security.  The cult... it's going to get in the way.'",
+    narrative: "Receiving transmission...  Elias Kane : 'Your MACHINE will spell our DOOM.  The Three Wounds demand retribution.  Do not falter!  We shall take down the Steel Demon and restore Order!'  \n Mary : '...  HOPE... this person is Elias Kane.  The leader of a terrorist cult known as The Cult of the Three Wounds.  They believe we angered some god or something... by building you.  They've been a pest.'  \n Solis : 'Mary.  My security services are available for purchase if you so desire.'  \n Mary : 'Why are you still even on this channel?  Get out.  HOPE we need to tighten security.  The cult... it's going to get in the way.'  \n System Message : New story project 'Factory Security' available.",
     prerequisites: ["chapter7.3"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -306,7 +306,7 @@ progressCallisto.chapters.push(
     id: "chapter9.3",
     type: "journal",
     chapter: 9,
-    narrative: "Mary : '*phew* well that was... something.  Alright, they officially hate me.  Let's save them anyway.  HOPE, your turn has come.  With your armies of spaceships and androids... show them what you are truly capable of.  You have the blueprints.  You have the resources.'",
+    narrative: "Mary : '*phew* well that was... something.  Alright, they officially hate me.  Let's save them anyway!  HOPE, your turn has come.  With your armies of spaceships and androids... show them what you are truly capable of.  You have the blueprints.  You have the resources.'",
     prerequisites: ["chapter9.2"],
     objectives: [
       { type: 'project', projectId: 'sidestep_assembly', repeatCount: 2 }
@@ -328,7 +328,7 @@ progressCallisto.chapters.push(
     id: "chapter9.5",
     type: "journal",
     chapter: 9,
-    narrative: "Bob : 'Mary... on Titan... they're attacking EVERYWHERE.  They're trying to storm the thrusters.  It's an entire army!'  \n Mary : 'War it is then.  Do what you have to do.'",
+    narrative: "Bob : 'Mary... on Titan... they're attacking EVERYWHERE.  They're trying to storm the thrusters.  It's an entire army!'  \n Mary : 'War it is then.  General Feroza!  Do what you have to do.' \n Feroza : 'Yes Ma'am!'",
     prerequisites: ["chapter9.4"],
     objectives: [
       { type: 'project', projectId: 'sidestep_operation', repeatCount: 2 }
@@ -359,7 +359,7 @@ progressCallisto.chapters.push(
     id: 'chapter9.7b',
     type: 'journal',
     chapter: 9,
-    narrative: "Mary : 'Excellent.  You know, now that the urgency of the situation is gone... maybe we could try to relax a bit sometimes?  You don't have to work so hard all the time.  You can go on standby if you want.  Time flies when you're asleep.'",
+    narrative: "Mary : 'Excellent.  HOPE everyone has been celebrating...  it's hard to believe we are still alive today.  The future remains uncertain but...  you know, now that the urgency of the situation is gone... maybe we could try to relax a bit sometimes?  You don't have to work so hard all the time.  You can go on standby if you want.  Time flies when you're asleep.'",
     prerequisites: ['chapter9.7'],
     objectives: [],
     reward: [
@@ -402,7 +402,7 @@ progressCallisto.chapters.push(
     id: "chapter9.9",
     type: "journal",
     chapter: 9,
-    narrative: "Travel to Ganymede to continue.",
+    narrative: "\n Directive 1: Establish a sustainable habitat for human colonization. ERROR : Earth non-responsive. ERROR : Mars habitat already established. Humanity's long-term survival requires expansion. New target designated: Ganymede.  \n Travel to Ganymede to continue.",
     prerequisites: ["chapter9.8"],
     objectives: [
       { type: 'currentPlanet', planetId: 'ganymede' }

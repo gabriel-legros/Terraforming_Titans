@@ -577,7 +577,7 @@ progressTitan.chapters.push(
     id: "chapter6.4",
     type: "journal",
     chapter: 6,
-    narrative: "Bob : 'Hey HOPE.  My name is Bob, the president-elect of Titan.  We don't want to end up like Mars so we prepared a structure to pick everything up when you're gone.  Don't worry about your Dead Hand Protocol.  We'll be fine.  Hey, I reckon we'll be in better shape than Mars is right now.  Thanks for everything!'",
+    narrative: "Bob : 'Hey HOPE.  My name is Bob, the president-elect of Titan.  We don't want to end up like Mars so we prepared a structure to pick everything up when you're gone.  Don't worry about your Dead Hand Protocol.  We'll be fine.  Hey, I reckon we'll be in better shape than Mars is right now.  Thanks for everything!' \n Directive 1: Establish a sustainable habitat for human colonization. ERROR : Earth non-responsive. ERROR : Mars habitat already established. Humanity's long-term survival requires expansion. New target designated: Callisto.  \n Travel to Callisto to continue.",
     prerequisites: ["chapter6.3c"],
     objectives: [
       {
