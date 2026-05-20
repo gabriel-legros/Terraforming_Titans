@@ -439,7 +439,7 @@ progressSolisPrime.chapters.push(
       terraformingParameter : 'complete',
     }],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'solisprime', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'solisprime', value: true, effectId: 'story-solisprime-rwg-lock' },
       { target: 'rwgManager', type: 'unlockType', targetId: 'rogue' },
     ]
   },
@@ -491,7 +491,7 @@ progressSolisPrime.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', targetId: 'gabbag', type: 'enable' }
+      { target: 'spaceManager', targetId: 'gabbag', type: 'enable', effectId: 'story-solisprime-enable-gabbag' }
     ]
   },
   {

@@ -521,7 +521,7 @@ progressVega2.chapters.push(
     prerequisites: ['chapter17.4'],
     objectives: [{ type: 'terraforming', terraformingParameter: 'complete' }],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'vega2', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'vega2', value: true, effectId: 'story-vega2-rwg-lock' },
       { target: 'rwgManager', type: 'unlockOrbit', targetId: 'hot' },
     ]
   },
@@ -535,8 +535,9 @@ progressVega2.chapters.push(
         reward: [{
         target: 'spaceManager',
         targetId: 'venus',
-        type: 'enable'
-      }]
+        type: 'enable',
+        effectId: 'story-vega2-enable-venus'
+        }]
     },
     {
         id: "chapter17.7",

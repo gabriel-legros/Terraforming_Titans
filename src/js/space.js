@@ -288,6 +288,34 @@ class SpaceManager extends EffectableEntity {
         }
     }
 
+    getSpaceEffectId(effect) {
+        if (effect.effectId) {
+            return effect.effectId;
+        }
+        const parts = [
+            effect.target || 'spaceManager',
+            effect.type || '',
+            effect.targetId || '',
+            effect.flagId || '',
+            effect.resourceType || '',
+            effect.planetId || '',
+            effect.sourceId || '',
+            effect.value === undefined ? '' : String(effect.value)
+        ];
+        return `spaceManager-${parts.join('|')}`;
+    }
+
+    addAndReplace(effect) {
+        const effectId = this.getSpaceEffectId(effect);
+        const effectiveEffect = effect.effectId ? effect : { ...effect, effectId };
+        if (!effect.effectId) {
+            this.activeEffects = this.activeEffects.filter((activeEffect) => (
+                this.getSpaceEffectId(activeEffect) !== effectId
+            ));
+        }
+        super.addAndReplace(effectiveEffect);
+    }
+
     grantDominionTerraformReward(dominionId) {
         const resolvedDominion = dominionId || 'human';
         if (resolvedDominion === 'human' || resolvedDominion === 'gabbagian') {

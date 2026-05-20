@@ -346,7 +346,7 @@ progressTartarus.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'tartarus', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'tartarus', value: true, effectId: 'story-tartarus-rwg-lock' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'brown-dwarf' },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'kessler' }
     ]
@@ -361,7 +361,7 @@ progressTartarus.chapters.push(
     objectives: [
       { type: 'galaxySectorControl', sectorLabel: 'R4-03' }
     ],
-    reward: [      { target: 'spaceManager', targetId: 'hades', type: 'enable' }]
+    reward: [      { target: 'spaceManager', targetId: 'hades', type: 'enable', effectId: 'story-tartarus-enable-hades' }]
   },
   {
     id: 'tartarus.32.13',

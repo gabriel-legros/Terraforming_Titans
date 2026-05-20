@@ -455,8 +455,8 @@ progressGanymede.chapters.push(
             { type: 'terraforming', terraformingParameter: 'complete' }
         ],
         reward: [
-            { target: 'spaceManager', type: 'setRwgLock', targetId: 'ganymede', value: true },
-            { target: 'spaceManager', type: 'enable', targetId: 'space-random' },
+            { target: 'spaceManager', type: 'setRwgLock', targetId: 'ganymede', value: true, effectId: 'story-ganymede-rwg-lock' },
+            { target: 'spaceManager', type: 'enable', targetId: 'space-random', effectId: 'story-ganymede-enable-space-random' },
             // Ensure the main Space tab is brought to the front when unlocking Random
             { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false },
             {
@@ -485,8 +485,9 @@ progressGanymede.chapters.push(
         reward: [{
         target: 'spaceManager',
         targetId: 'vega2',
-        type: 'enable'
-      }]
+        type: 'enable',
+        effectId: 'story-ganymede-enable-vega2'
+        }]
     },
     {
         id: "chapter13.8",

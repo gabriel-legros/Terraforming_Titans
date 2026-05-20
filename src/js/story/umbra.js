@@ -299,7 +299,7 @@ progressUmbra.chapters.push(
       terraformingParameter : 'complete',
     }],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'umbra', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'umbra', value: true, effectId: 'story-umbra-rwg-lock' },
       { target: 'rwgManager', type: 'unlockFeature', targetId: 'hazards' },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'hazardousBiomass' }
     ]
@@ -346,7 +346,7 @@ progressUmbra.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', targetId: 'solisprime', type: 'enable' }
+      { target: 'spaceManager', targetId: 'solisprime', type: 'enable', effectId: 'story-umbra-enable-solisprime' }
     ]
   },
   {

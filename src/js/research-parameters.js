@@ -2241,6 +2241,7 @@ const researchParameters = {
             target: 'spaceManager',
             type: 'booleanFlag',
             flagId: 'oneillCylinders',
+            effectId: 'research-oneill-cylinders-space-flag',
             value: true
           },
           {
@@ -2262,6 +2263,7 @@ const researchParameters = {
             target: 'spaceManager',
             type: 'booleanFlag',
             flagId: 'cylindersHopeCollaborationAgreement',
+            effectId: 'research-cylinders-hope-collaboration-space-flag',
             value: true
           }
         ]
@@ -2582,6 +2584,7 @@ const researchParameters = {
             target: 'spaceManager',
             type: 'booleanFlag',
             flagId: 'hyperlane',
+            effectId: 'research-hyperlane-space-flag',
             value: true
           }
         ]

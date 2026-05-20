@@ -440,7 +440,7 @@ progressHades.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'hades', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'hades', value: true, effectId: 'story-hades-rwg-lock' },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'pulsar' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'k-dwarf' }
     ]
@@ -456,7 +456,7 @@ progressHades.chapters.push(
       { type: 'galaxySectorControl', sectorLabel: 'R5-10' }
     ],
     reward: [
-      { target: 'spaceManager', targetId: 'poseidon', type: 'enable' }
+      { target: 'spaceManager', targetId: 'poseidon', type: 'enable', effectId: 'story-hades-enable-poseidon' }
     ]
   },
   {

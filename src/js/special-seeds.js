@@ -741,6 +741,16 @@ const toi3693bOverrides = {
   effects: [
     {
       target: 'project',
+      targetId: 'aerostatStructuralNet',
+      type: 'enable'
+    },
+    {
+      target: 'project',
+      targetId: 'overpopulationOneillCylinders',
+      type: 'enable'
+    },
+    {
+      target: 'project',
       targetId: 'artificialSky',
       type: 'permanentProjectDisable',
       value: true,

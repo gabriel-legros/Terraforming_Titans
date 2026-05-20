@@ -357,7 +357,7 @@ progressStyx.chapters.push(
     }
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'styx', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'styx', value: true, effectId: 'story-styx-rwg-lock' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'neutron-star' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'f-dwarf' },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'hazardousMachinery' }
@@ -387,7 +387,7 @@ progressStyx.chapters.push(
       { type: 'galaxySectorControl', sectorLabel: 'R5-29' }
     ],
     reward: [
-      { target: 'spaceManager', targetId: 'zeus', type: 'enable' }
+      { target: 'spaceManager', targetId: 'zeus', type: 'enable', effectId: 'story-styx-enable-zeus' }
     ]
   },
   {

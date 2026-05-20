@@ -1941,6 +1941,13 @@
     flex-basis: auto;
 }
 
+#mirror-oversight-lantern-fields {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
 /* Flux Table */
 #mirror-flux-table {
     width: 100%;

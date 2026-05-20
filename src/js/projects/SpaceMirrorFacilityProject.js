@@ -915,7 +915,7 @@ function initializeMirrorOversightUI(container) {
     lanternDivInit.style.display = 'flex';
     lanternDivInit.style.alignItems = 'center';
     lanternDivInit.style.gap = '12px';
-    lanternDivInit.style.flexWrap = 'wrap';
+    lanternDivInit.style.flexWrap = 'nowrap';
     lanternDivInit.insertAdjacentElement('beforeend', advDiv);
   }
 
@@ -1504,7 +1504,7 @@ function updateMirrorOversightUI() {
     lanternDiv.style.display = (lanternUnlocked || advancedUnlocked) ? 'flex' : 'none';
     lanternDiv.style.alignItems = 'center';
     lanternDiv.style.gap = '12px';
-    lanternDiv.style.flexWrap = 'wrap';
+    lanternDiv.style.flexWrap = 'nowrap';
   }
   if (advCheckbox) advCheckbox.checked = !!mirrorOversightSettings.advancedOversight;
   if (mirrorOversightCache?.allowHeatCheckbox) {

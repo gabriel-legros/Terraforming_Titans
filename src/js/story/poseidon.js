@@ -405,7 +405,7 @@ progressPoseidon.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true, effectId: 'story-poseidon-rwg-lock' },
       { target: 'rwgManager', type: 'unlockType', targetId: 'molten' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'white-dwarf' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'g-dwarf' }
@@ -433,7 +433,7 @@ progressPoseidon.chapters.push(
       { type: 'galaxySectorControl', sectorLabel: 'R1-02' }
     ],
     reward: [
-      { target: 'spaceManager', targetId: 'styx', type: 'enable' }
+      { target: 'spaceManager', targetId: 'styx', type: 'enable', effectId: 'story-poseidon-enable-styx' }
     ]
   },
   {

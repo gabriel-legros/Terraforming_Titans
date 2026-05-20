@@ -360,7 +360,7 @@ progressGabbag.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'gabbag', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'gabbag', value: true, effectId: 'story-gabbag-rwg-lock' },
       { target: 'rwgManager', type: 'unlockFeature', targetId: 'dominions' },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'garbage' },
       { target: 'rwgManager', type: 'allowDominion', targetId: 'gabbagian' },
@@ -402,7 +402,7 @@ progressGabbag.chapters.push(
     prerequisites: ['gabbag.29.9'],
     objectives: [
     ],
-    reward: [      { target: 'spaceManager', targetId: 'tartarus', type: 'enable' }]
+    reward: [      { target: 'spaceManager', targetId: 'tartarus', type: 'enable', effectId: 'story-gabbag-enable-tartarus' }]
   },
   {
     id: 'gabbag.29.11',

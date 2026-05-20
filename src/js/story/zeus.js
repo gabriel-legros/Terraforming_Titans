@@ -508,7 +508,7 @@ progressZeus.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'zeus', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'zeus', value: true, effectId: 'story-zeus-rwg-lock' },
       { target: 'rwgManager', type: 'unlockType', targetId: 'jupiter-like' },
       {
         target: 'artificialManager',

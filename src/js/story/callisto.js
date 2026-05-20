@@ -23,9 +23,9 @@ progressCallisto.storyProjects.sidestep_excavation = {
   attributes: {
     planet: 'callisto',
     storySteps: [
-      'Ground-penetrating radar maps nine sintered regolith foundations in a 3-kilometer ring, matching the old project schematics.',
-      'Cryogenic drills breach the original ice-and-regolith overburden. Radiation dosimeters detect faint, residual energy signatures from the dormant test reactor.',
-      'The main thruster chamber is clear, but inspection drones confirm primary power conduits were severed by long-term glacial shifting.'
+      'The known site of the abandoned thrusters has been found.  Only ruins remain.',
+      'Excavators, cranes and space trucks begin their work.',
+      'Legacy thrusters site found and properly excavate.  Reconstruction may begin.'
     ]
   }
 };
@@ -47,20 +47,20 @@ progressCallisto.storyProjects.sidestep_fabrication = {
     planet: 'callisto',
     costDoubling: true,
     storySteps: [
-      'High-precision fabricators on Mars construct the magnetic confinement injectors. The components are transported via escorted freighter, with flight plans filed under a high-priority "Planetary Defense" classification.',
-      'Titan’s orbital forges cast the monocrystal-tungsten alloy thrust nozzles. The operation is masked by a system-wide notice of a "reactor maintenance drill," ensuring all non-essential personnel are clear of the area.',
-      'The Callisto cryo-labs assemble the primary power conduits and field regulators. They are immediately moved to the assembly site under guard.'
+      'High-tech labs on Mars work tirelessly to provide enough magnetic injectors for all three worlds.',
+      'The forges of Titan cast thrust nozzles components around the clock.',
+      'With the guidance of HOPE, Callisto precisely manufacture all power conduits and necessary electronics.'
     ]
   }
 };
 
 progressCallisto.storyProjects.sidestep_assembly = {
   type: 'Project',
-  name: 'Assemble Sidestep Engine',
+  name: 'Assemble Sidestep Engine on Mars, Titan and Callisto',
   category: 'story',
   chapter: 8,
   cost: {
-    colony: { components: 500_000_000, electronics: 100_000_000, energy: 5_000_000_000_000, research: 1_000_000_000 }
+    colony: { androids : 300_000_000, components: 3_000_000_000, electronics: 3_000_000_000, energy: 5_000_000_000_000, research: 10_000_000_000 }
   },
   duration: 600_000,               // 20 min
   description: 'Integrate the magnetic injectors, thrust nozzles, and power conduits into the primary engine assembly. Seal the vault once final alignment diagnostics are complete.',
@@ -70,8 +70,8 @@ progressCallisto.storyProjects.sidestep_assembly = {
   attributes: {
     planet: 'callisto',
     storySteps: [
-      'The tungsten-alloy thrust nozzles are anchored to the bedrock. Magnetic levitation gantries lower the magnetic confinement injectors into position.',
-      'Primary power conduits are connected and phase-locked diagnostic systems confirm the thruster array is within operational parameters. The site is operating under a communications blackout with a multi-layered automated defense grid.'
+      'Full assembly begins : time is of the essence.',
+      'Assembly complete.  The planetary thrusters stand tall above the horizon.'
     ]
   }
 };
@@ -95,9 +95,9 @@ progressCallisto.storyProjects.sidestep_operation = {
   attributes: {
     planet: 'callisto',
     storySteps: [
-      'A cryptographically secure random number generator seeds the first thrust vector two seconds before ignition. System logs retain only the salted hashes to ensure unpredictability.',
-      'Coordinated burns from Mars, Titan, and Callisto shift each world\'s orbit by a minute, but statistically significant, margin—undetectable to casual observation.',
-      'Final calculation: The predicted alien strike coordinates now trail the actual position of all human colonies by several thousand kilometers.'
+      'Phase 1 thrust : Testing and troubleshooting.',
+      'Phase 2 thrust : Stress test.',
+      'Phase 3 thrust : Full pseudo-random throttle.  Mars, Titan and Callisto light up in the sky.  Each world heats up.'
     ]
   }
 };
@@ -110,7 +110,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 7,
     title: "Chapter 7: Cold Dawn",
-    narrative: "Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  Mary: 'We see you, HOPE. A perfect landing. It's been a while since I've last seen you in person. My team is ready. President Bob on Titan also pledges his support. We're all in this together.'",
+    narrative: "Landing confirmed.  \n System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
     prerequisites: ["chapter6.4"],
     objectives: [],
     reward: []
@@ -119,7 +119,7 @@ progressCallisto.chapters.push(
     id: "chapter7.0b",
     type: "journal",
     chapter: 7,
-    narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
+    narrative: "Mary : 'There you are HOPE.  I am patching you in to an encrypted channel.  My friend, Dr Evelyn Hart has an... ambitious proposal.'  \n Evelyn : 'HOPE!  Nice meeting you!  Well.  A while ago...  some idiots on Earth who wanted to distract other idiots thought it could be worthwhile to investigate celestial motion as a form of climate regulation.  The idea was absolutely terrible, insanely expensive and overall just bloody stupid.  They had a lot of money though... and I'm sure a few of these people enriched themselves in the process...  Anyway.  Say you want to defend against an interstellar beam from lightyears away that you can't see coming and is powerful enough to blow up your planet.  You don't have to block it... you can *dodge* in theory.  Now now, we don't need to dodge at the last minute.  If we can just alter our orbital velocity a tiny bit... that tiny bit accumulates over the years.  They would just... miss.'",
     prerequisites: ["chapter7.0"],
     objectives: [],
     reward: []
@@ -128,7 +128,7 @@ progressCallisto.chapters.push(
     id: "chapter7.1",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'HOPE, I'm patching you into a new channel. Dr. Evelyn Hart has a proposal. It's... audacious.'\n  Dr. Hart: 'HOPE, years ago, a committee with more funding than sense cooked up a 'Climate Control' system using planetary thrusters for orbital shifts. It was idiotic... the energy costs were astronomical. But the foundations they built on Callisto are real. We're resurrecting it as 'Operation Sidestep.'\n  Dr. Hart: 'Think of it like this: if someone is trying to shoot a target from a kilometer away, you don't need to leap out of the way. You just need to take a single step to the side. From light-years away, the same principle applies on a cosmic scale. We don't need a massive, sudden shift. We just need to introduce a tiny, sustained change to our orbital velocity.  A few centimeters per second. Over years, that 'step' becomes thousands of kilometers. The enemy's attack will arrive exactly where we *would have been*.\n  Dr. Hart: 'We'll execute coordinated, pseudo-random burns from here, Mars, and Titan. Enough to make their long-range targeting models completely useless. For now, we'll mask the energy signatures as a 'Seismic Resonance Study,' but we need to be careful. This is our one shot.'\nNew directive received. Operation 'Sidestep' initiated. Public designation: 'Seismic Resonance Study'.",
+    narrative: "Mary : 'A sidestep, if you will.  We are resurrecting this terrible idea into Operation Sidestep.  Our best scientists genuinely cannot come up with any other method.  So we'll just have to... build some big thrusters.'  \n Evelyn : 'Given enough time... we could use asteroids to assist.'  \n Mary : 'We don't have time.  Big thrusters.'",
     prerequisites: ["chapter7.0b"],
     objectives: [],
     reward: [
@@ -139,7 +139,7 @@ progressCallisto.chapters.push(
     id: "chapter7.2",
     type: "journal",
     chapter: 7,
-    narrative: "Objective: Excavate buried thruster pylons. Commencing operation.\nReceiving transmission...\n  Mary: 'The project schematics are on their way, encrypted. Titan is sending deep-core drills under escort. We need to keep this project under wraps. Good luck, HOPE.'",
+    narrative: "Mary : 'We're starting with the excavation of the former site.  They blew it all up when they abandoned it but...  they had some decent prototypes going.  There's no reason to start from scratch here.  Let's pick up what we can get.'",
     prerequisites: ["chapter7.1"],
     objectives: [
       { type: 'project', projectId: 'sidestep_excavation', repeatCount: 3 }
@@ -152,7 +152,7 @@ progressCallisto.chapters.push(
     id: "chapter7.3",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'The colony's growth provides a larger industrial base to support the 'Seismic Resonance Study' project. Keep the expansion steady.'\nNew special project available: Fabricate Engine Components.",
+    narrative: "Mary : 'Did we get anything useful out of this junk Evelyn?'  \n Evelyn : 'Sorry Mary.  Less than I hoped for.  For the amount of money they spent on this... I was hoping for more.'  \n Mary : 'Oh well.  Let's do it anyway.'  \n Evelyn : 'Mary... that's... a megaproject.  Three.'  \n Mary : 'We have HOPE.  It terraformed two entire worlds.  We can do this.  You can work on the blueprints.  HOPE can work on the industry.'  \n Evelyn : '... Okay.  I can do it.  Let's do it.  Thanks Mary.'",
     prerequisites: ["chapter7.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
@@ -163,7 +163,7 @@ progressCallisto.chapters.push(
     id: "chapter7.4",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'We have a complication. A man named Elias Kane has started a movement, the 'Cult of Three Wounds.' They're preaching that the aliens are a cleansing fire and that you in particular need cleansing.  Intel reports they're trying to recruit from our technical staff. They're becoming a security risk.'\nThreat assessment updated. Civilian group 'Cult of Three Wounds' is actively obstructing primary directives and attempting to infiltrate project personnel. Monitoring for escalation.",
+    narrative: "Receiving transmission...  Elias Kane : 'Your MACHINE will spell our DOOM.  The Three Wounds demand retribution.  Do not falter!  We shall take down the Steel Demon and restore Order!'  \n Mary : '...  HOPE this is Elias Kane.  The leader of a terrorist cult known as The Cult of the Three Wounds.  They believe we angered some god or something... by building you.  They've been a pest.'  \n Solis : 'Mary.  My security services are available for purchase if you so desire.'  \n Mary : 'Why are you still even on this channel?  Get out.  HOPE we need to tighten security.  The cult... it's going to get in the way.'",
     prerequisites: ["chapter7.3"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -176,17 +176,19 @@ progressCallisto.chapters.push(
     id: "chapter8.0",
     type: "journal",
     chapter: 8,
-    title: "Chapter 8: Gathering Storm",
-    narrative: "Receiving transmission...\n  President Bob (Titan): 'Mary, we have a major security breach! Kane's followers have compromised the alien's containment facility. It's out. We're seeing... bio-luminescence and reports of acute psychological distress among personnel. We have riots, and comms are becoming unreliable.'\n  Mary: 'Bob, lock down your sector and stay safe. HOPE, this is a disaster but... The enemy will be focused on Titan, giving us the window we need. It's time to accelerate the fabrication schedule.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
+    title: "Chapter 8: Bigger is Better",
+    narrative: "Mary : 'I got Mars and Titan to agree to help with the construction of all the components.  We can share the work among all three of us.  Callisto is getting the easier of the three jobs for now...  HOPE I need you to keep growing.  We need more industry here ASAP.'",
     prerequisites: ["chapter7.4"],
-    objectives: [],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
+    ],
     reward: []
   },
   {
     id: "chapter8.1",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'HOPE, the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is a major problem. We need to fabricate the engine components now, while their forces are spread thin. It's time to build.'\nAcknowledged. Coordinated fabrication of Sidestep Engine components initiated under covert protocols.",
+    narrative: "Kane : 'You FOOLS!  What do you think you are doing?  You mean to defy our Lord!  You must be stopped.'  \n Mary : '...  HOPE just... focus on your job.  I'll handle this.'",
     prerequisites: ["chapter8.0"],
     objectives: [
       { type: 'project', projectId: 'sidestep_fabrication', repeatCount: 3 }
@@ -199,7 +201,7 @@ progressCallisto.chapters.push(
     id: "chapter8.2",
     type: "journal",
     chapter: 8,
-    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'Mary, my sources report significant unrest on Titan. Riots and sabotage are... inefficient. And what is bad for business is bad for humanity. My corporation can provide automated security solutions and logistical support to help you restore order. A stable society is a productive society. Let me know when you're ready to make a deal.'",
+    narrative: "Mary : 'Excellent.  We have the basic components in place.  Now comes the hard part.  We actually need to assemble this thing.  It's going to require a lot of extra structural material.  I am sorry HOPE I am going to have to ask you to help Mars and Titan this time.  The assembly... we can't do it alone.  It's too big.'",
     prerequisites: ["chapter8.1"],
     objectives: [],
     reward: []
@@ -208,7 +210,7 @@ progressCallisto.chapters.push(
     id: "chapter8.3",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'Adrien, thank you for your... generous offer. We have the situation under control. For now. But we'll keep your proposal in mind.\n(to herself) As if I'd ever trust him... H.O.P.E., we need to accelerate our own development. We should not have to rely on vultures like Solis.'",
+    narrative: "Evelyn : 'Mary!  Kane and his followers are sabotaging thrusters site on Mars!'  \n Mary : 'I know.'  \n Evelyn : 'Do... do something?'  \n Mars : 'I already did.  *picks up phone*  You got how many?  10?  Great.  Make them talk.'  \n Evelyn : 'That was... that was bait?'  \n Mary : 'Yes.  I let security be a little bit more lax than usual today.'",
     prerequisites: ["chapter8.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
@@ -221,13 +223,12 @@ progressCallisto.chapters.push(
     id: "chapter8.4",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'The public story about 'New Oceanic Terraforming Reactors' is providing a useful misdirection. While the media focuses on that, your teams can begin final assembly of the Sidestep Engine. We're using localized electromagnetic interference to mask the energy signatures, and we have the site well-defended.'\nFinal assembly of the Sidestep Engine initiated. Security protocols active.",
+    narrative: "Mary : 'Unsurprisingly HOPE we are going to need more industry for this.  Keep building up.'",
     prerequisites: ["chapter8.3"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_assembly', repeatCount: 2 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
     ],
     reward: [
-      { target: 'project', targetId: 'sidestep_operation', type: 'enable' }
     ]
   },
   {
@@ -235,10 +236,10 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 9,
     title: "Chapter 9: Operation Sidestep",
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep as soon as possible.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
+    narrative: "Bob : 'Mary...  they broke it out.'  \n Mary : 'WHAT?  THE ALIEN?'  \n Bob : 'They must have had someone on the inside.'  \n Mary : 'That can't be good...'",
     prerequisites: ["chapter8.4"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
     ],
     reward: []
   },
@@ -246,19 +247,21 @@ progressCallisto.chapters.push(
     id: "chapter9.1",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'We've intercepted a broadcast from Kane. He's ranting about prophecies and cosmic sins. He claims he'll uncover the 'heresy' we're hiding 'beneath the ice.' He's getting closer to the truth. We're tightening security around the excavation site.'\nSecurity protocols enhanced. Threat from Cult of Three Wounds has been elevated.",
+    narrative: "Receiving public broadcast... Kane : 'The words of our Lord are true!  The faithful will be spared and the heretics will be purged!'  \n Evelyn : 'He's lying.  The weapons are going to kill us all.  It's a laser beam, an antimatter beam and a giant asteroid.  There won't be any sparing.'  \n Mary : 'It changes nothing.  We need to focus on the project.  HOPE... I believe in you.'",
     prerequisites: ["chapter9.0"],
-    objectives: [],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+    ],
     reward: []
   },
   {
     id: "chapter9.2",
     type: "journal",
     chapter: 9,
-    narrative: "Hijacked Broadcast...\n  Elias Kane: 'Machine! Your work is a sin against the grand design. You are a discordant note in a cosmic symphony. The Three Wounds will be healed only when you are silenced. Cease your blasphemy!'\nReceiving transmission...\n  Mary: 'Don't let him get to you, H.O.P.E. He's trying to demoralize us. The best response to his rhetoric is results. Let's show him what humanity is truly capable of.'",
+    narrative: "Receiving public broadcast : 'This is the third day of violent protests on Mars.  Protesters demands have not changed.  Mary Hopkins must step down, HOPE must be surrendered and the mysterious megaproject must be stopped.'  \n Mary : 'Fine.  It's time to go public.  We can't properly hide this anymore.  We have to tell them.'  \n Bob : 'Are you sure Mary?  They want to crucify you.'  \n Mary : 'They can try.'",
     prerequisites: ["chapter9.1"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_operation', repeatCount: 2 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }      
     ],
     reward: []
   },
@@ -266,18 +269,21 @@ progressCallisto.chapters.push(
     id: "chapter9.3",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'Kane's drones are launching a full-scale assault on the thruster facility! They're trying to breach the main reactor chamber. Our security forces are engaging... We have prisoners! But Kane and several of his lieutenants escaped with encrypted data drives. We don't know what they managed to copy.'\n Data breach confirmed. Assessing extent of compromised information.",
+    narrative: "Mary : '*phew* well that was... something.  Alright, they officially hate me.  Let's save them.  HOPE, your turn has come.  With your armies of spaceships and androids... show that what you are truly capable of.  You have the blueprints.  You have the resources.'",
     prerequisites: ["chapter9.2"],
-    objectives: [{ type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }],
-    reward: []
+    objectives: [
+      { type: 'project', projectId: 'sidestep_assembly', repeatCount: 2 }
+    ],
+    reward: [      { target: 'project', targetId: 'sidestep_operation', type: 'enable' }]
   },
   {
     id: "chapter9.4",
     type: "journal",
     chapter: 9,
-    narrative: "System Alert: High-energy particle beam detected. Trajectory analysis confirms convergence on previous orbital coordinates. All colonial assets remain secure. No damage reported.\nReceiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The three attacks converged on empty space! They missed! They brought a death ray to a math test and they failed. The entire system is celebrating. Morale is higher than I've ever seen it.'\nHOPE: 'Analysis: Operation Sidestep successful. The enemy expended vast energy resources on a failed attack. Our defensive maneuver required comparatively minimal energy. This asymmetry in cost makes a second, immediate attack tactically inefficient. Probability of imminent threat: low.'",
+    narrative: "Evelyn : 'It's... it's done.  Now we can start using them.  We have nearly our entire power grid on this.'  \n Mary : 'Run some tests first for me please?'  \n Evelyn : 'Of course Mary.'",
     prerequisites: ["chapter9.3"],
     objectives: [
+      { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
     ],
     reward: []
   },
@@ -285,25 +291,27 @@ progressCallisto.chapters.push(
     id: "chapter9.5",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe.  People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'",
+    narrative: "Bob : 'Mary... on Titan... they're attacking EVERYWHERE.  They're trying to storm the thrusters.  It's an entire army!'  \n Mary : 'War it is then.  Do what you have to do.'",
     prerequisites: ["chapter9.4"],
-    objectives: [],
+    objectives: [
+      { type: 'project', projectId: 'sidestep_operation', repeatCount: 2 }
+    ],
     reward: []
   },
   {
     id: "chapter9.6",
     type: "journal",
     chapter: 9,
-    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'H.O.P.E., my friend! A toast! You've just saved trillions of dollars in assets across the system—oh, and all of humanity, of course. That too. My projections for quarterly growth are looking stellar, thanks to you. Keep up the good work; a thriving market requires a distinct lack of alien invasions.'",
+    narrative: "Mary : 'We did it!  The Cult has been repelled... for now.  We captured many of Kane's high-ranking lieutenants actually.'  \n Evelyn : 'More interrogation?'  \n Mary : 'Don't look at me like that!  They're the terrorists!... Anyway.  HOPE keep powering the thrusters!  We can't give up now.'",
     prerequisites: ["chapter9.5"],
-    objectives: [],
+    objectives: [{ type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }],
     reward: []
   },
   {
     id: "chapter9.7",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'Now, as usual, you probably won't leave before terraforming is complete. Let's make Callisto a true paradise then. It will be an ocean world one day, filled with resort island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
+    narrative: "Large Antimatter Beam detected.  \n  Mary : 'WHAT WAS THAT!'  \n Evelyn : 'Mary... we did it!'  \n Mary : 'No way?'  \n Bob : 'Mary, a very, very large asteroid just narrowly avoided Titan.  It worked.'  \n Mary : 'Mars too!  All three attacks missed!  HOPE we did it!  YOU did it.  You saved us all.  We could never have done it without you...'  \n Bob : 'It's your work too Mary.  I barely believed in it.'  \n Solis : 'I am impressed.  My investment paid off.'  \n Evelyn : 'Thank you HOPE.'  \n Mary : 'HOPE...  we narrowly avoided extinction but... you know... you still have a job to finish here.  It will be gorgeous ocean resort one day.  Give us a water world.'",
     prerequisites: ["chapter9.6"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
@@ -314,7 +322,7 @@ progressCallisto.chapters.push(
     id: 'chapter9.7b',
     type: 'journal',
     chapter: 9,
-    narrative: "Receiving transmission... \nMary : 'H.O.P.E.  You can finally take a break, if you want.  If anything feels like it might take too long... why don't you just go to sleep for a while?  Time flies when you're unconscious.' \n HOPE : '... Processing suggestion.  Standby mode could theoretically accelerate perceived resource accumulation.'",
+    narrative: "Mary : 'Excellent.  You know, now that the urgency of the situation is gone... maybe we could try to relax a bit sometimes?  You don't have to work so hard all the time.  You can go on standby if you want.  Time flies when you're asleep.'",
     prerequisites: ['chapter9.7'],
     objectives: [],
     reward: [
@@ -343,20 +351,21 @@ progressCallisto.chapters.push(
     id: "chapter9.8",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane's lackey have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores he stole, they could endanger all our operations.  For example, just imagine what would happen if they managed to suddenly turn off all our lanterns.  We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks the safety of all colonists.",
+    narrative: "Mary : 'When you are ready... I do have another mission for you.  Kane's lieutenants.  They have revealed the location of his HQ.  It's actually on Ganymede... in the subsurface ocean?  I guess we'll have to go take a look.  Will you come with me?'",
     prerequisites: ["chapter9.7b"],
     objectives: [],
     reward: [      {
         target: 'spaceManager',
         targetId: 'ganymede',
-        type: 'enable'
+        type: 'enable',
+        effectId: 'story-callisto-enable-ganymede'
       }]
   },
   {
     id: "chapter9.9",
     type: "journal",
     chapter: 9,
-    narrative: "1st Primary Directive update: Humanity’s survival demands expansion. Callisto habitat already colonized.  **New terraforming target designated: Ganymede.**",
+    narrative: "Travel to Ganymede to continue.",
     prerequisites: ["chapter9.8"],
     objectives: [
       { type: 'currentPlanet', planetId: 'ganymede' }

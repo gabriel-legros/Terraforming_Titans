@@ -741,7 +741,7 @@ progressVenus.chapters.push(
       { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'venus', value: true },
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'venus', value: true, effectId: 'story-venus-rwg-lock' },
       { target: 'rwgManager', type: 'unlockType', targetId: 'venus-like' }
     ]
   },
@@ -753,7 +753,7 @@ progressVenus.chapters.push(
     prerequisites: ["chapter20.17"],
     objectives: [],
     reward: [
-      { target: 'spaceManager', targetId: 'umbra', type: 'enable' }
+      { target: 'spaceManager', targetId: 'umbra', type: 'enable', effectId: 'story-venus-enable-umbra' }
     ]
   },
   {

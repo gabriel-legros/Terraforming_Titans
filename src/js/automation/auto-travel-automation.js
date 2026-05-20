@@ -105,7 +105,7 @@ class AutoTravelAutomation {
       id,
       name: rawPreset.name || `Preset ${id}`,
       target: rawPreset.target || 'random',
-      type: rawPreset.type || 'random',
+      type: this._normalizeTypeId(rawPreset.type),
       orbitPreset: rawPreset.orbitPreset || 'random',
       dominion: rawPreset.dominion || 'random',
       hazards: this._normalizeHazards(rawPreset.hazards),
@@ -212,6 +212,17 @@ class AutoTravelAutomation {
       }
       seen.add(hazardId);
       normalized.push(hazardId);
+    }
+    return normalized;
+  }
+
+  _normalizeTypeId(typeId) {
+    const normalized = String(typeId || '').trim();
+    if (!normalized || normalized === 'random') {
+      return 'random';
+    }
+    if (normalized === 'water-rich') {
+      return 'icy-moon';
     }
     return normalized;
   }
@@ -350,10 +361,11 @@ class AutoTravelAutomation {
 
   _buildRandomWorldResult(preset) {
     const randomSeed = String((Math.random() * 1e9) >>> 0);
+    const typeId = this._normalizeTypeId(preset.type);
     const options = {
       target: this._resolveRandomWorldSelection(preset.target, 'auto'),
       orbitPreset: this._resolveRandomWorldSelection(preset.orbitPreset, 'auto'),
-      type: this._resolveRandomWorldSelection(preset.type, 'auto'),
+      type: this._resolveRandomWorldSelection(typeId, 'auto'),
       hazards: this._normalizeHazards(preset.hazards)
     };
     const res = generateRandomPlanet(randomSeed, options);

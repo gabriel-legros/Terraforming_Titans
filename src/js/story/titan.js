@@ -568,7 +568,8 @@ progressTitan.chapters.push(
       {
         target: 'spaceManager',
         targetId: 'callisto',
-        type: 'enable'
+        type: 'enable',
+        effectId: 'story-titan-enable-callisto'
       }
     ]
   },
