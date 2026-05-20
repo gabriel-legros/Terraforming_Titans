@@ -2691,6 +2691,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'warp_assembly',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 10_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'manufacturingWorld',
+            type: 'booleanFlag',
+            flagId: 'warpAssembly',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'white_dwarf_harvesting',
         name: '',
         description: '',

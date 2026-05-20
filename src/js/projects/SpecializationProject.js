@@ -99,19 +99,20 @@
 
     canPurchaseUpgrade(item) {
       const purchases = this.getShopPurchaseCount(item.id);
-      if (purchases >= item.maxPurchases) {
+      if (purchases >= this.getShopItemMaxPurchases(item)) {
         return false;
       }
-      return this.getSpecializationPoints() >= item.cost;
+      return this.getSpecializationPoints() >= this.getShopItemCost(item);
     }
 
     getMaxShopPurchases(item) {
       const points = this.getSpecializationPoints();
-      if (points < item.cost) {
+      const itemCost = this.getShopItemCost(item);
+      if (points < itemCost) {
         return 0;
       }
-      const remainingPurchases = item.maxPurchases - this.getShopPurchaseCount(item.id);
-      return Math.min(remainingPurchases, Math.floor(points / item.cost));
+      const remainingPurchases = this.getShopItemMaxPurchases(item) - this.getShopPurchaseCount(item.id);
+      return Math.min(remainingPurchases, Math.floor(points / itemCost));
     }
 
     purchaseUpgrade(id, purchaseCount = 1) {
@@ -124,10 +125,34 @@
       if (actualPurchases <= 0) {
         return;
       }
-      this.addSpecializationPoints(-(item.cost * actualPurchases));
+      this.addSpecializationPoints(-(this.getShopItemCost(item) * actualPurchases));
       this.shopPurchases[id] = this.getShopPurchaseCount(id) + actualPurchases;
       this.applySpecializationEffects();
       this.updateUI();
+    }
+
+    getShopItemCost(item) {
+      return item.cost;
+    }
+
+    getShopItemMaxPurchases(item) {
+      return item.maxPurchases;
+    }
+
+    getShopBuyButtonText(item, purchases, maxPurchases) {
+      return purchases >= maxPurchases ? 'Maxed' : 'Buy';
+    }
+
+    getShopMaxButtonText() {
+      return this.maxButtonText;
+    }
+
+    shouldDisableShopMaxButton(item, canBuy) {
+      return !canBuy;
+    }
+
+    handleShopMaxButtonClick(item) {
+      this.purchaseUpgrade(item.id, this.getMaxShopPurchases(item));
     }
 
     shouldHideStartBar() {
@@ -288,9 +313,9 @@
         const maxButton = document.createElement('button');
         maxButton.classList.add('bioworld-shop-button', 'bioworld-shop-max-button');
         maxButton.dataset.specializationUiMaxButton = item.id;
-        maxButton.textContent = this.maxButtonText;
+        maxButton.textContent = this.getShopMaxButtonText(item);
         maxButton.addEventListener('click', () => {
-          this.purchaseUpgrade(item.id, this.getMaxShopPurchases(item));
+          this.handleShopMaxButtonClick(item);
         });
 
         const metaRow = document.createElement('div');
@@ -331,14 +356,16 @@
       this.shopItems.forEach((item) => {
         const row = elements.shopRows[item.id];
         const purchases = this.getShopPurchaseCount(item.id);
-        row.cost.textContent = `${formatNumber(item.cost, true)} ${this.pointsUnit}`;
-        row.count.textContent = `${purchases}/${item.maxPurchases}`;
+        const maxPurchases = this.getShopItemMaxPurchases(item);
+        row.cost.textContent = `${formatNumber(this.getShopItemCost(item), true)} ${this.pointsUnit}`;
+        row.count.textContent = `${purchases}/${maxPurchases}`;
         const canBuy = this.canPurchaseUpgrade(item);
         row.button.disabled = !canBuy;
         if (row.maxButton) {
-          row.maxButton.disabled = !canBuy;
+          row.maxButton.disabled = this.shouldDisableShopMaxButton(item, canBuy);
+          row.maxButton.textContent = this.getShopMaxButtonText(item);
         }
-        row.button.textContent = purchases >= item.maxPurchases ? 'Maxed' : 'Buy';
+        row.button.textContent = this.getShopBuyButtonText(item, purchases, maxPurchases);
       });
     }
 

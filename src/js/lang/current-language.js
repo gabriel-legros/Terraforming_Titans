@@ -4979,6 +4979,10 @@ setLanguageData({
           name: 'Planet Cracking',
           description: 'There is still so much metal out there... if we can get to it.',
         },
+        warp_assembly: {
+          name: 'Manufacturing Warp-assembly Lines',
+          description: 'What if we had a box that could transport objects between places?  What if we could pass trains through a warp-gate?  What if logistics robots could go from anywhere on a manufacturing world to anywhere else?  The factory will need refactoring.  Enables the ability to push the limits of manufacturing worlds further... at the cost of setbacks.',
+        },
         white_dwarf_harvesting: {
           name: 'White Dwarf Harvesting',
           description: 'Some stellar remnants are rich in carbon and oxygen.  Our lifters cannot get to it easily but if we charge them with enough positrons this task can be made more doable.  Unlocks a new terastructure.  (Special Thanks to Citizen Power for this research proposal)',
@@ -5462,6 +5466,8 @@ setLanguageData({
           auto: 'Auto',
           showShop: 'Show Shop',
           hideShop: 'Hide Shop',
+          refactorButton: 'Refactor',
+          refactorConfirm: 'Refactor {label}?\n\nThis will halve current purchases ({purchases} -> {halved}), increase max purchases to {max}, and raise MP cost per purchase to {cost}.\n\nProceed?',
           summary: {
             cumulativePopulation: 'Cumulative Population',
             assigned: 'Assigned',

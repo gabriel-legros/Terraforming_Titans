@@ -243,6 +243,7 @@
       this.operationPreRunThisTick = false;
       this.uiElements = null;
       this.shopCollapsed = false;
+      this.shopRefactorCounts = {};
       this.assignmentLayoutWidth = 0;
       this.assignmentRowHeightsDirty = true;
     }
@@ -429,6 +430,79 @@
     }
 
     applySpecializationEffects() {}
+
+    createEmptyShopRefactorCounts() {
+      return this.shopItems.reduce((acc, item) => {
+        acc[item.id] = 0;
+        return acc;
+      }, {});
+    }
+
+    getShopRefactorCount(id) {
+      return Math.max(0, Math.floor(this.shopRefactorCounts[id] || 0));
+    }
+
+    canUseWarpAssembly() {
+      return this.isBooleanFlagSet('warpAssembly');
+    }
+
+    getShopItemCost(item) {
+      return item.cost + this.getShopRefactorCount(item.id);
+    }
+
+    getShopItemMaxPurchases(item) {
+      return item.maxPurchases + (this.getShopRefactorCount(item.id) * 1000);
+    }
+
+    canRefactorShopItem(item) {
+      if (!this.canUseWarpAssembly()) {
+        return false;
+      }
+      return this.getShopPurchaseCount(item.id) >= this.getShopItemMaxPurchases(item);
+    }
+
+    getShopMaxButtonText(item) {
+      if (this.canRefactorShopItem(item)) {
+        return getManufacturingText('catalogs.specializations.manufacturing.ui.refactorButton') || 'Refactor';
+      }
+      return super.getShopMaxButtonText(item);
+    }
+
+    shouldDisableShopMaxButton(item, canBuy) {
+      if (this.canRefactorShopItem(item)) {
+        return false;
+      }
+      return super.shouldDisableShopMaxButton(item, canBuy);
+    }
+
+    handleShopMaxButtonClick(item) {
+      if (this.canRefactorShopItem(item)) {
+        this.refactorShopItem(item);
+        return;
+      }
+      super.handleShopMaxButtonClick(item);
+    }
+
+    refactorShopItem(item) {
+      const currentPurchases = this.getShopPurchaseCount(item.id);
+      const halvedPurchases = Math.floor(currentPurchases / 2);
+      const nextMax = this.getShopItemMaxPurchases(item) + 1000;
+      const nextCost = this.getShopItemCost(item) + 1;
+      const message = getManufacturingText('catalogs.specializations.manufacturing.ui.refactorConfirm', {
+        label: item.label,
+        purchases: formatNumber(currentPurchases, true),
+        halved: formatNumber(halvedPurchases, true),
+        max: formatNumber(nextMax, true),
+        cost: formatNumber(nextCost, true),
+      }) || '';
+      if (!confirm(message)) {
+        return;
+      }
+      this.shopPurchases[item.id] = halvedPurchases;
+      this.shopRefactorCounts[item.id] = this.getShopRefactorCount(item.id) + 1;
+      this.applySpecializationEffects();
+      this.updateUI();
+    }
 
     normalizeAssignments() {
       const keys = this.getManagedAssignmentKeys();
@@ -1606,6 +1680,7 @@
         ...super.saveState(),
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
+        shopRefactorCounts: { ...this.shopRefactorCounts },
         manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
         assignmentStep: serializeManufacturingInteger(this.assignmentStep),
         autoAssignFlags: { ...this.autoAssignFlags },
@@ -1618,6 +1693,10 @@
       this.loadSpecializationState(state);
       this.cumulativePopulation = Math.max(0, state.cumulativePopulation || 0);
       this.isRunning = state.isRunning === true;
+      this.shopRefactorCounts = {
+        ...this.createEmptyShopRefactorCounts(),
+        ...(state.shopRefactorCounts || {}),
+      };
       this.manufacturingAssignments = { ...(state.manufacturingAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
@@ -1635,6 +1714,7 @@
         ...super.saveTravelState(),
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
+        shopRefactorCounts: { ...this.shopRefactorCounts },
         manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
         assignmentStep: serializeManufacturingInteger(this.assignmentStep),
         autoAssignFlags: { ...this.autoAssignFlags },
@@ -1646,6 +1726,10 @@
       super.loadTravelState(state);
       this.cumulativePopulation = Math.max(0, state.cumulativePopulation || 0);
       this.isRunning = state.isRunning === true;
+      this.shopRefactorCounts = {
+        ...this.createEmptyShopRefactorCounts(),
+        ...(state.shopRefactorCounts || {}),
+      };
       this.manufacturingAssignments = { ...(state.manufacturingAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
