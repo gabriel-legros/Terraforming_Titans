@@ -1307,36 +1307,30 @@ function applyExternalProductivityOperations(externalOperations = [], deltaTime,
   }
 }
 
-function getResourceAmountFromTotals(totals, category, resource) {
-  return totals?.[category]?.[resource] || 0;
-}
-
-function setProjectProductionRateForAvailability(project, fullGain = {}, scaledGain = {}, deltaTime = 1000) {
+function applyProjectResourceRatesForAvailability(project, cost = {}, gain = {}, deltaTime = 1000) {
   const seconds = deltaTime / 1000;
   if (!(seconds > 0)) {
     return;
   }
   const source = project.displayName;
-  for (const category in fullGain) {
-    for (const resourceName in fullGain[category]) {
-      const resource = resources[category][resourceName];
-      const scaledAmount = getResourceAmountFromTotals(scaledGain, category, resourceName);
-      const desiredRate = Math.max(0, scaledAmount / seconds);
-      const projectRates = resource.productionRateByType.project || {};
-      const currentRate = projectRates[source] || 0;
-      const difference = desiredRate - currentRate;
-      if (difference === 0) {
+
+  for (const category in cost) {
+    for (const resourceName in cost[category]) {
+      const amount = cost[category][resourceName] || 0;
+      if (!(amount > 0)) {
         continue;
       }
-      resource.productionRate += difference;
-      if (!resource.productionRateBySource[source]) {
-        resource.productionRateBySource[source] = 0;
+      resources[category][resourceName].modifyRate(-(amount / seconds), source, 'project');
+    }
+  }
+
+  for (const category in gain) {
+    for (const resourceName in gain[category]) {
+      const amount = gain[category][resourceName] || 0;
+      if (!(amount > 0)) {
+        continue;
       }
-      resource.productionRateBySource[source] += difference;
-      if (!resource.productionRateByType.project) {
-        resource.productionRateByType.project = {};
-      }
-      resource.productionRateByType.project[source] = desiredRate;
+      resources[category][resourceName].modifyRate(amount / seconds, source, 'project');
     }
   }
 }
@@ -1443,11 +1437,13 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       if (shouldApplyProjectProductivity(project)) {
         const projectProductivity = projectProductivityMap[name] ?? 1;
         if (projectRateMode === 'availability') {
-          const fullTotals = project.estimateCostAndGain(deltaTime, true, 1) || {};
+          const fullCostTotals = project.estimateProductivityCostAndGain
+            ? project.estimateProductivityCostAndGain(deltaTime)
+            : project.estimateCostAndGain(deltaTime, false, 1);
           const scaledTotals = project.estimateCostAndGain(deltaTime, false, projectProductivity) || {};
-          setProjectProductionRateForAvailability(
+          applyProjectResourceRatesForAvailability(
             project,
-            fullTotals.gain || {},
+            fullCostTotals.cost || {},
             scaledTotals.gain || {},
             deltaTime
           );

@@ -488,6 +488,45 @@ class MockProductionProject {
   }
 }
 
+class MockClampedContinuousEnergyProject {
+  constructor(desiredEnergyPerTick) {
+    this.name = 'mockClampedContinuousEnergy';
+    this.displayName = 'Mock Clamped Continuous Energy';
+    this.attributes = { continuousAsBuilding: true };
+    this.desiredEnergyPerTick = desiredEnergyPerTick;
+    this.isActive = true;
+    this.autoStart = false;
+    this.unlocked = true;
+  }
+
+  isContinuous() {
+    return true;
+  }
+
+  estimateProductivityCostAndGain(deltaTime = 1000) {
+    const seconds = deltaTime / 1000;
+    return {
+      cost: { colony: { energy: this.desiredEnergyPerTick * seconds } },
+      gain: {},
+    };
+  }
+
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const seconds = deltaTime / 1000;
+    const requested = this.desiredEnergyPerTick * seconds * productivity;
+    const clamped = Math.min(requested, resources.colony.energy.value);
+    if (applyRates && clamped > 0) {
+      resources.colony.energy.modifyRate(-(clamped / seconds), this.displayName, 'project');
+    }
+    return {
+      cost: { colony: { energy: clamped } },
+      gain: {},
+    };
+  }
+
+  applyCostAndGain() {}
+}
+
 function createArtificialStarsProject(ArtificialStarsProject, assignment = 1) {
   const artificialStars = new ArtificialStarsProject({
     name: 'Artificial Stars',
@@ -736,6 +775,28 @@ function expectApprox(received, expected, tolerance = 1e-6) {
 }
 
 describe('Space building productivity via produceResources', () => {
+  test('continuous project productivity uses full desired cost when normal estimate clamps to available energy', () => {
+    const harness = setupHarness();
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      cleanup,
+    } = harness;
+
+    resources.colony.energy.value = 1;
+
+    const project = new MockClampedContinuousEnergyProject(200);
+    projectManager.projects.mockClampedContinuousEnergy = project;
+    projectManager.projectOrder = ['mockClampedContinuousEnergy'];
+
+    produceResources(1000, {});
+
+    expectApprox(project.continuousProductivity, 0.005);
+    expectApprox(project.operationProductivity, 0.005);
+    cleanup();
+  });
+
   test.each([
     { hydrogen: 0, expectedRatio: 0 },
     { hydrogen: 50, expectedRatio: 0.25 },
