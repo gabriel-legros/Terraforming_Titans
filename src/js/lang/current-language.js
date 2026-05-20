@@ -5466,6 +5466,9 @@ setLanguageData({
           auto: 'Auto',
           showShop: 'Show Shop',
           hideShop: 'Hide Shop',
+          refactorTitle: 'Warp-assembly Refactor',
+          refactorConfirmButton: 'Refactor',
+          refactorCancelButton: 'Cancel',
           refactorButton: 'Refactor',
           refactorConfirm: 'Refactor {label}?\n\nThis will reset current MP points to 0, halve current purchases ({purchases} -> {halved}), increase max purchases to {max}, and raise MP cost per purchase to {cost}.\n\nProceed?',
           summary: {

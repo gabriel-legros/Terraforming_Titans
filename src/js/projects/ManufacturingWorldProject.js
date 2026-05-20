@@ -495,14 +495,20 @@
         max: formatNumber(nextMax, true),
         cost: formatNumber(nextCost, true),
       }) || '';
-      if (!confirm(message)) {
-        return;
-      }
-      this[this.pointsKey] = 0;
-      this.shopPurchases[item.id] = halvedPurchases;
-      this.shopRefactorCounts[item.id] = this.getShopRefactorCount(item.id) + 1;
-      this.applySpecializationEffects();
-      this.updateUI();
+      createSystemChoicePopup(
+        getManufacturingText('catalogs.specializations.manufacturing.ui.refactorTitle') || 'Refactor',
+        message,
+        getManufacturingText('catalogs.specializations.manufacturing.ui.refactorConfirmButton') || 'Confirm',
+        getManufacturingText('catalogs.specializations.manufacturing.ui.refactorCancelButton') || 'Cancel',
+        () => {
+          this[this.pointsKey] = 0;
+          this.shopPurchases[item.id] = halvedPurchases;
+          this.shopRefactorCounts[item.id] = this.getShopRefactorCount(item.id) + 1;
+          this.applySpecializationEffects();
+          this.updateUI();
+        },
+        null
+      );
     }
 
     normalizeAssignments() {
