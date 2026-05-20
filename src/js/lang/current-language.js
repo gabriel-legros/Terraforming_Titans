@@ -4040,7 +4040,7 @@ setLanguageData({
       },
       diskworldTerraforming: {
         name: 'Diskworld Terraforming',
-        description: 'Pump hydrogen into the Alderson disk to fill it.',
+        description: 'Pump hydrogen into the Alderson disk to fill it  (you may assume to be pumping helium instead but hydrogen is used to keep the game simple).',
       },
       deeperMining: {
         name: 'Deeper mining',
