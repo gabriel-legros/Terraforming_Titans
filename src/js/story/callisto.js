@@ -247,7 +247,7 @@ progressCallisto.chapters.push(
     id: "chapter8.3",
     type: "journal",
     chapter: 8,
-    narrative: "Evelyn : 'Mary!  Kane and his followers are sabotaging thrusters site on Mars!'  \n Mary : 'I know.'  \n Evelyn : 'Do... do something?'  \n Mars : 'I already did.  *picks up phone*  You got how many?  10?  Great.  Make them talk.'  \n Evelyn : 'That was... that was bait?'  \n Mary : 'Yes.  I let security be a little bit more lax than usual today.'",
+    narrative: "Evelyn : 'Mary!  Kane and his followers are sabotaging thruster sites on Mars!'  \n Mary : 'I know.'  \n Evelyn : 'Do... do something?'  \n Mars : 'I already did.  *picks up phone*  Feroza.  You got how many?  10?  Great.  Make them talk.'  \n Evelyn : 'That was... that was bait?'  \n Mary : 'Yes.  I let security be a little bit more lax than usual today.'",
     prerequisites: ["chapter8.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
