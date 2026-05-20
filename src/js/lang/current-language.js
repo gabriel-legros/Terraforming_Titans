@@ -5467,7 +5467,7 @@ setLanguageData({
           showShop: 'Show Shop',
           hideShop: 'Hide Shop',
           refactorButton: 'Refactor',
-          refactorConfirm: 'Refactor {label}?\n\nThis will halve current purchases ({purchases} -> {halved}), increase max purchases to {max}, and raise MP cost per purchase to {cost}.\n\nProceed?',
+          refactorConfirm: 'Refactor {label}?\n\nThis will reset current MP points to 0, halve current purchases ({purchases} -> {halved}), increase max purchases to {max}, and raise MP cost per purchase to {cost}.\n\nProceed?',
           summary: {
             cumulativePopulation: 'Cumulative Population',
             assigned: 'Assigned',

@@ -498,6 +498,7 @@
       if (!confirm(message)) {
         return;
       }
+      this[this.pointsKey] = 0;
       this.shopPurchases[item.id] = halvedPurchases;
       this.shopRefactorCounts[item.id] = this.getShopRefactorCount(item.id) + 1;
       this.applySpecializationEffects();
