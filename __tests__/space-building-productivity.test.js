@@ -1347,7 +1347,13 @@ describe('Space building productivity via produceResources', () => {
     harvesters.lifterAssignments.whiteDwarfHarvest = 1;
     harvesters.isRunning = true;
 
+    global.warpGateNetworkManager = { getAverageWarpGateLevelAllSectors: () => 500_000 };
     harvesters.repeatCount = 20_000_000_000;
+    harvesters.lifterAssignments.whiteDwarfHarvest = 20_000_000_000n;
+    harvesters.normalizeAssignments();
+    expect(harvesters.getStoredAssignmentAmount('whiteDwarfHarvest')).toBe(5_000_000_000n);
+
+    global.warpGateNetworkManager = { getAverageWarpGateLevelAllSectors: () => 1_000_000 };
     harvesters.lifterAssignments.whiteDwarfHarvest = 20_000_000_000n;
     harvesters.normalizeAssignments();
     expect(harvesters.getStoredAssignmentAmount('whiteDwarfHarvest')).toBe(10_000_000_000n);

@@ -983,7 +983,7 @@ setLanguageData({
       },
       whiteDwarfHarvesters: {
         title: 'White Dwarf Harvester Controls',
-        titleTooltip: 'Assign harvesters to process white dwarfs. Each assigned harvester consumes space energy, stores output in space storage, and counts against the 10B white dwarf assignment cap.',
+        titleTooltip: 'Assign harvesters to process white dwarfs. Each assigned harvester consumes space energy, stores output in space storage, and counts against the Warp Gate Network-scaled white dwarf assignment cap.',
         totalLifters: 'Total Harvesters',
         runLifters: 'Run harvesters',
         energyPerLifter: 'Energy per harvester',
@@ -998,7 +998,7 @@ setLanguageData({
         maxAssignment: 'Max',
         expansionRate: '{value} harvesters/s',
         operationNote: 'Each assigned harvester processes {value} tons of white dwarf CO per second, producing carbon and oxygen straight to space storage.',
-        maxAssignmentTooltip: 'Accessible white dwarf assignment cap: {max}',
+        maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible white dwarf assignment cap: {max}',
         starLiftingTooltip: '',
         status: {
           idle: 'Idle',

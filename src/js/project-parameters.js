@@ -953,7 +953,7 @@ const projectParameters = {
         superconductors: 100_000_000_000_000_000_000
       }
     },
-    duration: 36_000_000_000_000,
+    duration: 360_000_000_000_000,
     description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
@@ -961,7 +961,7 @@ const projectParameters = {
     attributes: {
       canUseSpaceStorage: true,
       lifterUnitRate: 3e20,
-      lifterEnergyPerUnit: 6e28,
+      lifterEnergyPerUnit: 2e32,
       spaceBuilding: true,
       spaceBuildingProductivity: true,
       lifterStripRecipe: {
