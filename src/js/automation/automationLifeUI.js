@@ -544,7 +544,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     limitInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       limitInfo,
-      getAutomationCardText('lifeStepLimitTooltip', {}, 'Step cap:\n- Spend Amount distributes up to the entered life design points by substep weight.\n- Capped by highest max distributes by weight until the highest finite substep cap is reached.\n\nSubstep caps:\n- Fixed uses the entered cap. Blank means uncapped.\n- Max uses the attribute max.\n- As needed is available for temperature tolerance and radiation tolerance.')
+      getAutomationCardText('lifeStepLimitTooltip', {}, 'Step cap:\n- Spend Amount distributes up to the entered life design points by substep weight.\n- Capped by highest max distributes by weight until the highest finite substep cap is reached.\n\nSubstep caps:\n- Fixed uses the entered cap. Blank means uncapped.\n- Max uses the attribute max.\n- As needed is available for optimal growth temperature, temperature tolerance, and radiation tolerance. Optimal growth temperature uses the average daytime temperature of selected zones.')
     );
     const limitMode = document.createElement('select');
     const fixedStepOpt = document.createElement('option');
@@ -662,19 +662,19 @@ function renderLifeAutomationSteps(automation, preset, container) {
           maxCapOpt.value = 'max';
           maxCapOpt.textContent = getAutomationCardText('lifeModeMaxOut', {}, 'Max');
           capMode.appendChild(maxCapOpt);
-          if (attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance' || attributeName === 'radiationTolerance') {
-            const neededCapOpt = document.createElement('option');
-            neededCapOpt.value = 'needed';
-            neededCapOpt.textContent = getAutomationCardText('lifeModeAsNeeded', {}, 'As needed');
-            capMode.appendChild(neededCapOpt);
-          }
+        }
+        if (attributeName === 'optimalGrowthTemperature' || attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance' || attributeName === 'radiationTolerance') {
+          const neededCapOpt = document.createElement('option');
+          neededCapOpt.value = 'needed';
+          neededCapOpt.textContent = getAutomationCardText('lifeModeAsNeeded', {}, 'As needed');
+          capMode.appendChild(neededCapOpt);
         }
         capMode.value = currentMode;
         if (capMode.value !== currentMode) {
           capMode.value = 'fixed';
         }
         capInput.disabled = capMode.value !== 'fixed';
-        zoneRow.style.display = capMode.value === 'needed' && (attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance') ? '' : 'none';
+        zoneRow.style.display = capMode.value === 'needed' && (attributeName === 'optimalGrowthTemperature' || attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance') ? '' : 'none';
       };
 
       const attributeSelect = document.createElement('select');
@@ -731,7 +731,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
         automation.updateDesignEntry(preset.id, step.id, entry.id, { capMode: nextMode });
         entry.capMode = nextMode;
         capInput.disabled = nextMode !== 'fixed';
-        zoneRow.style.display = nextMode === 'needed' && (entry.attribute === 'minTemperatureTolerance' || entry.attribute === 'maxTemperatureTolerance') ? '' : 'none';
+        zoneRow.style.display = nextMode === 'needed' && (entry.attribute === 'optimalGrowthTemperature' || entry.attribute === 'minTemperatureTolerance' || entry.attribute === 'maxTemperatureTolerance') ? '' : 'none';
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
