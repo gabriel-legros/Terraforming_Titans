@@ -2,6 +2,8 @@ const RINGWORLD_TERRAFORM_ENERGY_REQUIRED = 1e21;
 const RINGWORLD_SHIP_ENERGY_MULTIPLIER = 0.1;
 const RINGWORLD_POWER_STEP_MIN = 1;
 const RINGWORLD_POWER_STEP_MAX = 1e100;
+const RINGWORLD_POWER_MODE_ABSOLUTE = 'absolute';
+const RINGWORLD_POWER_MODE_PERCENT = 'percent';
 const RINGWORLD_GRAVITY = 9.81;
 const RINGWORLD_AU_METERS = 1.496e11;
 const RINGWORLD_WATT_DAY_SECONDS = 86400;
@@ -43,6 +45,9 @@ class RingworldTerraformingProject extends Project {
     this.shipEnergyMultiplier = config.attributes?.shipEnergyMultiplier || RINGWORLD_SHIP_ENERGY_MULTIPLIER;
     this.energyInvested = 0;
     this.power = config.attributes?.power || 0;
+    this.powerMode = RINGWORLD_POWER_MODE_ABSOLUTE;
+    this.absolutePower = this.power;
+    this.powerPercent = 10;
     this.step = config.attributes?.powerStep || RINGWORLD_POWER_STEP_MIN;
     this.shadingStrength = RINGWORLD_SHADING_DEFAULT;
     this.autoShadeEnabled = false;
@@ -309,15 +314,35 @@ class RingworldTerraformingProject extends Project {
     investContainer.appendChild(investLabel);
     controls.appendChild(investContainer);
 
+    const powerInputsStack = document.createElement('div');
+    powerInputsStack.className = 'ringworld-terraforming-power-stack';
+
+    const powerModeRow = document.createElement('div');
+    powerModeRow.className = 'ringworld-terraforming-power';
+    const powerModeLabel = document.createElement('span');
+    powerModeLabel.className = 'ringworld-terraforming-power-label';
+    powerModeLabel.textContent = getRingworldText('powerMode', null, 'Power Mode:');
+    const powerModeSelect = document.createElement('select');
+    const absoluteOption = document.createElement('option');
+    absoluteOption.value = RINGWORLD_POWER_MODE_ABSOLUTE;
+    absoluteOption.textContent = getRingworldText('absolute', null, 'Absolute');
+    const percentOption = document.createElement('option');
+    percentOption.value = RINGWORLD_POWER_MODE_PERCENT;
+    percentOption.textContent = getRingworldText('percentEnergyProduction', null, '% of energy production');
+    powerModeSelect.append(absoluteOption, percentOption);
+    powerModeRow.append(powerModeLabel, powerModeSelect);
+
     const powerReadout = document.createElement('div');
     powerReadout.className = 'ringworld-terraforming-power';
     const powerLabel = document.createElement('span');
     powerLabel.className = 'ringworld-terraforming-power-label';
     powerLabel.textContent = getRingworldText('power', null, 'Power:');
-    const powerValue = document.createElement('span');
-    powerValue.className = 'stat-value ringworld-terraforming-power-value';
-    powerReadout.append(powerLabel, powerValue);
-    controls.appendChild(powerReadout);
+    const powerInput = document.createElement('input');
+    powerInput.type = 'text';
+    powerInput.className = 'ringworld-terraforming-power-value';
+    powerReadout.append(powerLabel, powerInput);
+    powerInputsStack.append(powerModeRow, powerReadout);
+    controls.appendChild(powerInputsStack);
 
     const powerControls = document.createElement('div');
     powerControls.className = 'thruster-power-controls ringworld-terraforming-power-controls';
@@ -387,7 +412,8 @@ class RingworldTerraformingProject extends Project {
       progressLabel,
       progressFill,
       investToggle,
-      powerValue,
+      powerModeSelect,
+      powerInput,
       powerZero,
       powerMinus,
       powerPlus,
@@ -421,6 +447,38 @@ class RingworldTerraformingProject extends Project {
       this.updateUI();
     });
 
+    powerModeSelect.addEventListener('change', () => {
+      this.powerMode = powerModeSelect.value === RINGWORLD_POWER_MODE_PERCENT
+        ? RINGWORLD_POWER_MODE_PERCENT
+        : RINGWORLD_POWER_MODE_ABSOLUTE;
+      this.syncPowerFromMode();
+      this.updateUI();
+    });
+
+    wireStringNumberInput(powerInput, {
+      datasetKey: 'ringworldPowerValue',
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        const numeric = Number.isFinite(parsed) ? parsed : 0;
+        return Math.max(0, numeric);
+      },
+      formatValue: (parsed) => {
+        if (this.powerMode === RINGWORLD_POWER_MODE_PERCENT) {
+          return String(parsed);
+        }
+        return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+      },
+      onValue: (parsed) => {
+        if (this.powerMode === RINGWORLD_POWER_MODE_PERCENT) {
+          this.powerPercent = parsed;
+        } else {
+          this.absolutePower = parsed;
+        }
+        this.syncPowerFromMode();
+        this.updateUI();
+      },
+    });
+
     powerZero.addEventListener('click', () => {
       this.setPower(0);
       this.updateUI();
@@ -450,6 +508,7 @@ class RingworldTerraformingProject extends Project {
   }
 
   updateUI() {
+    this.syncPowerFromMode();
     this.refreshMassAndEnergyRequirement();
     const investedValue = Math.min(this.energyInvested, this.energyRequired);
     const gravityRatio = this.getSurfaceGravityRatio();
@@ -478,7 +537,15 @@ class RingworldTerraformingProject extends Project {
     this.el.spinEnergy.textContent = `${formatNumber(this.currentShipSpinEnergyPerTon, true)} /ton`;
     this.el.progressLabel.textContent = `${formatNumber(progressPercent, true, 1)}% (${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)})`;
     this.el.progressFill.style.width = `${progressPercent}%`;
-    this.el.powerValue.textContent = `${formatNumber(this.power, true)} W`;
+    this.el.powerModeSelect.value = this.powerMode;
+    const displayPowerValue = this.powerMode === RINGWORLD_POWER_MODE_PERCENT
+      ? this.powerPercent
+      : this.absolutePower;
+    if (document.activeElement !== this.el.powerInput) {
+      this.el.powerInput.value = this.powerMode === RINGWORLD_POWER_MODE_PERCENT
+        ? `${displayPowerValue}`
+        : formatNumber(displayPowerValue, true);
+    }
     this.el.massTotal.textContent = `${formatNumber(this.currentMassTons, true)} t`;
 
     this.el.shadingStrength.textContent = `${formatNumber(this.shadingStrength, false, 2)}`;
@@ -498,6 +565,8 @@ class RingworldTerraformingProject extends Project {
     this.el.investToggle.checked = this.investing;
     this.el.investToggle.disabled = this.isCompleted;
     this.el.powerZero.disabled = this.isCompleted;
+    this.el.powerInput.disabled = this.isCompleted;
+    this.el.powerModeSelect.disabled = this.isCompleted;
     this.el.powerMinus.disabled = this.isCompleted;
     this.el.powerPlus.disabled = this.isCompleted;
     this.el.stepDown.disabled = this.isCompleted;
@@ -513,11 +582,30 @@ class RingworldTerraformingProject extends Project {
   }
 
   adjustPower(delta) {
-    this.power = Math.max(0, this.power + delta);
+    if (this.powerMode === RINGWORLD_POWER_MODE_PERCENT) {
+      this.powerPercent = Math.max(0, this.powerPercent + delta);
+    } else {
+      this.absolutePower = Math.max(0, this.absolutePower + delta);
+    }
+    this.syncPowerFromMode();
   }
 
   setPower(value) {
-    this.power = Math.max(0, value);
+    if (this.powerMode === RINGWORLD_POWER_MODE_PERCENT) {
+      this.powerPercent = Math.max(0, value);
+    } else {
+      this.absolutePower = Math.max(0, value);
+    }
+    this.syncPowerFromMode();
+  }
+
+  syncPowerFromMode() {
+    const productionRate = resources.colony.energy.productionRate || 0;
+    if (this.powerMode === RINGWORLD_POWER_MODE_PERCENT) {
+      this.power = Math.max(0, productionRate * this.powerPercent / 100);
+      return;
+    }
+    this.power = Math.max(0, this.absolutePower);
   }
 
   adjustStep(multiplier) {
@@ -684,6 +772,9 @@ class RingworldTerraformingProject extends Project {
     return {
       ...super.saveAutomationSettings(),
       power: this.power,
+      powerMode: this.powerMode,
+      absolutePower: this.absolutePower,
+      powerPercent: this.powerPercent,
       step: this.step,
       investing: this.investing === true,
       shadingStrength: this.shadingStrength,
@@ -697,6 +788,18 @@ class RingworldTerraformingProject extends Project {
     super.loadAutomationSettings(settings);
     if (Object.prototype.hasOwnProperty.call(settings, 'power')) {
       this.power = settings.power || 0;
+      this.absolutePower = this.power;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'powerMode')) {
+      this.powerMode = settings.powerMode === RINGWORLD_POWER_MODE_PERCENT
+        ? RINGWORLD_POWER_MODE_PERCENT
+        : RINGWORLD_POWER_MODE_ABSOLUTE;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'absolutePower')) {
+      this.absolutePower = Math.max(0, settings.absolutePower || 0);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'powerPercent')) {
+      this.powerPercent = Math.max(0, settings.powerPercent || 0);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'step')) {
       this.step = settings.step || RINGWORLD_POWER_STEP_MIN;
@@ -721,6 +824,7 @@ class RingworldTerraformingProject extends Project {
     if (Object.prototype.hasOwnProperty.call(settings, 'autoShadeTarget')) {
       this.autoShadeTarget = settings.autoShadeTarget || this.autoShadeTarget;
     }
+    this.syncPowerFromMode();
     this.applyEffects();
   }
 
@@ -729,6 +833,9 @@ class RingworldTerraformingProject extends Project {
       ...super.saveState(),
       energyInvested: this.energyInvested,
       power: this.power,
+      powerMode: this.powerMode,
+      absolutePower: this.absolutePower,
+      powerPercent: this.powerPercent,
       step: this.step,
       investing: this.investing,
       currentMassTons: this.currentMassTons,
@@ -744,6 +851,11 @@ class RingworldTerraformingProject extends Project {
     super.loadState(state);
     this.energyInvested = state.energyInvested || 0;
     this.power = state.power || 0;
+    this.powerMode = state.powerMode === RINGWORLD_POWER_MODE_PERCENT
+      ? RINGWORLD_POWER_MODE_PERCENT
+      : RINGWORLD_POWER_MODE_ABSOLUTE;
+    this.absolutePower = Math.max(0, state.absolutePower ?? this.power);
+    this.powerPercent = Math.max(0, state.powerPercent ?? this.powerPercent);
     this.step = state.step || RINGWORLD_POWER_STEP_MIN;
     this.investing = state.investing === true;
     this.isActive = this.investing;
@@ -753,6 +865,7 @@ class RingworldTerraformingProject extends Project {
     this.autoShadeEnabled = state.autoShadeEnabled === true;
     this.autoShadeMode = state.autoShadeMode || this.autoShadeMode;
     this.autoShadeTarget = state.autoShadeTarget || this.autoShadeTarget;
+    this.syncPowerFromMode();
     this.applyEffects();
   }
 

@@ -9,6 +9,8 @@ const ROGUE_DISTANCE_AU = 10000;
 const FUSION_VE    = 1.0e5;               // 100 km s‑1
 const BASE_TP_RATIO = 2 / FUSION_VE;
 const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for escape
+const THRUSTER_POWER_MODE_ABSOLUTE = 'absolute';
+const THRUSTER_POWER_MODE_PERCENT = 'percent';
 
 // rotationPeriodToDuration is defined globally in the browser but must be
 // required explicitly when running under Node.js for tests
@@ -170,6 +172,9 @@ class PlanetaryThrustersProject extends Project{
   constructor(cfg,name){
     super(cfg,name);
     this.power=0;this.step=1;
+    this.powerMode = THRUSTER_POWER_MODE_ABSOLUTE;
+    this.absolutePower = 0;
+    this.powerPercent = 10;
     this.spinInvest=false;this.motionInvest=false;
     this.autoGoRogue=false;
 
@@ -312,7 +317,10 @@ class PlanetaryThrustersProject extends Project{
     const pwrHTML=`<div class="card-header"><span class="card-title">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.title', 'Thruster Power')}</span></div>
     <div class="card-body">
       <div class="stats-grid four-col">
-        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.continuous', 'Continuous:')}</span><span id="pwrVal" class="stat-value">0</span></div>
+        <div class="thruster-power-input-stack">
+          <div class="thruster-power-input-row"><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.mode', 'Mode:')}</span><select id="pwrMode"><option value="absolute">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.absolute', 'Absolute')}</option><option value="percent">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.percentEnergyProduction', '% of energy production')}</option></select></div>
+          <div class="thruster-power-input-row"><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.continuous', 'Continuous:')}</span><input id="pwrVal" type="text" class="stat-value"></div>
+        </div>
         <div class="thruster-power-controls">
           <div class="main-buttons">
             <button id="p0">0</button><button id="pMinus">-</button><button id="pPlus">+</button>
@@ -347,6 +355,7 @@ class PlanetaryThrustersProject extends Project{
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
       parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
       pwrVal:g('#pwrVal',pwrCard),veVal:g('#veVal',pwrCard),tpVal:g('#tpVal',pwrCard),
+      pwrMode:g('#pwrMode',pwrCard),
       pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
       pDiv:g('#pDiv',pwrCard),pMul:g('#pMul',pwrCard),p0:g('#p0',pwrCard)};
 
@@ -389,6 +398,7 @@ class PlanetaryThrustersProject extends Project{
     /* restore saved values */
     this.el.rotCb.checked = this.spinInvest;
     this.el.distCb.checked = this.motionInvest;
+    this.el.pwrMode.value = this.powerMode;
     this.el.goRogueAutoCb.checked = this.autoGoRogue;
     this.el.rotTarget.value = this.tgtDays;
     this.el.distTarget.value = this.tgtAU;
@@ -419,6 +429,37 @@ class PlanetaryThrustersProject extends Project{
       if(this.autoGoRogue && this.canGoRogue()) this.goRogue();
     };
     this.el.goRogueBtn.onclick = ()=>this.goRogue();
+
+    this.el.pwrMode.onchange = ()=>{
+      this.powerMode = this.el.pwrMode.value === THRUSTER_POWER_MODE_PERCENT
+        ? THRUSTER_POWER_MODE_PERCENT
+        : THRUSTER_POWER_MODE_ABSOLUTE;
+      this.syncPowerFromMode();
+      this.updateUI();
+    };
+    wireStringNumberInput(this.el.pwrVal, {
+      datasetKey: 'thrusterPowerValue',
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        const numeric = Number.isFinite(parsed) ? parsed : 0;
+        return Math.max(0, numeric);
+      },
+      formatValue: (parsed) => {
+        if (this.powerMode === THRUSTER_POWER_MODE_PERCENT) {
+          return String(parsed);
+        }
+        return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+      },
+      onValue: (parsed) => {
+        if (this.powerMode === THRUSTER_POWER_MODE_PERCENT) {
+          this.powerPercent = parsed;
+        } else {
+          this.absolutePower = parsed;
+        }
+        this.syncPowerFromMode();
+        this.updateUI();
+      },
+    });
 
     const up=()=>this.updateUI();
     this.el.pPlus.onclick =()=>{this.adjustPower(+this.step);up();};
@@ -610,6 +651,7 @@ class PlanetaryThrustersProject extends Project{
 
 /* ---------- UI refresh ------------------------------------------------ */
   updateUI(){
+    this.syncPowerFromMode();
     if(!this.el.rotNow || !this.el.distNow || !this.el.pwrVal){
       return;
     }
@@ -638,13 +680,20 @@ class PlanetaryThrustersProject extends Project{
     this.el.distNow.textContent = isBoundToParent(p)
       ? fmt(p.parentBody.orbitRadius||0,false,0)+" km"
       : fmt(p.distanceFromSun||0,false,3)+" AU";
-    this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
+    this.el.pwrMode.value = this.powerMode;
+    if(document.activeElement !== this.el.pwrVal){
+      this.el.pwrVal.value = this.powerMode === THRUSTER_POWER_MODE_PERCENT
+        ? `${this.powerPercent}`
+        : formatNumber(this.absolutePower, true);
+    }
     if(this.el.veVal) this.el.veVal.textContent = this.hasTractorBeams()
       ? getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.na', 'N/A')
       : fmt(FUSION_VE,false,0)+" m/s";
     if(this.el.tpVal) this.el.tpVal.textContent = fmt(this.getThrustPowerRatio(),false,6)+" N/W";
     this.el.pPlus.textContent="+"+formatNumber(this.step,true);
     this.el.pMinus.textContent="-"+formatNumber(this.step,true);
+    this.el.pwrVal.disabled = !this.isCompleted;
+    this.el.pwrMode.disabled = !this.isCompleted;
 
     /* delta v and energy refresh */
     if(this.el.rotTarget){
@@ -727,8 +776,31 @@ class PlanetaryThrustersProject extends Project{
   }
 
 /* ---------- power controls ------------------------------------------- */
-  adjustPower(d){this.power=Math.max(0,this.power+d);}  
-  setPower(v){this.power=Math.max(0,v);}  
+  adjustPower(d){
+    if(this.powerMode === THRUSTER_POWER_MODE_PERCENT){
+      this.powerPercent=Math.max(0,this.powerPercent+d);
+    }else{
+      this.absolutePower=Math.max(0,this.absolutePower+d);
+    }
+    this.syncPowerFromMode();
+  }  
+  setPower(v){
+    if(this.powerMode === THRUSTER_POWER_MODE_PERCENT){
+      this.powerPercent=Math.max(0,v);
+    }else{
+      this.absolutePower=Math.max(0,v);
+    }
+    this.syncPowerFromMode();
+  }  
+
+  syncPowerFromMode(){
+    const productionRate = resources.colony.energy.productionRate || 0;
+    if(this.powerMode === THRUSTER_POWER_MODE_PERCENT){
+      this.power = Math.max(0, productionRate * this.powerPercent / 100);
+      return;
+    }
+    this.power = Math.max(0, this.absolutePower);
+  }
 
 /* ------------------  T I C K  ---------------------------------------- */
   update(dtMs){
@@ -922,6 +994,9 @@ class PlanetaryThrustersProject extends Project{
     return {
       ...super.saveAutomationSettings(),
       power: this.power,
+      powerMode: this.powerMode,
+      absolutePower: this.absolutePower,
+      powerPercent: this.powerPercent,
       step: this.step,
       spinInvest: this.spinInvest === true,
       motionInvest: this.motionInvest === true,
@@ -940,6 +1015,18 @@ class PlanetaryThrustersProject extends Project{
     super.loadAutomationSettings(settings);
     if (Object.prototype.hasOwnProperty.call(settings, 'power')) {
       this.power = Math.max(0, settings.power || 0);
+      this.absolutePower = this.power;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'powerMode')) {
+      this.powerMode = settings.powerMode === THRUSTER_POWER_MODE_PERCENT
+        ? THRUSTER_POWER_MODE_PERCENT
+        : THRUSTER_POWER_MODE_ABSOLUTE;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'absolutePower')) {
+      this.absolutePower = Math.max(0, settings.absolutePower || 0);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'powerPercent')) {
+      this.powerPercent = Math.max(0, settings.powerPercent || 0);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'step')) {
       this.step = Math.max(1, settings.step || 1);
@@ -986,6 +1073,10 @@ class PlanetaryThrustersProject extends Project{
     if (this.el.goRogueAutoCb) {
       this.el.goRogueAutoCb.checked = this.autoGoRogue;
     }
+    if (this.el.pwrMode) {
+      this.el.pwrMode.value = this.powerMode;
+    }
+    this.syncPowerFromMode();
 
     if (this.spinInvest) {
       this.motionInvest = false;
@@ -1015,6 +1106,9 @@ class PlanetaryThrustersProject extends Project{
   saveState(){
     const state = super.saveState();
     state.power = this.power;
+    state.powerMode = this.powerMode;
+    state.absolutePower = this.absolutePower;
+    state.powerPercent = this.powerPercent;
     state.step = this.step;
     state.spinInvest = this.spinInvest;
     state.motionInvest = this.motionInvest;
@@ -1035,6 +1129,11 @@ class PlanetaryThrustersProject extends Project{
   loadState(state){
     super.loadState(state);
     this.power = state.power || 0;
+    this.powerMode = state.powerMode === THRUSTER_POWER_MODE_PERCENT
+      ? THRUSTER_POWER_MODE_PERCENT
+      : THRUSTER_POWER_MODE_ABSOLUTE;
+    this.absolutePower = Math.max(0, state.absolutePower ?? this.power);
+    this.powerPercent = Math.max(0, state.powerPercent ?? this.powerPercent);
     this.step = state.step || 1;
     this.spinInvest = state.spinInvest || false;
     this.motionInvest = state.motionInvest || false;
@@ -1058,9 +1157,11 @@ class PlanetaryThrustersProject extends Project{
       if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
       if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
       if(this.el.goRogueAutoCb) this.el.goRogueAutoCb.checked = this.autoGoRogue;
+      if(this.el.pwrMode) this.el.pwrMode.value = this.powerMode;
       if(this.el.rotTarget) this.el.rotTarget.value = this.tgtDays;
       if(this.el.distTarget) this.el.distTarget.value = this.tgtAU;
     }
+    this.syncPowerFromMode();
   }
 }
 

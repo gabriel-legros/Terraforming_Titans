@@ -910,6 +910,12 @@
     font-size: 0.9em;
 }
 
+.ringworld-terraforming-power-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .ringworld-terraforming-power-value {
     font-weight: 600;
 }
@@ -3098,6 +3104,18 @@
     padding: 2px 4px;
     font-size: 0.7em;
     cursor: pointer;
+}
+
+.thruster-power-input-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.thruster-power-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 .storage-full-icon {
     color: #ffc107;
