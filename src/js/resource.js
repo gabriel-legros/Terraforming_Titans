@@ -1931,7 +1931,7 @@ function calculateProjectProductivities(resources, deltaTime, projectData = {}) 
       for (const resource in cost[category]) {
         const required = cost[category][resource] || 0;
         if (required > 0) {
-          const ratio = getResourceAvailabilityRatio(resources[category][resource]);
+          const ratio = resources[category][resource].availabilityRatio;
           productivity = Math.min(productivity, ratio);
         }
       }
@@ -2068,10 +2068,6 @@ function reduceSpaceStorageEntriesByAmount(entries, amount) {
   return 0;
 }
 
-function calculateResourceAvailabilityRatio(resource, deltaTime) {
-  return calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, 0);
-}
-
 function getAvailabilityProductionRate(resource, extraReserve) {
   if (!(extraReserve > 0)) {
     return resource.productionRate;
@@ -2089,7 +2085,7 @@ function getAvailabilityProductionRate(resource, extraReserve) {
   return productionRate;
 }
 
-function calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, extraReserve) {
+function calculateResourceAvailabilityRatio(resource, deltaTime, extraReserve = 0) {
   const seconds = deltaTime / 1000;
   const requiredAmount = resource.consumptionRate * seconds;
   if (requiredAmount <= 0) {
@@ -2114,16 +2110,12 @@ function updateResourceAvailabilityRatios(resources, deltaTime) {
       const resource = resources[category][resourceName];
       if (category === 'spaceStorage' && hasReserveMethod) {
         const consumptionReserve = spaceStorageProj.getResourceStrategicReserveAmount(resourceName, 'consumption');
-        resource.availabilityRatio = calculateResourceAvailabilityRatioWithReserve(resource, deltaTime, consumptionReserve);
+        resource.availabilityRatio = calculateResourceAvailabilityRatio(resource, deltaTime, consumptionReserve);
       } else {
         resource.availabilityRatio = calculateResourceAvailabilityRatio(resource, deltaTime);
       }
     }
   }
-}
-
-function getResourceAvailabilityRatio(resource) {
-  return resource.availabilityRatio;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -2134,7 +2126,6 @@ if (typeof module !== 'undefined' && module.exports) {
     produceResources,
     calculateResourceAvailabilityRatio,
     updateResourceAvailabilityRatios,
-    getResourceAvailabilityRatio,
     calculateProjectProductivities,
     recalculateTotalRates,
     reconcileLandResourceValue,
@@ -2144,7 +2135,6 @@ if (typeof module !== 'undefined' && module.exports) {
 try {
   window.calculateResourceAvailabilityRatio = calculateResourceAvailabilityRatio;
   window.updateResourceAvailabilityRatios = updateResourceAvailabilityRatios;
-  window.getResourceAvailabilityRatio = getResourceAvailabilityRatio;
 } catch (error) {
   // window is not available
 }

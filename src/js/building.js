@@ -1328,7 +1328,7 @@ class Building extends EffectableEntity {
         if (effectiveAmount <= 0) {
           continue;
         }
-        const ratio = getResourceAvailabilityRatio(resources[category][resource]);
+        const ratio = resources[category][resource].availabilityRatio;
         minRatio = Math.min(minRatio, ratio);
       }
     }

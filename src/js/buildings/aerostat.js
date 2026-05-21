@@ -1096,7 +1096,7 @@ class Aerostat extends BaseColony {
       return minRatio;
     }
 
-    const energyRatio = getResourceAvailabilityRatio(resources.colony.energy);
+    const energyRatio = resources.colony.energy.availabilityRatio;
     return Math.min(minRatio, energyRatio);
   }
 

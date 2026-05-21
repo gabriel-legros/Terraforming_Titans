@@ -122,7 +122,7 @@ function createCylindersHopeProductivityOperation(space) {
       );
     },
     updateProductivity() {
-      this.productivity = Math.max(0, Math.min(1, getResourceAvailabilityRatio(resources.space.energy)));
+      this.productivity = Math.max(0, Math.min(1, resources.space.energy.availabilityRatio));
     },
     applyOperationCostAndGain(deltaTime, accumulatedChanges) {
       updateSpaceSliders(deltaTime, {

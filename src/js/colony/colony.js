@@ -423,7 +423,7 @@ class Colony extends Building {
                   continue;
               }
 
-              const ratio = getResourceAvailabilityRatio(resources[category][resource]);
+              const ratio = resources[category][resource].availabilityRatio;
               minRatio = Math.min(minRatio, ratio);
           }
       }
