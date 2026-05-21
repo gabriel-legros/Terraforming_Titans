@@ -1245,7 +1245,7 @@ function buildAutomationPresetVisibleRenderTree(sourcePreset, visibleLeafPaths) 
   return root;
 }
 
-function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange, fieldOptionsResolver) {
+function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange, fieldOptionsResolver, renderRootPath = null) {
   const content = details._contentNode;
   content.textContent = '';
   details._jsonInputMap = {};
@@ -1373,7 +1373,11 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
   };
 
   const renderTree = buildAutomationPresetVisibleRenderTree(preset, leafPaths);
-  renderValue(renderTree, [], 0, null, true);
+  const renderRootValue = renderRootPath && renderRootPath.length
+    ? getAutomationPresetValueAtPath(renderTree, renderRootPath)
+    : renderTree;
+  const renderPath = renderRootPath && renderRootPath.length ? renderRootPath.slice() : [];
+  renderValue(renderRootValue, renderPath, 0, null, true);
 }
 
 function applyAutomationPresetJsonFieldEdit(preset, path, nextValue, options = {}) {
@@ -1439,9 +1443,13 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const isLeafVisible = options.isLeafVisible;
   const fieldOptionsResolver = options.getFieldOptions;
   const filterOptionsResolver = options.getFilterOptions;
+  const rootPath = Array.isArray(options.rootPath) && options.rootPath.length
+    ? options.rootPath.slice()
+    : null;
   const selectedFilterValue = options.selectedFilterValue || '';
   const onFilterChange = options.onFilterChange;
   const onClearFilter = options.onClearFilter;
+  const toFullPath = (path) => (rootPath ? rootPath.concat(path) : path.slice());
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
@@ -1555,8 +1563,21 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     }
   }
 
-  const leafPaths = [];
-  collectAutomationPresetLeafPaths(preset, [], leafPaths);
+  const scopedPreset = rootPath ? getAutomationPresetValueAtPath(preset, rootPath) : preset;
+  if (!scopedPreset || (scopedPreset.constructor !== Object && !Array.isArray(scopedPreset))) {
+    details._contentNode.textContent = '';
+    details._renderedFieldKeySignature = '';
+    details._renderedPresetJson = presetSignature;
+    details._saveButton.disabled = true;
+    if (details._saveButtonStarNode) {
+      details._saveButtonStarNode.style.display = 'none';
+    }
+    return;
+  }
+
+  const scopedLeafPaths = [];
+  collectAutomationPresetLeafPaths(scopedPreset, [], scopedLeafPaths);
+  const leafPaths = scopedLeafPaths.map(toFullPath);
   const effectivePreset = JSON.parse(JSON.stringify(preset));
   const draftEntries = Object.values(details._jsonDraftMap);
   for (let draftIndex = 0; draftIndex < draftEntries.length; draftIndex += 1) {
@@ -1666,7 +1687,14 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
 
   const shouldRebuildJson = details._renderedFieldKeySignature !== nextFieldKeySignature || details._boundPresetId !== preset.id;
   if (shouldRebuildJson) {
-    renderAutomationPresetEditableJson(details, effectivePreset, visibleLeafPaths, onFieldChange, fieldOptionsResolver);
+    renderAutomationPresetEditableJson(
+      details,
+      effectivePreset,
+      visibleLeafPaths,
+      onFieldChange,
+      fieldOptionsResolver,
+      rootPath
+    );
     details._renderedFieldKeySignature = nextFieldKeySignature;
     details._boundPresetId = preset.id;
   } else {

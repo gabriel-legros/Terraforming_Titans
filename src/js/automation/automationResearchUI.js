@@ -208,6 +208,7 @@ function updateResearchAutomationUI() {
   });
 
   updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset, {
+    rootPath: ['researches'],
     onFieldChange: (fieldPath, nextValue) => {
       if (!selectedPreset) {
         return;

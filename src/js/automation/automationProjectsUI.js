@@ -565,6 +565,7 @@ function updateProjectsAutomationUI() {
     projectAutomationUIState.jsonFilterProjectId = '';
   }
   updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
+    rootPath: ['projects'],
     isLeafVisible: (fieldPath) => {
       const selectedProjectId = projectAutomationUIState.jsonFilterProjectId;
       if (selectedProjectId && fieldPath[0] === 'projects' && fieldPath[1] !== selectedProjectId) {
