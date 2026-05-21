@@ -834,6 +834,25 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.applyDurationEffects(base, { treatAsSpaceshipProject: true });
   }
 
+  calculateSpaceshipCost() {
+    const totalCost = super.calculateSpaceshipCost();
+    if (!(totalCost?.colony?.energy > 0)) {
+      return totalCost;
+    }
+    const multiplier = (projectManager.activeEffects || []).reduce((value, effect) => {
+      if (
+        effect.type === 'spaceshipCostMultiplier' &&
+        effect.resourceCategory === 'colony' &&
+        effect.resourceId === 'energy'
+      ) {
+        return value * effect.value;
+      }
+      return value;
+    }, 1);
+    totalCost.colony.energy *= multiplier;
+    return totalCost;
+  }
+
   start(resources) {
     this.shortfallLastTick = false;
     this.expansionProgress = 0;
