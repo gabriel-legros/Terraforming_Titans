@@ -50,16 +50,18 @@ function _ensureRWGEffectsUI() {
   const container = typeof document !== 'undefined' ? document.getElementById('space-random') : null;
   if (!container) return false;
 
-  const card = document.createElement('div');
-  card.className = 'rwg-card';
+  const card = document.createElement('details');
+  card.className = 'rwg-card rwg-collapsible';
   card.id = 'rwg-effects-card';
+  card.open = true;
   card.innerHTML = `
-    <div class="card-header">
-      <h3 class="card-title">Random World Effects <span id="rwg-effects-info" class="info-tooltip-icon">&#9432;</span></h3>
+    <summary class="rwg-collapsible-summary">
+      <span class="summary-arrow">▼</span>Random World Effects <span id="rwg-effects-info" class="info-tooltip-icon">&#9432;</span>
+    </summary>
+    <div class="rwg-collapsible-body">
+      <div id="rwg-effects-list" class="card-body rwg-effects-list"></div>
     </div>
-    <div id="rwg-effects-list" class="card-body rwg-effects-list"></div>
   `;
-  if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
   const historyEl = document.getElementById('rwg-history');
   if (historyEl && historyEl.parentElement === container) {
     container.insertBefore(card, historyEl);

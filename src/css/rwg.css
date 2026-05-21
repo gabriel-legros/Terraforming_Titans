@@ -138,16 +138,6 @@
 
 .rwg-hazard-list {
   margin-top: 10px;
-  background: var(--rwg-card);
-  border: 1px solid var(--rwg-border);
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.rwg-hazard-title {
-  color: var(--rwg-fg-dim);
-  font-size: 13px;
-  margin-bottom: 4px;
 }
 
 .rwg-hazard-note {
@@ -250,6 +240,38 @@
 .collapse-arrow { margin-right: 6px; cursor: pointer; }
 .rwg-card.collapsed .card-body { display: none; }
 
+.rwg-collapsible-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--rwg-fg);
+  font-weight: 700;
+  font-size: 1.17em;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+
+.rwg-collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+
+.rwg-collapsible:not([open]) .summary-arrow {
+  transform: rotate(-90deg);
+}
+
+.rwg-collapsible .summary-arrow {
+  transition: transform 0.15s ease;
+}
+
+.rwg-collapsible:not([open]) .rwg-collapsible-summary {
+  margin-bottom: 0;
+}
+
+.rwg-collapsible-summary .info-tooltip-icon {
+  font-size: 0.8em;
+}
+
 .rwg-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -273,6 +295,7 @@
 
 /* RWG effects table: 3 columns with alternating rows like history */
 .rwg-effects-list { margin-top: 4px; max-width: 1200px; margin-left: auto; margin-right: auto; }
+#rwg-effects-card { margin-top: 14px; }
 .rwg-effects-row {
   display: grid;
   grid-template-columns: minmax(400px, 1fr) 40px minmax(144px, auto) minmax(740px, auto);
@@ -302,16 +325,6 @@
   border-radius: 10px;
   padding: 12px;
   margin-top: 14px;
-}
-
-.rwg-history-title {
-  margin: 0 0 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  user-select: none;
-  color: var(--rwg-fg);
 }
 
 .rwg-history-head,

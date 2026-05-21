@@ -143,6 +143,8 @@ setLanguageData({
       },
       details: {
         unknownStar: 'Unknown Star',
+        starDetailsTitle: 'Star Details',
+        worldDetailsTitle: 'World Details',
         starTitle: 'Star: {value}',
         spectral: 'Spectral',
         luminosity: 'Luminosity',

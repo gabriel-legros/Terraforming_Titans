@@ -876,14 +876,17 @@ function initializeRandomWorldUI() {
   `;
   container.appendChild(settingsCard);
 
-  const hazardList = document.createElement('div');
+  const hazardList = document.createElement('details');
   hazardList.id = 'rwg-hazard-list';
-  hazardList.className = 'rwg-hazard-list';
+  hazardList.className = 'rwg-card rwg-hazard-list rwg-collapsible';
+  hazardList.open = true;
   hazardList.style.display = 'none';
   hazardList.innerHTML = `
-    <div class="rwg-hazard-title">${getRwgUiText('hazards.title', 'Hazards')}</div>
-    <div class="rwg-hazard-note">${getRwgUiText('hazards.note', 'Every hazard selected counts as +1 for Random World effects.')}</div>
-    <div id="rwg-hazard-items" class="rwg-hazard-items"></div>
+    <summary class="rwg-collapsible-summary"><span class="summary-arrow">▼</span>${getRwgUiText('hazards.title', 'Hazards')}</summary>
+    <div class="rwg-collapsible-body">
+      <div class="rwg-hazard-note">${getRwgUiText('hazards.note', 'Every hazard selected counts as +1 for Random World effects.')}</div>
+      <div id="rwg-hazard-items" class="rwg-hazard-items"></div>
+    </div>
   `;
   container.appendChild(hazardList);
 
@@ -948,33 +951,20 @@ function initializeRandomWorldUI() {
   container.appendChild(result);
   rwgResultEl = result;
 
-  const history = document.createElement('div');
+  const history = document.createElement('details');
   history.id = 'rwg-history';
-  history.className = 'rwg-history';
+  history.className = 'rwg-history rwg-collapsible';
+  history.open = true;
   history.innerHTML = `
-    <h3>${getRwgUiText('history.title', 'Visited Worlds (Last 10)')}</h3>
-    <div id="rwg-history-list"></div>`;
+    <summary class="rwg-collapsible-summary"><span id="rwg-history-arrow" class="summary-arrow">▼</span>${getRwgUiText('history.title', 'Visited Worlds (Last 10)')}</summary>
+    <div class="rwg-collapsible-body">
+      <div id="rwg-history-list"></div>
+    </div>`;
   container.appendChild(history);
 
   historyContainerEl = history;
   historyListEl = history.querySelector('#rwg-history-list');
-  // Make header collapsible without changing markup structure
-  const historyHeader = history.querySelector('h3');
-  if (historyHeader) {
-    historyHeader.classList.add('rwg-history-title');
-    historyHeader.innerHTML = `<span id="rwg-history-arrow" class="summary-arrow">▼</span> ${getRwgUiText('history.title', 'Visited Worlds (Last 10)')}`;
-    const arrowEl = historyHeader.querySelector('#rwg-history-arrow');
-    historyHeader.addEventListener('click', () => {
-      historyCollapsed = !historyCollapsed;
-      if (historyCollapsed) {
-        if (historyListEl) historyListEl.style.display = 'none';
-        if (arrowEl) arrowEl.textContent = '▶';
-      } else {
-        if (historyListEl) historyListEl.style.display = '';
-        if (arrowEl) arrowEl.textContent = '▼';
-      }
-    });
-  }
+  historyCollapsed = false;
 
   initializeDominionLoreOverlay();
 
@@ -1646,15 +1636,18 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const toDisplayTemp = typeof toDisplayTemperature === 'function' ? toDisplayTemperature : (v => v);
   const tempUnit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
   const starPanel = `
-    <div class="rwg-card">
-      <h3>${getRwgUiText('details.starTitle', 'Star: {value}', { value: star.name })}</h3>
-      <div class="rwg-infobar">
-        <div class="rwg-chip"><div class="label">${getRwgUiText('details.spectral', 'Spectral')}</div><div class="value">${star.spectralType}</div></div>
-        <div class="rwg-chip"><div class="label">${getRwgUiText('details.luminosity', 'Luminosity')}</div><div class="value">${(star.luminositySolar).toFixed(3)} L☉</div></div>
-        <div class="rwg-chip"><div class="label">${getRwgUiText('details.mass', 'Mass')}</div><div class="value">${(star.massSolar).toFixed(3)} M☉</div></div>
-        <div class="rwg-chip"><div class="label">${getRwgUiText('details.temp', 'Temp')}</div><div class="value">${fmt(toDisplayTemp(star.temperatureK))} ${tempUnit}</div></div>
+    <details class="rwg-card rwg-collapsible" open>
+      <summary class="rwg-collapsible-summary"><span class="summary-arrow">▼</span>${getRwgUiText('details.starDetailsTitle', 'Star Details')}</summary>
+      <div class="rwg-collapsible-body">
+        <h3>${getRwgUiText('details.starTitle', 'Star: {value}', { value: star.name })}</h3>
+        <div class="rwg-infobar">
+          <div class="rwg-chip"><div class="label">${getRwgUiText('details.spectral', 'Spectral')}</div><div class="value">${star.spectralType}</div></div>
+          <div class="rwg-chip"><div class="label">${getRwgUiText('details.luminosity', 'Luminosity')}</div><div class="value">${(star.luminositySolar).toFixed(3)} L☉</div></div>
+          <div class="rwg-chip"><div class="label">${getRwgUiText('details.mass', 'Mass')}</div><div class="value">${(star.massSolar).toFixed(3)} M☉</div></div>
+          <div class="rwg-chip"><div class="label">${getRwgUiText('details.temp', 'Temp')}</div><div class="value">${fmt(toDisplayTemp(star.temperatureK))} ${tempUnit}</div></div>
+        </div>
       </div>
-    </div>`;
+    </details>`;
 
   const parent = c.parentBody ? `
     <div class="rwg-card">
@@ -1721,7 +1714,9 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
       : getRandomWorldTravelEquilibrationWarning(eqState));
   const gWarn = gravityPenaltyEnabled ? createGravityWarning(c.gravity, fmt, { includeFlavor: true }) : '';
   const worldPanel = `
-    <div class="rwg-card">
+    <details class="rwg-card rwg-collapsible" open>
+      <summary class="rwg-collapsible-summary"><span class="summary-arrow">▼</span>${getRwgUiText('details.worldDetailsTitle', 'World Details')}</summary>
+      <div class="rwg-collapsible-body">
       <h3>${getSpecialSeedDisplayName(res)}</h3>
       <div class="rwg-control-row">
         <button id="rwg-equilibrate-btn" class="rwg-btn" ${equilibrateDisabled ? 'disabled' : ''}>${getRwgUiText('controls.equilibrate', 'Equilibrate')}</button>
@@ -1763,7 +1758,8 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
           ${renderSurfaceResources(surf)}
         </div>
       </div>
-    </div>`;
+      </div>
+    </details>`;
 
   return `${specialEffectsPanel}${starPanel}${parent}${worldPanel}`;
 }
