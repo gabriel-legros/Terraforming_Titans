@@ -140,6 +140,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.continuousThreshold = 1000;
     this.operationPreRunThisTick = false;
     this.stripPressureAutomationElements = null;
+    this.deferAssignmentCapClamp = false;
   }
 
   getLifterTextPath() {
@@ -614,11 +615,28 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     return 1;
   }
 
+  shouldClampAssignmentCaps() {
+    return this.deferAssignmentCapClamp !== true;
+  }
+
+  applyDeferredAssignmentCapClamp() {
+    if (this.deferAssignmentCapClamp !== true) {
+      return;
+    }
+    this.deferAssignmentCapClamp = false;
+    this.normalizeAssignments();
+  }
+
+  deferLoadedAssignmentCapClamp() {
+    this.deferAssignmentCapClamp = true;
+  }
+
   normalizeAssignments() {
     const idleKey = this.getUnassignedAssignmentKey();
     const allKeys = [idleKey].concat(this.getRecipeKeys());
     const availableKeys = this.getManagedAssignmentKeys();
     const total = normalizeLifterInteger(this.repeatCount);
+    const clampAssignmentCaps = this.shouldClampAssignmentCaps();
 
     allKeys.forEach((key) => {
       this.lifterAssignments[key] = normalizeLifterInteger(this.lifterAssignments[key]);
@@ -627,12 +645,14 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
     });
 
-    availableKeys.forEach((key) => {
-      const cap = this.getAssignmentCapForKey(key, total);
-      if ((this.lifterAssignments[key] || 0n) > cap) {
-        this.lifterAssignments[key] = cap;
-      }
-    });
+    if (clampAssignmentCaps) {
+      availableKeys.forEach((key) => {
+        const cap = this.getAssignmentCapForKey(key, total);
+        if ((this.lifterAssignments[key] || 0n) > cap) {
+          this.lifterAssignments[key] = cap;
+        }
+      });
+    }
 
     let usedManual = 0n;
     availableKeys.forEach((key) => {
@@ -644,7 +664,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     const autoKeys = availableKeys.filter((key) => this.autoAssignFlags[key]);
     const remaining = total > usedManual ? (total - usedManual) : 0n;
 
-    if (autoKeys.length > 0) {
+    if (autoKeys.length > 0 && clampAssignmentCaps) {
       this.distributeAutoAssignments(autoKeys, remaining, total);
     }
 
@@ -1305,6 +1325,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   getOperationProductivityForTick(defaultProductivity = 1, deltaTime = 1000) {
+    this.applyDeferredAssignmentCapClamp();
     const productivities = {};
     this.getRecipeKeys().forEach((key) => {
       productivities[key] = 0;
@@ -1698,6 +1719,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.applyDeferredAssignmentCapClamp();
     const operationAlreadyHandled = this.operationPreRunThisTick === true;
     this.operationPreRunThisTick = false;
     if (!operationAlreadyHandled) {
@@ -2063,6 +2085,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       || Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold');
 
     if (hasAssignmentState) {
+      this.deferLoadedAssignmentCapClamp();
       if (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')) {
         this.lifterAssignments = { ...(settings.lifterAssignments || {}) };
       }
@@ -2135,6 +2158,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       || Object.prototype.hasOwnProperty.call(state, 'stripPressureThreshold');
 
     if (hasAssignmentState) {
+      this.deferLoadedAssignmentCapClamp();
       this.lifterAssignments = { ...(state.lifterAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
@@ -2202,6 +2226,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       || Object.prototype.hasOwnProperty.call(state, 'stripPressureThreshold');
 
     if (hasAssignmentState) {
+      this.deferLoadedAssignmentCapClamp();
       this.lifterAssignments = { ...(state.lifterAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
