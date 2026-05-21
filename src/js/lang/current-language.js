@@ -322,7 +322,7 @@ setLanguageData({
         title: 'Effects',
         spaceshipEnergyCosts: 'Spaceship energy costs:',
         ringworldSpinProject: 'You will have to spin the Ringworld via an infrastructure special project.',
-        diskPreparationWarning: 'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will be very expensive to use.  Be prepared.',
+        diskPreparationWarning: 'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will be very expensive to use.\nInitial ship multiplier: {value}.',
       },
       controls: {
         sector: 'Sector',

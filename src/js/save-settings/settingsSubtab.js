@@ -23,6 +23,7 @@ function cacheSettingsElements() {
     preserveAutoStartTooltip: document.getElementById('preserve-project-auto-start-tooltip'),
     preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
+    keepHiddenStructuresTooltip: document.getElementById('keep-hidden-structures-tooltip'),
     keepHiddenResearchToggle: document.getElementById('keep-hidden-research-toggle'),
     keepHiddenResearchTooltip: document.getElementById('keep-hidden-research-tooltip'),
     noSpecializationWarningOnTravelToggle: document.getElementById('no-specialization-warning-on-travel-toggle'),
@@ -229,6 +230,17 @@ function addSettingsListeners() {
     cached.keepHiddenStructuresToggle.addEventListener('change', () => {
       gameSettings.keepHiddenStructuresOnTravel = cached.keepHiddenStructuresToggle.checked;
     });
+  }
+
+  if (cached.keepHiddenStructuresTooltip) {
+    attachDynamicInfoTooltip(
+      cached.keepHiddenStructuresTooltip,
+      t(
+        'ui.settings.keepHiddenBuildingsTooltip',
+        {},
+        'Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.'
+      )
+    );
   }
 
   if (cached.keepHiddenResearchToggle) {

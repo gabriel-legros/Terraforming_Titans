@@ -106,6 +106,10 @@ const ARTIFICIAL_SECTOR_RESOURCE_LABELS = {
 
 const ARTIFICIAL_RING_FLUX_BOUNDS_WM2 = { min: 1_200, max: 1_400 };
 const ARTIFICIAL_RING_FLUX_DEFAULT_WM2 = 1_300;
+const ARTIFICIAL_DISKWORLD_AU_METERS = 1.496e11;
+const ARTIFICIAL_DISKWORLD_EARTH_RADIUS_METERS = 6.371e6;
+const ARTIFICIAL_DISKWORLD_GRAVITY = 9.81;
+const ARTIFICIAL_DISKWORLD_GRAVITATIONAL_CONSTANT = 6.67430e-11;
 
 function getArtificialText(path, fallback, vars) {
   try {
@@ -2410,9 +2414,25 @@ function renderEffects(project, selection) {
       effectLabel = getArtificialText('effects.ringworldSpinProject', 'You will have to spin the Ringworld via an infrastructure special project.');
     }
     if (type === 'disk') {
+      const diskRadiusAU = project ? project.diskRadiusAU : selection.diskRadiusAU;
+      const diskInnerRadiusAU = project ? project.diskInnerRadiusAU : selection.diskInnerRadiusAU;
+      const diskAreaHa = artificialManager.calculateDiskWorldAreaHectares(diskRadiusAU || 0, diskInnerRadiusAU || 0);
+      const diskCost = project && project.cost ? project.cost : artificialManager.calculateDiskCost(diskAreaHa);
+      const outerRadiusMeters = (diskRadiusAU || 0) * ARTIFICIAL_DISKWORLD_AU_METERS;
+      const innerRadiusMeters = Math.min(
+        (diskInnerRadiusAU || 0) * ARTIFICIAL_DISKWORLD_AU_METERS,
+        Math.max(outerRadiusMeters - 1, 0)
+      );
+      const requiredMassTons = ((ARTIFICIAL_DISKWORLD_GRAVITY * Math.max((outerRadiusMeters * outerRadiusMeters) - (innerRadiusMeters * innerRadiusMeters), 0)) / (2 * ARTIFICIAL_DISKWORLD_GRAVITATIONAL_CONSTANT)) / 1000;
+      const constructionMassTons = (diskCost.superalloys || 0) + (diskCost.metal || 0);
+      const fillFraction = requiredMassTons > 0 ? Math.max(constructionMassTons / requiredMassTons, 0) : 1;
+      const radiusEarth = outerRadiusMeters / ARTIFICIAL_DISKWORLD_EARTH_RADIUS_METERS;
+      const initialMultiplierValue = Math.max(1, fillFraction * radiusEarth);
+      const initialMultiplier = `x${formatNumber(initialMultiplierValue, false, 2)}`;
       effectLabel = getArtificialText(
         'effects.diskPreparationWarning',
-        'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will be very expensive to use.  Be prepared.'
+        'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will be very expensive to use.\nInitial ship multiplier: {value}.  Be prepared.',
+        { value: initialMultiplier }
       );
     }
     artificialUICache.effectShipEnergyLabel.textContent = effectLabel;
