@@ -235,6 +235,25 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     accumulatedChanges.dysonSpaceEnergyInjected = true;
   }
 
+  estimateProductivityCostAndGain(deltaTime = 1000) {
+    const totals = { cost: {}, gain: {} };
+    if (this.isPermanentlyDisabled()) {
+      return totals;
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return totals;
+    }
+
+    const collectorPowerPerSecond = this.getProjectedCollectorPowerPerSecond();
+    const collectorEnergyGain = Math.max(collectorPowerPerSecond * seconds, 0);
+    if (collectorEnergyGain > 0) {
+      totals.gain.space = { energy: collectorEnergyGain };
+    }
+    return totals;
+  }
+
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     if (this.isPermanentlyDisabled()) {
