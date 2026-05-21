@@ -48,6 +48,18 @@ function applyHiddenResearchFlags() {
     }
 }
 
+function resetHiddenResearchOnTravel() {
+    ensureHiddenResearchIds();
+    if (hiddenResearchIds.length > 0) {
+        hiddenResearchIds.length = 0;
+    }
+    for (const category in researchManager.researches) {
+        researchManager.researches[category].forEach(r => {
+            r.hiddenByUser = false;
+        });
+    }
+}
+
 function setResearchHiddenByUser(researchItem, hidden) {
     ensureHiddenResearchIds();
     researchItem.hiddenByUser = hidden;
@@ -549,6 +561,7 @@ if (typeof module !== 'undefined' && module.exports) {
         updateResearchUI,
         initializeResearchTabs,
         activateResearchSubtab,
+        resetHiddenResearchOnTravel,
         researchSubtabManager: () => researchSubtabManager
     };
 }

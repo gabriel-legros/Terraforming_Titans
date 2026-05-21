@@ -775,6 +775,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
+      cachedSettings.keepHiddenResearchToggle.checked = gameSettings.keepHiddenResearchOnTravel;
       cachedSettings.noSpecializationWarningOnTravelToggle.checked = gameSettings.noSpecializationWarningOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       cachedSettings.colonyUpgradeUncheckAutobuildToggle.checked = gameSettings.colonyUpgradeUnchecksAutobuild;

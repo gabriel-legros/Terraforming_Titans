@@ -3700,6 +3700,8 @@ setLanguageData({
       preserveProjectSettingsTooltip: 'Preserves most project settings when traveling.',
       keepHiddenBuildings: 'Keep hidden buildings on travel',
       keepHiddenBuildingsTooltip: 'Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.',
+      keepHiddenResearchOnTravel: 'Keep hidden research on travel',
+      keepHiddenResearchOnTravelTooltip: 'Keeps research you hide hidden after travelling to another world instead of revealing it when you arrive.',
       noSpecializationWarningOnTravel: 'No specialization warning on travel',
       noSpecializationWarningOnTravelTooltip: 'When enabled, traveling away from a world with no completed specialization asks for confirmation.',
       automationSafetyRestoreTitle: 'Automation Safety Check',

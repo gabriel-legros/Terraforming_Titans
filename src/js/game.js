@@ -335,6 +335,9 @@ function initializeGameState(options = {}) {
   } else if (preserveManagers && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenStructuresOnTravel) {
     structureDisplayState.hidden = {};
   }
+  if (preserveManagers && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenResearchOnTravel && typeof resetHiddenResearchOnTravel === 'function') {
+    resetHiddenResearchOnTravel();
+  }
   goldenAsteroid?.resetForTravel?.();
   if (preserveManagers) {
     // Use prepared travel state from departure when available to avoid overwriting pretravel save.

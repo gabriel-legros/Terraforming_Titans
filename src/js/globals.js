@@ -74,6 +74,7 @@ let gameSettings = {
   roundBuildingConstruction: false,
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
+  keepHiddenResearchOnTravel: false,
   noSpecializationWarningOnTravel: false,
   alwaysDisableAutomationOnLoad: false,
   showSpaceStorageResources: false,

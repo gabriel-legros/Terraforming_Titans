@@ -23,6 +23,8 @@ function cacheSettingsElements() {
     preserveAutoStartTooltip: document.getElementById('preserve-project-auto-start-tooltip'),
     preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
+    keepHiddenResearchToggle: document.getElementById('keep-hidden-research-toggle'),
+    keepHiddenResearchTooltip: document.getElementById('keep-hidden-research-tooltip'),
     noSpecializationWarningOnTravelToggle: document.getElementById('no-specialization-warning-on-travel-toggle'),
     noSpecializationWarningOnTravelTooltip: document.getElementById('no-specialization-warning-on-travel-tooltip'),
     autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
@@ -227,6 +229,24 @@ function addSettingsListeners() {
     cached.keepHiddenStructuresToggle.addEventListener('change', () => {
       gameSettings.keepHiddenStructuresOnTravel = cached.keepHiddenStructuresToggle.checked;
     });
+  }
+
+  if (cached.keepHiddenResearchToggle) {
+    cached.keepHiddenResearchToggle.checked = gameSettings.keepHiddenResearchOnTravel;
+    cached.keepHiddenResearchToggle.addEventListener('change', () => {
+      gameSettings.keepHiddenResearchOnTravel = cached.keepHiddenResearchToggle.checked;
+    });
+  }
+
+  if (cached.keepHiddenResearchTooltip) {
+    attachDynamicInfoTooltip(
+      cached.keepHiddenResearchTooltip,
+      t(
+        'ui.settings.keepHiddenResearchOnTravelTooltip',
+        {},
+        'Keeps research you hide hidden after travelling to another world instead of revealing it when you arrive.'
+      )
+    );
   }
 
   if (cached.noSpecializationWarningOnTravelToggle) {
