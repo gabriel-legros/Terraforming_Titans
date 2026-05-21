@@ -212,6 +212,7 @@ class ScriptVariableRegistry {
   }
 
   getProjectAttributes(targetId) {
+    const project = projectManager?.projects?.[targetId];
     const attributes = [
       { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
       { id: 'visible', label: 'Visible', valueType: 'boolean' },
@@ -226,6 +227,9 @@ class ScriptVariableRegistry {
       { id: 'autoStart', label: 'Auto-start Construction', valueType: 'boolean' },
       { id: 'autoContinuousOperation', label: 'Auto Operation Enabled', valueType: 'boolean' }
     ];
+    if (project instanceof SpaceshipProject) {
+      attributes.push({ id: 'spaceshipCostMultiplier', label: 'Spaceship Cost Multiplier', valueType: 'number' });
+    }
     if (targetId === 'ringworldTerraforming') {
       attributes.push({ id: 'currentMass', label: 'Current Mass', valueType: 'number' });
     }
@@ -665,10 +669,32 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'maxRepeatCount') return this.toNumber(project.maxRepeatCount);
     if (ref.attribute === 'autoStart') return project.autoStart ? 1 : 0;
     if (ref.attribute === 'autoContinuousOperation') return project.autoContinuousOperation ? 1 : 0;
+    if (ref.attribute === 'spaceshipCostMultiplier') return this.resolveProjectSpaceshipCostMultiplier(project);
     if (ref.attribute === 'currentMass' && ref.target === 'ringworldTerraforming') {
       return this.toNumber(project.getTotalRingworldMassTons());
     }
     return 0;
+  }
+
+  resolveProjectSpaceshipCostMultiplier(project) {
+    if (!(project instanceof SpaceshipProject)) return 0;
+    const costPerShip = project.attributes?.costPerShip || {};
+    let weightedBaseCost = 0;
+    let weightedAdjustedCost = 0;
+    for (const category in costPerShip) {
+      for (const resourceId in costPerShip[category]) {
+        const baseCost = this.toNumber(costPerShip[category][resourceId]);
+        if (baseCost <= 0) continue;
+        const efficiencyMultiplier = resourceId === 'energy' ? shipEfficiency : 1;
+        const baseWithSharedMultipliers = baseCost
+          * project.getEffectiveCostMultiplier(category, resourceId)
+          * efficiencyMultiplier;
+        weightedBaseCost += baseWithSharedMultipliers;
+        weightedAdjustedCost += baseWithSharedMultipliers * project.getEffectiveSpaceshipCostMultiplier(category, resourceId);
+      }
+    }
+    if (weightedBaseCost <= 0) return 1;
+    return weightedAdjustedCost / weightedBaseCost;
   }
 
   resolveProjectRunning(project) {
