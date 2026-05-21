@@ -294,6 +294,20 @@ function hideSpaceGalaxyTab() {
     }
 }
 
+function maybeShowGalaxyWelcomePopup() {
+    if (!galaxyManager.enabled || galaxyManager.hasSeenWelcomePopup) {
+        return;
+    }
+    const title = getSpaceUIText('galaxyWelcome.title', 'Galactic Overview');
+    const text = getSpaceUIText(
+        'galaxyWelcome.body',
+        'Welcome to the galaxy map.  With the galaxy in disarray, the United Human Federation will be forced to participate.\n\nYou begin in Sector R5-07.  You will have to take over this sector to expand further.\n\nWhile you can be attacked by Imperial factions, the war is designed to be unloseable.'
+    );
+    const buttonText = getSpaceUIText('galaxyWelcome.close', 'Continue');
+    createSystemPopup(title, text, buttonText);
+    galaxyManager.hasSeenWelcomePopup = true;
+}
+
 function showTravelWarningPopup(warningData, onConfirm) {
     if (globalGameIsTraveling || globalGameIsLoadingFromSave) {
         return;
@@ -537,6 +551,7 @@ function initializeSpaceTabs() {
         }
         if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
             updateGalaxyUI({ force: true });
+            maybeShowGalaxyWelcomePopup();
         }
         if (id === 'space-invasion') {
             updateGalacticInvasionUI({ force: true });

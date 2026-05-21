@@ -2971,6 +2971,11 @@ setLanguageData({
         incomingAttackThreat: 'Incoming attack detected in UHF sector',
         incomingAttackNoChance: 'Incoming attack detected in UHF sector with no current success chance',
       },
+      galaxyWelcome: {
+        title: 'Galactic Overview',
+        body: 'Welcome to the galaxy map.  With the galaxy in disarray, the United Human Federation is forced to participate in the Great Imperial Civil War, willing or not.\n\nThey begin in Sector R5-07.  You will have to take over this sector to expand further.\n\nWhile you can be attacked by Imperial factions, the war is designed to be unloseable.',
+        close: 'Continue',
+      },
       travelWarning: {
         hideHint: 'Hide Hint',
         showHint: 'Show Hint',

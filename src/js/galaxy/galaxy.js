@@ -26,6 +26,7 @@ class GalaxyManager extends EffectableEntity {
         this.controlledSectorCacheVersion = 0;
         this.controlledSectorWorldCountCache = {};
         this.hasEverControlledWholeGalaxyFlag = false;
+        this.hasSeenWelcomePopup = false;
         this.popupVisibility = {
             sector: true,
             operations: true,
@@ -156,7 +157,8 @@ class GalaxyManager extends EffectableEntity {
             operationAutoSectors: operationState.operationAutoSectors,
             operationAutoThreshold: operationState.operationAutoThreshold,
             operationAutoMode: operationState.operationAutoMode,
-            popupVisibility: this.getPopupVisibilityState()
+            popupVisibility: this.getPopupVisibilityState(),
+            hasSeenWelcomePopup: this.hasSeenWelcomePopup === true
         };
     }
 
@@ -227,6 +229,7 @@ class GalaxyManager extends EffectableEntity {
             }
         });
         this.hasEverControlledWholeGalaxyFlag = state?.hasEverControlledWholeGalaxyFlag === true;
+        this.hasSeenWelcomePopup = state?.hasSeenWelcomePopup === true;
         this.setPopupVisibilityState(state?.popupVisibility || {});
         if (state && Number.isFinite(state.successfulOperations)) {
             this.successfulOperations = Math.max(0, state.successfulOperations);
@@ -285,6 +288,7 @@ class GalaxyManager extends EffectableEntity {
         this.sectors.clear();
         this.markControlledSectorCacheDirty();
         this.hasEverControlledWholeGalaxyFlag = false;
+        this.hasSeenWelcomePopup = false;
         if (this.operationManager) {
             this.operationManager.reset();
         }

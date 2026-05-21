@@ -89,6 +89,7 @@
 
 .system-popup-text {
   margin: 10px 0;
+  white-space: pre-line;
 }
 
 .system-choice-popup-window {
@@ -156,6 +157,12 @@
 }
 
 .dark-mode .system-choice-popup-window {
+  background-color: #151515;
+  color: #f3f4f6;
+  border-color: #6b7280;
+}
+
+.dark-mode .system-popup-window {
   background-color: #151515;
   color: #f3f4f6;
   border-color: #6b7280;
