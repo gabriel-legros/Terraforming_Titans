@@ -527,7 +527,7 @@ class DiskworldTerraformingProject extends Project {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
-    if (!this.unlocked || !this.pumping || this.isCompleted || this.pumpRate <= 0) {
+    if (!this.unlocked || !this.pumping || this.isCompleted || (!this.uncappedPumpRate && this.pumpRate <= 0)) {
       return totals;
     }
     const seconds = deltaTime / 1000;
@@ -564,7 +564,7 @@ class DiskworldTerraformingProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.unlocked || !this.pumping || this.isCompleted || this.pumpRate <= 0) {
+    if (!this.unlocked || !this.pumping || this.isCompleted || (!this.uncappedPumpRate && this.pumpRate <= 0)) {
       this.shortfallLastTick = false;
       this.actualPumpRate = 0;
       this.currentEnergyConsumptionRate = 0;
