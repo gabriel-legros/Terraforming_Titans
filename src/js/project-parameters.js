@@ -687,7 +687,7 @@ const projectParameters = {
       colony: {
         metal: 5_000_000_000,
         components: 10_000_000_000,
-        electronics: 2_00_000_000
+        electronics: 200_000_000
       }
     },
     duration: 300000,
@@ -947,8 +947,7 @@ const projectParameters = {
     category: 'tera',
     cost: {
       colony: {
-        superalloys: 1_000_000_000_000_000_000_000,
-        components: 100_000_000_000_000_000_000,
+        superalloys: 2_500_000_000_000_000_000_000,
         electronics: 10_000_000_000_000_000_000,
         superconductors: 100_000_000_000_000_000_000
       }

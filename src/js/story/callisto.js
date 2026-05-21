@@ -85,9 +85,9 @@ progressCallisto.storyProjects.sidestep_assembly = {
   category: 'story',
   chapter: 8,
   cost: {
-    colony: { androids : 300_000_000, components: 3_000_000_000, electronics: 3_000_000_000, energy: 5_000_000_000_000, research: 10_000_000_000 }
+    colony: { androids : 300_000_000, metal : 15_000_000_000, components: 10_000_000_000, electronics: 600_000_000, energy: 5_000_000_000_000, research: 10_000_000_000 }
   },
-  duration: 600_000,               // 20 min
+  duration: 300_000,               // 20 min
   description: 'Integrate the magnetic injectors, thrust nozzles, and power conduits into the primary engine assembly. Seal the vault once final alignment diagnostics are complete.',
   repeatable: true,
   maxRepeatCount: 2,
@@ -112,7 +112,7 @@ progressCallisto.storyProjects.sidestep_operation = {
   sustainCost: {
     colony: { energy: 250_000_000_000_000_000 }
   },
-  duration: 600_000,               // 10 min
+  duration: 300_000,               // 10 min
   description: 'Execute a years-long sequence of pseudo-random, coordinated burns from Mars, Titan, and Callisto to introduce an unpredictable drift into their orbital mechanics, scrambling enemy targeting solutions. The energy required is immense.  (You must have sufficient energy storage for this project to progress).',
   repeatable: true,
   maxRepeatCount: 3,
