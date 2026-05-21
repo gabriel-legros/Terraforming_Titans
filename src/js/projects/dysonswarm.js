@@ -311,7 +311,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
         accumulatedChanges,
         storageState,
         {
-          applyRates,
+          applyRates: false,
           sourceLabel: 'Dyson Collector'
         }
       );
@@ -391,7 +391,10 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
           if (storageState?.storageProject && !accumulatedChanges && typeof updateSpaceStorageUI === 'function') {
             updateSpaceStorageUI(storageState.storageProject);
           }
-        }
+        },
+        applyRates: true,
+        seconds: deltaTime / 1000,
+        rateSourceLabel: 'Dyson Collector'
       }
     );
     this.collectorShortfallLastTick = result.shortfall;

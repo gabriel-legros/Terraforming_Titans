@@ -103,6 +103,11 @@ function createResources(initial = {}) {
     colony: {
       funding: createResource('funding', 0),
       energy: createResource('energy', 0, true, initial.colonyEnergyCap || Infinity),
+      metal: createResource('metal', initial.colonyMetal || 0),
+      components: createResource('components', initial.colonyComponents || 0),
+      electronics: createResource('electronics', initial.colonyElectronics || 0),
+      glass: createResource('glass', initial.colonyGlass || 0),
+      superalloys: createResource('superalloys', initial.colonySuperalloys || 0),
       workers: createResource('workers', 0),
       water: createResource('water', 0, true, Infinity),
     },
@@ -446,6 +451,49 @@ class MockConsumingDemandProject extends MockDemandProject {
   }
 }
 
+class MockColonyMetalDemandProject {
+  constructor(demandPerSecond) {
+    this.name = 'mockColonyMetalDemand';
+    this.displayName = 'Mock Colony Metal Demand';
+    this.attributes = { spaceBuilding: true, spaceBuildingProductivity: true };
+    this.demandPerSecond = demandPerSecond;
+    this.autoStart = false;
+    this.operationPreRunThisTick = false;
+    this.unlocked = true;
+    this.operationProductivity = 1;
+  }
+
+  isContinuous() {
+    return false;
+  }
+
+  estimateCostAndGain(deltaTime = 1000, applyRates = true) {
+    const seconds = deltaTime / 1000;
+    const amount = this.demandPerSecond * seconds;
+    if (applyRates && amount > 0) {
+      resources.colony.metal.modifyRate(-this.demandPerSecond, this.displayName, 'project');
+    }
+    return { cost: { colony: { metal: amount } }, gain: {} };
+  }
+
+  applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges = null, productivity = 1) {
+    if (!accumulatedChanges || !(this.demandPerSecond > 0)) {
+      return;
+    }
+    const seconds = deltaTime / 1000;
+    const amount = this.demandPerSecond * seconds * productivity;
+    accumulatedChanges.colony.metal =
+      (accumulatedChanges.colony.metal || 0) - amount;
+    resources.colony.metal.modifyRate(-(amount / seconds), this.displayName, 'project');
+    this.operationProductivity = productivity;
+    this.operationPreRunThisTick = true;
+  }
+
+  applyCostAndGain() {
+    this.operationPreRunThisTick = false;
+  }
+}
+
 class MockProductionProject {
   constructor(resourceKey, productionPerTick, projectName = '') {
     this.name = projectName || `mockProduction-${resourceKey}`;
@@ -613,6 +661,10 @@ function setupHarness(initialStorage = {}) {
       return this.duration;
     }
 
+    applyDurationEffects(duration) {
+      return duration;
+    }
+
     getScaledCost() {
       return this.cost || {};
     }
@@ -751,6 +803,8 @@ function setupHarness(initialStorage = {}) {
   setGlobal('NuclearAlchemyFurnaceProject', NuclearAlchemyFurnaceProject, originalGlobals);
   setGlobal('LiftersProject', LiftersProject, originalGlobals);
   const WhiteDwarfHarvestersProject = require(path.resolve(__dirname, '../src/js/projects/WhiteDwarfHarvestersProject.js'));
+  const DysonSwarmReceiverProject = require(path.resolve(__dirname, '../src/js/projects/dysonswarm.js'));
+  const DysonSphereProject = require(path.resolve(__dirname, '../src/js/projects/dysonsphere.js'));
   setGlobal('window', global, originalGlobals);
   setGlobal('ArtificialStarsProject', global.ArtificialStarsProject, originalGlobals);
   require(path.resolve(__dirname, '../src/js/projects/ArtificialStarsProject.js'));
@@ -769,6 +823,8 @@ function setupHarness(initialStorage = {}) {
     LiftersProject,
     WhiteDwarfHarvestersProject,
     ArtificialStarsProject,
+    DysonSwarmReceiverProject,
+    DysonSphereProject,
     cleanup: () => restoreGlobals(originalGlobals),
   };
 }
@@ -1244,6 +1300,62 @@ describe('Space building productivity via produceResources', () => {
     expect(buildings.dysonReceiver.productivity).toBeGreaterThan(0.99);
     expectApprox(resources.space.energy.value, 0);
     expectApprox(resources.space.energy.projectedProductionRateBySource['Dyson Collectors'] || 0, 8_990_000_000_000_000);
+    cleanup();
+  });
+
+  test.each([
+    ['Dyson Swarm', 'dysonSwarmReceiver', 'Dyson Swarm Receiver', 'DysonSwarmReceiverProject'],
+    ['Dyson Sphere', 'dysonSphere', 'Dyson Sphere', 'DysonSphereProject'],
+  ])('%s collector expansion cost is ignored for operation productivity', (label, projectName, displayName, classKey) => {
+    const harness = setupHarness({
+      colonyMetal: 100,
+      colonyComponents: 1e12,
+      colonyElectronics: 1e12,
+      colonyGlass: 1e12,
+      spaceEnergy: 0,
+    });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      DysonSwarmReceiverProject,
+      DysonSphereProject,
+      cleanup,
+    } = harness;
+
+    const ProjectClass = classKey === 'DysonSphereProject'
+      ? DysonSphereProject
+      : DysonSwarmReceiverProject;
+    const dyson = new ProjectClass({
+      name: displayName,
+      duration: 300000,
+      cost: {},
+      attributes: {
+        canUseSpaceStorage: true,
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+        spaceEnergyProducer: true,
+      },
+    }, projectName);
+    dyson.baseCollectorDuration = 1;
+    dyson.continuousThreshold = 1000;
+    dyson.autoContinuousOperation = true;
+    dyson.isCompleted = true;
+    dyson.collectors = 1;
+    dyson.energyPerCollector = 0;
+
+    const metalDemand = new MockColonyMetalDemandProject(100);
+    projectManager.projects[projectName] = dyson;
+    projectManager.projects.mockColonyMetalDemand = metalDemand;
+    projectManager.projectOrder = [projectName, 'mockColonyMetalDemand'];
+
+    expect(dyson.estimateProductivityCostAndGain(1000).cost).toEqual({});
+
+    produceResources(1000, {});
+
+    expectApprox(metalDemand.operationProductivity, 1);
+    expectApprox(resources.colony.metal.value, 0);
+    expectApprox(resources.colony.metal.projectedConsumptionRateBySource['Mock Colony Metal Demand'] || 0, 100);
     cleanup();
   });
 
