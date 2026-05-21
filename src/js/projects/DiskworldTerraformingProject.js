@@ -127,6 +127,15 @@ class DiskworldTerraformingProject extends Project {
     return true;
   }
 
+  enable() {
+    super.enable();
+    if (this.el.massTotal) {
+      this.updateUI();
+    } else {
+      this.refreshMassState();
+    }
+  }
+
   getDiskRadiusAU() {
     return currentPlanetParameters.specialAttributes.diskRadiusAU
       || currentPlanetParameters.specialAttributes.disk?.radiusAU
@@ -191,7 +200,7 @@ class DiskworldTerraformingProject extends Project {
   }
 
   refreshMassState() {
-    if(!this.unlocked) return;
+    if (!this.unlocked) return;
     const constructionMass = this.getConstructionMassTons();
     const requiredMass = this.getRequiredMassTons();
     const requiredHydrogen = Math.max(requiredMass - constructionMass, 0);
@@ -624,6 +633,7 @@ class DiskworldTerraformingProject extends Project {
       removeEffect(this.lowGravityLifeEffect);
       return;
     }
+    this.refreshMassState();
     this.applyEffects();
   }
 
