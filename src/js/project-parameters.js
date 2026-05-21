@@ -1043,6 +1043,20 @@ const projectParameters = {
               electronics: 10_000_000_000
             }
           }
+        },
+        deepWarp: {
+          label: '',
+          requiresProjectFlag: 'deepWarpStorageUpgrade',
+          expansionSpeedMultiplier: 100,
+          cost: {
+            colony: {
+              metal: 10_000_000_000,
+              components: 10_000_000_000,
+              electronics: 10_000_000_000,
+              superalloys: 10_000_000_000,
+              superconductors: 10_000_000_000
+            }
+          }
         }
       }
     }

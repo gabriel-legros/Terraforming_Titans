@@ -2487,6 +2487,29 @@ const researchParameters = {
         ]
       },
       {
+        id: 'deep_warp_storage',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 500_000_000_000_000 },
+        prerequisites: ['warp_storage'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'storageDepot',
+            type: 'booleanFlag',
+            flagId: 'deepWarpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'deepWarpStorageUpgrade',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'space_chemistry',
         name: '',
         description: '',

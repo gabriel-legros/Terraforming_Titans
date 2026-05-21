@@ -522,6 +522,23 @@ const buildingsParameters = {
             superalloys: 500
           }
         }
+      },
+      deepWarp: {
+        shortName: '',
+        requiresBuildingFlag: 'deepWarpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000_000 } },
+        storage: {
+          colony: {
+            metal: 5_000_000,
+            silicon: 5_000_000,
+            glass: 5_000_000,
+            food: 5_000_000,
+            components: 500_000,
+            electronics: 200_000,
+            superconductors: 200_000,
+            superalloys: 50_000
+          }
+        }
       }
     }
   },

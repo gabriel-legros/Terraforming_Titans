@@ -3936,6 +3936,7 @@ setLanguageData({
         recipes: {
           standard: { shortName: 'Standard Storage' },
           warp: { shortName: 'Warp Storage' },
+          deepWarp: { shortName: 'Deep Warp Storage' },
         },
       },
       waterTank: {
@@ -4209,6 +4210,7 @@ setLanguageData({
           expansionRecipes: {
             standard: { label: 'Standard Storage' },
             warp: { label: 'Warp Storage' },
+            deepWarp: { label: 'Deep Warp Storage' },
           },
         },
       },
@@ -4947,6 +4949,10 @@ setLanguageData({
         warp_storage: {
           name: 'Warp Storage',
           description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode and Space Storage expansion mode.',
+        },
+        deep_warp_storage: {
+          name: 'Deep Warp Storage',
+          description: 'Sometimes we lose objects in warp storage.  Now we finally know why.  The warp can go so much deeper that we once thought...  How deep?  Provides a new deep warp storage option for storage depots and space storage.',
         },
         space_chemistry: {
           name: 'Space Chemistry',
