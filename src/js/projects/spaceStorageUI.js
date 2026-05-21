@@ -340,6 +340,8 @@ function renderSpaceStorageUI(project, container) {
   let reserveModeSelect = cachedCaps.reserveModeSelect;
   let reserveValueInput = cachedCaps.reserveValueInput;
   let reserveValueLabel = cachedCaps.reserveValueLabel;
+  let transferWeightInput = cachedCaps.transferWeightInput;
+  let transferWeightLabel = cachedCaps.transferWeightLabel;
   let scopeExpansionsCheckbox = cachedCaps.scopeExpansionsCheckbox;
   let scopeTransfersCheckbox = cachedCaps.scopeTransfersCheckbox;
   let scopeConsumptionCheckbox = cachedCaps.scopeConsumptionCheckbox;
@@ -534,6 +536,41 @@ function renderSpaceStorageUI(project, container) {
     });
     reserveValueRow.append(reserveValueLabel, reserveValueInput);
 
+    const transferWeightRow = document.createElement('div');
+    transferWeightRow.classList.add('space-storage-settings-row');
+    transferWeightLabel = document.createElement('label');
+    transferWeightLabel.classList.add('space-storage-settings-label');
+    transferWeightLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.transferWeight', 'Transfer weight:');
+    const transferWeightInfo = document.createElement('span');
+    transferWeightInfo.classList.add('info-tooltip-icon');
+    transferWeightInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      transferWeightInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.transferWeightTooltip', 'Used for ship transfer capacity split. Capacity is divided proportionally by selected resources weight. Weight 0 excludes that resource from ship transfer capacity allocation.')
+    );
+    transferWeightLabel.appendChild(transferWeightInfo);
+    transferWeightInput = document.createElement('input');
+    transferWeightInput.type = 'text';
+    transferWeightInput.classList.add('space-storage-settings-input');
+    wireStringNumberInput(transferWeightInput, {
+      datasetKey: 'spaceStorageTransferWeight',
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value) || 0;
+        return Math.max(0, parsed);
+      },
+      formatValue: (parsed) => {
+        return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+      },
+      onValue: (parsed) => {
+        const projectEntry = projectElements[project.name];
+        if (!projectEntry) {
+          return;
+        }
+        projectEntry.transferWeightDraft = parsed;
+      },
+    });
+    transferWeightRow.append(transferWeightLabel, transferWeightInput);
+
     const reserveScopeRow = document.createElement('div');
     reserveScopeRow.classList.add('space-storage-settings-row');
     reserveScopeRow.style.alignItems = 'flex-start';
@@ -606,6 +643,7 @@ function renderSpaceStorageUI(project, container) {
       capResourceRow,
       capModeRow,
       capValueRow,
+      transferWeightRow,
       reserveModeRow,
       reserveValueRow,
       reserveScopeRow,
@@ -715,6 +753,7 @@ function renderSpaceStorageUI(project, container) {
         const scope = reserveDraft.scope || { expansions: true, transfers: false, consumption: false };
         project.resourceStrategicReserves[key] = { mode: reserveDraft.mode, value: reserveDraft.value || 0, scope };
       }
+      project.setResourceTransferWeight(key, projectElements[project.name].transferWeightDraft);
       projectElements[project.name].capDraftDirty = false;
       projectElements[project.name].reserveDraftDirty = false;
       closeCapWindow();
@@ -792,6 +831,7 @@ function renderSpaceStorageUI(project, container) {
     const scope = reserveSetting.scope || { expansions: true, transfers: false, consumption: false };
     projectElements[project.name].reserveDraft = { mode: reserveSetting.mode, value: reserveSetting.value || 0, scope };
     projectElements[project.name].reserveDraftDirty = false;
+    projectElements[project.name].transferWeightDraft = project.getResourceTransferWeight(resourceKey);
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
     capValueInput.value = capSetting.mode === 'percent' || capSetting.mode === 'weight'
@@ -806,6 +846,11 @@ function renderSpaceStorageUI(project, container) {
       : ((reserveSetting.value || 0) >= 1e6
         ? formatNumber(reserveSetting.value || 0, true, 3)
         : String(reserveSetting.value || 0));
+    const transferWeight = projectElements[project.name].transferWeightDraft;
+    transferWeightInput.dataset.spaceStorageTransferWeight = String(transferWeight);
+    transferWeightInput.value = transferWeight >= 1e6
+      ? formatNumber(transferWeight, true, 3)
+      : String(transferWeight);
     scopeExpansionsCheckbox.checked = scope.expansions !== false;
     scopeTransfersCheckbox.checked = scope.transfers === true;
     scopeConsumptionCheckbox.checked = scope.consumption === true;
@@ -1106,6 +1151,8 @@ function renderSpaceStorageUI(project, container) {
     reserveModeSelect,
     reserveValueInput,
     reserveValueLabel,
+    transferWeightInput,
+    transferWeightLabel,
     scopeExpansionsCheckbox,
     scopeTransfersCheckbox,
     scopeConsumptionCheckbox,
@@ -1392,6 +1439,11 @@ function updateSpaceStorageUI(project) {
       els.reserveValueInput.value = reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal'
         ? String(reserveValue)
         : (reserveValue >= 1e6 ? formatNumber(reserveValue, true, 3) : String(reserveValue));
+    }
+    if (els.transferWeightInput !== document.activeElement) {
+      const transferWeight = els.transferWeightDraft != null ? els.transferWeightDraft : 1;
+      els.transferWeightInput.dataset.spaceStorageTransferWeight = String(transferWeight);
+      els.transferWeightInput.value = transferWeight >= 1e6 ? formatNumber(transferWeight, true, 3) : String(transferWeight);
     }
     els.capValueInput.disabled = els.capModeSelect.value === 'none' || els.capModeSelect.value === 'remaining';
     const reserveIsNone = els.reserveModeSelect.value === 'none';

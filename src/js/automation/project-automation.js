@@ -687,6 +687,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const source = settings || {};
     const filtered = {};
     const resourceCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
+    const weightSource = source.resourceTransferWeights || {};
     filtered.spaceStorageSingleResourceKey = resourceKey;
     if (Object.prototype.hasOwnProperty.call(source, 'mode')) {
       filtered.mode = source.mode;
@@ -721,6 +722,25 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
           [resourceKey]: this.deepClone(capSource[resourceKey])
         };
       }
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourceTransferWeights')) {
+      if (Object.prototype.hasOwnProperty.call(weightSource, resourceKey)) {
+        filtered.resourceTransferWeights = {
+          [resourceKey]: this.deepClone(weightSource[resourceKey])
+        };
+        filtered.transferWeight = this.deepClone(weightSource[resourceKey]);
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'transferWeight')) {
+      filtered.transferWeight = source.transferWeight;
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceTransferWeight')) {
+      filtered.transferWeight = source.spaceStorageSingleResourceTransferWeight;
+    }
+    if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
+      filtered.transferWeight = Object.prototype.hasOwnProperty.call(weightSource, resourceKey)
+        ? this.deepClone(weightSource[resourceKey])
+        : 1;
     }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'mode')
       && Object.prototype.hasOwnProperty.call(source, 'resourceTransferModes')) {
@@ -892,19 +912,24 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     }
     const capsSource = settings.resourceCaps || {};
     const reserveSource = settings.resourceStrategicReserves || {};
+    const weightSource = settings.resourceTransferWeights || {};
     const hasTransferMode = Object.prototype.hasOwnProperty.call(settings, 'mode')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
     const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'selected')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceSelected');
+    const hasTransferWeight = Object.prototype.hasOwnProperty.call(settings, 'transferWeight')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferWeight');
     const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
     const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
-    if (!capsHasKey && !reserveHasKey && !hasTransferMode && !hasSelectedFlag) {
+    const weightHasKey = Object.prototype.hasOwnProperty.call(weightSource, resourceKey);
+    if (!capsHasKey && !reserveHasKey && !weightHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag) {
       return false;
     }
 
     const beforeCaps = project.resourceCaps?.[resourceKey];
     const beforeReserve = project.resourceStrategicReserves?.[resourceKey];
     const beforeTransfer = project.resourceTransferModes?.[resourceKey];
+    const beforeWeight = project.resourceTransferWeights?.[resourceKey];
     const canonicalCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     const beforeSelectedResourceCount = Array.isArray(project.selectedResources)
       ? project.selectedResources.filter((entry) => entry?.resource === resourceKey).length
@@ -929,6 +954,24 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       project.resourceStrategicReserves[resourceKey] = this.deepClone(reserveSource[resourceKey]);
       project.sanitizeResourceStrategicReserves();
       changed = changed || !this.areSettingsEqual(beforeReserve, project.resourceStrategicReserves[resourceKey]);
+    }
+    if (weightHasKey) {
+      if (!project.resourceTransferWeights) {
+        project.resourceTransferWeights = {};
+      }
+      const parsedWeight = Number(this.deepClone(weightSource[resourceKey]));
+      project.resourceTransferWeights[resourceKey] = Number.isFinite(parsedWeight) && parsedWeight >= 0 ? parsedWeight : 1;
+      changed = changed || !this.areSettingsEqual(beforeWeight, project.resourceTransferWeights[resourceKey]);
+    } else if (hasTransferWeight) {
+      const transferWeight = Object.prototype.hasOwnProperty.call(settings, 'transferWeight')
+        ? settings.transferWeight
+        : settings.spaceStorageSingleResourceTransferWeight;
+      if (!project.resourceTransferWeights) {
+        project.resourceTransferWeights = {};
+      }
+      const parsedWeight = Number(this.deepClone(transferWeight));
+      project.resourceTransferWeights[resourceKey] = Number.isFinite(parsedWeight) && parsedWeight >= 0 ? parsedWeight : 1;
+      changed = changed || !this.areSettingsEqual(beforeWeight, project.resourceTransferWeights[resourceKey]);
     }
     if (hasTransferMode) {
       const transferMode = Object.prototype.hasOwnProperty.call(settings, 'mode')

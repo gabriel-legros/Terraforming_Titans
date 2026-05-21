@@ -1796,6 +1796,8 @@ setLanguageData({
         percentOfResourceCap: '% of resource cap',
         reserveValue: 'Reserve value:',
         reserveValueTooltip: 'Accepts scientific notation. Percent reserves clamp to 0-100.',
+        transferWeight: 'Transfer weight:',
+        transferWeightTooltip: 'Used for ship transfer capacity split. Capacity is divided proportionally by selected resources weight. Weight 0 excludes that resource from ship transfer capacity allocation.',
         reserveAppliesTo: 'Applies to:',
         reserveAppliesToTooltip: 'Choose which systems respect this reserve. Unchecked systems ignore it.',
         reserveScopeExpansions: 'Expansions',

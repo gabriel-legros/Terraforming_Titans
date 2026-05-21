@@ -285,6 +285,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Hydrology, phase transitions, and zonal resource synchronization were refactored for stability and consistency.
 
 ### Space, Projects, and Hazards
+- Space Storage per-resource cap settings now include `Transfer Weight` (default `1`, accepts `0+`) that controls ship transfer capacity allocation proportionally across selected resources; the value has a tooltip, persists through save/load/travel, and is included in Space Storage automation presets including single-resource presets.
 - Space Antimatter Safety Regulations synchronize the special Antimatter resource against Space Energy at `1 antimatter = 2Q space energy`: antimatter production/storage routes to Space Energy, antimatter costs spend Space Energy through that conversion, Antimatter Farms no longer expose a separate Space Energy recipe, and the Antimatter resource tooltip explains the synchronization.
 - Galactic Invasion is a preserved/save-loaded manager with an opt-in Space subtab to the right of Galaxy. It uses the special `prometheanInvasion` galaxy faction (`INV`, deep purple), 10s operations, no fleet regeneration, rim-entry invasion rules, cancel-to-UHF cleanup with 1h cooldown, and completed-letter rewards that reapply as summarized effects.
 - Galactic Invasion Omega fleet power values are `10 Sx` for Lower Omega and `100 Sx` for Upper Omega.
