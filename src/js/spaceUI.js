@@ -332,7 +332,7 @@ function showTravelWarningPopup(warningData, onConfirm) {
         win.style.padding = '16px';
         win.style.border = '1px solid #555';
         win.style.maxWidth = '300px';
-        win.style.textAlign = 'center';
+        win.style.textAlign = 'left';
 
         travelWarningMessageEl = document.createElement('div');
         travelWarningMessageEl.className = 'travel-warning-message';

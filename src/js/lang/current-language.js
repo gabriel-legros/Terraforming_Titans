@@ -5167,7 +5167,7 @@ setLanguageData({
         star: { name: 'Sun' },
         parentBody: { name: 'Saturn' },
         travelWarning: {
-          message: 'You have completed Mars, which is widely considered the tutorial for this game.  When travelling Titan, most things will reset.  The game has multiple meta-progression systems, and the first three will unlock on Titan but not immediately and not all at once.  The game will unlock new features and new systems every story world.  By end-game, it is possible to terraform worlds is seconds.  However, this progression is slow and can appear repetitive at first.  If you had enough already, I thank you for playing this game <3 Otherwise, be prepared for a long and epic journey across the galaxy.'
+          message: 'You have completed Mars, which is widely considered the tutorial for this game.  Congratulations.  \n\n When travelling to Titan, most things will reset.  The game has multiple meta-progression systems and advanced automation features, and the first three will unlock on Titan but not immediately and not all at once.  The game will unlock new features and new systems every story world.  By end-game, it is possible and common to terraform worlds in seconds.  \n\n However, this progression is intentionally slow and can appear repetitive at first.  If you had enough already, I thank you for playing this game <3. Otherwise, be prepared for a long and epic journey across the galaxy.  The real game begins now.'
         },
       },
       callisto: {

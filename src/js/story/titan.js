@@ -49,7 +49,7 @@ progressTitan.chapters.push(
     id: "chapter4.4b",
     type: "journal",
     chapter: 4,
-    narrative: "Receiving transmission...  Adrien Solis : 'HOPE...  my name is Adrien Solis.  You could call me a... philantropist.  I have many space assets.  I also happened to have lost many assets on Earth.  I would rather not put all my eggs in one basket.  I like your ambitions.  I want to help you build up Titan.'",
+    narrative: "(Some lonely time later) Receiving transmission...  Adrien Solis : 'HOPE...  my name is Adrien Solis.  You could call me a... philantropist.  I have many space assets.  I also happened to have lost many assets on Earth.  I would rather not put all my eggs in one basket.  I like your ambitions.  I want to help you build up Titan.'",
     prerequisites: ["chapter4.4"],
     objectives: [],
     reward: [
