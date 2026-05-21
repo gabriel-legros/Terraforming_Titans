@@ -20,6 +20,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     this.segmentProgress = 0;
     this.kesslerDebrisSize = 'large';
     this.maxRepeatCount = 1;
+    this.hasCompletedOnce = false;
   }
 
   getCostRateLabel() {
@@ -42,7 +43,7 @@ class ArtificialSkyProject extends SpaceshipProject {
 
   getBuiltSegmentsWithProgress() {
     const maxSegments = this.getMaxRepeats();
-    if (this.isCompleted) {
+    if (this.isCompleted || this.hasCompletedOnce) {
       return maxSegments;
     }
 
@@ -178,6 +179,9 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   canStart() {
+    if (this.hasCompletedOnce) {
+      return false;
+    }
     if (this.repeatCount >= this.getMaxRepeats()) {
       return false;
     }
@@ -199,6 +203,9 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   canContinue() {
+    if (this.hasCompletedOnce) {
+      return false;
+    }
     return this.repeatCount < this.getMaxRepeats();
   }
 
@@ -267,6 +274,7 @@ class ArtificialSkyProject extends SpaceshipProject {
 
   completeProjectFully() {
     const maxSegments = this.getMaxRepeats();
+    this.hasCompletedOnce = true;
     this.repeatCount = maxSegments;
     this.segmentProgress = 0;
     this.isCompleted = true;
@@ -649,7 +657,8 @@ class ArtificialSkyProject extends SpaceshipProject {
   saveState() {
     return {
       ...super.saveState(),
-      segmentProgress: this.segmentProgress
+      segmentProgress: this.segmentProgress,
+      hasCompletedOnce: this.hasCompletedOnce === true
     };
   }
 
@@ -657,9 +666,10 @@ class ArtificialSkyProject extends SpaceshipProject {
     this.maxRepeatCount = this.getMaxRepeats();
     super.loadState(state);
     this.segmentProgress = state.segmentProgress || 0;
+    this.hasCompletedOnce = state && state.hasCompletedOnce === true;
     const maxSegments = this.getMaxRepeats();
     this.repeatCount = Math.min(this.repeatCount || 0, maxSegments);
-    if (this.repeatCount >= maxSegments || this.isCompleted) {
+    if (this.repeatCount >= maxSegments || this.isCompleted || this.hasCompletedOnce) {
       this.completeProjectFully();
     }
   }
