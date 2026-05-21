@@ -42,13 +42,8 @@ class AndroidHousing extends Building {
   }
 
   getAndroidCountTarget(totalAndroidCount) {
-    const perBuildingCapacity = this.getStorageAmount('colony', 'androids');
-    if (perBuildingCapacity <= 0) {
-      return 0;
-    }
-
     const androidBudget = Math.max(0, (this.autoBuildPercent || 0) * totalAndroidCount / 100);
-    return Math.floor(androidBudget / perBuildingCapacity);
+    return Math.floor(androidBudget);
   }
 
   getConsumptionRatio() {
