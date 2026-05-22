@@ -1018,6 +1018,7 @@ const projectParameters = {
     kesslerDebrisSize: 'large',
     attributes: {
       spaceStorage: true,
+      shipBaseDuration: 25_000,
       costPerShip: { colony: { metal : 100_000, energy: 25_000_000_000 } },
       transportPerShip: 1_000_000,
       canUseSpaceStorage: true,
