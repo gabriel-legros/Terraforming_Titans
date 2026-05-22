@@ -300,14 +300,6 @@ const researchParameters = {
             value: 1.25,
             repeatableAddend: 0.25,
             effectId: 'ai_reactor_overclocking_output'
-          },
-          {
-            target: 'building',
-            targetId: 'superalloyFusionReactor',
-            type: 'consumptionMultiplier',
-            value: 1.25,
-            repeatableAddend: 0.25,
-            effectId: 'ai_reactor_overclocking_consumption'
           }
         ]
       },
