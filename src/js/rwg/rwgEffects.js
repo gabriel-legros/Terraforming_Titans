@@ -12,7 +12,8 @@ const RWG_EFFECTS = {
       descriptionKey: "effects.nitrogenImportDurationAndCaps",
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
-        return 1 / (1 + f * count);
+        const divisor = Math.min(2, 1 + f * count);
+        return 1 / divisor;
       },
     },
     {
@@ -24,7 +25,32 @@ const RWG_EFFECTS = {
       hideInSummary: true,
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
-        return 1 / (1 + f * count);
+        const divisor = Math.min(2, 1 + f * count);
+        return 1 / divisor;
+      },
+    },
+    {
+      effectId: "rwg-titan-ghg-factory",
+      target: "building",
+      targetId: "ghgFactory",
+      type: "productionMultiplier",
+      factor: 0.1,
+      descriptionKey: "effects.titanLikeGhgFactoryThroughput",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-titan-ghg-factory-consumption",
+      target: "building",
+      targetId: "ghgFactory",
+      type: "consumptionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
       },
     },
   ],
@@ -38,7 +64,8 @@ const RWG_EFFECTS = {
       descriptionKey: "effects.carbonImportDurationAndCaps",
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
-        return 1 / (1 + f * count);
+        const divisor = Math.min(2, 1 + f * count);
+        return 1 / divisor;
       },
     },
     {
@@ -50,7 +77,56 @@ const RWG_EFFECTS = {
       hideInSummary: true,
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
-        return 1 / (1 + f * count);
+        const divisor = Math.min(2, 1 + f * count);
+        return 1 / divisor;
+      },
+    },
+    {
+      effectId: "rwg-carbon-dust-factory",
+      target: "building",
+      targetId: "dustFactory",
+      type: "productionMultiplier",
+      factor: 0.1,
+      descriptionKey: "effects.carbonDustAndBiodomeThroughput",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-carbon-dust-factory-consumption",
+      target: "building",
+      targetId: "dustFactory",
+      type: "consumptionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-carbon-biodome",
+      target: "building",
+      targetId: "biodome",
+      type: "productionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-carbon-biodome-consumption",
+      target: "building",
+      targetId: "biodome",
+      type: "consumptionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
       },
     },
   ],
@@ -64,7 +140,8 @@ const RWG_EFFECTS = {
       descriptionKey: "effects.waterImportDurationAndCaps",
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
-        return 1 / (1 + f * count);
+        const divisor = Math.min(2, 1 + f * count);
+        return 1 / divisor;
       },
     },
     {
@@ -76,7 +153,32 @@ const RWG_EFFECTS = {
       hideInSummary: true,
       computeValue(count, def) {
         const f = def?.factor ?? 0.2;
-        return 1 / (1 + f * count);
+        const divisor = Math.min(2, 1 + f * count);
+        return 1 / divisor;
+      },
+    },
+    {
+      effectId: "rwg-icy-oxygen-factory",
+      target: "building",
+      targetId: "oxygenFactory",
+      type: "productionMultiplier",
+      factor: 0.1,
+      descriptionKey: "effects.icyMoonOxygenFactoryThroughput",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-icy-oxygen-factory-consumption",
+      target: "building",
+      targetId: "oxygenFactory",
+      type: "consumptionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
       },
     },
   ],

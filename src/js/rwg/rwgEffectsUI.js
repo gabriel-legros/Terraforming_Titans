@@ -122,6 +122,12 @@ function _computeRWGEffectsSummary() {
   Object.keys(RWG).forEach((type) => {
     if (!orderedTypes.includes(type)) orderedTypes.push(type);
   });
+  const desertIndex = orderedTypes.indexOf('cold-desert');
+  const desiccatedIndex = orderedTypes.indexOf('desiccated-desert');
+  if (desertIndex !== -1 && desiccatedIndex !== -1 && desiccatedIndex !== desertIndex + 1) {
+    orderedTypes.splice(desiccatedIndex, 1);
+    orderedTypes.splice(desertIndex + 1, 0, 'desiccated-desert');
+  }
 
   for (const type of orderedTypes) {
     const effects = RWG[type];
@@ -142,11 +148,10 @@ function _computeRWGEffectsSummary() {
         descr = descr || `${what} production increased (+${fEach.toFixed(0)}% each)`;
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'projectDurationMultiplier') {
-        // Show as divided by (1 + factor * count)
-        const f = eff.factor ?? 0.2;
-        const divisor = 1 + f * effectiveCount;
+        // Show from computed value so capped formulas display correctly.
+        const divisor = raw > 0 ? 1 / raw : 0;
         const name = RWG_PROJECT_NAMES[eff.targetId] || eff.targetId || 'Project';
-        const fEach = (f * 100).toFixed(0);
+        const fEach = ((eff.factor ?? 0.2) * 100).toFixed(0);
         descr = descr || `${name} duration (${fEach}% each)`;
         display = `/${divisor.toFixed(2)}`;
       } else if (eff.type === 'globalPopulationGrowth') {
@@ -188,7 +193,7 @@ function _computeRWGEffectsSummary() {
         display = divisor > 0 ? `/${divisor.toFixed(1)}` : '—';
       } else if (eff.type === 'importCapMultiplier') {
         const each = eff.factor ?? 0.2;
-        const divisor = 1 + each * effectiveCount;
+        const divisor = raw > 0 ? 1 / raw : 0;
         const eachPct = (each * 100).toFixed(0);
         descr = descr || `Import cap divided by (1+${eachPct}% each)`;
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
@@ -239,17 +244,17 @@ function updateRWGEffectsUI() {
       count: '',
       effect: ''
     });
-    for (const eff of entry.effects) {
+    entry.effects.forEach((eff, effectIndex) => {
       rows.push({
         kind: 'body',
         className: `rwg-effects-row rwg-effects-body${groupAlt}`,
         dataEffect: eff.effectId,
         type: eff.description || '',
         smallType: true,
-        count: countText,
+        count: effectIndex === 0 ? countText : '',
         effect: eff.display || ''
       });
-    }
+    });
   }
 
   _rwgEffectsListEl._rows ||= [];

@@ -1954,8 +1954,10 @@ function updateDecreaseButtonText(button, buildCount) {
   function formatRwgMultiplierSource(sourceId) {
     const id = String(sourceId || '');
     if (!id.startsWith('rwg-')) return null;
-    const type = id.slice(4).replace(/-/g, ' ');
-    const name = type.replace(/\b\w/g, char => char.toUpperCase());
+    const typeKey = id.slice(4);
+    const displayName = RWG_WORLD_TYPES[typeKey]?.displayName;
+    const fallback = typeKey.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    const name = displayName || fallback;
     return name
       ? getStructuresUIText('ui.structures.sources.randomWorldNamed', 'Random World: {name}', { name })
       : getStructuresUIText('ui.structures.sources.randomWorld', 'Random World');
