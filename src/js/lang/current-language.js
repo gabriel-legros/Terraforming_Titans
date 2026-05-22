@@ -5013,7 +5013,7 @@ setLanguageData({
         },
         white_dwarf_harvesting: {
           name: 'White Dwarf Harvesting',
-          description: 'Some stellar remnants are rich in carbon and oxygen.  Our lifters cannot get to it easily but if we charge them with enough positrons this task can be made more doable.  Unlocks a new terastructure.  (Special Thanks to Citizen Power for this research proposal)',
+          description: 'Some stellar remnants are rich in carbon and oxygen.  Our lifters cannot get to it easily but if we charge the dwarfs with enough positrons this task can be made more doable.  Unlocks a new terastructure.  (Special Thanks to Citizen Power for this research proposal)',
         },
         tractor_beams: {
           name: 'Tractor Beams',
