@@ -53,6 +53,30 @@ const RWG_EFFECTS = {
         return 1 + f * count;
       },
     },
+    {
+      effectId: "rwg-titan-hyperion-lantern",
+      target: "building",
+      targetId: "hyperionLantern",
+      type: "productionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-titan-hyperion-lantern-consumption",
+      target: "building",
+      targetId: "hyperionLantern",
+      type: "consumptionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
   ],
   "carbon-planet": [
     {

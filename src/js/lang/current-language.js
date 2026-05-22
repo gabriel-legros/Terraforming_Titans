@@ -82,7 +82,7 @@ setLanguageData({
         carbonImportDurationAndCaps: 'Carbon Import duration and caps divided by (1+20% each, max 2)',
         nitrogenImportDurationAndCaps: 'Nitrogen Import duration and caps divided by (1+20% each, max 2)',
         icyMoonOxygenFactoryThroughput: 'Oxygen Factory throughput increased (+10% each)',
-        titanLikeGhgFactoryThroughput: 'GHG Factory throughput increased (+10% each)',
+        titanLikeGhgFactoryThroughput: 'GHG Factory and Hyperion Lantern throughput increased (+10% each)',
         carbonDustAndBiodomeThroughput: 'Dust Factory and Biodome throughput increased (+10% each)',
       },
       dominions: {

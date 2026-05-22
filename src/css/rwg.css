@@ -298,7 +298,7 @@
 #rwg-effects-card { margin-top: 14px; }
 .rwg-effects-row {
   display: grid;
-  grid-template-columns: minmax(400px, 1fr) 40px minmax(144px, auto) minmax(740px, auto);
+  grid-template-columns: minmax(0, 1fr) minmax(104px, max-content) minmax(120px, max-content);
   gap: 14px;
   padding: 4px 14px;
   align-items: center;
