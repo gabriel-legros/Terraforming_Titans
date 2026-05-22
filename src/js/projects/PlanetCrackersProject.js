@@ -283,7 +283,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
 
   setLastRunStats(planetsRate = 0, spaceEnergyRate = 0, capRate = null, ratesByType = null) {
     this.lastCrackedPerSecond = planetsRate;
-    this.lastSpaceEnergyPerSecond = spaceEnergyRate;
+    this.lastSpaceEnergyPerSecond = spaceEnergyRate > 0 ? spaceEnergyRate : 0;
     this.lastCapGainPerSecond = capRate || { metal: 0, silicon: 0, water: 0 };
     this.lastOutputRatesByResource = {};
     const keys = this.getAssignmentKeys();
