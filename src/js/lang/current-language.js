@@ -1109,6 +1109,7 @@ setLanguageData({
           pressure: 'Pumping energy uses an isothermal hydrogen compression estimate once internal pressure exceeds 1 atm, so each ton becomes more expensive after that point.',
           mass: 'Disk mass includes construction mass, filled hydrogen, and all colony, surface, and atmospheric resources measured in tons.',
           shipPenalty: 'Spaceship shipments pay an energy penalty per ton based on fill progress and radius.',
+          summary: 'All values in the Terraforming Summary screen are displayed as if the diskworld is fully filled.',
         },
       },
       hephaestus: {

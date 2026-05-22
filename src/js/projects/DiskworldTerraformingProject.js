@@ -386,7 +386,8 @@ class DiskworldTerraformingProject extends Project {
       getDiskworldText('notes.completeFill', null, 'You must fill the disk with hydrogen until structural gravity reaches 1g to complete terraforming.'),
       getDiskworldText('notes.pressure', null, 'Pumping energy uses an isothermal hydrogen compression estimate, so each ton becomes more expensive as internal pressure rises.'),
       getDiskworldText('notes.mass', null, 'Disk mass includes construction mass, filled hydrogen, and all colony, surface, and atmospheric resources measured in tons.'),
-      getDiskworldText('notes.shipPenalty', null, 'Spaceship shipments pay an energy penalty per ton based on fill progress and radius.')
+      getDiskworldText('notes.shipPenalty', null, 'Spaceship shipments pay an energy penalty per ton based on fill progress and radius.'),
+      getDiskworldText('notes.summary', null, 'All values in the Terraforming Summary screen are displayed as if the diskworld is fully filled.')
     ].forEach(text => {
       const item = document.createElement('li');
       item.textContent = text;
