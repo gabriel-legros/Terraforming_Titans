@@ -10,6 +10,7 @@ const DISKWORLD_WATT_DAY_SECONDS = 86400;
 const DISKWORLD_RATE_STEP_MIN = 1;
 const DISKWORLD_RATE_STEP_MAX = 1e100;
 const DISKWORLD_MIN_GRAVITY_RATIO = 0.1;
+const DISKWORLD_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS = 100_000;
 
 function getDiskworldText(path, vars, fallback = '') {
   try {
@@ -93,13 +94,14 @@ class DiskworldTerraformingProject extends Project {
     this.currentPressurePa = 0;
     this.currentEnergyPerTon = 0;
     this.currentEnergyConsumptionRate = 0;
-    this.currentShipEnergyMultiplier = 1;
-    this.shipEnergyMultiplierEffect = {
+    this.currentShipEnergyPenalty = 0;
+    this.shipEnergyPenaltyEffect = {
       target: 'projectManager',
-      type: 'spaceshipCostMultiplier',
+      type: 'spaceshipCostPerTon',
       resourceCategory: 'colony',
       resourceId: 'energy',
-      value: 1,
+      value: 0,
+      skipForSpaceStorageImports: true,
       effectId: `${this.name}-ship-energy-multiplier`,
       sourceId: this.name,
       name: this.displayName
@@ -213,7 +215,7 @@ class DiskworldTerraformingProject extends Project {
     this.currentMassTons = constructionMass + this.hydrogenFilledTons + this.getOtherResourceMassTons();
     this.currentPressurePa = this.getHydrogenPressurePa();
     this.currentEnergyPerTon = this.getPumpEnergyPerTon();
-    this.currentShipEnergyMultiplier = this.getShipEnergyMultiplier();
+    this.currentShipEnergyPenalty = this.getShipEnergyPenalty();
     if (!this.isCompleted && requiredHydrogen <= 0) {
       this.complete();
       this.pumping = false;
@@ -260,12 +262,12 @@ class DiskworldTerraformingProject extends Project {
     return (joulesPerKg * DISKWORLD_TON_KG) / DISKWORLD_WATT_DAY_SECONDS;
   }
 
-  getShipEnergyMultiplier() {
-    const fillFraction = this.currentRequiredMassTons > 0
-      ? Math.max(this.currentMassTons / this.currentRequiredMassTons, 0)
+  getShipEnergyPenalty() {
+    const fillRate = this.currentRequiredMassTons > 0
+      ? Math.min(Math.max((this.currentConstructionMassTons + this.hydrogenFilledTons) / this.currentRequiredMassTons, 0), 1)
       : 1;
     const radiusEarth = this.getDiskRadiusMeters() / DISKWORLD_EARTH_RADIUS_METERS;
-    return Math.max(1, fillFraction * radiusEarth);
+    return fillRate * Math.max(radiusEarth - 1, 0) * DISKWORLD_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS;
   }
 
   applyDiskGravity() {
@@ -315,7 +317,7 @@ class DiskworldTerraformingProject extends Project {
     const pressure = createDiskworldStat(getDiskworldText('hydrogenPressure', null, 'Hydrogen Pressure:'));
     const energyPerTon = createDiskworldStat(getDiskworldText('energyPerTon', null, 'Energy per Ton:'));
     const energyUse = createDiskworldStat(getDiskworldText('energyUse', null, 'Current Energy Use:'));
-    const shipMultiplier = createDiskworldStat(getDiskworldText('shipEnergyMultiplier', null, 'Ship Energy Multiplier:'));
+    const shipPenalty = createDiskworldStat(getDiskworldText('shipEnergyPenalty', null, 'Ship Energy Penalty:'));
     const massTotal = createDiskworldStat(getDiskworldText('diskMass', null, 'Disk Mass:'));
     const hydrogenFilled = createDiskworldStat(getDiskworldText('hydrogenFilled', null, 'Hydrogen Filled:'));
     const overviewGroup = createDiskworldStatGroup(
@@ -379,7 +381,7 @@ class DiskworldTerraformingProject extends Project {
 
     const diagnosticsGroup = createDiskworldStatGroup(
       getDiskworldText('groups.diagnostics', null, 'Pressure and Costs'),
-      [pressure, energyPerTon, shipMultiplier]
+      [pressure, energyPerTon, shipPenalty]
     );
     statusPanel.appendChild(diagnosticsGroup);
 
@@ -395,7 +397,7 @@ class DiskworldTerraformingProject extends Project {
       getDiskworldText('notes.completeFill', null, 'You must fill the disk with hydrogen until structural gravity reaches 1g to complete terraforming.'),
       getDiskworldText('notes.pressure', null, 'Pumping energy uses an isothermal hydrogen compression estimate, so each ton becomes more expensive as internal pressure rises.'),
       getDiskworldText('notes.mass', null, 'Disk mass includes construction mass, filled hydrogen, and all colony, surface, and atmospheric resources measured in tons.'),
-      getDiskworldText('notes.shipPenalty', null, 'Spaceship energy cost scales from the total disk mass and updates automatically as mass changes.')
+      getDiskworldText('notes.shipPenalty', null, 'Spaceship shipments pay an energy penalty per ton based on fill progress and radius.')
     ].forEach(text => {
       const item = document.createElement('li');
       item.textContent = text;
@@ -414,7 +416,7 @@ class DiskworldTerraformingProject extends Project {
       pressure: pressure.value,
       energyPerTon: energyPerTon.value,
       energyUse: energyUse.value,
-      shipMultiplier: shipMultiplier.value,
+      shipPenalty: shipPenalty.value,
       massTotal: massTotal.value,
       hydrogenFilled: hydrogenFilled.value,
       progressEta,
@@ -483,7 +485,7 @@ class DiskworldTerraformingProject extends Project {
     this.el.pressure.textContent = `${formatNumber(this.currentPressurePa, true, 3)} Pa`;
     this.el.energyPerTon.textContent = `${formatNumber(this.currentEnergyPerTon, true, 3)} W-day/t`;
     this.el.energyUse.textContent = `${formatNumber(this.currentEnergyConsumptionRate, true, 3)} energy/s`;
-    this.el.shipMultiplier.textContent = `${formatNumber(this.currentShipEnergyMultiplier, true, 3)}x`;
+    this.el.shipPenalty.textContent = `${formatNumber(this.currentShipEnergyPenalty, true)} /ton`;
     this.el.massTotal.textContent = `${formatNumber(this.currentMassTons, true, 3)} t`;
     this.el.hydrogenFilled.textContent = `${formatNumber(this.hydrogenFilledTons, true, 3)} / ${formatNumber(this.currentRequiredHydrogenTons, true, 3)} t`;
     this.el.progressEta.textContent = getDiskworldText('to100', { value: etaText }, `To 100%: ${etaText}`);
@@ -615,8 +617,8 @@ class DiskworldTerraformingProject extends Project {
       removeEffect(this.lowGravityLifeEffect);
       return;
     }
-    this.shipEnergyMultiplierEffect.value = this.currentShipEnergyMultiplier;
-    projectManager.addAndReplace(this.shipEnergyMultiplierEffect);
+    this.shipEnergyPenaltyEffect.value = this.currentShipEnergyPenalty;
+    projectManager.addAndReplace(this.shipEnergyPenaltyEffect);
     const gravityRatio = this.getSurfaceGravityRatio();
     if (gravityRatio < DISKWORLD_MIN_GRAVITY_RATIO) {
       addEffect(this.lowGravityTerraformingEffect);

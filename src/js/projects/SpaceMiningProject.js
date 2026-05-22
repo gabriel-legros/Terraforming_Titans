@@ -505,6 +505,16 @@ class SpaceMiningProject extends SpaceshipProject {
     return this.getTargetAtmosphericResource() && this.gasImportTarget === 'spaceStorage';
   }
 
+  isSpaceStorageImportSelected() {
+    return (this.attributes.dynamicWaterImport && this.waterImportTarget === 'spaceStorage')
+      || (this.getPlanetaryMassImportResource() && this.materialImportTarget === 'spaceStorage')
+      || this.isGasStorageImportSelected();
+  }
+
+  shouldSkipSpaceshipCostEffect(effect) {
+    return effect.skipForSpaceStorageImports === true && this.isSpaceStorageImportSelected();
+  }
+
   isAtmosphericImportTargetSelected() {
     return !this.getTargetAtmosphericResource() || !this.isGasStorageImportSelected();
   }

@@ -1872,10 +1872,11 @@ class ArtificialManager extends EffectableEntity {
                 },
                 {
                     target: 'projectManager',
-                    type: 'spaceshipCostMultiplier',
+                    type: 'spaceshipCostPerTon',
                     resourceCategory: 'colony',
                     resourceId: 'energy',
-                    value: project.radiusEarth,
+                    value: Math.max(project.radiusEarth - 1, 0) * 100_000,
+                    skipForSpaceStorageImports: true,
                     effectId: 'artificial-ship-energy-multiplier'
                 }
             ];

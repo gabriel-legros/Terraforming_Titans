@@ -1259,6 +1259,7 @@ class ProjectManager extends EffectableEntity {
         resourceCategory,
         resourceId,
         value,
+        skipForSpaceStorageImports: effect.skipForSpaceStorageImports === true,
         effectId: `${baseEffectId}-${name}`,
         sourceId,
         name: effect.name
@@ -1282,6 +1283,7 @@ class ProjectManager extends EffectableEntity {
         resourceCategory,
         resourceId,
         value,
+        skipForSpaceStorageImports: effect.skipForSpaceStorageImports === true,
         effectId: `${baseEffectId}-${name}`,
         sourceId,
         name: effect.name

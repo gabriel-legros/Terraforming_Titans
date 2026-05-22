@@ -324,7 +324,7 @@ setLanguageData({
         title: 'Effects',
         spaceshipEnergyCosts: 'Spaceship energy costs:',
         ringworldSpinProject: 'You will have to spin the Ringworld via an infrastructure special project.',
-        diskPreparationWarning: 'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will be very expensive to use.\nInitial ship multiplier: {value}.',
+        diskPreparationWarning: 'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will pay an energy penalty per ton.\nInitial ship penalty: {value}.',
       },
       controls: {
         sector: 'Sector',
@@ -1081,7 +1081,7 @@ setLanguageData({
         hydrogenPressure: 'Hydrogen Pressure:',
         energyPerTon: 'Energy per Ton:',
         energyUse: 'Current Energy Use:',
-        shipEnergyMultiplier: 'Ship Energy Multiplier:',
+        shipEnergyPenalty: 'Ship Energy Penalty:',
         diskMass: 'Disk Mass:',
         hydrogenFilled: 'Hydrogen Filled:',
         pump: ' Pump hydrogen',
@@ -1105,7 +1105,7 @@ setLanguageData({
           completeFill: 'You must fill the disk with atmospheric or liquid hydrogen until structural gravity reaches 1g to complete terraforming.',
           pressure: 'Pumping energy uses an isothermal hydrogen compression estimate once internal pressure exceeds 1 atm, so each ton becomes more expensive after that point.',
           mass: 'Disk mass includes construction mass, filled hydrogen, and all colony, surface, and atmospheric resources measured in tons.',
-          shipPenalty: 'Spaceship energy cost scales from the total disk mass.',
+          shipPenalty: 'Spaceship shipments pay an energy penalty per ton based on fill progress and radius.',
         },
       },
       hephaestus: {

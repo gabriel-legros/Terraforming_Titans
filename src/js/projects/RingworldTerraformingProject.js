@@ -65,6 +65,7 @@ class RingworldTerraformingProject extends Project {
       resourceCategory: 'colony',
       resourceId: 'energy',
       value: this.shipEnergyMultiplier,
+      skipForSpaceStorageImports: true,
       effectId: `${this.name}-ship-energy-multiplier`,
       sourceId: this.name,
       name: this.displayName
@@ -75,6 +76,7 @@ class RingworldTerraformingProject extends Project {
       resourceCategory: 'colony',
       resourceId: 'energy',
       value: 0,
+      skipForSpaceStorageImports: true,
       effectId: `${this.name}-ship-energy-per-ton`,
       sourceId: this.name,
       name: this.displayName

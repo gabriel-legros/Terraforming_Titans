@@ -110,6 +110,7 @@ const ARTIFICIAL_DISKWORLD_AU_METERS = 1.496e11;
 const ARTIFICIAL_DISKWORLD_EARTH_RADIUS_METERS = 6.371e6;
 const ARTIFICIAL_DISKWORLD_GRAVITY = 9.81;
 const ARTIFICIAL_DISKWORLD_GRAVITATIONAL_CONSTANT = 6.67430e-11;
+const ARTIFICIAL_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS = 100_000;
 
 function getArtificialText(path, fallback, vars) {
   try {
@@ -2405,6 +2406,7 @@ function renderGains(project, selection, manager) {
 function renderEffects(project, selection) {
   const type = project?.type || selection?.type || 'shell';
   const r = project ? project.radiusEarth : selection.radiusEarth;
+  const shellShipPenalty = Math.max(r - 1, 0) * ARTIFICIAL_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS;
   if (artificialUICache.effectShipEnergyRow) {
     artificialUICache.effectShipEnergyRow.classList.toggle('hidden', false);
   }
@@ -2425,20 +2427,20 @@ function renderEffects(project, selection) {
       );
       const requiredMassTons = ((ARTIFICIAL_DISKWORLD_GRAVITY * Math.max((outerRadiusMeters * outerRadiusMeters) - (innerRadiusMeters * innerRadiusMeters), 0)) / (2 * ARTIFICIAL_DISKWORLD_GRAVITATIONAL_CONSTANT)) / 1000;
       const constructionMassTons = (diskCost.superalloys || 0) + (diskCost.metal || 0);
-      const fillFraction = requiredMassTons > 0 ? Math.max(constructionMassTons / requiredMassTons, 0) : 1;
+      const fillFraction = requiredMassTons > 0 ? Math.min(Math.max(constructionMassTons / requiredMassTons, 0), 1) : 1;
       const radiusEarth = outerRadiusMeters / ARTIFICIAL_DISKWORLD_EARTH_RADIUS_METERS;
-      const initialMultiplierValue = Math.max(1, fillFraction * radiusEarth);
-      const initialMultiplier = `x${formatNumber(initialMultiplierValue, false, 2)}`;
+      const initialPenaltyValue = fillFraction * Math.max(radiusEarth - 1, 0) * ARTIFICIAL_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS;
+      const initialPenalty = `${formatNumber(initialPenaltyValue, true)} /ton`;
       effectLabel = getArtificialText(
         'effects.diskPreparationWarning',
-        'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will be very expensive to use.\nInitial ship multiplier: {value}.  Be prepared.',
-        { value: initialMultiplier }
+        'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will pay an energy penalty per ton.\nInitial ship penalty: {value}.  Be prepared.',
+        { value: initialPenalty }
       );
     }
     artificialUICache.effectShipEnergyLabel.textContent = effectLabel;
   }
   if (artificialUICache.effectShipEnergy) {
-    artificialUICache.effectShipEnergy.textContent = (type === 'ring' || type === 'disk') ? '' : `x${r.toFixed(2)}`;
+    artificialUICache.effectShipEnergy.textContent = (type === 'ring' || type === 'disk') ? '' : `${formatNumber(shellShipPenalty, true)} /ton`;
   }
 }
 

@@ -667,7 +667,8 @@ class EffectableEntity {
         if (
           effect.type === 'spaceshipCostMultiplier' &&
           effect.resourceCategory === resourceCategory &&
-          effect.resourceId === resourceId
+          effect.resourceId === resourceId &&
+          !this.shouldSkipSpaceshipCostEffect(effect)
         ) {
           multiplier *= effect.value;
         }
@@ -683,13 +684,18 @@ class EffectableEntity {
         if (
           effect.type === 'spaceshipCostPerTon' &&
           effect.resourceCategory === resourceCategory &&
-          effect.resourceId === resourceId
+          effect.resourceId === resourceId &&
+          !this.shouldSkipSpaceshipCostEffect(effect)
         ) {
           total += effect.value;
         }
       });
 
       return total;
+    }
+
+    shouldSkipSpaceshipCostEffect(effect) {
+      return false;
     }
 
     getEffectiveMaintenanceCostMultiplier(resourceCategory, resourceId) {

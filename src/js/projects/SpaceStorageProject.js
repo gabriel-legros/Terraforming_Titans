@@ -850,6 +850,19 @@ class SpaceStorageProject extends SpaceshipProject {
       return value;
     }, 1);
     totalCost.colony.energy *= multiplier;
+    const perTonCost = (projectManager.activeEffects || []).reduce((value, effect) => {
+      if (
+        effect.type === 'spaceshipCostPerTon' &&
+        effect.resourceCategory === 'colony' &&
+        effect.resourceId === 'energy'
+      ) {
+        return value + effect.value;
+      }
+      return value;
+    }, 0);
+    if (perTonCost > 0) {
+      totalCost.colony.energy += perTonCost * this.getShipCapacity(this.attributes.transportPerShip || 0);
+    }
     return totalCost;
   }
 
