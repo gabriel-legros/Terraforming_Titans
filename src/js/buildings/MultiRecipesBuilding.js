@@ -141,7 +141,9 @@ class MultiRecipesBuilding extends Building {
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
-    this._applyRecipeMapping();
+    const defs = this.recipes || {};
+    const hasCurrentRecipe = Object.prototype.hasOwnProperty.call(defs, this.currentRecipeKey);
+    this._applyRecipeMapping({ ignoreRestrictions: hasCurrentRecipe });
   }
 
   loadState(state = {}) {
