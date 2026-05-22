@@ -226,7 +226,6 @@ class DiskworldTerraformingProject extends Project {
       this.pumping = false;
       this.isActive = false;
     }
-    this.applyDiskGravity();
   }
 
   getFillProgressRatio() {
@@ -268,16 +267,6 @@ class DiskworldTerraformingProject extends Project {
       : 1;
     const radiusEarth = this.getDiskRadiusMeters() / DISKWORLD_EARTH_RADIUS_METERS;
     return fillRate * Math.max(radiusEarth - 1, 0) * DISKWORLD_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS;
-  }
-
-  applyDiskGravity() {
-    const gravity = DISKWORLD_GRAVITY * this.getSurfaceGravityRatio();
-    if (terraforming?.celestialParameters) {
-      terraforming.celestialParameters.gravity = gravity;
-    }
-    if (currentPlanetParameters?.celestialParameters) {
-      currentPlanetParameters.celestialParameters.gravity = gravity;
-    }
   }
 
   renderUI(container) {
