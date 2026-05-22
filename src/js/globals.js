@@ -62,6 +62,7 @@ let gameSettings = {
   keepTabRunningAudio: false,
   enableTerraformingSubsteps: true,
   hideCompletedResearch: false,
+  hideCompletedInvasions: true,
   hiddenResearchIds: [],
   silenceSolisAlert: false,
   silenceMilestoneAlert: false,

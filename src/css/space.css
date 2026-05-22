@@ -1150,6 +1150,10 @@
   padding: 14px;
 }
 
+.galactic-invasion-hide-toggle {
+  margin-left: auto;
+}
+
 .galactic-invasion-section__description {
   margin: 0 0 12px;
   color: #475569;

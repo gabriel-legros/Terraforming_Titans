@@ -1,4 +1,5 @@
 let galacticInvasionUICache = null;
+let completedInvasionsHidden = gameSettings.hideCompletedInvasions !== false;
 
 function getGalacticInvasionText(path, fallback, vars) {
   return t(`ui.space.invasion.${path}`, vars, fallback);
@@ -110,6 +111,15 @@ function initializeGalacticInvasionUI() {
   );
   training.body.appendChild(trainingDescription);
 
+  const hideCompletedButton = document.createElement('button');
+  hideCompletedButton.type = 'button';
+  hideCompletedButton.className = 'toggle-completed-button galactic-invasion-hide-toggle';
+  hideCompletedButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleCompletedInvasionsVisibility();
+  });
+  training.header.appendChild(hideCompletedButton);
+
   const grid = document.createElement('div');
   grid.className = 'galactic-invasion-grid';
   training.body.appendChild(grid);
@@ -140,6 +150,7 @@ function initializeGalacticInvasionUI() {
     content,
     overlay,
     training,
+    hideCompletedButton,
     grid,
     traits,
     traitSummary: traits.body,
@@ -176,6 +187,9 @@ function createGalacticInvasionSection(key, titleText) {
   header.addEventListener('click', () => {
     const collapsed = section.classList.toggle('collapsed');
     arrow.textContent = collapsed ? '▶' : '▼';
+    if (key === 'training') {
+      updateCompletedInvasionVisibilityToggle(galacticInvasionUICache?.hideCompletedButton);
+    }
   });
 
   section.append(header, body);
@@ -226,6 +240,7 @@ function updateGalacticInvasionUI() {
   if (!galaxyInvasionManager?.enabled) {
     return;
   }
+  completedInvasionsHidden = gameSettings.hideCompletedInvasions !== false;
   initializeGalacticInvasionUI();
   const cache = galacticInvasionUICache;
   const root = document.getElementById('space-invasion');
@@ -248,6 +263,7 @@ function updateGalacticInvasionUI() {
     const blockedByCooldown = galaxyInvasionManager.cooldownRemainingMs > 0 && !active;
     card.element.classList.toggle('completed', completed);
     card.element.classList.toggle('active', active);
+    card.element.style.display = completed && completedInvasionsHidden ? 'none' : '';
     card.status.textContent = completed
       ? getGalacticInvasionText('complete', 'Complete')
       : active
@@ -272,8 +288,35 @@ function updateGalacticInvasionUI() {
       card.button.textContent = getGalacticInvasionText('startButton', 'Start Invasion');
     }
   });
+  updateCompletedInvasionVisibilityToggle(refreshedCache.hideCompletedButton);
   updateGalacticInvasionTraitSummary(refreshedCache.traitSummary);
   updateGalacticInvasionRewardSummary(refreshedCache.rewardSummary);
+}
+
+function toggleCompletedInvasionsVisibility() {
+  completedInvasionsHidden = !completedInvasionsHidden;
+  gameSettings.hideCompletedInvasions = completedInvasionsHidden;
+  updateGalacticInvasionUI({ force: true });
+}
+
+function updateCompletedInvasionVisibilityToggle(toggleButton) {
+  if (!toggleButton) {
+    return;
+  }
+  const cache = galacticInvasionUICache;
+  const trainingCollapsed = cache && cache.training && cache.training.section.classList.contains('collapsed');
+  if (trainingCollapsed) {
+    toggleButton.style.display = 'none';
+    return;
+  }
+  const hasCompletedInvasions = GALACTIC_INVASION_LETTERS.some((letter) => galaxyInvasionManager.completedLetters.has(letter.key));
+  toggleButton.style.display = hasCompletedInvasions ? 'inline-block' : 'none';
+  if (!hasCompletedInvasions) {
+    return;
+  }
+  toggleButton.textContent = completedInvasionsHidden
+    ? getGalacticInvasionText('showHiddenButton', 'Show Hidden')
+    : getGalacticInvasionText('hideHiddenButton', 'Hide Hidden');
 }
 
 function getGalacticInvasionTraitName(traitKey) {

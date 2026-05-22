@@ -2904,6 +2904,8 @@ setLanguageData({
         cancelButton: 'Cancel Invasion',
         cooldownButton: 'Cooldown: {value}',
         completedButton: 'Completed',
+        showHiddenButton: 'Show Hidden',
+        hideHiddenButton: 'Hide Hidden',
         complete: 'Complete',
         active: 'Active',
         traitList: 'Traits: {value}',
