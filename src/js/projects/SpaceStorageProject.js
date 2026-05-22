@@ -1413,9 +1413,6 @@ class SpaceStorageProject extends SpaceshipProject {
           continue;
         }
         this.applyAccumulatedResourceDelta(category, resource, -amount, accumulatedChanges);
-        if (seconds > 0) {
-          resources[category][resource].modifyRate(-(amount / seconds), 'Space storage transfer', 'project');
-        }
         if (resource !== 'energy') {
           nonEnergyCost += amount;
         }
