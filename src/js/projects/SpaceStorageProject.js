@@ -41,6 +41,12 @@ const SPACE_STORAGE_RESOURCE_KEYS = [
   'atmosphericAmmonia',
   'hydrogen'
 ];
+const SPACE_STORAGE_IMPORT_LIMIT_RESOURCE_PROJECTS = {
+  liquidWater: 'waterSpaceMining',
+  carbonDioxide: 'carbonSpaceMining',
+  inertGas: 'nitrogenSpaceMining',
+  hydrogen: 'hydrogenSpaceMining'
+};
 const SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY = 'standard';
 
 function getSpaceStorageProjectText(path, vars, fallback = '') {
@@ -79,6 +85,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.lastUniformTransferMode = 'store';
     this.resourceTransferModes = {};
     this.resourceTransferWeights = {};
+    this.resourceImportLimitRespects = {};
     this.pendingTransfers = [];
     this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     this.megaProjectSpaceOnlyOnTravel = false;
@@ -938,6 +945,56 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceTransferWeights = sanitized;
   }
 
+  sanitizeImportLimitRespects() {
+    const source = this.resourceImportLimitRespects || {};
+    const sanitized = {};
+    for (const resourceKey in SPACE_STORAGE_IMPORT_LIMIT_RESOURCE_PROJECTS) {
+      if (source[resourceKey] === true) {
+        sanitized[resourceKey] = true;
+      }
+    }
+    this.resourceImportLimitRespects = sanitized;
+  }
+
+  shouldRespectImportProjectLimits(resourceKey) {
+    return this.resourceImportLimitRespects?.[resourceKey] === true;
+  }
+
+  setRespectImportProjectLimits(resourceKey, enabled) {
+    if (!SPACE_STORAGE_IMPORT_LIMIT_RESOURCE_PROJECTS[resourceKey]) {
+      return;
+    }
+    if (enabled === true) {
+      this.resourceImportLimitRespects[resourceKey] = true;
+    } else {
+      delete this.resourceImportLimitRespects[resourceKey];
+    }
+  }
+
+  exportImportLimitRespectsForAutomation() {
+    const settings = {};
+    for (const resourceKey in SPACE_STORAGE_IMPORT_LIMIT_RESOURCE_PROJECTS) {
+      settings[resourceKey] = this.shouldRespectImportProjectLimits(resourceKey);
+    }
+    return settings;
+  }
+
+  getImportLimitProjectForResource(resourceKey) {
+    const projectId = SPACE_STORAGE_IMPORT_LIMIT_RESOURCE_PROJECTS[resourceKey];
+    return projectId ? projectManager?.projects?.[projectId] : null;
+  }
+
+  getImportLimitRemainingForWithdrawal(resourceKey, target, accumulatedChanges = null) {
+    if (!this.shouldRespectImportProjectLimits(resourceKey)) {
+      return Infinity;
+    }
+    const project = this.getImportLimitProjectForResource(resourceKey);
+    if (!project) {
+      return Infinity;
+    }
+    return project.getImportLimitRemainingForDelivery(resourceKey, target.category, target.resource, accumulatedChanges);
+  }
+
   getUnlockedSelectedResources() {
     if (!Array.isArray(this.selectedResources) || this.selectedResources.length === 0) {
       return [];
@@ -1053,7 +1110,8 @@ class SpaceStorageProject extends SpaceshipProject {
         : { category: entry.category, resource: entry.resource };
       const targetRes = resources[target.category][target.resource];
       const destFree = targetRes && Number.isFinite(targetRes.cap) ? Math.max(0, targetRes.cap - targetRes.value) : Infinity;
-      const amount = Math.min(weightedCapacity, stored, destFree);
+      const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target);
+      const amount = Math.min(weightedCapacity, stored, destFree, importLimitRemaining);
       if (!Number.isFinite(amount) || amount <= 0) return;
       transfers.push({ mode: 'withdraw', category: target.category, resource: target.resource, amount, storageKey: entry.resource });
       total += amount;
@@ -1160,7 +1218,8 @@ class SpaceStorageProject extends SpaceshipProject {
         ? this.getWaterTransferEndpoint('withdraw')
         : { category: entry.category, resource: entry.resource };
       const destFree = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
-      const amount = Math.min(weightedCapacity, stored, destFree);
+      const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
+      const amount = Math.min(weightedCapacity, stored, destFree, importLimitRemaining);
       if (!Number.isFinite(amount) || amount <= 0) return;
       transfers.push({ mode: 'withdraw', category: target.category, resource: target.resource, amount, storageKey: entry.resource });
       total += amount;
@@ -1759,6 +1818,7 @@ class SpaceStorageProject extends SpaceshipProject {
       lastUniformTransferMode: this.lastUniformTransferMode,
       resourceTransferModes: { ...(this.resourceTransferModes || {}) },
       resourceTransferWeights: { ...(this.resourceTransferWeights || {}) },
+      resourceImportLimitRespects: this.exportImportLimitRespectsForAutomation(),
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel === true,
       waterWithdrawTarget: this.waterWithdrawTarget,
@@ -1771,7 +1831,8 @@ class SpaceStorageProject extends SpaceshipProject {
     return {
       resourceStrategicReserves: JSON.parse(JSON.stringify(this.resourceStrategicReserves || {})),
       resourceCaps: JSON.parse(JSON.stringify(this.resourceCaps || {})),
-      resourceTransferWeights: JSON.parse(JSON.stringify(this.resourceTransferWeights || {}))
+      resourceTransferWeights: JSON.parse(JSON.stringify(this.resourceTransferWeights || {})),
+      resourceImportLimitRespects: this.exportImportLimitRespectsForAutomation()
     };
   }
 
@@ -1780,6 +1841,7 @@ class SpaceStorageProject extends SpaceshipProject {
     delete settings.resourceStrategicReserves;
     delete settings.resourceCaps;
     delete settings.resourceTransferWeights;
+    delete settings.resourceImportLimitRespects;
     return settings;
   }
 
@@ -1821,6 +1883,10 @@ class SpaceStorageProject extends SpaceshipProject {
     if (Object.prototype.hasOwnProperty.call(settings, 'resourceTransferWeights')) {
       this.resourceTransferWeights = { ...(settings.resourceTransferWeights || {}) };
       this.sanitizeTransferWeights();
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceImportLimitRespects')) {
+      this.resourceImportLimitRespects = { ...(settings.resourceImportLimitRespects || {}) };
+      this.sanitizeImportLimitRespects();
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'megaProjectResourceMode')) {
       if (MEGA_PROJECT_RESOURCE_MODE_MAP[settings.megaProjectResourceMode]) {
@@ -1865,12 +1931,18 @@ class SpaceStorageProject extends SpaceshipProject {
         : {};
       this.sanitizeTransferWeights();
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceImportLimitRespects')) {
+      this.resourceImportLimitRespects = settings.resourceImportLimitRespects
+        ? JSON.parse(JSON.stringify(settings.resourceImportLimitRespects))
+        : {};
+      this.sanitizeImportLimitRespects();
+    }
   }
 
   loadOtherAutomationSettings(settings = {}) {
     const filteredSettings = {};
     for (const key in settings) {
-      if (key === 'resourceStrategicReserves' || key === 'resourceCaps' || key === 'resourceTransferWeights') {
+      if (key === 'resourceStrategicReserves' || key === 'resourceCaps' || key === 'resourceTransferWeights' || key === 'resourceImportLimitRespects') {
         continue;
       }
       filteredSettings[key] = settings[key];
@@ -1922,6 +1994,7 @@ class SpaceStorageProject extends SpaceshipProject {
       artificialEcosystemsEnabled: this.artificialEcosystemsEnabled,
       resourceCaps: this.resourceCaps,
       resourceTransferWeights: this.resourceTransferWeights,
+      resourceImportLimitRespects: this.resourceImportLimitRespects,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
       resourceTransferModes: this.resourceTransferModes,
@@ -1971,6 +2044,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceTransferModes = state.resourceTransferModes || {};
     this.resourceTransferWeights = state.resourceTransferWeights || {};
     this.sanitizeTransferWeights();
+    this.resourceImportLimitRespects = state.resourceImportLimitRespects || {};
+    this.sanitizeImportLimitRespects();
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
     this.shipOperationStartingDuration = ship.startingDuration || 0;
@@ -2010,6 +2085,7 @@ class SpaceStorageProject extends SpaceshipProject {
       artificialEcosystemsEnabled: this.artificialEcosystemsEnabled,
       resourceCaps: this.resourceCaps,
       resourceTransferWeights: this.resourceTransferWeights,
+      resourceImportLimitRespects: this.resourceImportLimitRespects,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
       resourceTransferModes: this.resourceTransferModes,
@@ -2035,6 +2111,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceTransferModes = state.resourceTransferModes || {};
     this.resourceTransferWeights = state.resourceTransferWeights || {};
     this.sanitizeTransferWeights();
+    this.resourceImportLimitRespects = state.resourceImportLimitRespects || {};
+    this.sanitizeImportLimitRespects();
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
       this.resourceTransferModes = {};
       this.lastUniformTransferMode = this.shipTransferMode;

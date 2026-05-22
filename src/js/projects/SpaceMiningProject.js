@@ -1060,6 +1060,52 @@ class SpaceMiningProject extends SpaceshipProject {
     return totalCoverage >= (this.waterCoverageThreshold - ATMOSPHERIC_MONITORING_TOLERANCE);
   }
 
+  getSurfaceCoverageLimitRemaining(coverageKey, threshold, accumulatedChanges = null) {
+    const surfaceArea = terraforming.celestialParameters.surfaceArea;
+    let current = 0;
+    let limit = 0;
+    for (const zone of getZones()) {
+      const zoneSurface = terraforming.zonalSurface[zone];
+      const zoneArea = surfaceArea * getZonePercentage(zone);
+      if (coverageKey === 'liquidWater') {
+        current += (zoneSurface.liquidWater || 0) + (zoneSurface.ice || 0);
+      } else {
+        current += (zoneSurface.liquidCO2 || 0) + (zoneSurface.dryIce || 0);
+      }
+      limit += estimateAmountForCoverage(threshold, zoneArea);
+    }
+    if (coverageKey === 'liquidWater') {
+      current += accumulatedChanges?.surface?.liquidWater || 0;
+      current += accumulatedChanges?.surface?.ice || 0;
+    } else {
+      current += accumulatedChanges?.surface?.liquidCO2 || 0;
+      current += accumulatedChanges?.surface?.dryIce || 0;
+    }
+    return Math.max(0, limit - current);
+  }
+
+  getWaterImportLimitRemaining(accumulatedChanges = null) {
+    if (!this.isBooleanFlagSet('atmosphericMonitoring') || !this.attributes.dynamicWaterImport || !this.disableAboveWaterCoverage) {
+      return Infinity;
+    }
+    if (this.waterCoverageDisableMode === 'target') {
+      const current = this.getWaterIceTotalAmount() + (accumulatedChanges?.surface?.liquidWater || 0) + (accumulatedChanges?.surface?.ice || 0);
+      return Math.max(0, this.getWaterTargetAmount() - current);
+    }
+    return this.getSurfaceCoverageLimitRemaining('liquidWater', this.waterCoverageThreshold, accumulatedChanges);
+  }
+
+  getCarbonDioxideCoverageLimitRemaining(accumulatedChanges = null) {
+    if (!this.isBooleanFlagSet('atmosphericMonitoring') || this.getTargetAtmosphericResource() !== 'carbonDioxide' || !this.disableAboveCo2Coverage) {
+      return Infinity;
+    }
+    if (this.co2CoverageDisableMode === 'target' && this.hasCo2LiquidTarget()) {
+      const current = this.getCo2IceTotalAmount() + (accumulatedChanges?.surface?.liquidCO2 || 0) + (accumulatedChanges?.surface?.dryIce || 0);
+      return Math.max(0, this.getCo2TargetAmount() - current);
+    }
+    return this.getSurfaceCoverageLimitRemaining('liquidCO2', this.co2CoverageThreshold, accumulatedChanges);
+  }
+
   getPressureLimitMass(limitKPa) {
     const gSurface = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
@@ -1079,6 +1125,44 @@ class SpaceMiningProject extends SpaceshipProject {
     const maxMass = this.getPressureLimitMass(limitKPa);
     const consumptionBuffer = this.getAtmosphericNeedForGas(gas, deltaTime, accumulatedChanges);
     return amount >= maxMass + consumptionBuffer;
+  }
+
+  getGasImportPressureLimitRemaining(gas, accumulatedChanges = null) {
+    if (!this.isBooleanFlagSet('atmosphericMonitoring') || !this.disableAbovePressure) {
+      return Infinity;
+    }
+    const amount = (resources.atmospheric[gas].value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
+    const maxMass = this.getPressureLimitMass(this.disablePressureThreshold);
+    const consumptionBuffer = this.getAtmosphericNeedForGas(gas, this.currentTickDeltaTime || 0, accumulatedChanges);
+    return Math.max(0, maxMass + consumptionBuffer - amount);
+  }
+
+  getHydrogenFillLimitRemaining(accumulatedChanges = null) {
+    if (this.disableIfDiskworldHydrogenFillCovered !== true || !this.isDiskworldHydrogenFillDisableControlAvailable()) {
+      return Infinity;
+    }
+    const diskProject = projectManager.projects.diskworldTerraforming;
+    const required = Math.max((diskProject.currentRequiredHydrogenTons || 0) - (diskProject.hydrogenFilledTons || 0), 0);
+    const current =
+      Math.max((resources.atmospheric.hydrogen.value || 0) + (accumulatedChanges?.atmospheric?.hydrogen || 0), 0)
+      + Math.max((resources.surface.liquidHydrogen.value || 0) + (accumulatedChanges?.surface?.liquidHydrogen || 0), 0);
+    return Math.max(0, required - current);
+  }
+
+  getImportLimitRemainingForDelivery(resourceKey, targetCategory, targetResource, accumulatedChanges = null) {
+    if (resourceKey === 'liquidWater') {
+      return targetCategory === 'surface'
+        ? this.getWaterImportLimitRemaining(accumulatedChanges)
+        : Infinity;
+    }
+    let remaining = this.getGasImportPressureLimitRemaining(targetResource, accumulatedChanges);
+    if (resourceKey === 'carbonDioxide') {
+      remaining = Math.min(remaining, this.getCarbonDioxideCoverageLimitRemaining(accumulatedChanges));
+    }
+    if (resourceKey === 'hydrogen') {
+      remaining = Math.min(remaining, this.getHydrogenFillLimitRemaining(accumulatedChanges));
+    }
+    return remaining;
   }
 
   shouldAutomationDisable(accumulatedChanges = null) {

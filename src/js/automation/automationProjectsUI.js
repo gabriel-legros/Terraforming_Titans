@@ -26,6 +26,12 @@ const PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion'
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID = 'spaceStorageSingleResource';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX = `${PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID}:`;
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_IMPORT_LIMIT_RESOURCES = new Set([
+  'liquidWater',
+  'carbonDioxide',
+  'inertGas',
+  'hydrogen'
+]);
 
 function getSpaceStorageSingleResourceProjectId(resourceKey) {
   return `${PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX}${resourceKey}`;
@@ -62,11 +68,26 @@ function getProjectPresetJsonFieldOptions(fieldPath) {
     return null;
   }
   const projectId = fieldPath[1];
-  if (!projectId || getSpaceStorageSingleResourceKey(projectId) === '') {
+  if (!projectId) {
     return null;
   }
-  if (fieldPath[2] !== 'operations'
-    || (fieldPath[3] !== 'mode' && fieldPath[3] !== 'spaceStorageSingleResourceTransferMode')) {
+  if (fieldPath[2] !== 'operations') {
+    return null;
+  }
+  if (fieldPath[3] === 'resourceImportLimitRespects'
+    && (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID || getSpaceStorageSingleResourceKey(projectId) !== '')
+    && PROJECT_AUTOMATION_UI_SPACE_STORAGE_IMPORT_LIMIT_RESOURCES.has(fieldPath[4])) {
+    return {
+      selectOptions: [
+        { value: 'true', label: getAutomationCardText('true', {}, 'True') },
+        { value: 'false', label: getAutomationCardText('false', {}, 'False') }
+      ]
+    };
+  }
+  if (getSpaceStorageSingleResourceKey(projectId) === '') {
+    return null;
+  }
+  if (fieldPath[3] !== 'mode' && fieldPath[3] !== 'spaceStorageSingleResourceTransferMode') {
     return null;
   }
   return {

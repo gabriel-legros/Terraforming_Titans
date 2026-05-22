@@ -36,6 +36,12 @@ const storageResourceOptions = [
   { labelKey: 'hydrogen', fallbackLabel: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' }
 ];
 const SPACE_STORAGE_RESOURCE_DIVIDER_TOP = new Set(['components', 'liquidWater', 'carbonDioxide']);
+const SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES = new Set([
+  'liquidWater',
+  'carbonDioxide',
+  'inertGas',
+  'hydrogen'
+]);
 
 function getSpaceStorageResourceLabel(option) {
   return getSpaceStorageUIText(
@@ -342,6 +348,9 @@ function renderSpaceStorageUI(project, container) {
   let reserveValueLabel = cachedCaps.reserveValueLabel;
   let transferWeightInput = cachedCaps.transferWeightInput;
   let transferWeightLabel = cachedCaps.transferWeightLabel;
+  let respectImportLimitsRow = cachedCaps.respectImportLimitsRow;
+  let respectImportLimitsCheckbox = cachedCaps.respectImportLimitsCheckbox;
+  let respectImportLimitsLabel = cachedCaps.respectImportLimitsLabel;
   let scopeExpansionsCheckbox = cachedCaps.scopeExpansionsCheckbox;
   let scopeTransfersCheckbox = cachedCaps.scopeTransfersCheckbox;
   let scopeConsumptionCheckbox = cachedCaps.scopeConsumptionCheckbox;
@@ -571,6 +580,24 @@ function renderSpaceStorageUI(project, container) {
     });
     transferWeightRow.append(transferWeightLabel, transferWeightInput);
 
+    respectImportLimitsRow = document.createElement('div');
+    respectImportLimitsRow.classList.add('space-storage-settings-row');
+    respectImportLimitsLabel = document.createElement('label');
+    respectImportLimitsLabel.classList.add('space-storage-settings-label');
+    respectImportLimitsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.respectImportProjectLimits', 'Respect Import Project limits');
+    const respectImportLimitsInfo = document.createElement('span');
+    respectImportLimitsInfo.classList.add('info-tooltip-icon');
+    respectImportLimitsInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      respectImportLimitsInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.respectImportProjectLimitsTooltip', 'When withdrawing this resource from space storage, use the matching import project limits such as pressure or coverage caps.')
+    );
+    respectImportLimitsLabel.appendChild(respectImportLimitsInfo);
+    respectImportLimitsCheckbox = document.createElement('input');
+    respectImportLimitsCheckbox.type = 'checkbox';
+    respectImportLimitsCheckbox.id = 'respect-import-project-limits';
+    respectImportLimitsRow.append(respectImportLimitsLabel, respectImportLimitsCheckbox);
+
     const reserveScopeRow = document.createElement('div');
     reserveScopeRow.classList.add('space-storage-settings-row');
     reserveScopeRow.style.alignItems = 'flex-start';
@@ -644,6 +671,7 @@ function renderSpaceStorageUI(project, container) {
       capModeRow,
       capValueRow,
       transferWeightRow,
+      respectImportLimitsRow,
       reserveModeRow,
       reserveValueRow,
       reserveScopeRow,
@@ -754,6 +782,7 @@ function renderSpaceStorageUI(project, container) {
         project.resourceStrategicReserves[key] = { mode: reserveDraft.mode, value: reserveDraft.value || 0, scope };
       }
       project.setResourceTransferWeight(key, projectElements[project.name].transferWeightDraft);
+      project.setRespectImportProjectLimits(key, projectElements[project.name].respectImportLimitsDraft === true);
       projectElements[project.name].capDraftDirty = false;
       projectElements[project.name].reserveDraftDirty = false;
       closeCapWindow();
@@ -818,6 +847,9 @@ function renderSpaceStorageUI(project, container) {
     scopeExpansionsCheckbox.addEventListener('change', updateScopeOnDraft);
     scopeTransfersCheckbox.addEventListener('change', updateScopeOnDraft);
     scopeConsumptionCheckbox.addEventListener('change', updateScopeOnDraft);
+    respectImportLimitsCheckbox.addEventListener('change', () => {
+      projectElements[project.name].respectImportLimitsDraft = respectImportLimitsCheckbox.checked;
+    });
   }
 
   const openCapWindow = (resourceKey, label) => {
@@ -832,6 +864,7 @@ function renderSpaceStorageUI(project, container) {
     projectElements[project.name].reserveDraft = { mode: reserveSetting.mode, value: reserveSetting.value || 0, scope };
     projectElements[project.name].reserveDraftDirty = false;
     projectElements[project.name].transferWeightDraft = project.getResourceTransferWeight(resourceKey);
+    projectElements[project.name].respectImportLimitsDraft = project.shouldRespectImportProjectLimits(resourceKey);
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
     capValueInput.value = capSetting.mode === 'percent' || capSetting.mode === 'weight'
@@ -854,6 +887,8 @@ function renderSpaceStorageUI(project, container) {
     scopeExpansionsCheckbox.checked = scope.expansions !== false;
     scopeTransfersCheckbox.checked = scope.transfers === true;
     scopeConsumptionCheckbox.checked = scope.consumption === true;
+    respectImportLimitsCheckbox.checked = projectElements[project.name].respectImportLimitsDraft === true;
+    respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(resourceKey) ? '' : 'none';
     updateCapInputState();
     updateReserveInputState();
     updateCapResourceValue();
@@ -1153,6 +1188,9 @@ function renderSpaceStorageUI(project, container) {
     reserveValueLabel,
     transferWeightInput,
     transferWeightLabel,
+    respectImportLimitsRow,
+    respectImportLimitsCheckbox,
+    respectImportLimitsLabel,
     scopeExpansionsCheckbox,
     scopeTransfersCheckbox,
     scopeConsumptionCheckbox,
@@ -1444,6 +1482,10 @@ function updateSpaceStorageUI(project) {
       const transferWeight = els.transferWeightDraft != null ? els.transferWeightDraft : 1;
       els.transferWeightInput.dataset.spaceStorageTransferWeight = String(transferWeight);
       els.transferWeightInput.value = transferWeight >= 1e6 ? formatNumber(transferWeight, true, 3) : String(transferWeight);
+    }
+    if (els.respectImportLimitsCheckbox) {
+      els.respectImportLimitsCheckbox.checked = els.respectImportLimitsDraft === true;
+      els.respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
     }
     els.capValueInput.disabled = els.capModeSelect.value === 'none' || els.capModeSelect.value === 'remaining';
     const reserveIsNone = els.reserveModeSelect.value === 'none';
