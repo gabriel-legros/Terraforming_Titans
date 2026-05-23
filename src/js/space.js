@@ -2553,6 +2553,10 @@ class SpaceManager extends EffectableEntity {
             st.landHa = landHa;
             st.cachedLandHa = landHa;
             st.artificialSnapshot = artificialManager.buildSnapshotFromParams(currentPlanetParameters);
+            const smbhSnapshot = captureCurrentSmbhShellworldSnapshot(this);
+            if (smbhSnapshot) {
+                st.smbhSnapshot = smbhSnapshot;
+            }
             if (!st.name) st.name = this.currentRandomName || `Artificial ${key}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
             const ps = this.planetStatuses[this.currentPlanetKey];
@@ -2627,6 +2631,7 @@ class SpaceManager extends EffectableEntity {
             currentPlanetParameters = JSON.parse(JSON.stringify(params));
         }
         initializeGameState({ preserveManagers: true, preserveJournal: true });
+        restoreCurrentSmbhShellworldSnapshot(this);
         resetGameFrameClock(true);
         const elapsedMs = performance.now() - startMs;
         this._recordTravelPerf(options?.travelKind, elapsedMs, options?.targetLabel);
