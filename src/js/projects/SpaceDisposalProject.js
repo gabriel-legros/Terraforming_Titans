@@ -25,6 +25,26 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return hasDynamicMassEnabled(terraforming, currentPlanetParameters);
   }
 
+  isLiquidHydrogenDisposalSelection(selection) {
+    return selection?.category === 'surface' && selection?.resource === 'liquidHydrogen';
+  }
+
+  isLiquidHydrogenDisposalTemperatureAllowed() {
+    return terraforming.temperature.value < 373.15;
+  }
+
+  getLiquidHydrogenDisposalTemperatureLabel() {
+    return `${formatNumber(toDisplayTemperature(373.15), false, 2)}${getTemperatureUnit()}`;
+  }
+
+  getLiquidHydrogenDisposalOptionLabel() {
+    return this.getSpaceDisposalText(
+      'ui.projects.spaceDisposal.liquidHydrogenRequiresTemperature',
+      `Liquid Hydrogen (requires surface temperature < ${this.getLiquidHydrogenDisposalTemperatureLabel()})`,
+      { value: this.getLiquidHydrogenDisposalTemperatureLabel() }
+    );
+  }
+
   getSelectionAvailableAmount(selection, accumulatedChanges = null) {
     if (!selection) {
       return 0;
@@ -51,6 +71,61 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   buildDisposalGroupData() {
     const disposalGroupData = super.buildDisposalGroupData();
+    const hydrogenKeys = {
+      'colony:colonyHydrogen': true,
+      'surface:liquidHydrogen': true,
+      'atmospheric:hydrogen': true,
+    };
+    const filteredGroupList = [];
+    Object.keys(disposalGroupData.groupMap).forEach((groupKey) => {
+      const group = disposalGroupData.groupMap[groupKey];
+      const options = group.options.filter(option => !hydrogenKeys[`${option.category}:${option.resource}`]);
+      if (!options.length) {
+        delete disposalGroupData.groupMap[groupKey];
+        return;
+      }
+      group.options = options;
+      filteredGroupList.push(group);
+    });
+    disposalGroupData.groupList = filteredGroupList;
+    Object.keys(hydrogenKeys).forEach((resourceKey) => {
+      delete disposalGroupData.resourceGroupLookup[resourceKey];
+      delete disposalGroupData.resourceMetaLookup[resourceKey];
+    });
+
+    const hydrogenOptions = [
+      {
+        category: 'colony',
+        resource: 'colonyHydrogen',
+        label: this.getSpaceDisposalText('ui.projects.spaceDisposal.colonyHydrogen', 'Colony Hydrogen'),
+      },
+      {
+        category: 'surface',
+        resource: 'liquidHydrogen',
+        label: this.getLiquidHydrogenDisposalOptionLabel(),
+      },
+      {
+        category: 'atmospheric',
+        resource: 'hydrogen',
+        label: this.getSpaceDisposalText('ui.projects.spaceDisposal.atmosphericHydrogen', 'Atmospheric Hydrogen'),
+      },
+    ];
+    const hydrogenGroup = {
+      key: 'hydrogen',
+      label: this.getSpaceDisposalText('ui.projects.spaceDisposal.hydrogen', 'Hydrogen'),
+      options: hydrogenOptions,
+    };
+    disposalGroupData.groupList.push(hydrogenGroup);
+    disposalGroupData.groupMap.hydrogen = hydrogenGroup;
+    hydrogenOptions.forEach((option) => {
+      const resourceKey = `${option.category}:${option.resource}`;
+      disposalGroupData.resourceGroupLookup[resourceKey] = hydrogenGroup.key;
+      disposalGroupData.resourceMetaLookup[resourceKey] = {
+        groupKey: hydrogenGroup.key,
+        phaseType: option.category === 'atmospheric' ? 'gas' : (option.resource === 'liquidHydrogen' ? 'liquid' : null),
+      };
+    });
+
     if (!this.canUsePlanetaryMassDisposal()) {
       return disposalGroupData;
     }
@@ -254,6 +329,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         target.disablePressureThreshold,
         target.disableBelowCoverage ? 1 : 0,
         target.disableCoverageThreshold,
+        this.isLiquidHydrogenDisposalSelection(target.selectedDisposalResource)
+          ? (this.isLiquidHydrogenDisposalTemperatureAllowed() ? 1 : 0)
+          : '',
       ].join(':'));
     }
     return parts.join('|');
@@ -357,6 +435,12 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (!target || !target.selectedDisposalResource) {
       return false;
     }
+    if (
+      this.isLiquidHydrogenDisposalSelection(target.selectedDisposalResource) &&
+      !this.isLiquidHydrogenDisposalTemperatureAllowed()
+    ) {
+      return false;
+    }
     if (!this.isBooleanFlagSet('atmosphericMonitoring')) {
       return true;
     }
@@ -411,6 +495,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
     if (this.canTargetRun(target)) {
       return this.getSpaceDisposalText('ui.projects.spaceDisposal.statusDetail.included', 'Included in the current disposal split.');
+    }
+    if (this.isLiquidHydrogenDisposalSelection(target.selectedDisposalResource)) {
+      return this.getSpaceDisposalText(
+        'ui.projects.spaceDisposal.statusDetail.liquidHydrogenTooHot',
+        `Surface temperature must be below ${this.getLiquidHydrogenDisposalTemperatureLabel()}.`,
+        { value: this.getLiquidHydrogenDisposalTemperatureLabel() }
+      );
     }
     if (target.disableBelowTemperature && this.isTargetSafeGhgSelection(target)) {
       return this.getSpaceDisposalText(
@@ -1157,7 +1248,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
           const selectedByOther = usedKeys[optionKey] && optionKey !== selectionKey;
           phaseOptions.push({
             value: optionKey,
-            label: optionData.label,
+            label: this.isLiquidHydrogenDisposalSelection(optionData)
+              ? this.getLiquidHydrogenDisposalOptionLabel()
+              : optionData.label,
             disabled: selectedByOther
           });
         }
@@ -1921,6 +2014,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
     if (elements.disposalAddTargetButton) {
       elements.disposalAddTargetButton.disabled = this.disposalTargets.length >= this.maxDisposalTargets;
+    }
+    const temperatureUnit = getTemperatureUnit();
+    if (elements.disposalLiquidHydrogenTemperatureUnit !== temperatureUnit) {
+      elements.disposalLiquidHydrogenTemperatureUnit = temperatureUnit;
+      this.refreshDisposalTargetSelects();
     }
 
     for (let i = 0; i < this.disposalTargets.length; i += 1) {

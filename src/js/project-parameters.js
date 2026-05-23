@@ -1283,9 +1283,10 @@ const projectParameters = {
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 10_000_000_000}},
       disposable : {
-        colony: ['water'],
+        colony: ['water', 'colonyHydrogen'],
         surface: [
           'liquidWater',
+          'liquidHydrogen',
           'ice',
           'dryIce',
           'liquidCO2',
