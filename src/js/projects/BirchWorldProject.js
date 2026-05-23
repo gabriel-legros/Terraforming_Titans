@@ -2,6 +2,8 @@ const BIRCH_WORLD_MAX_LAYERS = 1500;
 const BIRCH_WORLD_STARTING_LAYERS = 1;
 const BIRCH_WORLD_VALUE_DIVISOR = 50_000_000_000;
 const BIRCH_WORLD_CORE_MASS_SOLAR = 4.3e6;
+const BIRCH_WORLD_SHIP_ENERGY_PER_TON_PER_RADIUS = 25_000;
+const BIRCH_WORLD_SHIP_ENERGY_EFFECT_ID = 'artificial-ship-energy-multiplier';
 
 class BirchWorldProject extends Project {
   constructor(config, name) {
@@ -66,6 +68,18 @@ class BirchWorldProject extends Project {
     return this.getCurrentTotalLandHa() / BIRCH_WORLD_VALUE_DIVISOR;
   }
 
+  getCurrentLayer() {
+    return this.getLayerCache()[Math.max(0, this.layerCount - 1)];
+  }
+
+  getCurrentRadiusEarth() {
+    return this.getCurrentLayer()?.radiusEarth || 0;
+  }
+
+  getCurrentShipEnergyPerTon() {
+    return Math.max(this.getCurrentRadiusEarth() - 1, 0) * BIRCH_WORLD_SHIP_ENERGY_PER_TON_PER_RADIUS;
+  }
+
   getNextLayer() {
     if (this.layerCount >= BIRCH_WORLD_MAX_LAYERS) {
       return null;
@@ -93,17 +107,38 @@ class BirchWorldProject extends Project {
     return t(path, vars, fallback);
   }
 
+  applyEffects() {
+    if (this.unlocked && this.isCurrentSmbhShellworld()) {
+      this.updateShipEnergyPenalty();
+    }
+  }
+
+  updateShipEnergyPenalty() {
+    projectManager.addAndReplace({
+      target: 'projectManager',
+      type: 'spaceshipCostPerTon',
+      resourceCategory: 'colony',
+      resourceId: 'energy',
+      value: this.getCurrentShipEnergyPerTon(),
+      skipForSpaceStorageImports: true,
+      effectId: BIRCH_WORLD_SHIP_ENERGY_EFFECT_ID,
+      sourceId: this.name,
+      name: this.displayName
+    });
+  }
+
   renderUI(container) {
     const panel = document.createElement('div');
     panel.className = 'birch-world-panel';
 
     const grid = document.createElement('div');
-    grid.className = 'stats-grid five-col project-summary-grid birch-world-grid';
+    grid.className = 'stats-grid six-col project-summary-grid birch-world-grid';
 
     const metrics = [
       ['layerCount', 'ui.projects.birchWorld.currentLayers', 'Current Layers:'],
       ['totalLand', 'ui.projects.birchWorld.currentLand', 'Current Total Land:'],
       ['worldValue', 'ui.projects.birchWorld.currentValue', 'Current World Value:'],
+      ['shipPenalty', 'ui.projects.birchWorld.shipPenalty', 'Ship Energy Penalty:'],
       ['nextLand', 'ui.projects.birchWorld.nextLand', 'Next Layer Land:'],
       ['nextValue', 'ui.projects.birchWorld.nextValue', 'Next Layer Value:']
     ];
@@ -162,6 +197,11 @@ class BirchWorldProject extends Project {
     this.ui.layerCount.textContent = `${formatNumber(this.layerCount, true)} / ${formatNumber(BIRCH_WORLD_MAX_LAYERS, true)}`;
     this.ui.totalLand.textContent = formatNumber(this.getCurrentTotalLandHa(), false, 2);
     this.ui.worldValue.textContent = formatNumber(this.getCurrentWorldValue(), false, 2);
+    this.ui.shipPenalty.textContent = this.getBirchWorldText(
+      'ui.projects.birchWorld.shipPenaltyValue',
+      '{value} / ton',
+      { value: formatNumber(this.getCurrentShipEnergyPerTon(), false, 2) }
+    );
     this.ui.nextLand.textContent = formatNumber(this.getNextLayerLandHa(), false, 2);
     this.ui.nextValue.textContent = formatNumber(this.getNextLayerWorldValue(), false, 2);
     this.ui.cost.textContent = this.formatCost();
@@ -189,15 +229,19 @@ class BirchWorldProject extends Project {
     spaceManager._updateWorldCacheForStatusMutation('artificial', key, (status) => {
       status.landHa = totalLandHa;
       status.cachedLandHa = totalLandHa;
+      status.radiusEarth = this.getCurrentRadiusEarth();
       status.terraformedValue = totalLandHa / BIRCH_WORLD_VALUE_DIVISOR;
       status.fleetCapacityValue = spaceManager._deriveArtificialFleetCapacityValue(status);
       if (status.artificialSnapshot) {
         status.artificialSnapshot.landHa = totalLandHa;
+        status.artificialSnapshot.radiusEarth = status.radiusEarth;
       }
       if (status.original) {
         status.original.landHa = totalLandHa;
       }
     });
+    currentPlanetParameters.celestialParameters.radius = this.getCurrentRadiusEarth() * EARTH_RADIUS_KM;
+    this.updateShipEnergyPenalty();
     reconcileLandResourceValue();
     recalculateLandUsage();
   }

@@ -123,8 +123,8 @@
     margin-top: 8px;
 }
 
-.stats-grid.five-col.birch-world-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+.stats-grid.six-col.birch-world-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     margin-bottom: 0;
 }
 
@@ -142,7 +142,7 @@
 }
 
 @media (max-width: 900px) {
-    .stats-grid.five-col.birch-world-grid {
+    .stats-grid.six-col.birch-world-grid {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 }

@@ -4259,10 +4259,12 @@ setLanguageData({
       },
       birchWorld: {
         name: 'Birch World',
-        description: 'Add another habitable shell layer around the supermassive black hole shellworld. Each layer uses the mass under it for its material cost, increases land by the summed shell-layer area, and raises the world value by total land divided by 50B.  HOPE is finally satisfied to witness its dream fully realized and is ready to retire at any moment now.',
+        description: 'Add another habitable shell layer around the supermassive black hole shellworld. Each layer uses the mass under it for its material cost, increases land, and raises the world value by total land divided by 50B.  HOPE is finally satisfied to witness its dream fully realized and is ready to retire at any moment now.',
         currentLayers: 'Current Layers:',
         currentLand: 'Current Total Land:',
         currentValue: 'Current World Value:',
+        shipPenalty: 'Ship Energy Penalty:',
+        shipPenaltyValue: '{value} / ton',
         nextLand: 'Next Layer Land:',
         nextValue: 'Next Layer Value:',
         nextCost: 'Next Layer Cost:',
