@@ -1001,6 +1001,22 @@ const projectParameters = {
     unlocked: false,
     attributes: { canUseSpaceStorage: true, showInResourcesRate: false }
   },
+  birchWorld: {
+    type: 'BirchWorldProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 1800000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      showInResourcesRate: false,
+      ignoreDurationModifiers: true
+    }
+  },
   spaceStorage : {
     type: 'SpaceStorageProject',
     name : '',

@@ -1941,6 +1941,12 @@ class ArtificialManager extends EffectableEntity {
                 }
             ]
             : [
+                ...(project.core === SUPERMASSIVE_SHELL_CORE ? [{
+                    target: 'project',
+                    targetId: 'birchWorld',
+                    type: 'enable',
+                    effectId: 'smbh-shellworld-enable-birch-world'
+                }] : []),
                 {
                     target: 'project',
                     targetId: 'planetaryThruster',

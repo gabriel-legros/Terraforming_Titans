@@ -4257,6 +4257,17 @@ setLanguageData({
         name: 'Orbital Ring',
         description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.  You can prepay rings for each world without a ring.',
       },
+      birchWorld: {
+        name: 'Birch World',
+        description: 'Add another habitable shell layer around the supermassive black hole shellworld. Each layer uses the mass under it for its material cost, increases land by the summed shell-layer area, and raises the world value by total land divided by 50B.  HOPE is finally satisfied to witness its dream fully realized and is ready to retire at any moment now.',
+        currentLayers: 'Current Layers:',
+        currentLand: 'Current Total Land:',
+        currentValue: 'Current World Value:',
+        nextLand: 'Next Layer Land:',
+        nextValue: 'Next Layer Value:',
+        nextCost: 'Next Layer Cost:',
+        maxLayers: 'Max layers reached',
+      },
       spaceStorage: {
         name: 'Space Storage',
         description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time.  Resources in space storage may also be used to pay for most mega projects (planetary thrusters and world specializations excepted).  Space storage capacity and resources in storage persist between worlds.',

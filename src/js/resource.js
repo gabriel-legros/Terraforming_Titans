@@ -1157,6 +1157,14 @@ function reconcileLandResourceValue() {
     totalLand += geometricLand;
   }
 
+  const birchWorldProject = activeProjectManager?.projects?.birchWorld;
+  if (
+    birchWorldProject?.isCurrentSmbhShellworld?.()
+    && birchWorldProject?.getCurrentTotalLandHa
+  ) {
+    totalLand = birchWorldProject.getCurrentTotalLandHa();
+  }
+
   const undergroundProject = activeProjectManager?.projects?.undergroundExpansion;
   if (undergroundProject) {
     const perCompletion = Math.max(0, undergroundProject.getPerCompletionLand?.() || 0);
