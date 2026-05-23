@@ -65,41 +65,60 @@ function collectWasteCleanupSlackByResource(buildings) {
   return cleanupSlack;
 }
 
-function routeColonyWaterOverflow(deltaTime, accumulatedChanges) {
-  const resource = resources.colony.water;
+function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
+  const resource = resources[config.sourceCategory][config.sourceResource];
   if (!resource.hasCap) {
     return;
   }
 
   const previousValue = resource.value;
-  const newValue = resource.value + accumulatedChanges.colony.water;
+  const newValue = resource.value + accumulatedChanges[config.sourceCategory][config.sourceResource];
   const limit = previousValue >= resource.cap ? previousValue : resource.cap;
   const overflow = newValue > limit ? newValue - limit : 0;
   if (overflow <= 0) {
     return;
   }
 
-  accumulatedChanges.colony.water -= overflow;
+  accumulatedChanges[config.sourceCategory][config.sourceResource] -= overflow;
 
-  const zones = getZones();
-  const zoneTemp = zone => terraforming.temperature.zones[zone].value;
-  const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
+  const target = config.resolveTarget();
   const seconds = deltaTime / 1000;
   const rate = seconds > 0 ? overflow / seconds : 0;
-  const allZonesHot = zones.every(zone => zoneTemp(zone) > 373.15);
 
-  if (allZonesHot) {
-    accumulatedChanges.atmospheric.atmosphericWater += overflow;
-    resources.atmospheric.atmosphericWater.modifyRate(rate, 'Overflow', 'overflow');
-  } else if (warmZones.length > 0) {
-    accumulatedChanges.surface.liquidWater += overflow;
-    resources.surface.liquidWater.modifyRate(rate, 'Overflow', 'overflow');
-  } else {
-    accumulatedChanges.surface.ice += overflow;
-    resources.surface.ice.modifyRate(rate, 'Overflow', 'overflow');
-  }
-
+  accumulatedChanges[target.category][target.resource] += overflow;
+  resources[target.category][target.resource].modifyRate(rate, 'Overflow', 'overflow');
   resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+}
+
+function routeColonyWaterOverflow(deltaTime, accumulatedChanges) {
+  routeColonyResourceOverflow(deltaTime, accumulatedChanges, {
+    sourceCategory: 'colony',
+    sourceResource: 'water',
+    resolveTarget() {
+      const zones = getZones();
+      const zoneTemp = zone => terraforming.temperature.zones[zone].value;
+      const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
+      const allZonesHot = zones.every(zone => zoneTemp(zone) > 373.15);
+
+      if (allZonesHot) {
+        return { category: 'atmospheric', resource: 'atmosphericWater' };
+      }
+      if (warmZones.length > 0) {
+        return { category: 'surface', resource: 'liquidWater' };
+      }
+      return { category: 'surface', resource: 'ice' };
+    }
+  });
+}
+
+function routeColonyHydrogenOverflow(deltaTime, accumulatedChanges) {
+  routeColonyResourceOverflow(deltaTime, accumulatedChanges, {
+    sourceCategory: 'colony',
+    sourceResource: 'colonyHydrogen',
+    resolveTarget() {
+      return { category: 'atmospheric', resource: 'hydrogen' };
+    }
+  });
 }
 
 function accumulateSpecialPlanetaryMassChange(accumulatedSpecialChanges, source, amount) {
@@ -1850,6 +1869,7 @@ function produceResources(deltaTime, buildings) {
 
   if (terraforming) {
     routeColonyWaterOverflow(deltaTime, accumulatedChanges);
+    routeColonyHydrogenOverflow(deltaTime, accumulatedChanges);
     terraforming.distributeSurfaceChangesToZones(accumulatedChanges.surface);
   }
 

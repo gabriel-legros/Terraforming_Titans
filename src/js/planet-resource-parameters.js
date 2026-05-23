@@ -17,6 +17,7 @@
       silicon: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton' },
       glass: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton', maintenanceConversion : {surface : 'junk'}, marginBottom: 10 },
       water: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {atmospheric : 'atmosphericWater'}, unit: 'ton'},
+      colonyHydrogen: { name: '', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false, maintenanceConversion : {atmospheric : 'hydrogen'}, unit: 'ton', hideWhenSmall: true },
       food: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'packs', marginBottom: 10 },
       components: { name: '', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton' },
       electronics: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton', conversionValue : 0.2},

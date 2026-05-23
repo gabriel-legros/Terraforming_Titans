@@ -208,6 +208,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 7. Aggregate display rates
 - Shared productivity availability now uses stored stock plus same-tick production, so consumers can hold 100% throughput while inventory buffers last and only throttle once the buffer is no longer sufficient for the tick.
 - Surface land now keeps a fixed-point `BigInt` reservation/value ledger under the normal resource fields, so building/autobuild checks, hazard reservations, UI, and save/load stay stable on giant artificial worlds.
+- Colony hydrogen is a capped colony resource backed by Hydrogen Reservoir storage. Colony hydrogen overflow spills into atmospheric hydrogen through the shared resource overflow path, mirroring colony water overflow behavior.
 
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.
@@ -287,7 +288,9 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Space, Projects, and Hazards
 - Space Storage per-resource cap settings now include `Transfer Weight` (default `1`, accepts `0+`) that controls ship transfer capacity allocation proportionally across selected resources; the value has a tooltip, persists through save/load/travel, and is included in Space Storage automation presets including single-resource presets.
+- Space Storage hydrogen transfers can target either atmospheric hydrogen or colony hydrogen for both storing and withdrawing.
 - Space Storage advanced settings for Water, CO2, Nitrogen, and Hydrogen include `Respect Import Project limits`; when enabled, withdrawals into the planet are capped by the matching import project's pressure/coverage/fill limits and the setting is available in Space Storage automation presets.
+- Hydrogen Import can target Atmosphere, Colony and Atmosphere, Colony only, or Space Storage. Colony and Atmosphere imports add colony hydrogen first and rely on colony hydrogen overflow to spill excess into atmospheric hydrogen; Colony only stops at colony storage.
 - Space Antimatter Safety Regulations synchronize the special Antimatter resource against Space Energy at `1 antimatter = 2Q space energy`: antimatter production/storage routes to Space Energy, antimatter costs spend Space Energy through that conversion, Antimatter Farms no longer expose a separate Space Energy recipe, and the Antimatter resource tooltip explains the synchronization.
 - Galactic Invasion is a preserved/save-loaded manager with an opt-in Space subtab to the right of Galaxy. It uses the special `prometheanInvasion` galaxy faction (`INV`, deep purple), 10s operations, no fleet regeneration, rim-entry invasion rules, cancel-to-UHF cleanup with 1h cooldown, and completed-letter rewards that reapply as summarized effects.
 - Galactic Invasion Omega fleet power values are `10 Sx` for Lower Omega and `100 Sx` for Upper Omega.

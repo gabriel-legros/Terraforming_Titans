@@ -389,6 +389,17 @@ progressVenus.chapters.push(
         targetId: 'chemical_reactor'
       },
       {
+        target: 'resource',
+        resourceType: 'colony',
+        targetId: 'colonyHydrogen',
+        type: 'enable'
+      },
+      {
+        target: 'building',
+        targetId: 'hydrogenReservoir',
+        type: 'enable'
+      },
+      {
         target: 'building',
         type: 'booleanFlag',
         targetId: 'fusionPowerPlant',
