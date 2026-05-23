@@ -629,7 +629,8 @@ class RingworldTerraformingProject extends Project {
     const surfacePressurePa = calculateAtmosphericPressure(
       (compositionData.totalMass || 0) / 1000,
       gSurface,
-      terraforming.celestialParameters.radius
+      terraforming.celestialParameters.radius,
+      terraforming.celestialParameters.surfaceArea
     );
     const surfacePressureBar = surfacePressurePa / 1e5;
     const aerosolsSW = {};

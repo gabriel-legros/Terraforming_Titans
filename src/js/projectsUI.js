@@ -2085,8 +2085,8 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
       const amount = totalResourceGain[category][resource];
       let entry = `${resourceDisplayName}: ${formatNumber(amount, true, 2)}${suffix}`;
       if (category === 'atmospheric' && ATMOSPHERIC_GAS_IMPORTS.has(resource)) {
-        const { gravity, radius } = terraforming.celestialParameters;
-        const pressure = calculateAtmosphericPressure(amount, gravity, radius);
+        const { gravity, radius, surfaceArea } = terraforming.celestialParameters;
+        const pressure = calculateAtmosphericPressure(amount, gravity, radius, surfaceArea);
         entry += ` / ${formatNumber(pressure, true, 2, true)}${pressureSuffix}`;
       }
       gainArray.push(entry);

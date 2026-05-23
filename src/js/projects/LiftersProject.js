@@ -991,7 +991,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   getStripPressureFloorAmount() {
     const gravity = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
-    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius);
+    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius, terraforming.celestialParameters.surfaceArea);
     if (pressurePerUnitPa <= 0) {
       return 0;
     }

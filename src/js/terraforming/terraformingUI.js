@@ -1675,7 +1675,8 @@ function createTemperatureBox(row) {
         const currentGlobalPressurePa = calculateAtmosphericPressure(
             currentAmount,
             terraforming.celestialParameters.gravity,
-            terraforming.celestialParameters.radius
+            terraforming.celestialParameters.radius,
+            terraforming.celestialParameters.surfaceArea
         );
 
         const gasEls = els.gases[gas];

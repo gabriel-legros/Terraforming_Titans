@@ -318,6 +318,7 @@ function getTotalSurfacePressureKPa(terraformingState) {
     null;
   const gravity = terra?.celestialParameters?.gravity;
   const radius = terra?.celestialParameters?.radius;
+  const surfaceArea = terra?.celestialParameters?.surfaceArea;
 
   if (!atmospheric || !calculateAtmosphericPressureFn) {
     return null;
@@ -330,7 +331,7 @@ function getTotalSurfacePressureKPa(terraformingState) {
   let totalPressurePa = 0;
   for (const key of Object.keys(atmospheric)) {
     const amount = atmospheric[key]?.value ?? 0;
-    totalPressurePa += calculateAtmosphericPressureFn(amount, gravity, radius);
+    totalPressurePa += calculateAtmosphericPressureFn(amount, gravity, radius, surfaceArea);
   }
 
   if (!Number.isFinite(totalPressurePa) || totalPressurePa < 0) {

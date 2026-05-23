@@ -109,7 +109,7 @@ class BirchWorldProject extends Project {
 
   applyEffects() {
     if (this.unlocked && this.isCurrentSmbhShellworld()) {
-      this.updateShipEnergyPenalty();
+      this.applyCurrentWorldGeometry();
     }
   }
 
@@ -125,6 +125,65 @@ class BirchWorldProject extends Project {
       sourceId: this.name,
       name: this.displayName
     });
+  }
+
+  setLandFields(target, totalLandHa) {
+    if (!target) {
+      return;
+    }
+    target.landHa = totalLandHa;
+    if (target.celestialParameters) {
+      target.celestialParameters.baseLand = totalLandHa;
+    }
+    if (target.resources?.surface?.land) {
+      target.resources.surface.land.initialValue = totalLandHa;
+      target.resources.surface.land.baseLand = totalLandHa;
+      target.resources.surface.land.baseCap = totalLandHa;
+    }
+  }
+
+  setRadiusFields(target, radiusEarth) {
+    if (!target) {
+      return;
+    }
+    const radiusKm = radiusEarth * EARTH_RADIUS_KM;
+    if (target.celestialParameters) {
+      target.celestialParameters.radius = radiusKm;
+      target.celestialParameters.surfaceArea = target.landHa * 10_000;
+      target.celestialParameters.crossSectionArea = calculateCrossSectionAreaM2FromRadius(radiusKm);
+    }
+  }
+
+  updateLiveWorldGeometry(totalLandHa) {
+    const radiusEarth = this.getCurrentRadiusEarth();
+    const radiusKm = radiusEarth * EARTH_RADIUS_KM;
+    const atmosphericSurfaceArea = totalLandHa * 10_000;
+    terraforming.baseLand = totalLandHa;
+    terraforming.initialLand = totalLandHa;
+    terraforming.celestialParameters.radius = radiusKm;
+    terraforming.celestialParameters.baseLand = totalLandHa;
+    terraforming.celestialParameters.surfaceArea = atmosphericSurfaceArea;
+    terraforming.celestialParameters.crossSectionArea = calculateCrossSectionAreaM2FromRadius(radiusKm);
+    if (terraforming.initialCelestialParameters) {
+      terraforming.initialCelestialParameters.baseLand = totalLandHa;
+      terraforming.initialCelestialParameters.radius = radiusKm;
+      terraforming.initialCelestialParameters.surfaceArea = atmosphericSurfaceArea;
+      terraforming.initialCelestialParameters.crossSectionArea = terraforming.celestialParameters.crossSectionArea;
+    }
+    if (resources.surface.land) {
+      resources.surface.land.baseLand = totalLandHa;
+      resources.surface.land.baseCap = totalLandHa;
+    }
+    this.setLandFields(currentPlanetParameters, totalLandHa);
+    this.setRadiusFields(currentPlanetParameters, radiusEarth);
+  }
+
+  applyCurrentWorldGeometry() {
+    if (!this.isCurrentSmbhShellworld()) {
+      return;
+    }
+    this.updateLiveWorldGeometry(this.getCurrentTotalLandHa());
+    this.updateShipEnergyPenalty();
   }
 
   renderUI(container) {
@@ -227,9 +286,10 @@ class BirchWorldProject extends Project {
   updateCurrentWorldLand(totalLandHa) {
     const key = String(spaceManager.currentArtificialKey);
     spaceManager._updateWorldCacheForStatusMutation('artificial', key, (status) => {
-      status.landHa = totalLandHa;
+      this.setLandFields(status, totalLandHa);
       status.cachedLandHa = totalLandHa;
       status.radiusEarth = this.getCurrentRadiusEarth();
+      this.setRadiusFields(status, status.radiusEarth);
       status.terraformedValue = totalLandHa / BIRCH_WORLD_VALUE_DIVISOR;
       status.fleetCapacityValue = spaceManager._deriveArtificialFleetCapacityValue(status);
       if (status.artificialSnapshot) {
@@ -237,10 +297,15 @@ class BirchWorldProject extends Project {
         status.artificialSnapshot.radiusEarth = status.radiusEarth;
       }
       if (status.original) {
-        status.original.landHa = totalLandHa;
+        this.setLandFields(status.original, totalLandHa);
+        this.setLandFields(status.original.merged, totalLandHa);
+        this.setLandFields(status.original.override, totalLandHa);
+        this.setRadiusFields(status.original, status.radiusEarth);
+        this.setRadiusFields(status.original.merged, status.radiusEarth);
+        this.setRadiusFields(status.original.override, status.radiusEarth);
       }
     });
-    currentPlanetParameters.celestialParameters.radius = this.getCurrentRadiusEarth() * EARTH_RADIUS_KM;
+    this.updateLiveWorldGeometry(totalLandHa);
     this.updateShipEnergyPenalty();
     reconcileLandResourceValue();
     recalculateLandUsage();

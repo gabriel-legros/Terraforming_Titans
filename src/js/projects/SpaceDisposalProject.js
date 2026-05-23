@@ -457,7 +457,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       const pressurePa = calculateAtmosphericPressure(
         amount,
         terraforming.celestialParameters.gravity,
-        terraforming.celestialParameters.radius
+        terraforming.celestialParameters.radius,
+        terraforming.celestialParameters.surfaceArea
       );
       if ((pressurePa / 1000) <= target.disablePressureThreshold) {
         return false;
@@ -1551,7 +1552,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   getTargetPressureFloorAmount(target) {
     const gravity = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
-    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius);
+    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius, terraforming.celestialParameters.surfaceArea);
     if (pressurePerUnitPa <= 0) {
       return 0;
     }

@@ -994,7 +994,7 @@ class TerraformingGraphsManager {
     for (const gasKey in resources.atmospheric) {
       const series = gases[gasKey] || new Array(index).fill(0);
       const amount = resources.atmospheric[gasKey].value || 0;
-      series[index] = calculateAtmosphericPressure(amount, gravity, radius);
+      series[index] = calculateAtmosphericPressure(amount, gravity, radius, terraforming.celestialParameters.surfaceArea);
       gases[gasKey] = series;
     }
   }
@@ -1247,7 +1247,7 @@ class TerraformingGraphsManager {
     const radius = terraforming.celestialParameters.radius;
     const currentTemp = terraforming.temperature.value;
     const currentAmount = resources.atmospheric[definition.atmosphereKey].value;
-    const currentPressure = calculateAtmosphericPressure(currentAmount, gravity, radius);
+    const currentPressure = calculateAtmosphericPressure(currentAmount, gravity, radius, terraforming.celestialParameters.surfaceArea);
     const displayTempUnit = getTemperatureUnit();
     const signature = `${definition.id}:${displayTempUnit}:${Math.round(currentTemp * 10)}:${Math.round(currentPressure)}`;
     if (!this.phaseNeedsRedraw && signature === this.phaseSignature) {

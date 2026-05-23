@@ -1140,11 +1140,10 @@ function reconcileLandResourceValue() {
     0,
     resolveWorldGeometricLandFn(tf, landResource, params?.celestialParameters) || 0
   );
-  const baseLand = Math.max(
+  let baseLand = Math.max(
     0,
     resolveWorldBaseLand(tf, landResource) || geometricLand
   );
-  landResource.baseLand = baseLand;
 
   let totalLand = geometricLand;
 
@@ -1163,6 +1162,26 @@ function reconcileLandResourceValue() {
     && birchWorldProject?.getCurrentTotalLandHa
   ) {
     totalLand = birchWorldProject.getCurrentTotalLandHa();
+    baseLand = totalLand;
+  }
+
+  landResource.baseLand = baseLand;
+  if (tf) {
+    tf.baseLand = baseLand;
+    tf.initialLand = baseLand;
+    if (tf.celestialParameters) {
+      tf.celestialParameters.baseLand = baseLand;
+    }
+    if (tf.initialCelestialParameters) {
+      tf.initialCelestialParameters.baseLand = baseLand;
+    }
+  }
+  if (params?.celestialParameters) {
+    params.celestialParameters.baseLand = baseLand;
+  }
+  if (params?.resources?.surface?.land) {
+    params.resources.surface.land.baseLand = baseLand;
+    params.resources.surface.land.baseCap = baseLand;
   }
 
   const undergroundProject = activeProjectManager?.projects?.undergroundExpansion;

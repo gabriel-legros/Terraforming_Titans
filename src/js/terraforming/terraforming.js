@@ -403,13 +403,13 @@ try {
 }
 
 
-function buildAtmosphereContext(atmospheric, gravity, radius) {
+function buildAtmosphereContext(atmospheric, gravity, radius, surfaceArea) {
     let totalPressurePa = 0;
     const pressureByKey = {};
     const availableByKey = {};
     for (const key in atmospheric) {
         const amount = atmospheric[key]?.value || 0;
-        const pressure = calculateAtmosphericPressure(amount, gravity, radius);
+        const pressure = calculateAtmosphericPressure(amount, gravity, radius, surfaceArea);
         totalPressurePa += pressure;
         pressureByKey[key] = pressure;
         availableByKey[key] = amount;
@@ -427,7 +427,10 @@ function calculateInitialAtmosphericPressureForDelta(terraformingState, amount) 
     const radius = dynamicMassWorld
         ? (initialCelestial.radius || initialCelestial.baseRadius)
         : currentCelestial.radius;
-    return calculateAtmosphericPressure(amount, gravity, radius);
+    const surfaceArea = dynamicMassWorld
+        ? initialCelestial.surfaceArea
+        : currentCelestial.surfaceArea;
+    return calculateAtmosphericPressure(amount, gravity, radius, surfaceArea);
 }
 
 class Terraforming extends EffectableEntity{
@@ -730,7 +733,8 @@ class Terraforming extends EffectableEntity{
           const gasPressurePa = calculateAtmosphericPressure(
               gasAmount,
               this.celestialParameters.gravity,
-              this.celestialParameters.radius
+              this.celestialParameters.radius,
+              this.celestialParameters.surfaceArea
           );
           const target = this.gasTargets[gas];
           if (gasPressurePa < target.min || gasPressurePa > target.max) {
@@ -1566,7 +1570,8 @@ class Terraforming extends EffectableEntity{
         const surfacePressurePa = calculateAtmosphericPressure(
             totalMass / 1000,
             gSurface,
-            this.celestialParameters.radius
+            this.celestialParameters.radius,
+            this.celestialParameters.surfaceArea
         );
         const surfacePressureBar = surfacePressurePa / 1e5;
 
@@ -2051,7 +2056,8 @@ class Terraforming extends EffectableEntity{
         const cache = buildAtmosphereContext(
             this.resources.atmospheric,
             this.celestialParameters.gravity,
-            this.celestialParameters.radius
+            this.celestialParameters.radius,
+            this.celestialParameters.surfaceArea
         );
         cache.totalPressureKPa = cache.totalPressure / 1000;
         this.atmosphericPressureCache = cache;
@@ -2069,7 +2075,8 @@ class Terraforming extends EffectableEntity{
         const surfacePressurePa = calculateAtmosphericPressure(
             totalMass / 1000,
             gSurface,
-            this.celestialParameters.radius
+            this.celestialParameters.radius,
+            this.celestialParameters.surfaceArea
         );
         const surfacePressureBar = surfacePressurePa / 1e5;
         const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(
@@ -2621,7 +2628,12 @@ class Terraforming extends EffectableEntity{
             const currentAmount = this.resources.atmospheric[gas].value || 0;
             const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
 
-            const currentPressure = calculateAtmosphericPressure(currentAmount, this.celestialParameters.gravity, this.celestialParameters.radius);
+            const currentPressure = calculateAtmosphericPressure(
+                currentAmount,
+                this.celestialParameters.gravity,
+                this.celestialParameters.radius,
+                this.celestialParameters.surfaceArea
+            );
             const initialPressure = calculateInitialAtmosphericPressureForDelta(this, initialAmount);
 
             totalDelta += Math.abs(currentPressure - initialPressure);

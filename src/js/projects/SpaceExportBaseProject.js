@@ -851,7 +851,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
   getPressureFloorAmount() {
     const gravity = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
-    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius);
+    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius, terraforming.celestialParameters.surfaceArea);
     if (pressurePerUnitPa <= 0) {
       return 0;
     }
@@ -992,7 +992,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
         const pressurePa = calculateAtmosphericPressure(
           amount,
           terraforming.celestialParameters.gravity,
-          terraforming.celestialParameters.radius
+          terraforming.celestialParameters.radius,
+          terraforming.celestialParameters.surfaceArea
         );
         const pressureKPa = pressurePa / 1000;
         if (pressureKPa <= this.disablePressureThreshold) {
@@ -1030,7 +1031,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
         const pressurePa = calculateAtmosphericPressure(
           amount,
           terraforming.celestialParameters.gravity,
-          terraforming.celestialParameters.radius
+          terraforming.celestialParameters.radius,
+          terraforming.celestialParameters.surfaceArea
         );
         const pressureKPa = pressurePa / 1000;
         if (pressureKPa <= this.disablePressureThreshold) {

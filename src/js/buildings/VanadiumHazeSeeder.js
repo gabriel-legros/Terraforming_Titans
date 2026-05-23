@@ -39,7 +39,8 @@ class VanadiumHazeSeeder extends Building {
       const currentPa = calculateAtmosphericPressure(
         vanadiumAerosol.value,
         terraforming.celestialParameters.gravity,
-        terraforming.celestialParameters.radius
+        terraforming.celestialParameters.radius,
+        terraforming.celestialParameters.surfaceArea
       );
       if (currentPa >= targetPa) {
         this.setAutomationActivityMultiplier(0);
@@ -51,7 +52,8 @@ class VanadiumHazeSeeder extends Building {
         const maxPa = calculateAtmosphericPressure(
           vanadiumAerosol.value + maxProduction,
           terraforming.celestialParameters.gravity,
-          terraforming.celestialParameters.radius
+          terraforming.celestialParameters.radius,
+          terraforming.celestialParameters.surfaceArea
         );
         const deltaPa = maxPa - currentPa;
         const neededPa = targetPa - currentPa;

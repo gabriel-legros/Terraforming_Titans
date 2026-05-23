@@ -2218,7 +2218,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
           const currentPressurePa = calculateAtmosphericPressure(
             resource.value || 0,
             terraforming.celestialParameters.gravity,
-            terraforming.celestialParameters.radius
+            terraforming.celestialParameters.radius,
+            terraforming.celestialParameters.surfaceArea
           );
           if (currentPressurePa < target.min) {
             const targetMass = (target.min * terraforming.celestialParameters.surfaceArea)

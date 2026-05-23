@@ -2319,7 +2319,11 @@ class SpaceMirrorFacilityProject extends Project {
       }
       
       if (showLantern) {
-        const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
+        const birchWorldProject = projectManager.projects.birchWorld;
+        const usesBirchLayerArea = birchWorldProject?.unlocked && birchWorldProject.isCurrentSmbhShellworld();
+        const area = usesBirchLayerArea
+          ? terraforming.celestialParameters.surfaceArea
+          : (terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea);
         const numLanterns = Number.isFinite(lantern?.activeNumber)
           ? lantern.activeNumber
           : (typeof buildingCountToNumber === 'function'

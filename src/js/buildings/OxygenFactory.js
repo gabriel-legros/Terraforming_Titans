@@ -48,7 +48,8 @@ class OxygenFactory extends MultiRecipesBuilding {
       const currentPa = calculateAtmosphericPressure(
         oxygen.value,
         terraforming.celestialParameters.gravity,
-        terraforming.celestialParameters.radius
+        terraforming.celestialParameters.radius,
+        terraforming.celestialParameters.surfaceArea
       );
       if (currentPa >= targetPa) {
         this.setAutomationActivityMultiplier(0);
@@ -60,7 +61,8 @@ class OxygenFactory extends MultiRecipesBuilding {
         const maxPa = calculateAtmosphericPressure(
           oxygen.value + maxProduction,
           terraforming.celestialParameters.gravity,
-          terraforming.celestialParameters.radius
+          terraforming.celestialParameters.radius,
+          terraforming.celestialParameters.surfaceArea
         );
         const deltaPa = maxPa - currentPa;
         const neededPa = targetPa - currentPa;
