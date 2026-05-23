@@ -110,6 +110,7 @@ function createResources(initial = {}) {
       superalloys: createResource('superalloys', initial.colonySuperalloys || 0),
       workers: createResource('workers', 0),
       water: createResource('water', 0, true, Infinity),
+      colonyHydrogen: createResource('colonyHydrogen', 0, true, 0),
     },
     surface: {
       land: createResource('land', 0),
@@ -118,6 +119,7 @@ function createResources(initial = {}) {
     },
     atmospheric: {
       atmosphericWater: createResource('atmosphericWater', 0),
+      hydrogen: createResource('hydrogen', 0),
     },
     space: {
       energy: createResource('energy', initial.spaceEnergy || 0, true, initial.spaceEnergyCap ?? Infinity),

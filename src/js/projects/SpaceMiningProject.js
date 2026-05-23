@@ -22,8 +22,14 @@ function normalizeMaterialImportTarget(target) {
   return 'colony';
 }
 
-function normalizeGasImportTarget(target) {
-  return target === 'spaceStorage' ? 'spaceStorage' : 'atmospheric';
+function normalizeGasImportTarget(target, gas) {
+  if (target === 'spaceStorage') {
+    return 'spaceStorage';
+  }
+  if (gas === 'hydrogen' && (target === 'colony' || target === 'colonyOnly')) {
+    return target;
+  }
+  return 'atmospheric';
 }
 
 function ensureSelectOption(select, value, labelText) {
@@ -505,6 +511,11 @@ class SpaceMiningProject extends SpaceshipProject {
     return this.getTargetAtmosphericResource() && this.gasImportTarget === 'spaceStorage';
   }
 
+  isHydrogenColonyImportSelected() {
+    return this.getTargetAtmosphericResource() === 'hydrogen'
+      && (this.gasImportTarget === 'colony' || this.gasImportTarget === 'colonyOnly');
+  }
+
   isSpaceStorageImportSelected() {
     return (this.attributes.dynamicWaterImport && this.waterImportTarget === 'spaceStorage')
       || (this.getPlanetaryMassImportResource() && this.materialImportTarget === 'spaceStorage')
@@ -516,7 +527,8 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   isAtmosphericImportTargetSelected() {
-    return !this.getTargetAtmosphericResource() || !this.isGasStorageImportSelected();
+    return !this.getTargetAtmosphericResource()
+      || (!this.isGasStorageImportSelected() && !this.isHydrogenColonyImportSelected());
   }
 
   isSpaceStorageTargetAvailable() {
@@ -626,11 +638,11 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   createGasImportTargetControl() {
-    if (!this.isSpaceStorageTargetAvailable()) {
-      return null;
-    }
     const gas = this.getTargetAtmosphericResource();
     if (!gas) {
+      return null;
+    }
+    if (!this.isSpaceStorageTargetAvailable() && gas !== 'hydrogen') {
       return null;
     }
 
@@ -644,10 +656,19 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const select = document.createElement('select');
     select.classList.add('gas-import-target-select');
-    [
+    const options = [
       { value: 'atmospheric', text: getSpaceMiningText('ui.projects.spaceMining.atmosphere', 'Atmosphere') },
       { value: 'spaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage') }
-    ].forEach(optionData => {
+    ];
+    if (gas === 'hydrogen') {
+      options.splice(
+        1,
+        0,
+        { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndAtmosphere', 'Colony and Atmosphere') },
+        { value: 'colonyOnly', text: getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only') }
+      );
+    }
+    options.forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
       option.textContent = optionData.text;
@@ -656,9 +677,10 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       select.appendChild(option);
     });
+    this.gasImportTarget = normalizeGasImportTarget(this.gasImportTarget, gas);
     select.value = this.gasImportTarget;
     select.addEventListener('change', () => {
-      this.gasImportTarget = normalizeGasImportTarget(select.value);
+      this.gasImportTarget = normalizeGasImportTarget(select.value, gas);
     });
     control.appendChild(select);
 
@@ -790,7 +812,9 @@ class SpaceMiningProject extends SpaceshipProject {
       }
     }
     if (elements.automationSettingsContainer) {
-      if (this.getTargetAtmosphericResource() && this.isSpaceStorageTargetAvailable() && !elements.gasImportTargetControl) {
+      const gas = this.getTargetAtmosphericResource();
+      const canShowGasTarget = gas && (this.isSpaceStorageTargetAvailable() || gas === 'hydrogen');
+      if (canShowGasTarget && !elements.gasImportTargetControl) {
         const gasTargetControl = this.createGasImportTargetControl();
         this.placeTargetControlInline(elements.automationSettingsContainer, gasTargetControl);
       }
@@ -919,7 +943,8 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.materialImportTargetSelect) {
       elements.materialImportTargetSelect.value = this.materialImportTarget;
     }
-    const showGasTargetControl = this.getTargetAtmosphericResource() && this.isSpaceStorageTargetAvailable();
+    const gasTarget = this.getTargetAtmosphericResource();
+    const showGasTargetControl = gasTarget && (this.isSpaceStorageTargetAvailable() || gasTarget === 'hydrogen');
     if (elements.gasImportTargetControl) {
       elements.gasImportTargetControl.style.display = showGasTargetControl ? 'flex' : 'none';
     }
@@ -931,6 +956,7 @@ class SpaceMiningProject extends SpaceshipProject {
       }
     }
     if (elements.gasImportTargetSelect) {
+      this.gasImportTarget = normalizeGasImportTarget(this.gasImportTarget, this.getTargetAtmosphericResource());
       elements.gasImportTargetSelect.value = this.gasImportTarget;
     }
     if (elements.oxygenPressureControl) {
@@ -1293,7 +1319,7 @@ class SpaceMiningProject extends SpaceshipProject {
       this.materialImportTarget = normalizeMaterialImportTarget(settings.materialImportTarget);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'gasImportTarget')) {
-      this.gasImportTarget = normalizeGasImportTarget(settings.gasImportTarget);
+      this.gasImportTarget = normalizeGasImportTarget(settings.gasImportTarget, this.getTargetAtmosphericResource());
     }
   }
 
@@ -1345,7 +1371,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = normalizeMaterialImportTarget(state.materialImportTarget || this.materialImportTarget);
-    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget);
+    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget, this.getTargetAtmosphericResource());
   }
 
   saveTravelState() {
@@ -1396,7 +1422,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = normalizeMaterialImportTarget(state.materialImportTarget || this.materialImportTarget);
-    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget);
+    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget, this.getTargetAtmosphericResource());
   }
 
   calculateSpaceshipGainPerShip() {
@@ -1428,6 +1454,10 @@ class SpaceMiningProject extends SpaceshipProject {
       const gas = this.getTargetAtmosphericResource();
       const amount = this.attributes.resourceGainPerShip?.atmospheric?.[gas] || 0;
       return { spaceStorage: { [gas]: this.getShipCapacity(amount) } };
+    }
+    if (this.isHydrogenColonyImportSelected()) {
+      const amount = this.attributes.resourceGainPerShip?.atmospheric?.hydrogen || 0;
+      return { colony: { colonyHydrogen: this.getShipCapacity(amount) } };
     }
     return super.calculateSpaceshipGainPerShip();
   }
@@ -1473,6 +1503,26 @@ class SpaceMiningProject extends SpaceshipProject {
     return amount - toColony;
   }
 
+  applyHydrogenImportToColony(amount, accumulatedChanges = null, allowOverflow = false) {
+    const resource = resources.colony.colonyHydrogen;
+    const pending = accumulatedChanges?.colony?.colonyHydrogen || 0;
+    const current = resource.value + pending;
+    const limit = resource.hasCap
+      ? (allowOverflow ? current + amount : (current >= resource.cap ? current : resource.cap))
+      : current + amount;
+    const available = Math.max(0, limit - current);
+    const toColony = Math.min(amount, available);
+    if (toColony > 0) {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
+        accumulatedChanges.colony.colonyHydrogen = (accumulatedChanges.colony.colonyHydrogen || 0) + toColony;
+      } else {
+        resource.value += toColony;
+      }
+    }
+    return amount - toColony;
+  }
+
   getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
     let ratio = super.getContinuousGainScaleLimit(context, gainBase, accumulatedChanges, productivity);
     if (gainBase.spaceStorage) {
@@ -1494,6 +1544,16 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (!hasMonitoring || !this.disableAbovePressure || !gainBase.atmospheric || !this.isAtmosphericImportTargetSelected()) {
+      if (this.isHydrogenColonyImportSelected() && this.gasImportTarget === 'colonyOnly' && gainBase.colony?.colonyHydrogen) {
+        const desired = gainBase.colony.colonyHydrogen * context.fraction * context.successChance * productivity;
+        const remaining = Math.max(
+          0,
+          resources.colony.colonyHydrogen.cap
+            - resources.colony.colonyHydrogen.value
+            - (accumulatedChanges?.colony?.colonyHydrogen || 0)
+        );
+        ratio = Math.min(ratio, desired > 0 ? Math.max(0, Math.min(1, remaining / desired)) : 1);
+      }
       return ratio;
     }
 
@@ -1550,6 +1610,11 @@ class SpaceMiningProject extends SpaceshipProject {
         resources.surface[surfaceResource].value += amount;
         terraforming.distributeSurfaceChangesToZones({ [surfaceResource]: amount });
       }
+      return;
+    }
+    if (this.isHydrogenColonyImportSelected() && gain.colony?.colonyHydrogen) {
+      const amount = gain.colony.colonyHydrogen * fraction * productivity;
+      this.applyHydrogenImportToColony(amount, accumulatedChanges, this.gasImportTarget === 'colony');
       return;
     }
     if (this.isPlanetaryMassImportSelected() && gain.underground?.planetaryMass) {

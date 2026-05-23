@@ -970,6 +970,7 @@ function renderSpaceStorageUI(project, container) {
     });
 
     let waterSelect;
+    let hydrogenSelect;
     if (opt.resource === 'liquidWater') {
       waterSelect = document.createElement('select');
       waterSelect.id = `${project.name}-water-destination`;
@@ -988,6 +989,23 @@ function renderSpaceStorageUI(project, container) {
         }
       });
       textSpan.append(' ', waterSelect);
+    }
+    if (opt.resource === 'hydrogen') {
+      hydrogenSelect = document.createElement('select');
+      hydrogenSelect.id = `${project.name}-hydrogen-destination`;
+      hydrogenSelect.style.fontSize = '12px';
+      const atmosphereOpt = document.createElement('option');
+      atmosphereOpt.value = 'atmospheric';
+      atmosphereOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.atmosphere', 'Atmosphere');
+      const colonyOpt = document.createElement('option');
+      colonyOpt.value = 'colony';
+      colonyOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.colony', 'Colony');
+      hydrogenSelect.append(atmosphereOpt, colonyOpt);
+      hydrogenSelect.addEventListener('change', e => {
+        project.hydrogenTransferTarget = e.target.value === 'colony' ? 'colony' : 'atmospheric';
+        updateSpaceStorageUI(project);
+      });
+      textSpan.append(' ', hydrogenSelect);
     }
 
     if (biomassInfo) {
@@ -1050,7 +1068,8 @@ function renderSpaceStorageUI(project, container) {
         ...(projectElements[project.name]?.resourceItems || {}),
         [opt.resource]: resourceItem
       },
-      ...(opt.resource === 'liquidWater' ? { waterDestinationSelect: waterSelect } : {})
+      ...(opt.resource === 'liquidWater' ? { waterDestinationSelect: waterSelect } : {}),
+      ...(opt.resource === 'hydrogen' ? { hydrogenDestinationSelect: hydrogenSelect } : {})
     };
   });
 
@@ -1367,6 +1386,12 @@ function updateSpaceStorageUI(project) {
       && project.selectedResources.some(entry => entry?.resource === 'liquidWater');
     els.waterDestinationSelect.style.display = hasWaterSelected ? '' : 'none';
   }
+  if (els.hydrogenDestinationSelect) {
+    els.hydrogenDestinationSelect.value = project.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+    const hasHydrogenSelected = Array.isArray(project.selectedResources)
+      && project.selectedResources.some(entry => entry?.resource === 'hydrogen');
+    els.hydrogenDestinationSelect.style.display = hasHydrogenSelected ? '' : 'none';
+  }
   if (els.transferButtons) {
     const withdrawalDisabled = project.isWithdrawalDisabled && project.isWithdrawalDisabled();
     storageResourceOptions.forEach(opt => {
@@ -1407,6 +1432,14 @@ function updateSpaceStorageUI(project) {
           tooltipText = project.waterWithdrawTarget === 'surface'
             ? getSpaceStorageUIText('ui.projects.spaceStorage.surfaceStorageFull', 'Surface storage full')
             : getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full');
+        }
+        if (opt.resource === 'hydrogen' && mode === 'withdraw') {
+          res = project.hydrogenTransferTarget === 'colony'
+            ? resources.colony.colonyHydrogen
+            : resources.atmospheric.hydrogen;
+          tooltipText = project.hydrogenTransferTarget === 'colony'
+            ? getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full')
+            : getSpaceStorageUIText('ui.projects.spaceStorage.atmosphereStorageFull', 'Atmosphere storage full');
         }
         if (tooltip) {
           tooltip.textContent = tooltipText;

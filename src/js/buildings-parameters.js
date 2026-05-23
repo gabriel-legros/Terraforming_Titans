@@ -378,7 +378,7 @@ const buildingsParameters = {
       hydrogen: {
         shortName: '',
         requiresBuildingFlag: 'hydrogenFusionRecipe',
-        consumption: { atmospheric: { hydrogen: 0.1 } },
+        consumption: { colony: { colonyHydrogen: 0.1 } },
         production: { colony: { energy: 5_000_000_000 } }
       }
     }
@@ -409,7 +409,7 @@ const buildingsParameters = {
       hydrogen: {
         shortName: '',
         requiresBuildingFlag: 'hydrogenFusionRecipe',
-        consumption: { atmospheric: { hydrogen: 1 } },
+        consumption: { colony: { colonyHydrogen: 1 } },
         production: { colony: { energy: 500_000_000_000 } }
       }
     }
@@ -560,6 +560,38 @@ const buildingsParameters = {
     unlocked: false,
     autoBuildFillEnabled: true,
     autoBuildFillPercent: 95
+  },
+  hydrogenReservoir: {
+    name: '',
+    category: 'storage',
+    description: '',
+    cost: { colony: { metal: 100 } },
+    consumption: {},
+    production: {},
+    storage: { colony: { colonyHydrogen: 5000 } },
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 0.05,
+    aerostatReduction: 0.01,
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95,
+    defaultRecipe: 'storage',
+    recipes: {
+      storage: {
+        shortName: '',
+        storage: { colony: { colonyHydrogen: 5000 } }
+      },
+      intake: {
+        shortName: '',
+        consumption: { atmospheric: { hydrogen: 10 } },
+        production: { colony: { colonyHydrogen: 10 } },
+        storage: { colony: { colonyHydrogen: 5000 } }
+      }
+    }
   },
   hydrogenBattery: {
     name: '',
@@ -742,7 +774,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10} },
     consumption: { colony: { energy: 24000000, water: 100 } },
-    production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } },
+    production: { atmospheric: { oxygen: 88.89 }, colony: { colonyHydrogen: 11.11 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
@@ -756,7 +788,7 @@ const buildingsParameters = {
       water: {
         shortName: '',
         consumption: { colony: { energy: 24000000, water: 100 } },
-        production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } }
+        production: { atmospheric: { oxygen: 88.89 }, colony: { colonyHydrogen: 11.11 } }
       },
       silicates: {
         shortName: '',
@@ -793,24 +825,24 @@ const buildingsParameters = {
       recipe1: {
         shortName: '',
         consumption: {
-          colony: { energy: 100_000 },
-          atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
+          colony: { energy: 100_000, colonyHydrogen: 9.09 },
+          atmospheric: { carbonDioxide: 100 }
         },
         production: { colony: { water: 81.82 }, surface: { graphite: 27.27 } }
       },
       recipe2: {
         shortName: '',
         consumption: {
-          colony: { energy: 100_000 },
-          atmospheric: { oxygen: 72.73, hydrogen: 9.09 }
+          colony: { energy: 100_000, colonyHydrogen: 9.09 },
+          atmospheric: { oxygen: 72.73 }
         },
         production: { colony: { water: 81.82 } }
       },
       recipe3: {
         shortName: '',
         consumption: {
-          colony: { energy: 100_000 },
-          atmospheric: { carbonDioxide: 100, hydrogen: 18.18 }
+          colony: { energy: 100_000, colonyHydrogen: 18.18 },
+          atmospheric: { carbonDioxide: 100 }
         },
         production: {
           atmospheric: { atmosphericMethane: 36.36 },
@@ -830,8 +862,8 @@ const buildingsParameters = {
         shortName: '',
         requiresBuildingFlag: 'gabbagAmmoniaChemistry',
         consumption: {
-          colony: { energy: 100_000 },
-          atmospheric: { inertGas: 100, hydrogen: 21.43 }
+          colony: { energy: 100_000, colonyHydrogen: 21.43 },
+          atmospheric: { inertGas: 100 }
         },
         production: { atmospheric: { atmosphericAmmonia: 121.43 } }
       },
