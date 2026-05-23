@@ -110,6 +110,8 @@ const ARTIFICIAL_DISKWORLD_AU_METERS = 1.496e11;
 const ARTIFICIAL_DISKWORLD_EARTH_RADIUS_METERS = 6.371e6;
 const ARTIFICIAL_DISKWORLD_GRAVITY = 9.81;
 const ARTIFICIAL_DISKWORLD_GRAVITATIONAL_CONSTANT = 6.67430e-11;
+const ARTIFICIAL_WATT_DAY_SECONDS = 86400;
+const ARTIFICIAL_TON_KG = 1000;
 const ARTIFICIAL_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS = 25_000;
 
 function getArtificialText(path, fallback, vars) {
@@ -2413,7 +2415,15 @@ function renderEffects(project, selection) {
   if (artificialUICache.effectShipEnergyLabel) {
     let effectLabel = getArtificialText('effects.spaceshipEnergyCosts', 'Spaceship energy costs:');
     if (type === 'ring') {
-      effectLabel = getArtificialText('effects.ringworldSpinProject', 'You will have to spin the Ringworld via an infrastructure special project.');
+      const ringOrbitRadiusAU = project ? (project.orbitRadiusAU || project.distanceFromStarAU) : selection?.orbitRadiusAU;
+      const ringOrbitRadiusMeters = Math.max(ringOrbitRadiusAU || 0, 0) * ARTIFICIAL_DISKWORLD_AU_METERS;
+      const maxSpinPenaltyValue = (0.5 * ARTIFICIAL_TON_KG * ARTIFICIAL_DISKWORLD_GRAVITY * ringOrbitRadiusMeters) / ARTIFICIAL_WATT_DAY_SECONDS;
+      const maxSpinPenalty = `${formatNumber(maxSpinPenaltyValue, true)} /ton`;
+      effectLabel = getArtificialText(
+        'effects.ringworldMaxSpinPenalty',
+        'You will have to spin the Ringworld via an infrastructure special project.\nAt maximum spin, ships will pay an additional energy penalty per ton of {value}.',
+        { value: maxSpinPenalty }
+      );
     }
     if (type === 'disk') {
       const diskRadiusAU = project ? project.diskRadiusAU : selection.diskRadiusAU;

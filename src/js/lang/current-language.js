@@ -327,6 +327,7 @@ setLanguageData({
         title: 'Effects',
         spaceshipEnergyCosts: 'Spaceship energy costs:',
         ringworldSpinProject: 'You will have to spin the Ringworld via an infrastructure special project.',
+        ringworldMaxSpinPenalty: 'You will have to spin the Ringworld via an infrastructure special project.\nAt maximum spin, ships will pay an additional energy penalty per ton of {value}.',
         diskPreparationWarning: 'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will pay an energy penalty per ton.\nInitial ship penalty: {value}.',
       },
       controls: {
