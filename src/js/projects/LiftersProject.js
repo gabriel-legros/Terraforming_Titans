@@ -1532,11 +1532,15 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     return 'Lifting';
   }
 
+  shouldKeepRunningOnTravel() {
+    return false;
+  }
+
   applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.shouldOperate()) {
       this.setLastTickStats({});
       if (!this.repeatCount) {
-        this.updateStatus(getLiftersProjectText('status.completeAtLeastOne', null, 'Complete at least one lifter'));
+        this.updateStatus(this.getProjectText('status.completeAtLeastOne', null, 'Complete at least one lifter'));
       } else if (!this.isRunning) {
         this.updateStatus(getLiftersProjectText('status.runDisabled', null, 'Run disabled'));
       } else {
@@ -2193,6 +2197,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   saveTravelState() {
     const state = {
       repeatCount: this.repeatCount,
+      isRunning: this.isRunning === true,
       expansionProgress: this.expansionProgress,
       lifterAssignments: serializeLifterAssignments(this.lifterAssignments),
       assignmentStep: serializeLifterInteger(this.assignmentStep),
@@ -2252,10 +2257,10 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
 
-    this.isRunning = false;
+    this.isRunning = this.shouldKeepRunningOnTravel() && state.isRunning === true;
     this.isCompleted = false;
     this.setLastTickStats({});
-    this.updateStatus(getLiftersProjectText('status.idle', null, 'Idle'));
+    this.updateStatus(this.getProjectText('status.idle', null, 'Idle'));
 
     if (state.isActive) {
       this.isActive = true;
