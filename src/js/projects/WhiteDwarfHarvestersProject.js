@@ -27,6 +27,10 @@ class WhiteDwarfHarvestersProject extends WhiteDwarfHarvestersBase {
     return 'White Dwarf Harvesting';
   }
 
+  shouldKeepRunningOnTravel() {
+    return true;
+  }
+
   isAtmosphereStripDisabled() {
     return true;
   }
