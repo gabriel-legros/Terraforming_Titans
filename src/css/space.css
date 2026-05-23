@@ -607,6 +607,10 @@
   white-space: pre-line;
 }
 
+.artificial-effect-warning {
+  color: #ff6161;
+}
+
 .artificial-priority {
   display: flex;
   align-items: center;
@@ -796,6 +800,67 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.artificial-supermassive-card {
+  gap: 12px;
+  background: linear-gradient(180deg, rgba(67, 123, 168, 0.10), rgba(255, 255, 255, 0.02));
+}
+
+.artificial-supermassive-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.artificial-supermassive-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.artificial-supermassive-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.artificial-supermassive-status {
+  color: var(--space-accent);
+  font-weight: 700;
+  padding: 3px 8px;
+  border: 1px solid rgba(88, 166, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(88, 166, 255, 0.08);
+}
+
+.artificial-supermassive-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  min-width: 0;
+  font-size: 16px;
+}
+
+.artificial-supermassive-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artificial-supermassive-card .artificial-actions {
+  margin-top: 2px;
+  justify-content: flex-end;
+}
+
+.artificial-supermassive-card .artificial-primary {
+  min-width: 88px;
 }
 
 .artificial-history-card {

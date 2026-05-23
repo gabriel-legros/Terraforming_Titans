@@ -259,6 +259,9 @@ setLanguageData({
           stored: 'Stored',
           abandoned: 'Abandoned',
         },
+        typeLabels: {
+          supermassiveShellworld: 'SMBH Shellworld',
+        },
         columns: {
           name: 'Name',
           type: 'Type',
@@ -330,10 +333,27 @@ setLanguageData({
         ringworldMaxSpinPenalty: 'You will have to spin the Ringworld via an infrastructure special project.\nAt maximum spin, ships will pay an additional energy penalty per ton of {value}.',
         diskPreparationWarning: 'You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will pay an energy penalty per ton.\nInitial ship penalty: {value}.',
       },
+      supermassive: {
+        title: 'Supermassive Black Hole Shellworld',
+        singleWarning: 'Only one supermassive black hole shellworld can exist.',
+        unnamed: 'Supermassive Shellworld',
+        travel: 'Travel',
+        current: 'Current',
+        status: {
+          building: 'Building',
+          completed: 'Ready',
+          current: 'Current',
+          stored: 'Stored',
+          abandoned: 'Abandoned',
+          terraformed: 'Terraformed',
+          constructed: 'Constructed',
+        },
+      },
       controls: {
         sector: 'Sector',
         filterResource: 'Filter +Resource',
         allResources: 'All resources',
+        coreSector: 'Core sector',
       },
       stash: {
         title: 'Starting stockpile',
@@ -374,6 +394,7 @@ setLanguageData({
         startConstruction: 'Start Construction',
         prepay: 'Prepay',
         insufficient: 'Insufficient',
+        supermassiveExists: 'Already exists',
       },
       progress: {
         noActiveProject: 'No active project',

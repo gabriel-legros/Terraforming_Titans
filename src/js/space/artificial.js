@@ -14,7 +14,7 @@ const ARTIFICIAL_CORES = [
     { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
     { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
     { value: 'stellar-bh', label: 'Stellar Black Hole', disabled: true, disabledSource : "World 14", minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
-    { value: 'smbh', label: 'Supermassive Black Hole (Coming Soon)', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 1200000, maxRadiusEarth: 1200000, allowStar: false}
+    { value: 'smbh', label: 'Supermassive Black Hole', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 1200000, maxRadiusEarth: 1200000, allowStar: false}
 ];
 const ARTIFICIAL_STAR_CONTEXTS = [
     { value: 'with-star', label: 'Star in system', hasStar: true, disabled: false },
@@ -410,6 +410,8 @@ function calculateDiskLandHectares(radiusAU, innerRadiusAU = 0) {
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
 const ARTIFICIAL_FLEET_CAPACITY_UNCAPPED = 'uncapped';
+const SUPERMASSIVE_SHELL_CORE = 'smbh';
+const SUPERMASSIVE_SHELL_SECTOR = 'Core';
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
@@ -480,6 +482,76 @@ class ArtificialManager extends EffectableEntity {
 
     isArtificialCoreUnlocked(coreId) {
         return this.unlockedCores.has(coreId);
+    }
+
+    isSupermassiveShellworldEntry(entry) {
+        if (!entry) return false;
+        const type = entry.type
+            || entry.classification?.type
+            || entry.original?.merged?.classification?.type
+            || entry.original?.classification?.type
+            || entry.artificialSnapshot?.type;
+        const core = entry.core
+            || entry.classification?.core
+            || entry.original?.merged?.classification?.core
+            || entry.original?.classification?.core
+            || entry.artificialSnapshot?.core;
+        return type === 'shell' && core === SUPERMASSIVE_SHELL_CORE;
+    }
+
+    getSupermassiveShellworldStatus() {
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        const currentKey = spaceManager?.currentArtificialKey !== null && spaceManager?.currentArtificialKey !== undefined
+            ? String(spaceManager.currentArtificialKey)
+            : null;
+        const active = this.activeProject && this.isSupermassiveShellworldEntry(this.activeProject)
+            ? {
+                id: this.activeProject.seed || String(this.activeProject.id),
+                renameId: this.activeProject.id,
+                seed: this.activeProject.seed,
+                name: this.activeProject.name,
+                status: this.activeProject.status || 'building',
+                current: false,
+                canTravel: this.activeProject.status === 'completed',
+                canDiscard: false,
+                travelKind: 'constructed',
+                project: this.activeProject
+            }
+            : null;
+        if (active) return active;
+
+        let found = null;
+        Object.entries(statuses).forEach(([key, status]) => {
+            if (found || !this.isSupermassiveShellworldEntry(status)) return;
+            found = { key, status };
+        });
+        if (!found) return null;
+
+        const status = found.status;
+        const isCurrent = currentKey === found.key;
+        const hasSnapshot = !!status.artificialSnapshot;
+        return {
+            id: found.key,
+            renameId: found.key,
+            seed: found.key,
+            name: status.name || status.artificialSnapshot?.name || `Artificial ${found.key}`,
+            type: status.type || status.artificialSnapshot?.type || 'shell',
+            core: status.core || status.artificialSnapshot?.core || SUPERMASSIVE_SHELL_CORE,
+            terraformed: !!status.terraformed,
+            stored: !!status.stored,
+            abandoned: !!status.abandoned,
+            current: isCurrent,
+            canTravel: !isCurrent && hasSnapshot,
+            canDiscard: !isCurrent && (status.stored || status.abandoned),
+            travelKind: 'stored',
+            status: isCurrent ? 'current' : (status.stored ? 'stored' : (status.abandoned ? 'abandoned' : (status.terraformed ? 'terraformed' : 'constructed')))
+        };
+    }
+
+    hasSupermassiveShellworld() {
+        if (this.activeProject && this.isSupermassiveShellworldEntry(this.activeProject)) return true;
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        return Object.values(statuses).some((status) => this.isSupermassiveShellworldEntry(status));
     }
 
     isRingStarCoreUnlocked(coreId) {
@@ -1248,6 +1320,7 @@ class ArtificialManager extends EffectableEntity {
       if (!this.isArtificialTypeUnlocked('shell')) return false;
       const core = options?.core || 'super-earth';
       if (!this.isArtificialCoreUnlocked(core)) return false;
+      if (core === SUPERMASSIVE_SHELL_CORE && this.hasSupermassiveShellworld()) return false;
       const coreConfig = getArtificialCoreConfig(core);
       const bounds = getArtificialCoreBounds(core);
       const starContext = options?.starContext || ARTIFICIAL_STAR_CONTEXTS[0].value;
@@ -1287,7 +1360,7 @@ class ArtificialManager extends EffectableEntity {
         return false;
       }
       const now = Date.now();
-      let sector = options?.sector || 'auto';
+      let sector = core === SUPERMASSIVE_SHELL_CORE ? SUPERMASSIVE_SHELL_SECTOR : (options?.sector || 'auto');
       if (sector === 'auto') {
         sector = this.resolveAutoSector(options?.sectorFilter || 'all');
       }
@@ -2114,7 +2187,8 @@ class ArtificialManager extends EffectableEntity {
                 radiusEarth,
                 landHa
             });
-            const canTravel = (label === 'abandoned' || label === 'stored') && !!snapshot;
+            const isSupermassiveShellworld = this.isSupermassiveShellworldEntry(status);
+            const canTravel = (label === 'abandoned' || label === 'stored' || (label === 'terraformed' && isSupermassiveShellworld)) && !!snapshot;
             const canDiscard = label === 'stored' || label === 'abandoned';
             entries.push({
                 id: key,

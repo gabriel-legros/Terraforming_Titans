@@ -24,6 +24,7 @@ const SPACE_HAZARD_KEY_SET = new Set(SPACE_HAZARD_KEYS);
 
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
+const SPACE_SUPERMASSIVE_SHELL_CORE = 'smbh';
 const MAX_REMEMBERED_RANDOM_WORLD_STATUSES = 10;
 const MAX_REMEMBERED_ARTIFICIAL_WORLD_STATUSES = 50;
 const MAX_TERRAFORM_HISTORY_ENTRIES = 10;
@@ -78,6 +79,21 @@ function resolveSectorFromSources(...sources) {
         }
     }
     return SPACE_DEFAULT_SECTOR_LABEL;
+}
+
+function isSupermassiveShellworldStatus(status) {
+    if (!status) return false;
+    const type = status.type
+        || status.classification?.type
+        || status.original?.merged?.classification?.type
+        || status.original?.classification?.type
+        || status.artificialSnapshot?.type;
+    const core = status.core
+        || status.classification?.core
+        || status.original?.merged?.classification?.core
+        || status.original?.classification?.core
+        || status.artificialSnapshot?.core;
+    return type === 'shell' && core === SPACE_SUPERMASSIVE_SHELL_CORE;
 }
 
 function getLandFromParams(source) {
@@ -1129,6 +1145,9 @@ class SpaceManager extends EffectableEntity {
                 return;
             }
             if (!this._isRememberedArtificialWorldStatus(key, status, activeKey)) {
+                return;
+            }
+            if (isSupermassiveShellworldStatus(status)) {
                 return;
             }
             if (keepKeys.has(key)) {
