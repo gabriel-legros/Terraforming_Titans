@@ -561,15 +561,47 @@
     );
   }
 
+  function forceCompleteTerraformingNoChecks() {
+    const alreadyTerraformed = spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey());
+    const isBetterTime = fastestTerraformDays === null || playTimeSeconds < fastestTerraformDays;
+    const sameTimeMissingReal = playTimeSeconds === fastestTerraformDays && fastestTerraformRealSeconds === null;
+    const sameTimeBetterReal = playTimeSeconds === fastestTerraformDays
+      && fastestTerraformRealSeconds !== null
+      && realPlayTimeSeconds < fastestTerraformRealSeconds;
+
+    if (isBetterTime || sameTimeMissingReal || sameTimeBetterReal) {
+      fastestTerraformDays = playTimeSeconds;
+      fastestTerraformRealSeconds = realPlayTimeSeconds;
+    }
+
+    terraforming.readyForCompletion = true;
+    terraforming.completed = true;
+    spaceManager.updateCurrentPlanetTerraformedStatus(true, {
+      playTimeSeconds,
+      realPlayTimeSeconds
+    });
+
+    if (!alreadyTerraformed) {
+      spaceManager.grantDominionTerraformReward(terraforming.requirementId);
+      patienceManager.onTerraformingComplete();
+    }
+
+    updateSpaceUI();
+    updateCompleteTerraformingButton();
+
+    return true;
+  }
+
 
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, logTerraformingOverride, calculateEquilibriumConstants, reconstructJournalState, giveColonyResources };
+    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, logTerraformingOverride, calculateEquilibriumConstants, reconstructJournalState, giveColonyResources, forceCompleteTerraformingNoChecks };
   } else {
     globalThis.fastForwardToEquilibrium = fastForwardToEquilibrium;
     globalThis.generateOverrideSnippet = generateOverrideSnippet;
     globalThis.logTerraformingOverride = logTerraformingOverride;
     globalThis.reconstructJournalState = reconstructJournalState;
+    globalThis.forceCompleteTerraformingNoChecks = forceCompleteTerraformingNoChecks;
     window.giveColonyResources = giveColonyResources;
     globalThis.runEquilibriumCalculation = function(terraformingInstance) {
       if (terraformingInstance && typeof terraformingInstance.calculateInitialValues === 'function') {

@@ -2995,6 +2995,7 @@ function completeTerraformingNow() {
   return true;
 }
 
+
 // Function to create the "Complete Terraforming" button
   function createCompleteTerraformingButton(container) {
     const doc = (container && container.ownerDocument) || document;
