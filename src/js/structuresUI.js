@@ -2935,6 +2935,7 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+            if (span._updateMaintenanceTooltip) span._updateMaintenanceTooltip();
           } else if (sec.key === 'production') {
             span._productionTooltipContext = {
               structure,
@@ -2942,6 +2943,7 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+            if (span._updateProductionTooltip) span._updateProductionTooltip();
           } else if (sec.key === 'consumption') {
             span._consumptionTooltipContext = {
               structure,
@@ -2949,6 +2951,7 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+            if (span._updateConsumptionTooltip) span._updateConsumptionTooltip();
           }
           if (resObj) {
             const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
@@ -3098,6 +3101,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span._maintenanceTooltipCache = {};
           span._updateMaintenanceTooltip = () => {
             const context = span._maintenanceTooltipContext;
+            if (!context) return;
             const text = buildStructureMaintenanceTooltip(
               context.structure,
               context.resource,
@@ -3113,6 +3117,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span._productionTooltipCache = {};
           span._updateProductionTooltip = () => {
             const context = span._productionTooltipContext;
+            if (!context) return;
             const text = buildStructureProductionTooltip(
               context.structure,
               context.category,
@@ -3129,6 +3134,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span._consumptionTooltipCache = {};
           span._updateConsumptionTooltip = () => {
             const context = span._consumptionTooltipContext;
+            if (!context) return;
             const text = buildStructureConsumptionTooltip(
               context.structure,
               context.category,
@@ -3188,12 +3194,8 @@ function updateDecreaseButtonText(button, buildCount) {
       const nextKeySet = new Set(nextKeys);
       info.spans.forEach((span, key) => {
         if (!nextKeySet.has(key)) {
-          const separator = info.separators.get(key);
-          if (separator) {
-            separator.nodeValue = '';
-            separator._inactive = true;
-          }
-          span.style.display = 'none';
+          info.spans.delete(key);
+          info.separators.delete(key);
         }
       });
       nextKeys.forEach((key, index) => {
