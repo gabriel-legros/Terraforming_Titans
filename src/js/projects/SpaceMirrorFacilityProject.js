@@ -227,21 +227,23 @@ function applyMirrorOversightSettings(settings, saved = {}) {
     settings.autoAssign[zone] = !!savedAuto[zone];
   });
 
-  const savedAssignments = saved.assignments || {};
-  const savedMirrors = savedAssignments.mirrors || {};
-  const savedLanterns = savedAssignments.lanterns || {};
-  mergeSettingKeys(settings.assignments.mirrors, savedMirrors).forEach(zone => {
-    const mv = Number(savedMirrors[zone]);
-    settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
-  });
-  mergeSettingKeys(settings.assignments.lanterns, savedLanterns).forEach(zone => {
-    const lv = Number(savedLanterns[zone]);
-    settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
-  });
-  const savedReversal = savedAssignments.reversalMode || {};
-  mergeSettingKeys(settings.assignments.reversalMode, savedReversal).forEach(zone => {
-    settings.assignments.reversalMode[zone] = !!savedReversal[zone];
-  });
+  if (!settings.advancedOversight) {
+    const savedAssignments = saved.assignments || {};
+    const savedMirrors = savedAssignments.mirrors || {};
+    const savedLanterns = savedAssignments.lanterns || {};
+    mergeSettingKeys(settings.assignments.mirrors, savedMirrors).forEach(zone => {
+      const mv = Number(savedMirrors[zone]);
+      settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
+    });
+    mergeSettingKeys(settings.assignments.lanterns, savedLanterns).forEach(zone => {
+      const lv = Number(savedLanterns[zone]);
+      settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
+    });
+    const savedReversal = savedAssignments.reversalMode || {};
+    mergeSettingKeys(settings.assignments.reversalMode, savedReversal).forEach(zone => {
+      settings.assignments.reversalMode[zone] = !!savedReversal[zone];
+    });
+  }
 
   syncMirrorAssignmentMode(settings);
   if (settings.useFinerControls || settings.advancedOversight) {
