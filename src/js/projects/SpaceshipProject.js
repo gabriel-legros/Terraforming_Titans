@@ -82,6 +82,30 @@ class SpaceshipProject extends Project {
     this.applyingContinuousPlanGain = false;
   }
 
+  recalculateShipCapacityMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'shipCapacityMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    this.shipCapacityMultiplier = multiplier;
+  }
+
+  applyShipCapacityMultiplier(effect) {
+    this.recalculateShipCapacityMultiplier();
+  }
+
+  removeEffect(effect) {
+    super.removeEffect(effect);
+    this.recalculateShipCapacityMultiplier();
+  }
+
+  applyActiveEffects(firstTime = true) {
+    super.applyActiveEffects(firstTime);
+    this.recalculateShipCapacityMultiplier();
+  }
+
   getActiveShipCount() {
     return this.assignedSpaceships ?? 0;
   }
