@@ -1373,6 +1373,14 @@ const researchParameters = {
             onLoad : false
           },
           {
+            target: 'tab',
+            type: 'activateSubtab',
+            subtabClass: 'terraforming-subtab',
+            contentClass: 'terraforming-subtab-content',
+            targetId: 'summary-terraforming',
+            onLoad: false
+          },
+          {
             target: 'terraforming',
             type: 'booleanFlag',
             flagId: 'summaryUnlocked',
