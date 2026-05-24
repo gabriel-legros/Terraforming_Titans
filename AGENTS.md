@@ -369,6 +369,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Building/project cards support collapsible layouts and improved cached rendering.
 - Autobuild building priority now supports five levels (`⏬`, `▼`, neutral, `▲`, `⏫`) mapped to `-2..2`; level `±2` reserves/builds more aggressively than `±1` while keeping the same styled priority buttons in light/dark themes.
 - Save & Settings now includes a `Keybinds` section in `Settings` with pause hotkey capture/reset controls; pause defaults to `Spacebar`, updates the Pause button label dynamically, and persists in `gameSettings.pauseKeybind`.
+- Save & Settings now includes a `Difficulty` section in `Settings` for challenge-affecting toggles such as disabling the day-night cycle and disabling fusion consumption scaling.
 - Dust Factory no longer has target-ground-albedo automation controls; its card now shows a `Dust Color` + computed albedo readout and uses manual forward/reverse behavior.
 - Aerostats now include a saved and colony-preset-aware `Cap workers to aerostat capacity` checkbox in the buoyancy details card; when enabled, total world worker capacity is clamped to active aerostats x 10.
 - Planet visualizer now supports a composition-driven gas overlay layered above the normal world texture: strong atmospheric/surface hydrogen enables Jupiter-style tan banding, methane adds cooler blue-gray belt shading, and ammonia adds bright pale cloud-band/storm accents once each gas clears its visual threshold.

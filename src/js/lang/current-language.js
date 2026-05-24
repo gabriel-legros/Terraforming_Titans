@@ -3768,6 +3768,7 @@ setLanguageData({
       simplifyGoldenAsteroid: 'Simplify Golden Asteroid',
       simplifyGoldenAsteroidTooltip: 'When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.',
       suppressFaith: 'Suppress Faith',
+      difficultyTitle: 'Difficulty',
       disableFusionConsumptionScaling: 'Disable fusion consumption scaling',
       keybindsTitle: 'Keybinds',
       pauseKeybindLabel: 'Pause key',
