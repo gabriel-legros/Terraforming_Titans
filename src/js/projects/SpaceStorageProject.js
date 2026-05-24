@@ -1220,7 +1220,7 @@ class SpaceStorageProject extends SpaceshipProject {
     return { transfers, total };
   }
 
-  calculateTransferPlanForTick(capacityOverride = null, accumulatedChanges = null, selections = null) {
+  calculateTransferPlanForTick(capacityOverride = null, accumulatedChanges = null, selections = null, modeFilter = 'all') {
     const transfers = [];
     let total = 0;
     const selected = selections ?? this.getUnlockedSelectedResources();
@@ -1275,13 +1275,13 @@ class SpaceStorageProject extends SpaceshipProject {
     };
 
     weightedSelected.forEach(({ entry, weight }) => {
-      if (resolveMode(entry.resource) === 'withdraw') {
+      if ((modeFilter === 'all' || modeFilter === 'withdraw') && resolveMode(entry.resource) === 'withdraw') {
         applyWithdrawForResource(entry, (capacity * weight) / totalWeight);
       }
     });
 
     weightedSelected.forEach(({ entry, weight }) => {
-      if (resolveMode(entry.resource) === 'store') {
+      if ((modeFilter === 'all' || modeFilter === 'store') && resolveMode(entry.resource) === 'store') {
         applyStoreForResource(entry, (capacity * weight) / totalWeight);
       }
     });
@@ -1427,11 +1427,101 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shortfallLastTick = result.shortfall;
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1, accumulatedSpecialChanges = null) {
     this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
+    this.applyContinuousWithdrawals(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
   }
 
-  applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance = 1, seconds = 0) {
+  recordTentativeWithdrawal(accumulatedSpecialChanges, transfer, delivered) {
+    if (!accumulatedSpecialChanges || !(delivered > 0) || !transfer?.storageKey) {
+      return;
+    }
+    accumulatedSpecialChanges.spaceStorageTentativeWithdrawals ||= {};
+    const ledger = accumulatedSpecialChanges.spaceStorageTentativeWithdrawals;
+    ledger.destinations ||= {};
+    const destinationKey = `${transfer.category}:${transfer.resource}`;
+    ledger.destinations[destinationKey] ||= {
+      category: transfer.category,
+      resource: transfer.resource,
+      entries: []
+    };
+    ledger.destinations[destinationKey].entries.push({
+      storageKey: transfer.storageKey,
+      amount: delivered
+    });
+  }
+
+  applyTentativeWithdrawalRefunds(accumulatedSpecialChanges, overflowByResource, spaceStorageCapLimits = null) {
+    const destinations = accumulatedSpecialChanges?.spaceStorageTentativeWithdrawals?.destinations;
+    if (!destinations || !resources?.spaceStorage) {
+      return;
+    }
+
+    this.reconcileUsedStorage?.();
+    let currentUsedStorage = Number(this.usedStorage) || 0;
+    const maxStorage = Number(this.maxStorage);
+    const hasFiniteMaxStorage = Number.isFinite(maxStorage);
+
+    for (const destinationKey in destinations) {
+      const destination = destinations[destinationKey];
+      if (!destination?.entries?.length) {
+        continue;
+      }
+      const overflow = overflowByResource?.[destination.category]?.[destination.resource] || 0;
+      if (!(overflow > 0)) {
+        continue;
+      }
+      const totalTentative = destination.entries.reduce((sum, entry) => sum + (entry.amount || 0), 0);
+      if (!(totalTentative > 0)) {
+        continue;
+      }
+      let refundRemaining = Math.min(overflow, totalTentative);
+      for (let i = 0; i < destination.entries.length; i += 1) {
+        const entry = destination.entries[i];
+        if (!(refundRemaining > 0)) {
+          break;
+        }
+        const storageKey = entry.storageKey;
+        const storageResource = resources.spaceStorage[storageKey];
+        if (!storageResource) {
+          continue;
+        }
+        const entryAmount = entry.amount || 0;
+        if (!(entryAmount > 0)) {
+          continue;
+        }
+        const entryShare = i === destination.entries.length - 1
+          ? refundRemaining
+          : Math.min(refundRemaining, (entryAmount / totalTentative) * Math.min(overflow, totalTentative));
+        if (!(entryShare > 0)) {
+          continue;
+        }
+        let perResourceLimit = Infinity;
+        if (spaceStorageCapLimits && Object.prototype.hasOwnProperty.call(spaceStorageCapLimits, storageKey)) {
+          perResourceLimit = Number(spaceStorageCapLimits[storageKey]);
+        } else if (this.getResourceCapLimit) {
+          perResourceLimit = Number(this.getResourceCapLimit(storageKey));
+        }
+        const resourceFree = Number.isFinite(perResourceLimit)
+          ? Math.max(0, perResourceLimit - storageResource.value)
+          : Infinity;
+        const sharedFree = hasFiniteMaxStorage
+          ? Math.max(0, maxStorage - currentUsedStorage)
+          : Infinity;
+        const acceptedRefund = Math.max(0, Math.min(entryShare, resourceFree, sharedFree));
+        if (!(acceptedRefund > 0)) {
+          continue;
+        }
+        storageResource.value += acceptedRefund;
+        currentUsedStorage += acceptedRefund;
+        refundRemaining -= acceptedRefund;
+      }
+    }
+
+    this.reconcileUsedStorage?.();
+  }
+
+  applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance = 1, seconds = 0, options = null) {
     if (!plan?.transfers?.length) {
       return;
     }
@@ -1457,6 +1547,9 @@ class SpaceStorageProject extends SpaceshipProject {
           this.applyAccumulatedResourceDelta(t.category, t.resource, delivered, accumulatedChanges);
           resources[t.category][t.resource].modifyRate(deliveredRate, 'Space storage transfer', 'project');
           storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
+        }
+        if (options?.recordTentativeWithdrawals === true) {
+          this.recordTentativeWithdrawal(options.accumulatedSpecialChanges, t, delivered);
         }
       } else if (t.mode === 'store') {
         if (t.resource === 'biomass') {
@@ -1521,6 +1614,54 @@ class SpaceStorageProject extends SpaceshipProject {
     return nonEnergyCost;
   }
 
+  applyContinuousWithdrawals(deltaTime, accumulatedChanges, productivity = 1, accumulatedSpecialChanges = null) {
+    if (
+      !this.shipOperationIsActive
+      || this.shipOperationIsPaused
+      || this.assignedSpaceships <= 0
+      || !this.isShipOperationContinuous()
+      || this.isWithdrawalDisabled()
+    ) {
+      return;
+    }
+    const duration = this.getShipOperationDuration();
+    const workerRatio = this.getHazardousMachineryWorkerAvailabilityRatio();
+    const operationFraction = (deltaTime / duration) * workerRatio * Math.max(0, productivity);
+    const capacity = this.calculateTransferAmount() * operationFraction;
+    if (!(capacity > 0)) {
+      return;
+    }
+    const plan = this.calculateTransferPlanForTick(capacity, accumulatedChanges, null, 'withdraw');
+    if (!(plan.total > 0)) {
+      return;
+    }
+    const capacityRatio = Math.max(0, Math.min(1, plan.total / capacity));
+    if (!(capacityRatio > 0)) {
+      return;
+    }
+    const seconds = deltaTime / 1000;
+    const totalCost = this.calculateSpaceshipTotalCost();
+    const costScale = this.assignedSpaceships * operationFraction * capacityRatio;
+    if (!this.canCoverShipOperationCostForTick(totalCost, accumulatedChanges, costScale)) {
+      return;
+    }
+    const successChance = this.getKesslerSuccessChance();
+    const failureChance = 1 - successChance;
+    const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale, seconds);
+    this.applyTransferPlanToAccumulated(
+      plan,
+      accumulatedChanges,
+      successChance,
+      seconds,
+      { recordTentativeWithdrawals: true, accumulatedSpecialChanges }
+    );
+    this.reconcileUsedStorage();
+    if (failureChance > 0) {
+      const shipLoss = this.assignedSpaceships * operationFraction * capacityRatio * failureChance;
+      this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
+    }
+  }
+
   applyPostProjectShipOperation(deltaTime, accumulatedChanges) {
     if (!this.shipOperationIsActive || this.shipOperationIsPaused || this.assignedSpaceships <= 0) {
       return;
@@ -1536,31 +1677,29 @@ class SpaceStorageProject extends SpaceshipProject {
         this.shipOperationIsActive = false;
         return;
       }
-
-      const totalCost = this.calculateSpaceshipTotalCost();
-      if (!this.canCoverShipOperationCostForTick(totalCost, accumulatedChanges, this.assignedSpaceships * fraction)) {
-        this.shipOperationIsActive = false;
-        return;
-      }
-
-      const plan = this.calculateTransferPlanForTick(capacity, accumulatedChanges);
-      if (plan.total <= 0) {
-        this.shipOperationIsActive = false;
-        return;
-      }
-
-      const nonEnergyCost = this.applyShipOperationCostForTick(
-        totalCost,
-        accumulatedChanges,
-        this.assignedSpaceships * fraction,
-        seconds
-      );
-      this.applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance, seconds);
-      this.reconcileUsedStorage();
-
-      if (failureChance > 0) {
-        const shipLoss = this.assignedSpaceships * fraction * failureChance;
-        this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
+      const plan = this.calculateTransferPlanForTick(capacity, accumulatedChanges, null, 'store');
+      if (plan.total > 0) {
+        const capacityRatio = Math.max(0, Math.min(1, plan.total / capacity));
+        if (capacityRatio > 0) {
+          const totalCost = this.calculateSpaceshipTotalCost();
+          const costScale = this.assignedSpaceships * fraction * capacityRatio;
+          if (!this.canCoverShipOperationCostForTick(totalCost, accumulatedChanges, costScale)) {
+            this.shipOperationIsActive = false;
+            return;
+          }
+          const nonEnergyCost = this.applyShipOperationCostForTick(
+            totalCost,
+            accumulatedChanges,
+            costScale,
+            seconds
+          );
+          this.applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance, seconds);
+          this.reconcileUsedStorage();
+          if (failureChance > 0) {
+            const shipLoss = this.assignedSpaceships * fraction * capacityRatio * failureChance;
+            this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
+          }
+        }
       }
       this.shipOperationIsActive = true;
       return;

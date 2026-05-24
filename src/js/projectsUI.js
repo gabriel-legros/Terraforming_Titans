@@ -1738,6 +1738,9 @@ function updateProjectUI(projectName) {
             const productivityLabel = showProductivity
               ? getProjectsUIText('ui.projects.status.productivitySuffix', ' ({value}% productivity)', { value: Math.round(productivity * 100) })
               : '';
+            const withdrawalProductivityLabel = project.attributes?.spaceStorage && project.isShipOperationContinuous?.()
+              ? getProjectsUIText('ui.projects.status.withdrawalProductivitySuffix', ' (Withdrawal Productivity: {value}%)', { value: Math.round(productivity * 100) })
+              : '';
             if (project.autoStart && project.isActive && !project.isPaused) {
               const etaSeconds = getContinuousEtaSeconds(project);
               const etaLabel = Number.isFinite(etaSeconds)
@@ -1747,7 +1750,7 @@ function updateProjectUI(projectName) {
                     { time: formatDuration(Math.ceil(Math.max(0, etaSeconds))) }
                   )
                 : getProjectsUIText('ui.projects.status.continuous', 'Continuous');
-              const statusText = `${etaLabel}${productivityLabel}`;
+              const statusText = `${etaLabel}${productivityLabel}${withdrawalProductivityLabel}`;
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, statusText);
               } else {

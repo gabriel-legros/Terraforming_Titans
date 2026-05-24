@@ -1906,6 +1906,7 @@ setLanguageData({
         continuous: 'Continuous',
         continuousWithEta: 'Continuous ({time} remaining)',
         productivitySuffix: ' ({value}% productivity)',
+        withdrawalProductivitySuffix: ' (Withdrawal Productivity: {value}%)',
         stopped: 'Stopped',
         inProgress: 'In Progress: {time} seconds remaining',
         inProgressPercent: 'In Progress: {time} seconds remaining ({percent}%)',

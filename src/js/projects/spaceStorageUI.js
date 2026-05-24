@@ -1585,7 +1585,13 @@ function updateSpaceStorageUI(project) {
   if (els.shipProgressButton) {
     if (project.isShipOperationContinuous()) {
       if (project.shipOperationAutoStart) {
-        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous');
+        const productivity = project.continuousProductivity ?? 1;
+        const withdrawalProductivityLabel = getSpaceStorageUIText(
+          'ui.projects.status.withdrawalProductivitySuffix',
+          ' (Withdrawal Productivity: {value}%)',
+          { value: Math.round(productivity * 100) }
+        );
+        els.shipProgressButton.textContent = `${getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous')}${withdrawalProductivityLabel}`;
         els.shipProgressButton.style.background = '#4caf50';
       } else {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.stopped', 'Stopped');

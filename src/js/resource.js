@@ -1902,9 +1902,11 @@ function produceResources(deltaTime, buildings) {
 
   const spaceStorageCapLimits = spaceStorageProject?.getResourceCapLimits?.() || null;
   const wasteCleanupSlack = collectWasteCleanupSlackByResource(buildings);
+  const overflowByResource = {};
 
   // Apply accumulated changes to resources
   for (const category in resources) {
+    overflowByResource[category] = {};
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
       const previousValue = resource.value; // Track the previous value before changes
@@ -1919,6 +1921,9 @@ function produceResources(deltaTime, buildings) {
         const limit = previousValue >= resource.cap ? previousValue : resource.cap;
         if (newValue > limit) overflow = newValue - limit;
         finalValue = Math.min(newValue, limit);
+      }
+      if (overflow > 0) {
+        overflowByResource[category][resourceName] = overflow;
       }
 
       if (category === 'spaceStorage' && spaceStorageCapLimits) {
@@ -1943,6 +1948,11 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (spaceStorageProject) {
+    spaceStorageProject.applyTentativeWithdrawalRefunds?.(
+      accumulatedSpecialChanges,
+      overflowByResource,
+      spaceStorageCapLimits
+    );
     clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorageCapLimits);
   }
 

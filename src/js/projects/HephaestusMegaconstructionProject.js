@@ -277,6 +277,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     this.yardAssignments[inactiveDyson] = 0n;
 
     const keys = this.getManagedAssignmentKeys();
+    this.yardAssignments[this.getUnassignedAssignmentKey()] = 0n;
     // Keep assignments for temporarily hidden optional targets (for example,
     // Nuclear Alchemy during load/travel sequencing) so saved auto-assign
     // flags and yard allocations are restored once that target is visible.
@@ -358,7 +359,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       }
     }
 
-    const totalAssigned = keys.reduce((sum, key) => sum + (this.yardAssignments[key] || 0n), 0n);
+    const totalAssigned = keys.reduce((sum, key) => sum + normalizeHephaestusInteger(this.yardAssignments[key]), 0n);
     if (totalAssigned > total && autoKeys.length === 0) {
       let excess = totalAssigned - total;
       for (let i = keys.length - 1; i >= 0 && excess > 0n; i--) {
@@ -374,7 +375,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   getAssignedTotal() {
     this.normalizeAssignments();
     return this.getAssignmentKeys().reduce(
-      (sum, key) => sum + (this.yardAssignments[key] || 0n),
+      (sum, key) => sum + normalizeHephaestusInteger(this.yardAssignments[key]),
       0n
     );
   }
@@ -386,7 +387,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   }
 
   getStoredAssignmentAmount(key) {
-    return this.yardAssignments[key] || 0n;
+    const normalized = normalizeHephaestusInteger(this.yardAssignments[key]);
+    this.yardAssignments[key] = normalized;
+    return normalized;
   }
 
   getDisplayedAssignmentAmount(key) {
