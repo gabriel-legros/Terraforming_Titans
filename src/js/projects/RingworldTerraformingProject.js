@@ -697,6 +697,7 @@ class RingworldTerraformingProject extends Project {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
+    this.syncPowerFromMode();
     if (!this.unlocked || !this.investing || this.isCompleted || this.power <= 0) {
       return totals;
     }
@@ -708,6 +709,7 @@ class RingworldTerraformingProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.syncPowerFromMode();
     if (!this.unlocked || !this.investing || this.isCompleted || this.power <= 0) {
       this.shortfallLastTick = false;
       this.actualInvestRate = 0;
@@ -762,6 +764,7 @@ class RingworldTerraformingProject extends Project {
       removeEffect(this.lowGravityLifeEffect);
       return;
     }
+    this.syncPowerFromMode();
     if (this.autoShadeEnabled) {
       this.applyAutoShade();
     }

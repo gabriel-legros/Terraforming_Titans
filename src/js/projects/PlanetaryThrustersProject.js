@@ -805,6 +805,7 @@ class PlanetaryThrustersProject extends Project{
 /* ------------------  T I C K  ---------------------------------------- */
   update(dtMs){
     super.update(dtMs);
+    this.syncPowerFromMode();
     if(this.tryAutoGoRogue()){
       this.lastActiveTime = 0;
       return;
@@ -821,6 +822,7 @@ class PlanetaryThrustersProject extends Project{
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1){
     const totals = { cost: {}, gain: {} };
+    this.syncPowerFromMode();
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)) return totals;
     if (applyRates && resources?.colony?.energy?.modifyRate) {
       resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
@@ -830,6 +832,7 @@ class PlanetaryThrustersProject extends Project{
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1){
+    this.syncPowerFromMode();
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
       return;
     }
