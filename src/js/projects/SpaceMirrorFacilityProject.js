@@ -309,6 +309,17 @@ function getFacilityResourceFactor(building) {
   return Math.max(0, Math.min(1, base));
 }
 
+function getFacilityProductionFactor(building) {
+  if (!building) return 1;
+  const factor = building.getEffectiveProductionMultiplier();
+  return Number.isFinite(factor) ? factor : 1;
+}
+
+function getLanternPowerPerBuilding(lantern) {
+  if (!lantern) return 0;
+  return (lantern.powerPerBuilding || 0) * getFacilityResourceFactor(lantern) * getFacilityProductionFactor(lantern);
+}
+
 function canControlLanternDayNightCycle() {
   if (typeof terraforming === 'undefined' || !terraforming.celestialParameters) return false;
   return terraforming.celestialParameters.rogue === true
@@ -1320,6 +1331,36 @@ function initializeMirrorOversightUI(container) {
 
 let mirrorOversightCache = null;
 
+function mirrorOversightUiMissingActiveZones(container) {
+  const assignmentGrid = container.querySelector('#assignment-grid');
+  if (!assignmentGrid) return true;
+  return getZones().some(zone => (
+    !container.querySelector(`#mirror-oversight-${zone}`) ||
+    !container.querySelector(`#adv-target-${zone}`) ||
+    !container.querySelector(`#mirror-flux-${zone}`) ||
+    !assignmentGrid.querySelector(`.assign-cell[data-type="mirrors"][data-zone="${zone}"]`) ||
+    !assignmentGrid.querySelector(`.assign-cell[data-type="lanterns"][data-zone="${zone}"]`) ||
+    !assignmentGrid.querySelector(`.auto-assign[data-zone="${zone}"]`)
+  ));
+}
+
+function rebuildMirrorOversightUiIfMissingZones(container) {
+  if (!mirrorOversightUiMissingActiveZones(container)) return false;
+  const parent = container.parentElement;
+  const finerContent = document.getElementById('mirror-finer-content');
+  const wasFinerOpen = finerContent && finerContent.style.display !== 'none';
+  container.remove();
+  mirrorOversightCache = null;
+  initializeMirrorOversightUI(parent);
+  if (wasFinerOpen) {
+    const rebuiltFinerContent = document.getElementById('mirror-finer-content');
+    const rebuiltFinerIcon = document.getElementById('mirror-finer-icon');
+    if (rebuiltFinerContent) rebuiltFinerContent.style.display = 'block';
+    if (rebuiltFinerIcon) rebuiltFinerIcon.textContent = '▼';
+  }
+  return true;
+}
+
 function rebuildMirrorOversightCache() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container') || document.createElement('div');
@@ -1414,6 +1455,7 @@ function updateMirrorOversightUI() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container');
   if (!container) return;
+  if (rebuildMirrorOversightUiIfMissingZones(container)) return;
   ensureMirrorOversightCache();
   applyMirrorZoneVisibility();
   let enabled = false;
@@ -1720,7 +1762,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
       const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
       const lantern = buildings?.hyperionLantern;
-      const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+      const lanternPowerPer = getLanternPowerPerBuilding(lantern);
       const focusMirrorCount = mirrorOversightSettings.advancedOversight
         ? Math.abs(assignM.focus || 0)
         : (assignM.focus || 0);
@@ -1734,7 +1776,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
         const mirrorPowerTotal = mirrorPowerPer * (buildings['spaceMirror']?.activeNumber || 0);
         const lantern = buildings?.hyperionLantern;
-        const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+        const lanternPowerPer = getLanternPowerPerBuilding(lantern);
         const lanternPowerTotal = mirrorOversightSettings.applyToLantern
           ? lanternPowerPer * (lantern?.activeNumber || 0)
           : 0;
@@ -1797,7 +1839,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
   const mirrorPowerPer = terraforming.calculateMirrorEffect(isDisk ? zone : undefined).interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
   const lantern = buildings?.hyperionLantern;
-  const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+  const lanternPowerPer = getLanternPowerPerBuilding(lantern);
   const totalMirrorPower = mirrorPowerPer * (buildings?.spaceMirror?.activeNumber || 0);
   const totalLanternPower = lanternPowerPer * (lantern?.activeNumber || 0);
 
@@ -2329,11 +2371,10 @@ class SpaceMirrorFacilityProject extends Project {
           : (typeof buildingCountToNumber === 'function'
             ? buildingCountToNumber(lantern?.active)
             : Math.max(0, Math.floor(Number(lantern?.active) || 0)));
-        const lanternResourceFactor = getFacilityResourceFactor(lantern);
         const lanternAssignmentShare = lantern._allowFullProductivity
           ? 1
           : (Number.isFinite(lantern._assignmentShare) ? lantern._assignmentShare : 1);
-        const powerPerLantern = (lantern.powerPerBuilding || 0) * lanternResourceFactor;
+        const powerPerLantern = getLanternPowerPerBuilding(lantern);
         const powerPerLanternArea = area > 0 ? powerPerLantern / area : 0;
         const totalLanternPower = powerPerLantern * numLanterns * lanternAssignmentShare;
         const totalLanternArea = powerPerLanternArea * numLanterns * lanternAssignmentShare;

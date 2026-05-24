@@ -84,8 +84,10 @@ class SpaceMirrorAdvancedOversight {
         (terraforming.calculateMirrorEffect(isAldersonDiskWorld() ? zone : undefined)?.interceptedPower || 0) * mirrorResourceFactor
       );
       const mirrorPowerPer = getMirrorPowerPer();
+      const rawLanternProductionFactor = lanternBuilding ? lanternBuilding.getEffectiveProductionMultiplier() : 1;
+      const lanternProductionFactor = Number.isFinite(rawLanternProductionFactor) ? rawLanternProductionFactor : 1;
       const lanternPowerPer = settings.applyToLantern
-        ? Math.max(0, (lanternBuilding?.powerPerBuilding || 0) * getFacilityResourceFactor(lanternBuilding))
+        ? Math.max(0, (lanternBuilding?.powerPerBuilding || 0) * getFacilityResourceFactor(lanternBuilding) * lanternProductionFactor)
         : 0;
 
       const totalSurfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;

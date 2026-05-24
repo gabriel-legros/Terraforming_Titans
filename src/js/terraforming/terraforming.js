@@ -1629,7 +1629,9 @@ class Terraforming extends EffectableEntity{
       const lanternBaseProductivity = Number.isFinite(lantern?._baseProductivity)
         ? lantern._baseProductivity
         : (Number.isFinite(lantern?.productivity) ? lantern.productivity : 1);
-      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternBaseProductivity : 0;
+      const rawLanternProductionFactor = lantern ? lantern.getEffectiveProductionMultiplier() : 1;
+      const lanternProductionFactor = Number.isFinite(rawLanternProductionFactor) ? rawLanternProductionFactor : 1;
+      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternBaseProductivity * lanternProductionFactor : 0;
       const totalLanterns = Math.max(
         0,
         Number.isFinite(lantern?.activeNumber)
@@ -2461,7 +2463,9 @@ class Terraforming extends EffectableEntity{
         const assignmentFactor = lantern._allowFullProductivity
           ? 1
           : (Number.isFinite(lantern._assignmentShare) ? lantern._assignmentShare : 1);
-        const power = (lantern.powerPerBuilding || 0) * lantern.activeNumber * resourceFactor * assignmentFactor;
+        const rawProductionFactor = lantern.getEffectiveProductionMultiplier();
+        const productionFactor = Number.isFinite(rawProductionFactor) ? rawProductionFactor : 1;
+        const power = (lantern.powerPerBuilding || 0) * lantern.activeNumber * resourceFactor * productionFactor * assignmentFactor;
         const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
         return power / area;
       }
