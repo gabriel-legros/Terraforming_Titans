@@ -1756,6 +1756,7 @@ setLanguageData({
           ironRich: 'Iron-rich planets',
           carbonRich: 'Carbon-rich planets',
           waterRich: 'Water-rich planets',
+          rocky: 'Rocky planets',
           iceRich: 'Ice-rich planets',
         },
         recipeTooltip: 'Per cracked planet: +{metal} metal cap, +{silicon} silica cap, +{carbon} carbon cap, +{water} ice cap.',

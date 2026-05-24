@@ -936,6 +936,15 @@ const projectParameters = {
               carbon: 0,
               water: 5_000_000_000
             }
+          },
+          rocky: {
+            label: '',
+            complexity: 10,
+            total: 200_000_000_000,
+            capBonuses: {
+              metal: 3_000_000_000,
+              silicon: 7_000_000_000
+            }
           }
         }
       }
