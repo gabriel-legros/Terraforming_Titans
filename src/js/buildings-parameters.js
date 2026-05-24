@@ -416,7 +416,7 @@ const buildingsParameters = {
     category: 'energy',
     description: '',
     cost: { colony: { metal: 500000, components: 10000, electronics: 10000, superconductors: 5000, superalloys: 25000 } },
-    consumption: { colony: { water: 1 } },
+    consumption: { colony: { water: 2.5 } },
     production: { colony: { energy: 500_000_000_000 } },
     storage: {},
     dayNightActivity: false,
@@ -437,7 +437,7 @@ const buildingsParameters = {
       hydrogen: {
         shortName: '',
         requiresBuildingFlag: 'hydrogenFusionRecipe',
-        consumption: { colony: { colonyHydrogen: 1 } },
+        consumption: { colony: { colonyHydrogen: 0.25 } },
         production: { colony: { energy: 500_000_000_000 } }
       }
     }

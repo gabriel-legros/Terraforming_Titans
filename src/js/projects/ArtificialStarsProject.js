@@ -5,7 +5,7 @@ const ARTIFICIAL_STAR_RECIPE = {
   baseOutput: 25_000_000_000_000_000_000_000,
   inputs: {
     spaceStorage: {
-      hydrogen: 50_000_000_000
+      hydrogen: 5_000_000_000
     }
   },
   wgcUpgradeId: 'superalloyFusionEfficiency'

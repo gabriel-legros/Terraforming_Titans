@@ -791,6 +791,16 @@ class WarpGateCommand extends EffectableEntity {
         effectId,
         sourceId: 'wgcRD'
       });
+      if (key === 'superalloyFusionEfficiency') {
+        addEffect({
+          target: 'building',
+          targetId: mapping[key],
+          type: 'consumptionMultiplier',
+          value: mult,
+          effectId: `${effectId}-consumption`,
+          sourceId: 'wgcRD'
+        });
+      }
     }
   }
 

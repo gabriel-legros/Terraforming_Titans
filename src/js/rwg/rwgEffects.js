@@ -313,12 +313,36 @@ const RWG_EFFECTS = {
       },
     },
     {
+      effectId: "rwg-molten-fusion-consumption",
+      target: "building",
+      targetId: "fusionPowerPlant",
+      type: "consumptionMultiplier",
+      factor: 0.05,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.05;
+        return 1 + f * count;
+      },
+    },
+    {
       effectId: "rwg-molten-superalloy-fusion",
       target: "building",
       targetId: "superalloyFusionReactor",
       type: "resourceProductionMultiplier",
       resourceCategory: "colony",
       resourceTarget: "energy",
+      factor: 0.05,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.05;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-molten-superalloy-fusion-consumption",
+      target: "building",
+      targetId: "superalloyFusionReactor",
+      type: "consumptionMultiplier",
       factor: 0.05,
       hideInSummary: true,
       computeValue(count, def) {
