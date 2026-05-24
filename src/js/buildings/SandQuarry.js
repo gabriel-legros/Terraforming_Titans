@@ -35,7 +35,8 @@ class SandQuarry extends Building {
       return 0;
     }
 
-    return super.getBuildLimit();
+    const geometricLand = Math.max(0, resolveWorldGeometricLand(terraforming, resources?.surface?.land));
+    return Math.floor(geometricLand * 5);
   }
 
   maxBuildable(reservePercent = 0, additionalReserves = null) {
@@ -74,6 +75,22 @@ class SandQuarry extends Building {
     }
 
     super.updateProductivity(resources, deltaTime);
+  }
+
+  build(buildCount = 1, activate = true) {
+    if (!this.hasSandAvailable()) {
+      return false;
+    }
+
+    const geometricLand = Math.max(0, resolveWorldGeometricLand(terraforming, resources?.surface?.land));
+    const cap = Math.floor(geometricLand * 5);
+    const remaining = cap - this.countNumber;
+    if (remaining <= 0) {
+      return false;
+    }
+
+    const allowed = Math.min(buildCount, remaining);
+    return super.build(allowed, activate);
   }
 }
 
