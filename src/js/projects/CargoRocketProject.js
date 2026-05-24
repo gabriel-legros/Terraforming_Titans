@@ -649,6 +649,14 @@ class CargoRocketProject extends Project {
 
   loadTravelState(state = {}) {
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
+    this.selectedResources = [];
+
+    const elements = projectElements[this.name];
+    if (elements && elements.selectionInputs && elements.setInputQuantity) {
+      elements.selectionInputs.forEach((input) => {
+        elements.setInputQuantity(input, 0, true);
+      });
+    }
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
