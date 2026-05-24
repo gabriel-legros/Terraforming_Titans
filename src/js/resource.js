@@ -1547,7 +1547,11 @@ function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, acc
     const { project } = data;
     const isContinuousAsBuilding = project.attributes?.continuousAsBuilding && project.isContinuous();
     const productivity = isContinuousAsBuilding ? project.continuousProductivity : 1;
+    const hasActiveSpaceStorageTransfer = project.attributes?.spaceStorage
+      && project.shipOperationIsActive === true
+      && project.assignedSpaceships > 0;
     const shouldEstimate =
+      hasActiveSpaceStorageTransfer ||
       project.autoStart !== false ||
       isProjectAutoContinuousEnabled(project);
     if (!shouldEstimate) {
