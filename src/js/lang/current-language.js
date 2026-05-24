@@ -5163,7 +5163,7 @@ setLanguageData({
         greenhouseGas: { name: 'Safe GHG' },
         atmosphericMethane: { name: 'Methane' },
         atmosphericAmmonia: { name: 'Ammonia' },
-        hydrogen: { name: 'Hydrogen' },
+        hydrogen: { name: 'Atm. Hydrogen' },
         sulfuricAcid: { name: 'Sulfuric Acid' },
         calciteAerosol: { name: 'Calcite Aerosol' },
         vanadiumAerosol: { name: 'Vanadium Aerosol' },
