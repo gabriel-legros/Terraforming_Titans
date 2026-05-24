@@ -998,6 +998,33 @@
     margin-top: 0;
 }
 
+.diskworld-source-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.diskworld-source-controls-label {
+    color: #6c757d;
+    font-size: 0.82em;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.diskworld-source-checkboxes {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.diskworld-source-checkbox {
+    margin: 0;
+}
+
 @media (max-width: 900px) {
     .ringworld-terraforming-layout {
         flex-direction: column;
