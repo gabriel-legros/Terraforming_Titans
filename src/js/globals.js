@@ -82,6 +82,7 @@ let gameSettings = {
   showSpaceStorageInDefaultPanel: false,
   simplifyGoldenAsteroid: false,
   suppressFaith: false,
+  disableFusionConsumptionScaling: false,
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
 };

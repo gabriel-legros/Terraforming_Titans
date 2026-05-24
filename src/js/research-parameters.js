@@ -305,6 +305,7 @@ const researchParameters = {
             target: 'building',
             targetId: 'superalloyFusionReactor',
             type: 'consumptionMultiplier',
+            disabledWhenGameSettingEnabled: 'disableFusionConsumptionScaling',
             value: 1.25,
             repeatableAddend: 0.25,
             effectId: 'ai_reactor_overclocking_consumption'

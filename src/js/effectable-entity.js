@@ -10,6 +10,9 @@ class EffectableEntity {
       if (this.clearTickEffectCache) {
         this.clearTickEffectCache();
       }
+      if (!this.shouldApplyEffect(effect)) {
+        return;
+      }
       this.activeEffects.push(effect);
       this.applyEffect(effect);
     }
@@ -24,6 +27,17 @@ class EffectableEntity {
       );
 
       if (existingEffectIndex !== -1) {
+        if (!this.shouldApplyEffect(effect)) {
+          const existingEffect = this.activeEffects[existingEffectIndex];
+          if (existingEffect && existingEffect.type === 'booleanFlag') {
+            this.booleanFlags.delete(existingEffect.flagId);
+            if (typeof this[existingEffect.flagId] === 'boolean') {
+              this[existingEffect.flagId] = false;
+            }
+          }
+          this.activeEffects.splice(existingEffectIndex, 1);
+          return;
+        }
         this.activeEffects[existingEffectIndex] = effect;
         this.applyEffect(effect);
       } else {
@@ -77,12 +91,56 @@ class EffectableEntity {
         this.addEffect(effect);
       }
     }
+
+  shouldApplyEffect(effect) {
+    if ('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave) {
+      return false;
+    }
+    if ('onTravel' in effect && effect.onTravel == false && globalGameIsTraveling) {
+      return false;
+    }
+    const disabledWhenSetting = effect.disabledWhenGameSettingEnabled;
+    if (disabledWhenSetting) {
+      if (Array.isArray(disabledWhenSetting)) {
+        for (let i = 0; i < disabledWhenSetting.length; i += 1) {
+          if (gameSettings[disabledWhenSetting[i]] === true) {
+            return false;
+          }
+        }
+      } else if (gameSettings[disabledWhenSetting] === true) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  reconcileConditionalEffects() {
+    if (!this.activeEffects || this.activeEffects.length === 0) {
+      return;
+    }
+    const filtered = [];
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      if (this.shouldApplyEffect(effect)) {
+        filtered.push(effect);
+        continue;
+      }
+      if (effect.type === 'booleanFlag') {
+        this.booleanFlags.delete(effect.flagId);
+        if (typeof this[effect.flagId] === 'boolean') {
+          this[effect.flagId] = false;
+        }
+      }
+    }
+    this.activeEffects = filtered;
+    if (this.clearTickEffectCache) {
+      this.clearTickEffectCache();
+    }
+  }
   
   // Method to apply a specific effect
   applyEffect(effect) {
-    if(!('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave)
-      && !('onTravel' in effect && effect.onTravel == false && globalGameIsTraveling))
-    {
+    if (this.shouldApplyEffect(effect)) {
       switch (effect.type) {
         case 'increaseResourceGain':
           this.applyIncreaseResourceGain(effect);

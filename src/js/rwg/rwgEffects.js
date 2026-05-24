@@ -317,6 +317,7 @@ const RWG_EFFECTS = {
       target: "building",
       targetId: "fusionPowerPlant",
       type: "consumptionMultiplier",
+      disabledWhenGameSettingEnabled: "disableFusionConsumptionScaling",
       factor: 0.05,
       hideInSummary: true,
       computeValue(count, def) {
@@ -343,6 +344,7 @@ const RWG_EFFECTS = {
       target: "building",
       targetId: "superalloyFusionReactor",
       type: "consumptionMultiplier",
+      disabledWhenGameSettingEnabled: "disableFusionConsumptionScaling",
       factor: 0.05,
       hideInSummary: true,
       computeValue(count, def) {

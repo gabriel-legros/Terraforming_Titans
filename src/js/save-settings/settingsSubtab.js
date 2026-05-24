@@ -37,6 +37,7 @@ function cacheSettingsElements() {
     simplifyGoldenAsteroidToggle: document.getElementById('simplify-golden-asteroid-toggle'),
     simplifyGoldenAsteroidTooltip: document.getElementById('simplify-golden-asteroid-tooltip'),
     suppressFaithToggle: document.getElementById('suppress-faith-toggle'),
+    disableFusionConsumptionScalingToggle: document.getElementById('disable-fusion-consumption-scaling-toggle'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -371,6 +372,49 @@ function addSettingsListeners() {
       gameSettings.suppressFaith = cached.suppressFaithToggle.checked;
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();
+      }
+    });
+  }
+
+  if (cached.disableFusionConsumptionScalingToggle) {
+    cached.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
+    cached.disableFusionConsumptionScalingToggle.addEventListener('change', () => {
+      gameSettings.disableFusionConsumptionScaling = cached.disableFusionConsumptionScalingToggle.checked;
+      for (const key in structures) {
+        const structure = structures[key];
+        if (structure && structure.reconcileConditionalEffects) {
+          structure.reconcileConditionalEffects();
+        }
+      }
+      if (globalEffects.reconcileConditionalEffects) {
+        globalEffects.reconcileConditionalEffects();
+      }
+      if (researchManager && researchManager.reapplyEffects) {
+        researchManager.reapplyEffects();
+      }
+      if (skillManager && skillManager.reapplyEffects) {
+        skillManager.reapplyEffects();
+      }
+      if (solisManager && solisManager.reapplyEffects) {
+        solisManager.reapplyEffects();
+      }
+      if (warpGateCommand && warpGateCommand.reapplyEffects) {
+        warpGateCommand.reapplyEffects();
+      }
+      if (patienceManager && patienceManager.reapplyEffects) {
+        patienceManager.reapplyEffects();
+      }
+      if (followersManager && followersManager.reapplyEffects) {
+        followersManager.reapplyEffects();
+      }
+      if (atlasManager && atlasManager.reapplyEffects) {
+        atlasManager.reapplyEffects();
+      }
+      if (galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
+        galaxyInvasionManager.reapplyEffects();
+      }
+      if (nanotechManager && nanotechManager.reapplyEffects) {
+        nanotechManager.reapplyEffects();
       }
     });
   }

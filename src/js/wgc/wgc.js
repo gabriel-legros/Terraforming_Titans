@@ -796,6 +796,7 @@ class WarpGateCommand extends EffectableEntity {
           target: 'building',
           targetId: mapping[key],
           type: 'consumptionMultiplier',
+          disabledWhenGameSettingEnabled: 'disableFusionConsumptionScaling',
           value: mult,
           effectId: `${effectId}-consumption`,
           sourceId: 'wgcRD'

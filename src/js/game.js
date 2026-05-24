@@ -374,6 +374,7 @@ function initializeGameState(options = {}) {
     gameSettings.useCelsius = false;
     gameSettings.disableDayNightCycle = false;
     gameSettings.showSpaceStorageResources = false;
+    gameSettings.disableFusionConsumptionScaling = false;
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;
