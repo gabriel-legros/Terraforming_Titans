@@ -244,6 +244,12 @@ body.dark-mode {
     color: #f0f0f0;
 }
 
+.dark-mode .bioworld-shop-adaptation {
+    background: #1f252b;
+    border-color: #3c3c3c;
+    color: #f0f0f0;
+}
+
 .dark-mode .bioworld-shop-item {
     background: #202327;
     border-color: #3c3c3c;

@@ -266,6 +266,7 @@
       this.uiElements = null;
       this.shopCollapsed = false;
       this.shopRefactorCounts = {};
+      this.adaptationPoints = 0;
       this.assignmentLayoutWidth = 0;
       this.assignmentRowHeightsDirty = true;
     }
@@ -471,6 +472,29 @@
       return this.isBooleanFlagSet('warpAssembly');
     }
 
+    getAdaptationPoints() {
+      return Math.max(0, this.adaptationPoints || 0);
+    }
+
+    addSpecializationPoints(value) {
+      if (!(value > 0)) {
+        super.addSpecializationPoints(value);
+        return;
+      }
+      if (!this.canUseWarpAssembly()) {
+        super.addSpecializationPoints(value);
+        return;
+      }
+      const adaptationPoints = this.getAdaptationPoints();
+      if (!(adaptationPoints > 0)) {
+        super.addSpecializationPoints(value);
+        return;
+      }
+      const bonus = Math.min(value, adaptationPoints);
+      this.adaptationPoints = adaptationPoints - bonus;
+      super.addSpecializationPoints(value + bonus);
+    }
+
     getShopItemCost(item) {
       return item.cost + this.getShopRefactorCount(item.id);
     }
@@ -526,6 +550,10 @@
         getManufacturingText('catalogs.specializations.manufacturing.ui.refactorConfirmButton') || 'Confirm',
         getManufacturingText('catalogs.specializations.manufacturing.ui.refactorCancelButton') || 'Cancel',
         () => {
+          const pointsBeforeRefactor = Math.max(0, this.getSpecializationPoints());
+          if (this.canUseWarpAssembly() && pointsBeforeRefactor > 0) {
+            this.adaptationPoints = this.getAdaptationPoints() + pointsBeforeRefactor;
+          }
           this[this.pointsKey] = 0;
           this.shopPurchases[item.id] = halvedPurchases;
           this.shopRefactorCounts[item.id] = this.getShopRefactorCount(item.id) + 1;
@@ -830,6 +858,36 @@
 
       shopElements.collapseButton = collapseButton;
       shopElements.itemsContainer = itemsContainer;
+
+      let adaptationGroup = shopElements.wrapper.querySelector('[data-manufacturing-ui="adaptationGroup"]');
+      if (this.canUseWarpAssembly()) {
+        if (!adaptationGroup) {
+          adaptationGroup = document.createElement('div');
+          adaptationGroup.classList.add('bioworld-shop-adaptation');
+          adaptationGroup.dataset.manufacturingUi = 'adaptationGroup';
+
+          const adaptationLabel = document.createElement('span');
+          adaptationLabel.classList.add('bioworld-shop-adaptation-label');
+          adaptationLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.adaptationPointsLabel');
+          const adaptationInfo = document.createElement('span');
+          adaptationInfo.classList.add('info-tooltip-icon');
+          adaptationInfo.classList.add('bioworld-shop-adaptation-info');
+          adaptationInfo.innerHTML = '&#9432;';
+          attachDynamicInfoTooltip(
+            adaptationInfo,
+            getManufacturingText('catalogs.specializations.manufacturing.ui.adaptationPointsTooltip')
+          );
+          const adaptationValue = document.createElement('span');
+          adaptationValue.classList.add('bioworld-shop-points');
+          adaptationValue.dataset.manufacturingUi = 'adaptationValue';
+          adaptationGroup.append(adaptationLabel, adaptationValue, adaptationInfo);
+          itemsContainer.insertAdjacentElement('afterend', adaptationGroup);
+        }
+      } else if (adaptationGroup) {
+        adaptationGroup.remove();
+      }
+
+      shopElements.adaptationValue = shopElements.wrapper.querySelector('[data-manufacturing-ui="adaptationValue"]');
       this.shopElements = shopElements;
     }
 
@@ -1595,6 +1653,9 @@
             ? getManufacturingText('catalogs.specializations.manufacturing.ui.showShop')
             : getManufacturingText('catalogs.specializations.manufacturing.ui.hideShop');
         }
+        if (this.shopElements.adaptationValue) {
+          this.shopElements.adaptationValue.textContent = formatNumber(this.getAdaptationPoints(), true);
+        }
       }
 
       const elements = this.resolveUIElements();
@@ -1713,6 +1774,7 @@
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
         shopRefactorCounts: { ...this.shopRefactorCounts },
+        adaptationPoints: this.getAdaptationPoints(),
         manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
         assignmentStep: serializeManufacturingInteger(this.assignmentStep),
         autoAssignFlags: { ...this.autoAssignFlags },
@@ -1729,6 +1791,7 @@
         ...this.createEmptyShopRefactorCounts(),
         ...(state.shopRefactorCounts || {}),
       };
+      this.adaptationPoints = Math.max(0, state.adaptationPoints || 0);
       this.manufacturingAssignments = { ...(state.manufacturingAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
@@ -1747,6 +1810,7 @@
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
         shopRefactorCounts: { ...this.shopRefactorCounts },
+        adaptationPoints: this.getAdaptationPoints(),
         manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
         assignmentStep: serializeManufacturingInteger(this.assignmentStep),
         autoAssignFlags: { ...this.autoAssignFlags },
@@ -1762,6 +1826,7 @@
         ...this.createEmptyShopRefactorCounts(),
         ...(state.shopRefactorCounts || {}),
       };
+      this.adaptationPoints = Math.max(0, state.adaptationPoints || 0);
       this.manufacturingAssignments = { ...(state.manufacturingAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };

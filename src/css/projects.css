@@ -471,6 +471,28 @@
     opacity: 0.6;
 }
 
+.bioworld-shop-adaptation {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-start;
+    padding: 8px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #e9ecef;
+    font-weight: 600;
+}
+
+.bioworld-shop-adaptation-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bioworld-shop-adaptation-info {
+    margin-left: auto;
+}
+
 .progress-button-container {
     width: 100%;
 }
