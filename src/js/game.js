@@ -663,7 +663,7 @@ function initializeGameState(options = {}) {
     autoTravelContext.restoreTabState = null;
   }
   if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
-    solisManager.reapplyEffects();
+    solisManager.reapplyEffects({ grantStartingResources: true });
     hazardManager.applyTravelAdjustments(terraforming);
   }
   if (preserveManagers && warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {

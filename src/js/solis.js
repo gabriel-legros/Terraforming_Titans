@@ -584,7 +584,8 @@ class SolisManager extends EffectableEntity {
     return true;
   }
 
-  reapplyEffects() {
+  reapplyEffects(options = {}) {
+    const grantStartingResources = options.grantStartingResources === true;
     this.setUpgradeEnabled('autoResearch', this.isBooleanFlagSet('solisAutoResearch'));
     this.setUpgradeEnabled('shipAssignment', this.isBooleanFlagSet('solisShipAssignment'));
     this.setUpgradeEnabled('lifeAutomation', this.isBooleanFlagSet('solisLifeAutomation'));
@@ -782,7 +783,7 @@ class SolisManager extends EffectableEntity {
             ships.unlocked = true;
           }
         }
-        if (!globalGameIsLoadingFromSave) {
+        if (grantStartingResources) {
           if (ships.increase) {
             ships.increase(startingShipsUpgrade.purchases);
           } else {
@@ -809,7 +810,7 @@ class SolisManager extends EffectableEntity {
             sourceId: 'solisShop'
           });
         }
-        if (!globalGameIsLoadingFromSave) {
+        if (grantStartingResources) {
           res.increase(amount);
         }
       }
