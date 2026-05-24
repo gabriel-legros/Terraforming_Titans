@@ -916,6 +916,112 @@ class SpaceStorageProject extends SpaceshipProject {
     return { plan, shipCompletionCount };
   }
 
+  buildStoreEstimateAccumulatedChanges(deltaTime = 1000) {
+    const seconds = deltaTime / 1000;
+    const selected = this.getUnlockedSelectedResources();
+    if (!(seconds > 0) || selected.length === 0) {
+      return null;
+    }
+    const estimated = {};
+    let hasEntries = false;
+    selected.forEach((entry) => {
+      if (this.getShipTransferModeForResource(entry.resource) !== 'store') {
+        return;
+      }
+      const source = this.getTransferEndpoint(entry, 'store');
+      const sourceResource = resources?.[source.category]?.[source.resource];
+      if (!sourceResource) {
+        return;
+      }
+      const projectedProductionRate = Math.max(0, sourceResource.productionRate || 0);
+      if (!(projectedProductionRate > 0)) {
+        return;
+      }
+      hasEntries = true;
+      estimated[source.category] ||= {};
+      estimated[source.category][source.resource] = (estimated[source.category][source.resource] || 0) + projectedProductionRate * seconds;
+    });
+    return hasEntries ? estimated : null;
+  }
+
+  estimateExpansionStorageGainForTick(deltaTime = 1000, productivity = 1) {
+    if (!this.isActive || !this.isContinuous()) {
+      return 0;
+    }
+    const tick = this.getContinuousExpansionTickState(deltaTime);
+    if (!tick.duration || tick.duration === Infinity || !tick.ready) {
+      return 0;
+    }
+    const requestedProgress = tick.requestedProgress * Math.max(0, productivity);
+    if (!(requestedProgress > 0)) {
+      return 0;
+    }
+    const storageState = this.createExpansionStorageState(null);
+    const affordableProgress = this.getAffordableExpansionProgress(
+      requestedProgress,
+      this.getScaledCost(),
+      storageState,
+      null
+    );
+    if (!(affordableProgress > 0)) {
+      return 0;
+    }
+    return affordableProgress * this.capacityPerCompletion * this.getEffectiveStorageCapacityMultiplier();
+  }
+
+  applyEstimatedExpansionStorageHeadroom(accumulatedChanges, deltaTime = 1000, productivity = 1) {
+    if (!accumulatedChanges) {
+      return accumulatedChanges;
+    }
+    const storageGain = this.estimateExpansionStorageGainForTick(deltaTime, productivity);
+    if (!(storageGain > 0)) {
+      return accumulatedChanges;
+    }
+    const selected = this.getUnlockedSelectedResources()
+      .filter(entry => this.getShipTransferModeForResource(entry.resource) === 'store');
+    if (selected.length === 0) {
+      return accumulatedChanges;
+    }
+    accumulatedChanges.spaceStorage ||= {};
+    if (selected.length === 1) {
+      const key = selected[0].resource;
+      accumulatedChanges.spaceStorage[key] = (accumulatedChanges.spaceStorage[key] || 0) - storageGain;
+      return accumulatedChanges;
+    }
+    const weighted = selected.map((entry) => ({
+      key: entry.resource,
+      weight: Math.max(0, this.getResourceTransferWeight(entry.resource))
+    }));
+    const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+    if (!(totalWeight > 0)) {
+      const split = storageGain / selected.length;
+      selected.forEach((entry) => {
+        const key = entry.resource;
+        accumulatedChanges.spaceStorage[key] = (accumulatedChanges.spaceStorage[key] || 0) - split;
+      });
+      return accumulatedChanges;
+    }
+    weighted.forEach((item) => {
+      const amount = storageGain * (item.weight / totalWeight);
+      if (amount > 0) {
+        accumulatedChanges.spaceStorage[item.key] = (accumulatedChanges.spaceStorage[item.key] || 0) - amount;
+      }
+    });
+    return accumulatedChanges;
+  }
+
+  cloneAccumulatedChangesForPlanning(accumulatedChanges = null) {
+    if (!accumulatedChanges) {
+      return {};
+    }
+    const clone = {};
+    for (const category in accumulatedChanges) {
+      const source = accumulatedChanges[category];
+      clone[category] = source && typeof source === 'object' ? { ...source } : source;
+    }
+    return clone;
+  }
+
   applyAccumulatedResourceDelta(category, resourceKey, amount, accumulatedChanges = null) {
     if (!(amount !== 0) || !accumulatedChanges) {
       return;
@@ -1915,10 +2021,71 @@ class SpaceStorageProject extends SpaceshipProject {
     return totals;
   }
 
-  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+  estimateShipTransferCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     const workerRatio = this.getHazardousMachineryWorkerAvailabilityRatio();
     const effectiveProductivity = productivity * workerRatio;
+    if (!this.shipOperationIsActive) {
+      return totals;
+    }
+
+    if (this.isShipOperationContinuous()) {
+      const seconds = deltaTime / 1000;
+      let planningChanges = this.cloneAccumulatedChangesForPlanning(accumulatedChanges);
+      if (!accumulatedChanges) {
+        const estimatedStoreSupply = this.buildStoreEstimateAccumulatedChanges(deltaTime);
+        if (estimatedStoreSupply) {
+          for (const category in estimatedStoreSupply) {
+            planningChanges[category] ||= {};
+            for (const resourceKey in estimatedStoreSupply[category]) {
+              planningChanges[category][resourceKey] =
+                (planningChanges[category][resourceKey] || 0) + estimatedStoreSupply[category][resourceKey];
+            }
+          }
+        }
+      }
+      planningChanges = this.applyEstimatedExpansionStorageHeadroom(planningChanges, deltaTime, 1) || planningChanges;
+      const withdrawalProductivity = this.usesContinuousWithdrawalProductivity()
+        ? productivity
+        : 1;
+      const withdrawalPlan = this.calculateContinuousTransferPlanForMode(
+        'withdraw',
+        deltaTime,
+        planningChanges,
+        withdrawalProductivity
+      );
+      this.addShipCompletionCostsToTotals(totals, withdrawalPlan.shipCompletionCount, applyRates, seconds);
+      if (this.hasContinuousTransferMode('store')) {
+        const storePlan = this.calculateContinuousTransferPlanForMode('store', deltaTime, planningChanges, 1);
+        this.addShipCompletionCostsToTotals(totals, storePlan.shipCompletionCount, applyRates, seconds);
+      }
+      return totals;
+    }
+
+    const duration = this.shipOperationStartingDuration || this.getShipOperationDuration();
+    const rate = 1000 / duration;
+    const fraction = (deltaTime / duration) * workerRatio;
+    const cost = this.calculateSpaceshipTotalCost();
+    for (const category in cost) {
+      if (!totals.cost[category]) totals.cost[category] = {};
+      for (const resource in cost[category]) {
+        const rateValue = cost[category][resource] * rate * (applyRates ? effectiveProductivity : 1);
+        if (applyRates) {
+          resources[category][resource].modifyRate(
+            -rateValue,
+            'Space storage transfer',
+            'project'
+          );
+        }
+        totals.cost[category][resource] =
+          (totals.cost[category][resource] || 0) + cost[category][resource] * fraction;
+      }
+    }
+    return totals;
+  }
+
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    const totals = { cost: {}, gain: {} };
     if (this.isActive) {
       const duration = this.getEffectiveDuration();
       const expansionProductivity = this.attributes?.continuousAsBuilding ? productivity : 1;
@@ -1943,44 +2110,11 @@ class SpaceStorageProject extends SpaceshipProject {
         this.mergeResourceTotals(totals.cost, expansionCostTotals);
       }
     }
-    if (this.shipOperationIsActive) {
-      if (this.isShipOperationContinuous()) {
-        const seconds = deltaTime / 1000;
-        const withdrawalProductivity = this.usesContinuousWithdrawalProductivity()
-          ? productivity
-          : 1;
-        const withdrawalPlan = this.calculateContinuousTransferPlanForMode(
-          'withdraw',
-          deltaTime,
-          accumulatedChanges,
-          withdrawalProductivity
-        );
-        this.addShipCompletionCostsToTotals(totals, withdrawalPlan.shipCompletionCount, applyRates, seconds);
-
-        if (this.hasContinuousTransferMode('store')) {
-          const storePlan = this.calculateContinuousTransferPlanForMode('store', deltaTime, accumulatedChanges, 1);
-          this.addShipCompletionCostsToTotals(totals, storePlan.shipCompletionCount, applyRates, seconds);
-        }
-      } else {
-        const duration = this.shipOperationStartingDuration || this.getShipOperationDuration();
-        const rate = 1000 / duration;
-        const fraction = (deltaTime / duration) * workerRatio;
-        const cost = this.calculateSpaceshipTotalCost();
-        for (const category in cost) {
-          if (!totals.cost[category]) totals.cost[category] = {};
-          for (const resource in cost[category]) {
-            const rateValue = cost[category][resource] * rate * (applyRates ? effectiveProductivity : 1);
-            if (applyRates) {
-              resources[category][resource].modifyRate(
-                -rateValue,
-                'Space storage transfer',
-                'project'
-              );
-            }
-            totals.cost[category][resource] =
-              (totals.cost[category][resource] || 0) + cost[category][resource] * fraction;
-          }
-        }
+    const shipTotals = this.estimateShipTransferCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
+    for (const category in shipTotals.cost) {
+      totals.cost[category] ||= {};
+      for (const resource in shipTotals.cost[category]) {
+        totals.cost[category][resource] = (totals.cost[category][resource] || 0) + shipTotals.cost[category][resource];
       }
     }
     return totals;
@@ -2023,7 +2157,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (elements.totalCostElement && this.assignedSpaceships != null) {
       const perSecond = this.isShipOperationContinuous();
       const totalCost = perSecond
-        ? this.estimateProjectCostAndGain(1000, false, this.continuousProductivity ?? 1, null).cost
+        ? this.estimateShipTransferCostAndGain(1000, false, this.continuousProductivity ?? 1, null).cost
         : this.calculateSpaceshipTotalCost(false);
       const suffix = perSecond ? '/s' : '';
       const costParts = [];
