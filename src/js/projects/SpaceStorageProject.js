@@ -1881,7 +1881,28 @@ class SpaceStorageProject extends SpaceshipProject {
     return true;
   }
 
-  applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale = 1, seconds = 0) {
+  getAffordableShipOperationCostScale(totalCost, accumulatedChanges, costScale = 1) {
+    if (!(costScale > 0)) {
+      return 0;
+    }
+    let affordableScale = costScale;
+    for (const category in totalCost) {
+      for (const resource in totalCost[category]) {
+        const perScaleAmount = totalCost[category][resource];
+        if (!(perScaleAmount > 0)) {
+          continue;
+        }
+        const available = this.getResourceValueForTick(category, resource, accumulatedChanges);
+        const maxScaleForResource = Math.max(0, available / perScaleAmount);
+        if (maxScaleForResource < affordableScale) {
+          affordableScale = maxScaleForResource;
+        }
+      }
+    }
+    return Math.max(0, Math.min(costScale, affordableScale));
+  }
+
+  applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale = 1) {
     let nonEnergyCost = 0;
     for (const category in totalCost) {
       for (const resource in totalCost[category]) {
@@ -1923,12 +1944,9 @@ class SpaceStorageProject extends SpaceshipProject {
     const seconds = deltaTime / 1000;
     const totalCost = this.calculateSpaceshipTotalCost();
     const costScale = shipCompletionCount;
-    if (!this.canCoverShipOperationCostForTick(totalCost, accumulatedChanges, costScale)) {
-      return;
-    }
     const successChance = this.getKesslerSuccessChance();
     const failureChance = 1 - successChance;
-    const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale, seconds);
+    const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale);
     const paidEnergy = Math.max(0, (totalCost?.colony?.energy || 0) * costScale);
     const paidMetal = Math.max(0, (totalCost?.colony?.metal || 0) * costScale);
     const deliveredTotal = plan.total * successChance;
@@ -1950,7 +1968,7 @@ class SpaceStorageProject extends SpaceshipProject {
     );
     this.reconcileUsedStorage();
     if (failureChance > 0) {
-      const shipLoss = shipCompletionCount * failureChance;
+      const shipLoss = costScale * failureChance;
       this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
     }
   }
@@ -1972,24 +1990,27 @@ class SpaceStorageProject extends SpaceshipProject {
       }
       const plan = this.calculateTransferPlanForTick(capacity, accumulatedChanges, null, 'store');
       if (plan.total > 0) {
-        const capacityRatio = Math.max(0, Math.min(1, plan.total / capacity));
-        if (capacityRatio > 0) {
+        const perShip = this.getShipCapacity(this.attributes.transportPerShip || 0);
+        const shipCompletionCount = perShip > 0 ? plan.total / perShip : 0;
+        if (shipCompletionCount > 0) {
           const totalCost = this.calculateSpaceshipTotalCost();
-          const costScale = this.assignedSpaceships * fraction * capacityRatio;
-          if (!this.canCoverShipOperationCostForTick(totalCost, accumulatedChanges, costScale)) {
+          const affordableScale = this.getAffordableShipOperationCostScale(totalCost, accumulatedChanges, shipCompletionCount);
+          if (!(affordableScale > 0)) {
             this.shipOperationIsActive = false;
             return;
           }
-          const nonEnergyCost = this.applyShipOperationCostForTick(
-            totalCost,
-            accumulatedChanges,
-            costScale,
-            seconds
-          );
+          const executionRatio = affordableScale / shipCompletionCount;
+          if (executionRatio < 1) {
+            plan.transfers.forEach((transfer) => {
+              transfer.amount *= executionRatio;
+            });
+            plan.total *= executionRatio;
+          }
+          const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, affordableScale);
           this.applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance, seconds);
           this.reconcileUsedStorage();
           if (failureChance > 0) {
-            const shipLoss = this.assignedSpaceships * fraction * capacityRatio * failureChance;
+            const shipLoss = affordableScale * failureChance;
             this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
           }
         }
@@ -2017,7 +2038,7 @@ class SpaceStorageProject extends SpaceshipProject {
       return;
     }
 
-    this.applyShipOperationCostForTick(totalCost, accumulatedChanges, 1, durationSeconds);
+    this.applyShipOperationCostForTick(totalCost, accumulatedChanges, 1);
     const reservePlan = { transfers: this.pendingTransfers };
     this.applyTransferPlanToAccumulated(reservePlan, accumulatedChanges, 1, durationSeconds);
     this.completeShipOperation();
