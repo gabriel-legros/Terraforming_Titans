@@ -9,7 +9,8 @@ const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceStrategicReserves',
   'resourceCaps',
-  'resourceImportLimitRespects'
+  'resourceImportLimitRespects',
+  'resourceBiomassDensityWithdrawLimits'
 ]);
 const PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY = {
   metal: 'colony',
@@ -690,6 +691,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const resourceCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     const weightSource = source.resourceTransferWeights || {};
     const importLimitSource = source.resourceImportLimitRespects || {};
+    const biomassDensityLimitSource = source.resourceBiomassDensityWithdrawLimits || {};
     filtered.spaceStorageSingleResourceKey = resourceKey;
     if (Object.prototype.hasOwnProperty.call(source, 'mode')) {
       filtered.mode = source.mode;
@@ -746,6 +748,13 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         };
       }
     }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourceBiomassDensityWithdrawLimits')) {
+      if (Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey)) {
+        filtered.resourceBiomassDensityWithdrawLimits = {
+          [resourceKey]: biomassDensityLimitSource[resourceKey] === true
+        };
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(source, 'respectImportProjectLimits')) {
       filtered.resourceImportLimitRespects = {
         [resourceKey]: source.respectImportProjectLimits === true
@@ -754,6 +763,16 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceRespectImportProjectLimits')) {
       filtered.resourceImportLimitRespects = {
         [resourceKey]: source.spaceStorageSingleResourceRespectImportProjectLimits === true
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'limitWithdrawalsToMaxBiomassDensity')) {
+      filtered.resourceBiomassDensityWithdrawLimits = {
+        [resourceKey]: source.limitWithdrawalsToMaxBiomassDensity === true
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity')) {
+      filtered.resourceBiomassDensityWithdrawLimits = {
+        [resourceKey]: source.spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity === true
       };
     }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
@@ -933,6 +952,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const reserveSource = settings.resourceStrategicReserves || {};
     const weightSource = settings.resourceTransferWeights || {};
     const importLimitSource = settings.resourceImportLimitRespects || {};
+    const biomassDensityLimitSource = settings.resourceBiomassDensityWithdrawLimits || {};
     const hasTransferMode = Object.prototype.hasOwnProperty.call(settings, 'mode')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
     const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'selected')
@@ -941,11 +961,14 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferWeight');
     const hasRespectImportLimits = Object.prototype.hasOwnProperty.call(settings, 'respectImportProjectLimits')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceRespectImportProjectLimits');
+    const hasBiomassDensityLimit = Object.prototype.hasOwnProperty.call(settings, 'limitWithdrawalsToMaxBiomassDensity')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity');
     const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
     const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
     const weightHasKey = Object.prototype.hasOwnProperty.call(weightSource, resourceKey);
     const importLimitHasKey = Object.prototype.hasOwnProperty.call(importLimitSource, resourceKey);
-    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits) {
+    const biomassDensityLimitHasKey = Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey);
+    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !biomassDensityLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits && !hasBiomassDensityLimit) {
       return false;
     }
 
@@ -954,6 +977,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const beforeTransfer = project.resourceTransferModes?.[resourceKey];
     const beforeWeight = project.resourceTransferWeights?.[resourceKey];
     const beforeRespectImportLimits = project.resourceImportLimitRespects?.[resourceKey] === true;
+    const beforeBiomassDensityLimit = project.resourceBiomassDensityWithdrawLimits?.[resourceKey] === true;
     const canonicalCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     const beforeSelectedResourceCount = Array.isArray(project.selectedResources)
       ? project.selectedResources.filter((entry) => entry?.resource === resourceKey).length
@@ -1023,6 +1047,18 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
           : settings.spaceStorageSingleResourceRespectImportProjectLimits === true);
       project.setRespectImportProjectLimits(resourceKey, enabled);
       changed = changed || beforeRespectImportLimits !== (project.resourceImportLimitRespects?.[resourceKey] === true);
+    }
+    if (biomassDensityLimitHasKey || hasBiomassDensityLimit) {
+      if (!project.resourceBiomassDensityWithdrawLimits) {
+        project.resourceBiomassDensityWithdrawLimits = {};
+      }
+      const enabled = biomassDensityLimitHasKey
+        ? biomassDensityLimitSource[resourceKey] === true
+        : (Object.prototype.hasOwnProperty.call(settings, 'limitWithdrawalsToMaxBiomassDensity')
+          ? settings.limitWithdrawalsToMaxBiomassDensity === true
+          : settings.spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity === true);
+      project.setLimitWithdrawalsToMaxBiomassDensity(resourceKey, enabled);
+      changed = changed || beforeBiomassDensityLimit !== (project.resourceBiomassDensityWithdrawLimits?.[resourceKey] === true);
     }
     if (hasSelectedFlag) {
       if (!Array.isArray(project.selectedResources)) {

@@ -348,6 +348,8 @@ function renderSpaceStorageUI(project, container) {
   let reserveValueLabel = cachedCaps.reserveValueLabel;
   let transferWeightInput = cachedCaps.transferWeightInput;
   let transferWeightLabel = cachedCaps.transferWeightLabel;
+  let limitBiomassDensityWithdrawalsRow = cachedCaps.limitBiomassDensityWithdrawalsRow;
+  let limitBiomassDensityWithdrawalsCheckbox = cachedCaps.limitBiomassDensityWithdrawalsCheckbox;
   let respectImportLimitsRow = cachedCaps.respectImportLimitsRow;
   let respectImportLimitsCheckbox = cachedCaps.respectImportLimitsCheckbox;
   let respectImportLimitsLabel = cachedCaps.respectImportLimitsLabel;
@@ -580,6 +582,24 @@ function renderSpaceStorageUI(project, container) {
     });
     transferWeightRow.append(transferWeightLabel, transferWeightInput);
 
+    limitBiomassDensityWithdrawalsRow = document.createElement('div');
+    limitBiomassDensityWithdrawalsRow.classList.add('space-storage-settings-row');
+    const limitBiomassDensityWithdrawalsLabel = document.createElement('label');
+    limitBiomassDensityWithdrawalsLabel.classList.add('space-storage-settings-label');
+    limitBiomassDensityWithdrawalsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.limitWithdrawalsToMaxBiomassDensity', 'Limit withdrawals to maximum biomass density');
+    const limitBiomassDensityInfo = document.createElement('span');
+    limitBiomassDensityInfo.classList.add('info-tooltip-icon');
+    limitBiomassDensityInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      limitBiomassDensityInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.limitWithdrawalsToMaxBiomassDensityTooltip', 'When withdrawing biomass from space storage into surface biomass, stop at the current life design maximum biomass density. Uses 0.1 t/m² if no design density is available.')
+    );
+    limitBiomassDensityWithdrawalsLabel.appendChild(limitBiomassDensityInfo);
+    limitBiomassDensityWithdrawalsCheckbox = document.createElement('input');
+    limitBiomassDensityWithdrawalsCheckbox.type = 'checkbox';
+    limitBiomassDensityWithdrawalsCheckbox.id = 'limit-biomass-density-withdrawals';
+    limitBiomassDensityWithdrawalsRow.append(limitBiomassDensityWithdrawalsLabel, limitBiomassDensityWithdrawalsCheckbox);
+
     respectImportLimitsRow = document.createElement('div');
     respectImportLimitsRow.classList.add('space-storage-settings-row');
     respectImportLimitsLabel = document.createElement('label');
@@ -671,6 +691,7 @@ function renderSpaceStorageUI(project, container) {
       capModeRow,
       capValueRow,
       transferWeightRow,
+      limitBiomassDensityWithdrawalsRow,
       respectImportLimitsRow,
       reserveModeRow,
       reserveValueRow,
@@ -783,6 +804,7 @@ function renderSpaceStorageUI(project, container) {
       }
       project.setResourceTransferWeight(key, projectElements[project.name].transferWeightDraft);
       project.setRespectImportProjectLimits(key, projectElements[project.name].respectImportLimitsDraft === true);
+      project.setLimitWithdrawalsToMaxBiomassDensity(key, projectElements[project.name].limitBiomassDensityWithdrawalsDraft === true);
       projectElements[project.name].capDraftDirty = false;
       projectElements[project.name].reserveDraftDirty = false;
       closeCapWindow();
@@ -850,6 +872,9 @@ function renderSpaceStorageUI(project, container) {
     respectImportLimitsCheckbox.addEventListener('change', () => {
       projectElements[project.name].respectImportLimitsDraft = respectImportLimitsCheckbox.checked;
     });
+    limitBiomassDensityWithdrawalsCheckbox.addEventListener('change', () => {
+      projectElements[project.name].limitBiomassDensityWithdrawalsDraft = limitBiomassDensityWithdrawalsCheckbox.checked;
+    });
   }
 
   const openCapWindow = (resourceKey, label) => {
@@ -865,6 +890,7 @@ function renderSpaceStorageUI(project, container) {
     projectElements[project.name].reserveDraftDirty = false;
     projectElements[project.name].transferWeightDraft = project.getResourceTransferWeight(resourceKey);
     projectElements[project.name].respectImportLimitsDraft = project.shouldRespectImportProjectLimits(resourceKey);
+    projectElements[project.name].limitBiomassDensityWithdrawalsDraft = project.shouldLimitWithdrawalsToMaxBiomassDensity(resourceKey);
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
     capValueInput.value = capSetting.mode === 'percent' || capSetting.mode === 'weight'
@@ -888,6 +914,8 @@ function renderSpaceStorageUI(project, container) {
     scopeTransfersCheckbox.checked = scope.transfers === true;
     scopeConsumptionCheckbox.checked = scope.consumption === true;
     respectImportLimitsCheckbox.checked = projectElements[project.name].respectImportLimitsDraft === true;
+    limitBiomassDensityWithdrawalsCheckbox.checked = projectElements[project.name].limitBiomassDensityWithdrawalsDraft === true;
+    limitBiomassDensityWithdrawalsRow.style.display = resourceKey === 'biomass' ? '' : 'none';
     respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(resourceKey) ? '' : 'none';
     updateCapInputState();
     updateReserveInputState();
@@ -1207,6 +1235,8 @@ function renderSpaceStorageUI(project, container) {
     reserveValueLabel,
     transferWeightInput,
     transferWeightLabel,
+    limitBiomassDensityWithdrawalsRow,
+    limitBiomassDensityWithdrawalsCheckbox,
     respectImportLimitsRow,
     respectImportLimitsCheckbox,
     respectImportLimitsLabel,
@@ -1519,6 +1549,10 @@ function updateSpaceStorageUI(project) {
     if (els.respectImportLimitsCheckbox) {
       els.respectImportLimitsCheckbox.checked = els.respectImportLimitsDraft === true;
       els.respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
+    }
+    if (els.limitBiomassDensityWithdrawalsCheckbox) {
+      els.limitBiomassDensityWithdrawalsCheckbox.checked = els.limitBiomassDensityWithdrawalsDraft === true;
+      els.limitBiomassDensityWithdrawalsRow.style.display = els.capResourceKey === 'biomass' ? '' : 'none';
     }
     els.capValueInput.disabled = els.capModeSelect.value === 'none' || els.capModeSelect.value === 'remaining';
     const reserveIsNone = els.reserveModeSelect.value === 'none';

@@ -84,6 +84,16 @@ function getProjectPresetJsonFieldOptions(fieldPath) {
       ]
     };
   }
+  if (fieldPath[3] === 'resourceBiomassDensityWithdrawLimits'
+    && (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID || getSpaceStorageSingleResourceKey(projectId) !== '')
+    && fieldPath[4] === 'biomass') {
+    return {
+      selectOptions: [
+        { value: 'true', label: getAutomationCardText('true', {}, 'True') },
+        { value: 'false', label: getAutomationCardText('false', {}, 'False') }
+      ]
+    };
+  }
   if (getSpaceStorageSingleResourceKey(projectId) === '') {
     return null;
   }

@@ -86,6 +86,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceTransferModes = {};
     this.resourceTransferWeights = {};
     this.resourceImportLimitRespects = {};
+    this.resourceBiomassDensityWithdrawLimits = {};
     this.pendingTransfers = [];
     this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     this.megaProjectSpaceOnlyOnTravel = false;
@@ -885,7 +886,8 @@ class SpaceStorageProject extends SpaceshipProject {
       const storageDemand = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
       const consumerDemand = this.getProductivityConsumerDemandForTick(target.category, target.resource, deltaTime);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
-      const requested = Math.min(stored, storageDemand + consumerDemand, importLimitRemaining);
+      const biomassDensityRemaining = this.getBiomassWithdrawalDensityRemaining(accumulatedChanges);
+      const requested = Math.min(stored, storageDemand + consumerDemand, importLimitRemaining, biomassDensityRemaining);
       if (!(requested > 0)) {
         return;
       }
@@ -1171,6 +1173,15 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceImportLimitRespects = sanitized;
   }
 
+  sanitizeBiomassDensityWithdrawLimits() {
+    const source = this.resourceBiomassDensityWithdrawLimits || {};
+    const sanitized = {};
+    if (source.biomass === true) {
+      sanitized.biomass = true;
+    }
+    this.resourceBiomassDensityWithdrawLimits = sanitized;
+  }
+
   shouldRespectImportProjectLimits(resourceKey) {
     return this.resourceImportLimitRespects?.[resourceKey] === true;
   }
@@ -1192,6 +1203,40 @@ class SpaceStorageProject extends SpaceshipProject {
       settings[resourceKey] = this.shouldRespectImportProjectLimits(resourceKey);
     }
     return settings;
+  }
+
+  shouldLimitWithdrawalsToMaxBiomassDensity(resourceKey) {
+    return resourceKey === 'biomass' && this.resourceBiomassDensityWithdrawLimits?.[resourceKey] === true;
+  }
+
+  setLimitWithdrawalsToMaxBiomassDensity(resourceKey, enabled) {
+    if (resourceKey !== 'biomass') {
+      return;
+    }
+    if (enabled === true) {
+      this.resourceBiomassDensityWithdrawLimits[resourceKey] = true;
+    } else {
+      delete this.resourceBiomassDensityWithdrawLimits[resourceKey];
+    }
+  }
+
+  exportBiomassDensityWithdrawLimitsForAutomation() {
+    return {
+      biomass: this.shouldLimitWithdrawalsToMaxBiomassDensity('biomass')
+    };
+  }
+
+  getBiomassWithdrawalDensityRemaining(accumulatedChanges = null) {
+    if (!this.shouldLimitWithdrawalsToMaxBiomassDensity('biomass')) {
+      return Infinity;
+    }
+    const design = lifeDesigner?.currentDesign;
+    const maxDensity = design?.getMaxBiomassDensity ? Math.max(0, design.getMaxBiomassDensity()) : 0.1;
+    const effectiveMaxDensity = maxDensity > 0 ? maxDensity : 0.1;
+    const landAreaM2 = resolveWorldGeometricLand(terraforming, resources.surface.land) * 10000;
+    const maxBiomass = landAreaM2 > 0 ? landAreaM2 * effectiveMaxDensity : 0;
+    const currentBiomass = this.getResourceValueForTick('surface', 'biomass', accumulatedChanges);
+    return Math.max(0, maxBiomass - currentBiomass);
   }
 
   getImportLimitProjectForResource(resourceKey) {
@@ -1327,7 +1372,8 @@ class SpaceStorageProject extends SpaceshipProject {
       const targetRes = resources[target.category][target.resource];
       const destFree = targetRes && Number.isFinite(targetRes.cap) ? Math.max(0, targetRes.cap - targetRes.value) : Infinity;
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target);
-      const amount = Math.min(weightedCapacity, stored, destFree, importLimitRemaining);
+      const biomassDensityRemaining = this.getBiomassWithdrawalDensityRemaining(null);
+      const amount = Math.min(weightedCapacity, stored, destFree, importLimitRemaining, biomassDensityRemaining);
       if (!Number.isFinite(amount) || amount <= 0) return;
       transfers.push({ mode: 'withdraw', category: target.category, resource: target.resource, amount, storageKey: entry.resource });
       total += amount;
@@ -1447,7 +1493,8 @@ class SpaceStorageProject extends SpaceshipProject {
       const target = this.getTransferEndpoint(entry, 'withdraw');
       const destFree = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
-      const amount = Math.min(weightedCapacity, stored, destFree, importLimitRemaining);
+      const biomassDensityRemaining = this.getBiomassWithdrawalDensityRemaining(accumulatedChanges);
+      const amount = Math.min(weightedCapacity, stored, destFree, importLimitRemaining, biomassDensityRemaining);
       if (!Number.isFinite(amount) || amount <= 0) return;
       transfers.push({ mode: 'withdraw', category: target.category, resource: target.resource, amount, storageKey: entry.resource });
       total += amount;
@@ -2297,6 +2344,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceTransferModes: { ...(this.resourceTransferModes || {}) },
       resourceTransferWeights: { ...(this.resourceTransferWeights || {}) },
       resourceImportLimitRespects: this.exportImportLimitRespectsForAutomation(),
+      resourceBiomassDensityWithdrawLimits: this.exportBiomassDensityWithdrawLimitsForAutomation(),
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel === true,
       waterWithdrawTarget: this.waterWithdrawTarget,
@@ -2311,7 +2359,8 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceStrategicReserves: JSON.parse(JSON.stringify(this.resourceStrategicReserves || {})),
       resourceCaps: JSON.parse(JSON.stringify(this.resourceCaps || {})),
       resourceTransferWeights: JSON.parse(JSON.stringify(this.resourceTransferWeights || {})),
-      resourceImportLimitRespects: this.exportImportLimitRespectsForAutomation()
+      resourceImportLimitRespects: this.exportImportLimitRespectsForAutomation(),
+      resourceBiomassDensityWithdrawLimits: this.exportBiomassDensityWithdrawLimitsForAutomation()
     };
   }
 
@@ -2321,6 +2370,7 @@ class SpaceStorageProject extends SpaceshipProject {
     delete settings.resourceCaps;
     delete settings.resourceTransferWeights;
     delete settings.resourceImportLimitRespects;
+    delete settings.resourceBiomassDensityWithdrawLimits;
     return settings;
   }
 
@@ -2366,6 +2416,10 @@ class SpaceStorageProject extends SpaceshipProject {
     if (Object.prototype.hasOwnProperty.call(settings, 'resourceImportLimitRespects')) {
       this.resourceImportLimitRespects = { ...(settings.resourceImportLimitRespects || {}) };
       this.sanitizeImportLimitRespects();
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceBiomassDensityWithdrawLimits')) {
+      this.resourceBiomassDensityWithdrawLimits = { ...(settings.resourceBiomassDensityWithdrawLimits || {}) };
+      this.sanitizeBiomassDensityWithdrawLimits();
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'megaProjectResourceMode')) {
       if (MEGA_PROJECT_RESOURCE_MODE_MAP[settings.megaProjectResourceMode]) {
@@ -2419,12 +2473,18 @@ class SpaceStorageProject extends SpaceshipProject {
         : {};
       this.sanitizeImportLimitRespects();
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceBiomassDensityWithdrawLimits')) {
+      this.resourceBiomassDensityWithdrawLimits = settings.resourceBiomassDensityWithdrawLimits
+        ? JSON.parse(JSON.stringify(settings.resourceBiomassDensityWithdrawLimits))
+        : {};
+      this.sanitizeBiomassDensityWithdrawLimits();
+    }
   }
 
   loadOtherAutomationSettings(settings = {}) {
     const filteredSettings = {};
     for (const key in settings) {
-      if (key === 'resourceStrategicReserves' || key === 'resourceCaps' || key === 'resourceTransferWeights' || key === 'resourceImportLimitRespects') {
+      if (key === 'resourceStrategicReserves' || key === 'resourceCaps' || key === 'resourceTransferWeights' || key === 'resourceImportLimitRespects' || key === 'resourceBiomassDensityWithdrawLimits') {
         continue;
       }
       filteredSettings[key] = settings[key];
@@ -2478,6 +2538,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceCaps: this.resourceCaps,
       resourceTransferWeights: this.resourceTransferWeights,
       resourceImportLimitRespects: this.resourceImportLimitRespects,
+      resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
       resourceTransferModes: this.resourceTransferModes,
@@ -2530,6 +2591,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.sanitizeTransferWeights();
     this.resourceImportLimitRespects = state.resourceImportLimitRespects || {};
     this.sanitizeImportLimitRespects();
+    this.resourceBiomassDensityWithdrawLimits = state.resourceBiomassDensityWithdrawLimits || {};
+    this.sanitizeBiomassDensityWithdrawLimits();
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
     this.shipOperationStartingDuration = ship.startingDuration || 0;
@@ -2571,6 +2634,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceCaps: this.resourceCaps,
       resourceTransferWeights: this.resourceTransferWeights,
       resourceImportLimitRespects: this.resourceImportLimitRespects,
+      resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
       resourceTransferModes: this.resourceTransferModes,
@@ -2599,6 +2663,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.sanitizeTransferWeights();
     this.resourceImportLimitRespects = state.resourceImportLimitRespects || {};
     this.sanitizeImportLimitRespects();
+    this.resourceBiomassDensityWithdrawLimits = state.resourceBiomassDensityWithdrawLimits || {};
+    this.sanitizeBiomassDensityWithdrawLimits();
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
       this.resourceTransferModes = {};
       this.lastUniformTransferMode = this.shipTransferMode;
