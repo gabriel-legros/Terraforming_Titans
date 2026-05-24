@@ -1322,7 +1322,8 @@ const shouldApplySpaceBuildingProductivity = (project) =>
 
 const shouldApplyProjectProductivity = (project) =>
   shouldTreatProjectAsBuilding(project) ||
-  shouldApplySpaceBuildingProductivity(project);
+  shouldApplySpaceBuildingProductivity(project) ||
+  project?.usesContinuousWithdrawalProductivity?.() === true;
 
 const isProjectAutoContinuousEnabled = (project) =>
   project?.autoContinuousOperation === true || project?.autoDeployCollectors === true;
@@ -1546,7 +1547,9 @@ function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, acc
   for (const [, data] of entries) {
     const { project } = data;
     const isContinuousAsBuilding = project.attributes?.continuousAsBuilding && project.isContinuous();
-    const productivity = isContinuousAsBuilding ? project.continuousProductivity : 1;
+    const productivity = (isContinuousAsBuilding || project.usesContinuousWithdrawalProductivity?.() === true)
+      ? project.continuousProductivity
+      : 1;
     const hasActiveSpaceStorageTransfer = project.attributes?.spaceStorage
       && project.shipOperationIsActive === true
       && project.assignedSpaceships > 0;
@@ -1807,7 +1810,10 @@ function produceResources(deltaTime, buildings) {
       const { project } = data;
       if (project.attributes?.deprioritized) {
         deprioritizedProjectEntries.push([project.name, data]);
-      } else if (project.attributes?.continuousAsBuilding && project.isContinuous()) {
+      } else if (
+        (project.attributes?.continuousAsBuilding && project.isContinuous())
+        || project.usesContinuousWithdrawalProductivity?.() === true
+      ) {
         standardContinuousProjectEntries.push([project.name, data]);
       } else {
         standardRegularProjectEntries.push([project.name, data]);

@@ -86,6 +86,7 @@ function createBareSpaceStorageProject(SpaceStorageProject, maxStorage = Infinit
     this.usedStorage = Object.values(resources.spaceStorage || {})
       .reduce((sum, resource) => sum + Math.max(0, resource.value || 0), 0);
   };
+  project.isBooleanFlagSet = () => false;
   return project;
 }
 
