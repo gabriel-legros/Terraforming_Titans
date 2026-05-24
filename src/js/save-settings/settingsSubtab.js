@@ -38,6 +38,7 @@ function cacheSettingsElements() {
     simplifyGoldenAsteroidTooltip: document.getElementById('simplify-golden-asteroid-tooltip'),
     suppressFaithToggle: document.getElementById('suppress-faith-toggle'),
     disableFusionConsumptionScalingToggle: document.getElementById('disable-fusion-consumption-scaling-toggle'),
+    disableFusionConsumptionScalingTooltip: document.getElementById('disable-fusion-consumption-scaling-tooltip'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -417,6 +418,17 @@ function addSettingsListeners() {
         nanotechManager.reapplyEffects();
       }
     });
+  }
+
+  if (cached.disableFusionConsumptionScalingTooltip) {
+    attachDynamicInfoTooltip(
+      cached.disableFusionConsumptionScalingTooltip,
+      t(
+        'ui.settings.disableFusionConsumptionScalingTooltip',
+        {},
+        'When enabled, upgrades and world rewards can still make Fusion Reactors and Superalloy Fusion Reactors produce more energy, but they will not make those buildings consume more hydrogen or other fuel.'
+      )
+    );
   }
 
   if (cached.startBackgroundSilenceButton) {

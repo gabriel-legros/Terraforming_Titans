@@ -3770,6 +3770,7 @@ setLanguageData({
       suppressFaith: 'Suppress Faith',
       difficultyTitle: 'Difficulty',
       disableFusionConsumptionScaling: 'Disable fusion consumption scaling',
+      disableFusionConsumptionScalingTooltip: 'When enabled, upgrades and world rewards can still make Fusion Reactors and Superalloy Fusion Reactors produce more energy, but they will not make those buildings consume more hydrogen or other fuel.',
       keybindsTitle: 'Keybinds',
       pauseKeybindLabel: 'Pause key',
       pauseButtonLabel: 'Pause ({keybind})',
