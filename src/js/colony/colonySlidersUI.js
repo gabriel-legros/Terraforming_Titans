@@ -20,6 +20,7 @@ let warpnetEffect;
 let warpnetValue;
 let warpnetInput;
 let warpnetRefresh;
+let colonySlidersContainer;
 
 function refreshColonySliderInputs() {
   setWorkforceRatio(colonySliderSettings.workerRatio);
@@ -33,6 +34,7 @@ function refreshColonySliderInputs() {
 
 function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
+  colonySlidersContainer = container;
   if (!container) return;
   // Always reset to hidden; research effects re-enable this when unlocked.
   container.classList.add('invisible');
@@ -658,6 +660,12 @@ function initializeColonySlidersUI() {
 }
 
 function updateColonySlidersUI() {
+  if (!colonySlidersContainer) {
+    colonySlidersContainer = document.getElementById('colony-sliders-container');
+  }
+  const slidersUnlocked = researchManager.getResearchById('colony_sliders').isResearched;
+  colonySlidersContainer.classList.toggle('invisible', !slidersUnlocked);
+
   if (!mechanicalAssistanceRow) {
     mechanicalAssistanceRow = document.getElementById('mechanical-assistance-row');
   }
