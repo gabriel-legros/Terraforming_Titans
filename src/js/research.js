@@ -503,15 +503,18 @@ class Research {
       for (const category in this.researches) {
       this.researches[category].forEach((research) => {
         if (research.isResearched && (!research.repeatable || research.timesResearched > 0)) {
-          this.applyResearchEffects(research);
+          this.applyResearchEffects(research, { reapply: true });
         }
       });
       }
     }
 
   // Apply research effects to the target
-  applyResearchEffects(research) {
+  applyResearchEffects(research, options = {}) {
     research.effects.forEach((effect, index) => {
+      if (options.reapply && (effect.type === 'activateTab' || effect.type === 'activateSubtab') && effect.onReapply !== true) {
+        return;
+      }
       this.applyResearchEffect(research, effect, index);
     });
   }
