@@ -1432,7 +1432,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.applyContinuousWithdrawals(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
   }
 
-  recordTentativeWithdrawal(accumulatedSpecialChanges, transfer, delivered) {
+  recordTentativeWithdrawal(accumulatedSpecialChanges, transfer, delivered, refundCostPerDelivered = null) {
     if (!accumulatedSpecialChanges || !(delivered > 0) || !transfer?.storageKey) {
       return;
     }
@@ -1447,11 +1447,12 @@ class SpaceStorageProject extends SpaceshipProject {
     };
     ledger.destinations[destinationKey].entries.push({
       storageKey: transfer.storageKey,
-      amount: delivered
+      amount: delivered,
+      refundCostPerDelivered
     });
   }
 
-  applyTentativeWithdrawalRefunds(accumulatedSpecialChanges, overflowByResource, spaceStorageCapLimits = null) {
+  applyTentativeWithdrawalRefunds(accumulatedSpecialChanges, overflowByResource, spaceStorageCapLimits = null, seconds = 0) {
     const destinations = accumulatedSpecialChanges?.spaceStorageTentativeWithdrawals?.destinations;
     if (!destinations || !resources?.spaceStorage) {
       return;
@@ -1461,6 +1462,7 @@ class SpaceStorageProject extends SpaceshipProject {
     let currentUsedStorage = Number(this.usedStorage) || 0;
     const maxStorage = Number(this.maxStorage);
     const hasFiniteMaxStorage = Number.isFinite(maxStorage);
+    const refundedCostByResource = {};
 
     for (const destinationKey in destinations) {
       const destination = destinations[destinationKey];
@@ -1513,8 +1515,39 @@ class SpaceStorageProject extends SpaceshipProject {
           continue;
         }
         storageResource.value += acceptedRefund;
+        const perDeliveredCosts = entry.refundCostPerDelivered || null;
+        if (perDeliveredCosts) {
+          for (const resourceKey in perDeliveredCosts) {
+            const perDeliveredCost = Number(perDeliveredCosts[resourceKey]) || 0;
+            if (!(perDeliveredCost > 0)) {
+              continue;
+            }
+            refundedCostByResource[resourceKey] = (refundedCostByResource[resourceKey] || 0)
+              + acceptedRefund * perDeliveredCost;
+          }
+        }
         currentUsedStorage += acceptedRefund;
         refundRemaining -= acceptedRefund;
+      }
+    }
+
+    for (const resourceKey in refundedCostByResource) {
+      const refundedAmount = refundedCostByResource[resourceKey] || 0;
+      if (!(refundedAmount > 0)) {
+        continue;
+      }
+      const colonyResource = resources?.colony?.[resourceKey];
+      if (!colonyResource) {
+        continue;
+      }
+      const nextValue = colonyResource.value + refundedAmount;
+      if (colonyResource.hasCap && Number.isFinite(colonyResource.cap)) {
+        colonyResource.value = Math.min(nextValue, colonyResource.cap);
+      } else {
+        colonyResource.value = nextValue;
+      }
+      if (seconds > 0) {
+        colonyResource.modifyRate(refundedAmount / seconds, 'Space storage transfer', 'project');
       }
     }
 
@@ -1549,7 +1582,12 @@ class SpaceStorageProject extends SpaceshipProject {
           storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
         }
         if (options?.recordTentativeWithdrawals === true) {
-          this.recordTentativeWithdrawal(options.accumulatedSpecialChanges, t, delivered);
+          this.recordTentativeWithdrawal(
+            options.accumulatedSpecialChanges,
+            t,
+            delivered,
+            options.energyCostPerDelivered || 0
+          );
         }
       } else if (t.mode === 'store') {
         if (t.resource === 'biomass') {
@@ -1648,12 +1686,24 @@ class SpaceStorageProject extends SpaceshipProject {
     const successChance = this.getKesslerSuccessChance();
     const failureChance = 1 - successChance;
     const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale, seconds);
+    const paidEnergy = Math.max(0, (totalCost?.colony?.energy || 0) * costScale);
+    const paidMetal = Math.max(0, (totalCost?.colony?.metal || 0) * costScale);
+    const deliveredTotal = plan.total * successChance;
+    const refundCostPerDelivered = {};
+    if (deliveredTotal > 0) {
+      if (paidEnergy > 0) {
+        refundCostPerDelivered.energy = paidEnergy / deliveredTotal;
+      }
+      if (paidMetal > 0) {
+        refundCostPerDelivered.metal = paidMetal / deliveredTotal;
+      }
+    }
     this.applyTransferPlanToAccumulated(
       plan,
       accumulatedChanges,
       successChance,
       seconds,
-      { recordTentativeWithdrawals: true, accumulatedSpecialChanges }
+      { recordTentativeWithdrawals: true, accumulatedSpecialChanges, refundCostPerDelivered }
     );
     this.reconcileUsedStorage();
     if (failureChance > 0) {
@@ -1770,6 +1820,15 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     if (this.shipOperationIsActive) {
       if (this.isShipOperationContinuous()) {
+        if (this.shipTransferMode === 'store') {
+          const duration = this.getShipOperationDuration();
+          const fraction = (deltaTime / duration) * workerRatio;
+          const capacity = this.calculateTransferAmount() * fraction;
+          const plan = this.calculateTransferPlanForTick(capacity, accumulatedChanges, null, 'store');
+          if (!(plan.total > 0)) {
+            return totals;
+          }
+        }
         const perSecondCost = this.calculateSpaceshipTotalCost(true);
         for (const category in perSecondCost) {
           if (!totals.cost[category]) totals.cost[category] = {};

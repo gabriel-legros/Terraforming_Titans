@@ -1948,10 +1948,12 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (spaceStorageProject) {
+    const tickSeconds = deltaTime / 1000;
     spaceStorageProject.applyTentativeWithdrawalRefunds?.(
       accumulatedSpecialChanges,
       overflowByResource,
-      spaceStorageCapLimits
+      spaceStorageCapLimits,
+      tickSeconds
     );
     clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorageCapLimits);
   }
