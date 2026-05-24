@@ -450,7 +450,7 @@ class SpaceMiningProject extends SpaceshipProject {
     const control = document.createElement('div');
     control.classList.add('checkbox-container', 'water-import-target-control');
     control.id = `${this.name}-water-import-target-control`;
-    control.style.display = (this.isBooleanFlagSet('waterImportTargeting') || this.isSpaceStorageTargetAvailable()) ? 'flex' : 'none';
+    control.style.display = this.shouldShowWaterImportTargetControl() ? 'flex' : 'none';
 
     const label = document.createElement('label');
     label.textContent = getSpaceMiningText('ui.projects.spaceMining.target', 'Target ');
@@ -483,6 +483,8 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTargetControl: control,
       waterImportTargetLabel: label,
       waterImportTargetSelect: select,
+      waterImportTargetColonyOption: select.querySelector('option[value="colony"]'),
+      waterImportTargetColonyOnlyOption: select.querySelector('option[value="colonyOnly"]'),
       waterImportTargetSpaceStorageOption: select.querySelector('option[value="spaceStorage"]'),
     };
 
@@ -534,6 +536,11 @@ class SpaceMiningProject extends SpaceshipProject {
   isSpaceStorageTargetAvailable() {
     const project = projectManager.projects?.spaceStorage;
     return !!project && project.enabled !== false && project.unlocked !== false;
+  }
+
+  shouldShowWaterImportTargetControl() {
+    return this.attributes.dynamicWaterImport
+      && (this.isBooleanFlagSet('waterImportTargeting') || this.isSpaceStorageTargetAvailable());
   }
 
   ensureAutoStartTargetRow(container) {
@@ -819,7 +826,7 @@ class SpaceMiningProject extends SpaceshipProject {
         this.placeTargetControlInline(elements.automationSettingsContainer, gasTargetControl);
       }
       this.ensureAutoStartTargetRow(elements.automationSettingsContainer);
-      if ((this.attributes.dynamicWaterImport && this.isSpaceStorageTargetAvailable()) && !elements.waterImportTargetControl) {
+      if (this.attributes.dynamicWaterImport && !elements.waterImportTargetControl) {
         this.placeTargetControlInline(elements.automationSettingsContainer, this.createWaterImportTargetControl());
       }
       if (this.getPlanetaryMassImportResource() && this.isSpaceStorageTargetAvailable() && !elements.materialImportTargetControl) {
@@ -888,8 +895,22 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.co2CoverageVisibilityUpdate();
     }
     if (elements.waterImportTargetControl) {
-      const showWaterTarget = this.isBooleanFlagSet('waterImportTargeting') || this.isSpaceStorageTargetAvailable();
+      const showWaterTarget = this.shouldShowWaterImportTargetControl();
       elements.waterImportTargetControl.style.display = showWaterTarget ? 'flex' : 'none';
+    }
+    if (elements.waterImportTargetSelect && !elements.waterImportTargetColonyOption) {
+      elements.waterImportTargetColonyOption = ensureSelectOption(
+        elements.waterImportTargetSelect,
+        'colony',
+        getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony')
+      );
+    }
+    if (elements.waterImportTargetSelect && !elements.waterImportTargetColonyOnlyOption) {
+      elements.waterImportTargetColonyOnlyOption = ensureSelectOption(
+        elements.waterImportTargetSelect,
+        'colonyOnly',
+        getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only')
+      );
     }
     if (elements.waterImportTargetSelect && !elements.waterImportTargetSpaceStorageOption) {
       elements.waterImportTargetSpaceStorageOption = ensureSelectOption(
@@ -897,6 +918,14 @@ class SpaceMiningProject extends SpaceshipProject {
         'spaceStorage',
         getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage')
       );
+    }
+    if (elements.waterImportTargetColonyOption && elements.waterImportTargetColonyOnlyOption) {
+      const allowColonyTargets = this.isBooleanFlagSet('waterImportTargeting');
+      elements.waterImportTargetColonyOption.style.display = allowColonyTargets ? '' : 'none';
+      elements.waterImportTargetColonyOnlyOption.style.display = allowColonyTargets ? '' : 'none';
+      if (!allowColonyTargets && (this.waterImportTarget === 'colony' || this.waterImportTarget === 'colonyOnly')) {
+        this.waterImportTarget = 'surface';
+      }
     }
     if (elements.waterImportTargetSpaceStorageOption) {
       const allowSpaceStorage = this.isSpaceStorageTargetAvailable();
