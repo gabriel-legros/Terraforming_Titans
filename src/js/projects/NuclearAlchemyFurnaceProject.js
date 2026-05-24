@@ -34,6 +34,58 @@ const NUCLEAR_ALCHEMY_RECIPE_KEYS = [
   'metal'
 ];
 const NUCLEAR_ALCHEMY_UNASSIGNED_KEY = 'idleUnassigned';
+const NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
+
+function normalizeNuclearAlchemyInteger(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0n;
+  }
+  if (Object.prototype.toString.call(value) === '[object BigInt]') {
+    return value < 0n ? 0n : value;
+  }
+  if (Object.prototype.toString.call(value) === '[object String]') {
+    const trimmed = value.trim();
+    if (/^\d+$/.test(trimmed)) {
+      return BigInt(trimmed);
+    }
+    const parsed = parseFlexibleNumber(trimmed);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      if (Number.isSafeInteger(parsed)) {
+        return BigInt(parsed);
+      }
+      return BigInt(Math.floor(parsed).toLocaleString('fullwide', {
+        useGrouping: false,
+        maximumFractionDigits: 0
+      }));
+    }
+  }
+  const numeric = Number(value) || 0;
+  if (numeric <= 0) {
+    return 0n;
+  }
+  if (Number.isSafeInteger(numeric)) {
+    return BigInt(numeric);
+  }
+  return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
+    useGrouping: false,
+    maximumFractionDigits: 0
+  }));
+}
+
+function serializeNuclearAlchemyInteger(value) {
+  const normalized = normalizeNuclearAlchemyInteger(value);
+  return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
+    ? Number(normalized)
+    : normalized.toString();
+}
+
+function serializeNuclearAlchemyAssignments(assignments = {}) {
+  const serialized = {};
+  Object.keys(assignments).forEach((key) => {
+    serialized[key] = serializeNuclearAlchemyInteger(assignments[key]);
+  });
+  return serialized;
+}
 
 function getNuclearAlchemyText(path, fallback, vars) {
   try {
@@ -60,7 +112,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.continuousThreshold = 1000;
     this.expansionProgress = 0;
     this.furnaceAssignments = {};
-    this.assignmentStep = 1;
+    this.assignmentStep = 1n;
     this.autoAssignFlags = {};
     this.autoAssignWeights = {};
     this.isRunning = false;
@@ -147,7 +199,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getTotalFurnaces() {
-    return this.repeatCount;
+    return normalizeNuclearAlchemyInteger(this.repeatCount);
   }
 
   getAssignmentKeys() {
@@ -252,7 +304,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const total = this.getTotalFurnaces();
 
     keys.forEach((key) => {
-      this.furnaceAssignments[key] = Math.max(0, Math.floor(this.furnaceAssignments[key] || 0));
+      this.furnaceAssignments[key] = normalizeNuclearAlchemyInteger(this.furnaceAssignments[key]);
       this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
       const weight = Number(this.autoAssignWeights[key]);
       this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
@@ -260,11 +312,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
     Object.keys(this.furnaceAssignments).forEach((key) => {
       if (!keySet.has(key)) {
-        this.furnaceAssignments[key] = 0;
+        this.furnaceAssignments[key] = 0n;
       }
     });
 
-    let usedManual = 0;
+    let usedManual = 0n;
     keys.forEach((key) => {
       if (!this.autoAssignFlags[key]) {
         usedManual += this.furnaceAssignments[key];
@@ -272,7 +324,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     });
 
     const autoKeys = keys.filter((key) => this.autoAssignFlags[key]);
-    const remaining = Math.max(0, total - usedManual);
+    const remaining = total > usedManual ? (total - usedManual) : 0n;
 
     if (autoKeys.length > 0) {
       let totalWeight = 0;
@@ -282,25 +334,27 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
       if (totalWeight <= 0) {
         autoKeys.forEach((key) => {
-          this.furnaceAssignments[key] = 0;
+          this.furnaceAssignments[key] = 0n;
         });
       } else {
         const remainders = [];
-        let assigned = 0;
+        let assigned = 0n;
         autoKeys.forEach((key) => {
-          const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
-          const floorValue = Math.floor(exact);
-          this.furnaceAssignments[key] = floorValue;
-          assigned += floorValue;
-          remainders.push({ key, value: exact - floorValue });
+          const exact = Number(remaining) * (this.autoAssignWeights[key] / totalWeight);
+          const finiteExact = Number.isFinite(exact) && exact > 0 ? exact : 0;
+          const floorValue = Math.floor(finiteExact);
+          const floorBigInt = normalizeNuclearAlchemyInteger(floorValue);
+          this.furnaceAssignments[key] = floorBigInt;
+          assigned += floorBigInt;
+          remainders.push({ key, value: finiteExact - floorValue });
         });
         let leftover = remaining - assigned;
         remainders.sort((left, right) => right.value - left.value);
-        for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
-          this.furnaceAssignments[remainders[i].key] += 1;
-          leftover -= 1;
+        for (let i = 0; i < remainders.length && leftover > 0n; i += 1) {
+          this.furnaceAssignments[remainders[i].key] += 1n;
+          leftover -= 1n;
         }
-        if (leftover > 0 && autoKeys.length > 0) {
+        if (leftover > 0n && autoKeys.length > 0) {
           const idleKey = this.getUnassignedAssignmentKey();
           const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
           this.furnaceAssignments[targetKey] += leftover;
@@ -308,31 +362,33 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       }
     }
 
-    let assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
+    let assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0n), 0n);
     if (assignedTotal > total) {
       let excess = assignedTotal - total;
-      for (let i = keys.length - 1; i >= 0 && excess > 0; i -= 1) {
+      for (let i = keys.length - 1; i >= 0 && excess > 0n; i -= 1) {
         const key = keys[i];
-        const current = this.furnaceAssignments[key] || 0;
-        const reduction = Math.min(current, excess);
+        const current = this.furnaceAssignments[key] || 0n;
+        const reduction = current < excess ? current : excess;
         this.furnaceAssignments[key] = current - reduction;
         excess -= reduction;
       }
-      assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
+      assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0n), 0n);
     }
   }
 
   getAssignedTotal() {
     this.normalizeAssignments();
-    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
+    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0n), 0n);
   }
 
   getAvailableFurnaces() {
-    return Math.max(0, this.getTotalFurnaces() - this.getAssignedTotal());
+    const total = this.getTotalFurnaces();
+    const assigned = this.getAssignedTotal();
+    return total > assigned ? (total - assigned) : 0n;
   }
 
   getStoredAssignmentAmount(key) {
-    return this.furnaceAssignments[key] || 0;
+    return this.furnaceAssignments[key] || 0n;
   }
 
   getDisplayedAssignmentAmount(key) {
@@ -353,13 +409,46 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         return sum;
       }
       return sum + this.getStoredAssignmentAmount(otherKey);
-    }, 0);
-    return Math.max(0, total - usedOther);
+    }, 0n);
+    return total > usedOther ? (total - usedOther) : 0n;
   }
 
   setAssignmentStep(step) {
-    const next = Math.min(1e30, Math.max(1, Math.round(step)));
-    this.assignmentStep = next;
+    const next = normalizeNuclearAlchemyInteger(step);
+    this.assignmentStep = next < 1n ? 1n : (next > NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX ? NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX : next);
+  }
+
+  normalizeAssignmentStep() {
+    this.assignmentStep = normalizeNuclearAlchemyInteger(this.assignmentStep);
+    if (this.assignmentStep < 1n) {
+      this.assignmentStep = 1n;
+    }
+  }
+
+  getSignedAssignmentDelta(delta) {
+    const valueType = Object.prototype.toString.call(delta);
+    if (valueType === '[object BigInt]') {
+      return delta;
+    }
+    if (valueType === '[object String]') {
+      const trimmed = delta.trim();
+      if (!trimmed || trimmed === '-') {
+        return 0n;
+      }
+      const isNegative = trimmed.startsWith('-');
+      const digits = isNegative || trimmed.startsWith('+') ? trimmed.slice(1) : trimmed;
+      if (!/^\d+$/.test(digits)) {
+        return 0n;
+      }
+      const magnitude = BigInt(digits);
+      return isNegative ? -magnitude : magnitude;
+    }
+    const numeric = Number(delta);
+    if (!Number.isFinite(numeric) || numeric === 0) {
+      return 0n;
+    }
+    const magnitude = normalizeNuclearAlchemyInteger(Math.abs(numeric));
+    return numeric < 0 ? -magnitude : magnitude;
   }
 
   setAutoAssignTarget(key, enabled) {
@@ -373,9 +462,19 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       return;
     }
     this.normalizeAssignments();
+    const signedDelta = this.getSignedAssignmentDelta(delta);
+    if (signedDelta === 0n) {
+      return;
+    }
     const current = this.getStoredAssignmentAmount(key);
     const maxForKey = this.getAssignmentMaxTarget(key);
-    const next = Math.min(maxForKey, Math.max(0, current + delta));
+    let next = current + signedDelta;
+    if (next < 0n) {
+      next = 0n;
+    }
+    if (next > maxForKey) {
+      next = maxForKey;
+    }
     this.furnaceAssignments[key] = next;
     this.normalizeAssignments();
     this.updateUI();
@@ -385,7 +484,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     if (this.autoAssignFlags[key]) {
       return;
     }
-    this.furnaceAssignments[key] = 0;
+    this.furnaceAssignments[key] = 0n;
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -496,8 +595,8 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const entries = [];
     this.getAssignmentKeys().forEach((key) => {
       const recipe = this.getRecipe(key);
-      const assigned = this.furnaceAssignments[key] || 0;
-      if (assigned <= 0 || !recipe) {
+      const assigned = Number(this.furnaceAssignments[key] || 0n);
+      if (!(assigned > 0) || !recipe) {
         return;
       }
       const rate = (assigned / recipe.complexity) * parameter;
@@ -941,14 +1040,16 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     stepDownButton.dataset.nuclearUi = 'stepDownButton';
     stepDownButton.textContent = getNuclearAlchemyText('ui.projects.common.divideTen', '/10');
     stepDownButton.addEventListener('click', () => {
-      this.setAssignmentStep(this.assignmentStep / 10);
+      this.normalizeAssignmentStep();
+      this.setAssignmentStep(this.assignmentStep > 1n ? (this.assignmentStep / 10n) : 1n);
       this.updateUI();
     });
     const stepUpButton = document.createElement('button');
     stepUpButton.dataset.nuclearUi = 'stepUpButton';
     stepUpButton.textContent = getNuclearAlchemyText('ui.projects.common.timesTen', 'x10');
     stepUpButton.addEventListener('click', () => {
-      this.setAssignmentStep(this.assignmentStep * 10);
+      this.normalizeAssignmentStep();
+      this.setAssignmentStep(this.assignmentStep * 10n);
       this.updateUI();
     });
 
@@ -1147,7 +1248,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.normalizeAssignments();
     const total = this.getTotalFurnaces();
     const assigned = this.getAssignedTotal();
-    const available = Math.max(0, total - assigned);
+    const available = total > assigned ? (total - assigned) : 0n;
     const step = this.assignmentStep;
 
     elements.totalValue.textContent = formatNumber(total, true, 2);
@@ -1199,8 +1300,8 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return {
       ...super.saveAutomationSettings(),
       isRunning: this.isRunning === true,
-      furnaceAssignments: { ...this.furnaceAssignments },
-      assignmentStep: this.assignmentStep,
+      furnaceAssignments: serializeNuclearAlchemyAssignments(this.furnaceAssignments),
+      assignmentStep: serializeNuclearAlchemyInteger(this.assignmentStep),
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights }
     };
@@ -1224,6 +1325,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
     }
     this.normalizeAssignments();
+    this.normalizeAssignmentStep();
   }
 
   saveState() {
@@ -1231,8 +1333,8 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       ...super.saveState(),
       isRunning: this.isRunning,
       expansionProgress: this.expansionProgress,
-      furnaceAssignments: { ...this.furnaceAssignments },
-      assignmentStep: this.assignmentStep,
+      furnaceAssignments: serializeNuclearAlchemyAssignments(this.furnaceAssignments),
+      assignmentStep: serializeNuclearAlchemyInteger(this.assignmentStep),
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights }
     };
@@ -1247,6 +1349,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
     this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
     this.normalizeAssignments();
+    this.normalizeAssignmentStep();
     if (!this.isRunning) {
       this.setLastRunStats(0, {});
       this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle'));
@@ -1258,8 +1361,8 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       repeatCount: this.repeatCount,
       expansionProgress: this.expansionProgress,
       isRunning: this.isRunning,
-      furnaceAssignments: { ...this.furnaceAssignments },
-      assignmentStep: this.assignmentStep,
+      furnaceAssignments: serializeNuclearAlchemyAssignments(this.furnaceAssignments),
+      assignmentStep: serializeNuclearAlchemyInteger(this.assignmentStep),
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights }
     };
@@ -1287,6 +1390,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         : getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.runDisabled', 'Run disabled')
     );
     this.normalizeAssignments();
+    this.normalizeAssignmentStep();
     if (state.isActive) {
       this.isActive = true;
       this.startingDuration = state.startingDuration || this.getEffectiveDuration();

@@ -581,7 +581,7 @@ class DiskworldTerraformingProject extends Project {
     let hydrogenAmount = 0;
     const atmosphericAvailable = this.useAtmosphericHydrogen ? Math.max(resources.atmospheric.hydrogen.value, 0) : 0;
     const liquidAvailable = this.useLiquidHydrogen ? Math.max(getDiskworldLiquidHydrogenAvailable(), 0) : 0;
-    const colonyAvailable = this.useColonyHydrogen ? Math.max(resources.colony.hydrogen.value, 0) : 0;
+    const colonyAvailable = this.useColonyHydrogen ? Math.max(resources.colony.colonyHydrogen.value, 0) : 0;
     const availableHydrogen = atmosphericAvailable + liquidAvailable + colonyAvailable;
     if (this.uncappedPumpRate) {
       const availableEnergy = Math.max(resources.colony.energy.value, 0);
@@ -607,13 +607,13 @@ class DiskworldTerraformingProject extends Project {
         resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.displayName, 'project');
       }
       if (colonyHydrogenRate > 0) {
-        resources.colony.hydrogen.modifyRate(-colonyHydrogenRate, this.displayName, 'project');
+        resources.colony.colonyHydrogen.modifyRate(-colonyHydrogenRate, this.displayName, 'project');
       }
       resources.colony.energy.modifyRate(-energyRate, this.displayName, 'project');
     }
     totals.cost.atmospheric = { hydrogen: atmosphericAmount };
     totals.cost.surface = { liquidHydrogen: liquidHydrogenAmount };
-    totals.cost.colony = { hydrogen: colonyAmount, energy: energyRate * seconds };
+    totals.cost.colony = { colonyHydrogen: colonyAmount, energy: energyRate * seconds };
     return totals;
   }
 
@@ -639,11 +639,11 @@ class DiskworldTerraformingProject extends Project {
     const requestedEnergy = requestedHydrogen * this.currentEnergyPerTon;
     const pendingHydrogen = accumulatedChanges.atmospheric.hydrogen || 0;
     const pendingLiquidHydrogen = accumulatedChanges.surface.liquidHydrogen || 0;
-    const pendingColonyHydrogen = accumulatedChanges.colony.hydrogen || 0;
+    const pendingColonyHydrogen = accumulatedChanges.colony.colonyHydrogen || 0;
     const pendingEnergy = accumulatedChanges.colony.energy || 0;
     const availableHydrogen = this.useAtmosphericHydrogen ? Math.max(resources.atmospheric.hydrogen.value + pendingHydrogen, 0) : 0;
     const availableLiquidHydrogen = this.useLiquidHydrogen ? Math.max(getDiskworldLiquidHydrogenAvailable() + Math.min(pendingLiquidHydrogen, 0), 0) : 0;
-    const availableColonyHydrogen = this.useColonyHydrogen ? Math.max(resources.colony.hydrogen.value + pendingColonyHydrogen, 0) : 0;
+    const availableColonyHydrogen = this.useColonyHydrogen ? Math.max(resources.colony.colonyHydrogen.value + pendingColonyHydrogen, 0) : 0;
     const availableEnergy = Math.max(resources.colony.energy.value + pendingEnergy, 0);
     const hydrogenByEnergy = this.currentEnergyPerTon > 0 ? availableEnergy / this.currentEnergyPerTon : requestedHydrogen;
     const targetHydrogen = Math.min(requestedHydrogen, availableHydrogen + availableLiquidHydrogen + availableColonyHydrogen, hydrogenByEnergy);
@@ -654,7 +654,7 @@ class DiskworldTerraformingProject extends Project {
     const usedEnergy = usedHydrogen * this.currentEnergyPerTon;
     accumulatedChanges.atmospheric.hydrogen = pendingHydrogen - usedAtmosphericHydrogen;
     accumulatedChanges.surface.liquidHydrogen = pendingLiquidHydrogen - usedLiquidHydrogen;
-    accumulatedChanges.colony.hydrogen = pendingColonyHydrogen - usedColonyHydrogen;
+    accumulatedChanges.colony.colonyHydrogen = pendingColonyHydrogen - usedColonyHydrogen;
     accumulatedChanges.colony.energy = pendingEnergy - usedEnergy;
     this.hydrogenFilledTons += usedHydrogen;
     this.shortfallLastTick = usedHydrogen < requestedHydrogen;
@@ -671,7 +671,7 @@ class DiskworldTerraformingProject extends Project {
         resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.displayName, 'project');
       }
       if (colonyHydrogenRate > 0) {
-        resources.colony.hydrogen.modifyRate(-colonyHydrogenRate, this.displayName, 'project');
+        resources.colony.colonyHydrogen.modifyRate(-colonyHydrogenRate, this.displayName, 'project');
       }
       resources.colony.energy.modifyRate(-this.currentEnergyConsumptionRate, this.displayName, 'project');
     }

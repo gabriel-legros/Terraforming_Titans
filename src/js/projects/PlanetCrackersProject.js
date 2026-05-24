@@ -311,7 +311,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     const planetTypes = this.getPlanetTypeConfigs();
     for (let index = 0; index < planetTypes.length; index += 1) {
       const typeConfig = planetTypes[index];
-      const assigned = this.furnaceAssignments[typeConfig.key] || 0;
+      const assigned = Number(this.furnaceAssignments[typeConfig.key] || 0n);
       if (!(assigned > 0)) {
         continue;
       }
@@ -493,7 +493,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     const keys = this.getAssignmentKeys();
     for (let index = 0; index < keys.length; index += 1) {
       const key = keys[index];
-      const assigned = this.furnaceAssignments[key] || 0;
+      const assigned = Number(this.furnaceAssignments[key] || 0n);
       if (!(assigned > 0)) {
         continue;
       }

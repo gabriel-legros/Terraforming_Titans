@@ -124,7 +124,7 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
       }
     };
 
-    const assigned = this.furnaceAssignments.energy || 0;
+    const assigned = Number(this.furnaceAssignments.energy || 0n);
     if (!(assigned > 0)) {
       return plan;
     }
@@ -269,7 +269,7 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
     }
 
     this.normalizeAssignments();
-    const assigned = this.furnaceAssignments.energy || 0;
+    const assigned = Number(this.furnaceAssignments.energy || 0n);
     if (!(assigned > 0)) {
       return totals;
     }

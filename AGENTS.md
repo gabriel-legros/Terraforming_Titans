@@ -290,6 +290,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Hydrology, phase transitions, and zonal resource synchronization were refactored for stability and consistency.
 
 ### Space, Projects, and Hazards
+- Nuclear Alchemy assignment projects now store assignment counts and assignment step as BigInt-backed values (with number/string save serialization) across Nuclear Alchemy Furnace and inheritors (Space Chemistry, Superalloy Gigafoundry, Artificial Stars, Planet Crackers); arithmetic paths that mix with rates must convert assignment counts to Number at the formula boundary.
 - Space Storage per-resource cap settings now include `Transfer Weight` (default `1`, accepts `0+`) that controls ship transfer capacity allocation proportionally across selected resources; the value has a tooltip, persists through save/load/travel, and is included in Space Storage automation presets including single-resource presets.
 - Space Storage hydrogen transfers can target either atmospheric hydrogen or colony hydrogen for both storing and withdrawing.
 - Space Storage advanced settings for Water, CO2, Nitrogen, and Hydrogen include `Respect Import Project limits`; when enabled, withdrawals into the planet are capped by the matching import project's pressure/coverage/fill limits and the setting is available in Space Storage automation presets.

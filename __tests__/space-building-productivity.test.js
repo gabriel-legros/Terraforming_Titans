@@ -1171,7 +1171,7 @@ describe('Space building productivity via produceResources', () => {
     produceResources(1000, buildings);
 
     const consumedMetal = initialMetal + metalProductionPerSecond - resources.spaceStorage.metal.value;
-    const fullDemandPerSecond = gigafoundry.furnaceAssignments.superalloys
+    const fullDemandPerSecond = Number(gigafoundry.furnaceAssignments.superalloys || 0n)
       * gigafoundry.getAlchemyParameter()
       * gigafoundry.getRecipe().inputs.spaceStorage.metal;
     const expectedProductivity = 1;

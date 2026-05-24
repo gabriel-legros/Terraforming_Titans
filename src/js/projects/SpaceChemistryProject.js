@@ -398,7 +398,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     const productivityByRecipe = {};
     this.normalizeAssignments();
     this.getAssignmentKeys().forEach((key) => {
-      const assigned = this.furnaceAssignments[key] || 0;
+      const assigned = Number(this.furnaceAssignments[key] || 0n);
       if (!(assigned > 0)) {
         productivityByRecipe[key] = 0;
         return;
@@ -431,7 +431,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     const parameter = this.getAlchemyParameter();
 
     this.getAssignmentKeys().forEach((key) => {
-      const assigned = this.furnaceAssignments[key] || 0;
+      const assigned = Number(this.furnaceAssignments[key] || 0n);
       const recipe = this.getRecipe(key);
       const complexity = recipe.complexity || 1;
       if (!(assigned > 0) || !(complexity > 0)) {
@@ -490,7 +490,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
   getOperationShortfallStatus(productivity = 1) {
     let hasAnyInput = false;
     for (const key of this.getAssignmentKeys()) {
-      const assigned = this.furnaceAssignments[key] || 0;
+      const assigned = Number(this.furnaceAssignments[key] || 0n);
       if (!(assigned > 0)) {
         continue;
       }
@@ -520,7 +520,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     }
     if (!Number.isFinite(productivity)) {
       for (const key of this.getAssignmentKeys()) {
-        const assigned = this.furnaceAssignments[key] || 0;
+        const assigned = Number(this.furnaceAssignments[key] || 0n);
         if (assigned > 0 && this.getRecipeOperationProductivity(key, productivity) < 1) {
           return this.getText('status.insufficientSpaceInput', null, 'Insufficient space input');
         }

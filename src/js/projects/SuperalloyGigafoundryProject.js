@@ -166,7 +166,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
       }
     };
 
-    const assigned = this.furnaceAssignments.superalloys || 0;
+    const assigned = Number(this.furnaceAssignments.superalloys || 0n);
     if (!(assigned > 0)) {
       return plan;
     }
@@ -349,7 +349,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     }
 
     this.normalizeAssignments();
-    const assigned = this.furnaceAssignments.superalloys || 0;
+    const assigned = Number(this.furnaceAssignments.superalloys || 0n);
     if (!(assigned > 0)) {
       return totals;
     }
