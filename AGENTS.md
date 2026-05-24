@@ -220,6 +220,11 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Nanotechnology Stage IV is a `30B` advanced research after Stage III; it adds graphite allocation, additive standard-material maintenance reduction, and graphene-as-metal production, with a no-deposits warning when graphite fabrication is capped by graphite input.
 - Nanocolony growth, production, consumption, and maintenance effects fully shut down when global average temperature exceeds `700°C` (`973.15 K`), and the colony card shows a red warning using the current temperature unit.
 
+### Silica Phase-Out
+- `Silica phase-out Initiative` is a `200T` advanced research that sets `silicaPhaseOutRecipe` boolean flags on Glass Smelters, Electronics Factories, and Manufacturing Worlds.
+- The flags unlock graphite-based half-throughput recipes for Glass Smelters and Electronics Factories, plus graphite glass/electronics Manufacturing World recipes, and the research enables graphite Space Storage.
+- Manufacturing World graphite glass/electronics recipes use twice the complexity of the matching silica recipes and share the existing glass/electronics MP shop bonuses.
+
 ### Warp Gate Command
 - Team/operation progression persists across planets.
 - Operation logs are not saved (save-size control).

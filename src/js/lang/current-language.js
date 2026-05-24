@@ -3892,6 +3892,10 @@ setLanguageData({
       glassSmelter: {
         name: 'Glass Smelter',
         description: 'Uses high heat to turn silicon into glass.',
+        recipes: {
+          silica: { shortName: 'Silica' },
+          graphite: { shortName: 'Graphite' },
+        },
       },
       hydroponicFarm: {
         name: 'Hydroponic Farm',
@@ -3904,6 +3908,10 @@ setLanguageData({
       electronicsFactory: {
         name: 'Electronics Factory',
         description: 'Turns metals and silicon into electronics.  Requires workers.',
+        recipes: {
+          silica: { shortName: 'Silica' },
+          graphite: { shortName: 'Graphite' },
+        },
       },
       grapheneFactory: {
         name: 'Graphene Factory',
@@ -5033,6 +5041,10 @@ setLanguageData({
           name: 'Nuclear Alchemy',
           description: 'Alchemy has always been possible... with the right knowledge and extreme infrastructure.',
         },
+        silica_phase_out_initiative: {
+          name: 'Silica phase-out Initiative',
+          description: "Silica has always been one of the most abundant resource we've ever had access to.  Unfortunately, times have changed and we need to look at alternate solutions.  We can use carbon to make glass (diamonds) and circuits.  Unlocks new recipes for glass smelters, electronics factories and manufacturing worlds.",
+        },
         artificial_ecosystems: {
           name: 'Artificial Ecosystems',
           description: 'Turns space storage into a living orbital greenhouse. Unlocks a persisted Space Storage operations toggle that grows stored biomass toward its configured cap by consuming stored carbon dioxide and water.',
@@ -5577,9 +5589,11 @@ setLanguageData({
         },
         recipes: {
           glass: { label: 'Glass' },
+          graphiteGlass: { label: 'Graphite Glass' },
           graphene: { label: 'Graphene' },
           components: { label: 'Components' },
           electronics: { label: 'Electronics' },
+          graphiteElectronics: { label: 'Graphite Electronics' },
           superconductors: { label: 'Superconductor' },
           superalloys: { label: 'Superalloy' },
         },

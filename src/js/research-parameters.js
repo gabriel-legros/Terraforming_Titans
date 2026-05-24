@@ -2552,6 +2552,43 @@ const researchParameters = {
         ]
       },
       {
+        id: 'silica_phase_out_initiative',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 200_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'glassSmelter',
+            type: 'booleanFlag',
+            flagId: 'silicaPhaseOutRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'electronicsFactory',
+            type: 'booleanFlag',
+            flagId: 'silicaPhaseOutRecipe',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'manufacturingWorld',
+            type: 'booleanFlag',
+            flagId: 'silicaPhaseOutRecipe',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'graphiteStorage',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'artificial_ecosystems',
         name: '',
         description: '',

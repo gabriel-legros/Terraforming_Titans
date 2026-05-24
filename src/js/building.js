@@ -1711,6 +1711,8 @@ function registerBuildingConstructor(name, ctor) {
 const constructors = {
   oreMine: 'OreMine',
   sandQuarry: 'SandQuarry',
+  glassSmelter: 'MultiRecipesBuilding',
+  electronicsFactory: 'MultiRecipesBuilding',
   sandSeeder: 'SandSeeder',
   vanadiumHazeSeeder: 'VanadiumHazeSeeder',
   androidFactory: 'AndroidFactory',

@@ -17,9 +17,11 @@
 
   const MANUFACTURING_RECIPE_KEYS = [
     'glass',
+    'graphiteGlass',
     'graphene',
     'components',
     'electronics',
+    'graphiteElectronics',
     'superconductors',
     'superalloys',
   ];
@@ -87,6 +89,16 @@
       shopId: 'glassEfficiency',
       wgcUpgradeId: null,
     },
+    graphiteGlass: {
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.graphiteGlass.label'),
+      outputStorageKey: 'glass',
+      complexity: 5,
+      baseOutput: 0.5,
+      inputs: { graphite: 0.5 },
+      shopId: 'glassEfficiency',
+      wgcUpgradeId: null,
+      requiresProjectFlag: 'silicaPhaseOutRecipe',
+    },
     graphene: {
       label: getManufacturingText('catalogs.specializations.manufacturing.recipes.graphene.label'),
       outputStorageKey: 'metal',
@@ -113,6 +125,16 @@
       inputs: { metal: 1, silicon: 4 },
       shopId: 'electronicsEfficiency',
       wgcUpgradeId: 'electronicsEfficiency',
+    },
+    graphiteElectronics: {
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.graphiteElectronics.label'),
+      outputStorageKey: 'electronics',
+      complexity: 100,
+      baseOutput: 0.5,
+      inputs: { metal: 0.5, graphite: 2 },
+      shopId: 'electronicsEfficiency',
+      wgcUpgradeId: 'electronicsEfficiency',
+      requiresProjectFlag: 'silicaPhaseOutRecipe',
     },
     superconductors: {
       label: getManufacturingText('catalogs.specializations.manufacturing.recipes.superconductors.label'),
@@ -283,7 +305,10 @@
     }
 
     getAssignmentKeys() {
-      return MANUFACTURING_RECIPE_KEYS.slice();
+      return MANUFACTURING_RECIPE_KEYS.filter((key) => {
+        const recipe = MANUFACTURING_RECIPES[key];
+        return !recipe.requiresProjectFlag || this.isBooleanFlagSet(recipe.requiresProjectFlag);
+      });
     }
 
     getUnassignedAssignmentKey() {

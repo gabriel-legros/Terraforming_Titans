@@ -111,6 +111,20 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     aerostatReduction: 1,
     automationBuildingsDropDown: ['sandQuarry'],
+    defaultRecipe: 'silica',
+    recipes: {
+      silica: {
+        shortName: '',
+        consumption: { colony: { energy: 100000, silicon: 1 } },
+        production: { colony: { glass: 1 } }
+      },
+      graphite: {
+        shortName: '',
+        requiresBuildingFlag: 'silicaPhaseOutRecipe',
+        consumption: { colony: { energy: 50000 }, surface: { graphite: 0.5 } },
+        production: { colony: { glass: 0.5 } }
+      }
+    },
     unlocked: false
   },
   hydroponicFarm: {
@@ -156,6 +170,20 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 100,
     maintenanceFactor: 1,
+    defaultRecipe: 'silica',
+    recipes: {
+      silica: {
+        shortName: '',
+        consumption: { colony: { energy: 50_000_000, metal: 1, silicon: 4 } },
+        production: { colony: { electronics: 1 } }
+      },
+      graphite: {
+        shortName: '',
+        requiresBuildingFlag: 'silicaPhaseOutRecipe',
+        consumption: { colony: { energy: 25_000_000, metal: 0.5 }, surface: { graphite: 2 } },
+        production: { colony: { electronics: 0.5 } }
+      }
+    },
     unlocked: false
   },
   grapheneFactory: {

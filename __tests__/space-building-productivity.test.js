@@ -760,7 +760,7 @@ function setupHarness(initialStorage = {}) {
     distributeGlobalChangesToZones: () => {},
   }, originalGlobals);
   setGlobal('lifeManager', null, originalGlobals);
-  setGlobal('researchManager', null, originalGlobals);
+  setGlobal('researchManager', { isBooleanFlagSet: () => false }, originalGlobals);
   setGlobal('globalEffects', {}, originalGlobals);
   setGlobal('updateArtificialEcosystems', () => {}, originalGlobals);
   setGlobal('updateAntimatterStorageCap', () => {}, originalGlobals);
