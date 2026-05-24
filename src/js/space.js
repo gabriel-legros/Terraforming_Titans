@@ -2695,6 +2695,9 @@ class SpaceManager extends EffectableEntity {
         const revisitingRandomSeed = !isArtificial && !!existing?.visited;
         const specialSeedKey = getSpecialSeedKeyFromWorldData(res) || getSpecialSeedKeyFromWorldData(existing);
         const persistedDominionId = getDominionIdFromWorldData(res) || getDominionIdFromWorldData(existing);
+        const requestedSpecialAttributes = res?.override?.specialAttributes || res?.merged?.specialAttributes || {};
+        const deferHazardousBiomassTravelTuning = requestedSpecialAttributes.deferHazardousBiomassTravelTuning === true;
+        const deferHazardousMachineryTravelTuning = requestedSpecialAttributes.deferHazardousMachineryTravelTuning === true;
         let travelResult = res;
         if (revisitingRandomSeed) {
             try {
@@ -2704,6 +2707,19 @@ class SpaceManager extends EffectableEntity {
                 if (!regenerated || !regenerated.merged) {
                     console.warn(`SpaceManager: Failed to regenerate seed ${s} for replay.`);
                     return false;
+                }
+                if (deferHazardousBiomassTravelTuning || deferHazardousMachineryTravelTuning) {
+                    const override = regenerated.override || (regenerated.override = {});
+                    const special = override.specialAttributes || (override.specialAttributes = {});
+                    const mergedSpecial = regenerated.merged.specialAttributes || (regenerated.merged.specialAttributes = {});
+                    if (deferHazardousBiomassTravelTuning) {
+                        special.deferHazardousBiomassTravelTuning = true;
+                        mergedSpecial.deferHazardousBiomassTravelTuning = true;
+                    }
+                    if (deferHazardousMachineryTravelTuning) {
+                        special.deferHazardousMachineryTravelTuning = true;
+                        mergedSpecial.deferHazardousMachineryTravelTuning = true;
+                    }
                 }
                 travelResult = regenerated;
             } catch (error) {
