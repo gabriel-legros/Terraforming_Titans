@@ -852,6 +852,9 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!resource) {
       return 0;
     }
+    if (!resource.hasCap) {
+      return Infinity;
+    }
     if (!Number.isFinite(resource.cap)) {
       return Infinity;
     }
