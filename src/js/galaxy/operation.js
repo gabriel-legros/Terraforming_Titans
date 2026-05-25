@@ -1167,6 +1167,15 @@ class GalaxyOperationManager {
             if (!sector) {
                 return;
             }
+            const hasStronghold = this.hasNeighboringStronghold
+                ? this.hasNeighboringStronghold(sector, this.uhfFactionId)
+                : false;
+            const hasPresence = this.hasFactionPresence
+                ? this.hasFactionPresence(sector, this.uhfFactionId)
+                : false;
+            if (!hasStronghold && !hasPresence) {
+                return;
+            }
             const targetFactionId = candidate.targetFactionId;
             const normalizedPower = candidate.requiredPower;
             if (!(normalizedPower > 0) || normalizedPower > availablePower) {
@@ -1269,6 +1278,15 @@ class GalaxyOperationManager {
             const sectorKey = String(rawKey);
             const sector = this.manager?.sectors?.get?.(sectorKey);
             if (!sector || this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
+                return;
+            }
+            const hasStronghold = this.hasNeighboringStronghold
+                ? this.hasNeighboringStronghold(sector, this.uhfFactionId)
+                : false;
+            const hasPresence = this.hasFactionPresence
+                ? this.hasFactionPresence(sector, this.uhfFactionId)
+                : false;
+            if (!hasStronghold && !hasPresence) {
                 return;
             }
             const targetFactionId = this.#resolveOperationTarget(sector, this.uhfFactionId);
