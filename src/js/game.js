@@ -686,6 +686,9 @@ function initializeGameState(options = {}) {
   }
 
   applyPlanetParameterEffects();
+  if (typeof applyRWGEffects === 'function') {
+    applyRWGEffects();
+  }
   hazardManager.ensureCrusaderPresence(terraforming);
   updateColonySubtabsVisibility();
   if (preserveManagers && typeof updateRender === 'function') {
