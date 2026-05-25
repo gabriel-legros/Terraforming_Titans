@@ -563,6 +563,20 @@
   };
 
   PlanetVisualizer.prototype.updateSurfaceTextureFromPressure = function updateSurfaceTextureFromPressure(force = false) {
+    if (this.isSmbhShellWorld()) {
+      const tex = this.generateBirchWorldTexture();
+      const surface = this.surfaceMesh || this.sphere;
+      if (surface && surface.material && surface.material.map !== tex) {
+        const previousMap = surface.material.map;
+        surface.material.map = tex;
+        surface.material.color.setRGB(1, 1, 1);
+        surface.material.needsUpdate = true;
+        if (previousMap && previousMap !== tex && previousMap.dispose) {
+          previousMap.dispose();
+        }
+      }
+      return;
+    }
     if (this.debug.mode === 'game') {
       const gameBase = this.getGameBaseColor();
       if (gameBase !== this.viz.baseColor) {
@@ -613,6 +627,115 @@
   PlanetVisualizer.prototype.resetSurfaceTextureThrottle = function resetSurfaceTextureThrottle() {
     this._lastSurfaceTextureUpdate = 0;
     this.lastCraterFactorKey = null;
+  };
+
+  PlanetVisualizer.prototype.generateBirchWorldTexture = function generateBirchWorldTexture() {
+    if (this._birchWorldTexture) return this._birchWorldTexture;
+
+    const w = 1536;
+    const h = 768;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(w, h);
+    const data = img.data;
+    const seed = this.hashSeedFromPlanet();
+    const seedValue = Math.floor((seed.x * 104729) ^ (seed.y * 130363)) >>> 0;
+    const hash = (x, y) => {
+      const n = Math.sin(x * 127.1 + y * 311.7 + seedValue * 0.00017) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const smoothstepLocal = (a, b, v) => {
+      const t = clamp01((v - a) / Math.max(0.000001, b - a));
+      return t * t * (3 - 2 * t);
+    };
+    const valueNoise = (x, y) => {
+      const xi = Math.floor(x);
+      const yi = Math.floor(y);
+      const xf = x - xi;
+      const yf = y - yi;
+      const sx = xf * xf * (3 - 2 * xf);
+      const sy = yf * yf * (3 - 2 * yf);
+      const a = hash(xi, yi);
+      const b = hash(xi + 1, yi);
+      const c = hash(xi, yi + 1);
+      const d = hash(xi + 1, yi + 1);
+      return (a * (1 - sx) + b * sx) * (1 - sy) + (c * (1 - sx) + d * sx) * sy;
+    };
+
+    for (let i = 0; i < w * h; i++) {
+      const x = i % w;
+      const y = (i - x) / w;
+      const u = x / Math.max(1, w - 1);
+      const v = y / Math.max(1, h - 1);
+      const lat = Math.abs(v - 0.5) * 2;
+      const panelU = Math.floor(u * 36);
+      const panelV = Math.floor(v * 18);
+      const panelSeed = hash(panelU, panelV);
+      const panelShade = 0.82 + panelSeed * 0.28;
+      const fine = valueNoise(u * 180, v * 90) - 0.5;
+      const broad = valueNoise(u * 18, v * 9) - 0.5;
+      const seamX = Math.min(u * 36 - panelU, 1 - (u * 36 - panelU));
+      const seamY = Math.min(v * 18 - panelV, 1 - (v * 18 - panelV));
+      const seam = 1 - smoothstepLocal(0, 0.035, Math.min(seamX, seamY));
+      const latShade = 0.9 + (1 - lat) * 0.16;
+      const polished = panelShade * latShade + fine * 0.08 + broad * 0.1 - seam * 0.14;
+
+      const idx = i * 4;
+      data[idx] = Math.max(0, Math.min(255, Math.round(96 * polished + 18)));
+      data[idx + 1] = Math.max(0, Math.min(255, Math.round(112 * polished + 22)));
+      data[idx + 2] = Math.max(0, Math.min(255, Math.round(132 * polished + 34)));
+      data[idx + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const drawDistrict = (cx, cy, radius, blocks, alphaBase) => {
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.9);
+      glow.addColorStop(0, 'rgba(78, 206, 255, 0.24)');
+      glow.addColorStop(0.42, 'rgba(24, 133, 255, 0.12)');
+      glow.addColorStop(1, 'rgba(8, 89, 255, 0)');
+      ctx.globalAlpha = alphaBase;
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 1.9, 0, Math.PI * 2);
+      ctx.fill();
+
+      for (let i = 0; i < blocks; i++) {
+        const angle = hash(cx * 0.017 + i, cy * 0.019) * Math.PI * 2;
+        const dist = Math.sqrt(hash(i * 7.7 + cx, cy * 0.013)) * radius;
+        const bw = 3 + hash(i * 2.3, cx * 0.01) * 10;
+        const bh = 2 + hash(i * 4.1, cy * 0.01) * 8;
+        const x = cx + Math.cos(angle) * dist;
+        const y = cy + Math.sin(angle) * dist;
+        ctx.globalAlpha = alphaBase * (0.12 + hash(i * 8.3, cy) * 0.28);
+        ctx.fillStyle = '#7fe9ff';
+        ctx.fillRect(x - bw * 0.5, y - bh * 0.5, bw, bh);
+      }
+    };
+    for (let i = 0; i < 896; i++) {
+      const cx = hash(i * 11.7, 3.2) * w;
+      const cy = (0.08 + hash(i * 4.4, 6.8) * 0.84) * h;
+      const radius = 5 + hash(i * 2.7, 9.5) * 18;
+      drawDistrict(cx, cy, radius, 6 + Math.floor(hash(i * 5.1, 2.6) * 18), 0.52);
+    }
+    ctx.restore();
+
+    ctx.drawImage(canvas, 0, 0, 1, h, w - 1, 0, 1, h);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    if (THREE && THREE.SRGBColorSpace) {
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+    this._birchWorldTexture = texture;
+    return texture;
   };
 
   PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength, surfaceBaseHex) {

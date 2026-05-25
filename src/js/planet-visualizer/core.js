@@ -28,6 +28,7 @@
       this.ringShadeMaterial = null;
       this.ringShadeOffset = 0;
       this.ringShadeDriftSpeed = 0.006;
+      this.birchWorldLightsGroup = null;
 
       // Lighting and atmosphere
       this.sunLight = null;
@@ -152,6 +153,11 @@
     isDiskWorld() {
       return currentPlanetParameters?.classification?.type === 'disk'
         || currentPlanetParameters?.specialAttributes?.zoneLayout === 'aldersonDisk';
+    }
+
+    isSmbhShellWorld() {
+      const classification = currentPlanetParameters?.classification || {};
+      return classification.type === 'shell' && classification.core === 'smbh';
     }
 
     isFlatWorld() {
@@ -425,12 +431,18 @@
     createSurfaceMesh() {
       const isRing = this.isRingWorld();
       const isDisk = this.isDiskWorld();
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: this.isFlatWorld() ? 0.85 : 0.9,
-        metalness: 0.0,
-        side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
-      });
+      const isBirchWorld = this.isSmbhShellWorld();
+      const material = isBirchWorld
+        ? new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          side: THREE.FrontSide,
+        })
+        : new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: this.isFlatWorld() ? 0.85 : 0.9,
+          metalness: 0.0,
+          side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
+        });
       if (isRing) {
         const ringRadius = 1;
         const ringHeight = 0.23625;
@@ -460,7 +472,7 @@
         this.diskOuterRadius = diskOuterRadius;
         this.diskInnerRadius = diskInnerRadius;
       } else {
-        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        const geometry = new THREE.SphereGeometry(1, isBirchWorld ? 96 : 32, isBirchWorld ? 64 : 32);
         this.sphere = new THREE.Mesh(geometry, material);
         this.sphere.userData.baseRoughness = material.roughness;
         this.sphere.userData.baseMetalness = material.metalness;
@@ -473,6 +485,16 @@
         this.diskOuterRadius = 0;
         this.diskInnerRadius = 0;
       }
+    }
+
+    createBirchWorldLights() {
+      if (!this.sphere || this.birchWorldLightsGroup) return;
+      const group = new THREE.Group();
+      this.sphere.add(group);
+      this.birchWorldLightsGroup = group;
+    }
+
+    updateBirchWorldLights() {
     }
 
     init() {
@@ -497,6 +519,7 @@
       this.createStarField();
       const isRing = this.isRingWorld();
       const isDisk = this.isDiskWorld();
+      const isBirchWorld = this.isSmbhShellWorld();
       if (isRing) {
         this.cameraDistance = 0;
         this.cameraHeight = 0;
@@ -518,6 +541,7 @@
 
       const initialIllum = this.getGameIllumination();
       this.viz.illum = initialIllum;
+      const visualIllum = isBirchWorld ? 1.35 : initialIllum;
       const baseColorFromGame = this.getGameBaseColor();
       if (baseColorFromGame) {
         this.setBaseColor(baseColorFromGame, { fromGame: true, force: true, skipSurfaceUpdate: true });
@@ -536,15 +560,15 @@
         f.contrast = 2.0;  // higher contrast for visibility
       }
       if (isRing || isDisk) {
-        this.sunLight = new THREE.PointLight(0xffffff, initialIllum, 0, 2);
+        this.sunLight = new THREE.PointLight(0xffffff, visualIllum, 0, 2);
         this.sunLight.position.set(0, 0, 0);
       } else {
-        this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
+        this.sunLight = new THREE.DirectionalLight(0xffffff, visualIllum);
         this.sunLight.position.set(5, 3, 2);
       }
       this.scene.add(this.sunLight);
       // Keep nightside visible with subtle ambient fill
-      this.ambientLight = new THREE.AmbientLight(0xffffff, isDisk ? 0.8 : 0.06);
+      this.ambientLight = new THREE.AmbientLight(0xffffff, isBirchWorld ? 0.34 : (isDisk ? 0.8 : 0.06));
       this.scene.add(this.ambientLight);
 
       const sunGeom = new THREE.SphereGeometry(0.15, 16, 16);
@@ -555,6 +579,8 @@
         this.sunMesh.scale.setScalar(0.2);
         this.sunMesh.renderOrder = 20;
         this.sunMesh.material.depthTest = false;
+      } else if (isBirchWorld) {
+        this.sunMesh.visible = false;
       } else {
         this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
       }
@@ -562,13 +588,19 @@
       this.updateSunFromInclination();
 
       this.createSurfaceMesh();
-      this.createLavaOverlayMesh();
-      this.createGasOverlayMesh();
-      if (!this.isFlatWorld()) {
+      if (isBirchWorld) {
+        this.createBirchWorldLights();
+      } else {
+        this.createLavaOverlayMesh();
+        this.createGasOverlayMesh();
+      }
+      if (!this.isFlatWorld() && !isBirchWorld) {
         this.createCityLights();
         this.createAtmosphere();
       }
-      this.createCloudSphere();
+      if (!isBirchWorld) {
+        this.createCloudSphere();
+      }
       if (isRing) {
         this.createRingShadePanels();
       }
@@ -580,10 +612,14 @@
 
       this.updateOverlayText();
       this.updateSurfaceTextureFromPressure(true);
-      this.updateLavaOverlay();
-      this.updateGasOverlay();
-      this.updateCityLights();
-      this.updateCloudUniforms();
+      if (isBirchWorld) {
+        this.updateBirchWorldLights();
+      } else {
+        this.updateLavaOverlay();
+        this.updateGasOverlay();
+        this.updateCityLights();
+        this.updateCloudUniforms();
+      }
       this.animate();
     }
 
@@ -611,6 +647,7 @@
       this.planetAngle = angle;
       const isRing = this.isRingWorld();
       const isDisk = this.isDiskWorld();
+      const isBirchWorld = this.isSmbhShellWorld();
       if (this.surfaceMesh) {
         this.surfaceMesh.rotation.y = isDisk ? 0 : angle;
       }
@@ -643,14 +680,18 @@
       if (this.debug && this.debug.mode === 'game') {
         this.updateZonalCoverageFromGameSafe();
       }
-      this.updateDustTint();
-      this.updateSurfaceHeatMaterial();
-      this.updateLavaOverlay();
-      this.updateGasOverlay();
-      this.updateSurfaceTextureFromPressure();
-      this.updateCityLights();
-      this.updateAtmosphereUniforms();
-      this.updateCloudUniforms();
+      if (isBirchWorld) {
+        this.updateBirchWorldLights();
+      } else {
+        this.updateDustTint();
+        this.updateSurfaceHeatMaterial();
+        this.updateLavaOverlay();
+        this.updateGasOverlay();
+        this.updateSurfaceTextureFromPressure();
+        this.updateCityLights();
+        this.updateAtmosphereUniforms();
+        this.updateCloudUniforms();
+      }
       this.updateShips();
 
       if (this.debug && this.debug.mode === 'game' && this.debug.rows && this.debug.container) {
