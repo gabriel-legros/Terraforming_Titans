@@ -1169,6 +1169,10 @@ class LifeManager extends EffectableEntity {
   }
 
   buildAtmosphericPlan(deltaTime, accumulatedChanges = null) {
+    if (accumulatedChanges) {
+      accumulatedChanges.atmospheric ||= {};
+      accumulatedChanges.colony ||= {};
+    }
     const design = lifeDesigner.currentDesign;
     const baseGrowthRate = Number(design.getBaseGrowthRate());
     const requirements = getActiveLifeDesignRequirements();
