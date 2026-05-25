@@ -1568,7 +1568,8 @@ class SpaceshipProject extends Project {
     const gainFraction = context.fraction * context.successChance * ratio;
     const failedGainFraction = context.fraction * context.failureChance * ratio;
     const resourceGain = {};
-    this.addScaledResourceMap(resourceGain, gainBase, gainFraction * productivity);
+    // Keep reported continuous gain rates aligned with applied gains, which use worker-adjusted productivity.
+    this.addScaledResourceMap(resourceGain, gainBase, gainFraction * context.productivity);
 
     let fundingGain = 0;
     if (appliedDisposal > 0 && this.attributes.fundingGainAmount > 0) {
