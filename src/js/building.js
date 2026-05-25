@@ -31,6 +31,20 @@ function buildingCountToNumber(value) {
   return Number(normalizeBuildingCount(value));
 }
 
+function bigIntToConservativeNumber(value) {
+  if (value <= 0n) {
+    return 0;
+  }
+  if (value <= BigInt(Number.MAX_SAFE_INTEGER)) {
+    return Number(value);
+  }
+  const digits = value.toString();
+  const significantDigits = 15;
+  const head = digits.slice(0, significantDigits);
+  const conservativeText = `${head}${'0'.repeat(Math.max(0, digits.length - significantDigits))}`;
+  return Number(conservativeText);
+}
+
 // Building Class (Core Game Logic)
 class Building extends EffectableEntity {
   constructor(config, buildingName) {
@@ -223,9 +237,34 @@ class Building extends EffectableEntity {
     let maxBuildable = this.maxBuildable(reservePercent, additionalReserves);
 
     if (this.requiresLand && typeof this.landAffordCount === 'function') {
-      const inactiveCount = Math.max(0, this.countNumber - this.activeNumber);
-      const remainingLandBackedBuilds = Math.max(0, this.landAffordCount(reservePercent) - inactiveCount);
-      maxBuildable = Math.min(maxBuildable, remainingLandBackedBuilds);
+      const landResource = resources?.surface?.land;
+      if (
+        landResource &&
+        typeof landResource.getExactLandAvailable === 'function'
+      ) {
+        const cap = landResource.cap || 0;
+        const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
+        const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+        const exactReserve = numberToExactLandAmount(strategicReserve);
+        const exactAvailable = landResource.getExactLandAvailable() - exactReserve;
+        const exactPerBuilding = numberToExactLandAmount(this.requiresLand);
+        const inactiveCount = this.count > this.active ? this.count - this.active : 0n;
+        const affordableByLand = exactAvailable > 0n && exactPerBuilding > 0n
+          ? exactAvailable / exactPerBuilding
+          : 0n;
+        const remainingLandBackedBuilds = affordableByLand > inactiveCount
+          ? affordableByLand - inactiveCount
+          : 0n;
+        const maxBuildableBigInt = normalizeBuildingCount(maxBuildable);
+        const cappedBuildable = remainingLandBackedBuilds < maxBuildableBigInt
+          ? remainingLandBackedBuilds
+          : maxBuildableBigInt;
+        maxBuildable = bigIntToConservativeNumber(cappedBuildable);
+      } else {
+        const inactiveCount = Math.max(0, this.countNumber - this.activeNumber);
+        const remainingLandBackedBuilds = Math.max(0, this.landAffordCount(reservePercent) - inactiveCount);
+        maxBuildable = Math.min(maxBuildable, remainingLandBackedBuilds);
+      }
     }
 
     return Math.max(maxBuildable, 0);
