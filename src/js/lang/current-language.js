@@ -335,7 +335,7 @@ setLanguageData({
       },
       supermassive: {
         title: 'Supermassive Black Hole Shellworld',
-        singleWarning: 'Only one supermassive black hole shellworld can exist.',
+        singleWarning: 'Only one supermassive black hole shellworld can exist.  This world can be expanded with a special project.',
         unnamed: 'Supermassive Shellworld',
         travel: 'Travel',
         current: 'Current',
@@ -4991,6 +4991,10 @@ setLanguageData({
         alderson_disk_concept: {
           name: 'Alderson Disks',
           description: "A proposal so excessive it makes Ringworld engineering look conservative.  Very, very large.",
+        },
+        birch_world: {
+          name: 'Birch World',
+          description: 'HOPE\'s dream.  Enables the supermassive black hole core for shellworlds.',
         },
         biostorage: {
           name: 'Biostorage',

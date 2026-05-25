@@ -2754,6 +2754,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'birch_world',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 1_000_000_000_000_000_000 },
+        prerequisites: ['alderson_disk_concept'],
+        effects: [
+          {
+            target: 'artificialManager',
+            type: 'unlockCore',
+            targetId: 'smbh'
+          }
+        ]
+      },
+      {
         id: 'planet_cracking',
         name: '',
         description: '',
