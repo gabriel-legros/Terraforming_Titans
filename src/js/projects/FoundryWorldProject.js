@@ -139,7 +139,8 @@
             && !bioworld.isActive
             && !bioworld.isCompleted
             && !manufacturing.isActive
-            && !manufacturing.isCompleted,
+            && !manufacturing.isCompleted
+            && !(projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked),
         },
       ];
     }
@@ -170,6 +171,9 @@
         return false;
       }
       if (manufacturing.isActive || manufacturing.isCompleted) {
+        return false;
+      }
+      if (projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked) {
         return false;
       }
       return true;

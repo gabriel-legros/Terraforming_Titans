@@ -143,7 +143,8 @@
             && !foundry.isActive
             && !foundry.isCompleted
             && !manufacturing.isActive
-            && !manufacturing.isCompleted,
+            && !manufacturing.isCompleted
+            && !(projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked),
         },
       ];
     }
@@ -174,6 +175,9 @@
         return false;
       }
       if (manufacturing.isActive || manufacturing.isCompleted) {
+        return false;
+      }
+      if (projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked) {
         return false;
       }
       return colonies.t7_colony.count < 1000;

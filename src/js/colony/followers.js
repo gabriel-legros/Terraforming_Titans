@@ -167,9 +167,12 @@ class FollowersManager extends EffectableEntity {
     const foundry = projectManager.projects.foundryWorld;
     const bioworld = projectManager.projects.bioworld;
     const manufacturing = projectManager.projects.manufacturingWorld;
+    const birchWorld = projectManager.projects.birchWorld;
+    const birchWorldBlocked = birchWorld.isCurrentSmbhShellworld() && birchWorld.unlocked;
     const noOtherSpecialization = !foundry.isActive && !foundry.isCompleted
       && !bioworld.isActive && !bioworld.isCompleted
-      && !manufacturing.isActive && !manufacturing.isCompleted;
+      && !manufacturing.isActive && !manufacturing.isCompleted
+      && !birchWorldBlocked;
     const terraformed = spaceManager.isCurrentWorldTerraformed();
     const ecumenopolisCoverage = this.getHolyWorldEcumenopolisCoverage();
     const occupancyRatio = this.getHolyWorldOccupancyRatio();

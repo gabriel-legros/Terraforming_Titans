@@ -4295,6 +4295,11 @@ setLanguageData({
         nextValue: 'Next Layer Value:',
         nextCost: 'Next Layer Cost:',
         maxLayers: 'Max layers reached',
+        operationalNotes: {
+          title: 'Operational Notes:',
+          specializationLock: 'This world counts as a specialization.  Leaving the world allows retravel to it.',
+          terraformingGreen: 'Can only add a layer when all terraforming requirements are green.',
+        },
       },
       spaceStorage: {
         name: 'Space Storage',

@@ -415,7 +415,8 @@
             && !foundry.isActive
             && !foundry.isCompleted
             && !bioworld.isActive
-            && !bioworld.isCompleted,
+            && !bioworld.isCompleted
+            && !(projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked),
         },
       ];
     }
@@ -443,6 +444,9 @@
         return false;
       }
       if (bioworld.isActive || bioworld.isCompleted) {
+        return false;
+      }
+      if (projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked) {
         return false;
       }
       return true;

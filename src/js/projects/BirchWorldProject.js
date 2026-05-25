@@ -107,6 +107,27 @@ class BirchWorldProject extends Project {
     return t(path, vars, fallback);
   }
 
+  getOperationalNotes() {
+    return [
+      {
+        id: 'specializationLock',
+        label: this.getBirchWorldText(
+          'ui.projects.birchWorld.operationalNotes.specializationLock',
+          'Counts as specialization (blocks other world specializations on this SMBH shellworld)'
+        ),
+        met: true
+      },
+      {
+        id: 'terraformingGreen',
+        label: this.getBirchWorldText(
+          'ui.projects.birchWorld.operationalNotes.terraformingGreen',
+          'Can only add a layer when all 6 terraforming requirement groups are green'
+        ),
+        met: terraforming.getTerraformingStatus()
+      }
+    ];
+  }
+
   applyEffects() {
     if (this.unlocked && this.isCurrentSmbhShellworld()) {
       this.applyCurrentWorldGeometry();
@@ -226,9 +247,30 @@ class BirchWorldProject extends Project {
     grid.appendChild(costBox);
     refs.cost = costValue;
 
+    const notesSection = document.createElement('div');
+    notesSection.className = 'project-requirements';
+    const notesLabel = document.createElement('strong');
+    notesLabel.textContent = this.getBirchWorldText('ui.projects.birchWorld.operationalNotes.title', 'Operational Notes:');
+    const notesList = document.createElement('ul');
+    notesList.className = 'project-requirements-list';
+    const noteItems = {};
+    const notes = this.getOperationalNotes();
+    for (let index = 0; index < notes.length; index += 1) {
+      const note = notes[index];
+      const item = document.createElement('li');
+      item.className = 'project-requirements-item';
+      item.textContent = note.label;
+      item.classList.toggle('is-unmet', !note.met);
+      notesList.appendChild(item);
+      noteItems[note.id] = item;
+    }
+    notesSection.append(notesLabel, notesList);
+
     panel.appendChild(grid);
+    panel.appendChild(notesSection);
     container.appendChild(panel);
     this.ui = refs;
+    this.ui.noteItems = noteItems;
     this.updateUI();
   }
 
@@ -264,6 +306,12 @@ class BirchWorldProject extends Project {
     this.ui.nextLand.textContent = formatNumber(this.getNextLayerLandHa(), false, 2);
     this.ui.nextValue.textContent = formatNumber(this.getNextLayerWorldValue(), false, 2);
     this.ui.cost.textContent = this.formatCost();
+    const notes = this.getOperationalNotes();
+    for (let index = 0; index < notes.length; index += 1) {
+      const note = notes[index];
+      const item = this.ui.noteItems[note.id];
+      item.classList.toggle('is-unmet', !note.met);
+    }
   }
 
   canStart() {
@@ -271,6 +319,9 @@ class BirchWorldProject extends Project {
       return false;
     }
     if (this.layerCount >= BIRCH_WORLD_MAX_LAYERS) {
+      return false;
+    }
+    if (!terraforming.getTerraformingStatus()) {
       return false;
     }
     return super.canStart();
