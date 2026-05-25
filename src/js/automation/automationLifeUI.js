@@ -205,12 +205,16 @@ function updateLifeAutomationUI() {
   lifeDeployNowButton.disabled = !canDeploy;
 
   // Only rebuild purchase container if no input within is focused
-  const purchaseHasFocus = lifePurchaseContainer.contains(document.activeElement) &&
-    document.activeElement.tagName === 'INPUT';
+  const purchaseActiveElement = document.activeElement;
+  const purchaseHasFocus = !globalGameIsLoadingFromSave &&
+    lifePurchaseContainer.contains(purchaseActiveElement) &&
+    purchaseActiveElement.tagName === 'INPUT' &&
+    purchaseActiveElement.type !== 'checkbox';
   if (!purchaseHasFocus) {
     const purchaseSignature = JSON.stringify(lifeShopCategories.map(category => {
       const settings = activePreset.purchaseSettings[category.name];
       return {
+        presetId: activePreset.id,
         category: category.name,
         unlocked: isLifeShopCategoryUnlocked(category),
         enabled: !!settings.enabled,
@@ -473,12 +477,14 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     row.appendChild(maxLabel);
 
     toggle.addEventListener('change', (event) => {
-      automation.setPurchaseEnabled(preset.id, category.name, event.target.checked);
+      const activePreset = automation.getActivePreset();
+      automation.setPurchaseEnabled(activePreset.id, category.name, event.target.checked);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
     thresholdInput.addEventListener('change', (event) => {
-      automation.setPurchaseThreshold(preset.id, category.name, event.target.value);
+      const activePreset = automation.getActivePreset();
+      automation.setPurchaseThreshold(activePreset.id, category.name, event.target.value);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -491,7 +497,8 @@ function renderLifeAutomationPurchases(automation, preset, container) {
         return value > 0 ? formatNumber(value, true, 3) : '';
       },
       onValue: (parsed) => {
-        automation.setPurchaseMaxCost(preset.id, category.name, parsed > 0 ? parsed : null);
+        const activePreset = automation.getActivePreset();
+        automation.setPurchaseMaxCost(activePreset.id, category.name, parsed > 0 ? parsed : null);
         queueAutomationUIRefresh();
       }
     });
