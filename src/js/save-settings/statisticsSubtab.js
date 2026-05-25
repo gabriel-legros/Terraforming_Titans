@@ -13,6 +13,8 @@ function cacheStatisticsElements() {
     totalPlaytime: document.getElementById('total-playtime-display'),
     fastestTerraformRow: document.getElementById('fastest-terraform-row'),
     fastestTerraform: document.getElementById('fastest-terraform-display'),
+    birchWorldTerraformRow: document.getElementById('birch-world-terraform-row'),
+    birchWorldTerraform: document.getElementById('birch-world-terraform-display'),
     fastestTerraformByTypeTitle: document.getElementById('fastest-terraform-by-type-title'),
     fastestTerraformByTypeList: document.getElementById('fastest-terraform-by-type-list'),
     recentTerraformHistoryTitle: document.getElementById('recent-terraform-history-title'),
@@ -115,6 +117,19 @@ function updateStatisticsDisplay() {
       } else {
         const fastestRealTime = formatDurationDetailed(fastestTerraformRealSeconds);
         cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (${fastestRealTime} real time)`;
+      }
+    }
+  }
+  if (cached.birchWorldTerraformRow && cached.birchWorldTerraform) {
+    if (birchWorldTerraformTimeSeconds === null) {
+      cached.birchWorldTerraformRow.style.display = 'none';
+    } else {
+      cached.birchWorldTerraformRow.style.display = '';
+      if (birchWorldTerraformRealTimeSeconds === null) {
+        cached.birchWorldTerraform.textContent = `${formatPlayTime(birchWorldTerraformTimeSeconds)} (real time unavailable)`;
+      } else {
+        const birchRealTime = formatDurationDetailed(birchWorldTerraformRealTimeSeconds);
+        cached.birchWorldTerraform.textContent = `${formatPlayTime(birchWorldTerraformTimeSeconds)} (${birchRealTime} real time)`;
       }
     }
   }

@@ -286,7 +286,9 @@ function getGameState() {
     realPlayTimeSeconds: typeof realPlayTimeSeconds !== 'undefined' ? realPlayTimeSeconds : undefined,
     totalRealPlayTimeSeconds: typeof totalRealPlayTimeSeconds !== 'undefined' ? totalRealPlayTimeSeconds : undefined,
     fastestTerraformDays: typeof fastestTerraformDays !== 'undefined' ? fastestTerraformDays : undefined,
-    fastestTerraformRealSeconds: typeof fastestTerraformRealSeconds !== 'undefined' ? fastestTerraformRealSeconds : undefined
+    fastestTerraformRealSeconds: typeof fastestTerraformRealSeconds !== 'undefined' ? fastestTerraformRealSeconds : undefined,
+    birchWorldTerraformTimeSeconds,
+    birchWorldTerraformRealTimeSeconds
   };
 }
 
@@ -852,6 +854,16 @@ function loadGame(slotOrCustomString, recreate = true) {
         if (Math.abs(fastestTerraformRealSeconds - legacyDerived) < 0.001) {
           fastestTerraformRealSeconds = null;
         }
+      }
+      if (gameState.birchWorldTerraformTimeSeconds !== undefined) {
+        birchWorldTerraformTimeSeconds = gameState.birchWorldTerraformTimeSeconds;
+      } else {
+        birchWorldTerraformTimeSeconds = null;
+      }
+      if (gameState.birchWorldTerraformRealTimeSeconds !== undefined) {
+        birchWorldTerraformRealTimeSeconds = gameState.birchWorldTerraformRealTimeSeconds;
+      } else {
+        birchWorldTerraformRealTimeSeconds = null;
       }
 
       if (typeof openTerraformingWorldTab === 'function') {

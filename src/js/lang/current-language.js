@@ -3797,6 +3797,7 @@ setLanguageData({
       creditsTitle: 'Credits',
       totalPlaytime: 'Total Playtime:',
       fastestTerraform: 'Fastest Terraform:',
+      timeToTerraformedBirchWorld: 'Time to terraformed Birch World:',
       fastestTerraformByTypeTitle: 'Fastest Terraform by World Type',
       fastestTerraformByTypeEntry: '{type}: {game} ({real} real time)',
       recentTerraformHistoryTitle: 'Last {count} Terraformed Worlds',

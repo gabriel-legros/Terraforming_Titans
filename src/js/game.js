@@ -378,6 +378,8 @@ function initializeGameState(options = {}) {
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;
+      birchWorldTerraformTimeSeconds = null;
+      birchWorldTerraformRealTimeSeconds = null;
     }
     const dayNightToggle = typeof document !== 'undefined' ? document.getElementById('day-night-toggle') : null;
     if (dayNightToggle) {
@@ -943,6 +945,8 @@ function startNewGame() {
   currentPlanetParameters = getPlanetParameters('mars');
   totalPlayTimeSeconds = 0;
   totalRealPlayTimeSeconds = 0;
+  birchWorldTerraformTimeSeconds = null;
+  birchWorldTerraformRealTimeSeconds = null;
   initializeGameState();
   if (typeof openTerraformingWorldTab === 'function') {
     openTerraformingWorldTab();

@@ -2942,6 +2942,12 @@ function updateLifeBox() {
   }
 
 function completeTerraformingNow() {
+  const isSmbhShellworld = currentPlanetParameters.classification?.type === 'shell'
+    && currentPlanetParameters.classification?.core === 'smbh';
+  if (isSmbhShellworld && birchWorldTerraformTimeSeconds === null) {
+    birchWorldTerraformTimeSeconds = totalPlayTimeSeconds;
+    birchWorldTerraformRealTimeSeconds = totalRealPlayTimeSeconds;
+  }
   const isRingworld = currentPlanetParameters.classification?.type === 'ring';
   if (isRingworld) {
     const ringProject = projectManager.projects.ringworldTerraforming;

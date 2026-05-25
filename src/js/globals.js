@@ -115,6 +115,8 @@ let realPlayTimeSeconds = 0;
 let totalRealPlayTimeSeconds = 0;
 let fastestTerraformDays = null;
 let fastestTerraformRealSeconds = null;
+let birchWorldTerraformTimeSeconds = null;
+let birchWorldTerraformRealTimeSeconds = null;
 let gameSpeed = 1;
 
 Object.defineProperty(globalThis, 'galaxyManager', {
