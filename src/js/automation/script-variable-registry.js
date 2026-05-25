@@ -493,6 +493,9 @@ class ScriptVariableRegistry {
       { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
       { id: 'netRate', label: 'Net Rate', valueType: 'number' }
     ];
+    if (categoryId === 'atmospheric') {
+      attributes.push({ id: 'pressurePa', label: 'Pressure Pa', valueType: 'number' });
+    }
     if (categoryId === 'special' && resolvedTargetId === 'spaceships') {
       attributes.push({
         id: 'totalAmount',
@@ -1052,6 +1055,9 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'productionRate') return this.toNumber(resource.productionRate);
     if (ref.attribute === 'consumptionRate') return this.toNumber(resource.consumptionRate);
     if (ref.attribute === 'netRate') return this.toNumber(resource.productionRate) - this.toNumber(resource.consumptionRate);
+    if (ref.attribute === 'pressurePa' && ref.category === 'atmospheric') {
+      return this.toNumber(terraforming.atmosphericPressureCache.pressureByKey[resourceId]);
+    }
     if (ref.attribute === 'totalAmount') return this.resolveSpecialResourceTotalAmount(ref.category, resourceId, resource);
     if (ref.attribute === 'coverage') return this.resolveSurfaceResourceCoverage(ref.category, resourceId);
     return 0;
