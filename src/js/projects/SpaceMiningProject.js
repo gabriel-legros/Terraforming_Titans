@@ -1164,7 +1164,8 @@ class SpaceMiningProject extends SpaceshipProject {
   getPressureLimitMass(limitKPa) {
     const gSurface = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
-    const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
+    const surfaceArea = terraforming.celestialParameters.surfaceArea
+      || (4 * Math.PI * Math.pow(radius * 1000, 2));
     const limitPa = limitKPa * 1000;
     return (limitPa * surfaceArea) / (1000 * gSurface);
   }
