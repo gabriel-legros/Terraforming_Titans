@@ -311,6 +311,15 @@ function attachAutomationHandlers() {
 
 function renderAutomationSteps(automation, preset, container, projectsOverride) {
   const projects = projectsOverride || automation.getAutomationTargets();
+  const updateAllStepWeights = (stepData, multiplier) => {
+    for (let index = 0; index < stepData.entries.length; index += 1) {
+      const stepEntry = stepData.entries[index];
+      const nextWeight = Math.max(0, Math.floor((stepEntry.weight || 0) * multiplier));
+      automation.updateEntry(preset.id, stepData.id, stepEntry.projectId, { weight: nextWeight });
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  };
 
   const formatProjectOption = (option, project) => {
     const label = project.displayName || project.name;
@@ -443,6 +452,24 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     const controlWrap = document.createElement('div');
     controlWrap.classList.add('automation-step-controls');
     controlWrap.append(limitRow);
+    const weightScaleControls = document.createElement('div');
+    weightScaleControls.classList.add('automation-entry-scale-controls');
+    const divideWeightsButton = document.createElement('button');
+    divideWeightsButton.type = 'button';
+    divideWeightsButton.textContent = getAutomationCardText('shipWeightScaleDownButton', {}, '/10');
+    divideWeightsButton.title = getAutomationCardText('shipWeightScaleDownTitle', {}, 'Divide all step weights by 10');
+    divideWeightsButton.addEventListener('click', () => {
+      updateAllStepWeights(step, 0.1);
+    });
+    const multiplyWeightsButton = document.createElement('button');
+    multiplyWeightsButton.type = 'button';
+    multiplyWeightsButton.textContent = getAutomationCardText('shipWeightScaleUpButton', {}, 'x10');
+    multiplyWeightsButton.title = getAutomationCardText('shipWeightScaleUpTitle', {}, 'Multiply all step weights by 10');
+    multiplyWeightsButton.addEventListener('click', () => {
+      updateAllStepWeights(step, 10);
+    });
+    weightScaleControls.append(divideWeightsButton, multiplyWeightsButton);
+    controlWrap.appendChild(weightScaleControls);
     const orderWrap = document.createElement('div');
     orderWrap.classList.add('automation-step-order');
     const moveUp = document.createElement('button');

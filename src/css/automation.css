@@ -436,6 +436,8 @@
   align-items: center;
   flex-wrap: wrap;
   justify-content: space-between;
+  position: relative;
+  container: ship-step-header / inline-size;
   padding-bottom: 8px;
   border-bottom: 1px solid #e5eaf3;
 }
@@ -493,6 +495,42 @@
   flex-direction: column;
   gap: 10px;
   margin-top: 8px;
+}
+
+.automation-entry-scale-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(240px, 1.6fr) auto 56px;
+  gap: 6px 8px;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 8px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.automation-entry-scale-controls button {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: start;
+  border: 1px solid #c4cad7;
+  background: #f1f4f9;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+
+.automation-entry-scale-controls button + button {
+  margin-left: 43px;
+}
+
+@container ship-step-header (max-width: 1100px) {
+  .automation-entry-scale-controls {
+    display: none;
+  }
 }
 
 .automation-entry {
@@ -612,6 +650,7 @@
 .automation-order-buttons button:hover,
 .automation-step-header button:hover,
 .automation-entry button:hover,
+.automation-entry-scale-controls button:hover,
 .automation-collapse:hover {
   background: #e2e7f2;
   transform: translateY(-1px);

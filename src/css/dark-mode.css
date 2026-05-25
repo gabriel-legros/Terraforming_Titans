@@ -1176,7 +1176,8 @@ body.dark-mode {
 .dark-mode .automation-preset-buttons button,
 .dark-mode .automation-order-buttons button,
 .dark-mode .automation-step-header button,
-.dark-mode .automation-entry button {
+.dark-mode .automation-entry button,
+.dark-mode .automation-entry-scale-controls button {
     background: #1a2538;
     border-color: #2b3a53;
     color: #e7ecf7;
@@ -1190,7 +1191,8 @@ body.dark-mode {
 .dark-mode .automation-preset-buttons button:hover,
 .dark-mode .automation-order-buttons button:hover,
 .dark-mode .automation-step-header button:hover,
-.dark-mode .automation-entry button:hover {
+.dark-mode .automation-entry button:hover,
+.dark-mode .automation-entry-scale-controls button:hover {
     background: #24324a;
 }
 
