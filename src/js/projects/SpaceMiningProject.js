@@ -529,6 +529,9 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   isAtmosphericImportTargetSelected() {
+    if (this.getTargetAtmosphericResource() === 'hydrogen' && this.gasImportTarget === 'colony') {
+      return true;
+    }
     return !this.getTargetAtmosphericResource()
       || (!this.isGasStorageImportSelected() && !this.isHydrogenColonyImportSelected());
   }
