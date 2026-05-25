@@ -895,7 +895,9 @@ class SpaceStorageProject extends SpaceshipProject {
       const storageDemand = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
       const consumerDemand = this.getProductivityConsumerDemandForTick(target.category, target.resource, deltaTime);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
-      const biomassDensityRemaining = this.getBiomassWithdrawalDensityRemaining(accumulatedChanges);
+      const biomassDensityRemaining = entry.resource === 'biomass'
+        ? this.getBiomassWithdrawalDensityRemaining(accumulatedChanges)
+        : Infinity;
       const requested = Math.min(stored, storageDemand + consumerDemand, importLimitRemaining, biomassDensityRemaining);
       if (!(requested > 0)) {
         return;
@@ -1562,7 +1564,9 @@ class SpaceStorageProject extends SpaceshipProject {
       const target = this.getTransferEndpoint(entry, 'withdraw');
       const destFree = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
-      const biomassDensityRemaining = this.getBiomassWithdrawalDensityRemaining(accumulatedChanges);
+      const biomassDensityRemaining = entry.resource === 'biomass'
+        ? this.getBiomassWithdrawalDensityRemaining(accumulatedChanges)
+        : Infinity;
       const amount = Math.min(weightedCapacity, stored, destFree, importLimitRemaining, biomassDensityRemaining);
       if (!Number.isFinite(amount) || amount <= 0) return;
       transfers.push({ mode: 'withdraw', category: target.category, resource: target.resource, amount, storageKey: entry.resource });
