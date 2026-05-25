@@ -4299,6 +4299,7 @@ setLanguageData({
           title: 'Operational Notes:',
           specializationLock: 'This world counts as a specialization.  Leaving the world allows retravel to it.',
           terraformingGreen: 'Can only add a layer when all terraforming requirements are green.',
+          travelPersistence: 'You can leave this world and come back.  Most values will be saved.',
         },
       },
       spaceStorage: {

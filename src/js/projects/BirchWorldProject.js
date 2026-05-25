@@ -124,6 +124,14 @@ class BirchWorldProject extends Project {
           'Can only add a layer when all 6 terraforming requirement groups are green'
         ),
         met: terraforming.getTerraformingStatus()
+      },
+      {
+        id: 'travelPersistence',
+        label: this.getBirchWorldText(
+          'ui.projects.birchWorld.operationalNotes.travelPersistence',
+          'You can leave this world and come back.  Most values will be saved.'
+        ),
+        met: true
       }
     ];
   }
