@@ -170,6 +170,7 @@ class BirchWorldProject extends Project {
     const radiusKm = radiusEarth * EARTH_RADIUS_KM;
     if (target.celestialParameters) {
       target.celestialParameters.radius = radiusKm;
+      target.celestialParameters.layeredSurfaceArea = true;
       target.celestialParameters.surfaceArea = target.landHa * 10_000;
       target.celestialParameters.crossSectionArea = calculateCrossSectionAreaM2FromRadius(radiusKm);
     }
@@ -183,11 +184,13 @@ class BirchWorldProject extends Project {
     terraforming.initialLand = totalLandHa;
     terraforming.celestialParameters.radius = radiusKm;
     terraforming.celestialParameters.baseLand = totalLandHa;
+    terraforming.celestialParameters.layeredSurfaceArea = true;
     terraforming.celestialParameters.surfaceArea = atmosphericSurfaceArea;
     terraforming.celestialParameters.crossSectionArea = calculateCrossSectionAreaM2FromRadius(radiusKm);
     if (terraforming.initialCelestialParameters) {
       terraforming.initialCelestialParameters.baseLand = totalLandHa;
       terraforming.initialCelestialParameters.radius = radiusKm;
+      terraforming.initialCelestialParameters.layeredSurfaceArea = true;
       terraforming.initialCelestialParameters.surfaceArea = atmosphericSurfaceArea;
       terraforming.initialCelestialParameters.crossSectionArea = terraforming.celestialParameters.crossSectionArea;
     }
