@@ -576,6 +576,9 @@ class ArtificialManager extends EffectableEntity {
         if (!entry) {
             return false;
         }
+        if (entry.disabled !== true && entry.requiresFullGalaxyControl !== true) {
+            return true;
+        }
         if (entry.requiresFullGalaxyControl) {
             return this.storyUnlockedDiskStarCores.has(coreId)
                 && galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
