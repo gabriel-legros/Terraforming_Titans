@@ -810,6 +810,17 @@
     box-sizing: border-box;
     min-width: 0;
 }
+
+.space-storage-pressure-input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.space-storage-pressure-unit {
+    flex: 0 0 auto;
+}
 /* Mode selection buttons for Space Storage */
 .mode-selection {
     display: flex;
