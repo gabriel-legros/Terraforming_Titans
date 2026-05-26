@@ -293,7 +293,7 @@ class BirchWorldProject extends Project {
         const amount = cost[category][resource];
         if (amount > 0) {
           const resourceName = resources[category][resource].displayName;
-          parts.push(`${resourceName}: ${formatNumber(amount, true)}`);
+          parts.push(`${resourceName}: ${formatNumber(amount, true, 2)}`);
         }
       }
     }
@@ -306,7 +306,7 @@ class BirchWorldProject extends Project {
     if (!this.ui) {
       return;
     }
-    this.ui.layerCount.textContent = `${formatNumber(this.layerCount, true)} / ${formatNumber(BIRCH_WORLD_MAX_LAYERS, true)}`;
+    this.ui.layerCount.textContent = `${this.layerCount} / ${BIRCH_WORLD_MAX_LAYERS}`;
     this.ui.totalLand.textContent = formatNumber(this.getCurrentTotalLandHa(), false, 2);
     this.ui.worldValue.textContent = formatNumber(this.getCurrentWorldValue(), false, 2);
     this.ui.shipPenalty.textContent = this.getBirchWorldText(
