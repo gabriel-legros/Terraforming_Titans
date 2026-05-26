@@ -1,6 +1,6 @@
 const SMBH_SHELLWORLD_SNAPSHOT_VERSION = 1;
 const SMBH_SHELLWORLD_ALLOWED_PROJECT_CATEGORIES = new Set(['resources', 'infrastructure']);
-const SMBH_SHELLWORLD_ALLOWED_MEGA_PROJECTS = new Set(['megaHeatSink']);
+const SMBH_SHELLWORLD_ALLOWED_MEGA_PROJECTS = new Set(['megaHeatSink', 'spaceStorage']);
 
 function cloneSmbhShellworldSnapshotData(value) {
   return JSON.parse(JSON.stringify(value));
@@ -31,6 +31,21 @@ function restoreSmbhShellworldResourceValues(snapshot) {
         resource.value = value;
       }
     }
+  }
+}
+
+function captureSmbhShellworldTerraformingValues() {
+  return cloneSmbhShellworldSnapshotData(terraforming.saveState());
+}
+
+function restoreSmbhShellworldTerraformingValues(snapshot) {
+  if (!snapshot) return;
+  if (snapshot.initialValuesCalculated !== undefined) {
+    terraforming.loadState(snapshot);
+  } else if (snapshot.zonalSurface) {
+    terraforming.zonalSurface = createEmptyZonalSurface();
+    applyZonalSurfaceFromLegacy(terraforming.zonalSurface, { zonalSurface: snapshot.zonalSurface });
+    terraforming.synchronizeGlobalResources();
   }
 }
 
@@ -141,11 +156,60 @@ function restoreSmbhShellworldOrbitalAllocation(snapshot) {
   followersManager.reapplyEffects();
 }
 
+function reapplySmbhShellworldEffects() {
+  if (globalEffects && globalEffects.reconcileConditionalEffects) {
+    globalEffects.reconcileConditionalEffects();
+  }
+  for (const name in structures) {
+    const structure = structures[name];
+    if (structure && structure.reconcileConditionalEffects) {
+      structure.reconcileConditionalEffects();
+    }
+  }
+  if (storyManager && storyManager.reapplyEffects) {
+    storyManager.reapplyEffects();
+  }
+  if (skillManager && skillManager.reapplyEffects) {
+    skillManager.reapplyEffects();
+  }
+  if (researchManager && researchManager.reapplyEffects) {
+    researchManager.reapplyEffects();
+  }
+  projectManager.applyEffects();
+  if (automationManager && automationManager.reapplyEffects) {
+    automationManager.reapplyEffects();
+  }
+  if (solisManager && solisManager.reapplyEffects) {
+    solisManager.reapplyEffects();
+  }
+  if (warpGateCommand && warpGateCommand.reapplyEffects) {
+    warpGateCommand.reapplyEffects();
+  }
+  if (patienceManager && patienceManager.reapplyEffects) {
+    patienceManager.reapplyEffects();
+  }
+  if (followersManager && followersManager.reapplyEffects) {
+    followersManager.reapplyEffects();
+  }
+  if (atlasManager && atlasManager.reapplyEffects) {
+    atlasManager.reapplyEffects();
+  }
+  if (galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
+    galaxyInvasionManager.reapplyEffects();
+  }
+  if (nanotechManager && nanotechManager.reapplyEffects) {
+    nanotechManager.reapplyEffects();
+  }
+  applyPlanetParameterEffects();
+  applyRWGEffects();
+}
+
 function captureSmbhShellworldSnapshot() {
   return {
     version: SMBH_SHELLWORLD_SNAPSHOT_VERSION,
     capturedAt: Date.now(),
     resources: captureSmbhShellworldResourceValues(),
+    terraforming: captureSmbhShellworldTerraformingValues(),
     buildings: captureSmbhShellworldStructures(buildings),
     colonies: captureSmbhShellworldStructures(colonies),
     colonySliderSettings: colonySliderSettings.saveState(),
@@ -165,6 +229,7 @@ function restoreSmbhShellworldSnapshot(snapshot) {
   initializeResearchAlerts();
 
   restoreSmbhShellworldResourceValues(snapshot.resources);
+  restoreSmbhShellworldTerraformingValues(snapshot.terraforming);
   restoreSmbhShellworldStructures(buildings, snapshot.buildings);
   restoreSmbhShellworldStructures(colonies, snapshot.colonies);
   structures = { ...buildings, ...colonies };
@@ -173,8 +238,9 @@ function restoreSmbhShellworldSnapshot(snapshot) {
   restoreSmbhShellworldOrbitalAllocation(snapshot.orbitalAllocation);
   restoreSmbhShellworldProjects(snapshot.projects);
 
-  projectManager.applyEffects();
+  reapplySmbhShellworldEffects();
   terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+  terraforming.synchronizeGlobalResources();
   reconcileLandResourceValue();
   hazardManager.syncHazardLandReservation(terraforming);
   recalculateLandUsage();
