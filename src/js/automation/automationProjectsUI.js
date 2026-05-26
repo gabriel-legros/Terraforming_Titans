@@ -32,6 +32,22 @@ const PROJECT_AUTOMATION_UI_SPACE_STORAGE_IMPORT_LIMIT_RESOURCES = new Set([
   'inertGas',
   'hydrogen'
 ]);
+const SPACE_MINING_WATER_ONLY_FIELDS = new Set([
+  'waterImportTarget',
+  'disableAboveWaterCoverage',
+  'waterCoverageThreshold',
+  'waterCoverageDisableMode'
+]);
+const SPACE_MINING_GAS_ONLY_FIELDS = new Set([
+  'gasImportTarget',
+  'disableAbovePressure',
+  'disablePressureThreshold',
+  'disableAboveOxygenPressure',
+  'disableOxygenPressureThreshold',
+  'disableAboveCo2Coverage',
+  'co2CoverageThreshold',
+  'co2CoverageDisableMode'
+]);
 
 function getSpaceStorageSingleResourceProjectId(resourceKey) {
   return `${PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX}${resourceKey}`;
@@ -107,6 +123,54 @@ function getProjectPresetJsonFieldOptions(fieldPath) {
       { value: 'withdraw', label: getAutomationCardText('spaceStorageSingleResourceModeWithdraw', {}, 'Withdraw') }
     ]
   };
+}
+
+function isProjectPresetFieldVisible(fieldPath, effectivePreset, automation) {
+  if (!Array.isArray(fieldPath) || fieldPath.length < 4) {
+    return true;
+  }
+  if (fieldPath[0] !== 'projects' || fieldPath[2] !== 'operations') {
+    return true;
+  }
+
+  const projectId = fieldPath[1];
+  const settingKey = fieldPath[3];
+  const project = automation.getProjectForAutomationId(projectId);
+  if (!project || !project.attributes || !project.attributes.spaceMining) {
+    return true;
+  }
+
+  if (SPACE_MINING_WATER_ONLY_FIELDS.has(settingKey) && !project.attributes.dynamicWaterImport) {
+    return false;
+  }
+
+  const hasAtmosphericTarget = !!project.getTargetAtmosphericResource();
+  if (SPACE_MINING_GAS_ONLY_FIELDS.has(settingKey) && !hasAtmosphericTarget) {
+    return false;
+  }
+
+  if (settingKey === 'disableIfDiskworldHydrogenFillCovered' && project.name !== 'hydrogenSpaceMining') {
+    return false;
+  }
+
+  if (settingKey === 'materialImportTarget' && !project.getPlanetaryMassImportResource()) {
+    return false;
+  }
+
+  if (settingKey === 'waterCoverageDisableMode') {
+    const disableEnabled = !!getAutomationPresetValueAtPath(effectivePreset, ['projects', projectId, 'operations', 'disableAboveWaterCoverage']);
+    if (!disableEnabled) {
+      return false;
+    }
+  }
+  if (settingKey === 'co2CoverageDisableMode') {
+    const disableEnabled = !!getAutomationPresetValueAtPath(effectivePreset, ['projects', projectId, 'operations', 'disableAboveCo2Coverage']);
+    if (!disableEnabled) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function formatProjectAutomationPresetType(preset) {
@@ -597,9 +661,12 @@ function updateProjectsAutomationUI() {
   }
   updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
     rootPath: ['projects'],
-    isLeafVisible: (fieldPath) => {
+    isLeafVisible: (fieldPath, effectivePreset) => {
       const selectedProjectId = projectAutomationUIState.jsonFilterProjectId;
       if (selectedProjectId && fieldPath[0] === 'projects' && fieldPath[1] !== selectedProjectId) {
+        return false;
+      }
+      if (!isProjectPresetFieldVisible(fieldPath, effectivePreset, automation)) {
         return false;
       }
       return true;
