@@ -238,51 +238,14 @@ function restoreSmbhShellworldOrbitalAllocation(snapshot) {
 }
 
 function reapplySmbhShellworldEffects() {
-  if (globalEffects && globalEffects.reconcileConditionalEffects) {
-    globalEffects.reconcileConditionalEffects();
-  }
-  for (const name in structures) {
-    const structure = structures[name];
-    if (structure && structure.reconcileConditionalEffects) {
-      structure.reconcileConditionalEffects();
-    }
-  }
-  if (storyManager && storyManager.reapplyEffects) {
-    storyManager.reapplyEffects();
-  }
-  if (skillManager && skillManager.reapplyEffects) {
-    skillManager.reapplyEffects();
-  }
-  if (researchManager && researchManager.reapplyEffects) {
-    researchManager.reapplyEffects();
-  }
-  projectManager.applyEffects();
-  if (automationManager && automationManager.reapplyEffects) {
-    automationManager.reapplyEffects();
-  }
-  if (solisManager && solisManager.reapplyEffects) {
-    solisManager.reapplyEffects();
-  }
-  if (warpGateCommand && warpGateCommand.reapplyEffects) {
-    warpGateCommand.reapplyEffects();
-  }
-  if (patienceManager && patienceManager.reapplyEffects) {
-    patienceManager.reapplyEffects();
-  }
-  if (followersManager && followersManager.reapplyEffects) {
-    followersManager.reapplyEffects();
-  }
-  if (atlasManager && atlasManager.reapplyEffects) {
-    atlasManager.reapplyEffects();
-  }
-  if (galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
-    galaxyInvasionManager.reapplyEffects();
-  }
-  if (nanotechManager && nanotechManager.reapplyEffects) {
-    nanotechManager.reapplyEffects();
-  }
-  applyPlanetParameterEffects();
-  applyRWGEffects();
+  reapplySharedManagerEffects({
+    includeConditionalReconcile: true,
+    includeStory: true,
+    includeProject: true,
+    includeAutomation: true,
+    includePlanetParameterEffects: true,
+    includeRWGEffects: true
+  });
 }
 
 function captureSmbhShellworldSnapshot() {

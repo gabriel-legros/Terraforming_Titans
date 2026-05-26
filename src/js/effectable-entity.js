@@ -867,6 +867,72 @@ function applyPlanetParameterEffects() {
     });
   }
 }
+
+function reapplySharedManagerEffects(options = {}) {
+  const includeConditionalReconcile = options.includeConditionalReconcile === true;
+  const includeStory = options.includeStory === true;
+  const includeProject = options.includeProject === true;
+  const includeAutomation = options.includeAutomation === true;
+  const includePlanetParameterEffects = options.includePlanetParameterEffects === true;
+  const includeRWGEffects = options.includeRWGEffects === true;
+  const solisOptions = options.solisOptions || null;
+
+  if (includeConditionalReconcile) {
+    if (globalEffects && globalEffects.reconcileConditionalEffects) {
+      globalEffects.reconcileConditionalEffects();
+    }
+    for (const structureName in structures) {
+      const structure = structures[structureName];
+      if (structure && structure.reconcileConditionalEffects) {
+        structure.reconcileConditionalEffects();
+      }
+    }
+  }
+
+  if (includeStory && storyManager && storyManager.reapplyEffects) {
+    storyManager.reapplyEffects();
+  }
+  if (skillManager && skillManager.reapplyEffects) {
+    skillManager.reapplyEffects();
+  }
+  if (researchManager && researchManager.reapplyEffects) {
+    researchManager.reapplyEffects();
+  }
+  if (includeProject) {
+    projectManager.applyEffects();
+  }
+  if (includeAutomation && automationManager && automationManager.reapplyEffects) {
+    automationManager.reapplyEffects();
+  }
+  if (solisManager && solisManager.reapplyEffects) {
+    solisManager.reapplyEffects(solisOptions);
+  }
+  if (warpGateCommand && warpGateCommand.reapplyEffects) {
+    warpGateCommand.reapplyEffects();
+  }
+  if (patienceManager && patienceManager.reapplyEffects) {
+    patienceManager.reapplyEffects();
+  }
+  if (followersManager && followersManager.reapplyEffects) {
+    followersManager.reapplyEffects();
+  }
+  if (atlasManager && atlasManager.reapplyEffects) {
+    atlasManager.reapplyEffects();
+  }
+  if (galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
+    galaxyInvasionManager.reapplyEffects();
+  }
+  if (nanotechManager && nanotechManager.reapplyEffects) {
+    nanotechManager.reapplyEffects();
+  }
+
+  if (includePlanetParameterEffects) {
+    applyPlanetParameterEffects();
+  }
+  if (includeRWGEffects) {
+    applyRWGEffects();
+  }
+}
 if (typeof globalThis !== "undefined") {
   globalThis.EffectableEntity = EffectableEntity;
 }

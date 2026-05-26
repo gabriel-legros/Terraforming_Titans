@@ -381,42 +381,9 @@ function addSettingsListeners() {
     cached.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
     cached.disableFusionConsumptionScalingToggle.addEventListener('change', () => {
       gameSettings.disableFusionConsumptionScaling = cached.disableFusionConsumptionScalingToggle.checked;
-      for (const key in structures) {
-        const structure = structures[key];
-        if (structure && structure.reconcileConditionalEffects) {
-          structure.reconcileConditionalEffects();
-        }
-      }
-      if (globalEffects.reconcileConditionalEffects) {
-        globalEffects.reconcileConditionalEffects();
-      }
-      if (researchManager && researchManager.reapplyEffects) {
-        researchManager.reapplyEffects();
-      }
-      if (skillManager && skillManager.reapplyEffects) {
-        skillManager.reapplyEffects();
-      }
-      if (solisManager && solisManager.reapplyEffects) {
-        solisManager.reapplyEffects();
-      }
-      if (warpGateCommand && warpGateCommand.reapplyEffects) {
-        warpGateCommand.reapplyEffects();
-      }
-      if (patienceManager && patienceManager.reapplyEffects) {
-        patienceManager.reapplyEffects();
-      }
-      if (followersManager && followersManager.reapplyEffects) {
-        followersManager.reapplyEffects();
-      }
-      if (atlasManager && atlasManager.reapplyEffects) {
-        atlasManager.reapplyEffects();
-      }
-      if (galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
-        galaxyInvasionManager.reapplyEffects();
-      }
-      if (nanotechManager && nanotechManager.reapplyEffects) {
-        nanotechManager.reapplyEffects();
-      }
+      reapplySharedManagerEffects({
+        includeConditionalReconcile: true
+      });
     });
   }
 
