@@ -182,7 +182,7 @@ function releaseMirrorUnassignedAssignments(settings) {
   lanterns.unassigned = 0;
 }
 
-function applyMirrorOversightSettings(settings, saved = {}) {
+function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
   const savedDistribution = saved.distribution || {};
   mergeSettingKeys(settings.distribution, savedDistribution).forEach(zone => {
     const v = Number(savedDistribution[zone]);
@@ -227,7 +227,7 @@ function applyMirrorOversightSettings(settings, saved = {}) {
     settings.autoAssign[zone] = !!savedAuto[zone];
   });
 
-  if (!settings.advancedOversight) {
+  if (!settings.advancedOversight || options.restoreAdvancedAssignments === true) {
     const savedAssignments = saved.assignments || {};
     const savedMirrors = savedAssignments.mirrors || {};
     const savedLanterns = savedAssignments.lanterns || {};
@@ -244,6 +244,7 @@ function applyMirrorOversightSettings(settings, saved = {}) {
       settings.assignments.reversalMode[zone] = !!savedReversal[zone];
     });
   }
+  settings.lastProjectedTemperatureState = saved.lastProjectedTemperatureState || null;
 
   syncMirrorAssignmentMode(settings);
   if (settings.useFinerControls || settings.advancedOversight) {
@@ -2455,7 +2456,11 @@ class SpaceMirrorFacilityProject extends Project {
     super.loadState(state);
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
-    applyMirrorOversightSettings(this.mirrorOversightSettings, state?.mirrorOversightSettings);
+    applyMirrorOversightSettings(
+      this.mirrorOversightSettings,
+      state?.mirrorOversightSettings,
+      { restoreAdvancedAssignments: true }
+    );
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();

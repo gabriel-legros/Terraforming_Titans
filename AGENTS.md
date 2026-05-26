@@ -237,6 +237,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Advanced oversight binary searches must guard against JS number precision stalls at extreme mirror counts (for example `10Sp`), and should stop when the midpoint no longer changes instead of assuming `high - low > 1` guarantees progress.
 - Advanced oversight temperature probes that overshoot and worsen the objective should fall back to one much smaller probe step and use that cheaper result instead of running an expensive bracket search.
 - Advanced oversight now keeps its solved temperature/flux snapshot in oversight state for UI display instead of overwriting the live terraforming trend fields after restore; runtime temperature and trend must remain physically consistent through the tick.
+- Space Mirror Facility full project state restore must preserve explicit mirror/lantern assignments even when advanced oversight is enabled; presets/travel setting restores should keep the advanced-oversight assignment guard unless explicitly opting into assignment restore. Signed mirror assignment counts encode reverse/cooling mode.
 - Starless worlds support day-night period control when lanterns are unlocked.
 - Focused melting, advanced auto-assignment, and quick-build integration are supported.
 - Ringworlds disable Space Mirror Facility and Planetary Thrusters and hide related research/UI.
