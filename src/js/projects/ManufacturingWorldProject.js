@@ -580,9 +580,10 @@
         this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
       });
 
+      const persistentKeys = new Set([this.getUnassignedAssignmentKey(), ...MANUFACTURING_RECIPE_KEYS]);
       Object.keys(this.manufacturingAssignments).forEach((key) => {
-        if (!keySet.has(key)) {
-          this.manufacturingAssignments[key] = 0n;
+        if (!persistentKeys.has(key)) {
+          delete this.manufacturingAssignments[key];
         }
       });
 
