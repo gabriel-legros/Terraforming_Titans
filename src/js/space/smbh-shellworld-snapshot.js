@@ -9,8 +9,11 @@ function cloneSmbhShellworldSnapshotData(value) {
 function captureSmbhShellworldResourceValues() {
   const snapshot = {};
   for (const category in resources) {
+    if (category === 'spaceStorage') continue;
     snapshot[category] = {};
     for (const resourceName in resources[category]) {
+      if (category === 'space' && resourceName === 'energy') continue;
+      if (category === 'special' && resourceName === 'alienArtifact') continue;
       snapshot[category][resourceName] = resources[category][resourceName].value || 0;
     }
   }
@@ -19,9 +22,12 @@ function captureSmbhShellworldResourceValues() {
 
 function restoreSmbhShellworldResourceValues(snapshot) {
   for (const category in snapshot || {}) {
+    if (category === 'spaceStorage') continue;
     const categoryResources = resources[category];
     if (!categoryResources) continue;
     for (const resourceName in snapshot[category]) {
+      if (category === 'space' && resourceName === 'energy') continue;
+      if (category === 'special' && resourceName === 'alienArtifact') continue;
       const resource = categoryResources[resourceName];
       if (!resource) continue;
       const value = Math.max(Number(snapshot[category][resourceName]) || 0, 0);
@@ -74,6 +80,75 @@ function isSmbhShellworldSnapshotProjectAllowed(name, project) {
     || SMBH_SHELLWORLD_ALLOWED_MEGA_PROJECTS.has(name);
 }
 
+function captureSmbhShellworldSpaceStorageSettings(project) {
+  const state = project.saveState();
+  return {
+    autoStart: state.autoStart,
+    autoStartUncheckOnTravel: state.autoStartUncheckOnTravel,
+    selectedResources: state.selectedResources || [],
+    expansionRecipeKey: state.expansionRecipeKey,
+    megaProjectResourceMode: state.megaProjectResourceMode,
+    megaProjectSpaceOnlyOnTravel: state.megaProjectSpaceOnlyOnTravel,
+    resourceStrategicReserves: state.resourceStrategicReserves || {},
+    waterWithdrawTarget: state.waterWithdrawTarget,
+    hydrogenTransferTarget: state.hydrogenTransferTarget,
+    artificialEcosystemsEnabled: state.artificialEcosystemsEnabled,
+    resourceCaps: state.resourceCaps || {},
+    resourceTransferWeights: state.resourceTransferWeights || {},
+    resourceImportLimitRespects: state.resourceImportLimitRespects || {},
+    resourceBiomassDensityWithdrawLimits: state.resourceBiomassDensityWithdrawLimits || {},
+    resourcePressureWithdrawLimits: state.resourcePressureWithdrawLimits || {},
+    shipTransferMode: state.shipTransferMode,
+    lastUniformTransferMode: state.lastUniformTransferMode,
+    resourceTransferModes: state.resourceTransferModes || {},
+    shipOperationAutoStart: state.shipOperation?.autoStart === true
+  };
+}
+
+function restoreSmbhShellworldSpaceStorageSettings(project, state = {}) {
+  if (Object.prototype.hasOwnProperty.call(state, 'autoStart')) {
+    project.autoStart = state.autoStart === true;
+  }
+  if (Object.prototype.hasOwnProperty.call(state, 'autoStartUncheckOnTravel')) {
+    project.autoStartUncheckOnTravel = state.autoStartUncheckOnTravel === true;
+  }
+  project.selectedResources = Array.isArray(state.selectedResources)
+    ? cloneSmbhShellworldSnapshotData(state.selectedResources)
+    : [];
+  project.expansionRecipeKey = state.expansionRecipeKey || project.expansionRecipeKey;
+  if (MEGA_PROJECT_RESOURCE_MODE_MAP[state.megaProjectResourceMode]) {
+    project.megaProjectResourceMode = state.megaProjectResourceMode;
+  }
+  project.megaProjectSpaceOnlyOnTravel = state.megaProjectSpaceOnlyOnTravel === true;
+  project.resourceStrategicReserves = cloneSmbhShellworldSnapshotData(state.resourceStrategicReserves || {});
+  project.sanitizeResourceStrategicReserves();
+  project.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
+  project.hydrogenTransferTarget = state.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+  project.artificialEcosystemsEnabled = state.artificialEcosystemsEnabled === true;
+  project.resourceCaps = cloneSmbhShellworldSnapshotData(state.resourceCaps || {});
+  project.sanitizeResourceCaps();
+  project.resourceTransferWeights = cloneSmbhShellworldSnapshotData(state.resourceTransferWeights || {});
+  project.sanitizeTransferWeights();
+  project.resourceImportLimitRespects = cloneSmbhShellworldSnapshotData(state.resourceImportLimitRespects || {});
+  project.sanitizeImportLimitRespects();
+  project.resourceBiomassDensityWithdrawLimits = cloneSmbhShellworldSnapshotData(state.resourceBiomassDensityWithdrawLimits || {});
+  project.sanitizeBiomassDensityWithdrawLimits();
+  project.resourcePressureWithdrawLimits = cloneSmbhShellworldSnapshotData(state.resourcePressureWithdrawLimits || {});
+  project.sanitizePressureWithdrawLimits();
+  project.shipTransferMode = state.shipTransferMode || project.shipTransferMode;
+  project.lastUniformTransferMode = state.lastUniformTransferMode || project.lastUniformTransferMode;
+  project.resourceTransferModes = cloneSmbhShellworldSnapshotData(state.resourceTransferModes || {});
+  if (project.shipTransferMode === 'store' || project.shipTransferMode === 'withdraw') {
+    project.resourceTransferModes = {};
+    project.lastUniformTransferMode = project.shipTransferMode;
+  }
+  project.shipOperationAutoStart = state.shipOperationAutoStart === true;
+  project.sanitizeTransferModes();
+  project.getExpansionRecipeKey();
+  project.syncSpaceStorageResourceUnlocks();
+  project.reconcileUsedStorage();
+}
+
 function captureSmbhShellworldProjects() {
   projectManager.normalizeImportProjectOrder();
   projectManager.normalizeGroupedProjectOrder();
@@ -81,7 +156,9 @@ function captureSmbhShellworldProjects() {
   for (const name in projectManager.projects) {
     const project = projectManager.projects[name];
     if (!isSmbhShellworldSnapshotProjectAllowed(name, project)) continue;
-    snapshot.projects[name] = project.saveState();
+    snapshot.projects[name] = name === 'spaceStorage'
+      ? captureSmbhShellworldSpaceStorageSettings(project)
+      : project.saveState();
     snapshot.order.push(name);
   }
   return snapshot;
@@ -92,7 +169,11 @@ function restoreSmbhShellworldProjects(snapshot) {
   for (const name in projectStates) {
     const project = projectManager.projects[name];
     if (!project || !isSmbhShellworldSnapshotProjectAllowed(name, project)) continue;
-    project.loadState(projectStates[name]);
+    if (name === 'spaceStorage') {
+      restoreSmbhShellworldSpaceStorageSettings(project, projectStates[name]);
+    } else {
+      project.loadState(projectStates[name]);
+    }
   }
   if (Array.isArray(snapshot?.order)) {
     const restored = snapshot.order.filter((name) => projectManager.projects[name]);
