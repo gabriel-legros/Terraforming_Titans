@@ -699,7 +699,7 @@ const ganymedeOverrides = {
 const vega2Overrides = {
   name: '',
   travelWarning: {
-    message: 'This world has no water.  Solis can help.'
+    message: 'This world has no water.  Solis can help.  Five purchases is enough but more can help.'
   },
 
   resources: {
