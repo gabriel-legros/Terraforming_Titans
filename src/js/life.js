@@ -1268,7 +1268,8 @@ class LifeManager extends EffectableEntity {
       const maxBiomassForZone = zoneArea * maxBiomassDensity;
 
       if (zonalBiomass > maxBiomassForZone) {
-        const overflowDecay = Math.min(zonalBiomass, zonalBiomass * 0.01 * secondsMultiplier);
+        const overflowAmount = zonalBiomass - maxBiomassForZone;
+        const overflowDecay = Math.min(overflowAmount, zonalBiomass * 0.01 * secondsMultiplier);
         overflowDecayByZone[zoneName] = overflowDecay;
         zonalBiomass = Math.max(0, zonalBiomass - overflowDecay);
         biomassByZone[zoneName] = zonalBiomass;
