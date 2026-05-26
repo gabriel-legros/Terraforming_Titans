@@ -53,6 +53,24 @@
   display: none;
 }
 
+.hazard-card.collapsed > .hazard-bar-wrapper {
+  display: flex;
+  gap: 0;
+}
+
+.hazard-card.collapsed .hazard-bar {
+  height: 49px;
+}
+
+.hazard-card.collapsed .hazard-bar__label {
+  font-size: 14px;
+  padding: 0 16px;
+}
+
+.hazard-card.collapsed .hazard-bar__details {
+  display: none;
+}
+
 .hazard-card__message {
   margin: 0;
   font-size: 15px;
