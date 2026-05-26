@@ -118,6 +118,7 @@ function addTooltipHover(anchor, tooltip, options = {}) {
     const hasColumns = typeof setResourceTooltipColumns === 'function' && (!!tooltipEl._columnsInfo || !!tooltipEl.closest('.resource-item'));
     tooltipEl.classList.remove('above', 'three-column');
     if (dynamicPlacement) tooltipEl.style.zIndex = '4000';
+    if (tooltipEl._prepareTooltipContent) tooltipEl._prepareTooltipContent();
 
     if (isResource) {
       if (hasColumns) setResourceTooltipColumns(tooltipEl, 1);

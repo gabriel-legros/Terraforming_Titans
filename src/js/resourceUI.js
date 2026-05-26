@@ -700,6 +700,9 @@ function createTooltipElement(category, resourceName) {
   const col3 = document.createElement('div');
   // Store references needed for dynamic column reflow
   tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv };
+  tooltip._prepareTooltipContent = function() {
+    updateResourceRateDisplay(getDisplayResourceObject(resources, category, resourceName), 0, category, resourceName);
+  };
 
   return tooltip;
 }
