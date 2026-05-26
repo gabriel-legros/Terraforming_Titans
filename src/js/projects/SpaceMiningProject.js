@@ -529,11 +529,14 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   isAtmosphericImportTargetSelected() {
-    if (this.getTargetAtmosphericResource() === 'hydrogen' && this.gasImportTarget === 'colony') {
+    const gas = this.getTargetAtmosphericResource();
+    if (!gas) {
+      return false;
+    }
+    if (gas === 'hydrogen' && this.gasImportTarget === 'colony') {
       return true;
     }
-    return !this.getTargetAtmosphericResource()
-      || (!this.isGasStorageImportSelected() && !this.isHydrogenColonyImportSelected());
+    return !this.isGasStorageImportSelected() && !this.isHydrogenColonyImportSelected();
   }
 
   isSpaceStorageTargetAvailable() {
@@ -1180,7 +1183,11 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   isGasPressureLimitReached(gas, limitKPa, deltaTime = this.currentTickDeltaTime || 0, accumulatedChanges = null) {
-    const amount = (resources.atmospheric[gas].value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
+    const atmosphericResource = resources.atmospheric[gas];
+    if (!gas || !atmosphericResource) {
+      return false;
+    }
+    const amount = (atmosphericResource.value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
     const maxMass = this.getPressureLimitMass(limitKPa);
     const consumptionBuffer = this.getAtmosphericNeedForGas(gas, deltaTime, accumulatedChanges);
     return amount >= maxMass + consumptionBuffer;
@@ -1190,7 +1197,11 @@ class SpaceMiningProject extends SpaceshipProject {
     if (!this.isBooleanFlagSet('atmosphericMonitoring') || !this.disableAbovePressure) {
       return Infinity;
     }
-    const amount = (resources.atmospheric[gas].value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
+    const atmosphericResource = resources.atmospheric[gas];
+    if (!gas || !atmosphericResource) {
+      return Infinity;
+    }
+    const amount = (atmosphericResource.value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
     const maxMass = this.getPressureLimitMass(this.disablePressureThreshold);
     const consumptionBuffer = this.getAtmosphericNeedForGas(gas, this.currentTickDeltaTime || 0, accumulatedChanges);
     return Math.max(0, maxMass + consumptionBuffer - amount);
@@ -1353,6 +1364,12 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'gasImportTarget')) {
       this.gasImportTarget = normalizeGasImportTarget(settings.gasImportTarget, this.getTargetAtmosphericResource());
+    }
+    if (!this.getTargetAtmosphericResource()) {
+      this.disableAbovePressure = false;
+      this.disablePressureThreshold = 0;
+      this.disableAboveOxygenPressure = false;
+      this.disableOxygenPressureThreshold = 0;
     }
   }
 
