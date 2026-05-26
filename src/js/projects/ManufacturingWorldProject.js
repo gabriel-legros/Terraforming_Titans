@@ -570,7 +570,6 @@
 
     normalizeAssignments() {
       const keys = this.getManagedAssignmentKeys();
-      const keySet = new Set(keys);
       const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
 
       keys.forEach((key) => {
