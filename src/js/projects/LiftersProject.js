@@ -2072,8 +2072,20 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     };
   }
 
-  loadAutomationSettings(settings = {}) {
+  getPresetLifterAssignments(settings = {}) {
+    const assignments = { ...(settings.lifterAssignments || {}) };
+    const autoAssignFlags = settings.autoAssignFlags || {};
+    for (const key in autoAssignFlags) {
+      if (autoAssignFlags[key] === true) {
+        delete assignments[key];
+      }
+    }
+    return assignments;
+  }
+
+  loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
+    const isPresetApplication = options.isPresetApplication === true;
 
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
@@ -2089,9 +2101,13 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       || Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold');
 
     if (hasAssignmentState) {
-      this.deferLoadedAssignmentCapClamp();
+      if (!isPresetApplication) {
+        this.deferLoadedAssignmentCapClamp();
+      }
       if (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')) {
-        this.lifterAssignments = { ...(settings.lifterAssignments || {}) };
+        this.lifterAssignments = isPresetApplication
+          ? this.getPresetLifterAssignments(settings)
+          : { ...(settings.lifterAssignments || {}) };
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
         this.assignmentStep = settings.assignmentStep || 1;

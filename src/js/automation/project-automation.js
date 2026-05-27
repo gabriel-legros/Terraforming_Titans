@@ -950,7 +950,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       : this.captureFallbackSettings(project);
 
     if (project.loadAutomationSettings) {
-      project.loadAutomationSettings(this.deepClone(settings));
+      project.loadAutomationSettings(this.deepClone(settings), { isPresetApplication: true });
     } else {
       this.applyFallbackSettings(project, settings);
     }
