@@ -1696,8 +1696,14 @@ function updateSpaceStorageUI(project) {
     } else {
       const duration = project.getShipOperationDuration();
       const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
-      if (project.shipOperationIsActive) {
-        const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
+      if (project.assignedSpaceships <= 0) {
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.noShipsAssigned', 'No ships assigned');
+        els.shipProgressButton.style.background = '#f44336';
+      } else if (project.shipOperationIsActive) {
+        const rawProgressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
+        const progressPercent = Number.isFinite(rawProgressPercent)
+          ? Math.max(0, Math.min(100, rawProgressPercent))
+          : 0;
         let statusText = getSpaceStorageUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', {
           time: timeRemaining,
           percent: progressPercent.toFixed(2)

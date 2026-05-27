@@ -1912,6 +1912,7 @@ setLanguageData({
         withdrawalDisabled: 'Withdrawal disabled on this world',
         withdrawFromSpaceStorage: 'Withdraw from space storage',
         storeInSpaceStorage: 'Store in space storage',
+        noShipsAssigned: 'No ships assigned',
         resumeShipTransfers: 'Resume ship transfers ({time}s left)',
         startShipTransfers: 'Start ship transfers (Duration: {duration} seconds)',
         resources: {
