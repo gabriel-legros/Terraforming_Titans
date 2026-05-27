@@ -330,6 +330,22 @@ class LifeDesign {
       getLifeText('ui.lifeDesigner.attributes.bioships.description', 'Converts a fraction of global biomass into living spaceships.'),
       getAttributeMaxUpgrades('bioships')
     );
+    this.normalizeAttributeValues();
+  }
+
+  normalizeAttributeValues() {
+    for (const key in this) {
+      const attribute = this[key];
+      if (!(attribute instanceof LifeAttribute)) {
+        continue;
+      }
+      const rawValue = Number(attribute.value) || 0;
+      if (attribute.name === 'optimalGrowthTemperature') {
+        attribute.value = Math.sign(rawValue) * Math.floor(Math.abs(rawValue));
+      } else {
+        attribute.value = Math.max(0, Math.floor(rawValue));
+      }
+    }
   }
 
   getDesignCost() {
@@ -398,6 +414,7 @@ class LifeDesign {
         );
       }
     }
+    this.normalizeAttributeValues();
   }
 
   save() {
@@ -432,6 +449,7 @@ class LifeDesign {
     );
 
     design.optimalGrowthTemperature.value = data.optimalGrowthTemperature ?? 0;
+    design.normalizeAttributeValues();
     return design;
   }
 
@@ -877,6 +895,7 @@ class LifeDesigner extends EffectableEntity {
 
   confirmDesign() {
     if (this.tentativeDesign) {
+      this.tentativeDesign.normalizeAttributeValues();
       this.isActive = true;
       this.remainingTime = this.getTentativeDuration();
       this.totalTime = this.getTentativeDuration();
@@ -1041,10 +1060,11 @@ class LifeDesigner extends EffectableEntity {
   }
 
   buyPoint(category, quantity = 1) {
-    if (this.canAfford(category, quantity)) {
-      const totalCost = this.getTotalPointCost(category, quantity);
+    const normalizedQuantity = Math.max(1, Math.floor(quantity));
+    if (this.canAfford(category, normalizedQuantity)) {
+      const totalCost = this.getTotalPointCost(category, normalizedQuantity);
       resources.colony[category].decrease(totalCost);
-      this.purchaseCounts[category] = this.getPurchaseCount(category) + quantity;
+      this.purchaseCounts[category] = this.getPurchaseCount(category) + normalizedQuantity;
     }
   }
 

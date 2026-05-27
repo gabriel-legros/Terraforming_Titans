@@ -766,12 +766,13 @@ function initializeLifeTerraformingDesignerUI() {
                 newValue = Math.max(-maxUpgrades, Math.min(maxUpgrades, newValue));
               }
               const allowed = Math.min(Math.abs(newValue), Math.max(0, available));
-              newValue = Math.sign(newValue) * allowed;
+              newValue = Math.sign(newValue) * Math.floor(allowed);
           } else {
               // Clamp the value between 0 and the allowed maximum and available points
               const upperLimit = quantumBiology ? maximumSpendValue : Math.min(maxUpgrades, maximumSpendValue);
               newValue = Math.max(0, Math.min(upperLimit, newValue));
               newValue = Math.min(newValue, remainingPoints);
+              newValue = Math.floor(newValue);
           }
 
           lifeDesigner.tentativeDesign[attributeName].value = newValue;
