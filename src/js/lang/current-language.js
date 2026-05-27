@@ -1041,6 +1041,39 @@ setLanguageData({
           running: 'Running',
         },
       },
+      artificialQuasars: {
+        title: 'Artificial Quasar Controls',
+        titleTooltip: 'Assign quasars to harness stellar black hole spin energy. Each assigned quasar produces space energy and counts against the Warp Gate Network-scaled black hole assignment cap.',
+        totalLifters: 'Total Quasars',
+        runLifters: 'Run quasars',
+        energyPerLifter: 'Energy per quasar',
+        energyPerLifterTooltip: 'Artificial Quasars extract spin energy directly and do not consume space energy while running.',
+        energyUse: 'Energy Use',
+        energyUseTooltip: 'Artificial Quasars extract spin energy directly and do not consume space energy while running.',
+        disableStripBelowPressure: 'Disable atmospheric stripping below:',
+        pa: 'Pa',
+        supercharge: 'Supercharge',
+        recipe: 'Target',
+        complexity: 'Complexity',
+        maxAssignment: 'Max',
+        expansionRate: '{value} quasars/s',
+        operationNote: 'Each assigned quasar produces {value} space energy per real-time second by spinning down stellar black holes over a 10,000-year extraction window.',
+        maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible black hole assignment cap: {max}',
+        starLiftingTooltip: '',
+        status: {
+          idle: 'Idle',
+          runDisabled: 'Run disabled',
+          buildSpaceStorage: 'Build space storage',
+          spaceStorageFull: 'Space storage is full',
+          storageCapReached: 'Storage cap reached',
+          pressureLimitReached: 'Pressure limiter reached',
+          noAtmosphereToStrip: 'No atmosphere to strip',
+          insufficientEnergy: 'Insufficient energy',
+          noAssignments: 'No assignments',
+          completeAtLeastOne: 'Complete at least one quasar',
+          running: 'Running',
+        },
+      },
       spaceExportBase: {
         whichOne: 'Which one : ',
         waitForFullCapacity: 'Wait for full capacity',
@@ -4283,6 +4316,16 @@ setLanguageData({
           },
         },
       },
+      artificialQuasars: {
+        name: 'Artificial Quasars',
+        description: 'Build tera-scale black hole spin-energy platforms. Assigned quasars produce space energy from accessible stellar black holes, scaled by the average Warp Gate Network level.',
+        attributes: {
+          lifterStripRecipe: { label: 'Strip Atmosphere' },
+          lifterHarvestRecipes: {
+            blackHoleSpinEnergy: { label: 'Black Hole Spin Energy' },
+          },
+        },
+      },
       orbitalRing: {
         name: 'Orbital Ring',
         description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.  You can prepay rings for each world without a ring.',
@@ -5112,6 +5155,10 @@ setLanguageData({
         white_dwarf_harvesting: {
           name: 'White Dwarf Harvesting',
           description: 'Some stellar remnants are rich in carbon and oxygen.  Our lifters cannot get to it easily but if we charge the dwarfs with enough positrons this task can be made more doable.  Unlocks a new terastructure.  (Special Thanks to Citizen Power for this research proposal)',
+        },
+        artificial_quasars: {
+          name: 'Artificial Quasars',
+          description: 'The galaxy has a large number of black holes that are just sitting there.  We can harness their rotational energy with a superconducting magnetosphere.',
         },
         tractor_beams: {
           name: 'Tractor Beams',

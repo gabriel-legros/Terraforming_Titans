@@ -805,6 +805,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('NuclearAlchemyFurnaceProject', NuclearAlchemyFurnaceProject, originalGlobals);
   setGlobal('LiftersProject', LiftersProject, originalGlobals);
   const WhiteDwarfHarvestersProject = require(path.resolve(__dirname, '../src/js/projects/WhiteDwarfHarvestersProject.js'));
+  const ArtificialQuasarsProject = require(path.resolve(__dirname, '../src/js/projects/ArtificialQuasarsProject.js'));
   const DysonSwarmReceiverProject = require(path.resolve(__dirname, '../src/js/projects/dysonswarm.js'));
   const DysonSphereProject = require(path.resolve(__dirname, '../src/js/projects/dysonsphere.js'));
   setGlobal('window', global, originalGlobals);
@@ -824,6 +825,7 @@ function setupHarness(initialStorage = {}) {
     ManufacturingWorldProject,
     LiftersProject,
     WhiteDwarfHarvestersProject,
+    ArtificialQuasarsProject,
     ArtificialStarsProject,
     DysonSwarmReceiverProject,
     DysonSphereProject,
@@ -1488,6 +1490,56 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(resources.space.energy.projectedConsumptionRateBySource['White Dwarf Harvesting'] || 0, initialEnergy);
     expectApprox(resources.spaceStorage.graphite.projectedProductionRateBySource['White Dwarf Harvesting'] || 0, unitRate * expectedProductivity * (12 / 28));
     expectApprox(resources.spaceStorage.oxygen.projectedProductionRateBySource['White Dwarf Harvesting'] || 0, unitRate * expectedProductivity * (16 / 28));
+    cleanup();
+  });
+
+  test('Artificial Quasars provide space energy for space building productivity', () => {
+    const harness = setupHarness({ spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialQuasarsProject,
+      cleanup,
+    } = harness;
+
+    const quasars = new ArtificialQuasarsProject({
+      name: 'Artificial Quasars',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+        spaceEnergyProducer: true,
+        lifterUnitRate: 100,
+        lifterEnergyPerUnit: 0,
+        lifterHarvestRecipes: {
+          blackHoleSpinEnergy: {
+            label: 'Black Hole Spin Energy',
+            storageKey: 'spaceEnergy',
+            outputMultiplier: 1,
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'artificialQuasars');
+
+    quasars.repeatCount = 1;
+    quasars.lifterAssignments.blackHoleSpinEnergy = 1;
+    quasars.isRunning = true;
+
+    const receiver = createProductivityAwareSpaceEnergyConsumer(100, 'Quasar-fed Receiver');
+    projectManager.projects.artificialQuasars = quasars;
+    projectManager.projectOrder = ['artificialQuasars'];
+
+    produceResources(1000, { receiver });
+
+    expectApprox(receiver.productivity, 1);
+    expectApprox(quasars.operationProductivity?.blackHoleSpinEnergy, 1);
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Quasar'] || 0, 100);
+    expectApprox(resources.space.energy.projectedConsumptionRateBySource['Quasar-fed Receiver'] || 0, 100);
     cleanup();
   });
 

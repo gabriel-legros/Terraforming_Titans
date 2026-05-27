@@ -2812,6 +2812,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'artificial_quasars',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 50_000_000_000_000 },
+        prerequisites: ['star_lifting'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'artificialQuasars',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: '',
         description: '',

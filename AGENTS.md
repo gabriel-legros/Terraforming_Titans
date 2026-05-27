@@ -230,6 +230,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Operation logs are not saved (save-size control).
 - R&D supports shift-click bulk purchase.
 - Superalloy Fusion Efficiency upgrade exists (+1% per level, high cap).
+- Artificial Quasars are a 50T advanced research terastructure unlocked after Star Lifting; they inherit Lifters assignment controls, produce space energy from stellar black hole spin-energy, and use a White Dwarf Harvester-style assignment cap scaled by average Warp Gate Network level.  Output is scaled to the game's one-real-second-per-day energy convention.
 
 ### Space Mirror Facility
 - Zonal mirror/lantern assignment with advanced oversight and reversible mirror mode; advanced oversight now stores mirror assignments as signed counts (`negative = reverse/cooling`) and derives reverse mode from the solved assignments instead of tracking a separate reverse-state decision through the solver.
