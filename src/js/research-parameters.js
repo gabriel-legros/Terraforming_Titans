@@ -2507,7 +2507,7 @@ const researchParameters = {
         id: 'deep_warp_storage',
         name: '',
         description: '',
-        cost: { advancedResearch: 500_000_000_000_000 },
+        cost: { advancedResearch: 50_000_000_000_000 },
         prerequisites: ['warp_storage'],
         effects: [
           {
@@ -2815,7 +2815,7 @@ const researchParameters = {
         id: 'artificial_quasars',
         name: '',
         description: '',
-        cost: { advancedResearch: 50_000_000_000_000 },
+        cost: { advancedResearch: 500_000_000_000_000 },
         prerequisites: ['star_lifting'],
         effects: [
           {
