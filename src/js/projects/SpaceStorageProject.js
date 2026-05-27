@@ -722,6 +722,20 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getAvailableStoredResourceForTick(resourceKey, scopeFilter = null, accumulatedChanges = null) {
+    const reserveGrowth = scopeFilter === 'transfers'
+      ? (this.transferReserveGrowthThisTick?.[resourceKey] || 0)
+      : 0;
+    if (reserveGrowth > 0 && accumulatedChanges) {
+      const stored = this.getStoredResourceValue(resourceKey);
+      const pending = this.getPendingResourceDelta(accumulatedChanges, 'spaceStorage', resourceKey);
+      const reserve = this.getResourceStrategicReserveAmount(resourceKey, scopeFilter);
+      const reserveBeforeGrowth = Math.max(0, reserve - reserveGrowth);
+      const existingSurplus = Math.max(0, stored - reserveBeforeGrowth);
+      if (pending > 0) {
+        return existingSurplus + Math.max(0, pending - reserveGrowth);
+      }
+      return Math.max(0, existingSurplus + pending);
+    }
     const stored = this.getStoredResourceValueForTick(resourceKey, accumulatedChanges);
     const reserve = this.getResourceStrategicReserveAmount(resourceKey, scopeFilter);
     return Math.max(0, stored - reserve);
@@ -1721,6 +1735,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.transferReserveGrowthThisTick = {};
     if (!this.isContinuous() || !this.isActive) return;
 
     const tick = this.getContinuousExpansionTickState(deltaTime);
@@ -1730,6 +1745,14 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     if (!tick.ready) {
       return;
+    }
+
+    const reserveBeforeExpansion = {};
+    for (const resourceKey in this.resourceStrategicReserves) {
+      const setting = this.getResourceStrategicReserveSetting(resourceKey);
+      if (setting.scope.transfers) {
+        reserveBeforeExpansion[resourceKey] = this.getResourceStrategicReserveAmount(resourceKey, 'transfers');
+      }
     }
 
     const result = this.applyRequestedExpansionProgress(
@@ -1743,6 +1766,13 @@ class SpaceStorageProject extends SpaceshipProject {
       }
     );
     this.shortfallLastTick = result.shortfall;
+    for (const resourceKey in reserveBeforeExpansion) {
+      const currentReserve = this.getResourceStrategicReserveAmount(resourceKey, 'transfers');
+      const growth = currentReserve - reserveBeforeExpansion[resourceKey];
+      if (growth > 0) {
+        this.transferReserveGrowthThisTick[resourceKey] = growth;
+      }
+    }
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1, accumulatedSpecialChanges = null) {
