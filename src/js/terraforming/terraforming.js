@@ -2695,7 +2695,12 @@ class Terraforming extends EffectableEntity{
             type: 'resourceConsumptionMultiplier',
             resourceCategory: 'colony',
             resourceTarget: 'energy',
-            value: colonyEnergyPenalty
+            value: colonyEnergyPenalty,
+            name: t(
+              'ui.terraforming.temperature.effects.colonyEnergyPenalty',
+              null,
+              'Temperature'
+            )
         };
 
         addEffect(energyPenaltyEffect);

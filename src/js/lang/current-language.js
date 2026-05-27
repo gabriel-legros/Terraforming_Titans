@@ -2326,6 +2326,9 @@ setLanguageData({
         temperature: {
           infographicAlt: 'Terraforming temperature infographic',
           openInfographic: 'Open temperature infographic',
+          effects: {
+            colonyEnergyPenalty: 'Temperature',
+          },
           tooltip: [
             'Temperature is a critical factor for terraforming. It is determined by a complex interplay of factors:',
             '',
