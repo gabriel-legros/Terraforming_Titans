@@ -19,6 +19,14 @@ class ArtificialQuasarsProject extends LiftersProject {
     return 'Artificial Quasar';
   }
 
+  getEnergyPerLifterDisplayValue() {
+    return this.getEffectiveUnitRatePerLifter();
+  }
+
+  getEnergyRateDisplayValue() {
+    return this.lastHarvestPerSecond || 0;
+  }
+
   shouldKeepRunningOnTravel() {
     return true;
   }

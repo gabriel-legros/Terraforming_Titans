@@ -369,8 +369,14 @@ function updateLiftersUI(project) {
   elements.assignedValue.textContent = formatNumber(assigned, true, 2);
   elements.unassignedValue.textContent = formatNumber(available, true, 2);
   elements.statusValue.textContent = project.statusText || 'Idle';
-  elements.energyPerLifterValue.textContent = formatPerSecond(project.getEffectiveEnergyPerUnit());
-  elements.energyRateValue.textContent = formatPerSecond(project.lastEnergyPerSecond);
+  const energyPerLifterDisplay = project.getEnergyPerLifterDisplayValue
+    ? project.getEnergyPerLifterDisplayValue()
+    : project.getEffectiveEnergyPerUnit();
+  const energyRateDisplay = project.getEnergyRateDisplayValue
+    ? project.getEnergyRateDisplayValue()
+    : project.lastEnergyPerSecond;
+  elements.energyPerLifterValue.textContent = formatPerSecond(energyPerLifterDisplay);
+  elements.energyRateValue.textContent = formatPerSecond(energyRateDisplay);
   const expansionRate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
   elements.expansionRateValue.textContent = getProjectLiftersUIText(project, 'expansionRate', '{value} lifters/s', {
     value: formatNumber(expansionRate, true, 3)
