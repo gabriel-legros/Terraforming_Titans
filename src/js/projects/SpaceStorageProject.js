@@ -384,12 +384,13 @@ class SpaceStorageProject extends SpaceshipProject {
     return Array.from(keys);
   }
 
-  getResourceCapLimits(capOverrides = null) {
+  getResourceCapLimits(capOverrides = null, maxStorageOverride = this.maxStorage) {
     const sourceCaps = capOverrides
       ? { ...(this.resourceCaps || {}), ...capOverrides }
       : (this.resourceCaps || {});
     const keys = this.getAllSpaceStorageResourceKeys(sourceCaps);
     const limits = {};
+    const maxStorage = maxStorageOverride;
     let fixedTotal = 0;
     let remainingCount = 0;
     let hasWeightCap = false;
@@ -404,7 +405,7 @@ class SpaceStorageProject extends SpaceshipProject {
         return;
       }
       if (setting.mode === 'percent') {
-        const limit = Math.max(0, (this.maxStorage * (setting.value || 0)) / 100);
+        const limit = Math.max(0, (maxStorage * (setting.value || 0)) / 100);
         limits[resourceKey] = limit;
         fixedTotal += limit;
         return;
@@ -421,7 +422,7 @@ class SpaceStorageProject extends SpaceshipProject {
       }
     });
 
-    const remainingStorage = Math.max(0, this.maxStorage - fixedTotal);
+    const remainingStorage = Math.max(0, maxStorage - fixedTotal);
     if (remainingCount > 0) {
       const splitCap = remainingStorage / remainingCount;
       keys.forEach((resourceKey) => {
@@ -453,8 +454,8 @@ class SpaceStorageProject extends SpaceshipProject {
     return limits;
   }
 
-  getResourceCapLimit(resourceKey, capOverrides = null) {
-    const limits = this.getResourceCapLimits(capOverrides);
+  getResourceCapLimit(resourceKey, capOverrides = null, maxStorageOverride = this.maxStorage) {
+    const limits = this.getResourceCapLimits(capOverrides, maxStorageOverride);
     if (Object.prototype.hasOwnProperty.call(limits, resourceKey)) {
       return limits[resourceKey];
     }
@@ -485,7 +486,7 @@ class SpaceStorageProject extends SpaceshipProject {
     return { mode, value, scope };
   }
 
-  getResourceStrategicReserveAmount(resourceKey, scopeFilter = null) {
+  getResourceStrategicReserveAmount(resourceKey, scopeFilter = null, maxStorageOverride = this.maxStorage) {
     const setting = this.getResourceStrategicReserveSetting(resourceKey);
     if (setting.mode === 'none') return 0;
     if (scopeFilter && !setting.scope[scopeFilter]) return 0;
@@ -493,13 +494,35 @@ class SpaceStorageProject extends SpaceshipProject {
       return Math.max(0, setting.value || 0);
     }
     if (setting.mode === 'percentTotal') {
-      return Math.max(0, (this.maxStorage * (setting.value || 0)) / 100);
+      return Math.max(0, (maxStorageOverride * (setting.value || 0)) / 100);
     }
-    let capLimit = this.getResourceCapLimit(resourceKey);
+    let capLimit = this.getResourceCapLimit(resourceKey, null, maxStorageOverride);
     if (!Number.isFinite(capLimit)) {
-      capLimit = this.maxStorage;
+      capLimit = maxStorageOverride;
     }
     return Math.max(0, (capLimit * (setting.value || 0)) / 100);
+  }
+
+  estimateTransferReserveGrowthForTick(deltaTime = 1000, productivity = 1) {
+    const storageGain = this.estimateExpansionStorageGainForTick(deltaTime, productivity);
+    if (!(storageGain > 0)) {
+      return {};
+    }
+    const maxStorageAfter = this.maxStorage + storageGain;
+    const growthByResource = {};
+    for (const resourceKey in this.resourceStrategicReserves) {
+      const setting = this.getResourceStrategicReserveSetting(resourceKey);
+      if (!setting.scope.transfers) {
+        continue;
+      }
+      const before = this.getResourceStrategicReserveAmount(resourceKey, 'transfers');
+      const after = this.getResourceStrategicReserveAmount(resourceKey, 'transfers', maxStorageAfter);
+      const growth = after - before;
+      if (growth > 0) {
+        growthByResource[resourceKey] = growth;
+      }
+    }
+    return growthByResource;
   }
 
   recordTransferReserveTickStart() {
@@ -1008,6 +1031,67 @@ class SpaceStorageProject extends SpaceshipProject {
       estimated[source.category][source.resource] = (estimated[source.category][source.resource] || 0) + projectedProductionRate * seconds;
     });
     return hasEntries ? estimated : null;
+  }
+
+  getEstimatedNonTransferSpaceStorageNetRate(resourceKey) {
+    const resource = resources?.spaceStorage?.[resourceKey];
+    if (!resource) {
+      return 0;
+    }
+    let production = 0;
+    for (const rateType in resource.productionRateByType) {
+      const sources = resource.productionRateByType[rateType];
+      for (const source in sources) {
+        production += sources[source] || 0;
+      }
+    }
+    let consumption = 0;
+    for (const rateType in resource.consumptionRateByType) {
+      const sources = resource.consumptionRateByType[rateType];
+      for (const source in sources) {
+        if (source !== 'Space storage transfer') {
+          consumption += sources[source] || 0;
+        }
+      }
+    }
+    return production - consumption;
+  }
+
+  buildWithdrawalEstimateAccumulatedChanges(deltaTime = 1000) {
+    const seconds = deltaTime / 1000;
+    const selected = this.getUnlockedSelectedResources();
+    if (!(seconds > 0) || selected.length === 0) {
+      return null;
+    }
+    const estimated = {};
+    let hasEntries = false;
+    selected.forEach((entry) => {
+      if (this.getShipTransferModeForResource(entry.resource) !== 'withdraw') {
+        return;
+      }
+      const netRate = this.getEstimatedNonTransferSpaceStorageNetRate(entry.resource);
+      if (!(netRate > 0)) {
+        return;
+      }
+      hasEntries = true;
+      estimated.spaceStorage ||= {};
+      estimated.spaceStorage[entry.resource] = (estimated.spaceStorage[entry.resource] || 0) + netRate * seconds;
+    });
+    return hasEntries ? estimated : null;
+  }
+
+  mergePlanningChanges(target, source) {
+    if (!source) {
+      return target;
+    }
+    for (const category in source) {
+      target[category] ||= {};
+      for (const resourceKey in source[category]) {
+        target[category][resourceKey] =
+          (target[category][resourceKey] || 0) + source[category][resourceKey];
+      }
+    }
+    return target;
   }
 
   estimateExpansionStorageGainForTick(deltaTime = 1000, productivity = 1) {
@@ -2231,7 +2315,14 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!this.usesContinuousWithdrawalProductivity()) {
       return totals;
     }
-    const { shipCompletionCount } = this.calculateContinuousTransferPlanForMode('withdraw', deltaTime, null, 1);
+    let planningChanges = {};
+    this.mergePlanningChanges(planningChanges, this.buildStoreEstimateAccumulatedChanges(deltaTime));
+    this.mergePlanningChanges(planningChanges, this.buildWithdrawalEstimateAccumulatedChanges(deltaTime));
+    planningChanges = this.applyEstimatedExpansionStorageHeadroom(planningChanges, deltaTime, 1) || planningChanges;
+    const previousReserveGrowth = this.transferReserveGrowthThisTick;
+    this.transferReserveGrowthThisTick = this.estimateTransferReserveGrowthForTick(deltaTime, 1);
+    const { shipCompletionCount } = this.calculateContinuousTransferPlanForMode('withdraw', deltaTime, planningChanges, 1);
+    this.transferReserveGrowthThisTick = previousReserveGrowth;
     this.addShipCompletionCostsToTotals(totals, shipCompletionCount, false, deltaTime / 1000);
     return totals;
   }
@@ -2248,27 +2339,22 @@ class SpaceStorageProject extends SpaceshipProject {
       const seconds = deltaTime / 1000;
       let planningChanges = this.cloneAccumulatedChangesForPlanning(accumulatedChanges);
       if (!accumulatedChanges) {
-        const estimatedStoreSupply = this.buildStoreEstimateAccumulatedChanges(deltaTime);
-        if (estimatedStoreSupply) {
-          for (const category in estimatedStoreSupply) {
-            planningChanges[category] ||= {};
-            for (const resourceKey in estimatedStoreSupply[category]) {
-              planningChanges[category][resourceKey] =
-                (planningChanges[category][resourceKey] || 0) + estimatedStoreSupply[category][resourceKey];
-            }
-          }
-        }
+        this.mergePlanningChanges(planningChanges, this.buildStoreEstimateAccumulatedChanges(deltaTime));
+        this.mergePlanningChanges(planningChanges, this.buildWithdrawalEstimateAccumulatedChanges(deltaTime));
       }
       planningChanges = this.applyEstimatedExpansionStorageHeadroom(planningChanges, deltaTime, 1) || planningChanges;
       const withdrawalProductivity = this.usesContinuousWithdrawalProductivity()
         ? productivity
         : 1;
+      const previousReserveGrowth = this.transferReserveGrowthThisTick;
+      this.transferReserveGrowthThisTick = this.estimateTransferReserveGrowthForTick(deltaTime, 1);
       const withdrawalPlan = this.calculateContinuousTransferPlanForMode(
         'withdraw',
         deltaTime,
         planningChanges,
         withdrawalProductivity
       );
+      this.transferReserveGrowthThisTick = previousReserveGrowth;
       this.addShipCompletionCostsToTotals(totals, withdrawalPlan.shipCompletionCount, applyRates, seconds);
       if (this.hasContinuousTransferMode('store')) {
         const storePlan = this.calculateContinuousTransferPlanForMode('store', deltaTime, planningChanges, 1);
