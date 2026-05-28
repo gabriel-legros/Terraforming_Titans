@@ -731,10 +731,14 @@ class SpaceStorageProject extends SpaceshipProject {
       const reserve = this.getResourceStrategicReserveAmount(resourceKey, scopeFilter);
       const reserveBeforeGrowth = Math.max(0, reserve - reserveGrowth);
       const existingSurplus = Math.max(0, stored - reserveBeforeGrowth);
-      if (pending > 0) {
-        return existingSurplus + Math.max(0, pending - reserveGrowth);
+      const finalSurplus = Math.max(0, stored + pending - reserve);
+      if (stored < reserveBeforeGrowth) {
+        return 0;
       }
-      return Math.max(0, existingSurplus + pending);
+      if (pending > 0) {
+        return Math.min(finalSurplus, existingSurplus + Math.max(0, pending - reserveGrowth));
+      }
+      return Math.min(finalSurplus, Math.max(0, existingSurplus + pending));
     }
     const stored = this.getStoredResourceValueForTick(resourceKey, accumulatedChanges);
     const reserve = this.getResourceStrategicReserveAmount(resourceKey, scopeFilter);
