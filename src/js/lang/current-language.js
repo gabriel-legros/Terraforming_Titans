@@ -3719,6 +3719,7 @@ setLanguageData({
         presetOff: 'Preset Off',
         stepWithIndex: 'Step {index}',
         selectedPresetJsonSummary: 'Selected preset JSON',
+        presetJsonIncludeFieldLabel: 'Include this field in saved preset',
         sidebar: {
           autoTravel: 'Auto-travel',
           scripting: 'Scripting',

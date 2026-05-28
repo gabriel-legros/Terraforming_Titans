@@ -587,11 +587,11 @@ function updateBuildingsAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
-    onFieldChange: (fieldPath, nextValue) => {
+    onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!activePreset) {
         return;
       }
-      applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+      const applyOptions = {
         normalizeValue: (path, value) => {
           if (path[0] === 'buildings' && path[2] === 'control' && path[3] === 'workerPriority') {
             return Number.parseInt(value, 10);
@@ -616,7 +616,12 @@ function updateBuildingsAutomationUI() {
                 : 'automation';
           }
         }
-      });
+      };
+      if (changeOptions && changeOptions.remove) {
+        applyAutomationPresetJsonFieldRemoval(activePreset, fieldPath, applyOptions);
+      } else {
+        applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, applyOptions);
+      }
     }
   });
 

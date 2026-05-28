@@ -109,6 +109,11 @@
   opacity: 0.78;
 }
 
+.automation-preset-json-field-include-checkbox {
+  margin: 0 2px 0 0;
+  vertical-align: middle;
+}
+
 .automation-preset-row,
 .automation-add-entry-row {
   display: flex;

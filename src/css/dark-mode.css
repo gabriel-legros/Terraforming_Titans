@@ -1091,6 +1091,10 @@ body.dark-mode {
     color: #b8c4d9;
 }
 
+.dark-mode .automation-preset-json-field-include-checkbox {
+    accent-color: #74a0ff;
+}
+
 .dark-mode .automation-preset-row {
     background: #111827;
     border-color: #24324a;

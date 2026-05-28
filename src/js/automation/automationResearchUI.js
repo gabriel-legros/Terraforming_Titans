@@ -209,17 +209,22 @@ function updateResearchAutomationUI() {
 
   updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset, {
     rootPath: ['researches'],
-    onFieldChange: (fieldPath, nextValue) => {
+    onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!selectedPreset) {
         return;
       }
-      applyAutomationPresetJsonFieldEdit(selectedPreset, fieldPath, nextValue, {
+      const applyOptions = {
         onApplied: (appliedPath, appliedValue, rootKey) => {
           if (rootKey === 'showInSidebar') {
             researchAutomationUIState.builderShowInSidebar = appliedValue !== false;
           }
         }
-      });
+      };
+      if (changeOptions && changeOptions.remove) {
+        applyAutomationPresetJsonFieldRemoval(selectedPreset, fieldPath, applyOptions);
+      } else {
+        applyAutomationPresetJsonFieldEdit(selectedPreset, fieldPath, nextValue, applyOptions);
+      }
     }
   });
 }

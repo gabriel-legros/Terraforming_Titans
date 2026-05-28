@@ -1219,6 +1219,30 @@ function setAutomationPresetValueAtPath(target, path, value) {
   current[path[path.length - 1]] = value;
 }
 
+function removeAutomationPresetValueAtPath(target, path) {
+  if (!target || !Array.isArray(path) || path.length === 0) {
+    return false;
+  }
+  let parent = target;
+  for (let index = 0; index < path.length - 1; index += 1) {
+    parent = parent[path[index]];
+  }
+  const leafKey = path[path.length - 1];
+  if (Array.isArray(parent)) {
+    const numericIndex = Number(leafKey);
+    if (!Number.isInteger(numericIndex) || numericIndex < 0 || numericIndex >= parent.length) {
+      return false;
+    }
+    parent.splice(numericIndex, 1);
+    return true;
+  }
+  if (!parent || parent.constructor !== Object || !Object.prototype.hasOwnProperty.call(parent, leafKey)) {
+    return false;
+  }
+  delete parent[leafKey];
+  return true;
+}
+
 function buildAutomationPresetVisibleRenderTree(sourcePreset, visibleLeafPaths) {
   const root = {};
   const ensureContainer = (parent, key, nextSegment) => {
@@ -1254,9 +1278,10 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     content.appendChild(document.createTextNode(text));
   };
 
-  const appendLeafInput = (path, value, isString) => {
+  const appendLeafInput = (path, value, isString, keyPrefix) => {
     const pathKey = buildAutomationPresetLeafPathKey(path);
     const draftEntry = details._jsonDraftMap[pathKey];
+    const isIncluded = !draftEntry || draftEntry.included !== false;
     const valueToRender = draftEntry ? draftEntry.value : value;
     const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(path, value, preset) : null;
     const hasCustomSelectOptions = !!(fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length);
@@ -1300,6 +1325,55 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     if (input.disabled) {
       input.classList.add('automation-preset-json-field-input-disabled');
     }
+    if (!isIncluded && !input.disabled) {
+      input.disabled = true;
+      input.classList.add('automation-preset-json-field-input-disabled');
+    }
+
+    let includeCheckbox = null;
+    if (path.length !== 1 || path[0] !== 'id') {
+      includeCheckbox = document.createElement('input');
+      includeCheckbox.type = 'checkbox';
+      includeCheckbox.checked = isIncluded;
+      includeCheckbox.classList.add('automation-preset-json-field-include-checkbox');
+      includeCheckbox.title = getAutomationCardText('presetJsonIncludeFieldLabel', {}, 'Include this field in saved preset');
+      includeCheckbox.addEventListener('change', (event) => {
+        const nextIncluded = !!event.target.checked;
+        const basePreset = details._activePresetRef || preset;
+        const baseValue = getAutomationPresetValueAtPath(basePreset, path);
+        const nextValue = hasCustomSelectOptions
+          ? parseAutomationPresetJsonFieldValue(input.value)
+          : isBooleanLeaf
+            ? input.value === 'true'
+            : isString
+              ? input.value
+              : parseAutomationPresetJsonFieldValue(input.value);
+        const baseMatches = JSON.stringify(baseValue) === JSON.stringify(nextValue);
+        if (nextIncluded && baseMatches) {
+          delete details._jsonDraftMap[pathKey];
+        } else {
+          details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue, included: nextIncluded };
+        }
+        input.disabled = !nextIncluded;
+        if (!nextIncluded) {
+          input.classList.add('automation-preset-json-field-input-disabled');
+        } else if (!(path.length === 1 && path[0] === 'id')) {
+          input.classList.remove('automation-preset-json-field-input-disabled');
+        }
+        details._jsonDirty = Object.keys(details._jsonDraftMap).length > 0;
+        if (details._jsonDirty) {
+          saveAutomationPresetJsonDraftStore(details, preset.id);
+        } else {
+          clearAutomationPresetJsonDraftStore(details, preset.id);
+        }
+        if (details._onDirtyChange) {
+          details._onDirtyChange(details._jsonDirty);
+        }
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+    }
+
     input.addEventListener('change', (event) => {
       try {
         const nextValue = hasCustomSelectOptions
@@ -1311,10 +1385,11 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
               : parseAutomationPresetJsonFieldValue(event.target.value);
         const basePreset = details._activePresetRef || preset;
         const baseValue = getAutomationPresetValueAtPath(basePreset, path);
-        if (JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
+        const nextIncluded = includeCheckbox ? includeCheckbox.checked : true;
+        if (nextIncluded && JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
           delete details._jsonDraftMap[pathKey];
         } else {
-          details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue };
+          details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue, included: nextIncluded };
         }
         details._jsonDirty = Object.keys(details._jsonDraftMap).length > 0;
         if (details._jsonDirty) {
@@ -1337,6 +1412,13 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
       }
     });
     details._jsonInputMap[pathKey] = input;
+    if (includeCheckbox) {
+      content.appendChild(includeCheckbox);
+      writeText(' ');
+    }
+    if (keyPrefix) {
+      writeText(keyPrefix);
+    }
     if (isString && !hasCustomSelectOptions) {
       writeText('"');
       content.appendChild(input);
@@ -1367,8 +1449,8 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
       writeText(`${indentText}}${isLast ? '' : ','}\n`);
       return;
     }
-    writeText(`${indentText}${keyPrefix}`);
-    appendLeafInput(path, value, typeof value === 'string');
+    writeText(indentText);
+    appendLeafInput(path, value, typeof value === 'string', keyPrefix);
     writeText(`${isLast ? '' : ','}\n`);
   };
 
@@ -1404,6 +1486,23 @@ function applyAutomationPresetJsonFieldEdit(preset, path, nextValue, options = {
   parent[leafKey] = finalValue;
   if (options.onApplied) {
     options.onApplied(path, finalValue, rootKey);
+  }
+  return true;
+}
+
+function applyAutomationPresetJsonFieldRemoval(preset, path, options = {}) {
+  if (!preset || !Array.isArray(path) || path.length === 0) {
+    return false;
+  }
+  if (path.length === 1 && path[0] === 'id') {
+    return false;
+  }
+  const rootKey = path[0];
+  if (!removeAutomationPresetValueAtPath(preset, path)) {
+    return false;
+  }
+  if (options.onApplied) {
+    options.onApplied(path, undefined, rootKey);
   }
   return true;
 }
@@ -1606,6 +1705,9 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     if (!draftEntry) {
       continue;
     }
+    if (draftEntry.included === false) {
+      continue;
+    }
     const baseValue = getAutomationPresetValueAtPath(preset, path);
     if (JSON.stringify(baseValue) === JSON.stringify(draftEntry.value)) {
       delete details._jsonDraftMap[pathKey];
@@ -1640,6 +1742,9 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       const draftEntries = Object.values(details._jsonDraftMap);
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
+        if (draftEntry.included === false) {
+          continue;
+        }
         const baseValue = getAutomationPresetValueAtPath(currentPreset, draftEntry.path);
         const fieldOptions = fieldOptionsResolver
           ? fieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
@@ -1663,7 +1768,11 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       }
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
-        currentOnFieldChange(draftEntry.path, draftEntry.value);
+        if (draftEntry.included === false) {
+          currentOnFieldChange(draftEntry.path, undefined, { remove: true });
+        } else {
+          currentOnFieldChange(draftEntry.path, draftEntry.value);
+        }
       }
       details._jsonDraftMap = {};
       details._jsonDirty = false;
@@ -1709,6 +1818,15 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       const valueToRender = draftEntry
         ? draftEntry.value
         : getAutomationPresetValueAtPath(preset, leafPath);
+      const nextIncluded = !draftEntry || draftEntry.included !== false;
+      if (input.disabled !== !nextIncluded) {
+        input.disabled = !nextIncluded;
+      }
+      if (nextIncluded) {
+        input.classList.remove('automation-preset-json-field-input-disabled');
+      } else {
+        input.classList.add('automation-preset-json-field-input-disabled');
+      }
       if (input.tagName === 'SELECT') {
         const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(leafPath, valueToRender, effectivePreset) : null;
         if (fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length) {

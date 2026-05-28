@@ -690,11 +690,11 @@ function updateProjectsAutomationUI() {
       updateAutomationUI();
     },
     getFieldOptions: (fieldPath) => getProjectPresetJsonFieldOptions(fieldPath),
-    onFieldChange: (fieldPath, nextValue) => {
+    onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!activePreset) {
         return;
       }
-      applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+      const applyOptions = {
         onApplied: (appliedPath, appliedValue, rootKey) => {
           if (rootKey === 'showInSidebar') {
             projectAutomationUIState.builderShowInSidebar = appliedValue !== false;
@@ -712,7 +712,12 @@ function updateProjectsAutomationUI() {
                 : 'operations';
           }
         }
-      });
+      };
+      if (changeOptions && changeOptions.remove) {
+        applyAutomationPresetJsonFieldRemoval(activePreset, fieldPath, applyOptions);
+      } else {
+        applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, applyOptions);
+      }
     }
   });
 
