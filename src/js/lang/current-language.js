@@ -1301,6 +1301,13 @@ setLanguageData({
         divideTen: '/10',
         timesTen: 'x10',
         buildButton: 'Build {count} Batteries',
+        autobuild: {
+          checkbox: 'Autobuild to target',
+          basisEffectiveWorlds: 'x effective worlds',
+          basisHephaestusYards: 'x Hephaestus yards',
+          currentTarget: 'Target: {value}',
+          blockedHint: 'Insufficient resources or requirements not met.',
+        },
       },
       overpopulationOneillCylinders: {
         title: "O'Neill Cylinder Components",

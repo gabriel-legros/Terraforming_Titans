@@ -887,6 +887,7 @@ function createProjectItem(project) {
   }
 
   const showTravelReset = project.name !== 'dysonSwarmReceiver' &&
+    project.name !== 'spaceAntimatter' &&
     (project.attributes?.spaceStorage ||
     project.attributes?.canUseSpaceStorage ||
     project.attributes?.projectGroup === 'specializedWorlds');
@@ -1192,12 +1193,12 @@ function getUpdatedResourceGain(project) {
   return updatedResourceGain;
 }
 
-function getAvailableProjectCostAmount(project, category, resource) {
+function getAvailableProjectCostAmount(project, category, resource, storageAccess = null) {
   const colonyAvailable = resources[category][resource].value;
   if (project && project.attributes?.canUseSpaceStorage) {
     const storageKey = resource === 'water' ? 'liquidWater' : resource;
-    const storageProj = projectManager?.projects?.spaceStorage;
-    return getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
+    const effectiveStorageAccess = storageAccess || project.createSpaceStorageAccess('expansions');
+    return getMegaProjectResourceAvailability(effectiveStorageAccess, storageKey, colonyAvailable);
   }
   return colonyAvailable;
 }
@@ -1213,6 +1214,9 @@ function updateCostDisplay(project) {
   const elements = projectElements[project.name];
   if (elements && elements.costItems) {
     const cost = project.getScaledCost();
+    const storageAccess = project && project.attributes?.canUseSpaceStorage
+      ? project.createSpaceStorageAccess('expansions')
+      : null;
     let hasItem = false;
     for (const key in elements.costItems) {
       const [category, resource] = key.split('.');
@@ -1221,7 +1225,7 @@ function updateCostDisplay(project) {
       if (requiredAmount > 0) {
         const hasPreviousItem = hasItem;
         hasItem = true;
-        const availableAmount = getAvailableProjectCostAmount(project, category, resource);
+        const availableAmount = getAvailableProjectCostAmount(project, category, resource, storageAccess);
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';

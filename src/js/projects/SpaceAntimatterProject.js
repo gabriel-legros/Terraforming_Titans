@@ -32,6 +32,11 @@
       this.repeatCount = 0n;
       this.buildCount = 1;
       this.activeBuildCount = 1;
+      this.autoBuildToTargetEnabled = false;
+      this.autoBuildTargetMultiplier = 1;
+      this.autoBuildTargetBasis = 'effectiveWorlds';
+      this._autoBuildTargetRemaining = 0n;
+      this.autoBuildTargetBlocked = false;
       this.startedCompleted = false;
       this.uiElements = null;
     }
@@ -49,7 +54,11 @@
         batteriesBuiltValue: card.querySelector('[data-space-antimatter-ui="batteriesBuiltValue"]'),
         storageBonusValue: card.querySelector('[data-space-antimatter-ui="storageBonusValue"]'),
         antimatterStorageBonusValue: card.querySelector('[data-space-antimatter-ui="antimatterStorageBonusValue"]'),
-        buildButton: card.querySelector('[data-space-antimatter-ui="buildButton"]')
+        buildButton: card.querySelector('[data-space-antimatter-ui="buildButton"]'),
+        autoBuildCheckbox: card.querySelector('[data-space-antimatter-ui="autoBuildCheckbox"]'),
+        autoBuildMultiplierInput: card.querySelector('[data-space-antimatter-ui="autoBuildMultiplierInput"]'),
+        autoBuildBasisSelect: card.querySelector('[data-space-antimatter-ui="autoBuildBasisSelect"]'),
+        autoBuildTargetStatus: card.querySelector('[data-space-antimatter-ui="autoBuildTargetStatus"]')
       };
       if (!nextElements.buildButton) {
         this.uiElements = null;
@@ -160,10 +169,63 @@
       if (!container) {
         return;
       }
-      const children = Array.from(container.children || []);
-      for (let i = 0; i < children.length; i += 1) {
-        children[i].style.display = 'none';
+      if (container.querySelector('[data-space-antimatter-ui="autoBuildContainer"]')) {
+        return;
       }
+      const autoBuildContainer = document.createElement('div');
+      autoBuildContainer.dataset.spaceAntimatterUi = 'autoBuildContainer';
+      autoBuildContainer.classList.add('checkbox-container');
+
+      const autoBuildCheckbox = document.createElement('input');
+      autoBuildCheckbox.type = 'checkbox';
+      autoBuildCheckbox.dataset.spaceAntimatterUi = 'autoBuildCheckbox';
+      const autoBuildCheckboxLabel = document.createElement('label');
+      autoBuildCheckboxLabel.textContent = getSpaceAntimatterText('autobuild.checkbox', null, 'Autobuild to target');
+
+      const autoBuildMultiplierInput = document.createElement('input');
+      autoBuildMultiplierInput.type = 'text';
+      autoBuildMultiplierInput.dataset.spaceAntimatterUi = 'autoBuildMultiplierInput';
+      autoBuildMultiplierInput.classList.add('automation-input');
+      autoBuildMultiplierInput.style.width = '110px';
+      autoBuildMultiplierInput.inputMode = 'decimal';
+
+      const autoBuildBasisSelect = document.createElement('select');
+      autoBuildBasisSelect.dataset.spaceAntimatterUi = 'autoBuildBasisSelect';
+      autoBuildBasisSelect.classList.add('automation-select');
+      const effectiveWorldsOption = document.createElement('option');
+      effectiveWorldsOption.value = 'effectiveWorlds';
+      effectiveWorldsOption.textContent = getSpaceAntimatterText('autobuild.basisEffectiveWorlds', null, 'x effective worlds');
+      const hephaestusYardsOption = document.createElement('option');
+      hephaestusYardsOption.value = 'hephaestusYards';
+      hephaestusYardsOption.textContent = getSpaceAntimatterText('autobuild.basisHephaestusYards', null, 'x Hephaestus yards');
+      autoBuildBasisSelect.append(effectiveWorldsOption, hephaestusYardsOption);
+
+      const autoBuildTargetStatus = document.createElement('span');
+      autoBuildTargetStatus.dataset.spaceAntimatterUi = 'autoBuildTargetStatus';
+      autoBuildTargetStatus.style.marginLeft = '4px';
+      autoBuildTargetStatus.style.fontSize = '0.9em';
+
+      autoBuildContainer.append(autoBuildCheckbox, autoBuildCheckboxLabel, autoBuildMultiplierInput, autoBuildBasisSelect, autoBuildTargetStatus);
+      container.appendChild(autoBuildContainer);
+
+      autoBuildCheckbox.addEventListener('change', () => {
+        this.autoBuildToTargetEnabled = autoBuildCheckbox.checked;
+      });
+      wireStringNumberInput(autoBuildMultiplierInput, {
+        parseValue: (value) => {
+          const parsed = parseFlexibleNumber(value);
+          return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+        },
+        formatValue: (value) => formatNumber(value, false, 2),
+        onValue: (value) => {
+          this.autoBuildTargetMultiplier = Math.max(0, value);
+        }
+      });
+      autoBuildBasisSelect.addEventListener('change', () => {
+        this.autoBuildTargetBasis = autoBuildBasisSelect.value === 'hephaestusYards'
+          ? 'hephaestusYards'
+          : 'effectiveWorlds';
+      });
     }
 
     getScaledCost() {
@@ -195,7 +257,12 @@
     }
 
     start(resources) {
-      this.activeBuildCount = this.getSelectedBuildCount();
+      const selectedCount = normalizeSpaceAntimatterCount(this.getSelectedBuildCount());
+      const autoTargetRemaining = normalizeSpaceAntimatterCount(this._autoBuildTargetRemaining);
+      this.activeBuildCount = autoTargetRemaining > 0n && autoTargetRemaining < selectedCount
+        ? serializeSpaceAntimatterCount(autoTargetRemaining)
+        : serializeSpaceAntimatterCount(selectedCount);
+      this._autoBuildTargetRemaining = 0n;
       const started = super.start(resources);
       if (!started) {
         this.activeBuildCount = 1;
@@ -313,7 +380,6 @@
         this.scaleBuildCount(10);
         refresh();
       });
-
       this.uiElements = {
         batteriesBuiltValue: batteriesBuilt.value,
         storageBonusValue: storageBonus.value,
@@ -338,13 +404,34 @@
         { count: formatNumber(selected, true) },
         `Build ${formatNumber(selected, true)} Batteries`
       );
-      uiElements.buildButton.disabled = !this.canStart();
+      uiElements.buildButton.disabled = false;
+      uiElements.buildButton.title = this.canStart()
+        ? ''
+        : getSpaceAntimatterText('autobuild.blockedHint', null, 'Insufficient resources or requirements not met.');
+      uiElements.autoBuildCheckbox.checked = this.autoBuildToTargetEnabled === true;
+      if (document.activeElement !== uiElements.autoBuildMultiplierInput) {
+        uiElements.autoBuildMultiplierInput.value = formatNumber(this.autoBuildTargetMultiplier || 0, false, 2);
+      }
+      const basisValue = this.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
+      if (uiElements.autoBuildBasisSelect.value !== basisValue) {
+        uiElements.autoBuildBasisSelect.value = basisValue;
+      }
+      const targetCount = this.getAutoBuildTargetCount();
+      uiElements.autoBuildTargetStatus.textContent = getSpaceAntimatterText(
+        'autobuild.currentTarget',
+        { value: formatNumber(targetCount, true) },
+        `Target: ${formatNumber(targetCount, true)}`
+      );
+      uiElements.autoBuildTargetStatus.style.color = this.autoBuildTargetBlocked ? 'orange' : '';
     }
 
     saveAutomationSettings() {
       return {
         ...super.saveAutomationSettings(),
-        buildCount: serializeSpaceAntimatterCount(this.buildCount)
+        buildCount: serializeSpaceAntimatterCount(this.buildCount),
+        autoBuildToTargetEnabled: this.autoBuildToTargetEnabled === true,
+        autoBuildTargetMultiplier: Math.max(0, Number(this.autoBuildTargetMultiplier) || 0),
+        autoBuildTargetBasis: this.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds'
       };
     }
 
@@ -353,6 +440,10 @@
       if (Object.prototype.hasOwnProperty.call(settings, 'buildCount')) {
         this.buildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(settings.buildCount || 1));
       }
+      this.autoBuildToTargetEnabled = settings.autoBuildToTargetEnabled === true;
+      this.autoBuildTargetMultiplier = Math.max(0, Number(settings.autoBuildTargetMultiplier ?? settings.autoBuildTargetPercent) || 0);
+      this.autoBuildTargetBasis = settings.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
+      this.autoBuildTargetBlocked = false;
     }
 
     saveState() {
@@ -361,6 +452,9 @@
         repeatCount: serializeSpaceAntimatterCount(this.repeatCount),
         buildCount: serializeSpaceAntimatterCount(this.buildCount),
         activeBuildCount: serializeSpaceAntimatterCount(this.activeBuildCount),
+        autoBuildToTargetEnabled: this.autoBuildToTargetEnabled === true,
+        autoBuildTargetMultiplier: Math.max(0, Number(this.autoBuildTargetMultiplier) || 0),
+        autoBuildTargetBasis: this.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds',
         startedCompleted: this.startedCompleted === true
       };
       return state;
@@ -371,6 +465,10 @@
       this.repeatCount = normalizeSpaceAntimatterCount(state.repeatCount || 0);
       this.buildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(state.buildCount || 1));
       this.activeBuildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(state.activeBuildCount || 1));
+      this.autoBuildToTargetEnabled = state.autoBuildToTargetEnabled === true;
+      this.autoBuildTargetMultiplier = Math.max(0, Number(state.autoBuildTargetMultiplier ?? state.autoBuildTargetPercent) || 0);
+      this.autoBuildTargetBasis = state.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
+      this.autoBuildTargetBlocked = false;
       this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0n || this.isCompleted === true;
       this.applyBatteryStorageEffect();
     }
@@ -379,6 +477,9 @@
       const state = super.saveTravelState();
       state.repeatCount = serializeSpaceAntimatterCount(this.repeatCount);
       state.buildCount = serializeSpaceAntimatterCount(this.buildCount);
+      state.autoBuildToTargetEnabled = this.autoBuildToTargetEnabled === true;
+      state.autoBuildTargetMultiplier = Math.max(0, Number(this.autoBuildTargetMultiplier) || 0);
+      state.autoBuildTargetBasis = this.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
       state.startedCompleted = this.startedCompleted === true;
       return state;
     }
@@ -387,9 +488,52 @@
       super.loadTravelState(state);
       this.repeatCount = normalizeSpaceAntimatterCount(state.repeatCount || this.repeatCount);
       this.buildCount = serializeSpaceAntimatterCount(normalizeBuildStepCount(state.buildCount || this.buildCount));
+      this.autoBuildToTargetEnabled = state.autoBuildToTargetEnabled === true;
+      this.autoBuildTargetMultiplier = Math.max(0, Number(state.autoBuildTargetMultiplier ?? state.autoBuildTargetPercent) || 0);
+      this.autoBuildTargetBasis = state.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
+      this.autoBuildTargetBlocked = false;
       this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0n || this.isCompleted === true;
       this.applyBatteryStorageEffect();
       this.applyAntimatterStorageEffect();
+    }
+
+    getAutoBuildTargetCount() {
+      const multiplier = Math.max(0, Number(this.autoBuildTargetMultiplier) || 0);
+      if (multiplier <= 0) {
+        return 0n;
+      }
+      if (this.autoBuildTargetBasis === 'hephaestusYards') {
+        const yardCount = normalizeSpaceAntimatterCount(projectManager.projects.hephaestusMegaconstruction.repeatCount);
+        return BigInt(Math.floor(Number(yardCount) * multiplier));
+      }
+      const effectiveWorlds = Math.max(0, Number(spaceManager.getTerraformedPlanetCount()) || 0);
+      return BigInt(Math.floor(effectiveWorlds * multiplier));
+    }
+
+    tryAutoBuildToTarget() {
+      if (!this.autoBuildToTargetEnabled || this.isActive || this.isCompleted || this.isPaused) {
+        this.autoBuildTargetBlocked = false;
+        return;
+      }
+      const targetCount = this.getAutoBuildTargetCount();
+      const currentCount = normalizeSpaceAntimatterCount(this.repeatCount);
+      if (targetCount <= currentCount) {
+        this.autoBuildTargetBlocked = false;
+        return;
+      }
+      const remaining = targetCount - currentCount;
+      if (!this.canStart()) {
+        this.autoBuildTargetBlocked = true;
+        return;
+      }
+      this.autoBuildTargetBlocked = false;
+      this._autoBuildTargetRemaining = remaining;
+      projectManager.startProject(this.name);
+    }
+
+    update(deltaTime) {
+      super.update(deltaTime);
+      this.tryAutoBuildToTarget();
     }
   }
 
