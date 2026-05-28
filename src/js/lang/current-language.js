@@ -565,6 +565,7 @@ setLanguageData({
         production: 'Production:',
         consumptionAndMaintenance: 'Consumption and Maintenance:',
         overflow: 'Overflow:',
+        lostToOverflowLast1s: 'Lost to overflow (last 1s):',
         autobuildCost: 'Autobuild Cost (avg 10s):',
         autobuildGain: 'Autobuild Gain (avg 10s):',
         assignments: 'Assignments:',

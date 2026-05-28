@@ -688,18 +688,31 @@ function createTooltipElement(category, resourceName) {
   autobuildDiv.appendChild(autoTable);
   autobuildDiv._info = { header: autoHeader, value: autoValue, table: autoTable, rows: new Map() };
 
+  const overflowLossDiv = document.createElement('div');
+  overflowLossDiv.id = getResourceDomId(category, resourceName, 'tooltip-overflow-loss');
+  overflowLossDiv.style.display = 'none';
+  overflowLossDiv.appendChild(document.createElement('br'));
+  const overflowLossHeader = document.createElement('strong');
+  overflowLossHeader.textContent = getResourceUICommonText('lostToOverflowLast1s', 'Lost to overflow (last 1s):');
+  overflowLossDiv.appendChild(overflowLossHeader);
+  overflowLossDiv.appendChild(document.createTextNode(' '));
+  const overflowLossValue = document.createElement('span');
+  overflowLossDiv.appendChild(overflowLossValue);
+  overflowLossDiv._info = { header: overflowLossHeader, value: overflowLossValue };
+
   const col1 = document.createElement('div');
   col1.appendChild(headerDiv);
   col1.appendChild(productionDiv);
   col1.appendChild(consumptionDiv);
   col1.appendChild(overflowDiv);
   col1.appendChild(autobuildDiv);
+  col1.appendChild(overflowLossDiv);
   tooltip.appendChild(col1);
 
   const col2 = document.createElement('div');
   const col3 = document.createElement('div');
   // Store references needed for dynamic column reflow
-  tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv };
+  tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv };
   tooltip._prepareTooltipContent = function() {
     updateResourceRateDisplay(getDisplayResourceObject(resources, category, resourceName), 0, category, resourceName);
   };
@@ -972,7 +985,7 @@ function isAutobuildTrackedResource(resource) {
 
 function setResourceTooltipColumns(tooltip, cols) {
   if (!tooltip || !tooltip._columnsInfo) return;
-  const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
+  const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
   col1.innerHTML = '';
   if (cols === 3) {
     col2.innerHTML = '';
@@ -1004,6 +1017,7 @@ function setResourceTooltipColumns(tooltip, cols) {
     }
     col3.appendChild(netDiv);
     col3.appendChild(autobuildDiv);
+    col3.appendChild(overflowLossDiv);
     if (!col2.parentNode) tooltip.appendChild(col2);
     if (!col3.parentNode) tooltip.appendChild(col3);
 
@@ -1051,6 +1065,7 @@ function setResourceTooltipColumns(tooltip, cols) {
     col1.appendChild(consumptionDiv);
     col1.appendChild(overflowDiv);
     col1.appendChild(autobuildDiv);
+    col1.appendChild(overflowLossDiv);
     if (col2.parentNode) tooltip.removeChild(col2);
     if (col3.parentNode) tooltip.removeChild(col3);
   }
@@ -2083,6 +2098,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-consumption'));
   const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-overflow'));
   const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-autobuild'));
+  const overflowLossDiv = entry?.tooltip?.overflowLossDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-overflow-loss'));
   const warningDiv = entry?.tooltip?.warningDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-warning'));
 
   const consumptionDisplay = getDisplayConsumptionRates(resource);
@@ -2608,6 +2624,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       autobuildDiv.style.display = 'none';
     }
   }
+
+  if (overflowLossDiv) {
+    if (resource.hasCap) {
+      const overflowLost = resource.overflowLostLast1s || 0;
+      overflowLossDiv.style.display = 'block';
+      overflowLossDiv._info.value.textContent = `${formatNumber(overflowLost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
+    } else {
+      overflowLossDiv.style.display = 'none';
+    }
+  }
 }
 
 function updateResourceUI(resources) {
@@ -2681,6 +2707,7 @@ function cacheSingleResource(category, resourceName) {
       consumptionDiv: document.getElementById(`${domPrefix}-tooltip-consumption`),
       overflowDiv: document.getElementById(`${domPrefix}-tooltip-overflow`),
       autobuildDiv: document.getElementById(`${domPrefix}-tooltip-autobuild`),
+      overflowLossDiv: document.getElementById(`${domPrefix}-tooltip-overflow-loss`),
       warningDiv: document.getElementById(`${domPrefix}-tooltip-warning`),
     }
   };
