@@ -997,10 +997,12 @@ class Project extends EffectableEntity {
     const accumulatedChanges = options.accumulatedChanges || null;
     const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
     const getAvailable = (resourceKey) => {
-      const stored = reserveScope === 'ignoreReserve'
-        ? storageProj.getStoredResourceValue(resourceKey)
-        : storageProj.getAvailableStoredResource(resourceKey, reserveScope);
-      return Math.max(0, stored + getStoragePending(resourceKey));
+      const stored = storageProj.getStoredResourceValue(resourceKey) + getStoragePending(resourceKey);
+      if (reserveScope === 'ignoreReserve') {
+        return Math.max(0, stored);
+      }
+      const reserve = storageProj.getResourceStrategicReserveAmount(resourceKey, reserveScope);
+      return Math.max(0, stored - reserve);
     };
     return {
       storageProject: storageProj,
