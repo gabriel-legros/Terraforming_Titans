@@ -223,9 +223,6 @@ class AntimatterBattery extends Building {
       this._fillCooldownEndsAtMs = Date.now() + (FILL_COOLDOWN_SECONDS * 1000);
     }
 
-    globalThis.updateResourceDisplay?.(resources);
-    globalThis.updateStructureDisplay?.(structures);
-    this.updateUI(this._cachedUI || {});
     return { energyGain, spaceEnergySpent };
   }
 
