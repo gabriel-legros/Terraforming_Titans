@@ -258,9 +258,6 @@ class Resource extends EffectableEntity {
     this.hideRate = resourceData.hideRate || false; // Flag to hide rate display in UI
     this.showUndergroundRate = resourceData.showUndergroundRate === true;
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
-    this.overflowLostHistory = [];
-    this.overflowLostLast1s = 0;
-    this.overflowLostWindowNowMs = 0;
     this.rateHistory = []; // Keep history of recent net rates
     this.marginTop = resourceData.marginTop || 0;
     this.marginBottom = resourceData.marginBottom || 0;
@@ -804,13 +801,6 @@ class Resource extends EffectableEntity {
     this.resetBaseProductionRate();
     this.resetRates();
     this.rateHistory = [];
-    this.overflowLostHistory = [];
-    this.overflowLostLast1s = 0;
-    this.overflowLostWindowNowMs = 0;
-  }
-
-  updateOverflowLostWindow(lossAmount, deltaTimeMs) {
-    updateOverflowLostWindowForResource(this, lossAmount, deltaTimeMs);
   }
 
   // Record a net production rate and keep only the last 10 entries
@@ -1392,29 +1382,6 @@ function applyProjectResourceRatesForAvailability(project, cost = {}, gain = {},
   }
 }
 
-function updateOverflowLostWindowForResource(resource, lossAmount, deltaTimeMs) {
-  resource.overflowLostHistory = Array.isArray(resource.overflowLostHistory) ? resource.overflowLostHistory : [];
-  resource.overflowLostLast1s = resource.overflowLostLast1s || 0;
-  resource.overflowLostWindowNowMs = resource.overflowLostWindowNowMs || 0;
-  const tickMs = Math.max(0, deltaTimeMs || 0);
-  resource.overflowLostWindowNowMs += tickMs;
-  if (lossAmount > 0) {
-    resource.overflowLostHistory.push({
-      timeMs: resource.overflowLostWindowNowMs,
-      amount: lossAmount,
-    });
-  }
-  const cutoff = resource.overflowLostWindowNowMs - 1000;
-  while (resource.overflowLostHistory.length > 0 && resource.overflowLostHistory[0].timeMs < cutoff) {
-    resource.overflowLostHistory.shift();
-  }
-  let total = 0;
-  for (let i = 0; i < resource.overflowLostHistory.length; i += 1) {
-    total += resource.overflowLostHistory[i].amount;
-  }
-  resource.overflowLostLast1s = total;
-}
-
 function calculateProductionRates(deltaTime, buildings, options = {}) {
   const {
     useProductivity = false,
@@ -1976,8 +1943,6 @@ function produceResources(deltaTime, buildings) {
         }
       }
 
-      const overflowLost = Math.max(newValue - finalValue, 0);
-      updateOverflowLostWindowForResource(resource, overflowLost, deltaTime);
       resource.value = Math.max(finalValue, 0); // Ensure non-negative
 
       const cleanupSlackForResource = wasteCleanupSlack[category]?.[resourceName] || 0;
@@ -1993,10 +1958,6 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (spaceStorageProject) {
-    const spaceStorageBeforeSharedClamp = {};
-    for (const resourceName in resources.spaceStorage) {
-      spaceStorageBeforeSharedClamp[resourceName] = resources.spaceStorage[resourceName].value;
-    }
     const tickSeconds = deltaTime / 1000;
     spaceStorageProject.applyTentativeWithdrawalRefunds?.(
       accumulatedSpecialChanges,
@@ -2005,15 +1966,6 @@ function produceResources(deltaTime, buildings) {
       tickSeconds
     );
     clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorageCapLimits);
-    for (const resourceName in resources.spaceStorage) {
-      const resource = resources.spaceStorage[resourceName];
-      const previousValue = spaceStorageBeforeSharedClamp[resourceName] || 0;
-      const lostToSharedCap = Math.max(previousValue - resource.value, 0);
-      if (lostToSharedCap > 0) {
-        updateOverflowLostWindowForResource(resource, lostToSharedCap, 0);
-      }
-    }
-    spaceStorageProject.updateTransferReserveDeficitsAfterTick?.();
   }
 
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
