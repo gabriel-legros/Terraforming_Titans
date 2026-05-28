@@ -1966,6 +1966,7 @@ function produceResources(deltaTime, buildings) {
       tickSeconds
     );
     clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorageCapLimits);
+    spaceStorageProject.updateTransferReserveDeficitsAfterTick?.();
   }
 
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
@@ -2054,18 +2055,11 @@ function clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorage
       value,
       capLimit: hasSetCap ? Math.max(0, capLimit) : Infinity,
       hasSetCap,
-      minValue: Math.max(0, spaceStorageProject.getResourceStrategicReserveAmount?.(resourceName, 'transfers') || 0),
     });
     total += value;
   }
 
   if (total <= maxStorage) {
-    entries.forEach((entry) => {
-      const minValue = Math.max(0, entry.minValue || 0);
-      if (minValue > 0 && entry.resource.value < minValue) {
-        entry.resource.value = minValue;
-      }
-    });
     if (spaceStorageProject.reconcileUsedStorage) {
       spaceStorageProject.reconcileUsedStorage();
     }
@@ -2087,8 +2081,7 @@ function clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorage
     if (remainingOverflow <= 0 || !entry.hasSetCap || entry.resource.value <= entry.capLimit) {
       return;
     }
-    const reductionFloor = Math.max(entry.capLimit, entry.minValue || 0);
-    const reduction = Math.min(remainingOverflow, Math.max(0, entry.resource.value - reductionFloor));
+    const reduction = Math.min(remainingOverflow, entry.resource.value - entry.capLimit);
     entry.resource.value -= reduction;
     remainingOverflow -= reduction;
   });
@@ -2104,13 +2097,6 @@ function clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorage
     reduceSpaceStorageEntriesByAmount(entries, remainingOverflow);
   }
 
-  entries.forEach((entry) => {
-    const minValue = Math.max(0, entry.minValue || 0);
-    if (minValue > 0 && entry.resource.value < minValue) {
-      entry.resource.value = minValue;
-    }
-  });
-
   if (spaceStorageProject.reconcileUsedStorage) {
     spaceStorageProject.reconcileUsedStorage();
   }
@@ -2119,14 +2105,14 @@ function clampSpaceStorageResourcesToSharedCap(spaceStorageProject, spaceStorage
 function reduceSpaceStorageEntriesByAmount(entries, amount) {
   let available = 0;
   entries.forEach((entry) => {
-    available += Math.max(0, entry.resource.value - (entry.minValue || 0));
+    available += Math.max(0, entry.resource.value);
   });
   if (available <= 0) {
     return amount;
   }
   if (available <= amount) {
     entries.forEach((entry) => {
-      entry.resource.value = Math.max(0, entry.minValue || 0);
+      entry.resource.value = 0;
     });
     return amount - available;
   }
@@ -2135,16 +2121,13 @@ function reduceSpaceStorageEntriesByAmount(entries, amount) {
   const ratio = targetTotal / available;
   let reducedTotal = 0;
   let largestEntry = entries[0];
-  let largestReducible = -1;
   entries.forEach((entry) => {
-    const minValue = Math.max(0, entry.minValue || 0);
-    const currentValue = Math.max(0, entry.resource.value - minValue);
-    const nextValue = minValue + currentValue * ratio;
+    const currentValue = Math.max(0, entry.resource.value);
+    const nextValue = currentValue * ratio;
     entry.resource.value = nextValue;
-    reducedTotal += nextValue - minValue;
-    if (currentValue > largestReducible) {
+    reducedTotal += nextValue;
+    if (currentValue > Math.max(0, largestEntry.resource.value)) {
       largestEntry = entry;
-      largestReducible = currentValue;
     }
   });
 

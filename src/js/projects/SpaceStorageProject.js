@@ -100,6 +100,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.hydrogenTransferTarget = 'atmospheric';
     this.artificialEcosystemsEnabled = false;
     this.resourceStrategicReserves = {};
+    this.transferReserveDeficits = {};
+    this.transferReserveSurplusAtTickStart = {};
+    this.transferReserveWithdrawnThisTick = {};
     this.usedStorageResyncTimer = 0;
     this.shipOperationKesslerElapsed = 0;
     this.shipOperationKesslerPending = false;
@@ -499,6 +502,41 @@ class SpaceStorageProject extends SpaceshipProject {
     return Math.max(0, (capLimit * (setting.value || 0)) / 100);
   }
 
+  recordTransferReserveTickStart() {
+    this.transferReserveSurplusAtTickStart = {};
+    this.transferReserveWithdrawnThisTick = {};
+    for (const resourceKey in this.resourceStrategicReserves) {
+      const setting = this.getResourceStrategicReserveSetting(resourceKey);
+      if (setting.scope.transfers) {
+        this.transferReserveSurplusAtTickStart[resourceKey] =
+          this.getStoredResourceValue(resourceKey) - this.getResourceStrategicReserveAmount(resourceKey, 'transfers');
+      }
+    }
+  }
+
+  updateTransferReserveDeficitsAfterTick() {
+    const starts = this.transferReserveSurplusAtTickStart || {};
+    this.transferReserveDeficits ||= {};
+    for (const resourceKey in this.resourceStrategicReserves) {
+      const setting = this.getResourceStrategicReserveSetting(resourceKey);
+      if (!setting.scope.transfers) {
+        delete this.transferReserveDeficits[resourceKey];
+        continue;
+      }
+      const currentDeficit = Math.max(
+        0,
+        this.getResourceStrategicReserveAmount(resourceKey, 'transfers') - this.getStoredResourceValue(resourceKey)
+      );
+      const previousDeficit = this.transferReserveDeficits[resourceKey] || 0;
+      const wasWithdrawn = this.transferReserveWithdrawnThisTick?.[resourceKey] === true;
+      if (currentDeficit > 0 && ((starts[resourceKey] || 0) >= 0 || previousDeficit > 0 || wasWithdrawn)) {
+        this.transferReserveDeficits[resourceKey] = currentDeficit;
+      } else {
+        delete this.transferReserveDeficits[resourceKey];
+      }
+    }
+  }
+
   sanitizeResourceStrategicReserves() {
     for (const resourceKey in this.resourceStrategicReserves) {
       const setting = this.resourceStrategicReserves[resourceKey];
@@ -726,15 +764,12 @@ class SpaceStorageProject extends SpaceshipProject {
       ? (this.transferReserveGrowthThisTick?.[resourceKey] || 0)
       : 0;
     if (reserveGrowth > 0 && accumulatedChanges) {
-      const stored = this.getStoredResourceValue(resourceKey);
+      const stored = this.getStoredResourceValue(resourceKey) + (this.transferReserveDeficits?.[resourceKey] || 0);
       const pending = this.getPendingResourceDelta(accumulatedChanges, 'spaceStorage', resourceKey);
       const reserve = this.getResourceStrategicReserveAmount(resourceKey, scopeFilter);
       const reserveBeforeGrowth = Math.max(0, reserve - reserveGrowth);
       const existingSurplus = Math.max(0, stored - reserveBeforeGrowth);
       const finalSurplus = Math.max(0, stored + pending - reserve);
-      if (stored < reserveBeforeGrowth) {
-        return 0;
-      }
       if (pending > 0) {
         return Math.min(finalSurplus, existingSurplus + Math.max(0, pending - reserveGrowth));
       }
@@ -1780,6 +1815,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1, accumulatedSpecialChanges = null) {
+    this.recordTransferReserveTickStart();
     const expansionProductivity = this.attributes?.continuousAsBuilding ? productivity : 1;
     this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, expansionProductivity);
     this.applyContinuousWithdrawals(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
@@ -1920,6 +1956,10 @@ class SpaceStorageProject extends SpaceshipProject {
       const deliveredRate = seconds > 0 ? delivered / seconds : 0;
       const storageResource = this.getSpaceStorageResource(t.storageKey || t.resource);
       if (t.mode === 'withdraw') {
+        if (t.storageKey) {
+          this.transferReserveWithdrawnThisTick ||= {};
+          this.transferReserveWithdrawnThisTick[t.storageKey] = true;
+        }
         this.applyAccumulatedResourceDelta('spaceStorage', t.storageKey, -t.amount, accumulatedChanges);
         if (t.resource === 'biomass') {
           this.addBiomassToZones(delivered);
