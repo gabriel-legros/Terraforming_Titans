@@ -173,7 +173,8 @@ class AntimatterBattery extends Building {
     return globalThis.ANTIMATTER_PER_TERRAFORMED_WORLD ?? 0;
   }
 
-  fillFromAntimatter() {
+  fillFromAntimatter(options = {}) {
+    const shouldUpdateDisplay = options.updateDisplay !== false;
     const antimatter = resources?.special?.antimatter || null;
     const energy = resources?.colony?.energy || null;
     if (!antimatter || !energy) {
@@ -223,6 +224,11 @@ class AntimatterBattery extends Building {
       this._fillCooldownEndsAtMs = Date.now() + (FILL_COOLDOWN_SECONDS * 1000);
     }
 
+    if (shouldUpdateDisplay) {
+      globalThis.updateResourceDisplay?.(resources);
+      globalThis.updateStructureDisplay?.(structures);
+      this.updateUI(this._cachedUI || {});
+    }
     return { energyGain, spaceEnergySpent };
   }
 
@@ -230,7 +236,7 @@ class AntimatterBattery extends Building {
     if (!this.isBooleanFlagSet('antimatterWarpLogistics') || !this.autoFillingEnabled) {
       return;
     }
-    const fillResult = this.fillFromAntimatter();
+    const fillResult = this.fillFromAntimatter({ updateDisplay: false });
     if (!fillResult || deltaTime <= 0) {
       return;
     }
