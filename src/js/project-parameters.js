@@ -1056,7 +1056,7 @@ const projectParameters = {
     name: '',
     category: 'infrastructure',
     cost: {},
-    duration: 300000,
+    duration: 180000,
     description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
