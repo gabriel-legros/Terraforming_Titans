@@ -209,6 +209,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Shared productivity availability now uses stored stock plus same-tick production, so consumers can hold 100% throughput while inventory buffers last and only throttle once the buffer is no longer sufficient for the tick.
 - Surface land now keeps a fixed-point `BigInt` reservation/value ledger under the normal resource fields, so building/autobuild checks, hazard reservations, UI, and save/load stay stable on giant artificial worlds.
 - Colony hydrogen is a capped colony resource backed by Hydrogen Reservoir storage. Colony hydrogen overflow spills into atmospheric hydrogen through the shared resource overflow path, mirroring colony water overflow behavior.
+- Hydrogen space mining set to colony-only estimates its full same-tick import for productivity without storage-cap limiting; the actual imported amount is tracked so that cap overflow from that import is not routed into atmospheric hydrogen.
 
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.

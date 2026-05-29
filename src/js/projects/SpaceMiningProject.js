@@ -1553,7 +1553,7 @@ class SpaceMiningProject extends SpaceshipProject {
     return amount - toColony;
   }
 
-  applyHydrogenImportToColony(amount, accumulatedChanges = null, allowOverflow = false) {
+  applyHydrogenImportToColony(amount, accumulatedChanges = null, allowOverflow = false, accumulatedSpecialChanges = null) {
     const resource = resources.colony.colonyHydrogen;
     const pending = accumulatedChanges?.colony?.colonyHydrogen || 0;
     const current = resource.value + pending;
@@ -1569,6 +1569,10 @@ class SpaceMiningProject extends SpaceshipProject {
       } else {
         resource.value += toColony;
       }
+    }
+    if (allowOverflow && accumulatedSpecialChanges) {
+      accumulatedSpecialChanges.colonyHydrogenNoOverflow =
+        (accumulatedSpecialChanges.colonyHydrogenNoOverflow || 0) + amount;
     }
     return amount - toColony;
   }
@@ -1594,16 +1598,6 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (!hasMonitoring || !this.disableAbovePressure || !gainBase.atmospheric || !this.isAtmosphericImportTargetSelected()) {
-      if (this.isHydrogenColonyImportSelected() && this.gasImportTarget === 'colonyOnly' && gainBase.colony?.colonyHydrogen) {
-        const desired = gainBase.colony.colonyHydrogen * context.fraction * context.successChance * productivity;
-        const remaining = Math.max(
-          0,
-          resources.colony.colonyHydrogen.cap
-            - resources.colony.colonyHydrogen.value
-            - (accumulatedChanges?.colony?.colonyHydrogen || 0)
-        );
-        ratio = Math.min(ratio, desired > 0 ? Math.max(0, Math.min(1, remaining / desired)) : 1);
-      }
       return ratio;
     }
 
@@ -1664,7 +1658,13 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.isHydrogenColonyImportSelected() && gain.colony?.colonyHydrogen) {
       const amount = gain.colony.colonyHydrogen * fraction * productivity;
-      this.applyHydrogenImportToColony(amount, accumulatedChanges, this.gasImportTarget === 'colony');
+      const importWithoutOverflow = this.gasImportTarget === 'colonyOnly';
+      this.applyHydrogenImportToColony(
+        amount,
+        accumulatedChanges,
+        this.gasImportTarget === 'colony' || importWithoutOverflow,
+        importWithoutOverflow ? accumulatedSpecialChanges : null
+      );
       return;
     }
     if (this.isPlanetaryMassImportSelected() && gain.underground?.planetaryMass) {

@@ -43,7 +43,8 @@ function addDynamicWorldPlanetaryMaterialSafe(terraformingState, materialKey, am
 function initializeAccumulatedSpecialChanges() {
   return {
     planetaryMass: {},
-    planetaryMassImports: {}
+    planetaryMassImports: {},
+    colonyHydrogenNoOverflow: 0
   };
 }
 
@@ -74,7 +75,11 @@ function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
   const previousValue = resource.value;
   const newValue = resource.value + accumulatedChanges[config.sourceCategory][config.sourceResource];
   const limit = previousValue >= resource.cap ? previousValue : resource.cap;
-  const overflow = newValue > limit ? newValue - limit : 0;
+  let overflow = newValue > limit ? newValue - limit : 0;
+  const protectedOverflow = config.getProtectedOverflow ? config.getProtectedOverflow() : 0;
+  if (protectedOverflow > 0) {
+    overflow = Math.max(0, overflow - protectedOverflow);
+  }
   if (overflow <= 0) {
     return;
   }
@@ -111,10 +116,13 @@ function routeColonyWaterOverflow(deltaTime, accumulatedChanges) {
   });
 }
 
-function routeColonyHydrogenOverflow(deltaTime, accumulatedChanges) {
+function routeColonyHydrogenOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
   routeColonyResourceOverflow(deltaTime, accumulatedChanges, {
     sourceCategory: 'colony',
     sourceResource: 'colonyHydrogen',
+    getProtectedOverflow() {
+      return accumulatedSpecialChanges.colonyHydrogenNoOverflow || 0;
+    },
     resolveTarget() {
       return { category: 'atmospheric', resource: 'hydrogen' };
     }
@@ -1939,7 +1947,7 @@ function produceResources(deltaTime, buildings) {
 
   if (terraforming) {
     routeColonyWaterOverflow(deltaTime, accumulatedChanges);
-    routeColonyHydrogenOverflow(deltaTime, accumulatedChanges);
+    routeColonyHydrogenOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     terraforming.distributeSurfaceChangesToZones(accumulatedChanges.surface);
   }
 
