@@ -286,6 +286,9 @@ function getActiveResidueDisplayValue(resource, value) {
   if (!(numericValue > 0)) {
     return value;
   }
+  if (resource.hasCap && Number.isFinite(resource.cap) && resource.cap > 0 && numericValue >= resource.cap) {
+    return value;
+  }
   const productionRate = Math.abs(resource.productionRate || 0);
   const consumptionRate = Math.abs(getDisplayConsumptionRates(resource).total || 0);
   const activityRate = Math.max(productionRate, consumptionRate);
