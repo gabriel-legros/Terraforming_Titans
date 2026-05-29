@@ -169,6 +169,7 @@ const projectParameters = {
         {
           target: 'building',
           targetId: 'spaceMirror',
+          effectId: 'space-mirror-facility-enable-space-mirror',
           type: 'enable'
         }
       ]
@@ -396,6 +397,7 @@ const projectParameters = {
         {
           target : 'building',
           targetId : 'spaceMirror',
+          effectId: 'space-elevator-space-mirror-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -404,6 +406,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'oreSpaceMining',
+          effectId: 'space-elevator-ore-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -412,6 +415,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'siliconSpaceMining',
+          effectId: 'space-elevator-silicon-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -420,6 +424,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'carbonSpaceMining',
+          effectId: 'space-elevator-carbon-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -428,6 +433,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'nitrogenSpaceMining',
+          effectId: 'space-elevator-nitrogen-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -436,6 +442,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'hydrogenSpaceMining',
+          effectId: 'space-elevator-hydrogen-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -444,6 +451,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'waterSpaceMining',
+          effectId: 'space-elevator-water-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -452,6 +460,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'disposeResources',
+          effectId: 'space-elevator-dispose-resources-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -460,6 +469,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'exportResources',
+          effectId: 'space-elevator-export-resources-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -468,6 +478,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'spaceStorage',
+          effectId: 'space-elevator-space-storage-spaceship-metal-cost',
           type : 'spaceshipCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -500,11 +511,13 @@ const projectParameters = {
         {
           type: 'booleanFlag',
           target: 'terraforming',
+          effectId: 'magnetic-shield-terraforming-flag',
           flagId: 'magneticShield',
           value: true
         },
         {
           target: 'terraforming',
+          effectId: 'magnetic-shield-life-growth',
           type: 'lifeGrowthMultiplier',
           value: 1.5
         }
