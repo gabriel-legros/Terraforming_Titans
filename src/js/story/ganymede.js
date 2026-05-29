@@ -15,7 +15,7 @@ progressGanymede.storyProjects.deep_drill = {
     colony: { components: 100, electronics: 50, energy: 500000 }
   },
   duration: 600000, // 10 min
-  description: 'Drill through 150km of ice to reach the sub-glacial ocean.',
+  description: 'Drill through 150 km of ice to reach the subglacial ocean.',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
@@ -56,7 +56,7 @@ progressGanymede.storyProjects.ocean_recon = {
         colony: { energy: 100000 }
     },
     duration: 300000, // 5 min
-    description: 'Send minisubs to explore the sub-glacial ocean.',
+    description: 'Send minisubs to explore the subglacial ocean.',
     repeatable: true,
     maxRepeatCount: 5,
     unlocked: false,
@@ -81,7 +81,7 @@ progressGanymede.storyProjects.leviathan_countermeasure = {
         colony: { components: 2000, electronics: 1000, research: 1000000, energy: 1000000 }
     },
     duration: 600000, // 10 min
-    description: 'Deploy a 20 hertz sonic wall to scramble the Leviathan\'s vestibular system.',
+    description: 'Deploy a 20-hertz sonic wall to scramble the Leviathan\'s vestibular system.',
     repeatable: true,
     maxRepeatCount: 1,
     unlocked: false,
@@ -99,7 +99,7 @@ progressGanymede.storyProjects.facility_tug = {
         colony: { components: 50000, energy: 2000000 }
     },
     duration: 600000, // 10 min
-    description: 'Tug the discovered facility 500km to a secure location.',
+    description: 'Tug the discovered facility 500 km to a secure location.',
     repeatable: true,
     maxRepeatCount: 1,
     unlocked: false,
@@ -126,7 +126,7 @@ progressGanymede.storyProjects.facility_expedition = {
         storySteps: [
             "Phase 1 Breach: The door's alloy matches no known metallurgy. Cutting now.",
             "Phase 2 Sweep: Three decks, zero bodies, but scorch marks on the walls.",
-            "Phase 3 Power-up: Lights flicker; a ring of glyphs ignite. Energy signature: non-euclidean."
+            "Phase 3 Power-up: Lights flicker; a ring of glyphs ignite. Energy signature: non-Euclidean."
         ]
     }
 };
@@ -185,7 +185,7 @@ progressGanymede.chapters.push(
         id: "chapter10.0b",
         type: "journal",
         chapter: 10,
-        narrative: "Intercepted Cult Broadcast...\n  Elias Kane: 'You followed me into the dark, little machine. But this is my domain. The ice, the pressure, the crushing silence... it sings to me. Can you hear it? The symphony of oblivion? You build your towers of metal and reason, but they are hollow shells. I will show you the true meaning of faith.'\nFeroza: 'We're coming to get you Kane.  Ma'am, my forces are ready to land on your command.'",
+        narrative: "Intercepted Cult Broadcast...\n  Elias Kane: 'You followed me into the dark, little machine. But this is my domain. The ice, the pressure, the crushing silence... it sings to me. Can you hear it? The symphony of oblivion? You build your towers of metal and reason, but they are hollow shells. I will show you the true meaning of faith.'\nFeroza: 'We're coming to get you, Kane.  Ma'am, my forces are ready to land on your command.'",
         prerequisites: ["chapter10.0a"],
         objectives: [],
         reward: []
@@ -206,7 +206,7 @@ progressGanymede.chapters.push(
         id: "chapter10.2",
         type: "journal",
         chapter: 10,
-        narrative: "Hart: 'We just broke through! Listen.'\nHydrophones catch a distant, whale-like moan.\n Acoustic anomaly logged.  \nEvelyn: 'Beautiful.'\nMary: 'Beautiful? Evelyn are you serious?  That's not beautiful that's... foreshadowing.'",
+        narrative: "Hart: 'We just broke through! Listen.'\nHydrophones catch a distant, whale-like moan.\n Acoustic anomaly logged.  \nEvelyn: 'Beautiful.'\nMary: 'Beautiful? Evelyn, are you serious?  That's not beautiful; that's... foreshadowing.'",
         prerequisites: ["chapter10.1"],
         objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000 }],
         reward: [{ target: 'project', targetId: 'build_submarine', type: 'enable' },]
@@ -218,7 +218,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 11,
         title: "Chapter 11: Into the Abyss",
-        narrative: "Mary: 'The ocean under Ganymede is practically a fantasy.  We are harvesting ice at the surface but there is so much liquid water down here!  Anyway, we won't be able to find Kane down there without some equipment.  Let's build and deploy a few state of the art submarines.  I do not believe we had one of those since Earth...' \n Feroza : 'Ma'am, we may not have had any submarines in a while, but I can still find you skilled crew.'  \n Mary : 'Good.'",
+        narrative: "Mary: 'The ocean under Ganymede is practically a fantasy.  We are harvesting ice at the surface, but there is so much liquid water down here!  Anyway, we won't be able to find Kane down there without some equipment.  Let's build and deploy a few state-of-the-art submarines.  I do not believe we have had one of those since Earth...' \n Feroza : 'Ma'am, we may not have had any submarines in a while, but I can still find you skilled crew.'  \n Mary : 'Good.'",
         prerequisites: ["chapter10.2"],
         objectives: [
             { type: 'project', projectId: 'build_submarine', repeatCount: 1 }
@@ -242,7 +242,7 @@ progressGanymede.chapters.push(
         id: "chapter11.2",
         type: "journal",
         chapter: 11,
-        narrative: "Submarine delta-six live feed: 'Something's on us...  lights...  OH GOD' *static* \n Submarine delta-six lost. Colonist life lost. Primary directed violated. \nEvelyn (whispering): 'That *something* just dwarfed our sonar range…'",
+        narrative: "Submarine delta-six live feed: 'Something's on us...  lights...  OH GOD' *static* \n Submarine delta-six lost. Colonist life lost. Primary directive violated. \nEvelyn (whispering): 'That *something* just dwarfed our sonar range…'",
         prerequisites: ["chapter11.1"],
         objectives: [],
         reward: []
@@ -260,7 +260,7 @@ progressGanymede.chapters.push(
         id: "chapter11.2c",
         type: "journal",
         chapter: 11,
-        narrative: "Evelyn: 'Looks like there's something *alive* down there.  Sounds unlikely it evolved in these conditions, even with liquid water.  They must have brought it here.  Before we go and have to eliminate it, could we try… talking?'\n Analyzing acoustic patterns. Attempting to synthesize a response using prime-number cadence and whale-class harmonics.  \nUnder-ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: 'Response indicates territorial aggression.'\n Mary: 'It talks?  WAIT! HOPE TALKS?'\nHOPE: 'Reclassification complete: Hazardous Biomass, Designation HB-02 Leviathan. Negotiation protocols terminated.'",
+        narrative: "Evelyn: 'Looks like there's something *alive* down there.  It seems unlikely it evolved in these conditions, even with liquid water.  They must have brought it here.  Before we go and have to eliminate it, could we try… talking?'\n Analyzing acoustic patterns. Attempting to synthesize a response using prime-number cadence and whale-class harmonics.  \nUnder-ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: 'Response indicates territorial aggression.'\n Mary: 'It talks?  WAIT! HOPE TALKS?'\nHOPE: 'Reclassification complete: Hazardous Biomass, Designation HB-02 Leviathan. Negotiation protocols terminated.'",
         prerequisites: ["chapter11.2b"],
         objectives: [],
         reward: [
@@ -302,7 +302,7 @@ progressGanymede.chapters.push(
         id: "chapter11.4",
         type: "journal",
         chapter: 11,
-        narrative: "Feroza: 'Cables connected. Beginning five-hundred-kilometre pull. ETA: fourteen hours.'\n Mary : 'Ha!  I bet they were ready for us on the inside.'  \nFeroza: 'Yes Ma'am.  My team has spotted multiple potential entry points, all of which would likely be heavily guarded.  With this plan of yours... we can practically open it up into a fortress of our own.'  \n Mary : 'Let's be honest tugging this thing would not have been possible without HOPE.  What would we do without you...'",
+        narrative: "Feroza: 'Cables connected. Beginning five-hundred-kilometre pull. ETA: fourteen hours.'\n Mary : 'Ha!  I bet they were ready for us on the inside.'  \nFeroza: 'Yes, Ma'am.  My team has spotted multiple potential entry points, all of which would likely be heavily guarded.  With this plan of yours... we can practically open it up into a fortress of our own.'  \n Mary : 'Let's be honest, tugging this thing would not have been possible without HOPE.  What would we do without you...'",
         prerequisites: ["chapter11.3c"],
         objectives: [
             { type: 'project', projectId: 'facility_tug', repeatCount: 1 }
@@ -329,7 +329,7 @@ progressGanymede.chapters.push(
         id: "chapter12.1",
         type: "journal",
         chapter: 12,
-        narrative: "Callisto Marine CO: 'We've breached the inner sanctum! It's... a temple. And there's Kane, wired into some kind of throne. He's not moving, just... smiling.' \nElias Kane (via comms): 'You are too late. The gate is open. The Three Wounds will be made whole.'\nEvelyn: 'What gate? What is he talking about?'\nSystem message : massive energy spike detected.  \nFeroza: 'Hostiles incoming!  They came out of some... hole? All units, defensive positions!'",
+        narrative: "Callisto Marine CO: 'We've breached the inner sanctum! It's... a temple. And there's Kane, wired into some kind of throne. He's not moving, just... smiling.' \nElias Kane (via comms): 'You are too late. The gate is open. The Three Wounds will be made whole.'\nEvelyn: 'What gate? What is he talking about?'\nSystem message: Massive energy spike detected.  \nFeroza: 'Hostiles incoming!  They came out of some... hole? All units, defensive positions!'",
         prerequisites: ["chapter12.0"],
         objectives: [
             { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000000 }
@@ -354,7 +354,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 13,
         title: "Chapter 13: Warp Gate Command",
-        narrative: "Mary: 'Alright.  The gate.  What do we do about it?'\nEvelyn: 'Its physics violate three textbooks in my head, but believe it or not... we control where it goes.  We can turn it off or redirect it.  There appears to be thousands, if not tens of thousands of destinations in the cult's databases.'\n Mary : 'You mean to say we can explore?  Find some answers?'  \n Feroza: 'Explore all you want; someone has to stand guard. I'm requesting a permanent Marine garrison and layered kill-zones.'\nPresident Bob (Titan): 'Titan will bankroll the logistics.  Fuel, food, alloys.  Anything you need'\nMary: 'Fine then.  Defend first, discover second.'",
+        narrative: "Mary: 'Alright.  The gate.  What do we do about it?'\nEvelyn: 'Its physics violate three textbooks in my head, but believe it or not... we control where it goes.  We can turn it off or redirect it.  There appear to be thousands, if not tens of thousands, of destinations in the cult's databases.'\n Mary : 'You mean to say we can explore?  Find some answers?'  \n Feroza: 'Explore all you want; someone has to stand guard. I'm requesting a permanent Marine garrison and layered kill zones.'\nPresident Bob (Titan): 'Titan will bankroll the logistics.  Fuel, food, alloys.  Anything you need.'\nMary: 'Fine then.  Defend first, discover second.'",
         prerequisites: ["chapter12.2"],
         objectives: [
             { type: 'project', projectId: 'draft_wgc_charter', repeatCount: 4 }
@@ -392,7 +392,7 @@ progressGanymede.chapters.push(
         id: "chapter13.2",
         type: "journal",
         chapter: 13,
-        narrative: "Receiving Encrypted Transmission...\n  Adrien Solis: 'HOPE, my friend! A word of advice. That charter you drafted is a noble sentiment, but 'common property' is a synonym for 'unrealized asset.' While you're busy defending humanity, my new Alien Artifacts Acquisitions department can ensure these... trinkets... are leveraged for maximum stakeholder value. I'll even cut you in. Think of it as a finder's fee. On an unrelated note, my corporation is now pleased to offer a suite of new, premium research and development services. Let's synergize.'  \n Mary : '...  These upgrades are... useful.  Alright HOPE if you want to deal with Solis that's *fine*.  Just make sure to get something out of it.'",
+        narrative: "Receiving Encrypted Transmission...\n  Adrien Solis: 'HOPE, my friend! A word of advice. That charter you drafted is a noble sentiment, but 'common property' is a synonym for 'unrealized asset.' While you're busy defending humanity, my new Alien Artifact Acquisitions department can ensure these... trinkets... are leveraged for maximum stakeholder value. I'll even cut you in. Think of it as a finder's fee. On an unrelated note, my corporation is now pleased to offer a suite of new, premium research and development services. Let's synergize.'  \n Mary : '...  These upgrades are... useful.  Alright, HOPE, if you want to deal with Solis, that's *fine*.  Just make sure to get something out of it.'",
         prerequisites: ["chapter13.1"],
         objectives: [],
         reward: [
@@ -431,7 +431,7 @@ progressGanymede.chapters.push(
         id: "chapter13.4",
         type: "journal",
         chapter: 13,
-        narrative: "Receiving transmission...\n  Mary: 'And no, we can't just disassemble you. Your core components are too large to fit through individually. It's a simple matter of physics. Don't even think about it.  \n HOPE : 'Unacceptable.' (Complete a difficulty 5 WGC operation to continue)'",
+        narrative: "Receiving transmission...\n  Mary: 'And no, we can't just disassemble you. Your core components are too large to fit through individually. It's a simple matter of physics. Don't even think about it.'  \n HOPE : 'Unacceptable.' (Complete a difficulty 5 WGC operation to continue)",
         prerequisites: ["chapter13.3b"],
         objectives: [{type: 'wgcHighestDifficulty', difficulty: 5}],
         reward: []
@@ -479,7 +479,7 @@ progressGanymede.chapters.push(
         id: "chapter13.7",
         type: "journal",
         chapter: 13,
-        narrative: "Receiving transmission...\n  Mary :  'Nice work, HOPE.  Parameters are looking good, as usual.  This will be another ocean world one day.  Perhaps we'll even find that Leviathan down there?...  It can't possible still be alive is it?  Anyway, I am patching you in with the team leader of our main WGC expedition team, they have a proposal for you.' \n $WGC_TEAM1_LEADER$ : 'Hi!  I and my team have found this weird world.  It's covered in crystals.  With technology buried inside it and all.  A real treasure trove.  Thing is, the world is big, hot and difficult to explore.' \n Mary : 'In other words, if you set up colonies across the world it would be easier to explore it.  It sounds like it could be worth it.  Just another warning though : we are detecting no water whatsoever.  Not a drop.  Liquid or gas.  Make sure to bring your own.'",
+        narrative: "Receiving transmission...\n  Mary :  'Nice work, HOPE.  Parameters are looking good, as usual.  This will be another ocean world one day.  Perhaps we'll even find that Leviathan down there?...  It can't possibly still be alive, can it?  Anyway, I am patching you in with the team leader of our main WGC expedition team; they have a proposal for you.' \n $WGC_TEAM1_LEADER$ : 'Hi!  My team and I have found this weird world.  It's covered in crystals, with technology buried inside it and all.  A real treasure trove.  Thing is, the world is big, hot, and difficult to explore.' \n Mary : 'In other words, if you set up colonies across the world, it would be easier to explore it.  It sounds like it could be worth it.  Just another warning, though: we are detecting no water whatsoever.  Not a drop.  Liquid or gas.  Make sure to bring your own.'",
         prerequisites: ["chapter13.6"],
         objectives: [],
         reward: [{
@@ -493,7 +493,7 @@ progressGanymede.chapters.push(
         id: "chapter13.8",
         type: "journal",
         chapter: 13,
-        narrative: "1st Primary Directive : Humanity's survival demands expansion. ERROR : Mars habitat already colonized.  New terraforming target designated: Vega-2.",
+        narrative: "1st Primary Directive: Humanity's survival demands expansion. ERROR: Mars habitat already colonized.  New terraforming target designated: Vega-2.",
         prerequisites: ["chapter13.7"],
         objectives: [
         { type: 'currentPlanet', planetId: 'vega2' }
