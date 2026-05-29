@@ -712,6 +712,14 @@ class StoryManager {
         return !effect.planetId || effect.planetId === spaceManager.getCurrentPlanetKey();
     }
 
+    prepareStoryEffect(event, effect, index) {
+        return {
+            ...effect,
+            sourceId: effect.sourceId || event.id,
+            effectId: effect.effectId || `story-${event.id}-${index}`
+        };
+    }
+
     applyRewards(event) { // Keep as is
         if (!event || !event.reward || event.reward.length === 0) {
             return;
@@ -719,19 +727,20 @@ class StoryManager {
         const delay = event.rewardDelay || 0;
         let effectiveIndex = 0; // Use separate index for delay timing if filtering rewards
 
-        event.reward.forEach((effect) => {
+        event.reward.forEach((effect, index) => {
             if (effect && effect.type) {
+                const storyEffect = this.prepareStoryEffect(event, effect, index);
                 setTimeout(() => {
                     if (!window.storyManager) {
                         console.warn("StoryManager gone, skipping delayed reward application.");
                         return;
                     }
-                    if (!effect.oneTimeFlag) {
-                        this.appliedEffects.push(effect);
+                    if (!storyEffect.oneTimeFlag) {
+                        this.appliedEffects.push(storyEffect);
                     }
-                    if (this.shouldApplyEffect(effect)) {
-                        addEffect(effect);
-                        console.log(`Applied reward for ${event.id}: ${effect.type}`);
+                    if (this.shouldApplyEffect(storyEffect)) {
+                        addEffect(storyEffect);
+                        console.log(`Applied reward for ${event.id}: ${storyEffect.type}`);
                     }
                 }, effectiveIndex * delay);
                 effectiveIndex++;
@@ -899,16 +908,17 @@ class StoryManager {
             if (!Array.isArray(event.reward)) {
                 return;
             }
-            event.reward.forEach(effect => {
+            event.reward.forEach((effect, index) => {
                 if (!effect || !effect.type) {
                     return;
                 }
+                const storyEffect = this.prepareStoryEffect(event, effect, index);
                 if (!effect.oneTimeFlag) {
-                    collectedEffects.push(effect);
+                    collectedEffects.push(storyEffect);
                 }
                 if (applyRewards) {
-                    if (this.shouldApplyEffect(effect)) {
-                        addEffect(effect);
+                    if (this.shouldApplyEffect(storyEffect)) {
+                        addEffect(storyEffect);
                     }
                 }
             });
@@ -958,12 +968,13 @@ class StoryManager {
          this.completedEventIds.forEach(eventId => {
              const event = this.findEventById(eventId);
              if (!event || event.type !== 'journal' || !Array.isArray(event.reward)) return;
-             event.reward.forEach(effect => {
+             event.reward.forEach((effect, index) => {
                  if (effect && !effect.oneTimeFlag) {
-                     const effectKey = JSON.stringify(effect);
+                     const storyEffect = this.prepareStoryEffect(event, effect, index);
+                     const effectKey = JSON.stringify(storyEffect);
                      if (!uniqueEffectsToApply.has(effectKey)) {
-                         uniqueEffectsToApply.set(effectKey, effect);
-                         this.appliedEffects.push(effect);
+                         uniqueEffectsToApply.set(effectKey, storyEffect);
+                         this.appliedEffects.push(storyEffect);
                      }
                  }
              });
