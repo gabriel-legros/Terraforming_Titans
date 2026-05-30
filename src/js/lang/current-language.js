@@ -459,7 +459,7 @@ setLanguageData({
         closePanel: 'Close panel',
         sectorDetails: 'Sector Details',
         galacticOverview: 'Galactic Overview',
-        galacticOverviewTooltip: 'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  The UHF starts with a 10% control of sector R5-07.  Conquering certain sectors will be required to advance the story.',
+        galacticOverviewTooltip: 'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  The UHF starts with a 10% control of sector R5-07.  Conquering certain sectors will be required to advance the story.  \n\n To conquer sectors you will need fleet power, which requires fleet capacity.  Fleet capacity is primarily acquired by terraforming more worlds (see tooltip for advanced breakdown).  If you find yourself unable to progress the story, you may wish to do some side content.',
         noSectorSelected: 'No sector selected.',
         noHostilesDetected: 'No hostiles detected.',
         operations: 'Operations',
