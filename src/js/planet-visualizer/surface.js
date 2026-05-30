@@ -8,6 +8,9 @@
   const HYDROGEN_VISUAL_MIN_KPA = 1e3;
   const HYDROGEN_VISUAL_MAX_KPA = 1e6;
   const SURFACE_TEXTURE_UPDATE_INTERVAL_MS = 5000;
+  const HEIGHT_MAP_KEYS = {
+    earth: true,
+  };
 
   const PLANET_TYPE_TEXTURES = {
     default: {
@@ -167,6 +170,18 @@
       }
     }
     return type || 'default';
+  }
+
+  function resolveHeightMapKey(context) {
+    const key = context?.viz?.heightMapKey || currentPlanetParameters?.visualization?.heightMapKey || '';
+    if (HEIGHT_MAP_KEYS[key]) return key;
+
+    const specialSeedKey = currentPlanetParameters?.rwgMeta?.specialSeedKey || '';
+    const planetName = currentPlanetParameters?.name || '';
+    if (specialSeedKey === 'earthoverrun' || planetName === 'EarthOverrun') {
+      return 'earth';
+    }
+    return '';
   }
 
   function createJitterRandom(seedX, seedY) {
@@ -607,7 +622,8 @@
     try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}`;
+    const heightKey = resolveHeightMapKey(this);
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -1941,7 +1957,67 @@
     return arr;
   };
 
+  PlanetVisualizer.prototype.populateHeightZoneHists = function populateHeightZoneHists(arr, w, h) {
+    if (!this._zoneRowIndex || this._zoneRowIndex.length !== h) {
+      this._zoneRowIndex = this.buildZoneRowIndex(h);
+    }
+    this.heightZoneHists = {
+      0: { counts: new Uint32Array(256), total: 0 },
+      1: { counts: new Uint32Array(256), total: 0 },
+      2: { counts: new Uint32Array(256), total: 0 },
+    };
+    for (let i = 0; i < w * h; i++) {
+      const y = Math.floor(i / w);
+      const x = i - y * w;
+      const zi = this.getTextureZoneIndex(x, y, w, h);
+      const bin = Math.max(0, Math.min(255, Math.floor(arr[i] * 255)));
+      this.heightZoneHists[zi].counts[bin]++;
+      this.heightZoneHists[zi].total++;
+    }
+  };
+
+  PlanetVisualizer.prototype.tryGenerateConfiguredHeightMap = function tryGenerateConfiguredHeightMap(w, h) {
+    if (this.isRingWorld() || this.isDiskWorld()) return false;
+
+    const key = resolveHeightMapKey(this);
+    if (!key) return false;
+    const packed = window.PLANET_VISUALIZER_HEIGHT_MAPS?.[key];
+    if (!packed?.data || !packed.width || !packed.height) return false;
+
+    if (!this._decodedHeightMaps) {
+      this._decodedHeightMaps = {};
+    }
+    if (!this._decodedHeightMaps[key]) {
+      const packedText = packed.data.replace(/\s+/g, '');
+      const binary = atob(packedText);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      this._decodedHeightMaps[key] = bytes;
+    }
+
+    const source = this._decodedHeightMaps[key];
+    const srcW = packed.width;
+    const srcH = packed.height;
+    const arr = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) {
+      const sy = Math.min(srcH - 1, Math.max(0, Math.round((y / Math.max(1, h - 1)) * (srcH - 1))));
+      const row = sy * srcW;
+      for (let x = 0; x < w; x++) {
+        const sx = Math.min(srcW - 1, Math.max(0, Math.round((x / w) * srcW) % srcW));
+        arr[y * w + x] = source[row + sx] / 255;
+      }
+    }
+    this.heightMap = arr;
+    this.populateHeightZoneHists(arr, w, h);
+    this._heightMapSourceKey = `${key}:${w}x${h}`;
+    return true;
+  };
+
   PlanetVisualizer.prototype.generateHeightMap = function generateHeightMap(w, h) {
+    if (this.tryGenerateConfiguredHeightMap(w, h)) return;
+
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
     const usePeriodic = this.isRingWorld();
@@ -2032,22 +2108,7 @@
     for (let i = 0; i < w * h; i++) arr[i] = (arr[i] - minH) / span;
 
     this.heightMap = arr;
-
-    if (!this._zoneRowIndex) {
-      this._zoneRowIndex = this.buildZoneRowIndex(h);
-    }
-    this.heightZoneHists = {
-      0: { counts: new Uint32Array(256), total: 0 },
-      1: { counts: new Uint32Array(256), total: 0 },
-      2: { counts: new Uint32Array(256), total: 0 },
-    };
-    for (let i = 0; i < w * h; i++) {
-      const y = Math.floor(i / w);
-      const x = i - y * w;
-      const zi = this.getTextureZoneIndex(x, y, w, h);
-      const bin = Math.max(0, Math.min(255, Math.floor(arr[i] * 255)));
-      this.heightZoneHists[zi].counts[bin]++;
-      this.heightZoneHists[zi].total++;
-    }
+    this.populateHeightZoneHists(arr, w, h);
+    this._heightMapSourceKey = `procedural:${w}x${h}`;
   };
 })();

@@ -1112,7 +1112,7 @@ const earthOverrunOverrides = {
     surface: {
       land: { initialValue: 51007200000 },
       ice: { initialValue: 0, unlocked: true },
-      liquidWater: { initialValue: 1.386e18, unlocked: true },
+      liquidWater: { initialValue: 984999703315911200, unlocked: true },
       dryIce: { initialValue: 0 },
       liquidMethane: { initialValue: 0 },
       hydrocarbonIce: { initialValue: 0 }
@@ -1147,7 +1147,7 @@ const earthOverrunOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 552669895738704700,
+      "liquidWater": 428290060334606340,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1166,7 +1166,7 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 718384395470084900,
+      "liquidWater": 556709642981304800,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1269,7 +1269,8 @@ const earthOverrunOverrides = {
     }
   },
   visualization: {
-    baseColor: '#878a81'
+    baseColor: '#878a81',
+    heightMapKey: 'earth'
   }
 };
 

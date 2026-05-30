@@ -480,6 +480,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Visual and UX
 - Planet visualizer modularized (core/lighting/surfaces/clouds/ships/environment/debug).
+- Planet visualizer supports configured equirectangular grayscale height-map data through `visualization.heightMapKey`; EarthOverrun uses the bundled Earth topography/bathymetry map so water coverage floods recognizable Earth basins.
 - Planet visualizer surface now transitions into a lava-world palette and molten glow between `900 K` and `1400 K` global mean surface temperature.
 - Planet visualizer supports Alderson disks as annulus worlds with a central star, cropped inner hole, and flat-world overlay/cloud geometry.
 - Ringworld rendering, cloud wrapping/noise, shoreline and terrain blending were improved.

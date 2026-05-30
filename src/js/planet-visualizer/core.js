@@ -120,6 +120,7 @@
           polar: { water: 0, ice: 0, life: 0 },
         },
         baseColor: '#8a2a2a',
+        heightMapKey: '',
         inclinationDeg: 15,
         // Large-scale surface feature (e.g., Mars dark regions)
         surfaceFeatures: {
