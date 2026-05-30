@@ -144,17 +144,26 @@ function isProjectPresetFieldVisible(fieldPath, effectivePreset, automation) {
     return false;
   }
 
-  const hasAtmosphericTarget = !!project.getTargetAtmosphericResource();
-  if (SPACE_MINING_GAS_ONLY_FIELDS.has(settingKey) && !hasAtmosphericTarget) {
-    return false;
+  if (SPACE_MINING_GAS_ONLY_FIELDS.has(settingKey)) {
+    const gasTarget = project.getTargetAtmosphericResource
+      ? project.getTargetAtmosphericResource()
+      : null;
+    if (!gasTarget) {
+      return false;
+    }
   }
 
   if (settingKey === 'disableIfDiskworldHydrogenFillCovered' && project.name !== 'hydrogenSpaceMining') {
     return false;
   }
 
-  if (settingKey === 'materialImportTarget' && !project.getPlanetaryMassImportResource()) {
-    return false;
+  if (settingKey === 'materialImportTarget') {
+    const materialImportResource = project.getPlanetaryMassImportResource
+      ? project.getPlanetaryMassImportResource()
+      : null;
+    if (!materialImportResource) {
+      return false;
+    }
   }
 
   if (settingKey === 'waterCoverageDisableMode') {

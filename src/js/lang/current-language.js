@@ -5168,7 +5168,7 @@ setLanguageData({
         },
         artificial_quasars: {
           name: 'Artificial Quasars',
-          description: 'The galaxy has a large number of black holes that are just sitting there.  We can harness their rotational energy with a superconducting magnetosphere.',
+          description: 'The galaxy has a large number of black holes that are just sitting there.  We can harness their rotational energy with a superconducting magnetosphere.  (Special Thanks to Nightmare Brent for this research proposal)',
         },
         tractor_beams: {
           name: 'Tractor Beams',
