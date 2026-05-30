@@ -883,6 +883,9 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
 
     applyPlanetParameterEffects();
+    if (typeof applyRWGEffects === 'function') {
+      applyRWGEffects();
+    }
     if (typeof updateRender === 'function') {
       updateRender(true, { forceAllSubtabs: true });
     }
