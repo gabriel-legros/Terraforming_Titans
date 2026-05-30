@@ -396,7 +396,7 @@
         return;
       }
       const selected = this.getSelectedBuildCount();
-      uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, true);
+      uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, false, 2);
       uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonusCount(), true);
       uiElements.antimatterStorageBonusValue.textContent = formatNumber(this.getTotalAntimatterStorageBonus(), true);
       uiElements.buildButton.textContent = getSpaceAntimatterText(
@@ -421,8 +421,8 @@
       const targetCount = this.getAutoBuildTargetCount();
       uiElements.autoBuildTargetStatus.textContent = getSpaceAntimatterText(
         'autobuild.currentTarget',
-        { value: formatNumber(targetCount, true) },
-        `Target: ${formatNumber(targetCount, true)}`
+        { value: formatNumber(targetCount, false, 2) },
+        `Target: ${formatNumber(targetCount, false, 2)}`
       );
       uiElements.autoBuildTargetStatus.style.color = this.autoBuildTargetBlocked ? 'orange' : '';
     }
