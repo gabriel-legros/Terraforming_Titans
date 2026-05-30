@@ -1484,7 +1484,7 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
-      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'spaceStorage') {
+      if (this.waterImportTarget === 'spaceStorage') {
         return { spaceStorage: { liquidWater: capacity } };
       }
       if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
