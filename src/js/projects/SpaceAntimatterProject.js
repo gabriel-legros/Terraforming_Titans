@@ -404,8 +404,10 @@
         { count: formatNumber(selected, true) },
         `Build ${formatNumber(selected, true)} Batteries`
       );
+      const canBuild = this.canStart();
       uiElements.buildButton.disabled = false;
-      uiElements.buildButton.title = this.canStart()
+      uiElements.buildButton.style.color = canBuild ? '' : 'red';
+      uiElements.buildButton.title = canBuild
         ? ''
         : getSpaceAntimatterText('autobuild.blockedHint', null, 'Insufficient resources or requirements not met.');
       uiElements.autoBuildCheckbox.checked = this.autoBuildToTargetEnabled === true;
