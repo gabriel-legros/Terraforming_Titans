@@ -694,8 +694,16 @@ function handleGalaxyPopupToggle(event) {
     if (!popupKey || !cache || !cache.popupVisibility) {
         return;
     }
-    cache.popupVisibility[popupKey] = cache.popupVisibility[popupKey] === false;
-    galaxyManager?.setPopupVisibilityState?.(cache.popupVisibility);
+    cache.popupVisibility[popupKey] = popupKey === 'incoming'
+        ? cache.popupVisibility[popupKey] !== true
+        : cache.popupVisibility[popupKey] === false;
+    if (cache.popupVisibility[popupKey] === true) {
+        setPopupClosedState(popupKey, false);
+    }
+    const savedVisibility = galaxyManager?.setPopupVisibilityState?.(cache.popupVisibility);
+    if (savedVisibility) {
+        cache.popupVisibility = savedVisibility;
+    }
     setGalaxySectorPopupsVisible(!!cache.selectedSector);
     if (popupKey === 'incoming') {
         updateIncomingAttacksPopupVisibility(cache);
