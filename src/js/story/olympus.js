@@ -12,7 +12,7 @@ progressOlympus.chapters.push(
     activePlanet: 'olympus',
     title: '',
     narrative: '',
-    prerequisites: ['zeus.45.17'],
+    prerequisites: ['impossible15'],
     objectives: [],
     reward: []
   },
