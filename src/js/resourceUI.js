@@ -2629,7 +2629,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   }
 
   if (overflowLossDiv) {
-    if (resource.hasCap) {
+    const isColonyWater = resource.category === 'colony' && resource.name === 'water';
+    if (resource.hasCap && !isColonyWater) {
       const overflowLost = resource.overflowLostLast1s || 0;
       overflowLossDiv.style.display = 'block';
       overflowLossDiv._info.value.textContent = `${formatNumber(overflowLost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
