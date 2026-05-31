@@ -128,6 +128,10 @@ class GoldenAsteroid {
         this.countdownDuration = 30000; // 30 seconds in milliseconds
         this.countdownStartTime = 0;
         this.countdownActive = false; // New flag to track countdown state
+        this.celebrationActive = false;
+        this.celebrationRemainingTime = 0;
+        this.confettiContainer = null;
+        this.confettiSpawnCarry = 0;
         this.cacheContainers();
         this.cacheElements();
         }
@@ -206,6 +210,68 @@ class GoldenAsteroid {
       this.buttonElement?.style && (this.buttonElement.style.display = 'none');
       this.imageElement?.style && (this.imageElement.style.display = 'none');
     }
+
+    ensureConfettiContainer() {
+      if (!this.confettiContainer || !this.confettiContainer.isConnected) {
+        this.confettiContainer = document.getElementById('golden-asteroid-confetti');
+      }
+      if (!this.confettiContainer) {
+        this.confettiContainer = document.createElement('div');
+        this.confettiContainer.id = 'golden-asteroid-confetti';
+        this.confettiContainer.className = 'golden-asteroid-confetti';
+        document.body.appendChild(this.confettiContainer);
+      }
+    }
+
+    spawnConfettiBurst(count) {
+      this.ensureConfettiContainer();
+      const fragment = document.createDocumentFragment();
+      const colors = ['#ffd700', '#ff4d6d', '#2ec4b6', '#3a86ff', '#fb8500', '#7bd88f', '#f72585', '#ffffff'];
+      for (let i = 0; i < count; i += 1) {
+        const piece = document.createElement('span');
+        const size = 6 + Math.random() * 9;
+        const duration = 3000 + Math.random() * 3500;
+        piece.className = 'golden-asteroid-confetti-piece';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.width = `${size}px`;
+        piece.style.height = `${size * (0.5 + Math.random())}px`;
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = `${duration}ms`;
+        piece.style.animationDelay = `${Math.random() * 250}ms`;
+        piece.style.setProperty('--confetti-drift', `${(Math.random() - 0.5) * 260}px`);
+        piece.style.setProperty('--confetti-spin', `${360 + Math.random() * 1080}deg`);
+        fragment.appendChild(piece);
+        window.setTimeout(() => {
+          piece.remove();
+        }, duration + 500);
+      }
+      this.confettiContainer.appendChild(fragment);
+    }
+
+    updateConfetti(delta) {
+      this.confettiSpawnCarry += delta;
+      while (this.confettiSpawnCarry >= 100) {
+        this.confettiSpawnCarry -= 100;
+        this.spawnConfettiBurst(12);
+      }
+    }
+
+    stopConfetti() {
+      this.confettiSpawnCarry = 0;
+      if (this.confettiContainer) {
+        this.confettiContainer.remove();
+        this.confettiContainer = null;
+      }
+    }
+
+    startBirchWorldCelebration(duration = 30000) {
+      this.celebrationActive = true;
+      this.celebrationRemainingTime = duration;
+      this.confettiSpawnCarry = 0;
+      this.spawnConfettiBurst(180);
+      this.despawn();
+      this.spawn(duration);
+    }
   
     spawn(duration = 5000) {
         if (!this.active) {
@@ -245,6 +311,9 @@ class GoldenAsteroid {
         this.addEffects();
         this.startCountdown(this.countdownDuration + getGlobalGoldenAsteroidDurationBonusMs());
         this.despawn();
+        if (this.celebrationActive && this.celebrationRemainingTime > 0) {
+          this.spawn(this.celebrationRemainingTime);
+        }
         }
     }
 
@@ -289,18 +358,35 @@ class GoldenAsteroid {
       this.despawn();
       this.countdownActive = false;
       this.countdownRemainingTime = 0;
+      this.celebrationActive = false;
+      this.celebrationRemainingTime = 0;
+      this.stopConfetti();
       this.removeCountdownDisplay();
       this.lastSpawnTime = 0;
       this.generateNextSpawnTime();
     }
   
     update(delta) {
+        if (this.celebrationActive) {
+          this.celebrationRemainingTime -= delta;
+          if (this.celebrationRemainingTime > 0) {
+            this.updateConfetti(delta);
+            if (!this.active) {
+              this.spawn(this.celebrationRemainingTime);
+            }
+          } else {
+            this.celebrationActive = false;
+            this.celebrationRemainingTime = 0;
+            this.stopConfetti();
+          }
+        }
+
         if (this.active) {
           this.duration -= delta;
           if (this.duration <= 0) {
             this.despawn();
           }
-        } else {
+        } else if (!this.celebrationActive) {
           this.lastSpawnTime += delta;
     
           if (this.lastSpawnTime >= this.nextSpawnTime) {
@@ -349,6 +435,8 @@ class GoldenAsteroid {
           spawnTime: this.spawnTime,
           countdownActive: this.countdownActive,
           countdownRemainingTime: this.countdownRemainingTime,
+          celebrationActive: this.celebrationActive,
+          celebrationRemainingTime: this.celebrationRemainingTime,
         };
       }
     
@@ -357,6 +445,9 @@ class GoldenAsteroid {
       this.removeEffects();
       this.countdownActive = false;
       this.countdownRemainingTime = 0;
+      this.celebrationActive = false;
+      this.celebrationRemainingTime = 0;
+      this.stopConfetti();
       this.cacheElements();
       this.removeCountdownDisplay();
 
@@ -370,12 +461,19 @@ class GoldenAsteroid {
       this.spawnTime = data.spawnTime;
       this.countdownActive = data.countdownActive;
       this.countdownRemainingTime = data.countdownRemainingTime;
+      this.celebrationActive = data.celebrationActive === true;
+      this.celebrationRemainingTime = data.celebrationRemainingTime || 0;
       this.lastSpawnTime = 0;
       this.generateNextSpawnTime();
 
       if (this.countdownActive) {
         this.addEffects();
         this.startCountdown(this.countdownRemainingTime, { extendExisting: false });
+      }
+      if (this.celebrationActive && this.celebrationRemainingTime > 0) {
+        this.active = false;
+        this.spawnConfettiBurst(180);
+        this.spawn(this.celebrationRemainingTime);
       }
     }
   }

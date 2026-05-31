@@ -667,6 +667,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     if(gameState.goldenAsteroid){
       goldenAsteroid.loadState(gameState.goldenAsteroid);
     }
+    projectManager.projects.birchWorld.triggerPendingCompletionCelebration();
 
     if(gameState.nanotechManager){
       nanotechManager.loadState(gameState.nanotechManager);

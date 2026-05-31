@@ -783,6 +783,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('getDynamicWorldPlanetaryMassAvailableTons', () => 0, originalGlobals);
   setGlobal('hasDynamicMassEnabled', () => false, originalGlobals);
   setGlobal('globalGameIsLoadingFromSave', false, originalGlobals);
+  setGlobal('autoActivateStructures', () => {}, originalGlobals);
 
   const projectManager = {
     projects: {},

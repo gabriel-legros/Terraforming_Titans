@@ -11,6 +11,8 @@ class BirchWorldProject extends Project {
     this.layerCount = BIRCH_WORLD_STARTING_LAYERS;
     this.layerCache = null;
     this.cachedTotalLandHa = 0;
+    this.completionCelebrationTriggered = false;
+    this.completionCelebrationPendingOnLoad = false;
   }
 
   isCurrentSmbhShellworld() {
@@ -343,6 +345,21 @@ class BirchWorldProject extends Project {
     this.layerCount = Math.min(this.layerCount + 1, BIRCH_WORLD_MAX_LAYERS);
     const totalLandHa = this.refreshCachedTotalLand();
     this.updateCurrentWorldLand(totalLandHa);
+    if (this.layerCount >= BIRCH_WORLD_MAX_LAYERS && !this.completionCelebrationTriggered) {
+      this.triggerCompletionCelebration();
+    }
+  }
+
+  triggerCompletionCelebration() {
+    this.completionCelebrationTriggered = true;
+    this.completionCelebrationPendingOnLoad = false;
+    goldenAsteroid.startBirchWorldCelebration(30000);
+  }
+
+  triggerPendingCompletionCelebration() {
+    if (this.completionCelebrationPendingOnLoad) {
+      this.triggerCompletionCelebration();
+    }
   }
 
   updateCurrentWorldLand(totalLandHa) {
@@ -377,7 +394,8 @@ class BirchWorldProject extends Project {
     return {
       ...super.saveState(),
       layerCount: this.layerCount,
-      cachedTotalLandHa: this.cachedTotalLandHa
+      cachedTotalLandHa: this.cachedTotalLandHa,
+      completionCelebrationTriggered: this.completionCelebrationTriggered
     };
   }
 
@@ -388,6 +406,8 @@ class BirchWorldProject extends Project {
       Math.min(state.layerCount || BIRCH_WORLD_STARTING_LAYERS, BIRCH_WORLD_MAX_LAYERS)
     );
     this.cachedTotalLandHa = state.cachedTotalLandHa || 0;
+    this.completionCelebrationTriggered = state.completionCelebrationTriggered === true;
+    this.completionCelebrationPendingOnLoad = this.layerCount >= BIRCH_WORLD_MAX_LAYERS && !this.completionCelebrationTriggered;
     this.refreshCachedTotalLand();
   }
 }

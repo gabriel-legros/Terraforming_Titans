@@ -39,3 +39,37 @@
     justify-content: center;
     padding: 5px;
   }
+
+  .golden-asteroid-confetti {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .golden-asteroid-confetti-piece {
+    position: absolute;
+    top: -24px;
+    border-radius: 2px;
+    opacity: 0.95;
+    animation-name: golden-asteroid-confetti-fall;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes golden-asteroid-confetti-fall {
+    0% {
+      transform: translate3d(0, -24px, 0) rotate(0deg);
+      opacity: 1;
+    }
+
+    85% {
+      opacity: 1;
+    }
+
+    100% {
+      transform: translate3d(var(--confetti-drift), 110vh, 0) rotate(var(--confetti-spin));
+      opacity: 0;
+    }
+  }
