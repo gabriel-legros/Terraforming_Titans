@@ -5411,6 +5411,10 @@ setLanguageData({
           }
         },
       },
+      olympus: {
+        name: 'Olympus',
+        star: { name: 'Vepive-015' },
+      },
     },
     life: {
       lichen: {

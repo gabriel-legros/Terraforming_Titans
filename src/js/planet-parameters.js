@@ -2105,6 +2105,147 @@ const zeusOverrides = {
   }
 };
 
+const olympusOverrides = {
+  name: 'Olympus',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: false,
+    hasOre: false,
+    terraformingRequirementId: 'kerati',
+    zoneKeys: ['tropical', 'temperate', 'polar'],
+    zoneLayout: 'aldersonDisk',
+    diskInnerRadiusAU: 0.427,
+    diskRadiusAU: 12.021,
+    disk: { innerRadiusAU: 0.427, radiusAU: 12.021 },
+    diskConstructionCostTons: 3.044071346759389e31,
+    diskConstructionCostIncludesMetal: true
+  },
+  classification: {
+    archetype: 'artificial',
+    type: 'disk',
+    core: 'b-star'
+  },
+  star: {
+    name: 'Vepive-015',
+    spectralType: 'B',
+    luminositySolar: 2187,
+    massSolar: 9,
+    radiusSolar: 5.799546134795289,
+    temperatureK: 16407.51195964452,
+    habitableZone: { inner: 44.39763507136315, outer: 67.17737742552511 }
+  },
+  celestialParameters: {
+    distanceFromSun: 12.021,
+    gravity: 9.81,
+    radius: 1_270_798_963.8556244,
+    mass: 2.376486241758024e36,
+    albedo: 0.24,
+    rotationPeriod: 24,
+    spinPeriod: 24,
+    starLuminosity: 2187,
+    sector: 'R5-30',
+    baseLand: 2.0293808978395928e21
+  },
+  visualization: {
+    baseColor: '#2a3d4f',
+  },
+  effects: [
+    {
+      target: 'building',
+      targetId: 'hyperionLantern',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-hyperion-lanterns'
+    },
+    {
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-planetary-thrusters'
+    },
+    {
+      target: 'project',
+      targetId: 'diskworldTerraforming',
+      type: 'enable',
+      effectId: 'olympus-disk-enable-terraforming'
+    }
+  ],
+  resources: {
+    surface: {
+      land: {
+        initialValue: 2.0293808978395928e21,
+        baseLand: 2.0293808978395928e21,
+        baseCap: 2.0293808978395928e21
+      },
+      liquidWater: { initialValue: 8.570695396558675e22, unlocked: true },
+      ice: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidCO2: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 2.068685930519462e25 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      atmosphericAmmonia: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 3.103028895779193e26 },
+      hydrogen: { initialValue: 8.274743722077849e25 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 1.082965260226405e22,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    temperate: {
+      liquidWater: 2.8568984655195586e22,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    polar: {
+      liquidWater: 4.630831670812712e22,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    }
+  },
+  zonalTemperatures: null
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -2121,7 +2262,8 @@ const planetSpecificOverrides = {
   hades: hadesOverrides,
   poseidon: poseidonOverrides,
   styx: styxOverrides,
-  zeus: zeusOverrides
+  zeus: zeusOverrides,
+  olympus: olympusOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -2173,6 +2315,7 @@ const planetParameters = {
     poseidon: getPlanetParameters('poseidon'),
     styx: getPlanetParameters('styx'),
     zeus: getPlanetParameters('zeus'),
+    olympus: getPlanetParameters('olympus'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,

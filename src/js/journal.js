@@ -251,7 +251,8 @@ function ensureJournalWorldData() {
     { id: 'hades', label: 'Hades', source: getStorySource(() => progressHades, './story/hades.js') },
     { id: 'poseidon', label: 'Poseidon', source: getStorySource(() => progressPoseidon, './story/poseidon.js') },
     { id: 'styx', label: 'Styx', source: getStorySource(() => progressStyx, './story/styx.js') },
-    { id: 'zeus', label: 'Zeus', source: getStorySource(() => progressZeus, './story/zeus.js') }
+    { id: 'zeus', label: 'Zeus', source: getStorySource(() => progressZeus, './story/zeus.js') },
+    { id: 'olympus', label: 'Olympus', source: getStorySource(() => progressOlympus, './story/olympus.js') }
   ].filter(world => world.source && Array.isArray(world.source.chapters));
   const standardWorlds = [];
   worlds.forEach(world => {

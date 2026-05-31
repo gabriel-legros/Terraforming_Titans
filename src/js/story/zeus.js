@@ -520,7 +520,8 @@ progressZeus.chapters.push(
       { target: 'artificialManager', type: 'unlockCore', targetId: 'stellar-bh' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'a-star' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'b-star' },
-      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'o-star' }
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'o-star' },
+//      { target: 'spaceManager', targetId: 'olympus', type: 'enable', effectId: 'story-zeus-enable-olympus' }
     ]
   },
   {
