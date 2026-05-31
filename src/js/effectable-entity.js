@@ -875,7 +875,7 @@ function reapplySharedManagerEffects(options = {}) {
   const includeAutomation = options.includeAutomation === true;
   const includePlanetParameterEffects = options.includePlanetParameterEffects === true;
   const includeRWGEffects = options.includeRWGEffects === true;
-  const solisOptions = options.solisOptions || null;
+  const solisOptions = options.solisOptions;
 
   if (includeConditionalReconcile) {
     if (globalEffects && globalEffects.reconcileConditionalEffects) {

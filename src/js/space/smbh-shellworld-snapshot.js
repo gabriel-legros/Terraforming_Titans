@@ -83,6 +83,11 @@ function isSmbhShellworldSnapshotProjectAllowed(name, project) {
 function captureSmbhShellworldSpaceStorageSettings(project) {
   const state = project.saveState();
   return {
+    assignedSpaceships: state.assignedSpaceships || 0,
+    autoAssignSpaceships: state.autoAssignSpaceships === true,
+    waitForCapacity: state.waitForCapacity !== false,
+    assignmentMultiplier: state.assignmentMultiplier || 1,
+    highAgilityFreightersEnabled: state.highAgilityFreightersEnabled === true,
     autoStart: state.autoStart,
     autoStartUncheckOnTravel: state.autoStartUncheckOnTravel,
     selectedResources: state.selectedResources || [],
@@ -106,6 +111,15 @@ function captureSmbhShellworldSpaceStorageSettings(project) {
 }
 
 function restoreSmbhShellworldSpaceStorageSettings(project, state = {}) {
+  project.assignedSpaceships = Math.max(0, Math.floor(state.assignedSpaceships || 0));
+  project.autoAssignSpaceships = state.autoAssignSpaceships === true;
+  project.waitForCapacity = state.waitForCapacity !== false;
+  project.assignmentMultiplier = Math.max(1, Math.floor(state.assignmentMultiplier || 1));
+  if (project.setHighAgilityFreightersEnabled) {
+    project.setHighAgilityFreightersEnabled(state.highAgilityFreightersEnabled === true);
+  } else {
+    project.highAgilityFreightersEnabled = state.highAgilityFreightersEnabled === true;
+  }
   if (Object.prototype.hasOwnProperty.call(state, 'autoStart')) {
     project.autoStart = state.autoStart === true;
   }
