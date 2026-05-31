@@ -337,19 +337,40 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
           this.furnaceAssignments[key] = 0n;
         });
       } else {
+        const autoWeightScale = 1000000;
+        const scaledWeights = {};
+        let totalScaledWeight = 0n;
+        autoKeys.forEach((key) => {
+          const weightValue = this.autoAssignWeights[key];
+          const scaled = Math.floor(Math.max(0, weightValue) * autoWeightScale);
+          const normalizedScaled = scaled > 0 ? BigInt(scaled) : 0n;
+          scaledWeights[key] = normalizedScaled;
+          totalScaledWeight += normalizedScaled;
+        });
+        if (totalScaledWeight <= 0n) {
+          autoKeys.forEach((key) => {
+            scaledWeights[key] = 1n;
+          });
+          totalScaledWeight = BigInt(autoKeys.length);
+        }
         const remainders = [];
         let assigned = 0n;
         autoKeys.forEach((key) => {
-          const exact = Number(remaining) * (this.autoAssignWeights[key] / totalWeight);
-          const finiteExact = Number.isFinite(exact) && exact > 0 ? exact : 0;
-          const floorValue = Math.floor(finiteExact);
-          const floorBigInt = normalizeNuclearAlchemyInteger(floorValue);
+          const scaledWeight = scaledWeights[key];
+          const weightedTotal = remaining * scaledWeight;
+          const floorBigInt = totalScaledWeight > 0n ? (weightedTotal / totalScaledWeight) : 0n;
+          const remainderValue = totalScaledWeight > 0n ? (weightedTotal % totalScaledWeight) : 0n;
           this.furnaceAssignments[key] = floorBigInt;
           assigned += floorBigInt;
-          remainders.push({ key, value: finiteExact - floorValue });
+          remainders.push({ key, value: remainderValue });
         });
         let leftover = remaining - assigned;
-        remainders.sort((left, right) => right.value - left.value);
+        remainders.sort((left, right) => {
+          if (left.value === right.value) {
+            return 0;
+          }
+          return left.value > right.value ? -1 : 1;
+        });
         for (let i = 0; i < remainders.length && leftover > 0n; i += 1) {
           this.furnaceAssignments[remainders[i].key] += 1n;
           leftover -= 1n;
