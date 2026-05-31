@@ -510,6 +510,17 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const uhfFactionId = faction.id || fallbackFactionId;
+        const sector = manager.getSector(selection.q, selection.r);
+        if (!sector) {
+            return;
+        }
+        const hasStronghold = manager.hasNeighboringStronghold
+            ? manager.hasNeighboringStronghold(uhfFactionId, selection.q, selection.r)
+            : false;
+        const hasPresence = Number(sector.getControlValue ? sector.getControlValue(uhfFactionId) : 0) > 0;
+        if (!hasStronghold && !hasPresence) {
+            return;
+        }
         const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(sectorKey);
         const assignment = clampAssignment(stored, availablePower);
@@ -1185,6 +1196,11 @@ const GalaxyOperationUI = (() => {
             || null;
         const targetFaction = targetFactionId ? manager.getFaction(targetFactionId) : null;
         const targetLabel = targetFaction ? (targetFaction.name || targetFaction.id) : getOperationsText('noTarget', {}, 'No target');
+        const hasStronghold = manager.hasNeighboringStronghold
+            ? manager.hasNeighboringStronghold(uhfFactionId, selection.q, selection.r)
+            : false;
+        const hasPresence = Number(sector.getControlValue ? sector.getControlValue(uhfFactionId) : 0) > 0;
+        const canLaunchOnSelection = hasStronghold || hasPresence;
 
         const sectorPower = manager.getSectorDefensePower
             ? manager.getSectorDefensePower(selection.key, uhfFactionId, targetFactionId)
@@ -1200,7 +1216,8 @@ const GalaxyOperationUI = (() => {
         if (operationsTargetDefense) {
             operationsTargetDefense.textContent = formatNumber(sectorPower, false, 2);
         }
-        if (!operationRunning && effectiveAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
+        const hasValidOperationTarget = !!targetFactionId && canLaunchOnSelection;
+        if (!operationRunning && hasValidOperationTarget && effectiveAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
             const adjusted = clampAssignment(requiredThreshold, availablePower);
             const normalizedAdjustment = normalizeAssignment(adjusted);
             if (normalizedAdjustment > assignment) {
@@ -1315,7 +1332,7 @@ const GalaxyOperationUI = (() => {
             } else if (!hasChance) {
                 statusMessage = getOperationsText('assignMoreThan', { value: formatNumber(sectorPower, false, 0) }, `Assign more than ${formatNumber(sectorPower, false, 0)} power for a chance of success.`);
             }
-            if (statusMessage === '' && effectiveAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
+            if (statusMessage === '' && hasValidOperationTarget && effectiveAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
                 statusMessage = getOperationsText('autoLaunchRequires', { value: formatNumber(requiredAutoPower, false, 2) }, `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`);
             }
         }
