@@ -940,6 +940,58 @@ function getAutoActivationTargetCount(building, population, workerCap, totalLand
                             : roundedPercentTarget;
 }
 
+function autoActivateStructures(buildings) {
+    const population = resources.colony.colonists.value;
+    const workerCap = resources.colony.workers?.cap || 0;
+    const totalLand = resources.surface.land.value;
+
+    for (const buildingName in buildings) {
+        const building = buildings[buildingName];
+        if (!building || !building.shouldClampSetActiveToSupported || !building.shouldClampSetActiveToSupported()) {
+            continue;
+        }
+        const supportedCap = Math.max(0, Math.floor(building.getSupportedActiveCap()));
+        const change = supportedCap - building.activeNumber;
+        if (change >= 0) {
+            continue;
+        }
+        if (typeof adjustStructureActivation === 'function') {
+            adjustStructureActivation(building, change);
+        } else {
+            building.active = BigInt(
+                Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
+            );
+        }
+    }
+
+    for (const buildingName in buildings) {
+        const building = buildings[buildingName];
+        if (!canApplyAutoActiveTarget(building)) {
+            continue;
+        }
+        const targetCount = getAutoActivationTargetCount(
+            building,
+            population,
+            workerCap,
+            totalLand,
+            buildings
+        );
+        const desiredActive = building.getClampedSetActiveTargetCount
+            ? building.getClampedSetActiveTargetCount(targetCount, building.countNumber)
+            : Math.min(targetCount, building.countNumber);
+        const change = desiredActive - building.activeNumber;
+        if (change !== 0) {
+            if (typeof adjustStructureActivation === 'function') {
+                adjustStructureActivation(building, change);
+            } else {
+                building.active = BigInt(
+                    Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
+                );
+            }
+        }
+    }
+}
+
 function autoBuild(buildings, delta = 0) {
     resetAutoBuildPartialFlags(buildings);
     resetAutoBuildResourceShortages(typeof resources !== 'undefined' ? resources : null);
@@ -953,7 +1005,6 @@ function autoBuild(buildings, delta = 0) {
     const workerCap = resources.colony.workers?.cap || 0;
     const totalLand = resources.surface.land.value;
     const buildableBuildings = [];
-    const buildingInfos = [];
 
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
@@ -963,8 +1014,6 @@ function autoBuild(buildings, delta = 0) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {
                 const fillData = getAutoBuildFillData(building);
-                const targetCount = building.countNumber + fillData.requiredAmount;
-                buildingInfos.push({ building, targetCount });
                 if (building.autoBuildEnabled && fillData.requiredAmount > 0) {
                     buildableBuildings.push({
                         building,
@@ -1003,8 +1052,6 @@ function autoBuild(buildings, delta = 0) {
                             : usesAndroidCapacityShareBasis
                                 ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
                             : roundedPercentTarget;
-
-            buildingInfos.push({ building, targetCount });
 
             if (building.autoBuildEnabled) {
                 const currentRatio = usesMaxBasis && !usesAdjustableMaxBasis ? 0 : (targetCount > 0 ? building.countNumber / targetCount : 0);
@@ -1155,57 +1202,13 @@ function autoBuild(buildings, delta = 0) {
     }
 
     // Step 4: Auto-set active counts after building
-    buildingInfos.forEach(({ building }) => {
-        if (!building.shouldClampSetActiveToSupported || !building.shouldClampSetActiveToSupported()) {
-            return;
-        }
-        const supportedCap = Math.max(0, Math.floor(building.getSupportedActiveCap()));
-        const change = supportedCap - building.activeNumber;
-        if (change >= 0) {
-            return;
-        }
-        if (typeof adjustStructureActivation === 'function') {
-            adjustStructureActivation(building, change);
-        } else {
-            building.active = BigInt(
-                Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
-            );
-        }
-    });
-
-    buildingInfos.forEach(({ building }) => {
-        if (!canApplyAutoActiveTarget(building)) {
-            return;
-        }
-        const currentPopulation = resources.colony.colonists.value;
-        const currentWorkerCap = resources.colony.workers?.cap || 0;
-        const currentTotalLand = resources.surface.land.value;
-        const targetCount = getAutoActivationTargetCount(
-            building,
-            currentPopulation,
-            currentWorkerCap,
-            currentTotalLand,
-            buildings
-        );
-        const desiredActive = building.getClampedSetActiveTargetCount
-            ? building.getClampedSetActiveTargetCount(targetCount, building.countNumber)
-            : Math.min(targetCount, building.countNumber);
-        const change = desiredActive - building.activeNumber;
-        if (change !== 0) {
-            if (typeof adjustStructureActivation === 'function') {
-                adjustStructureActivation(building, change);
-            } else {
-                building.active = BigInt(
-                    Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
-                );
-            }
-        }
-    });
+    autoActivateStructures(buildings);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         autoBuild,
+        autoActivateStructures,
         autoUpgradeColonies,
         autobuildCostTracker,
         resolveAutoBuildBase,

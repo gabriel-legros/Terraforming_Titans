@@ -1904,6 +1904,8 @@ function produceResources(deltaTime, buildings) {
     accumulatedSpecialChanges
   );
 
+  autoActivateStructures(buildings);
+
   // Call terraforming.updateResources AFTER accumulating building/funding changes
   // but BEFORE applying accumulatedChanges to resource values.
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
