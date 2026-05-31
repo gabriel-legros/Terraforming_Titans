@@ -219,6 +219,22 @@ function captureSmbhShellworldResearch() {
   return { researches: snapshot };
 }
 
+function captureSmbhShellworldMilestoneClaims() {
+  const claims = {};
+  milestonesManager.milestones.forEach((milestone) => {
+    claims[milestone.id || milestone.name] = milestone.isCompleted === true;
+  });
+  return claims;
+}
+
+function restoreSmbhShellworldMilestoneClaims(snapshot) {
+  if (!snapshot) return;
+  milestonesManager.milestones.forEach((milestone) => {
+    const key = milestone.id || milestone.name;
+    milestone.isCompleted = snapshot[key] === true;
+  });
+}
+
 function captureSmbhShellworldOrbitalAllocation() {
   followersManager.ensureTrackedOrbitals();
   return {
@@ -274,7 +290,8 @@ function captureSmbhShellworldSnapshot() {
     nanotechManager: nanotechManager.saveState(),
     orbitalAllocation: captureSmbhShellworldOrbitalAllocation(),
     projects: captureSmbhShellworldProjects(),
-    research: captureSmbhShellworldResearch()
+    research: captureSmbhShellworldResearch(),
+    milestoneClaims: captureSmbhShellworldMilestoneClaims()
   };
 }
 
@@ -295,6 +312,7 @@ function restoreSmbhShellworldSnapshot(snapshot) {
   nanotechManager.loadState(snapshot.nanotechManager || {});
   restoreSmbhShellworldOrbitalAllocation(snapshot.orbitalAllocation);
   restoreSmbhShellworldProjects(snapshot.projects);
+  restoreSmbhShellworldMilestoneClaims(snapshot.milestoneClaims);
 
   reapplySmbhShellworldEffects();
   terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
