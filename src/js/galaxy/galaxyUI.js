@@ -2557,15 +2557,18 @@ function createIncomingAttackRow(doc) {
     const attacker = doc.createElement('span');
     const sector = doc.createElement('span');
     const power = doc.createElement('span');
+    const time = doc.createElement('span');
     const chance = doc.createElement('span');
     power.className = 'galaxy-incoming-attacks__cell--numeric';
+    time.className = 'galaxy-incoming-attacks__cell--numeric';
     chance.className = 'galaxy-incoming-attacks__cell--numeric';
-    row.append(attacker, sector, power, chance);
+    row.append(attacker, sector, power, time, chance);
     return {
         row,
         attacker,
         sector,
         power,
+        time,
         chance
     };
 }
@@ -2575,8 +2578,7 @@ function updateIncomingAttacksPopupVisibility(cache) {
         return;
     }
     const visible = cache.popupVisibility?.incoming !== false
-        && cache.popupClosed?.incoming !== true
-        && cache.incomingAttacksHasRows === true;
+        && cache.popupClosed?.incoming !== true;
     cache.incomingAttacksPopup.classList.toggle('is-hidden', !visible);
 }
 
@@ -2628,7 +2630,7 @@ function cacheGalaxyElements() {
     incomingAttacksToggle.dataset.popupKey = 'incoming';
     incomingAttacksToggle.textContent = GALAXY_ALIEN_ICON;
     incomingAttacksToggle.setAttribute('aria-label', getGalaxyText('map.toggleIncomingAttacks', 'Toggle incoming attacks'));
-    incomingAttacksToggle.setAttribute('aria-pressed', 'true');
+    incomingAttacksToggle.setAttribute('aria-pressed', 'false');
 
     const mapWrapper = doc.createElement('div');
     mapWrapper.className = 'galaxy-map-wrapper';
@@ -2764,6 +2766,8 @@ function cacheGalaxyElements() {
     });
     [detailsToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
         button.addEventListener('click', handleGalaxyPopupToggle);
+    });
+    [detailsToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
         button.addEventListener('mousedown', (event) => event.stopPropagation());
         button.addEventListener('touchstart', (event) => {
             event.stopPropagation();
@@ -2812,12 +2816,16 @@ function cacheGalaxyElements() {
     const incomingAttacksHeader = doc.createElement('div');
     incomingAttacksHeader.className = 'galaxy-incoming-attacks__row galaxy-incoming-attacks__row--header';
     [
-        getGalaxyText('attacks.attacker', 'Attacker'),
-        getGalaxyText('attacks.sector', 'Sector'),
-        getGalaxyText('attacks.power', 'Power'),
-        getGalaxyText('attacks.enemySuccessChance', 'Enemy Success Chance')
-    ].forEach((label) => {
+        { label: getGalaxyText('attacks.attacker', 'Attacker') },
+        { label: getGalaxyText('attacks.sector', 'Sector') },
+        { label: getGalaxyText('attacks.power', 'Power'), numeric: true },
+        { label: getGalaxyText('attacks.timeUntilAttack', 'Time'), numeric: true },
+        { label: getGalaxyText('attacks.enemySuccessChance', 'Enemy Success Chance'), numeric: true }
+    ].forEach(({ label, numeric }) => {
         const cell = doc.createElement('span');
+        if (numeric) {
+            cell.className = 'galaxy-incoming-attacks__cell--numeric';
+        }
         cell.textContent = label;
         incomingAttacksHeader.appendChild(cell);
     });
@@ -2825,6 +2833,10 @@ function cacheGalaxyElements() {
     incomingAttacksRows.className = 'galaxy-incoming-attacks__body';
     incomingAttacksTable.append(incomingAttacksHeader, incomingAttacksRows);
     incomingAttacksPanel.body.appendChild(incomingAttacksTable);
+    const incomingAttacksEmpty = doc.createElement('p');
+    incomingAttacksEmpty.className = 'galaxy-incoming-attacks__empty';
+    incomingAttacksEmpty.textContent = getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
+    incomingAttacksPanel.body.appendChild(incomingAttacksEmpty);
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
     attackContent.dataset.emptyMessage = getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
@@ -2924,20 +2936,30 @@ function cacheGalaxyElements() {
 
     const defenseHistory = doc.createElement('div');
     defenseHistory.className = 'galaxy-defense-history';
-    const defenseHistoryTitle = doc.createElement('div');
+    const defenseHistoryTitle = doc.createElement('button');
+    defenseHistoryTitle.type = 'button';
     defenseHistoryTitle.className = 'galaxy-defense-history__title';
-    defenseHistoryTitle.textContent = getGalaxyText('defense.lastFiveAttacks', 'Last 5 Attacks');
+    defenseHistoryTitle.setAttribute('aria-expanded', 'true');
+    defenseHistoryTitle.setAttribute('aria-label', getGalaxyText('defense.toggleAttackHistory', 'Toggle attack history'));
+    const defenseHistoryArrow = doc.createElement('span');
+    defenseHistoryArrow.className = 'galaxy-defense-history__arrow';
+    defenseHistoryArrow.textContent = '▼';
+    const defenseHistoryTitleText = doc.createElement('span');
+    defenseHistoryTitleText.textContent = getGalaxyText('defense.lastFiveAttacks', 'Last 5 Attacks');
+    defenseHistoryTitle.append(defenseHistoryArrow, defenseHistoryTitleText);
 
     const defenseHistoryHeader = doc.createElement('div');
     defenseHistoryHeader.className = 'galaxy-defense-history__row galaxy-defense-history__row--header';
     [
-        getGalaxyText('defense.historyEnemy', 'Enemy'),
-        getGalaxyText('defense.historyEnemyPower', 'Enemy Power'),
-        getGalaxyText('defense.historyResult', 'Result'),
-        getGalaxyText('defense.historyUhfLosses', 'UHF Losses')
-    ].forEach((label) => {
+        { label: getGalaxyText('defense.historyEnemy', 'Enemy') },
+        { label: getGalaxyText('defense.historyEnemyPower', 'Enemy Power'), numeric: true },
+        { label: getGalaxyText('defense.historyResult', 'Result') },
+        { label: getGalaxyText('defense.historyUhfLosses', 'UHF Losses'), numeric: true }
+    ].forEach(({ label, numeric }) => {
         const cell = doc.createElement('span');
-        cell.className = 'galaxy-defense-history__cell';
+        cell.className = numeric
+            ? 'galaxy-defense-history__cell galaxy-defense-history__cell--numeric'
+            : 'galaxy-defense-history__cell';
         cell.textContent = label;
         defenseHistoryHeader.appendChild(cell);
     });
@@ -2963,12 +2985,22 @@ function cacheGalaxyElements() {
     defenseHistoryEmpty.className = 'galaxy-defense-history__empty';
     defenseHistoryEmpty.textContent = getGalaxyText('defense.noAttacksRecorded', 'No attacks recorded yet.');
 
+    const defenseHistoryBody = doc.createElement('div');
+    defenseHistoryBody.className = 'galaxy-defense-history__body';
+    defenseHistoryBody.appendChild(defenseHistoryHeader);
+    defenseHistoryRows.forEach((entry) => defenseHistoryBody.appendChild(entry.row));
+    defenseHistoryBody.appendChild(defenseHistoryEmpty);
+
     defenseHistory.appendChild(defenseHistoryTitle);
-    defenseHistory.appendChild(defenseHistoryHeader);
-    defenseHistoryRows.forEach((entry) => defenseHistory.appendChild(entry.row));
-    defenseHistory.appendChild(defenseHistoryEmpty);
+    defenseHistory.appendChild(defenseHistoryBody);
+    defenseHistoryTitle.addEventListener('click', () => {
+        const collapsed = defenseHistory.classList.toggle('is-collapsed');
+        defenseHistoryTitle.setAttribute('aria-expanded', String(!collapsed));
+        defenseHistoryArrow.textContent = collapsed ? '▶' : '▼';
+    });
 
     attackContent.appendChild(defenseSection);
+    incomingAttacksPanel.body.appendChild(defenseHistory);
     incomingAttacks.body.appendChild(attackContent);
 
     Object.values(defenseButtons).forEach((button) => {
@@ -3210,12 +3242,12 @@ function cacheGalaxyElements() {
 
     container.replaceChildren(layout);
 
-    const popupVisibility = galaxyManager?.getPopupVisibilityState?.() || {
+    const popupVisibility = Object.assign({
         sector: true,
         operations: true,
         defense: true,
-        incoming: true
-    };
+        incoming: false
+    }, galaxyManager?.getPopupVisibilityState?.() || {});
 
     galaxyUICache = {
         container,
@@ -3287,9 +3319,10 @@ function cacheGalaxyElements() {
         attackList,
         attackEntries: new Map(),
         incomingAttacksPopup: incomingAttacksPanel.section,
+        incomingAttacksTable,
         incomingAttacksRows,
+        incomingAttacksEmpty,
         incomingAttacksRowCache: new Map(),
-        incomingAttacksHasRows: false,
         defenseSection,
         defenseWarning,
         defenseForm,
@@ -3303,6 +3336,8 @@ function cacheGalaxyElements() {
         defenseButtons,
         defenseClearButton,
         defenseHistory,
+        defenseHistoryBody,
+        defenseHistoryTitle,
         defenseHistoryRows,
         defenseHistoryEmpty,
         sectorCloseButton,
@@ -3618,6 +3653,7 @@ function updateIncomingAttackPanel(manager, cache) {
             row.attacker.textContent = attack.attackerName || getGalaxyText('attacks.unknownAttacker', 'Unknown attacker');
             row.sector.textContent = attack.sectorName || getGalaxyText('attacks.unknownSector', 'Unknown sector');
             row.power.textContent = formatFleetValue(attack.power);
+            row.time.textContent = formatAttackCountdown(attack.remainingMs);
             const estimate = manager.operationManager.getOperationLossEstimate({
                 sectorKey: attack.sectorKey,
                 factionId: attack.attackerId,
@@ -3639,7 +3675,13 @@ function updateIncomingAttackPanel(manager, cache) {
             row?.row?.remove();
             rowCache.delete(key);
         });
-        cache.incomingAttacksHasRows = uhfAttacks.length > 0;
+        const hasIncomingAttacks = uhfAttacks.length > 0;
+        if (cache.incomingAttacksTable) {
+            cache.incomingAttacksTable.hidden = !hasIncomingAttacks;
+        }
+        if (cache.incomingAttacksEmpty) {
+            cache.incomingAttacksEmpty.classList.toggle('is-hidden', hasIncomingAttacks);
+        }
         updateIncomingAttacksPopupVisibility(cache);
     }
 

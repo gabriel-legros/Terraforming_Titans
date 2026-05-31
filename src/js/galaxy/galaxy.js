@@ -30,7 +30,8 @@ class GalaxyManager extends EffectableEntity {
         this.popupVisibility = {
             sector: true,
             operations: true,
-            defense: true
+            defense: true,
+            incoming: false
         };
         this.fleetUpgradePurchases = {};
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
@@ -166,7 +167,8 @@ class GalaxyManager extends EffectableEntity {
         return {
             sector: this.popupVisibility.sector !== false,
             operations: this.popupVisibility.operations !== false,
-            defense: this.popupVisibility.defense !== false
+            defense: this.popupVisibility.defense !== false,
+            incoming: this.popupVisibility.incoming === true
         };
     }
 
@@ -174,7 +176,8 @@ class GalaxyManager extends EffectableEntity {
         this.popupVisibility = {
             sector: state.sector !== false,
             operations: state.operations !== false,
-            defense: state.defense !== false
+            defense: state.defense !== false,
+            incoming: state.incoming === true
         };
         return this.getPopupVisibilityState();
     }

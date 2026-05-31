@@ -852,7 +852,7 @@
 
 .galaxy-incoming-attacks__row {
   display: grid;
-  grid-template-columns: minmax(80px, 1fr) minmax(68px, 0.8fr) minmax(74px, 0.8fr) minmax(150px, 1fr);
+  grid-template-columns: minmax(80px, 1fr) minmax(68px, 0.8fr) minmax(74px, 0.75fr) minmax(54px, 0.6fr) minmax(150px, 1fr);
   gap: 8px;
   align-items: center;
   padding: 4px 8px;
@@ -877,6 +877,14 @@
 .galaxy-incoming-attacks__cell--numeric {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.galaxy-incoming-attacks__empty {
+  margin: 8px 0 0;
+  text-align: center;
+  color: rgba(219, 233, 255, 0.78);
+  font-size: 0.78rem;
+  font-style: italic;
 }
 
 .galaxy-sector-panel.is-populated {
@@ -1303,18 +1311,48 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px;
+  margin-top: 10px;
+  padding: 10px;
   border-radius: 10px;
   background: rgba(54, 10, 10, 0.28);
   border: 1px solid rgba(212, 104, 104, 0.22);
 }
 
 .galaxy-defense-history__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #ffdede;
+  text-align: left;
+  cursor: pointer;
+}
+
+.galaxy-defense-history__title:hover {
+  color: #ffffff;
+}
+
+.galaxy-defense-history__arrow {
+  width: 1em;
+  flex: 0 0 auto;
+  font-size: 0.76rem;
+}
+
+.galaxy-defense-history__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.galaxy-defense-history.is-collapsed .galaxy-defense-history__body {
+  display: none;
 }
 
 .galaxy-defense-history__row {
