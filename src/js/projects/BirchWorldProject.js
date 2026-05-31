@@ -171,6 +171,9 @@ class BirchWorldProject extends Project {
       target.resources.surface.land.baseLand = totalLandHa;
       target.resources.surface.land.baseCap = totalLandHa;
     }
+    if (target.resources?.special?.albedoUpgrades) {
+      target.resources.special.albedoUpgrades.baseCap = Math.max(0, totalLandHa * 10000);
+    }
   }
 
   setRadiusFields(target, radiusEarth) {
@@ -207,6 +210,10 @@ class BirchWorldProject extends Project {
     if (resources.surface.land) {
       resources.surface.land.baseLand = totalLandHa;
       resources.surface.land.baseCap = totalLandHa;
+    }
+    if (resources.special.albedoUpgrades) {
+      resources.special.albedoUpgrades.baseCap = Math.max(0, totalLandHa * 10000);
+      resources.special.albedoUpgrades.updateStorageCap();
     }
     this.setLandFields(currentPlanetParameters, totalLandHa);
     this.setRadiusFields(currentPlanetParameters, radiusEarth);
