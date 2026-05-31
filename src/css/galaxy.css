@@ -1339,6 +1339,12 @@
   color: #ffffff;
 }
 
+.dark-mode .galaxy-defense-history__title,
+.dark-mode .galaxy-defense-history__title:hover {
+  background: transparent;
+  border: 0;
+}
+
 .galaxy-defense-history__arrow {
   width: 1em;
   flex: 0 0 auto;
