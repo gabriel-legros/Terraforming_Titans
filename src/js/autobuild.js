@@ -955,13 +955,7 @@ function autoActivateStructures(buildings) {
         if (change >= 0) {
             continue;
         }
-        if (typeof adjustStructureActivation === 'function') {
-            adjustStructureActivation(building, change);
-        } else {
-            building.active = BigInt(
-                Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
-            );
-        }
+        adjustStructureActivation(building, change);
     }
 
     for (const buildingName in buildings) {
@@ -981,13 +975,7 @@ function autoActivateStructures(buildings) {
             : Math.min(targetCount, building.countNumber);
         const change = desiredActive - building.activeNumber;
         if (change !== 0) {
-            if (typeof adjustStructureActivation === 'function') {
-                adjustStructureActivation(building, change);
-            } else {
-                building.active = BigInt(
-                    Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
-                );
-            }
+            adjustStructureActivation(building, change);
         }
     }
 }
