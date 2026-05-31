@@ -78,6 +78,7 @@ class SubtabManager {
       const tab = this.subtabs[i];
       const id = tab.dataset.subtab;
       const content = document.getElementById(id);
+      if (isCurrentWorldSubtabDisabled(id)) continue;
       if (tab.classList.contains('hidden')) continue;
       if (content && content.classList.contains('hidden')) continue;
       return id;
@@ -94,7 +95,13 @@ class SubtabManager {
     if (!this.subtabs) this._cacheSubtabs();
     const tab = this.getSubtab(id);
     const content = document.getElementById(id);
-    if (tab && tab.classList.contains('hidden')) {
+    if (isCurrentWorldSubtabDisabled(id)) {
+      if (tab) tab.classList.add('hidden');
+      if (content) content.classList.add('hidden');
+      const fallbackId = this._getFirstVisibleId();
+      if (!fallbackId) return;
+      id = fallbackId;
+    } else if (tab && tab.classList.contains('hidden')) {
       const fallbackId = this._getFirstVisibleId();
       if (!fallbackId) return;
       id = fallbackId;
@@ -133,6 +140,11 @@ class SubtabManager {
   show(id) {
     const tab = this.getSubtab(id);
     const content = document.getElementById(id);
+    if (isCurrentWorldSubtabDisabled(id)) {
+      if (tab) tab.classList.add('hidden');
+      if (content) content.classList.add('hidden');
+      return;
+    }
     if (tab) tab.classList.remove('hidden');
     if (content) content.classList.remove('hidden');
   }

@@ -316,6 +316,9 @@ class MilestonesManager {
 
     // Update which milestones can be completed based on current game state
     update(delta) {
+        if (isCurrentWorldManagerDisabled('milestonesManager')) {
+            return;
+        }
         this.milestones.forEach(milestone => {
             if (!milestone.isCompleted && this.checkIfCanBeCompleted(milestone)) {
                 milestone.canBeCompleted = true;

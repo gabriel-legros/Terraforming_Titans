@@ -256,6 +256,10 @@ function ensureSolisCooldownElements() {
 }
 
 function showSolisTab() {
+  if (isCurrentWorldSubtabDisabled('solis-hope')) {
+    hideSolisTab();
+    return;
+  }
   solisTabVisible = true;
   if (hopeSubtabManager) {
     hopeSubtabManager.show('solis-hope');

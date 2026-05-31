@@ -2049,7 +2049,7 @@ function toggleArtificialTabVisibility(isEnabled) {
   const { button, content, storyButton, storyContent } = cacheArtificialUIElements();
   if (!button || !content) return;
 
-  const shouldHide = !isEnabled;
+  const shouldHide = !isEnabled || isCurrentWorldSubtabDisabled('space-artificial');
   button.classList.toggle('hidden', shouldHide);
   content.classList.toggle('hidden', shouldHide);
 
@@ -2670,7 +2670,7 @@ function renderStartButton(project, manager, preview) {
 function updateArtificialUI(options = {}) {
   const force = !!options.force;
   const manager = artificialManager;
-  const enabled = !!(manager && manager.enabled);
+  const enabled = isManagerEffectivelyEnabled(manager, 'artificialManager');
   toggleArtificialTabVisibility(enabled);
   if (!enabled) return;
 

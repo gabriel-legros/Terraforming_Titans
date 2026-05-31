@@ -85,7 +85,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     update(deltaMs) {
-        if(!this.enabled){
+        if(!isManagerEffectivelyEnabled(this, 'galaxyManager')){
             return;
         }
         updateFactions.call(this, deltaMs);
@@ -96,6 +96,9 @@ class GalaxyManager extends EffectableEntity {
     }
 
     enable(targetId, { autoSwitch = true } = {}) {
+        if (isCurrentWorldManagerDisabled('galaxyManager')) {
+            return;
+        }
         if (targetId && targetId !== 'space-galaxy' && targetId !== 'galaxy') {
             return;
         }
@@ -105,7 +108,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     refreshUIVisibility() {
-        if (this.enabled) {
+        if (isManagerEffectivelyEnabled(this, 'galaxyManager')) {
             if (typeof showSpaceGalaxyTab === 'function') {
                 showSpaceGalaxyTab();
             }

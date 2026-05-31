@@ -585,6 +585,9 @@ class SolisManager extends EffectableEntity {
   }
 
   reapplyEffects(options = {}) {
+    if (isCurrentWorldManagerDisabled('solisManager')) {
+      return;
+    }
     const grantStartingResources = options.grantStartingResources === true;
     this.setUpgradeEnabled('autoResearch', this.isBooleanFlagSet('solisAutoResearch'));
     this.setUpgradeEnabled('shipAssignment', this.isBooleanFlagSet('solisShipAssignment'));
@@ -818,6 +821,9 @@ class SolisManager extends EffectableEntity {
   }
 
   update(delta) {
+    if (isCurrentWorldManagerDisabled('solisManager')) {
+      return;
+    }
     const elapsed = Math.max(0, delta);
     if (this.questCooldownRemaining > 0) {
       this.questCooldownRemaining = Math.max(0, this.questCooldownRemaining - elapsed);
@@ -901,6 +907,9 @@ class SolisManager extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('solisManager')) {
+      return;
+    }
     this.enabled = true;
     if (typeof showSolisTab === 'function') {
       showSolisTab();

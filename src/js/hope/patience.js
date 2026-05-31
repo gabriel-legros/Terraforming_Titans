@@ -21,6 +21,9 @@ class PatienceManager extends EffectableEntity {
      * Enable the patience system
      */
     enable() {
+        if (isCurrentWorldManagerDisabled('patienceManager')) {
+            return;
+        }
         this.enabled = true;
     }
 
@@ -325,7 +328,7 @@ class PatienceManager extends EffectableEntity {
      * Update called each tick
      */
     update(delta = 0) {
-        if (!this.enabled) {
+        if (!isManagerEffectivelyEnabled(this, 'patienceManager')) {
             return;
         }
         const deltaSeconds = delta / 1000;
@@ -378,6 +381,9 @@ class PatienceManager extends EffectableEntity {
      * Reapply effects after loading or planet travel
      */
     reapplyEffects() {
+        if (isCurrentWorldManagerDisabled('patienceManager')) {
+            return;
+        }
         this.applyActiveEffects();
         this.clampCurrentHoursToMax();
     }

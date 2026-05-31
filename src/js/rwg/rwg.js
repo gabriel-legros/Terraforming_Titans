@@ -2144,6 +2144,9 @@ class RwgManager extends EffectableEntity {
   }
 
   applyEffect(effect) {
+    if (isCurrentWorldManagerDisabled('rwgManager')) {
+      return;
+    }
     if (effect.type === 'unlockOrbit') {
       this.unlockOrbit(effect.targetId);
     } else if (effect.type === 'lockOrbit') {

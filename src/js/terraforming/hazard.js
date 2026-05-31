@@ -521,6 +521,9 @@ class HazardManager {
   }
 
   update(deltaTime = 0, terraformingState = null) {
+    if (isCurrentWorldManagerDisabled('hazardManager')) {
+      return;
+    }
     if (!terraformingState) {
       return;
     }

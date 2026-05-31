@@ -2169,6 +2169,10 @@ function setAutomationToggleState(toggle, enabled) {
 }
 
 function showAutomationTab() {
+  if (isCurrentWorldSubtabDisabled('automation-hope')) {
+    hideAutomationTab();
+    return;
+  }
   automationTabVisible = true;
   cacheAutomationElements();
   const { tab, content } = automationElements;

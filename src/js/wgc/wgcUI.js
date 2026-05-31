@@ -261,6 +261,10 @@ function renderWGCLogLines(entries) {
 }
 
 function showWGCTab() {
+  if (isCurrentWorldSubtabDisabled('wgc-hope')) {
+    hideWGCTab();
+    return;
+  }
   wgcTabVisible = true;
   if (typeof hopeSubtabManager !== 'undefined' && hopeSubtabManager) {
     hopeSubtabManager.show('wgc-hope');

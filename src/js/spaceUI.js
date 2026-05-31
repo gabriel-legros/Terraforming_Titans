@@ -113,6 +113,10 @@ function updateTravelWarningMessageText() {
 }
 
 function showSpaceRandomTab() {
+    if (isCurrentWorldSubtabDisabled('space-random')) {
+        hideSpaceRandomTab();
+        return;
+    }
     spaceRandomTabVisible = true;
     if (spaceSubtabManager) {
         spaceSubtabManager.show('space-random');
@@ -245,6 +249,10 @@ function setSpaceIncomingAttackWarning(isActive, isThreat = true) {
 }
 
 function showSpaceAtlasTab() {
+    if (isCurrentWorldSubtabDisabled('space-atlas')) {
+        hideSpaceAtlasTab();
+        return;
+    }
     spaceAtlasTabVisible = true;
     const { button, content } = cacheAtlasTabElements();
     if (spaceSubtabManager) {
@@ -267,6 +275,10 @@ function hideSpaceAtlasTab() {
 }
 
 function showSpaceGalaxyTab() {
+    if (isCurrentWorldSubtabDisabled('space-galaxy')) {
+        hideSpaceGalaxyTab();
+        return;
+    }
     spaceGalaxyTabVisible = true;
     const { button, content } = cacheGalaxyTabElements();
     if (spaceSubtabManager) {
@@ -533,7 +545,7 @@ function handleCurrentWorldTravelWarnings(onConfirm) {
 
 function updateSpaceRandomVisibility() {
     if (!_spaceManagerInstance) return;
-    if (_spaceManagerInstance.randomTabEnabled) {
+    if (_spaceManagerInstance.randomTabEnabled && !isCurrentWorldSubtabDisabled('space-random')) {
         if (!spaceRandomTabVisible) {
             showSpaceRandomTab();
         }

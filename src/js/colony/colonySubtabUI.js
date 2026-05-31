@@ -115,9 +115,9 @@ function activateColonySubtab(subtabId) {
 function updateColonySubtabsVisibility() {
   cacheColonySubtabElements();
 
-  const populationUnlocked = isPopulationSubtabUnlocked();
-  const nanocolonyUnlocked = populationUnlocked && isNanocolonySubtabUnlocked();
-  const followersUnlocked = populationUnlocked && isFollowersSubtabUnlocked();
+  const populationUnlocked = isPopulationSubtabUnlocked() && !isCurrentWorldSubtabDisabled(COLONY_SUBTAB_IDS.population);
+  const nanocolonyUnlocked = isPopulationSubtabUnlocked() && isNanocolonySubtabUnlocked() && !isCurrentWorldSubtabDisabled(COLONY_SUBTAB_IDS.nanocolony);
+  const followersUnlocked = isPopulationSubtabUnlocked() && isFollowersSubtabUnlocked() && !isCurrentWorldSubtabDisabled(COLONY_SUBTAB_IDS.followers);
 
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.population, populationUnlocked);
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.nanocolony, nanocolonyUnlocked);

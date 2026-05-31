@@ -720,11 +720,15 @@ function updateLogic(delta) {
 
   colonySliderSettings.updateColonySlidersEffect();
 
-  if (galaxyManager && typeof galaxyManager.update === 'function') {
+  if (!isCurrentWorldManagerDisabled('galaxyManager') && galaxyManager && typeof galaxyManager.update === 'function') {
     galaxyManager.update(delta);
   }
-  galaxyInvasionManager.update(delta);
-  rwgManager.updateDominionUnlocksFromGalaxy(galaxyManager);
+  if (!isCurrentWorldManagerDisabled('galaxyInvasionManager')) {
+    galaxyInvasionManager.update(delta);
+  }
+  if (!isCurrentWorldManagerDisabled('rwgManager')) {
+    rwgManager.updateDominionUnlocksFromGalaxy(galaxyManager);
+  }
   warpGateNetworkManager.update(delta);
 
   const allStructures = {...buildings, ...colonies};
@@ -746,28 +750,32 @@ function updateLogic(delta) {
 
   goldenAsteroid.update(delta);
 
-  if (solisManager) {
+  if (!isCurrentWorldManagerDisabled('solisManager') && solisManager) {
     solisManager.update(delta);
   }
-  if (followersManager && typeof followersManager.update === 'function') {
+  if (!isCurrentWorldManagerDisabled('followersManager') && followersManager && typeof followersManager.update === 'function') {
     followersManager.update(delta);
   }
-  if (automationManager) {
+  if (!isCurrentWorldManagerDisabled('automationManager') && automationManager) {
     automationManager.update(delta);
   }
-  if (warpGateCommand) {
+  if (!isCurrentWorldManagerDisabled('warpGateCommand') && warpGateCommand) {
     warpGateCommand.update(delta);
   }
-  if (artificialManager) {
+  if (!isCurrentWorldManagerDisabled('artificialManager') && artificialManager) {
     artificialManager.update(delta);
   }
-  if (atlasManager) {
+  if (!isCurrentWorldManagerDisabled('atlasManager') && atlasManager) {
     atlasManager.update(delta);
   }
 
-  lifeDesigner.update(delta);
+  if (!isCurrentWorldManagerDisabled('lifeDesigner')) {
+    lifeDesigner.update(delta);
+  }
 
-  milestonesManager.update(delta);
+  if (!isCurrentWorldManagerDisabled('milestonesManager')) {
+    milestonesManager.update(delta);
+  }
 
   // **** Update the Story Manager ****
   // This will check objectives for active events, process completions,
@@ -781,7 +789,9 @@ function updateLogic(delta) {
   recalculateTotalRates();
 
 
-  patienceManager.update(delta);
+  if (!isCurrentWorldManagerDisabled('patienceManager')) {
+    patienceManager.update(delta);
+  }
   terraformingGraphsManager.update(delta);
 }
 

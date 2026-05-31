@@ -237,6 +237,9 @@ class AtlasManager extends EffectableEntity {
     }
 
     enable(targetId) {
+        if (isCurrentWorldManagerDisabled('atlasManager')) {
+            return;
+        }
         if (targetId && targetId !== 'space-atlas' && targetId !== 'atlas') {
             return;
         }
@@ -257,7 +260,7 @@ class AtlasManager extends EffectableEntity {
     }
 
     refreshUIVisibility() {
-        if (this.enabled) {
+        if (isManagerEffectivelyEnabled(this, 'atlasManager')) {
             showSpaceAtlasTab();
         } else {
             hideSpaceAtlasTab();
@@ -274,6 +277,9 @@ class AtlasManager extends EffectableEntity {
     update() {}
 
     reapplyEffects() {
+        if (isCurrentWorldManagerDisabled('atlasManager')) {
+            return;
+        }
         this.applyCompletionRewards();
         if (skillManager && typeof skillManager.handleAtlasCompletionChange === 'function') {
             skillManager.handleAtlasCompletionChange();

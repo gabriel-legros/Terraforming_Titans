@@ -93,6 +93,12 @@ class EffectableEntity {
     }
 
   shouldApplyEffect(effect) {
+    if (isCurrentWorldAdvancedResearchDisabled() && effect.sourceId && researchManager) {
+      const sourceResearch = researchManager.getResearchById(effect.sourceId);
+      if (sourceResearch && sourceResearch.category === 'advanced') {
+        return false;
+      }
+    }
     if ('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave) {
       return false;
     }
@@ -693,6 +699,18 @@ class EffectableEntity {
 
     // Method to check if a boolean flag is set
     isBooleanFlagSet(flag) {
+      if (isCurrentWorldAdvancedResearchDisabled()) {
+        const advancedFlagEffect = this.activeEffects.find((effect) => {
+          if (effect.type !== 'booleanFlag' || effect.flagId !== flag || !effect.sourceId || !researchManager) {
+            return false;
+          }
+          const sourceResearch = researchManager.getResearchById(effect.sourceId);
+          return sourceResearch && sourceResearch.category === 'advanced';
+        });
+        if (advancedFlagEffect) {
+          return false;
+        }
+      }
       return this.booleanFlags.has(flag);
     }
 
@@ -785,6 +803,43 @@ class EffectableEntity {
       });
       return multiplier > 0 ? multiplier : 1;
     }
+}
+
+function getCurrentWorldDisabledFeatures() {
+  return currentPlanetParameters?.specialAttributes?.disabledFeatures || {};
+}
+
+function isWorldFeatureDisabled(featureType, featureId) {
+  const disabledFeatures = getCurrentWorldDisabledFeatures();
+  const disabledList = disabledFeatures[featureType];
+  if (Array.isArray(disabledList)) {
+    return disabledList.includes(featureId);
+  }
+  return disabledList === featureId;
+}
+
+function isCurrentWorldTabDisabled(tabId) {
+  return isWorldFeatureDisabled('tabs', extractTabId(tabId));
+}
+
+function isCurrentWorldSubtabDisabled(subtabId) {
+  return isWorldFeatureDisabled('subtabs', subtabId);
+}
+
+function isCurrentWorldManagerDisabled(managerId) {
+  return isWorldFeatureDisabled('managers', managerId);
+}
+
+function isCurrentWorldProjectCategoryDisabled(category) {
+  return isWorldFeatureDisabled('projectCategories', category);
+}
+
+function isCurrentWorldAdvancedResearchDisabled() {
+  return isWorldFeatureDisabled('researchCategories', 'advanced');
+}
+
+function isManagerEffectivelyEnabled(manager, managerId) {
+  return !!(manager && manager.enabled && !isCurrentWorldManagerDisabled(managerId));
 }
 
 function addOrRemoveEffect(effect, action) {

@@ -2125,6 +2125,10 @@ function updateEmptyProjectMessages(activeSubtabId) {
 }
 
 function updateCategoryProjectsVisibility(category, subtabId) {
+  if (isCurrentWorldProjectCategoryDisabled(category)) {
+    setProjectSubtabVisibility(subtabId, false);
+    return;
+  }
   let visible = false;
   if (typeof projectManager !== 'undefined' && projectManager.projects) {
     visible = Object.values(projectManager.projects).some(p => {

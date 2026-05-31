@@ -390,7 +390,7 @@ class Colony extends Building {
     const hazardPenalty = this.getHazardHappinessPenalty();
 
     // Calculate the target happiness after gravity penalty and hazard penalties
-    const artGalleryHappinessBonus = followersManager && followersManager.enabled
+    const artGalleryHappinessBonus = isManagerEffectivelyEnabled(followersManager, 'followersManager')
       ? followersManager.getArtHappinessBonus()
       : 0;
     const targetHappiness = ((nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness) * (1 - gravityPenalty) - hazardPenalty * 100)

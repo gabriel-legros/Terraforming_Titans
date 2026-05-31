@@ -828,6 +828,7 @@ function markTerraformingMilestonesIfActive() {
 
 function setTerraformingSummaryVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('summary-terraforming');
 
   const { summaryButton, summaryContent } = terraformingTabElements;
   if (!summaryButton || !summaryContent) {
@@ -848,6 +849,7 @@ function setTerraformingSummaryVisibility(unlocked) {
 
 function setTerraformingLifeVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('life-terraforming');
 
   const { lifeButton, lifeContent } = terraformingTabElements;
   if (!lifeButton || !lifeContent) {
@@ -868,6 +870,7 @@ function setTerraformingLifeVisibility(unlocked) {
 
 function setTerraformingHazardsVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('hazard-terraforming');
 
   const { hazardsButton, hazardsContent } = terraformingTabElements;
   if (!hazardsButton || !hazardsContent) {
@@ -891,6 +894,7 @@ function setTerraformingHazardsVisibility(unlocked) {
 
 function setTerraformingMilestonesVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('milestone-terraforming');
 
   const { milestonesButton, milestonesContent } = terraformingTabElements;
   if (!milestonesButton || !milestonesContent) {

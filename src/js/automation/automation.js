@@ -173,6 +173,9 @@ class AutomationManager extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('automationManager')) {
+      return;
+    }
     this.enabled = true;
     this.updateUI();
   }
@@ -222,6 +225,9 @@ class AutomationManager extends EffectableEntity {
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('automationManager')) {
+      return;
+    }
     this.setFeature('automationAutoTravel', this.isBooleanFlagSet('automationAutoTravel'));
     this.setFeature('automationShipAssignment', this.isBooleanFlagSet('automationShipAssignment'));
     this.setFeature('automationLifeDesign', this.isBooleanFlagSet('automationLifeDesign'));
@@ -369,6 +375,9 @@ class AutomationManager extends EffectableEntity {
   }
 
   update(delta) {
+    if (isCurrentWorldManagerDisabled('automationManager')) {
+      return;
+    }
     if (this.autoTravelAutomation) {
       this.autoTravelAutomation.update(delta || 0);
     }

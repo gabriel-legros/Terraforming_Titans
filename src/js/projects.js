@@ -767,7 +767,7 @@ class Project extends EffectableEntity {
   }
 
   isPermanentlyDisabled() {
-    return this.permanentlyDisabled === true;
+    return this.permanentlyDisabled === true || isCurrentWorldProjectCategoryDisabled(this.category || 'resources');
   }
 
   enable() {

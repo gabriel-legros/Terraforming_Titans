@@ -501,7 +501,7 @@ function updateCompletedResearchVisibility() {
 }
 
 function updateAdvancedResearchVisibility() {
-    const visible = researchManager && researchManager.isBooleanFlagSet('advancedResearchUnlocked');
+    const visible = researchManager && researchManager.isBooleanFlagSet('advancedResearchUnlocked') && !isCurrentWorldSubtabDisabled('advanced-research');
     if (researchSubtabManager) {
         if (visible) {
             researchSubtabManager.show('advanced-research');

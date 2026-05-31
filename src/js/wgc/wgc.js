@@ -714,6 +714,9 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('warpGateCommand')) {
+      return;
+    }
     this.enabled = true;
     warpGateNetworkManager.setWarpGateUnlocked(true);
     if (typeof showWGCTab === 'function') {
@@ -806,6 +809,9 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('warpGateCommand')) {
+      return;
+    }
     for (const key in this.rdUpgrades) {
       if (this.rdUpgrades[key].purchases > 0) {
         this.applyUpgradeEffect(key);

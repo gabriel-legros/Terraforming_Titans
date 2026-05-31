@@ -19,6 +19,9 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   enable(targetId) {
+    if (isCurrentWorldManagerDisabled('galaxyInvasionManager')) {
+      return;
+    }
     if (targetId && targetId !== 'space-invasion' && targetId !== 'galacticInvasion') {
       return;
     }
@@ -27,7 +30,7 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   refreshUIVisibility() {
-    if (this.enabled) {
+    if (isManagerEffectivelyEnabled(this, 'galaxyInvasionManager')) {
       showSpaceInvasionTab();
       initializeGalacticInvasionUI();
       updateGalacticInvasionUI({ force: true });
@@ -48,7 +51,7 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   update(deltaMs) {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'galaxyInvasionManager')) {
       return;
     }
     if (this.cooldownRemainingMs > 0) {
@@ -868,6 +871,9 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('galaxyInvasionManager')) {
+      return;
+    }
     this.refreshRewardEffects(true);
     this.refreshUIVisibility();
   }

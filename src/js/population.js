@@ -31,7 +31,7 @@ class PopulationModule extends EffectableEntity {
         multiplier *= effect.value;
       }
     });
-    if (followersManager && followersManager.enabled) {
+    if (isManagerEffectivelyEnabled(followersManager, 'followersManager')) {
       multiplier *= (1 + followersManager.getPilgrimGrowthBonus());
     }
     return multiplier;
@@ -48,10 +48,10 @@ class PopulationModule extends EffectableEntity {
   }
 
   getWorkerEfficiencyMultipliers() {
-    const zealMultiplier = followersManager && followersManager.enabled
+    const zealMultiplier = isManagerEffectivelyEnabled(followersManager, 'followersManager')
       ? (1 + followersManager.getZealWorkerEfficiencyBonus())
       : 1;
-    const artMultiplier = followersManager && followersManager.enabled
+    const artMultiplier = isManagerEffectivelyEnabled(followersManager, 'followersManager')
       ? followersManager.getArtWorkerPerColonistMultiplier()
       : 1;
     return {

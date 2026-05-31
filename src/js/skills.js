@@ -169,6 +169,9 @@ class SkillManager {
   }
 
   applySkillEffect(skill) {
+    if (isCurrentWorldManagerDisabled('skillManager')) {
+      return;
+    }
     const effects = Array.isArray(skill.effects)
       ? skill.effects
       : (skill.effect ? [skill.effect] : []);
@@ -211,6 +214,9 @@ class SkillManager {
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('skillManager')) {
+      return;
+    }
     this.refreshMaxRanks();
     for (const id in this.skills) {
       const skill = this.skills[id];

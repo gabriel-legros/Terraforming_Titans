@@ -24,6 +24,10 @@ function formatGalacticInvasionDuration(milliseconds) {
 }
 
 function showSpaceInvasionTab() {
+  if (isCurrentWorldSubtabDisabled('space-invasion')) {
+    hideSpaceInvasionTab();
+    return;
+  }
   const button = document.querySelector('[data-subtab="space-invasion"]');
   const content = document.getElementById('space-invasion');
   if (spaceSubtabManager) {

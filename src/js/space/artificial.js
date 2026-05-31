@@ -729,6 +729,7 @@ class ArtificialManager extends EffectableEntity {
     }
 
     enable() {
+        if (isCurrentWorldManagerDisabled('artificialManager')) return;
         if (this.enabled) return;
         this.enabled = true;
         this.updateUI(true);
@@ -820,6 +821,7 @@ class ArtificialManager extends EffectableEntity {
     }
 
     update(delta) {
+        if (isCurrentWorldManagerDisabled('artificialManager')) return;
         const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
         if (hasGalaxyConquest !== this._lastGalaxyConquestUnlockState) {
             this.refreshConditionalRingStarCoreUnlocks();
@@ -839,6 +841,7 @@ class ArtificialManager extends EffectableEntity {
     applyEffect(effect) {
         if (!effect) return;
         if (effect.type === 'enable') {
+            if (isCurrentWorldManagerDisabled('artificialManager')) return;
             this.enable(effect.targetId);
             return;
         }

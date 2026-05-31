@@ -40,9 +40,19 @@ class Research {
       this.orderDirty = false;
       this.autoResearchEnabled = false;
       this.pendingConditionalEffects = new Map();
+      this.advancedResearchFlagIds = new Set();
 
       // Load research data and create Research instances
       for (const category in researchData) {
+        if (category === 'advanced') {
+          researchData[category].forEach((research) => {
+            (research.effects || []).forEach((effect) => {
+              if (effect.type === 'booleanFlag' && effect.flagId) {
+                this.advancedResearchFlagIds.add(effect.flagId);
+              }
+            });
+          });
+        }
         this.researches[category] = researchData[category].map(
           (research) =>
             new Research(
@@ -59,6 +69,13 @@ class Research {
 
       this.sortAllResearches();
       this.orderDirty = false;
+    }
+
+    isBooleanFlagSet(flag) {
+      if (isCurrentWorldAdvancedResearchDisabled() && this.advancedResearchFlagIds.has(flag)) {
+        return false;
+      }
+      return super.isBooleanFlagSet(flag);
     }
 
     getRepeatCount(research) {
@@ -150,6 +167,7 @@ class Research {
     }
 
     update(deltaTime) {
+      if (isCurrentWorldAdvancedResearchDisabled()) return;
       if (!resources || !resources.colony || !resources.colony.advancedResearch) return;
       if (!resources.colony.advancedResearch.unlocked) return;
       if (typeof spaceManager === 'undefined') return;
@@ -355,6 +373,9 @@ class Research {
     }
 
     isResearchDisplayable(research) {
+      if (research.category === 'advanced' && isCurrentWorldAdvancedResearchDisabled()) {
+        return false;
+      }
       if (research.disabled) {
         return false;
       }
@@ -458,7 +479,7 @@ class Research {
     // Mark a research as completed
     completeResearch(id) {
         const research = this.getResearchById(id);
-        if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
+        if (research && this.isResearchDisplayable(research) && this.isResearchAvailable(id) && canAffordResearch(research)) {
           if (research.cost.research) {
             resources.colony.research.value -= research.cost.research;
           }
@@ -509,9 +530,12 @@ class Research {
       }
     }
 
-  // Apply research effects to the target
-  applyResearchEffects(research, options = {}) {
-    research.effects.forEach((effect, index) => {
+    // Apply research effects to the target
+    applyResearchEffects(research, options = {}) {
+      if (research.category === 'advanced' && isCurrentWorldAdvancedResearchDisabled()) {
+        return;
+      }
+      research.effects.forEach((effect, index) => {
       if (options.reapply && (effect.type === 'activateTab' || effect.type === 'activateSubtab') && effect.onReapply !== true) {
         return;
       }

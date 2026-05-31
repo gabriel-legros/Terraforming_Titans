@@ -70,7 +70,7 @@ const tabParameters = {
       tabParams.tabs.forEach(tabConfig => {
         const tab = this.tabs[tabConfig.id];
         if (tab) {
-          if (tabConfig.isHidden) {
+          if (tabConfig.isHidden || isCurrentWorldTabDisabled(tabConfig.id)) {
             tab.classList.add('hidden');
           } else {
             tab.classList.remove('hidden');
@@ -121,6 +121,10 @@ const tabParameters = {
     // Enable a tab by removing the hidden class
     enable(tabId) {
       if (this.tabs[tabId]) {
+        if (isCurrentWorldTabDisabled(tabId)) {
+          this.hide(tabId);
+          return;
+        }
         this.tabs[tabId].classList.remove('hidden');
         console.log(`Tab "${tabId}" unlocked.`);
       } else {
@@ -150,6 +154,11 @@ const tabParameters = {
 
       if (!tabElement) {
         console.error(`Tab button with data-tab="${tabId}" not found.`);
+        return;
+      }
+      if (isCurrentWorldTabDisabled(tabId)) {
+        tabElement.classList.add('hidden');
+        this.activateTab('settings');
         return;
       }
       if (tabElement.classList.contains('hidden')) {

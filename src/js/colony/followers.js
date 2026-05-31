@@ -1322,6 +1322,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('followersManager')) {
+      return;
+    }
     const wasEnabled = this.enabled;
     this.enabled = true;
     if (!wasEnabled) {
@@ -1355,6 +1358,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('followersManager')) {
+      return;
+    }
     this.applyHolyWorldEffects();
     this.updateUI();
   }
@@ -1462,7 +1468,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   update(deltaTime) {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
       return;
     }
 

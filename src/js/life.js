@@ -912,6 +912,9 @@ class LifeDesigner extends EffectableEntity {
   }
 
   update(delta) {
+    if (isCurrentWorldManagerDisabled('lifeDesigner')) {
+      return;
+    }
     if (this.isActive) {
       this.elapsedTime += delta;
       this.remainingTime = Math.max(0, this.totalTime - this.elapsedTime);

@@ -521,7 +521,6 @@ progressZeus.chapters.push(
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'a-star' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'b-star' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'o-star' },
-//      { target: 'spaceManager', targetId: 'olympus', type: 'enable', effectId: 'story-zeus-enable-olympus' }
     ]
   },
   {
@@ -535,6 +534,19 @@ progressZeus.chapters.push(
     objectives: [
     ],
     reward: [
+    ]
+  },
+  {
+    id: "zeus.45.18",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    title: "",
+    narrative: "(World 15 not implemented yet)",
+    prerequisites: ["impossible"],
+    objectives: [
+    ],
+    reward: [{ target: 'spaceManager', targetId: 'olympus', type: 'enable', effectId: 'story-zeus-enable-olympus' }
     ]
   }
 );
