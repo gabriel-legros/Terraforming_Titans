@@ -2114,12 +2114,13 @@ const olympusOverrides = {
     terraformingRequirementId: 'kerati',
     zoneKeys: ['tropical', 'temperate', 'polar'],
     zoneLayout: 'aldersonDisk',
+    fixedZonalAverageFlux: 400,
     diskInnerRadiusAU: 0.427,
     diskRadiusAU: 12.021,
     disk: { innerRadiusAU: 0.427, radiusAU: 12.021 },
     diskConstructionCostTons: 3.044071346759389e31,
     diskConstructionCostIncludesMetal: true,
-    disabledFeatures: {
+/*    disabledFeatures: {
       tabs: ['research', 'hope'],
       subtabs: [
         'energy-research',
@@ -2164,8 +2165,8 @@ const olympusOverrides = {
         'followersManager'
       ],
       researchCategories: ['advanced'],
-      projectCategories: ['mega', 'giga', 'tera']
-    }
+      projectCategories: ['mega', 'giga', 'tera'] 
+    } */
   },
   classification: {
     archetype: 'artificial',

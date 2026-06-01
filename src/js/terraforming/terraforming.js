@@ -1430,7 +1430,8 @@ class Terraforming extends EffectableEntity{
         ? albRes.cloudHazeRaw
         : albRes.penalty;
       this.luminosity.albedo = this.luminosity.actualAlbedo;
-      this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      const fixedZonalAverageFlux = currentPlanetParameters.specialAttributes?.fixedZonalAverageFlux;
+      this.luminosity.solarFlux = fixedZonalAverageFlux ?? this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
     }
 
     saveTemperatureState() {
@@ -2403,6 +2404,10 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateDiskDirectSolarFlux(zone) {
+      const fixedZonalAverageFlux = currentPlanetParameters.specialAttributes?.fixedZonalAverageFlux;
+      if (fixedZonalAverageFlux !== undefined) {
+        return Math.max(fixedZonalAverageFlux, 2.4e-5);
+      }
       const diskRadiusAU = Math.max(this.getDiskOuterRadiusAU(), 0.000001);
       const annulusRadiusAU = Math.max(diskRadiusAU * getDiskZoneRadiusRatio(zone), 0.000001);
       const orbitalFlux = this.calculateSolarFlux(annulusRadiusAU * AU_METER);
@@ -2411,7 +2416,8 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateModifiedSolarFlux(distanceFromSunInMeters){
-      const baseFlux = this.calculateSolarFlux(distanceFromSunInMeters);
+      const fixedZonalAverageFlux = currentPlanetParameters.specialAttributes?.fixedZonalAverageFlux;
+      const baseFlux = fixedZonalAverageFlux ?? this.calculateSolarFlux(distanceFromSunInMeters);
       const mirrorEffect = this.calculateMirrorEffect();
       const mirrorFlux = mirrorEffect.powerPerUnitArea;
       const lanternFlux = this.calculateLanternFlux();
