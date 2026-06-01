@@ -22,6 +22,8 @@ class FollowersManager extends EffectableEntity {
     this.worldBelieverRatio = 0.1;
     this.galacticPopulation = 0;
     this.galacticBelievers = 0;
+    this.smbhGalacticPopulationContribution = 0;
+    this.smbhGalacticBelieversContribution = 0;
     this.galacticBelieverPercentFallback = 0.1;
     this.lastFaithWorldConversionRate = 0;
     this.lastFaithGalacticConversionRate = 0;
@@ -810,6 +812,18 @@ class FollowersManager extends EffectableEntity {
       return;
     }
     const worldBelievers = worldPopulation * this.getWorldBelieverPercent();
+    if (this.isCurrentWorldSupermassiveShellworld()) {
+      this.galacticPopulation = Math.max(
+        0,
+        this.galacticPopulation - this.smbhGalacticPopulationContribution
+      );
+      this.galacticBelievers = Math.max(
+        0,
+        this.galacticBelievers - this.smbhGalacticBelieversContribution
+      );
+      this.smbhGalacticPopulationContribution = worldPopulation;
+      this.smbhGalacticBelieversContribution = worldBelievers;
+    }
     this.galacticPopulation += worldPopulation;
     this.galacticBelievers += worldBelievers;
     this.galacticBelievers = Math.min(this.galacticBelievers, this.galacticPopulation);
@@ -817,6 +831,24 @@ class FollowersManager extends EffectableEntity {
     if (!this.isFaithSuppressed() && this.isCurrentWorldHolyConsecrated()) {
       this.holyWorldPoints += 1;
     }
+  }
+
+  isCurrentWorldSupermassiveShellworld() {
+    if (spaceManager.currentArtificialKey === null) {
+      return false;
+    }
+    const status = spaceManager.getCurrentWorldStatus();
+    const type = status?.type
+      || status?.classification?.type
+      || status?.original?.merged?.classification?.type
+      || status?.original?.classification?.type
+      || status?.artificialSnapshot?.type;
+    const core = status?.core
+      || status?.classification?.core
+      || status?.original?.merged?.classification?.core
+      || status?.original?.classification?.core
+      || status?.artificialSnapshot?.core;
+    return type === 'shell' && core === 'smbh';
   }
 
   updateFaith(deltaTime) {
@@ -1379,6 +1411,8 @@ class FollowersManager extends EffectableEntity {
         worldBelieverRatio: this.worldBelieverRatio,
         galacticPopulation: this.galacticPopulation,
         galacticBelievers: this.galacticBelievers,
+        smbhGalacticPopulationContribution: this.smbhGalacticPopulationContribution,
+        smbhGalacticBelieversContribution: this.smbhGalacticBelieversContribution,
         galacticBelieverPercentFallback: this.galacticBelieverPercentFallback
       },
       holyWorld: {
@@ -1434,6 +1468,8 @@ class FollowersManager extends EffectableEntity {
     this.worldBelieverRatio = this.clampPercent(faith.worldBelieverRatio ?? 0.1);
     this.galacticPopulation = Math.max(0, faith.galacticPopulation || 0);
     this.galacticBelievers = Math.max(0, faith.galacticBelievers || 0);
+    this.smbhGalacticPopulationContribution = Math.max(0, faith.smbhGalacticPopulationContribution || 0);
+    this.smbhGalacticBelieversContribution = Math.max(0, faith.smbhGalacticBelieversContribution || 0);
     this.galacticBelieverPercentFallback = this.clampPercent(
       faith.galacticBelieverPercentFallback ?? 0.1
     );
