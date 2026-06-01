@@ -52,6 +52,9 @@
     makeRow('bTrop', 'Biomass Trop (%)', 0, 100, 0.1);
     makeRow('bTemp', 'Biomass Temp (%)', 0, 100, 0.1);
     makeRow('bPol', 'Biomass Polar (%)', 0, 100, 0.1);
+    makeRow('hbTrop', 'Hazard Biomass Trop (%)', 0, 100, 0.1);
+    makeRow('hbTemp', 'Hazard Biomass Temp (%)', 0, 100, 0.1);
+    makeRow('hbPol', 'Hazard Biomass Polar (%)', 0, 100, 0.1);
     makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
     makeRow('cloudWind', 'Cloud Wind', 0, 0.05, 0.0005);
 
@@ -265,7 +268,7 @@
     setVal('cloudCov', Number(r.cloudCov?.range?.value || 0));
     if (r.cloudWind) setVal('cloudWind', Number(r.cloudWind.range.value));
     const sv = (id) => { if (r[id]) setVal(id, Number(r[id].range.value)); };
-    ['wTrop', 'wTemp', 'wPol', 'iTrop', 'iTemp', 'iPol', 'bTrop', 'bTemp', 'bPol'].forEach(sv);
+    ['wTrop', 'wTemp', 'wPol', 'iTrop', 'iTemp', 'iPol', 'bTrop', 'bTemp', 'bPol', 'hbTrop', 'hbTemp', 'hbPol'].forEach(sv);
     if (r.featStrength) setVal('featStrength', Number(r.featStrength.range.value));
     if (r.featScale) setVal('featScale', Number(r.featScale.range.value));
     if (r.featContrast) setVal('featContrast', Number(r.featContrast.range.value));
@@ -313,11 +316,14 @@
     const wT = clampFrom(r.wTrop) / 100, wM = clampFrom(r.wTemp) / 100, wP = clampFrom(r.wPol) / 100;
     const iT = clampFrom(r.iTrop) / 100, iM = clampFrom(r.iTemp) / 100, iP = clampFrom(r.iPol) / 100;
     const bT = clampFrom(r.bTrop) / 100, bM = clampFrom(r.bTemp) / 100, bP = clampFrom(r.bPol) / 100;
+    const hbT = clampFrom(r.hbTrop) / 100, hbM = clampFrom(r.hbTemp) / 100, hbP = clampFrom(r.hbPol) / 100;
     z.tropical.water = wT; z.temperate.water = wM; z.polar.water = wP;
     z.tropical.ice = iT; z.temperate.ice = iM; z.polar.ice = iP;
     z.tropical.life = bT; z.temperate.life = bM; z.polar.life = bP;
+    z.tropical.hazardousLife = hbT; z.temperate.hazardousLife = hbM; z.polar.hazardousLife = hbP;
     this.viz.coverage.water = ((wT + wM + wP) / 3) * 100;
     this.viz.coverage.life = ((bT + bM + bP) / 3) * 100;
+    this.viz.coverage.hazardousLife = ((hbT + hbM + hbP) / 3) * 100;
     if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
     if (r.cloudWind) this.cloudDriftSpeed = clampFrom(r.cloudWind);
 
@@ -451,16 +457,20 @@
       const waterFraction = estimateCoverageFn(waterAmount, zoneArea, 0.0001);
       const iceFraction = estimateCoverageFn(iceAmount, zoneArea, 0.0001 * 100);
       const lifeFraction = estimateCoverageFn(surfaceData.biomass ?? 0, zoneArea, 0.0001 * 100000);
+      const hazardousLifeFraction = estimateCoverageFn(surfaceData.hazardousBiomass ?? 0, zoneArea, 0.0001 * 100000);
       waterFractions.push(Math.max(0, Math.min(1, Number(waterFraction) || 0)));
       const pctWater = (Math.max(0, Math.min(1, Number(waterFraction) || 0)) * 100);
       const pctIce = (Math.max(0, Math.min(1, Number(iceFraction) || 0)) * 100);
       const pctLife = (Math.max(0, Math.min(1, Number(lifeFraction) || 0)) * 100);
+      const pctHazardousLife = (Math.max(0, Math.min(1, Number(hazardousLifeFraction) || 0)) * 100);
       const wPair = rows[`w${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
       const iPair = rows[`i${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
       const bPair = rows[`b${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
+      const hbPair = rows[`hb${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
       setPairValue(wPair, pctWater, { precision: 2 });
       setPairValue(iPair, pctIce, { precision: 2 });
       setPairValue(bPair, pctLife, { precision: 2 });
+      setPairValue(hbPair, pctHazardousLife, { precision: 2 });
     }
 
     if (rows.cloudCov) {
@@ -560,6 +570,9 @@
     if (r.bTrop) { const s = fmt(z.tropical.life); r.bTrop.range.value = s; r.bTrop.number.value = s; }
     if (r.bTemp) { const s = fmt(z.temperate.life); r.bTemp.range.value = s; r.bTemp.number.value = s; }
     if (r.bPol) { const s = fmt(z.polar.life); r.bPol.range.value = s; r.bPol.number.value = s; }
+    if (r.hbTrop) { const s = fmt(z.tropical.hazardousLife); r.hbTrop.range.value = s; r.hbTrop.number.value = s; }
+    if (r.hbTemp) { const s = fmt(z.temperate.hazardousLife); r.hbTemp.range.value = s; r.hbTemp.number.value = s; }
+    if (r.hbPol) { const s = fmt(z.polar.hazardousLife); r.hbPol.range.value = s; r.hbPol.number.value = s; }
     const avgWater = ((z.tropical.water + z.temperate.water + z.polar.water) / 3) * 100;
     const cloudGame = Number.isFinite(this.viz.coverage?.cloud) ? this.viz.coverage.cloud : avgWater;
     if (r.cloudCov) {
@@ -602,6 +615,7 @@
     this.viz.coverage = {
       water: avg(z.tropical.water, z.temperate.water, z.polar.water) * 100,
       life: avg(z.tropical.life, z.temperate.life, z.polar.life) * 100,
+      hazardousLife: avg(z.tropical.hazardousLife, z.temperate.hazardousLife, z.polar.hazardousLife) * 100,
       cloud: cloudGame,
     };
     this.viz.ships = Number(r.ships ? r.ships.range.value : 0);
@@ -647,6 +661,9 @@
       setPct(r.bTrop, (zc.tropical?.life || 0) * 100);
       setPct(r.bTemp, (zc.temperate?.life || 0) * 100);
       setPct(r.bPol, (zc.polar?.life || 0) * 100);
+      setPct(r.hbTrop, (zc.tropical?.hazardousLife || 0) * 100);
+      setPct(r.hbTemp, (zc.temperate?.hazardousLife || 0) * 100);
+      setPct(r.hbPol, (zc.polar?.hazardousLife || 0) * 100);
       if (r.cloudCov) setPct(r.cloudCov, this.viz.coverage?.cloud || 0);
       if (r.cloudWind) {
         r.cloudWind.range.value = String(this.cloudDriftSpeed);

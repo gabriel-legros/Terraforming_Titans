@@ -872,14 +872,23 @@ function updateRender(force = false, options = {}) {
           // Zonal coverages for rendering bands
           const zones = ['tropical', 'temperate', 'polar'];
           const zonal = {};
+          let hazardousLifeSum = 0;
+          let zoneWeightSum = 0;
           for (const z of zones) {
             // Returns fractions 0..1
             const f = calculateZonalSurfaceFractions(terraforming, z);
+            const hazardousLife = Math.max(0, Math.min(1, terraforming.zonalCoverageCache[z]?.hazardousBiomass || 0));
+            const zoneWeight = terraforming.getZoneWeight ? terraforming.getZoneWeight(z) : getZonePercentage(z);
+            hazardousLifeSum += hazardousLife * zoneWeight;
+            zoneWeightSum += zoneWeight;
             zonal[z] = {
               water: Math.max(0, Math.min(1, f.ocean || 0)),
               ice: Math.max(0, Math.min(1, f.ice || 0)),
+              life: Math.max(0, Math.min(1, f.biomass || 0)),
+              hazardousLife,
             };
           }
+          pv.viz.coverage.hazardousLife = pct(zoneWeightSum > 0 ? hazardousLifeSum / zoneWeightSum : 0);
           pv.viz.zonalCoverage = zonal;
           if (typeof pv.setBaseColor === 'function') {
             const baseColor = currentPlanetParameters?.visualization?.baseColor;

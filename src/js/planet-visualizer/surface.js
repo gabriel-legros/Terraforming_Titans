@@ -607,9 +607,10 @@
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
     const water = (this.viz.coverage?.water || 0) / 100;
     const life = (this.viz.coverage?.life || 0) / 100;
+    const hazardousLife = (this.viz.coverage?.hazardousLife || 0) / 100;
     const z = this.viz.zonalCoverage || {};
     const zKey = ['tropical', 'temperate', 'polar']
-      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
+      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}_${(z[k]?.hazardousLife ?? 0).toFixed(2)}`)
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const dustBaseColor = this.normalizeHexColor(this.dustTintColor) || baseColorKey;
@@ -623,7 +624,7 @@
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
     const heightKey = resolveHeightMapKey(this);
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -1242,9 +1243,10 @@
       blendPixel(tdata, idx, iceR, iceG, iceB, alpha);
     }
 
-    const zcLife = this.viz.zonalCoverage || {};
-    const bAny = ((zcLife.tropical?.life || 0) + (zcLife.temperate?.life || 0) + (zcLife.polar?.life || 0)) > 0;
-    if (bAny) {
+    const renderLifeOverlay = (coverageKey, palette) => {
+      const zcLife = this.viz.zonalCoverage || {};
+      const bAny = ((zcLife.tropical?.[coverageKey] || 0) + (zcLife.temperate?.[coverageKey] || 0) + (zcLife.polar?.[coverageKey] || 0)) > 0;
+      if (!bAny) return;
       const bioSeed = this.hashSeedFromPlanet();
       const bioSeedVal = Math.floor((bioSeed.x * 65535) ^ (bioSeed.y * 131071)) >>> 0;
       const bioHash = (x, y) => {
@@ -1272,9 +1274,9 @@
         return Math.max(0, Math.min(1, base * 0.9 + detail * 0.1));
       };
       const lifeFracs = [
-        Math.max(0, Math.min(1, (zcLife.tropical?.life || 0))),
-        Math.max(0, Math.min(1, (zcLife.temperate?.life || 0))),
-        Math.max(0, Math.min(1, (zcLife.polar?.life || 0))),
+        Math.max(0, Math.min(1, (zcLife.tropical?.[coverageKey] || 0))),
+        Math.max(0, Math.min(1, (zcLife.temperate?.[coverageKey] || 0))),
+        Math.max(0, Math.min(1, (zcLife.polar?.[coverageKey] || 0))),
       ];
       const lifeNoise = this.getLifeNoiseField(w, h);
       if (!this._lifeScore || this._lifeScore.length !== w * h) this._lifeScore = new Float32Array(w * h);
@@ -1368,16 +1370,16 @@
         const alphaScale = 0.15 + 0.85 * lifeFrac;
         alpha = Math.max(0, Math.min(1, alpha * alphaScale));
         if (alpha < 0.00001) continue;
-        const baseR = 24;
-        const baseG = 105;
-        const baseB = 58;
+        const baseR = palette.base[0];
+        const baseG = palette.base[1];
+        const baseB = palette.base[2];
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const coarse = Math.pow(lifeNoise[i], 1.6);
         const micro = bioHash(x * 2, y * 2);
         const tone = Math.max(0, Math.min(1, 0.1 + 0.9 * (0.55 * coarse + 0.25 * (1 - hgt) + 0.2 * micro)));
-        const messyR = Math.floor(34 * (1 - tone) + 12 * tone);
-        const messyG = Math.floor(110 * (1 - tone) + 150 * tone);
-        const messyB = Math.floor(78 * (1 - tone) + 44 * tone);
+        const messyR = Math.floor(palette.low[0] * (1 - tone) + palette.high[0] * tone);
+        const messyG = Math.floor(palette.low[1] * (1 - tone) + palette.high[1] * tone);
+        const messyB = Math.floor(palette.low[2] * (1 - tone) + palette.high[2] * tone);
         const messiness = 0.2 + 0.8 * lifeFrac;
         let r = Math.floor(baseR * (1 - messiness) + messyR * messiness);
         let g = Math.floor(baseG * (1 - messiness) + messyG * messiness);
@@ -1400,7 +1402,18 @@
         }
         blendPixel(tdata, idx, r, g, b, alpha);
       }
-    }
+    };
+
+    renderLifeOverlay('life', {
+      base: [24, 105, 58],
+      low: [34, 110, 78],
+      high: [12, 150, 44],
+    });
+    renderLifeOverlay('hazardousLife', {
+      base: [130, 24, 24],
+      low: [150, 42, 34],
+      high: [205, 36, 42],
+    });
 
     ctx.putImageData(timg, 0, 0);
     if (!this._surfaceCanvasTexture) {

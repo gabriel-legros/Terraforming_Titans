@@ -113,11 +113,11 @@
         illum: 1,
         pop: 0,
         kpa: { co2: 0, o2: 0, inert: 0, h2o: 0, ch4: 0 },
-        coverage: { water: 0, life: 0, cloud: 0 },
+        coverage: { water: 0, life: 0, hazardousLife: 0, cloud: 0 },
         zonalCoverage: {
-          tropical: { water: 0, ice: 0, life: 0 },
-          temperate: { water: 0, ice: 0, life: 0 },
-          polar: { water: 0, ice: 0, life: 0 },
+          tropical: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
+          temperate: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
+          polar: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
         },
         baseColor: '#8a2a2a',
         heightMapKey: '',
@@ -716,35 +716,42 @@
       const z = this.viz.zonalCoverage;
       let waterSum = 0;
       let lifeSum = 0;
+      let hazardousLifeSum = 0;
       let weightSum = 0;
       for (const zone of zones) {
-        let w, i, b;
+        let w, i, b, hb;
         if (t && t.zonalCoverageCache && t.zonalCoverageCache[zone]) {
           const c = t.zonalCoverageCache[zone];
           w = c.liquidWater; i = c.ice; b = c.biomass;
+          hb = c.hazardousBiomass;
         } else {
           const area = (t.celestialParameters.surfaceArea || 0) * getZonePercentage(zone);
           const zs = t.zonalSurface?.[zone] || {};
           w = estimateCoverage(zs.liquidWater || 0, area, 0.0001);
           i = estimateCoverage(zs.ice || 0, area, 0.0001 * 100);
           b = estimateCoverage(zs.biomass || 0, area, 0.0001 * 100000);
+          hb = estimateCoverage(zs.hazardousBiomass || 0, area, 0.0001 * 100000);
         }
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));
         z[zone].ice = Math.max(0, Math.min(1, Number(i) || 0));
         z[zone].life = Math.max(0, Math.min(0.5, Number(b) || 0));
+        z[zone].hazardousLife = Math.max(0, Math.min(0.5, Number(hb) || 0));
         const weight = t?.getZoneWeight ? t.getZoneWeight(zone) : 1;
         waterSum += z[zone].water * weight;
         lifeSum += z[zone].life * weight;
+        hazardousLifeSum += z[zone].hazardousLife * weight;
         weightSum += weight;
       }
       const norm = weightSum > 0 ? weightSum : zones.length;
       const avgWater = norm > 0 ? (waterSum / norm) : 0;
       const avgLife = norm > 0 ? (lifeSum / norm) : 0;
+      const avgHazardousLife = norm > 0 ? (hazardousLifeSum / norm) : 0;
       const cloudFraction = Number.isFinite(t?.luminosity?.cloudFraction)
         ? Math.max(0, Math.min(1, t.luminosity.cloudFraction))
         : avgWater;
       this.viz.coverage.water = avgWater * 100;
       this.viz.coverage.life = Math.min(0.5, avgLife) * 100;
+      this.viz.coverage.hazardousLife = Math.min(0.5, avgHazardousLife) * 100;
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
     }
 
