@@ -122,6 +122,11 @@ body.dark-mode {
     color: #ffb347;
 }
 
+.dark-mode #journal-entries .blue-text,
+.dark-mode .history-entries .blue-text {
+    color: #7db7ff;
+}
+
 .dark-mode #journal-entries .journal-white-text,
 .dark-mode .history-entries .journal-white-text {
     color: inherit;

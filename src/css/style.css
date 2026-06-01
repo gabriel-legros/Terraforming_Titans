@@ -320,6 +320,11 @@ body.journal-collapsed .tab-content {
     color: #d97706;
 }
 
+#journal-entries .blue-text,
+.history-entries .blue-text {
+    color: #2563eb;
+}
+
 #journal-entries .journal-white-text,
 .history-entries .journal-white-text {
     color: inherit;

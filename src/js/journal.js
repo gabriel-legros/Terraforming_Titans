@@ -84,11 +84,14 @@ const GREEN_TOKEN = '$GREEN$';
 const DIAGNOSTIC_CLASS = 'diagnostic-text';
 const ORANGE_TOKEN = '$ORANGE$';
 const ORANGE_CLASS = 'orange-text';
+const BLUE_TOKEN = '$BLUE$';
+const BLUE_CLASS = 'blue-text';
 const JOURNAL_WHITE_CLASS = 'journal-white-text';
 const JOURNAL_INLINE_CLASSES = new Set([
   PROMETHEUS_CLASS,
   DIAGNOSTIC_CLASS,
   ORANGE_CLASS,
+  BLUE_CLASS,
   JOURNAL_WHITE_CLASS
 ]);
 
@@ -97,7 +100,8 @@ const JOURNAL_LINE_TOKENS = [
   { token: RED_TOKEN, className: PROMETHEUS_CLASS, label: '' },
   { token: DIAGNOSTIC_TOKEN, className: DIAGNOSTIC_CLASS, label: '' },
   { token: GREEN_TOKEN, className: DIAGNOSTIC_CLASS, label: '' },
-  { token: ORANGE_TOKEN, className: ORANGE_CLASS, label: '' }
+  { token: ORANGE_TOKEN, className: ORANGE_CLASS, label: '' },
+  { token: BLUE_TOKEN, className: BLUE_CLASS, label: '' }
 ];
 
 function buildJournalSegments(text) {
