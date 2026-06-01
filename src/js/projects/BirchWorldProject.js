@@ -291,24 +291,56 @@ class BirchWorldProject extends Project {
     container.appendChild(panel);
     this.ui = refs;
     this.ui.noteItems = noteItems;
+    this.ui.costItems = {};
+    this.ui.costMaxLayers = document.createElement('span');
+    this.ui.costMaxLayers.textContent = this.getBirchWorldText('ui.projects.birchWorld.maxLayers', 'Max layers reached');
+    this.ui.cost.appendChild(this.ui.costMaxLayers);
     this.updateUI();
   }
 
-  formatCost() {
+  updateCostUI() {
+    if (!this.ui || !this.ui.cost) {
+      return;
+    }
     const cost = this.getScaledCost();
-    const parts = [];
+    const storageAccess = this.attributes?.canUseSpaceStorage
+      ? this.createSpaceStorageAccess('expansions')
+      : null;
+    const activeKeys = {};
+    let visibleCount = 0;
+
     for (const category in cost) {
       for (const resource in cost[category]) {
-        const amount = cost[category][resource];
-        if (amount > 0) {
+        const requiredAmount = cost[category][resource];
+        if (requiredAmount > 0) {
+          const key = `${category}.${resource}`;
+          activeKeys[key] = true;
+          let item = this.ui.costItems[key];
+          if (!item) {
+            item = document.createElement('span');
+            item.className = 'birch-world-cost-item';
+            this.ui.costItems[key] = item;
+            this.ui.cost.appendChild(item);
+          }
+          const prefix = visibleCount > 0 ? ', ' : '';
           const resourceName = resources[category][resource].displayName;
-          parts.push(`${resourceName}: ${formatNumber(amount, true, 2)}`);
+          item.textContent = `${prefix}${resourceName}: ${formatNumber(requiredAmount, true, 2)}`;
+          const availableAmount = getAvailableProjectCostAmount(this, category, resource, storageAccess);
+          const highlight = shouldHighlightProjectCost(this, category, resource, availableAmount, requiredAmount);
+          item.style.color = highlight ? 'red' : '';
+          item.style.display = '';
+          visibleCount += 1;
         }
       }
     }
-    return parts.length
-      ? parts.join(', ')
-      : this.getBirchWorldText('ui.projects.birchWorld.maxLayers', 'Max layers reached');
+
+    for (const key in this.ui.costItems) {
+      if (!activeKeys[key]) {
+        this.ui.costItems[key].style.display = 'none';
+      }
+    }
+
+    this.ui.costMaxLayers.style.display = visibleCount > 0 ? 'none' : '';
   }
 
   updateUI() {
@@ -325,7 +357,7 @@ class BirchWorldProject extends Project {
     );
     this.ui.nextLand.textContent = formatNumber(this.getNextLayerLandHa(), false, 2);
     this.ui.nextValue.textContent = formatNumber(this.getNextLayerWorldValue(), false, 2);
-    this.ui.cost.textContent = this.formatCost();
+    this.updateCostUI();
     const notes = this.getOperationalNotes();
     for (let index = 0; index < notes.length; index += 1) {
       const note = notes[index];

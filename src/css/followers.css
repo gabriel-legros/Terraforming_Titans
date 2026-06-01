@@ -132,6 +132,7 @@
 #followers-layout .followers-art-invest-input {
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   padding: 4px 6px;
   border-radius: 6px;
   border: 1px solid #b8cae4;
