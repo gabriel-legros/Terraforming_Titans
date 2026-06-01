@@ -661,7 +661,10 @@ class SpaceshipAutomation {
       const manuallyDisabled = target.isAutomationManuallyDisabled
         ? target.isAutomationManuallyDisabled()
         : false;
-      disabledTargetStates[target.name] = !automationAllowed || manuallyDisabled;
+      disabledTargetStates[target.name] = {
+        automationDisabled: !automationAllowed,
+        manuallyDisabled,
+      };
     }
 
     const desiredAssignments = {};
@@ -754,8 +757,10 @@ class SpaceshipAutomation {
           if (!project) continue;
           const usesMassDrivers = entry.projectId === massDriverTargetId;
           const releaseOnDisable = this.disabledProjects.has(entry.projectId);
-          const isTemporarilyDisabled = disabledTargetStates[entry.projectId] === true;
-          if (isTemporarilyDisabled) {
+          const disabledState = disabledTargetStates[entry.projectId] || { automationDisabled: false, manuallyDisabled: false };
+          const isTemporarilyDisabled = disabledState.automationDisabled;
+          const isManuallyDisabled = disabledState.manuallyDisabled;
+          if (isManuallyDisabled || (isTemporarilyDisabled && releaseOnDisable)) {
             const currentTarget = this.sanitizeShipCount(
               Object.prototype.hasOwnProperty.call(desiredAssignments, entry.projectId)
                 ? desiredAssignments[entry.projectId]
@@ -910,7 +915,7 @@ class SpaceshipAutomation {
         };
 
         const mode = step.mode || 'fill';
-        if (mode === 'cappedMin' && hasMassEntries && hasNonMassEntries) {
+        if (mode === 'cappedMin' && hasMassEntries && hasNonMassEntries && remainingMassDriverEquivalency > 0) {
           const shipEntries = weightedEntries.filter(item => !item.usesMassDrivers);
           const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
           const shipWeight = shipEntries.reduce((sum, item) => sum + item.entry.weight, 0);
@@ -948,7 +953,7 @@ class SpaceshipAutomation {
           break;
         }
 
-        if (hasMassEntries && hasNonMassEntries) {
+        if (hasMassEntries && hasNonMassEntries && remainingMassDriverEquivalency > 0) {
           const shipEntries = weightedEntries.filter(item => !item.usesMassDrivers);
           const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
           const shipWeight = shipEntries.reduce((sum, item) => sum + item.entry.weight, 0);

@@ -589,7 +589,7 @@ describe('Spaceship automation scenarios', () => {
     cleanup();
   });
 
-  it('cappedMin ignores the disposal target when mass drivers are disabled', () => {
+  it('cappedMin keeps assigning to the disposal target when mass drivers are disabled unless release is checked', () => {
     const { automation, projects, cleanup } = createHarness({
       initialShips: 100,
       massDriverCount: 10,
@@ -611,11 +611,11 @@ describe('Spaceship automation scenarios', () => {
 
     automation.applyAssignments();
 
-    expect(projects.metalMining.getAutomationShipCount()).toBe(50);
-    expect(projects.siliconMining.getAutomationShipCount()).toBe(50);
-    expect(projects.disposeResources.getAutomationShipCount()).toBe(0);
+    expect(projects.metalMining.getAutomationShipCount()).toBe(33);
+    expect(projects.siliconMining.getAutomationShipCount()).toBe(33);
+    expect(projects.disposeResources.getAutomationShipCount()).toBe(33);
     expect(buildings.massDriver.active).toBe(0);
-    expect(resources.special.spaceships.value).toBe(0);
+    expect(resources.special.spaceships.value).toBe(1);
     cleanup();
   });
 
