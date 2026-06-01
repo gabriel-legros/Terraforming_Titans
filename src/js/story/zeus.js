@@ -548,6 +548,18 @@ progressZeus.chapters.push(
     ],
     reward: [{ target: 'spaceManager', targetId: 'olympus', type: 'enable', effectId: 'story-zeus-enable-olympus' }
     ]
+  },
+  {
+    id: "zeus.45.19",
+    type: "journal",
+    chapter: 45,
+    activePlanet: "zeus",
+    title: "",
+    narrative: "Travel to Olympus to continue.",
+    prerequisites: ["zeus.45.18"],
+    objectives: [      { type: 'currentPlanet', planetId: 'olympus' }
+    ],
+    reward: []
   }
 );
 

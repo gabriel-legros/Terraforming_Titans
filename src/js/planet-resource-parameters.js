@@ -263,6 +263,7 @@
         hideWhenSmall: true,
         reverseColor: true,
       },
+      rocks: { name: '', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       graphite: { name: '', initialValue: 0, unlocked: true, unit: 'ton', hideWhenSmall: true },
       scrapMetal : {name: '', initialValue : 0, unlocked: false, unit: 'ton', marginTop:10, reverseColor: true },
       garbage: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },

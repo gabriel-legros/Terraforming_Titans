@@ -3310,3 +3310,65 @@
 .mirror-oversight-card input[type="range"]:disabled::-moz-range-thumb {
     background: #adb5bd;
 }
+
+.olympus-workshop-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #eef2f5;
+    border: 1px solid #c7d0d8;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.olympus-workshop-gather-row {
+    display: flex;
+    gap: 8px;
+}
+
+.olympus-workshop-gather-button,
+.olympus-workshop-action-button {
+    flex: 1;
+    min-height: 34px;
+}
+
+.olympus-workshop-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.olympus-workshop-action-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.olympus-workshop-action-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.olympus-workshop-action-status {
+    min-width: 100px;
+    text-align: right;
+    color: #4b5a64;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.olympus-workshop-progress-track {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #6e7b85;
+    overflow: hidden;
+}
+
+.olympus-workshop-progress-fill {
+    width: 0;
+    height: 100%;
+    background: #4caf50;
+}

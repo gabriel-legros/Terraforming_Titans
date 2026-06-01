@@ -200,6 +200,19 @@ body.dark-mode {
     background: #3a3a3a;
 }
 
+.dark-mode .olympus-workshop-panel {
+    background: #2f3439;
+    border-color: #4e5760;
+}
+
+.dark-mode .olympus-workshop-action-status {
+    color: #d2dbe0;
+}
+
+.dark-mode .olympus-workshop-progress-track {
+    background: #47515a;
+}
+
 .dark-mode .project-advanced-settings-button {
     background: #3a3a3a;
     color: #f0f0f0;
