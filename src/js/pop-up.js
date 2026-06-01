@@ -62,7 +62,16 @@ function createPopup(title, text, buttonText) {
     let delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>')) ? 250 : 50;
 
     while (elapsed >= delay && index < text.length) {
-      if (text[index] === '\n' || text.slice(index, index + 4) === '<br>') {
+      if (text[index] === '<') {
+        const tagEndIndex = text.indexOf('>', index);
+        if (tagEndIndex !== -1) {
+          popupText.innerHTML += text.slice(index, tagEndIndex + 1);
+          index = tagEndIndex + 1;
+        } else {
+          popupText.innerHTML += text[index];
+          index++;
+        }
+      } else if (text[index] === '\n' || text.slice(index, index + 4) === '<br>') {
         popupText.innerHTML += '<br>';
         index += (text[index] === '\n') ? 1 : 4;
       } else {
