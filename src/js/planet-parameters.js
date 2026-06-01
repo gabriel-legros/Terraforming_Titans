@@ -2239,56 +2239,110 @@ const olympusOverrides = {
       ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
       geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
     },
-    atmospheric: {
-      carbonDioxide: { initialValue: 2.068685930519462e25 },
-      atmosphericWater: { initialValue: 0 },
-      atmosphericMethane: { initialValue: 0 },
-      atmosphericAmmonia: { initialValue: 0 },
-      oxygen: { initialValue: 0 },
-      inertGas: { initialValue: 3.103028895779193e26 },
-      hydrogen: { initialValue: 8.274743722077849e25 },
-      sulfuricAcid: { initialValue: 0 }
+ "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 2.068685930519462e+25
+      },
+      "atmosphericWater": {
+        "initialValue": 1.5212327995048885e+24
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 0
+      },
+      "inertGas": {
+        "initialValue": 3.103028895779193e+26
+      },
+      "hydrogen": {
+        "initialValue": 8.274743722077849e+25
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
     }
   },
-  zonalSurface: {
-    tropical: {
-      liquidWater: 1.082965260226405e22,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 5.7079240006938396e+26,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 1e+23,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    temperate: {
-      liquidWater: 2.8568984655195586e22,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0
+    "temperate": {
+      "liquidWater": 1.5057683064374472e+27,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 1e+23,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    polar: {
-      liquidWater: 4.630831670812712e22,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0
+    "polar": {
+      "liquidWater": 2.4407436711848512e+27,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 302.5061157790979,
+      "day": 302.59905236879825,
+      "night": 302.41317918939757
+    },
+    "temperate": {
+      "value": 302.50611497605826,
+      "day": 302.5990515957248,
+      "night": 302.4131783563917
+    },
+    "polar": {
+      "value": 302.50611453905276,
+      "day": 302.5990511750266,
+      "night": 302.4131779030789
     }
   },
   zonalTemperatures: null
