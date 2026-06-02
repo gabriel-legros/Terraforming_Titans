@@ -56,6 +56,22 @@ const projectParameters = {
       },
     }
   },
+  metalSalvaging: {
+    type: 'MetalSalvagingProject',
+    name: '',
+    category: 'resources',
+    cost: {},
+    duration: 10_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      planet: 'olympus',
+      resourceGain: { surface: { scrapMetal: 1 } },
+      showInResourcesRate: true
+    }
+  },
   import_colonists_1: {
     type: 'ImportColonistsProject',
     name: '',

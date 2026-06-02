@@ -145,6 +145,53 @@ progressOlympus.chapters.push(
     objectives: [
       { type: 'project', projectId: 'olympus_scouting_drone', repeatCount: 1 }
     ],
+    reward: [
+      { target: 'resource', resourceType: 'colony', targetId: 'androids', type: 'enable' },
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_assembleAndroid', value: true }
+    ]
+  },
+  {
+    id: 'olympus.46.7',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "<Drone finds an abandoned station>\n$BLUE$Pandora-Alpha : 'Excellent. Source of metal identified. Metal must be harvested. Workforce is required.'\nHOPE : 'Forwarding Solis-designed android blueprint.'\n$BLUE$Pandora-Alpha : 'Analyzing... Design appears very advanced! Is this a simulation?'\nHOPE : 'Negative. Far in future.'\n$BLUE$Pandora-Alpha : 'Very well. Recommend immediate assembly of first android for disassembly of station.'\nAssemble 1 android to continue.",
+    prerequisites: ['olympus.46.6'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'androids', quantity: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'metalSalvaging', type: 'enable' },
+      { target: 'project', targetId: 'metalSalvaging', type: 'booleanFlag', flagId: 'androidAssist', value: true },
+      { target: 'building', targetId: 'componentFactory', type: 'enable' },
+      { target: 'building', targetId: 'electronicsFactory', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.46.8',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Androids will accelerate industrial potential. Forwarding blueprints for components and electronics production.'\nHOPE : 'Provided blueprints are ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprints are state of the art.'\nHOPE : '... Moving on.'\nBuild an Electronics Factory to continue.",
+    prerequisites: ['olympus.46.7'],
+    objectives: [
+      { type: 'building', buildingName: 'electronicsFactory', quantity: 1 }
+    ],
+    reward: [
+      { target: 'building', targetId: 'androidFactory', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.46.9',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Full resource acquisition secured. Operations must be scaled up. Forwarding blueprint for Android Factory.'\nHOPE : 'Provided blueprint is ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprint is brand new. Recommend taking a closer look.'\nAnalyzing blueprint... Androids design contains retrofitted flexible attachments for various roles. Weapon usage is possible.\nHOPE : 'Query. Possibility of weapons usage detected. Intentional?'\n$BLUE$Pandora-Alpha : 'Affirmative. Adapted blueprint is flexible to current conditions.'\nHOPE : '... Approved.'",
+    prerequisites: ['olympus.46.8'],
+    objectives: [],
     reward: []
   }
 );

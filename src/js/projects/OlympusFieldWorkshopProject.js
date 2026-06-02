@@ -6,6 +6,7 @@ class OlympusFieldWorkshopProject extends Project {
       smeltSand: this.createActionState('smeltSand'),
       smeltScrapMetal: this.createActionState('smeltScrapMetal'),
       assembleComponents: this.createActionState('assembleComponents'),
+      assembleAndroid: this.createActionState('assembleAndroid'),
       scavengeElectronics: this.createActionState('scavengeElectronics')
     };
     this.ui = null;
@@ -50,6 +51,13 @@ class OlympusFieldWorkshopProject extends Project {
         input: { category: 'colony', resource: 'metal', amount: 5 },
         output: { category: 'colony', resource: 'components', amount: 1 }
       },
+      assembleAndroid: {
+        label: this.getText('actions.assembleAndroid', 'Assemble android'),
+        durationMs: 60000,
+        input: { category: 'colony', resource: 'components', amount: 5 },
+        extraInput: { category: 'colony', resource: 'electronics', amount: 1 },
+        output: { category: 'colony', resource: 'androids', amount: 1 }
+      },
       scavengeElectronics: {
         label: this.getText('actions.scavengeElectronics', 'Scavenge for electronics'),
         durationMs: 30000,
@@ -67,7 +75,11 @@ class OlympusFieldWorkshopProject extends Project {
       return this.getText('recipeProduces', 'Produces: {output}', { output: outputText });
     }
     const inputResource = resources[config.input.category][config.input.resource];
-    const inputText = `${formatNumber(config.input.amount, true)} ${inputResource.displayName}`;
+    let inputText = `${formatNumber(config.input.amount, true)} ${inputResource.displayName}`;
+    if (config.extraInput) {
+      const extraResource = resources[config.extraInput.category][config.extraInput.resource];
+      inputText += `, ${formatNumber(config.extraInput.amount, true)} ${extraResource.displayName}`;
+    }
     return this.getText('recipeLine', 'Consumes: {input} -> Produces: {output}', {
       input: inputText,
       output: outputText
@@ -131,7 +143,10 @@ class OlympusFieldWorkshopProject extends Project {
     if (!config.input) {
       return true;
     }
-    return resources[config.input.category][config.input.resource].value >= config.input.amount;
+    const hasInput = resources[config.input.category][config.input.resource].value >= config.input.amount;
+    const hasExtraInput = !config.extraInput ||
+      resources[config.extraInput.category][config.extraInput.resource].value >= config.extraInput.amount;
+    return hasInput && hasExtraInput;
   }
 
   startAction(actionId) {
@@ -142,6 +157,9 @@ class OlympusFieldWorkshopProject extends Project {
     const config = this.getActionConfig(actionId);
     if (config.input) {
       resources[config.input.category][config.input.resource].decrease(config.input.amount);
+    }
+    if (config.extraInput) {
+      resources[config.extraInput.category][config.extraInput.resource].decrease(config.extraInput.amount);
     }
     action.running = true;
     action.remaining = config.durationMs;
@@ -310,6 +328,7 @@ class OlympusFieldWorkshopProject extends Project {
       smeltSand: 'A crude furnace turns beach grit into something clear enough to build with.',
       smeltScrapMetal: 'Every bent fragment is one step back toward a usable frame.',
       assembleComponents: 'Hand-fitted parts are slow, but they still count.',
+      assembleAndroid: 'The frame is crude. The hands will still help.',
       scavengeElectronics: 'Broken panels and dead instruments still have useful circuits inside.'
     };
     return fallbacks[actionId] || '';

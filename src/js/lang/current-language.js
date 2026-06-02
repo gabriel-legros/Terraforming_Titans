@@ -936,6 +936,7 @@ setLanguageData({
           smeltSand: 'Smelt sand',
           smeltScrapMetal: 'Smelt scrap metal',
           assembleComponents: 'Assemble components',
+          assembleAndroid: 'Assemble android',
           scavengeElectronics: 'Scavenge for electronics',
         },
         actionFlavor: {
@@ -943,8 +944,13 @@ setLanguageData({
           smeltSand: 'The silica melts from your fiery wrath.',
           smeltScrapMetal: 'It is not clear which is burning hotter between HOPE or the forge.',
           assembleComponents: 'You are not good at this but you will do it regardless.',
+          assembleAndroid: 'The frame is crude. The hands will still help.',
           scavengeElectronics: 'Self-cannibalization.  You did not need those parts anyway.',
         },
+      },
+      metalSalvaging: {
+        salvageSpeed: 'Salvage speed',
+        salvageSpeedTooltip: '10 x assigned androids',
       },
       run: 'Run',
       enableExtraSettings: 'Enable extra settings',
@@ -4215,6 +4221,10 @@ setLanguageData({
       galactic_market: {
         name: 'Galactic Market',
         description: 'Open trading lanes with the wider galaxy to import resources funded through market exchanges.',
+      },
+      metalSalvaging: {
+        name: 'Metal Salvaging',
+        description: 'Dispatch assigned androids to dismantle abandoned structures for scrap metal.',
       },
       import_colonists_1: {
         name: 'Import colonists',
