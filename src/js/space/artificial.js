@@ -2110,6 +2110,11 @@ class ArtificialManager extends EffectableEntity {
         if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
         const status = spaceManager.artificialWorldStatuses[seed];
         if (!status) return false;
+        if (spaceManager.currentArtificialKey !== null && String(spaceManager.currentArtificialKey) === seed) return false;
+        const canTravelStatus = status.stored
+            || status.abandoned
+            || (status.terraformed && this.isSupermassiveShellworldEntry(status));
+        if (!canTravelStatus) return false;
         let snapshot = status.artificialSnapshot || null;
         if (!snapshot) {
             const merged = status.original?.merged || status.original?.override || status.original;
@@ -2204,8 +2209,7 @@ class ArtificialManager extends EffectableEntity {
                 radiusEarth,
                 landHa
             });
-            const isSupermassiveShellworld = this.isSupermassiveShellworldEntry(status);
-            const canTravel = (label === 'abandoned' || label === 'stored' || (label === 'terraformed' && isSupermassiveShellworld)) && !!snapshot;
+            const canTravel = (label === 'abandoned' || label === 'stored') && !!snapshot;
             const canDiscard = label === 'stored' || label === 'abandoned';
             entries.push({
                 id: key,
