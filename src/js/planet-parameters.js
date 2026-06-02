@@ -1299,16 +1299,19 @@ const gabbagOverrides = {
         "initialValue": 3696135227990891
       },
       "atmosphericWater": {
-        "initialValue": 1223821191070649.8
+        "initialValue": 227911776816642.75
       },
       "atmosphericMethane": {
         "initialValue": 400000000000000
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
       },
       "oxygen": {
         "initialValue": 79141235823.26874
       },
       "inertGas": {
-        "initialValue": 250000000000000000
+        "initialValue": 50000000000000000
       },
       "hydrogen": {
         "initialValue": 0
@@ -1320,12 +1323,13 @@ const gabbagOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 10376927901498830,
+      "liquidWater": 10958745240492290,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
       "hazardousBiomass": 0,
       "liquidMethane": 0,
@@ -1339,12 +1343,13 @@ const gabbagOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 13520749521777934,
+      "liquidWater": 14259849940889528,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
       "hazardousBiomass": 0,
       "liquidMethane": 0,
@@ -1358,12 +1363,13 @@ const gabbagOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 2674188487940561,
+      "liquidWater": 2349180144090766,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
       "hazardousBiomass": 0,
       "liquidMethane": 0,
@@ -1379,19 +1385,19 @@ const gabbagOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 384.35758184646875,
-      "day": 384.44754567504003,
-      "night": 384.26761801789746
+      "value": 357.49717991695,
+      "day": 357.6565374525549,
+      "night": 357.3378223813451
     },
     "temperate": {
-      "value": 380.64394187786604,
-      "day": 380.71872158129815,
-      "night": 380.5691621744339
+      "value": 349.49415561505145,
+      "day": 349.6266206759527,
+      "night": 349.3616905541502
     },
     "polar": {
-      "value": 370.00441470563226,
-      "day": 370.0431368337225,
-      "night": 369.96569257754203
+      "value": 326.5195752086963,
+      "day": 326.59005684280845,
+      "night": 326.4490935745842
     }
   },
   hazards: {
