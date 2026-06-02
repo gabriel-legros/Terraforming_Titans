@@ -13,6 +13,7 @@ class BirchWorldProject extends Project {
     this.cachedTotalLandHa = 0;
     this.completionCelebrationTriggered = false;
     this.completionCelebrationPendingOnLoad = false;
+    this.ui = null;
   }
 
   isCurrentSmbhShellworld() {
