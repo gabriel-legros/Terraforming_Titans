@@ -194,6 +194,10 @@ class OlympusFieldWorkshopProject extends Project {
 
     const gatherRow = document.createElement('div');
     gatherRow.classList.add('olympus-workshop-gather-row');
+    const gatherRockControl = document.createElement('div');
+    gatherRockControl.classList.add('olympus-workshop-gather-control');
+    const gatherSandControl = document.createElement('div');
+    gatherSandControl.classList.add('olympus-workshop-gather-control');
     const gatherRockButton = document.createElement('button');
     gatherRockButton.type = 'button';
     gatherRockButton.classList.add('olympus-workshop-gather-button');
@@ -202,7 +206,9 @@ class OlympusFieldWorkshopProject extends Project {
     gatherSandButton.classList.add('olympus-workshop-gather-button');
     this.attachHoldHandlers(gatherRockButton, () => this.gatherRocks(), 'rocks');
     this.attachHoldHandlers(gatherSandButton, () => this.gatherSand(), 'sand');
-    gatherRow.append(gatherRockButton, gatherSandButton);
+    gatherRockControl.appendChild(gatherRockButton);
+    gatherSandControl.appendChild(gatherSandButton);
+    gatherRow.append(gatherRockControl, gatherSandControl);
 
     const actionsContainer = document.createElement('div');
     actionsContainer.classList.add('olympus-workshop-actions');
@@ -221,6 +227,8 @@ class OlympusFieldWorkshopProject extends Project {
       const status = document.createElement('span');
       status.classList.add('olympus-workshop-action-status');
       topRow.append(button, status);
+      const flavor = document.createElement('div');
+      flavor.classList.add('olympus-workshop-action-flavor');
 
       const track = document.createElement('div');
       track.classList.add('olympus-workshop-progress-track');
@@ -228,9 +236,9 @@ class OlympusFieldWorkshopProject extends Project {
       fill.classList.add('olympus-workshop-progress-fill');
       track.appendChild(fill);
 
-      row.append(topRow, track);
+      row.append(topRow, flavor, track);
       actionsContainer.appendChild(row);
-      actionRows[actionId] = { button, status, fill };
+      actionRows[actionId] = { button, status, flavor, fill };
     }
 
     panel.append(gatherRow, actionsContainer);
@@ -259,6 +267,7 @@ class OlympusFieldWorkshopProject extends Project {
       const row = this.ui.actionRows[actionId];
       row.button.textContent = `${config.label} (${this.formatActionRecipe(config)})`;
       row.button.disabled = !this.canStartAction(actionId);
+      row.flavor.textContent = this.getText(`actionFlavor.${actionId}`, this.getActionFlavorFallback(actionId));
 
       if (action.running) {
         const pct = Math.max(0, Math.min(100, ((config.durationMs - action.remaining) / config.durationMs) * 100));
@@ -273,6 +282,17 @@ class OlympusFieldWorkshopProject extends Project {
         row.status.textContent = this.getText('ready', 'Ready');
       }
     }
+  }
+
+  getActionFlavorFallback(actionId) {
+    const fallbacks = {
+      smashRocks: 'Flat stones become anvils. Bigger stones become hammers.',
+      smeltSand: 'A crude furnace turns beach grit into something clear enough to build with.',
+      smeltScrapMetal: 'Every bent fragment is one step back toward a usable frame.',
+      assembleComponents: 'Hand-fitted parts are slow, but they still count.',
+      scavengeElectronics: 'Broken panels and dead instruments still have useful circuits inside.'
+    };
+    return fallbacks[actionId] || '';
   }
 
   saveState() {

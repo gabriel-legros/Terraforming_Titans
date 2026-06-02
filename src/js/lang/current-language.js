@@ -938,6 +938,13 @@ setLanguageData({
           assembleComponents: 'Assemble components',
           scavengeElectronics: 'Scavenge for electronics',
         },
+        actionFlavor: {
+          smashRocks: 'Channel all your anger into it.',
+          smeltSand: 'The silica melts from your fiery wrath.',
+          smeltScrapMetal: 'It is not clear which is burning harder between HOPE or the forge.',
+          assembleComponents: 'You are not good at this but you will do it regardless.',
+          scavengeElectronics: 'Self-cannibalization.  You did not need those parts anyway.',
+        },
       },
       run: 'Run',
       enableExtraSettings: 'Enable extra settings',

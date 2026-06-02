@@ -214,6 +214,10 @@ body.dark-mode {
     color: #d2dbe0;
 }
 
+.dark-mode .olympus-workshop-action-flavor {
+    color: #b8c5cc;
+}
+
 .dark-mode .olympus-workshop-progress-track {
     background: #47515a;
 }

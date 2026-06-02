@@ -3324,12 +3324,27 @@
 .olympus-workshop-gather-row {
     display: flex;
     gap: 8px;
+    align-items: stretch;
+}
+
+.olympus-workshop-gather-control {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .olympus-workshop-gather-button,
 .olympus-workshop-action-button {
     flex: 1;
     min-height: 34px;
+}
+
+.olympus-workshop-action-flavor {
+    color: #52656f;
+    font-size: 12px;
+    font-style: italic;
+    line-height: 1.25;
 }
 
 .olympus-workshop-actions {
