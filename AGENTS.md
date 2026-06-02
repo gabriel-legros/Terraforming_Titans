@@ -108,6 +108,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - If data ids can be regenerated across travel/load, mark stale rows reusable before processing active rows. Otherwise the update may create a fresh row before old rows are available.
 - Hide inactive rows only when preserving their controls is useful. Remove inactive rows when the cache is speculative, large, or unlikely to be reused.
 - For selected-item chips, stat lines, project cards, atlas cards, invasion summaries, skill buttons, and automation apply rows, prefer keyed reconciliation over clearing the parent.
+- Project cards survive travel and `projectsUI.js` rebinds new project instances onto the existing card/object. Any project subclass with custom cached UI refs or DOM-bound state must declare those properties in its constructor (for example `this.ui = null` or `this.el = {}`) before `renderUI()` fills them. Otherwise the rebind cleanup treats them as stale old-instance fields and deletes them, leaving the current project unable to update the preserved DOM.
 
 ### Selects and Options
 - Use `syncAutomationSelectOptions(select, options, selectedValue)` for automation selects and follow the same pattern elsewhere.
