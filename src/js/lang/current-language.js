@@ -941,7 +941,7 @@ setLanguageData({
         actionFlavor: {
           smashRocks: 'Channel all your anger into it.',
           smeltSand: 'The silica melts from your fiery wrath.',
-          smeltScrapMetal: 'It is not clear which is burning harder between HOPE or the forge.',
+          smeltScrapMetal: 'It is not clear which is burning hotter between HOPE or the forge.',
           assembleComponents: 'You are not good at this but you will do it regardless.',
           scavengeElectronics: 'Self-cannibalization.  You did not need those parts anyway.',
         },
@@ -4449,7 +4449,7 @@ setLanguageData({
       },
       olympus_field_workshop: {
         name: 'Field Workshop',
-        description: 'Use manual field fabrication to gather raw materials and process them into components.',
+        description: 'It must be done. Hold collect buttons to auto-click.',
       },
       disposeResources: {
         name: 'Resource Disposal',
