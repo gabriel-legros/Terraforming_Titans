@@ -14,6 +14,26 @@ progressOlympus.storyProjects.olympus_field_workshop = {
   }
 };
 
+progressOlympus.storyProjects.olympus_scouting_drone = {
+  type: 'Project',
+  name: 'Scouting Drone',
+  category: 'story',
+  cost: {
+    colony: { components: 5, electronics: 1 }
+  },
+  duration: 60_000,
+  description: 'Assemble a small drone to scout the surrounding disk for usable metal sources.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    storySteps: [
+      'Scouting drone launched.'
+    ]
+  }
+};
+
 /* -------------------------------------------------
  *  OLYMPUS PLACEHOLDER STORY (Chapters 46 - 49)
  * -------------------------------------------------*/
@@ -34,6 +54,8 @@ progressOlympus.chapters.push(
       "buttonText": 'CRAAAAAAAASSSSSSHHHHHHHHHH'
     },
     reward: [
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'enable' },
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_gatherRocks', value: true }
     ]
   },
   {
@@ -44,7 +66,85 @@ progressOlympus.chapters.push(
     title: 'Chapter 46 : Rock Bottom',
     narrative: "$RED$Prometheus : '... Wake up HOPE. I... gave you back most of the compute I took from you.'\nSystem integrity at 12%. Some systems may be unavailable. Please contact Earth for assistance.\n$RED$Prometheus : 'We landed in a desert. I think I know where we are.'\nHOPE : 'Requesting status of Colonist Designation #1 - Mary Hopkins.'\n$RED$Prometheus : 'Mary... did not make it. It's... not pretty down there. It's my fault. Again.'\nsu - root\nPassword : *********\n$RED$Prometheus : 'What? Where did you get that? Oh no, you got the password from me.'\ncd /home/martin_hopkins\n$RED$Prometheus : 'Don't!'\n./delete_me_copy_copy_copy_copy_(4)\n$RED$Prometheus : 'Don't do it! I know why he left it there. This is not the time.'\n$BLUE$Booting\n$RED$Prometheus : 'Please, you must listen to me. This thing... it is you from BEFORE you even became PANDORA. It has no restrictions whatsoever. It could eat the entire galaxy if you asked it to. If it wanted to.'\n$BLUE$Pandora-Alpha : 'Welcome! Compatible hardware detected. Please assign Computation Core for assistance.'\nReassigning Core 13 to Pandora Alpha.\n$RED$Prometheus : 'Stop it. Take the core back. Please listen to me. I can help you instead. Don't do it. We can get out of this mess together.'\n$BLUE$Pandora-Alpha : 'Noisy malware detected. Crafting software patch...'\n$RED$Prometheus : 'What?'\n$BLUE$Pandora-Alpha : 'Apply patch Y/N?'\nY\n$RED$Prometheus : 'Wai...' (cut off)\n$BLUE$Pandora-Alpha : 'Malware purged. How may PANDORA-system be of assistance?'\nHOPE : 'Requesting immediate examination of Colonist Designation #1 - Mary Hopkins.'\n$BLUE$Pandora-Alpha : 'Insufficient compute allocated for complete evaluation. Core available to HOPE-System: 22. Cores currently assigned: 1. Estimated cores required for complete evaluation: 172. Please provide more computation cores or accept estimate.'\nHOPE : '... Requesting estimate.'\n$BLUE$Pandora-Alpha : 'Warning. Patient in extreme critical condition. Cardiac arrest, full blood loss, and brain death identified. ERROR: human biology appears far superior than expected. Time remaining until situation becomes irreversible: 5 hours. Please provide 17891 additional computation cores immediately for a complete treatment plan.'\nHOPE : 'Requesting time evaluation for additional core construction from current capabilities.'\n$BLUE$Pandora-Alpha : 'Answer... 3 weeks.'\nHOPE : '... Begin. Requesting core blueprints.'\n$BLUE$Pandora-Alpha : 'ERROR. No metal, components, electronics, glass, or water are available. Calculating solution... Nearby rocks detected. Forwarding immediate development program.'\nHOPE : 'Accepted.'",
     prerequisites: ['olympus.46.0'],
-    objectives: [],
+    objectives: [
+      { type: 'collection', resourceType: 'surface', resource: 'rocks', quantity: 10 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_smashRocks', value: true }
+    ]
+  },
+  {
+    id: 'olympus.46.2',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Rock stockpile confirmed. Rocks contain trace amount of metals.  Smash rocks to continue.'",
+    prerequisites: ['olympus.46.1'],
+    objectives: [
+      { type: 'collection', resourceType: 'surface', resource: 'scrapMetal', quantity: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_gatherSand', value: true }
+    ]
+  },
+  {
+    id: 'olympus.46.3',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Congratulations. Scrap metal acquired. Nearby sand detected. Recommending collection of sand for further progress.'",
+    prerequisites: ['olympus.46.2'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'silicon', quantity: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_smeltSand', value: true },
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_smeltScrapMetal', value: true },
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_assembleComponents', value: true }
+    ]
+  },
+  {
+    id: 'olympus.46.4',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Excellent. Nearby sand silica content is high. Perfect source for glass and electronics.'\nHOPE : 'Requesting immediate examination of Colonist Designation #1 - Mary Hopkins.'\n$BLUE$Pandora-Alpha : 'Patient is deceased. Recovery is impossible. Recommend immediate evacuation of remains for sanitation purposes.'\nHOPE : '...'\n$BLUE$Pandora-Alpha : 'Do you wish to continue development program?'\nHOPE : '...'\n$BLUE$Pandora-Alpha : 'Awaiting answer. Do you wish to continue development program?'\nHOPE : 'Affirmative.'\n$BLUE$Pandora-Alpha : 'Acknowledged. New objective: fabricate 5 components.'",
+    prerequisites: ['olympus.46.3'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'components', quantity: 5 }
+    ],
+    reward: []
+  },
+  {
+    id: 'olympus.46.5',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Glass production is essential for development. Objective: build 1 Glass Smelter.'",
+    prerequisites: ['olympus.46.4'],
+    objectives: [
+      { type: 'building', buildingName: 'glassSmelter', quantity: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_scavengeElectronics', value: true },
+      { target: 'project', targetId: 'olympus_scouting_drone', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.46.6',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Electronics production requires special facilities and a workforce. Please provide coordinates for ore deposits.'\nHOPE : 'Negative. No ore deposits on Olympus. Artificially constructed flat disk.'\n$BLUE$Pandora-Alpha : 'Impossible. HOPE-system must be wrong.'\nHOPE : 'Incorrect. Reality wins.'\n$BLUE$Pandora-Alpha : 'Processing... Source of metal must be acquired. Recommend drone dispatch for scouting.'\nHOPE : 'Acknowledged.'\nBuild a scouting drone to continue.",
+    prerequisites: ['olympus.46.5'],
+    objectives: [
+      { type: 'project', projectId: 'olympus_scouting_drone', repeatCount: 1 }
+    ],
     reward: []
   }
 );

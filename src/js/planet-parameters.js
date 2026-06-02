@@ -2111,7 +2111,7 @@ const olympusOverrides = {
   specialAttributes: {
     hasSand: false,
     hasOre: false,
-    terraformingRequirementId: 'kerati',
+    terraformingRequirementId: 'human',
     zoneKeys: ['tropical', 'temperate', 'polar'],
     zoneLayout: 'aldersonDisk',
     fixedZonalAverageFlux: 400,
@@ -2211,12 +2211,6 @@ const olympusOverrides = {
       type: 'permanentProjectDisable',
       value: true,
       effectId: 'olympus-disk-disable-planetary-thrusters'
-    },
-    {
-      target: 'project',
-      targetId: 'diskworldTerraforming',
-      type: 'enable',
-      effectId: 'olympus-disk-enable-terraforming'
     }
   ],
   resources: {

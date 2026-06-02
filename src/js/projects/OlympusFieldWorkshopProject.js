@@ -87,6 +87,14 @@ class OlympusFieldWorkshopProject extends Project {
     resources.surface.scrapMetal.unlocked = true;
   }
 
+  isGatherUnlocked(gatherId) {
+    return this.hasBooleanFlag(`olympusWorkshop_${gatherId}`);
+  }
+
+  isActionUnlocked(actionId) {
+    return this.hasBooleanFlag(`olympusWorkshop_${actionId}`);
+  }
+
   isVisible() {
     return this.unlocked && !this.isPermanentlyDisabled();
   }
@@ -96,16 +104,25 @@ class OlympusFieldWorkshopProject extends Project {
   }
 
   gatherRocks() {
+    if (!this.isGatherUnlocked('gatherRocks')) {
+      return;
+    }
     resources.surface.rocks.increase(1);
     this.updateUI();
   }
 
   gatherSand() {
+    if (!this.isGatherUnlocked('gatherSand')) {
+      return;
+    }
     resources.colony.silicon.increase(0.1);
     this.updateUI();
   }
 
   canStartAction(actionId) {
+    if (!this.isActionUnlocked(actionId)) {
+      return false;
+    }
     const action = this.actions[actionId];
     const config = this.getActionConfig(actionId);
     if (!action || !config || action.running) {
@@ -238,7 +255,7 @@ class OlympusFieldWorkshopProject extends Project {
 
       row.append(topRow, flavor, track);
       actionsContainer.appendChild(row);
-      actionRows[actionId] = { button, status, flavor, fill };
+      actionRows[actionId] = { container: row, button, status, flavor, fill };
     }
 
     panel.append(gatherRow, actionsContainer);
@@ -257,7 +274,9 @@ class OlympusFieldWorkshopProject extends Project {
       return;
     }
     this.ui.gatherRockButton.textContent = this.getText('gatherRocks', 'Collect rocks (+1)');
+    this.ui.gatherRockButton.style.display = this.isGatherUnlocked('gatherRocks') ? '' : 'none';
     this.ui.gatherSandButton.textContent = this.getText('gatherSand', 'Collect sand (+0.1 silica)');
+    this.ui.gatherSandButton.style.display = this.isGatherUnlocked('gatherSand') ? '' : 'none';
 
     const actionIds = Object.keys(this.actions);
     for (let i = 0; i < actionIds.length; i += 1) {
@@ -265,6 +284,7 @@ class OlympusFieldWorkshopProject extends Project {
       const action = this.actions[actionId];
       const config = this.getActionConfig(actionId);
       const row = this.ui.actionRows[actionId];
+      row.container.style.display = this.isActionUnlocked(actionId) ? '' : 'none';
       row.button.textContent = `${config.label} (${this.formatActionRecipe(config)})`;
       row.button.disabled = !this.canStartAction(actionId);
       row.flavor.textContent = this.getText(`actionFlavor.${actionId}`, this.getActionFlavorFallback(actionId));
