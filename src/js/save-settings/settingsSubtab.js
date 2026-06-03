@@ -12,6 +12,7 @@ function cacheSettingsElements() {
     whiteNoiseTooltip: document.getElementById('white-noise-tooltip'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
     celsiusToggle: document.getElementById('celsius-toggle'),
+    colorblindPaletteSelect: document.getElementById('colorblind-palette-select'),
     silenceToggle: document.getElementById('solis-silence-toggle'),
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
     showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
@@ -132,6 +133,16 @@ function addSettingsListeners() {
       if (typeof updateBuildingDisplay === 'function') {
         updateBuildingDisplay(buildings);
       }
+    });
+  }
+
+  if (cached.colorblindPaletteSelect) {
+    cached.colorblindPaletteSelect.value = getColorblindPaletteKey();
+    cached.colorblindPaletteSelect.addEventListener('change', () => {
+      gameSettings.colorblindPalette = cached.colorblindPaletteSelect.value;
+      applyColorblindPaletteSettings();
+      updateTerraformingUI();
+      updateProjectsUI();
     });
   }
 

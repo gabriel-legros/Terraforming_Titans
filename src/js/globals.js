@@ -58,6 +58,7 @@ let planetVisualizerRuntimeFailureReason = '';
 let gameSettings = {
   autosaveIntervalSeconds: 300,
   useCelsius: false,
+  colorblindPalette: 'redGreen',
   darkMode: false,
   keepTabRunningAudio: false,
   enableTerraformingSubsteps: true,
@@ -100,6 +101,52 @@ Object.defineProperty(globalThis, 'gameSettings', {
 });
 
 globalThis.planetVisualizerDebugEnabled = gameSettings.planetVisualizerDebugEnabled;
+
+const colorblindPalettes = {
+  redGreen: {
+    success: 'green',
+    failure: 'red',
+  },
+  blueOrange: {
+    success: '#0072b2',
+    failure: '#e69f00',
+  },
+  purpleYellow: {
+    success: '#7b3294',
+    failure: '#fdb863',
+  },
+  cyanMagenta: {
+    success: '#009e73',
+    failure: '#d55e00',
+  },
+  grayscale: {
+    success: '#111111',
+    failure: '#777777',
+  },
+};
+
+function getColorblindPaletteKey() {
+  return colorblindPalettes[gameSettings.colorblindPalette]
+    ? gameSettings.colorblindPalette
+    : 'redGreen';
+}
+
+function getStatusColor(status) {
+  const palette = colorblindPalettes[getColorblindPaletteKey()];
+  return status === 'success' ? palette.success : palette.failure;
+}
+
+function getStatusProgressBackground(progressPercent) {
+  return `linear-gradient(to right, ${getStatusColor('success')} ${progressPercent}%, #ccc ${progressPercent}%)`;
+}
+
+function applyColorblindPaletteSettings() {
+  const root = document.documentElement;
+  root.style.setProperty('--status-success-color', getStatusColor('success'));
+  root.style.setProperty('--status-failure-color', getStatusColor('failure'));
+}
+
+applyColorblindPaletteSettings();
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
 let solisManager;

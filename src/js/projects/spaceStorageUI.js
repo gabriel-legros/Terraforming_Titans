@@ -1688,17 +1688,17 @@ function updateSpaceStorageUI(project) {
           { value: Math.round(productivity * 100) }
         );
         els.shipProgressButton.textContent = `${getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous')}${withdrawalProductivityLabel}`;
-        els.shipProgressButton.style.background = '#4caf50';
+        els.shipProgressButton.style.background = getStatusColor('success');
       } else {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.stopped', 'Stopped');
-        els.shipProgressButton.style.background = '#f44336';
+        els.shipProgressButton.style.background = getStatusColor('failure');
       }
     } else {
       const duration = project.getShipOperationDuration();
       const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
       if (project.assignedSpaceships <= 0) {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.noShipsAssigned', 'No ships assigned');
-        els.shipProgressButton.style.background = '#f44336';
+        els.shipProgressButton.style.background = getStatusColor('failure');
       } else if (project.shipOperationIsActive) {
         const rawProgressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
         const progressPercent = Number.isFinite(rawProgressPercent)
@@ -1715,16 +1715,16 @@ function updateSpaceStorageUI(project) {
           });
         }
         els.shipProgressButton.textContent = statusText;
-        els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+        els.shipProgressButton.style.background = getStatusProgressBackground(progressPercent);
       } else if (project.shipOperationIsPaused) {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.resumeShipTransfers', 'Resume ship transfers ({time}s left)', { time: timeRemaining });
-        els.shipProgressButton.style.background = project.canStartShipOperation() ? '#4caf50' : '#f44336';
+        els.shipProgressButton.style.background = project.canStartShipOperation() ? getStatusColor('success') : getStatusColor('failure');
       } else if (project.canStartShipOperation && project.canStartShipOperation()) {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.startShipTransfers', 'Start ship transfers (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
-        els.shipProgressButton.style.background = '#4caf50';
+        els.shipProgressButton.style.background = getStatusColor('success');
       } else {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.startShipTransfers', 'Start ship transfers (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
-        els.shipProgressButton.style.background = '#f44336';
+        els.shipProgressButton.style.background = getStatusColor('failure');
       }
     }
   }

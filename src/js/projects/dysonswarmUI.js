@@ -206,22 +206,22 @@ function updateDysonSwarmUI(project) {
   if (project.isCollectorContinuous()) {
     if (project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)) {
       els.startButton.textContent = getDysonSwarmText('ui.projects.status.continuous', 'Continuous');
-      els.startButton.style.background = '#4caf50';
+      els.startButton.style.background = getStatusColor('success');
     } else {
       els.startButton.textContent = getDysonSwarmText('ui.projects.status.stopped', 'Stopped');
-      els.startButton.style.background = '#f44336';
+      els.startButton.style.background = getStatusColor('failure');
     }
     els.startButton.disabled = true;
   } else if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
     const secs = Math.max(0, project.collectorProgress / 1000).toFixed(2);
     els.startButton.textContent = getDysonSwarmText('ui.projects.dysonSwarm.deploying', 'Deploying ({time}s)', { time: secs });
-    els.startButton.style.background = `linear-gradient(to right, #4caf50 ${pct}%, #ccc ${pct}%)`;
+    els.startButton.style.background = getStatusProgressBackground(pct);
   } else {
     const can = project.canStartCollector();
     const dur = Math.round(project.collectorDuration / 1000);
     els.startButton.textContent = getDysonSwarmText('ui.projects.dysonSwarm.deployCollector', 'Deploy Collector ({time}s)', { time: dur });
-    els.startButton.style.background = can ? '#4caf50' : '#f44336';
+    els.startButton.style.background = can ? getStatusColor('success') : getStatusColor('failure');
     els.startButton.disabled = !can;
   }
   els.autoCheckbox.checked = project.autoContinuousOperation;

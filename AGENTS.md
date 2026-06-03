@@ -73,6 +73,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ## UI Requirements
 - Features with UI must use an `enabled` flag to reveal/hide.
 - Do not persist UI enabled flags in saves; re-enable via story/research/effects.
+- The Status colours setting controls the red/green status palette for terraforming requirement boxes and project progress bars; use `getStatusColor(...)` / `getStatusProgressBackground(...)` for those surfaces instead of hard-coded red/green.
 - Use refresh helpers correctly:
   - New game: `startNewGame()`
   - Load: `loadGame()` -> `initializeGameState({ skipStoryInitialization: true })`

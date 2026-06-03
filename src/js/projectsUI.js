@@ -1672,7 +1672,7 @@ function updateProjectUI(projectName) {
         const statusText = isMaxRepeatReached
           ? getProjectsUIText('ui.projects.status.maxDepthReached', 'Max depth reached')
           : getProjectsUIText('ui.projects.status.completed', 'Completed');
-        const statusColor = isMaxRepeatReached ? '#f44336' : '#4caf50';
+        const statusColor = isMaxRepeatReached ? getStatusColor('failure') : getStatusColor('success');
         if (isImportProject && importUI) {
           importUI.setProgressLabel(elements, project, statusText);
         } else {
@@ -1715,7 +1715,7 @@ function updateProjectUI(projectName) {
           } else {
             elements.progressButton.textContent = specializationLockedText;
           }
-          elements.progressButton.style.background = '#f44336';
+          elements.progressButton.style.background = getStatusColor('failure');
         } else if (!project.isActive && !project.isCompleted && project.isHazardDisabled()) {
           const hazardLabel = project.getHazardDisableLabel();
           const statusText = hazardLabel
@@ -1726,7 +1726,7 @@ function updateProjectUI(projectName) {
           } else {
             elements.progressButton.textContent = statusText;
           }
-          elements.progressButton.style.background = '#f44336';
+          elements.progressButton.style.background = getStatusColor('failure');
         } else if (isContinuousProject) {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
             const statusText = getProjectsUIText('ui.projects.status.pausedByPulsar', 'Paused by pulsar');
@@ -1735,7 +1735,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else {
             const showProductivity = project.attributes?.continuousAsBuilding;
             const productivity = project.continuousProductivity ?? 1;
@@ -1757,14 +1757,14 @@ function updateProjectUI(projectName) {
               } else {
                 elements.progressButton.textContent = statusText;
               }
-              elements.progressButton.style.background = '#4caf50';
+              elements.progressButton.style.background = getStatusColor('success');
             } else {
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.stopped', 'Stopped'));
               } else {
                 elements.progressButton.textContent = getProjectsUIText('ui.projects.status.stopped', 'Stopped');
               }
-              elements.progressButton.style.background = '#f44336';
+              elements.progressButton.style.background = getStatusColor('failure');
             }
           }
         } else if (project.isActive) {
@@ -1776,7 +1776,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
             const statusText = getProjectsUIText('ui.projects.status.pausedStorm', 'Paused: Electromagnetic Storm');
             if (isImportProject && importUI) {
@@ -1784,7 +1784,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           const progressPercent = project.getProgress();
@@ -1796,7 +1796,7 @@ function updateProjectUI(projectName) {
               elements.progressButton.textContent = statusText;
             }
             // Avoid flashy gradients for instant projects
-            elements.progressButton.style.background = '#4caf50';
+            elements.progressButton.style.background = getStatusColor('success');
           } else {
             const statusText = getProjectsUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', { time: timeRemaining, percent: progressPercent });
             if (isImportProject && importUI) {
@@ -1804,7 +1804,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+            elements.progressButton.style.background = getStatusProgressBackground(progressPercent);
           }
           }
         } else if (project.isCompleted) {
@@ -1813,7 +1813,7 @@ function updateProjectUI(projectName) {
           } else {
             elements.progressButton.textContent = getProjectsUIText('ui.projects.status.completedNamed', 'Completed: {name}', { name: project.displayName });
           }
-          elements.progressButton.style.background = '#4caf50';
+          elements.progressButton.style.background = getStatusColor('success');
         } else if (project.isPaused) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
@@ -1831,7 +1831,7 @@ function updateProjectUI(projectName) {
               elements.progressButton.textContent = statusText;
             }
           }
-          elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
+          elements.progressButton.style.background = project.canStart() ? getStatusColor('success') : getStatusColor('failure');
         } else {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
             const statusText = getProjectsUIText('ui.projects.status.pausedStorm', 'Paused: Electromagnetic Storm');
@@ -1840,7 +1840,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else {
             // Update dynamic duration for spaceMining projects
             let duration = project.getEffectiveDuration();
@@ -1870,9 +1870,9 @@ function updateProjectUI(projectName) {
 
             // Set background color based on whether the project can start
             if (project.canStart()) {
-              elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+              elements.progressButton.style.background = getStatusColor('success');
             } else {
-              elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+              elements.progressButton.style.background = getStatusColor('failure');
             }
           }
         }

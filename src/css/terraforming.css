@@ -135,11 +135,11 @@
   }
 
   .status-check {
-    color: green;
+    color: var(--status-success-color, green);
   }
 
   .status-cross {
-    color: red;
+    color: var(--status-failure-color, red);
   }
 
   .optical-depth-warning {

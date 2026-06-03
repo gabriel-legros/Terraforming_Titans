@@ -753,7 +753,11 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'disableFusionConsumptionScaling')) {
         gameSettings.disableFusionConsumptionScaling = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
+        gameSettings.colorblindPalette = 'redGreen';
+      }
       setPauseKeybindCode(gameSettings.pauseKeybind);
+      applyColorblindPaletteSettings();
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
       }
@@ -763,6 +767,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
       cachedSettings.terraformingSubstepsToggle.checked = gameSettings.enableTerraformingSubsteps;
       cachedSettings.celsiusToggle.checked = gameSettings.useCelsius;
+      cachedSettings.colorblindPaletteSelect.value = getColorblindPaletteKey();
       const debugEnabled = !!gameSettings.planetVisualizerDebugEnabled;
       if (typeof globalThis !== 'undefined') {
         globalThis.planetVisualizerDebugEnabled = debugEnabled;

@@ -1335,7 +1335,7 @@ function createTemperatureBox(row) {
     els.polarDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);
     els.polarNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.night), false, 2);
 
-    temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? 'green' : 'red';
+    temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? getStatusColor('success') : getStatusColor('failure');
 
     if (els.energyPenalty) {
       els.energyPenalty.textContent = `${getTerraformingSummaryText(
@@ -1518,7 +1518,7 @@ function createTemperatureBox(row) {
     const els = terraformingUICache.atmosphere;
     const atmosphereBox = els.box;
     if (!atmosphereBox) return;
-    atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? 'green' : 'red';
+    atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? getStatusColor('success') : getStatusColor('failure');
     const gasTargets = terraforming.gasTargets;
     const gasBody = els.gasBody;
     const frameDelta = deltaSeconds > 0 ? Math.min(1, deltaSeconds) : 0;
@@ -1966,7 +1966,7 @@ function createWaterBox(row) {
     }
 
     waterBox.style.borderColor = terraforming.liquidCoverageTargets.length
-      ? (allTargetsMet && !hasLiquidHydrogen ? 'green' : 'red')
+      ? (allTargetsMet && !hasLiquidHydrogen ? getStatusColor('success') : getStatusColor('failure'))
       : '';
     if (els.liquidHydrogenWarningRow) {
       els.liquidHydrogenWarningRow.style.display = hasLiquidHydrogen ? '' : 'none';
@@ -2114,7 +2114,7 @@ function updateLifeBox() {
       ? terraforming.getHazardClearanceStatus()
       : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
     const lifeTargetMet = avgBiomassCoverage >= effectiveTarget;
-    lifeBox.style.borderColor = lifeTargetMet ? 'green' : 'red';
+    lifeBox.style.borderColor = lifeTargetMet ? getStatusColor('success') : getStatusColor('failure');
     if (els.target) {
       els.target.textContent = formatTerraformingTargetText(
         getTerraformingSummaryText(
@@ -2452,7 +2452,7 @@ function updateLifeBox() {
     }
 
     updateOtherRequirementStatuses(els);
-    magnetosphereBox.style.borderColor = terraforming.getOthersStatus() ? 'green' : 'red';
+    magnetosphereBox.style.borderColor = terraforming.getOthersStatus() ? getStatusColor('success') : getStatusColor('failure');
   }
   
   function buildAlbedoTable() {
@@ -2663,7 +2663,7 @@ function updateLifeBox() {
     const els = terraformingUICache.luminosity;
     const luminosityBox = els.box;
     if (!luminosityBox) return;
-    luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? 'green' : 'red';
+    luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? getStatusColor('success') : getStatusColor('failure');
 
     if (els.target) {
       els.target.textContent = formatTerraformingTargetText(
