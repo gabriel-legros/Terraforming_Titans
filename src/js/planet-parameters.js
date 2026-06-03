@@ -2126,7 +2126,7 @@ const olympusOverrides = {
     disk: { innerRadiusAU: 0.427, radiusAU: 12.021 },
     diskConstructionCostTons: 3.044071346759389e31,
     diskConstructionCostIncludesMetal: true,
-/*    disabledFeatures: {
+    disabledFeatures: {
       tabs: ['research', 'hope'],
       subtabs: [
         'energy-research',
@@ -2172,7 +2172,7 @@ const olympusOverrides = {
       ],
       researchCategories: ['advanced'],
       projectCategories: ['mega', 'giga', 'tera'] 
-    } */
+    } 
   },
   classification: {
     archetype: 'artificial',
