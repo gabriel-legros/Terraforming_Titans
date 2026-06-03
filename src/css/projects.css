@@ -3340,6 +3340,49 @@
     min-height: 34px;
 }
 
+.olympus-workshop-android-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid #c7d0d8;
+    border-radius: 6px;
+    background: #f7fafc;
+}
+
+.olympus-workshop-android-header,
+.olympus-workshop-android-stats,
+.olympus-workshop-android-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.olympus-workshop-android-header,
+.olympus-workshop-android-stats {
+    justify-content: space-between;
+}
+
+.olympus-workshop-android-title,
+.olympus-workshop-android-speed {
+    color: #34444c;
+    font-weight: 600;
+}
+
+.olympus-workshop-android-stats {
+    color: #52656f;
+    font-size: 12px;
+}
+
+.olympus-workshop-android-controls {
+    flex-wrap: wrap;
+}
+
+.olympus-workshop-android-button {
+    min-width: 44px;
+    min-height: 28px;
+}
+
 .olympus-workshop-action-flavor {
     color: #52656f;
     font-size: 12px;

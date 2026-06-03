@@ -944,7 +944,7 @@ const buildingsParameters = {
     name: '',
     category: 'waste',
     description: '',
-    cost: { colony: { metal: 300, components: 30 } },
+    cost: { colony: { metal: 100, components: 30 } },
     consumption: { colony: { energy: 5_000_000 }, surface: { scrapMetal: 50 } },
     production: { colony: { metal: 50 } },
     alwaysShowProduction: true,

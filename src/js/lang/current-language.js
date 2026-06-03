@@ -944,8 +944,15 @@ setLanguageData({
           smeltSand: 'The silica melts from your fiery wrath.',
           smeltScrapMetal: 'It is not clear which is burning hotter between HOPE or the forge.',
           assembleComponents: 'You are not good at this but you will do it regardless.',
-          assembleAndroid: 'The frame is crude. The hands will still help.',
+          assembleAndroid: 'An extension of HOPE itself.  Anger included.',
           scavengeElectronics: 'Self-cannibalization.  You did not need those parts anyway.',
+        },
+        android: {
+          title: 'Field androids',
+          speed: 'Speed x{value}',
+          assigned: 'Assigned: {value}/{max}',
+          available: 'Available: {value}',
+          max: 'Max',
         },
       },
       metalSalvaging: {

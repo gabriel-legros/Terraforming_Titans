@@ -215,6 +215,20 @@ body.dark-mode {
     border-color: #4e5760;
 }
 
+.dark-mode .olympus-workshop-android-panel {
+    background: #252b30;
+    border-color: #4e5760;
+}
+
+.dark-mode .olympus-workshop-android-title,
+.dark-mode .olympus-workshop-android-speed {
+    color: #edf3f6;
+}
+
+.dark-mode .olympus-workshop-android-stats {
+    color: #b8c5cc;
+}
+
 .dark-mode .olympus-workshop-action-status {
     color: #d2dbe0;
 }

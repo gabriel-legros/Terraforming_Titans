@@ -11,6 +11,8 @@ class OlympusFieldWorkshopProject extends Project {
     };
     this.ui = null;
     this.holdTimers = {};
+    this.assignedAndroids = 0;
+    this.assignmentStep = 1;
   }
 
   getText(path, fallback, vars) {
@@ -54,7 +56,7 @@ class OlympusFieldWorkshopProject extends Project {
       assembleAndroid: {
         label: this.getText('actions.assembleAndroid', 'Assemble android'),
         durationMs: 30000,
-        input: { category: 'colony', resource: 'components', amount: 5 },
+        input: { category: 'colony', resource: 'components', amount: 4 },
         extraInput: { category: 'colony', resource: 'electronics', amount: 1 },
         output: { category: 'colony', resource: 'androids', amount: 1 }
       },
@@ -134,6 +136,51 @@ class OlympusFieldWorkshopProject extends Project {
     return this.isBooleanFlagSet(`olympusWorkshop_${actionId}`);
   }
 
+  canAssignAndroids() {
+    return this.unlocked && this.isBooleanFlagSet('olympusWorkshop_androidAssist');
+  }
+
+  getMaxAssignedAndroids() {
+    return 100;
+  }
+
+  getAssignableAndroidTotal() {
+    return Math.floor(resources.colony.androids.value || 0);
+  }
+
+  getAvailableAndroids() {
+    const assignedOther = projectManager.getAssignedAndroids(this);
+    return Math.max(0, this.getAssignableAndroidTotal() - assignedOther);
+  }
+
+  clampAssignedAndroids() {
+    const current = Math.max(0, this.assignedAndroids || 0);
+    const maxForWorkshop = Math.min(this.getMaxAssignedAndroids(), current + this.getAvailableAndroids());
+    this.assignedAndroids = Math.min(current, maxForWorkshop);
+  }
+
+  getAndroidSpeedMultiplier() {
+    return 1 + Math.max(0, this.assignedAndroids || 0);
+  }
+
+  assignAndroids(amount) {
+    if (!this.canAssignAndroids()) {
+      this.assignedAndroids = 0;
+      this.updateUI();
+      return;
+    }
+    const current = Math.max(0, this.assignedAndroids || 0);
+    const maxForWorkshop = Math.min(this.getMaxAssignedAndroids(), current + this.getAvailableAndroids());
+    this.assignedAndroids = Math.max(0, Math.min(maxForWorkshop, current + amount));
+    populationModule.updateWorkerCap();
+    this.updateUI();
+  }
+
+  setAssignmentStep(step) {
+    this.assignmentStep = Math.max(1, Math.min(this.getMaxAssignedAndroids(), Math.round(step || 1)));
+    this.updateUI();
+  }
+
   isVisible() {
     return this.unlocked && !this.isPermanentlyDisabled();
   }
@@ -210,6 +257,7 @@ class OlympusFieldWorkshopProject extends Project {
   }
 
   tickActions(deltaTime) {
+    const speedMultiplier = this.getAndroidSpeedMultiplier();
     const actionIds = Object.keys(this.actions);
     for (let i = 0; i < actionIds.length; i += 1) {
       const actionId = actionIds[i];
@@ -217,7 +265,7 @@ class OlympusFieldWorkshopProject extends Project {
       if (!action.running) {
         continue;
       }
-      action.remaining -= deltaTime;
+      action.remaining -= deltaTime * speedMultiplier;
       if (action.remaining <= 0) {
         this.completeAction(actionId);
       }
@@ -274,6 +322,34 @@ class OlympusFieldWorkshopProject extends Project {
     gatherSandControl.appendChild(gatherSandButton);
     gatherRow.append(gatherRockControl, gatherSandControl);
 
+    const androidPanel = document.createElement('div');
+    androidPanel.classList.add('olympus-workshop-android-panel');
+    const androidHeader = document.createElement('div');
+    androidHeader.classList.add('olympus-workshop-android-header');
+    const androidTitle = document.createElement('span');
+    androidTitle.classList.add('olympus-workshop-android-title');
+    const androidSpeed = document.createElement('span');
+    androidSpeed.classList.add('olympus-workshop-android-speed');
+    androidHeader.append(androidTitle, androidSpeed);
+
+    const androidStats = document.createElement('div');
+    androidStats.classList.add('olympus-workshop-android-stats');
+    const androidAssigned = document.createElement('span');
+    const androidAvailable = document.createElement('span');
+    androidStats.append(androidAssigned, androidAvailable);
+
+    const androidControls = document.createElement('div');
+    androidControls.classList.add('olympus-workshop-android-controls');
+    const zeroButton = this.createAssignmentButton('0', () => this.assignAndroids(-(this.assignedAndroids || 0)));
+    const minusButton = this.createAssignmentButton('', () => this.assignAndroids(-this.assignmentStep));
+    const plusButton = this.createAssignmentButton('', () => this.assignAndroids(this.assignmentStep));
+    const maxButton = this.createAssignmentButton('', () => this.assignAndroids(this.getMaxAssignedAndroids()));
+    const divideButton = this.createAssignmentButton('/10', () => this.setAssignmentStep(this.assignmentStep / 10));
+    const timesButton = this.createAssignmentButton('x10', () => this.setAssignmentStep(this.assignmentStep * 10));
+    androidControls.append(zeroButton, minusButton, plusButton, maxButton, divideButton, timesButton);
+
+    androidPanel.append(androidHeader, androidStats, androidControls);
+
     const actionsContainer = document.createElement('div');
     actionsContainer.classList.add('olympus-workshop-actions');
     const actionRows = {};
@@ -305,15 +381,32 @@ class OlympusFieldWorkshopProject extends Project {
       actionRows[actionId] = { container: row, button, status, flavor, fill };
     }
 
-    panel.append(gatherRow, actionsContainer);
+    panel.append(gatherRow, androidPanel, actionsContainer);
     container.appendChild(panel);
 
     this.ui = {
       gatherRockButton,
       gatherSandButton,
+      androidPanel,
+      androidTitle,
+      androidSpeed,
+      androidAssigned,
+      androidAvailable,
+      minusButton,
+      plusButton,
+      maxButton,
       actionRows
     };
     this.updateUI();
+  }
+
+  createAssignmentButton(label, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.classList.add('olympus-workshop-android-button');
+    button.textContent = label;
+    button.addEventListener('click', onClick);
+    return button;
   }
 
   updateUI() {
@@ -324,6 +417,7 @@ class OlympusFieldWorkshopProject extends Project {
     this.ui.gatherRockButton.style.display = this.isGatherUnlocked('gatherRocks') ? '' : 'none';
     this.ui.gatherSandButton.textContent = this.getGatherLabel('gatherSand');
     this.ui.gatherSandButton.style.display = this.isGatherUnlocked('gatherSand') ? '' : 'none';
+    this.updateAndroidAssignmentUI();
 
     const actionIds = Object.keys(this.actions);
     for (let i = 0; i < actionIds.length; i += 1) {
@@ -339,16 +433,50 @@ class OlympusFieldWorkshopProject extends Project {
       if (action.running) {
         const pct = Math.max(0, Math.min(100, ((config.durationMs - action.remaining) / config.durationMs) * 100));
         row.fill.style.width = `${pct}%`;
+        const speedMultiplier = this.getAndroidSpeedMultiplier();
         row.status.textContent = this.getText(
           'inProgress',
           '{seconds}s remaining',
-          { seconds: formatNumber(action.remaining / 1000, false, 1) }
+          { seconds: formatNumber((action.remaining / speedMultiplier) / 1000, false, 1) }
         );
       } else {
         row.fill.style.width = '0%';
         row.status.textContent = this.getText('ready', 'Ready');
       }
     }
+  }
+
+  updateAndroidAssignmentUI() {
+    const ui = this.ui;
+    const canAssign = this.canAssignAndroids();
+    ui.androidPanel.style.display = canAssign ? '' : 'none';
+    if (!canAssign) {
+      if (this.assignedAndroids > 0) {
+        this.assignedAndroids = 0;
+      }
+      return;
+    }
+    this.clampAssignedAndroids();
+    const speed = this.getAndroidSpeedMultiplier();
+    const assigned = Math.max(0, this.assignedAndroids || 0);
+    const available = this.getAvailableAndroids();
+    ui.androidTitle.textContent = this.getText('android.title', 'Field androids');
+    ui.androidSpeed.textContent = this.getText('android.speed', 'Speed x{value}', {
+      value: formatNumber(speed, false, 1)
+    });
+    ui.androidAssigned.textContent = this.getText('android.assigned', 'Assigned: {value}/{max}', {
+      value: formatNumber(assigned, true),
+      max: formatNumber(this.getMaxAssignedAndroids(), true)
+    });
+    ui.androidAvailable.textContent = this.getText('android.available', 'Available: {value}', {
+      value: formatNumber(available, true)
+    });
+    ui.minusButton.textContent = `-${formatNumber(this.assignmentStep, true)}`;
+    ui.plusButton.textContent = `+${formatNumber(this.assignmentStep, true)}`;
+    ui.maxButton.textContent = this.getText('android.max', 'Max');
+    ui.minusButton.disabled = assigned <= 0;
+    ui.plusButton.disabled = assigned >= this.getMaxAssignedAndroids() || available <= 0;
+    ui.maxButton.disabled = assigned >= this.getMaxAssignedAndroids() || available <= 0;
   }
 
   getActionFlavorFallback(actionId) {
@@ -376,13 +504,17 @@ class OlympusFieldWorkshopProject extends Project {
     }
     return {
       ...super.saveState(),
-      workshopActions: savedActions
+      workshopActions: savedActions,
+      assignedAndroids: this.assignedAndroids || 0,
+      assignmentStep: this.assignmentStep || 1
     };
   }
 
   loadState(state = {}) {
     super.loadState(state);
     this.applyEffects();
+    this.assignedAndroids = Math.max(0, Math.min(this.getMaxAssignedAndroids(), state.assignedAndroids || 0));
+    this.assignmentStep = Math.max(1, Math.min(this.getMaxAssignedAndroids(), state.assignmentStep || 1));
     const savedActions = state.workshopActions || {};
     const actionIds = Object.keys(this.actions);
     for (let i = 0; i < actionIds.length; i += 1) {

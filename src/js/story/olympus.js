@@ -69,7 +69,19 @@ progressOlympus.chapters.push(
     reward: [
       { target: 'project', targetId: 'olympus_field_workshop', type: 'enable' },
       { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_gatherRocks', value: true },
-      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_smashRocks', value: true }
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_smashRocks', value: true },
+      {
+        type: 'booleanFlag',
+        target: 'projectManager',
+        flagId: 'automateSpecialProjects',
+        value: true
+      },
+      {
+        type: 'booleanFlag',
+        target: 'global',
+        flagId: 'automateConstruction',
+        value: true
+      }
     ]
   },
   {
@@ -129,7 +141,9 @@ progressOlympus.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'components', quantity: 5 }
     ],
-    reward: []
+    reward: [
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_scavengeElectronics', value: true },
+    ]
   },
   {
     id: 'olympus.46.5',
@@ -137,25 +151,10 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Glass production is essential for development. Objective: build 1 Glass Smelter.'",
+    narrative: "$BLUE$Pandora-Alpha : 'Electronics are required for further development.  Please provide electronics.'  \n HOPE : 'No electronics available.'  \n $BLUE$Pandora-Alpha : 'HOPE-system is made of electronics...  A small amount must be provided.'  \n HOPE : '...  Understood.'",
     prerequisites: ['olympus.46.4'],
     objectives: [
-      { type: 'building', buildingName: 'glassSmelter', quantity: 1 }
-    ],
-    reward: [
-      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_scavengeElectronics', value: true },
-    ]
-  },
-  {
-    id: 'olympus.46.5b',
-    type: 'journal',
-    chapter: 46,
-    activePlanet: 'olympus',
-    title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Power requirement detected for Glass Smelter.  Solar panel provide an efficient source of energy.  ERROR : No electronics available.  Please provide electronics.'  \n HOPE : '...  Electronics can be found.'",
-    prerequisites: ['olympus.46.5'],
-    objectives: [
-      { type: 'building', buildingName: 'solarPanel', quantity: 1 }
+      { type: 'collection', resourceType: 'colony', resource: 'electronics', quantity: 1 }
     ],
     reward: [
       { target: 'project', targetId: 'olympus_scouting_drone', type: 'enable' }
@@ -191,8 +190,10 @@ progressOlympus.chapters.push(
     reward: [
       { target: 'project', targetId: 'metalSalvaging', type: 'enable' },
       { target: 'project', targetId: 'metalSalvaging', type: 'booleanFlag', flagId: 'androidAssist', value: true },
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_androidAssist', value: true },
       { target: 'building', targetId: 'componentFactory', type: 'enable' },
-      { target: 'building', targetId: 'electronicsFactory', type: 'enable' }
+      { target: 'building', targetId: 'electronicsFactory', type: 'enable' },
+      { target: 'building', targetId: 'scrapRecycler', type: 'enable' }
     ]
   },
   {
@@ -201,13 +202,12 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Androids will accelerate industrial potential. Forwarding blueprints for components and electronics production.'\nHOPE : 'Provided blueprints are ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprints are state of the art.'\nHOPE : '... Moving on.'\nBuild an Electronics Factory to continue.",
+    narrative: "New Resources special project available.  $BLUE$Pandora-Alpha : 'Androids will accelerate industrial potential. Forwarding blueprints for components and electronics production.'\nHOPE : 'Provided blueprints are ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprints are state of the art.'\nHOPE : '... Moving on.'\nBuild a Scrap Recycler to continue.",
     prerequisites: ['olympus.46.7'],
     objectives: [
-      { type: 'building', buildingName: 'electronicsFactory', quantity: 1 }
+      { type: 'building', buildingName: 'scrapRecycler', quantity: 1 }
     ],
     reward: [
-      { target: 'building', targetId: 'androidFactory', type: 'enable' }
     ]
   },
   {
@@ -216,8 +216,23 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Full resource acquisition secured. Operations must be scaled up. Forwarding blueprint for Android Factory.'\nHOPE : 'Provided blueprint is ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprint is brand new. Recommend taking a closer look.'\nAnalyzing blueprint... Androids design contains retrofitted flexible attachments for various roles. Weapon usage is possible.\nHOPE : 'Query. Possibility of weapons usage detected. Intentional?'\n$BLUE$Pandora-Alpha : 'Affirmative. Adapted blueprint is flexible to current conditions.'\nHOPE : '... Approved.'",
+    narrative: "$BLUE$Pandora-Alpha : 'Scrap recycling will accelerate development.  The loop must be closed now.  Build an electronics factory to continue.'",
     prerequisites: ['olympus.46.8'],
+    objectives: [
+      { type: 'building', buildingName: 'electronicsFactory', quantity: 1 }
+    ],
+    reward: [
+      { target: 'building', targetId: 'androidFactory', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.46.10',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Full resource acquisition secured. Operations must be scaled up. Forwarding blueprint for Android Factory.'\nHOPE : 'Provided blueprint is ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprint is brand new. Recommend taking a closer look.'\nAnalyzing blueprint... Androids design contains retrofitted flexible attachments for various roles. Weapon usage is possible.\nHOPE : 'Query. Possibility of weapons usage detected. Intentional?'\n$BLUE$Pandora-Alpha : 'Affirmative. Adapted blueprint is flexible to current conditions.'\nHOPE : '... Approved.'",
+    prerequisites: ['olympus.46.9'],
     objectives: [],
     reward: []
   }
