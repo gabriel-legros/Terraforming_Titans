@@ -524,6 +524,7 @@ function updateBuildingsAutomationUI() {
   }
   updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset, {
     rootPath: ['buildings'],
+    showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.buildingsAutomationStatus, text, isError),
     isLeafVisible: (fieldPath, preset) => {
       const selectedBuildingId = buildingAutomationUIState.jsonFilterBuildingId;
       if (selectedBuildingId && fieldPath[0] === 'buildings' && fieldPath[1] !== selectedBuildingId) {

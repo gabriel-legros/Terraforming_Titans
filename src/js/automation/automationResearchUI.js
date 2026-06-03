@@ -209,6 +209,7 @@ function updateResearchAutomationUI() {
 
   updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset, {
     rootPath: ['researches'],
+    showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.researchAutomationStatus, text, isError),
     onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!selectedPreset) {
         return;

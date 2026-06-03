@@ -576,6 +576,7 @@ function updateColonyAutomationUI() {
   }
   updateAutomationPresetJsonDetails(colonyPresetJsonDetails, activePreset, {
     rootPath: ['targets'],
+    showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.colonyAutomationStatus, text, isError),
     isLeafVisible: (fieldPath, preset) => {
       const selectedTargetId = colonyAutomationUIState.jsonFilterTargetId;
       if (selectedTargetId && fieldPath[0] === 'targets' && fieldPath[1] !== selectedTargetId) {

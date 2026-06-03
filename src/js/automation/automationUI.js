@@ -1403,10 +1403,12 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
         queueAutomationUIRefresh();
         updateAutomationUI();
       } catch (error) {
-        showAutomationImportStatus(
-          getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.'),
-          true
-        );
+        if (details._showStatus) {
+          details._showStatus(
+            getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.'),
+            true
+          );
+        }
         queueAutomationUIRefresh();
         updateAutomationUI();
       }
@@ -1533,6 +1535,12 @@ function isValidAutomationPresetLeafReplacement(baseValue, nextValue) {
   return false;
 }
 
+function showAutomationPresetJsonStatus(statusElement, text, isError) {
+  statusElement.textContent = text;
+  statusElement.style.display = '';
+  statusElement.classList.toggle('automation-status-error', !!isError);
+}
+
 function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   if (!details) {
     return;
@@ -1548,10 +1556,12 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const selectedFilterValue = options.selectedFilterValue || '';
   const onFilterChange = options.onFilterChange;
   const onClearFilter = options.onClearFilter;
+  const showStatus = options.showStatus || null;
   const toFullPath = (path) => (rootPath ? rootPath.concat(path) : path.slice());
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
+  details._showStatus = showStatus;
 
   if (!preset) {
     details.open = false;
@@ -1753,14 +1763,16 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
           && Array.isArray(fieldOptions.selectOptions)
           && fieldOptions.selectOptions.length);
         if (!hasCustomSelectOptions && !isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value)) {
-          showAutomationImportStatus(
-            getAutomationCardText(
-              'importPresetInvalidJsonError',
-              {},
-              'That preset string is not valid JSON.'
-            ),
-            true
-          );
+          if (showStatus) {
+            showStatus(
+              getAutomationCardText(
+                'importPresetInvalidJsonError',
+                {},
+                'That preset string is not valid JSON.'
+              ),
+              true
+            );
+          }
           queueAutomationUIRefresh();
           updateAutomationUI();
           return;
