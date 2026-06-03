@@ -742,13 +742,23 @@ class SpaceshipProject extends Project {
     autoAssignLabel.htmlFor = `${this.name}-auto-assign-spaceships`;
     autoAssignLabel.textContent = getSpaceshipProjectText('ui.projects.common.autoAssign', 'Auto assign');
 
+    const autoAssignAutomationLockInfo = document.createElement('span');
+    autoAssignAutomationLockInfo.classList.add('info-tooltip-icon', 'automation-control-lock-tooltip');
+    autoAssignAutomationLockInfo.hidden = true;
+    attachDynamicInfoTooltip(
+      autoAssignAutomationLockInfo,
+      getSpaceshipProjectText('ui.projects.spaceship.controlledByAutomation', 'controlled by automation')
+    );
+
     autoAssignCheckboxContainer.appendChild(autoAssignCheckbox);
     autoAssignCheckboxContainer.appendChild(autoAssignLabel);
+    autoAssignCheckboxContainer.appendChild(autoAssignAutomationLockInfo);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       autoAssignCheckbox,
       autoAssignCheckboxContainer,
+      autoAssignAutomationLockInfo,
       assignmentButtons,
       assignmentContainer,
     };

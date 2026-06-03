@@ -1013,6 +1013,7 @@ setLanguageData({
         costLabel: 'Spaceship Cost',
         costPerShipmentValue: 'Cost per Shipment: {value}',
         gainPerShipmentValue: 'Gain per Shipment: {value}',
+        controlledByAutomation: 'Controlled by automation',
       },
       lifters: {
         title: 'Lifter Controls',

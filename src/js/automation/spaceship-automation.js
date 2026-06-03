@@ -579,6 +579,9 @@ class SpaceshipAutomation {
       if (elements.assignmentContainer) {
         elements.assignmentContainer.classList.toggle('automation-locked', locked);
       }
+      if (elements.autoAssignAutomationLockInfo) {
+        elements.autoAssignAutomationLockInfo.hidden = !locked;
+      }
     }
   }
 
