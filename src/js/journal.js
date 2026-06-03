@@ -216,11 +216,14 @@ function getJournalChapterGroups() {
     const meta = src && src.id ? journalChapterMetaById && journalChapterMetaById.get(src.id) : null;
     const worldId = meta ? meta.worldId : null;
     if (chNum !== null) {
+      if (chNum < 0) {
+        continue;
+      }
       if (chNum !== currentNum || worldId !== currentWorldId) {
         currentNum = chNum;
         currentWorldId = worldId;
-        current = chNum >= 0 ? { chapterId: src.id, chapterNum: chNum, worldId, entries: [], sources: [] } : null;
-        if (current) groups.push(current);
+        current = { chapterId: src.id, chapterNum: chNum, worldId, entries: [], sources: [] };
+        groups.push(current);
       }
     } else if (!current) {
       currentNum = null;
