@@ -3810,6 +3810,7 @@ setLanguageData({
       confirmDeleteSlot: 'Are you sure you want to delete the save file in {slot}? This action cannot be undone.',
       confirmNewGame: 'Are you sure you want to start a new game? Any unsaved progress will be lost.',
       pasteSaveData: 'Paste save data to load:',
+      saveStorageWarning: 'Some browsers (especially Brave) or aggressive ad blockers can prevent save to local storage or purge your saves on a restart.  Please be careful.',
       autosaveDisabled: 'Autosave disabled',
       nextAutosaveLong: 'Next autosave in {hours}h {minutes}m {seconds}s',
       nextAutosaveShort: 'Next autosave in {minutes}m {seconds}s',
