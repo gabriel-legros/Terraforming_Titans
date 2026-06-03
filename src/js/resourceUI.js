@@ -349,8 +349,12 @@ function isWasteResource(resourceName) {
 }
 
 function swapResourceRateColor(resource, color) {
-  if (resource.reverseColor && color === 'red') return 'green';
-  if (resource.reverseColor && color === 'green') return 'red';
+  if (color === 'red') {
+    return resource.reverseColor ? getStatusColor('success') : getStatusColor('failure');
+  }
+  if (color === 'green') {
+    return resource.reverseColor ? getStatusColor('failure') : getStatusColor('success');
+  }
   return color;
 }
 
@@ -869,7 +873,7 @@ function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings
   });
 }
 
-function updateRateTableWithCooldown(container, entries, formatter, frameDelta) {
+function updateRateTableWithCooldown(container, entries, formatter, frameDelta, valueColor = '') {
   if (!container) return false;
   const info = container._info;
   let cooldown = container._cooldown;
@@ -922,6 +926,10 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta) 
   cooldown.totalTimer = totalTimer;
 
   if (info.totalRight) {
+    const totalColor = totalTimer > 0 ? valueColor : '';
+    if (info.totalRight.style.color !== totalColor) {
+      info.totalRight.style.color = totalColor;
+    }
     if (Math.abs(total) >= 1e-12) {
       info.totalRight.textContent = formatter(total);
       info.totalRow.style.display = 'table-row';
@@ -964,6 +972,7 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta) 
       : formatter(val);
     if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
     if (rowInfo.right.textContent !== text) rowInfo.right.textContent = text;
+    if (rowInfo.right.style.color !== valueColor) rowInfo.right.style.color = valueColor;
     rowInfo.row.style.display = 'table-row';
     orderedRows.push(rowInfo.row);
     used.add(name);
@@ -2080,10 +2089,14 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
           ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
         }
         let ppsColor = '';
-        if (netRate < 0 && Math.abs(netRate) > resource.value) {
-          ppsColor = 'red';
-        } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
-          ppsColor = 'orange';
+        if (netRate < 0) {
+          if (Math.abs(netRate) > resource.value) {
+            ppsColor = 'red';
+          } else if (Math.abs(netRate) > resource.value / 120) {
+            ppsColor = 'orange';
+          } else {
+            ppsColor = '';
+          }
         }
         ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
       }

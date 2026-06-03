@@ -143,6 +143,9 @@ function addSettingsListeners() {
       applyColorblindPaletteSettings();
       updateTerraformingUI();
       updateProjectsUI();
+      updateResourceDisplay(resources, 0);
+      updateBuildingDisplay(buildings);
+      updateColonyDisplay(colonies);
     });
   }
 

@@ -62,8 +62,12 @@ function getManualBuildCount(structure, buildCount) {
 }
 
 function swapResourceRateColor(resource, color) {
-  if (resource.reverseColor && color === 'red') return 'green';
-  if (resource.reverseColor && color === 'green') return 'red';
+  if (color === 'red') {
+    return resource.reverseColor ? getStatusColor('success') : getStatusColor('failure');
+  }
+  if (color === 'green') {
+    return resource.reverseColor ? getStatusColor('failure') : getStatusColor('success');
+  }
   return color;
 }
 

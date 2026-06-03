@@ -558,12 +558,11 @@ progressTitan.chapters.push(
     type: "journal",
     chapter: 6,
     narrative : "Complete the terraforming of Titan to continue",
+    prerequisites: ["chapter6.3b"],
     objectives: [{
       type: 'terraforming',
       terraformingParameter : 'complete',
     }],
-    prerequisites: ["chapter6.3b"],
-    objectives: [],
     reward: [
       {
         target: 'spaceManager',
