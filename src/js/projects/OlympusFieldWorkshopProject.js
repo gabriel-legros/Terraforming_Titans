@@ -13,6 +13,8 @@ class OlympusFieldWorkshopProject extends Project {
     this.holdTimers = {};
     this.assignedAndroids = 0;
     this.assignmentStep = 1;
+    this.continuousActionId = '';
+    this.continuousProductivity = 1;
   }
 
   getText(path, fallback, vars) {
@@ -145,22 +147,48 @@ class OlympusFieldWorkshopProject extends Project {
   }
 
   getAssignableAndroidTotal() {
-    return Math.floor(resources.colony.androids.value || 0);
+    return Math.floor(Math.min(resources.colony.androids.value || 0, resources.colony.androids.cap || 0));
   }
 
   getAvailableAndroids() {
-    const assignedOther = projectManager.getAssignedAndroids(this);
-    return Math.max(0, this.getAssignableAndroidTotal() - assignedOther);
+    return Math.max(0, this.getAssignableAndroidTotal() - projectManager.getAssignedAndroids());
   }
 
   clampAssignedAndroids() {
     const current = Math.max(0, this.assignedAndroids || 0);
-    const maxForWorkshop = Math.min(this.getMaxAssignedAndroids(), current + this.getAvailableAndroids());
+    const assignedOther = projectManager.getAssignedAndroids(this);
+    const maxForWorkshop = Math.max(0, Math.min(this.getMaxAssignedAndroids(), this.getAssignableAndroidTotal() - assignedOther));
     this.assignedAndroids = Math.min(current, maxForWorkshop);
   }
 
   getAndroidSpeedMultiplier() {
     return 1 + Math.max(0, this.assignedAndroids || 0);
+  }
+
+  getEffectiveActionDuration(actionId) {
+    const config = this.getActionConfig(actionId);
+    return config.durationMs / this.getAndroidSpeedMultiplier();
+  }
+
+  canUseContinuousAction(actionId) {
+    return this.isActionUnlocked(actionId) && this.getEffectiveActionDuration(actionId) < 1000;
+  }
+
+  usesContinuousWithdrawalProductivity() {
+    return !!this.continuousActionId && this.canUseContinuousAction(this.continuousActionId);
+  }
+
+  setContinuousAction(actionId, enabled) {
+    this.continuousActionId = enabled ? actionId : '';
+    if (this.continuousActionId && !this.canUseContinuousAction(this.continuousActionId)) {
+      this.continuousActionId = '';
+    }
+    if (this.continuousActionId) {
+      const action = this.actions[this.continuousActionId];
+      action.running = false;
+      action.remaining = 0;
+    }
+    this.updateUI();
   }
 
   assignAndroids(amount) {
@@ -170,8 +198,11 @@ class OlympusFieldWorkshopProject extends Project {
       return;
     }
     const current = Math.max(0, this.assignedAndroids || 0);
-    const maxForWorkshop = Math.min(this.getMaxAssignedAndroids(), current + this.getAvailableAndroids());
-    this.assignedAndroids = Math.max(0, Math.min(maxForWorkshop, current + amount));
+    const assignedOther = projectManager.getAssignedAndroids(this);
+    const maxForWorkshop = Math.max(0, Math.min(this.getMaxAssignedAndroids(), this.getAssignableAndroidTotal() - assignedOther));
+    const available = maxForWorkshop - current;
+    const adjusted = Math.max(-current, Math.min(amount, available));
+    this.assignedAndroids = current + adjusted;
     populationModule.updateWorkerCap();
     this.updateUI();
   }
@@ -225,7 +256,26 @@ class OlympusFieldWorkshopProject extends Project {
     return hasInput && hasExtraInput;
   }
 
-  startAction(actionId) {
+  hasActionResourceShortage(actionId) {
+    if (!this.isActionUnlocked(actionId)) {
+      return false;
+    }
+    const action = this.actions[actionId];
+    if (!action || action.running) {
+      return false;
+    }
+    const config = this.getActionConfig(actionId);
+    if (!config.input) {
+      return false;
+    }
+    if (resources[config.input.category][config.input.resource].value < config.input.amount) {
+      return true;
+    }
+    return !!config.extraInput &&
+      resources[config.extraInput.category][config.extraInput.resource].value < config.extraInput.amount;
+  }
+
+  startAction(actionId, skipUiUpdate = false) {
     if (!this.canStartAction(actionId)) {
       return false;
     }
@@ -239,7 +289,9 @@ class OlympusFieldWorkshopProject extends Project {
     }
     action.running = true;
     action.remaining = config.durationMs;
-    this.updateUI();
+    if (!skipUiUpdate) {
+      this.updateUI();
+    }
     return true;
   }
 
@@ -251,6 +303,87 @@ class OlympusFieldWorkshopProject extends Project {
     resources[config.output.category][config.output.resource].increase(config.output.amount);
   }
 
+  estimateCostAndGain(deltaTime = 1000) {
+    const totals = { cost: {}, gain: {} };
+    if (!this.continuousActionId || !this.canUseContinuousAction(this.continuousActionId)) {
+      return totals;
+    }
+    const config = this.getActionConfig(this.continuousActionId);
+    const seconds = deltaTime / 1000;
+    if (seconds <= 0) {
+      return totals;
+    }
+    const completionsPerSecond = 1000 / this.getEffectiveActionDuration(this.continuousActionId);
+    const addRate = (entry, bucketName) => {
+      if (!entry) {
+        return;
+      }
+      if (!totals[bucketName][entry.category]) {
+        totals[bucketName][entry.category] = {};
+      }
+      totals[bucketName][entry.category][entry.resource] =
+        (totals[bucketName][entry.category][entry.resource] || 0) + entry.amount * completionsPerSecond * seconds;
+    };
+    addRate(config.input, 'cost');
+    addRate(config.extraInput, 'cost');
+    addRate(config.output, 'gain');
+    return totals;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (!this.continuousActionId || !this.canUseContinuousAction(this.continuousActionId)) {
+      this.shortfallLastTick = false;
+      return;
+    }
+    const config = this.getActionConfig(this.continuousActionId);
+    const seconds = deltaTime / 1000;
+    if (seconds <= 0) {
+      this.shortfallLastTick = false;
+      return;
+    }
+    const desiredRuns = (1000 / this.getEffectiveActionDuration(this.continuousActionId)) * seconds * productivity;
+    let actualRuns = desiredRuns;
+    const limitRunsByInput = (entry) => {
+      if (!entry || entry.amount <= 0) {
+        return;
+      }
+      const pending = accumulatedChanges?.[entry.category]?.[entry.resource] || 0;
+      const available = Math.max(0, resources[entry.category][entry.resource].value + pending);
+      actualRuns = Math.min(actualRuns, available / entry.amount);
+    };
+    limitRunsByInput(config.input);
+    limitRunsByInput(config.extraInput);
+    actualRuns = Math.max(0, actualRuns);
+    this.shortfallLastTick = actualRuns < desiredRuns;
+
+    const applyEntry = (entry, sign) => {
+      if (!entry || actualRuns <= 0) {
+        return;
+      }
+      const amount = sign * entry.amount * actualRuns;
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[entry.category]) {
+          accumulatedChanges[entry.category] = {};
+        }
+        accumulatedChanges[entry.category][entry.resource] =
+          (accumulatedChanges[entry.category][entry.resource] || 0) + amount;
+      } else if (amount < 0) {
+        resources[entry.category][entry.resource].decrease(-amount);
+      } else {
+        resources[entry.category][entry.resource].increase(amount);
+      }
+      resources[entry.category][entry.resource].modifyRate(
+        amount / seconds,
+        this.displayName || this.name,
+        'project'
+      );
+    };
+
+    applyEntry(config.input, -1);
+    applyEntry(config.extraInput, -1);
+    applyEntry(config.output, 1);
+  }
+
   update(deltaTime) {
     super.update(deltaTime);
     this.tickActions(deltaTime);
@@ -258,16 +391,28 @@ class OlympusFieldWorkshopProject extends Project {
 
   tickActions(deltaTime) {
     const speedMultiplier = this.getAndroidSpeedMultiplier();
+    if (this.continuousActionId && !this.canUseContinuousAction(this.continuousActionId)) {
+      this.continuousActionId = '';
+    }
     const actionIds = Object.keys(this.actions);
     for (let i = 0; i < actionIds.length; i += 1) {
       const actionId = actionIds[i];
+      if (this.continuousActionId === actionId) {
+        continue;
+      }
       const action = this.actions[actionId];
       if (!action.running) {
         continue;
       }
       action.remaining -= deltaTime * speedMultiplier;
-      if (action.remaining <= 0) {
+      while (action.remaining <= 0) {
+        const overflow = -action.remaining;
         this.completeAction(actionId);
+        if (this.continuousActionId !== actionId || !this.canStartAction(actionId)) {
+          break;
+        }
+        this.startAction(actionId, true);
+        action.remaining -= overflow;
       }
     }
   }
@@ -360,10 +505,18 @@ class OlympusFieldWorkshopProject extends Project {
       row.classList.add('olympus-workshop-action-row');
       const topRow = document.createElement('div');
       topRow.classList.add('olympus-workshop-action-top');
+      const continuousCheckbox = document.createElement('input');
+      continuousCheckbox.type = 'checkbox';
+      continuousCheckbox.classList.add('olympus-workshop-continuous-checkbox');
       const button = document.createElement('button');
       button.type = 'button';
       button.classList.add('olympus-workshop-action-button');
       button.addEventListener('click', () => this.startAction(actionId));
+      continuousCheckbox.addEventListener('click', (event) => event.stopPropagation());
+      continuousCheckbox.addEventListener('change', () => this.setContinuousAction(actionId, continuousCheckbox.checked));
+      const buttonText = document.createElement('span');
+      buttonText.classList.add('olympus-workshop-action-button-text');
+      button.append(continuousCheckbox, buttonText);
       const status = document.createElement('span');
       status.classList.add('olympus-workshop-action-status');
       topRow.append(button, status);
@@ -378,7 +531,7 @@ class OlympusFieldWorkshopProject extends Project {
 
       row.append(topRow, flavor, track);
       actionsContainer.appendChild(row);
-      actionRows[actionId] = { container: row, button, status, flavor, fill };
+      actionRows[actionId] = { container: row, continuousCheckbox, button, buttonText, status, flavor, fill };
     }
 
     panel.append(gatherRow, androidPanel, actionsContainer);
@@ -418,6 +571,9 @@ class OlympusFieldWorkshopProject extends Project {
     this.ui.gatherSandButton.textContent = this.getGatherLabel('gatherSand');
     this.ui.gatherSandButton.style.display = this.isGatherUnlocked('gatherSand') ? '' : 'none';
     this.updateAndroidAssignmentUI();
+    if (this.continuousActionId && !this.canUseContinuousAction(this.continuousActionId)) {
+      this.continuousActionId = '';
+    }
 
     const actionIds = Object.keys(this.actions);
     for (let i = 0; i < actionIds.length; i += 1) {
@@ -425,12 +581,24 @@ class OlympusFieldWorkshopProject extends Project {
       const action = this.actions[actionId];
       const config = this.getActionConfig(actionId);
       const row = this.ui.actionRows[actionId];
-      row.container.style.display = this.isActionUnlocked(actionId) ? '' : 'none';
-      row.button.textContent = `${config.label} (${this.formatActionRecipe(config)})`;
+      const isUnlocked = this.isActionUnlocked(actionId);
+      const canUseContinuous = this.canUseContinuousAction(actionId);
+      row.container.style.display = isUnlocked ? '' : 'none';
+      row.continuousCheckbox.style.display = canUseContinuous ? '' : 'none';
+      row.continuousCheckbox.checked = this.continuousActionId === actionId;
+      row.continuousCheckbox.title = this.getText('continuousTooltip', 'Repeat this action automatically while its duration is below 1 second. Only one field action can repeat at a time.');
+      row.buttonText.textContent = `${config.label} (${this.formatActionRecipe(config)})`;
+      const blocked = this.hasActionResourceShortage(actionId);
+      row.container.classList.toggle('olympus-workshop-action-row--blocked', blocked);
       row.button.disabled = !this.canStartAction(actionId);
       row.flavor.textContent = this.getText(`actionFlavor.${actionId}`, this.getActionFlavorFallback(actionId));
 
-      if (action.running) {
+      if (this.continuousActionId === actionId) {
+        row.fill.style.width = '100%';
+        row.status.textContent = this.hasActionResourceShortage(actionId)
+          ? this.getText('waiting', 'Waiting')
+          : this.getText('continuous', 'Continuous');
+      } else if (action.running) {
         const pct = Math.max(0, Math.min(100, ((config.durationMs - action.remaining) / config.durationMs) * 100));
         row.fill.style.width = `${pct}%`;
         const speedMultiplier = this.getAndroidSpeedMultiplier();
@@ -506,7 +674,8 @@ class OlympusFieldWorkshopProject extends Project {
       ...super.saveState(),
       workshopActions: savedActions,
       assignedAndroids: this.assignedAndroids || 0,
-      assignmentStep: this.assignmentStep || 1
+      assignmentStep: this.assignmentStep || 1,
+      continuousActionId: this.continuousActionId || ''
     };
   }
 
@@ -515,6 +684,7 @@ class OlympusFieldWorkshopProject extends Project {
     this.applyEffects();
     this.assignedAndroids = Math.max(0, Math.min(this.getMaxAssignedAndroids(), state.assignedAndroids || 0));
     this.assignmentStep = Math.max(1, Math.min(this.getMaxAssignedAndroids(), state.assignmentStep || 1));
+    this.continuousActionId = this.actions[state.continuousActionId] ? state.continuousActionId : '';
     const savedActions = state.workshopActions || {};
     const actionIds = Object.keys(this.actions);
     for (let i = 0; i < actionIds.length; i += 1) {

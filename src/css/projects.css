@@ -3340,6 +3340,18 @@
     min-height: 34px;
 }
 
+.olympus-workshop-action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.olympus-workshop-action-button-text {
+    flex: 1;
+    text-align: center;
+}
+
 .olympus-workshop-android-panel {
     display: flex;
     flex-direction: column;
@@ -3408,12 +3420,24 @@
     gap: 8px;
 }
 
+.olympus-workshop-continuous-checkbox {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
 .olympus-workshop-action-status {
     min-width: 100px;
     text-align: right;
     color: #4b5a64;
     font-size: 12px;
     font-weight: 600;
+}
+
+.olympus-workshop-action-row--blocked .olympus-workshop-action-button,
+.olympus-workshop-action-row--blocked .olympus-workshop-action-button:disabled,
+.olympus-workshop-action-row--blocked .olympus-workshop-action-flavor,
+.olympus-workshop-action-row--blocked .olympus-workshop-action-status {
+    color: #b00020;
 }
 
 .olympus-workshop-progress-track {
