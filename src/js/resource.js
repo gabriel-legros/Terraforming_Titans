@@ -895,7 +895,7 @@ class Resource extends EffectableEntity {
       newCap += structure.getStorageContribution(this.category, this.name);
     }
 
-    if (followersManager && this.hasCap) {
+    if (isManagerEffectivelyEnabled(followersManager, 'followersManager') && this.hasCap) {
       newCap += followersManager.getOrbitalStorageCapBonusForResource(this.category, this.name);
     }
     this.cap = this.hasCap ? newCap : Infinity;

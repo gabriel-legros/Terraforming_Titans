@@ -226,7 +226,11 @@ class NanotechManager extends EffectableEntity {
     if(deltaTime == 0){
       return;
     }
-    if (!this.enabled) return;
+    if (!isManagerEffectivelyEnabled(this, 'nanotechManager')) {
+      this.resetActivityState();
+      this.applyMaintenanceEffects();
+      return;
+    }
     if (this.isTemperatureDisabled()) {
       this.resetActivityState();
       this.applyMaintenanceEffects();
@@ -684,6 +688,9 @@ class NanotechManager extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('nanotechManager')) {
+      return;
+    }
     this.enabled = true;
     this.updateUI();
   }
@@ -757,7 +764,7 @@ class NanotechManager extends EffectableEntity {
         });
       }
     };
-    if (!this.enabled || this.isTemperatureDisabled()) {
+    if (!isManagerEffectivelyEnabled(this, 'nanotechManager') || this.isTemperatureDisabled()) {
       clearNanotechMaintenanceEffects();
       this.currentMaintenanceReduction = 0;
       this.currentMaintenance2Reduction = 0;
@@ -1298,7 +1305,7 @@ class NanotechManager extends EffectableEntity {
     if (cacheRefreshed) {
       this.bindUIHandlers();
     }
-    container.style.display = this.enabled ? '' : 'none';
+    container.style.display = isManagerEffectivelyEnabled(this, 'nanotechManager') ? '' : 'none';
     const max = this.getMaxNanobots();
     const C = this.uiCache || {};
     const stage2Active = this.isBooleanFlagSet('stage2_enabled');
@@ -2395,6 +2402,9 @@ class NanotechManager extends EffectableEntity {
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('nanotechManager')) {
+      return;
+    }
     this.applyMaintenanceEffects();
   }
 

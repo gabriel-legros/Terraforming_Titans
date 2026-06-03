@@ -1629,7 +1629,7 @@ function populateResourceElements(resources) {
 
 function unlockResource(resource) {
   if (!shouldRenderResourceCategory(resource.category)) return;
-  if (resource.unlocked && !document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
+  if (resource.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name) && !document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
     const container = document.getElementById(containerId);
@@ -1730,7 +1730,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
       }
 
       let timer = smallValueTimers[resourceKey] || 0;
-      let showResource = resourceObj.unlocked;
+      let showResource = resourceObj.unlocked && !isCurrentWorldResourceDisabled(resourceObj.category, resourceObj.name);
 
       if (showResource) {
         const activityRate = (resourceObj.productionRate || 0) + (resourceObj.consumptionRate || 0);

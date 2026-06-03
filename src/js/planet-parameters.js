@@ -2127,7 +2127,7 @@ const olympusOverrides = {
     diskConstructionCostTons: 3.044071346759389e31,
     diskConstructionCostIncludesMetal: true,
     disabledFeatures: {
-      tabs: ['research', 'hope'],
+      tabs: ['research', 'hope', 'colonies'],
       subtabs: [
         'energy-research',
         'industry-research',
@@ -2149,6 +2149,7 @@ const olympusOverrides = {
         'hazard-terraforming',
         'milestone-terraforming',
         'population-colonies',
+        'nanocolony-colonies',
         'followers-colonies',
         'mega-projects',
         'giga-projects',
@@ -2168,10 +2169,18 @@ const olympusOverrides = {
         'lifeDesigner',
         'hazardManager',
         'milestonesManager',
+        'nanotechManager',
         'followersManager'
       ],
       researchCategories: ['advanced'],
-      projectCategories: ['mega', 'giga', 'tera'] 
+      projectCategories: ['mega', 'giga', 'tera'],
+      resources: [
+        'colony:funding',
+        'colony:research',
+        'colony:advancedResearch',
+        'special:alienArtifact',
+        'special:antimatter'
+      ]
     } 
   },
   classification: {
@@ -2217,6 +2226,20 @@ const olympusOverrides = {
       type: 'permanentProjectDisable',
       value: true,
       effectId: 'olympus-disk-disable-planetary-thrusters'
+    },
+    {
+      target: 'project',
+      targetId: 'cargo_rocket',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disable-cargo-rockets'
+    },
+    {
+      target: 'project',
+      targetId: 'import_colonists_1',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disable-import-colonists'
     }
   ],
   resources: {

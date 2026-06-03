@@ -1240,7 +1240,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   rebuildOrbitalStorageCapBonusCache() {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
       this.orbitalStorageCapBonusCache = {};
       return;
     }
@@ -1270,7 +1270,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getOrbitalStorageCapBonusForResource(category, resourceName) {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
       return 0;
     }
     const cacheKey = `${category}:${resourceName}`;
@@ -1283,7 +1283,7 @@ class FollowersManager extends EffectableEntity {
 
   produceOrbitals(deltaTime) {
     this.ensureTrackedOrbitals();
-    if (!this.enabled || deltaTime <= 0) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager') || deltaTime <= 0) {
       this.lastProductionRates = {};
       this.lastAppliedAssignments = {};
       return;
@@ -1327,7 +1327,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   applyOrbitalProductionRates() {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
+      this.lastProductionRates = {};
+      this.lastAppliedAssignments = {};
       return;
     }
 

@@ -809,13 +809,153 @@ function getCurrentWorldDisabledFeatures() {
   return currentPlanetParameters?.specialAttributes?.disabledFeatures || {};
 }
 
-function isWorldFeatureDisabled(featureType, featureId) {
+const WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY = 2;
+const WORLD_FEATURE_DEFAULT_ENABLE_PRIORITY = 1;
+
+const WORLD_FEATURE_ENABLE_LINKS = {
+  nanotechManager: {
+    managers: ['nanotechManager'],
+    tabs: ['colonies'],
+    subtabs: ['nanocolony-colonies']
+  }
+};
+
+function getWorldFeatureDisablePriority(featureType, featureId) {
   const disabledFeatures = getCurrentWorldDisabledFeatures();
   const disabledList = disabledFeatures[featureType];
   if (Array.isArray(disabledList)) {
-    return disabledList.includes(featureId);
+    for (let i = 0; i < disabledList.length; i += 1) {
+      const entry = disabledList[i];
+      if (entry === featureId) {
+        return WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY;
+      }
+      if (entry && entry.id === featureId) {
+        return Number.isFinite(entry.priority) ? entry.priority : WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY;
+      }
+    }
+    return 0;
   }
-  return disabledList === featureId;
+  if (disabledList && disabledList[featureId] !== undefined) {
+    const entry = disabledList[featureId];
+    if (entry === true) {
+      return WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY;
+    }
+    if (Number.isFinite(entry)) {
+      return entry;
+    }
+    if (entry && Number.isFinite(entry.priority)) {
+      return entry.priority;
+    }
+    return 0;
+  }
+  return disabledList === featureId ? WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY : 0;
+}
+
+function getWorldFeatureEffectPriority(effect) {
+  if (!effect || effect.value === false) {
+    return 0;
+  }
+  if (Number.isFinite(effect.priority)) {
+    return effect.priority;
+  }
+  if (Number.isFinite(effect.enablePriority)) {
+    return effect.enablePriority;
+  }
+  if (Number.isFinite(effect.level)) {
+    return effect.level;
+  }
+  return WORLD_FEATURE_DEFAULT_ENABLE_PRIORITY;
+}
+
+function normalizeWorldFeatureId(featureType, featureId) {
+  if (featureType === 'tabs') {
+    return extractTabId(featureId);
+  }
+  return featureId;
+}
+
+function getWorldResourceFeatureId(category, resourceName) {
+  return `${category}:${resourceName}`;
+}
+
+function doesEnableEffectTargetFeature(effect, featureType, featureId) {
+  if (!effect || effect.type !== 'enable') {
+    return false;
+  }
+  const normalizedFeatureId = normalizeWorldFeatureId(featureType, featureId);
+  if (effect.featureType === featureType && normalizeWorldFeatureId(featureType, effect.featureId || effect.targetId) === normalizedFeatureId) {
+    return true;
+  }
+  const linked = WORLD_FEATURE_ENABLE_LINKS[effect.target];
+  if (linked && linked[featureType] && linked[featureType].includes(normalizedFeatureId)) {
+    return true;
+  }
+  if (featureType === 'managers') {
+    return effect.target === normalizedFeatureId;
+  }
+  if (featureType === 'tabs') {
+    return effect.target === 'tab' && normalizeWorldFeatureId('tabs', effect.targetId) === normalizedFeatureId;
+  }
+  if (featureType === 'subtabs') {
+    return effect.targetId === normalizedFeatureId || effect.subtabId === normalizedFeatureId;
+  }
+  if (featureType === 'projectCategories') {
+    return effect.projectCategory === normalizedFeatureId;
+  }
+  if (featureType === 'researchCategories') {
+    return effect.researchCategory === normalizedFeatureId;
+  }
+  if (featureType === 'resources') {
+    return getWorldResourceFeatureId(effect.resourceType, effect.targetId) === normalizedFeatureId
+      || getWorldResourceFeatureId(effect.resourceCategory, effect.resourceId) === normalizedFeatureId;
+  }
+  return false;
+}
+
+function getWorldFeatureEnablePriority(featureType, featureId) {
+  const effectSources = [
+    globalEffects,
+    tabManager,
+    projectManager,
+    researchManager,
+    skillManager,
+    solisManager,
+    warpGateCommand,
+    patienceManager,
+    automationManager,
+    rwgManager,
+    artificialManager,
+    atlasManager,
+    galaxyManager,
+    galaxyInvasionManager,
+    lifeDesigner,
+    hazardManager,
+    milestonesManager,
+    nanotechManager,
+    followersManager
+  ];
+  let priority = 0;
+  for (let sourceIndex = 0; sourceIndex < effectSources.length; sourceIndex += 1) {
+    const source = effectSources[sourceIndex];
+    if (!source || !Array.isArray(source.activeEffects)) {
+      continue;
+    }
+    for (let i = 0; i < source.activeEffects.length; i += 1) {
+      const effect = source.activeEffects[i];
+      if (doesEnableEffectTargetFeature(effect, featureType, featureId)) {
+        priority = Math.max(priority, getWorldFeatureEffectPriority(effect));
+      }
+    }
+  }
+  return priority;
+}
+
+function isWorldFeatureDisabled(featureType, featureId) {
+  const disablePriority = getWorldFeatureDisablePriority(featureType, normalizeWorldFeatureId(featureType, featureId));
+  if (disablePriority <= 0) {
+    return false;
+  }
+  return disablePriority >= getWorldFeatureEnablePriority(featureType, featureId);
 }
 
 function isCurrentWorldTabDisabled(tabId) {
@@ -836,6 +976,10 @@ function isCurrentWorldProjectCategoryDisabled(category) {
 
 function isCurrentWorldAdvancedResearchDisabled() {
   return isWorldFeatureDisabled('researchCategories', 'advanced');
+}
+
+function isCurrentWorldResourceDisabled(category, resourceName) {
+  return isWorldFeatureDisabled('resources', getWorldResourceFeatureId(category, resourceName));
 }
 
 function isManagerEffectivelyEnabled(manager, managerId) {

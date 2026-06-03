@@ -295,7 +295,7 @@
       orbitalDebris: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       spaceships: {name: '', hasCap: false, initialValue: 0, unlocked: false},
       alienArtifact: { name: '', hasCap: false, initialValue: 0, unlocked: false, preserveOnTravel: true },
-      crusaders: { name: '', hasCap: false, initialValue: 0, unlocked: false },
+      crusaders: { name: '', hasCap: false, initialValue: 0, hideWhenSmall : true, unlocked: false },
       antimatter: { name: '', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false, preserveOnTravel: true, preserveOnTravelFields: ['value', 'unlocked', 'enabled', 'syncedToSpaceEnergy'] }
     },
     space: {
