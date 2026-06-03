@@ -306,26 +306,31 @@ body.journal-collapsed .tab-content {
 }
 
 #journal-entries .prometheus-text,
+.popup-text .prometheus-text,
 .history-entries .prometheus-text {
     color: #c43333;
 }
 
 #journal-entries .diagnostic-text,
+.popup-text .diagnostic-text,
 .history-entries .diagnostic-text {
     color: #2e7d32;
 }
 
 #journal-entries .orange-text,
+.popup-text .orange-text,
 .history-entries .orange-text {
     color: #d97706;
 }
 
 #journal-entries .blue-text,
+.popup-text .blue-text,
 .history-entries .blue-text {
     color: #2563eb;
 }
 
 #journal-entries .journal-white-text,
+.popup-text .journal-white-text,
 .history-entries .journal-white-text {
     color: inherit;
 }

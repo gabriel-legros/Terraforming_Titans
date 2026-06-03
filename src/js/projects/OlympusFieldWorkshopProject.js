@@ -29,31 +29,31 @@ class OlympusFieldWorkshopProject extends Project {
     const configs = {
       smashRocks: {
         label: this.getText('actions.smashRocks', 'Smash rocks'),
-        durationMs: 1000,
-        input: { category: 'surface', resource: 'rocks', amount: 1 },
-        output: { category: 'surface', resource: 'scrapMetal', amount: 0.1 }
+        durationMs: 10000,
+        input: { category: 'surface', resource: 'rocks', amount: 10 },
+        output: { category: 'surface', resource: 'scrapMetal', amount: 1 }
       },
       smeltSand: {
         label: this.getText('actions.smeltSand', 'Smelt sand'),
-        durationMs: 1000,
-        input: { category: 'colony', resource: 'silicon', amount: 1 },
-        output: { category: 'colony', resource: 'glass', amount: 1 }
+        durationMs: 5000,
+        input: { category: 'colony', resource: 'silicon', amount: 2 },
+        output: { category: 'colony', resource: 'glass', amount: 2 }
       },
       smeltScrapMetal: {
         label: this.getText('actions.smeltScrapMetal', 'Smelt scrap metal'),
-        durationMs: 10000,
+        durationMs: 5000,
         input: { category: 'surface', resource: 'scrapMetal', amount: 1 },
         output: { category: 'colony', resource: 'metal', amount: 1 }
       },
       assembleComponents: {
         label: this.getText('actions.assembleComponents', 'Assemble components'),
-        durationMs: 60000,
+        durationMs: 30000,
         input: { category: 'colony', resource: 'metal', amount: 5 },
         output: { category: 'colony', resource: 'components', amount: 1 }
       },
       assembleAndroid: {
         label: this.getText('actions.assembleAndroid', 'Assemble android'),
-        durationMs: 60000,
+        durationMs: 30000,
         input: { category: 'colony', resource: 'components', amount: 5 },
         extraInput: { category: 'colony', resource: 'electronics', amount: 1 },
         output: { category: 'colony', resource: 'androids', amount: 1 }
@@ -66,6 +66,33 @@ class OlympusFieldWorkshopProject extends Project {
       }
     };
     return configs[actionId];
+  }
+
+  getGatherConfig(gatherId) {
+    const configs = {
+      gatherRocks: {
+        labelKey: 'gatherRocks',
+        fallback: 'Collect rocks (+{amount})',
+        category: 'surface',
+        resource: 'rocks',
+        amount: 0.2
+      },
+      gatherSand: {
+        labelKey: 'gatherSand',
+        fallback: 'Collect sand (+{amount} silica)',
+        category: 'colony',
+        resource: 'silicon',
+        amount: 0.2
+      }
+    };
+    return configs[gatherId];
+  }
+
+  getGatherLabel(gatherId) {
+    const config = this.getGatherConfig(gatherId);
+    return this.getText(config.labelKey, config.fallback, {
+      amount: formatNumber(config.amount, true)
+    });
   }
 
   formatActionRecipe(config) {
@@ -100,11 +127,11 @@ class OlympusFieldWorkshopProject extends Project {
   }
 
   isGatherUnlocked(gatherId) {
-    return this.hasBooleanFlag(`olympusWorkshop_${gatherId}`);
+    return this.isBooleanFlagSet(`olympusWorkshop_${gatherId}`);
   }
 
   isActionUnlocked(actionId) {
-    return this.hasBooleanFlag(`olympusWorkshop_${actionId}`);
+    return this.isBooleanFlagSet(`olympusWorkshop_${actionId}`);
   }
 
   isVisible() {
@@ -119,7 +146,8 @@ class OlympusFieldWorkshopProject extends Project {
     if (!this.isGatherUnlocked('gatherRocks')) {
       return;
     }
-    resources.surface.rocks.increase(1);
+    const config = this.getGatherConfig('gatherRocks');
+    resources[config.category][config.resource].increase(config.amount);
     this.updateUI();
   }
 
@@ -127,7 +155,8 @@ class OlympusFieldWorkshopProject extends Project {
     if (!this.isGatherUnlocked('gatherSand')) {
       return;
     }
-    resources.colony.silicon.increase(0.1);
+    const config = this.getGatherConfig('gatherSand');
+    resources[config.category][config.resource].increase(config.amount);
     this.updateUI();
   }
 
@@ -291,9 +320,9 @@ class OlympusFieldWorkshopProject extends Project {
     if (!this.ui) {
       return;
     }
-    this.ui.gatherRockButton.textContent = this.getText('gatherRocks', 'Collect rocks (+1)');
+    this.ui.gatherRockButton.textContent = this.getGatherLabel('gatherRocks');
     this.ui.gatherRockButton.style.display = this.isGatherUnlocked('gatherRocks') ? '' : 'none';
-    this.ui.gatherSandButton.textContent = this.getText('gatherSand', 'Collect sand (+0.1 silica)');
+    this.ui.gatherSandButton.textContent = this.getGatherLabel('gatherSand');
     this.ui.gatherSandButton.style.display = this.isGatherUnlocked('gatherSand') ? '' : 'none';
 
     const actionIds = Object.keys(this.actions);

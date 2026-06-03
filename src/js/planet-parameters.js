@@ -2199,7 +2199,7 @@ const olympusOverrides = {
   },
   celestialParameters: {
     distanceFromSun: 12.021,
-    gravity: 9.81,
+    gravity: 8.17,
     radius: 1_270_798_963.8556244,
     mass: 2.376486241758024e36,
     albedo: 0.24,

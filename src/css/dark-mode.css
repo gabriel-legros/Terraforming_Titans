@@ -108,26 +108,31 @@ body.dark-mode {
 }
 
 .dark-mode #journal-entries .prometheus-text,
+.dark-mode .popup-text .prometheus-text,
 .dark-mode .history-entries .prometheus-text {
     color: #ff6a6a;
 }
 
 .dark-mode #journal-entries .diagnostic-text,
+.dark-mode .popup-text .diagnostic-text,
 .dark-mode .history-entries .diagnostic-text {
     color: #7dff7d;
 }
 
 .dark-mode #journal-entries .orange-text,
+.dark-mode .popup-text .orange-text,
 .dark-mode .history-entries .orange-text {
     color: #ffb347;
 }
 
 .dark-mode #journal-entries .blue-text,
+.dark-mode .popup-text .blue-text,
 .dark-mode .history-entries .blue-text {
     color: #7db7ff;
 }
 
 .dark-mode #journal-entries .journal-white-text,
+.dark-mode .popup-text .journal-white-text,
 .dark-mode .history-entries .journal-white-text {
     color: inherit;
 }

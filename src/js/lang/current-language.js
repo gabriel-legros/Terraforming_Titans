@@ -925,8 +925,8 @@ setLanguageData({
         secured: 'Secured',
       },
       olympusFieldWorkshop: {
-        gatherRocks: 'Collect rocks (+1)',
-        gatherSand: 'Collect sand (+0.1 silica)',
+        gatherRocks: 'Collect rocks (+{amount})',
+        gatherSand: 'Collect sand (+{amount} silica)',
         ready: 'Ready',
         inProgress: '{seconds}s remaining',
         recipeLine: 'Consumes: {input} -> Produces: {output}',

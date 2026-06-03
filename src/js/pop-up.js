@@ -50,8 +50,37 @@ function createPopup(title, text, buttonText) {
   document.body.appendChild(overlay);
 
   // Typing animation for the text
-  let index = 0;
+  const segments = buildJournalSegments(text);
+  let segmentIndex = 0;
+  let textIndex = 0;
   let lastTimestamp = 0;
+
+  const appendNextPopupCharacter = () => {
+    const segment = segments[segmentIndex];
+    if (segment.isBreak) {
+      popupText.appendChild(document.createElement('br'));
+      segmentIndex++;
+      textIndex = 0;
+      return '\n';
+    }
+
+    if (!segment._node) {
+      segment._node = segment.className ? document.createElement('span') : document.createTextNode('');
+      if (segment.className) {
+        segment._node.className = segment.className;
+      }
+      popupText.appendChild(segment._node);
+    }
+
+    const character = segment.text[textIndex];
+    segment._node.textContent += character;
+    textIndex++;
+    if (textIndex >= segment.text.length) {
+      segmentIndex++;
+      textIndex = 0;
+    }
+    return character;
+  };
 
   const typeLetter = (timestamp) => {
     if (!lastTimestamp) {
@@ -59,31 +88,17 @@ function createPopup(title, text, buttonText) {
     }
 
     let elapsed = timestamp - lastTimestamp;
-    let delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>')) ? 250 : 50;
+    let previousCharacter = '';
+    let delay = 50;
 
-    while (elapsed >= delay && index < text.length) {
-      if (text[index] === '<') {
-        const tagEndIndex = text.indexOf('>', index);
-        if (tagEndIndex !== -1) {
-          popupText.innerHTML += text.slice(index, tagEndIndex + 1);
-          index = tagEndIndex + 1;
-        } else {
-          popupText.innerHTML += text[index];
-          index++;
-        }
-      } else if (text[index] === '\n' || text.slice(index, index + 4) === '<br>') {
-        popupText.innerHTML += '<br>';
-        index += (text[index] === '\n') ? 1 : 4;
-      } else {
-        popupText.innerHTML += text[index];
-        index++;
-      }
+    while (elapsed >= delay && segmentIndex < segments.length) {
+      previousCharacter = appendNextPopupCharacter();
       elapsed -= delay;
-      delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>')) ? 250 : 50;
+      delay = (previousCharacter === '.' || previousCharacter === '\n') ? 250 : 50;
     }
     lastTimestamp = timestamp - elapsed;
 
-    if (index < text.length) {
+    if (segmentIndex < segments.length) {
       requestAnimationFrame(typeLetter);
     } else {
       closeButton.style.display = 'block';
