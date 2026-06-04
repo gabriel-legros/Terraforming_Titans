@@ -90,6 +90,24 @@ function getProjectPresetJsonFieldOptions(fieldPath) {
   if (fieldPath[2] !== 'operations') {
     return null;
   }
+  if ((projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID || projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID)
+    && fieldPath[3] === 'transferMethod') {
+    return {
+      selectOptions: [
+        { value: 'spaceships', label: getAutomationCardText('spaceStorageTransferMethodSpaceships', {}, 'Spaceships') },
+        { value: 'teleporters', label: getAutomationCardText('spaceStorageTransferMethodTeleporters', {}, 'Teleporters') }
+      ]
+    };
+  }
+  if ((projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID || projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID)
+    && fieldPath[3] === 'teleporterTransferRateBasis') {
+    return {
+      selectOptions: [
+        { value: 'fixed', label: getAutomationCardText('spaceStorageTeleporterBasisFixed', {}, 'Fixed') },
+        { value: 'workers', label: getAutomationCardText('spaceStorageTeleporterBasisWorkers', {}, 'workers') }
+      ]
+    };
+  }
   if (fieldPath[3] === 'resourceImportLimitRespects'
     && (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID || getSpaceStorageSingleResourceKey(projectId) !== '')
     && PROJECT_AUTOMATION_UI_SPACE_STORAGE_IMPORT_LIMIT_RESOURCES.has(fieldPath[4])) {

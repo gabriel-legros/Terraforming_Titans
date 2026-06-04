@@ -2432,6 +2432,30 @@
     border-bottom: 1px solid #e9ecef;
 }
 
+.space-storage-assignment-section .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.space-storage-transfer-method-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9em;
+    font-weight: normal;
+}
+
+.space-storage-teleporter-controls {
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.space-storage-teleporter-rate-input {
+    width: 120px;
+}
+
 .spaceship-assignment-container {
     display: grid;
     grid-template-columns: 150px 1fr;

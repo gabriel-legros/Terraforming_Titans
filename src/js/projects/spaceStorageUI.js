@@ -1337,6 +1337,42 @@ function updateSpaceStorageUI(project) {
   if (els.shipAutoStartLabel) {
     els.shipAutoStartLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
   }
+  if (els.transferMethodContainer && els.transferMethodSelect) {
+    const unlocked = project.isTeleporterTransferUnlocked();
+    els.transferMethodContainer.style.display = unlocked ? 'flex' : 'none';
+    if (unlocked) {
+      const method = project.isTeleporterTransferActive() ? 'teleporters' : 'spaceships';
+      if (els.transferMethodSelect.value !== method) {
+        els.transferMethodSelect.value = method;
+      }
+      const showTeleporters = method === 'teleporters';
+      if (els.shipAssignmentContainer) {
+        els.shipAssignmentContainer.style.display = showTeleporters ? 'none' : '';
+      }
+      if (els.teleporterControls) {
+        els.teleporterControls.style.display = showTeleporters ? 'flex' : 'none';
+      }
+      if (els.teleporterRateInput) {
+        els.teleporterRateInput.dataset.teleporterTransferRate = String(project.teleporterTransferRate || 0);
+        if (document.activeElement !== els.teleporterRateInput) {
+          const rate = project.teleporterTransferRate || 0;
+          els.teleporterRateInput.value = rate >= 1e6 ? formatNumber(rate, true, 3) : String(rate);
+        }
+      }
+      if (els.teleporterRateBasisSelect) {
+        if (els.teleporterRateBasisSelect.value !== project.teleporterTransferRateBasis) {
+          els.teleporterRateBasisSelect.value = project.teleporterTransferRateBasis;
+        }
+      }
+    } else {
+      if (els.shipAssignmentContainer) {
+        els.shipAssignmentContainer.style.display = '';
+      }
+      if (els.teleporterControls) {
+        els.teleporterControls.style.display = 'none';
+      }
+    }
+  }
   if (els.artificialEcosystemsLabel) {
     els.artificialEcosystemsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystems', 'Artificial Ecosystems');
   }
@@ -1349,7 +1385,7 @@ function updateSpaceStorageUI(project) {
   if (els.kesslerWarning && els.kesslerWarningText) {
     const hazardActive = hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
     const isCollapsed = els.storageCard?.classList?.contains('collapsed');
-    if (hazardActive && !isCollapsed) {
+    if (hazardActive && !isCollapsed && !project.isTeleporterTransferActive()) {
       const failureChance = project.getKesslerFailureChance();
       const percent = Math.max(0, Math.min(1, failureChance)) * 100;
       if (percent <= 0) {
@@ -1682,12 +1718,15 @@ function updateSpaceStorageUI(project) {
     if (project.isShipOperationContinuous()) {
       if (project.shipOperationAutoStart) {
         const productivity = project.continuousProductivity ?? 1;
+        const activeMethod = project.isTeleporterTransferActive()
+          ? getSpaceStorageUIText('ui.projects.spaceStorage.teleportersActive', 'Teleporters')
+          : getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous');
         const withdrawalProductivityLabel = getSpaceStorageUIText(
           'ui.projects.status.withdrawalProductivitySuffix',
           ' (Withdrawal Productivity: {value}%)',
           { value: Math.round(productivity * 100) }
         );
-        els.shipProgressButton.textContent = `${getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous')}${withdrawalProductivityLabel}`;
+        els.shipProgressButton.textContent = `${activeMethod}${withdrawalProductivityLabel}`;
         els.shipProgressButton.style.background = getStatusColor('success');
       } else {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.stopped', 'Stopped');

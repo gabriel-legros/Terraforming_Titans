@@ -13,6 +13,11 @@ const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceBiomassDensityWithdrawLimits',
   'resourcePressureWithdrawLimits'
 ]);
+const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATION_KEYS = new Set([
+  'transferMethod',
+  'teleporterTransferRate',
+  'teleporterTransferRateBasis'
+]);
 const PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY = {
   metal: 'colony',
   silicon: 'colony',
@@ -675,6 +680,10 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const source = settings || {};
     const filtered = {};
     for (const key in source) {
+      if (PROJECT_AUTOMATION_SPACE_STORAGE_OPERATION_KEYS.has(key)) {
+        filtered[key] = this.deepClone(source[key]);
+        continue;
+      }
       if (PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS.has(key)) {
         continue;
       }

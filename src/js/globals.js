@@ -104,7 +104,7 @@ globalThis.planetVisualizerDebugEnabled = gameSettings.planetVisualizerDebugEnab
 
 const colorblindPalettes = {
   redGreen: {
-    success: 'green',
+    success: '#4caf50',
     failure: 'red',
   },
   blueOrange: {

@@ -2504,6 +2504,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'teleporters',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 100_000_000_000_000_000 },
+        prerequisites: ['space_storage'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'teleporters',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'deep_warp_storage',
         name: '',
         description: '',

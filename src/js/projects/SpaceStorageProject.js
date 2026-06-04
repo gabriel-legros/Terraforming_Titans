@@ -104,6 +104,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerElapsed = 0;
     this.shipOperationKesslerPending = false;
     this.shipOperationKesslerCost = null;
+    this.transferMethod = 'spaceships';
+    this.teleporterTransferRate = 0;
+    this.teleporterTransferRateBasis = 'fixed';
     this.resourceCaps = {};
     // Override kesslerDebrisSize to null so expansion doesn't trigger Kessler
     // Only ship operations should generate debris
@@ -661,10 +664,75 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   isShipOperationContinuous() {
-    return this.assignedSpaceships > 100;
+    return this.isTeleporterTransferActive() || this.assignedSpaceships > 100;
+  }
+
+  isTeleporterTransferUnlocked() {
+    return this.isBooleanFlagSet('teleporters');
+  }
+
+  isTeleporterTransferActive() {
+    return this.isTeleporterTransferUnlocked() && this.transferMethod === 'teleporters';
+  }
+
+  setTransferMethod(method) {
+    this.transferMethod = method === 'teleporters' && this.isTeleporterTransferUnlocked()
+      ? 'teleporters'
+      : 'spaceships';
+    if (this.isTeleporterTransferActive()) {
+      this.releaseTeleporterAssignedShips();
+    }
+  }
+
+  setTeleporterTransferRate(rate) {
+    const parsed = Number(rate);
+    this.teleporterTransferRate = Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    return this.teleporterTransferRate;
+  }
+
+  setTeleporterTransferRateBasis(basis) {
+    this.teleporterTransferRateBasis = basis === 'workers' ? 'workers' : 'fixed';
+  }
+
+  getTeleporterWorkerCount() {
+    return Math.max(
+      resources.colony.workers.value || 0,
+      resources.colony.workers.cap || 0,
+      resources.colony.workers.potential || 0
+    );
+  }
+
+  getTeleporterTransferRate() {
+    const rate = Math.max(0, Number(this.teleporterTransferRate) || 0);
+    if (this.teleporterTransferRateBasis === 'workers') {
+      return rate * this.getTeleporterWorkerCount();
+    }
+    return rate;
+  }
+
+  releaseTeleporterAssignedShips() {
+    if (this.assignedSpaceships > 0) {
+      this.assignSpaceships(-this.assignedSpaceships);
+    }
+    this.autoAssignSpaceships = false;
+    const elements = projectElements[this.name];
+    if (elements && elements.autoAssignCheckbox) {
+      elements.autoAssignCheckbox.checked = false;
+    }
+  }
+
+  getMaxAssignableShips() {
+    return this.isTeleporterTransferActive() ? 0 : Infinity;
+  }
+
+  shouldAutomationDisable() {
+    return this.isTeleporterTransferActive();
   }
 
   calculateTransferAmount() {
+    if (this.isTeleporterTransferActive()) {
+      return this.getTeleporterTransferRate();
+    }
     const perShip = this.getShipCapacity(this.attributes.transportPerShip || 0);
     const scalingFactor = this.isShipOperationContinuous()
       ? this.assignedSpaceships
@@ -680,7 +748,10 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   hasContinuousTransferMode(mode) {
-    if (!this.shipOperationIsActive || this.shipOperationIsPaused || this.assignedSpaceships <= 0) {
+    if (!this.shipOperationIsActive || this.shipOperationIsPaused) {
+      return false;
+    }
+    if (!this.isTeleporterTransferActive() && this.assignedSpaceships <= 0) {
       return false;
     }
     if (!this.isShipOperationContinuous()) {
@@ -908,9 +979,10 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   calculateContinuousTransferPlanForMode(mode, deltaTime, accumulatedChanges = null, productivity = 1) {
-    const duration = this.getShipOperationDuration();
     const workerRatio = this.getHazardousMachineryWorkerAvailabilityRatio();
-    const operationFraction = (deltaTime / duration) * workerRatio * Math.max(0, productivity);
+    const operationFraction = this.isTeleporterTransferActive()
+      ? (deltaTime / 1000) * Math.max(0, productivity)
+      : (deltaTime / this.getShipOperationDuration()) * workerRatio * Math.max(0, productivity);
     const assignedCapacity = this.calculateTransferAmount() * operationFraction;
     if (!(assignedCapacity > 0)) {
       return { plan: { transfers: [], total: 0 }, shipCompletionCount: 0 };
@@ -1065,11 +1137,66 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getShipOperationDuration() {
+    if (this.isTeleporterTransferActive()) {
+      return 1000;
+    }
     const base = this.calculateSpaceshipAdjustedDuration();
     return this.applyDurationEffects(base, { treatAsSpaceshipProject: true });
   }
 
+  calculateTeleporterShipmentCost() {
+    const costPerShip = this.attributes.costPerShip;
+    const totalCost = {};
+    const energyProjectMultiplier = (projectManager.activeEffects || []).reduce((value, effect) => {
+      if (
+        effect.type === 'spaceshipCostMultiplier' &&
+        effect.resourceCategory === 'colony' &&
+        effect.resourceId === 'energy'
+      ) {
+        return value * effect.value;
+      }
+      return value;
+    }, 1);
+    const energyPerTonCost = (projectManager.activeEffects || []).reduce((value, effect) => {
+      if (
+        effect.type === 'spaceshipCostPerTon' &&
+        effect.resourceCategory === 'colony' &&
+        effect.resourceId === 'energy'
+      ) {
+        return value + effect.value;
+      }
+      return value;
+    }, 0);
+
+    for (const category in costPerShip) {
+      totalCost[category] = {};
+      for (const resource in costPerShip[category]) {
+        const baseCost = costPerShip[category][resource];
+        const multiplier = this.getEffectiveCostMultiplier(category, resource)
+          * this.getEffectiveSpaceshipCostMultiplier(category, resource);
+        let adjustedCost = baseCost * multiplier;
+        if (resource === 'energy') {
+          adjustedCost *= shipEfficiency * energyProjectMultiplier * 100;
+          if (energyPerTonCost > 0) {
+            adjustedCost += energyPerTonCost * this.getShipCapacity(this.attributes.transportPerShip || 0);
+          }
+        }
+        if (adjustedCost > 0) {
+          totalCost[category][resource] = adjustedCost;
+        }
+      }
+      if (Object.keys(totalCost[category]).length === 0) {
+        delete totalCost[category];
+      }
+    }
+
+    return totalCost;
+  }
+
   calculateSpaceshipCost() {
+    if (this.isTeleporterTransferActive()) {
+      return this.calculateTeleporterShipmentCost();
+    }
     const totalCost = super.calculateSpaceshipCost();
     if (!(totalCost?.colony?.energy > 0)) {
       return totalCost;
@@ -1996,7 +2123,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (
       !this.shipOperationIsActive
       || this.shipOperationIsPaused
-      || this.assignedSpaceships <= 0
+      || (!this.isTeleporterTransferActive() && this.assignedSpaceships <= 0)
       || !this.isShipOperationContinuous()
       || this.isWithdrawalDisabled()
     ) {
@@ -2017,7 +2144,7 @@ class SpaceStorageProject extends SpaceshipProject {
     const seconds = deltaTime / 1000;
     const totalCost = this.calculateSpaceshipTotalCost();
     const costScale = shipCompletionCount;
-    const successChance = this.getKesslerSuccessChance();
+    const successChance = this.isTeleporterTransferActive() ? 1 : this.getKesslerSuccessChance();
     const failureChance = 1 - successChance;
     const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale);
     const paidEnergy = Math.max(0, (totalCost?.colony?.energy || 0) * costScale);
@@ -2047,14 +2174,15 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   applyPostProjectShipOperation(deltaTime, accumulatedChanges) {
-    if (!this.shipOperationIsActive || this.shipOperationIsPaused || this.assignedSpaceships <= 0) {
+    if (!this.shipOperationIsActive || this.shipOperationIsPaused || (!this.isTeleporterTransferActive() && this.assignedSpaceships <= 0)) {
       return;
     }
     if (this.isShipOperationContinuous()) {
-      const duration = this.getShipOperationDuration();
-      const fraction = (deltaTime / duration) * this.getHazardousMachineryWorkerAvailabilityRatio();
+      const fraction = this.isTeleporterTransferActive()
+        ? deltaTime / 1000
+        : (deltaTime / this.getShipOperationDuration()) * this.getHazardousMachineryWorkerAvailabilityRatio();
       const seconds = deltaTime / 1000;
-      const successChance = this.getKesslerSuccessChance();
+      const successChance = this.isTeleporterTransferActive() ? 1 : this.getKesslerSuccessChance();
       const failureChance = 1 - successChance;
       const capacity = this.calculateTransferAmount() * fraction;
       if (capacity <= 0) {
@@ -2273,6 +2401,93 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
+  createSpaceshipAssignmentUI(container) {
+    super.createSpaceshipAssignmentUI(container);
+    const els = projectElements[this.name];
+    const section = container.lastElementChild;
+    section.classList.add('space-storage-assignment-section');
+    const title = section.querySelector('.section-title');
+    const assignmentContainer = section.querySelector('.spaceship-assignment-container');
+    assignmentContainer.classList.add('space-storage-ship-assignment-controls');
+
+    const transferMethodContainer = document.createElement('div');
+    transferMethodContainer.classList.add('space-storage-transfer-method-container');
+
+    const transferMethodLabel = document.createElement('label');
+    transferMethodLabel.htmlFor = `${this.name}-transfer-method`;
+    transferMethodLabel.textContent = getSpaceStorageProjectText('transferMethod', null, 'Transfer:');
+
+    const transferMethodSelect = document.createElement('select');
+    transferMethodSelect.id = `${this.name}-transfer-method`;
+    const spaceshipOption = document.createElement('option');
+    spaceshipOption.value = 'spaceships';
+    spaceshipOption.textContent = getSpaceStorageProjectText('transferMethodSpaceships', null, 'Spaceships');
+    const teleporterOption = document.createElement('option');
+    teleporterOption.value = 'teleporters';
+    teleporterOption.textContent = getSpaceStorageProjectText('transferMethodTeleporters', null, 'Teleporters');
+    transferMethodSelect.append(spaceshipOption, teleporterOption);
+    transferMethodSelect.addEventListener('change', (event) => {
+      this.setTransferMethod(event.target.value);
+      if (this.isTeleporterTransferActive()) {
+        this.shipOperationRemainingTime = 0;
+        this.shipOperationStartingDuration = 0;
+        this.shipOperationKesslerElapsed = 0;
+        this.shipOperationKesslerPending = false;
+        this.shipOperationKesslerCost = null;
+      }
+      invalidateAutomationSettingsCache(this.name);
+      this.updateUI();
+    });
+
+    transferMethodContainer.append(transferMethodLabel, transferMethodSelect);
+    title.appendChild(transferMethodContainer);
+
+    const teleporterContainer = document.createElement('div');
+    teleporterContainer.classList.add('space-storage-teleporter-controls');
+    const teleporterLabel = document.createElement('label');
+    teleporterLabel.htmlFor = `${this.name}-teleporter-rate`;
+    teleporterLabel.textContent = getSpaceStorageProjectText('teleporterRate', null, 'Transfer Rate:');
+
+    const rateInput = document.createElement('input');
+    rateInput.type = 'text';
+    rateInput.inputMode = 'decimal';
+    rateInput.id = `${this.name}-teleporter-rate`;
+    rateInput.classList.add('space-storage-teleporter-rate-input');
+    wireStringNumberInput(rateInput, {
+      datasetKey: 'teleporterTransferRate',
+      parseValue: (value) => Math.max(0, parseFlexibleNumber(value) || 0),
+      formatValue: (parsed) => parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed),
+      onValue: (parsed) => {
+        this.setTeleporterTransferRate(parsed);
+        invalidateAutomationSettingsCache(this.name);
+        this.updateUI();
+      }
+    });
+
+    const rateBasisSelect = document.createElement('select');
+    const fixedOption = document.createElement('option');
+    fixedOption.value = 'fixed';
+    fixedOption.textContent = getSpaceStorageProjectText('teleporterBasisFixed', null, 'Fixed');
+    const workersOption = document.createElement('option');
+    workersOption.value = 'workers';
+    workersOption.textContent = getSpaceStorageProjectText('teleporterBasisWorkers', null, 'workers');
+    rateBasisSelect.append(fixedOption, workersOption);
+    rateBasisSelect.addEventListener('change', (event) => {
+      this.setTeleporterTransferRateBasis(event.target.value);
+      invalidateAutomationSettingsCache(this.name);
+      this.updateUI();
+    });
+
+    teleporterContainer.append(teleporterLabel, rateInput, rateBasisSelect);
+    section.appendChild(teleporterContainer);
+    els.transferMethodContainer = transferMethodContainer;
+    els.transferMethodSelect = transferMethodSelect;
+    els.shipAssignmentContainer = assignmentContainer;
+    els.teleporterControls = teleporterContainer;
+    els.teleporterRateInput = rateInput;
+    els.teleporterRateBasisSelect = rateBasisSelect;
+  }
+
   updateCostAndGains(elements) {
     if (!elements) return;
     if (elements.costPerShipElement && this.attributes.costPerShip) {
@@ -2404,6 +2619,11 @@ class SpaceStorageProject extends SpaceshipProject {
   update(deltaTime) {
     super.update(deltaTime);
     this.syncSpaceStorageResourceUnlocks();
+    if (!this.isTeleporterTransferUnlocked()) {
+      this.transferMethod = 'spaceships';
+    } else if (this.transferMethod === 'teleporters' && this.assignedSpaceships > 0) {
+      this.assignSpaceships(-this.assignedSpaceships);
+    }
     this.usedStorageResyncTimer += deltaTime;
     while (this.usedStorageResyncTimer >= 1000) {
       this.usedStorageResyncTimer -= 1000;
@@ -2440,6 +2660,9 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceImportLimitRespects: this.exportImportLimitRespectsForAutomation(),
       resourceBiomassDensityWithdrawLimits: this.exportBiomassDensityWithdrawLimitsForAutomation(),
       resourcePressureWithdrawLimits: this.exportPressureWithdrawLimitsForAutomation(),
+      transferMethod: this.transferMethod,
+      teleporterTransferRate: this.teleporterTransferRate,
+      teleporterTransferRateBasis: this.teleporterTransferRateBasis,
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel === true,
       waterWithdrawTarget: this.waterWithdrawTarget,
@@ -2538,6 +2761,15 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'artificialEcosystemsEnabled')) {
       this.artificialEcosystemsEnabled = settings.artificialEcosystemsEnabled === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'transferMethod')) {
+      this.transferMethod = settings.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'teleporterTransferRate')) {
+      this.setTeleporterTransferRate(settings.teleporterTransferRate);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'teleporterTransferRateBasis')) {
+      this.setTeleporterTransferRateBasis(settings.teleporterTransferRateBasis);
     }
     this.loadCapsAndReserveAutomationSettings(settings);
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
@@ -2647,6 +2879,9 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceImportLimitRespects: this.resourceImportLimitRespects,
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
+      transferMethod: this.transferMethod,
+      teleporterTransferRate: this.teleporterTransferRate,
+      teleporterTransferRateBasis: this.teleporterTransferRateBasis,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
       resourceTransferModes: this.resourceTransferModes,
@@ -2703,6 +2938,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.sanitizeBiomassDensityWithdrawLimits();
     this.resourcePressureWithdrawLimits = state.resourcePressureWithdrawLimits || {};
     this.sanitizePressureWithdrawLimits();
+    this.transferMethod = state.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
+    this.setTeleporterTransferRate(state.teleporterTransferRate);
+    this.setTeleporterTransferRateBasis(state.teleporterTransferRateBasis);
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
     this.shipOperationStartingDuration = ship.startingDuration || 0;
@@ -2746,6 +2984,9 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceImportLimitRespects: this.resourceImportLimitRespects,
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
+      transferMethod: this.transferMethod,
+      teleporterTransferRate: this.teleporterTransferRate,
+      teleporterTransferRateBasis: this.teleporterTransferRateBasis,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
       resourceTransferModes: this.resourceTransferModes,
@@ -2778,6 +3019,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.sanitizeBiomassDensityWithdrawLimits();
     this.resourcePressureWithdrawLimits = state.resourcePressureWithdrawLimits || {};
     this.sanitizePressureWithdrawLimits();
+    this.transferMethod = state.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
+    this.setTeleporterTransferRate(state.teleporterTransferRate);
+    this.setTeleporterTransferRateBasis(state.teleporterTransferRateBasis);
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
       this.resourceTransferModes = {};
       this.lastUniformTransferMode = this.shipTransferMode;
