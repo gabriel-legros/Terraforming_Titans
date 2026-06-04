@@ -1953,6 +1953,7 @@ setLanguageData({
         transferMethod: 'Transfer:',
         transferMethodSpaceships: 'Spaceships',
         transferMethodTeleporters: 'Teleporters',
+        runTeleporters: 'Run Teleporters',
         teleporterRate: 'Transfer Rate:',
         teleporterBasisFixed: 'Fixed',
         teleporterBasisWorkers: 'workers',

@@ -105,6 +105,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerPending = false;
     this.shipOperationKesslerCost = null;
     this.transferMethod = 'spaceships';
+    this.teleporterRun = false;
     this.teleporterTransferRate = 0;
     this.teleporterTransferRateBasis = 'fixed';
     this.resourceCaps = {};
@@ -114,6 +115,9 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   isAutomationManuallyDisabled() {
+    if (this.isTeleporterTransferActive()) {
+      return this.teleporterRun === false;
+    }
     return this.shipOperationAutoStart === false;
   }
 
@@ -2447,6 +2451,21 @@ class SpaceStorageProject extends SpaceshipProject {
 
     const teleporterContainer = document.createElement('div');
     teleporterContainer.classList.add('space-storage-teleporter-controls');
+
+    const teleporterRunLabel = document.createElement('label');
+    teleporterRunLabel.classList.add('checkbox-container');
+    const teleporterRunCheckbox = document.createElement('input');
+    teleporterRunCheckbox.type = 'checkbox';
+    teleporterRunCheckbox.id = `${this.name}-teleporter-run`;
+    teleporterRunCheckbox.addEventListener('change', (event) => {
+      this.teleporterRun = event.target.checked;
+      invalidateAutomationSettingsCache(this.name);
+      this.updateUI();
+    });
+    const teleporterRunText = document.createElement('span');
+    teleporterRunText.textContent = getSpaceStorageProjectText('runTeleporters', null, 'Run Teleporters');
+    teleporterRunLabel.append(teleporterRunCheckbox, teleporterRunText);
+
     const teleporterLabel = document.createElement('label');
     teleporterLabel.htmlFor = `${this.name}-teleporter-rate`;
     teleporterLabel.textContent = getSpaceStorageProjectText('teleporterRate', null, 'Transfer Rate:');
@@ -2481,12 +2500,18 @@ class SpaceStorageProject extends SpaceshipProject {
       this.updateUI();
     });
 
-    teleporterContainer.append(teleporterLabel, rateInput, rateBasisSelect);
+    const teleporterRateRow = document.createElement('div');
+    teleporterRateRow.classList.add('space-storage-teleporter-rate-row');
+    teleporterRateRow.append(teleporterLabel, rateInput, rateBasisSelect);
+
+    teleporterContainer.append(teleporterRateRow, teleporterRunLabel);
     section.appendChild(teleporterContainer);
     els.transferMethodContainer = transferMethodContainer;
     els.transferMethodSelect = transferMethodSelect;
     els.shipAssignmentContainer = assignmentContainer;
     els.teleporterControls = teleporterContainer;
+    els.teleporterRunCheckbox = teleporterRunCheckbox;
+    els.teleporterRunText = teleporterRunText;
     els.teleporterRateInput = rateInput;
     els.teleporterRateBasisSelect = rateBasisSelect;
   }
@@ -2625,7 +2650,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!this.isTeleporterTransferUnlocked()) {
       this.transferMethod = 'spaceships';
     } else if (this.transferMethod === 'teleporters' && this.assignedSpaceships > 0) {
-      this.assignSpaceships(-this.assignedSpaceships);
+      this.releaseTeleporterAssignedShips();
     }
     this.usedStorageResyncTimer += deltaTime;
     while (this.usedStorageResyncTimer >= 1000) {
@@ -2633,7 +2658,9 @@ class SpaceStorageProject extends SpaceshipProject {
       this.reconcileUsedStorage();
     }
     if (this.isShipOperationContinuous()) {
-      this.shipOperationIsActive = this.shipOperationAutoStart === true;
+      this.shipOperationIsActive = this.isTeleporterTransferActive()
+        ? this.teleporterRun === true
+        : this.shipOperationAutoStart === true;
       this.shipOperationIsPaused = false;
       this.pendingTransfers = [];
     } else if (this.shipOperationIsActive) {
@@ -2664,6 +2691,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceBiomassDensityWithdrawLimits: this.exportBiomassDensityWithdrawLimitsForAutomation(),
       resourcePressureWithdrawLimits: this.exportPressureWithdrawLimitsForAutomation(),
       transferMethod: this.transferMethod,
+      teleporterRun: this.teleporterRun === true,
       teleporterTransferRate: this.teleporterTransferRate,
       teleporterTransferRateBasis: this.teleporterTransferRateBasis,
       megaProjectResourceMode: this.megaProjectResourceMode,
@@ -2767,6 +2795,9 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'transferMethod')) {
       this.transferMethod = settings.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'teleporterRun')) {
+      this.teleporterRun = settings.teleporterRun === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'teleporterTransferRate')) {
       this.setTeleporterTransferRate(settings.teleporterTransferRate);
@@ -2883,6 +2914,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
       transferMethod: this.transferMethod,
+      teleporterRun: this.teleporterRun === true,
       teleporterTransferRate: this.teleporterTransferRate,
       teleporterTransferRateBasis: this.teleporterTransferRateBasis,
       shipTransferMode: this.shipTransferMode,
@@ -2942,6 +2974,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourcePressureWithdrawLimits = state.resourcePressureWithdrawLimits || {};
     this.sanitizePressureWithdrawLimits();
     this.transferMethod = state.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
+    this.teleporterRun = state.teleporterRun === true;
     this.setTeleporterTransferRate(state.teleporterTransferRate);
     this.setTeleporterTransferRateBasis(state.teleporterTransferRateBasis);
     const ship = state.shipOperation || {};
@@ -2988,6 +3021,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
       transferMethod: this.transferMethod,
+      teleporterRun: this.teleporterRun === true,
       teleporterTransferRate: this.teleporterTransferRate,
       teleporterTransferRateBasis: this.teleporterTransferRateBasis,
       shipTransferMode: this.shipTransferMode,
@@ -3023,6 +3057,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourcePressureWithdrawLimits = state.resourcePressureWithdrawLimits || {};
     this.sanitizePressureWithdrawLimits();
     this.transferMethod = state.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
+    this.teleporterRun = state.teleporterRun === true;
     this.setTeleporterTransferRate(state.teleporterTransferRate);
     this.setTeleporterTransferRateBasis(state.teleporterTransferRateBasis);
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {

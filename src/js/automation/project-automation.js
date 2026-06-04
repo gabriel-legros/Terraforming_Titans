@@ -15,6 +15,7 @@ const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
 ]);
 const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATION_KEYS = new Set([
   'transferMethod',
+  'teleporterRun',
   'teleporterTransferRate',
   'teleporterTransferRateBasis'
 ]);

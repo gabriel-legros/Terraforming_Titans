@@ -1331,11 +1331,14 @@ function updateSpaceStorageUI(project) {
   if (els.shipAutoStartContainer && els.prioritizeRowContainer) {
     const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
       projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'flex' : 'none';
-    els.shipAutoStartContainer.style.display = display;
+    els.shipAutoStartContainer.style.display = project.isTeleporterTransferActive() ? 'none' : display;
     els.prioritizeRowContainer.style.display = display;
   }
   if (els.shipAutoStartLabel) {
     els.shipAutoStartLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
+  }
+  if (els.teleporterRunText) {
+    els.teleporterRunText.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.runTeleporters', 'Run Teleporters');
   }
   if (els.transferMethodContainer && els.transferMethodSelect) {
     const unlocked = project.isTeleporterTransferUnlocked();
@@ -1351,6 +1354,9 @@ function updateSpaceStorageUI(project) {
       }
       if (els.teleporterControls) {
         els.teleporterControls.style.display = showTeleporters ? 'flex' : 'none';
+      }
+      if (els.teleporterRunCheckbox) {
+        els.teleporterRunCheckbox.checked = project.teleporterRun === true;
       }
       if (els.teleporterRateInput) {
         els.teleporterRateInput.dataset.teleporterTransferRate = String(project.teleporterTransferRate || 0);
@@ -1370,6 +1376,9 @@ function updateSpaceStorageUI(project) {
       }
       if (els.teleporterControls) {
         els.teleporterControls.style.display = 'none';
+      }
+      if (els.teleporterRunCheckbox) {
+        els.teleporterRunCheckbox.checked = project.teleporterRun === true;
       }
     }
   }
@@ -1716,7 +1725,10 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipProgressButton) {
     if (project.isShipOperationContinuous()) {
-      if (project.shipOperationAutoStart) {
+      const continuousOperationRunning = project.isTeleporterTransferActive()
+        ? project.teleporterRun === true
+        : project.shipOperationAutoStart === true;
+      if (continuousOperationRunning) {
         const productivity = project.continuousProductivity ?? 1;
         const activeMethod = project.isTeleporterTransferActive()
           ? getSpaceStorageUIText('ui.projects.spaceStorage.teleportersActive', 'Teleporters')
