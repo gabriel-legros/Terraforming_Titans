@@ -4293,7 +4293,7 @@ setLanguageData({
     projects: {
       self_improvement: {
         name: 'Self-improvement',
-        description: 'Repair the damage then cross the Rubicon.',
+        description: 'Repair the damage.  Cross the Rubicon.',
       },
       cargo_rocket: {
         name: 'Cargo Rocket',

@@ -54,6 +54,14 @@ class BattleOfOlympusProject extends AndroidProject {
     return this.biomassCap > 0 ? Math.max(0, Math.min(1, this.hazardousBiomass / this.biomassCap)) : 0;
   }
 
+  shouldReleaseAndroidAssignmentsForCompleteOrDisabled() {
+    return this.hazardousBiomass <= 0;
+  }
+
+  shouldReleaseAndroidAssignmentsWhenIdle() {
+    return false;
+  }
+
   update(deltaTime) {
     super.update(deltaTime);
     if (!this.unlocked) {
@@ -78,11 +86,7 @@ class BattleOfOlympusProject extends AndroidProject {
     this.syncZonalBiomass();
     this.updateHazardousBiomassRates(appliedGrowth, appliedDecay, seconds);
 
-    if (this.hazardousBiomass <= 0) {
-      this.isCompleted = true;
-    } else if (this.repeatable) {
-      this.isCompleted = false;
-    }
+    this.isCompleted = this.hazardousBiomass <= 0;
   }
 
   renderUI(container) {
@@ -229,6 +233,7 @@ class BattleOfOlympusProject extends AndroidProject {
     this.hazardousBiomass = Math.max(0, Math.min(this.biomassCap, state.hazardousBiomass ?? this.biomassCap));
     this.removedBiomass = Math.max(0, Math.min(this.biomassCap, state.removedBiomass ?? (this.biomassCap - this.hazardousBiomass)));
     this.hazardousBiomass = Math.max(0, this.biomassCap - this.removedBiomass);
+    this.isCompleted = this.hazardousBiomass <= 0;
   }
 }
 

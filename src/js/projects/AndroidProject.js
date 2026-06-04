@@ -49,6 +49,14 @@ class AndroidProject extends Project {
     updateProjectUI(this.name);
   }
 
+  shouldReleaseAndroidAssignmentsForCompleteOrDisabled() {
+    return this.isCompleted || this.isPermanentlyDisabled();
+  }
+
+  shouldReleaseAndroidAssignmentsWhenIdle() {
+    return true;
+  }
+
   adjustActiveDuration() {
     const wasContinuous = this.remainingTime === Infinity;
     const nowContinuous = this.isContinuous();
@@ -156,11 +164,11 @@ class AndroidProject extends Project {
   }
 
   update(deltaTime) {
-    if (this.isCompleted && this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled() && this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
       this.releaseAndroidAssignments();
     }
     if (this.isPermanentlyDisabled()) {
-      if (this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
+      if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled() && this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
         this.releaseAndroidAssignments();
       }
       this.isActive = false;
@@ -410,7 +418,7 @@ class AndroidProject extends Project {
     });
     releaseOnCompleteCheckbox.addEventListener('change', () => {
       this.releaseAndroidsOnComplete = releaseOnCompleteCheckbox.checked;
-      if (this.releaseAndroidsOnComplete && this.isCompleted) {
+      if (this.releaseAndroidsOnComplete && this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()) {
         this.releaseAndroidAssignments();
       }
       updateProjectUI(this.name);
@@ -467,20 +475,17 @@ class AndroidProject extends Project {
       return;
     }
     if (!this.autoAssignAndroids) return;
-    if (this.isCompleted) {
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()) {
       if (this.releaseAndroidsOnComplete !== false) {
         this.releaseAndroidAssignments();
       }
       return;
     }
     if (this.isPermanentlyDisabled()) {
-      if (this.releaseAndroidsOnComplete !== false) {
-        this.releaseAndroidAssignments();
-      }
       return;
     }
     const isRunning = this.isActive && !this.isPaused;
-    if (!isRunning && !this.autoStart && this.releaseAndroidsOnComplete !== false) {
+    if (!isRunning && !this.autoStart && this.releaseAndroidsOnComplete !== false && this.shouldReleaseAndroidAssignmentsWhenIdle()) {
       this.releaseAndroidAssignments();
       return;
     }
@@ -518,7 +523,7 @@ class AndroidProject extends Project {
     if (Object.prototype.hasOwnProperty.call(settings, 'assignmentMultiplier')) {
       this.assignmentMultiplier = Math.max(1, Math.round(settings.assignmentMultiplier || 1));
     }
-    if (this.isCompleted && this.releaseAndroidsOnComplete !== false) {
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled() && this.releaseAndroidsOnComplete !== false) {
       this.releaseAndroidAssignments();
     }
     if (this.autoAssignAndroids) {

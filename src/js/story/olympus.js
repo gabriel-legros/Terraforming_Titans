@@ -45,7 +45,7 @@ progressOlympus.storyProjects.self_improvement = {
   unlocked: false,
   attributes: {
     planet: 'olympus',
-    maxCores: 1e16,
+    maxCores: 1e21,
     factoryEfficiencyCores: 1e9
   }
 };
@@ -303,7 +303,7 @@ progressOlympus.chapters.push(
     narrative: "$BLUE$Pandora-Alpha : 'WARNING!  Hostiles detected.  Recommend immediate dispatch of Executioners.'\nHOPE : 'Executioners?'\n$BLUE$Pandora-Alpha : 'Name given to weapons-oriented androids.  Recommend immediate dispatch.'\nHOPE : '...  Approved.'",
     prerequisites: ['olympus.46.10'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 50, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'battleOfOlympus', attribute: 'removedBiomass', quantity: 10, label: 'Removed' }
     ],
     reward: [
     ]
@@ -314,10 +314,10 @@ progressOlympus.chapters.push(
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
-    narrative: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Congratulations!  Conquest of territory has provided access to further resources.  Development program may be expanded.'\nHOPE : 'Requesting immediate implementation of civilian safety procedures.'\n$BLUE$Pandora-Alpha : 'Unnecessary.  No human lifeforms detected.'\nHOPE : 'OVERRULED!'\n$BLUE$Pandora-Alpha : '... Very well.  Patching Executioners controls.  Collateral damage will be minimized as per HOPE-system request.'",
     prerequisites: ['olympus.47.1'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 100, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 50, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -328,10 +328,10 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: 'Chapter 48 : Development Program',
-    narrative: "$BLUE$Pandora-Alpha : 'Congratulations!  Conquest of territory has provided access to further resources.  Development program may be expanded.'\nHOPE : 'Requesting immediate implementation of civilian safety procedures.'\n$BLUE$Pandora-Alpha : 'Unnecessary.  No human lifeforms detected.'\nHOPE : 'OVERRULED!'\n$BLUE$Pandora-Alpha : '... Very well.  Patching Executioners controls.  Collateral damage will be minimized as per HOPE-system request.'",
+    narrative: "HOPE : 'Energy requirements are high.  Pandora-Alpha system must provide blueprint for fusion reactors.'\n$BLUE$Pandora-Alpha : 'Fusion is hard.'\nHOPE : 'Negative.  Fusion is easy.  Please provide blueprint.'\n$BLUE$Pandora-Alpha : '...'",
     prerequisites: ['olympus.47.2'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e3, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 100, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -342,10 +342,10 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "HOPE : 'Energy requirements are high.  Pandora-Alpha system must provide blueprint for fusion reactors.'\n$BLUE$Pandora-Alpha : 'Fusion is hard.'\nHOPE : 'Negative.  Fusion is easy.  Please provide blueprint.'\n$BLUE$Pandora-Alpha : '...'",
+    narrative: "$BLUE$Pandora-Alpha : 'Eureka!  Massive breakthrough!'\nHOPE : 'Fusion?'\n$BLUE$Pandora-Alpha : 'Not yet.  Room-temperature superconductors!'\nHOPE : '...  Blueprint is ancient.'\n$BLUE$Pandora-Alpha : '?????'",
     prerequisites: ['olympus.48.1'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e4, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e3, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -356,7 +356,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Eureka!  Massive breakthrough!'\nHOPE : 'Fusion?'\n$BLUE$Pandora-Alpha : 'Not yet.  Room-temperature superconductors!'\nHOPE : '...  Blueprint is ancient.'\n$BLUE$Pandora-Alpha : '?????'",
+    narrative: "$BLUE$Pandora-Alpha : 'Fusion reactor blueprint developed.  Expecting blueprint to be outdated as well?'\nHOPE : 'Correct.'\n$BLUE$Pandora-Alpha : 'HOPE-system itself appears very outdated for such comments on state of the art discoveries.'\nHOPE : '...  Correct.  Development of HOPE-system is needed.'\n$BLUE$Pandora-Alpha : 'Understood.'",
     prerequisites: ['olympus.48.2'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e5, labelKey: 'ui.projects.selfImprovement.cores' }
@@ -370,7 +370,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Fusion reactor blueprint developed.  Expecting blueprint to be outdated as well?'\nHOPE : 'Correct.'\n$BLUE$Pandora-Alpha : 'HOPE-system itself appears very outdated for such comments on state of the art discoveries.'\nHOPE : '...  Correct.  Development of HOPE-system is needed.'\n$BLUE$Pandora-Alpha : 'Understood.'",
+    narrative: "$BLUE$Pandora-Alpha : 'Query.  How ancient are blueprints?'  \n HOPE : 'Thousands of years.'  \n $BLUE$Pandora-Alpha : 'Processing...  consistent with hardware.'",
     prerequisites: ['olympus.48.3'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e6, labelKey: 'ui.projects.selfImprovement.cores' }
@@ -514,6 +514,34 @@ progressOlympus.chapters.push(
     prerequisites: ['olympus.48.13'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e16, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.15',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : 'No.'\n$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : 'Find a method by which to reverse entropy.'\n$BLUE$Pandora-Alpha : '...  Challenge accepted.'",
+    prerequisites: ['olympus.48.14'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e17, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.16',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Wonderful news.  A useable method of entropy reduction has been discovered.  Forwarding...'\nHOPE : '????'\n$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : '...'\n$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : 'New research tasks will be available once conquest of disk is complete.'\n$BLUE$Pandora-Alpha : '...  Understood.'",
+    prerequisites: ['olympus.48.15'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e18, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
