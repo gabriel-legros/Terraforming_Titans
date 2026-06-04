@@ -2115,7 +2115,7 @@ const olympusOverrides = {
   name: 'Olympus',
   gravityPenaltyEnabled: true,
   specialAttributes: {
-    hasSand: false,
+    hasSand: true,
     hasOre: false,
     terraformingRequirementId: 'human',
     zoneKeys: ['tropical', 'temperate', 'polar'],

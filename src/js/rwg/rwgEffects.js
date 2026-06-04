@@ -439,8 +439,30 @@ function countRandomWorldHazards(status) {
   return hazardKeys.size;
 }
 
+function clearRWGEffects() {
+  if (!(removeEffect instanceof Function)) return;
+  const removed = new Set();
+  for (const [type, effects] of Object.entries(RWG_EFFECTS)) {
+    const sourceId = `rwg-${type}`;
+    for (const effect of effects) {
+      if (effect.type === "flavorText") continue;
+      const key = `${effect.target}:${sourceId}`;
+      if (removed.has(key)) continue;
+      removed.add(key);
+      removeEffect({
+        target: effect.target,
+        sourceId,
+      });
+    }
+  }
+}
+
 function applyRWGEffects() {
   if (!spaceManager || !(addEffect instanceof Function)) return;
+  if (isCurrentWorldManagerDisabled("rwgManager")) {
+    clearRWGEffects();
+    return;
+  }
 
   let counts = {};
   let hazardBonuses = {};
