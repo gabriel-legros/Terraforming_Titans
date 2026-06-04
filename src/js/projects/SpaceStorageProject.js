@@ -1171,6 +1171,9 @@ class SpaceStorageProject extends SpaceshipProject {
     for (const category in costPerShip) {
       totalCost[category] = {};
       for (const resource in costPerShip[category]) {
+        if (category === 'colony' && resource === 'metal') {
+          continue;
+        }
         const baseCost = costPerShip[category][resource];
         const multiplier = this.getEffectiveCostMultiplier(category, resource)
           * this.getEffectiveSpaceshipCostMultiplier(category, resource);
