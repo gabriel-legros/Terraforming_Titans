@@ -5242,7 +5242,7 @@ setLanguageData({
         },
         teleporters: {
           name: 'Teleporters',
-          description: 'We cannot quite convert matter into energy and back, but we can very narrowly transport matter via the warp.  This should allow us to move items back and forth from space storage without using ships.  Energy-intensive.  No suitable for consciousness.  Not a weapon.',
+          description: 'We cannot quite convert matter into energy and back, but we can very narrowly transport matter via the warp.  This should allow us to move items back and forth from space storage without using ships.  Energy-intensive.  Not suitable for consciousness.  Not a weapon.',
         },
         deep_warp_storage: {
           name: 'Deep Warp Storage',
