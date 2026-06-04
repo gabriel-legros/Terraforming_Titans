@@ -364,7 +364,7 @@ class SelfImprovementProject extends Project {
     const spendable = this.getMaxSpendableCores();
     this.ui.coreValue.textContent = formatNumber(this.cores || 0, true);
     this.ui.coreLabel.textContent = this.getText('coreLabel', 'cores / {max}', { max: formatNumber(maxCores, true) });
-    this.ui.progressFill.style.width = `${Math.max(0, Math.min(100, ((this.cores || 0) / maxCores) * 100))}%`;
+    this.ui.progressFill.style.width = `${this.getLogProgress(maxCores) * 100}%`;
     this.ui.spendButton.textContent = this.getText('spend', 'Spend {electronics} electronics for {cores} cores', {
       electronics: formatNumber(this.spendStep * SELF_IMPROVEMENT_CORE_COST, true),
       cores: formatNumber(this.spendStep, true)

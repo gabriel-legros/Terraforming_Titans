@@ -483,7 +483,8 @@ class EffectableEntity {
           type: 'workerMultiplier',
           value: multiplier,
           effectId,
-          sourceId: effect.sourceId
+          sourceId: effect.sourceId,
+          name: effect.name
         });
       }
     }
