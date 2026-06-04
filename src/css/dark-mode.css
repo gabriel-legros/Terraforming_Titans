@@ -574,6 +574,24 @@ body.dark-mode {
     color: #ffffff;
 }
 
+.dark-mode .battle-of-olympus-progress-wrap {
+    border-color: #d16876;
+    background: #1f2630;
+}
+
+.dark-mode .battle-of-olympus-metric {
+    border-color: #3c4b5e;
+    background: #202a36;
+}
+
+.dark-mode .battle-of-olympus-metric-label {
+    color: #b9c7d8;
+}
+
+.dark-mode .battle-of-olympus-metric-value {
+    color: #ffffff;
+}
+
 .dark-mode .colony-slider label {
     color: #ffffff;
 }

@@ -50,6 +50,28 @@ progressOlympus.storyProjects.self_improvement = {
   }
 };
 
+progressOlympus.storyProjects.battleOfOlympus = {
+  type: 'BattleOfOlympusProject',
+  name: '',
+  category: 'story',
+  cost: {},
+  duration: 0,
+  description: '',
+  repeatable: false,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    biomassCap: 2e23,
+    initialBiomass: 2e23,
+    baseGrowthRate: 0.004,
+    executionerDecayRate: 1,
+    assignmentUnlockRatio: 1000,
+    minimumMetalSalvagingAndroids: 100,
+    biomassZones: ['tropical', 'temperate'],
+    hideAutoStart: true
+  }
+};
+
 /* -------------------------------------------------
  *  OLYMPUS PLACEHOLDER STORY (Chapters 46 - 49)
  * -------------------------------------------------*/
@@ -254,7 +276,22 @@ progressOlympus.chapters.push(
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 10, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
-    reward: []
+    reward: [
+      { target: 'project', targetId: 'battleOfOlympus', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.47.1',
+    type: 'journal',
+    chapter: 47,
+    activePlanet: 'olympus',
+    title: 'Chapter 47 : Remove Hazardous Biomass',
+    narrative: "$BLUE$Pandora-Alpha : 'WARNING!  Hostiles detected.  Recommend immediate dispatch of Executioners.'\nHOPE : 'Executioners?'\n$BLUE$Pandora-Alpha : 'Name given to weapons-oriented androids.  Recommend immediate dispatch.'\nHOPE : '...  Approved.'",
+    prerequisites: ['olympus.46.10'],
+    objectives: [
+    ],
+    reward: [
+    ]
   }
 );
 

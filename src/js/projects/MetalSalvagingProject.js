@@ -7,6 +7,23 @@ class MetalSalvagingProject extends AndroidProject {
     return (this.assignedAndroids || 0) * 10;
   }
 
+  getMaxAssignableAndroids() {
+    const battle = projectManager.projects.battleOfOlympus;
+    if (battle.unlocked) {
+      return battle.getMetalSalvagingAssignmentCap();
+    }
+    return Infinity;
+  }
+
+  clampAssignedAndroidsToCap() {
+    const max = this.getMaxAssignableAndroids();
+    if (this.assignedAndroids > max) {
+      this.assignedAndroids = max;
+      this.adjustActiveDuration();
+      populationModule.updateWorkerCap();
+    }
+  }
+
   getAndroidSpeedLabelText() {
     return t('ui.projects.metalSalvaging.salvageSpeed', null, 'Salvage speed');
   }
@@ -16,7 +33,13 @@ class MetalSalvagingProject extends AndroidProject {
   }
 
   canStart() {
+    this.clampAssignedAndroidsToCap();
     return (this.assignedAndroids || 0) > 0 && super.canStart();
+  }
+
+  update(deltaTime) {
+    this.clampAssignedAndroidsToCap();
+    super.update(deltaTime);
   }
 
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {

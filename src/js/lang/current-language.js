@@ -915,6 +915,21 @@ setLanguageData({
       zeusBattle: {
         frameLabel: 'Frame {current} / {max}',
       },
+      battleOfOlympus: {
+        statusTitle: 'Hazardous biomass front',
+        progressLabel: '{percent}% active',
+        remaining: 'Remaining',
+        removed: 'Removed',
+        growth: 'Regrowth',
+        growthValue: '+{value}/s',
+        metalSalvagingCap: 'Metal Salvaging android cap',
+        capValue: '{cap}',
+        executionerDecay: 'Suppression',
+        executionerDecayTooltip: 'Each Executioner removes 1 hazardous biomass per second.',
+        executionerDecayValue: '{value}/s',
+        regrowthRateSource: 'Battle of Olympus regrowth',
+        executionerRateSource: 'Executioners',
+      },
       cultSecurity: {
         title: 'Security audit',
         summary: 'Spend resources to tighten security.',
@@ -4279,6 +4294,10 @@ setLanguageData({
       metalSalvaging: {
         name: 'Metal Salvaging',
         description: 'Dispatch assigned androids to dismantle abandoned structures for scrap metal.',
+      },
+      battleOfOlympus: {
+        name: 'Battle of Olympus',
+        description: 'Remove the military, contain the civilians.  No war crimes.',
       },
       import_colonists_1: {
         name: 'Import colonists',
