@@ -241,6 +241,52 @@ body.dark-mode {
     background: #47515a;
 }
 
+.dark-mode .self-improvement-panel {
+    background: #252b30;
+    border-color: #4e5760;
+}
+
+.dark-mode .self-improvement-summary {
+    background: #2f3439;
+    border-color: #4e5760;
+}
+
+.dark-mode .self-improvement-core-value,
+.dark-mode .self-improvement-column-title,
+.dark-mode .self-improvement-row-value {
+    color: #edf3f6;
+}
+
+.dark-mode .self-improvement-core-label,
+.dark-mode .self-improvement-row-label {
+    color: #b8c5cc;
+}
+
+.dark-mode .self-improvement-progress-track {
+    background: #47515a;
+}
+
+.dark-mode .self-improvement-column {
+    background: #2f3439;
+    border-color: #4e5760;
+}
+
+.dark-mode .self-improvement-row {
+    background: #252b30;
+}
+
+.dark-mode .self-improvement-row-complete {
+    background: #173149;
+}
+
+.dark-mode .self-improvement-column-industrial .self-improvement-row-value {
+    color: #7bd88f;
+}
+
+.dark-mode .self-improvement-column-research .self-improvement-row-value {
+    color: #8bbcff;
+}
+
 .dark-mode .project-advanced-settings-button {
     background: #3a3a3a;
     color: #f0f0f0;

@@ -3454,3 +3454,172 @@
     height: 100%;
     background: #4caf50;
 }
+
+.self-improvement-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid #b9c6d3;
+    border-radius: 8px;
+    padding: 12px;
+    background: #f5f8fb;
+}
+
+.self-improvement-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #d4dde6;
+    border-radius: 8px;
+    padding: 8px;
+    background: #ffffff;
+}
+
+.self-improvement-core-block {
+    display: grid;
+    grid-template-columns: auto minmax(110px, 1fr);
+    gap: 4px 10px;
+    align-items: center;
+    min-width: 0;
+}
+
+.self-improvement-core-value {
+    color: #24313a;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.self-improvement-core-label {
+    color: #546673;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.self-improvement-progress-track {
+    grid-column: 1 / -1;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #c6d1db;
+}
+
+.self-improvement-progress-fill {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #1f9d55, #2563eb);
+}
+
+.self-improvement-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(90px, 0.8fr) 42px 42px;
+    gap: 8px;
+    min-width: 0;
+}
+
+.self-improvement-controls button {
+    min-height: 30px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.self-improvement-spend-button {
+    min-width: 0;
+}
+
+.self-improvement-max-button {
+    min-width: 0;
+}
+
+.self-improvement-step-button {
+    min-width: 42px;
+}
+
+.self-improvement-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.self-improvement-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #c8d4df;
+    border-radius: 8px;
+    padding: 10px;
+    background: #ffffff;
+}
+
+.self-improvement-column-industrial {
+    border-top: 4px solid #1f9d55;
+}
+
+.self-improvement-column-research {
+    border-top: 4px solid #2563eb;
+}
+
+.self-improvement-column-title {
+    color: #26333c;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.self-improvement-row-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.self-improvement-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 28px;
+    align-items: center;
+    border-radius: 6px;
+    padding: 6px 8px;
+    background: #eef3f7;
+}
+
+.self-improvement-row-label {
+    color: #3b4b55;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.self-improvement-row-value {
+    flex: 0 0 auto;
+    color: #26333c;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.self-improvement-column-industrial .self-improvement-row-value {
+    color: #147340;
+}
+
+.self-improvement-column-research .self-improvement-row-value {
+    color: #1d4ed8;
+}
+
+.self-improvement-row-complete {
+    background: #e6f3ff;
+}
+
+@media (max-width: 700px) {
+    .self-improvement-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .self-improvement-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(90px, 0.65fr) 42px 42px;
+    }
+
+    .self-improvement-columns {
+        grid-template-columns: 1fr;
+    }
+}

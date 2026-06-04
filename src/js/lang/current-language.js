@@ -958,6 +958,35 @@ setLanguageData({
           max: 'Max',
         },
       },
+      selfImprovement: {
+        industrialTitle: 'Industrial',
+        researchTitle: 'Research',
+        coreLabel: 'cores / {max}',
+        spend: 'Spend {electronics} electronics for {cores} cores',
+        max: 'Max: {cores} cores',
+        unlocked: 'Unlocked',
+        threshold: '{cores} cores',
+        industrial: {
+          buildCost: 'Build cost reduction',
+          workers: 'Worker requirement reduction',
+          maintenance: 'Maintenance reduction',
+          components: 'Components factory efficiency',
+          electronics: 'Electronics factory efficiency',
+          superconductors: 'Superconductor factory efficiency',
+          superalloys: 'Superalloy production efficiency',
+          androids: 'Androids factory efficiency',
+        },
+        research: {
+          nuclear: 'Nuclear reactor + closed loop',
+          superconductors: 'Superconductor factories',
+          fusion: 'Fusion reactor',
+          fusion1: 'Fusion reactor output x2',
+          antimatterBattery: 'Antimatter batteries',
+          fusion2: 'Fusion reactor output x2',
+          superalloys: 'Superalloys',
+          superalloyFusion1: 'Superalloy fusion output x4',
+        },
+      },
       metalSalvaging: {
         salvageSpeed: 'Salvage speed',
         salvageSpeedTooltip: '10 x assigned androids',
@@ -4234,6 +4263,10 @@ setLanguageData({
       },
     },
     projects: {
+      self_improvement: {
+        name: 'Self-improvement',
+        description: 'Repair the damage then cross the Rubicon.',
+      },
       cargo_rocket: {
         name: 'Cargo Rocket',
         description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",

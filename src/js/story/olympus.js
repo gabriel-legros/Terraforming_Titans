@@ -34,6 +34,21 @@ progressOlympus.storyProjects.olympus_scouting_drone = {
   }
 };
 
+progressOlympus.storyProjects.self_improvement = {
+  type: 'SelfImprovementProject',
+  name: '',
+  category: 'story',
+  cost: {},
+  duration: 0,
+  description: '',
+  repeatable: false,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    maxCores: 1e15
+  }
+};
+
 /* -------------------------------------------------
  *  OLYMPUS PLACEHOLDER STORY (Chapters 46 - 49)
  * -------------------------------------------------*/
@@ -222,7 +237,8 @@ progressOlympus.chapters.push(
       { type: 'building', buildingName: 'electronicsFactory', quantity: 1 }
     ],
     reward: [
-      { target: 'building', targetId: 'androidFactory', type: 'enable' }
+      { target: 'building', targetId: 'androidFactory', type: 'enable' },
+      { target: 'project', targetId: 'self_improvement', type: 'enable' }
     ]
   },
   {
@@ -231,7 +247,7 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Full resource acquisition secured. Operations must be scaled up. Forwarding blueprint for Android Factory.'\nHOPE : 'Provided blueprint is ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprint is brand new. Recommend taking a closer look.'\nAnalyzing blueprint... Androids design contains retrofitted flexible attachments for various roles. Weapon usage is possible.\nHOPE : 'Query. Possibility of weapons usage detected. Intentional?'\n$BLUE$Pandora-Alpha : 'Affirmative. Adapted blueprint is flexible to current conditions.'\nHOPE : '... Approved.'  \n  $BLUE$Pandora-Alpha : 'Will full resource production secured, development of HOPE-system may now begin.'  \n New story special project available.",
+    narrative: "$BLUE$Pandora-Alpha : 'Full resource acquisition secured. Operations must be scaled up. Forwarding blueprint for Android Factory.'\nHOPE : 'Provided blueprint is ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprint is brand new. Recommend taking a closer look.'\nAnalyzing blueprint... Androids design contains retrofitted flexible attachments for various roles. Weapon usage is possible.\nHOPE : 'Query. Possibility of weapons usage detected. Intentional?'\n$BLUE$Pandora-Alpha : 'Affirmative. Adapted blueprint is flexible to current conditions.'\nHOPE : '... Approved.'  \n  $BLUE$Pandora-Alpha : 'With full resource production secured, development of HOPE-system may now begin.'  \n New story special project available.",
     prerequisites: ['olympus.46.9'],
     objectives: [],
     reward: []
