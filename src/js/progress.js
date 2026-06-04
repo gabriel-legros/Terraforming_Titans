@@ -461,6 +461,13 @@ class StoryManager {
                      return proj ? proj.repeatCount >= objective.repeatCount : false;
                 }
                 return false;
+          case 'projectAttribute': {
+               const proj = projectManager.projects[objective.projectId];
+               const attribute = objective.attribute || 'cores';
+               const current = proj ? proj[attribute] || 0 : 0;
+               const target = objective.quantity || objective.value || 0;
+               return compareValues(current, target, objective.comparison);
+          }
           case 'research': {
                if (typeof researchManager === 'undefined') {
                    return false;
@@ -617,6 +624,16 @@ class StoryManager {
                 }
                 return '';
             }
+          case 'projectAttribute': {
+               const proj = projectManager.projects[objective.projectId];
+               const attribute = objective.attribute || 'cores';
+               const current = proj ? proj[attribute] || 0 : 0;
+               const target = objective.quantity || objective.value || 0;
+               const name = objective.name || (proj ? proj.displayName : objective.projectId);
+               const fallbackLabel = attribute.charAt(0).toUpperCase() + attribute.slice(1);
+               const label = objective.labelKey ? t(objective.labelKey, null, fallbackLabel) : (objective.label || fallbackLabel);
+               return `${name} ${label}: ${format(current, true)}/${format(target, true)}`;
+          }
           case 'research': {
                if (typeof researchManager === 'undefined') {
                    return '';

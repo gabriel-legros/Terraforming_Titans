@@ -962,6 +962,7 @@ setLanguageData({
         industrialTitle: 'Industrial',
         researchTitle: 'Research',
         coreLabel: 'cores / {max}',
+        cores: 'Cores',
         spend: 'Spend {electronics} electronics for {cores} cores',
         max: 'Max: {cores} cores',
         unlocked: 'Unlocked',
