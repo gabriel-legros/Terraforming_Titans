@@ -195,6 +195,23 @@ progressOlympus.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'electronics', quantity: 1 }
     ],
     reward: [
+      { target: 'resource', resourceType: 'colony', targetId: 'androids', type: 'enable' },
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_assembleAndroid', value: true }
+    ]
+  },
+  {
+    id: 'olympus.46.5b',
+    type: 'journal',
+    chapter: 46,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Advisory : additional workforce is required for accelerated development.'  \nHOPE : 'Forwarding Solis-designed android blueprint.'\n$BLUE$Pandora-Alpha : 'Analyzing... Design appears very advanced! Is this a simulation?'\nHOPE : 'Negative. Far in future.'\n$BLUE$Pandora-Alpha : 'Very well.",
+    prerequisites: ['olympus.46.5'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'androids', quantity: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_androidAssist', value: true },
       { target: 'project', targetId: 'olympus_scouting_drone', type: 'enable' }
     ]
   },
@@ -204,14 +221,12 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Electronics production requires special facilities and a workforce. Please provide coordinates for ore deposits.'\nHOPE : 'Negative. No ore deposits on Olympus. Artificially constructed flat disk.'\n$BLUE$Pandora-Alpha : 'Impossible. HOPE-system must be wrong.'\nHOPE : 'Incorrect. Reality wins.'\n$BLUE$Pandora-Alpha : 'Processing... Source of metal must be acquired. Recommend drone dispatch for scouting.'\nHOPE : 'Acknowledged.'\nBuild a scouting drone to continue.",
-    prerequisites: ['olympus.46.5'],
+    narrative: "$BLUE$Pandora-Alpha : 'Electronics production requires special expensive facilities. Please provide coordinates for ore deposits.'\nHOPE : 'Negative. No ore deposits on Olympus. Artificially constructed flat disk.'\n$BLUE$Pandora-Alpha : 'Impossible. HOPE-system must be wrong.'\nHOPE : 'Incorrect. Reality wins.'\n$BLUE$Pandora-Alpha : 'Processing... Source of metal must be acquired. Recommend drone dispatch for scouting.'\nHOPE : 'Acknowledged.'\nBuild a scouting drone to continue.",
+    prerequisites: ['olympus.46.5b'],
     objectives: [
       { type: 'project', projectId: 'olympus_scouting_drone', repeatCount: 1 }
     ],
     reward: [
-      { target: 'resource', resourceType: 'colony', targetId: 'androids', type: 'enable' },
-      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_assembleAndroid', value: true }
     ]
   },
   {
@@ -220,7 +235,7 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "<Drone finds an abandoned station>\n$BLUE$Pandora-Alpha : 'Excellent. Source of metal identified. Metal must be harvested. Workforce is required.'\nHOPE : 'Forwarding Solis-designed android blueprint.'\n$BLUE$Pandora-Alpha : 'Analyzing... Design appears very advanced! Is this a simulation?'\nHOPE : 'Negative. Far in future.'\n$BLUE$Pandora-Alpha : 'Very well. Recommend immediate assembly of first android for disassembly of station.'\nAssemble 1 android to continue.",
+    narrative: "<Drone finds an abandoned station>\n$BLUE$Pandora-Alpha : 'Excellent. Source of metal identified. Metal must be harvested. Workforce is required. Recommend immediate assembly of an additional android for disassembly of station.'\nAssemble 1 android to continue.",
     prerequisites: ['olympus.46.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'androids', quantity: 1 }
@@ -228,7 +243,6 @@ progressOlympus.chapters.push(
     reward: [
       { target: 'project', targetId: 'metalSalvaging', type: 'enable' },
       { target: 'project', targetId: 'metalSalvaging', type: 'booleanFlag', flagId: 'androidAssist', value: true },
-      { target: 'project', targetId: 'olympus_field_workshop', type: 'booleanFlag', flagId: 'olympusWorkshop_androidAssist', value: true },
       { target: 'building', targetId: 'componentFactory', type: 'enable' },
       { target: 'building', targetId: 'electronicsFactory', type: 'enable' },
       { target: 'building', targetId: 'scrapRecycler', type: 'enable' }
@@ -240,7 +254,7 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "New Resources special project available.  $BLUE$Pandora-Alpha : 'Androids will accelerate industrial potential. Forwarding blueprints for components and electronics production.'\nHOPE : 'Provided blueprints are ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprints are state of the art.'\nHOPE : '... Moving on.'\nBuild a Scrap Recycler to continue.",
+    narrative: "New Resources special project available.  $BLUE$Pandora-Alpha : 'A sufficient number of androids will accelerate industrial potential. Forwarding blueprints for components and electronics production as well as scrap recycling.'\nHOPE : 'Provided blueprints are ancient.'\n$BLUE$Pandora-Alpha : 'Negative. Blueprints are state of the art.'\nHOPE : '... Moving on.'\nBuild a Scrap Recycler to continue.",
     prerequisites: ['olympus.46.7'],
     objectives: [
       { type: 'building', buildingName: 'scrapRecycler', quantity: 1 }
@@ -254,7 +268,7 @@ progressOlympus.chapters.push(
     chapter: 46,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Scrap recycling will accelerate development.  The loop must be closed now.  Build an electronics factory to continue.'",
+    narrative: "$BLUE$Pandora-Alpha : 'The loop must be closed now.  Build an electronics factory to continue.'",
     prerequisites: ['olympus.46.8'],
     objectives: [
       { type: 'building', buildingName: 'electronicsFactory', quantity: 1 }
