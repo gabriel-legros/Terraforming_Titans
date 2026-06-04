@@ -1,4 +1,5 @@
 const SELF_IMPROVEMENT_MAX_CORES = 1e15;
+const SELF_IMPROVEMENT_FACTORY_EFFICIENCY_CORES = 1e9;
 const SELF_IMPROVEMENT_CORE_COST = 100;
 const SELF_IMPROVEMENT_EFFECT_SOURCE = 'self-improvement';
 
@@ -24,6 +25,10 @@ class SelfImprovementProject extends Project {
 
   getMaxCores() {
     return this.attributes.maxCores || SELF_IMPROVEMENT_MAX_CORES;
+  }
+
+  getFactoryEfficiencyCores() {
+    return this.attributes.factoryEfficiencyCores || SELF_IMPROVEMENT_FACTORY_EFFICIENCY_CORES;
   }
 
   getAvailableCoreCapacity() {
@@ -82,7 +87,7 @@ class SelfImprovementProject extends Project {
   }
 
   getEfficiencyBonus() {
-    return 4 * this.getLogProgress(1e6);
+    return 4 * this.getLogProgress(this.getFactoryEfficiencyCores());
   }
 
   getSuperalloyEfficiencyMultiplier() {

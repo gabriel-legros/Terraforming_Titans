@@ -45,7 +45,8 @@ progressOlympus.storyProjects.self_improvement = {
   unlocked: false,
   attributes: {
     planet: 'olympus',
-    maxCores: 1e15
+    maxCores: 1e15,
+    factoryEfficiencyCores: 1e9
   }
 };
 
