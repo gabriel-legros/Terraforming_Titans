@@ -391,7 +391,7 @@ function updateSidebarAutomationToggleVisibility() {
       || manager.hasFeature('automationProjects')
       || manager.hasFeature('automationColony')
       || manager.hasFeature('automationScripts')));
-  const toggleVisible = !!(manager && manager.enabled && hasAnyAutomation);
+  const toggleVisible = !!(manager && manager.enabled && hasAnyAutomation && !isCurrentWorldManagerDisabled('automationManager'));
   elements.toggle.classList.toggle('hidden', !toggleVisible);
   if (!toggleVisible && sidebarAutomationMode) {
     setJournalAutomationMode(false);
