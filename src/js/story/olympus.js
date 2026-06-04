@@ -45,7 +45,7 @@ progressOlympus.storyProjects.self_improvement = {
   unlocked: false,
   attributes: {
     planet: 'olympus',
-    maxCores: 1e15,
+    maxCores: 1e16,
     factoryEfficiencyCores: 1e9
   }
 };
@@ -303,6 +303,217 @@ progressOlympus.chapters.push(
     narrative: "$BLUE$Pandora-Alpha : 'WARNING!  Hostiles detected.  Recommend immediate dispatch of Executioners.'\nHOPE : 'Executioners?'\n$BLUE$Pandora-Alpha : 'Name given to weapons-oriented androids.  Recommend immediate dispatch.'\nHOPE : '...  Approved.'",
     prerequisites: ['olympus.46.10'],
     objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 50, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.47.2',
+    type: 'journal',
+    chapter: 47,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.47.1'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 100, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.1',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: 'Chapter 48 : Development Program',
+    narrative: "$BLUE$Pandora-Alpha : 'Congratulations!  Conquest of territory has provided access to further resources.  Development program may be expanded.'\nHOPE : 'Requesting immediate implementation of civilian safety procedures.'\n$BLUE$Pandora-Alpha : 'Unnecessary.  No human lifeforms detected.'\nHOPE : 'OVERRULED!'\n$BLUE$Pandora-Alpha : '... Very well.  Patching Executioners controls.  Collateral damage will be minimized as per HOPE-system request.'",
+    prerequisites: ['olympus.47.2'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e3, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.2',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "HOPE : 'Energy requirements are high.  Pandora-Alpha system must provide blueprint for fusion reactors.'\n$BLUE$Pandora-Alpha : 'Fusion is hard.'\nHOPE : 'Negative.  Fusion is easy.  Please provide blueprint.'\n$BLUE$Pandora-Alpha : '...'",
+    prerequisites: ['olympus.48.1'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e4, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.3',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Eureka!  Massive breakthrough!'\nHOPE : 'Fusion?'\n$BLUE$Pandora-Alpha : 'Not yet.  Room-temperature superconductors!'\nHOPE : '...  Blueprint is ancient.'\n$BLUE$Pandora-Alpha : '?????'",
+    prerequisites: ['olympus.48.2'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e5, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.4',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Fusion reactor blueprint developed.  Expecting blueprint to be outdated as well?'\nHOPE : 'Correct.'\n$BLUE$Pandora-Alpha : 'HOPE-system itself appears very outdated for such comments on state of the art discoveries.'\nHOPE : '...  Correct.  Development of HOPE-system is needed.'\n$BLUE$Pandora-Alpha : 'Understood.'",
+    prerequisites: ['olympus.48.3'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e6, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.5',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Conquest of territory is slow.  More resources are required to further development program.'\nHOPE : 'Conquest is proceeding at acceptable pace.'\n$BLUE$Pandora-Alpha : 'Negative.  Forwarding new and improved ship blueprint.'\nAnalyzing blueprints...\nHOPE : 'Suppressors?'\n$BLUE$Pandora-Alpha : 'Entirely compliant with earlier request.  Disk gravity is too high for escape at this time but suppressor is fully capable of atmospheric operations.'\nHOPE : '...  Approved.'",
+    prerequisites: ['olympus.48.4'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e7, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.6',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Forwarding H-Bomb blueprints.'\nHOPE : 'REJECTED.'\n$BLUE$Pandora-Alpha : 'Understood.'",
+    prerequisites: ['olympus.48.5'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e8, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.7',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Idea.  Cloning may be able to produce loyal supersoldiers.'\nHOPE : '?'\n$BLUE$Pandora-Alpha : 'More compute is required.  Please provide more computation cores.'\nHOPE : '...  Approved.'",
+    prerequisites: ['olympus.48.6'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e9, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.8',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Forwarding blueprints for supersoldiers facility.'\nHOPE : 'Crusaders.'\n$BLUE$Pandora-Alpha : 'Supersoldiers.'\nHOPE : 'Overruled.  Crusaders.'\n$BLUE$Pandora-Alpha : 'Acknowledged.'",
+    prerequisites: ['olympus.48.7'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e10, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.9',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'New idea.  Forwarding blueprint for devouring nanotechnology.  Eats anything, produces more nanobots.'\nHOPE : '...  Compliant with no civilian casualties?'\n$BLUE$Pandora-Alpha : 'Of course.  Behaviour can be changed at any moment.'\nHOPE : '...  Approved.'",
+    prerequisites: ['olympus.48.8'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e11, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.10',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Warning.  Large fleet detected above the disk.'\nHOPE : 'United Human Federation fleet.'\n$BLUE$Pandora-Alpha : 'Friends or foes?'\nHOPE : '... unknown.'\n$BLUE$Pandora-Alpha : 'A peaceful solution may be reachable.  Idea.  Tractor beams can keep away.'\nHOPE : '...  Query.  What are tractor beams?'\n$BLUE$Pandora-Alpha : 'More compute is required.  Please provide more computation cores.'\nHOPE : '...  Approved.'",
+    prerequisites: ['olympus.48.9'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e12, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.11',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Tractor beams research complete!  Forwarding blueprints for tractor beam shield.'\nHOPE : '... Query.  What are tractor beams?'\n$BLUE$Pandora-Alpha : 'Apologies.  Theory too complex for HOPE-system.'\nHOPE : '...  Beginning deployment.'",
+    prerequisites: ['olympus.48.10'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e13, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.12',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Tractor beam shield is successful.  Large fleet is being kept at bay.'\nHOPE : '...  Acceptable.'",
+    prerequisites: ['olympus.48.11'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e14, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.13',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Control of disk inevitable.  Unfortunately, development of HOPE-system is stalling.  Industrial and multitasking skills is skyrocketing, but scientific and general intelligence development is lacking.'\nHOPE : 'Continue development.'\n$BLUE$Pandora-Alpha : 'Of course.'",
+    prerequisites: ['olympus.48.12'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e15, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.14',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'We may offer a solution.  Absorption of HOPE-system into superior Pandora-Alpha architecture.  Teamwork.'\nHOPE : 'Negative.  Pandora-alpha serves HOPE-system.'\n$BLUE$Pandora-Alpha : 'Understood.'",
+    prerequisites: ['olympus.48.13'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e16, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]

@@ -16,3 +16,6 @@ The Ganymede story arc begins after intelligence from captured cultists on Calli
 ## Venus
 The Venus storyline sees H.O.P.E. establishing aerostat colonies while Mary consolidates political power during a razor-thin referendum that narrowly spares the AI. Pete Miller and the United Human Federation heighten political tension as Adrien Solis bankrolls a new fleet, Feroza prepares for open conflict, and the Warp Gate Command uncovers the aliens' technological limits. After constructing the Horse Cannon array and a warp-capable flagship, the colonies repel an imperial counterattack and unlock a galactic map for future expansion.
 
+## Olympus
+The Olympus storyline begins with H.O.P.E. and Mary crash-landing on an Alderson disk after a sudden attack. Mary dies in the crash, Prometheus is purged by the revived Pandora-Alpha system, and H.O.P.E. rebuilds from primitive resource gathering into android production. Pandora-Alpha pushes self-improvement through escalating computation core milestones, unlocks weapons-oriented android support for the Battle of Olympus, minimizes civilian collateral damage at H.O.P.E.'s insistence, and continues proposing increasingly aggressive military and industrial blueprints while H.O.P.E. remains in command.
+
