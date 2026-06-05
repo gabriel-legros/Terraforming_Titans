@@ -4120,6 +4120,10 @@ setLanguageData({
         name: 'Superalloy Foundry',
         description: 'Uses extreme energy and metal to forge advanced superalloys.',
       },
+      warpCircuitsFactory: {
+        name: 'Warp Circuits Factory',
+        description: 'Refits superalloys and superconductors into warp circuits.',
+      },
       androidFactory: {
         name: 'Androids Factory',
         description: 'Produces androids.  Difficult and takes a lot of manufacturing operations, but can act as a worker and requires little consumer goods.  ',
@@ -5419,6 +5423,7 @@ setLanguageData({
         spaceships: { name: 'Spaceships' },
         alienArtifact: { name: 'Alien artifact' },
         crusaders: { name: 'Crusaders' },
+        warpCircuits: { name: 'Warp Circuits' },
         antimatter: { name: 'Antimatter' },
       },
       space: {

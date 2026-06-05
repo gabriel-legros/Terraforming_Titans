@@ -232,6 +232,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  warpCircuitsFactory: {
+    name: '',
+    category: 'production',
+    description: '',
+    cost: { colony: { metal: 1000, glass : 1000, components: 1000, electronics: 500} },
+    consumption: { colony: { superalloys: 4, superconductors: 1 } },
+    production: { special: { warpCircuits: 5 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 100,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   androidFactory: {
     name: '',
     category: 'production',

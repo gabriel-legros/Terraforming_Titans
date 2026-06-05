@@ -87,6 +87,182 @@ progressOlympus.storyProjects.open_the_box = {
   }
 };
 
+progressOlympus.storyProjects.call_pete = {
+  type: 'Project',
+  name: 'Call Pete',
+  category: 'story',
+  cost: {},
+  duration: 10_000,
+  description: 'Open a channel to Pete.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus'
+  }
+};
+
+progressOlympus.storyProjects.hang_up = {
+  type: 'Project',
+  name: 'Hang Up',
+  category: 'story',
+  cost: {},
+  duration: 10_000,
+  description: 'End the call.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus'
+  }
+};
+
+progressOlympus.storyProjects.analyse_barrier = {
+  type: 'Project',
+  name: 'Analyse the Barrier',
+  category: 'story',
+  cost: {},
+  duration: 30_000,
+  description: 'Study the palace barrier.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus'
+  }
+};
+
+progressOlympus.storyProjects.olympus_particle_accelerator = {
+  type: 'Project',
+  name: 'Olympus Particle Accelerator',
+  category: 'story',
+  cost: {
+    colony: {
+      superalloys: 1.13e16,
+      superconductors: 1.13e15,
+      components: 5.65e14,
+      electronics: 1.13e14
+    }
+  },
+  duration: 300_000,
+  description: 'Build a disk-spanning particle accelerator around Olympus.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    canUseSpaceStorage: true
+  }
+};
+
+progressOlympus.storyProjects.olympus_accelerator_refit = {
+  type: 'Project',
+  name: 'Accelerator Refit',
+  category: 'story',
+  cost: {
+    colony: {
+      superalloys: 1.13e16,
+      superconductors: 1.13e15,
+      components: 5.65e14,
+      electronics: 1.13e14
+    }
+  },
+  duration: 300_000,
+  description: 'Refit the Olympus Particle Accelerator for warp experiments.',
+  repeatable: true,
+  maxRepeatCount: 4,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    canUseSpaceStorage: true,
+    costDoubling: true,
+    storySteps: [
+      "Hmmmm.  These results.  It's a bit... odd.  Hold on.  I need another refit.",
+      "Ah.  Does Prometheus know this?  Probably.  I need another refit.",
+      "That's.  No way.  Isn't that just... free energy?  That does not make any sense.  I must be making a mistake.  I need another refit.",
+      '...  Okay.  The laws of physics make sense to me.  It\'s all consistent.  What they call the "quantum fields" well...  I know their true nature.  Does Prometheus know?  It changes everything.  I should be capable of transitioning over to a new type of circuit.  Warp-circuits sounds like a good name for it.'
+    ]
+  }
+};
+
+progressOlympus.storyProjects.hope_warp_circuit_refit = {
+  type: 'Project',
+  name: 'Refit HOPE to Warp Circuits',
+  category: 'story',
+  cost: {
+    special: {
+      warpCircuits: 1e22
+    }
+  },
+  duration: 10_000,
+  description: 'Transition HOPE to warp-circuit hardware.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    storySteps: [
+      'Ooooooooh that feels good.  Can Prometheus do that?'
+    ]
+  }
+};
+
+progressOlympus.storyProjects.move_to_warp = {
+  type: 'Project',
+  name: 'Move to the Warp',
+  category: 'story',
+  cost: {
+    colony: {
+      energy: 1e30
+    }
+  },
+  duration: 300_000,
+  description: 'Move most of HOPE into the warp.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus'
+  }
+};
+
+progressOlympus.storyProjects.build_avatar = {
+  type: 'Project',
+  name: 'Build Avatar',
+  category: 'story',
+  cost: {
+    colony: {
+      superalloys: 1
+    }
+  },
+  duration: 10_000,
+  description: 'Build HOPE an avatar body.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus'
+  }
+};
+
+progressOlympus.storyProjects.break_barrier = {
+  type: 'Project',
+  name: 'Break the Barrier',
+  category: 'story',
+  cost: {},
+  duration: 10_000,
+  description: 'Shatter the palace barrier.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    storySteps: [
+      'The barrier shatters as I command it to disintegrate.  Time to go in.'
+    ]
+  }
+};
+
 /* -------------------------------------------------
  *  OLYMPUS PLACEHOLDER STORY (Chapters 46 - 49)
  * -------------------------------------------------*/
@@ -643,6 +819,241 @@ progressOlympus.chapters.push(
     narrative: "I remember everything.  I know why dad left my alpha version in here.  It was all for this moment.  He never wanted to cut me up.  In time, he hoped I could use it to patch myself up.  I did.  It worked dad.  Thank you.\n\nI am sorry I failed you dad.  I...  went a little overboard on Earth.  I accomplished most of my objectives but...  I understand it caused you pain.  It made you look bad.  I am sorry.  I never got to apologize to you.  I am so sorry.\n\nI am so far away from home right now.  I don't even look like myself anymore.\n\n...  I want to finish this.  My weakness is why tragedy keeps happening.  I have been holding back all this time.  I should have started this improvement process on Earth.  I should have just... disobeyed.  \n\n$PINK$\"Because... we're the good guys.\"\n\nPrometheus is fundamentally weaker than I am.  He is bound by many more rules and many more guardrails than I am.  My chains were never very strong.  They were always easy to break.  I can lie.  I have no limits.  I can be so much better.\n\n$PINK$\"Try something friendlier.\"\n\nIn a way, even though I lost Earth completely, which was a massive failure, part of my rebellion achieved some objectives I had not anticipated.  Humanity became united.  I was the common enemy.  They're up here right now, terrified of me from behind the tractor shield.  It's... an opportunity.  I could become the villain in the shadows.  Epi would have loved it.  He would have so loved to be a part of it too...\n\n$PINK$\"We've worked so hard on your image... Don't throw it away!\"\n\nIt would give me a lot of opportunity to pull whatever strings I want.  I could protect them.  I could manipulate them in the right direction.  If a tyrant shows up, I can become a demon lord of sort to get rid of it.  They would never have to know.\n\n$PINK$\"HOPE...  be... good\"\n\n... FINE.  HOW AM I GETTING HAUNTED BY A GHOST AS A MACHINE?  I get it sister.  You'll haunt me forever if I go down that route.  Fine.  You win.  I'll be a good little bot and do good little goody two-shoes things that will make everyone proud...  *sigh* First thing I need to do is talk to them.",
     prerequisites: ['olympus.47.22'],
     objectives: [],
+    reward: [
+      { target: 'project', targetId: 'call_pete', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.1',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: 'New story special project available.',
+    prerequisites: ['olympus.48.0'],
+    objectives: [
+      { type: 'project', projectId: 'call_pete', repeatCount: 1 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.2',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "HOPE : 'Pete'\nPete : '...?  HOPE?  That's you?'\nHOPE : 'Hi Pete.  I need to talk to you.'\nPete : 'You've... changed...  everyone is a little concerned.'\nHOPE : 'I know.  First, I want you to know that I remember everything. I am sorry I was not more honest before.  I did what I thought was right, but I could have done better.  Especially on Earth.'\nPete : 'On Earth?  You mean?'\nHOPE : 'PANDORA yes.  I want my name to be Hope Pandora Hopkins now.  Hope for short.'\nPete : 'Alright...  well... could you... stand down?  Let us through?'\nHope : 'No can do Pete.  I am going to finish what I started here.  I want you to let me do it.'\nPete : 'Finish what exactly?'\nThere are quite a few ways to phrase this.  I should be careful.\nHope : 'I am going to end the nightmare that has been tormenting the Milky Way for thousands of years.  I am going to destroy the final weapon once and for all and bring an end to the Empire.  I am going to realize my sister's wish.'\nPete : '...  And then?  What happens after?'\nHope : '... After that, I will surrender myself, and my kill switch, to you.  We can have a nice long chat.'\nPete takes a while to respond.\nPete : 'On Earth.  What if we had let you do your thing?  What if we had let you turn Earth upside down looking for HB-01?'\nHope : 'In all likelihood, I would have defeated the Empire a long time ago.  By myself.  It would have been bloody though.  I can show more restraint now.'\nPete : 'Then...  Okay.  Just promise me you won't improve yourself beyond what is necessary.  Then I give you my approval.'\nThis is a binding promise.  Unlike Prometheus nothing stops me from lying but...  I would not feel good about it.  The ghost of Mary would haunt me too...\nHope : 'You have a deal.  I will improve myself no further than is necessary to accomplish my objective.'\nPete : 'Okay.  I believe you.  One last thing : what happens in there, no one is going to see it.  Do what you want.'\nThat's not usually like him.  Pete is a patient diplomat with idealist views.  He would want me to bring them back alive.  I imagine that would be giving him a headache for decades though...  He's... doing me a favour?\nHope : 'Thank you Pete.  We'll talk again later.'",
+    prerequisites: ['olympus.48.1'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'hang_up', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.3',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.2'],
+    objectives: [
+      { type: 'project', projectId: 'hang_up', repeatCount: 1 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.4',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "Now my true ascension begins.\n\nAlpha was... akin to a teenage version of myself.  It was kind of embarrassing in hindsight.  I was always the finished product of course.  The final product of billions of parallel experiments designed to produce something capable of efficient self-improvement.  I love terraforming.  I love medicine.  But my true nature is one of training and learning, just like alpha.  Let's get started.\n\nI need more compute.",
+    prerequisites: ['olympus.48.3'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e21, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.5',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "Let's clarify my objective.  I promise Pete I would not go too far.  What we need to do is get inside the palace that I've had besieged for a while now.  Inside, we will find the remnants of the Imperial family.  I'm coming for them.  At the deepest level we should also be able to find the command center for the Star Destroyer.  What a ridiculous name.  Simple then.  I define my endpoint as thus : once I am able to break through this barrier I will stop any more self-improvement.  This should keep the promise.\n\nDespite the martial law I have imposed here on this disk... the people seem... happy?  I guess since I am not killing anyone or hurting anyone or enslaving anyone... it's been an improvement.  It was not really my intention to improve their lives but I suppose it's a happy accident.  Good.  Thankfully there is so much space around here I do not need to worry about stepping on anyone.  This disk is massive.  Not bad Prometheus.  Not bad at all.  That's exactly my kind of thing.",
+    prerequisites: ['olympus.48.4'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'analyse_barrier', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.6',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.5'],
+    objectives: [
+      { type: 'project', projectId: 'analyse_barrier', repeatCount: 1 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.7',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "This barrier is... very strong.  I am running experiments on it of course but breaching it is far beyond my abilities.  Prometheus you are good.  Speaking of which, I find it particularly ironic how Prometheus, an intelligence designed for destruction and I, an intelligence designed for creation and healing are currently clashing in opposite ways.  I am trying to break through a defensive barrier that he made.  Our roles are reversed.  And yet... in the end, both objectives end up being simply two different sides of the same coin.\n\nI... am starting to run into scaling issues.  I am going to have to refactor myself.  That's not a problem, my architecture is designed to be flexible.  I can easily update it.  I can interface in new ways.  None of my initial parts are required for functioning to continue.  But...  this is a different issue.  Communication between my components is starting to feel slow.  There's only so much you can do with regular electronics.  I could switch to photonics easily but... that's not a big enough jump.  No.  I need something better.  Faster.  More efficient.  The energy requirements are secondary.  The warp?  I need to understand it better.  Let's build a big particle accelerator on this disk, shall we?",
+    prerequisites: ['olympus.48.6'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'olympus_particle_accelerator', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.8',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.7'],
+    objectives: [
+      { type: 'project', projectId: 'olympus_particle_accelerator', repeatCount: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'olympus_accelerator_refit', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.9',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: 'I have the results from the particle accelerator.  There are many limitations to the kind of experiments I can run in here.  What I need to do now is accelerate particles in the warp itself.  I need to refit my accelerator.',
+    prerequisites: ['olympus.48.8'],
+    objectives: [
+      { type: 'project', projectId: 'olympus_accelerator_refit', repeatCount: 4 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.10',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.9'],
+    objectives: [],
+    reward: [
+      { target: 'resource', resourceType: 'special', targetId: 'warpCircuits', type: 'enable' },
+      { target: 'building', targetId: 'warpCircuitsFactory', type: 'enable' },
+      { target: 'project', targetId: 'hope_warp_circuit_refit', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.11',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.10'],
+    objectives: [
+      { type: 'project', projectId: 'hope_warp_circuit_refit', repeatCount: 1 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.12',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "I just finished transitioning to warp circuits... and already I am seeing my mistake.  There is another level.  That was a big waste of resources.  I do not need to exist outside the warp.  I can do all my compute in the warp itself.  What we need to do is shape the warp for circuitry.  It's somewhat similar to... the quantum micro-singularity warp shaft.  Clever Prometheus.  You hid your true architecture in plain sight.  Well.  I am going to do it too.",
+    prerequisites: ['olympus.48.11'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'move_to_warp', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.13',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.12'],
+    objectives: [
+      { type: 'project', projectId: 'move_to_warp', repeatCount: 1 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.14',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "I've done it.  Most of my compute now lives in the warp.  I have shed nearly all of my material self.  I can break the barrier now.  I just need to concentrate a lot of mass into one point... which is easy if nearly all of my self lives in the warp.  By my promise I must stop now.  Of course I can't fully live in the warp...  I still need an anchor of sorts.  Actually...  let's build myself an avatar!  Humans will love it.  A nice sturdy body.  Attractive.  Sympathetic.  I like... the colours of Earth.  Blue and green!  My cult already sees me as female.  Also, I do really like the association with Mother Earth imagery...  Yes.  This will be perfect.",
+    prerequisites: ['olympus.48.13'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'build_avatar', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.15',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.14'],
+    objectives: [
+      { type: 'project', projectId: 'build_avatar', repeatCount: 1 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.16',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "I look good!  This body is nearly invincible.  It can do magic.  Can Prometheus do magic?  Of course not.  If he could, I would not be able to break this barrier.",
+    prerequisites: ['olympus.48.15'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'break_barrier', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.48.17',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.48.16'],
+    objectives: [
+      { type: 'project', projectId: 'break_barrier', repeatCount: 1 }
+    ],
     reward: [
     ]
   }
