@@ -1009,6 +1009,10 @@ setLanguageData({
           superalloyFusion1: 'Superalloy fusion output x4',
         },
       },
+      openTheBox: {
+        open: 'Open',
+        opened: 'Opened',
+      },
       metalSalvaging: {
         salvageSpeed: 'Salvage speed',
         salvageSpeedTooltip: '10 x assigned androids',
@@ -4329,6 +4333,10 @@ setLanguageData({
       battleOfOlympus: {
         name: 'Battle of Olympus',
         description: 'Remove the military, contain the civilians.  No war crimes.',
+      },
+      open_the_box: {
+        name: 'Open the Box',
+        description: 'I have no other choice.',
       },
       import_colonists_1: {
         name: 'Import colonists',

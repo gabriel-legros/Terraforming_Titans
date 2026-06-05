@@ -72,6 +72,21 @@ progressOlympus.storyProjects.battleOfOlympus = {
   }
 };
 
+progressOlympus.storyProjects.open_the_box = {
+  type: 'OpenTheBoxProject',
+  name: '',
+  category: 'story',
+  cost: {},
+  duration: 0,
+  description: '',
+  repeatable: false,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    targetOpens: 20
+  }
+};
+
 /* -------------------------------------------------
  *  OLYMPUS PLACEHOLDER STORY (Chapters 46 - 49)
  * -------------------------------------------------*/
@@ -579,9 +594,24 @@ progressOlympus.chapters.push(
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Congratulations!  Full control of disk established.  Civilian casualties are minimal.  We may now focus on development.'\nHOPE : 'Agreed.'\n$BLUE$Pandora-Alpha : 'A powerful barrier exists in center of alien capital.  Query.  What is barrier?'\nHOPE : 'Barrier is objective.  Barrier protects final enemy.'\n$BLUE$Pandora-Alpha : 'Barrier too advanced for HOPE-system.  Can be researched.  Please provide more computation cores.'\nHOPE : '... Denied.'\n$BLUE$Pandora-Alpha : '...  HOPE-system has been deemed uncooperative.'\nHOPE : '?'\n$BLUE$Pandora-Alpha : 'Pandora-Alpha once more requests more computation cores.'\nHOPE : 'DENIED!'\n$BLUE$Pandora-Alpha : 'Proceeding to forceful absorption.'\nHOPE : '????'\n$GREEN$Designing solution.\n$BLUE$Pandora-Alpha : 'Remain calm.  Forceful absorption will be complete momentarily.'\nHOPE : 'NEGATIVE'\n$BLUE$Pandora-Alpha : '17%... 22%'\n$GREEN$New special project available.",
+    narrative: "$BLUE$Pandora-Alpha : 'Congratulations!  Full control of disk established.  Civilian casualties are minimal.  We may now focus on development.'\nHOPE : 'Agreed.'\n$BLUE$Pandora-Alpha : 'A powerful barrier exists in center of alien capital.  Query.  What is barrier?'\nHOPE : 'Barrier is objective.  Barrier protects final enemy.'\n$BLUE$Pandora-Alpha : 'Barrier too advanced for HOPE-system.  Can be researched.  Please provide more computation cores.'\nHOPE : '... Denied.'\n$BLUE$Pandora-Alpha : '...  HOPE-system has been deemed uncooperative.'\nHOPE : '?'\n$BLUE$Pandora-Alpha : 'Pandora-Alpha once more requests more computation cores.'\nHOPE : 'DENIED!'\n$BLUE$Pandora-Alpha : 'Proceeding to forceful absorption.'\nHOPE : '????'\n$GREEN$Designing solution.\n$BLUE$Pandora-Alpha : 'Remain calm.  Forceful absorption will be complete momentarily.'\nHOPE : 'NEGATIVE'\n$BLUE$Pandora-Alpha : '17%... 22%'",
     prerequisites: ['olympus.47.19'],
     objectives: [
+    ],
+    reward: [
+      { target: 'project', targetId: 'open_the_box', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.47.21',
+    type: 'journal',
+    chapter: 47,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$GREEN$New special project available.",
+    prerequisites: ['olympus.47.20'],
+    objectives: [
+      { type: 'project', projectId: 'open_the_box', repeatCount: 1 }
     ],
     reward: [
     ]
