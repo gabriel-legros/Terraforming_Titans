@@ -3658,10 +3658,10 @@
 
 .open-the-box-button {
     min-height: 84px;
-    border: 1px solid #16181c;
+    border: 1px solid #2f8f46;
     border-radius: 4px;
-    background: #20242b;
-    color: #f8f9fa;
+    background: #2f9e44;
+    color: #ffffff;
     font-size: 28px;
     font-weight: 800;
     letter-spacing: 0;
@@ -3669,7 +3669,7 @@
 }
 
 .open-the-box-button:hover:not(:disabled) {
-    background: #2b313b;
+    background: #27853a;
 }
 
 .open-the-box-button:active:not(:disabled) {
@@ -3679,6 +3679,7 @@
 .open-the-box-button:disabled {
     cursor: default;
     background: #111318;
+    border-color: #16181c;
     color: #d6d9df;
 }
 

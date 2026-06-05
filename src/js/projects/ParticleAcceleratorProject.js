@@ -4,6 +4,8 @@ const MATERIAL_COST_PER_METER = 100;
 const HALF_MATERIAL_SPLIT = 0.5;
 const STEP_MULTIPLIER = 10;
 const MINIMUM_STEP_METERS = 1;
+const MILKY_WAY_RADIUS_METERS = 5e20;
+const MAXIMUM_STEP_METERS = Math.pow(10, Math.floor(Math.log10(MILKY_WAY_RADIUS_METERS)));
 const MATERIAL_COST_PER_RADIUS = TWO_PI * MATERIAL_COST_PER_METER * HALF_MATERIAL_SPLIT;
 
 class ParticleAcceleratorProject extends Project {
@@ -206,13 +208,19 @@ class ParticleAcceleratorProject extends Project {
     elements.notice.style.display = needsIncrease ? 'block' : 'none';
   }
 
+  clampRadiusMeters(value) {
+    return Math.min(Math.max(this.minimumRadiusMeters, value), MILKY_WAY_RADIUS_METERS);
+  }
+
+  clampStepMeters(value) {
+    return Math.min(Math.max(MINIMUM_STEP_METERS, value), MAXIMUM_STEP_METERS);
+  }
+
   setRadiusMeters(value) {
     if (this.isActive) {
       return;
     }
-    const minimum = this.minimumRadiusMeters;
-    const target = value > minimum ? value : minimum;
-    this.selectedRadiusMeters = target;
+    this.selectedRadiusMeters = this.clampRadiusMeters(value);
     this.updateUI();
     this.refreshProjectUI();
   }
@@ -235,7 +243,7 @@ class ParticleAcceleratorProject extends Project {
       return;
     }
     const nextStep = this.radiusStepMeters * multiplier;
-    this.radiusStepMeters = nextStep >= MINIMUM_STEP_METERS ? nextStep : MINIMUM_STEP_METERS;
+    this.radiusStepMeters = this.clampStepMeters(nextStep);
     this.updateUI();
   }
 
@@ -305,7 +313,10 @@ class ParticleAcceleratorProject extends Project {
     const maxFromSuperconductors = availableSuperconductors / (MATERIAL_COST_PER_RADIUS * superconductorMultiplier);
     const affordableRadius = Math.min(maxFromSuperalloys, maxFromSuperconductors);
     const normalizedRadius = Number.isFinite(affordableRadius) && affordableRadius > 0 ? affordableRadius : 0;
-    return Math.max(this.minimumRadiusMeters, this.alignRadiusToStep(normalizedRadius));
+    if (normalizedRadius >= MILKY_WAY_RADIUS_METERS) {
+      return MILKY_WAY_RADIUS_METERS;
+    }
+    return this.clampRadiusMeters(this.alignRadiusToStep(normalizedRadius));
   }
 
   getAvailableMaterialAmount(resourceKey, storage) {
@@ -320,9 +331,9 @@ class ParticleAcceleratorProject extends Project {
     const step = this.radiusStepMeters > 0 ? this.radiusStepMeters : MINIMUM_STEP_METERS;
     const steps = Math.floor(radius / step);
     if (steps > 0) {
-      return steps * step;
+      return this.clampRadiusMeters(steps * step);
     }
-    return Math.max(this.minimumRadiusMeters, radius);
+    return this.clampRadiusMeters(radius);
   }
 
   refreshProjectUI() {
@@ -344,7 +355,7 @@ class ParticleAcceleratorProject extends Project {
     super.complete();
     this.acceleratorCount = this.repeatCount;
     if (this.selectedRadiusMeters > this.bestRadiusMeters) {
-      this.bestRadiusMeters = this.selectedRadiusMeters;
+      this.bestRadiusMeters = this.clampRadiusMeters(this.selectedRadiusMeters);
     }
     this.applyResearchBoostEffect();
     this.refreshProjectUI();
@@ -366,11 +377,11 @@ class ParticleAcceleratorProject extends Project {
     super.loadAutomationSettings(settings);
     if (Object.prototype.hasOwnProperty.call(settings, 'selectedRadiusMeters')) {
       const nextRadius = settings.selectedRadiusMeters || this.defaultRadiusMeters;
-      this.selectedRadiusMeters = Math.max(this.minimumRadiusMeters, nextRadius);
+      this.selectedRadiusMeters = this.clampRadiusMeters(nextRadius);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'radiusStepMeters')) {
       const step = settings.radiusStepMeters || this.defaultStepMeters;
-      this.radiusStepMeters = Math.max(MINIMUM_STEP_METERS, step);
+      this.radiusStepMeters = this.clampStepMeters(step);
     }
   }
 
@@ -399,19 +410,19 @@ class ParticleAcceleratorProject extends Project {
       state.selectedRadiusMeters ??
       (typeof state.selectedRadiusEarth === 'number' ? state.selectedRadiusEarth * EARTH_RADIUS_METERS : undefined);
     this.selectedRadiusMeters = savedRadiusMeters && savedRadiusMeters > 0
-      ? Math.max(this.minimumRadiusMeters, savedRadiusMeters)
+      ? this.clampRadiusMeters(savedRadiusMeters)
       : this.defaultRadiusMeters;
 
     const savedBestMeters =
       state.bestRadiusMeters ??
       (typeof state.bestRadiusEarth === 'number' ? state.bestRadiusEarth * EARTH_RADIUS_METERS : undefined);
-    this.bestRadiusMeters = savedBestMeters && savedBestMeters > 0 ? savedBestMeters : 0;
+    this.bestRadiusMeters = savedBestMeters && savedBestMeters > 0 ? this.clampRadiusMeters(savedBestMeters) : 0;
 
     const savedStepMeters =
       state.radiusStepMeters ??
       (typeof state.radiusStepEarth === 'number' ? state.radiusStepEarth * EARTH_RADIUS_METERS : undefined);
     this.radiusStepMeters = savedStepMeters && savedStepMeters >= MINIMUM_STEP_METERS
-      ? savedStepMeters
+      ? this.clampStepMeters(savedStepMeters)
       : this.defaultStepMeters;
     this.applyResearchBoostEffect();
   }
@@ -439,19 +450,19 @@ class ParticleAcceleratorProject extends Project {
       state.selectedRadiusMeters ??
       (typeof state.selectedRadiusEarth === 'number' ? state.selectedRadiusEarth * EARTH_RADIUS_METERS : undefined);
     this.selectedRadiusMeters = savedRadiusMeters && savedRadiusMeters > 0
-      ? Math.max(this.minimumRadiusMeters, savedRadiusMeters)
+      ? this.clampRadiusMeters(savedRadiusMeters)
       : this.defaultRadiusMeters;
 
     const savedBestMeters =
       state.bestRadiusMeters ??
       (typeof state.bestRadiusEarth === 'number' ? state.bestRadiusEarth * EARTH_RADIUS_METERS : undefined);
-    this.bestRadiusMeters = savedBestMeters && savedBestMeters > 0 ? savedBestMeters : 0;
+    this.bestRadiusMeters = savedBestMeters && savedBestMeters > 0 ? this.clampRadiusMeters(savedBestMeters) : 0;
 
     const savedStepMeters =
       state.radiusStepMeters ??
       (typeof state.radiusStepEarth === 'number' ? state.radiusStepEarth * EARTH_RADIUS_METERS : undefined);
     this.radiusStepMeters = savedStepMeters && savedStepMeters >= MINIMUM_STEP_METERS
-      ? savedStepMeters
+      ? this.clampStepMeters(savedStepMeters)
       : this.defaultStepMeters;
     this.isActive = false;
     if (state.isActive) {

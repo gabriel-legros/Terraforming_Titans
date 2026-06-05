@@ -129,6 +129,10 @@ class OpenTheBoxProject extends Project {
   }
 
   updateScreenFracture(pulse) {
+    if (this.isCompleted && this.shatterElapsed <= 0) {
+      this.clearScreenFracture();
+      return;
+    }
     if (!this.unlocked && this.opens <= 0) {
       return;
     }
@@ -165,11 +169,12 @@ class OpenTheBoxProject extends Project {
       this.isCompleted = true;
       this.repeatCount = Math.max(this.repeatCount || 0, 1);
     }
-    this.shatterElapsed = Math.max(0, state.shatterElapsed || 0);
-    if (this.isCompleted && this.shatterElapsed <= 0) {
+    if (this.isCompleted) {
+      this.shatterElapsed = 0;
       this.clearScreenFracture();
       return;
     }
+    this.shatterElapsed = Math.max(0, state.shatterElapsed || 0);
     this.updateScreenFracture(false);
   }
 }
