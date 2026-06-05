@@ -269,6 +269,21 @@ const buildingsParameters = {
     cost: { colony: { metal: 1000, glass: 10, components: 100, electronics: 50 } },
     consumption: { colony: { energy: 100_000_000 } },
     production: { colony: { colonists: 0.1 } },
+    defaultRecipe: 'colonists',
+    recipes: {
+      colonists: {
+        shortName: '',
+        disabledByBuildingFlag: 'disableColonistCloningRecipe',
+        consumption: { colony: { energy: 100_000_000 } },
+        production: { colony: { colonists: 0.1 } }
+      },
+      crusaders: {
+        shortName: '',
+        requiresBuildingFlag: 'crusaderCloningRecipe',
+        consumption: { colony: { energy: 100_000_000, food: 10, electronics: 0.1 } },
+        production: { special: { crusaders: 0.1 } }
+      }
+    },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,

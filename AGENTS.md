@@ -467,6 +467,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Checked Olympus field workshop continuous actions use `estimateCostAndGain`/`applyCostAndGain` for resource rates and fractional resource deltas instead of discrete per-tick completion.
 - Olympus chapter `46.1` grants the same effects as Launch Pads and Construction Office research completion: special-project automation, construction automation, and Construction Office UI content.
 - Olympus early recovery adds `Metal Salvaging`, a Resources project using android assignment controls; each completion yields scrap metal, with duration scaled by `10 * assigned androids`. The Field Workshop can later assemble one android from components and electronics before the abandoned station is salvaged.
+- Olympus chapters `47.7`, `47.10`, and `47.11` award Shipyard, Crusader Cloning Facility, and full Nanocolony/Stage Skull support respectively; Battle of Olympus suppression includes Executioners, Suppressors from ships, Crusaders, and grey goo hazardous-biomass consumption.
 - Poseidon applies a world effect that enables `Foundry`, a resource building capped by initial land that costs like an Ore Mine, needs 10 workers, produces 10 metal plus 10 silica, and only gets the metal half doubled by `Advanced Alloys`.
 - Terraforming completion rewards and travel-point systems were extended (including dominion-specific rewards).
 - Journal reconstruction and indexing were improved for story continuity.

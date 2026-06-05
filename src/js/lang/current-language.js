@@ -924,9 +924,15 @@ setLanguageData({
         growthValue: '+{value}/s',
         metalSalvagingCap: 'Metal Salvaging android cap',
         capValue: '{cap}',
+        executioners: 'Executioners',
         executionerDecay: 'Suppression',
         executionerDecayTooltip: 'Each Executioner removes 1 hazardous biomass per second.',
         executionerDecayValue: '{value}/s',
+        suppressors: 'Suppressors',
+        crusaders: 'Crusaders',
+        greyGoo: 'Grey goo',
+        suppressionBonusValue: '+{value}%',
+        suppressionRateValue: '{value}/s',
         regrowthRateSource: 'Battle of Olympus regrowth',
         executionerRateSource: 'Executioners',
       },
@@ -2311,6 +2317,7 @@ setLanguageData({
           stage2: 'Stage II',
           stage3: 'Stage III',
           stage4: 'Stage IV',
+          stageSkull: 'Stage ☠',
         },
         recycling: {
           junk: 'Junk',
@@ -2358,11 +2365,18 @@ setLanguageData({
           grapheneProduction: 'Graphene Production',
           grapheneDescription: 'Diverts growth to fabricate graphene.',
         },
+        stageSkull: {
+          hazardousBiomassAllocation: 'Consume Hazardous Biomass',
+          hazardousBiomassDescription: 'Consumes hazardous biomass to boost growth.',
+          consumeHazardousBiomass: 'Consume Hazardous Biomass',
+          consumeHazardousBiomassDescription: 'Increases hazardous biomass consumption while slowing growth.',
+        },
         warnings: {
           noSand: '⚠️ No sand deposits; glass capped to silica allocation.',
           noOre: '⚠️ No ore deposits; components capped to metal allocation.',
           noResources: '⚠️ No resources; electronics capped to biomass allocation.',
           noDeposits: '⚠️ No deposits, metal capped to graphite.',
+          noHazardousBiomass: 'No hazardous biomass available.',
         },
         status: {
           disabled: 'Disabled',
@@ -2380,6 +2394,7 @@ setLanguageData({
           metal: 'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: scrap usage is not capped, but metal usage still follows this limit.',
           biomass: 'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: trash usage is not capped, but biomass usage still follows this limit.',
           graphite: 'Percentage of graphite production: maximum share of graphite production the swarm may consume per second.\nAbsolute: fixed graphite limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: graphite usage ignores production-rate caps and is limited only by available graphite.',
+          hazardousBiomass: 'Grey goo consumes Hazardous Biomass directly. The two extra sliders each add another full-rate consumption stream and reduce growth.',
         },
       },
     },
@@ -4112,6 +4127,10 @@ setLanguageData({
       cloningFacility: {
         name: 'Cloning Facility',
         description: 'Consumes energy to grow and educate new colonists.',
+        recipes: {
+          colonists: { shortName: 'Colonists' },
+          crusaders: { shortName: 'Crusaders' },
+        },
       },
       solarPanel: {
         name: 'Solar Panel Array',

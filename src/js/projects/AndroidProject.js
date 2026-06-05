@@ -18,6 +18,10 @@ class AndroidProject extends Project {
     this.shortfallLastTick = false;
   }
 
+  getAndroidAssignmentLabelText() {
+    return this.getAndroidProjectText('ui.projects.android.androids', 'Androids');
+  }
+
   isContinuous() {
     const baseDuration = this.getEffectiveDuration();
     return baseDuration < this.continuousThreshold;
@@ -274,7 +278,7 @@ class AndroidProject extends Project {
     const headerRow = document.createElement('div');
     headerRow.classList.add('android-assignment-headers');
     const androidHeader = document.createElement('div');
-    androidHeader.textContent = this.getAndroidProjectText('ui.projects.android.androids', 'Androids');
+    androidHeader.textContent = this.getAndroidAssignmentLabelText();
     const controlsHeader = document.createElement('div');
     controlsHeader.textContent = this.getAndroidProjectText('ui.projects.android.controls', 'Controls');
     const autoHeader = document.createElement('div');

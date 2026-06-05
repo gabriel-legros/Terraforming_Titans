@@ -10,6 +10,10 @@ class BattleOfOlympusProject extends AndroidProject {
     this.assignmentUnlockRatio = attributes.assignmentUnlockRatio || 1000;
     this.minimumMetalSalvagingAndroids = attributes.minimumMetalSalvagingAndroids || 100;
     this.biomassZones = attributes.biomassZones || ['tropical', 'temperate'];
+    this.lastExecutionerSuppressionRate = 0;
+    this.lastSuppressorSuppressionRate = 0;
+    this.lastCrusaderSuppressionRate = 0;
+    this.lastGreyGooSuppressionRate = 0;
     this.ui = null;
   }
 
@@ -22,7 +26,11 @@ class BattleOfOlympusProject extends AndroidProject {
   }
 
   getAndroidSpeedMultiplier() {
-    return (this.assignedAndroids || 0) * this.executionerDecayRate;
+    return this.getExecutionerSuppressionRate();
+  }
+
+  getAndroidAssignmentLabelText() {
+    return t('ui.projects.battleOfOlympus.executioners', null, 'Executioners');
   }
 
   getAndroidSpeedLabelText() {
@@ -37,6 +45,64 @@ class BattleOfOlympusProject extends AndroidProject {
     return t('ui.projects.battleOfOlympus.executionerDecayValue', {
       value: formatNumber(this.getAndroidSpeedMultiplier(), true)
     }, '{value}/s');
+  }
+
+  getSuppressorBonusPercent() {
+    return (this.getSuppressorMultiplier() - 1) * 100;
+  }
+
+  getCrusaderBonusPercent() {
+    return (this.getCrusaderMultiplier() - 1) * 100;
+  }
+
+  getSuppressorMultiplier() {
+    if (!this.isSuppressorSuppressionAvailable()) {
+      return 1;
+    }
+    const ships = Math.max(1, resources.special.spaceships.value || 0);
+    return 1 + 0.05 * Math.log(ships);
+  }
+
+  getCrusaderMultiplier() {
+    if (!this.isCrusaderSuppressionAvailable()) {
+      return 1;
+    }
+    const crusaders = Math.max(1, resources.special.crusaders.value || 0);
+    return 1 + 0.05 * Math.log(crusaders);
+  }
+
+  getExecutionerSuppressionRate() {
+    return (this.assignedAndroids || 0) * this.executionerDecayRate;
+  }
+
+  getSuppressorSuppressionRate() {
+    return this.getExecutionerSuppressionRate() * (this.getSuppressorMultiplier() - 1);
+  }
+
+  getCrusaderSuppressionRate() {
+    return this.getExecutionerSuppressionRate() * (this.getCrusaderMultiplier() - 1);
+  }
+
+  getGreyGooSuppressionRate() {
+    return this.isGreyGooSuppressionAvailable()
+      ? Math.max(0, nanotechManager.currentHazardousBiomassConsumption || 0)
+      : 0;
+  }
+
+  getTotalSuppressionRate() {
+    return this.getExecutionerSuppressionRate() + this.getSuppressorSuppressionRate() + this.getCrusaderSuppressionRate();
+  }
+
+  isSuppressorSuppressionAvailable() {
+    return buildings.shipyard.unlocked === true;
+  }
+
+  isCrusaderSuppressionAvailable() {
+    return buildings.cloningFacility.isBooleanFlagSet('crusaderCloningRecipe');
+  }
+
+  isGreyGooSuppressionAvailable() {
+    return nanotechManager.isBooleanFlagSet('stageSkull_enabled');
   }
 
   getRemovedBiomass() {
@@ -68,10 +134,21 @@ class BattleOfOlympusProject extends AndroidProject {
       return;
     }
 
+    const resourceBiomass = Math.max(0, resources.surface.hazardousBiomass.value || 0);
+    if (resourceBiomass < this.hazardousBiomass) {
+      this.hazardousBiomass = resourceBiomass;
+      this.removedBiomass = Math.max(0, this.biomassCap - this.hazardousBiomass);
+    }
+
     const seconds = deltaTime / 1000;
     const removed = Math.max(0, Math.min(this.biomassCap, this.removedBiomass));
     const growth = removed * this.baseGrowthRate * (1 - removed / this.biomassCap) * seconds;
-    const decay = (this.assignedAndroids || 0) * this.executionerDecayRate * seconds;
+    const executionerSuppressionRate = this.getExecutionerSuppressionRate();
+    const suppressorSuppressionRate = this.getSuppressorSuppressionRate();
+    const crusaderSuppressionRate = this.getCrusaderSuppressionRate();
+    const greyGooSuppressionRate = this.getGreyGooSuppressionRate();
+    const decayRate = this.getTotalSuppressionRate();
+    const decay = decayRate * seconds;
     const unclampedRemoved = removed + decay - growth;
     let appliedGrowth = growth;
     let appliedDecay = decay;
@@ -83,6 +160,10 @@ class BattleOfOlympusProject extends AndroidProject {
 
     this.removedBiomass = Math.max(0, Math.min(this.biomassCap, unclampedRemoved));
     this.hazardousBiomass = Math.max(0, this.biomassCap - this.removedBiomass);
+    this.lastExecutionerSuppressionRate = executionerSuppressionRate;
+    this.lastSuppressorSuppressionRate = suppressorSuppressionRate;
+    this.lastCrusaderSuppressionRate = crusaderSuppressionRate;
+    this.lastGreyGooSuppressionRate = greyGooSuppressionRate;
     this.syncZonalBiomass();
     this.updateHazardousBiomassRates(appliedGrowth, appliedDecay, seconds);
 
@@ -92,6 +173,43 @@ class BattleOfOlympusProject extends AndroidProject {
   renderUI(container) {
     this.createBattleStatusUI(container);
     this.createAndroidAssignmentUI(container);
+    this.createExtraSuppressionUI();
+  }
+
+  createExtraSuppressionUI() {
+    const elements = projectElements[this.name];
+    if (!elements || !elements.androidAssignmentContainer) {
+      return;
+    }
+    const speedContainer = elements.androidAssignmentContainer.querySelector('.android-speed-container');
+    if (!speedContainer) {
+      return;
+    }
+    const suppressors = this.createSuppressionRow(t('ui.projects.battleOfOlympus.suppressors', null, 'Suppressors'));
+    const crusaders = this.createSuppressionRow(t('ui.projects.battleOfOlympus.crusaders', null, 'Crusaders'));
+    const greyGoo = this.createSuppressionRow(t('ui.projects.battleOfOlympus.greyGoo', null, 'Grey goo'));
+    speedContainer.append(suppressors.row, crusaders.row, greyGoo.row);
+    projectElements[this.name] = {
+      ...elements,
+      battleOfOlympusSuppressorsRow: suppressors.row,
+      battleOfOlympusSuppressorsSuppression: suppressors.value,
+      battleOfOlympusCrusadersRow: crusaders.row,
+      battleOfOlympusCrusadersSuppression: crusaders.value,
+      battleOfOlympusGreyGooRow: greyGoo.row,
+      battleOfOlympusGreyGooSuppression: greyGoo.value
+    };
+  }
+
+  createSuppressionRow(labelText) {
+    const row = document.createElement('div');
+    row.classList.add('android-speed-row', 'battle-of-olympus-suppression-row');
+    const label = document.createElement('span');
+    label.className = 'battle-of-olympus-suppression-label';
+    label.textContent = labelText;
+    const value = document.createElement('span');
+    value.className = 'android-speed-value battle-of-olympus-suppression-value';
+    row.append(label, value);
+    return { row, value };
   }
 
   createBattleStatusUI(container) {
@@ -218,6 +336,30 @@ class BattleOfOlympusProject extends AndroidProject {
     elements.battleOfOlympusCap.textContent = t('ui.projects.battleOfOlympus.capValue', {
       cap: formatNumber(cap, true)
     }, '{cap}');
+    if (elements.battleOfOlympusSuppressorsRow) {
+      elements.battleOfOlympusSuppressorsRow.style.display = this.isSuppressorSuppressionAvailable() ? '' : 'none';
+    }
+    if (elements.battleOfOlympusSuppressorsSuppression) {
+      elements.battleOfOlympusSuppressorsSuppression.textContent = t('ui.projects.battleOfOlympus.suppressionBonusValue', {
+        value: formatNumber(this.getSuppressorBonusPercent(), false, 2)
+      }, '+{value}%');
+    }
+    if (elements.battleOfOlympusCrusadersRow) {
+      elements.battleOfOlympusCrusadersRow.style.display = this.isCrusaderSuppressionAvailable() ? '' : 'none';
+    }
+    if (elements.battleOfOlympusCrusadersSuppression) {
+      elements.battleOfOlympusCrusadersSuppression.textContent = t('ui.projects.battleOfOlympus.suppressionBonusValue', {
+        value: formatNumber(this.getCrusaderBonusPercent(), false, 2)
+      }, '+{value}%');
+    }
+    if (elements.battleOfOlympusGreyGooRow) {
+      elements.battleOfOlympusGreyGooRow.style.display = this.isGreyGooSuppressionAvailable() ? '' : 'none';
+    }
+    if (elements.battleOfOlympusGreyGooSuppression) {
+      elements.battleOfOlympusGreyGooSuppression.textContent = t('ui.projects.battleOfOlympus.suppressionRateValue', {
+        value: formatNumber(this.lastGreyGooSuppressionRate, true)
+      }, '{value}/s');
+    }
   }
 
   saveState() {

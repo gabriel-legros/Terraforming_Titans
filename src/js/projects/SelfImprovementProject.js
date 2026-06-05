@@ -90,6 +90,10 @@ class SelfImprovementProject extends Project {
     return 4 * this.getLogProgress(this.getFactoryEfficiencyCores());
   }
 
+  getAndroidEfficiencyBonus() {
+    return 9 * this.getLogProgress(this.getFactoryEfficiencyCores());
+  }
+
   getSuperalloyEfficiencyMultiplier() {
     return 1 + 999 * this.getLogProgress(this.getMaxCores());
   }
@@ -99,6 +103,7 @@ class SelfImprovementProject extends Project {
     const workerReduction = this.getIndustrialReduction(0.99);
     const maintenanceReduction = this.getIndustrialReduction(1);
     const efficiencyBonus = this.getEfficiencyBonus();
+    const androidEfficiencyBonus = this.getAndroidEfficiencyBonus();
     const superalloyMultiplier = this.getSuperalloyEfficiencyMultiplier();
     return [
       { id: 'buildCost', label: this.getText('industrial.buildCost', 'Build cost reduction'), value: this.formatPercent(costReduction) },
@@ -108,7 +113,7 @@ class SelfImprovementProject extends Project {
       { id: 'electronics', label: this.getText('industrial.electronics', 'Electronics factory efficiency'), value: this.formatSignedPercent(efficiencyBonus) },
       { id: 'superconductors', label: this.getText('industrial.superconductors', 'Superconductor factory efficiency'), value: this.formatSignedPercent(efficiencyBonus) },
       { id: 'superalloys', label: this.getText('industrial.superalloys', 'Superalloy production efficiency'), value: this.formatMultiplier(superalloyMultiplier) },
-      { id: 'androids', label: this.getText('industrial.androids', 'Androids factory efficiency'), value: this.formatSignedPercent(efficiencyBonus) }
+      { id: 'androids', label: this.getText('industrial.androids', 'Androids factory efficiency'), value: this.formatSignedPercent(androidEfficiencyBonus) }
     ];
   }
 
@@ -145,6 +150,7 @@ class SelfImprovementProject extends Project {
     const workerReduction = this.getIndustrialReduction(0.99);
     const maintenanceReduction = this.getIndustrialReduction(1);
     const efficiencyBonus = this.getEfficiencyBonus();
+    const androidEfficiencyBonus = this.getAndroidEfficiencyBonus();
     const superalloyMultiplier = this.getSuperalloyEfficiencyMultiplier();
 
     addEffect({
@@ -175,7 +181,7 @@ class SelfImprovementProject extends Project {
     this.applyFactoryEfficiency('componentFactory', efficiencyBonus);
     this.applyFactoryEfficiency('electronicsFactory', efficiencyBonus);
     this.applyFactoryEfficiency('superconductorFactory', efficiencyBonus);
-    this.applyFactoryEfficiency('androidFactory', efficiencyBonus);
+    this.applyFactoryEfficiency('androidFactory', androidEfficiencyBonus);
     this.applyFactoryMultiplier('superalloyFoundry', superalloyMultiplier);
     this.applyResearchUnlocks();
   }

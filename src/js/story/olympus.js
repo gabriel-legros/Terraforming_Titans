@@ -389,6 +389,8 @@ progressOlympus.chapters.push(
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e5, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
+      { target: 'building', targetId: 'shipyard', type: 'enable' },
+      { target: 'resource', resourceType: 'special', targetId: 'spaceships', type: 'enable' }
     ]
   },
   {
@@ -431,6 +433,10 @@ progressOlympus.chapters.push(
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e8, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
+      { target: 'building', targetId: 'cloningFacility', type: 'enable' },
+      { target: 'building', targetId: 'cloningFacility', type: 'booleanFlag', flagId: 'crusaderCloningRecipe', value: true },
+      { target: 'building', targetId: 'cloningFacility', type: 'booleanFlag', flagId: 'disableColonistCloningRecipe', value: true },
+      { target: 'resource', resourceType: 'special', targetId: 'crusaders', type: 'enable' }
     ]
   },
   {
@@ -445,6 +451,11 @@ progressOlympus.chapters.push(
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e9, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
+      { target: 'nanotechManager', type: 'enable', priority: 3 },
+      { target: 'nanotechManager', type: 'booleanFlag', flagId: 'stage2_enabled', value: true },
+      { target: 'nanotechManager', type: 'booleanFlag', flagId: 'stage3_enabled', value: true },
+      { target: 'nanotechManager', type: 'booleanFlag', flagId: 'stage4_enabled', value: true },
+      { target: 'nanotechManager', type: 'booleanFlag', flagId: 'stageSkull_enabled', value: true }
     ]
   },
   {
