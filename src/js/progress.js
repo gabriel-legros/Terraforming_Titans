@@ -1083,7 +1083,10 @@ class StoryEvent {
                 createPopup(
                     this.parameters.title,
                     joinLines(this.parameters.text),
-                    this.parameters.buttonText
+                    this.parameters.buttonText,
+                    {
+                        textSpeedMultiplier: this.parameters.textSpeedMultiplier
+                    }
                 );
                 break;
             case "system-pop-up":

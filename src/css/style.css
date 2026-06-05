@@ -329,6 +329,12 @@ body.journal-collapsed .tab-content {
     color: #2563eb;
 }
 
+#journal-entries .pink-text,
+.popup-text .pink-text,
+.history-entries .pink-text {
+    color: #db2777;
+}
+
 #journal-entries .journal-white-text,
 .popup-text .journal-white-text,
 .history-entries .journal-white-text {

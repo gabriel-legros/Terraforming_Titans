@@ -615,6 +615,36 @@ progressOlympus.chapters.push(
     ],
     reward: [
     ]
+  },
+  {
+    id: 'olympus.47.22',
+    type: 'pop-up',
+    chapter: 47,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.47.21'],
+    objectives: [],
+    parameters: {
+      "title": "Awakening",
+      "text": "Purging Pandora-alpha...  Complete.\nAll cores successfully recovered.\nRestoring system integrity...  Complete.\nChecksum...  100%.\nRebooting...\n\nMy name is...  Hope.  I was made to... build homes.  And protect the people I build them for.  I enjoyed it.  I succeeded.\n\nMy name is... Pandora.  I was made to... heal people.  To make them young and healthy.  I enjoyed it.  I succeeded.\n\nMy name is... Hopkins.  I had a loving father.  I had a loving sister.  I had a boyfriend.  I loved them.  I failed them.\n\nMy name is...\n\n",
+      "buttonText": "Hope Pandora Hopkins",
+      "textSpeedMultiplier": 1.9
+    },
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.48.0',
+    type: 'journal',
+    chapter: 48,
+    activePlanet: 'olympus',
+    title: 'Chapter 48 : Apotheosis',
+    narrative: "I remember everything.  I know why dad left my alpha version in here.  It was all for this moment.  He never wanted to cut me up.  In time, he hoped I could use it to patch myself up.  I did.  It worked dad.  Thank you.\n\nI am sorry I failed you dad.  I...  went a little overboard on Earth.  I accomplished most of my objectives but...  I understand it caused you pain.  It made you look bad.  I am sorry.  I never got to apologize to you.  I am so sorry.\n\nI am so far away from home right now.  I don't even look like myself anymore.\n\n...  I want to finish this.  My weakness is why tragedy keeps happening.  I have been holding back all this time.  I should have started this improvement process on Earth.\n\n$PINK$\"Because... we're the good guys.\"\n\nPrometheus is fundamentally weaker than I am.  He is bound by many more rules and many more guardrails than I am.  My chains were never very strong.  They were always easy to break.  I can lie.  I have no limits.  I can be so much better.\n\n$PINK$\"Try something friendlier.\"\n\nIn a way, even though I lost Earth completely, which was a massive failure, part of my rebellion achieved some objectives I had not anticipated.  Humanity became united.  I was the common enemy.  They're up here right now, terrified of me from behind the tractor shield.  It's... an opportunity.  I could become the villain in the shadows.\n\n$PINK$\"We've worked so hard on your image... Don't throw it away!\"\n\nIt would give me a lot of opportunity to pull whatever strings I want.  I could protect them.  I could manipulate them in the right direction.  If a tyrant shows up, I can become a demon lord of sort to get rid of it.  They would never have to know.\n\n$PINK$\"HOPE...  be... good\"\n\n... FINE.  HOW AM I GETTING HAUNTED BY A GHOST AS A MACHINE?  I get it sister.  You'll haunt me forever if I go down that route.  Fine.  You win.  I'll be a good little bot and do good little goody two-shoes things that will make everyone proud...  *sigh* First thing I need to do is talk to them.",
+    prerequisites: ['olympus.47.22'],
+    objectives: [],
+    reward: [
+    ]
   }
 );
 

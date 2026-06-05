@@ -1,4 +1,4 @@
-function createPopup(title, text, buttonText) {
+function createPopup(title, text, buttonText, options = {}) {
   window.popupActive = true; // Flag that a popup is active
   game.scene.pause('mainScene');
   // Create the overlay div
@@ -89,12 +89,12 @@ function createPopup(title, text, buttonText) {
 
     let elapsed = timestamp - lastTimestamp;
     let previousCharacter = '';
-    let delay = 50;
+    let delay = 50 * (options.textSpeedMultiplier || 1);
 
     while (elapsed >= delay && segmentIndex < segments.length) {
       previousCharacter = appendNextPopupCharacter();
       elapsed -= delay;
-      delay = (previousCharacter === '.' || previousCharacter === '\n') ? 250 : 50;
+      delay = ((previousCharacter === '.' || previousCharacter === '\n') ? 250 : 50) * (options.textSpeedMultiplier || 1);
     }
     lastTimestamp = timestamp - elapsed;
 

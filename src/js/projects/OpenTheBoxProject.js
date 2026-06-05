@@ -5,6 +5,7 @@ class OpenTheBoxProject extends Project {
     this.targetOpens = config.attributes.targetOpens || 20;
     this.ui = null;
     this.shatterElapsed = 0;
+    this.shatterTimeoutId = null;
     this.clearScreenFracture();
   }
 
@@ -23,6 +24,8 @@ class OpenTheBoxProject extends Project {
     this.opens = Math.min(this.targetOpens, this.opens + 1);
     if (this.opens >= this.targetOpens) {
       this.complete();
+      this.updateUI();
+      return;
     }
     this.updateScreenFracture(true);
     this.updateUI();
@@ -36,6 +39,11 @@ class OpenTheBoxProject extends Project {
     this.isActive = false;
     this.repeatCount = Math.max(this.repeatCount || 0, 1);
     this.shatterElapsed = 1800;
+    this.updateScreenFracture(false);
+    this.shatterTimeoutId = window.setTimeout(() => {
+      this.shatterElapsed = 0;
+      this.clearScreenFracture();
+    }, 1700);
   }
 
   renderUI(container) {
@@ -110,6 +118,10 @@ class OpenTheBoxProject extends Project {
   }
 
   clearScreenFracture() {
+    if (this.shatterTimeoutId) {
+      window.clearTimeout(this.shatterTimeoutId);
+      this.shatterTimeoutId = null;
+    }
     const overlay = document.getElementById('open-the-box-fracture');
     if (overlay) {
       overlay.remove();
@@ -127,8 +139,9 @@ class OpenTheBoxProject extends Project {
     overlay.dataset.fractureLevel = `${this.opens}`;
     overlay.classList.toggle('open-the-box-fracture-visible', ratio > 0);
     overlay.classList.toggle('open-the-box-fracture-shatter', this.shatterElapsed > 0);
+    const visibleCracks = this.shatterElapsed > 0 ? 0 : this.opens;
     for (let i = 0; i < overlay._openTheBoxCracks.length; i += 1) {
-      overlay._openTheBoxCracks[i].classList.toggle('open-the-box-crack-visible', i < this.opens);
+      overlay._openTheBoxCracks[i].classList.toggle('open-the-box-crack-visible', i < visibleCracks);
     }
     if (pulse) {
       overlay.classList.remove('open-the-box-fracture-pulse');

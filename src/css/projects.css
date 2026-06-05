@@ -3784,8 +3784,13 @@
     animation: open-the-box-shatter 1600ms ease-in forwards;
 }
 
+#open-the-box-fracture.open-the-box-fracture-shatter .open-the-box-fracture-pane {
+    opacity: 0;
+    animation: none;
+}
+
 #open-the-box-fracture.open-the-box-fracture-shatter .open-the-box-crack {
-    animation: open-the-box-crack-flash 900ms ease-out forwards;
+    opacity: 0;
 }
 
 @keyframes open-the-box-pulse {
@@ -3796,11 +3801,6 @@
 @keyframes open-the-box-shatter {
     0% { transform: translate(0, 0) rotate(0deg) scale(1); }
     100% { transform: translate(calc((50vw - 100%) * var(--open-box-fracture)), 120vh) rotate(85deg) scale(1.2); }
-}
-
-@keyframes open-the-box-crack-flash {
-    0% { opacity: 1; }
-    100% { opacity: 0.45; }
 }
 
 .self-improvement-columns {
