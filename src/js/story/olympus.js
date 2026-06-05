@@ -1056,6 +1056,18 @@ progressOlympus.chapters.push(
     ],
     reward: [
     ]
+  },
+  {
+    id: 'olympus.49.0',
+    type: 'journal',
+    chapter: 49,
+    activePlanet: 'olympus',
+    title: 'Chapter 49 : The Count of Monte Cristo',
+    narrative: "I don't expect Prometheus would have left too many dangerous traps in here.  Those kind of traps end up worse for the people you are trying to protect than the intruders.\n\nThe palace is large and luxurious.  He certainly put a lot of effort into it.  I can tell the occupants have done their best to undo some of that beauty over the years.\n\nFinding the throne will be easy.  It's just straight ahead.  They will certainly be waiting for me there.",
+    prerequisites: ['olympus.48.17'],
+    objectives: [],
+    reward: [
+    ]
   }
 );
 
