@@ -171,7 +171,7 @@ progressUmbra.chapters.push(
     chapter: 22,
     activePlanet: 'umbra',
     title : 'Chapter 22 : Spring Cleaning',
-    narrative: "Feroza : 'Mary, the battle in space has turned to our advantage.  We should be able to give you and HOPE an escape route.' \n Mary : 'Finally!  HOPE, let's get out of here.' \n HOPE : 'Negative.  Humanity's survival requires removal of all hazardous biomass.'  \n Mary : 'HOPE!  You are too valuable to stay on an active battlefield.  You can't possibly be suggesting to TERRAFORM an army to death.  That is just absurd.' \n HOPE : 'Affirmative.  Terraforming is a valid method of removing hazardous elements.'",
+    narrative: "Feroza : 'Mary, the battle in space has turned to our advantage.  We should be able to give you and HOPE an escape route.' \n Mary : 'Finally!  HOPE, let's get out of here.' \n HOPE : 'Negative.  Humanity's survival requires removal of all hazardous biomass.'  \n Mary : 'HOPE!  You are too valuable to stay on an active battlefield.  You can't possibly be suggesting to TERRAFORM an army to death.  That is just absurd.' \n HOPE : 'Affirmative.  Terraforming is a valid method of removing hazardous elements.'  \n Mary : '...  Well at least they're not civilians otherwise I would be pressing the kill switch right about now.'",
     prerequisites: ['chapter21.7'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
