@@ -3639,6 +3639,11 @@
     min-width: 0;
 }
 
+.self-improvement-spend-button.self-improvement-spend-button-unaffordable,
+.self-improvement-spend-button.self-improvement-spend-button-unaffordable:disabled {
+    color: var(--status-failure-color, red);
+}
+
 .self-improvement-max-button {
     min-width: 0;
 }

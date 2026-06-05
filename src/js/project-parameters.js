@@ -68,6 +68,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       planet: 'olympus',
+      continuousAsBuilding: true,
       resourceGain: { surface: { scrapMetal: 1 } },
       showInResourcesRate: true
     }

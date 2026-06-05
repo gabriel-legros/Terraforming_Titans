@@ -66,6 +66,10 @@ class SelfImprovementProject extends Project {
   }
 
   spendStepCores() {
+    if (this.spendStep > this.getMaxSpendableCores()) {
+      this.updateUI();
+      return;
+    }
     this.spendCores(this.spendStep);
   }
 
@@ -368,6 +372,7 @@ class SelfImprovementProject extends Project {
     this.spendStep = this.clampSpendStep(this.spendStep);
     const maxCores = this.getMaxCores();
     const spendable = this.getMaxSpendableCores();
+    const selectedSpendAvailable = this.spendStep <= spendable;
     this.ui.coreValue.textContent = formatNumber(this.cores || 0, true);
     this.ui.coreLabel.textContent = this.getText('coreLabel', 'cores / {max}', { max: formatNumber(maxCores, true) });
     this.ui.progressFill.style.width = `${this.getLogProgress(maxCores) * 100}%`;
@@ -376,7 +381,8 @@ class SelfImprovementProject extends Project {
       cores: formatNumber(this.spendStep, true)
     });
     this.ui.maxButton.textContent = this.getText('max', 'Max: {cores} cores', { cores: formatNumber(spendable, true) });
-    this.ui.spendButton.disabled = spendable <= 0;
+    this.ui.spendButton.disabled = !selectedSpendAvailable;
+    this.ui.spendButton.classList.toggle('self-improvement-spend-button-unaffordable', !selectedSpendAvailable);
     this.ui.maxButton.disabled = spendable <= 0;
 
     const industrialRows = this.getIndustrialRows();

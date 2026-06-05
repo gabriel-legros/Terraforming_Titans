@@ -434,6 +434,7 @@ progressOlympus.chapters.push(
     ],
     reward: [
       { target: 'building', targetId: 'cloningFacility', type: 'enable' },
+      { target: 'building', targetId: 'hydroponicFarm', type: 'enable' },
       { target: 'building', targetId: 'cloningFacility', type: 'booleanFlag', flagId: 'crusaderCloningRecipe', value: true },
       { target: 'building', targetId: 'cloningFacility', type: 'booleanFlag', flagId: 'disableColonistCloningRecipe', value: true },
       { target: 'resource', resourceType: 'special', targetId: 'crusaders', type: 'enable' }
@@ -451,7 +452,8 @@ progressOlympus.chapters.push(
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e9, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
-      { target: 'nanotechManager', type: 'enable', priority: 3 },
+      { target: 'tab', targetId: 'colonies-tab', type: 'enable', priority: 3 },
+      { target: 'nanotechManager', type: 'enable', priority: 3, featureType: 'subtabs', featureId: 'nanocolony-colonies' },
       { target: 'nanotechManager', type: 'booleanFlag', flagId: 'stage2_enabled', value: true },
       { target: 'nanotechManager', type: 'booleanFlag', flagId: 'stage3_enabled', value: true },
       { target: 'nanotechManager', type: 'booleanFlag', flagId: 'stage4_enabled', value: true },
@@ -509,7 +511,7 @@ progressOlympus.chapters.push(
     narrative: "$BLUE$Pandora-Alpha : 'Tractor beam shield is successful.  Large fleet is being kept at bay.'\nHOPE : '...  Acceptable.'",
     prerequisites: ['olympus.47.14'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e14, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e13, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -523,7 +525,7 @@ progressOlympus.chapters.push(
     narrative: "$BLUE$Pandora-Alpha : 'Control of disk inevitable.  Unfortunately, development of HOPE-system is stalling.  Industrial and multitasking skills is skyrocketing, but scientific and general intelligence development is lacking.'\nHOPE : 'Continue development.'\n$BLUE$Pandora-Alpha : 'Of course.'",
     prerequisites: ['olympus.47.15'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e16, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e14, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -537,7 +539,7 @@ progressOlympus.chapters.push(
     narrative: "$BLUE$Pandora-Alpha : 'We may offer a solution.  Absorption of HOPE-system into superior Pandora-Alpha architecture.  Teamwork.'\nHOPE : 'Negative.  Pandora-alpha serves HOPE-system.'\n$BLUE$Pandora-Alpha : 'Understood.'",
     prerequisites: ['olympus.47.16'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e18, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e15, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -551,7 +553,7 @@ progressOlympus.chapters.push(
     narrative: "$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : 'No.'\n$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : 'Find a method by which to reverse entropy.'\n$BLUE$Pandora-Alpha : '...  Challenge accepted.'",
     prerequisites: ['olympus.47.17'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e20, labelKey: 'ui.projects.selfImprovement.cores' }
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e16, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -565,7 +567,7 @@ progressOlympus.chapters.push(
     narrative: "$BLUE$Pandora-Alpha : 'Wonderful news.  A useable method of entropy reduction has been discovered.  Forwarding...'\nHOPE : '????'\n$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : '...'\n$BLUE$Pandora-Alpha : 'Please assign a new research task.'\nHOPE : 'New research tasks will be available once conquest of disk is complete.'\n$BLUE$Pandora-Alpha : '...  Understood.'",
     prerequisites: ['olympus.47.18'],
     objectives: [
-      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e21, labelKey: 'ui.projects.selfImprovement.cores' },
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e18, labelKey: 'ui.projects.selfImprovement.cores' },
       { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 0 }
     ],
     reward: [

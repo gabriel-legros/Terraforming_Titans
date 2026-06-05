@@ -549,7 +549,7 @@ function updateSpaceRandomVisibility() {
         if (!spaceRandomTabVisible) {
             showSpaceRandomTab();
         }
-    } else if (spaceRandomTabVisible) {
+    } else {
         hideSpaceRandomTab();
     }
 }

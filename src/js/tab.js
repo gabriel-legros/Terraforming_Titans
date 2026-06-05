@@ -120,12 +120,15 @@ const tabParameters = {
   
     // Enable a tab by removing the hidden class
     enable(tabId) {
-      if (this.tabs[tabId]) {
+      const managedTabId = this.tabs[tabId]
+        ? tabId
+        : document.querySelector(`[data-tab="${tabId}"]`)?.id;
+      if (managedTabId && this.tabs[managedTabId]) {
         if (isCurrentWorldTabDisabled(tabId)) {
-          this.hide(tabId);
+          this.hide(managedTabId);
           return;
         }
-        this.tabs[tabId].classList.remove('hidden');
+        this.tabs[managedTabId].classList.remove('hidden');
         console.log(`Tab "${tabId}" unlocked.`);
       } else {
         console.error(`Tab "${tabId}" not managed by TabManager.`);

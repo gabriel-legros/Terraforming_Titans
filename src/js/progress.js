@@ -703,26 +703,39 @@ class StoryManager {
        }
    }
 
-    // Determine the first incomplete objective from active events
-    getCurrentObjectiveText() {
+    // Determine the incomplete objectives from the earliest active event waiting on objectives
+    getCurrentObjectiveTexts() {
         for (const id of this.activeEventIds) {
             const ev = this.findEventById(id);
             if (!ev || !ev.objectives) continue;
+            const texts = [];
             for (const obj of ev.objectives) {
                 if (!this.isObjectiveComplete(obj, ev)) {
-                    return this.describeObjective(obj);
+                    const text = this.describeObjective(obj);
+                    if (text) {
+                        texts.push(text);
+                    }
                 }
             }
+            if (texts.length) return texts;
         }
-        return '';
+        return [];
+    }
+
+    getCurrentObjectiveText() {
+        return this.getCurrentObjectiveTexts().join('; ');
     }
 
     updateCurrentObjectiveUI() {
         if (typeof document === 'undefined') return;
         const el = document.getElementById('current-objective');
         if (!el) return;
-        const text = this.getCurrentObjectiveText();
-        el.textContent = text ? `Objective: ${text}` : '';
+        const texts = this.getCurrentObjectiveTexts();
+        if (texts.length === 0) {
+            el.textContent = '';
+            return;
+        }
+        el.textContent = `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`;
     }
 
     shouldApplyEffect(effect) {
