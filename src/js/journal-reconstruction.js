@@ -46,9 +46,35 @@
         if (ch.objectives) {
           ch.objectives.forEach(obj => {
             if (obj.type === 'project') {
-              const steps = storyProjects[obj.projectId]?.attributes?.storyStepLines || storyProjects[obj.projectId]?.attributes?.storySteps || [];
-              const needed = obj.repeatCount || steps.length;
               const proj = projects[obj.projectId] || {};
+              if (typeof proj.getJournalObjectiveSteps === 'function') {
+                const steps = proj.getJournalObjectiveSteps();
+                const needed = obj.repeatCount || steps.length;
+                const assumeCompleted = completedOnly.has(ch.id);
+                const targetCount = assumeCompleted ? Math.min(needed, steps.length) : Math.min(steps.length, needed);
+                const projName = storyProjects[obj.projectId]?.name;
+                const total = steps.length;
+                const completedCount = projectStepProgress.get(obj.projectId) || 0;
+                for (let i = completedCount; i < targetCount; i++) {
+                  const stepText = steps[i];
+                  if (stepText != null) {
+                    let textStr = joinLines(stepText);
+                    if (projName) {
+                      textStr = `${projName} ${i + 1}/${total}: ${textStr}`;
+                    }
+                    textStr = resolve(textStr);
+                    entries.push(textStr);
+                    sources.push({ type: 'project', id: obj.projectId, step: i });
+                    historyEntries.push(textStr);
+                    historySources.push({ type: 'project', id: obj.projectId, step: i });
+                  }
+                }
+                projectStepProgress.set(obj.projectId, Math.max(completedCount, targetCount));
+                return;
+              }
+              const projectAttributes = storyProjects[obj.projectId]?.attributes || {};
+              const steps = projectAttributes.formattedStoryStepLines || projectAttributes.formattedStorySteps || projectAttributes.storyStepLines || projectAttributes.storySteps || [];
+              const needed = obj.repeatCount || steps.length;
               const repeat = proj.repeatCount || 0;
               const assumeCompleted = completedOnly.has(ch.id);
               const targetCount = assumeCompleted ? Math.min(needed, steps.length) : Math.min(repeat, needed, steps.length);

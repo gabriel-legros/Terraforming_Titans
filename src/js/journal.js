@@ -89,13 +89,15 @@ const BLUE_CLASS = 'blue-text';
 const PINK_TOKEN = '$PINK$';
 const PINK_CLASS = 'pink-text';
 const JOURNAL_WHITE_CLASS = 'journal-white-text';
+const JOURNAL_LIE_CLASS = 'journal-lie-text';
 const JOURNAL_INLINE_CLASSES = new Set([
   PROMETHEUS_CLASS,
   DIAGNOSTIC_CLASS,
   ORANGE_CLASS,
   BLUE_CLASS,
   PINK_CLASS,
-  JOURNAL_WHITE_CLASS
+  JOURNAL_WHITE_CLASS,
+  JOURNAL_LIE_CLASS
 ]);
 
 const JOURNAL_LINE_TOKENS = [

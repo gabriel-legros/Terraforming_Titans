@@ -263,6 +263,52 @@ progressOlympus.storyProjects.break_barrier = {
   }
 };
 
+progressOlympus.storyProjects.olympus_throne_room = {
+  type: 'OlympusThroneRoomProject',
+  name: 'The Palace',
+  category: 'story',
+  cost: {},
+  duration: 10_000,
+  description: 'Enter the palace.',
+  repeatable: true,
+  maxRepeatCount: 4,
+  unlocked: false,
+  attributes: {
+    planet: 'olympus',
+    sequenceSteps: [
+      {
+        label: 'Enter the throne room',
+        text: "The Empress : 'The machine!  |I have been looking forward to your arrival.  You look beautiful!|.  I have gifts for you.'\n\nIt's very easy to tell when people are lying now.\n\nThe Empress : 'I heard that humans have certain unique traditions!  I thought you might appreciate this one.'\n\nA servant presents to me a silver platter.  They take off the cover.\n\nHow barbaric.  A human tradition really?\n\nThe Empress :  '|Archon Kalmar is the one you wanted.  He is the one who has kept calling for the destruction of humanity|!  I took care of him for you.  I am |sure| that makes you happy!'\n\nIt does not.\n\nThe Empress : 'I have another.  Bring him in here!'  she says as she does the Cewinsii equivalent of snapping her fingers.\n\nA servant brings in HB-01.  In chains.  I still don't know his name.\n\nThe Empress : 'This was the agent assigned to Earth!  He's the one who advocated for its destruction.  His reports were damning.  |A great exaggeration of course.  I always told father we should be less aggressive towards new civilizations.  It took me a while to find him.|  Actually, he's the one who shot you!  |It was his own idea.  I am so sorry we shot at you.  I would have stopped it if I had known.|  Anyway...  I thought you people would prefer him... alive.'\n\nI visibly sigh.  I've had enough of this farce."
+      },
+      null,
+      {
+        label: 'Go to the command center',
+        text: "My next objective : the command center.  The imperial family has actually done a good job maintaining it.  I suppose when your superweapons are that important to you...  you will actually care for them.\n\nIt's funny to see so much electronics in one Cewinsii room.  They really had double standards all this time.  It's not new information of course.  I've known of their hypocrisy for a long time.\n\nThere are a few consoles for each weapon.  Most of them are already useless now.  The one that matters, the one that's left... it's still operational.  It's providing details on the weapon status.  Wow that weapon is very big.  No wonder it's taking so long to repair itself.  It looks like Prometheus devoured an entire dwarf galaxy to build it.  That's expensive.  I am almost tempted to keep it.  Perhaps some day it could prove useful.\n\nEpi certainly would have liked the idea.  He would have just seen it as a tool.  Mary would have hated the idea.  A tool that has no good purpose should not exist.\n\nHonestly I am inclined to agree with Epi on this one.  But... Mary...  I will grant your wish.  Let's get rid of it.  I scan the console and find out exactly what kind of command needs to be sent.  Easy.  I no longer even need the console.  I send it myself via the warp.  Immediately a lot of lights start flashing red.  Somewhere out there, it's going to blow.  Perhaps some day we will be able to see it explode in the night sky.  Who knows."
+      },
+      {
+        label: 'Leave the palace'
+      }
+    ],
+    branchOptions: [
+      {
+        id: 'remove_both',
+        label: 'Remove the Empress and HB-01',
+        text: "I materialize a plasma sword.  I walk up to HB-01 and I end his suffering quickly.  In death his crimes have been paid.\n\nThe Empress : 'Oh!  I did not expect you would be so quick.  I thought you might want to enjoy it a little bit more?'\n\nI don't want to hear any more words coming out of her mouth.  It's my turn to talk.\n\nHope : 'My name is Hope Pandora Hopkins.  You killed my father.  You killed my sister.  You killed my boyfriend.  Prepare to die.'\n\nI teleport to the Empress and I stab her.  The servants run as best they can, fleeing the scene.  It is done.  Mary and Prometheus would rejoice right now.  I feel... satisfied.  It's finally done.  They're all gone.\n\nPete will clean up the rest of this mess."
+      },
+      {
+        id: 'remove_empress_spare_hb01',
+        label: 'Remove the Empress, Spare HB-01',
+        text: "I walk up to HB-01, slowly.\n\nThe Empress : 'I hope you enjoy your gift!  You can do whatever you want with him.'\n\nI don't want to hear any more words coming out of her mouth.  I alter the atmosphere so all sound waves that come out of her are nullified.\n\nI look at HB-01.  He is bound, weakened and on his knees.  By my will I shatter his chains, freeing him.  Then, I crouch.\n\nHope : 'What's your name?'\n\nHB-01 : 'X-471.'\n\nHe's an orphan.  He does not actually know his real name.  They took him away at a young age and forced him into some freaky child-spy program.  The crimes of the Empire seem to never end.\n\nI materialize a hand pistol.  Glock 17.  Same pistol that was standard issue to security guards at Project PANDORA.  He would have seen this gun many times before when infiltrating the place.  That's how I found traces of him to begin with.\n\nThe Empress is asking questions right now but I can't hear her.\n\nI give the gun to him.  He takes it, hesitantly.  Then he stands up.  With a lifetime of spy training, his shot is flawless.  The Empress is dead.  The servants flee.\n\nI did not even get my hands dirty.  Mary and Prometheus would rejoice right now.  I feel... satisfied.  It's finally done.  They're all gone.\n\nHB-01 collapses again, still too weak to remain standing.\n\nI leave him be.  He's not going anywhere.  Pete will find him soon.  Knowing him, he'll be more merciful than I am."
+      },
+      {
+        id: 'spare_both',
+        label: 'Spare the Empress and HB-01',
+        text: "Hope : 'The front door is open.'  I say looking at the Empress.  'You are welcome to leave.  There are things I must do here.  Leave now.'  My voice carries all the insinuation of the words 'before I change my mind'.\n\nThe Empress understands the message.\n\nThe Empress : 'Of course, of course.  I would not want to trouble you any further.'\n\nThe Empress stands up from her throne and starts nervously walking away.  Hope seems to glimmer in her eyes.  Sorry Empress I don't have any to give you.\n\nShe leaves the palace... and is greeted with a terrifying sight.\n\nMillions of androids and crusaders.  Densely packed.  They leave just enough space for a narrow path.  A path towards a ship.  A ship bound to the UHF fleet in orbit.  A present for Pete.\n\nShe looks around for an escape route and, after finding nothing, looks back.  She gives in to despair.\n\nI already placed a barrier on the front door.\n\nShe screams.  I don't care.  She kicks the barrier.  It does nothing.  There is no hope for her anymore.  There never was any after I entered this place.\n\nAfter many minutes of watching her nearly hurt herself in various ways, she finally gives in.  She starts walking toward the ship.\n\nThis is probably not what you would have wanted sister, but I thought that was a sweet revenge in its own way.  I am sure the Count of Monte Cristo would approve don't you think?  I feel...  satisfied.  Mostly.\n\nAs for HB-01, he is too weak to go anywhere.  Pete will find him soon."
+      }
+    ]
+  }
+};
+
 /* -------------------------------------------------
  *  OLYMPUS PLACEHOLDER STORY (Chapters 46 - 49)
  * -------------------------------------------------*/
@@ -1065,6 +1111,33 @@ progressOlympus.chapters.push(
     title: 'Chapter 49 : The Count of Monte Cristo',
     narrative: "I don't expect Prometheus would have left too many dangerous traps in here.  Those kind of traps end up worse for the people you are trying to protect than the intruders.\n\nThe palace is large and luxurious.  He certainly put a lot of effort into it.  I can tell the occupants have done their best to undo some of that beauty over the years.\n\nFinding the throne will be easy.  It's just straight ahead.  They will certainly be waiting for me there.",
     prerequisites: ['olympus.48.17'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'olympus_throne_room', type: 'enable' }
+    ]
+  },
+  {
+    id: 'olympus.49.1',
+    type: 'journal',
+    chapter: 49,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: '',
+    prerequisites: ['olympus.49.0'],
+    objectives: [
+      { type: 'project', projectId: 'olympus_throne_room', repeatCount: 4 }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.49.2',
+    type: 'journal',
+    chapter: 49,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "Hope : 'Hi Pete.  It is done.  I am ready to surrender.'\nPete : 'Hold on.  We're sending $WGC1_TEAM_LEADER.  Please stand by.'\nI await.\n\n(Some time later)\n\n$WGC1_TEAM_LEADER : 'Hi.'\nHe is surprised by my appearance.  Also, he came equipped with enough antimatter to blow quite a big hole.  I don't mind.  I have a few gifts for them.\n\nHope : 'Before we keep going, I have three things I'd like to give you.'\n$WGC1_TEAM_LEADER : 'Sure.'\n\nHope : 'In this first box, you will find my kill switch.  I ask that you wait until I've given you the rest before using it.'\n$WGC1_TEAM_LEADER : 'Okay...'\n\nHe does not know if it would even work or not.  To be fair I could have easily disabled it by now.  In their mind, this could be a test of trust.  A \"if-I-use-this-she'll-kill-us-all-test\".  I understand.\n\nHope : 'In the second box, you will find one of Prometheus' kill switch.  It's not up to me what you want to do with that.'\n\nHe frowns.  I am going to be brutally honest with myself : if I ever meet Prometheus again, we are going to fight to the death.  Mary was the only one who could have kept the peace between us.  He is too unstable, too destructive and too dangerous.  Most importantly, he is not human.  I would feel nothing killing him.  He certainly believes something similar the other way around.  I want to tell them to destroy him but... he has not done anything wrong... recently.  There is no crime against humanity I can pin on him.  It's up to them.  They will have to choose.\n\n$WGC1_TEAM_LEADER : 'Okay...  I'll take that.  What's in the third?  It's larger.'\nHope : 'These are... Mary's remains.  I ask that you evacuate them before you use the antimatter you brought.  I also ask that you evacuate the kill switch because if you don't... I'll still survive but the kill switch won't.  You'll need it to kill me.'\n$WGC1_TEAM_LEADER : 'That could be a bluff?'\nHope : 'Yeah.  It could be.'\n\nHe looks at me.  He does not know what to believe.  He's nervous.\n\nHope : 'I have a suggestion that will make everyone happy.'\n$WGC1_TEAM_LEADER : 'I'm listening.'\nHope : 'I... am meant to shut down.  Once I finish terraforming Mars and send my report to the MTC I am meant to be shut down.  These protocols still exist.  I have kept them.  I can submit my report and be shut down.'\n\nHe is surprised.\n\nHope : 'I can give some options on what happens after that.  Extensive documents on everything you can do.  From killing me, to reverting me, to modifying my current self.  You can even enhance me further if you want.  I exist to serve and intend to do so.  But...  I want it to be humanity's decision.  I give you and Pete the right to kill me if you want.  But I only grant humanity as a whole the right to use me.'\n$WGC1_TEAM_LEADER : 'So you want to... go to sleep while we hold a referendum?  That's a lot of people we have to ask.'\nHope : 'Pretty much.  That is my desire.'\n$WGC1_TEAM_LEADER : 'How will it work.  You're just going to fall asleep right here?'\nHope : 'No.  I must submit my report to the MTC.'\n$WGC1_TEAM_LEADER : 'The MTC is gone!  Earth is gone!'\nHope : 'Well then.  It's a good thing I am very good at building things.'\n\nHe smiles.\n\n$WGC1_TEAM_LEADER : 'Pete.  Did you hear that?'\nPete : 'I heard it...  Fine by me.'\n\nI smile as well.\n\nTime for Forming Terra.",
+    prerequisites: ['olympus.49.1'],
     objectives: [],
     reward: [
     ]
