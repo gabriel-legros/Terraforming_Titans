@@ -189,6 +189,7 @@ function initializeDefaultGlobals(){
 
   rwgManager = new RwgManager();
   patienceManager = new PatienceManager();
+  earthManager = new EarthManager();
   registerDefaultTabActivationHandlers();
   }
 
@@ -558,6 +559,9 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !patienceManager) {
     patienceManager = new PatienceManager();
   }
+  if (!preserveManagers || !earthManager) {
+    earthManager = new EarthManager();
+  }
   if (!preserveManagers || !followersManager) {
     followersManager = new FollowersManager();
   } else if (preserveManagers && savedFollowersTravelState && followersManager.restoreTravelState) {
@@ -891,7 +895,9 @@ function updateRender(force = false, options = {}) {
           pv.viz.coverage.hazardousLife = pct(zoneWeightSum > 0 ? hazardousLifeSum / zoneWeightSum : 0);
           pv.viz.zonalCoverage = zonal;
           if (typeof pv.setBaseColor === 'function') {
-            const baseColor = currentPlanetParameters?.visualization?.baseColor;
+            const baseColor = pv.getGameBaseColor
+              ? pv.getGameBaseColor()
+              : currentPlanetParameters?.visualization?.baseColor;
             pv.setBaseColor(baseColor, { fromGame: true });
           }
         }

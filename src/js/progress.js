@@ -490,6 +490,11 @@ class StoryManager {
                    return solisManager.solisPoints >= (objective.points || 0);
                }
                return false;
+          case 'earthAction': {
+               const current = earthManager ? earthManager.getActionCount(objective.actionId) : 0;
+               const target = objective.quantity || objective.value || 0;
+               return compareValues(current, target, objective.comparison);
+          }
           case 'galaxySectorControl': {
                const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label;
                const sector = findGalaxySector(sectorLabel);
@@ -670,6 +675,12 @@ class StoryManager {
                const current = solisManager ? solisManager.solisPoints || 0 : 0;
                return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
            }
+          case 'earthAction': {
+               const current = earthManager ? earthManager.getActionCount(objective.actionId) : 0;
+               const target = objective.quantity || objective.value || 0;
+               const label = objective.labelKey ? t(objective.labelKey, null, objective.label || objective.actionId) : (objective.label || objective.actionId);
+               return `${label} ${format(current, true)}/${format(target, true)}`;
+          }
           case 'condition': {
                return objective.description || '';
           }

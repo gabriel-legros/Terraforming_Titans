@@ -330,7 +330,8 @@ const terraformingUICache = {
   life: {},
   magnetosphere: {},
   luminosity: {},
-  summary: {}
+  summary: {},
+  earthActions: {}
 };
 
 const TEMPERATURE_INFOGRAPHIC_PATH = 'assets/images/infographic.jpg';
@@ -692,6 +693,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
     case 'world-terraforming': {
       updateWorldVisualizerDisabledPrompt();
       updateWorldVisualizerFailurePrompt();
+      updateEarthReconstructionControls();
       const viz = typeof window !== 'undefined' ? window.planetVisualizer : null;
       if (!suppressPlanetVisualizerRuntime && terraformingWorldInitialized && isTerraformingWorldSubtabActive() && viz && viz.animate) {
         try {
@@ -762,6 +764,191 @@ function updateWorldVisualizerFailurePrompt() {
     'World visualizer failed ({reason}). Click to retry.'
   );
   prompt.style.display = 'flex';
+}
+
+function updateEarthReconstructionControls() {
+  const controls = terraformingUICache.earthActions;
+  if (!controls || !controls.container) return;
+
+  const currentPlanetKey = spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : '';
+  const showControls = currentPlanetKey === 'earth'
+    && earthManager
+    && earthManager.enabled
+    && (
+      earthManager.isActionUnlocked('increaseMass')
+      || earthManager.isActionUnlocked('removeHeat')
+      || earthManager.isActionUnlocked('shapeSurface')
+      || earthManager.isActionUnlocked('buildAtmosphere')
+      || earthManager.isActionUnlocked('addWater')
+      || earthManager.isActionUnlocked('adjustTilt')
+      || earthManager.isActionUnlocked('restoreBiomass')
+    );
+
+  controls.container.classList.toggle('hidden', !showControls);
+  if (!showControls) return;
+
+  const massCount = earthManager.getActionCount('increaseMass');
+  controls.increaseMassButton.classList.toggle('hidden', !earthManager.isActionUnlocked('increaseMass'));
+  controls.increaseMassButton.textContent = `${t('ui.terraforming.earthActions.increaseMass', null, 'Increase mass')} ${massCount}/${EARTH_RECONSTRUCTION_MAX_MASS_STEPS}`;
+  controls.increaseMassButton.disabled = massCount >= EARTH_RECONSTRUCTION_MAX_MASS_STEPS;
+
+  const heatCount = earthManager.getActionCount('removeHeat');
+  controls.removeHeatButton.classList.toggle('hidden', !earthManager.isActionUnlocked('removeHeat'));
+  controls.removeHeatButton.textContent = `${t('ui.terraforming.earthActions.removeHeat', null, 'Remove heat')} ${heatCount}/${EARTH_RECONSTRUCTION_MAX_HEAT_STEPS}`;
+  controls.removeHeatButton.disabled = heatCount >= EARTH_RECONSTRUCTION_MAX_HEAT_STEPS;
+
+  const shapeCount = earthManager.getActionCount('shapeSurface');
+  controls.shapeSurfaceButton.classList.toggle('hidden', !earthManager.isActionUnlocked('shapeSurface'));
+  controls.shapeSurfaceButton.textContent = `${t('ui.terraforming.earthActions.shapeSurface', null, 'Shape surface')} ${shapeCount}/${EARTH_RECONSTRUCTION_MAX_SHAPE_STEPS}`;
+  controls.shapeSurfaceButton.disabled = shapeCount >= EARTH_RECONSTRUCTION_MAX_SHAPE_STEPS;
+
+  const atmosphereCount = earthManager.getActionCount('buildAtmosphere');
+  controls.buildAtmosphereButton.classList.toggle('hidden', !earthManager.isActionUnlocked('buildAtmosphere'));
+  controls.buildAtmosphereButton.textContent = `${t('ui.terraforming.earthActions.buildAtmosphere', null, 'Build atmosphere')} ${atmosphereCount}/${EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS}`;
+  controls.buildAtmosphereButton.disabled = atmosphereCount >= EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS;
+
+  const waterCount = earthManager.getActionCount('addWater');
+  controls.addWaterButton.classList.toggle('hidden', !earthManager.isActionUnlocked('addWater'));
+  controls.addWaterButton.textContent = `${t('ui.terraforming.earthActions.addWater', null, 'Add water')} ${waterCount}/${EARTH_RECONSTRUCTION_MAX_WATER_STEPS}`;
+  controls.addWaterButton.disabled = waterCount >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS;
+
+  const tiltCount = earthManager.getActionCount('adjustTilt');
+  controls.adjustTiltButton.classList.toggle('hidden', !earthManager.isActionUnlocked('adjustTilt'));
+  controls.adjustTiltButton.textContent = `${t('ui.terraforming.earthActions.adjustTilt', null, 'Adjust tilt')} ${tiltCount}/${EARTH_RECONSTRUCTION_MAX_TILT_STEPS}`;
+  controls.adjustTiltButton.disabled = tiltCount >= EARTH_RECONSTRUCTION_MAX_TILT_STEPS;
+
+  const biomassCount = earthManager.getActionCount('restoreBiomass');
+  controls.restoreBiomassButton.classList.toggle('hidden', !earthManager.isActionUnlocked('restoreBiomass'));
+  controls.restoreBiomassButton.textContent = `${t('ui.terraforming.earthActions.restoreBiomass', null, 'Restore biomass')} ${biomassCount}/${EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS}`;
+  controls.restoreBiomassButton.disabled = biomassCount >= EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS;
+}
+
+function createEarthReconstructionControls() {
+  const controls = document.createElement('div');
+  controls.className = 'earth-reconstruction-controls hidden';
+
+  const increaseMassButton = document.createElement('button');
+  increaseMassButton.type = 'button';
+  increaseMassButton.className = 'earth-reconstruction-button';
+  increaseMassButton.addEventListener('click', () => {
+    if (earthManager.pressAction('increaseMass')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.applyEarthVisualOverrides) {
+        window.planetVisualizer.applyEarthVisualOverrides();
+        window.planetVisualizer.updateEarthAsteroidVisibility();
+      }
+    }
+  });
+
+  const removeHeatButton = document.createElement('button');
+  removeHeatButton.type = 'button';
+  removeHeatButton.className = 'earth-reconstruction-button hidden';
+  removeHeatButton.addEventListener('click', () => {
+    if (earthManager.pressAction('removeHeat')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.updateLavaOverlay) {
+        window.planetVisualizer.updateSurfaceHeatMaterial();
+        window.planetVisualizer.updateLavaOverlay();
+      }
+    }
+  });
+
+  const shapeSurfaceButton = document.createElement('button');
+  shapeSurfaceButton.type = 'button';
+  shapeSurfaceButton.className = 'earth-reconstruction-button hidden';
+  shapeSurfaceButton.addEventListener('click', () => {
+    if (earthManager.pressAction('shapeSurface')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.updateSurfaceTextureFromPressure) {
+        window.planetVisualizer.heightMap = null;
+        window.planetVisualizer.heightZoneHists = null;
+        window.planetVisualizer.resetSurfaceTextureThrottle();
+        window.planetVisualizer.updateSurfaceTextureFromPressure(true);
+      }
+    }
+  });
+
+  const buildAtmosphereButton = document.createElement('button');
+  buildAtmosphereButton.type = 'button';
+  buildAtmosphereButton.className = 'earth-reconstruction-button hidden';
+  buildAtmosphereButton.addEventListener('click', () => {
+    if (earthManager.pressAction('buildAtmosphere')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+    }
+  });
+
+  const addWaterButton = document.createElement('button');
+  addWaterButton.type = 'button';
+  addWaterButton.className = 'earth-reconstruction-button hidden';
+  addWaterButton.addEventListener('click', () => {
+    if (earthManager.pressAction('addWater')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.resetSurfaceTextureThrottle) {
+        window.planetVisualizer.resetSurfaceTextureThrottle();
+      }
+    }
+  });
+
+  const adjustTiltButton = document.createElement('button');
+  adjustTiltButton.type = 'button';
+  adjustTiltButton.className = 'earth-reconstruction-button hidden';
+  adjustTiltButton.addEventListener('click', () => {
+    if (earthManager.pressAction('adjustTilt')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.applyEarthVisualOverrides) {
+        window.planetVisualizer.applyEarthVisualOverrides();
+      }
+    }
+  });
+
+  const restoreBiomassButton = document.createElement('button');
+  restoreBiomassButton.type = 'button';
+  restoreBiomassButton.className = 'earth-reconstruction-button hidden';
+  restoreBiomassButton.addEventListener('click', () => {
+    if (earthManager.pressAction('restoreBiomass')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+    }
+  });
+
+  controls.appendChild(increaseMassButton);
+  controls.appendChild(removeHeatButton);
+  controls.appendChild(shapeSurfaceButton);
+  controls.appendChild(buildAtmosphereButton);
+  controls.appendChild(addWaterButton);
+  controls.appendChild(adjustTiltButton);
+  controls.appendChild(restoreBiomassButton);
+  terraformingUICache.earthActions = {
+    container: controls,
+    increaseMassButton,
+    removeHeatButton,
+    shapeSurfaceButton,
+    buildAtmosphereButton,
+    addWaterButton,
+    adjustTiltButton,
+    restoreBiomassButton
+  };
+  return controls;
 }
 
 function setWorldVisualizerRuntimeFailure(reason) {
@@ -937,6 +1124,11 @@ function createTerraformingWorldUI() {
   // Clear any placeholder content and create the visualizer shell
   while (host.firstChild) host.removeChild(host.firstChild);
 
+  const layout = document.createElement('div');
+  layout.className = 'earth-visualizer-layout';
+
+  const earthControls = createEarthReconstructionControls();
+
   // Container for WebGL canvas
   const container = document.createElement('div');
   container.className = 'planet-visualizer';
@@ -962,7 +1154,9 @@ function createTerraformingWorldUI() {
   failurePrompt.className = 'planet-visualizer-failure-prompt';
   failurePrompt.addEventListener('click', retryWorldVisualizerAfterFailure);
 
-  host.appendChild(container);
+  host.appendChild(layout);
+  layout.appendChild(earthControls);
+  layout.appendChild(container);
   container.appendChild(disabledPrompt);
   container.appendChild(failurePrompt);
   host.appendChild(overlay);
@@ -971,6 +1165,7 @@ function createTerraformingWorldUI() {
   terraformingWorldInitialized = true;
   updateWorldVisualizerDisabledPrompt();
   updateWorldVisualizerFailurePrompt();
+  updateEarthReconstructionControls();
 }
 
 function createTerraformingSummaryUI() {

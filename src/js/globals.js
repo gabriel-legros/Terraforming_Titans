@@ -158,6 +158,7 @@ let galaxyInvasionManager;
 let nanotechManager;
 let followersManager;
 let milestonesManager;
+let earthManager;
 let playTimeSeconds = 0;
 let totalPlayTimeSeconds = 0;
 let realPlayTimeSeconds = 0;

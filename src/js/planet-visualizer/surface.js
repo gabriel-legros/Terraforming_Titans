@@ -231,6 +231,43 @@
     return clamp01((valueLog - minLog) / span);
   }
 
+  function getEarthReconstructionShapeRatio(context) {
+    if (context.isEarthReconstructionVisualActive()) {
+      return earthManager.getVisualizerState().surfaceShapeRatio;
+    }
+    return 1;
+  }
+
+  function getEarthReconstructionNoiseHeight(u, v, phase) {
+    const wave = (longitudeFrequency, latitudeFrequency, angle, offset) => {
+      const lon = u * Math.PI * 2 * longitudeFrequency + angle;
+      const lat = v * Math.PI * 2 * latitudeFrequency + offset;
+      return Math.sin(lon + Math.sin(lat) * 0.7);
+    };
+    const broad = wave(2, 1.4, phase * 0.31, phase * 0.47) * 0.5 + 0.5;
+    const mid = wave(6, 3.6, phase * 0.73, phase * 0.19) * 0.5 + 0.5;
+    const fine = wave(17, 9.2, phase * 1.17, phase * 0.61) * 0.5 + 0.5;
+    const ridge = 1 - Math.abs((wave(9, 5.4, phase * 1.43, phase * 0.83) * 0.5 + 0.5) * 2 - 1);
+    return clamp01(0.18 + broad * 0.38 + mid * 0.2 + ridge * 0.16 + fine * 0.08);
+  }
+
+  function getEarthReconstructionPeriodicLavaNoise(u, v, phase) {
+    const periodicHash = (scale, offset) => {
+      const lon = u * Math.PI * 2;
+      const x = Math.cos(lon) * scale;
+      const z = Math.sin(lon) * scale;
+      const y = v * scale;
+      const n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + phase * 19.19 + offset) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const coarse = periodicHash(18, 0);
+    const mid = periodicHash(46, 11.7);
+    const fine = periodicHash(92, -5.4);
+    const pin = periodicHash(170, 27.3);
+    const ridge = 1 - Math.abs((mid * 0.62 + fine * 0.38) * 2 - 1);
+    return clamp01(coarse * 0.18 + mid * 0.25 + fine * 0.32 + pin * 0.16 + ridge * 0.09);
+  }
+
   PlanetVisualizer.prototype.getSurfaceTemperatureK = function getSurfaceTemperatureK() {
     const worldTemp = this.terraforming?.temperature?.value;
     if (Number.isFinite(worldTemp) && worldTemp > 0) {
@@ -244,7 +281,11 @@
   };
 
   PlanetVisualizer.prototype.getLavaTransitionStrength = function getLavaTransitionStrength() {
-    return smoothstep(LAVA_WORLD_START_K, LAVA_WORLD_FULL_K, this.getSurfaceTemperatureK());
+    const baseStrength = smoothstep(LAVA_WORLD_START_K, LAVA_WORLD_FULL_K, this.getSurfaceTemperatureK());
+    if (this.isEarthReconstructionVisualActive()) {
+      return baseStrength * earthManager.getVisualizerState().heatRatio;
+    }
+    return baseStrength;
   };
 
   PlanetVisualizer.prototype.updateSurfaceHeatMaterial = function updateSurfaceHeatMaterial() {
@@ -435,7 +476,10 @@
     if (!material) return;
 
     const { w, h } = this.getSurfaceTextureSize();
-    const textureKey = `${w}x${h}`;
+    const earthKey = this.isEarthReconstructionVisualActive()
+      ? `${earthManager.getActionCount('shapeSurface')}`
+      : '';
+    const textureKey = `${w}x${h}|${earthKey}`;
     if (this.lavaOverlayTexture && this.lavaOverlayTextureKey === textureKey) {
       return;
     }
@@ -624,7 +668,13 @@
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
     const heightKey = resolveHeightMapKey(this);
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}`;
+    const earthShapeKey = this.isEarthReconstructionVisualActive() ? earthManager.getActionCount('shapeSurface') : '';
+    if (earthShapeKey !== this._earthSurfaceShapeTextureKey) {
+      this._earthSurfaceShapeTextureKey = earthShapeKey;
+      this.heightMap = null;
+      this.heightZoneHists = null;
+    }
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -758,8 +808,9 @@
   PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength, surfaceBaseHex) {
     const { w, h } = this.getSurfaceTextureSize();
     const ringAspect = this.getRingUvAspect();
+    const skipCraters = this.isEarthReconstructionVisualActive();
 
-    if (!this.craterLayer) {
+    if (!skipCraters && !this.craterLayer) {
       const craterCanvas = document.createElement('canvas');
       craterCanvas.width = w; craterCanvas.height = h;
       const cctx = craterCanvas.getContext('2d');
@@ -842,6 +893,7 @@
     const isRing = this.isRingWorld();
     const isDisk = this.isDiskWorld();
     const rand = createJitterRandom(seed.x, seed.y);
+    const terrainReveal = smoothstep(0, 1, getEarthReconstructionShapeRatio(this));
 
     let gradientBase = baseHex;
     if (palette.tint) {
@@ -876,7 +928,7 @@
     const featureMask = Math.max(0, palette.featureMask ?? 1);
     const shadeBias = palette.shade ?? 1;
 
-    const craterStrength = isArtificial ? 0 : strength;
+    const craterStrength = (isArtificial || skipCraters) ? 0 : strength;
     if (craterStrength > 0) {
       ctx.globalAlpha = Math.max(0, Math.min(1, craterStrength));
       ctx.drawImage(this.craterLayer, 0, 0);
@@ -938,7 +990,8 @@
       const fOffX = Number(feat.offsetX || 0);
       const fOffY = Number(feat.offsetY || 0);
       const useFeatures = fEnabled && fStrength > 0;
-      const mountainStrength = isArtificial ? 0 : 0.35;
+      const noisyEarthBaseRelief = this.isEarthReconstructionVisualActive() ? 0.16 : 0;
+      const mountainStrength = isArtificial ? 0 : Math.max(noisyEarthBaseRelief, 0.35 * terrainReveal);
       let mountainThreshold = 1;
       if (mountainStrength > 0) {
         const hist0 = this.heightZoneHists[0];
@@ -1461,15 +1514,26 @@
     const lavaRed = { r: 176, g: 30, b: 12 };
     const lavaOrange = { r: 234, g: 94, b: 18 };
     const lavaYellow = { r: 255, g: 196, b: 84 };
+    const useEarthVolcanicNoise = this.isEarthReconstructionVisualActive();
     for (let i = 0; i < w * h; i++) {
       const x = i % w;
       const y = (i - x) / w;
       const idx = i * 4;
-      const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+      const u = x / w;
+      const v = y / h;
+      const hgt = useEarthVolcanicNoise
+        ? getEarthReconstructionPeriodicLavaNoise(u, v, 7.9)
+        : (this.heightMap ? this.heightMap[i] : 0.5);
       const lowland = 1 - smoothstep(0.42, 0.82, hgt);
-      const fissure = ridgeNoise((x / w) * ringAspect, y / h, 8.5);
-      const patch = smoothstep(0.42, 0.82, patchNoise((x / w) * ringAspect + 3.4, y / h - 1.8, 3.2));
-      const patchDetail = smoothstep(0.46, 0.8, patchNoise((x / w) * ringAspect - 11.2, y / h + 7.6, 5.1));
+      const fissure = useEarthVolcanicNoise
+        ? getEarthReconstructionPeriodicLavaNoise(u, v, 13.5)
+        : ridgeNoise(u * ringAspect, v, 8.5);
+      const patch = useEarthVolcanicNoise
+        ? smoothstep(0.62, 0.94, getEarthReconstructionPeriodicLavaNoise(u, v, 5.4))
+        : smoothstep(0.42, 0.82, patchNoise(u * ringAspect + 3.4, v - 1.8, 3.2));
+      const patchDetail = useEarthVolcanicNoise
+        ? smoothstep(0.58, 0.9, getEarthReconstructionPeriodicLavaNoise(u, v, 9.2))
+        : smoothstep(0.46, 0.8, patchNoise(u * ringAspect - 11.2, v + 7.6, 5.1));
       const crackMask = clamp01(fissure * 0.48 + patch * 0.38 + patchDetail * 0.14);
       const moltenMask = clamp01(lowland * 0.58 + crackMask * 0.82 + patch * 0.18);
       const crustBlend = clamp01(0.5 + lowland * 0.2 + crackMask * 0.14);
@@ -1486,12 +1550,14 @@
       r += lavaRed.r * redBlend * 0.95;
       g += lavaRed.g * redBlend * 0.95;
       b += lavaRed.b * redBlend * 0.95;
-      r += lavaOrange.r * orangeBlend * 0.72;
-      g += lavaOrange.g * orangeBlend * 0.72;
-      b += lavaOrange.b * orangeBlend * 0.72;
-      r += lavaYellow.r * yellowBlend * 0.38;
-      g += lavaYellow.g * yellowBlend * 0.38;
-      b += lavaYellow.b * yellowBlend * 0.38;
+      const orangeWeight = useEarthVolcanicNoise ? 0.82 : 0.72;
+      const yellowWeight = useEarthVolcanicNoise ? 0.58 : 0.38;
+      r += lavaOrange.r * orangeBlend * orangeWeight;
+      g += lavaOrange.g * orangeBlend * orangeWeight;
+      b += lavaOrange.b * orangeBlend * orangeWeight;
+      r += lavaYellow.r * yellowBlend * yellowWeight;
+      g += lavaYellow.g * yellowBlend * yellowWeight;
+      b += lavaYellow.b * yellowBlend * yellowWeight;
 
       data[idx] = Math.max(0, Math.min(255, Math.round(r)));
       data[idx + 1] = Math.max(0, Math.min(255, Math.round(g)));
@@ -2014,12 +2080,23 @@
     const srcW = packed.width;
     const srcH = packed.height;
     const arr = new Float32Array(w * h);
+    const shapeRatio = key === 'earth' ? getEarthReconstructionShapeRatio(this) : 1;
+    const reveal = smoothstep(0, 1, shapeRatio);
+    const noisePhase = 2.7;
     for (let y = 0; y < h; y++) {
       const sy = Math.min(srcH - 1, Math.max(0, Math.round((y / Math.max(1, h - 1)) * (srcH - 1))));
       const row = sy * srcW;
+      const v = y / Math.max(1, h - 1);
       for (let x = 0; x < w; x++) {
         const sx = Math.min(srcW - 1, Math.max(0, Math.round((x / w) * srcW) % srcW));
-        arr[y * w + x] = source[row + sx] / 255;
+        const sourceHeight = source[row + sx] / 255;
+        if (reveal >= 1) {
+          arr[y * w + x] = sourceHeight;
+        } else {
+          const u = x / Math.max(1, w - 1);
+          const noiseHeight = getEarthReconstructionNoiseHeight(u, v, noisePhase);
+          arr[y * w + x] = noiseHeight + (sourceHeight - noiseHeight) * reveal;
+        }
       }
     }
     this.heightMap = arr;

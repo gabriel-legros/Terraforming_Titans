@@ -929,6 +929,7 @@ function getWorldFeatureEnablePriority(featureType, featureId) {
     atlasManager,
     galaxyManager,
     galaxyInvasionManager,
+    earthManager,
     lifeDesigner,
     hazardManager,
     milestonesManager,
@@ -1015,7 +1016,8 @@ function addOrRemoveEffect(effect, action) {
     'atlasManager': atlasManager,
     'artificialManager': typeof artificialManager !== 'undefined' ? artificialManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
-    'patienceManager': typeof patienceManager !== 'undefined' ? patienceManager : undefined
+    'patienceManager': typeof patienceManager !== 'undefined' ? patienceManager : undefined,
+    'earthManager': earthManager
   };
 
   if (effect.target in targetHandlers &&

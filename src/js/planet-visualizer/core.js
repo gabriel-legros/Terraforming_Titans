@@ -29,6 +29,10 @@
       this.ringShadeOffset = 0;
       this.ringShadeDriftSpeed = 0.006;
       this.birchWorldLightsGroup = null;
+      this.earthAsteroidGroup = null;
+      this.earthAsteroidMesh = null;
+      this.earthAsteroidTransforms = [];
+      this._earthAsteroidVisibleKey = -1;
 
       // Lighting and atmosphere
       this.sunLight = null;
@@ -59,6 +63,8 @@
       this._spawnAcc = 0;
       this._spawnRate = 6;
       this._lastSliderSync = 0;
+      this._earthVisualStateKey = '';
+      this._earthAsteroidOrbit = 0;
 
       // Render sizing
       this.width = 0;
@@ -296,6 +302,9 @@
     }
 
     getGameBaseColor() {
+      if (this.isEarthReconstructionVisualActive()) {
+        return '#878a81';
+      }
       const base = currentPlanetParameters.visualization?.baseColor || '#8a2a2a';
       return base;
     }
@@ -498,6 +507,138 @@
     updateBirchWorldLights() {
     }
 
+    createEarthAsteroidBelt() {
+      if (this.earthAsteroidGroup || !this.isEarthReconstructionVisualActive()) return;
+      const group = new THREE.Group();
+      const geometry = new THREE.DodecahedronGeometry(1, 0);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x78716b,
+        roughness: 0.92,
+        metalness: 0.02,
+      });
+      const count = 60;
+      const mesh = new THREE.InstancedMesh(geometry, material, count);
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < count; i += 1) {
+        const angle = (i / count) * Math.PI * 2;
+        const stagger = ((i * 17) % count) / count;
+        const radius = 1.75 + (stagger - 0.5) * 0.8;
+        const height = (((i * 29) % count) / count - 0.5) * 1.1;
+        const size = 0.035 + (((i * 11) % count) / count) * 0.055;
+        this.earthAsteroidTransforms.push({
+          position: new THREE.Vector3(Math.cos(angle) * radius, height, Math.sin(angle) * radius),
+          rotation: new THREE.Euler(i * 0.37, i * 0.61, i * 0.19),
+          scale: new THREE.Vector3(size * 1.25, size * 0.8, size)
+        });
+        dummy.position.copy(this.earthAsteroidTransforms[i].position);
+        dummy.rotation.copy(this.earthAsteroidTransforms[i].rotation);
+        dummy.scale.copy(this.earthAsteroidTransforms[i].scale);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      group.add(mesh);
+      group.rotation.x = 0.25;
+      group.rotation.z = -0.18;
+      this.scene.add(group);
+      this.earthAsteroidGroup = group;
+      this.earthAsteroidMesh = mesh;
+      this.updateEarthAsteroidVisibility(true);
+    }
+
+    updateEarthAsteroidVisibility(force = false) {
+      if (!this.earthAsteroidMesh || !earthManager) return;
+      const massSteps = earthManager.getActionCount('increaseMass');
+      if (!force && massSteps === this._earthAsteroidVisibleKey) return;
+      this._earthAsteroidVisibleKey = massSteps;
+      const remainingRatio = Math.max(0, Math.min(1, 1 - massSteps / EARTH_RECONSTRUCTION_MAX_MASS_STEPS));
+      const visibleCount = Math.ceil(this.earthAsteroidTransforms.length * remainingRatio);
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < this.earthAsteroidTransforms.length; i += 1) {
+        const transform = this.earthAsteroidTransforms[i];
+        dummy.position.copy(transform.position);
+        dummy.rotation.copy(transform.rotation);
+        dummy.scale.copy(i < visibleCount ? transform.scale : new THREE.Vector3(0, 0, 0));
+        dummy.updateMatrix();
+        this.earthAsteroidMesh.setMatrixAt(i, dummy.matrix);
+      }
+      this.earthAsteroidMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    updateEarthAsteroidBelt() {
+      if (!this.isEarthReconstructionVisualActive()) {
+        if (this.earthAsteroidGroup) {
+          this.earthAsteroidGroup.visible = false;
+        }
+        return;
+      }
+      this.createEarthAsteroidBelt();
+      if (!this.earthAsteroidGroup) return;
+      this.earthAsteroidGroup.visible = true;
+      this.updateEarthAsteroidVisibility();
+      this._earthAsteroidOrbit += 0.0015;
+      this.earthAsteroidGroup.rotation.y = this._earthAsteroidOrbit;
+    }
+
+    isEarthReconstructionVisualActive() {
+      return spaceManager
+        && spaceManager.getCurrentPlanetKey
+        && spaceManager.getCurrentPlanetKey() === 'earth'
+        && earthManager
+        && earthManager.enabled;
+    }
+
+    applyEarthVisualOverrides() {
+      if (!this.isEarthReconstructionVisualActive()) {
+        this._earthVisualStateKey = '';
+        return;
+      }
+      const state = earthManager.getVisualizerState();
+      const radiusScale = state.radiusScale;
+      const axialTiltDeg = state.axialTiltDeg || 0;
+      const stateKey = `${radiusScale}|${axialTiltDeg}`;
+      if (stateKey === this._earthVisualStateKey) return;
+      this._earthVisualStateKey = stateKey;
+      if (this.surfaceMesh) {
+        this.surfaceMesh.scale.setScalar(radiusScale);
+      }
+      if (this.cloudMesh) {
+        this.cloudMesh.scale.setScalar(radiusScale);
+      }
+      if (this.atmoMesh) {
+        this.atmoMesh.scale.setScalar(radiusScale);
+      }
+      this.setBaseColor('#878a81', { fromGame: true, skipSurfaceUpdate: true });
+    }
+
+    applyEarthTiltedSpin(angle, cloudAngle) {
+      const state = earthManager.getVisualizerState();
+      const tilt = (state.axialTiltDeg || 0) * Math.PI / 180;
+      const tiltQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), tilt);
+      const spinAxis = new THREE.Vector3(0, 1, 0);
+      if (this.surfaceMesh) {
+        const spinQuaternion = new THREE.Quaternion().setFromAxisAngle(spinAxis, angle);
+        this.surfaceMesh.quaternion.copy(tiltQuaternion).multiply(spinQuaternion);
+      }
+      if (this.cloudMesh) {
+        const cloudSpinQuaternion = new THREE.Quaternion().setFromAxisAngle(spinAxis, cloudAngle);
+        this.cloudMesh.quaternion.copy(tiltQuaternion).multiply(cloudSpinQuaternion);
+      }
+    }
+
+    positionEarthReconstructionCamera() {
+      if (!this.camera) return;
+      this.camera.position.set(0, this.cameraHeight, this.cameraDistance);
+      this.camera.lookAt(0, 0, 0);
+      if (this.sunLight) {
+        this.sunLight.position.set(0, this.cameraHeight, this.cameraDistance + 2);
+      }
+      if (this.sunMesh) {
+        this.sunMesh.position.set(0, this.cameraHeight, this.cameraDistance + 3.2);
+      }
+    }
+
     init() {
       const container = document.getElementById('planet-visualizer');
       const overlay = document.getElementById('planet-visualizer-overlay');
@@ -613,6 +754,11 @@
 
       this.updateOverlayText();
       this.updateSurfaceTextureFromPressure(true);
+      this.applyEarthVisualOverrides();
+      if (this.isEarthReconstructionVisualActive()) {
+        this.positionEarthReconstructionCamera();
+      }
+      this.updateEarthAsteroidBelt();
       if (isBirchWorld) {
         this.updateBirchWorldLights();
       } else {
@@ -649,16 +795,23 @@
       const isRing = this.isRingWorld();
       const isDisk = this.isDiskWorld();
       const isBirchWorld = this.isSmbhShellWorld();
-      if (this.surfaceMesh) {
-        this.surfaceMesh.rotation.y = isDisk ? 0 : angle;
-      }
+      const isEarthReconstruction = this.isEarthReconstructionVisualActive();
       if (this.cloudMesh) {
         const now = performance.now();
         if (!this._lastCloudTime) this._lastCloudTime = now;
         const dt = Math.min(0.05, (now - this._lastCloudTime) / 1000);
         this._lastCloudTime = now;
         this.cloudDrift = (this.cloudDrift || 0) + (this.cloudDriftSpeed || 0.005) * dt;
-        this.cloudMesh.rotation.y = isDisk ? 0 : angle + this.cloudDrift;
+      }
+      if (isEarthReconstruction) {
+        this.applyEarthTiltedSpin(angle, angle + (this.cloudDrift || 0));
+      } else {
+        if (this.surfaceMesh) {
+          this.surfaceMesh.rotation.y = isDisk ? 0 : angle;
+        }
+        if (this.cloudMesh) {
+          this.cloudMesh.rotation.y = isDisk ? 0 : angle + this.cloudDrift;
+        }
       }
       if (isRing) {
         this.camera.position.set(0, this.cameraHeight, 0);
@@ -667,6 +820,8 @@
       } else if (isDisk) {
         this.camera.position.set(0, this.cameraHeight, 1.55);
         this.camera.lookAt(0, 0, 0);
+      } else if (isEarthReconstruction) {
+        this.positionEarthReconstructionCamera();
       } else {
         const ang = angle;
         this.camera.position.set(
@@ -684,6 +839,8 @@
       if (isBirchWorld) {
         this.updateBirchWorldLights();
       } else {
+        this.applyEarthVisualOverrides();
+        this.updateEarthAsteroidBelt();
         this.updateDustTint();
         this.updateSurfaceHeatMaterial();
         this.updateLavaOverlay();

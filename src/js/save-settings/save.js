@@ -261,6 +261,7 @@ function getGameState() {
     solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
     patienceManager: (typeof patienceManager !== 'undefined' && typeof patienceManager.saveState === 'function') ? patienceManager.saveState() : undefined,
+    earthManager: (typeof earthManager !== 'undefined' && typeof earthManager.saveState === 'function') ? earthManager.saveState() : undefined,
     followersManager: (typeof followersManager !== 'undefined' && typeof followersManager.saveState === 'function') ? followersManager.saveState() : undefined,
     artificialManager: (typeof artificialManager !== 'undefined' && typeof artificialManager.saveState === 'function') ? artificialManager.saveState() : undefined,
     atlasManager: (typeof atlasManager !== 'undefined' && typeof atlasManager.saveState === 'function') ? atlasManager.saveState() : undefined,
@@ -707,6 +708,9 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.patienceManager && typeof patienceManager !== 'undefined' && typeof patienceManager.loadState === 'function'){
       patienceManager.loadState(gameState.patienceManager);
+    }
+    if(gameState.earthManager && typeof earthManager !== 'undefined' && typeof earthManager.loadState === 'function'){
+      earthManager.loadState(gameState.earthManager);
     }
     if (gameState.followersManager && followersManager && followersManager.loadState) {
       followersManager.loadState(gameState.followersManager);

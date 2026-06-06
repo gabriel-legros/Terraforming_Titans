@@ -284,7 +284,13 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## Major Feature Updates (Consolidated)
 ### Atmosphere, Physics, and Terraforming
-- Earth is an end-road world that disables the normal late-game UI surface: Buildings, Special Projects, Research, Space, H.O.P.E., Colony, non-World Terraforming subtabs, managers tied to those systems, advanced research, special project categories including Story, and Space -> Story. Terraforming -> World and Save and Settings remain available.
+- Earth is an end-road world that disables the normal late-game UI surface: Buildings, Special Projects, Research, Space, H.O.P.E., Colony, all resources, non-World Terraforming subtabs, managers tied to those systems, advanced research, special project categories including Story, and Space -> Story. Terraforming -> World and Save and Settings remain available.
+- Earth reconstruction uses `EarthManager` for bespoke World visualizer controls and visual overrides; its manager is enabled by the Earth planet effect, while individual buttons unlock from Earth story rewards.
+- Earth reconstruction mass steps update real celestial radius, mass, gravity, surface/cross-section area, base geometry fields, land, pressure cache, and zonal coverage cache, not only the visualizer scale.
+- Earth reconstruction surface shaping blends from noisy rocky terrain into the configured Earth heightmap through the `shapeSurface` action, keeps molten lava patterns independent of the Earth heightmap, and disables random crater texture generation for Earth reconstruction visuals.
+- Earth reconstruction atmosphere and water steps use copied EarthOverrun target values in `EarthManager`; each button press adds 5% of the target resources, refreshes terraforming pressure/zonal caches, and sets temperatures to their current trend.
+- Earth reconstruction axial tilt uses a copied `23.44°` target in `EarthManager`; each `adjustTilt` press adds 5% of the target and tilts the Earth visualizer spin axis.
+- Earth reconstruction biomass restoration targets 100% biomass coverage in tropical and temperate zones only; polar biomass stays untouched.
 - World-land semantics now have explicit helper support for immutable `baseLand` versus live geometric land derived from radius; RWG persists generated `baseLand`, `initialLand` remains a compatibility alias during migration, and systems can move case-by-case onto the correct land basis instead of assuming one meaning everywhere.
 - Whole-world scaling now splits by system: hazard initialization can use `baseLand`; `Artificial Sky`, `Underground Expansion`, and Foundry World mining-cap scaling follow current world land; `Artificial Crust`, fixed base-land building caps, and Foundry World travel-point rewards stay on `baseLand`.
 - Atmospheric density/exobase/drag heuristics now use bulk non-heavy-trace mass/pressure to avoid nonphysical Kessler-line behavior.
