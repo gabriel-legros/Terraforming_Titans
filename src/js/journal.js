@@ -114,12 +114,40 @@ function buildJournalSegments(text) {
   const lines = joinLines(text).split('\n');
   const segments = [];
   for (let i = 0; i < lines.length; i++) {
-    segments.push(...buildJournalLineSegments(lines[i]));
+    segments.push(...buildJournalLieSegments(buildJournalLineSegments(lines[i])));
     if (i < lines.length - 1) {
       segments.push({ isBreak: true });
     }
   }
   return segments;
+}
+
+function buildJournalLieSegments(segments) {
+  const expanded = [];
+  for (const segment of segments) {
+    if (segment.isBreak || segment.className || !segment.text || segment.text.indexOf('|') === -1) {
+      expanded.push(segment);
+      continue;
+    }
+    let lieOpen = false;
+    let buffer = '';
+    for (let i = 0; i < segment.text.length; i++) {
+      const char = segment.text[i];
+      if (char === '|') {
+        if (buffer) {
+          expanded.push({ text: buffer, className: lieOpen ? JOURNAL_LIE_CLASS : null });
+          buffer = '';
+        }
+        lieOpen = !lieOpen;
+      } else {
+        buffer += char;
+      }
+    }
+    if (buffer) {
+      expanded.push({ text: buffer, className: lieOpen ? JOURNAL_LIE_CLASS : null });
+    }
+  }
+  return expanded;
 }
 
 function buildJournalLineSegments(line) {

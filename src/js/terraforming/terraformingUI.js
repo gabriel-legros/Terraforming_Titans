@@ -782,6 +782,8 @@ function updateEarthReconstructionControls() {
       || earthManager.isActionUnlocked('addWater')
       || earthManager.isActionUnlocked('adjustTilt')
       || earthManager.isActionUnlocked('restoreBiomass')
+      || earthManager.isActionUnlocked('replaceLuna')
+      || earthManager.isActionUnlocked('completeTerraforming')
     );
 
   controls.container.classList.toggle('hidden', !showControls);
@@ -821,6 +823,16 @@ function updateEarthReconstructionControls() {
   controls.restoreBiomassButton.classList.toggle('hidden', !earthManager.isActionUnlocked('restoreBiomass'));
   controls.restoreBiomassButton.textContent = `${t('ui.terraforming.earthActions.restoreBiomass', null, 'Restore biomass')} ${biomassCount}/${EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS}`;
   controls.restoreBiomassButton.disabled = biomassCount >= EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS;
+
+  const lunaCount = earthManager.getActionCount('replaceLuna');
+  controls.replaceLunaButton.classList.toggle('hidden', !earthManager.isActionUnlocked('replaceLuna'));
+  controls.replaceLunaButton.textContent = `${t('ui.terraforming.earthActions.replaceLuna', null, 'Replace Luna')} ${lunaCount}/${EARTH_RECONSTRUCTION_MAX_LUNA_STEPS}`;
+  controls.replaceLunaButton.disabled = lunaCount >= EARTH_RECONSTRUCTION_MAX_LUNA_STEPS;
+
+  const completeCount = earthManager.getActionCount('completeTerraforming');
+  controls.completeTerraformingButton.classList.toggle('hidden', !earthManager.isActionUnlocked('completeTerraforming'));
+  controls.completeTerraformingButton.textContent = `${t('ui.terraforming.earthActions.completeTerraforming', null, 'Complete terraforming')} ${completeCount}/${EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS}`;
+  controls.completeTerraformingButton.disabled = completeCount >= EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS;
 }
 
 function createEarthReconstructionControls() {
@@ -931,6 +943,37 @@ function createEarthReconstructionControls() {
     }
   });
 
+  const replaceLunaButton = document.createElement('button');
+  replaceLunaButton.type = 'button';
+  replaceLunaButton.className = 'earth-reconstruction-button hidden';
+  replaceLunaButton.addEventListener('click', () => {
+    if (earthManager.pressAction('replaceLuna')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.updateEarthLuna) {
+        window.planetVisualizer.updateEarthLuna();
+      }
+    }
+  });
+
+  const completeTerraformingButton = document.createElement('button');
+  completeTerraformingButton.type = 'button';
+  completeTerraformingButton.className = 'earth-reconstruction-button earth-reconstruction-button--complete hidden';
+  completeTerraformingButton.addEventListener('click', () => {
+    if (!earthManager.isActionUnlocked('completeTerraforming')) return;
+    if (earthManager.getActionCount('completeTerraforming') >= EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS) return;
+    terraforming.readyForCompletion = true;
+    if (!completeTerraformingNow()) return;
+    if (earthManager.pressAction('completeTerraforming')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+    }
+  });
+
   controls.appendChild(increaseMassButton);
   controls.appendChild(removeHeatButton);
   controls.appendChild(shapeSurfaceButton);
@@ -938,6 +981,8 @@ function createEarthReconstructionControls() {
   controls.appendChild(addWaterButton);
   controls.appendChild(adjustTiltButton);
   controls.appendChild(restoreBiomassButton);
+  controls.appendChild(replaceLunaButton);
+  controls.appendChild(completeTerraformingButton);
   terraformingUICache.earthActions = {
     container: controls,
     increaseMassButton,
@@ -946,7 +991,9 @@ function createEarthReconstructionControls() {
     buildAtmosphereButton,
     addWaterButton,
     adjustTiltButton,
-    restoreBiomassButton
+    restoreBiomassButton,
+    replaceLunaButton,
+    completeTerraformingButton
   };
   return controls;
 }

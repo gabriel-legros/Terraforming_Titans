@@ -292,6 +292,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - After Earth `addWater` is complete, the world visualizer cheats only the visual zonal water readout to tropical `71%` and temperate `70%`; real terraforming resources and zonal values remain unchanged.
 - Earth reconstruction axial tilt uses a copied `23.44°` target in `EarthManager`; each `adjustTilt` press adds 5% of the target and tilts the Earth visualizer spin axis.
 - Earth reconstruction biomass restoration targets 100% biomass coverage in tropical and temperate zones only; polar biomass stays untouched.
+- Earth reconstruction final `replaceLuna` action is a one-press step unlocked by `earth.50.7`; the visualizer then shows a small static cratered Luna mesh near the top-right of the Earth view.
+- Earth reconstruction `completeTerraforming` is a one-press green button unlocked by `earth.50.8`; it records the final Earth action and routes through the normal terraforming completion path.
 - World-land semantics now have explicit helper support for immutable `baseLand` versus live geometric land derived from radius; RWG persists generated `baseLand`, `initialLand` remains a compatibility alias during migration, and systems can move case-by-case onto the correct land basis instead of assuming one meaning everywhere.
 - Whole-world scaling now splits by system: hazard initialization can use `baseLand`; `Artificial Sky`, `Underground Expansion`, and Foundry World mining-cap scaling follow current world land; `Artificial Crust`, fixed base-land building caps, and Foundry World travel-point rewards stay on `baseLand`.
 - Atmospheric density/exobase/drag heuristics now use bulk non-heavy-trace mass/pressure to avoid nonphysical Kessler-line behavior.

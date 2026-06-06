@@ -7,6 +7,8 @@ const EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS = 20;
 const EARTH_RECONSTRUCTION_MAX_WATER_STEPS = 20;
 const EARTH_RECONSTRUCTION_MAX_TILT_STEPS = 20;
 const EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS = 20;
+const EARTH_RECONSTRUCTION_MAX_LUNA_STEPS = 1;
+const EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS = 1;
 const EARTH_RECONSTRUCTION_STEP_FRACTION = 0.05;
 const EARTH_RECONSTRUCTION_BIOMASS_COVERAGE_SCALE = 10;
 const EARTH_RECONSTRUCTION_TARGET_RADIUS_KM = 6371;
@@ -44,6 +46,8 @@ class EarthManager extends EffectableEntity {
     this.addWaterCount = 0;
     this.adjustTiltCount = 0;
     this.restoreBiomassCount = 0;
+    this.replaceLunaCount = 0;
+    this.completeTerraformingCount = 0;
   }
 
   enable() {
@@ -63,6 +67,8 @@ class EarthManager extends EffectableEntity {
     this.addWaterCount = 0;
     this.adjustTiltCount = 0;
     this.restoreBiomassCount = 0;
+    this.replaceLunaCount = 0;
+    this.completeTerraformingCount = 0;
     this.activeEffects = [];
     this.booleanFlags = new Set();
   }
@@ -127,6 +133,16 @@ class EarthManager extends EffectableEntity {
       this.applyBiomassStep();
       return true;
     }
+    if (actionId === 'replaceLuna') {
+      if (this.replaceLunaCount >= EARTH_RECONSTRUCTION_MAX_LUNA_STEPS) return false;
+      this.replaceLunaCount += 1;
+      return true;
+    }
+    if (actionId === 'completeTerraforming') {
+      if (this.completeTerraformingCount >= EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS) return false;
+      this.completeTerraformingCount += 1;
+      return true;
+    }
     return false;
   }
 
@@ -151,6 +167,12 @@ class EarthManager extends EffectableEntity {
     }
     if (actionId === 'restoreBiomass') {
       return this.restoreBiomassCount;
+    }
+    if (actionId === 'replaceLuna') {
+      return this.replaceLunaCount;
+    }
+    if (actionId === 'completeTerraforming') {
+      return this.completeTerraformingCount;
     }
     return 0;
   }
@@ -319,6 +341,8 @@ class EarthManager extends EffectableEntity {
       addWaterCount: this.addWaterCount,
       adjustTiltCount: this.adjustTiltCount,
       restoreBiomassCount: this.restoreBiomassCount,
+      replaceLunaCount: this.replaceLunaCount,
+      completeTerraformingCount: this.completeTerraformingCount,
       activeEffects: this.activeEffects,
       booleanFlags: Array.from(this.booleanFlags)
     };
@@ -354,6 +378,14 @@ class EarthManager extends EffectableEntity {
     this.restoreBiomassCount = Math.max(0, Math.min(
       EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS,
       Number(state.restoreBiomassCount) || 0
+    ));
+    this.replaceLunaCount = Math.max(0, Math.min(
+      EARTH_RECONSTRUCTION_MAX_LUNA_STEPS,
+      Number(state.replaceLunaCount) || 0
+    ));
+    this.completeTerraformingCount = Math.max(0, Math.min(
+      EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS,
+      Number(state.completeTerraformingCount) || 0
     ));
     this.activeEffects = Array.isArray(state.activeEffects) ? state.activeEffects : [];
     this.booleanFlags = new Set(Array.isArray(state.booleanFlags) ? state.booleanFlags : []);

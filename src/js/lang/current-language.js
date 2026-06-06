@@ -2440,7 +2440,11 @@ setLanguageData({
         adjustTilt: 'Adjust tilt',
         adjustTiltObjective: 'Adjust tilt',
         restoreBiomass: 'Restore life',
-        restoreBiomassObjective: 'Restore life'
+        restoreBiomassObjective: 'Restore life',
+        replaceLuna: 'Replace Luna',
+        replaceLunaObjective: 'Replace Luna',
+        completeTerraforming: 'Complete terraforming',
+        completeTerraformingObjective: 'Complete terraforming'
       },
       lifeTitle: 'Life',
       milestonesTitle: 'Milestones',

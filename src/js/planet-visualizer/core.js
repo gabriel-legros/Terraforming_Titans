@@ -32,6 +32,9 @@
       this.earthAsteroidGroup = null;
       this.earthAsteroidMesh = null;
       this.earthAsteroidTransforms = [];
+      this.earthLunaGroup = null;
+      this.earthLunaMesh = null;
+      this.earthLunaTexture = null;
       this._earthAsteroidVisibleKey = -1;
 
       // Lighting and atmosphere
@@ -65,6 +68,7 @@
       this._lastSliderSync = 0;
       this._earthVisualStateKey = '';
       this._earthAsteroidOrbit = 0;
+      this._earthLunaOrbit = 0.72;
 
       // Render sizing
       this.width = 0;
@@ -581,6 +585,93 @@
       this.earthAsteroidGroup.rotation.y = this._earthAsteroidOrbit;
     }
 
+    createEarthLunaTexture() {
+      if (this.earthLunaTexture) return this.earthLunaTexture;
+      const size = 512;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const data = img.data;
+      const hash = (x, y) => {
+        const n = Math.sin(x * 127.1 + y * 311.7 + 91.73) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+          const idx = (y * size + x) * 4;
+          const broad = hash(Math.floor(x / 18), Math.floor(y / 18));
+          const fine = hash(x, y);
+          const shade = 142 + broad * 42 + fine * 18;
+          data[idx] = shade;
+          data[idx + 1] = shade;
+          data[idx + 2] = shade * 0.96;
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      for (let i = 0; i < 46; i += 1) {
+        const x = hash(i * 5.3, 1.7) * size;
+        const y = hash(i * 2.1, 8.9) * size;
+        const r = 6 + hash(i * 3.7, 4.1) * 30;
+        const g = ctx.createRadialGradient(x, y, r * 0.1, x, y, r);
+        g.addColorStop(0, 'rgba(70,70,70,0.38)');
+        g.addColorStop(0.55, 'rgba(95,95,95,0.22)');
+        g.addColorStop(0.72, 'rgba(230,230,220,0.22)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      if (THREE && THREE.SRGBColorSpace) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+      }
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.needsUpdate = true;
+      this.earthLunaTexture = texture;
+      return texture;
+    }
+
+    createEarthLuna() {
+      if (this.earthLunaGroup || !this.isEarthReconstructionVisualActive()) return;
+      const group = new THREE.Group();
+      const geometry = new THREE.SphereGeometry(0.16, 48, 32);
+      const material = new THREE.MeshStandardMaterial({
+        map: this.createEarthLunaTexture(),
+        color: 0xffffff,
+        roughness: 0.96,
+        metalness: 0
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(0, 0, 0);
+      group.add(mesh);
+      group.visible = false;
+      this.scene.add(group);
+      this.earthLunaGroup = group;
+      this.earthLunaMesh = mesh;
+    }
+
+    updateEarthLuna() {
+      if (!this.isEarthReconstructionVisualActive()) {
+        if (this.earthLunaGroup) {
+          this.earthLunaGroup.visible = false;
+        }
+        return;
+      }
+      this.createEarthLuna();
+      if (!this.earthLunaGroup || !this.earthLunaMesh) return;
+      const visible = earthManager.getActionCount('replaceLuna') >= EARTH_RECONSTRUCTION_MAX_LUNA_STEPS;
+      this.earthLunaGroup.visible = visible;
+      if (!visible) return;
+
+      this.earthLunaGroup.position.set(1.38, 1.08, -0.9);
+      this.earthLunaMesh.rotation.set(0.12, 0, 0);
+    }
+
     isEarthReconstructionVisualActive() {
       return spaceManager
         && spaceManager.getCurrentPlanetKey
@@ -759,6 +850,7 @@
         this.positionEarthReconstructionCamera();
       }
       this.updateEarthAsteroidBelt();
+      this.updateEarthLuna();
       if (isBirchWorld) {
         this.updateBirchWorldLights();
       } else {
@@ -841,6 +933,7 @@
       } else {
         this.applyEarthVisualOverrides();
         this.updateEarthAsteroidBelt();
+        this.updateEarthLuna();
         this.updateDustTint();
         this.updateSurfaceHeatMaterial();
         this.updateLavaOverlay();
