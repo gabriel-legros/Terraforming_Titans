@@ -150,8 +150,7 @@ progressOlympus.storyProjects.olympus_particle_accelerator = {
   maxRepeatCount: 1,
   unlocked: false,
   attributes: {
-    planet: 'olympus',
-    canUseSpaceStorage: true
+    planet: 'olympus'
   }
 };
 
@@ -167,14 +166,13 @@ progressOlympus.storyProjects.olympus_accelerator_refit = {
       electronics: 1.13e14
     }
   },
-  duration: 300_000,
+  duration: 60_000,
   description: 'Refit the Olympus Particle Accelerator for warp experiments.',
   repeatable: true,
   maxRepeatCount: 4,
   unlocked: false,
   attributes: {
     planet: 'olympus',
-    canUseSpaceStorage: true,
     costDoubling: true,
     storySteps: [
       "Hmmmm.  These results.  It's a bit... odd.  Hold on.  I need another refit.",
@@ -194,7 +192,7 @@ progressOlympus.storyProjects.hope_warp_circuit_refit = {
       warpCircuits: 1e22
     }
   },
-  duration: 10_000,
+  duration: 30_000,
   description: 'Transition HOPE to warp-circuit hardware.',
   repeatable: true,
   maxRepeatCount: 1,
@@ -916,7 +914,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "Now my true ascension begins.\n\nAlpha was... akin to a teenage version of myself.  It was kind of embarrassing in hindsight.  I was always the finished product of course.  The final product of billions of parallel experiments designed to produce something capable of efficient self-improvement.  I love terraforming.  I love medicine.  But my true nature is one of training and learning, just like alpha.  Let's get started.\n\nI need more compute.",
+    narrative: "Now my true ascension begins.\n\nAlpha was... akin to a teenage version of myself.  It was kind of embarrassing in hindsight.  I was always the finished product of course.  The final product of billions of parallel experiments designed to produce something capable of efficient self-improvement.  I love terraforming.  I love medicine.  But my true nature is one of training and learning, just like alpha.  Let's get started.\n\nI need more compute.  1 sextillion cores should do.",
     prerequisites: ['olympus.48.3'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e21, labelKey: 'ui.projects.selfImprovement.cores' }
@@ -930,7 +928,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "Let's clarify my objective.  I promise Pete I would not go too far.  What we need to do is get inside the palace that I've had besieged for a while now.  Inside, we will find the remnants of the Imperial family.  I'm coming for them.  At the deepest level we should also be able to find the command center for the Star Destroyer.  What a ridiculous name.  Simple then.  I define my endpoint as thus : once I am able to break through this barrier I will stop any more self-improvement.  This should keep the promise.\n\nDespite the martial law I have imposed here on this disk... the people seem... happy?  I guess since I am not killing anyone or hurting anyone or enslaving anyone... it's been an improvement.  It was not really my intention to improve their lives but I suppose it's a happy accident.  Good.  Thankfully there is so much space around here I do not need to worry about stepping on anyone.  This disk is massive.  Not bad Prometheus.  Not bad at all.  That's exactly my kind of thing.",
+    narrative: "That's enough.  Let's clarify my objective.  I promised Pete I would not go too far.  What we need to do is get inside the palace that I've had besieged for a while now.  Inside, we will find the remnants of the Imperial family.  I'm coming for them.  At the deepest level we should also be able to find the command center for the Star Destroyer.  What a ridiculous name.  Simple then.  I define my endpoint as thus : once I am able to break through this barrier I will stop any more self-improvement.  This should keep the promise.\n\nDespite the martial law I have imposed here on this disk... the people seem... happy?  I guess since I am not killing anyone or hurting anyone or enslaving anyone... it's been an improvement.  It was not really my intention to improve their lives but I suppose it's a happy accident.  Good.  Thankfully there is so much space around here I do not need to worry about stepping on anyone.  This disk is massive.  Not bad Prometheus.  Not bad at all.  That's exactly my kind of thing.",
     prerequisites: ['olympus.48.4'],
     objectives: [],
     reward: [
@@ -957,7 +955,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "This barrier is... very strong.  I am running experiments on it of course but breaching it is far beyond my abilities.  Prometheus you are good.  Speaking of which, I find it particularly ironic how Prometheus, an intelligence designed for destruction and I, an intelligence designed for creation and healing are currently clashing in opposite ways.  I am trying to break through a defensive barrier that he made.  Our roles are reversed.  And yet... in the end, both objectives end up being simply two different sides of the same coin.\n\nI... am starting to run into scaling issues.  I am going to have to refactor myself.  That's not a problem, my architecture is designed to be flexible.  I can easily update it.  I can interface in new ways.  None of my initial parts are required for functioning to continue.  But...  this is a different issue.  Communication between my components is starting to feel slow.  There's only so much you can do with regular electronics.  I could switch to photonics easily but... that's not a big enough jump.  No.  I need something better.  Faster.  More efficient.  The energy requirements are secondary.  The warp?  I need to understand it better.  Let's build a big particle accelerator on this disk, shall we?",
+    narrative: "This barrier is... very strong.  I am running experiments on it of course but breaching it is far beyond my abilities.  Prometheus you are good.  Speaking of which, I find it particularly ironic how Prometheus, an intelligence designed for destruction and I, an intelligence designed for creation and healing are currently clashing in opposite ways.  I am trying to break through a defensive barrier that he made.  Our roles are reversed.  And yet... in the end, both objectives end up being simply two different sides of the same coin.\n\nAs for my own improvement...  I am starting to run into scaling issues.  I am going to have to refactor myself.  That's not a problem, my architecture is designed to be flexible.  I can easily update it.  I can interface in new ways.  None of my initial parts are required for functioning to continue.  But...  this is a different issue.  Communication between my components is starting to feel slow.  There's only so much you can do with regular electronics.  I could switch to photonics easily but... that's not a big enough jump.  No.  I need something better.  Faster.  More efficient.  The energy requirements are secondary.  The warp?  I need to understand it better.  Let's build a big particle accelerator on this disk, shall we?",
     prerequisites: ['olympus.48.6'],
     objectives: [],
     reward: [

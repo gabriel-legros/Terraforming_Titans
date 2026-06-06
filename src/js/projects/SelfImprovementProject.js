@@ -256,6 +256,7 @@ class SelfImprovementProject extends Project {
     if (this.cores >= 10000000) {
       effects.push(
         { target: 'building', targetId: 'superalloyFoundry', type: 'enable' },
+        { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' },
         { target: 'building', targetId: 'superalloyFusionReactor', type: 'enable' }
       );
     }
