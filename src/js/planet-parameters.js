@@ -2371,6 +2371,95 @@ const olympusOverrides = {
   zonalTemperatures: null
 };
 
+const earthOverrides = {
+  name: '',
+  travelWarning: {
+    message: 'This is the end of the road.  This world is very short.  A pre-travel save will not be taken.'
+  },
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: true,
+    skipCurrentWorldTravelWarnings: true,
+    savePretravel: false
+  },
+  star: {
+    name: '',
+    spectralType: 'G2V',
+    luminositySolar: 1,
+    massSolar: 1,
+    radiusSolar: 1,
+    temperatureK: 5772,
+    habitableZone: { inner: 0.82, outer: 1.17 }
+  },
+  celestialParameters: {
+    distanceFromSun: 1,
+    gravity: 7.8456,
+    hasNaturalMagnetosphere: true,
+    radius: 5096.8,
+    mass: 3.057664e24,
+    albedo: 0.05,
+    rotationPeriod: 24,
+    spinPeriod: 24,
+    starLuminosity: 1,
+    coreHeatFlux: 250_000,
+    sector: 'R5-00',
+    surfaceArea: 326446080000000
+  },
+  visualization: {
+    baseColor: '#878a81',
+    heightMapKey: 'earth'
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 32644608000 },
+      ice: { initialValue: 0 },
+      liquidWater: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidCO2: { initialValue: 0 },
+      liquidHydrogen: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      liquidAmmonia: { initialValue: 0 },
+      ammoniaIce: { initialValue: 0 },
+      liquidOxygen: { initialValue: 0 },
+      oxygenIce: { initialValue: 0 },
+      liquidNitrogen: { initialValue: 0 },
+      nitrogenIce: { initialValue: 0 },
+      fineSand: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 },
+      hazardousMachinery: { initialValue: 0 },
+      rocks: { initialValue: 0 },
+      graphite: { initialValue: 0 },
+      scrapMetal: { initialValue: 0 },
+      garbage: { initialValue: 0 },
+      trash: { initialValue: 0 },
+      junk: { initialValue: 0 },
+      radioactiveWaste: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      planetaryMass: { initialValue: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      atmosphericAmmonia: { initialValue: 0 },
+      greenhouseGas: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 0 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 },
+      calciteAerosol: { initialValue: 0 },
+      vanadiumAerosol: { initialValue: 0 }
+    }
+  },
+  zonalSurface: createZonalSurfaceDefaults(),
+  zonalTemperatures: null
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -2388,7 +2477,8 @@ const planetSpecificOverrides = {
   poseidon: poseidonOverrides,
   styx: styxOverrides,
   zeus: zeusOverrides,
-  olympus: olympusOverrides
+  olympus: olympusOverrides,
+  earth: earthOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -2441,6 +2531,7 @@ const planetParameters = {
     styx: getPlanetParameters('styx'),
     zeus: getPlanetParameters('zeus'),
     olympus: getPlanetParameters('olympus'),
+    earth: getPlanetParameters('earth'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,

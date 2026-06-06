@@ -2429,10 +2429,10 @@ class SpaceManager extends EffectableEntity {
      * This ensures all managers save their travel state consistently.
      * @returns {Object} Travel state data
      */
-    prepareForTravel() {
+    prepareForTravel(options = {}) {
         // Delegate to the unified prepareForTravel method in game.js
         if (typeof prepareForTravel === 'function') {
-            return prepareForTravel();
+            return prepareForTravel(options);
         }
         // Fallback for testing environments
         return {};
@@ -2446,9 +2446,9 @@ class SpaceManager extends EffectableEntity {
      * - stamps departure time
      * Works for both story planets and random worlds.
      */
-    recordDepartureSnapshot() {
+    recordDepartureSnapshot(options = {}) {
         // Call unified prepareForTravel before recording snapshot
-        this.prepareForTravel();
+        this.prepareForTravel({ savePretravel: options.savePretravel });
         
         const now = Date.now();
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
@@ -2651,8 +2651,11 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
+        const params = getPlanetParameters(targetKey);
+        const savePretravel = params.specialAttributes?.savePretravel !== false;
+
         // Preserve departure context for rewards/state before switching worlds.
-        this.recordDepartureSnapshot();
+        this.recordDepartureSnapshot({ savePretravel });
         this._grantDepartureSkillPoint();
         if (!this._setCurrentPlanetKey(targetKey)) {
             return false;
@@ -2664,7 +2667,6 @@ class SpaceManager extends EffectableEntity {
         this.visitPlanet(targetKey);
         this._compactRandomWorldStatuses();
         this._compactArtificialWorldStatuses();
-        const params = getPlanetParameters(targetKey);
         this._finalizeTravelInitialization({
             planetKey: targetKey,
             planetParameters: params,

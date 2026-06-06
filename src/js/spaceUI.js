@@ -888,11 +888,13 @@ function selectPlanet(planetKey, force, skipCurrentWorldWarnings){
         console.error('SpaceManager not initialized');
         return;
     }
-    if (!force && !skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => selectPlanet(planetKey, false, true))) {
+    const targetPlanetParameters = planetParameters[planetKey];
+    const targetSkipsCurrentWorldWarnings = targetPlanetParameters?.specialAttributes?.skipCurrentWorldTravelWarnings === true;
+    if (!force && !skipCurrentWorldWarnings && !targetSkipsCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => selectPlanet(planetKey, false, true))) {
         return;
     }
-    if(!force && planetParameters[planetKey]?.travelWarning){
-        showTravelWarningPopup(planetParameters[planetKey].travelWarning, () => selectPlanet(planetKey, true));
+    if(!force && targetPlanetParameters?.travelWarning){
+        showTravelWarningPopup(targetPlanetParameters.travelWarning, () => selectPlanet(planetKey, true));
         return;
     }
     const travelled = _spaceManagerInstance.travelToStoryPlanet(planetKey);

@@ -5580,6 +5580,13 @@ setLanguageData({
         name: 'Olympus',
         star: { name: 'Vepive-015' },
       },
+      earth: {
+        name: 'Earth',
+        star: { name: 'Sun' },
+        travelWarning: {
+          message: 'This is the end of the road.  This world is very short.  A pre-travel save will not be taken.',
+        },
+      },
     },
     life: {
       lichen: {

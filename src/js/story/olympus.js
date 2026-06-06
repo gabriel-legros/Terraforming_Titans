@@ -1138,6 +1138,7 @@ progressOlympus.chapters.push(
     prerequisites: ['olympus.49.1'],
     objectives: [],
     reward: [
+      { target: 'spaceManager', targetId: 'earth', type: 'enable', effectId: 'story-olympus-enable-earth' }
     ]
   },
   {
@@ -1148,7 +1149,9 @@ progressOlympus.chapters.push(
     title: '',
     narrative: "Travel to Earth to continue.",
     prerequisites: ['olympus.49.2'],
-    objectives: [],
+    objectives: [
+      { type: 'currentPlanet', planetId: 'earth' }
+    ],
     reward: [
     ]
   }
