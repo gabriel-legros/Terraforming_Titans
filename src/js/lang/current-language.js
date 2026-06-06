@@ -3994,6 +3994,7 @@ setLanguageData({
       creditsWorldVisualizerConceptName: 'Jebarus',
       creditsArtLabel: 'Art',
       creditsArtName: 'Oleksandra Lukashenko (eklaell)',
+      creditsArtLunyaruName: 'Lunyaru',
       creditsTitle: 'Credits',
       totalPlaytime: 'Total Playtime:',
       fastestTerraform: 'Fastest Terraform:',

@@ -14,8 +14,10 @@ const settingsCreditsEntries = [
   {
     labelKey: 'ui.settings.creditsArtLabel',
     labelFallback: 'Art',
-    nameKey: 'ui.settings.creditsArtName',
-    nameFallback: 'Oleksandra Lukashenko (eklaell)',
+    nameKey: 'ui.settings.creditsArtLunyaruName',
+    nameFallback: 'Lunyaru',
+    additionalNameKey: 'ui.settings.creditsArtName',
+    additionalNameFallback: 'Oleksandra Lukashenko (eklaell)',
   },
 ];
 
@@ -32,6 +34,10 @@ function initializeCreditsSubtab() {
     line.appendChild(document.createTextNode(t(entry.labelKey, null, entry.labelFallback)));
     line.appendChild(document.createElement('br'));
     line.appendChild(document.createTextNode(t(entry.nameKey, null, entry.nameFallback)));
+    if (entry.additionalNameKey) {
+      line.appendChild(document.createElement('br'));
+      line.appendChild(document.createTextNode(t(entry.additionalNameKey, null, entry.additionalNameFallback)));
+    }
     creditsList.appendChild(line);
   });
 }
