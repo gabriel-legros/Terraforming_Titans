@@ -53,7 +53,7 @@
                 const assumeCompleted = completedOnly.has(ch.id);
                 const targetCount = assumeCompleted ? Math.min(needed, steps.length) : Math.min(steps.length, needed);
                 const projName = storyProjects[obj.projectId]?.name;
-                const total = steps.length;
+                const total = proj.getJournalStepTotal ? proj.getJournalStepTotal() : steps.length;
                 const completedCount = projectStepProgress.get(obj.projectId) || 0;
                 for (let i = completedCount; i < targetCount; i++) {
                   const stepText = steps[i];

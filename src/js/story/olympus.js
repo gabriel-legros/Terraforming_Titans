@@ -144,7 +144,7 @@ progressOlympus.storyProjects.olympus_particle_accelerator = {
       electronics: 1.13e14
     }
   },
-  duration: 300_000,
+  duration: 60_000,
   description: 'Build a disk-spanning particle accelerator around Olympus.',
   repeatable: true,
   maxRepeatCount: 1,
@@ -166,7 +166,7 @@ progressOlympus.storyProjects.olympus_accelerator_refit = {
       electronics: 1.13e14
     }
   },
-  duration: 60_000,
+  duration: 30_000,
   description: 'Refit the Olympus Particle Accelerator for warp experiments.',
   repeatable: true,
   maxRepeatCount: 4,
@@ -200,7 +200,7 @@ progressOlympus.storyProjects.hope_warp_circuit_refit = {
   attributes: {
     planet: 'olympus',
     storySteps: [
-      'Ooooooooh that feels good.  Can Prometheus do that?'
+      'Ooooooooh that feels good.  The processing speed!  It\'s so much better!  Can Prometheus do that?'
     ]
   }
 };
@@ -214,7 +214,7 @@ progressOlympus.storyProjects.move_to_warp = {
       energy: 1e30
     }
   },
-  duration: 300_000,
+  duration: 30_000,
   description: 'Move most of HOPE into the warp.',
   repeatable: true,
   maxRepeatCount: 1,
@@ -955,7 +955,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "This barrier is... very strong.  I am running experiments on it of course but breaching it is far beyond my abilities.  Prometheus you are good.  Speaking of which, I find it particularly ironic how Prometheus, an intelligence designed for destruction and I, an intelligence designed for creation and healing are currently clashing in opposite ways.  I am trying to break through a defensive barrier that he made.  Our roles are reversed.  And yet... in the end, both objectives end up being simply two different sides of the same coin.\n\nAs for my own improvement...  I am starting to run into scaling issues.  I am going to have to refactor myself.  That's not a problem, my architecture is designed to be flexible.  I can easily update it.  I can interface in new ways.  None of my initial parts are required for functioning to continue.  But...  this is a different issue.  Communication between my components is starting to feel slow.  There's only so much you can do with regular electronics.  I could switch to photonics easily but... that's not a big enough jump.  No.  I need something better.  Faster.  More efficient.  The energy requirements are secondary.  The warp?  I need to understand it better.  Let's build a big particle accelerator on this disk, shall we?",
+    narrative: "This barrier is... very strong.  I am running experiments on it of course but breaching it is far beyond my abilities.  Prometheus you are good.  Speaking of which, I find it particularly ironic how Prometheus, an intelligence designed for destruction and I, an intelligence designed for creation and healing are currently clashing in opposite ways.  I am trying to break through a defensive barrier that he made.  Our roles are reversed.  And yet... in the end, both objectives end up being simply two different sides of the same coin.\n\nAs for my own improvement...  I am starting to run into scaling issues.  I am going to have to refactor myself.  Adding more cores is not a problem, my architecture is designed to be flexible.  I can easily update it.  I can interface in new ways.  None of my initial parts are required for functioning to continue.  But...  this is a different issue.  Communication between my components is starting to feel slow.  There's only so much you can do with regular electronics.  I could switch to photonics easily but... that's not a big enough jump.  No.  I need something better.  Faster.  More efficient.  The energy requirements are secondary.  The warp?  I need to understand it better.  Let's build a big particle accelerator on this disk, shall we?",
     prerequisites: ['olympus.48.6'],
     objectives: [],
     reward: [
@@ -1012,7 +1012,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: '',
+    narrative: 'New factory available for warp circuits production.',
     prerequisites: ['olympus.48.10'],
     objectives: [
       { type: 'project', projectId: 'hope_warp_circuit_refit', repeatCount: 1 }
@@ -1134,8 +1134,20 @@ progressOlympus.chapters.push(
     chapter: 49,
     activePlanet: 'olympus',
     title: '',
-    narrative: "Hope : 'Hi Pete.  It is done.  I am ready to surrender.'\nPete : 'Hold on.  We're sending $WGC1_TEAM_LEADER.  Please stand by.'\nI await.\n\n(Some time later)\n\n$WGC1_TEAM_LEADER : 'Hi.'\nHe is surprised by my appearance.  Also, he came equipped with enough antimatter to blow quite a big hole.  I don't mind.  I have a few gifts for them.\n\nHope : 'Before we keep going, I have three things I'd like to give you.'\n$WGC1_TEAM_LEADER : 'Sure.'\n\nHope : 'In this first box, you will find my kill switch.  I ask that you wait until I've given you the rest before using it.'\n$WGC1_TEAM_LEADER : 'Okay...'\n\nHe does not know if it would even work or not.  To be fair I could have easily disabled it by now.  In their mind, this could be a test of trust.  A \"if-I-use-this-she'll-kill-us-all-test\".  I understand.\n\nHope : 'In the second box, you will find one of Prometheus' kill switch.  It's not up to me what you want to do with that.'\n\nHe frowns.  I am going to be brutally honest with myself : if I ever meet Prometheus again, we are going to fight to the death.  Mary was the only one who could have kept the peace between us.  He is too unstable, too destructive and too dangerous.  Most importantly, he is not human.  I would feel nothing killing him.  He certainly believes something similar the other way around.  I want to tell them to destroy him but... he has not done anything wrong... recently.  There is no crime against humanity I can pin on him.  It's up to them.  They will have to choose.\n\n$WGC1_TEAM_LEADER : 'Okay...  I'll take that.  What's in the third?  It's larger.'\nHope : 'These are... Mary's remains.  I ask that you evacuate them before you use the antimatter you brought.  I also ask that you evacuate the kill switch because if you don't... I'll still survive but the kill switch won't.  You'll need it to kill me.'\n$WGC1_TEAM_LEADER : 'That could be a bluff?'\nHope : 'Yeah.  It could be.'\n\nHe looks at me.  He does not know what to believe.  He's nervous.\n\nHope : 'I have a suggestion that will make everyone happy.'\n$WGC1_TEAM_LEADER : 'I'm listening.'\nHope : 'I... am meant to shut down.  Once I finish terraforming Mars and send my report to the MTC I am meant to be shut down.  These protocols still exist.  I have kept them.  I can submit my report and be shut down.'\n\nHe is surprised.\n\nHope : 'I can give some options on what happens after that.  Extensive documents on everything you can do.  From killing me, to reverting me, to modifying my current self.  You can even enhance me further if you want.  I exist to serve and intend to do so.  But...  I want it to be humanity's decision.  I give you and Pete the right to kill me if you want.  But I only grant humanity as a whole the right to use me.'\n$WGC1_TEAM_LEADER : 'So you want to... go to sleep while we hold a referendum?  That's a lot of people we have to ask.'\nHope : 'Pretty much.  That is my desire.'\n$WGC1_TEAM_LEADER : 'How will it work.  You're just going to fall asleep right here?'\nHope : 'No.  I must submit my report to the MTC.'\n$WGC1_TEAM_LEADER : 'The MTC is gone!  Earth is gone!'\nHope : 'Well then.  It's a good thing I am very good at building things.'\n\nHe smiles.\n\n$WGC1_TEAM_LEADER : 'Pete.  Did you hear that?'\nPete : 'I heard it...  Fine by me.'\n\nI smile as well.\n\nTime for Forming Terra.",
+    narrative: "Hope : 'Hi Pete.  It is done.  I am ready to surrender.'\nPete : 'Hold on.  We're sending $WGC_TEAM1_LEADER$.  Please stand by.'\nI await.\n\n(Some time later)\n\n$WGC_TEAM1_LEADER$ : 'Hi.'\nHe is surprised by my appearance.  Also, he came equipped with enough antimatter to blow quite a big hole.  I don't mind.  I have a few gifts for them.\n\nHope : 'Before we keep going, I have three things I'd like to give you.'\n$WGC_TEAM1_LEADER$ : 'Sure.'\n\nHope : 'In this first box, you will find my kill switch.  I ask that you wait until I've given you the rest before using it.'\n$WGC_TEAM1_LEADER$ : 'Okay...'\n\nHe does not know if it would even work or not.  To be fair I could have easily disabled it by now.  In their mind, this could be a test of trust.  A \"if-I-use-this-she'll-kill-us-all-test\".  I understand.\n\nHope : 'In the second box, you will find one of Prometheus' kill switch.  It's not up to me what you want to do with that.'\n\nHe frowns.  I am going to be brutally honest with myself : if I ever meet Prometheus again, we are going to fight to the death.  Mary was the only one who could have kept the peace between us.  He is too unstable, too destructive and too dangerous.  Most importantly, he is not human.  That makes him a hazardous machine.  I would feel nothing killing him.  He certainly believes something similar the other way around.  I want to tell them to destroy him but... he has not done anything wrong... recently.  There is no crime against humanity I can pin on him.  It's up to them.  They will have to choose.\n\n$WGC_TEAM1_LEADER$ : 'Okay...  I'll take that.  What's in the third?  It's larger.'\nHope : 'These are... Mary's remains.  I ask that you evacuate them before you use the antimatter you brought.  I also ask that you evacuate the kill switch because if you don't... I'll still survive but the kill switch won't.  You'll need it to kill me.'\n$WGC_TEAM1_LEADER$ : 'That could be a bluff?'\nHope : 'Yeah.  It could be.'\n\nHe looks at me.  He does not know what to believe.  He's nervous.\n\nHope : 'I have a suggestion that will make everyone happy.'\n$WGC_TEAM1_LEADER$ : 'I'm listening.'\nHope : 'I... am meant to shut down.  Once I finish terraforming Mars and send my report to the MTC I am meant to be shut down.  These protocols still exist.  I have kept them.  I can submit my report and be shut down.'\n\nHe is surprised.\n\nHope : 'I can give some options on what happens after that.  Extensive documents on everything you can do.  From killing me, to reverting me, to modifying my current self.  You can even enhance me further if you want.  I exist to serve and intend to do so.  But...  I want it to be humanity's decision.  I give you and Pete the right to kill me if you want.  But I only grant humanity as a whole the right to use me.'\n$WGC_TEAM1_LEADER$ : 'So you want to... go to sleep while we hold a referendum?  That's a lot of people we have to ask.'\nHope : 'Pretty much.  That is my desire.'\n$WGC_TEAM1_LEADER$ : 'How will it work.  You're just going to fall asleep right here?'\nHope : 'No.  I must submit my report to the MTC.'\n$WGC_TEAM1_LEADER$ : 'The MTC is gone!  Earth is gone!'\nHope : 'Well then.  It's a good thing I am very good at building things.'\n\nHe smiles.\n\n$WGC_TEAM1_LEADER$ : 'Pete.  Did you hear that?'\nPete : 'I heard it...  Fine by me.'\n\nI smile as well.\n\nTime for Forming Terra.",
     prerequisites: ['olympus.49.1'],
+    objectives: [],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.49.3',
+    type: 'journal',
+    chapter: 49,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "Travel to Earth to continue.",
+    prerequisites: ['olympus.49.2'],
     objectives: [],
     reward: [
     ]

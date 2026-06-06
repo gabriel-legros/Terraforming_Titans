@@ -492,8 +492,11 @@ function addJournalEntry(text, eventId = null, source = null) {
   if (source && source.type === 'project' &&
       progressData && progressData.storyProjects && progressData.storyProjects[source.id]) {
     const proj = progressData.storyProjects[source.id];
-    const total = proj.attributes && Array.isArray(proj.attributes.storySteps)
-      ? proj.attributes.storySteps.length : 0;
+    const projectInstance = projectManager && projectManager.projects && projectManager.projects[source.id];
+    const total = projectInstance && projectInstance.getJournalStepTotal
+      ? projectInstance.getJournalStepTotal()
+      : (proj.attributes && Array.isArray(proj.attributes.storySteps)
+        ? proj.attributes.storySteps.length : 0);
     const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
     entryText = `${proj.name} ${stepNum}/${total}: ${entryText}`;
     separator = true;
@@ -782,6 +785,16 @@ function getJournalTextFromSource(source) {
     }
   } else if (source.type === 'project') {
     const proj = progressData && progressData.storyProjects && progressData.storyProjects[source.id];
+    const projectInstance = projectManager && projectManager.projects && projectManager.projects[source.id];
+    if (projectInstance && projectInstance.getJournalStepText) {
+      let text = projectInstance.getJournalStepText(source.step);
+      if (text) {
+        const total = projectInstance.getJournalStepTotal ? projectInstance.getJournalStepTotal() : 0;
+        const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
+        text = `${proj.name} ${stepNum}/${total}: ${text}`;
+        return text;
+      }
+    }
     const steps = proj && proj.attributes && (proj.attributes.storyStepLines || proj.attributes.storySteps);
     if (steps && steps[source.step] !== undefined) {
       let text = joinLines(steps[source.step]);

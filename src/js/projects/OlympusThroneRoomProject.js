@@ -64,6 +64,25 @@ class OlympusThroneRoomProject extends Project {
     }
   }
 
+  getJournalStepTotal() {
+    return this.maxRepeatCount;
+  }
+
+  getJournalStepText(stepIndex) {
+    const sequenceSteps = this.getSequenceSteps();
+    if (stepIndex === 0) {
+      return this.formatStoryStepText(sequenceSteps[0]?.text);
+    }
+    if (stepIndex === 1 && this.selectedBranch) {
+      const option = this.getBranchOptions().find(branch => branch.id === this.selectedBranch);
+      return this.formatStoryStepText(option?.text);
+    }
+    if (stepIndex === 2) {
+      return this.formatStoryStepText(sequenceSteps[2]?.text);
+    }
+    return '';
+  }
+
   advanceSequence(stepIndex) {
     if (!this.unlocked || this.isCompleted || this.sequenceStep !== stepIndex) {
       return;
@@ -185,18 +204,23 @@ class OlympusThroneRoomProject extends Project {
 
   getJournalObjectiveSteps() {
     const steps = [];
-    const sequenceSteps = this.getSequenceSteps();
-    if ((this.repeatCount || 0) >= 1 && sequenceSteps[0]?.text) {
-      steps.push(this.formatStoryStepText(sequenceSteps[0].text));
-    }
-    if (this.selectedBranch) {
-      const option = this.getBranchOptions().find(branch => branch.id === this.selectedBranch);
-      if (option) {
-        steps.push(this.formatStoryStepText(option.text));
+    if ((this.repeatCount || 0) >= 1) {
+      const text = this.getJournalStepText(0);
+      if (text) {
+        steps.push(text);
       }
     }
-    if ((this.repeatCount || 0) >= 3 && sequenceSteps[2]?.text) {
-      steps.push(this.formatStoryStepText(sequenceSteps[2].text));
+    if (this.selectedBranch) {
+      const text = this.getJournalStepText(1);
+      if (text) {
+        steps.push(text);
+      }
+    }
+    if ((this.repeatCount || 0) >= 3) {
+      const text = this.getJournalStepText(2);
+      if (text) {
+        steps.push(text);
+      }
     }
     return steps;
   }
