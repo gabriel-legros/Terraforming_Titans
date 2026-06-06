@@ -18,6 +18,9 @@ function getChapterNumber(id) {
 }
 
 function joinLines(text) {
+    if (text instanceof Function) {
+        return text();
+    }
     return Array.isArray(text) ? text.join('\n') : text;
 }
 

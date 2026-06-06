@@ -234,8 +234,8 @@ function getOneillTooltipText(space, capacity) {
 function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
   const { current, capacity, perSecond, next } = getOneillGrowthDelta(deltaTime, { space, galaxy });
   if (!(capacity > 0)) {
-    space?.setOneillCylinderCount?.(0, 0);
-    return 0;
+    space?.setOneillCylinderCount?.(current);
+    return space?.getOneillCylinderCount?.() ?? 0;
   }
   if (!(perSecond > 0)) {
     space?.setOneillCylinderCount?.(current);

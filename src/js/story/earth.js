@@ -1,5 +1,24 @@
 var progressEarth = { rwgLock: false, chapters: [], storyProjects: {} };
 
+function getEarthFinalReportText() {
+  const worldRating = formatNumber(spaceManager.getTerraformedPlanetCount(), false, 3);
+  const populationRating = formatNumber(followersManager.galacticPopulation, false, 3);
+  return `Terraforming Complete
+
+Transmitting final report to MTC...  complete.
+
+Evaluation...
+
+Directive 1 : Establish a sustainable habitat on Mars for human colonization.
+Rating : ${worldRating}/10
+
+Directive 2: Ensure the safety and well-being of all colonists.
+Rating : ${populationRating} stars
+
+Directive 3: Maintain operational stability.
+Rating : Don't be ridiculous I can't evaluate this.`;
+}
+
 progressEarth.chapters.push(
   {
     id: 'earth.50.0',
@@ -235,6 +254,22 @@ progressEarth.chapters.push(
       { type: 'earthAction', actionId: 'completeTerraforming', quantity: 1, labelKey: 'ui.terraforming.earthActions.completeTerraformingObjective', label: 'Complete terraforming' }
     ],
     reward: []
+  },
+  {
+    id: 'earth.50.9',
+    type: 'pop-up',
+    chapter: 50,
+    activePlanet: 'earth',
+    prerequisites: ['earth.50.8a'],
+    parameters: {
+      title: 'Terraforming complete',
+      text: getEarthFinalReportText,
+      buttonText: 'Shut Down',
+      "textSpeedMultiplier": 1.5
+    },
+    objectives: [],
+    reward: [],
+    rewardDelay: 500
   }
 );
 
