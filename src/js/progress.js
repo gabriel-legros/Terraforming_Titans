@@ -1099,7 +1099,8 @@ class StoryEvent {
                     joinLines(this.parameters.text),
                     this.parameters.buttonText,
                     {
-                        textSpeedMultiplier: this.parameters.textSpeedMultiplier
+                        textSpeedMultiplier: this.parameters.textSpeedMultiplier,
+                        onClose: this.parameters.onClose
                     }
                 );
                 break;

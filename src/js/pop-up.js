@@ -33,6 +33,9 @@ function createPopup(title, text, buttonText, options = {}) {
     document.body.removeChild(overlay); // Remove the pop-up
     window.popupActive = false; // Clear popup flag
     game.scene.resume('mainScene');
+    if (options.onClose instanceof Function) {
+      options.onClose();
+    }
   });
 
   // Append the text and button to the text container

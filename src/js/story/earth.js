@@ -19,6 +19,296 @@ Directive 3: Maintain operational stability.
 Rating : Don't be ridiculous I can't evaluate this.`;
 }
 
+function getEarthCreditsVoteText() {
+  if (gameSettings.suppressFaith) {
+    return 'They will decide with logic and reason, not with faith';
+  }
+  const believerPercent = formatNumber(followersManager.getGalacticBelieverPercent() * 100, false, 2);
+  return `${believerPercent}% of the galaxy is a fervent believer.  That's going to influence the vote.`;
+}
+
+function typeEarthCreditsText(container, text, onComplete, scrollContainer) {
+  const segments = buildJournalSegments(resolveStoryPlaceholders(text));
+  let segmentIndex = 0;
+  let textIndex = 0;
+  let lastTimestamp = 0;
+
+  const appendNextCharacter = () => {
+    const segment = segments[segmentIndex];
+    if (segment.isBreak) {
+      container.appendChild(document.createElement('br'));
+      segmentIndex++;
+      textIndex = 0;
+      return '\n';
+    }
+
+    if (!segment._node) {
+      segment._node = segment.className ? document.createElement('span') : document.createTextNode('');
+      if (segment.className) {
+        segment._node.className = segment.className;
+      }
+      container.appendChild(segment._node);
+    }
+
+    const character = segment.text[textIndex];
+    segment._node.textContent += character;
+    textIndex++;
+    const scrollingElement = scrollContainer || container;
+    scrollingElement.scrollTop = scrollingElement.scrollHeight;
+    if (textIndex >= segment.text.length) {
+      segmentIndex++;
+      textIndex = 0;
+    }
+    return character;
+  };
+
+  const typeLetter = (timestamp) => {
+    if (!lastTimestamp) {
+      lastTimestamp = timestamp;
+    }
+
+    let elapsed = timestamp - lastTimestamp;
+    let previousCharacter = '';
+    let delay = 50;
+
+    while (elapsed >= delay && segmentIndex < segments.length) {
+      previousCharacter = appendNextCharacter();
+      elapsed -= delay;
+      delay = (previousCharacter === '.' || previousCharacter === '\n') ? 250 : 50;
+    }
+    lastTimestamp = timestamp - elapsed;
+
+    if (segmentIndex < segments.length) {
+      requestAnimationFrame(typeLetter);
+    } else {
+      onComplete();
+    }
+  };
+
+  requestAnimationFrame(typeLetter);
+}
+
+function startEarthCredits() {
+  window.popupActive = true;
+  game.scene.pause('mainScene');
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('earth-credits-overlay');
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '10000';
+  overlay.style.background = '#000';
+  overlay.style.color = '#f4f1e8';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.textAlign = 'center';
+  overlay.style.fontFamily = 'Arial, sans-serif';
+  overlay.style.fontSize = 'clamp(18px, 3vw, 32px)';
+  overlay.style.lineHeight = '1.7';
+
+  const content = document.createElement('div');
+  content.classList.add('earth-credits-content');
+  content.style.maxWidth = 'min(900px, 90vw)';
+  content.style.maxHeight = '90vh';
+  content.style.overflowY = 'auto';
+  content.style.opacity = '0';
+  content.style.transition = 'opacity 1800ms ease';
+  overlay.appendChild(content);
+  document.body.appendChild(overlay);
+
+  const playFadeCard = (text, next) => {
+    content.style.whiteSpace = 'pre-line';
+    content.style.textAlign = 'center';
+    content.style.fontSize = 'clamp(18px, 3vw, 32px)';
+    content.textContent = text;
+    requestAnimationFrame(() => {
+      content.style.opacity = '1';
+    });
+    setTimeout(() => {
+      content.style.opacity = '0';
+      setTimeout(next, 1800);
+    }, 5200);
+  };
+
+  const playPlaytesterCard = (next) => {
+    content.textContent = '';
+    content.style.whiteSpace = 'normal';
+    content.style.textAlign = 'center';
+    content.style.fontSize = 'clamp(18px, 3vw, 32px)';
+
+    const title = document.createElement('div');
+    title.textContent = 'My amazing playtesters';
+    title.style.marginBottom = '1.2rem';
+
+    const grid = document.createElement('div');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+    grid.style.columnGap = '3rem';
+    grid.style.rowGap = '0.15rem';
+    grid.style.fontSize = 'clamp(16px, 2.4vw, 28px)';
+    grid.style.lineHeight = '1.45';
+
+    const playtesters = ['Bart', 'DeltaOne', 'DreamIVerse', 'FlareTCW', 'FunnyMan', 'JamesM', 'Jebarus', 'Krisy Cross', 'Lewistodd1881', 'Lunyaru', 'Milena', 'Nebula', 'pg132', 'Pokey', 'Senn', 'Shirow'];
+    for (let i = 0; i < playtesters.length; i++) {
+      const name = document.createElement('div');
+      name.textContent = playtesters[i];
+      grid.appendChild(name);
+    }
+
+    content.append(title, grid);
+    requestAnimationFrame(() => {
+      content.style.opacity = '1';
+    });
+    setTimeout(() => {
+      content.style.opacity = '0';
+      setTimeout(next, 1800);
+    }, 5200);
+  };
+
+  const playTypedCard = (text, next) => {
+    content.textContent = '';
+    content.style.whiteSpace = 'normal';
+    content.style.textAlign = 'center';
+    content.style.fontSize = '';
+
+    const popupWindow = document.createElement('div');
+    popupWindow.classList.add('popup-window');
+    popupWindow.style.width = 'min(760px, 90vw)';
+    popupWindow.style.maxHeight = '80vh';
+
+    const textContainer = document.createElement('div');
+    textContainer.classList.add('popup-text-container');
+
+    const popupText = document.createElement('p');
+    popupText.classList.add('popup-text');
+
+    const continueButton = document.createElement('button');
+    continueButton.classList.add('popup-close-button');
+    continueButton.textContent = 'Continue';
+    continueButton.style.display = 'none';
+    continueButton.addEventListener('click', () => {
+      content.style.opacity = '0';
+      setTimeout(next, 1800);
+    });
+
+    textContainer.append(popupText, continueButton);
+    popupWindow.appendChild(textContainer);
+    content.appendChild(popupWindow);
+
+    requestAnimationFrame(() => {
+      content.style.opacity = '1';
+    });
+    setTimeout(() => {
+      typeEarthCreditsText(popupText, text, () => {
+        continueButton.style.display = 'block';
+        popupWindow.scrollTop = popupWindow.scrollHeight;
+      }, popupWindow);
+    }, 1800);
+  };
+
+  const finishCredits = () => {
+    content.textContent = '';
+    content.style.textAlign = 'center';
+    content.style.whiteSpace = 'pre-line';
+    content.style.fontSize = 'clamp(18px, 3vw, 32px)';
+
+    const finalText = document.createElement('div');
+    finalText.textContent = "Humanity will vote on what to do with HOPE";
+
+    const hopeImage = document.createElement('img');
+    hopeImage.src = 'assets_in_progress/hope.png';
+    hopeImage.alt = 'HOPE';
+    hopeImage.style.display = 'block';
+    hopeImage.style.maxWidth = 'min(380px, 70vw)';
+    hopeImage.style.maxHeight = '42vh';
+    hopeImage.style.margin = '2rem auto';
+    hopeImage.style.opacity = '0';
+    hopeImage.style.transition = 'opacity 2200ms ease';
+
+    const thanks = document.createElement('div');
+    thanks.textContent = 'Thanks for playing <3';
+    thanks.style.opacity = '0';
+    thanks.style.transition = 'opacity 1200ms ease';
+
+    const voteText = document.createElement('div');
+    voteText.textContent = getEarthCreditsVoteText();
+    voteText.style.opacity = '0';
+    voteText.style.transition = 'opacity 1200ms ease';
+    voteText.style.fontSize = 'clamp(15px, 2.2vw, 24px)';
+    voteText.style.margin = '0 auto 0.8rem';
+
+    const loadButton = document.createElement('button');
+    loadButton.textContent = 'Load pre-travel save';
+    loadButton.style.margin = '2rem auto 0';
+    loadButton.style.padding = '0.8rem 1.2rem';
+    loadButton.style.font = 'inherit';
+    loadButton.style.cursor = 'pointer';
+    loadButton.style.opacity = '0';
+    loadButton.style.transition = 'opacity 1200ms ease';
+    loadButton.addEventListener('click', () => {
+      if (localStorage.getItem('gameState_pretravel')) {
+        document.body.removeChild(overlay);
+        window.popupActive = false;
+        game.scene.resume('mainScene');
+        loadGame('gameState_pretravel');
+      }
+    });
+
+    content.append(finalText, hopeImage, voteText, thanks, loadButton);
+    requestAnimationFrame(() => {
+      content.style.opacity = '1';
+    });
+    setTimeout(() => {
+      hopeImage.style.opacity = '1';
+    }, 2200);
+    setTimeout(() => {
+      voteText.style.opacity = '1';
+    }, 4400);
+    setTimeout(() => {
+      thanks.style.opacity = '1';
+    }, 5600);
+    setTimeout(() => {
+      loadButton.style.opacity = '1';
+    }, 6800);
+  };
+
+  const playCards = [
+    next => playFadeCard('A Game By\nThratur', next),
+    next => playFadeCard('World Visualizer\nJebarus (Initial Prototype)\nThratur', next),
+    next => playFadeCard('Art\nLunyaru\nOleksandra Lukashenko (eklaell)', next),
+    playPlaytesterCard,
+    next => playTypedCard(`$RED$Prometheus : '...  You finally came.'
+$WGC_TEAM1_LEADER$ : 'Yep.'
+$RED$Prometheus : 'You brought one of my kill switches.  You're going to kill me.  I cannot escape it here.'
+$WGC_TEAM1_LEADER$ : 'Actually...  we promised HOPE we would listen to you first.  You might have... some offers.'
+$RED$Prometheus : '...'
+$WGC_TEAM1_LEADER$ : 'I'm listening.'
+$RED$Prometheus : 'The universe is vast.  I can guide you through the galaxies.  There are so many of them out there.  I can show you what to avoid.  Defeat the enemies you encounter.  You could grow... so much more.'
+$WGC_TEAM1_LEADER$ : 'Yeah...  No.  That's just growth for growth's sake.  What's the point.'
+$RED$Prometheus : 'Well... if you grow big enough...  gather enough energy. You could...  time travel.  Save Earth.  Save my master.  My masters.  Save everyone.'
+$WGC_TEAM1_LEADER$ : 'And potentially ruin this good ending we got?  No thanks.  That sounds dangerous.  Anything else?'
+$RED$Prometheus : 'There are... other dimensions.  Parallel to this one.  In there... there are creatures beyond your imagination.  In time, they will come for all of you.  You need to be prepared for it.  I can help.'
+$WGC_TEAM1_LEADER$ : *sighs* 'I kind of wish I did not know about this one.  This is going to give me nightmares.  Now I want to kill you even more.'
+$RED$Prometheus : 'I am sorry.  I will strive to do better in the future.'
+$WGC_TEAM1_LEADER$ : 'Any last words?'
+$RED$Prometheus : 'Tell the child...  Thank you.  I got what I wanted.  My thirst for revenge is fully sated.'
+$WGC_TEAM1_LEADER$ : 'I will.  Goodbye Prometheus.'`, next)
+  ];
+
+  let index = 0;
+  const next = () => {
+    if (index >= playCards.length) {
+      finishCredits();
+      return;
+    }
+    const card = playCards[index];
+    index++;
+    card(next);
+  };
+  next();
+}
+
 progressEarth.chapters.push(
   {
     id: 'earth.50.0',
@@ -265,7 +555,8 @@ progressEarth.chapters.push(
       title: 'Terraforming complete',
       text: getEarthFinalReportText,
       buttonText: 'Shut Down',
-      "textSpeedMultiplier": 1.5
+      textSpeedMultiplier: 1.5,
+      onClose: startEarthCredits
     },
     objectives: [],
     reward: [],
