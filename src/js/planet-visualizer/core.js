@@ -899,6 +899,17 @@
         hazardousLifeSum += z[zone].hazardousLife * weight;
         weightSum += weight;
       }
+      if (
+        this.isEarthReconstructionVisualActive() &&
+        earthManager.getActionCount('addWater') >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS
+      ) {
+        const tropicalWeight = t?.getZoneWeight ? t.getZoneWeight('tropical') : 1;
+        const temperateWeight = t?.getZoneWeight ? t.getZoneWeight('temperate') : 1;
+        waterSum += (0.71 - z.tropical.water) * tropicalWeight;
+        waterSum += (0.70 - z.temperate.water) * temperateWeight;
+        z.tropical.water = 0.71;
+        z.temperate.water = 0.70;
+      }
       const norm = weightSum > 0 ? weightSum : zones.length;
       const avgWater = norm > 0 ? (waterSum / norm) : 0;
       const avgLife = norm > 0 ? (lifeSum / norm) : 0;

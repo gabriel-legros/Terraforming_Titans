@@ -892,6 +892,15 @@ function updateRender(force = false, options = {}) {
               hazardousLife,
             };
           }
+          if (
+            spaceManager.getCurrentPlanetKey() === 'earth' &&
+            earthManager &&
+            earthManager.enabled &&
+            earthManager.getActionCount('addWater') >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS
+          ) {
+            zonal.tropical.water = 0.71;
+            zonal.temperate.water = 0.70;
+          }
           pv.viz.coverage.hazardousLife = pct(zoneWeightSum > 0 ? hazardousLifeSum / zoneWeightSum : 0);
           pv.viz.zonalCoverage = zonal;
           if (typeof pv.setBaseColor === 'function') {
