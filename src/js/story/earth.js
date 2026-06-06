@@ -8,7 +8,7 @@ progressEarth.chapters.push(
     activePlanet: 'earth',
     title: 'Chapter 50 : Country Roads',
     narrative: '',
-    prerequisites: ['olympus.49.2'],
+    prerequisites: ['olympus.49.3'],
     objectives: [
       { type: 'currentPlanet', planetId: 'earth' }
     ],

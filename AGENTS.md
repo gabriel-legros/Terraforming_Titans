@@ -284,6 +284,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## Major Feature Updates (Consolidated)
 ### Atmosphere, Physics, and Terraforming
+- Earth is an end-road world that disables the normal late-game UI surface: Buildings, Special Projects, Research, Space, H.O.P.E., Colony, non-World Terraforming subtabs, managers tied to those systems, advanced research, special project categories including Story, and Space -> Story. Terraforming -> World and Save and Settings remain available.
 - World-land semantics now have explicit helper support for immutable `baseLand` versus live geometric land derived from radius; RWG persists generated `baseLand`, `initialLand` remains a compatibility alias during migration, and systems can move case-by-case onto the correct land basis instead of assuming one meaning everywhere.
 - Whole-world scaling now splits by system: hazard initialization can use `baseLand`; `Artificial Sky`, `Underground Expansion`, and Foundry World mining-cap scaling follow current world land; `Artificial Crust`, fixed base-land building caps, and Foundry World travel-point rewards stay on `baseLand`.
 - Atmospheric density/exobase/drag heuristics now use bulk non-heavy-trace mass/pressure to avoid nonphysical Kessler-line behavior.

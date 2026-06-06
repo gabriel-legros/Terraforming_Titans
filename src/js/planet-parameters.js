@@ -2380,7 +2380,67 @@ const earthOverrides = {
   specialAttributes: {
     hasSand: true,
     skipCurrentWorldTravelWarnings: true,
-    savePretravel: false
+    savePretravel: false,
+    disabledFeatures: {
+      tabs: ['buildings', 'special-projects', 'research', 'space', 'hope', { id: 'colonies', priority: 4 }],
+      subtabs: [
+        'energy-research',
+        'industry-research',
+        'colonization-research',
+        'terraforming-research',
+        'advanced-research',
+        'awakening-hope',
+        'solis-hope',
+        'wgc-hope',
+        'patience-hope',
+        'automation-hope',
+        'space-story',
+        'space-random',
+        'space-artificial',
+        'space-atlas',
+        'space-galaxy',
+        'space-invasion',
+        'summary-terraforming',
+        'life-terraforming',
+        'hazard-terraforming',
+        'milestone-terraforming',
+        'population-colonies',
+        { id: 'nanocolony-colonies', priority: 4 },
+        'followers-colonies',
+        'resources-projects',
+        'infrastructure-projects',
+        'story-projects',
+        'mega-projects',
+        'giga-projects',
+        'tera-projects'
+      ],
+      managers: [
+        'skillManager',
+        'solisManager',
+        'warpGateCommand',
+        'patienceManager',
+        'automationManager',
+        'rwgManager',
+        'artificialManager',
+        'atlasManager',
+        'galaxyManager',
+        'galaxyInvasionManager',
+        'lifeDesigner',
+        'hazardManager',
+        'milestonesManager',
+        'nanotechManager',
+        'followersManager'
+      ],
+      researchCategories: ['advanced'],
+      projectCategories: ['resources', 'infrastructure', 'story', 'mega', 'giga', 'tera'],
+      resources: [
+        'colony:funding',
+        'colony:research',
+        'colony:advancedResearch',
+        'special:alienArtifact',
+        'special:antimatter'
+      ]
+    }
   },
   star: {
     name: '',
