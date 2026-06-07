@@ -515,7 +515,6 @@ function addJournalEntry(text, eventId = null, source = null) {
   let entryText = joinLines(text);
   entryText = resolveStoryPlaceholders(entryText);
 
-  let separator = false;
   if (source && source.type === 'project' &&
       progressData && progressData.storyProjects && progressData.storyProjects[source.id]) {
     const proj = progressData.storyProjects[source.id];
@@ -526,10 +525,9 @@ function addJournalEntry(text, eventId = null, source = null) {
         ? proj.attributes.storySteps.length : 0);
     const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
     entryText = `${proj.name} ${stepNum}/${total}: ${entryText}`;
-    separator = true;
   }
 
-  journalQueue.push({ text: entryText, eventId, source, separator });
+  journalQueue.push({ text: entryText, eventId, source });
   if (!journalTyping) {
     processNextJournalEntry();
   }
@@ -545,7 +543,7 @@ function processNextJournalEntry() {
   journalTyping = true;
   journalTypingSession += 1;
   const sessionId = journalTypingSession;
-  const { text, eventId, source, separator } = journalQueue.shift();
+  const { text, eventId, source } = journalQueue.shift();
   journalCurrentEventId = eventId;
   const journalEntries = journalEntriesContainer;
   const journalContainer = journalContainerElement;
@@ -582,12 +580,6 @@ function processNextJournalEntry() {
   updateJournalNavArrows();
   if (journalIndexVisible) {
     buildJournalIndex();
-  }
-
-  if (separator) {
-    const hr = document.createElement('hr');
-    hr.classList.add('journal-entry-separator');
-    journalEntries.appendChild(hr);
   }
 
   const entry = document.createElement('p');

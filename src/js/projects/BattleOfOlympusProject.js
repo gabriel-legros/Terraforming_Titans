@@ -120,15 +120,6 @@ class BattleOfOlympusProject extends AndroidProject {
     return this.biomassCap > 0 ? Math.max(0, Math.min(1, this.hazardousBiomass / this.biomassCap)) : 0;
   }
 
-  getLogBiomassPercent() {
-    if (this.biomassCap <= 0) {
-      return 0;
-    }
-    const removed = this.getRemovedBiomass();
-    const removedProgress = Math.log10(1 + removed) / Math.log10(1 + this.biomassCap);
-    return Math.max(0, Math.min(1, 1 - removedProgress));
-  }
-
   shouldReleaseAndroidAssignmentsForCompleteOrDisabled() {
     return this.hazardousBiomass <= 0;
   }
@@ -328,7 +319,7 @@ class BattleOfOlympusProject extends AndroidProject {
 
     const removed = this.getRemovedBiomass();
     const remaining = Math.max(0, this.biomassCap - removed);
-    const percent = this.getLogBiomassPercent();
+    const percent = this.getBiomassPercent();
     const growthRate = removed * this.baseGrowthRate * (1 - removed / this.biomassCap);
     const cap = this.getMetalSalvagingAssignmentCap();
     const percentText = formatNumber(percent * 100, false, 2);

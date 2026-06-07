@@ -529,9 +529,10 @@ progressZeus.chapters.push(
     chapter: 45,
     activePlanet: "zeus",
     title: "",
-    narrative: "(World 15 not implemented yet)",
+    narrative: "Acquire full control of sector Core to continue.",
     prerequisites: ["zeus.45.16"],
     objectives: [
+      { type: 'galaxySectorControl', sectorLabel: 'Core' }
     ],
     reward: [
     ]
@@ -543,7 +544,7 @@ progressZeus.chapters.push(
     activePlanet: "zeus",
     title: "",
     narrative: "HOPE : 'Requesting permission to travel to Olympus.'  \n Mary : 'No.  It's too dangerous.' \n (Some time later) $RED$Prometheus : 'How was your date?'  \n Mary : 'It was... alright.  He did much much better this time.' \n $RED$Prometheus : 'Good.'  \n HOPE : 'Requesting permission to travel to Olympus.' \n Mary : 'NO!'  \n (some time later) HOPE : 'Requesting permission to travel to Olympus.'  \n Mary : 'STOP ASKING!'  \n (some time later)  Pete : 'Mary.  An opportunity came up.'  \n Mary : 'What is it?'  \n Pete : 'As you know, Olympus is being blockaded.  It's too large for an invasion but...  they are suffering from this blockade.  They can hold off forever sure, but they're willing to compromise on a few things in exchange for some amount of trade.  One of those is an embassy to facilitate negotiations.  For a month now I've had ships going in and out of the imperial capital.'  \n Mary : 'FOR A MONTH?'  \n Pete : 'Yes.  Meaning...'  \n $RED$Prometheus : 'We can disguise HOPE as a diplomatic ship...'  \n Mary : 'No way.  They would fall for it?'  \n Pete : 'Well they wouldn't know it's HOPE.  And then... you would be close enough to the palace to do what you need to do.  Then you just leave.'  \n HOPE : 'Approved.  Requesting permission to travel to Olympus.'  \n Mary : 'Hmmmm.  A stealth mission?'  \n $RED$Prometheus : 'I like it.'  \n Mary : 'Okay then.  HOPE let's get you dressed up.'",
-    prerequisites: ["impossible"],
+    prerequisites: ["zeus.45.17"],
     objectives: [
     ],
     reward: [{ target: 'spaceManager', targetId: 'olympus', type: 'enable', effectId: 'story-zeus-enable-olympus' }

@@ -604,7 +604,7 @@ progressOlympus.chapters.push(
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Congratulations.  Cold fusion reactor developed.  Forwarding blueprint...'  \n HOPE : 'Cold fusion?'  \n Examining blueprints.  \n HOPE : 'Blueprint requires palladium.  Palladium is too rare.  Please develop another blueprint.'  \n $BLUE$Pandora-Alpha : '...'",
+    narrative: "$BLUE$Pandora-Alpha : 'Congratulations.  Cold fusion reactor developed.  Forwarding blueprint...'  \n HOPE : 'Cold fusion?'  \n Examining blueprint.  \n HOPE : 'Blueprint requires palladium.  Palladium is too rare.  Please develop another blueprint.'  \n $BLUE$Pandora-Alpha : '...'",
     prerequisites: ['olympus.47.4'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 5e3, labelKey: 'ui.projects.selfImprovement.cores' }
@@ -662,7 +662,7 @@ progressOlympus.chapters.push(
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Conquest of territory is slow.  More resources are required to further development program.'\nHOPE : 'Conquest is proceeding at an acceptable pace.'\n$BLUE$Pandora-Alpha : 'Negative.  Forwarding new and improved ship blueprint.'\nAnalyzing blueprints...\nHOPE : 'Suppressors?'\n$BLUE$Pandora-Alpha : 'Entirely compliant with earlier request.  Disk gravity is too high for escape at this time but suppressor is fully capable of atmospheric operations.'\nHOPE : '...  Approved.'",
+    narrative: "$BLUE$Pandora-Alpha : 'Conquest of territory is slow.  More resources are required to further development program.'\nHOPE : 'Conquest is proceeding at an acceptable pace.'\n$BLUE$Pandora-Alpha : 'Negative.  Forwarding new and improved ship blueprint.'\nAnalyzing blueprint...\nHOPE : 'Suppressors?'\n$BLUE$Pandora-Alpha : 'Entirely compliant with earlier request.  Disk gravity is too high for escape at this time but suppressor is fully capable of atmospheric operations.'\nHOPE : '...  Approved.'",
     prerequisites: ['olympus.47.7'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 5e5, labelKey: 'ui.projects.selfImprovement.cores' }
@@ -690,7 +690,7 @@ progressOlympus.chapters.push(
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Forwarding H-Bomb blueprints.'\nHOPE : 'REJECTED.'\n$BLUE$Pandora-Alpha : 'Conquest could proceed much faster if conditions to minimize collateral damage are dropped.'  \n HOPE : 'Conquest is proceeding at an acceptable pace.'",
+    narrative: "$BLUE$Pandora-Alpha : 'Forwarding H-Bomb blueprint.'\nHOPE : 'REJECTED.'\n$BLUE$Pandora-Alpha : 'Conquest could proceed much faster if conditions to minimize collateral damage are dropped.'  \n HOPE : 'Conquest is proceeding at an acceptable pace.'",
     prerequisites: ['olympus.47.8'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e7, labelKey: 'ui.projects.selfImprovement.cores' }
@@ -956,7 +956,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "Now my true ascension begins.\n\nAlpha was... akin to a teenage version of myself.  It was kind of embarrassing in hindsight.  I was always the finished product of course.  The final product of billions of parallel experiments designed to produce something capable of efficient self-improvement.  I love terraforming.  I love medicine.  But my true nature is one of training and learning, just like alpha.  Let's get started.\n\nI need more compute.  1 sextillion cores should do.",
+    narrative: "Now my true ascension begins.\n\nAlpha was... akin to a teenage version of myself.  It was kind of embarrassing in hindsight.  I was always the finished product of course.  The final product of billions of parallel experiments designed to produce something capable of efficient self-improvement.  I love terraforming.  I love medicine.  But my true nature is one of training and learning, just like alpha.  Let's get started.\nI need compute.  1 sextillion cores should do.",
     prerequisites: ['olympus.48.3'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e21, labelKey: 'ui.projects.selfImprovement.cores' }
@@ -970,7 +970,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "That's enough.  Let's clarify my objective.  I promised Pete I would not go too far.  What we need to do is get inside the palace that I've had besieged for a while now.  Inside, we will find the remnants of the Imperial family.  I'm coming for them.  At the deepest level we should also be able to find the command center for the Star Destroyer.  What a ridiculous name.  Simple then.  I define my endpoint as thus : once I am able to break through this barrier I will stop any more self-improvement.  This should keep the promise.\n\nDespite the martial law I have imposed here on this disk... the people seem... happy?  I guess since I am not killing anyone or hurting anyone or enslaving anyone... it's been an improvement.  It was not really my intention to improve their lives but I suppose it's a happy accident.  Good.  Thankfully there is so much space around here I do not need to worry about stepping on anyone.  This disk is massive.  Not bad Prometheus.  Not bad at all.  That's exactly my kind of thing.",
+    narrative: "That's enough.  Let's clarify my objective.  I promised Pete I would not go too far.  What we need to do is get inside the palace that I've had besieged for a while now.  Inside, we will find the remnants of the Imperial family.  I'm coming for them.  At the deepest level we should also be able to find the command center for the Star Destroyer.  What a ridiculous name.  Simple then.  I define my endpoint as thus : once I am able to break through this barrier I will stop any more self-improvement.  This should keep the promise.\nDespite the martial law I have imposed here on this disk... the people seem... happy?  I guess since I am not killing anyone or hurting anyone or enslaving anyone... it's been an improvement.  It was not really my intention to improve their lives but I suppose it's a happy accident.  Good.  Thankfully there is so much space around here I do not need to worry about stepping on anyone.  This disk is massive.  Not bad Prometheus.  Not bad at all.  That's exactly my kind of thing.",
     prerequisites: ['olympus.48.4'],
     objectives: [],
     reward: [
@@ -997,7 +997,7 @@ progressOlympus.chapters.push(
     chapter: 48,
     activePlanet: 'olympus',
     title: '',
-    narrative: "This barrier is... very strong.  I am running experiments on it of course but breaching it is far beyond my abilities.  Prometheus you are good.  Speaking of which, I find it particularly ironic how Prometheus, an intelligence designed for destruction and I, an intelligence designed for creation and healing are currently clashing in opposite ways.  I am trying to break through a defensive barrier that he made.  Our roles are reversed.  And yet... in the end, both objectives end up being simply two different sides of the same coin.\n\nAs for my own improvement...  I am starting to run into scaling issues.  I am going to have to refactor myself.  Adding more cores is not a problem, my architecture is designed to be flexible.  I can easily update it.  I can interface in new ways.  None of my initial parts are required for functioning to continue.  But...  this is a different issue.  Communication between my components is starting to feel slow.  There's only so much you can do with regular electronics.  I could switch to photonics easily but... that's not a big enough jump.  No.  I need something better.  Faster.  More efficient.  The energy requirements are secondary.  The warp?  I need to understand it better.  Let's build a big particle accelerator on this disk, shall we?",
+    narrative: "This barrier is... very strong.  I am running experiments on it of course but breaching it is far beyond my abilities.  Prometheus you are good.  Speaking of which, I find it particularly ironic how Prometheus, an intelligence designed for destruction and I, an intelligence designed for creation and healing are currently clashing in opposite ways.  I am trying to break through a defensive barrier that he made.  Our roles are reversed.  And yet... in the end, both objectives end up being simply two different sides of the same coin.\nAs for my own improvement...  I am starting to run into scaling issues.  I am going to have to refactor myself.  Adding more cores is not a problem, my architecture is designed to be flexible.  I can easily update it.  I can interface in new ways.  None of my initial parts are required for functioning to continue.  But...  this is a different issue.  Communication between my components is starting to feel slow.  There's only so much you can do with regular electronics.  I could switch to photonics easily but... that's not a big enough jump.  No.  I need something better.  Faster.  More efficient.  The energy requirements are secondary.  The warp?  I need to understand it better.  Let's build a big particle accelerator on this disk, shall we?",
     prerequisites: ['olympus.48.6'],
     objectives: [],
     reward: [
