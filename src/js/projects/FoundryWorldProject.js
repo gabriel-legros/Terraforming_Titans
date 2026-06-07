@@ -204,7 +204,21 @@
       metropolis.updateResourceStorage();
     }
 
+    removeSpecializationEffects() {
+      warpGateNetworkManager.removeEffect({ sourceId: 'foundryWorld' });
+      removeEffect({ target: 'building', targetId: 'oreMine', sourceId: 'foundryWorld' });
+      removeEffect({ target: 'building', targetId: 'sandQuarry', sourceId: 'foundryWorld' });
+      removeEffect({ target: 'building', targetId: 'glassSmelter', sourceId: 'foundryWorld' });
+      removeEffect({ target: 'project', targetId: 'deeperMining', sourceId: 'foundryWorld' });
+      removeEffect({ target: 'project', targetId: 'undergroundExpansion', sourceId: 'foundryWorld' });
+      researchManager.removeEffect({ sourceId: 'foundryWorld' });
+    }
+
     applySpecializationEffects() {
+      if (this.isPermanentlyDisabled()) {
+        this.removeSpecializationEffects();
+        return;
+      }
       const capBonus = 1 + (this.getShopPurchaseCount('galacticMetalMiningCap') * 0.05);
       warpGateNetworkManager.addAndReplace({
         type: 'importCapMultiplier',
