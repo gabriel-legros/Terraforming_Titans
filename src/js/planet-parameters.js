@@ -2263,12 +2263,12 @@ const olympusOverrides = {
       ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
       geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
     },
- "atmospheric": {
+    "atmospheric": {
       "carbonDioxide": {
         "initialValue": 2.068685930519462e+25
       },
       "atmosphericWater": {
-        "initialValue": 1.5212327995048885e+24
+        "initialValue": 1.6396019102552818e+24
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -2292,7 +2292,7 @@ const olympusOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 5.7079240006938396e+26,
+      "liquidWater": 5.70777427170771e+26,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -2312,7 +2312,7 @@ const olympusOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 1.5057683064374472e+27,
+      "liquidWater": 1.5057288439442677e+27,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -2332,7 +2332,7 @@ const olympusOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 2.4407436711848512e+27,
+      "liquidWater": 2.4406797374658714e+27,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -2354,19 +2354,19 @@ const olympusOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 302.5061157790979,
-      "day": 302.59905236879825,
-      "night": 302.41317918939757
+      "value": 301.44413632392957,
+      "day": 301.53507541667886,
+      "night": 301.3531972311803
     },
     "temperate": {
-      "value": 302.50611497605826,
-      "day": 302.5990515957248,
-      "night": 302.4131783563917
+      "value": 301.4441355508358,
+      "day": 301.5350746719134,
+      "night": 301.35319642975827
     },
     "polar": {
-      "value": 302.50611453905276,
-      "day": 302.5990511750266,
-      "night": 302.4131779030789
+      "value": 301.44413513013114,
+      "day": 301.5350742666246,
+      "night": 301.3531959936377
     }
   },
   zonalTemperatures: null
