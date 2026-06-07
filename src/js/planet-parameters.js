@@ -2246,6 +2246,13 @@ const olympusOverrides = {
     },
     {
       target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-space-mirror-facility'
+    },
+    {
+      target: 'project',
       targetId: 'planetaryThruster',
       type: 'permanentProjectDisable',
       value: true,
