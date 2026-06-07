@@ -2245,6 +2245,13 @@ const olympusOverrides = {
       effectId: 'olympus-disk-disable-space-mirror'
     },
     {
+      target: 'building',
+      targetId: 'biodome',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-biodome'
+    },
+    {
       target: 'project',
       targetId: 'spaceMirrorFacility',
       type: 'permanentProjectDisable',
