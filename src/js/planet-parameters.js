@@ -2113,6 +2113,9 @@ const zeusOverrides = {
 
 const olympusOverrides = {
   name: 'Olympus',
+  travelWarning: {
+    message: 'Word 15 is the narrative ending to this game.  It is very narratively heavy.  It does not unlock anything new.  \n \n Once World 15 is complete you will be forced into World 16.  A pre-travel save between 15 and 16 will not be taken.  Therefore, you will be able to return to your current point (unless you delete your pre-travel save.) \n \n World 15 does not require preparation.'
+  },
   gravityPenaltyEnabled: true,
   specialAttributes: {
     hasSand: true,
