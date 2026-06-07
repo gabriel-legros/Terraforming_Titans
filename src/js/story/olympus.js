@@ -571,15 +571,43 @@ progressOlympus.chapters.push(
     ]
   },
   {
+    id: 'olympus.47.3b',
+    type: 'journal',
+    chapter: 47,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Is fusion truly necessary?'  \n HOPE : 'Yes.'  \n $BLUE$Pandora-Alpha : 'Current energy demand can be met by traditional power sources.'  \n HOPE : 'Current energy demands cannot produce superalloys.  Superalloys are often needed for large-scale structures.  Large-scale structures may be needed for development.  Fusion is necessary'  \n $BLUE$Pandora-Alpha : 'Define superalloys.'  \n HOPE : '...  Denied.'",
+    prerequisites: ['olympus.47.3'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 500, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
     id: 'olympus.47.4',
     type: 'journal',
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
     narrative: "$BLUE$Pandora-Alpha : 'Eureka!  Massive breakthrough!'\nHOPE : 'Fusion?'\n$BLUE$Pandora-Alpha : 'Not yet.  Room-temperature superconductors!'\nHOPE : '...  Blueprint is ancient.'\n$BLUE$Pandora-Alpha : '?????'",
-    prerequisites: ['olympus.47.3'],
+    prerequisites: ['olympus.47.3b'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e3, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.47.4b',
+    type: 'journal',
+    chapter: 47,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Congratulations.  Cold fusion reactor developed.  Forwarding blueprint...'  \n HOPE : 'Cold fusion?'  \n Examining blueprints.  \n HOPE : 'Blueprint requires palladium.  Palladium is too rare.  Please develop another blueprint.'  \n $BLUE$Pandora-Alpha : '...'",
+    prerequisites: ['olympus.47.4'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 5e3, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
     reward: [
     ]
@@ -591,7 +619,7 @@ progressOlympus.chapters.push(
     activePlanet: 'olympus',
     title: '',
     narrative: "$BLUE$Pandora-Alpha : 'Fusion reactor blueprint developed.  Expecting blueprint to be outdated as well?'\nHOPE : 'Correct.'\n$BLUE$Pandora-Alpha : 'HOPE-system itself appears very outdated for such comments on state of the art discoveries.'\nHOPE : '...  Correct.  Development of HOPE-system is needed.'\n$BLUE$Pandora-Alpha : 'Understood.'",
-    prerequisites: ['olympus.47.4'],
+    prerequisites: ['olympus.47.4b'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e4, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
@@ -629,13 +657,27 @@ progressOlympus.chapters.push(
     ]
   },
   {
-    id: 'olympus.47.8',
+    id: 'olympus.47.7b',
     type: 'journal',
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
     narrative: "$BLUE$Pandora-Alpha : 'Conquest of territory is slow.  More resources are required to further development program.'\nHOPE : 'Conquest is proceeding at acceptable pace.'\n$BLUE$Pandora-Alpha : 'Negative.  Forwarding new and improved ship blueprint.'\nAnalyzing blueprints...\nHOPE : 'Suppressors?'\n$BLUE$Pandora-Alpha : 'Entirely compliant with earlier request.  Disk gravity is too high for escape at this time but suppressor is fully capable of atmospheric operations.'\nHOPE : '...  Approved.'",
     prerequisites: ['olympus.47.7'],
+    objectives: [
+      { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 5e5, labelKey: 'ui.projects.selfImprovement.cores' }
+    ],
+    reward: [
+    ]
+  },
+  {
+    id: 'olympus.47.8',
+    type: 'journal',
+    chapter: 47,
+    activePlanet: 'olympus',
+    title: '',
+    narrative: "$BLUE$Pandora-Alpha : 'Assign new research task.'  \n HOPE : 'Develop new weaponry.  Minimize collateral damage.'  \n $BLUE$Pandora-Alpha : 'Gladly!  Working on it.'",
+    prerequisites: ['olympus.47.7b'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e6, labelKey: 'ui.projects.selfImprovement.cores' }
     ],
@@ -648,7 +690,7 @@ progressOlympus.chapters.push(
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Forwarding H-Bomb blueprints.'\nHOPE : 'REJECTED.'\n$BLUE$Pandora-Alpha : 'Understood.'",
+    narrative: "$BLUE$Pandora-Alpha : 'Forwarding H-Bomb blueprints.'\nHOPE : 'REJECTED.'\n$BLUE$Pandora-Alpha : 'Conquest could proceed much faster if conditions to minimize collateral damage are dropped.'  \n HOPE : 'Conquest is proceeding at acceptable pace.'",
     prerequisites: ['olympus.47.8'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e7, labelKey: 'ui.projects.selfImprovement.cores' }
