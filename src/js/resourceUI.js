@@ -132,7 +132,8 @@ function hasUnlockedSpaceStorageResources(resourceSet) {
   const storageResources = resourceSet?.spaceStorage;
   if (storageResources) {
     for (const resourceName in storageResources) {
-      if (storageResources[resourceName]?.unlocked) {
+      const resource = storageResources[resourceName];
+      if (resource?.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
         return true;
       }
     }
@@ -140,7 +141,8 @@ function hasUnlockedSpaceStorageResources(resourceSet) {
   const spaceResources = resourceSet?.space;
   if (spaceResources) {
     for (const resourceName in spaceResources) {
-      if (spaceResources[resourceName]?.unlocked) {
+      const resource = spaceResources[resourceName];
+      if (resource?.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
         return true;
       }
     }

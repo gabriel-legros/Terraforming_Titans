@@ -2179,7 +2179,8 @@ const olympusOverrides = {
         'colony:research',
         'colony:advancedResearch',
         'special:alienArtifact',
-        'special:antimatter'
+        'special:antimatter',
+        'space:energy'
       ]
     } 
   },
