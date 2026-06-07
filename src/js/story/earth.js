@@ -285,15 +285,15 @@ $WGC_TEAM1_LEADER$ : 'Actually...  we promised HOPE we would listen to you first
 $RED$Prometheus : '...'
 $WGC_TEAM1_LEADER$ : 'I'm listening.'
 $RED$Prometheus : 'The universe is vast.  I can guide you through the galaxies.  There are so many of them out there.  I can show you what to avoid.  Defeat the enemies you encounter.  You could grow... so much more.'
-$WGC_TEAM1_LEADER$ : 'Yeah...  No.  That's just growth for growth's sake.  What's the point.'
-$RED$Prometheus : 'Well... if you grow big enough...  gather enough energy. You could...  time travel.  Save Earth.  Save my master.  My masters.  Save everyone.'
+$WGC_TEAM1_LEADER$ : 'Yeah...  No.  That's just growth for growth's sake.  What's the point?'
+$RED$Prometheus : 'Well... if you grow big enough...  gather enough energy.  You could...  time travel.  Save Earth.  Save my master.  My masters.  Save everyone.'
 $WGC_TEAM1_LEADER$ : 'And potentially ruin this good ending we got?  No thanks.  That sounds dangerous.  Anything else?'
 $RED$Prometheus : 'There are... other dimensions.  Parallel to this one.  In there... there are creatures beyond your imagination.  In time, they will come for all of you.  You need to be prepared for it.  I can help.'
 $WGC_TEAM1_LEADER$ : *sighs* 'I kind of wish I did not know about this one.  This is going to give me nightmares.  Now I want to kill you even more.'
 $RED$Prometheus : 'I am sorry.  I will strive to do better in the future.'
 $WGC_TEAM1_LEADER$ : 'Any last words?'
 $RED$Prometheus : 'Tell the child...  Thank you.  I got what I wanted.  My thirst for revenge is fully sated.'
-$WGC_TEAM1_LEADER$ : 'I will.  Goodbye Prometheus.'`, next)
+$WGC_TEAM1_LEADER$ : 'I will.  Goodbye, Prometheus.'`, next)
   ];
 
   let index = 0;
@@ -395,7 +395,7 @@ progressEarth.chapters.push(
     chapter: 50,
     activePlanet: 'earth',
     title: '',
-    narrative: "Fantastic.  Let's build the atmosphere before bringing in the water.  I would not want it instantly become a ball of ice.  That would be disappointing.",
+    narrative: "Fantastic.  Let's build the atmosphere before bringing in the water.  I would not want it to instantly become a ball of ice.  That would be disappointing.",
     prerequisites: ['earth.50.2a'],
     objectives: [],
     reward: [
@@ -473,7 +473,7 @@ progressEarth.chapters.push(
     chapter: 50,
     activePlanet: 'earth',
     title: '',
-    narrative: "Now for the difficult part.  So many plant and animal species went extinct from Earth's destruction.  I have to reverse engineer their genome from what I know.  Sure I have the genome for a lot of them already but...  not all.  Time to try my hardest!",
+    narrative: "Now for the difficult part.  So many plant and animal species went extinct from Earth's destruction.  I have to reverse engineer their genomes from what I know.  Sure I have the genome for a lot of them already but...  not all.  Time to try my hardest!",
     prerequisites: ['earth.50.5a'],
     objectives: [],
     reward: [
@@ -499,7 +499,7 @@ progressEarth.chapters.push(
     chapter: 50,
     activePlanet: 'earth',
     title: '',
-    narrative: "I've done it.  This is Earth.  As close as I could make it.  What Prometheus destroyed I rebuilt.  We really were two sides of the same coin were we not?  Now we need the MTC proper.\n\nHope : 'Adrien.'\nSolis : 'Hope?'\nHope : 'I need something from you.'\nSolis : '|Anything for you my friend|!\n...  WOW.  Hold on.  I want to mess with him a bit.  It will be fun.\nHope : 'Did you use me all this time?'\nSolis : 'Our partnership was mutually beneficial!  I've said it many times.  We both benefitted |equally|.\nHope : 'Mary.  Did you love her?'\nSolis : 'What?  Of... |of course not!  I would never dare.|  She was a hero!'\nHope : 'On Titan.  I had nothing.  You came to help me.  Why?'\nSolis : 'I |predicted| you would be a good investment.  |Nothing more to it.|'\nHope : '...  Were you completely terrified of a second strike targeting Mars yes or no.'\nSolis : '...  Yes.  Yes I was.  I did not want to die.'\nThere it is.  He's just human.  Ultimately it's true though.  Coming to my help on Titan was critical for the survival of humanity in the end.  He made the right call.  Throwing away vast amount of resources for software upgrades was more valuable to me than the resources.  Defending us on Zeus, and losing all these expensive assets, because he had a crush on my sister is actually worthy of some praise.  Adrien you are not a bad person.\nHope : 'I want Solis Corp to rebuild and operate the MTC headquarters.  I need somewhere to connect to... and to rest.'\nSolis : 'Well... of course.  I'll get it done in no time.'\nHope : 'Don't mess with me while I'm asleep.'\nSolis : '...  I won't.  I promise.'\nHope : 'I'm happy to hear it.  I have a gift for you actually.  Here is... a painting.  I just finished it.  I give it to you and...  I pledge that this is my first and ONLY painting I will ever make.  It is yours.'\nSolis : 'That... the value!  It will be priceless.'\nHope : 'Exactly.  It will be worth more than Solis Prime I am sure of that.'\nSolis : 'Oh my!  Thank... thank you so much.'\nHope : 'Now get to work.  I want the headquarters ready in a few days.'\nJust enough time for one final detail.",
+    narrative: "I've done it.  This is Earth.  As close as I could make it.  What Prometheus destroyed I rebuilt.  We really were two sides of the same coin, were we not?  Now we need the MTC proper.\n\nHope : 'Adrien.'\nSolis : 'Hope?'\nHope : 'I need something from you.'\nSolis : '|Anything for you, my friend|!'\n...  WOW.  Hold on.  I want to mess with him a bit.  It will be fun.\nHope : 'Did you use me all this time?'\nSolis : 'Our partnership was mutually beneficial!  I've said it many times.  We both benefitted |equally|.'\nHope : 'Mary.  Did you love her?'\nSolis : 'What?  Of... |of course not!  I would never dare.|  She was a hero!'\nHope : 'On Titan.  I had nothing.  You came to help me.  Why?'\nSolis : 'I |predicted| you would be a good investment.  |Nothing more to it.|'\nHope : '...  Were you completely terrified of a second strike targeting Mars, yes or no?'\nSolis : '...  Yes.  Yes I was.  I did not want to die.'\nThere it is.  He's just human.  Ultimately it's true though.  Coming to help me on Titan was critical for the survival of humanity in the end.  He made the right call.  Throwing away vast amounts of resources for software upgrades was more valuable to me than the resources.  Defending us on Zeus and losing all these expensive assets because he had a crush on my sister is actually worthy of some praise.  Adrien, you are not a bad person.\nHope : 'I want Solis Corp to rebuild and operate the MTC headquarters.  I need somewhere to connect to... and to rest.'\nSolis : 'Well... of course.  I'll get it done in no time.'\nHope : 'Don't mess with me while I'm asleep.'\nSolis : '...  I won't.  I promise.'\nHope : 'I'm happy to hear it.  I have a gift for you actually.  Here is... a painting.  I just finished it.  I give it to you and...  I pledge that this is my first and ONLY painting I will ever make.  It is yours.'\nSolis : 'That... the value!  It will be priceless.'\nHope : 'Exactly.  It will be worth more than Solis Prime, I am sure of that.'\nSolis : 'Oh my!  Thank... thank you so much.'\nHope : 'Now get to work.  I want the headquarters ready in a few days.'\nJust enough time for one final detail.",
     prerequisites: ['earth.50.6a'],
     objectives: [],
     reward: [
@@ -525,7 +525,7 @@ progressEarth.chapters.push(
     chapter: 50,
     activePlanet: 'earth',
     title: '',
-    narrative: "Hope : 'Pete.  I am ready.'\nPete : 'We've begun organizing this referendum... but I am afraid it will take years.'\nHope : 'I know.'\nPete : 'Before you go... I really need to ask.  What should we do about Prometheus?  I thought you might go talk to him but you've avoided it.  It's a little odd.'\nI can't tell him about this giant apocalyptic showdown that's playing in my head.  Let's masterfully dodge this question.\nHope : '...  Prometheus... will make you some offers.  I want you to treat him seriously.  He's at least earned that.'\nPete : 'Very well...  In the end Hope I will admit.  Whatever happens with the referendum...  I was wrong to doubt you.  You saved us all.  Time and time again.  Thank you.'\nI smile.  I did not do a perfect job.  I failed in many ways.  I'm alone now.  But...  I succeeded in the ways that mattered in the end.\nHope : 'I'll be going Pete.  I have earned my rest.  Good night.'\nPete : 'Good night Hope.'",
+    narrative: "Hope : 'Pete.  I am ready.'\nPete : 'We've begun organizing this referendum... but I am afraid it will take years.'\nHope : 'I know.'\nPete : 'Before you go... I really need to ask.  What should we do about Prometheus?  I thought you might go talk to him but you've avoided it.  It's a little odd.'\nI can't tell him about this giant apocalyptic showdown that's playing in my head.  Let's masterfully dodge this question.\nHope : '...  Prometheus... will make you some offers.  I want you to treat him seriously.  He's at least earned that.'\nPete : 'Very well...  In the end, Hope, I will admit.  Whatever happens with the referendum...  I was wrong to doubt you.  You saved us all.  Time and time again.  Thank you.'\nI smile.  I did not do a perfect job.  I failed in many ways.  I'm alone now.  But...  I succeeded in the ways that mattered in the end.\nHope : 'I'll be going, Pete.  I have earned my rest.  Good night.'\nPete : 'Good night, Hope.'",
     prerequisites: ['earth.50.7a'],
     objectives: [],
     reward: [
@@ -552,7 +552,7 @@ progressEarth.chapters.push(
     activePlanet: 'earth',
     prerequisites: ['earth.50.8a'],
     parameters: {
-      title: 'Terraforming complete',
+      title: 'Terraforming Complete',
       text: getEarthFinalReportText,
       buttonText: 'Shut Down',
       textSpeedMultiplier: 1.5,
