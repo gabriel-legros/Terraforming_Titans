@@ -2269,7 +2269,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     }
 
     this.normalizeModeForFlags();
-    this.normalizeSuperchargeForFlags();
+    this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
 
