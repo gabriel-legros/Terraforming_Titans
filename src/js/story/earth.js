@@ -217,7 +217,7 @@ function startEarthCredits() {
     finalText.textContent = "Humanity will vote on what to do with HOPE";
 
     const hopeImage = document.createElement('img');
-    hopeImage.src = 'assets/hope.png';
+    hopeImage.src = 'assets/images/hope.png';
     hopeImage.alt = 'HOPE';
     hopeImage.style.display = 'block';
     hopeImage.style.maxWidth = 'min(380px, 70vw)';
