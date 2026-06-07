@@ -240,9 +240,8 @@ function getChapterNumberFromSource(src) {
 function getJournalChapterGroups() {
   ensureJournalWorldData();
   const groups = [];
+  const groupsByKey = new Map();
   let current = null;
-  let currentNum = null;
-  let currentWorldId = null;
   for (let i = 0; i < journalHistoryData.length; i++) {
     const src = journalHistorySources[i];
     const text = journalHistoryData[i];
@@ -253,15 +252,14 @@ function getJournalChapterGroups() {
       if (chNum < 0) {
         continue;
       }
-      if (chNum !== currentNum || worldId !== currentWorldId) {
-        currentNum = chNum;
-        currentWorldId = worldId;
+      const key = `${worldId || ''}:${chNum}`;
+      current = groupsByKey.get(key);
+      if (!current) {
         current = { chapterId: src.id, chapterNum: chNum, worldId, entries: [], sources: [] };
+        groupsByKey.set(key, current);
         groups.push(current);
       }
     } else if (!current) {
-      currentNum = null;
-      currentWorldId = null;
       current = { chapterId: null, chapterNum: null, worldId: null, entries: [], sources: [] };
       // group without chapter number is not shown when navigating but keep for completeness
     }
@@ -557,21 +555,26 @@ function processNextJournalEntry() {
   journalHistoryData.push(text); // Also keep it in the full history
   journalHistorySources.push(srcObj);
   const groups = getJournalChapterGroups();
-  const targetGroupIndex = groups.length > 0 ? groups.length - 1 : 0;
-  const showingTargetGroup = !journalIndexVisible && journalChapterIndex === targetGroupIndex;
-
-  if (!showingTargetGroup) {
-    if (journalIndexVisible) {
-      closeJournalIndex();
+  const targetChapter = getChapterNumberFromSource(srcObj);
+  const targetMeta = srcObj && srcObj.id ? journalChapterMetaById && journalChapterMetaById.get(srcObj.id) : null;
+  const targetWorldId = targetMeta ? targetMeta.worldId : null;
+  let targetGroupIndex = groups.length > 0 ? groups.length - 1 : 0;
+  if (targetChapter !== null) {
+    const matchingIndex = groups.findIndex(group => group.chapterNum === targetChapter && group.worldId === targetWorldId);
+    if (matchingIndex >= 0) {
+      targetGroupIndex = matchingIndex;
     }
-    const targetGroup = groups[targetGroupIndex];
-    if (targetGroup) {
-      setDisplayedJournalEntries(targetGroup.entries.slice(0, -1), targetGroup.sources.slice(0, -1));
-      journalChapterIndex = targetGroupIndex;
-    } else {
-      setDisplayedJournalEntries([], []);
-      journalChapterIndex = 0;
-    }
+  }
+  if (journalIndexVisible) {
+    closeJournalIndex();
+  }
+  const targetGroup = groups[targetGroupIndex];
+  if (targetGroup) {
+    setDisplayedJournalEntries(targetGroup.entries.slice(0, -1), targetGroup.sources.slice(0, -1));
+    journalChapterIndex = targetGroupIndex;
+  } else {
+    setDisplayedJournalEntries([], []);
+    journalChapterIndex = 0;
   }
 
   journalEntriesData.push(text);
