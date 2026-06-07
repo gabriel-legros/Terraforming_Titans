@@ -2130,7 +2130,7 @@ const olympusOverrides = {
     diskConstructionCostTons: 3.044071346759389e31,
     diskConstructionCostIncludesMetal: true,
     disabledFeatures: {
-      tabs: ['research', 'hope', 'colonies'],
+      tabs: ['research', 'hope'],
       subtabs: [
         'energy-research',
         'industry-research',
@@ -2151,7 +2151,6 @@ const olympusOverrides = {
         'life-terraforming',
         'hazard-terraforming',
         'milestone-terraforming',
-        'population-colonies',
         'nanocolony-colonies',
         'followers-colonies',
         'mega-projects',
@@ -2218,11 +2217,32 @@ const olympusOverrides = {
   },
   effects: [
     {
+      target: 'colony',
+      targetId: 'aerostat_colony',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disable-aerostat-colonies'
+    },
+    {
+      target: 'colony',
+      targetId: 't1_colony',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disable-research-outposts'
+    },
+    {
       target: 'building',
       targetId: 'hyperionLantern',
       type: 'permanentBuildingDisable',
       value: true,
       effectId: 'olympus-disk-disable-hyperion-lanterns'
+    },
+    {
+      target: 'building',
+      targetId: 'spaceMirror',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-space-mirror'
     },
     {
       target: 'project',
