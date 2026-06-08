@@ -2090,7 +2090,7 @@ class RwgManager extends EffectableEntity {
   getAvailableTypes(isMoon) {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
-      : ["mars-like", "cold-desert", "titan-like", "venus-like",
+      : ["mars-like", "cold-desert", "icy-moon", "titan-like", "venus-like",
         "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian", "molten", "jupiter-like"];
     return base.filter((t) => !this.lockedTypes.has(t));
   }
