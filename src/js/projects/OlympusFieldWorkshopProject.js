@@ -428,7 +428,7 @@ class OlympusFieldWorkshopProject extends Project {
       this.stopHoldTimer(holdKey);
       this.holdTimers[holdKey] = setInterval(() => {
         pressFn();
-      }, 100);
+      }, 50);
     });
     const clear = () => this.stopHoldTimer(holdKey);
     button.addEventListener('pointerup', clear);
