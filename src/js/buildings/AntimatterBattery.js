@@ -104,12 +104,17 @@ class AntimatterBattery extends Building {
     const hasResources = antimatter && energy;
     const hasActiveBattery = this.active > 0n;
     const hasWarpLogistics = this.isBooleanFlagSet('antimatterWarpLogistics');
+    const fillDisabled = this.isBooleanFlagSet('antimatterBatteryFillDisabled');
+    if (fillDisabled && this.autoFillingEnabled) {
+      this.autoFillingEnabled = false;
+    }
 
     const now = Date.now();
     const cooldownSecondsRemaining = this.getFillCooldownSecondsRemaining(now);
     const cooldownBlocked = !hasWarpLogistics && cooldownSecondsRemaining > 0;
 
     button.disabled =
+      fillDisabled ||
       !hasResources ||
       !hasActiveBattery ||
       availableAntimatter <= 0 ||
@@ -130,13 +135,13 @@ class AntimatterBattery extends Building {
         );
     }
     if (autoFillLabel) {
-      autoFillLabel.style.display = hasWarpLogistics ? 'inline-flex' : 'none';
+      autoFillLabel.style.display = hasWarpLogistics && !fillDisabled ? 'inline-flex' : 'none';
     }
     if (autoFillCheckbox) {
       autoFillCheckbox.checked = !!this.autoFillingEnabled;
-      autoFillCheckbox.disabled = !hasWarpLogistics;
+      autoFillCheckbox.disabled = !hasWarpLogistics || fillDisabled;
     }
-    button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
+    button.style.display = this.unlocked && !this.isHidden && !fillDisabled ? 'inline-block' : 'none';
   }
 
   getFillCooldownSecondsRemaining(now = Date.now()) {
@@ -181,6 +186,9 @@ class AntimatterBattery extends Building {
       return null;
     }
     if (this.active <= 0n) {
+      return null;
+    }
+    if (this.isBooleanFlagSet('antimatterBatteryFillDisabled')) {
       return null;
     }
 
@@ -233,7 +241,11 @@ class AntimatterBattery extends Building {
   }
 
   updateAutoFillAfterProductionTick(deltaTime) {
-    if (!this.isBooleanFlagSet('antimatterWarpLogistics') || !this.autoFillingEnabled) {
+    if (
+      this.isBooleanFlagSet('antimatterBatteryFillDisabled') ||
+      !this.isBooleanFlagSet('antimatterWarpLogistics') ||
+      !this.autoFillingEnabled
+    ) {
       return;
     }
     const fillResult = this.fillFromAntimatter({ updateDisplay: false });

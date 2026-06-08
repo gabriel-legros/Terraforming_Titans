@@ -2252,6 +2252,14 @@ const olympusOverrides = {
       effectId: 'olympus-disk-disable-biodome'
     },
     {
+      target: 'building',
+      targetId: 'antimatterBattery',
+      type: 'booleanFlag',
+      flagId: 'antimatterBatteryFillDisabled',
+      value: true,
+      effectId: 'olympus-disable-antimatter-battery-fill'
+    },
+    {
       target: 'project',
       targetId: 'spaceMirrorFacility',
       type: 'permanentProjectDisable',
