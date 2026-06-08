@@ -141,11 +141,6 @@ function addSettingsListeners() {
     cached.colorblindPaletteSelect.addEventListener('change', () => {
       gameSettings.colorblindPalette = cached.colorblindPaletteSelect.value;
       applyColorblindPaletteSettings();
-      updateTerraformingUI();
-      updateProjectsUI();
-      updateResourceDisplay(resources, 0);
-      updateBuildingDisplay(buildings);
-      updateColonyDisplay(colonies);
     });
   }
 
