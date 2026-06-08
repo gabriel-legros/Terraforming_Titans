@@ -2420,6 +2420,27 @@ const earthOverrides = {
       target: 'earthManager',
       type: 'enable',
       effectId: 'earth-enable-reconstruction-manager'
+    },
+    {
+      target: 'building',
+      targetId: 'hyperionLantern',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'earth-disable-hyperion-lanterns'
+    },
+    {
+      target: 'building',
+      targetId: 'spaceMirror',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'earth-disable-space-mirror'
+    },
+    {
+      target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'earth-disable-space-mirror-facility'
     }
   ],
   specialAttributes: {
