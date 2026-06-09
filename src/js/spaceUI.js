@@ -901,6 +901,10 @@ function selectPlanet(planetKey, force, skipCurrentWorldWarnings){
     if (!travelled) {
         return;
     }
+    if (planetKey === 'olympus') {
+        gameCompleted = false;
+        reconstructJournalState(storyManager, projectManager);
+    }
     resetCurrentWorldCache();
 
     if (typeof openTerraformingWorldTab === 'function') {
