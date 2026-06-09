@@ -674,7 +674,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
     case 'summary-terraforming':
       updateTerraformingSummaryWorldIdentity();
       updatePlayTimeDisplay();
-      updateTemperatureBox();
+      updateTemperatureBox(deltaSeconds);
       updateAtmosphereBox(deltaSeconds);
       updateWaterBox();
       updateLuminosityBox();
@@ -1506,14 +1506,16 @@ function createTemperatureBox(row) {
       maintenanceFloorInfo: temperatureBox.querySelector('#temperature-maintenance-floor-info'),
       maintenanceFloorTooltip,
       infographicButton: tempInfographicButton,
-      infographicOverlay: infographicElements.overlay
+      infographicOverlay: infographicElements.overlay,
+      maintenanceFloorHideTimer: 0
     };
   }
 
-  function updateTemperatureBox() {
+  function updateTemperatureBox(deltaSeconds) {
     const els = terraformingUICache.temperature;
     const temperatureBox = els.box;
     if (!temperatureBox) return;
+    const frameDelta = deltaSeconds > 0 ? Math.min(1, deltaSeconds) : 0;
 
     const zoneKeys = getZones();
     const showTemperate = zoneKeys.includes('temperate');
@@ -1606,7 +1608,9 @@ function createTemperatureBox(row) {
     }
     if (els.maintenanceFloor) {
       const floorContext = terraforming.calculateOneAtmMaintenanceFloor();
-      if (floorContext.penalty > 1 && Number.isFinite(floorContext.temperatureK)) {
+      const shouldShowFloor = floorContext.penalty > 1 && Number.isFinite(floorContext.temperatureK);
+      if (shouldShowFloor) {
+        els.maintenanceFloorHideTimer = 1;
         els.maintenanceFloor.style.display = '';
         const floorTemperature = formatNumber(
           toDisplayTemperature(floorContext.temperatureK),
@@ -1630,7 +1634,8 @@ function createTemperatureBox(row) {
           );
         }
       } else {
-        els.maintenanceFloor.style.display = 'none';
+        els.maintenanceFloorHideTimer = Math.max(0, (els.maintenanceFloorHideTimer || 0) - frameDelta);
+        els.maintenanceFloor.style.display = els.maintenanceFloorHideTimer > 0 ? '' : 'none';
       }
     }
   }
@@ -3261,7 +3266,7 @@ function completeTerraformingNow() {
   button.style.width = '100%';
   button.style.padding = '15px';
   button.style.marginTop = '20px';
-  button.style.backgroundColor = 'red';
+  button.style.backgroundColor = getStatusColor('failure');
   button.style.color = 'white';
   button.style.border = 'none';
   button.style.borderRadius = '5px';
@@ -3302,7 +3307,7 @@ function completeTerraformingNow() {
             'actions.spinRingworldFirst',
             'Spin Ringworld first'
           );
-          button.style.backgroundColor = 'red';
+          button.style.backgroundColor = getStatusColor('failure');
           button.style.cursor = 'not-allowed';
           button.disabled = true;
           return;
@@ -3316,7 +3321,7 @@ function completeTerraformingNow() {
             'actions.fillDiskworldFirst',
             'Fill Diskworld first'
           );
-          button.style.backgroundColor = 'red';
+          button.style.backgroundColor = getStatusColor('failure');
           button.style.cursor = 'not-allowed';
           button.disabled = true;
           return;
@@ -3332,7 +3337,7 @@ function completeTerraformingNow() {
         'actions.removeAllHazardsFirst',
         'Remove all hazards first'
       );
-      button.style.backgroundColor = 'red';
+      button.style.backgroundColor = getStatusColor('failure');
       button.style.cursor = 'not-allowed';
       button.disabled = true;
       return;
@@ -3355,7 +3360,7 @@ function completeTerraformingNow() {
   }
 
   if (terraforming.readyForCompletion) {
-      button.style.backgroundColor = 'green';
+      button.style.backgroundColor = getStatusColor('success');
       button.style.cursor = 'pointer';
       button.disabled = false; // Enable the button
       button.textContent = getTerraformingSummaryText(
@@ -3363,7 +3368,7 @@ function completeTerraformingNow() {
         'Complete Terraforming'
       );
   } else {
-      button.style.backgroundColor = 'red';
+      button.style.backgroundColor = getStatusColor('failure');
       button.style.cursor = 'not-allowed';
       button.disabled = true; // Disable the button
       button.textContent = getTerraformingSummaryText(
