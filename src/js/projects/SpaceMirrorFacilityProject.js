@@ -2445,6 +2445,16 @@ class SpaceMirrorFacilityProject extends Project {
     if (!Object.prototype.hasOwnProperty.call(settings, 'mirrorOversightSettings')) {
       return;
     }
+    const preserveAdvancedAssignments = options.isPresetApplication === true
+      && this.mirrorOversightSettings?.advancedOversight === true
+      && settings.mirrorOversightSettings?.advancedOversight === true;
+    const currentAdvancedAssignments = preserveAdvancedAssignments
+      ? {
+          mirrors: { ...(this.mirrorOversightSettings.assignments?.mirrors || {}) },
+          lanterns: { ...(this.mirrorOversightSettings.assignments?.lanterns || {}) },
+          reversalMode: { ...(this.mirrorOversightSettings.assignments?.reversalMode || {}) },
+        }
+      : null;
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
     applyMirrorOversightSettings(
@@ -2452,6 +2462,12 @@ class SpaceMirrorFacilityProject extends Project {
       settings.mirrorOversightSettings || {},
       { restoreProjectedState: options.isPresetApplication !== true }
     );
+    if (currentAdvancedAssignments) {
+      this.mirrorOversightSettings.assignments.mirrors = currentAdvancedAssignments.mirrors;
+      this.mirrorOversightSettings.assignments.lanterns = currentAdvancedAssignments.lanterns;
+      this.mirrorOversightSettings.assignments.reversalMode = currentAdvancedAssignments.reversalMode;
+      syncMirrorAssignmentMode(this.mirrorOversightSettings);
+    }
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();
