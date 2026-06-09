@@ -590,11 +590,17 @@ class SpaceMirrorAdvancedOversight {
 
       const computeFocusPowerTarget = () => {
         if (!FOCUS_FLAG || !(targets.water > 0)) return 0;
+        const availableSurfaceIce = ZONES.reduce(
+          (sum, zone) => sum + Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+          0
+        );
+        const dailyMeltTarget = Math.min(targets.water || 0, availableSurfaceIce);
+        if (!(dailyMeltTarget > 0)) return 0;
         const averageTemperature = snapshot?.temperature?.value ?? terraforming.temperature?.value ?? 0;
         const deltaT = Math.max(0, 273.15 - averageTemperature);
         const energyPerKg = (2100 * deltaT) + 334000;
         if (!(energyPerKg > 0)) return 0;
-        return ((targets.water || 0) * 1000 / 86400) * energyPerKg;
+        return (dailyMeltTarget * 1000 / 86400) * energyPerKg;
       };
 
       const focusPowerTarget = computeFocusPowerTarget();
