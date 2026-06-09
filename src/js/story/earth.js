@@ -252,6 +252,7 @@ function startEarthCredits() {
         window.popupActive = false;
         game.scene.resume('mainScene');
         loadGame('gameState_pretravel');
+        gameCompleted = true;
       }
     });
 

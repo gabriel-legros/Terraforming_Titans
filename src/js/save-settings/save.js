@@ -289,7 +289,8 @@ function getGameState() {
     fastestTerraformDays: typeof fastestTerraformDays !== 'undefined' ? fastestTerraformDays : undefined,
     fastestTerraformRealSeconds: typeof fastestTerraformRealSeconds !== 'undefined' ? fastestTerraformRealSeconds : undefined,
     birchWorldTerraformTimeSeconds,
-    birchWorldTerraformRealTimeSeconds
+    birchWorldTerraformRealTimeSeconds,
+    gameCompleted
   };
 }
 
@@ -875,6 +876,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       } else {
         birchWorldTerraformRealTimeSeconds = null;
       }
+      gameCompleted = gameState.gameCompleted === true;
 
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();

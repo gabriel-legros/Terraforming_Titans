@@ -981,6 +981,7 @@ function startNewGame() {
   totalRealPlayTimeSeconds = 0;
   birchWorldTerraformTimeSeconds = null;
   birchWorldTerraformRealTimeSeconds = null;
+  gameCompleted = false;
   initializeGameState();
   if (typeof openTerraformingWorldTab === 'function') {
     openTerraformingWorldTab();
