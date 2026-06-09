@@ -5211,7 +5211,7 @@ setLanguageData({
         },
         ship_smelting: {
           name: 'Ship smelting',
-          description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silicon. Water imports can now prioritize colony storage.',
+          description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silica. Water imports can now prioritize colony storage.',
         },
         companion_satellite: {
           name: 'Companion Satellite',

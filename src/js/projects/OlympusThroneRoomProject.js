@@ -59,13 +59,26 @@ class OlympusThroneRoomProject extends Project {
       return;
     }
     if (typeof addJournalEntry === 'function') {
-      addJournalEntry(this.formatStoryStepText(text), null, { type: 'project', id: this.name, step: stepIndex });
+      const source = { type: 'project', id: this.name, step: stepIndex };
+      let entryText = this.formatStoryStepText(text);
+      if (stepIndex === 1 && this.selectedBranch) {
+        const branchIndex = this.getBranchOptions().findIndex(branch => branch.id === this.selectedBranch);
+        const option = this.getBranchOptions()[branchIndex];
+        source.branchId = this.selectedBranch;
+        source.stepLabel = this.getBranchStepLabel(branchIndex);
+        entryText = `${option.label}\n\n${entryText}`;
+      }
+      addJournalEntry(entryText, null, source);
       this.shownStorySteps.add(stepIndex);
     }
   }
 
   getJournalStepTotal() {
     return this.maxRepeatCount;
+  }
+
+  getBranchStepLabel(branchIndex) {
+    return `2${String.fromCharCode(65 + branchIndex)}/${this.getJournalStepTotal()}`;
   }
 
   getJournalStepText(stepIndex) {
@@ -81,6 +94,20 @@ class OlympusThroneRoomProject extends Project {
       return this.formatStoryStepText(sequenceSteps[2]?.text);
     }
     return '';
+  }
+
+  getJournalTextForSource(source) {
+    if (source.branchId) {
+      const option = this.getBranchOptions().find(branch => branch.id === source.branchId);
+      const text = this.formatStoryStepText(option?.text);
+      return text ? `${option.label}\n\n${text}` : '';
+    }
+    if (source.step === 1 && this.selectedBranch) {
+      const option = this.getBranchOptions().find(branch => branch.id === this.selectedBranch);
+      const text = this.formatStoryStepText(option?.text);
+      return text ? `${option.label}\n\n${text}` : '';
+    }
+    return this.getJournalStepText(source.step);
   }
 
   advanceSequence(stepIndex) {
@@ -202,24 +229,54 @@ class OlympusThroneRoomProject extends Project {
     this.ui.leaveButton.disabled = this.sequenceStep !== 3;
   }
 
-  getJournalObjectiveSteps() {
+  getJournalObjectiveSteps(context = {}) {
     const steps = [];
-    if ((this.repeatCount || 0) >= 1) {
+    const effectiveRepeat = context.assumeCompleted
+      ? (context.repeatCount || this.maxRepeatCount)
+      : (this.repeatCount || 0);
+    if (effectiveRepeat >= 1) {
       const text = this.getJournalStepText(0);
       if (text) {
-        steps.push(text);
+        steps.push({
+          text,
+          stepLabel: `1/${this.getJournalStepTotal()}`,
+          sourceStep: 0
+        });
       }
     }
     if (this.selectedBranch) {
-      const text = this.getJournalStepText(1);
+      const branchIndex = this.getBranchOptions().findIndex(branch => branch.id === this.selectedBranch);
+      const option = this.getBranchOptions()[branchIndex];
+      const text = this.formatStoryStepText(option?.text);
       if (text) {
-        steps.push(text);
+        steps.push({
+          text: `${option.label}\n\n${text}`,
+          stepLabel: this.getBranchStepLabel(branchIndex),
+          sourceStep: 1,
+          branchId: option.id
+        });
       }
+    } else if (effectiveRepeat >= 1) {
+      this.getBranchOptions().forEach((option, branchIndex) => {
+        const text = this.formatStoryStepText(option.text);
+        if (text) {
+          steps.push({
+            text: `${option.label}\n\n${text}`,
+            stepLabel: this.getBranchStepLabel(branchIndex),
+            sourceStep: 1,
+            branchId: option.id
+          });
+        }
+      });
     }
-    if ((this.repeatCount || 0) >= 3) {
+    if (effectiveRepeat >= 3) {
       const text = this.getJournalStepText(2);
       if (text) {
-        steps.push(text);
+        steps.push({
+          text,
+          stepLabel: `3/${this.getJournalStepTotal()}`,
+          sourceStep: 2
+        });
       }
     }
     return steps;

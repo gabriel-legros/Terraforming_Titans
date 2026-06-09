@@ -48,25 +48,41 @@
             if (obj.type === 'project') {
               const proj = projects[obj.projectId] || {};
               if (typeof proj.getJournalObjectiveSteps === 'function') {
-                const steps = proj.getJournalObjectiveSteps();
-                const needed = obj.repeatCount || steps.length;
                 const assumeCompleted = completedOnly.has(ch.id);
+                const steps = proj.getJournalObjectiveSteps({
+                  repeatCount: obj.repeatCount || 0,
+                  assumeCompleted
+                });
+                const needed = steps.length;
                 const targetCount = assumeCompleted ? Math.min(needed, steps.length) : Math.min(steps.length, needed);
                 const projName = storyProjects[obj.projectId]?.name;
                 const total = proj.getJournalStepTotal ? proj.getJournalStepTotal() : steps.length;
                 const completedCount = projectStepProgress.get(obj.projectId) || 0;
                 for (let i = completedCount; i < targetCount; i++) {
-                  const stepText = steps[i];
+                  const stepEntry = steps[i];
+                  const stepText = stepEntry && stepEntry.text != null ? stepEntry.text : stepEntry;
                   if (stepText != null) {
                     let textStr = joinLines(stepText);
                     if (projName) {
-                      textStr = `${projName} ${i + 1}/${total}: ${textStr}`;
+                      const stepLabel = stepEntry && stepEntry.stepLabel ? stepEntry.stepLabel : `${i + 1}/${total}`;
+                      textStr = `${projName} ${stepLabel}: ${textStr}`;
                     }
                     textStr = resolve(textStr);
                     entries.push(textStr);
-                    sources.push({ type: 'project', id: obj.projectId, step: i });
+                    const source = {
+                      type: 'project',
+                      id: obj.projectId,
+                      step: stepEntry && stepEntry.sourceStep != null ? stepEntry.sourceStep : i
+                    };
+                    if (stepEntry && stepEntry.stepLabel) {
+                      source.stepLabel = stepEntry.stepLabel;
+                    }
+                    if (stepEntry && stepEntry.branchId) {
+                      source.branchId = stepEntry.branchId;
+                    }
+                    sources.push(source);
                     historyEntries.push(textStr);
-                    historySources.push({ type: 'project', id: obj.projectId, step: i });
+                    historySources.push(source);
                   }
                 }
                 projectStepProgress.set(obj.projectId, Math.max(completedCount, targetCount));

@@ -524,7 +524,8 @@ function addJournalEntry(text, eventId = null, source = null) {
       : (proj.attributes && Array.isArray(proj.attributes.storySteps)
         ? proj.attributes.storySteps.length : 0);
     const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
-    entryText = `${proj.name} ${stepNum}/${total}: ${entryText}`;
+    const stepLabel = source.stepLabel || `${stepNum}/${total}`;
+    entryText = `${proj.name} ${stepLabel}: ${entryText}`;
   }
 
   journalQueue.push({ text: entryText, eventId, source });
@@ -811,11 +812,14 @@ function getJournalTextFromSource(source) {
     const proj = progressData && progressData.storyProjects && progressData.storyProjects[source.id];
     const projectInstance = projectManager && projectManager.projects && projectManager.projects[source.id];
     if (projectInstance && projectInstance.getJournalStepText) {
-      let text = projectInstance.getJournalStepText(source.step);
+      let text = projectInstance.getJournalTextForSource
+        ? projectInstance.getJournalTextForSource(source)
+        : projectInstance.getJournalStepText(source.step);
       if (text) {
         const total = projectInstance.getJournalStepTotal ? projectInstance.getJournalStepTotal() : 0;
         const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
-        text = `${proj.name} ${stepNum}/${total}: ${text}`;
+        const stepLabel = source.stepLabel || `${stepNum}/${total}`;
+        text = `${proj.name} ${stepLabel}: ${text}`;
         return text;
       }
     }
@@ -825,7 +829,8 @@ function getJournalTextFromSource(source) {
       if (proj && proj.name) {
         const total = Array.isArray(proj.attributes?.storySteps) ? proj.attributes.storySteps.length : (Array.isArray(proj.attributes?.storyStepLines) ? proj.attributes.storyStepLines.length : steps.length);
         const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
-        text = `${proj.name} ${stepNum}/${total}: ${text}`;
+        const stepLabel = source.stepLabel || `${stepNum}/${total}`;
+        text = `${proj.name} ${stepLabel}: ${text}`;
       }
       return text;
     }
