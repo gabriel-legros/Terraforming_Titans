@@ -253,6 +253,7 @@ function startEarthCredits() {
         game.scene.resume('mainScene');
         loadGame('gameState_pretravel');
         gameCompleted = true;
+        reconstructJournalState(storyManager, projectManager);
       }
     });
 

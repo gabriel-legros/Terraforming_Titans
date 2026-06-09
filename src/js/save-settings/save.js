@@ -325,6 +325,7 @@ function loadGame(slotOrCustomString, recreate = true) {
 
   try {
     const gameState = JSON.parse(savedState);
+    gameCompleted = gameState.gameCompleted === true;
     captureAutomationSafetyRestoreState(gameState);
     resetStructureDisplayState();
     resetProjectDisplayState();
@@ -876,8 +877,6 @@ function loadGame(slotOrCustomString, recreate = true) {
       } else {
         birchWorldTerraformRealTimeSeconds = null;
       }
-      gameCompleted = gameState.gameCompleted === true;
-
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();
       } else if (tabManager && typeof tabManager.activateTab === 'function') {

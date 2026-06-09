@@ -294,7 +294,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Earth reconstruction biomass restoration targets 100% biomass coverage in tropical and temperate zones only; polar biomass stays untouched.
 - Earth reconstruction final `replaceLuna` action is a one-press step unlocked by `earth.50.7`; the visualizer then shows a small static cratered Luna mesh near the top-right of the Earth view.
 - Earth reconstruction `completeTerraforming` is a one-press green button unlocked by `earth.50.8`; it records the final Earth action and routes through the normal terraforming completion path.
-- After Earth end credits, `Load pre-travel save` marks the loaded runtime state with the saved global `gameCompleted = true` without rewriting the pre-travel slot.
+- After Earth end credits, `Load pre-travel save` marks the loaded runtime state with the saved global `gameCompleted = true` and immediately reconstructs the journal without rewriting the pre-travel slot.
+- Saves with `gameCompleted = true` restore that flag before journal reconstruction, and reconstruction includes Earth story progress through `earth.50.9`.
 - World-land semantics now have explicit helper support for immutable `baseLand` versus live geometric land derived from radius; RWG persists generated `baseLand`, `initialLand` remains a compatibility alias during migration, and systems can move case-by-case onto the correct land basis instead of assuming one meaning everywhere.
 - Whole-world scaling now splits by system: hazard initialization can use `baseLand`; `Artificial Sky`, `Underground Expansion`, and Foundry World mining-cap scaling follow current world land; `Artificial Crust`, fixed base-land building caps, and Foundry World travel-point rewards stay on `baseLand`.
 - Atmospheric density/exobase/drag heuristics now use bulk non-heavy-trace mass/pressure to avoid nonphysical Kessler-line behavior.

@@ -15,6 +15,15 @@
 
     const completedIds = sm.completedEventIds instanceof Set ? Array.from(sm.completedEventIds) : sm.completedEventIds || [];
     const activeIds = sm.activeEventIds instanceof Set ? Array.from(sm.activeEventIds) : sm.activeEventIds || [];
+    if (gameCompleted) {
+      for (let i = 0; i < data.chapters.length; i++) {
+        const ch = data.chapters[i];
+        completedIds.push(ch.id);
+        if (ch.id === 'earth.50.9') {
+          break;
+        }
+      }
+    }
     const completedOnly = new Set(completedIds);
     const completed = new Set([
       ...completedIds,
