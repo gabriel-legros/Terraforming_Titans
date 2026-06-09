@@ -1493,16 +1493,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
 
     if (usesAndroidCountMode) {
-      const perBuildingCapacity = structure.getStorageAmount('colony', 'androids');
       const totalAndroids = resources.colony.androids.value || 0;
-      if (perBuildingCapacity <= 0 || totalAndroids <= 0) {
+      if (totalAndroids <= 0) {
         return;
       }
       const activeCount = getStructureCountNumber(structure.active);
-      const rawPercent = (activeCount * perBuildingCapacity * 100) / totalAndroids;
+      const rawPercent = (activeCount * 100) / totalAndroids;
       const targetFromPercent = (percent) => {
-        const androidBudget = (percent * totalAndroids) / 100;
-        return Math.floor(androidBudget / perBuildingCapacity);
+        return Math.floor((percent * totalAndroids) / 100);
       };
       let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
       for (let decimals = 5; decimals >= 0; decimals--) {
