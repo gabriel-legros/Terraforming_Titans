@@ -244,7 +244,9 @@ function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
       settings.assignments.reversalMode[zone] = !!savedReversal[zone];
     });
   }
-  settings.lastProjectedTemperatureState = saved.lastProjectedTemperatureState || null;
+  settings.lastProjectedTemperatureState = options.restoreProjectedState === false
+    ? null
+    : (saved.lastProjectedTemperatureState || null);
 
   syncMirrorAssignmentMode(settings);
   if (settings.useFinerControls || settings.advancedOversight) {
@@ -290,6 +292,13 @@ function buildMirrorOversightTravelSnapshot(settings) {
     waterMultiplier: settings.waterMultiplier,
     autoAssign: { ...settings.autoAssign },
   };
+}
+
+function buildMirrorOversightAutomationSnapshot(settings) {
+  const snapshot = JSON.parse(JSON.stringify(settings || {}));
+  delete snapshot.lastProjectedTemperatureState;
+  delete snapshot.lastSolution;
+  return snapshot;
 }
 
 function getQuickBuildCount(building, buildCount) {
@@ -2427,18 +2436,22 @@ class SpaceMirrorFacilityProject extends Project {
   saveAutomationSettings() {
     return {
       ...super.saveAutomationSettings(),
-      mirrorOversightSettings: JSON.parse(JSON.stringify(this.mirrorOversightSettings))
+      mirrorOversightSettings: buildMirrorOversightAutomationSnapshot(this.mirrorOversightSettings)
     };
   }
 
-  loadAutomationSettings(settings = {}) {
+  loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     if (!Object.prototype.hasOwnProperty.call(settings, 'mirrorOversightSettings')) {
       return;
     }
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
-    applyMirrorOversightSettings(this.mirrorOversightSettings, settings.mirrorOversightSettings || {});
+    applyMirrorOversightSettings(
+      this.mirrorOversightSettings,
+      settings.mirrorOversightSettings || {},
+      { restoreProjectedState: options.isPresetApplication !== true }
+    );
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();

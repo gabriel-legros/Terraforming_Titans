@@ -1,4 +1,8 @@
 const PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
+const PROJECT_AUTOMATION_SPACE_MIRROR_FACILITY_ID = 'spaceMirrorFacility';
+const PROJECT_AUTOMATION_SPACE_MIRROR_OVERSIGHT_SETTINGS_KEY = 'mirrorOversightSettings';
+const PROJECT_AUTOMATION_SPACE_MIRROR_PROJECTED_STATE_KEY = 'lastProjectedTemperatureState';
+const PROJECT_AUTOMATION_SPACE_MIRROR_LAST_SOLUTION_KEY = 'lastSolution';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
 const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
@@ -640,10 +644,17 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const operations = {};
 
     for (const key in source) {
+      const value = this.deepClone(source[key]);
+      if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_MIRROR_FACILITY_ID
+        && key === PROJECT_AUTOMATION_SPACE_MIRROR_OVERSIGHT_SETTINGS_KEY
+        && value) {
+        delete value[PROJECT_AUTOMATION_SPACE_MIRROR_PROJECTED_STATE_KEY];
+        delete value[PROJECT_AUTOMATION_SPACE_MIRROR_LAST_SOLUTION_KEY];
+      }
       if (this.isExpansionSettingKey(normalizedProjectId, key)) {
-        expansion[key] = this.deepClone(source[key]);
+        expansion[key] = value;
       } else {
-        operations[key] = this.deepClone(source[key]);
+        operations[key] = value;
       }
     }
 
