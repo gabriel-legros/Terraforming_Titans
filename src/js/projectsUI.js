@@ -1662,7 +1662,7 @@ function updateProjectUI(projectName) {
     if (elements.costElement) {
       if (keepStartBarVisible) {
         elements.costElement.style.display = 'block';
-        elements.costElement.style.color = '#f44336';
+        elements.costElement.style.color = getStatusColor('success');
       } else {
         elements.costElement.style.display = 'none';
       }
@@ -1672,7 +1672,7 @@ function updateProjectUI(projectName) {
         const statusText = isMaxRepeatReached
           ? getProjectsUIText('ui.projects.status.maxDepthReached', 'Max depth reached')
           : getProjectsUIText('ui.projects.status.completed', 'Completed');
-        const statusColor = isMaxRepeatReached ? getStatusColor('failure') : getStatusColor('success');
+        const statusColor = getStatusColor('success');
         if (isImportProject && importUI) {
           importUI.setProgressLabel(elements, project, statusText);
         } else {
