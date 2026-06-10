@@ -65,6 +65,7 @@ class DustFactory extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
 
+    DustFactory.resetAutomationSettings();
     this.dustColorChanged = DEFAULT_DUST_STATE.dustColorChanged;
     this.dustAlbedoStart = DEFAULT_DUST_STATE.dustAlbedoStart;
     this.dustAlbedoTransitionActive = DEFAULT_DUST_STATE.dustAlbedoTransitionActive;
@@ -123,7 +124,7 @@ class DustFactory extends Building {
 
     const colorControl = document.createElement('div');
     colorControl.classList.add('dust-color-control');
-    colorControl.style.display = this.isBooleanFlagSet('terraformingBureauFeature') && this.reversalAvailable
+    colorControl.style.display = this.reversalAvailable
       ? 'flex'
       : 'none';
 
@@ -177,8 +178,7 @@ class DustFactory extends Building {
 
   updateUI(elements) {
     const dustEls = elements.dust;
-    const enabled = this.isBooleanFlagSet('terraformingBureauFeature');
-    dustEls.colorControl.style.display = enabled && this.reversalAvailable ? 'flex' : 'none';
+    dustEls.colorControl.style.display = this.reversalAvailable ? 'flex' : 'none';
     const settings = getDustAutomationSettings(this);
     updateDustResourceName(settings);
     this.enforceBlackOnly(settings);
@@ -252,6 +252,13 @@ class DustFactory extends Building {
     return settings;
   }
 
+  static resetAutomationSettings() {
+    const settings = this.getAutomationSettings();
+    settings.dustColor = DEFAULT_DUST_AUTOMATION_SETTINGS.dustColor;
+    settings.dustColorAlbedo = DEFAULT_DUST_AUTOMATION_SETTINGS.dustColorAlbedo;
+    return settings;
+  }
+
   static getDustAlbedoFromColor(color) {
     return getDustAlbedoFromColor(color);
   }
@@ -262,8 +269,15 @@ class DustFactory extends Building {
 
   static resetTravelState() {
     const dustFactory = buildings.dustFactory;
+    const currentSettings = this.getAutomationSettings();
+    const previousColor = currentSettings.dustColor;
+    const settings = this.resetAutomationSettings();
+    if (previousColor !== settings.dustColor) {
+      dustFactory.dustColorChanged = true;
+    }
     dustFactory.dustAlbedoStart = DEFAULT_DUST_STATE.dustAlbedoStart;
     dustFactory.dustAlbedoTransitionActive = DEFAULT_DUST_STATE.dustAlbedoTransitionActive;
+    updateDustResourceName(settings);
   }
 }
 
