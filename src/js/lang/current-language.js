@@ -4991,7 +4991,7 @@ setLanguageData({
         },
         terraforming_bureau: {
           name: 'Terraforming Bureau',
-          description: 'Establishes oversight to automatically halt GHG factories at a chosen temperature, oxygen factories when O2 pressure is too high, dust factories at a target rock albedo, and chemical reactors based on resource thresholds.',
+          description: 'Establishes oversight to automatically halt GHG factories at a chosen temperature, oxygen factories when O2 pressure is too high and chemical reactors based on resource thresholds.',
         },
         space_mirror_oversight: {
           name: 'Space Mirror Facility Oversight',
