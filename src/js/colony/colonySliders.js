@@ -356,7 +356,11 @@ class ColonySlidersManager extends EffectableEntity {
     super.applyBooleanFlag(effect);
   }
 
-  reset() {
+  reset(clearUnlocks = false) {
+    if (clearUnlocks) {
+      this.activeEffects = [];
+      this.booleanFlags = new Set();
+    }
     this.setWorkforceRatio(0.5);
     this.setFoodConsumptionMultiplier(1);
     this.setLuxuryWaterMultiplier(1);
@@ -398,8 +402,9 @@ function updateColonySlidersEffect() {
   colonySliderSettings.updateColonySlidersEffect();
 }
 
-function resetColonySliders() {
-  colonySliderSettings.reset();
+function resetColonySliders(clearUnlocks = false) {
+  colonySliderSettings.reset(clearUnlocks);
+  updateColonySlidersUI();
 }
 
 if (typeof module !== 'undefined' && module.exports) {

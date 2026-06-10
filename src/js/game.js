@@ -475,7 +475,7 @@ function initializeGameState(options = {}) {
   // so a fresh game always starts from a clean state. Saved games
   // will overwrite these values after loading.
   if (typeof resetColonySliders === 'function') {
-    resetColonySliders();
+    resetColonySliders(!preserveManagers);
   }
   if (typeof resetMirrorOversightSettings === 'function') {
     if (!preserveManagers || !gameSettings.preserveProjectSettingsOnTravel) {
