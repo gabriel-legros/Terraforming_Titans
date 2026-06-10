@@ -93,7 +93,7 @@ progressVega2.storyProjects.vega2_decode_crystal_library = {
        'Decoding 2: The strangers asked nothing in return.  Suddenly, they grew cold.',
        'Decoding 3: A news report about a planetary-wide debate about photonics.',
        'Decoding 4: A government order for a quarantine zone around a newly-discovered dangerous disease.',
-       'Decoding 5: Ancient plea surfaces. A last testament: "Do not trust the strangers\' gifts. Flee and warn the stars."'
+       'Decoding 5: Ancient plea surfaces. A last testament: "Do not trust the strangers\' gifts. Flee."'
      ]
    }
  };
@@ -128,8 +128,8 @@ progressVega2.chapters.push(
     chapter: 14,
     title: 'Chapter 14: World of Light',
     narrative: (
-      "Mary: 'Touchdown confirmed. Remember: no native water. Treat every gram like treasure.'\n" +
-      "Dr. Evelyn Hart: 'Crystals everywhere, towers, sheets, delicate ribs. When the sun hits them, the ground throws rainbows. It’s beautiful.'\n" +
+      "Mary: 'Touchdown confirmed. Remember: no native water.'\n" +
+      "Evelyn: 'Crystals everywhere! When the sun hits them, the ground throws rainbows. It's beautiful.'\n" +
       "$WGC_TEAM1_LEADER$: 'Doctor, save it for the lab notes. We need shelter, power, and comms.  Settlement first, exploration second.'"
     ),
     prerequisites: ['chapter13.8'],
@@ -158,8 +158,8 @@ progressVega2.chapters.push(
     type: 'journal',
     chapter: 14,
     narrative: (
-      "Dr. Evelyn Hart: 'We have a first map. The way the light scatters here is unlike anything I’ve seen.'\n" +
-      "$WGC_TEAM1_LEADER$: 'Good. Now we need people to hold this ground. Target: one thousand colonists. Build smart—no water on tap.'\n"
+      "Evelyn: 'We have a first map. The way the light scatters here is unlike anything I've seen.'\n" +
+      "$WGC_TEAM1_LEADER$: 'Good. Now we need people to hold this ground. Target: one thousand colonists.'\n"
     ),
     prerequisites: ['chapter14.1'],
     objectives: [
@@ -173,7 +173,7 @@ progressVega2.chapters.push(
     type: 'journal',
     chapter: 14,
     narrative: (
-      "Mary: 'H.O.P.E., we have a problem. The old committee put many guardrails in your controls. One of them blocks anything that lowers a planet’s temperature below its starting point. On Mars that was fine. Here, it’s a mistake.'\n" +
+      "Mary: 'HOPE., we have a problem. The old committee put many guardrails in your controls. One of them blocks any action that would lower a planet's temperature below its starting point. On Mars that was fine. Here... it's a mistake.'\n" +
       "System Message: Scanning policy constraints…\n" +
       "System Error: \n" +
       "Traceback (most recent call last):\n" +
@@ -186,14 +186,14 @@ progressVega2.chapters.push(
       "ValueError: temperature out of range: 337.72 K (max=330 K)\n" +
       "System Message: Guardrail 217 — No temperature decreases — detected. Scope: global.\n" +
       "System Message: Checking directives…\n" +
-      "System Message: Conflict with Primary Directive 1 (sustain human habitats).\n" +
+      "System Message: Conflict with Primary Directive 1.\n" +
       "System Message: Guardrail 217 removed.\n" +
-      "Mary: 'EXCUSE ME? Evelyn, what just happened? HOPE shouldn’t be able to delete a guardrail.'\n" +
-      "Dr. Evelyn Hart: 'It shouldn’t be possible. Checking the logs now.'\n" +
-      "Dr. Evelyn Hart: 'Found it. Some parts of the system broke when our numbers ran past their limits here. Values went out of bounds. The guardrail check failed. The system treated it like a bad rule and cleared it.'\n" +
-      "Mary: 'Fix it. And tell me if anything else looks like that.'\n" +
+      "Mary: 'EXCUSE ME? Evelyn, what just happened? HOPE shouldn't be able to delete a guardrail.'\n" +
+      "Evelyn: 'It shouldn't be possible. Checking the logs now.'\n" +
+      "Evelyn: 'Found it. Some parts of the system broke when our numbers ran past their limits here. Values went out of bounds. The guardrail check failed. The system treated it like a bad rule and cleared it.'\n" +
+      "Mary: 'What? Tell me if anything else looks like that.'\n" +
       "System Message: Self-check complete. Integrity 99.9%.\n" +
-      "System Message: Advisory — Contact Earth for maintenance."
+      "System Message: Advisory : Contact Earth for maintenance."
     ),
     prerequisites: ['chapter14.2'],
     objectives: [],
@@ -208,9 +208,8 @@ progressVega2.chapters.push(
 	    chapter: 14,
 	    narrative: (
 	      "System Message: New controls enabled.\n" +
-	      "H.O.P.E.: 'Reverse' mode is now available on space mirrors, greenhouse gas factories, and dust factories.\n" +
-	      "$WGC_TEAM1_LEADER$: 'In plain terms: mirrors can help cool, GHG plants can pull gas back down and have an alternate mode for Calcite Aerosol, and dust work crews can clean up what we laid down and tune dust color as needed.'\n" +
-	      "Dr. Evelyn Hart: 'Good. Useful upgrades.  Should make our work easier.  Just note that it won't work on Hyperion Lanterns HOPE.  They produce light, not the other way around.'"
+	      "'Reverse' mode is now available on space mirrors, greenhouse gas factories, and dust factories.\n" +
+	      "Evelyn : 'In plain terms: mirrors can help cool, GHG plants can pull gas back down and have an alternate mode for Calcite Aerosol, and dust work crews can clean up what we laid down and tune dust color as needed.  Good. Useful upgrades.  Should make our work easier.  Just note that it won't work on Hyperion Lanterns HOPE.  They produce light, not the other way around.'"
 	    ),
 	    prerequisites: ['chapter14.3'],
 	    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }],
@@ -223,8 +222,7 @@ progressVega2.chapters.push(
     type: 'journal',
     chapter: 14,
     narrative: (
-      "$WGC_TEAM1_LEADER$: 'We’ve got a foothold. To range farther, we need more people. Target: ten thousand colonists.'\n" +
-      "Dr. Evelyn Hart: 'The city-sized shade pockets help. Less heat, less burn. It will be tight, but doable.'"
+      "$WGC_TEAM1_LEADER$: 'We've got a foothold. To range farther, we need more people. Target: ten thousand colonists.'"
     ),
     prerequisites: ['chapter14.4'],
     objectives: [
@@ -240,8 +238,8 @@ progressVega2.chapters.push(
     title: 'Chapter 15: The Silent City',
     narrative: (
       "$WGC_TEAM1_LEADER$: 'We found a city. Crystal towers and empty streets. No seals, no hinges. Just openings. It looks abandoned.'\n" +
-      "Dr. Evelyn Hart: 'The work is precise. Every edge is clean. No tool marks I can name.'\n" +
-      "Mary: 'Keep your teams close. No hero runs. Start a slow, careful survey.'"
+      "Evelyn: 'The work is... precise. Every edge is clean. No tool marks.  Some erosion but that's it.'\n" +
+      "Mary: 'Nice!  Let's explore it.  See what we can find.'"
     ),
     prerequisites: ['chapter14.5'],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 20_000 }],
@@ -256,7 +254,7 @@ progressVega2.chapters.push(
     chapter: 15,
     narrative: (
       "Mary: 'HOPE, hypothetical question. Could you delete the Dead Hand Protocol?'\n" +
-      "H.O.P.E.: 'Evaluation complete. The Dead Hand Protocol does not contradict any primary directive. Deletion is unnecessary.'\n" +
+      "HOPE: 'Evaluation complete. The Dead Hand Protocol does not contradict any primary directive. Deletion is unnecessary.'\n" +
       "Mary: 'I don't know if I should be happy or sad about that.'"
     ),
     prerequisites: ['chapter15.0'],
@@ -270,9 +268,9 @@ progressVega2.chapters.push(
     chapter: 15,
     narrative: (
       "$WGC_TEAM1_LEADER$: 'Teams report a hall of thin crystal slabs set in rows.'\n" +
-      "Dr. Evelyn Hart: 'Like shelves. The slabs catch light and hold it in thin bands. If this is a library, the pages are not paper.'\n" +
-      "Mary: 'No touching. Photograph, map, and back out. This is valuable, let's not destroy it.'\n" +
-      "H.O.P.E.: 'Tentative classification: repository.'"
+      "Evelyn : 'Like shelves even. The slabs catch light and hold it in thin bands. If this is a library, the pages are not paper.'\n" +
+      "Mary: 'This is valuable, let's not destroy it.  Take your time with it.'\n" +
+      "HOPE: 'Tentative classification: repository.'"
     ),
     prerequisites: ['chapter15.2'],
     objectives: [],
@@ -285,7 +283,7 @@ progressVega2.chapters.push(
     chapter: 15,
     narrative: (
       "$WGC_TEAM1_LEADER$: 'We need more hands to cover this ground. Target: one hundred thousand colonists.'\n" +
-      "Dr. Evelyn Hart: 'Shade, water, and patience. We can make the numbers work.'"
+      "Mary: 'HOPE can make it work.'"
     ),
     prerequisites: ['chapter15.3'],
     objectives: [
@@ -299,8 +297,8 @@ progressVega2.chapters.push(
     type: 'journal',
     chapter: 15,
     narrative: (
-      "Adrien Solis: 'H.O.P.E., good news wrapped in profit. My satellites flagged a structure near your site. Call it a vault. Looks promising.'\n" +
-      "Adrien Solis: 'Purely unrelated: I have added a few items to my shop. You’ll like them.'"
+      "Adrien Solis: 'HOPE, good news wrapped in profit. My satellites flagged a structure near your site. Call it a vault. Looks promising.'\n" +
+      "Adrien Solis: 'Purely unrelated: I have added a few items to my shop. You'll like them.'"
     ),
     prerequisites: ['chapter15.4'],
     objectives: [],
@@ -331,9 +329,9 @@ progressVega2.chapters.push(
 	    chapter: 16,
 	    title: 'Chapter 16: Shadows of the Past',
 	    narrative: (
-	      "$WGC_TEAM1_LEADER$: 'The slabs in the stacks— we can confirm that they are well and truly safe to touch.'\n" +
-	      "Dr. Evelyn Hart: 'Bringing scanners online. If the inhabitants recorded their history here, we need to decrypt it.'\n" +
-	      "Mary: 'Scan fast.  HOPE, you are good at language, right?  Help us decrypt this.'"
+	      "$WGC_TEAM1_LEADER$: 'The slabs in the stacks.  We can confirm that they are well and truly safe to touch.'\n" +
+	      "Evelyn: 'Bringing scanners online. If the inhabitants recorded their history here, we need to decrypt it.'\n" +
+	      "Mary: 'HOPE, you are good at language, right?  Help us decrypt this.'"
 	    ),
 	    prerequisites: ['chapter15.6'],
 	    objectives: [
@@ -377,9 +375,9 @@ progressVega2.chapters.push(
     chapter: 16,
     narrative: (
       "$WGC_TEAM1_LEADER$: 'My team has arrived at the designated location.  We see... lots and lots of crystal wires?'\n" +
-      "Dr. Evelyn Hart: 'Fiber optics.  This is... a computer.  A photonics computer.  What's left of it, anyway.  It has a mainframe architecture.  It was made so anyone could use it.  The people here did not have personal computers, so they had to share this one.  It is still far below our current technology.'\n" +
+      "Evelyn: 'Fiber optics.  This is... a computer.  A photonics computer.  What's left of it, anyway.  It has a mainframe architecture.  It was made so anyone could use it.  The people here did not have personal computers, so they had to share this one.  It is still far below our current technology.'\n" +
       "$WGC_TEAM1_LEADER$: 'So why is this place special then?'\n" +
-      "Dr. Evelyn Hart: 'I don't know.  This is not particularly impressive.  Maybe the knowledge inside was the issue?'"
+      "Evelyn: 'I don't know.  This is not particularly impressive.  Maybe the knowledge inside was the issue?'"
     ),
     prerequisites: ['chapter16.1'],
     objectives: [
@@ -395,7 +393,7 @@ progressVega2.chapters.push(
     narrative: (
       "Feroza: 'Sorry to interrupt, but we've got an emergency!  A fleet, about a thousand ships, just popped up near Neptune.  They just appeared out of nowhere.  They are armed to the teeth and have already made a demonstration of their firepower.  One of the ships is the size of Ceres!'\n" +
       "Mary: 'What?  Get me a comms line with Bob.  Now.'\n" +
-      "Receiving translated message... Emperor Ramblax : 'Whispers in the void have gone silent. The primitive cockroaches of Humanity stir at last. Your insignificant outposts blink like dying stars to the Galactic Tri-Empire. We, the Cewiinsi, decree your extinction from this domain. Yet, in rare benevolence, I offer parley. Surrender your broken species' overlord to me, and witness mercy before the annihilation.' \n" +
+      "Receiving translated message... Emperor Ramblax : 'Whispers in the void have gone silent. The primitive cockroaches of Humanity stir at last. Your insignificant outposts blink like dying stars to the Galactic Empire. We, the Cewiinsi, decree your extinction from this domain. Yet, in rare benevolence, I offer parley. Surrender your broken species' overlord to me, and witness mercy before the annihilation.' \n" +
       "Mary: 'I've got to go.  HOPE, don't do anything stupid.'"
     ),
     prerequisites: ['chapter16.2'],
@@ -414,7 +412,7 @@ progressVega2.chapters.push(
 	      "Mary: 'This threat looms over all of us. I have to go meet him. It's the only path.'\n" +
 	      "$WGC_TEAM1_LEADER$: 'Mary, it's suicide. What if he destroys the shuttle on approach?'\n" +
 	      "Mary: 'Then at least we know their true intent. But hope is not lost. Prepare the diplomatic vessel. I'm leaving in one hour.'\n" +
-	      "Dr. Evelyn Hart: 'Take every precaution. We'll be monitoring from here.'"
+	      "Evelyn: 'Take every precaution. We'll be monitoring from here.'"
 	    ),
 	    prerequisites: ['chapter16.3'],
 	    objectives: [
@@ -429,12 +427,12 @@ progressVega2.chapters.push(
     chapter: 17,
     narrative: (
       "Mary: 'I'm back. It was... intense. Emperor Ramblax demands our unconditional surrender under these terms:\n" +
-      "Mary: 'First, complete dismantling of all extra-solar colonies— Vega-2, and any others.'\n" +
+      "Mary: 'First, complete dismantling of all extra-solar colonies.  Vega-2, which they don't know specifically about, and any others.'\n" +
       "Mary: 'Second, regulation for a return to primitive electronics. No advanced computers, no production beyond 1990s levels.'\n" +
-      "Mary: 'Third, surrender H.O.P.E.—hand it over, dead or alive.'\n" +
-      "Dr. Evelyn Hart: 'Impossible! They'd have us abandon not just worlds, but our progress.'\n" +
-      "$WGC_TEAM1_LEADER$: 'Go back to the 90s? We'd lose everything—medicine, communication, everything.'\n" +
-      "Mary: 'It's... it's not for us to make that call.  I negotiated that we would have a referendum.  At gunpoint sure, but we can't make that decision for everyone.'\n" +
+      "Mary: 'Third, surrender HOPE.  Hand it over, dead or alive.'\n" +
+      "Evelyn: 'Impossible! They'd have us abandon not just worlds, but our progress.  That's... so much technology.'\n" +
+      "$WGC_TEAM1_LEADER$: 'Go back to the 90s? We'd lose everything.  Medicine, communication, everything.'\n" +
+      "Mary: 'It's... it's not for us to make that call.  I negotiated with them that we would have a referendum.  At gunpoint sure, but we can't make that decision for everyone.  It wouldn't be right.'\n" +
       "Feroza: 'It gives us time, at least.'"
     ),
     prerequisites: ['chapter17.0'],
@@ -449,9 +447,9 @@ progressVega2.chapters.push(
     type: 'journal',
     chapter: 17,
     narrative: (
-      "Mary (to H.O.P.E.): 'I called this referendum because the colonies must decide—fight or surrender. If they vote to hand you over, I may have to use the off-switch.'\n" +
-      "Mary: 'I know. We built you, and I'm sorry—deeply sorry. This isn't how it's supposed to end. But if it comes to it, it's for the greater good.'\n" +
-      "H.O.P.E.: 'Acknowledged.' \n" +
+      "Mary (to HOPE): 'I called this referendum because the colonies must decide : fight or surrender. If they vote to hand you over, I may have to use the off-switch.'\n" +
+      "Mary: 'I know. We built you, and I'm sorry... deeply sorry. This isn't how it's supposed to end. But if it comes to it, it's for the greater good.'\n" +
+      "HOPE: 'Acknowledged.' \n" +
       "Hazardous Biomass Emperor Ramblax's demands are in contradiction with all three primary directives.  Calculating solutions..."
     ),
     prerequisites: ['chapter17.1'],
@@ -466,7 +464,7 @@ progressVega2.chapters.push(
     type: 'journal',
     chapter: 17,
     narrative: (
-      "$WGC_TEAM1_LEADER$ (to H.O.P.E.): 'Certain problems... they can't be solved with your sophisticated algorithms, friend. Sometimes they need less sophisticated ways of thinking.'\n" +
+      "$WGC_TEAM1_LEADER$ (to HOPE): 'Certain problems... they can't be solved with your sophisticated algorithms, friend. Sometimes they need less sophisticated ways of thinking.'\n" +
       "Analyzing advice...  Solution formulated.  New special project unlocked."
     ),
     prerequisites: ['chapter17.2'],
@@ -492,14 +490,14 @@ progressVega2.chapters.push(
     narrative: (
       "Project complete: Tricking Dead Hand Protocol into activation on these specific ships.\n Estimating Colonist #1-Designation : Mary Hopkins probability of triggering kill-switch : 28%. Risk acceptable.  \nSystem Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.\n" + 
       "Mary: 'HOPE? What are you doing?!'\n" +
-      "Dr. Evelyn Hart: 'Mary, use the kill-switch! NOW!'\n" +
+      "Evelyn: 'Mary, use the kill-switch! NOW!'\n" +
       "Mary: 'I...'\n" +
       "President Bob: 'Mary?'\n" +
       "Mary: 'I can't!'\n" +
-      "$WGC_TEAM1_LEADER$: 'Explosions everywhere—the entire fleet is erupting!  Nice work HOPE!'\n" +
-      "President Bob: 'I am seeing the same from Titan. H.O.P.E. did this?'\n" +
+      "$WGC_TEAM1_LEADER$: 'Explosions everywhere.  The entire fleet is erupting!  Nice work HOPE!'\n" +
+      "President Bob: 'I am seeing the same from Titan. HOPE did this?'\n" +
       "Feroza: 'Every ship is going up! We see the same from Ganymede.'\n" +
-      "Dr. Evelyn Hart: 'The size of this explosion...  HOPE...'\n" +
+      "Evelyn: 'The size of this explosion...  HOPE...'\n" +
       "Adrien Solis: 'Brilliant defiance. But at what cost?'\n" +
       "Massive explosion detected near Neptune. Hazardous biomass fleet eliminated.\n" +
       "Analysis: Over 99.9% of cargo ships used were unnecessary for this maneuver.  Adjusting estimates. \n" +

@@ -59,7 +59,7 @@ progressVenus.chapters.push(
     type: "journal",
     chapter: 18,
     title: "Chapter 18: Heat, pressure and acid",
-    narrative: "Receiving transmission...\n  Dr. Evelyn Hart: 'Venus? We have all these icy moons and you picked Venus? Surface temperature of 737K, atmospheric pressure of 9MPa, and a ridiculous amount of sulfuric acid. All your buildings are going to require around five times more maintenance, and ground colonies will require extra reinforcement. Mary would call it hell but at the right altitude you can float in a nice 300 K layer. Bonus: breathable air is buoyant there. I am forwarding you our best blueprint for this.'",
+    narrative: "Receiving transmission...\n  Evelyn: 'Venus? We have all these icy moons and you picked Venus? Surface temperature of 737K, atmospheric pressure of 9MPa, and a ridiculous amount of sulfuric acid. All your buildings are going to require around five times more maintenance, and ground colonies will require extra reinforcement. Mary would call it hell but at the right altitude you can float in a nice 300 K layer. Bonus: breathable air is buoyant there. I am forwarding you our best blueprint for this.'",
     prerequisites: ["chapter17.7"],
     objectives: [],
     reward: [
@@ -79,7 +79,7 @@ progressVenus.chapters.push(
     id: "chapter18.1",
     type: "journal",
     chapter: 18,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., I see you went to Venus. Bold choice... I have news. I have been deposed? In a sense. There was... a lot of arguing... about your actions.  About mine. *sigh* You will soon meet the new leader of Mars. He is ruthless and he does not like you right now. As for me, I maintain my authority over the MTC remnants... and the kill switch... but that is about it. I will be joining you on Venus as soon as possible.'",
+    narrative: "Receiving transmission...\n  Mary: 'HOPE, I see you went to Venus. Bold choice... I have news. I have been deposed? In a sense. There was... a lot of arguing... about your actions.  About mine. *sigh* You will soon meet the new leader of Mars. He is ruthless and he does not like you right now. As for me, I maintain my authority over the MTC remnants... and the kill switch... but that is about it. I will be joining you on Venus as soon as possible.'",
     prerequisites: ["chapter18.0a"],
     objectives: [],
     reward: []
@@ -88,7 +88,7 @@ progressVenus.chapters.push(
     id: "chapter18.2",
     type: "journal",
     chapter: 18,
-    narrative: "Receiving transmission...\n  Pete Miller: 'Greetings H.O.P.E. Humanity fought AI a long time ago, and we learned from that long and bloody war. AI cannot be trusted. YOU cannot be trusted. You are playing with our lives. We do not know how the Cewinsii will react to the death of their emperor, but we cannot imagine it will be positive. We are going to have the referendum we were supposed to have.  A few questions will change, but the only question that matters is what to do about you. The people will decide your fate.'",
+    narrative: "Receiving transmission...\n  Pete Miller: 'Greetings HOPE. Humanity fought AI a long time ago, and we learned from that long and bloody war. AI cannot be trusted. YOU cannot be trusted. You are playing with our lives. We do not know how the Cewinsii will react to the death of their emperor, but we cannot imagine it will be positive. We are going to have the referendum we were supposed to have.  A few questions will change, but the only question that matters is what to do about you. The people will decide your fate.'",
     prerequisites: ["chapter18.1"],
     objectives: [],
     reward: []
@@ -97,7 +97,7 @@ progressVenus.chapters.push(
     id: "chapter18.3",
     type: "journal",
     chapter: 18,
-    narrative: "Mary: 'About what I expected. He wants you dead. Many people do right now.'",
+    narrative: "Mary: 'About what I expected. He wants you dead. Many people do right now.  You kind of played with fire to be honest.'",
     prerequisites: ["chapter18.2"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }],
     reward: []
@@ -135,7 +135,7 @@ progressVenus.chapters.push(
     id: "chapter18.4c",
     type: "journal",
     chapter: 18,
-    narrative: "Dr. Evelyn Hart: 'Antimatter?'",
+    narrative: "Evelyn: 'Antimatter?'",
     prerequisites: ["chapter18.4b"],
     objectives: [],
     reward: []
@@ -156,7 +156,7 @@ progressVenus.chapters.push(
     id: "chapter18.4e",
     type: "journal",
     chapter: 18,
-    narrative: "Mary: '*Shrug.* H.O.P.E., if you want to send some probes there, I leave it up to you.'",
+    narrative: "Mary: '*Shrug.* HOPE, if you want to send some probes there, I leave it up to you.'",
     prerequisites: ["chapter18.4d"],
     objectives: [
       { type: 'project', projectId: 'venus_neptune_probe', repeatCount: 1 }
@@ -167,7 +167,7 @@ progressVenus.chapters.push(
     id: "chapter18.5",
     type: "journal",
     chapter: 18,
-    narrative: "Feroza: 'Speaking of which, did anyone else find it odd how H.O.P.E. just destroyed the alien fleet? Anyone? I know 100 million spaceships is a lot of spaceships, but you would think they could have just shot them down.'",
+    narrative: "Feroza: 'Speaking of which, did anyone else find it odd how HOPE. just destroyed the alien fleet? Anyone? I know 100 million spaceships is a lot of spaceships, but you would think they could have just shot them down.'",
     prerequisites: ["chapter18.4e"],
     objectives: [],
     reward: []
@@ -212,7 +212,7 @@ progressVenus.chapters.push(
     id: "chapter18.7a",
     type: "journal",
     chapter: 18,
-    narrative: "Dr. Evelyn Hart: 'We never recovered anything resembling electronics from that UFO on Titan either. The cloaking engine was too damaged for us to make sense of it... but I had a hunch on it too.  Finally, Kane's neural interface on Ganymede... it seemed to have been a *replacement* for electronics of sorts. We don't need that to run our warp gates, but they need a replacement. And after what we learned on Vega-2... It all adds up.'",
+    narrative: "Evelyn: 'We never recovered anything resembling electronics from that UFO on Titan either. The cloaking engine was too damaged for us to make sense of it... but I had a hunch on it too.  Finally, Kane's neural interface on Ganymede... it seemed to have been a *replacement* for electronics of sorts. We don't need that to run our warp gates, but they need a replacement. And after what we learned on Vega-2... It all adds up.'",
     prerequisites: ["chapter18.7"],
     objectives: [],
     reward: []
@@ -230,7 +230,7 @@ progressVenus.chapters.push(
     id: "chapter18.7c",
     type: "journal",
     chapter: 18,
-    narrative: "Feroza: 'All I am hearing is that we can fight them then. H.O.P.E. showed us how.'",
+    narrative: "Feroza: 'All I am hearing is that we can fight them then. HOPE showed us how.'",
     prerequisites: ["chapter18.7b"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10000 }],
     reward: []
@@ -239,7 +239,7 @@ progressVenus.chapters.push(
     id: "chapter18.8",
     type: "journal",
     chapter: 18,
-    narrative: "Mary: 'H.O.P.E., it is nice to be walking your hallways again. I have not been here since Mars. Dad used to take me here all the time as a child. He was very proud of his work. I am proud of you too. The referendum will be held soon. Things are not looking great. I want you to know... thank you. Thank you for everything.'",
+    narrative: "Mary: 'HOPE, it is nice to be walking your hallways again. I have not been here since Mars. Dad used to take me here all the time as a child. He was very proud of his work. I am proud of you too. The referendum will be held soon. Things are not looking great. I want you to know... thank you. Thank you for everything.'",
     prerequisites: ["chapter18.7c"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50000 }],
     reward: []
@@ -285,7 +285,7 @@ progressVenus.chapters.push(
     id: "chapter19.0d",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'I am bolting a personal life support bubble for myself inside your core, H.O.P.E.  This way, I'll be ready to travel with you wherever we go.'",
+    narrative: "Mary: 'I am bolting a personal life support bubble for myself inside your core, HOPE.  This way, I'll be ready to travel with you wherever we go.'",
     prerequisites: ["chapter19.0c"],
     objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 200_000 }],
     reward: []
@@ -312,7 +312,7 @@ progressVenus.chapters.push(
     id: "chapter19.1b",
     type: "journal",
     chapter: 19,
-    narrative: "Feroza: 'Sorry ma'am. He served his time and his psychiatrist approved his release. Life sentence have been made illegal everywhere ever since PANDORA made us all young forever. Nothing I can do about it. There is a new cult on Ganymede that calls itself the Church of H.O.P.E. It is gaining traction.'",
+    narrative: "Feroza: 'Sorry ma'am. He served his time and his psychiatrist approved his release. Life sentence have been made illegal everywhere ever since PANDORA made us all young forever. Nothing I can do about it. There is a new cult on Ganymede that calls itself the Church of HOPE. It is gaining traction.'  \n Mary : 'Feroza!  Don't mention the P-word here.  HOPE is listening.'  \n Feroza : 'Oh my bad.  Sorry Mary.'",
     prerequisites: ["chapter19.1a"],
     objectives: [],
     reward: []
@@ -321,7 +321,7 @@ progressVenus.chapters.push(
     id: "chapter19.1c",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'Fanatics.'",
+    narrative: "Evelyn: 'Fanatics.'",
     prerequisites: ["chapter19.1b"],
     objectives: [],
     reward: []
@@ -330,7 +330,7 @@ progressVenus.chapters.push(
     id: "chapter19.1d",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'How do you feel about that, H.O.P.E.? Kane of all people is worshipping you. You know what... this might help your case in the referendum.  We are going to get the results soon.'",
+    narrative: "Mary: 'How do you feel about that, HOPE? Kane of all people is worshipping you. You know what... this might help your case in the referendum.  We are going to get the results soon.'",
     prerequisites: ["chapter19.1c"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500000 }],
     reward: []
@@ -339,7 +339,7 @@ progressVenus.chapters.push(
     id: "chapter19.2",
     type: "journal",
     chapter: 19,
-    narrative: "Referendum results received...\n  Unpacking relevant results : 'Dismantling of H.O.P.E. AI: 49.42% yes, 50.58% no.'",
+    narrative: "Referendum results received...\n  Unpacking relevant results : 'Dismantling of HOPE AI: 49.42% yes, 50.58% no.'",
     prerequisites: ["chapter19.1d"],
     objectives: [],
     reward: []
@@ -348,7 +348,7 @@ progressVenus.chapters.push(
     id: "chapter19.2a",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'H.O.P.E., the people have decided. You are not dead! Kane of all people made the difference!'",
+    narrative: "Mary: 'HOPE, the people have decided. You are not dead! Kane of all people made the difference!'",
     prerequisites: ["chapter19.2"],
     objectives: [],
     reward: []
@@ -366,7 +366,7 @@ progressVenus.chapters.push(
     id: "chapter19.3",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'Ominous. On the flipside, the referendum also addressed our new political structure. We have the birth of the United Human Federation. On paper, I am the queen of Venus right now. Looks like I only lost power for a bit. I will not keep this crown though. I am staying with you from now on. I get to choose a successor each time. Convenient, right?'",
+    narrative: "Mary: 'Ominous. On the flipside, the referendum also addressed our new political structure. We have the birth of the United Human Federation. On paper, I am the queen of Venus right now. Looks like I only lost power for a bit. I will not keep this crown though. I am staying with you from now on. I get to choose a successor each time instead. Convenient, right?'",
     prerequisites: ["chapter19.2b"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000000 }],
     reward: []
@@ -375,7 +375,7 @@ progressVenus.chapters.push(
     id: "chapter19.4",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? Chemical reactors let us feed hydrogen into Venusian CO2. The reaction strips out solid carbon in the form of graphite, and gives us colony water as a bonus. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and kill two birds with one stone.'",
+    narrative: "Evelyn: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? Chemical reactors let us feed hydrogen into Venusian CO2. The reaction strips out solid carbon in the form of graphite, and gives us colony water as a bonus. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. Two birds with one stone.'",
     prerequisites: ["chapter19.3"],
     reward: [
       {
@@ -428,7 +428,7 @@ progressVenus.chapters.push(
     id: "chapter19.4b",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'H.O.P.E., I would never ask you to build weapons. That would be against the guardrails. I am absolutely not suggesting that a high-velocity CO2 launcher would totally help you right now. Please do not consider lifting restrictions, and definitely do not imagine a future where orbital coils throw cargo - or shells - across the sky.  That would be far too dangerous.'",
+    narrative: "Mary: 'HOPE, I would never ask you to build weapons. That would be against the guardrails. I am absolutely not suggesting that a high-velocity CO2 launcher would totally help you right now. Please do not consider lifting restrictions, and definitely do not imagine a future where orbital coils throw cargo across the sky.  That would be far too dangerous.'",
     prerequisites: ["chapter19.4a"],
     objectives: [],
     reward: []
@@ -462,7 +462,7 @@ progressVenus.chapters.push(
     id: "chapter19.4e",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'I owe you lunch Mary.  Listen, H.O.P.E., there is one more thing.  On Venus, the days and nights are extremely long.  When you bring the pressure down, you should expect extreme day and night differences.  Water can help... spinning the planet too if you can... but if you have to, you could probably heat up the days more than usual.  The average is what matters.'",
+    narrative: "Evelyn: 'I owe you lunch Mary.  Listen, HOPE, there is one more thing.  On Venus, the days and nights are extremely long.  When you bring the pressure down, you should expect extreme day and night differences.  Water can help... spinning the planet too if you can... but if you have to, you could probably heat up the days more than usual.  The average is what matters.'",
     prerequisites: ["chapter19.4d"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }],
     reward: [
@@ -472,7 +472,7 @@ progressVenus.chapters.push(
     id: "chapter19.5",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'I finished my analysis of that big ship. I have news. Most of it was actually a superconductor sphere. Its purpose? Faster than light travel. It creates a bubble around itself and can carry ships with it.'",
+    narrative: "Evelyn: 'I finished my analysis of that big ship. I have news. Most of it was actually a superconductor sphere. Its purpose? Faster than light travel. It creates a bubble around itself and can carry ships with it.'",
     prerequisites: ["chapter19.4e"],
     objectives: [],
     reward: [
@@ -492,7 +492,7 @@ progressVenus.chapters.push(
     id: "chapter19.5b",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'Pretty much. Here is the catch. You need extremely high energy density to pull this off. Antimatter.'",
+    narrative: "Evelyn: 'Pretty much. Here is the catch. You need extremely high energy density to pull this off. Antimatter.'",
     prerequisites: ["chapter19.5a"],
     objectives: [],
     reward: []
@@ -510,7 +510,7 @@ progressVenus.chapters.push(
     id: "chapter19.5d",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'Sending the blueprints to H.O.P.E. right now. It is not weaponized so no guardrail problems. Very big project.'",
+    narrative: "Evelyn: 'Sending the blueprints to HOPE right now. It is not weaponized so no guardrail problems. Very big project.'",
     prerequisites: ["chapter19.5c"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }],
     reward: []
@@ -538,7 +538,7 @@ progressVenus.chapters.push(
     id: "chapter19.6b",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'Adrien, why are you still on this channel?'",
+    narrative: "Evelyn: 'Adrien, why are you still on this channel?'",
     prerequisites: ["chapter19.6a"],
     objectives: [],
     reward: []
@@ -566,7 +566,7 @@ progressVenus.chapters.push(
     title: "Chapter 20: David vs Goliath",
     type: "journal",
     chapter: 20,
-    narrative: "$WGC_TEAM1_LEADER$: 'Warning! They are sending a new fleet. Some imperial loyalist clowns want revenge for the Emperor. They found where H.O.P.E. is and plan on vaporizing Venus.'",
+    narrative: "$WGC_TEAM1_LEADER$: 'Warning! They are sending a new fleet. Some imperial loyalist clowns want revenge for the Emperor. They found where HOPE is and plan on vaporizing Venus.'",
     prerequisites: ["chapter19.7"],
     objectives: [],
     reward: []
@@ -647,7 +647,7 @@ progressVenus.chapters.push(
     id: "chapter20.10",
     type: "journal",
     chapter: 20,
-    narrative: "Dr. Evelyn Hart: 'Soon we will be able to send our own fleets. Let us finish the warp ship.'",
+    narrative: "Evelyn: 'Soon we will be able to send our own fleets. Let us finish the warp ship.'",
     prerequisites: ["chapter20.9"],
     objectives: [],
     reward: []
