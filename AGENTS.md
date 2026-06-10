@@ -234,6 +234,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - R&D supports shift-click bulk purchase.
 - Superalloy Fusion Efficiency upgrade exists (+1% per level, high cap).
 - Artificial Quasars are a 50T advanced research terastructure unlocked after Star Lifting; they inherit Lifters assignment controls, produce space energy from stellar black hole spin-energy, and use a White Dwarf Harvester-style assignment cap scaled by average Warp Gate Network level.  Output is scaled to the game's one-real-second-per-day energy convention.
+- Matrioshka Brain is a 10Q advanced research terastructure unlocked after Artificial Quasars. Its construction duration scales down with effective terraformed worlds, its completed project persists through travel, and it unlocks cognition cycles that spend at least 10Q advanced research plus 1-25 hours to grant permanent additive throughput bonuses to selected/random buildings or colony structures. For this system, throughput means both production and consumption are increased; selected targets roll at half strength, storage-providing targets also gain storage multiplier, and all Matrioshka bonuses are suppressed on Olympus.
 
 ### Space Mirror Facility
 - Zonal mirror/lantern assignment with advanced oversight and reversible mirror mode; advanced oversight now stores mirror assignments as signed counts (`negative = reverse/cooling`) and derives reverse mode from the solved assignments instead of tracking a separate reverse-state decision through the solver.

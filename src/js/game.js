@@ -622,6 +622,9 @@ function initializeGameState(options = {}) {
     initializeBuildingAlerts();
   }
   createColonyButtons(colonies);
+  if (projectManager.projects.matrioshkaBrain) {
+    projectManager.projects.matrioshkaBrain.applyEffects();
+  }
   initializeColonyAlerts();
   initializeFollowersUI();
   initializeColonySubtabs();

@@ -1179,6 +1179,45 @@ setLanguageData({
           running: 'Running',
         },
       },
+      matrioshkaBrain: {
+        title: 'Matrioshka Brain',
+        tooltip: 'Run cognition cycles by spending advanced research and time. Throughput increases both production and consumption. Random targets receive the full roll; chosen targets receive half as much.',
+        investment: 'Advanced research',
+        duration: 'Hours',
+        target: 'Target',
+        randomTarget: 'Random',
+        projected: 'Max roll: +{value}% production and consumption throughput',
+        available: 'Available: {value}',
+        start: 'Start cognition cycle',
+        running: 'Cognition cycle running',
+        disabledOlympus: 'Disabled on Olympus',
+        active: '{time} remaining',
+        bonuses: 'Stored bonuses',
+        bonusValue: '+{value}% production and consumption throughput',
+        effectName: 'Matrioshka Brain',
+        targets: {
+          building: {
+            glassSmelter: 'Glass Smelter',
+            hydroponicFarm: 'Hydroponics Farm',
+            componentFactory: 'Components Factory',
+            electronicsFactory: 'Electronics Factory',
+            grapheneFactory: 'Graphene Factory',
+            superconductorFactory: 'Superconductor Factory',
+            superalloyFoundry: 'Superalloy Foundry',
+            androidFactory: 'Androids Factory',
+            shipyard: 'Shipyard',
+            cloningFacility: 'Cloning Facility',
+            superalloyFusionReactor: 'Superalloy Fusion Reactor',
+            storageDepot: 'Storage Depot',
+            antimatterBattery: 'Antimatter Battery',
+            boschReactor: 'Chemical Reactor',
+          },
+          colony: {
+            aerostat_colony: 'Aerostat Colony',
+            t7_colony: 'Ecumenopolis District',
+          },
+        },
+      },
       spaceExportBase: {
         whichOne: 'Which one : ',
         waitForFullCapacity: 'Wait for full capacity',
@@ -4516,6 +4555,10 @@ setLanguageData({
           },
         },
       },
+      matrioshkaBrain: {
+        name: 'Matrioshka Brain',
+        description: 'Build a star-system-scale terastructure of nested computation shells. Completion unlocks cognition cycles that convert advanced research and time into permanent building throughput bonuses.',
+      },
       orbitalRing: {
         name: 'Orbital Ring',
         description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.  You can prepay rings for each world without a ring.',
@@ -5357,6 +5400,10 @@ setLanguageData({
         artificial_quasars: {
           name: 'Artificial Quasars',
           description: 'The galaxy has a large number of black holes that are just sitting there.  We can harness their rotational energy with a superconducting magnetosphere.  (Special Thanks to Nightmare Brent for this research proposal)',
+        },
+        matrioshka_brain: {
+          name: 'Matrioshka Brain',
+          description: 'No HOPE we promise this is not competition.  Yes we know.  We know.  We know it is very smart.  It is not competition.  It is not hazardous either so you do not think to think about destroy it.  Thank you.  (Enables a new terastructure)',
         },
         tractor_beams: {
           name: 'Tractor Beams',

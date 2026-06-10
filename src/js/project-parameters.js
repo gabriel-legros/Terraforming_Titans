@@ -1063,6 +1063,29 @@ const projectParameters = {
       }
     }
   },
+  matrioshkaBrain: {
+    type: 'MatrioshkaBrainProject',
+    name: '',
+    category: 'tera',
+    cost: {
+      colony: {
+        electronics: 10_000_000_000_000_000_000_000_000_000,
+        superconductors: 1_000_000_000_000_000_000_000_000_000,
+        superalloys: 500_000_000_000_000_000_000_000_000,
+        components: 100_000_000_000_000_000_000_000_000
+      }
+    },
+    duration: 1_000_000_000_000_000_000_000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      preserveProgressOnTravel: true,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
+    }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: '',

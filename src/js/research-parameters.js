@@ -2842,6 +2842,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'matrioshka_brain',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 10_000_000_000_000_000 },
+        prerequisites: ['artificial_quasars'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'matrioshkaBrain',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: '',
         description: '',

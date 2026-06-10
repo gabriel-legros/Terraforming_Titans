@@ -3111,6 +3111,117 @@
     border-top: 1px solid #dee2e6;
 }
 
+.matrioshka-brain-panel {
+    border: 1px solid rgba(71, 181, 165, 0.35);
+    border-radius: 8px;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(71, 181, 165, 0.08), rgba(246, 200, 95, 0.1));
+}
+
+.matrioshka-brain-header,
+.matrioshka-brain-summary,
+.matrioshka-brain-active,
+.matrioshka-brain-ledger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.matrioshka-brain-title,
+.matrioshka-brain-ledger-title {
+    font-weight: 700;
+}
+
+.matrioshka-brain-controls {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) minmax(90px, 0.5fr) minmax(180px, 1.2fr);
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.matrioshka-brain-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9em;
+}
+
+.matrioshka-brain-field input,
+.matrioshka-brain-field select {
+    min-width: 0;
+}
+
+.matrioshka-brain-summary {
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+.matrioshka-brain-start {
+    margin-top: 10px;
+    width: 100%;
+    min-height: 34px;
+    text-align: center;
+}
+
+.matrioshka-brain-start--running,
+.matrioshka-brain-start--running:disabled {
+    color: #ffffff;
+    opacity: 1;
+}
+
+.matrioshka-brain-active {
+    margin-top: 10px;
+}
+
+.matrioshka-brain-progress-track {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.14);
+}
+
+.matrioshka-brain-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #47b5a5, #f6c85f);
+}
+
+.matrioshka-brain-ledger {
+    margin-top: 12px;
+}
+
+.matrioshka-brain-ledger-rows {
+    display: grid;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.matrioshka-brain-ledger-row {
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.matrioshka-brain-ledger-value {
+    font-weight: 700;
+    color: #2f9e84;
+}
+
+@media (max-width: 760px) {
+    .matrioshka-brain-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .matrioshka-brain-summary,
+    .matrioshka-brain-active,
+    .matrioshka-brain-ledger-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
 .pressure-control {
     display: flex;
     align-items: center;

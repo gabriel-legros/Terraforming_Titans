@@ -920,7 +920,7 @@ class Building extends EffectableEntity {
       modifiedProduction[category] = {};
       for (const resource in this.production[category]) {
         const baseProduction = this.production[category][resource];
-        const productionMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveResourceProductionMultiplier(category, resource);
+        const productionMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveResourceProductionMultiplier(category, resource) * this.getEffectiveThroughputMultiplier();
         modifiedProduction[category][resource] = baseProduction * productionMultiplier;
       }
     }
@@ -937,7 +937,7 @@ class Building extends EffectableEntity {
       modifiedConsumption[category] = {};
       for (const resource in consumption[category]) {
         const { amount } = this.getConsumptionResource(category, resource);
-        const consumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const consumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveResourceConsumptionMultiplier(category, resource) * this.getEffectiveThroughputMultiplier();
         modifiedConsumption[category][resource] = amount * consumptionMultiplier;
       }
     }
