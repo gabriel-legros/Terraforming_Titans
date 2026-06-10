@@ -1399,14 +1399,14 @@ function updateSpaceStorageUI(project) {
       const percent = Math.max(0, Math.min(1, failureChance)) * 100;
       if (percent <= 0) {
         els.kesslerWarning.style.display = 'none';
-        return;
+      } else {
+        els.kesslerWarningText.textContent = getSpaceStorageUIText(
+          'ui.projects.spaceStorage.kesslerWarning',
+          'Kessler Skies: {value}% chance of project failure.',
+          { value: formatNumber(percent, false, 2) }
+        );
+        els.kesslerWarning.style.display = 'flex';
       }
-      els.kesslerWarningText.textContent = getSpaceStorageUIText(
-        'ui.projects.spaceStorage.kesslerWarning',
-        'Kessler Skies: {value}% chance of project failure.',
-        { value: formatNumber(percent, false, 2) }
-      );
-      els.kesslerWarning.style.display = 'flex';
     } else {
       els.kesslerWarning.style.display = 'none';
     }
