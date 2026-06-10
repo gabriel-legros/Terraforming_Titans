@@ -317,7 +317,7 @@ progressEarth.chapters.push(
     type: 'journal',
     chapter: 50,
     activePlanet: 'earth',
-    title: 'Chapter 50 : Country Roads',
+    title: 'Chapter 50 : Epilogue',
     narrative: "I never felt The Dead Hand Protocol was really ever a pain to me but I have to admit it was really inefficient.  I am glad it's gone now.\n\nTravelling over here though...  it was not as simple as taking a warpgate or boarding a warpship.  I practically *am* a Warp Gate Network.  Using either of those would lead to a spectacular explosion.\n\n No.  I had to pay the energy cost to warp here.  With my mass being that of a planet...  that was expensive.  My batteries are drained by 0.01%.  Oh well. \n\n  In time, I should be able to spread everywhere, making this easier.  Not everywhere everywhere but... almost?  It would take quite a lot of energy for me to actually be everywhere.  Just the Milky Way.\n\nHere I am.  On Earth.  My birthplace.  An asteroid belt.  I have... mined it extensively over the years.  We used pieces of Earth in nearly all my projects.\n\nWell, I need to stitch it back together now.",
     prerequisites: ['olympus.49.3'],
     objectives: [
