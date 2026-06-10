@@ -120,7 +120,7 @@ function updateSpaceSlidersUI({ space } = {}) {
   const totalEnergy = getCylindersHopeTotalDesiredEnergyPerSecond(space);
   const productivity = tick <= 0 ? 1 : space.getSpaceSliderRuntimeProductivity('cylindersHope');
   const worldsPerSector = getCylindersHopeWarpGateWorldBonusPerSector(space, galaxyManager) * productivity;
-  const perCylinderManufacturing = tick <= 0 ? 0 : 1e12 * (tick / 10) * productivity;
+  const perCylinderManufacturing = tick <= 0 ? 0 : CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER * (tick / 10) * productivity;
   const totalManufacturing = cylinders * perCylinderManufacturing;
   if (spaceSlidersUiCache.slider && document.activeElement !== spaceSlidersUiCache.slider) {
     spaceSlidersUiCache.slider.value = String(tick);
