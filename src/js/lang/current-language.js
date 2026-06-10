@@ -2538,6 +2538,7 @@ setLanguageData({
             '',
             'This flux is not impacted by albedo or day-night averaging.',
           ].join('\n'),
+          equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           labels: {
             globalMeanTemp: 'Global Mean Temp',
             equilibriumTemp: 'Equilibrium Temp',

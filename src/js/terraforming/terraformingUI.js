@@ -1334,7 +1334,7 @@ function createTemperatureBox(row) {
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
-      <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
+      <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
       <table>
         <colgroup>
@@ -1387,6 +1387,14 @@ function createTemperatureBox(row) {
       temperatureHeading.appendChild(tempInfo);
       temperatureHeading.appendChild(tempInfographicButton);
     }
+    const equilibriumTempInfo = temperatureBox.querySelector('#equilibrium-temp-info');
+    const equilibriumTempTooltip = attachDynamicInfoTooltip(
+      equilibriumTempInfo,
+      getTerraformingSummaryText(
+        'temperature.equilibriumTempTooltip',
+        'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).'
+      )
+    );
     const coreHeatLine = temperatureBox.querySelector('#temperature-core-heat-line');
     const coreHeatInfo = document.createElement('span');
     coreHeatInfo.classList.add('info-tooltip-icon');
@@ -1473,6 +1481,7 @@ function createTemperatureBox(row) {
       target: temperatureBox.querySelector('#temperature-target'),
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
+      equilibriumTooltip: equilibriumTempTooltip,
       coreHeatLine,
       coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
