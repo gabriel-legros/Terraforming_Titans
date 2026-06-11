@@ -3900,6 +3900,7 @@ setLanguageData({
         removeTarget: 'Remove target',
         removePresetFromApply: 'Remove preset',
         scriptMissingPresetError: 'Script error: missing {type} preset #{id}',
+        scriptAutomationDisabledError: 'Script error: {type} automation is disabled',
         presetOn: 'Preset On',
         presetOff: 'Preset Off',
         stepWithIndex: 'Step {index}',

@@ -830,6 +830,14 @@ class ScriptAutomation {
         );
         return false;
       }
+      if ((action.automationType === 'ship' || action.automationType === 'life') && !target.enabled) {
+        this.lastError = t(
+          'ui.automation.cards.scriptAutomationDisabledError',
+          { type: action.automationType },
+          `Script error: ${action.automationType} automation is disabled`
+        );
+        return false;
+      }
       target.applyPresetOnce(presetId);
       return true;
     }
