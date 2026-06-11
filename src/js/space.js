@@ -28,6 +28,7 @@ const SPACE_SUPERMASSIVE_SHELL_CORE = 'smbh';
 const MAX_REMEMBERED_RANDOM_WORLD_STATUSES = 10;
 const MAX_REMEMBERED_ARTIFICIAL_WORLD_STATUSES = 50;
 const MAX_TERRAFORM_HISTORY_ENTRIES = 10;
+const SPACE_BIRCH_WORLD_SPECIALIZATION = 'birchWorld';
 
 function buildSpaceHazardKeys() {
     const keys = new Set();
@@ -2456,7 +2457,13 @@ class SpaceManager extends EffectableEntity {
             followersManager.onTravelDeparture(pop);
         }
         const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
-        const specialization = terraforming.requirementId;
+        let specialization = terraforming.requirementId;
+        if (this.currentArtificialKey !== null) {
+            const status = this.artificialWorldStatuses[String(this.currentArtificialKey)];
+            if (isSupermassiveShellworldStatus(status) || isSupermassiveShellworldStatus(currentPlanetParameters)) {
+                specialization = SPACE_BIRCH_WORLD_SPECIALIZATION;
+            }
+        }
         let foundryCompleted = false;
         try {
             foundryCompleted = projectManager.projects.foundryWorld.isCompleted;

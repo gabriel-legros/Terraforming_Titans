@@ -284,6 +284,9 @@ function createDysonCollectorProject(collectorPowerPerSecond = 0) {
     unlocked: true,
     collectors: collectorPowerPerSecond > 0 ? 1 : 0,
     energyPerCollector: collectorPowerPerSecond,
+    isPermanentlyDisabled() {
+      return false;
+    },
     isContinuous() {
       return false;
     },
@@ -321,6 +324,9 @@ function createSpaceEnergyDrainProject(energyPerSecond = 0, name = 'Dyson Receiv
     autoStart: false,
     operationPreRunThisTick: false,
     unlocked: true,
+    isPermanentlyDisabled() {
+      return false;
+    },
     isContinuous() {
       return false;
     },
@@ -348,6 +354,9 @@ function createSpaceStorageProject(resources) {
     maxStorage: resources._spaceStorageMaxStorage ?? Infinity,
     usedStorage: 0,
     resourceStrategicReserves: {},
+    isPermanentlyDisabled() {
+      return false;
+    },
     isContinuous() {
       return false;
     },
@@ -417,6 +426,10 @@ class MockDemandProject {
     return false;
   }
 
+  isPermanentlyDisabled() {
+    return false;
+  }
+
   applyOperationCostAndGain() {}
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true) {
@@ -469,6 +482,10 @@ class MockColonyMetalDemandProject {
     return false;
   }
 
+  isPermanentlyDisabled() {
+    return false;
+  }
+
   estimateCostAndGain(deltaTime = 1000, applyRates = true) {
     const seconds = deltaTime / 1000;
     const amount = this.demandPerSecond * seconds;
@@ -512,6 +529,10 @@ class MockProductionProject {
     return false;
   }
 
+  isPermanentlyDisabled() {
+    return false;
+  }
+
   applyOperationCostAndGain() {}
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true) {
@@ -551,6 +572,10 @@ class MockClampedContinuousEnergyProject {
 
   isContinuous() {
     return true;
+  }
+
+  isPermanentlyDisabled() {
+    return false;
   }
 
   estimateProductivityCostAndGain(deltaTime = 1000) {

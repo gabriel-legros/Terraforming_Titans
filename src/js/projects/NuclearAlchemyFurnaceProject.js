@@ -639,6 +639,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.expansionShortfallLastTick = false;
     this.lastExpansionRatePerSecond = 0;
     this.expansionRateLimitedLastTick = false;
+    if (this.isPermanentlyDisabled()) {
+      this.isActive = false;
+      return;
+    }
     if (!this.autoStart) {
       return;
     }
@@ -907,6 +911,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   estimateExpansionCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    if (this.isPermanentlyDisabled()) {
+      return { cost: {}, gain: {} };
+    }
     return this.estimateCostAndGainByPhase(
       deltaTime,
       applyRates,

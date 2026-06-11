@@ -462,6 +462,10 @@ function getActiveSpecializationProject() {
 }
 
 function hasCompletedSpecializationProject() {
+    const birchWorld = projectManager.projects.birchWorld;
+    if (birchWorld.unlocked && birchWorld.isCurrentSmbhShellworld()) {
+        return true;
+    }
     const bioworld = projectManager.projects.bioworld;
     if (bioworld.isCompleted) {
         return true;
