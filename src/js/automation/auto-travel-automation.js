@@ -27,6 +27,7 @@ class AutoTravelAutomation {
       type: 'random',
       orbitPreset: 'random',
       dominion: 'random',
+      randomTypeExclusions: ['jupiter-like'],
       hazards: [],
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
@@ -87,6 +88,7 @@ class AutoTravelAutomation {
       type: 'random',
       orbitPreset: 'random',
       dominion: 'random',
+      randomTypeExclusions: ['jupiter-like'],
       hazards: [],
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
@@ -108,6 +110,7 @@ class AutoTravelAutomation {
       type: this._normalizeTypeId(rawPreset.type),
       orbitPreset: rawPreset.orbitPreset || 'random',
       dominion: rawPreset.dominion || 'random',
+      randomTypeExclusions: this._normalizeRandomTypeExclusions(rawPreset.randomTypeExclusions),
       hazards: this._normalizeHazards(rawPreset.hazards),
       autoCompleteTerraforming: rawPreset.autoCompleteTerraforming !== false,
       waitForSpecialization: !!rawPreset.waitForSpecialization,
@@ -225,6 +228,35 @@ class AutoTravelAutomation {
       return 'icy-moon';
     }
     return normalized;
+  }
+
+  _normalizeRandomTypeExclusions(typeIds) {
+    const list = Array.isArray(typeIds) ? typeIds : ['jupiter-like'];
+    const seen = new Set();
+    const normalized = [];
+    for (let index = 0; index < list.length; index += 1) {
+      const typeId = this._normalizeTypeId(list[index]);
+      if (!typeId || typeId === 'random' || seen.has(typeId)) {
+        continue;
+      }
+      seen.add(typeId);
+      normalized.push(typeId);
+    }
+    return normalized;
+  }
+
+  _getRandomTypeCandidates(preset) {
+    const exclusions = new Set(this._normalizeRandomTypeExclusions(preset.randomTypeExclusions));
+    const typeIds = RWG_WORLD_TYPES ? Object.keys(RWG_WORLD_TYPES) : [];
+    const candidates = [];
+    for (let index = 0; index < typeIds.length; index += 1) {
+      const typeId = typeIds[index];
+      if (exclusions.has(typeId) || rwgManager.isTypeLocked(typeId)) {
+        continue;
+      }
+      candidates.push(typeId);
+    }
+    return candidates;
   }
 
   _getSkipEquilibrationUnlocked() {
@@ -368,6 +400,9 @@ class AutoTravelAutomation {
       type: this._resolveRandomWorldSelection(typeId, 'auto'),
       hazards: this._normalizeHazards(preset.hazards)
     };
+    if (typeId === 'random') {
+      options.availableTypes = this._getRandomTypeCandidates(preset);
+    }
     const res = generateRandomPlanet(randomSeed, options);
     if (!res || !res.merged) {
       return null;
@@ -525,6 +560,7 @@ class AutoTravelAutomation {
         type: preset.type || 'random',
         orbitPreset: preset.orbitPreset || 'random',
         dominion: preset.dominion || 'random',
+        randomTypeExclusions: this._normalizeRandomTypeExclusions(preset.randomTypeExclusions),
         hazards: this._normalizeHazards(preset.hazards),
         autoCompleteTerraforming: preset.autoCompleteTerraforming !== false,
         waitForSpecialization: !!preset.waitForSpecialization,

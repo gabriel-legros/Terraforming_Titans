@@ -275,6 +275,50 @@
   grid-template-columns: repeat(4, minmax(150px, 1fr)) minmax(260px, 1.4fr);
 }
 
+.auto-travel-type-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 6px;
+  align-items: center;
+}
+
+.auto-travel-random-type-settings {
+  width: 30px;
+  height: 28px;
+  border: 1px solid #cfd6e5;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2c44;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.auto-travel-random-type-settings:hover:not(:disabled) {
+  background: #eef3fb;
+}
+
+.auto-travel-random-type-settings-description {
+  color: #4c5c76;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.auto-travel-random-type-settings-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 8px 12px;
+}
+
+.auto-travel-random-type-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f2c44;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
 .auto-travel-script-after-travel-row {
   display: grid;
   grid-template-columns: auto max-content minmax(180px, 240px);
@@ -367,6 +411,10 @@
     grid-template-columns: repeat(2, minmax(150px, 1fr));
   }
 
+  .auto-travel-random-type-settings-body {
+    grid-template-columns: 1fr;
+  }
+
   .auto-travel-script-after-travel-row {
     grid-template-columns: auto 1fr;
   }
@@ -413,6 +461,24 @@
   background: #121722;
   border-color: #384358;
   color: #dbe5f8;
+}
+
+.dark-mode .auto-travel-random-type-settings {
+  background: #121722;
+  border-color: #384358;
+  color: #dbe5f8;
+}
+
+.dark-mode .auto-travel-random-type-settings:hover:not(:disabled) {
+  background: #1d2533;
+}
+
+.dark-mode .auto-travel-random-type-settings-description {
+  color: #9fb0d2;
+}
+
+.dark-mode .auto-travel-random-type-row {
+  color: #d6deee;
 }
 
 .automation-order-buttons {

@@ -3575,6 +3575,10 @@ setLanguageData({
             random: 'Type: Random',
             named: '{name}',
           },
+          randomTypeSettingsButton: 'Random type settings',
+          randomTypeSettingsTitle: 'Random Planet Types',
+          randomTypeSettingsClose: 'X',
+          randomTypeSettingsDescription: 'Choose which planet types can be picked when Type is Random.',
           orbit: {
             random: 'Orbit: Random',
             veryHot: 'Orbit: Very Hot',
