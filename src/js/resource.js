@@ -1519,6 +1519,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   if (projectManager) {
     for (const name in projectManager.projects) {
       const project = projectManager.projects[name];
+      if (project.isPermanentlyDisabled()) {
+        continue;
+      }
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
@@ -1587,6 +1590,9 @@ function saveCurrentRatesAsProjected(resources) {
 function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
   for (const [, data] of entries) {
     const { project } = data;
+    if (project.isPermanentlyDisabled()) {
+      continue;
+    }
     const isContinuousAsBuilding = project.attributes?.continuousAsBuilding && project.isContinuous();
     const productivity = (isContinuousAsBuilding || project.usesContinuousWithdrawalProductivity?.() === true)
       ? project.continuousProductivity
@@ -1672,6 +1678,9 @@ function produceResources(deltaTime, buildings) {
     for (const name of names) {
       const project = projectManager.projects?.[name];
       if (!project || project.treatAsBuilding) continue;
+      if (project.isPermanentlyDisabled()) {
+        continue;
+      }
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }

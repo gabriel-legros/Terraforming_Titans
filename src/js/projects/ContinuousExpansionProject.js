@@ -144,6 +144,10 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 
   getContinuousExpansionTickState(deltaTime = 1000, options = {}) {
+    if (this.isPermanentlyDisabled()) {
+      this.isActive = false;
+      return { ready: false, disabled: true };
+    }
     const progressOptions = options.progressOptions || {};
     const capacityOptions = options.capacityOptions || progressOptions;
     const duration = this.getEffectiveDuration();
@@ -284,6 +288,10 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
       storageState: options.storageState || null,
       progressResult: null,
     };
+    if (this.isPermanentlyDisabled()) {
+      this.isActive = false;
+      return result;
+    }
     if (!(normalizedRequested > 0)) {
       return result;
     }
