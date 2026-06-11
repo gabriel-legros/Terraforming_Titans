@@ -279,7 +279,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Birch World counts as the world's specialization on SMBH shellworlds: while on that world, no other world specialization can be started. Adding a Birch layer is only allowed while all six terraforming requirement groups are currently green.
 - SMBH shellworlds use a dedicated Birch World visualizer: a metallic engineered sphere with blue emissive light networks, independent of atmosphere, clouds, liquids, biomass, dust, lava, and gas overlays.
 - Completing the 1500th Birch World layer triggers a once-per-save celebration: 30 seconds of global confetti plus a Golden Asteroid that respawns while clicked during the celebration window.
-- Construction supports prepay, 5-hour hard cap, persistence, resume/discard, rename, and persisted Auto Start / Auto Store toggles for chained artificial world construction.
+- Construction supports prepay, 5-hour hard cap, persistence, resume/discard, rename, and persisted Auto Start / Auto Store toggles for chained artificial world construction. Stored artificial worlds are capped at 50.
 - Artificial naming auto-increments by type.
 - Stored and abandoned artificial worlds now persist as compact `artificialSnapshot` records plus top-level metadata; travel/load regenerates full planet parameters from the snapshot, reuses saved ringworld star data, and no longer keeps duplicated `original.override` / `original.merged` payloads for inactive artificial worlds.
 

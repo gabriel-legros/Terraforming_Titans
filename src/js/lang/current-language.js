@@ -383,6 +383,7 @@ setLanguageData({
         cancelConstruction: 'Cancel Construction',
         travelToConstructedWorld: 'Travel to Constructed World',
         storeWorld: 'Store World',
+        storeLimitReached: 'Storage Full',
         discardPrepay: 'Discard Prepay',
         discardPrepayTitle: 'Clear staged prepayments for this artificial world.',
         cancelActiveBuildTitle: 'Cancel the active build',

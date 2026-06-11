@@ -415,6 +415,7 @@ function calculateDiskLandHectares(radiusAU, innerRadiusAU = 0) {
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
 const ARTIFICIAL_FLEET_CAPACITY_UNCAPPED = 'uncapped';
+const ARTIFICIAL_STORED_WORLD_LIMIT = 50;
 const SUPERMASSIVE_SHELL_CORE = 'smbh';
 const SUPERMASSIVE_SHELL_SECTOR = 'Core';
 class ArtificialManager extends EffectableEntity {
@@ -1700,12 +1701,31 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
+    getStoredArtificialWorldCount(excludedSeed = null) {
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        const excluded = excludedSeed === null ? null : String(excludedSeed);
+        return Object.keys(statuses).reduce((count, seed) => {
+            if (seed === excluded) return count;
+            return statuses[seed]?.stored ? count + 1 : count;
+        }, 0);
+    }
+
+    hasStoredArtificialWorldCapacity(excludedSeed = null) {
+        return this.getStoredArtificialWorldCount(excludedSeed) < ARTIFICIAL_STORED_WORLD_LIMIT;
+    }
+
+    canStoreConstructedWorld() {
+        if (!this.activeProject || this.activeProject.status !== 'completed') return false;
+        return this.hasStoredArtificialWorldCapacity(this.activeProject.seed);
+    }
+
     storeConstructedWorld() {
         if (!this.activeProject || this.activeProject.status !== 'completed') return false;
         if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
 
         const project = this.activeProject;
         const seed = String(project.seed);
+        if (!this.hasStoredArtificialWorldCapacity(seed)) return false;
         const override = this.buildOverride(project);
         const snapshot = this.buildSnapshotFromParams(override);
         const now = Date.now();

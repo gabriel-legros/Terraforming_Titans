@@ -2200,6 +2200,7 @@ function renderProgress(project, prepayState) {
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
+      artificialUICache.storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
     }
     return;
   }
@@ -2218,6 +2219,7 @@ function renderProgress(project, prepayState) {
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
+      artificialUICache.storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
     }
     return;
   }
@@ -2232,7 +2234,11 @@ function renderProgress(project, prepayState) {
     );
     artificialUICache.travelBtn.disabled = false;
     if (artificialUICache.storeBtn) {
-      artificialUICache.storeBtn.disabled = false;
+      const canStore = artificialManager.canStoreConstructedWorld();
+      artificialUICache.storeBtn.disabled = !canStore;
+      artificialUICache.storeBtn.textContent = canStore
+        ? getArtificialText('actions.storeWorld', 'Store World')
+        : getArtificialText('actions.storeLimitReached', 'Storage Full');
     }
     return;
   }
@@ -2243,6 +2249,7 @@ function renderProgress(project, prepayState) {
   artificialUICache.travelBtn.disabled = true;
   if (artificialUICache.storeBtn) {
     artificialUICache.storeBtn.disabled = true;
+    artificialUICache.storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
   }
 }
 
