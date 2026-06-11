@@ -125,12 +125,12 @@ class SelfImprovementProject extends Project {
     return [
       { id: 'nuclear', threshold: 10, label: this.getText('research.nuclear', 'Nuclear reactor + closed loop') },
       { id: 'superconductors', threshold: 500, label: this.getText('research.superconductors', 'Superconductor factories') },
-      { id: 'fusion', threshold: 1000, label: this.getText('research.fusion', 'Fusion reactor') },
-      { id: 'fusion1', threshold: 10000, label: this.getText('research.fusion1', 'Fusion reactor output x2') },
-      { id: 'antimatterBattery', threshold: 100000, label: this.getText('research.antimatterBattery', 'Antimatter batteries') },
-      { id: 'fusion2', threshold: 1000000, label: this.getText('research.fusion2', 'Fusion reactor output x2') },
-      { id: 'superalloys', threshold: 10000000, label: this.getText('research.superalloys', 'Superalloys') },
-      { id: 'superalloyFusion1', threshold: 100000000, label: this.getText('research.superalloyFusion1', 'Superalloy fusion output x4') }
+      { id: 'fusion', threshold: 5_000, label: this.getText('research.fusion', 'Fusion reactor') },
+      { id: 'fusion1', threshold: 100_000, label: this.getText('research.fusion1', 'Fusion reactor output x2') },
+      { id: 'antimatterBattery', threshold: 1_000_000, label: this.getText('research.antimatterBattery', 'Antimatter batteries') },
+      { id: 'fusion2', threshold: 10_000_0000, label: this.getText('research.fusion2', 'Fusion reactor output x2') },
+      { id: 'superalloys', threshold: 10_000_000_000, label: this.getText('research.superalloys', 'Superalloys') },
+      { id: 'superalloyFusion1', threshold: 100_000_000_000, label: this.getText('research.superalloyFusion1', 'Superalloy fusion output x4') }
     ];
   }
 
