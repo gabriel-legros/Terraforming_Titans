@@ -177,7 +177,7 @@ function updateSpaceStorageCapDisplay(entry, resourceKey) {
   entry.capWrapperEl.style.display = showCap ? '' : 'none';
   entry.capEl.classList.remove('resource-cap-limited');
   if (showCap) {
-    entry.capEl.textContent = formatNumber(capLimit);
+    entry.capEl.textContent = formatNumber(capLimit, false, 1, false, true);
   }
 }
 
@@ -1708,10 +1708,10 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const maxStorage = storageProject ? Math.max(0, storageProject.maxStorage || 0) : 0;
       spaceStorageTotalHeadroom = Math.max(0, maxStorage - usedStorage);
       if (spaceStorageTotalEntry?.valueEl) {
-        spaceStorageTotalEntry.valueEl.textContent = formatNumber(usedStorage);
+        spaceStorageTotalEntry.valueEl.textContent = formatNumber(usedStorage, false, 1, false, true);
       }
       if (spaceStorageTotalEntry?.capEl) {
-        spaceStorageTotalEntry.capEl.textContent = formatNumber(maxStorage);
+        spaceStorageTotalEntry.capEl.textContent = formatNumber(maxStorage, false, 1, false, true);
       }
       setResourceCapLimited(spaceStorageTotalEntry, false);
     }
@@ -1721,6 +1721,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const resourceName = resourceNames[i];
       const resourceObj = getDisplayResourceObject(resources, category, resourceName);
       if (!resourceObj) continue;
+      const roundResourceBarAmountDown = category === 'colony' || category === 'spaceStorage';
       const resourceKey = getResourceUIKey(category, resourceName);
       const entry = resourceUICache.resources[resourceKey] || cacheSingleResource(category, resourceName);
       const resourceElement = entry ? entry.container : null;
@@ -1951,7 +1952,13 @@ function updateResourceDisplay(resources, deltaSeconds) {
           const displayValue = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
             ? getAntimatterEquivalentValue(resources)
             : resourceObj.value;
-          valEl.textContent = formatNumber(getActiveResidueDisplayValue(resourceObj, displayValue));
+          valEl.textContent = formatNumber(
+            getActiveResidueDisplayValue(resourceObj, displayValue),
+            false,
+            1,
+            false,
+            roundResourceBarAmountDown
+          );
         }
       
         const capElement = entry ? entry.capEl : null;
@@ -1959,7 +1966,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
           const displayCap = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
             ? getAntimatterEquivalentCap(resources)
             : resourceObj.cap;
-          capElement.textContent = formatNumber(displayCap);
+          capElement.textContent = formatNumber(displayCap, false, 1, false, roundResourceBarAmountDown);
         }
       
         updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
