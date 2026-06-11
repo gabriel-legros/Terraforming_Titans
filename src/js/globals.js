@@ -1,6 +1,10 @@
 
 applyLanguageToGameData();
 
+var hopeCreditsImagePath = 'assets/images/hope_credits.webp';
+var preloadedHopeCreditsImage = new Image();
+preloadedHopeCreditsImage.src = hopeCreditsImagePath;
+
 let defaultPlanet = 'mars';
 let tabManager;
 let currentPlanetParameters = getPlanetParameters(defaultPlanet);

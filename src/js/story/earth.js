@@ -217,7 +217,7 @@ function startEarthCredits() {
     finalText.textContent = "Humanity will vote on what to do with HOPE";
 
     const hopeImage = document.createElement('img');
-    hopeImage.src = 'assets/images/hope.png';
+    hopeImage.src = preloadedHopeCreditsImage.src;
     hopeImage.alt = 'HOPE';
     hopeImage.style.display = 'block';
     hopeImage.style.maxWidth = 'min(380px, 70vw)';
@@ -225,6 +225,9 @@ function startEarthCredits() {
     hopeImage.style.margin = '2rem auto';
     hopeImage.style.opacity = '0';
     hopeImage.style.transition = 'opacity 2200ms ease';
+    hopeImage.onerror = () => {
+      hopeImage.style.display = 'none';
+    };
 
     const thanks = document.createElement('div');
     thanks.textContent = 'Thanks for playing <3';
