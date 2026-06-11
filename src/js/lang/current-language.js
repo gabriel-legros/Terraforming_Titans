@@ -4653,7 +4653,7 @@ setLanguageData({
       },
       olympus_field_workshop: {
         name: 'Field Workshop',
-        description: 'It must be done. Hold collect buttons to auto-click.',
+        description: 'It will be painful. It must be done. (Hold collect buttons to auto-click)',
       },
       disposeResources: {
         name: 'Resource Disposal',
