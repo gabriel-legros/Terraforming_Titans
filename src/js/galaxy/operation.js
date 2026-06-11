@@ -632,17 +632,18 @@ class GalaxyOperationManager {
             attackSucceeded: isSuccessful
         });
 
+        operation.reservedPower = reservedPower;
+        operation.offensePower = offensePower;
+        operation.defensePower = defensePower;
+        operation.successChance = successChance;
+        operation.failureChance = failureChance;
+
         if (isSuccessful) {
             if (operation.factionId === this.uhfFactionId && typeof this.onOperationSuccess === 'function') {
                 this.onOperationSuccess();
             }
             this.#applyOperationSuccess(operation);
         }
-        operation.reservedPower = reservedPower;
-        operation.offensePower = offensePower;
-        operation.defensePower = defensePower;
-        operation.successChance = successChance;
-        operation.failureChance = failureChance;
         operation.losses = losses;
         operation.defenderLosses = defenderLosses;
         operation.targetFactionId = targetFactionId;

@@ -375,6 +375,16 @@ const GalaxyOperationUI = (() => {
         return Math.max(0, Math.min(1, chance));
     }
 
+    function resolveOperationControlGainFraction(manager, operation) {
+        const fraction = manager?.getOperationControlGainFraction
+            ? manager.getOperationControlGainFraction(operation)
+            : 0.1;
+        if (!Number.isFinite(fraction) || fraction <= 0) {
+            return 0;
+        }
+        return Math.max(0, Math.min(1, fraction));
+    }
+
     function adjustAllocationByAction(action) {
         const cache = getCache();
         const manager = getManager();
@@ -1255,7 +1265,17 @@ const GalaxyOperationUI = (() => {
                 : `${Math.round(successChance * 100)}%`;
         }
         if (operationsSummaryItems.gain) {
-            operationsSummaryItems.gain.textContent = '+10%';
+            const gainFraction = resolveOperationControlGainFraction(manager, {
+                sectorKey: selection.key,
+                factionId: uhfFactionId,
+                targetFactionId,
+                assignedPower: assignment,
+                reservedPower: assignment,
+                offensePower: assignment,
+                defensePower: sectorPower,
+                status: operationRunning ? 'running' : 'pending'
+            });
+            operationsSummaryItems.gain.textContent = `+${Math.round(gainFraction * 100)}%`;
         }
         if (operationsSummaryItems.loss) {
             const successLoss = lossEstimate?.successLoss;

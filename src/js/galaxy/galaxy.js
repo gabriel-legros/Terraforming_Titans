@@ -649,6 +649,10 @@ class GalaxyManager extends EffectableEntity {
         });
     }
 
+    getOperationControlGainFraction(operation) {
+        return this.galacticInvasionManager?.getInvasionOperationControlFraction?.(operation) ?? 0.1;
+    }
+
     getOperationLossEstimate({
         sectorKey,
         factionId,

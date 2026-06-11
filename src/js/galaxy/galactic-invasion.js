@@ -566,6 +566,9 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   getInvasionOperationControlFraction(operation) {
+    if (operation?.factionId === UHF_FACTION_ID) {
+      return this.getUhfInvasionOperationControlFraction(operation);
+    }
     if (!operation || operation.factionId !== PROMETHEAN_INVASION_FACTION_ID) {
       return 0.1;
     }
@@ -579,6 +582,20 @@ class GalacticInvasionManager extends EffectableEntity {
       return 0.5;
     }
     return 0.1;
+  }
+
+  getUhfInvasionOperationControlFraction(operation) {
+    const defensePower = Number(operation?.defensePower);
+    if (!Number.isFinite(defensePower) || defensePower <= 0) {
+      return 0.1;
+    }
+    const offensePower = Number(operation.offensePower);
+    if (!Number.isFinite(offensePower) || offensePower <= 0) {
+      return 0.1;
+    }
+    const multiplier = Math.floor(offensePower / defensePower);
+    const gainSteps = Math.max(1, multiplier - 1);
+    return Math.min(1, gainSteps * 0.1);
   }
 
   shouldSuppressDefenderLosses(operation, defensePower, offensePower) {
