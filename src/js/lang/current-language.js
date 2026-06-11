@@ -3061,6 +3061,7 @@ setLanguageData({
             severity: 'Severity ×{value}',
           },
           tooltips: {
+            growthModifiers: 'Hazardous Biomass has a base growth and a preferred environment.  For each environmental category there is an optimal range.  They suffer penalty equal to severity for each point outside that range.',
             zoneGrowth: 'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.',
             landPreference: 'Each zone adds (liquid water + liquid CO₂ + liquid methane coverage) × severity to the penalty. Zone penalties are averaged using zone surface share weighting.',
             invasiveness: 'Zone growth uses life density × (current invasiveness − target) × severity. If invasiveness is below target, this provides a growth boost to hazardous biomass. Totals use zone surface share weighting.',
