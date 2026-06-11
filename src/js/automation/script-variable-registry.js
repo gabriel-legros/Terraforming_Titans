@@ -8,6 +8,7 @@ class ScriptVariableRegistry {
       { id: 'projects', label: 'Special Projects' },
       { id: 'terraforming', label: 'Terraforming' },
       { id: 'celestial', label: 'Celestial Parameters' },
+      { id: 'artificial', label: t('ui.hope.automationCards.scriptVariables.artificial.source', {}, 'Artificial') },
       { id: 'hazards', label: 'Hazards' },
       { id: 'research', label: 'Research' }
     ];
@@ -24,6 +25,7 @@ class ScriptVariableRegistry {
     if (sourceId === 'projects') return this.getProjectCategories();
     if (sourceId === 'terraforming') return this.getTerraformingCategories();
     if (sourceId === 'celestial') return [{ id: 'celestial', label: 'Celestial Parameters' }];
+    if (sourceId === 'artificial') return this.getArtificialCategories();
     if (sourceId === 'hazards') return [{ id: 'hazards', label: 'Hazards' }];
     if (sourceId === 'research') return this.getResearchCategories();
     if (sourceId === 'resources') return this.getResourceCategories();
@@ -37,6 +39,7 @@ class ScriptVariableRegistry {
     if (sourceId === 'projects') return this.getProjectTargets(categoryId);
     if (sourceId === 'terraforming') return this.getTerraformingTargets(categoryId);
     if (sourceId === 'celestial') return [{ id: 'celestial', label: 'Celestial Parameters' }];
+    if (sourceId === 'artificial') return this.getArtificialTargets();
     if (sourceId === 'hazards') return this.getHazardTargets();
     if (sourceId === 'research') return this.getResearchTargets(categoryId);
     if (sourceId === 'resources') return this.getResourceTargets(categoryId);
@@ -50,6 +53,7 @@ class ScriptVariableRegistry {
     if (sourceId === 'projects') return this.getProjectAttributes(targetId);
     if (sourceId === 'terraforming') return this.getTerraformingAttributes(categoryId, targetId);
     if (sourceId === 'celestial') return this.getCelestialAttributes();
+    if (sourceId === 'artificial') return this.getArtificialAttributes();
     if (sourceId === 'hazards') return this.getHazardAttributes(targetId);
     if (sourceId === 'research') return this.getResearchAttributes(targetId);
     if (sourceId === 'resources') return this.getResourceAttributes(categoryId, targetId, optionId);
@@ -416,6 +420,28 @@ class ScriptVariableRegistry {
     ];
   }
 
+  getArtificialCategories() {
+    return [
+      { id: 'artificial', label: t('ui.hope.automationCards.scriptVariables.artificial.category', {}, 'Artificial') }
+    ];
+  }
+
+  getArtificialTargets() {
+    return [
+      { id: 'artificial', label: t('ui.hope.automationCards.scriptVariables.artificial.category', {}, 'Artificial') }
+    ];
+  }
+
+  getArtificialAttributes() {
+    return [
+      {
+        id: 'storedCount',
+        label: t('ui.hope.automationCards.scriptVariables.artificial.storedCount', {}, 'Stored Count'),
+        valueType: 'number'
+      }
+    ];
+  }
+
   getHazardTargets() {
     return [
       { id: 'hazardousBiomass', label: 'Hazardous Biomass' },
@@ -566,6 +592,7 @@ class ScriptVariableRegistry {
     if (ref.source === 'projects') return this.resolveProjectValue(ref);
     if (ref.source === 'terraforming') return this.resolveTerraformingValue(ref);
     if (ref.source === 'celestial') return this.resolveCelestialValue(ref);
+    if (ref.source === 'artificial') return this.resolveArtificialValue(ref);
     if (ref.source === 'hazards') return this.resolveHazardValue(ref);
     if (ref.source === 'research') return this.resolveResearchValue(ref);
     if (ref.source === 'resources') return this.resolveResourceValue(ref);
@@ -817,6 +844,20 @@ class ScriptVariableRegistry {
       return volumeM3 > 0 ? this.toNumber(massKg / volumeM3) : 0;
     }
     return this.toNumber(params[ref.attribute]);
+  }
+
+  resolveArtificialValue(ref) {
+    if (ref.attribute === 'storedCount') return this.getStoredArtificialWorldCount();
+    return 0;
+  }
+
+  getStoredArtificialWorldCount() {
+    const statuses = spaceManager.artificialWorldStatuses || {};
+    let count = 0;
+    for (const seed in statuses) {
+      if (statuses[seed] && statuses[seed].stored) count += 1;
+    }
+    return count;
   }
 
   resolveWorldArchetypeOption(ref) {

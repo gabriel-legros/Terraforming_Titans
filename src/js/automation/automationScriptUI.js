@@ -949,6 +949,18 @@ function renderReferencePicker(automation, ref, row) {
     return;
   }
 
+  if (ref.source === 'artificial') {
+    const attributes = registry.getAttributes(ref.source, ref.category, ref.target);
+    const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
+    attribute.addEventListener('change', event => {
+      ref.attribute = event.target.value;
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref), ref);
+    return;
+  }
+
   const categories = registry.getCategories(ref.source);
   const category = createSelect(categories.map(item => ({ id: item.id, label: item.label })), ref.category);
   category.addEventListener('change', event => {
