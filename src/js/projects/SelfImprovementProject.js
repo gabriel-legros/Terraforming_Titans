@@ -124,7 +124,7 @@ class SelfImprovementProject extends Project {
   getResearchRows() {
     return [
       { id: 'nuclear', threshold: 10, label: this.getText('research.nuclear', 'Nuclear reactor + closed loop') },
-      { id: 'superconductors', threshold: 100, label: this.getText('research.superconductors', 'Superconductor factories') },
+      { id: 'superconductors', threshold: 500, label: this.getText('research.superconductors', 'Superconductor factories') },
       { id: 'fusion', threshold: 1000, label: this.getText('research.fusion', 'Fusion reactor') },
       { id: 'fusion1', threshold: 10000, label: this.getText('research.fusion1', 'Fusion reactor output x2') },
       { id: 'antimatterBattery', threshold: 100000, label: this.getText('research.antimatterBattery', 'Antimatter batteries') },
