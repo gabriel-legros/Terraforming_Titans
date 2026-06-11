@@ -66,6 +66,8 @@ const artificialUICache = {
   sector: null,
   sectorFilter: null,
   priority: null,
+  autoStart: null,
+  autoStore: null,
   startBtn: null,
   travelBtn: null,
   storeBtn: null,
@@ -1311,6 +1313,31 @@ function ensureArtificialLayout() {
   priorityLabel.appendChild(priorityText);
   costs.appendChild(priorityLabel);
 
+  const automationRow = document.createElement('div');
+  automationRow.className = 'artificial-automation-options';
+  const autoStartLabel = document.createElement('label');
+  autoStartLabel.className = 'artificial-priority artificial-automation-option';
+  const autoStartCheckbox = document.createElement('input');
+  autoStartCheckbox.type = 'checkbox';
+  artificialUICache.autoStart = autoStartCheckbox;
+  autoStartLabel.appendChild(autoStartCheckbox);
+  const autoStartText = document.createElement('span');
+  autoStartText.textContent = getArtificialText('costs.autoStart', 'Auto Start');
+  autoStartLabel.appendChild(autoStartText);
+  automationRow.appendChild(autoStartLabel);
+
+  const autoStoreLabel = document.createElement('label');
+  autoStoreLabel.className = 'artificial-priority artificial-automation-option';
+  const autoStoreCheckbox = document.createElement('input');
+  autoStoreCheckbox.type = 'checkbox';
+  artificialUICache.autoStore = autoStoreCheckbox;
+  autoStoreLabel.appendChild(autoStoreCheckbox);
+  const autoStoreText = document.createElement('span');
+  autoStoreText.textContent = getArtificialText('costs.autoStore', 'Auto Store');
+  autoStoreLabel.appendChild(autoStoreText);
+  automationRow.appendChild(autoStoreLabel);
+  costs.appendChild(automationRow);
+
   const startBtn = document.createElement('button');
   startBtn.className = 'artificial-primary';
   startBtn.textContent = getArtificialText('actions.startArtificialWorld', 'Start Artificial World');
@@ -1827,11 +1854,20 @@ function ensureArtificialLayout() {
     }
     updateArtificialUI();
   });
+  autoStartCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAutoStart(autoStartCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
+  autoStoreCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAutoStore(autoStoreCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
   startBtn.addEventListener('click', () => {
     if (!artificialManager) return;
-    const rawName = artificialUICache.nameInput ? artificialUICache.nameInput.value.trim() : '';
-    const isLegacyDefaultName = /^Artificial World(?: \\d+)?$/.test(rawName);
-    const chosenName = rawName && !isLegacyDefaultName ? rawName : '';
     const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
     const manager = artificialManager;
     const selection = buildArtificialSelection(null, manager);
@@ -1847,39 +1883,7 @@ function ensureArtificialLayout() {
       }
       return;
     }
-    if (type === 'shell') {
-      artificialManager.startShellConstruction({
-        radiusEarth: selection.radiusEarth,
-        core: artificialUICache.core.value,
-        starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
-        name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
-        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
-      });
-      return;
-    }
-    if (type === 'ring') {
-      artificialManager.startRingConstruction({
-        starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
-        orbitRadiusAU: selection.orbitRadiusAU,
-        widthKm: selection.widthKm,
-        targetFluxWm2: selection.targetFluxWm2,
-        name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
-        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
-      });
-      return;
-    }
-    if (type === 'disk') {
-      artificialManager.startDiskConstruction({
-        starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
-        diskInnerRadiusAU: selection.diskInnerRadiusAU,
-        diskRadiusAU: selection.diskRadiusAU,
-        name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
-        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
-      });
-    }
+    artificialManager.startDraftConstruction();
   });
   coreSelect.addEventListener('change', () => {
     applyRadiusBounds();
@@ -3040,6 +3044,12 @@ function updateArtificialUI(options = {}) {
   applyRingBounds();
   if (artificialUICache.priority) {
     artificialUICache.priority.checked = manager.getPrioritizeSpaceStorage();
+  }
+  if (artificialUICache.autoStart) {
+    artificialUICache.autoStart.checked = manager.getAutoStart();
+  }
+  if (artificialUICache.autoStore) {
+    artificialUICache.autoStore.checked = manager.getAutoStore();
   }
 
   if (!project) {

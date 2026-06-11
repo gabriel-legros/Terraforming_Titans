@@ -619,6 +619,16 @@
   font-size: 13px;
 }
 
+.artificial-automation-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.artificial-automation-option {
+  min-width: 0;
+}
+
 .artificial-primary,
 .artificial-secondary {
   padding: 10px 14px;

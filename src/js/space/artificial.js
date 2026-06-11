@@ -423,6 +423,8 @@ class ArtificialManager extends EffectableEntity {
         this.enabled = false;
         this.constructionHoursPer50B = CONSTRUCTION_HOURS_PER_50B;
         this.prioritizeSpaceStorage = true;
+        this.autoStart = false;
+        this.autoStore = false;
         this.nextId = 1;
         this.activeProject = null;
         this.unlockedTypes = new Set(
@@ -829,8 +831,12 @@ class ArtificialManager extends EffectableEntity {
         if (!this.enabled || !this.activeProject) return;
         if (this.activeProject.status === 'building') {
             this.setRemainingTime(this.activeProject.remainingMs - delta, false);
-            if (this.activeProject && this.activeProject.status === 'completed') return;
+            if (this.activeProject && this.activeProject.status === 'completed') {
+                this.runAutomation();
+                return;
+            }
         }
+        this.runAutomation();
         this._tickTimer += delta;
         if (this._tickTimer >= 500) {
             this._tickTimer = 0;
@@ -1117,6 +1123,74 @@ class ArtificialManager extends EffectableEntity {
 
     getPrioritizeSpaceStorage() {
         return this.prioritizeSpaceStorage;
+    }
+
+    setAutoStart(value) {
+        this.autoStart = !!value;
+        this.runAutomation();
+    }
+
+    getAutoStart() {
+        return this.autoStart;
+    }
+
+    setAutoStore(value) {
+        this.autoStore = !!value;
+        this.runAutomation();
+    }
+
+    getAutoStore() {
+        return this.autoStore;
+    }
+
+    startDraftConstruction() {
+        if (!this.enabled || this.activeProject) return false;
+        const selection = this.getDraftSelection();
+        const chosenName = selection.name && String(selection.name).trim()
+            ? String(selection.name).trim()
+            : '';
+        if (selection.type === 'shell') {
+            return this.startShellConstruction({
+                radiusEarth: selection.radiusEarth,
+                core: selection.core,
+                starContext: selection.starContext,
+                name: chosenName,
+                sector: selection.sector,
+                sectorFilter: selection.sectorFilter
+            });
+        }
+        if (selection.type === 'ring') {
+            return this.startRingConstruction({
+                starCore: selection.ringStarCore,
+                orbitRadiusAU: selection.orbitRadiusAU,
+                widthKm: selection.widthKm,
+                targetFluxWm2: selection.targetFluxWm2,
+                name: chosenName,
+                sector: selection.sector,
+                sectorFilter: selection.sectorFilter
+            });
+        }
+        if (selection.type === 'disk') {
+            return this.startDiskConstruction({
+                starCore: selection.diskStarCore,
+                diskInnerRadiusAU: selection.diskInnerRadiusAU,
+                diskRadiusAU: selection.diskRadiusAU,
+                name: chosenName,
+                sector: selection.sector,
+                sectorFilter: selection.sectorFilter
+            });
+        }
+        return false;
+    }
+
+    runAutomation() {
+        if (!this.enabled) return;
+        if (this.autoStore && this.activeProject && this.activeProject.status === 'completed') {
+            this.storeConstructedWorld();
+        }
+        if (this.autoStart && !this.activeProject) {
+            this.startDraftConstruction();
+        }
     }
 
     createSeed() {
@@ -2324,6 +2398,8 @@ class ArtificialManager extends EffectableEntity {
         return {
             enabled: this.enabled,
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
+            autoStart: this.autoStart,
+            autoStore: this.autoStore,
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
             activeProject: project,
@@ -2341,6 +2417,8 @@ class ArtificialManager extends EffectableEntity {
     loadState(state) {
         if (!state) return;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
+        this.autoStart = state.autoStart === true;
+        this.autoStore = state.autoStore === true;
         if (Array.isArray(state.unlockedTypes)) {
             this.unlockedTypes = new Set(state.unlockedTypes);
         }
