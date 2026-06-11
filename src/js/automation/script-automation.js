@@ -830,7 +830,7 @@ class ScriptAutomation {
         );
         return false;
       }
-      if ((action.automationType === 'ship' || action.automationType === 'life') && !target.enabled) {
+      if ((action.automationType === 'ship' || action.automationType === 'life') && !target.isToggledOn()) {
         this.lastError = t(
           'ui.automation.cards.scriptAutomationDisabledError',
           { type: action.automationType },

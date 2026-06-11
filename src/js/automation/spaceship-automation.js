@@ -159,6 +159,10 @@ class SpaceshipAutomation {
     }
   }
 
+  isToggledOn() {
+    return this.enabled;
+  }
+
   addPreset(name = '') {
     const preset = {
       id: this.nextPresetId++,

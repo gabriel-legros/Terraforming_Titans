@@ -319,6 +319,10 @@ class LifeAutomation {
     this.enabled = !!enabled;
   }
 
+  isToggledOn() {
+    return this.enabled;
+  }
+
   addPreset(name = '') {
     const preset = {
       id: this.nextPresetId++,
