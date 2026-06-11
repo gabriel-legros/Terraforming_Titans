@@ -1453,11 +1453,16 @@ function updateTotalCostDisplay(project) {
 
   const totalCostValue = elements.totalCostValue;
   if (totalCostValue) {
-    totalCostValue.textContent = formatNumber(totalCost, true);
     const available = resources.colony?.funding?.value || 0;
     const highlight = project.isContinuous()
       ? project.shortfallLastTick
       : available < totalCost;
+    let totalCostText = formatNumber(totalCost, true);
+    if (highlight && available < totalCost && project.name === 'cargo_rocket') {
+      const missing = formatNumber(totalCost - available, true);
+      totalCostText += ` (${getProjectsUIText('ui.projects.cargoRocket.fundingMissing', 'Need {value} more', { value: missing })})`;
+    }
+    totalCostValue.textContent = totalCostText;
     totalCostValue.style.color = highlight ? 'red' : '';
   }
 }

@@ -1330,6 +1330,7 @@ setLanguageData({
         amount: 'Amount',
         priceFunding: 'Price (Funding)',
         totalCost: 'Total Cost: ',
+        fundingMissing: 'Need {value} more',
         spaceshipPriceTooltip: 'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by terraforming more worlds.',
       },
       importColonists: {
