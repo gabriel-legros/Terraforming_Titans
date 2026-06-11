@@ -141,13 +141,26 @@ class MultiRecipesBuilding extends Building {
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
+    const restoredRecipeKey = this._restoredRecipeKey;
     const defs = this.recipes || {};
+    if (restoredRecipeKey && Object.prototype.hasOwnProperty.call(defs, restoredRecipeKey)) {
+      this.currentRecipeKey = restoredRecipeKey;
+      const restoredAllowed = this._getAllowedRecipeKeys().includes(restoredRecipeKey);
+      this._applyRecipeMapping({ ignoreRestrictions: !restoredAllowed });
+      if (restoredAllowed) {
+        this._restoredRecipeKey = null;
+      }
+      return;
+    }
     const hasCurrentRecipe = Object.prototype.hasOwnProperty.call(defs, this.currentRecipeKey);
     const allowedKeys = this._getAllowedRecipeKeys();
     this._applyRecipeMapping({ ignoreRestrictions: hasCurrentRecipe && allowedKeys.includes(this.currentRecipeKey) });
   }
 
   loadState(state = {}) {
+    this._restoredRecipeKey = state && Object.prototype.hasOwnProperty.call(state, 'currentRecipeKey')
+      ? state.currentRecipeKey
+      : null;
     this.ignoreRecipeRestrictionsOnLoad = true;
     super.loadState(state);
     this.ignoreRecipeRestrictionsOnLoad = false;
