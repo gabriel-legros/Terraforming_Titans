@@ -2178,6 +2178,14 @@ function updateDecreaseButtonText(button, buildCount) {
           name: resolveCostMultiplierSourceName(effect),
           value: effect.value
         });
+        return;
+      }
+      if (effect.type === 'throughputMultiplier') {
+        if (effect.value === 0) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: 1 + effect.value
+        });
       }
     });
 
@@ -2229,6 +2237,20 @@ function updateDecreaseButtonText(button, buildCount) {
           name: resolveCostMultiplierSourceName(effect),
           value: effect.value
         });
+        return;
+      }
+      if (effect.type === 'throughputMultiplier') {
+        if (effect.value === 0) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: 1 + effect.value
+        });
+        if (isReverseMode) {
+          reverseMultipliers.push({
+            name: resolveCostMultiplierSourceName(effect),
+            value: 1 + effect.value
+          });
+        }
         return;
       }
       if (!isReverseMode) return;

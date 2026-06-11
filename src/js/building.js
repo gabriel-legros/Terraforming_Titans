@@ -1363,7 +1363,7 @@ class Building extends EffectableEntity {
         }
         const { amount } = this.getConsumptionResource(category, resource);
         const resourceMultiplier = this.getEffectiveResourceConsumptionMultiplier(category, resource);
-        const effectiveAmount = amount * consumptionMultiplier * resourceMultiplier;
+        const effectiveAmount = amount * consumptionMultiplier * resourceMultiplier * this.getEffectiveThroughputMultiplier();
         if (effectiveAmount <= 0) {
           continue;
         }
@@ -1397,7 +1397,8 @@ class Building extends EffectableEntity {
       const base = this.production[category]?.[resource] || 0;
       const effectiveMultiplier =
         this.getEffectiveProductionMultiplier() *
-        this.getEffectiveResourceProductionMultiplier(category, resource);
+        this.getEffectiveResourceProductionMultiplier(category, resource) *
+        this.getEffectiveThroughputMultiplier();
       return this.activeNumber * base * effectiveMultiplier * (deltaTime / 1000);
     };
 
@@ -1503,7 +1504,7 @@ class Building extends EffectableEntity {
     if (this.reversalAvailable && this.reverseEnabled) {
       return; // Skip normal production entirely while reversed
     }
-    const effectiveMultiplier = this.getEffectiveProductionMultiplier();
+    const effectiveMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveThroughputMultiplier();
     const displayProductivity = this.productivity;
 
     // Calculate production using effectiveMultiplier and accumulate changes
@@ -1540,8 +1541,8 @@ class Building extends EffectableEntity {
 
   // Updated consume function to track consumption rates
   consume(accumulatedChanges, deltaTime, accumulatedSpecialChanges) {
-    const effectiveConsumptionMultiplier = this.getEffectiveConsumptionMultiplier();
-    const effectiveProductionMultiplier = this.getEffectiveProductionMultiplier();
+    const effectiveConsumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveThroughputMultiplier();
+    const effectiveProductionMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveThroughputMultiplier();
     const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
       ? this.displayProductivity
       : this.productivity;
