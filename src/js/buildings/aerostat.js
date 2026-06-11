@@ -90,7 +90,7 @@ class Aerostat extends BaseColony {
   }
 
   shouldCapWorkersToAerostatCapacity() {
-    return this.capWorkersToAerostatCapacity === true;
+    return this.capWorkersToAerostatCapacity === true && this.isVisible();
   }
 
   getWorkerCapacityCap() {
