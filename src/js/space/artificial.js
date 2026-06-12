@@ -1131,6 +1131,12 @@ class ArtificialManager extends EffectableEntity {
         this.runAutomation();
     }
 
+    clearAutoStart() {
+        if (!this.autoStart) return false;
+        this.autoStart = false;
+        return true;
+    }
+
     getAutoStart() {
         return this.autoStart;
     }
@@ -1681,6 +1687,7 @@ class ArtificialManager extends EffectableEntity {
         if (!this.activeProject || this.activeProject.status !== 'building') return false;
         this.recordHistoryEntry('cancelled');
         this.activeProject = null;
+        this.clearAutoStart();
         this.updateUI(true);
         return true;
     }
@@ -1697,6 +1704,7 @@ class ArtificialManager extends EffectableEntity {
         if (!this.activeProject || this.activeProject.status !== 'completed') return false;
         this.recordHistoryEntry('discarded');
         this.activeProject = null;
+        this.clearAutoStart();
         this.updateUI(true);
         return true;
     }

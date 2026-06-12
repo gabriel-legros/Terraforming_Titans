@@ -687,6 +687,14 @@ function updateArtificialTextNodeLabel(node, text) {
   }
 }
 
+function clearArtificialAutoStartForBlueprintChange() {
+  const manager = artificialManager;
+  if (!manager) return;
+  if (manager.clearAutoStart()) {
+    artificialUICache.autoStart.checked = false;
+  }
+}
+
 function storeDraftSelection(manager, options = {}) {
   const preserveSector = !!options.preserveSector;
   const preserveFilter = !!options.preserveFilter;
@@ -1690,6 +1698,7 @@ function ensureArtificialLayout() {
 
   // Bind events
   typeSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     applyRadiusBounds();
     applyStarContextBounds();
     applyRingBounds();
@@ -1698,12 +1707,14 @@ function ensureArtificialLayout() {
   });
 
   radiusRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRadiusValue(parseFloat(radiusRange.value) || 0);
     radiusRange.value = value;
     radiusInput.value = value;
     updateArtificialUI();
   });
   radiusInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.radiusRange) {
       const value = parseFloat(radiusInput.value) || 0;
       const clamped = clampRadiusValue(value);
@@ -1720,6 +1731,7 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   radiusAuto.addEventListener('click', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialRadiusEditing = false;
     const value = getAutoRadiusValue();
     setRadiusFields(value, true);
@@ -1727,10 +1739,12 @@ function ensureArtificialLayout() {
   });
 
   ringStarCoreSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     applyRingBounds();
     updateArtificialUI();
   });
   ringOrbitRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0);
     ringOrbitRange.value = value;
     ringOrbitInput.value = value;
@@ -1740,6 +1754,7 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringOrbitInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.ringOrbitRange) {
       const value = parseFloat(ringOrbitInput.value) || 0;
       artificialUICache.ringOrbitRange.value = clampRingOrbitValue(value);
@@ -1758,6 +1773,7 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringAuto.addEventListener('click', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialRingOrbitEditing = false;
     artificialRingWidthEditing = false;
     if (getSelectedArtificialType(null) === 'disk') {
@@ -1775,12 +1791,14 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringWidthRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRingWidthValue(parseFloat(ringWidthRange.value) || 0);
     ringWidthRange.value = value;
     ringWidthInput.value = value;
     updateArtificialUI();
   });
   ringWidthInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.ringWidthRange) {
       const value = parseFloat(ringWidthInput.value) || 0;
       artificialUICache.ringWidthRange.value = clampRingWidthValue(value);
@@ -1796,12 +1814,14 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   diskInnerRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampDiskInnerValue(parseFloat(diskInnerRange.value) || 0);
     diskInnerRange.value = value;
     diskInnerInput.value = value;
     updateArtificialUI();
   });
   diskInnerInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.diskInnerRange) {
       const value = parseFloat(diskInnerInput.value) || 0;
       artificialUICache.diskInnerRange.value = clampDiskInnerValue(value);
@@ -1817,12 +1837,14 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringFluxRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRingFluxValue(parseFloat(ringFluxRange.value) || 0);
     ringFluxRange.value = value;
     ringFluxInput.value = value;
     updateArtificialUI();
   });
   ringFluxInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = parseFloat(ringFluxInput.value) || 0;
     artificialUICache.ringFluxRange.value = clampRingFluxValue(value);
   });
@@ -1886,15 +1908,22 @@ function ensureArtificialLayout() {
     artificialManager.startDraftConstruction();
   });
   coreSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     applyRadiusBounds();
     applyStarContextBounds();
     updateArtificialUI();
   });
+  starSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
+    updateArtificialUI();
+  });
   sectorSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialManager && artificialManager.setDraftSelection({ sector: sectorSelect.value });
     updateArtificialUI({ force: true });
   });
   sectorFilterSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialUICache.sector.value = 'auto';
     artificialManager && artificialManager.setDraftSelection({ sectorFilter: sectorFilterSelect.value, sector: 'auto' });
     updateArtificialUI({ force: true });
