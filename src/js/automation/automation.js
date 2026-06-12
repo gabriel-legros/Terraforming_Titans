@@ -372,6 +372,9 @@ class AutomationManager extends EffectableEntity {
       this.scriptAutomation.loadState(data.scriptAutomation || {});
     }
     this.reapplyEffects();
+    if (typeof invalidateShipAutomationUI === 'function') {
+      invalidateShipAutomationUI();
+    }
   }
 
   update(delta) {
