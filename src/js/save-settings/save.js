@@ -4,6 +4,8 @@ globalGameIsTraveling = false;
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let pendingAutomationSafetyRestoreState = null;
+const SAVE_SLOTS = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+const SAVE_FALLBACK_LOAD_ORDER = ['autosave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -214,8 +216,9 @@ function recalculateLandUsage() {
   }
 }
 
-function getGameState() {
+function getGameState(saveDate = new Date()) {
   return {
+    savedAt: new Date(saveDate).getTime(),
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
     resources: typeof resources !== 'undefined'
       ? Object.fromEntries(
@@ -297,34 +300,41 @@ function getGameState() {
 // Load game state from a specific slot or custom string
 function loadGame(slotOrCustomString, recreate = true) {
 
-  if(recreate){
-    initializeDefaultGlobals();
-  }
-
   if (slotOrCustomString === undefined) {
     console.log('No slot or custom string provided. Loading aborted.');
-    return;
+    return false;
   }
 
   let savedState = '';
 
   if (slotOrCustomString.startsWith('gameState_')) {
     // Load from a specific slot
-    savedState = localStorage.getItem(slotOrCustomString);
+    savedState = getSavedStateForSlot(slotOrCustomString.replace('gameState_', ''));
   } else {
     // Load from a custom string
     savedState = slotOrCustomString;
   }
   if (!savedState) {
     console.log('No saved game found.');
-    return;
+    return false;
+  }
+
+  let gameState = null;
+  try {
+    gameState = JSON.parse(savedState);
+  } catch (e) {
+    console.warn('Unable to parse saved game. Loading aborted:', e);
+    return false;
+  }
+
+  if(recreate){
+    initializeDefaultGlobals();
   }
 
   showLoadingOverlay();
   globalGameIsLoadingFromSave = true;
 
   try {
-    const gameState = JSON.parse(savedState);
     gameCompleted = gameState.gameCompleted === true;
     captureAutomationSafetyRestoreState(gameState);
     resetStructureDisplayState();
@@ -907,6 +917,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
+      return true;
   } finally {
     globalGameIsLoadingFromSave = false;
     hideLoadingOverlay();
@@ -922,8 +933,61 @@ function setSaveSlotStatus(slot, text) {
   }
 }
 
+function readSaveSlotDates() {
+  try {
+    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+    return saveSlotDates && saveSlotDates.constructor === Object ? saveSlotDates : {};
+  } catch (e) {
+    console.warn('Unable to access localStorage for save slot dates:', e);
+    return {};
+  }
+}
+
+function writeSaveSlotDates(saveSlotDates) {
+  try {
+    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+    return true;
+  } catch (e) {
+    console.warn('Unable to access localStorage for save slot dates:', e);
+    return false;
+  }
+}
+
+function getSavedStateForSlot(slot) {
+  try {
+    return localStorage.getItem(`gameState_${slot}`);
+  } catch (e) {
+    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+    return null;
+  }
+}
+
+function getTimestampFromSavedState(savedState) {
+  try {
+    const parsedState = JSON.parse(savedState);
+    const timestamp = Number(parsedState.savedAt);
+    return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getSaveSlotTimestamp(slot, saveSlotDates) {
+  const savedState = getSavedStateForSlot(slot);
+  if (!savedState) {
+    return null;
+  }
+  const embeddedTimestamp = getTimestampFromSavedState(savedState);
+  if (embeddedTimestamp !== null) {
+    return embeddedTimestamp;
+  }
+  const metadataTimestamp = Number(saveSlotDates[slot]);
+  return Number.isFinite(metadataTimestamp) && metadataTimestamp > 0 ? metadataTimestamp : null;
+}
+
 function saveGameToSlot(slot) {
-  const gameState = getGameState();
+  const saveDate = new Date();
+  const gameState = getGameState(saveDate);
   const genericFailure = t('ui.settings.saveFailedLocalStorage', null, 'SAVE FAILED: Game needs cookies/local storage permission.');
   let saveFailedReason = '';
   try {
@@ -939,8 +1003,6 @@ function saveGameToSlot(slot) {
     return { success: false, error: saveFailedReason };
   }
 
-  // Get the current date and time
-  const saveDate = new Date();
   const formattedSaveDate = formatDate(saveDate);
 
   setSaveSlotStatus(slot, formattedSaveDate);
@@ -959,7 +1021,7 @@ function saveGameToSlot(slot) {
 function saveGameToFile() {
   patienceManager.claimDailyPatience();
   updatePatienceUI();
-  const gameState = getGameState();
+  const gameState = getGameState(new Date());
 
   const saveData = JSON.stringify(gameState);
   const blob = new Blob([saveData], { type: 'application/json' });
@@ -981,7 +1043,7 @@ function saveGameToFile() {
 function saveGameToClipboard() {
   patienceManager.claimDailyPatience();
   updatePatienceUI();
-  const saveData = JSON.stringify(getGameState());
+  const saveData = JSON.stringify(getGameState(new Date()));
   copyTextToClipboard(saveData, {
     promptLabel: 'Copy save data:',
     onSuccess: () => {
@@ -1040,34 +1102,41 @@ function deleteSaveFileFromSlot(slot) {
 
 // Save the save slot dates as UNIX timestamps
 function saveSaveSlotDates(slot, date) {
-  try {
-    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-    saveSlotDates[slot] = new Date(date).getTime();
-    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
-  } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
-  }
+  const saveSlotDates = readSaveSlotDates();
+  saveSlotDates[slot] = new Date(date).getTime();
+  writeSaveSlotDates(saveSlotDates);
 }
 
 // Load the save slot dates and display them in a user-friendly format
 function loadSaveSlotDates() {
-  let saveSlotDates = {};
-  try {
-    saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-  } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
-    saveSlotDates = {};
-  }
-  for (const slot in saveSlotDates) {
-    const timestamp = saveSlotDates[slot];
-    const date = new Date(timestamp);
-    const formattedDate = formatDate(date);
+  const saveSlotDates = readSaveSlotDates();
+  const repairedDates = { ...saveSlotDates };
+
+  for (const slot of SAVE_SLOTS) {
+    const savedState = getSavedStateForSlot(slot);
     const dateCell = document.getElementById(`${slot}-date`);
-    if (dateCell) dateCell.textContent = formattedDate;
+    if (!savedState) {
+      if (dateCell) dateCell.textContent = t('ui.common.empty', null, 'Empty');
+      if (repairedDates[slot] !== undefined) {
+        delete repairedDates[slot];
+      }
+      continue;
+    }
+
+    const timestamp = getSaveSlotTimestamp(slot, saveSlotDates);
+    if (timestamp !== null) {
+      const date = new Date(timestamp);
+      const formattedDate = formatDate(date);
+      if (dateCell) dateCell.textContent = formattedDate;
+      repairedDates[slot] = timestamp;
+    }
   }
+
+  writeSaveSlotDates(repairedDates);
+
   const preRow = document.getElementById('pretravel-row');
   if (preRow) {
-    if (saveSlotDates.pretravel) {
+    if (getSavedStateForSlot('pretravel')) {
       preRow.classList.remove('hidden');
     } else {
       preRow.classList.add('hidden');
@@ -1091,45 +1160,47 @@ function formatDate(date) {
 
 // Delete a save slot date
 function deleteSaveSlotDate(slot) {
-  try {
-    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-    delete saveSlotDates[slot];
-    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
-  } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
-  }
+  const saveSlotDates = readSaveSlotDates();
+  delete saveSlotDates[slot];
+  writeSaveSlotDates(saveSlotDates);
 }
 
 // Load the most recent save
 function loadMostRecentSave() {
   loadSaveSlotDates();
 
-  let saveSlotDates = {};
-  try {
-    saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-  } catch (e) {
-    console.warn('Unable to access localStorage for most recent save:', e);
-    return false;
-  }
-  let mostRecentSlot = null;
-  let mostRecentTimestamp = null;
+  const saveSlotDates = readSaveSlotDates();
+  const candidates = [];
+  const candidateSlots = new Set();
 
-  for (const slot in saveSlotDates) {
-    const timestamp = saveSlotDates[slot];
-    if (mostRecentTimestamp === null || timestamp > mostRecentTimestamp) {
-      mostRecentSlot = slot;
-      mostRecentTimestamp = timestamp;
+  for (const slot of SAVE_SLOTS) {
+    const timestamp = getSaveSlotTimestamp(slot, saveSlotDates);
+    if (timestamp === null) {
+      continue;
+    }
+    candidates.push({ slot, timestamp });
+    candidateSlots.add(slot);
+  }
+
+  candidates.sort((a, b) => b.timestamp - a.timestamp);
+
+  for (const slot of SAVE_FALLBACK_LOAD_ORDER) {
+    if (!candidateSlots.has(slot) && getSavedStateForSlot(slot)) {
+      candidates.push({ slot, timestamp: 0 });
+      candidateSlots.add(slot);
     }
   }
 
-  if (mostRecentSlot) {
-    loadGame(`gameState_${mostRecentSlot}`, recreate = false);
-    console.log(`Loaded most recent save from slot ${mostRecentSlot}.`);
-    return true;
-  } else {
-    console.log('No save slots found. Starting a new game.');
-    return false;
+  for (const candidate of candidates) {
+    const loaded = loadGame(`gameState_${candidate.slot}`, false);
+    if (loaded) {
+      console.log(`Loaded most recent save from slot ${candidate.slot}.`);
+      return true;
+    }
   }
+
+  console.log('No valid save slots found. Starting a new game.');
+  return false;
 }
 
 const AUTOSAVE_INTERVAL_OPTIONS = [30, 60, 120, 300, 900, 1800, 3600, 0];
