@@ -5922,7 +5922,7 @@ setLanguageData({
           refactorButton: 'Refactor',
           refactorConfirm: 'Refactor {label}?\n\nThis will reset current MP points to 0, halve current purchases ({purchases} -> {halved}), increase max purchases to {max}, and raise MP cost per purchase to {cost}.\n\nProceed?',
           adaptationPointsLabel: 'Adaptation Points:',
-          adaptationPointsTooltip: 'Only available with Warp-assembly Refactor. When you refactor an item, MP removed by that refactor is banked here. Future MP gains are doubled by spending from this pool until it reaches 0.',
+          adaptationPointsTooltip: 'Only available with Warp-assembly Refactor. When you refactor an item, available MP lost from that refactor is banked here. Future MP gains are doubled by spending from this pool until it reaches 0.',
           summary: {
             cumulativePopulation: 'Cumulative Population',
             assigned: 'Assigned',
