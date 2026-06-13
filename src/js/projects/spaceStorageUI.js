@@ -47,6 +47,9 @@ const SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES = new Set([
   'atmosphericMethane',
   'atmosphericAmmonia'
 ]);
+const SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES = new Set([
+  'graphite'
+]);
 
 function getSpaceStorageResourceLabel(option) {
   return getSpaceStorageUIText(
@@ -361,6 +364,9 @@ function renderSpaceStorageUI(project, container) {
   let pressureWithdrawLimitRow = cachedCaps.pressureWithdrawLimitRow;
   let pressureWithdrawLimitInput = cachedCaps.pressureWithdrawLimitInput;
   let pressureWithdrawLimitLabel = cachedCaps.pressureWithdrawLimitLabel;
+  let amountWithdrawLimitRow = cachedCaps.amountWithdrawLimitRow;
+  let amountWithdrawLimitInput = cachedCaps.amountWithdrawLimitInput;
+  let amountWithdrawLimitLabel = cachedCaps.amountWithdrawLimitLabel;
   let scopeExpansionsCheckbox = cachedCaps.scopeExpansionsCheckbox;
   let scopeTransfersCheckbox = cachedCaps.scopeTransfersCheckbox;
   let scopeConsumptionCheckbox = cachedCaps.scopeConsumptionCheckbox;
@@ -662,6 +668,39 @@ function renderSpaceStorageUI(project, container) {
     pressureWithdrawLimitInputGroup.append(pressureWithdrawLimitInput, pressureWithdrawLimitUnit);
     pressureWithdrawLimitRow.append(pressureWithdrawLimitLabel, pressureWithdrawLimitInputGroup);
 
+    amountWithdrawLimitRow = document.createElement('div');
+    amountWithdrawLimitRow.classList.add('space-storage-settings-row');
+    amountWithdrawLimitLabel = document.createElement('label');
+    amountWithdrawLimitLabel.classList.add('space-storage-settings-label');
+    amountWithdrawLimitLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalAmount', 'Max withdrawal amount:');
+    const amountWithdrawLimitInfo = document.createElement('span');
+    amountWithdrawLimitInfo.classList.add('info-tooltip-icon');
+    amountWithdrawLimitInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      amountWithdrawLimitInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalAmountTooltip', 'When withdrawing this resource from space storage, stop once the destination amount reaches this value. Set to 0 for no amount limit.')
+    );
+    amountWithdrawLimitLabel.appendChild(amountWithdrawLimitInfo);
+    amountWithdrawLimitInput = document.createElement('input');
+    amountWithdrawLimitInput.type = 'text';
+    amountWithdrawLimitInput.inputMode = 'decimal';
+    amountWithdrawLimitInput.classList.add('space-storage-settings-input');
+    wireStringNumberInput(amountWithdrawLimitInput, {
+      datasetKey: 'spaceStorageAmountWithdrawLimit',
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (parsed) => {
+        const normalized = Math.max(0, parsed);
+        return normalized >= 1e6 ? formatNumber(normalized, true, 3) : String(normalized);
+      },
+      onValue: (parsed) => {
+        projectElements[project.name].amountWithdrawLimitDraft = parsed;
+      },
+    });
+    amountWithdrawLimitRow.append(amountWithdrawLimitLabel, amountWithdrawLimitInput);
+
     const reserveScopeRow = document.createElement('div');
     reserveScopeRow.classList.add('space-storage-settings-row');
     reserveScopeRow.style.alignItems = 'flex-start';
@@ -738,6 +777,7 @@ function renderSpaceStorageUI(project, container) {
       limitBiomassDensityWithdrawalsRow,
       respectImportLimitsRow,
       pressureWithdrawLimitRow,
+      amountWithdrawLimitRow,
       reserveModeRow,
       reserveValueRow,
       reserveScopeRow,
@@ -851,6 +891,7 @@ function renderSpaceStorageUI(project, container) {
       project.setRespectImportProjectLimits(key, projectElements[project.name].respectImportLimitsDraft === true);
       project.setLimitWithdrawalsToMaxBiomassDensity(key, projectElements[project.name].limitBiomassDensityWithdrawalsDraft === true);
       project.setPressureWithdrawLimitPa(key, projectElements[project.name].pressureWithdrawLimitDraft);
+      project.setAmountWithdrawLimit(key, projectElements[project.name].amountWithdrawLimitDraft);
       projectElements[project.name].capDraftDirty = false;
       projectElements[project.name].reserveDraftDirty = false;
       closeCapWindow();
@@ -938,6 +979,7 @@ function renderSpaceStorageUI(project, container) {
     projectElements[project.name].respectImportLimitsDraft = project.shouldRespectImportProjectLimits(resourceKey);
     projectElements[project.name].limitBiomassDensityWithdrawalsDraft = project.shouldLimitWithdrawalsToMaxBiomassDensity(resourceKey);
     projectElements[project.name].pressureWithdrawLimitDraft = project.getPressureWithdrawLimitPa(resourceKey);
+    projectElements[project.name].amountWithdrawLimitDraft = project.getAmountWithdrawLimit(resourceKey);
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
     capValueInput.value = capSetting.mode === 'percent' || capSetting.mode === 'weight'
@@ -965,9 +1007,15 @@ function renderSpaceStorageUI(project, container) {
     const pressureWithdrawLimit = projectElements[project.name].pressureWithdrawLimitDraft;
     pressureWithdrawLimitInput.dataset.spaceStoragePressureWithdrawLimit = String(pressureWithdrawLimit);
     pressureWithdrawLimitInput.value = formatNumber(Math.max(0, pressureWithdrawLimit), true, 2);
+    const amountWithdrawLimit = projectElements[project.name].amountWithdrawLimitDraft;
+    amountWithdrawLimitInput.dataset.spaceStorageAmountWithdrawLimit = String(amountWithdrawLimit);
+    amountWithdrawLimitInput.value = amountWithdrawLimit >= 1e6
+      ? formatNumber(Math.max(0, amountWithdrawLimit), true, 3)
+      : String(Math.max(0, amountWithdrawLimit));
     limitBiomassDensityWithdrawalsRow.style.display = resourceKey === 'biomass' ? '' : 'none';
     respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(resourceKey) ? '' : 'none';
     pressureWithdrawLimitRow.style.display = SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
+    amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
     updateCapInputState();
     updateReserveInputState();
     updateCapResourceValue();
@@ -1294,6 +1342,9 @@ function renderSpaceStorageUI(project, container) {
     pressureWithdrawLimitRow,
     pressureWithdrawLimitInput,
     pressureWithdrawLimitLabel,
+    amountWithdrawLimitRow,
+    amountWithdrawLimitInput,
+    amountWithdrawLimitLabel,
     scopeExpansionsCheckbox,
     scopeTransfersCheckbox,
     scopeConsumptionCheckbox,
@@ -1656,6 +1707,16 @@ function updateSpaceStorageUI(project) {
         els.pressureWithdrawLimitInput.value = formatNumber(Math.max(0, pressureWithdrawLimit), true, 2);
       }
       els.pressureWithdrawLimitRow.style.display = SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
+    }
+    if (els.amountWithdrawLimitInput) {
+      const amountWithdrawLimit = els.amountWithdrawLimitDraft || 0;
+      if (els.amountWithdrawLimitInput !== document.activeElement) {
+        els.amountWithdrawLimitInput.dataset.spaceStorageAmountWithdrawLimit = String(amountWithdrawLimit);
+        els.amountWithdrawLimitInput.value = amountWithdrawLimit >= 1e6
+          ? formatNumber(Math.max(0, amountWithdrawLimit), true, 3)
+          : String(Math.max(0, amountWithdrawLimit));
+      }
+      els.amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
     }
     if (els.limitBiomassDensityWithdrawalsCheckbox) {
       els.limitBiomassDensityWithdrawalsCheckbox.checked = els.limitBiomassDensityWithdrawalsDraft === true;

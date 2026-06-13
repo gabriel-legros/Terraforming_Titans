@@ -15,7 +15,8 @@ const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceCaps',
   'resourceImportLimitRespects',
   'resourceBiomassDensityWithdrawLimits',
-  'resourcePressureWithdrawLimits'
+  'resourcePressureWithdrawLimits',
+  'resourceAmountWithdrawLimits'
 ]);
 const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATION_KEYS = new Set([
   'transferMethod',
@@ -715,6 +716,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const importLimitSource = source.resourceImportLimitRespects || {};
     const biomassDensityLimitSource = source.resourceBiomassDensityWithdrawLimits || {};
     const pressureLimitSource = source.resourcePressureWithdrawLimits || {};
+    const amountLimitSource = source.resourceAmountWithdrawLimits || {};
     filtered.spaceStorageSingleResourceKey = resourceKey;
     if (Object.prototype.hasOwnProperty.call(source, 'mode')) {
       filtered.mode = source.mode;
@@ -785,6 +787,13 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         };
       }
     }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourceAmountWithdrawLimits')) {
+      if (Object.prototype.hasOwnProperty.call(amountLimitSource, resourceKey)) {
+        filtered.resourceAmountWithdrawLimits = {
+          [resourceKey]: this.deepClone(amountLimitSource[resourceKey])
+        };
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(source, 'respectImportProjectLimits')) {
       filtered.resourceImportLimitRespects = {
         [resourceKey]: source.respectImportProjectLimits === true
@@ -813,6 +822,16 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourcePressureWithdrawLimitPa')) {
       filtered.resourcePressureWithdrawLimits = {
         [resourceKey]: source.spaceStorageSingleResourcePressureWithdrawLimitPa
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'amountWithdrawLimit')) {
+      filtered.resourceAmountWithdrawLimits = {
+        [resourceKey]: source.amountWithdrawLimit
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceAmountWithdrawLimit')) {
+      filtered.resourceAmountWithdrawLimits = {
+        [resourceKey]: source.spaceStorageSingleResourceAmountWithdrawLimit
       };
     }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
@@ -994,6 +1013,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const importLimitSource = settings.resourceImportLimitRespects || {};
     const biomassDensityLimitSource = settings.resourceBiomassDensityWithdrawLimits || {};
     const pressureLimitSource = settings.resourcePressureWithdrawLimits || {};
+    const amountLimitSource = settings.resourceAmountWithdrawLimits || {};
     const hasTransferMode = Object.prototype.hasOwnProperty.call(settings, 'mode')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
     const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'selected')
@@ -1006,13 +1026,16 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity');
     const hasPressureLimit = Object.prototype.hasOwnProperty.call(settings, 'pressureWithdrawLimitPa')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourcePressureWithdrawLimitPa');
+    const hasAmountLimit = Object.prototype.hasOwnProperty.call(settings, 'amountWithdrawLimit')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceAmountWithdrawLimit');
     const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
     const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
     const weightHasKey = Object.prototype.hasOwnProperty.call(weightSource, resourceKey);
     const importLimitHasKey = Object.prototype.hasOwnProperty.call(importLimitSource, resourceKey);
     const biomassDensityLimitHasKey = Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey);
     const pressureLimitHasKey = Object.prototype.hasOwnProperty.call(pressureLimitSource, resourceKey);
-    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !biomassDensityLimitHasKey && !pressureLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits && !hasBiomassDensityLimit && !hasPressureLimit) {
+    const amountLimitHasKey = Object.prototype.hasOwnProperty.call(amountLimitSource, resourceKey);
+    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !biomassDensityLimitHasKey && !pressureLimitHasKey && !amountLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits && !hasBiomassDensityLimit && !hasPressureLimit && !hasAmountLimit) {
       return false;
     }
 
@@ -1023,6 +1046,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const beforeRespectImportLimits = project.resourceImportLimitRespects?.[resourceKey] === true;
     const beforeBiomassDensityLimit = project.resourceBiomassDensityWithdrawLimits?.[resourceKey] === true;
     const beforePressureLimit = project.resourcePressureWithdrawLimits?.[resourceKey];
+    const beforeAmountLimit = project.resourceAmountWithdrawLimits?.[resourceKey];
     const canonicalCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     const beforeSelectedResourceCount = Array.isArray(project.selectedResources)
       ? project.selectedResources.filter((entry) => entry?.resource === resourceKey).length
@@ -1116,6 +1140,18 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
           : settings.spaceStorageSingleResourcePressureWithdrawLimitPa);
       project.setPressureWithdrawLimitPa(resourceKey, pressureLimit);
       changed = changed || !this.areSettingsEqual(beforePressureLimit, project.resourcePressureWithdrawLimits?.[resourceKey]);
+    }
+    if (amountLimitHasKey || hasAmountLimit) {
+      if (!project.resourceAmountWithdrawLimits) {
+        project.resourceAmountWithdrawLimits = {};
+      }
+      const amountLimit = amountLimitHasKey
+        ? amountLimitSource[resourceKey]
+        : (Object.prototype.hasOwnProperty.call(settings, 'amountWithdrawLimit')
+          ? settings.amountWithdrawLimit
+          : settings.spaceStorageSingleResourceAmountWithdrawLimit);
+      project.setAmountWithdrawLimit(resourceKey, amountLimit);
+      changed = changed || !this.areSettingsEqual(beforeAmountLimit, project.resourceAmountWithdrawLimits?.[resourceKey]);
     }
     if (hasSelectedFlag) {
       if (!Array.isArray(project.selectedResources)) {
