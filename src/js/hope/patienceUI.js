@@ -20,6 +20,7 @@ const PatienceUI = {
     timerValueEl: null,
     spendInputEl: null,
     spendButtonEl: null,
+    spendHeaderEl: null,
     spendPreviewEl: null,
     meterFillEl: null,
     gainValueEl: null,
@@ -73,6 +74,7 @@ const PatienceUI = {
         this.timerMetaEl = cards[2] ? cards[2].querySelector('.patience-card-meta') : null;
         this.spendInputEl = document.getElementById('patience-spend-input');
         this.spendButtonEl = document.getElementById('patience-spend-button');
+        this.spendHeaderEl = this.container.querySelector('.patience-spend-card .patience-card-label');
         this.spendPreviewEl = document.getElementById('patience-spend-preview');
         this.meterFillEl = this.container.querySelector('.patience-meter-fill');
         this.gainValueEl = cards[1] ? cards[1].querySelector('.patience-card-value') : null;
@@ -256,10 +258,6 @@ const PatienceUI = {
 
         const spendHeader = document.createElement('div');
         spendHeader.className = 'patience-card-label';
-        spendHeader.textContent = getPatienceText(
-            'ui.hope.patiencePanel.spendDescription',
-            'Convert patience into net metal, superalloys, superconductors, advanced research, O\'Neill cylinders, faith conversion, and Warp Gate Command/Network progress based on current production.'
-        );
         spendCard.appendChild(spendHeader);
 
         const spendRow = document.createElement('div');
@@ -312,6 +310,7 @@ const PatienceUI = {
         this.timerMetaEl = timerMeta;
         this.spendInputEl = spendInput;
         this.spendButtonEl = spendButton;
+        this.spendHeaderEl = spendHeader;
         this.spendPreviewEl = spendPreview;
         this.meterFillEl = meterFill;
         this.gainValueEl = gainValue;
@@ -321,6 +320,7 @@ const PatienceUI = {
         this.saveFileButtonEl = saveFileButton;
         this.saveClipboardButtonEl = saveClipboardButton;
         this.updateSpendPreview();
+        this.updateSpendDescription();
     },
 
     /**
@@ -431,9 +431,11 @@ const PatienceUI = {
             advancedResearchGain,
             metalGain,
             oneillGain,
-            faithGains
+            faithGains,
+            warpGateCommandAdvance,
+            warpGateNetworkAdvance
         } = patienceManager.calculateSpendGains(hours);
-        const wgcAdvance = this.getWgcAdvancePreview(hours);
+        const wgcAdvance = this.getWgcAdvancePreview(warpGateCommandAdvance, warpGateNetworkAdvance);
         const lines = [];
 
         const metalResource = resources.colony.metal;
@@ -659,7 +661,9 @@ const PatienceUI = {
                 gains.advancedResearchGain > 0 ||
                 gains.oneillGain > 0 ||
                 gains.faithGains.worldBelieverGain > 0 ||
-                gains.faithGains.galacticBelieverGain > 0
+                gains.faithGains.galacticBelieverGain > 0 ||
+                gains.warpGateCommandAdvance ||
+                gains.warpGateNetworkAdvance
             );
             this.spendButtonEl.disabled = !canSpend;
         }
@@ -672,18 +676,69 @@ const PatienceUI = {
 
         // Update preview on each render
         this.updateSpendPreview();
+        this.updateSpendDescription();
+    },
+
+    getSpendGainLabel(id) {
+        const labels = {
+            metal: getPatienceText('ui.hope.patiencePanel.spendGainLabels.metal', 'net metal'),
+            superalloys: getPatienceText('ui.hope.patiencePanel.spendGainLabels.superalloys', 'superalloys'),
+            superconductors: getPatienceText('ui.hope.patiencePanel.spendGainLabels.superconductors', 'superconductors'),
+            advancedResearch: getPatienceText('ui.hope.patiencePanel.spendGainLabels.advancedResearch', 'advanced research'),
+            oneillCylinders: getPatienceText('ui.hope.patiencePanel.spendGainLabels.oneillCylinders', 'O\'Neill cylinders'),
+            faithConversion: getPatienceText('ui.hope.patiencePanel.spendGainLabels.faithConversion', 'faith conversion'),
+            warpGateProgress: getPatienceText('ui.hope.patiencePanel.spendGainLabels.warpGateProgress', 'Warp Gate Command/Network progress')
+        };
+        return labels[id];
+    },
+
+    formatSpendGainList(labels) {
+        if (labels.length === 1) {
+            return labels[0];
+        }
+        if (labels.length === 2) {
+            return getPatienceText('ui.hope.patiencePanel.spendGainListPair', '{first} and {second}', {
+                first: labels[0],
+                second: labels[1]
+            });
+        }
+        let list = labels[0];
+        for (let i = 1; i < labels.length - 1; i += 1) {
+            list = getPatienceText('ui.hope.patiencePanel.spendGainListAppend', '{list}, {item}', {
+                list,
+                item: labels[i]
+            });
+        }
+        return getPatienceText('ui.hope.patiencePanel.spendGainListFinal', '{list}, and {item}', {
+            list,
+            item: labels[labels.length - 1]
+        });
+    },
+
+    updateSpendDescription() {
+        if (!this.spendHeaderEl || !patienceManager) return;
+
+        const gainIds = patienceManager.getEverPossibleSpendGainIds();
+        const labels = [];
+        for (let i = 0; i < gainIds.length; i += 1) {
+            labels.push(this.getSpendGainLabel(gainIds[i]));
+        }
+
+        const text = labels.length
+            ? getPatienceText('ui.hope.patiencePanel.spendDescriptionKnown', 'Convert patience into {gains} based on current production.', {
+                gains: this.formatSpendGainList(labels)
+            })
+            : getPatienceText('ui.hope.patiencePanel.spendDescriptionEmpty', 'Convert patience based on current production.');
+        if (this.spendHeaderEl.textContent !== text) {
+            this.spendHeaderEl.textContent = text;
+        }
     }
 };
 
 /**
  * Build the Warp Gate Command fast-forward preview text
  */
-PatienceUI.getWgcAdvancePreview = function(hours) {
-    if (hours <= 0) return '';
-
-    const wgcAdvance = warpGateCommand.enabled;
-    const wgnAdvance = warpGateNetworkManager.isBooleanFlagSet('warpGateFabrication') && galaxyManager.enabled;
-
+PatienceUI.getWgcAdvancePreview = function(wgcAdvance, wgnAdvance) {
     if (!wgcAdvance && !wgnAdvance) return '';
 
     if (wgcAdvance && wgnAdvance) {
