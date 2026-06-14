@@ -524,6 +524,9 @@ const GalaxyOperationUI = (() => {
         if (!sector) {
             return;
         }
+        if (GalaxySector.isFullyControlled(sector, faction)) {
+            return;
+        }
         const hasStronghold = manager.hasNeighboringStronghold
             ? manager.hasNeighboringStronghold(uhfFactionId, selection.q, selection.r)
             : false;
@@ -1160,27 +1163,7 @@ const GalaxyOperationUI = (() => {
             : 'uhf';
         const faction = manager.getFaction(fallbackFactionId);
         const uhfFactionId = faction?.id || fallbackFactionId;
-        if (GalaxySector.isFullyControlled(sector, faction)) {
-            operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = getOperationsText('sectorAlreadyControlled', {}, 'Fully controlled by UHF.');
-            operationsForm.classList.add('is-hidden');
-            operationsCostValue.textContent = '0';
-            operationsStatusMessage.textContent = '';
-            if (operationsDurationValue) {
-                operationsDurationValue.textContent = '—';
-            }
-            if (operationsTargetRow) {
-                operationsTargetRow.classList.add('is-hidden');
-            }
-            if (operationsTargetFaction) {
-                operationsTargetFaction.textContent = '—';
-            }
-            if (operationsTargetDefense) {
-                operationsTargetDefense.textContent = '0';
-            }
-            disableAllControls();
-            return;
-        }
+        const sectorFullyControlled = GalaxySector.isFullyControlled(sector, faction);
         const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(selection.key);
         let assignment = clampAssignment(stored, availablePower);
@@ -1210,7 +1193,7 @@ const GalaxyOperationUI = (() => {
             ? manager.hasNeighboringStronghold(uhfFactionId, selection.q, selection.r)
             : false;
         const hasPresence = Number(sector.getControlValue ? sector.getControlValue(uhfFactionId) : 0) > 0;
-        const canLaunchOnSelection = hasStronghold || hasPresence;
+        const canLaunchOnSelection = !sectorFullyControlled && (hasStronghold || hasPresence);
 
         const sectorPower = manager.getSectorDefensePower
             ? manager.getSectorDefensePower(selection.key, uhfFactionId, targetFactionId)
@@ -1249,7 +1232,7 @@ const GalaxyOperationUI = (() => {
             targetFactionId
         });
 
-        const successChance = assignment > 0
+        const successChance = !sectorFullyControlled && assignment > 0
             ? resolveOperationSuccessChance(manager, selection.key, assignment, uhfFactionId, targetFactionId)
             : 0;
         const meetsAutoThreshold = requiredThreshold <= 0 ? assignment > 0 : assignment >= requiredThreshold;
@@ -1265,33 +1248,37 @@ const GalaxyOperationUI = (() => {
                 : `${Math.round(successChance * 100)}%`;
         }
         if (operationsSummaryItems.gain) {
-            const gainFraction = resolveOperationControlGainFraction(manager, {
-                sectorKey: selection.key,
-                factionId: uhfFactionId,
-                targetFactionId,
-                assignedPower: assignment,
-                reservedPower: assignment,
-                offensePower: assignment,
-                defensePower: sectorPower,
-                status: operationRunning ? 'running' : 'pending'
-            });
+            const gainFraction = sectorFullyControlled
+                ? 0
+                : resolveOperationControlGainFraction(manager, {
+                    sectorKey: selection.key,
+                    factionId: uhfFactionId,
+                    targetFactionId,
+                    assignedPower: assignment,
+                    reservedPower: assignment,
+                    offensePower: assignment,
+                    defensePower: sectorPower,
+                    status: operationRunning ? 'running' : 'pending'
+                });
             operationsSummaryItems.gain.textContent = `+${Math.round(gainFraction * 100)}%`;
         }
         if (operationsSummaryItems.loss) {
             const successLoss = lossEstimate?.successLoss;
             const failureLoss = lossEstimate?.failureLoss;
-            const lossDisplay = successChance > 0
-                ? (Number.isFinite(successLoss) ? successLoss : assignment)
-                : (Number.isFinite(failureLoss) ? failureLoss : assignment);
+            const lossDisplay = sectorFullyControlled
+                ? 0
+                : (successChance > 0
+                    ? (Number.isFinite(successLoss) ? successLoss : assignment)
+                    : (Number.isFinite(failureLoss) ? failureLoss : assignment));
             operationsSummaryItems.loss.textContent = getOperationsText('projectedLossesValue', { value: formatNumber(lossDisplay, false, 2) }, `-${formatNumber(lossDisplay, false, 2)} power`);
         }
 
         const hasFleetPower = availablePower > 0;
         const hasAssignment = assignment > 0;
         const hasAntimatter = !!antimatterResource && antimatterValue >= antimatterCost;
-        const insufficientAntimatter = hasAssignment && !hasAntimatter;
+        const insufficientAntimatter = !sectorFullyControlled && hasAssignment && !hasAntimatter;
         const hasChance = successChance > 0;
-        let launchBlocked = !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
+        let launchBlocked = sectorFullyControlled || !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
         let statusMessage = '';
 
         if (operationRunning) {
@@ -1342,7 +1329,9 @@ const GalaxyOperationUI = (() => {
                 button.disabled = !hasFleetPower;
             });
 
-            if (!hasFleetPower) {
+            if (sectorFullyControlled) {
+                statusMessage = getOperationsText('sectorAlreadyControlled', {}, 'Fully controlled by UHF.');
+            } else if (!hasFleetPower) {
                 statusMessage = getOperationsText('noFleetPowerAvailable', {}, 'No fleet power available for deployment.');
             } else if (!hasAssignment) {
                 statusMessage = getOperationsText('assignFleetPower', {}, 'Assign fleet power to begin an operation.');
