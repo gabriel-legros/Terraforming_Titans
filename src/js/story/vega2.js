@@ -208,8 +208,8 @@ progressVega2.chapters.push(
 	    chapter: 14,
 	    narrative: (
 	      "System Message: New controls enabled.\n" +
-	      "'Reverse' mode is now available on space mirrors (with the oversight research), greenhouse gas factories, and dust factories.\n" +
-	      "Evelyn : 'In plain terms: mirrors can help cool, GHG plants can pull gas back down and have an alternate mode for Calcite Aerosol, and dust work crews can clean up what we laid down and tune dust color as needed.  Good. Useful upgrades.  Should make our work easier.  Just note that it won't work on Hyperion Lanterns HOPE.  They produce light, not the other way around.'"
+	      "'Reverse' mode is now available on space mirrors (with the mirror oversight research), greenhouse gas factories, and dust factories.\n" +
+	      "Evelyn : 'In plain terms: mirrors can help cool, GHG plants can pull gas back down and have an alternate mode for Calcite Aerosol, and dust work crews can clean up what we laid down and tune dust color as needed (with construction office research).  Good. Useful upgrades.  Should make our work easier.  Just note that it won't work on Hyperion Lanterns HOPE.  They produce light, not the other way around.'"
 	    ),
 	    prerequisites: ['chapter14.3'],
 	    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }],
