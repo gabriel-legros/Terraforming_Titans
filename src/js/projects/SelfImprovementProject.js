@@ -2,6 +2,14 @@ const SELF_IMPROVEMENT_MAX_CORES = 1e21;
 const SELF_IMPROVEMENT_FACTORY_EFFICIENCY_CORES = 1e9;
 const SELF_IMPROVEMENT_CORE_COST = 100;
 const SELF_IMPROVEMENT_EFFECT_SOURCE = 'self-improvement';
+const SELF_IMPROVEMENT_RESEARCH_NUCLEAR_CORES = 10;
+const SELF_IMPROVEMENT_RESEARCH_SUPERCONDUCTORS_CORES = 500;
+const SELF_IMPROVEMENT_RESEARCH_FUSION_CORES = 5_000;
+const SELF_IMPROVEMENT_RESEARCH_FUSION_1_CORES = 100_000;
+const SELF_IMPROVEMENT_RESEARCH_ANTIMATTER_BATTERY_CORES = 1_000_000;
+const SELF_IMPROVEMENT_RESEARCH_FUSION_2_CORES = 100_000_000;
+const SELF_IMPROVEMENT_RESEARCH_SUPERALLOYS_CORES = 10_000_000_000;
+const SELF_IMPROVEMENT_RESEARCH_SUPERALLOY_FUSION_1_CORES = 100_000_000_000;
 
 class SelfImprovementProject extends Project {
   constructor(config, name) {
@@ -123,14 +131,14 @@ class SelfImprovementProject extends Project {
 
   getResearchRows() {
     return [
-      { id: 'nuclear', threshold: 10, label: this.getText('research.nuclear', 'Nuclear reactor + closed loop') },
-      { id: 'superconductors', threshold: 500, label: this.getText('research.superconductors', 'Superconductor factories') },
-      { id: 'fusion', threshold: 5_000, label: this.getText('research.fusion', 'Fusion reactor') },
-      { id: 'fusion1', threshold: 100_000, label: this.getText('research.fusion1', 'Fusion reactor output x2') },
-      { id: 'antimatterBattery', threshold: 1_000_000, label: this.getText('research.antimatterBattery', 'Antimatter batteries') },
-      { id: 'fusion2', threshold: 10_000_0000, label: this.getText('research.fusion2', 'Fusion reactor output x2') },
-      { id: 'superalloys', threshold: 10_000_000_000, label: this.getText('research.superalloys', 'Superalloys') },
-      { id: 'superalloyFusion1', threshold: 100_000_000_000, label: this.getText('research.superalloyFusion1', 'Superalloy fusion output x4') }
+      { id: 'nuclear', threshold: SELF_IMPROVEMENT_RESEARCH_NUCLEAR_CORES, label: this.getText('research.nuclear', 'Nuclear reactor + closed loop') },
+      { id: 'superconductors', threshold: SELF_IMPROVEMENT_RESEARCH_SUPERCONDUCTORS_CORES, label: this.getText('research.superconductors', 'Superconductor factories') },
+      { id: 'fusion', threshold: SELF_IMPROVEMENT_RESEARCH_FUSION_CORES, label: this.getText('research.fusion', 'Fusion reactor') },
+      { id: 'fusion1', threshold: SELF_IMPROVEMENT_RESEARCH_FUSION_1_CORES, label: this.getText('research.fusion1', 'Fusion reactor output x2') },
+      { id: 'antimatterBattery', threshold: SELF_IMPROVEMENT_RESEARCH_ANTIMATTER_BATTERY_CORES, label: this.getText('research.antimatterBattery', 'Antimatter batteries') },
+      { id: 'fusion2', threshold: SELF_IMPROVEMENT_RESEARCH_FUSION_2_CORES, label: this.getText('research.fusion2', 'Fusion reactor output x2') },
+      { id: 'superalloys', threshold: SELF_IMPROVEMENT_RESEARCH_SUPERALLOYS_CORES, label: this.getText('research.superalloys', 'Superalloys') },
+      { id: 'superalloyFusion1', threshold: SELF_IMPROVEMENT_RESEARCH_SUPERALLOY_FUSION_1_CORES, label: this.getText('research.superalloyFusion1', 'Superalloy fusion output x4') }
     ];
   }
 
@@ -208,7 +216,7 @@ class SelfImprovementProject extends Project {
 
   applyResearchUnlocks() {
     const effects = [];
-    if (this.cores >= 10) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_NUCLEAR_CORES) {
       effects.push(
         { target: 'building', targetId: 'nuclearPowerPlant', type: 'enable' },
         {
@@ -229,38 +237,38 @@ class SelfImprovementProject extends Project {
         }
       );
     }
-    if (this.cores >= 100) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_SUPERCONDUCTORS_CORES) {
       effects.push(
         { target: 'building', targetId: 'superconductorFactory', type: 'enable' },
         { target: 'resource', resourceType: 'colony', targetId: 'superconductors', type: 'enable' }
       );
     }
-    if (this.cores >= 1000) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_FUSION_CORES) {
       effects.push(
         { target: 'building', targetId: 'fusionPowerPlant', type: 'enable' },
         { target: 'resource', resourceType: 'colony', targetId: 'superconductors', type: 'enable' }
       );
     }
-    if (this.cores >= 10000) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_FUSION_1_CORES) {
       effects.push({ target: 'building', targetId: 'fusionPowerPlant', type: 'productionMultiplier', value: 2 });
     }
-    if (this.cores >= 100000) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_ANTIMATTER_BATTERY_CORES) {
       effects.push({ target: 'building', targetId: 'antimatterBattery', type: 'enable' });
     }
-    if (this.cores >= 1000000) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_FUSION_2_CORES) {
       effects.push(
         { target: 'building', targetId: 'fusionPowerPlant', type: 'productionMultiplier', value: 2 },
         { target: 'building', targetId: 'superalloyFusionReactor', type: 'productionMultiplier', value: 2 }
       );
     }
-    if (this.cores >= 10000000) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_SUPERALLOYS_CORES) {
       effects.push(
         { target: 'building', targetId: 'superalloyFoundry', type: 'enable' },
         { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' },
         { target: 'building', targetId: 'superalloyFusionReactor', type: 'enable' }
       );
     }
-    if (this.cores >= 100000000) {
+    if (this.cores >= SELF_IMPROVEMENT_RESEARCH_SUPERALLOY_FUSION_1_CORES) {
       effects.push({ target: 'building', targetId: 'superalloyFusionReactor', type: 'productionMultiplier', value: 4 });
     }
     for (let i = 0; i < effects.length; i += 1) {
