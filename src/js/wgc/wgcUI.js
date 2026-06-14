@@ -680,6 +680,21 @@ function closeRecruitDialog() {
   if (typeof updateWGCUI === 'function') updateWGCUI();
 }
 
+function getWGCAdjacentMemberSlot(teamIndex, slotIndex, direction) {
+  const teamCount = warpGateCommand.teams.length;
+  const slotCount = warpGateCommand.teams[teamIndex].length;
+  let rosterIndex = (teamIndex * slotCount) + slotIndex + direction;
+  while (rosterIndex >= 0 && rosterIndex < teamCount * slotCount) {
+    const nextTeamIndex = Math.floor(rosterIndex / slotCount);
+    const nextSlotIndex = rosterIndex % slotCount;
+    if (warpGateCommand.teams[nextTeamIndex][nextSlotIndex]) {
+      return { teamIndex: nextTeamIndex, slotIndex: nextSlotIndex };
+    }
+    rosterIndex += direction;
+  }
+  return null;
+}
+
 function openRecruitDialog(teamIndex, slotIndex, member) {
   closeRecruitDialog();
   if (member) member.isBeingEdited = true;
@@ -689,11 +704,37 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const win = document.createElement('div');
   win.classList.add('wgc-popup-window');
 
+  const titleRow = document.createElement('div');
+  titleRow.classList.add('wgc-member-dialog-title-row');
+
+  const previousSlot = member ? getWGCAdjacentMemberSlot(teamIndex, slotIndex, -1) : null;
+  const nextSlot = member ? getWGCAdjacentMemberSlot(teamIndex, slotIndex, 1) : null;
+
+  const previousButton = document.createElement('button');
+  previousButton.type = 'button';
+  previousButton.classList.add('wgc-member-rotate-button', 'wgc-member-rotate-left');
+  if (!member) previousButton.classList.add('wgc-member-rotate-placeholder');
+  previousButton.innerHTML = '&#9664;';
+  previousButton.disabled = !previousSlot;
+  previousButton.setAttribute('aria-label', getWGCText('previousMember', 'Previous member'));
+  titleRow.appendChild(previousButton);
+
   const title = document.createElement('h2');
   title.textContent = member
     ? getWGCText('editMember', 'Edit Member')
     : getWGCText('recruitMember', 'Recruit Member');
-  win.appendChild(title);
+  titleRow.appendChild(title);
+
+  const nextButton = document.createElement('button');
+  nextButton.type = 'button';
+  nextButton.classList.add('wgc-member-rotate-button', 'wgc-member-rotate-right');
+  if (!member) nextButton.classList.add('wgc-member-rotate-placeholder');
+  nextButton.innerHTML = '&#9654;';
+  nextButton.disabled = !nextSlot;
+  nextButton.setAttribute('aria-label', getWGCText('nextMember', 'Next member'));
+  titleRow.appendChild(nextButton);
+
+  win.appendChild(titleRow);
 
   const originalStats = member ? {
     power: member.power,
@@ -1025,12 +1066,10 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const buttonContainer = document.createElement('div');
   buttonContainer.classList.add('wgc-dialog-buttons');
 
-  const confirm = document.createElement('button');
-  confirm.textContent = getWGCText('confirm', 'Confirm');
-  confirm.addEventListener('click', () => {
+  const confirmRecruitDialog = () => {
     const firstName = firstNameField.value.trim();
     const lastName = lastNameField.value.trim();
-    if (!firstName) return;
+    if (!firstName) return false;
 
     if (member) {
       member.firstName = firstName;
@@ -1042,6 +1081,13 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
       warpGateCommand.recruitMember(teamIndex, slotIndex, m);
     }
     if (activeDialog) activeDialog._restoreStats = false;
+    return true;
+  };
+
+  const confirm = document.createElement('button');
+  confirm.textContent = getWGCText('confirm', 'Confirm');
+  confirm.addEventListener('click', () => {
+    if (!confirmRecruitDialog()) return;
     closeRecruitDialog();
     redrawWGCTeamCards();
   });
@@ -1055,6 +1101,21 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   win.appendChild(buttonContainer);
 
   if (member) {
+    previousButton.addEventListener('click', () => {
+      if (previousButton.disabled || !confirmRecruitDialog()) return;
+      const nextMember = warpGateCommand.teams[previousSlot.teamIndex][previousSlot.slotIndex];
+      closeRecruitDialog();
+      redrawWGCTeamCards();
+      openRecruitDialog(previousSlot.teamIndex, previousSlot.slotIndex, nextMember);
+    });
+    nextButton.addEventListener('click', () => {
+      if (nextButton.disabled || !confirmRecruitDialog()) return;
+      const nextMember = warpGateCommand.teams[nextSlot.teamIndex][nextSlot.slotIndex];
+      closeRecruitDialog();
+      redrawWGCTeamCards();
+      openRecruitDialog(nextSlot.teamIndex, nextSlot.slotIndex, nextMember);
+    });
+
     const dismiss = document.createElement('button');
     dismiss.textContent = getWGCText('dismiss', 'Dismiss');
     const opActive = warpGateCommand && warpGateCommand.operations &&

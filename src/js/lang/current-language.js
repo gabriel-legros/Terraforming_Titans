@@ -3551,6 +3551,8 @@ setLanguageData({
         buyButton: 'Buy ({cost}) {current} -> {next}',
         maxedButton: 'Maxed ({current})',
         editMember: 'Edit Member',
+        previousMember: 'Previous member',
+        nextMember: 'Next member',
         recruitMember: 'Recruit Member',
         firstNamePlaceholder: 'First Name (required)',
         lastNamePlaceholder: 'Last Name',

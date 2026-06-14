@@ -687,6 +687,13 @@
   opacity: 0.6;
 }
 
+.wgc-member-dialog-title-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+}
+
 .wgc-popup-window h2 {
   text-align: center;
   margin-top: 0;
@@ -728,6 +735,24 @@
 .wgc-popup-window .wgc-roll-name-button {
   width: 42px;
   padding: 4px 6px;
+}
+
+.wgc-popup-window .wgc-member-rotate-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--wgc-border-color);
+  line-height: 1;
+}
+
+.wgc-popup-window .wgc-member-rotate-button:disabled {
+  color: var(--wgc-text-dark);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.wgc-popup-window .wgc-member-rotate-placeholder {
+  visibility: hidden;
 }
 
 .wgc-popup-window .wgc-respec-button {
