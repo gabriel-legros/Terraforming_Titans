@@ -95,6 +95,8 @@ function initializeDefaultGlobals(){
   // Initialize resources
   resources = createResources(currentPlanetParameters.resources);
   createResourceDisplay(resources);
+  celestialParameters = currentPlanetParameters.celestialParameters;
+  terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
 
   // Initialize buildings
   buildings = initializeBuildings(buildingsParameters);
@@ -147,8 +149,6 @@ function initializeDefaultGlobals(){
   // Initialize StoryManager
   storyManager = new StoryManager(progressData);  // Pass the progressData object
 
-  celestialParameters = currentPlanetParameters.celestialParameters;
-  terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
   terraformingGraphsManager.reset();
   if (typeof window !== 'undefined') {

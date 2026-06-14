@@ -1542,6 +1542,7 @@ function attachAerostatBuoyancySection(container, structure) {
     !existing.container.isConnected ||
     existing.ownerStructure !== structure ||
     !existing.liftValue ||
+    !existing.altitudeValue ||
     !existing.poweredFlightRow ||
     !existing.poweredFlightValue ||
     !existing.mitigationValue ||
@@ -1612,6 +1613,24 @@ function attachAerostatBuoyancySection(container, structure) {
     liftRow.appendChild(liftInfo);
 
     body.appendChild(liftRow);
+
+    const altitudeRow = document.createElement('div');
+    altitudeRow.classList.add('colony-buoyancy-lift-row');
+
+    const altitudeLabel = document.createElement('span');
+    altitudeLabel.classList.add('colony-buoyancy-lift-label');
+    altitudeLabel.textContent = getAerostatText(
+      'ui.buildings.aerostat.currentAltitude',
+      'Current Altitude:'
+    );
+    altitudeRow.appendChild(altitudeLabel);
+
+    const altitudeValue = document.createElement('span');
+    altitudeValue.classList.add('colony-buoyancy-lift-value');
+    altitudeValue.textContent = getAerostatText('ui.buildings.aerostat.notAvailable', 'N/A');
+    altitudeRow.appendChild(altitudeValue);
+
+    body.appendChild(altitudeRow);
 
     const poweredFlightRow = document.createElement('div');
     poweredFlightRow.classList.add('colony-buoyancy-lift-row');
@@ -1810,6 +1829,7 @@ function attachAerostatBuoyancySection(container, structure) {
       liftValue,
       liftInfo,
       liftTooltip,
+      altitudeValue,
       poweredFlightRow,
       poweredFlightValue,
       mitigationValue,
@@ -1887,6 +1907,13 @@ function updateAerostatBuoyancySection(structure) {
     status.pressureBelow ? null : lift;
   const poweredFlightEnergy =
     structure.getAveragePoweredFlightEnergyPerActiveAerostat?.(lift, pressure) ?? 0;
+  const floorContext = terraforming.calculateOneAtmMaintenanceFloor();
+  const altitudeKm = Number.isFinite(floorContext.altitudeKm)
+    ? floorContext.altitudeKm
+    : Number.isFinite(floorContext.pressureKPa) &&
+      floorContext.pressureKPa < AEROSTAT_STANDARD_PRESSURE_PA / 1000
+      ? 0
+      : null;
 
   const baseBuildLimitRaw = structure._getBuildLimit?.() ?? null;
   const baseBuildLimit = Number.isFinite(baseBuildLimitRaw)
@@ -2017,6 +2044,20 @@ function updateAerostatBuoyancySection(structure) {
       )}`;
     }
     setTooltipText(ui.liftTooltip, title, ui, 'liftTooltipText');
+  }
+
+  if (ui.altitudeValue) {
+    ui.altitudeValue.textContent =
+      Number.isFinite(altitudeKm) && Number.isFinite(floorContext.penalty)
+        ? getAerostatText(
+            'ui.buildings.aerostat.currentAltitudeValue',
+            '{altitude} km (penalty x{penalty})',
+            {
+              altitude: formatNumber(altitudeKm, false, 2),
+              penalty: formatNumber(floorContext.penalty, false, 2)
+            }
+          )
+        : getAerostatText('ui.buildings.aerostat.notAvailable', 'N/A');
   }
 
   if (ui.poweredFlightRow) {

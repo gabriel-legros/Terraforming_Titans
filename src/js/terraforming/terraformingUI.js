@@ -459,7 +459,7 @@ function getTemperatureMaintenanceImmuneTooltip() {
           altitude: altitudeText,
           temperature: formatNumber(toDisplayTemperature(floorContext.temperatureK), false, 2),
           unit,
-          penalty: floorContext.penalty.toFixed(2),
+          penalty: formatNumber(floorContext.penalty, false, 2),
         }
       )
     );
@@ -498,7 +498,7 @@ function getTemperatureMaintenanceFloorTooltip(floorContext) {
     ? `${formatNumber(floorContext.pressureKPa, false, 2)} kPa`
     : getTerraformingSummaryText('notAvailable', 'N/A');
   const floorPenalty = Number.isFinite(floorContext?.penalty)
-    ? `x${floorContext.penalty.toFixed(2)}`
+    ? `x${formatNumber(floorContext.penalty, false, 2)}`
     : getTerraformingSummaryText('notAvailable', 'N/A');
 
   return [
@@ -1601,12 +1601,12 @@ function createTemperatureBox(row) {
       if (penalty > 1) {
         els.maintenancePenalty.style.display = '';
         if (els.maintenancePenaltyValue) {
-          els.maintenancePenaltyValue.textContent = penalty.toFixed(2);
+          els.maintenancePenaltyValue.textContent = formatNumber(penalty, false, 2);
         } else {
           els.maintenancePenalty.textContent = `${getTerraformingSummaryText(
             'temperature.labels.maintenanceMultiplier',
             'Maintenance cost multiplier from temperature : '
-          )}${penalty.toFixed(2)}`;
+          )}${formatNumber(penalty, false, 2)}`;
         }
         if (els.maintenancePenaltyTooltip) {
           setTooltipText(els.maintenancePenaltyTooltip, getTemperatureMaintenanceImmuneTooltip());
@@ -1628,13 +1628,13 @@ function createTemperatureBox(row) {
         );
         if (els.maintenanceFloorValue) {
           els.maintenanceFloorValue.textContent =
-            `${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
+            `${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
         } else {
           els.maintenanceFloor.textContent =
             `${getTerraformingSummaryText(
               'temperature.labels.oneAtmEstimate',
               '1 atm temperature estimate : '
-            )}${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
+            )}${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
         }
         if (els.maintenanceFloorTooltip) {
           setTooltipText(

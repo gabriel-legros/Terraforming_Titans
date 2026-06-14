@@ -753,6 +753,8 @@ setLanguageData({
         buoyancyTelemetryPending: 'Buoyancy telemetry pending.',
         detailsTitle: 'Aerostats Details',
         currentLift: 'Current Lift:',
+        currentAltitude: 'Current Altitude:',
+        currentAltitudeValue: '{altitude} km (penalty x{penalty})',
         temperatureMaintenanceMitigation: 'Temperature Maintenance Mitigation:',
         maximumAerostats: 'Maximum Aerostats:',
         maximumAerostatsWithBase: '{value} ({base} base{bonus})',
