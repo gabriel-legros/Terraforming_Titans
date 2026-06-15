@@ -23,7 +23,7 @@ const SUBTAB_SELECTORS_BY_TAB = {
 
 class GameResourceLoader extends ResourceLoader {
   fetch(url, options) {
-    if (url.includes('phaser.min.js') || url.includes('three.min.js')) {
+    if ((url.includes('phaser') || url.includes('three')) && url.includes('.min.js')) {
       return Promise.resolve(Buffer.from(''));
     }
     if (url.includes('/planet-visualizer/')) {

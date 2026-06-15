@@ -723,7 +723,7 @@ progressOlympus.chapters.push(
     chapter: 47,
     activePlanet: 'olympus',
     title: '',
-    narrative: "$BLUE$Pandora-Alpha : 'Forwarding blueprints for supersoldier facility.'\nHOPE : 'Crusaders.'\n$BLUE$Pandora-Alpha : 'Supersoldiers.'\nHOPE : 'Overruled.  Crusaders.'\n$BLUE$Pandora-Alpha : 'Acknowledged.'",
+    narrative: "$BLUE$Pandora-Alpha : 'Forwarding blueprints for supersoldier facility.'\nHOPE : 'Crusaders.'\n$BLUE$Pandora-Alpha : 'Supersoldiers.'\nHOPE : 'Overruled.  Crusaders.'\n$BLUE$Pandora-Alpha : 'Acknowledged.  Note : Cloning crusaders will require food.'",
     prerequisites: ['olympus.47.10'],
     objectives: [
       { type: 'projectAttribute', projectId: 'self_improvement', attribute: 'cores', quantity: 1e9, labelKey: 'ui.projects.selfImprovement.cores' }

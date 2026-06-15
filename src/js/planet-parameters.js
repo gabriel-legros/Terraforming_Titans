@@ -1450,6 +1450,9 @@ const tartarusOverrides = {
     baseColor: '#3b3a4d',
   },
    "resources": {
+    surface: {
+      land: { initialValue: 21_330_660_136 },
+    },
     "atmospheric": {
       "carbonDioxide": {
         "initialValue": 22607199827770.934

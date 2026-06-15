@@ -933,31 +933,47 @@ function setSaveSlotStatus(slot, text) {
   }
 }
 
+function getSaveStorage() {
+  return window.electronSaveStorage || localStorage;
+}
+
+function readSaveStorageItem(key) {
+  return getSaveStorage().getItem(key);
+}
+
+function writeSaveStorageItem(key, value) {
+  return getSaveStorage().setItem(key, value);
+}
+
+function removeSaveStorageItem(key) {
+  return getSaveStorage().removeItem(key);
+}
+
 function readSaveSlotDates() {
   try {
-    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+    const saveSlotDates = JSON.parse(readSaveStorageItem('saveSlotDates')) || {};
     return saveSlotDates && saveSlotDates.constructor === Object ? saveSlotDates : {};
   } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
+    console.warn('Unable to access save storage for save slot dates:', e);
     return {};
   }
 }
 
 function writeSaveSlotDates(saveSlotDates) {
   try {
-    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+    writeSaveStorageItem('saveSlotDates', JSON.stringify(saveSlotDates));
     return true;
   } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
+    console.warn('Unable to access save storage for save slot dates:', e);
     return false;
   }
 }
 
 function getSavedStateForSlot(slot) {
   try {
-    return localStorage.getItem(`gameState_${slot}`);
+    return readSaveStorageItem(`gameState_${slot}`);
   } catch (e) {
-    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+    console.warn(`Unable to access save storage for slot ${slot}:`, e);
     return null;
   }
 }
@@ -988,14 +1004,14 @@ function getSaveSlotTimestamp(slot, saveSlotDates) {
 function saveGameToSlot(slot) {
   const saveDate = new Date();
   const gameState = getGameState(saveDate);
-  const genericFailure = t('ui.settings.saveFailedLocalStorage', null, 'SAVE FAILED: Game needs cookies/local storage permission.');
+  const genericFailure = t('ui.settings.saveFailedLocalStorage', null, 'SAVE FAILED: Unable to write save storage.');
   let saveFailedReason = '';
   try {
-    localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
+    writeSaveStorageItem(`gameState_${slot}`, JSON.stringify(gameState));
     console.log(`Game saved successfully to slot ${slot}.`);
   } catch (e) {
     saveFailedReason = e?.message || 'Unknown error';
-    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+    console.warn(`Unable to access save storage for slot ${slot}:`, e);
     setSaveSlotStatus(slot, genericFailure);
     if (slot === 'autosave') {
       updateAutosaveText(genericFailure);
@@ -1082,10 +1098,10 @@ function loadGameFromString() {
 // Delete save file from a specific slot
 function deleteSaveFileFromSlot(slot) {
   try {
-    localStorage.removeItem(`gameState_${slot}`);
+    removeSaveStorageItem(`gameState_${slot}`);
     console.log(`Save file deleted successfully from slot ${slot}.`);
   } catch (e) {
-    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+    console.warn(`Unable to access save storage for slot ${slot}:`, e);
   }
 
   // Clear the save date for the slot
