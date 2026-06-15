@@ -4487,11 +4487,11 @@ setLanguageData({
         description: 'Use your spaceships to recover carbon from C-type asteroids, brought back as CO2. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.',
       },
       waterSpaceMining: {
-        name: 'Ice and Water importation',
+        name: 'Ice and Water Importation',
         description: "Ships haul ice from space. If any zone is warm enough, it's delivered as liquid water there; otherwise it arrives frozen. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
       },
       nitrogenSpaceMining: {
-        name: 'Nitrogen harvesting',
+        name: 'Nitrogen Harvesting',
         description: 'Use your spaceships to recover nitrogen from the outer solar system. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.',
       },
       hydrogenSpaceMining: {
