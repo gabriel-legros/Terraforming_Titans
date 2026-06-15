@@ -1590,7 +1590,7 @@ const hadesOverrides = {
   },
   resources: {
     surface: {
-      land: { initialValue: 31_000_000_000 },
+      land: { initialValue: 31_415_926_536 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
