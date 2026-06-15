@@ -1,7 +1,17 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, session, shell } = require('electron');
 const path = require('path');
 
 const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.png');
+
+function openExternalUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'mailto:') {
+      shell.openExternal(url);
+    }
+  } catch (_error) {
+  }
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -25,7 +35,7 @@ function createWindow() {
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    openExternalUrl(url);
     return { action: 'deny' };
   });
 
@@ -33,7 +43,7 @@ function createWindow() {
     const targetUrl = event.url;
     if (!targetUrl.startsWith('file://')) {
       event.preventDefault();
-      shell.openExternal(targetUrl);
+      openExternalUrl(targetUrl);
     }
   });
 
@@ -42,7 +52,11 @@ function createWindow() {
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
+  app.setName('Terraforming Titans');
   app.setAppUserModelId('terraforming-titans');
+  session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(false);
+  });
   createWindow();
 
   app.on('activate', () => {
