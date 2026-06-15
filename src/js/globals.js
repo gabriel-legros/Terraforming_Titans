@@ -88,6 +88,7 @@ let gameSettings = {
   simplifyGoldenAsteroid: false,
   suppressFaith: false,
   disableFusionConsumptionScaling: false,
+  disableSpeedControls: false,
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
 };

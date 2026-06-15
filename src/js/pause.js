@@ -130,6 +130,13 @@
     if (!controls) {
       return;
     }
+    if (gameSettings.disableSpeedControls) {
+      controls.classList.add('hidden');
+      updatePauseMessage();
+      return;
+    }
+    controls.classList.remove('hidden');
+    updatePauseMessage();
     const activeSpeed = paused ? 0 : gameSpeed;
     GAME_SPEED_OPTIONS.forEach(option => {
       const button = controls._buttons.get(option.speed);
@@ -140,6 +147,26 @@
     });
   }
 
+  function updatePauseMessage() {
+    const container = document.getElementById('pause-container');
+    if (!container) {
+      return;
+    }
+    let pauseMessage = container._pauseMessage;
+    if (!pauseMessage) {
+      pauseMessage = document.createElement('div');
+      pauseMessage.classList.add('pause-message');
+      container._pauseMessage = pauseMessage;
+    }
+    pauseMessage.textContent = t('ui.common.pausedUpper', {}, 'PAUSED');
+    const shouldShow = paused && gameSettings.disableSpeedControls;
+    if (shouldShow && !pauseMessage.parentNode) {
+      container.appendChild(pauseMessage);
+    } else if (!shouldShow && pauseMessage.parentNode) {
+      pauseMessage.remove();
+    }
+  }
+
   function applyPauseState(nextPaused) {
     paused = nextPaused;
     window.manualPause = paused;
@@ -147,6 +174,16 @@
     updatePauseButton();
     updateSpeedControls();
     updateRender(true);
+  }
+
+  function applySpeedControlsSetting() {
+    if (gameSettings.disableSpeedControls) {
+      lastActiveGameSpeed = 1;
+      if (!paused) {
+        setGameSpeed(1);
+      }
+    }
+    updateSpeedControls();
   }
 
   function setGameSpeedChoice(speed) {
@@ -177,7 +214,7 @@
   }
 
   if(typeof module !== 'undefined' && module.exports){
-    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, DEFAULT_PAUSE_KEYBIND_CODE };
+    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, updateSpeedControls, applySpeedControlsSetting, DEFAULT_PAUSE_KEYBIND_CODE };
   } else {
     window.togglePause = togglePause;
     window.isGamePaused = isGamePaused;
@@ -186,6 +223,8 @@
     window.setPauseKeybindCode = setPauseKeybindCode;
     window.initializeGameSpeedControls = initializeGameSpeedControls;
     window.setGameSpeedChoice = setGameSpeedChoice;
+    window.updateSpeedControls = updateSpeedControls;
+    window.applySpeedControlsSetting = applySpeedControlsSetting;
     window.DEFAULT_PAUSE_KEYBIND_CODE = DEFAULT_PAUSE_KEYBIND_CODE;
   }
 })();

@@ -40,6 +40,8 @@ function cacheSettingsElements() {
     suppressFaithToggle: document.getElementById('suppress-faith-toggle'),
     disableFusionConsumptionScalingToggle: document.getElementById('disable-fusion-consumption-scaling-toggle'),
     disableFusionConsumptionScalingTooltip: document.getElementById('disable-fusion-consumption-scaling-tooltip'),
+    disableSpeedControlsToggle: document.getElementById('disable-speed-controls-toggle'),
+    disableSpeedControlsTooltip: document.getElementById('disable-speed-controls-tooltip'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -403,6 +405,25 @@ function addSettingsListeners() {
         'ui.settings.disableFusionConsumptionScalingTooltip',
         {},
         'When enabled, upgrades and world rewards can still make Fusion Reactors and Superalloy Fusion Reactors produce more energy, but they will not make those buildings consume more hydrogen or other fuel.'
+      )
+    );
+  }
+
+  if (cached.disableSpeedControlsToggle) {
+    cached.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
+    cached.disableSpeedControlsToggle.addEventListener('change', () => {
+      gameSettings.disableSpeedControls = cached.disableSpeedControlsToggle.checked;
+      applySpeedControlsSetting();
+    });
+  }
+
+  if (cached.disableSpeedControlsTooltip) {
+    attachDynamicInfoTooltip(
+      cached.disableSpeedControlsTooltip,
+      t(
+        'ui.settings.disableSpeedControlsTooltip',
+        {},
+        'The game was balanced to be fully playable on 1x speed and is the experience the developer wanted for themselves.  If you want the intended experience feel free to disable them.'
       )
     );
   }

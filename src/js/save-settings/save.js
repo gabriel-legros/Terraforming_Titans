@@ -769,10 +769,14 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'disableFusionConsumptionScaling')) {
         gameSettings.disableFusionConsumptionScaling = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'disableSpeedControls')) {
+        gameSettings.disableSpeedControls = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
       setPauseKeybindCode(gameSettings.pauseKeybind);
+      applySpeedControlsSetting();
       applyColorblindPaletteSettings();
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
@@ -812,6 +816,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
       cachedSettings.suppressFaithToggle.checked = gameSettings.suppressFaith;
       cachedSettings.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
+      cachedSettings.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
       updatePauseKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();

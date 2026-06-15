@@ -15,6 +15,10 @@
   color: inherit;
 }
 
+.game-speed-controls.hidden {
+  display: none;
+}
+
 .game-speed-button {
   display: inline-flex;
   align-items: center;
