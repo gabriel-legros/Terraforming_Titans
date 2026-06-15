@@ -1,9 +1,52 @@
 #pause-container {
-  border-radius: 5px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 32px;
+  padding: 6px 0 0;
+}
+
+.game-speed-controls {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px;
+  gap: 8px;
+  height: 20px;
+  color: inherit;
+}
+
+.game-speed-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12px;
+  height: 18px;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.35;
+  user-select: none;
+}
+
+.game-speed-button[data-speed="0"] {
+  min-width: 15px;
+  font-size: 16px;
+}
+
+.game-speed-button.active {
+  opacity: 1;
+}
+
+.game-speed-button:hover,
+.game-speed-button:focus-visible {
+  opacity: 0.8;
+}
+
+.game-speed-button.active:hover,
+.game-speed-button.active:focus-visible {
+  opacity: 1;
 }
 
 .pause-message {

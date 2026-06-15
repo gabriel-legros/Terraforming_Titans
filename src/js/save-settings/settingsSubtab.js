@@ -454,5 +454,6 @@ function addSettingsListeners() {
 }
 
 function initializePreferencesSettingsSubtab() {
+  initializeGameSpeedControls();
   addSettingsListeners();
 }

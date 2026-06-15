@@ -18,6 +18,13 @@ setLanguageData({
       min: 'Min',
       max: 'Max',
       pause: 'Pause',
+      resume: 'Resume',
+      gameSpeedControls: 'Game speed controls',
+      gameSpeedPaused: 'Paused',
+      gameSpeed1x: '1x speed',
+      gameSpeed2x: '2x speed',
+      gameSpeed4x: '4x speed',
+      gameSpeed8x: '8x speed',
       refresh: 'Refresh',
     },
     debugRuntime: {
