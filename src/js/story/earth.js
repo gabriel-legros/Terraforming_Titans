@@ -250,7 +250,7 @@ function startEarthCredits() {
     loadButton.style.opacity = '0';
     loadButton.style.transition = 'opacity 1200ms ease';
     loadButton.addEventListener('click', () => {
-      if (localStorage.getItem('gameState_pretravel')) {
+      if (getSavedStateForSlot('pretravel')) {
         document.body.removeChild(overlay);
         window.popupActive = false;
         game.scene.resume('mainScene');
