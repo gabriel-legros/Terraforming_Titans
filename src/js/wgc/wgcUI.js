@@ -467,6 +467,107 @@ function invalidateWGCTeamCache() {
   });
 }
 
+function refreshWGCSlotRefs(slotEntry) {
+  const slot = slotEntry.slot;
+  slotEntry.button = slot.querySelector('button');
+  slotEntry.bar = slot.querySelector('.team-hp-bar-fill');
+  slotEntry.name = slot.querySelector('.team-member-name');
+  slotEntry.icon = slot.querySelector('.team-icon');
+  slotEntry.indicator = slot.querySelector('.unspent-points-indicator');
+}
+
+function clearWGCSlot(slot) {
+  while (slot.firstChild) {
+    slot.removeChild(slot.firstChild);
+  }
+}
+
+function showWGCEmptySlot(slotEntry, unlocked) {
+  const slot = slotEntry.slot;
+  clearWGCSlot(slot);
+  slot.classList.remove('filled');
+  const button = document.createElement('button');
+  button.textContent = '+';
+  button.disabled = !unlocked;
+  slot.appendChild(button);
+  refreshWGCSlotRefs(slotEntry);
+}
+
+function showWGCFilledSlot(slotEntry, member) {
+  const slot = slotEntry.slot;
+  clearWGCSlot(slot);
+  slot.classList.add('filled');
+
+  const hpBar = document.createElement('div');
+  hpBar.className = 'team-hp-bar';
+  const hpFill = document.createElement('div');
+  hpFill.className = 'team-hp-bar-fill';
+  hpBar.appendChild(hpFill);
+  slot.appendChild(hpBar);
+
+  const name = document.createElement('div');
+  name.className = 'team-member-name';
+  slot.appendChild(name);
+
+  const icon = document.createElement('img');
+  icon.className = 'team-icon';
+  slot.appendChild(icon);
+
+  refreshWGCSlotRefs(slotEntry);
+  updateWGCFilledSlot(slotEntry, member);
+}
+
+function updateWGCFilledSlot(slotEntry, member) {
+  if (slotEntry.name) {
+    slotEntry.name.textContent = member.firstName;
+  }
+  if (slotEntry.icon) {
+    const img = classImages[member.classType] || '';
+    if (slotEntry.icon.getAttribute('src') !== img) {
+      slotEntry.icon.setAttribute('src', img);
+    }
+  }
+  if (slotEntry.bar) {
+    const hpPercent = Math.floor((member.health / member.maxHealth) * 100);
+    slotEntry.bar.style.height = `${hpPercent}%`;
+    slotEntry.bar.classList.remove('low-hp', 'critical-hp');
+    if (hpPercent < 25) {
+      slotEntry.bar.classList.add('critical-hp');
+    } else if (hpPercent < 50) {
+      slotEntry.bar.classList.add('low-hp');
+    }
+  }
+  let indicator = slotEntry.indicator;
+  if (member.getPointsToAllocate() > 0) {
+    if (!indicator) {
+      const newIndicator = document.createElement('div');
+      newIndicator.className = 'unspent-points-indicator';
+      newIndicator.textContent = '!';
+      slotEntry.slot.appendChild(newIndicator);
+      slotEntry.indicator = newIndicator;
+    }
+  } else if (indicator) {
+    indicator.remove();
+    slotEntry.indicator = null;
+  }
+}
+
+function reconcileWGCMemberSlot(slotEntry, member, unlocked) {
+  if (member) {
+    if (!slotEntry.slot.classList.contains('filled')) {
+      showWGCFilledSlot(slotEntry, member);
+    } else {
+      updateWGCFilledSlot(slotEntry, member);
+    }
+    return;
+  }
+  if (slotEntry.slot.classList.contains('filled') || !slotEntry.button) {
+    showWGCEmptySlot(slotEntry, unlocked);
+  } else {
+    slotEntry.button.disabled = !unlocked;
+  }
+}
+
 function createRDItem(key, label) {
   const div = document.createElement('div');
   div.classList.add('wgc-rd-item', 'wgc-rd-upgrade');
@@ -1625,33 +1726,9 @@ function updateWGCUI() {
       }
     }
 
-    slots.forEach(({ slot, bar, button }, sIdx) => {
+    slots.forEach((slotEntry, sIdx) => {
       const member = team[sIdx];
-      if (button) button.disabled = !unlocked || !!member;
-      if (!slot || !member) return;
-      if (bar) {
-        const hpPercent = Math.floor((member.health / member.maxHealth) * 100);
-        bar.style.height = `${hpPercent}%`;
-        bar.classList.remove('low-hp', 'critical-hp');
-        if (hpPercent < 25) {
-          bar.classList.add('critical-hp');
-        } else if (hpPercent < 50) {
-          bar.classList.add('low-hp');
-        }
-      }
-      let indicator = slots[sIdx].indicator;
-      if (member.getPointsToAllocate() > 0) {
-        if (!indicator) {
-          const newIndicator = document.createElement('div');
-          newIndicator.className = 'unspent-points-indicator';
-          newIndicator.textContent = '!';
-          slot.appendChild(newIndicator);
-          slots[sIdx].indicator = newIndicator;
-        }
-      } else if (indicator) {
-        indicator.remove();
-        slots[sIdx].indicator = null;
-      }
+      reconcileWGCMemberSlot(slotEntry, member, unlocked);
     });
   });
 
