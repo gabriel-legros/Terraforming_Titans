@@ -2247,11 +2247,14 @@ class RwgManager extends EffectableEntity {
     forcedType = normalizeRwgArchetype(forcedType);
     if (!forcedType || forcedType === "auto") {
       const rngType = mulberry32(S ^ 0xC0FFEE);
-      let candidates = Array.isArray(opts.availableTypes) ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
+      const hasExplicitAvailableTypes = Array.isArray(opts.availableTypes);
+      let candidates = hasExplicitAvailableTypes ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
       if (Array.isArray(opts.lockedTypes)) candidates = candidates.filter((c) => !opts.lockedTypes.includes(c));
       if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
-      const autoCandidates = candidates.filter((c) => c !== "chthonian" && c !== "jupiter-like");
-      if (autoCandidates.length) candidates = autoCandidates;
+      if (!hasExplicitAvailableTypes) {
+        const autoCandidates = candidates.filter((c) => c !== "chthonian" && c !== "jupiter-like");
+        if (autoCandidates.length) candidates = autoCandidates;
+      }
       forcedType = candidates[Math.floor(rngType() * candidates.length)];
     }
 
