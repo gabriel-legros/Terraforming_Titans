@@ -4041,7 +4041,7 @@ setLanguageData({
       darkMode: 'Enable Dark Mode',
       showSpaceResources: 'Show space resources in default resource panel',
       immigrationPool: 'Immigration pool',
-      immigrationPoolTooltip: 'When enabled, on any worlds other than Mars, a large portion of colony growth becomes directly dependent on galactic population via immigration.  Immigration will attempt to equalize the world colonist fill ratio with the galactic fill ratio, and all immigration is taken from the galactic population pool.  This may lead to very slow growth in some cases.',
+      immigrationPoolTooltip: 'When enabled, on any world other than Mars, a large portion of colony growth becomes directly dependent on galactic population via immigration.  Immigration will attempt to equalize the world colonist fill ratio with the galactic fill ratio, and all immigration is taken from the galactic population pool.  This may lead to very slow growth in some cases.',
       disableUnlockAlerts: 'Disable unlock alerts',
       disableDayNightCycle: 'Disable day-night cycle',
       dayNightTooltip: 'Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance. Leads to a more realistic, slightly easier and more relaxed experience.',
