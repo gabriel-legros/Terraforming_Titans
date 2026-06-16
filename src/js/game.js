@@ -387,6 +387,8 @@ function initializeGameState(options = {}) {
     gameSettings.maintenanceCostMultiplier = 1;
     gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier = 1;
     gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier = 1;
+    gameSettings.galaxyFleetCapacityMultiplier = 1;
+    gameSettings.galaxyThreatScalingMultiplier = 1;
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;

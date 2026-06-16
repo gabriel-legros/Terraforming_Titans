@@ -15,6 +15,8 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   maintenanceCostMultiplier: { min: 0 },
   spaceshipEnergyBeforeSpaceElevatorMultiplier: { min: 0 },
   spaceshipEnergyAfterSpaceElevatorMultiplier: { min: 0 },
+  galaxyFleetCapacityMultiplier: { min: 0 },
+  galaxyThreatScalingMultiplier: { min: 0 },
 };
 
 function normalizeDifficultySettingValue(settingId, value) {
@@ -76,6 +78,9 @@ function clearDifficultySettingEffects() {
   }
   for (const id in colonies) {
     colonies[id].removeEffect(source);
+  }
+  if (galaxyManager) {
+    galaxyManager.removeEffect(source);
   }
   if (projectManager) {
     projectManager.updateProjectDurations();
@@ -164,6 +169,22 @@ function applyDifficultySettingEffects() {
       effectId: 'difficulty-spaceship-energy-after-space-elevator'
     });
   }
+  if (gameSettings.galaxyFleetCapacityMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'galaxyManager',
+      type: 'fleetCapacityMultiplier',
+      value: gameSettings.galaxyFleetCapacityMultiplier,
+      effectId: 'difficulty-galaxy-fleet-capacity'
+    });
+  }
+  if (gameSettings.galaxyThreatScalingMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'galaxyManager',
+      type: 'threatScalingMultiplier',
+      value: gameSettings.galaxyThreatScalingMultiplier,
+      effectId: 'difficulty-galaxy-threat-scaling'
+    });
+  }
   if (gameSettings.earlyAdvancedOversight) {
     addDifficultySettingEffect({
       target: 'project',
@@ -183,5 +204,10 @@ function applyDifficultySettingEffects() {
   }
   if (researchManager) {
     researchManager.updateAllResearchCosts();
+  }
+  if (galaxyManager) {
+    galaxyManager.getFactions().forEach((faction) => {
+      faction.updateFleetCapacity(galaxyManager);
+    });
   }
 }

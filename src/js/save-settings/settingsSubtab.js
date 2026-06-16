@@ -56,6 +56,9 @@ function cacheSettingsElements() {
     maintenanceCostMultiplierInput: document.getElementById('maintenance-cost-multiplier-input'),
     spaceshipEnergyBeforeSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-before-space-elevator-multiplier-input'),
     spaceshipEnergyAfterSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-after-space-elevator-multiplier-input'),
+    galaxyFleetCapacityMultiplierInput: document.getElementById('galaxy-fleet-capacity-multiplier-input'),
+    galaxyThreatScalingMultiplierInput: document.getElementById('galaxy-threat-scaling-multiplier-input'),
+    galaxyThreatScalingTooltip: document.getElementById('galaxy-threat-scaling-tooltip'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -103,6 +106,9 @@ function wireDifficultyMultiplierInput(input, settingId) {
       for (const projectName in projectManager.projects) {
         updateProjectUI(projectName);
       }
+      if (galaxyManager) {
+        updateGalaxyUI({ force: true });
+      }
     },
     datasetKey: settingId,
   });
@@ -119,6 +125,8 @@ function updateDifficultySettingInputs() {
     maintenanceCostMultiplier: cached.maintenanceCostMultiplierInput,
     spaceshipEnergyBeforeSpaceElevatorMultiplier: cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     spaceshipEnergyAfterSpaceElevatorMultiplier: cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
+    galaxyFleetCapacityMultiplier: cached.galaxyFleetCapacityMultiplierInput,
+    galaxyThreatScalingMultiplier: cached.galaxyThreatScalingMultiplierInput,
   };
 
   normalizeDifficultySettings();
@@ -559,6 +567,19 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.maintenanceCostMultiplierInput, 'maintenanceCostMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput, 'spaceshipEnergyBeforeSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');
+  wireDifficultyMultiplierInput(cached.galaxyFleetCapacityMultiplierInput, 'galaxyFleetCapacityMultiplier');
+  wireDifficultyMultiplierInput(cached.galaxyThreatScalingMultiplierInput, 'galaxyThreatScalingMultiplier');
+
+  if (cached.galaxyThreatScalingTooltip) {
+    attachDynamicInfoTooltip(
+      cached.galaxyThreatScalingTooltip,
+      t(
+        'ui.settings.galaxyThreatScalingTooltip',
+        {},
+        'Multiplies how much extra fleet capacity AI factions gain as they react to UHF expansion and late-game threat.'
+      )
+    );
+  }
 
   if (cached.startBackgroundSilenceButton) {
     cached.startBackgroundSilenceButton.addEventListener('click', () => {

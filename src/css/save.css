@@ -89,6 +89,13 @@
     box-sizing: border-box;
   }
 
+  .difficulty-multiplier-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
   @media (max-width: 420px) {
     .settings-grid-difficulty-inputs {
       grid-template-columns: 1fr;

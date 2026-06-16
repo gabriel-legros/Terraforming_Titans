@@ -935,7 +935,21 @@ class GalaxyManager extends EffectableEntity {
                 return;
             }
             const value = Number(effect.value);
-            if (Number.isFinite(value) && value > 0) {
+            if (Number.isFinite(value) && value >= 0) {
+                multiplier *= value;
+            }
+        });
+        return multiplier;
+    }
+
+    getThreatScalingMultiplier() {
+        let multiplier = 1;
+        this.activeEffects.forEach((effect) => {
+            if (effect?.type !== 'threatScalingMultiplier') {
+                return;
+            }
+            const value = Number(effect.value);
+            if (Number.isFinite(value) && value >= 0) {
                 multiplier *= value;
             }
         });

@@ -163,7 +163,7 @@ class GalaxyFaction {
                 const baseCapacity = fleetWorlds * fleetPerWorld;
                 if (baseCapacity > 0) {
                     const multiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
-                    const sanitizedMultiplier = multiplier > 0 ? multiplier : 1;
+                    const sanitizedMultiplier = Number.isFinite(multiplier) && multiplier >= 0 ? multiplier : 1;
                     capacity = baseCapacity * sanitizedMultiplier;
                 }
             }

@@ -84,7 +84,11 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         const adoption = this.#coerceAdoption(this.electronicAdoption);
         const sanitizedAdoption = adoption !== null ? adoption : 0;
         const sanitizedDoctrine = doctrine !== null ? doctrine : 0;
-        const multiplier = 1 + sanitizedAdoption * 5 + sanitizedDoctrine * 5;
+        const threatScaling = manager?.getThreatScalingMultiplier?.() ?? 1;
+        const sanitizedThreatScaling = Number.isFinite(threatScaling) && threatScaling >= 0 ? threatScaling : 1;
+        const multiplier = 1
+            + sanitizedAdoption * 5 * sanitizedThreatScaling
+            + sanitizedDoctrine * 5 * sanitizedThreatScaling;
         if (!(multiplier > 0)) {
             this.fleetCapacity = baseCapacity;
             return;
