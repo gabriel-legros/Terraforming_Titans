@@ -740,38 +740,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   recalculateGalacticPopulation() {
-    let total = spaceManager.getRandomWorldDepartedColonistsTotal
-      ? Math.max(0, spaceManager.getRandomWorldDepartedColonistsTotal())
-      : 0;
-    total += spaceManager.getArtificialWorldDepartedColonistsTotal
-      ? Math.max(0, spaceManager.getArtificialWorldDepartedColonistsTotal())
-      : 0;
-    const currentStoryKey = spaceManager.currentPlanetKey;
-    const currentSeed = spaceManager.currentRandomSeed === null ? null : String(spaceManager.currentRandomSeed);
-    const currentArtificialKey = spaceManager.currentArtificialKey === null ? null : String(spaceManager.currentArtificialKey);
-
-    Object.keys(spaceManager.planetStatuses).forEach((key) => {
-      if (currentSeed === null && currentArtificialKey === null && key === currentStoryKey) {
-        return;
-      }
-      total += Math.max(0, spaceManager.planetStatuses[key].colonists || 0);
-    });
-
-    Object.keys(spaceManager.randomWorldStatuses).forEach((key) => {
-      if (currentSeed !== null && key === currentSeed) {
-        return;
-      }
-      total += Math.max(0, spaceManager.randomWorldStatuses[key].colonists || 0);
-    });
-
-    Object.keys(spaceManager.artificialWorldStatuses).forEach((key) => {
-      if (currentArtificialKey !== null && key === currentArtificialKey) {
-        return;
-      }
-      total += Math.max(0, spaceManager.artificialWorldStatuses[key].colonists || 0);
-    });
-
-    this.galacticPopulation = total;
+    this.galacticPopulation = spaceManager.galacticPopulation;
   }
 
   initializeFaithIfNeeded() {
@@ -813,10 +782,6 @@ class FollowersManager extends EffectableEntity {
     }
     const worldBelievers = worldPopulation * this.getWorldBelieverPercent();
     if (this.isCurrentWorldSupermassiveShellworld()) {
-      this.galacticPopulation = Math.max(
-        0,
-        this.galacticPopulation - this.smbhGalacticPopulationContribution
-      );
       this.galacticBelievers = Math.max(
         0,
         this.galacticBelievers - this.smbhGalacticBelieversContribution
@@ -824,7 +789,7 @@ class FollowersManager extends EffectableEntity {
       this.smbhGalacticPopulationContribution = worldPopulation;
       this.smbhGalacticBelieversContribution = worldBelievers;
     }
-    this.galacticPopulation += worldPopulation;
+    this.galacticPopulation = spaceManager.galacticPopulation;
     this.galacticBelievers += worldBelievers;
     this.galacticBelievers = Math.min(this.galacticBelievers, this.galacticPopulation);
     this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
@@ -1468,7 +1433,7 @@ class FollowersManager extends EffectableEntity {
     this.booleanFlags = new Set(Array.isArray(data.booleanFlags) ? data.booleanFlags : []);
     this.faithInitialized = !!faith.faithInitialized;
     this.worldBelieverRatio = this.clampPercent(faith.worldBelieverRatio ?? 0.1);
-    this.galacticPopulation = Math.max(0, faith.galacticPopulation || 0);
+    this.galacticPopulation = spaceManager.galacticPopulation;
     this.galacticBelievers = Math.max(0, faith.galacticBelievers || 0);
     this.smbhGalacticPopulationContribution = Math.max(0, faith.smbhGalacticPopulationContribution || 0);
     this.smbhGalacticBelieversContribution = Math.max(0, faith.smbhGalacticBelieversContribution || 0);

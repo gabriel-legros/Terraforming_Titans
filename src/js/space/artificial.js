@@ -1745,6 +1745,7 @@ class ArtificialManager extends EffectableEntity {
         status.name = project.name;
         status.terraformed = false;
         status.colonists = 0;
+        status.populationCapacity = 0;
         status.visited = false;
         status.orbitalRing = false;
         status.departedAt = null;
@@ -1770,6 +1771,7 @@ class ArtificialManager extends EffectableEntity {
         delete status.original;
 
         spaceManager.artificialWorldStatuses[seed] = status;
+        spaceManager._ensureGalacticPopulationTotals();
         this.recordHistoryEntry('stored');
         this.activeProject = null;
         this.updateUI(true);

@@ -180,7 +180,7 @@ class SpaceManager extends EffectableEntity {
         // Tracking for procedurally generated worlds
         this.currentRandomSeed = null;
         this.currentRandomName = '';
-        this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
+        this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, populationCapacity, original, orbitalRing }
         this.rwgSummary = this._createEmptyRwgSummary();
         this.currentArtificialKey = null;
         this.artificialWorldStatuses = {};
@@ -197,6 +197,8 @@ class SpaceManager extends EffectableEntity {
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
         this.worldStatsCache = this._createEmptyWorldStatsCache();
+        this.galacticPopulation = 0;
+        this.galacticPopulationCapacity = 0;
         this.terraformedWorldCountCache = null;
         this.travelPerfLoggingEnabled = true;
         this.travelPerfStats = {
@@ -258,6 +260,7 @@ class SpaceManager extends EffectableEntity {
                 departureSkillPointGranted: false,
                 enabled: false, // visible/selectable in UI
                 colonists: 0,
+                populationCapacity: 0,
                 orbitalRing: false,
                 departedAt: null,
                 ecumenopolisPercent: 0,
@@ -528,6 +531,7 @@ class SpaceManager extends EffectableEntity {
             terraformedCount: 0,
             orbitalRingCount: 0,
             departedColonistsTotal: 0,
+            departedPopulationCapacityTotal: 0,
             sectorUnits: {},
             sectorTerraformedCounts: {},
             sectorRingCounts: {},
@@ -543,6 +547,7 @@ class SpaceManager extends EffectableEntity {
     _createEmptyArtificialSummary() {
         return {
             departedColonistsTotal: 0,
+            departedPopulationCapacityTotal: 0,
             terraformedCount: 0,
             sectorTerraformCounts: {},
             sectorUnits: {},
@@ -644,6 +649,10 @@ class SpaceManager extends EffectableEntity {
             terraformedCount: Math.max(0, Number(summary.terraformedCount) || 0),
             orbitalRingCount: Math.max(0, Number(summary.orbitalRingCount) || 0),
             departedColonistsTotal: Math.max(0, Number(summary.departedColonistsTotal) || 0),
+            departedPopulationCapacityTotal: Math.max(
+                0,
+                Number(summary.departedPopulationCapacityTotal) || Number(summary.departedColonistsTotal) || 0
+            ),
             sectorUnits: this._sanitizeCountMap(summary.sectorUnits),
             sectorTerraformedCounts: this._sanitizeCountMap(summary.sectorTerraformedCounts),
             sectorRingCounts: this._sanitizeCountMap(summary.sectorRingCounts),
@@ -705,6 +714,10 @@ class SpaceManager extends EffectableEntity {
     _sanitizeArtificialSummary(summary = {}) {
         return {
             departedColonistsTotal: Math.max(0, Number(summary.departedColonistsTotal) || 0),
+            departedPopulationCapacityTotal: Math.max(
+                0,
+                Number(summary.departedPopulationCapacityTotal) || Number(summary.departedColonistsTotal) || 0
+            ),
             terraformedCount: Math.max(0, Number(summary.terraformedCount) || 0),
             sectorTerraformCounts: this._sanitizeCountMap(summary.sectorTerraformCounts),
             sectorUnits: this._sanitizeCountMap(summary.sectorUnits),
@@ -837,12 +850,22 @@ class SpaceManager extends EffectableEntity {
         return count;
     }
 
+    _getStatusPopulation(status) {
+        return Math.max(0, Number(status?.colonists) || 0);
+    }
+
+    _getStatusPopulationCapacity(status) {
+        const capacity = Number(status?.populationCapacity);
+        return Number.isFinite(capacity) ? Math.max(0, capacity) : this._getStatusPopulation(status);
+    }
+
     _addRandomWorldStatusToSummary(status) {
         if (!status) {
             return;
         }
 
-        this._adjustRwgSummaryNumber('departedColonistsTotal', Math.max(0, Number(status.colonists) || 0));
+        this._adjustRwgSummaryNumber('departedColonistsTotal', this._getStatusPopulation(status));
+        this._adjustRwgSummaryNumber('departedPopulationCapacityTotal', this._getStatusPopulationCapacity(status));
 
         if (status.specialization) {
             this._adjustRwgSummaryMapValue('specializationCounts', status.specialization, 1);
@@ -886,7 +909,8 @@ class SpaceManager extends EffectableEntity {
             return;
         }
 
-        this._adjustArtificialSummaryNumber('departedColonistsTotal', Math.max(0, Number(status.colonists) || 0));
+        this._adjustArtificialSummaryNumber('departedColonistsTotal', this._getStatusPopulation(status));
+        this._adjustArtificialSummaryNumber('departedPopulationCapacityTotal', this._getStatusPopulationCapacity(status));
 
         if (!status.terraformed) {
             return;
@@ -1409,6 +1433,7 @@ class SpaceManager extends EffectableEntity {
             const contribution = this._buildWorldContribution('artificial', key, this.artificialWorldStatuses[key]);
             this._applyWorldContributionDiff(null, contribution);
         });
+        this._ensureGalacticPopulationTotals();
     }
 
     _updateWorldCacheForStatusMutation(type, key, mutator) {
@@ -1447,6 +1472,7 @@ class SpaceManager extends EffectableEntity {
         this._updateWorldCacheForStatusMutation('artificial', resolvedKey, (_, map, targetKey) => {
             delete map[targetKey];
         });
+        this._ensureGalacticPopulationTotals();
         return true;
     }
 
@@ -1506,6 +1532,100 @@ class SpaceManager extends EffectableEntity {
         return Math.max(0, this.artificialSummary.departedColonistsTotal || 0);
     }
 
+    _computeTotalPopulationStats({ includeCurrentWorld = false } = {}) {
+        let population = this.getRandomWorldDepartedColonistsTotal()
+            + this.getArtificialWorldDepartedColonistsTotal();
+        let populationCapacity = Math.max(0, this.rwgSummary.departedPopulationCapacityTotal || 0)
+            + Math.max(0, this.artificialSummary.departedPopulationCapacityTotal || 0);
+        const currentStoryKey = this.currentPlanetKey;
+        const currentSeed = this.currentRandomSeed === null ? null : String(this.currentRandomSeed);
+        const currentArtificialKey = this.currentArtificialKey === null ? null : String(this.currentArtificialKey);
+
+        Object.keys(this.planetStatuses).forEach((key) => {
+            if (!includeCurrentWorld && currentSeed === null && currentArtificialKey === null && key === currentStoryKey) {
+                return;
+            }
+            const status = this.planetStatuses[key];
+            population += this._getStatusPopulation(status);
+            populationCapacity += this._getStatusPopulationCapacity(status);
+        });
+
+        Object.keys(this.randomWorldStatuses).forEach((key) => {
+            if (!includeCurrentWorld && currentSeed !== null && key === currentSeed) {
+                return;
+            }
+            const status = this.randomWorldStatuses[key];
+            population += this._getStatusPopulation(status);
+            populationCapacity += this._getStatusPopulationCapacity(status);
+        });
+
+        Object.keys(this.artificialWorldStatuses).forEach((key) => {
+            if (!includeCurrentWorld && currentArtificialKey !== null && key === currentArtificialKey) {
+                return;
+            }
+            const status = this.artificialWorldStatuses[key];
+            population += this._getStatusPopulation(status);
+            populationCapacity += this._getStatusPopulationCapacity(status);
+        });
+
+        return { population, populationCapacity };
+    }
+
+    _refreshGalacticPopulationTotals(options = {}) {
+        const stats = this._computeTotalPopulationStats(options);
+        this.galacticPopulation = stats.population;
+        this.galacticPopulationCapacity = stats.populationCapacity;
+        return stats;
+    }
+
+    _hasGalacticPopulationTotals() {
+        const population = Number(this.galacticPopulation);
+        const capacity = Number(this.galacticPopulationCapacity);
+        return Number.isFinite(population)
+            && Number.isFinite(capacity)
+            && population > 0
+            && capacity > 0;
+    }
+
+    _ensureGalacticPopulationTotals(options = {}) {
+        if (this._hasGalacticPopulationTotals()) {
+            return {
+                population: this.galacticPopulation,
+                populationCapacity: this.galacticPopulationCapacity
+            };
+        }
+        return this._refreshGalacticPopulationTotals(options);
+    }
+
+    _addGalacticPopulationTotals(population, populationCapacity) {
+        this.galacticPopulation = Math.max(0, Number(this.galacticPopulation) || 0)
+            + Math.max(0, Number(population) || 0);
+        this.galacticPopulationCapacity = Math.max(0, Number(this.galacticPopulationCapacity) || 0)
+            + Math.max(0, Number(populationCapacity) || 0);
+        return {
+            population: this.galacticPopulation,
+            populationCapacity: this.galacticPopulationCapacity
+        };
+    }
+
+    getTotalPopulationStats(options = {}) {
+        if (options.includeCurrentWorld) {
+            return this._computeTotalPopulationStats(options);
+        }
+        return {
+            population: Math.max(0, this.galacticPopulation || 0),
+            populationCapacity: Math.max(0, this.galacticPopulationCapacity || 0)
+        };
+    }
+
+    getTotalPopulation(options = {}) {
+        return this.getTotalPopulationStats(options).population;
+    }
+
+    getTotalPopulationCapacity(options = {}) {
+        return this.getTotalPopulationStats(options).populationCapacity;
+    }
+
     getArtificialWorldSpecializationCounts() {
         const counts = { ...(this.artificialSummary.specializationCounts || {}) };
         Object.values(this.artificialWorldStatuses).forEach((status) => {
@@ -1563,6 +1683,7 @@ class SpaceManager extends EffectableEntity {
                 name: `Seed ${key}`,
                 terraformed: false,
                 colonists: 0,
+                populationCapacity: 0,
                 original: null,
                 visited: false,
                 departureSkillPointGranted: false,
@@ -1586,6 +1707,7 @@ class SpaceManager extends EffectableEntity {
         if (followersManager && followersManager.resetConsecrationForSeed) {
             followersManager.resetConsecrationForSeed(key);
         }
+        this._ensureGalacticPopulationTotals();
         this._refreshFoundryWorldBonusCache();
     }
 
@@ -2244,6 +2366,7 @@ class SpaceManager extends EffectableEntity {
                         name: this.currentRandomName,
                         terraformed: false,
                         colonists: 0,
+                        populationCapacity: 0,
                         original,
                         visited: true,
                         departureSkillPointGranted: false,
@@ -2283,6 +2406,7 @@ class SpaceManager extends EffectableEntity {
                         name: this.currentRandomName || `Artificial ${resolvedKey}`,
                         terraformed: false,
                         colonists: 0,
+                        populationCapacity: 0,
                         original,
                         visited: true,
                         departureSkillPointGranted: false,
@@ -2365,6 +2489,7 @@ class SpaceManager extends EffectableEntity {
                       departureSkillPointGranted: false,
                       enabled: false,
                       colonists: 0,
+                      populationCapacity: 0,
                       orbitalRing: false,
                       departedAt: null,
                       ecumenopolisPercent: 0,
@@ -2452,11 +2577,10 @@ class SpaceManager extends EffectableEntity {
         this.prepareForTravel({ savePretravel: options.savePretravel });
         
         const now = Date.now();
-        const pop = globalThis?.resources?.colony?.colonists?.value || 0;
-        if (followersManager && followersManager.onTravelDeparture) {
-            followersManager.onTravelDeparture(pop);
-        }
-        const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
+        const pop = resources.colony.colonists.value || 0;
+        const landCapacity = 10 * (resources.surface.land.value || 0);
+        const populationCapacity = Math.max(0, resources.colony.colonists.cap || 0, landCapacity || 0);
+        const ecoPercent = getEcumenopolisLandFraction(terraforming) * 100;
         let specialization = terraforming.requirementId;
         if (this.currentArtificialKey !== null) {
             const status = this.artificialWorldStatuses[String(this.currentArtificialKey)];
@@ -2482,6 +2606,7 @@ class SpaceManager extends EffectableEntity {
                     name: this.currentRandomName || `Seed ${seed}`,
                     terraformed: false,
                     colonists: 0,
+                    populationCapacity: 0,
                     original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
                     visited: true,
                     orbitalRing: false,
@@ -2496,6 +2621,7 @@ class SpaceManager extends EffectableEntity {
             const st = this.randomWorldStatuses[seed];
             st.visited = true;
             st.colonists = pop;
+            st.populationCapacity = populationCapacity;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
             st.foundryWorld = foundryCompleted;
@@ -2514,6 +2640,7 @@ class SpaceManager extends EffectableEntity {
                     name: this.currentRandomName || `Artificial ${key}`,
                     terraformed: false,
                     colonists: 0,
+                    populationCapacity: 0,
                     original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
                     visited: true,
                     departureSkillPointGranted: false,
@@ -2538,6 +2665,7 @@ class SpaceManager extends EffectableEntity {
             const st = this.artificialWorldStatuses[key];
             st.visited = true;
             st.colonists = pop;
+            st.populationCapacity = populationCapacity;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
             st.foundryWorld = foundryCompleted;
@@ -2569,6 +2697,7 @@ class SpaceManager extends EffectableEntity {
             const ps = this.planetStatuses[this.currentPlanetKey];
             ps.visited = true;
             ps.colonists = pop;
+            ps.populationCapacity = populationCapacity;
             ps.departedAt = now;
             ps.ecumenopolisPercent = ecoPercent;
             ps.foundryWorld = foundryCompleted;
@@ -2577,6 +2706,14 @@ class SpaceManager extends EffectableEntity {
         }
         this._compactRandomWorldStatuses();
         this._compactArtificialWorldStatuses();
+        if (this._hasGalacticPopulationTotals()) {
+            this._addGalacticPopulationTotals(pop, populationCapacity);
+        } else {
+            this._refreshGalacticPopulationTotals({ includeCurrentWorld: true });
+        }
+        if (followersManager && followersManager.onTravelDeparture) {
+            followersManager.onTravelDeparture(pop);
+        }
         this._refreshFoundryWorldBonusCache();
     }
 
@@ -2637,6 +2774,7 @@ class SpaceManager extends EffectableEntity {
             this.applyWorldStatusToPlanetParameters(params, options?.planetKey);
             currentPlanetParameters = JSON.parse(JSON.stringify(params));
         }
+        this._ensureGalacticPopulationTotals();
         initializeGameState({ preserveManagers: true, preserveJournal: true });
         restoreCurrentSmbhShellworldSnapshot(this);
         resetGameFrameClock(true);
@@ -2795,6 +2933,7 @@ class SpaceManager extends EffectableEntity {
                     name: this.currentRandomName,
                     terraformed: false,
                     colonists: 0,
+                    populationCapacity: 0,
                     original: originalSnapshot,
                     visited: true,
                     departureSkillPointGranted: false,
@@ -3042,6 +3181,8 @@ class SpaceManager extends EffectableEntity {
             artificialSummary: this._getArtificialSummarySaveData(),
             randomWorldStatuses: pruneStatuses(this.randomWorldStatuses, activeRandomKey),
             rwgSummary: this._sanitizeRwgSummary(this.rwgSummary),
+            galacticPopulation: this.galacticPopulation,
+            galacticPopulationCapacity: this.galacticPopulationCapacity,
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
@@ -3181,6 +3322,12 @@ class SpaceManager extends EffectableEntity {
                     if (typeof saved.colonists === 'number') {
                         this.planetStatuses[planetKey].colonists = saved.colonists;
                     }
+                    const savedPopulationCapacity = Number(saved.populationCapacity);
+                    if (Number.isFinite(savedPopulationCapacity)) {
+                        this.planetStatuses[planetKey].populationCapacity = savedPopulationCapacity;
+                    } else {
+                        this.planetStatuses[planetKey].populationCapacity = this.planetStatuses[planetKey].colonists;
+                    }
                     if (typeof saved.orbitalRing === 'boolean') {
                         this.planetStatuses[planetKey].orbitalRing = saved.orbitalRing;
                     }
@@ -3219,6 +3366,9 @@ class SpaceManager extends EffectableEntity {
                     return;
                 }
                 this._migrateArtificialWorldStatus(key, entry, activeArtificialKey);
+                if (!Number.isFinite(Number(entry.populationCapacity))) {
+                    entry.populationCapacity = Math.max(0, Number(entry.colonists) || 0);
+                }
                 if (entry.orbitalRing) {
                     entry.orbitalRing = false;
                 }
@@ -3245,6 +3395,9 @@ class SpaceManager extends EffectableEntity {
             Object.values(this.randomWorldStatuses)
                 .filter(Boolean)
                 .forEach((entry) => {
+                    if (!Number.isFinite(Number(entry.populationCapacity))) {
+                        entry.populationCapacity = Math.max(0, Number(entry.colonists) || 0);
+                    }
                     entry.departureSkillPointGranted = entry.departureSkillPointGranted === true;
                     entry.foundryLandFactor = entry.foundryLandFactor || 0;
                     entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
@@ -3322,6 +3475,14 @@ class SpaceManager extends EffectableEntity {
         }
 
         this.rwgSummary = this._sanitizeRwgSummary(savedData.rwgSummary);
+        const savedGalacticPopulation = Number(savedData.galacticPopulation);
+        const savedGalacticPopulationCapacity = Number(savedData.galacticPopulationCapacity);
+        this.galacticPopulation = Number.isFinite(savedGalacticPopulation) && savedGalacticPopulation > 0
+            ? savedGalacticPopulation
+            : 0;
+        this.galacticPopulationCapacity = Number.isFinite(savedGalacticPopulationCapacity) && savedGalacticPopulationCapacity > 0
+            ? savedGalacticPopulationCapacity
+            : 0;
 
         Object.keys(this.planetStatuses).forEach((planetKey) => {
             this._syncFoundryLandFactor(this.planetStatuses[planetKey], planetKey);

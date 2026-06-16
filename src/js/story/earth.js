@@ -2,7 +2,7 @@ var progressEarth = { rwgLock: false, chapters: [], storyProjects: {} };
 
 function getEarthFinalReportText() {
   const worldRating = formatNumber(spaceManager.getTerraformedPlanetCount(), false, 3);
-  const populationRating = formatNumber(followersManager.galacticPopulation, false, 3);
+  const populationRating = formatNumber(spaceManager.galacticPopulation, false, 3);
   return `Terraforming Complete
 
 Transmitting final report to MTC...  complete.
