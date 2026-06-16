@@ -426,7 +426,7 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = true;
         this.autoStart = false;
         this.autoStore = false;
-        this.autoStoreWithMaxStockpile = false;
+        this.autoStoreWithMaxStockpile = true;
         this.nextId = 1;
         this.activeProject = null;
         this.unlockedTypes = new Set(
@@ -2492,7 +2492,7 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
         this.autoStart = state.autoStart === true;
         this.autoStore = state.autoStore === true;
-        this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile === true;
+        this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile !== false;
         if (Array.isArray(state.unlockedTypes)) {
             this.unlockedTypes = new Set(state.unlockedTypes);
         }
