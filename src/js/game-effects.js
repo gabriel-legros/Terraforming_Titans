@@ -13,6 +13,8 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   projectDurationMultiplier: { min: 0.01 },
   popGrowthMultiplier: { min: 0 },
   maintenanceCostMultiplier: { min: 0 },
+  spaceshipEnergyBeforeSpaceElevatorMultiplier: { min: 0 },
+  spaceshipEnergyAfterSpaceElevatorMultiplier: { min: 0 },
 };
 
 function normalizeDifficultySettingValue(settingId, value) {
@@ -37,6 +39,20 @@ function formatDifficultyMultiplierValue(value) {
     return '1';
   }
   return String(parsed);
+}
+
+function isSpaceElevatorCostProfileActiveForEffects() {
+  const project = projectManager?.projects?.spaceElevator;
+  if (project && project.isCompleted) {
+    return true;
+  }
+  const effects = currentPlanetParameters.effects || [];
+  for (let i = 0; i < effects.length; i += 1) {
+    if (effects[i].effectId === 'space-elevator-space-storage-spaceship-metal-cost') {
+      return true;
+    }
+  }
+  return false;
 }
 
 function clearDifficultySettingEffects() {
@@ -121,6 +137,28 @@ function applyDifficultySettingEffects() {
       type: 'globalMaintenanceReduction',
       value: 1 - gameSettings.maintenanceCostMultiplier,
       effectId: 'difficulty-maintenance-cost'
+    });
+  }
+  if (gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'projectManager',
+      type: 'spaceshipCostMultiplier',
+      resourceCategory: 'colony',
+      resourceId: 'energy',
+      value: gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier,
+      appliesBeforeSpaceElevator: true,
+      effectId: 'difficulty-spaceship-energy-before-space-elevator'
+    });
+  }
+  if (gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'projectManager',
+      type: 'spaceshipCostMultiplier',
+      resourceCategory: 'colony',
+      resourceId: 'energy',
+      value: gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier,
+      appliesAfterSpaceElevator: true,
+      effectId: 'difficulty-spaceship-energy-after-space-elevator'
     });
   }
 

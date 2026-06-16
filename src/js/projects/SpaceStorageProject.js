@@ -1160,7 +1160,8 @@ class SpaceStorageProject extends SpaceshipProject {
       if (
         effect.type === 'spaceshipCostMultiplier' &&
         effect.resourceCategory === 'colony' &&
-        effect.resourceId === 'energy'
+        effect.resourceId === 'energy' &&
+        !projectManager.shouldSkipSpaceshipCostEffect(effect)
       ) {
         return value * effect.value;
       }
@@ -1170,7 +1171,8 @@ class SpaceStorageProject extends SpaceshipProject {
       if (
         effect.type === 'spaceshipCostPerTon' &&
         effect.resourceCategory === 'colony' &&
-        effect.resourceId === 'energy'
+        effect.resourceId === 'energy' &&
+        !projectManager.shouldSkipSpaceshipCostEffect(effect)
       ) {
         return value + effect.value;
       }
@@ -1217,7 +1219,8 @@ class SpaceStorageProject extends SpaceshipProject {
       if (
         effect.type === 'spaceshipCostMultiplier' &&
         effect.resourceCategory === 'colony' &&
-        effect.resourceId === 'energy'
+        effect.resourceId === 'energy' &&
+        !projectManager.shouldSkipSpaceshipCostEffect(effect)
       ) {
         return value * effect.value;
       }
@@ -1228,7 +1231,8 @@ class SpaceStorageProject extends SpaceshipProject {
       if (
         effect.type === 'spaceshipCostPerTon' &&
         effect.resourceCategory === 'colony' &&
-        effect.resourceId === 'energy'
+        effect.resourceId === 'energy' &&
+        !projectManager.shouldSkipSpaceshipCostEffect(effect)
       ) {
         return value + effect.value;
       }

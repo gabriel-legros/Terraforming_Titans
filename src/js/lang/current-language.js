@@ -4073,6 +4073,8 @@ setLanguageData({
       projectDurationMultiplier: 'Projection duration multiplier',
       popGrowthMultiplier: 'Pop growth multiplier',
       maintenanceCostMultiplier: 'Maintenance Cost Multiplier',
+      spaceshipEnergyBeforeSpaceElevatorMultiplier: 'Spaceship energy before Space Elevator',
+      spaceshipEnergyAfterSpaceElevatorMultiplier: 'Spaceship energy after Space Elevator',
       keybindsTitle: 'Keybinds',
       pauseKeybindLabel: 'Pause key',
       pauseButtonLabel: 'Pause ({keybind})',

@@ -772,6 +772,12 @@ class EffectableEntity {
     }
 
     shouldSkipSpaceshipCostEffect(effect) {
+      if (effect.appliesBeforeSpaceElevator === true && isSpaceElevatorCostProfileActiveForEffects()) {
+        return true;
+      }
+      if (effect.appliesAfterSpaceElevator === true && !isSpaceElevatorCostProfileActiveForEffects()) {
+        return true;
+      }
       return false;
     }
 

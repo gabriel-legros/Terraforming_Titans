@@ -286,7 +286,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## Major Feature Updates (Consolidated)
 ### Difficulty Settings
-- Difficulty settings include persisted multipliers for building costs, research costs, worker requirements, project duration, population growth, and maintenance costs. Defaults are 1, building/project duration clamp to at least 0.01, and maintenance clamps to at least 0. Effects are applied through the shared effect system when settings change and during the normal manager effect reapply pass on load/travel.
+- Difficulty settings include persisted multipliers for building costs, research costs, worker requirements, project duration, population growth, maintenance costs, and spaceship energy costs before/after Space Elevator. Defaults are 1, building/project duration clamp to at least 0.01, and maintenance/spaceship energy clamp to at least 0. Effects are applied through the shared effect system when settings change and during the normal manager effect reapply pass on load/travel.
 
 ### Atmosphere, Physics, and Terraforming
 - Earth is an end-road world that disables the normal late-game UI surface: Buildings, Special Projects, Research, Space, H.O.P.E., Colony, all resources, non-World Terraforming subtabs, managers tied to those systems, advanced research, special project categories including Story, and Space -> Story. Terraforming -> World and Save and Settings remain available.

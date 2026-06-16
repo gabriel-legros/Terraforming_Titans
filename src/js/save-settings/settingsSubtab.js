@@ -48,6 +48,8 @@ function cacheSettingsElements() {
     projectDurationMultiplierInput: document.getElementById('project-duration-multiplier-input'),
     popGrowthMultiplierInput: document.getElementById('pop-growth-multiplier-input'),
     maintenanceCostMultiplierInput: document.getElementById('maintenance-cost-multiplier-input'),
+    spaceshipEnergyBeforeSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-before-space-elevator-multiplier-input'),
+    spaceshipEnergyAfterSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-after-space-elevator-multiplier-input'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -92,6 +94,9 @@ function wireDifficultyMultiplierInput(input, settingId) {
       updateBuildingDisplay(buildings);
       updateColonyDisplay(colonies);
       updateResearchUI();
+      for (const projectName in projectManager.projects) {
+        updateProjectUI(projectName);
+      }
     },
     datasetKey: settingId,
   });
@@ -106,6 +111,8 @@ function updateDifficultySettingInputs() {
     projectDurationMultiplier: cached.projectDurationMultiplierInput,
     popGrowthMultiplier: cached.popGrowthMultiplierInput,
     maintenanceCostMultiplier: cached.maintenanceCostMultiplierInput,
+    spaceshipEnergyBeforeSpaceElevatorMultiplier: cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
+    spaceshipEnergyAfterSpaceElevatorMultiplier: cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
   };
 
   normalizeDifficultySettings();
@@ -483,6 +490,8 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.projectDurationMultiplierInput, 'projectDurationMultiplier');
   wireDifficultyMultiplierInput(cached.popGrowthMultiplierInput, 'popGrowthMultiplier');
   wireDifficultyMultiplierInput(cached.maintenanceCostMultiplierInput, 'maintenanceCostMultiplier');
+  wireDifficultyMultiplierInput(cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput, 'spaceshipEnergyBeforeSpaceElevatorMultiplier');
+  wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');
 
   if (cached.startBackgroundSilenceButton) {
     cached.startBackgroundSilenceButton.addEventListener('click', () => {

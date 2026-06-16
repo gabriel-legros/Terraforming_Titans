@@ -1262,6 +1262,8 @@ class ProjectManager extends EffectableEntity {
         resourceId,
         value,
         skipForSpaceStorageImports: effect.skipForSpaceStorageImports === true,
+        appliesBeforeSpaceElevator: effect.appliesBeforeSpaceElevator === true,
+        appliesAfterSpaceElevator: effect.appliesAfterSpaceElevator === true,
         effectId: `${baseEffectId}-${name}`,
         sourceId,
         name: effect.name
@@ -1286,6 +1288,8 @@ class ProjectManager extends EffectableEntity {
         resourceId,
         value,
         skipForSpaceStorageImports: effect.skipForSpaceStorageImports === true,
+        appliesBeforeSpaceElevator: effect.appliesBeforeSpaceElevator === true,
+        appliesAfterSpaceElevator: effect.appliesAfterSpaceElevator === true,
         effectId: `${baseEffectId}-${name}`,
         sourceId,
         name: effect.name

@@ -95,6 +95,8 @@ let gameSettings = {
   projectDurationMultiplier: 1,
   popGrowthMultiplier: 1,
   maintenanceCostMultiplier: 1,
+  spaceshipEnergyBeforeSpaceElevatorMultiplier: 1,
+  spaceshipEnergyAfterSpaceElevatorMultiplier: 1,
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
 };

@@ -525,7 +525,8 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   shouldSkipSpaceshipCostEffect(effect) {
-    return effect.skipForSpaceStorageImports === true && this.isSpaceStorageImportSelected();
+    return super.shouldSkipSpaceshipCostEffect(effect)
+      || (effect.skipForSpaceStorageImports === true && this.isSpaceStorageImportSelected());
   }
 
   isAtmosphericImportTargetSelected() {
