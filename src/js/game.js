@@ -726,7 +726,7 @@ function initializeGameState(options = {}) {
   }
 }
 
-function updateLogic(delta) {
+function updateLogic(delta, realDelta = delta) {
   if(isEquilibrating){
     return;
   }
@@ -766,7 +766,7 @@ function updateLogic(delta) {
 
   autoBuild(allStructures, delta);
 
-  goldenAsteroid.update(delta);
+  goldenAsteroid.update(delta, realDelta);
 
   if (!isCurrentWorldManagerDisabled('solisManager') && solisManager) {
     solisManager.update(delta);
@@ -982,9 +982,10 @@ function update(time, delta) {
   const quantizedDelta = Math.floor((scaledDelta + logicDeltaCarryMs) / LOGIC_DELTA_QUANTUM_MS) * LOGIC_DELTA_QUANTUM_MS;
   logicDeltaCarryMs = scaledDelta + logicDeltaCarryMs - quantizedDelta;
   if (quantizedDelta <= 0) {
+    goldenAsteroid.update(0, deltaMs);
     return;
   }
-  updateLogic(quantizedDelta);   // Update game state
+  updateLogic(quantizedDelta, deltaMs);   // Update game state
   updateRender.lastDelta = quantizedDelta;
   updateRender();             // Render updated game state
 

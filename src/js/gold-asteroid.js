@@ -366,11 +366,11 @@ class GoldenAsteroid {
       this.generateNextSpawnTime();
     }
   
-    update(delta) {
+    update(delta, realDelta = delta) {
         if (this.celebrationActive) {
-          this.celebrationRemainingTime -= delta;
+          this.celebrationRemainingTime -= realDelta;
           if (this.celebrationRemainingTime > 0) {
-            this.updateConfetti(delta);
+            this.updateConfetti(realDelta);
             if (!this.active) {
               this.spawn(this.celebrationRemainingTime);
             }
@@ -382,12 +382,12 @@ class GoldenAsteroid {
         }
 
         if (this.active) {
-          this.duration -= delta;
+          this.duration -= realDelta;
           if (this.duration <= 0) {
             this.despawn();
           }
         } else if (!this.celebrationActive) {
-          this.lastSpawnTime += delta;
+          this.lastSpawnTime += realDelta;
     
           if (this.lastSpawnTime >= this.nextSpawnTime) {
             const duration = 5000; // 5 seconds
