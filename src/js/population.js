@@ -22,6 +22,8 @@ class PopulationModule extends EffectableEntity {
       this.gravityMitigation = 0;
       this.currentWorldOverpopulationLossTotal = 0;
       this.currentWorldPeakPopulation = 0;
+      this.lastNaturalGrowthPerSecond = 0;
+      this.lastImmigrationPerSecond = 0;
     }
 
   getEffectiveGrowthMultiplier(){
@@ -167,6 +169,48 @@ class PopulationModule extends EffectableEntity {
     }
     return 1 - ratio;
   }
+
+  getImmigrationBaseRateSplit(baseGrowthRate) {
+    const threshold = spaceManager.galacticPopulationGrowthRate;
+    if (
+      !gameSettings.immigrationPool ||
+      spaceManager.currentPlanetKey === 'mars' ||
+      baseGrowthRate <= threshold
+    ) {
+      return {
+        naturalBaseRate: baseGrowthRate,
+        immigrationBaseRate: 0
+      };
+    }
+
+    return {
+      naturalBaseRate: threshold,
+      immigrationBaseRate: baseGrowthRate - threshold
+    };
+  }
+
+  calculateImmigrationForTick(potentialImmigration, currentPopulation, populationCap) {
+    if (!(potentialImmigration > 0) || !(populationCap > 0)) {
+      return 0;
+    }
+
+    const galacticPopulation = Math.max(0, spaceManager.galacticPopulation || 0);
+    const galacticCapacity = Math.max(0, spaceManager.galacticPopulationCapacity || 0);
+    if (!(galacticPopulation > 0) || !(galacticCapacity > 0)) {
+      return 0;
+    }
+
+    const worldFill = currentPopulation / populationCap;
+    const galacticFill = galacticPopulation / galacticCapacity;
+    if (worldFill >= galacticFill) {
+      return 0;
+    }
+
+    const equalizingImmigration =
+      (populationCap * galacticPopulation - galacticCapacity * currentPopulation) /
+      (populationCap + galacticCapacity);
+    return Math.max(0, Math.min(potentialImmigration, galacticPopulation, equalizingImmigration));
+  }
   
     calculateGrowthRate() {
       let totalWeightedHappiness = 0;
@@ -210,15 +254,29 @@ class PopulationModule extends EffectableEntity {
       }
 
       this.growthRate = Math.max(0, this.calculateGrowthRate());
+      const seconds = deltaTime > 0 ? deltaTime / 1000 : 0;
 
       // Calculate logistic growth/decay
       const growthMultiplier = this.getEffectiveGrowthMultiplier();
       const capacityFactor = this.calculateCapacityFactor(currentPopulation, populationCap);
       const baseGrowthRate = Math.max(0, this.growthRate);
-      const growthPerSecond = baseGrowthRate * currentPopulation * capacityFactor * growthMultiplier;
+      const growthSplit = this.getImmigrationBaseRateSplit(baseGrowthRate);
+      const naturalGrowthPerSecond =
+        growthSplit.naturalBaseRate * currentPopulation * capacityFactor * growthMultiplier;
+      const potentialImmigrationPerSecond =
+        growthSplit.immigrationBaseRate * currentPopulation * capacityFactor * growthMultiplier;
+      const potentialImmigration = potentialImmigrationPerSecond * seconds;
+      const immigration = this.calculateImmigrationForTick(
+        potentialImmigration,
+        currentPopulation,
+        populationCap
+      );
+      const immigrationPerSecond = seconds > 0 ? immigration / seconds : 0;
+      const growthPerSecond = naturalGrowthPerSecond + immigrationPerSecond;
+      this.lastNaturalGrowthPerSecond = naturalGrowthPerSecond;
+      this.lastImmigrationPerSecond = immigrationPerSecond;
 
       // Calculate decay from shortages
-      const seconds = deltaTime > 0 ? deltaTime / 1000 : 0;
       const starvationCoverage = this.getWeightedNeedFulfillment('food');
       const energyCoverage = this.getWeightedNeedFulfillment('energy');
       const componentsCoverage = this.getWeightedNeedFulfillment('components');
@@ -260,7 +318,20 @@ class PopulationModule extends EffectableEntity {
       const populationChange = netPerSecond * seconds;
 
       if (growthPerSecond > 0) {
-        this.populationResource.modifyRate(growthPerSecond, 'Population Growth', 'population');
+        if (naturalGrowthPerSecond > 0) {
+          this.populationResource.modifyRate(
+            naturalGrowthPerSecond,
+            t('ui.colony.growthRate.naturalGrowth', null, 'Natural growth'),
+            'population'
+          );
+        }
+        if (immigrationPerSecond > 0) {
+          this.populationResource.modifyRate(
+            immigrationPerSecond,
+            t('ui.colony.growthRate.immigration', null, 'Immigration'),
+            'population'
+          );
+        }
       }
       if (starvationDecayPerSecond > 0) {
         this.populationResource.modifyRate(-starvationDecayPerSecond, 'Starvation', 'population');
@@ -280,6 +351,9 @@ class PopulationModule extends EffectableEntity {
         this.populationResource.increase(populationChange);
       } else if (populationChange < 0) {
         this.populationResource.decrease(-populationChange);
+      }
+      if (immigration > 0) {
+        spaceManager.galacticPopulation = Math.max(0, spaceManager.galacticPopulation - immigration);
       }
 
       currentPopulation = this.populationResource.value;

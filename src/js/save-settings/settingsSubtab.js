@@ -16,6 +16,8 @@ function cacheSettingsElements() {
     silenceToggle: document.getElementById('solis-silence-toggle'),
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
     showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
+    immigrationPoolToggle: document.getElementById('immigration-pool-toggle'),
+    immigrationPoolTooltip: document.getElementById('immigration-pool-tooltip'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
     dayNightToggle: document.getElementById('day-night-toggle'),
     dayNightTooltip: document.getElementById('day-night-tooltip'),
@@ -219,6 +221,24 @@ function addSettingsListeners() {
       }
       createResourceDisplay(resources);
     });
+  }
+
+  if (cached.immigrationPoolToggle) {
+    cached.immigrationPoolToggle.checked = gameSettings.immigrationPool;
+    cached.immigrationPoolToggle.addEventListener('change', () => {
+      gameSettings.immigrationPool = cached.immigrationPoolToggle.checked;
+    });
+  }
+
+  if (cached.immigrationPoolTooltip) {
+    attachDynamicInfoTooltip(
+      cached.immigrationPoolTooltip,
+      t(
+        'ui.settings.immigrationPoolTooltip',
+        {},
+        'When enabled, strong colony growth above the galactic baseline on non-Mars worlds draws from the off-world galactic population pool instead of creating all growth locally. Immigration only happens while this world is less full than the galactic population pool, and colonist imports also draw from that pool when available.'
+      )
+    );
   }
 
   if (cached.unlockToggle) {

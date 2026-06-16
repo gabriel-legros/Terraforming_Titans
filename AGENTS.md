@@ -288,6 +288,9 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Difficulty Settings
 - Difficulty settings include persisted multipliers for building costs, research costs, worker requirements, project duration, population growth, maintenance costs, and spaceship energy costs before/after Space Elevator. Defaults are 1, building/project duration clamp to at least 0.01, and maintenance/spaceship energy clamp to at least 0. Effects are applied through the shared effect system when settings change and during the normal manager effect reapply pass on load/travel.
 
+### Immigration Pool
+- The Immigration pool setting makes non-Mars colony growth above the galactic baseline (`0.5% / 365` per second before capacity easing) draw from off-world galactic population when the current world is less full than the galactic pool. Immigration is capped so the transfer cannot push galactic fill below world fill, and colonist imports subtract from the same pool when available.
+
 ### Atmosphere, Physics, and Terraforming
 - Earth is an end-road world that disables the normal late-game UI surface: Buildings, Special Projects, Research, Space, H.O.P.E., Colony, all resources, non-World Terraforming subtabs, managers tied to those systems, advanced research, special project categories including Story, and Space -> Story. Terraforming -> World and Save and Settings remain available.
 - Earth reconstruction uses `EarthManager` for bespoke World visualizer controls and visual overrides; its manager is enabled by the Earth planet effect, while individual buttons unlock from Earth story rewards.
