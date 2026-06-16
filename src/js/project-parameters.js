@@ -1075,7 +1075,7 @@ const projectParameters = {
         components: 100_000_000_000_000_000_000_000_000
       }
     },
-    duration: 100_000_000_000_000_000_000,
+    duration: 5 * 60 * 60 * 1000,
     description: '',
     repeatable: false,
     unlocked: false,

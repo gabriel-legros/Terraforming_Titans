@@ -59,10 +59,6 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
     return getMatrioshkaCurrentPlanetKey() === 'olympus';
   }
 
-  getBaseDuration() {
-    return this.getDurationWithTerraformBonus(this.duration);
-  }
-
   isVisible() {
     return (this.unlocked || this.isCompleted || this.repeatCount > 0 || this.bonuses.length > 0) && !this.isPermanentlyDisabled();
   }
