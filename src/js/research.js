@@ -116,14 +116,37 @@ class Research {
   }
 
     updateRepeatableResearchCost(research) {
+      const settingMultiplier = this.getResearchCostMultiplier(research);
       if (!research.repeatable) {
-        research.cost = { ...research.baseCost };
+        research.cost = scaleResearchCost(research.baseCost, settingMultiplier);
         return;
       }
 
       const multiplier = (research.repeatableCostMultiplier || 1) ** Math.max(research.timesResearched, 0);
-      research.cost = scaleResearchCost(research.baseCost, multiplier);
+      research.cost = scaleResearchCost(research.baseCost, multiplier * settingMultiplier);
       this.orderDirty = true;
+    }
+
+    getResearchCostMultiplier(research) {
+      let multiplier = 1;
+      this.activeEffects.forEach(effect => {
+        if (
+          effect.type === 'researchCostMultiplier' &&
+          (!effect.targetId || effect.targetId === research.id)
+        ) {
+          multiplier *= effect.value;
+        }
+      });
+      return multiplier;
+    }
+
+    updateAllResearchCosts() {
+      for (const category in this.researches) {
+        this.researches[category].forEach(research => {
+          this.updateRepeatableResearchCost(research);
+        });
+      }
+      this.sortAllResearches();
     }
 
     normalizeAutoResearchPriority(priority) {
@@ -201,6 +224,10 @@ class Research {
       }
       if (effect.type === 'enableResearch') {
         this.applyEnableResearch(effect);
+        return;
+      }
+      if (effect.type === 'researchCostMultiplier') {
+        this.updateAllResearchCosts();
         return;
       }
       super.applyEffect(effect);

@@ -775,6 +775,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
+      normalizeDifficultySettings();
       setPauseKeybindCode(gameSettings.pauseKeybind);
       applySpeedControlsSetting();
       applyColorblindPaletteSettings();
@@ -817,6 +818,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.suppressFaithToggle.checked = gameSettings.suppressFaith;
       cachedSettings.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
       cachedSettings.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
+      updateDifficultySettingInputs();
       updatePauseKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();

@@ -42,6 +42,12 @@ function cacheSettingsElements() {
     disableFusionConsumptionScalingTooltip: document.getElementById('disable-fusion-consumption-scaling-tooltip'),
     disableSpeedControlsToggle: document.getElementById('disable-speed-controls-toggle'),
     disableSpeedControlsTooltip: document.getElementById('disable-speed-controls-tooltip'),
+    buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
+    researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
+    workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
+    projectDurationMultiplierInput: document.getElementById('project-duration-multiplier-input'),
+    popGrowthMultiplierInput: document.getElementById('pop-growth-multiplier-input'),
+    maintenanceCostMultiplierInput: document.getElementById('maintenance-cost-multiplier-input'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -68,6 +74,49 @@ function updatePauseKeybindButtons() {
     return;
   }
   cached.pauseKeybindCaptureButton.textContent = getPauseKeybindButtonLabel();
+}
+
+function wireDifficultyMultiplierInput(input, settingId) {
+  if (!input) {
+    return;
+  }
+  gameSettings[settingId] = normalizeDifficultySettingValue(settingId, gameSettings[settingId]);
+  input.value = formatDifficultyMultiplierValue(gameSettings[settingId]);
+  input.dataset[settingId] = String(gameSettings[settingId]);
+  wireStringNumberInput(input, {
+    parseValue: value => normalizeDifficultySettingValue(settingId, parseFlexibleNumber(value)),
+    formatValue: value => formatDifficultyMultiplierValue(value),
+    onValue: parsed => {
+      gameSettings[settingId] = parsed;
+      applyDifficultySettingEffects();
+      updateBuildingDisplay(buildings);
+      updateColonyDisplay(colonies);
+      updateResearchUI();
+    },
+    datasetKey: settingId,
+  });
+}
+
+function updateDifficultySettingInputs() {
+  const cached = cacheSettingsElements();
+  const inputs = {
+    buildingCostMultiplier: cached.buildingCostMultiplierInput,
+    researchCostMultiplier: cached.researchCostMultiplierInput,
+    workerRequirementMultiplier: cached.workerRequirementMultiplierInput,
+    projectDurationMultiplier: cached.projectDurationMultiplierInput,
+    popGrowthMultiplier: cached.popGrowthMultiplierInput,
+    maintenanceCostMultiplier: cached.maintenanceCostMultiplierInput,
+  };
+
+  normalizeDifficultySettings();
+  for (const settingId in inputs) {
+    const input = inputs[settingId];
+    if (!input) {
+      continue;
+    }
+    input.value = formatDifficultyMultiplierValue(gameSettings[settingId]);
+    input.dataset[settingId] = String(gameSettings[settingId]);
+  }
 }
 
 function addSettingsListeners() {
@@ -427,6 +476,13 @@ function addSettingsListeners() {
       )
     );
   }
+
+  wireDifficultyMultiplierInput(cached.buildingCostMultiplierInput, 'buildingCostMultiplier');
+  wireDifficultyMultiplierInput(cached.researchCostMultiplierInput, 'researchCostMultiplier');
+  wireDifficultyMultiplierInput(cached.workerRequirementMultiplierInput, 'workerRequirementMultiplier');
+  wireDifficultyMultiplierInput(cached.projectDurationMultiplierInput, 'projectDurationMultiplier');
+  wireDifficultyMultiplierInput(cached.popGrowthMultiplierInput, 'popGrowthMultiplier');
+  wireDifficultyMultiplierInput(cached.maintenanceCostMultiplierInput, 'maintenanceCostMultiplier');
 
   if (cached.startBackgroundSilenceButton) {
     cached.startBackgroundSilenceButton.addEventListener('click', () => {

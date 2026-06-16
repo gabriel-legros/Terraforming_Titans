@@ -89,6 +89,12 @@ let gameSettings = {
   suppressFaith: false,
   disableFusionConsumptionScaling: false,
   disableSpeedControls: false,
+  buildingCostMultiplier: 1,
+  researchCostMultiplier: 1,
+  workerRequirementMultiplier: 1,
+  projectDurationMultiplier: 1,
+  popGrowthMultiplier: 1,
+  maintenanceCostMultiplier: 1,
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
 };

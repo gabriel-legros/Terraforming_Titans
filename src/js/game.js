@@ -377,6 +377,12 @@ function initializeGameState(options = {}) {
     gameSettings.showSpaceStorageResources = false;
     gameSettings.disableFusionConsumptionScaling = false;
     gameSettings.disableSpeedControls = false;
+    gameSettings.buildingCostMultiplier = 1;
+    gameSettings.researchCostMultiplier = 1;
+    gameSettings.workerRequirementMultiplier = 1;
+    gameSettings.projectDurationMultiplier = 1;
+    gameSettings.popGrowthMultiplier = 1;
+    gameSettings.maintenanceCostMultiplier = 1;
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;
@@ -387,6 +393,7 @@ function initializeGameState(options = {}) {
     if (dayNightToggle) {
       dayNightToggle.checked = gameSettings.disableDayNightCycle;
     }
+    updateDifficultySettingInputs();
     nanotechManager.reset();
   }
 

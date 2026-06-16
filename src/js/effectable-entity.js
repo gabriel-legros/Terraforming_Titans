@@ -1097,6 +1097,7 @@ function reapplySharedManagerEffects(options = {}) {
   if (skillManager && skillManager.reapplyEffects) {
     skillManager.reapplyEffects();
   }
+  applyDifficultySettingEffects();
   if (researchManager && researchManager.reapplyEffects) {
     researchManager.reapplyEffects();
   }
