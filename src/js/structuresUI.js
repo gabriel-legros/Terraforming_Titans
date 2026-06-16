@@ -2646,8 +2646,10 @@ function updateDecreaseButtonText(button, buildCount) {
     if (newActive === 0n) {
       structure.productivity = 0;
       structure.displayProductivity = 0;
+      structure.maintenanceProductivity = 1;
     } else if (newActive > oldActive) {
       const ratio = oldActive > 0n ? Number(oldActive) / Number(newActive) : 0;
+      structure.blendMaintenanceProductivityForNewActive(Number(oldActive), Number(newActive));
       structure.productivity *= ratio;
       structure.displayProductivity *= ratio;
     }

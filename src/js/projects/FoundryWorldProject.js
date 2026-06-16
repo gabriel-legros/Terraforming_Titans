@@ -195,8 +195,10 @@
         ecumenopolis.adjustLand(-ecumenopolis.activeNumber);
         metropolis.adjustLand(ecumenopolis.activeNumber);
       }
+      const oldMetropolisActive = metropolis.activeNumber;
       metropolis.count += totalCount;
       metropolis.active += activeCount;
+      metropolis.blendMaintenanceProductivityForNewActive(oldMetropolisActive, metropolis.activeNumber);
       metropolis.isHidden = false;
       ecumenopolis.count = 0n;
       ecumenopolis.active = 0n;

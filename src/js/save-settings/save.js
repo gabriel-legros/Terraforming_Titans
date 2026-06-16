@@ -775,6 +775,9 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'disableSpeedControls')) {
         gameSettings.disableSpeedControls = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'unfulfilledMaintenancePenalties')) {
+        gameSettings.unfulfilledMaintenancePenalties = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
@@ -822,6 +825,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.suppressFaithToggle.checked = gameSettings.suppressFaith;
       cachedSettings.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
       cachedSettings.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
+      cachedSettings.unfulfilledMaintenancePenaltiesToggle.checked = gameSettings.unfulfilledMaintenancePenalties;
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {

@@ -62,6 +62,15 @@
     align-items: center;
   }
 
+  .settings-grid-difficulty-toggles {
+    margin-bottom: 12px;
+  }
+
+  .settings-grid-difficulty-inputs {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    margin-bottom: 16px;
+  }
+
   .difficulty-toggle-option {
     justify-content: flex-start;
     text-align: left;
@@ -81,6 +90,10 @@
   }
 
   @media (max-width: 420px) {
+    .settings-grid-difficulty-inputs {
+      grid-template-columns: 1fr;
+    }
+
     .difficulty-multiplier-option {
       grid-template-columns: 1fr;
       row-gap: 4px;

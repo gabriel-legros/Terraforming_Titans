@@ -1054,8 +1054,10 @@ class Aerostat extends BaseColony {
           ) {
             researchOutpost.adjustLand(convertible);
           }
+          const oldResearchOutpostActive = researchOutpost.activeNumber;
           researchOutpost.count += BigInt(convertible);
           researchOutpost.active += BigInt(convertible);
+          researchOutpost.blendMaintenanceProductivityForNewActive(oldResearchOutpostActive, researchOutpost.activeNumber);
 
           if (typeof researchOutpost.updateResourceStorage === 'function') {
             if (typeof resources !== 'undefined') {

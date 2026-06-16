@@ -44,6 +44,8 @@ function cacheSettingsElements() {
     disableFusionConsumptionScalingTooltip: document.getElementById('disable-fusion-consumption-scaling-tooltip'),
     disableSpeedControlsToggle: document.getElementById('disable-speed-controls-toggle'),
     disableSpeedControlsTooltip: document.getElementById('disable-speed-controls-tooltip'),
+    unfulfilledMaintenancePenaltiesToggle: document.getElementById('unfulfilled-maintenance-penalties-toggle'),
+    unfulfilledMaintenancePenaltiesTooltip: document.getElementById('unfulfilled-maintenance-penalties-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -500,6 +502,29 @@ function addSettingsListeners() {
         'ui.settings.disableSpeedControlsTooltip',
         {},
         'The game was balanced to be fully playable on 1x speed and is the experience the developer wanted for themselves.  If you want the intended experience feel free to disable them.'
+      )
+    );
+  }
+
+  if (cached.unfulfilledMaintenancePenaltiesToggle) {
+    cached.unfulfilledMaintenancePenaltiesToggle.checked = gameSettings.unfulfilledMaintenancePenalties;
+    cached.unfulfilledMaintenancePenaltiesToggle.addEventListener('change', () => {
+      gameSettings.unfulfilledMaintenancePenalties = cached.unfulfilledMaintenancePenaltiesToggle.checked;
+      if (!gameSettings.unfulfilledMaintenancePenalties) {
+        for (const buildingName in buildings) {
+          buildings[buildingName].maintenanceProductivity = 1;
+        }
+      }
+    });
+  }
+
+  if (cached.unfulfilledMaintenancePenaltiesTooltip) {
+    attachDynamicInfoTooltip(
+      cached.unfulfilledMaintenancePenaltiesTooltip,
+      t(
+        'ui.settings.unfulfilledMaintenancePenaltiesTooltip',
+        {},
+        'When enabled, unpaid building maintenance lowers affected buildings over 900 seconds. Each building trends toward the worst paid maintenance ratio among the resources it needs, and actual productivity is capped by that value.'
       )
     );
   }

@@ -81,6 +81,7 @@ class Building extends EffectableEntity {
     this.active = 0n;
     this.productivity = 0;
     this.displayProductivity = 0;
+    this.maintenanceProductivity = 1;
     this.isHidden = false; // track whether the building is hidden in the UI
     this.permanentlyDisabled = false;
     this.alertedWhenUnlocked = this.unlocked ? true : false;
@@ -351,6 +352,7 @@ class Building extends EffectableEntity {
       count: serializeCount(this.count),
       active: serializeCount(this.active),
       productivity: this.productivity,
+      maintenanceProductivity: this.maintenanceProductivity,
       isHidden: this.isHidden,
       alertedWhenUnlocked: this.alertedWhenUnlocked,
       autoBuildEnabled: this.autoBuildEnabled,
@@ -390,6 +392,7 @@ class Building extends EffectableEntity {
     if ('count' in state) this.count = state.count;
     if ('active' in state) this.active = state.active;
     if ('productivity' in state) this.productivity = state.productivity;
+    if ('maintenanceProductivity' in state) this.maintenanceProductivity = Math.max(0, Math.min(1, Number(state.maintenanceProductivity) || 0));
     if ('isHidden' in state) this.isHidden = state.isHidden;
     if ('alertedWhenUnlocked' in state) this.alertedWhenUnlocked = state.alertedWhenUnlocked;
     if ('autoBuildEnabled' in state) this.autoBuildEnabled = state.autoBuildEnabled;
@@ -447,6 +450,19 @@ class Building extends EffectableEntity {
     if (typeof this.normalizeAutoBuildBasis === 'function') {
       this.normalizeAutoBuildBasis();
     }
+  }
+
+  blendMaintenanceProductivityForNewActive(oldActive, newActive) {
+    if (newActive <= 0) {
+      this.maintenanceProductivity = 1;
+      return;
+    }
+    if (newActive <= oldActive) {
+      return;
+    }
+    const addedActive = newActive - oldActive;
+    const weightedExisting = this.maintenanceProductivity * oldActive;
+    this.maintenanceProductivity = Math.max(0, Math.min(1, (weightedExisting + addedActive) / newActive));
   }
 
   // External: enable reversal via effect
@@ -1319,10 +1335,12 @@ class Building extends EffectableEntity {
       if (activate) {
         this.active += buildCountBigInt;
       }
+      this.blendMaintenanceProductivityForNewActive(oldActive, this.activeNumber);
       if(this.active > 0n){
         this.productivity = oldProductivity * (this.activeNumber > 0 ? (oldActive / this.activeNumber) : 0);
       } else {
         this.productivity = 0;
+        this.maintenanceProductivity = 1;
       }
       this.updateResourceStorage();
       this._applyKesslerDebris(baseCost, multiplier);
@@ -1483,19 +1501,29 @@ class Building extends EffectableEntity {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this.displayProductivity = 0;
+      this.maintenanceProductivity = 1;
       return;
     }
 
     let targetProductivity = baseTarget;
+    const maintenanceCap = gameSettings.unfulfilledMaintenancePenalties
+      ? Math.max(0, Math.min(1, this.maintenanceProductivity))
+      : 1;
 
     if (this.snapProductivity) {
-      this.productivity = targetProductivity;
-      this.displayProductivity = displayTarget;
+      this.productivity = Math.min(targetProductivity, maintenanceCap);
+      this.displayProductivity = Math.min(displayTarget, maintenanceCap);
       return;
     }
 
-    this.productivity = this.applyProductivityDamping(this.productivity, targetProductivity, deltaTime);
-    this.displayProductivity = this.applyProductivityDamping(this.displayProductivity, displayTarget, deltaTime);
+    this.productivity = Math.min(
+      this.applyProductivityDamping(this.productivity, targetProductivity, deltaTime),
+      maintenanceCap
+    );
+    this.displayProductivity = Math.min(
+      this.applyProductivityDamping(this.displayProductivity, displayTarget, deltaTime),
+      maintenanceCap
+    );
   }
 
   // Updated produce function to track production rates

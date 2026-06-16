@@ -377,6 +377,7 @@ function initializeGameState(options = {}) {
     gameSettings.showSpaceStorageResources = false;
     gameSettings.disableFusionConsumptionScaling = false;
     gameSettings.disableSpeedControls = false;
+    gameSettings.unfulfilledMaintenancePenalties = false;
     gameSettings.buildingCostMultiplier = 1;
     gameSettings.researchCostMultiplier = 1;
     gameSettings.workerRequirementMultiplier = 1;

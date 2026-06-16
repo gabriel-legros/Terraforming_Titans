@@ -1965,6 +1965,7 @@ function produceResources(deltaTime, buildings) {
   const spaceStorageCapLimits = spaceStorageProject?.getResourceCapLimits?.() || null;
   const wasteCleanupSlack = collectWasteCleanupSlackByResource(buildings);
   const overflowByResource = {};
+  const maintenancePaymentRatios = {};
 
   // Apply accumulated changes to resources
   for (const category in resources) {
@@ -1995,6 +1996,18 @@ function produceResources(deltaTime, buildings) {
         }
       }
 
+      if (category === 'colony') {
+        const requestedMaintenance = accumulatedMaintenance[resourceName] || 0;
+        if (requestedMaintenance > 0) {
+          const clampedShortfall = Math.max(0, -finalValue);
+          const unpaidMaintenance = Math.min(requestedMaintenance, clampedShortfall);
+          maintenancePaymentRatios[resourceName] = Math.max(
+            0,
+            Math.min(1, (requestedMaintenance - unpaidMaintenance) / requestedMaintenance)
+          );
+        }
+      }
+
       const overflowLost = Math.max(newValue - finalValue, 0);
       updateOverflowLostWindowForResource(resource, overflowLost, deltaTime);
       resource.value = Math.max(finalValue, 0); // Ensure non-negative
@@ -2006,6 +2019,8 @@ function produceResources(deltaTime, buildings) {
 
     }
   }
+
+  updateBuildingMaintenanceProductivities(buildings, maintenancePaymentRatios, deltaTime);
 
   if (typeof synchronizeAntimatterWithSpaceEnergy === 'function') {
     synchronizeAntimatterWithSpaceEnergy(resources);
@@ -2086,6 +2101,38 @@ function recalculateTotalRates(){
     for (const resourceName in resources[category]) {
       resources[category][resourceName].recalculateTotalRates();
     }
+  }
+}
+
+function updateBuildingMaintenanceProductivities(buildings, maintenancePaymentRatios, deltaTime) {
+  if (!gameSettings.unfulfilledMaintenancePenalties) {
+    return;
+  }
+  const trendFactor = Math.min(Math.max(deltaTime / 900000, 0), 1);
+  for (const buildingName in buildings) {
+    const building = buildings[buildingName];
+    if (building.active === 0n) {
+      building.maintenanceProductivity = 1;
+      continue;
+    }
+
+    let target = 1;
+    let hasMaintenance = false;
+    const currentMaintenance = building.currentMaintenance || {};
+    for (const resource in currentMaintenance) {
+      if (currentMaintenance[resource] <= 0) {
+        continue;
+      }
+      hasMaintenance = true;
+      const resourceRatio = maintenancePaymentRatios[resource];
+      target = Math.min(target, resourceRatio === undefined ? 1 : resourceRatio);
+    }
+
+    if (!hasMaintenance) {
+      target = 1;
+    }
+    building.maintenanceProductivity += (target - building.maintenanceProductivity) * trendFactor;
+    building.maintenanceProductivity = Math.max(0, Math.min(1, building.maintenanceProductivity));
   }
 }
 

@@ -4074,6 +4074,8 @@ setLanguageData({
       disableFusionConsumptionScalingTooltip: 'When enabled, upgrades and world rewards can still make Fusion Reactors and Superalloy Fusion Reactors produce more energy, but they will not make those buildings consume more hydrogen or other fuel.',
       disableSpeedControls: 'Disable Speed Controls',
       disableSpeedControlsTooltip: 'The game was balanced to be fully playable on 1x speed and is the experience the developer wanted for themselves.  If you want the intended experience feel free to disable them.',
+      unfulfilledMaintenancePenalties: 'Unfulfilled Maintenance Penalties',
+      unfulfilledMaintenancePenaltiesTooltip: 'When enabled, unpaid building maintenance lowers affected buildings over 900 seconds. Each building trends toward the worst paid maintenance ratio among the resources it needs, and actual productivity is capped by that value.',
       buildingCostMultiplier: 'Building Cost Multiplier',
       researchCostMultiplier: 'Research multiplier',
       workerRequirementMultiplier: 'Worker Requirement multiplier',

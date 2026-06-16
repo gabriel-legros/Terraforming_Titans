@@ -562,8 +562,10 @@ class Colony extends Building {
     this.updateResourceStorage();
 
     // Add upgraded building
+    const oldNextActive = next.activeNumber;
     next.count += upgradeCountBigInt;
     next.active += upgradeCountBigInt;
+    next.blendMaintenanceProductivityForNewActive(oldNextActive, next.activeNumber);
     next.updateResourceStorage();
 
     return true;

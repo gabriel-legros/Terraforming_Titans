@@ -90,6 +90,7 @@ let gameSettings = {
   suppressFaith: false,
   disableFusionConsumptionScaling: false,
   disableSpeedControls: false,
+  unfulfilledMaintenancePenalties: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,
