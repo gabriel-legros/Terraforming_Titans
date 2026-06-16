@@ -313,6 +313,7 @@ setLanguageData({
         prioritizeSpaceStorage: 'Allow and prioritize space storage payments',
         autoStart: 'Auto Start',
         autoStore: 'Auto Store',
+        autoStoreWithMaxStockpile: 'with max stockpile',
         paid: 'Paid',
         prepaid: '{cost} ({paid} prepaid)',
         durationTooltip: 'Construction time is divided by terraformed worlds (currently {value}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.',

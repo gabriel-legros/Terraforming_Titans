@@ -426,6 +426,7 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = true;
         this.autoStart = false;
         this.autoStore = false;
+        this.autoStoreWithMaxStockpile = false;
         this.nextId = 1;
         this.activeProject = null;
         this.unlockedTypes = new Set(
@@ -1150,6 +1151,15 @@ class ArtificialManager extends EffectableEntity {
         return this.autoStore;
     }
 
+    setAutoStoreWithMaxStockpile(value) {
+        this.autoStoreWithMaxStockpile = !!value;
+        this.runAutomation();
+    }
+
+    getAutoStoreWithMaxStockpile() {
+        return this.autoStoreWithMaxStockpile;
+    }
+
     startDraftConstruction() {
         if (!this.enabled || this.activeProject) return false;
         const selection = this.getDraftSelection();
@@ -1193,6 +1203,7 @@ class ArtificialManager extends EffectableEntity {
     runAutomation() {
         if (!this.enabled) return;
         if (this.autoStore && this.activeProject && this.activeProject.status === 'completed') {
+            if (this.autoStoreWithMaxStockpile && !this.fillMaxStockpile()) return;
             this.storeConstructedWorld();
         }
         if (this.autoStart && !this.activeProject) {
@@ -1804,6 +1815,37 @@ class ArtificialManager extends EffectableEntity {
         if (!request.metal && !request.silicon) return false;
 
         const deduction = this.pullResources(request, prioritizeStorage);
+        if (!deduction) return false;
+        this.activeProject.stockpile.metal += request.metal || 0;
+        this.activeProject.stockpile.silicon += request.silicon || 0;
+        this.activeProject.override = null;
+        this.updateUI(true);
+        return true;
+    }
+
+    getMissingMaxStockpile(project = this.activeProject) {
+        if (!project) return { metal: 0, silicon: 0 };
+        const stockpile = project.stockpile || project.initialDeposit || {};
+        const cap = this.getStockpileCap(project);
+        return {
+            metal: Math.max(0, cap - (stockpile.metal || 0)),
+            silicon: Math.max(0, cap - (stockpile.silicon || 0))
+        };
+    }
+
+    fillMaxStockpile() {
+        if (!this.activeProject) return false;
+        if (!this.activeProject.stockpile) {
+            const legacyDeposit = this.activeProject.initialDeposit || {};
+            this.activeProject.stockpile = {
+                metal: legacyDeposit.metal || 0,
+                silicon: legacyDeposit.silicon || 0
+            };
+        }
+        const request = this.getMissingMaxStockpile(this.activeProject);
+        if (!request.metal && !request.silicon) return true;
+        if (!this.canCoverCost(request)) return false;
+        const deduction = this.pullResources(request);
         if (!deduction) return false;
         this.activeProject.stockpile.metal += request.metal || 0;
         this.activeProject.stockpile.silicon += request.silicon || 0;
@@ -2430,6 +2472,7 @@ class ArtificialManager extends EffectableEntity {
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
             autoStart: this.autoStart,
             autoStore: this.autoStore,
+            autoStoreWithMaxStockpile: this.autoStoreWithMaxStockpile,
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
             activeProject: project,
@@ -2449,6 +2492,7 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
         this.autoStart = state.autoStart === true;
         this.autoStore = state.autoStore === true;
+        this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile === true;
         if (Array.isArray(state.unlockedTypes)) {
             this.unlockedTypes = new Set(state.unlockedTypes);
         }

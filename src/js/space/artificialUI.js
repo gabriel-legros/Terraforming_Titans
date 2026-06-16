@@ -68,6 +68,7 @@ const artificialUICache = {
   priority: null,
   autoStart: null,
   autoStore: null,
+  autoStoreWithMaxStockpile: null,
   startBtn: null,
   travelBtn: null,
   storeBtn: null,
@@ -1344,6 +1345,17 @@ function ensureArtificialLayout() {
   autoStoreText.textContent = getArtificialText('costs.autoStore', 'Auto Store');
   autoStoreLabel.appendChild(autoStoreText);
   automationRow.appendChild(autoStoreLabel);
+
+  const autoStoreWithMaxLabel = document.createElement('label');
+  autoStoreWithMaxLabel.className = 'artificial-priority artificial-automation-option';
+  const autoStoreWithMaxCheckbox = document.createElement('input');
+  autoStoreWithMaxCheckbox.type = 'checkbox';
+  artificialUICache.autoStoreWithMaxStockpile = autoStoreWithMaxCheckbox;
+  autoStoreWithMaxLabel.appendChild(autoStoreWithMaxCheckbox);
+  const autoStoreWithMaxText = document.createElement('span');
+  autoStoreWithMaxText.textContent = getArtificialText('costs.autoStoreWithMaxStockpile', 'with max stockpile');
+  autoStoreWithMaxLabel.appendChild(autoStoreWithMaxText);
+  automationRow.appendChild(autoStoreWithMaxLabel);
   costs.appendChild(automationRow);
 
   const startBtn = document.createElement('button');
@@ -1885,6 +1897,12 @@ function ensureArtificialLayout() {
   autoStoreCheckbox.addEventListener('change', () => {
     if (artificialManager) {
       artificialManager.setAutoStore(autoStoreCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
+  autoStoreWithMaxCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAutoStoreWithMaxStockpile(autoStoreWithMaxCheckbox.checked);
     }
     updateArtificialUI();
   });
@@ -3086,6 +3104,9 @@ function updateArtificialUI(options = {}) {
   }
   if (artificialUICache.autoStore) {
     artificialUICache.autoStore.checked = manager.getAutoStore();
+  }
+  if (artificialUICache.autoStoreWithMaxStockpile) {
+    artificialUICache.autoStoreWithMaxStockpile.checked = manager.getAutoStoreWithMaxStockpile();
   }
 
   if (!project) {
