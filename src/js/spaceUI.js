@@ -24,6 +24,8 @@ let lastWorldSeed = null;
 let currentWorldDetailsDirty = true;
 let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
+let spaceStatGalacticPopulationValueEl = null;
+let spaceStatGalacticCapacityValueEl = null;
 let spaceStatUniqueTooltipEl = null;
 let spaceStatEffectiveTooltipEl = null;
 let spaceStatUniqueTooltipContentEl = null;
@@ -650,6 +652,8 @@ function initializeSpaceUI(spaceManager) {
     const statusContainer = document.getElementById('travel-status');
     spaceStatUniqueValueEl = document.getElementById('space-stat-unique-value');
     spaceStatEffectiveValueEl = document.getElementById('space-stat-effective-value');
+    spaceStatGalacticPopulationValueEl = document.getElementById('space-stat-galactic-population-value');
+    spaceStatGalacticCapacityValueEl = document.getElementById('space-stat-galactic-capacity-value');
     spaceStatUniqueTooltipEl = document.getElementById('space-stat-unique-tooltip');
     spaceStatEffectiveTooltipEl = document.getElementById('space-stat-effective-tooltip');
     spaceStatOneillCardEl = document.getElementById('space-stat-oneill-card');
@@ -824,8 +828,15 @@ function updateSpaceStatsUI() {
     }
     const uniqueCount = _spaceManagerInstance.getUnmodifiedTerraformedWorldCount();
     const effectiveCount = _spaceManagerInstance.getTerraformedPlanetCount();
+    const populationStats = _spaceManagerInstance.getTotalPopulationStats();
     spaceStatUniqueValueEl.textContent = formatGroupedNumber(uniqueCount, 2, 0);
     spaceStatEffectiveValueEl.textContent = formatGroupedNumber(effectiveCount, 2, 0);
+    if (spaceStatGalacticPopulationValueEl) {
+        spaceStatGalacticPopulationValueEl.textContent = formatNumber(populationStats.population, true, 2);
+    }
+    if (spaceStatGalacticCapacityValueEl) {
+        spaceStatGalacticCapacityValueEl.textContent = formatNumber(populationStats.populationCapacity, true, 2);
+    }
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
         const uniqueBase = getSpaceUIText(

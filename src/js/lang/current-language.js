@@ -3248,6 +3248,8 @@ setLanguageData({
       statisticsSubtitle: 'Track how far the campaign has spread.',
       uniqueWorldsTerraforming: 'Unique worlds terraformed',
       effectiveWorldsTerraforming: 'Effective worlds terraformed',
+      galacticPopulation: 'Galactic population',
+      galacticPopulationCapacity: 'Galactic population capacity',
       oneillCylinders: "O'Neill cylinders",
       oneillTooltipLocked: "Complete the O'Neill Cylinders advanced research to seed orbital habitats.",
       oneillTooltipBase: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
