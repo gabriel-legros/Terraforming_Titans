@@ -26,6 +26,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ## Testing
 - In this repo setup (WSL working on a Windows folder), run tests with Windows binaries:
   - `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm test"`
+- Do not run `npm test` directly from WSL in `/mnt/c`; Jest is much slower there because WSL Node has to traverse the Windows-mounted checkout and `node_modules`.
 - If Windows `node_modules` is missing, install dependencies with:
   - `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm ci"`
 - Report pass/fail counts.

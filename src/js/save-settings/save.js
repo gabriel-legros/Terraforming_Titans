@@ -298,7 +298,7 @@ function getGameState(saveDate = new Date()) {
 }
 
 // Load game state from a specific slot or custom string
-function loadGame(slotOrCustomString, recreate = true) {
+function loadGame(slotOrCustomString, recreate = true, options = {}) {
 
   if (slotOrCustomString === undefined) {
     console.log('No slot or custom string provided. Loading aborted.');
@@ -542,9 +542,11 @@ function loadGame(slotOrCustomString, recreate = true) {
         }
       }
       applyStructureDisplayPreferences(buildings);
-      createBuildingButtons(buildings);
-      if (typeof initializeBuildingAlerts === 'function') {
-        initializeBuildingAlerts();
+      if (!globalGameIsLoadingFromSave) {
+        createBuildingButtons(buildings);
+        if (typeof initializeBuildingAlerts === 'function') {
+          initializeBuildingAlerts();
+        }
       }
   
       // Restore colonies
@@ -572,8 +574,10 @@ function loadGame(slotOrCustomString, recreate = true) {
           }
         }
       applyStructureDisplayPreferences(colonies);
-      createColonyButtons(colonies);
-      initializeColonyAlerts();
+      if (!globalGameIsLoadingFromSave) {
+        createColonyButtons(colonies);
+        initializeColonyAlerts();
+      }
       structures = { ...buildings, ...colonies };
       recalculateLandUsage();
 
@@ -588,8 +592,10 @@ function loadGame(slotOrCustomString, recreate = true) {
           }
         }
         if (typeof updateBuildingDisplay === 'function') {
-          updateBuildingDisplay(buildings);
-          updateBuildingDisplay(colonies);
+          if (!globalGameIsLoadingFromSave) {
+            updateBuildingDisplay(buildings);
+            updateBuildingDisplay(colonies);
+          }
         }
       }
     
@@ -608,14 +614,16 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (typeof warpGateCommand.reapplyEffects === 'function') {
         warpGateCommand.reapplyEffects();
       }
-      if (typeof redrawWGCTeamCards === 'function') {
-        redrawWGCTeamCards();
-      }
-      if (typeof updateWGCUI === 'function') {
-        updateWGCUI();
-      }
-      if (typeof updateWGCVisibility === 'function') {
-        updateWGCVisibility();
+      if (!globalGameIsLoadingFromSave) {
+        if (typeof redrawWGCTeamCards === 'function') {
+          redrawWGCTeamCards();
+        }
+        if (typeof updateWGCUI === 'function') {
+          updateWGCUI();
+        }
+        if (typeof updateWGCVisibility === 'function') {
+          updateWGCVisibility();
+        }
       }
     }
 
@@ -663,7 +671,9 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (gameState.research) {
           researchManager.loadState(gameState.research);
           projectManager.applyEffects();
-          updateAllResearchButtons(researchManager.researches);
+          if (!globalGameIsLoadingFromSave) {
+            updateAllResearchButtons(researchManager.researches);
+          }
       }
       if (typeof updateAdvancedResearchVisibility === 'function') {
           updateAdvancedResearchVisibility();
@@ -841,12 +851,16 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {
-          updateAllResearchButtons(researchManager.researches);
-          updateCompletedResearchVisibility();
+          if (!globalGameIsLoadingFromSave) {
+            updateAllResearchButtons(researchManager.researches);
+            updateCompletedResearchVisibility();
+          }
         }
       }
       if (typeof createResourceDisplay === 'function' && resources) {
-        createResourceDisplay(resources);
+        if (!globalGameIsLoadingFromSave) {
+          createResourceDisplay(resources);
+        }
       }
     }
 
@@ -922,7 +936,8 @@ function loadGame(slotOrCustomString, recreate = true) {
     if (typeof applyRWGEffects === 'function') {
       applyRWGEffects();
     }
-    if (typeof updateRender === 'function') {
+    globalGameIsLoadingFromSave = false;
+    if (!options.skipRender && typeof updateRender === 'function') {
       updateRender(true, { forceAllSubtabs: true });
     }
     const pv = window.planetVisualizer;

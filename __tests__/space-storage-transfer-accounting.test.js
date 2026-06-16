@@ -95,8 +95,8 @@ describe('Space Storage transfer accounting', () => {
     const dom = await createGameDom();
     const window = dom.window;
 
-    loadSaveFromRelativePath(window, 'test_saves/debug/no_energy_consumption.json');
-    advanceTicks(window, 5, 1000);
+    loadSaveFromRelativePath(window, 'test_saves/debug/no_energy_consumption.json', { skipRender: true });
+    advanceTicks(window, 5, 1000, { skipRender: true });
 
     const spaceStorage = window.projectManager.projects.spaceStorage;
     const energyProjectConsumption = window.resources.colony.energy.consumptionRateByType.project || {};

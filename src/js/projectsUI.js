@@ -1507,6 +1507,10 @@ function updateProjectGroupNavigation(project, elements) {
 }
 
 function updateProjectUI(projectName) {
+  if (globalGameIsLoadingFromSave) {
+    return;
+  }
+
   const project = projectManager.projects[projectName]; // Use projectManager to get project
   const elements = projectElements[projectName];
   const importUI = getImportResourcesUI();
