@@ -2201,6 +2201,7 @@ function createWaterBox(row) {
     const avgDryIceCoverage = calculateAverageCoverage(terraforming, 'dryIce') || 0;
     const avgFineSandCoverage = calculateAverageCoverage(terraforming, 'fineSand') || 0;
     const avgLiquidHydrogenCoverage = calculateAverageCoverage(terraforming, 'liquidHydrogen') || 0;
+    const hasLiquidCoverageTargets = terraforming.liquidCoverageTargets.length > 0;
     const hasLiquidHydrogen = avgLiquidHydrogenCoverage > 1e-9;
 
     const requiresCo2 = terraforming.liquidCoverageTargets.some((entry) => entry.liquidType === 'carbonDioxide');
@@ -2221,11 +2222,11 @@ function createWaterBox(row) {
       }
     }
 
-    waterBox.style.borderColor = terraforming.liquidCoverageTargets.length
+    waterBox.style.borderColor = hasLiquidCoverageTargets
       ? (allTargetsMet && !hasLiquidHydrogen ? getStatusColor('success') : getStatusColor('failure'))
       : '';
     if (els.liquidHydrogenWarningRow) {
-      els.liquidHydrogenWarningRow.style.display = hasLiquidHydrogen ? '' : 'none';
+      els.liquidHydrogenWarningRow.style.display = hasLiquidCoverageTargets && hasLiquidHydrogen ? '' : 'none';
     }
 
     els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
