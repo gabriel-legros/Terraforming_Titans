@@ -199,6 +199,7 @@ class SpaceManager extends EffectableEntity {
         this.worldStatsCache = this._createEmptyWorldStatsCache();
         this.galacticPopulation = 0;
         this.galacticPopulationCapacity = 0;
+        this.galacticPopulationGrowthRate = 0.005 / 365;
         this.terraformedWorldCountCache = null;
         this.travelPerfLoggingEnabled = true;
         this.travelPerfStats = {
@@ -218,6 +219,23 @@ class SpaceManager extends EffectableEntity {
         }
         this._refreshWorldStatsCache();
         console.log("SpaceManager initialized with planet statuses.");
+    }
+
+    update(delta) {
+        const seconds = delta / 1000;
+        if (seconds <= 0 || this.galacticPopulation <= 0 || this.galacticPopulationCapacity <= 0) {
+            return;
+        }
+        if (this.galacticPopulation >= this.galacticPopulationCapacity) {
+            this.galacticPopulation = this.galacticPopulationCapacity;
+            return;
+        }
+        const capacityFactor = 1 - (this.galacticPopulation / this.galacticPopulationCapacity);
+        const growth = this.galacticPopulation * this.galacticPopulationGrowthRate * capacityFactor * seconds;
+        this.galacticPopulation = Math.min(
+            this.galacticPopulationCapacity,
+            this.galacticPopulation + growth
+        );
     }
 
     _recordTravelPerf(kind, elapsedMs, targetLabel) {

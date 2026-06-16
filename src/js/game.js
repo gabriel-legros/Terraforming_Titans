@@ -770,6 +770,9 @@ function updateLogic(delta) {
   if (!isCurrentWorldManagerDisabled('solisManager') && solisManager) {
     solisManager.update(delta);
   }
+  if (!isCurrentWorldManagerDisabled('spaceManager') && spaceManager) {
+    spaceManager.update(delta);
+  }
   if (!isCurrentWorldManagerDisabled('followersManager') && followersManager && typeof followersManager.update === 'function') {
     followersManager.update(delta);
   }

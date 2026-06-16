@@ -3309,6 +3309,7 @@ setLanguageData({
       stats: {
         uniqueTooltip: 'Counts every distinct story world and terraformed random world you have completed. Ignores all other bonuses.',
         effectiveTooltip: 'Includes worlds from other sources. This value influences advanced research, Solis rewards, mega structure expansion speed, and export caps.',
+        galacticPopulationTooltip: 'Galactic population grows at 0.5% / 365 per second, multiplied by (1 - population / capacity).',
         effectiveTooltipGalaxy: "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to {value} and O'Neill cylinders are ignored).",
         effectiveTooltipGalaxyUncapped: "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute their full value and O'Neill cylinders are ignored).",
       },

@@ -28,8 +28,10 @@ let spaceStatGalacticPopulationValueEl = null;
 let spaceStatGalacticCapacityValueEl = null;
 let spaceStatUniqueTooltipEl = null;
 let spaceStatEffectiveTooltipEl = null;
+let spaceStatGalacticPopulationTooltipEl = null;
 let spaceStatUniqueTooltipContentEl = null;
 let spaceStatEffectiveTooltipContentEl = null;
+let spaceStatGalacticPopulationTooltipContentEl = null;
 let spaceStatOneillCardEl = null;
 let spaceStatOneillValueEl = null;
 let spaceStatOneillTooltipEl = null;
@@ -656,12 +658,14 @@ function initializeSpaceUI(spaceManager) {
     spaceStatGalacticCapacityValueEl = document.getElementById('space-stat-galactic-capacity-value');
     spaceStatUniqueTooltipEl = document.getElementById('space-stat-unique-tooltip');
     spaceStatEffectiveTooltipEl = document.getElementById('space-stat-effective-tooltip');
+    spaceStatGalacticPopulationTooltipEl = document.getElementById('space-stat-galactic-population-tooltip');
     spaceStatOneillCardEl = document.getElementById('space-stat-oneill-card');
     spaceStatOneillValueEl = document.getElementById('space-stat-oneill-value');
     spaceStatOneillTooltipEl = document.getElementById('space-stat-oneill-tooltip');
     spaceStatOneillRateEl = document.getElementById('space-stat-oneill-rate');
     spaceStatUniqueTooltipContentEl = attachDynamicInfoTooltip(spaceStatUniqueTooltipEl, '');
     spaceStatEffectiveTooltipContentEl = attachDynamicInfoTooltip(spaceStatEffectiveTooltipEl, '');
+    spaceStatGalacticPopulationTooltipContentEl = attachDynamicInfoTooltip(spaceStatGalacticPopulationTooltipEl, '');
     spaceStatOneillTooltipContentEl = attachDynamicInfoTooltip(spaceStatOneillTooltipEl, '');
     if (typeof setOneillStatsElements === 'function') {
         setOneillStatsElements({
@@ -836,6 +840,17 @@ function updateSpaceStatsUI() {
     }
     if (spaceStatGalacticCapacityValueEl) {
         spaceStatGalacticCapacityValueEl.textContent = formatNumber(populationStats.populationCapacity, true, 2);
+    }
+    if (spaceStatGalacticPopulationTooltipEl) {
+        const populationTooltip = getSpaceUIText(
+            'stats.galacticPopulationTooltip',
+            'Galactic population grows at 0.5% / 365 per second, multiplied by (1 - population / capacity). Growth slows as population approaches galactic population capacity and stops at capacity.'
+        );
+        if (spaceStatGalacticPopulationTooltipContentEl) {
+            spaceStatGalacticPopulationTooltipContentEl.textContent = populationTooltip;
+        } else {
+            spaceStatGalacticPopulationTooltipEl.title = populationTooltip;
+        }
     }
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
