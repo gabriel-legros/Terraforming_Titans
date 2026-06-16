@@ -2190,9 +2190,9 @@ function activateProjectSubtab(subtabId) {
   projectsSubtabState.preferredSubtabId = subtabId;
   if (projectsSubtabManager) {
     projectsSubtabManager.activate(subtabId);
-  } else {
-    activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
+    return;
   }
+  activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
   if (typeof markProjectSubtabViewed === 'function') {
     markProjectSubtabViewed(subtabId);
   }
