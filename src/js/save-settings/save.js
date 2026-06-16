@@ -788,6 +788,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'unfulfilledMaintenancePenalties')) {
         gameSettings.unfulfilledMaintenancePenalties = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'earlyAdvancedOversight')) {
+        gameSettings.earlyAdvancedOversight = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
@@ -836,6 +839,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
       cachedSettings.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
       cachedSettings.unfulfilledMaintenancePenaltiesToggle.checked = gameSettings.unfulfilledMaintenancePenalties;
+      cachedSettings.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {

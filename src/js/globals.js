@@ -91,6 +91,7 @@ let gameSettings = {
   disableFusionConsumptionScaling: false,
   disableSpeedControls: false,
   unfulfilledMaintenancePenalties: false,
+  earlyAdvancedOversight: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,

@@ -4076,6 +4076,8 @@ setLanguageData({
       disableSpeedControlsTooltip: 'The game was balanced to be fully playable on 1x speed and is the experience the developer wanted for themselves.  If you want the intended experience feel free to disable them.',
       unfulfilledMaintenancePenalties: 'Unfulfilled Maintenance Penalties',
       unfulfilledMaintenancePenaltiesTooltip: 'When enabled, unpaid building maintenance lowers affected buildings over 900 seconds. Each building trends toward the worst paid maintenance ratio among the resources it needs, and actual productivity is capped by that value.',
+      earlyAdvancedOversight: 'Early Advanced Oversight',
+      earlyAdvancedOversightTooltip: 'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.',
       buildingCostMultiplier: 'Building Cost Multiplier',
       researchCostMultiplier: 'Research multiplier',
       workerRequirementMultiplier: 'Worker Requirement multiplier',

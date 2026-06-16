@@ -46,6 +46,8 @@ function cacheSettingsElements() {
     disableSpeedControlsTooltip: document.getElementById('disable-speed-controls-tooltip'),
     unfulfilledMaintenancePenaltiesToggle: document.getElementById('unfulfilled-maintenance-penalties-toggle'),
     unfulfilledMaintenancePenaltiesTooltip: document.getElementById('unfulfilled-maintenance-penalties-tooltip'),
+    earlyAdvancedOversightToggle: document.getElementById('early-advanced-oversight-toggle'),
+    earlyAdvancedOversightTooltip: document.getElementById('early-advanced-oversight-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -525,6 +527,26 @@ function addSettingsListeners() {
         'ui.settings.unfulfilledMaintenancePenaltiesTooltip',
         {},
         'When enabled, unpaid building maintenance lowers affected buildings over 900 seconds. Each building trends toward the worst paid maintenance ratio among the resources it needs, and actual productivity is capped by that value.'
+      )
+    );
+  }
+
+  if (cached.earlyAdvancedOversightToggle) {
+    cached.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
+    cached.earlyAdvancedOversightToggle.addEventListener('change', () => {
+      gameSettings.earlyAdvancedOversight = cached.earlyAdvancedOversightToggle.checked;
+      applyDifficultySettingEffects();
+      updateProjectUI('spaceMirrorFacility');
+    });
+  }
+
+  if (cached.earlyAdvancedOversightTooltip) {
+    attachDynamicInfoTooltip(
+      cached.earlyAdvancedOversightTooltip,
+      t(
+        'ui.settings.earlyAdvancedOversightTooltip',
+        {},
+        'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.'
       )
     );
   }

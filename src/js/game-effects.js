@@ -63,6 +63,9 @@ function clearDifficultySettingEffects() {
   }
   if (projectManager) {
     projectManager.removeEffect(source);
+    for (const id in projectManager.projects) {
+      projectManager.projects[id].removeEffect(source);
+    }
   }
   if (researchManager) {
     researchManager.removeEffect(source);
@@ -159,6 +162,16 @@ function applyDifficultySettingEffects() {
       value: gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier,
       appliesAfterSpaceElevator: true,
       effectId: 'difficulty-spaceship-energy-after-space-elevator'
+    });
+  }
+  if (gameSettings.earlyAdvancedOversight) {
+    addDifficultySettingEffect({
+      target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'booleanFlag',
+      flagId: 'advancedOversight',
+      value: true,
+      effectId: 'difficulty-early-advanced-oversight'
     });
   }
 

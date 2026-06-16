@@ -58,19 +58,32 @@ class EffectableEntity {
       const effectsToRemove = this.activeEffects.filter(effect => effect.sourceId === sourceId);
     
       if (effectsToRemove.length != 0) {
-        
-        // Remove boolean flags associated with the effects
+        const booleanFlagsToReconcile = new Set();
         effectsToRemove.forEach(effect => {
           if (effect.type === 'booleanFlag') {
-            this.booleanFlags.delete(effect.flagId);
-            if (typeof this[effect.flagId] === 'boolean') {
-              this[effect.flagId] = false;
-            }
+            booleanFlagsToReconcile.add(effect.flagId);
           }
         });
-    
-        // Update the active effects array
+
         this.activeEffects = this.activeEffects.filter(effect => effect.sourceId !== sourceId);
+        booleanFlagsToReconcile.forEach(flagId => {
+          let enabled = false;
+          for (let i = 0; i < this.activeEffects.length; i += 1) {
+            const activeEffect = this.activeEffects[i];
+            if (activeEffect.type === 'booleanFlag' && activeEffect.flagId === flagId && activeEffect.value) {
+              enabled = true;
+              break;
+            }
+          }
+          if (enabled) {
+            this.booleanFlags.add(flagId);
+          } else {
+            this.booleanFlags.delete(flagId);
+          }
+          if (this[flagId] === true || this[flagId] === false) {
+            this[flagId] = enabled;
+          }
+        });
       }
     
       return this; // Enables chaining

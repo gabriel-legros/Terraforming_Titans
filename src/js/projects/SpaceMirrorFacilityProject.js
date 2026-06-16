@@ -1550,6 +1550,9 @@ function updateMirrorOversightUI() {
       advancedUnlocked = true;
     }
   }
+  if (!advancedUnlocked && mirrorOversightSettings.advancedOversight) {
+    toggleAdvancedOversight(false);
+  }
   const advDiv = document.getElementById('mirror-advanced-oversight-div');
   const advCheckbox = document.getElementById('mirror-advanced-oversight');
   if (advDiv) advDiv.style.display = advancedUnlocked ? 'flex' : 'none';
