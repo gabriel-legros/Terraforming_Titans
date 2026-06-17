@@ -3479,7 +3479,7 @@ setLanguageData({
       },
       wgcUi: {
         clipboardPrompt: 'Copy Warp Gate Command team stats:',
-        copyTeamStatsTooltip: 'Copy Team Stats to Clipboard',
+        copyTeamStatsTooltip: 'Copy all stats to clipboard',
         showStory: 'Show Story',
         hideStory: 'Hide Story',
         teamNames: {
