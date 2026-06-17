@@ -1599,7 +1599,7 @@ function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, acc
       : 1;
     const hasActiveSpaceStorageTransfer = project.attributes?.spaceStorage
       && project.shipOperationIsActive === true
-      && project.assignedSpaceships > 0;
+      && (project.isTeleporterTransferActive() || project.assignedSpaceships > 0);
     const shouldEstimate =
       hasActiveSpaceStorageTransfer ||
       project.autoStart !== false ||
