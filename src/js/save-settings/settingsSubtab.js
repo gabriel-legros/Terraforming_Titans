@@ -57,6 +57,7 @@ function cacheSettingsElements() {
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
     projectDurationMultiplierInput: document.getElementById('project-duration-multiplier-input'),
     popGrowthMultiplierInput: document.getElementById('pop-growth-multiplier-input'),
+    lifeGrowthMultiplierInput: document.getElementById('life-growth-multiplier-input'),
     maintenanceCostMultiplierInput: document.getElementById('maintenance-cost-multiplier-input'),
     spaceshipEnergyBeforeSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-before-space-elevator-multiplier-input'),
     spaceshipEnergyBeforeSpaceElevatorTooltip: document.getElementById('spaceship-energy-before-space-elevator-tooltip'),
@@ -128,6 +129,7 @@ function updateDifficultySettingInputs() {
     workerRequirementMultiplier: cached.workerRequirementMultiplierInput,
     projectDurationMultiplier: cached.projectDurationMultiplierInput,
     popGrowthMultiplier: cached.popGrowthMultiplierInput,
+    lifeGrowthMultiplier: cached.lifeGrowthMultiplierInput,
     maintenanceCostMultiplier: cached.maintenanceCostMultiplierInput,
     spaceshipEnergyBeforeSpaceElevatorMultiplier: cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     spaceshipEnergyAfterSpaceElevatorMultiplier: cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
@@ -612,6 +614,7 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.workerRequirementMultiplierInput, 'workerRequirementMultiplier');
   wireDifficultyMultiplierInput(cached.projectDurationMultiplierInput, 'projectDurationMultiplier');
   wireDifficultyMultiplierInput(cached.popGrowthMultiplierInput, 'popGrowthMultiplier');
+  wireDifficultyMultiplierInput(cached.lifeGrowthMultiplierInput, 'lifeGrowthMultiplier');
   wireDifficultyMultiplierInput(cached.maintenanceCostMultiplierInput, 'maintenanceCostMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput, 'spaceshipEnergyBeforeSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');

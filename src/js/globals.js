@@ -99,6 +99,7 @@ let gameSettings = {
   workerRequirementMultiplier: 1,
   projectDurationMultiplier: 1,
   popGrowthMultiplier: 1,
+  lifeGrowthMultiplier: 1,
   maintenanceCostMultiplier: 1,
   spaceshipEnergyBeforeSpaceElevatorMultiplier: 1,
   spaceshipEnergyAfterSpaceElevatorMultiplier: 1,

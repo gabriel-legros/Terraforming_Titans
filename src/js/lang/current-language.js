@@ -4091,6 +4091,7 @@ setLanguageData({
       workerRequirementMultiplier: 'Worker Requirement multiplier',
       projectDurationMultiplier: 'Projection duration multiplier',
       popGrowthMultiplier: 'Pop growth multiplier',
+      lifeGrowthMultiplier: 'Life growth multiplier',
       maintenanceCostMultiplier: 'Maintenance Cost Multiplier',
       spaceshipEnergyBeforeSpaceElevatorMultiplier: 'Ship energy before Space Elevator',
       spaceshipEnergyBeforeSpaceElevatorMultiplierTooltip: 'Multiplies colony energy costs for spaceship projects before the Space Elevator is completed.  Use 100-500 if you want a realistic value.',
