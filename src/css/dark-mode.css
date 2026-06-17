@@ -1625,3 +1625,42 @@ body.dark-mode {
 .dark-mode .colony-buoyancy-card .colony-buoyancy-lift-label {
     color: #ffffff;
 }
+
+/* HOPE Tab — Skill Tree */
+.dark-mode .skill-connector {
+    stroke: #888;
+}
+
+.dark-mode #skill-points-display {
+    background-color: #2d2d2d;
+    border-color: #666;
+    color: #e0e0e0;
+}
+
+/* HOPE Tab — Solis: fix quest text and research colours inherited from light-mode base */
+.dark-mode #solis-quest-text {
+    color: #e0e0e0;
+}
+
+.dark-mode .solis-research-list {
+    color: #cccccc;
+}
+
+.dark-mode .solis-research-completed {
+    color: #888888;
+}
+
+/* Space Tab — Galactic Invasion: card name inherits correctly but make it explicit */
+.dark-mode .galactic-invasion-card__name {
+    color: #e2e8f0;
+}
+
+/* Space Tab — Galactic Invasion: section header chevron / collapse button colour */
+.dark-mode .galactic-invasion-section__header {
+    color: #e2e8f0;
+}
+
+/* Space Tab — ensure atlas community note text is readable */
+.dark-mode .atlas-community-note {
+    color: #cbd5e1;
+}
