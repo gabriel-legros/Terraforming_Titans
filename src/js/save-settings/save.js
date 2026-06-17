@@ -767,6 +767,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageInDefaultPanel')) {
         gameSettings.showSpaceStorageInDefaultPanel = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showNetResourceRateWithAutobuild')) {
+        gameSettings.showNetResourceRateWithAutobuild = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'immigrationPool')) {
         gameSettings.immigrationPool = false;
       }
@@ -826,6 +829,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.silenceToggle.checked = gameSettings.silenceSolisAlert;
       cachedSettings.milestoneToggle.checked = gameSettings.silenceMilestoneAlert;
       cachedSettings.showSpaceStorageInDefaultPanelToggle.checked = gameSettings.showSpaceStorageInDefaultPanel;
+      cachedSettings.netResourceRateDisplayToggle.checked = gameSettings.showNetResourceRateWithAutobuild;
       cachedSettings.immigrationPoolToggle.checked = gameSettings.immigrationPool;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;

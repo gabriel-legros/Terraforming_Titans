@@ -68,6 +68,10 @@ function showSpaceStorageInDefaultPanel() {
   return gameSettings.showSpaceStorageInDefaultPanel === true;
 }
 
+function shouldShowNetResourceRateWithAutobuild() {
+  return gameSettings.showNetResourceRateWithAutobuild === true;
+}
+
 function isSpaceStorageViewActive() {
   return !showSpaceStorageInDefaultPanel() && gameSettings.showSpaceStorageResources === true;
 }
@@ -983,6 +987,21 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta, 
 function isAutobuildTrackedResource(resource) {
   return resource.category === 'colony'
     || (resource.category === 'special' && resource.name === 'orbitalDebris');
+}
+
+function getAutobuildResourceRate(resource) {
+  if (!isAutobuildTrackedResource(resource)) {
+    return 0;
+  }
+  return autobuildCostTracker.getAverageCost(resource.category, resource.name);
+}
+
+function getDisplayedNetResourceRate(resource, consumptionDisplay) {
+  const rawNetRate = resource.productionRate - consumptionDisplay.total;
+  if (!shouldShowNetResourceRateWithAutobuild()) {
+    return rawNetRate;
+  }
+  return rawNetRate - getAutobuildResourceRate(resource);
 }
 
 function setResourceTooltipColumns(tooltip, cols) {
@@ -2024,7 +2043,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     } else {
       const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
       const consumptionDisplay = getDisplayConsumptionRates(resource);
-      const rawNetRate = resource.productionRate - consumptionDisplay.total;
+      const rawNetRate = getDisplayedNetResourceRate(resource, consumptionDisplay);
       const activityRate = Math.max(Math.abs(resource.productionRate), Math.abs(consumptionDisplay.total));
       const netRate = activityRate > 0 && Math.abs(rawNetRate) <= activityRate * 1e-12
         ? 0
@@ -2536,9 +2555,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   } else if (zonesDiv) {
     zonesDiv.style.display = 'none';
   }
-  const autobuildAvg = (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource))
-    ? autobuildCostTracker.getAverageCost(resource.category, resource.name)
-    : 0;
+  const autobuildAvg = getAutobuildResourceRate(resource);
   if (netDiv) {
     const autoLine = netDiv._lineAuto || netDiv.firstChild;
     const baseLine = netDiv._lineBase || netDiv.lastChild;

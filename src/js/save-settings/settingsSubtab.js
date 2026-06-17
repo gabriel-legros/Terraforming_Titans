@@ -16,6 +16,7 @@ function cacheSettingsElements() {
     silenceToggle: document.getElementById('solis-silence-toggle'),
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
     showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
+    netResourceRateDisplayToggle: document.getElementById('net-resource-rate-display-toggle'),
     immigrationPoolToggle: document.getElementById('immigration-pool-toggle'),
     immigrationPoolTooltip: document.getElementById('immigration-pool-tooltip'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
@@ -240,6 +241,14 @@ function addSettingsListeners() {
         gameSettings.showSpaceStorageResources = false;
       }
       createResourceDisplay(resources);
+    });
+  }
+
+  if (cached.netResourceRateDisplayToggle) {
+    cached.netResourceRateDisplayToggle.checked = gameSettings.showNetResourceRateWithAutobuild;
+    cached.netResourceRateDisplayToggle.addEventListener('change', () => {
+      gameSettings.showNetResourceRateWithAutobuild = cached.netResourceRateDisplayToggle.checked;
+      updateResourceDisplay(resources, 0);
     });
   }
 
