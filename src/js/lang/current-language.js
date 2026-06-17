@@ -820,6 +820,7 @@ setLanguageData({
       labels: {
         productivity: 'Productivity',
         cost: 'Cost:',
+        heat: 'Heat',
       },
       controls: {
         title: 'Controls',

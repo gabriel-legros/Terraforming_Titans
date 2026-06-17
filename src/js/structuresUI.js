@@ -2900,7 +2900,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const sections = getProdConsSections(structure, buildCount);
     const keyString = sections
       .map(sec => {
-        const keys = sec.key === 'provides'
+        const keys = sec.key === 'provides' || sec.key === 'heat'
           ? sec.data.map((_, i) => String(i)).join('|')
           : (sec.keys || []).join('|');
         return `${sec.key}:${keys}`;
@@ -2912,6 +2912,9 @@ function updateDecreaseButtonText(button, buildCount) {
     }
     const combinedCosts = {};
     sections.forEach(sec => {
+      if (sec.key === 'heat') {
+        return;
+      }
       if (sec.key === 'consumption') {
         for (const category in sec.data) {
           for (const resource in sec.data[category]) {
@@ -2930,7 +2933,7 @@ function updateDecreaseButtonText(button, buildCount) {
     sections.forEach(sec => {
       const info = productionConsumptionElement._sections[sec.key];
       if (!info) return;
-      if (sec.key === 'provides') {
+      if (sec.key === 'provides' || sec.key === 'heat') {
         sec.data.forEach((text, i) => {
           const span = info.spans.get(String(i));
           if (span && span.textContent !== text) {
@@ -3080,6 +3083,17 @@ function updateDecreaseButtonText(button, buildCount) {
       }
     }
 
+    const heatCoefficient = structure.factoryHeatCoefficient || 0;
+    const energyConsumption = displayConsumption.colony?.energy || 0;
+    const heatPower = gameSettings.factoryHeating ? energyConsumption * heatCoefficient : 0;
+    if (heatPower > 0) {
+      sections.push({
+        key: 'heat',
+        label: getStructuresUIText('ui.structures.labels.heat', 'Heat'),
+        data: [`${formatNumber(heatPower, false, 2)}W`]
+      });
+    }
+
     return sections;
   }
 
@@ -3102,7 +3116,7 @@ function updateDecreaseButtonText(button, buildCount) {
   function buildProdConsElement(element, sections) {
     const keyString = sections
       .map(sec => {
-        const keys = sec.key === 'provides'
+        const keys = sec.key === 'provides' || sec.key === 'heat'
           ? sec.data.map((_, i) => String(i)).join('|')
           : (sec.keys || []).join('|');
         return `${sec.key}:${keys}`;
@@ -3214,7 +3228,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     function syncSectionItems(info, sec) {
-      const nextKeys = sec.key === 'provides'
+      const nextKeys = sec.key === 'provides' || sec.key === 'heat'
         ? sec.data.map((_, i) => String(i))
         : sec.keys;
       const nextKeySet = new Set(nextKeys);
