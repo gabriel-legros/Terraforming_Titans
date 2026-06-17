@@ -1974,6 +1974,30 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorOversightSettings = this.mirrorOversightSettings;
   }
 
+  enableHyperionLanternIfAvailable() {
+    if (this.isCompleted && this.isBooleanFlagSet('hyperionLanternFacilityAccess')) {
+      addEffect({
+        target: 'building',
+        targetId: 'hyperionLantern',
+        effectId: 'space-mirror-facility-enable-hyperion-lantern',
+        type: 'enable',
+        sourceId: this
+      });
+    }
+  }
+
+  applyEffect(effect) {
+    super.applyEffect(effect);
+    if (effect.type === 'booleanFlag' && effect.flagId === 'hyperionLanternFacilityAccess') {
+      this.enableHyperionLanternIfAvailable();
+    }
+  }
+
+  applyCompletionEffect() {
+    super.applyCompletionEffect();
+    this.enableHyperionLanternIfAvailable();
+  }
+
   enforceMirrorLockout() {
     const mirrorBuilding = buildings?.spaceMirror;
     if (mirrorBuilding && mirrorBuilding.isBooleanFlagSet && mirrorBuilding.isBooleanFlagSet('disableMirrorFacilityActivation') && mirrorBuilding.active > 0n) {
@@ -2034,7 +2058,9 @@ class SpaceMirrorFacilityProject extends Project {
           </div>
         </div>
       </div>
+      <div class="mirror-facility-overlay">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.incompleteOverlay', 'Complete facility to enable mirrors')}</div>
     `;
+    mirrorDetails.classList.toggle('facility-incomplete', !this.isCompleted);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(mirrorDetails);
     container.appendChild(mirrorDetails);
 
@@ -2162,6 +2188,7 @@ class SpaceMirrorFacilityProject extends Project {
     projectElements[this.name] = {
       ...projectElements[this.name],
       mirrorDetails: {
+        container: mirrorDetails,
         numMirrors: mirrorDetails.querySelector('#num-mirrors'),
         powerPerMirror: mirrorDetails.querySelector('#power-per-mirror'),
         powerPerMirrorArea: mirrorDetails.querySelector('#power-per-mirror-area'),
@@ -2291,6 +2318,7 @@ class SpaceMirrorFacilityProject extends Project {
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements || !elements.mirrorDetails) return;
+    elements.mirrorDetails.container.classList.toggle('facility-incomplete', !this.isCompleted);
     const mirrorBuilding = buildings['spaceMirror'];
     const numMirrors = Number.isFinite(mirrorBuilding?.activeNumber)
       ? mirrorBuilding.activeNumber

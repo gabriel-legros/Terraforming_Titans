@@ -49,6 +49,45 @@
     flex-grow: 1;
 }
 
+.mirror-details-card {
+    position: relative;
+}
+
+.mirror-details-card.facility-incomplete .card-body {
+    opacity: 0.38;
+    filter: grayscale(1);
+    pointer-events: none;
+}
+
+.mirror-facility-overlay {
+    display: none;
+}
+
+.mirror-details-card.facility-incomplete .mirror-facility-overlay {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 1px solid #9aa6b2;
+    border-radius: 4px;
+    background: rgba(248, 249, 250, 0.9);
+    color: #2f3a46;
+    font-weight: 700;
+    text-align: center;
+    transform: translateY(-20%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.mirror-details-card.collapsed .mirror-facility-overlay {
+    display: none;
+}
+
 .card-footer {
     background-color: #f8f9fa;
     padding: 10px 12px;

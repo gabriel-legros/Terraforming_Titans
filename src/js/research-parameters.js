@@ -1772,9 +1772,11 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           {
-            target: 'building',
-            targetId: 'hyperionLantern',
-            type: 'enable'
+            target: 'project',
+            targetId: 'spaceMirrorFacility',
+            type: 'booleanFlag',
+            flagId: 'hyperionLanternFacilityAccess',
+            value: true
           }
         ]
       },

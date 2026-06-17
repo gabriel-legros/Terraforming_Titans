@@ -241,6 +241,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Space Mirror Facility
 - Zonal mirror/lantern assignment with advanced oversight and reversible mirror mode; advanced oversight now stores mirror assignments as signed counts (`negative = reverse/cooling`) and derives reverse mode from the solved assignments instead of tracking a separate reverse-state decision through the solver.
+- Hyperion Lantern research grants a facility access flag; the Hyperion Lantern building is enabled only after both that research is complete and Space Mirror Facility is completed.
 - Advanced oversight now solves the ideal zonal flux targets and focus-melt power first, using direct temperature simulations from explicit zonal flux overrides plus a Newton-like flux solve with a stagnation fallback to the older coordinate/bisection refinement, then projects that ideal flux/power plan onto mirror and lantern assignments by priority instead of searching by individual assignment moves.
 - Advanced oversight binary searches must guard against JS number precision stalls at extreme mirror counts (for example `10Sp`), and should stop when the midpoint no longer changes instead of assuming `high - low > 1` guarantees progress.
 - Advanced oversight temperature probes that overshoot and worsen the objective should fall back to one much smaller probe step and use that cheaper result instead of running an expensive bracket search.
