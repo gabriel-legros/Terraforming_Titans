@@ -140,9 +140,6 @@ function buildAutomationShipUI() {
   card.appendChild(body);
 
   const presetRow = createAutomationPresetRow(body);
-  const shipTransferButtons = createAutomationPresetTransferButtons('ship-automation-preset');
-  presetRow.presetRow.appendChild(shipTransferButtons.importButton);
-  presetRow.presetRow.appendChild(shipTransferButtons.exportButton);
 
   const stepsContainer = document.createElement('div');
   stepsContainer.classList.add('automation-steps');
@@ -166,8 +163,6 @@ function buildAutomationShipUI() {
   automationElements.showPresetInSidebarCheckbox = presetRow.showInSidebarCheckbox;
   automationElements.stepsContainer = stepsContainer;
   automationElements.addStepButton = addStepButton;
-  automationElements.shipImportPresetButton = shipTransferButtons.importButton;
-  automationElements.shipExportPresetButton = shipTransferButtons.exportButton;
 
   attachAutomationHandlers();
 }
@@ -264,12 +259,6 @@ function updateShipAutomationUI() {
     forceShipStepsRefresh = false;
   }
   addStepButton.disabled = !activePreset || activePreset.steps.length >= 10;
-  if (automationElements.shipImportPresetButton) {
-    automationElements.shipImportPresetButton.disabled = false;
-  }
-  if (automationElements.shipExportPresetButton) {
-    automationElements.shipExportPresetButton.disabled = !activePreset;
-  }
 }
 
 function attachAutomationHandlers() {
@@ -387,43 +376,6 @@ function attachAutomationHandlers() {
       forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
-    });
-  }
-
-  const { shipExportPresetButton, shipImportPresetButton } = automationElements;
-  if (shipExportPresetButton) {
-    shipExportPresetButton.addEventListener('click', () => {
-      if (!automationManager || !automationManager.spaceshipAutomation) return;
-      const automation = automationManager.spaceshipAutomation;
-      const preset = automation.getActivePreset();
-      if (!preset) return;
-      exportAutomationPresetToClipboard('ship', automation.exportPreset(preset.id), shipExportPresetButton);
-    });
-  }
-  if (shipImportPresetButton) {
-    shipImportPresetButton.addEventListener('click', () => {
-      openAutomationPresetImportDialog({
-        title: getAutomationCardText('importShipPresetTitle', {}, 'Import Ship Preset'),
-        description: getAutomationCardText(
-          'importPresetDescription',
-          {},
-          'Paste an exported preset string below. Import adds it as a new preset.'
-        ),
-        onImport: (text) => {
-          const parsed = parseAutomationPresetTransferPayload(text, 'ship');
-          if (!parsed.ok) {
-            return parsed;
-          }
-          if (!automationManager || !automationManager.spaceshipAutomation) {
-            return { ok: false, error: getAutomationCardText('importPresetFailed', {}, 'Could not import that preset.') };
-          }
-          automationManager.spaceshipAutomation.importPreset(parsed.preset);
-          forceShipStepsRefresh = true;
-          queueAutomationUIRefresh();
-          updateAutomationUI();
-          return { ok: true };
-        }
-      });
     });
   }
 }

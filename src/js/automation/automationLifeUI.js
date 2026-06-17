@@ -24,9 +24,6 @@ function buildAutomationLifeUI() {
   card.appendChild(body);
 
   const presetRow = createAutomationPresetRow(body);
-  const lifeTransferButtons = createAutomationPresetTransferButtons('life-automation-preset');
-  presetRow.presetRow.appendChild(lifeTransferButtons.importButton);
-  presetRow.presetRow.appendChild(lifeTransferButtons.exportButton);
 
   const purchaseSection = document.createElement('div');
   purchaseSection.classList.add('life-automation-section');
@@ -130,8 +127,6 @@ function buildAutomationLifeUI() {
   automationElements.lifeSeedButton = seedButton;
   automationElements.lifeDesignEnableCheckbox = designEnable;
   automationElements.lifeDeployNowButton = deployNowButton;
-  automationElements.lifeImportPresetButton = lifeTransferButtons.importButton;
-  automationElements.lifeExportPresetButton = lifeTransferButtons.exportButton;
 
   attachLifeAutomationHandlers();
 }
@@ -158,9 +153,7 @@ function updateLifeAutomationUI() {
     lifeDeployInput,
     lifeSeedRow,
     lifeDesignEnableCheckbox,
-    lifeDeployNowButton,
-    lifeImportPresetButton,
-    lifeExportPresetButton
+    lifeDeployNowButton
   } = automationElements;
   const manager = automationManager;
   const automation = manager.lifeAutomation;
@@ -210,8 +203,6 @@ function updateLifeAutomationUI() {
     : null;
   const canDeploy = deployCandidate && deployCandidate.canSurviveAnywhere();
   lifeDeployNowButton.disabled = !canDeploy;
-  lifeImportPresetButton.disabled = false;
-  lifeExportPresetButton.disabled = !activePreset;
 
   // Only rebuild purchase container if no input within is focused
   const purchaseActiveElement = document.activeElement;
@@ -393,33 +384,6 @@ function attachLifeAutomationHandlers() {
     automation.forceDeployDesign(preset.id);
     queueAutomationUIRefresh();
     updateAutomationUI();
-  });
-
-  automationElements.lifeExportPresetButton.addEventListener('click', () => {
-    const automation = automationManager.lifeAutomation;
-    const preset = automation.getActivePreset();
-    exportAutomationPresetToClipboard('life', automation.exportPreset(preset.id), automationElements.lifeExportPresetButton);
-  });
-
-  automationElements.lifeImportPresetButton.addEventListener('click', () => {
-    openAutomationPresetImportDialog({
-      title: getAutomationCardText('importLifePresetTitle', {}, 'Import Life Preset'),
-      description: getAutomationCardText(
-        'importPresetDescription',
-        {},
-        'Paste an exported preset string below. Import adds it as a new preset.'
-      ),
-      onImport: (text) => {
-        const parsed = parseAutomationPresetTransferPayload(text, 'life');
-        if (!parsed.ok) {
-          return parsed;
-        }
-        automationManager.lifeAutomation.importPreset(parsed.preset);
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-        return { ok: true };
-      }
-    });
   });
 }
 
