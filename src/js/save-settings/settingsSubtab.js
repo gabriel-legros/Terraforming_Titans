@@ -59,7 +59,9 @@ function cacheSettingsElements() {
     popGrowthMultiplierInput: document.getElementById('pop-growth-multiplier-input'),
     maintenanceCostMultiplierInput: document.getElementById('maintenance-cost-multiplier-input'),
     spaceshipEnergyBeforeSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-before-space-elevator-multiplier-input'),
+    spaceshipEnergyBeforeSpaceElevatorTooltip: document.getElementById('spaceship-energy-before-space-elevator-tooltip'),
     spaceshipEnergyAfterSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-after-space-elevator-multiplier-input'),
+    spaceshipEnergyAfterSpaceElevatorTooltip: document.getElementById('spaceship-energy-after-space-elevator-tooltip'),
     galaxyFleetCapacityMultiplierInput: document.getElementById('galaxy-fleet-capacity-multiplier-input'),
     galaxyThreatScalingMultiplierInput: document.getElementById('galaxy-threat-scaling-multiplier-input'),
     galaxyThreatScalingTooltip: document.getElementById('galaxy-threat-scaling-tooltip'),
@@ -615,6 +617,28 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyFleetCapacityMultiplierInput, 'galaxyFleetCapacityMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyThreatScalingMultiplierInput, 'galaxyThreatScalingMultiplier');
+
+  if (cached.spaceshipEnergyBeforeSpaceElevatorTooltip) {
+    attachDynamicInfoTooltip(
+      cached.spaceshipEnergyBeforeSpaceElevatorTooltip,
+      t(
+        'ui.settings.spaceshipEnergyBeforeSpaceElevatorMultiplierTooltip',
+        {},
+        'Multiplies colony energy costs for spaceship projects before the Space Elevator is completed.'
+      )
+    );
+  }
+
+  if (cached.spaceshipEnergyAfterSpaceElevatorTooltip) {
+    attachDynamicInfoTooltip(
+      cached.spaceshipEnergyAfterSpaceElevatorTooltip,
+      t(
+        'ui.settings.spaceshipEnergyAfterSpaceElevatorMultiplierTooltip',
+        {},
+        'Multiplies colony energy costs for spaceship projects after the Space Elevator is completed.'
+      )
+    );
+  }
 
   if (cached.galaxyThreatScalingTooltip) {
     attachDynamicInfoTooltip(
