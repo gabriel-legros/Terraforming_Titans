@@ -1281,7 +1281,7 @@ function generateWGCPresetsDialogHTML() {
           <h3 id="wgc-presets-dialog-title">${getWGCText('presetsTitle', 'Stat Presets')}</h3>
           <button id="wgc-presets-close" class="wgc-presets-close" aria-label="Close">✕</button>
         </div>
-        <p class="wgc-preset-description">${getWGCText('presetsDescription', 'Save ratio presets for auto-investing stat points on level-up.')}</p>
+        <p class="wgc-preset-description">${getWGCText('presetsDescription', 'Presets define a Power / Athletics / Wit ratio and are auto-applied on level-up. Points are distributed using a weighted algorithm — a ratio of 2·1·1 gives twice as many points to Power, not an exact split. Apply manually fills unspent points or fully respecs matching members depending on the mode below.')}</p>
         <div id="wgc-preset-form" class="wgc-preset-form">
           <input id="wgc-preset-name" type="text" class="wgc-preset-name-input" placeholder="${getWGCText('presetNamePlaceholder', 'Preset name')}" maxlength="40">
           <div class="wgc-preset-scope-row">
@@ -1304,6 +1304,12 @@ function generateWGCPresetsDialogHTML() {
           </div>
           <button id="wgc-preset-save" class="wgc-preset-save-button">${getWGCText('presetSave', 'Save Preset')}</button>
         </div>
+        <button type="button" id="wgc-respec-toggle" class="wgc-respec-toggle" aria-pressed="false">
+          <span class="wgc-respec-toggle__track" aria-hidden="true">
+            <span class="wgc-respec-toggle__thumb"></span>
+          </span>
+          <span class="wgc-respec-toggle__label">${getWGCText('presetApplyModeUnspent', 'Unspent only')}</span>
+        </button>
         <div id="wgc-presets-list" class="wgc-presets-list"></div>
       </div>
     </div>`;
@@ -1311,7 +1317,9 @@ function generateWGCPresetsDialogHTML() {
 
 function openWGCPresetsDialog() {
   const overlay = document.getElementById('wgc-presets-overlay');
-  if (overlay) overlay.classList.add('is-open');
+  if (!overlay) return;
+  renderWGCPresetsUI();
+  overlay.classList.add('is-open');
 }
 
 function closeWGCPresetsDialog() {
@@ -1322,9 +1330,6 @@ function closeWGCPresetsDialog() {
 function generateWGCLayout() {
   return `
     <div class="wgc-container">
-      <div class="wgc-toolbar">
-        <button id="wgc-open-presets-btn" class="wgc-toolbar-btn">${getWGCText('presetsTitle', 'Stat Presets')}</button>
-      </div>
       ${generateWGCPresetsDialogHTML()}
       <div class="wgc-main">
         <div class="wgc-left">
@@ -1333,6 +1338,7 @@ function generateWGCLayout() {
               <div class="wgc-card-title">
                 <h3>${getWGCText('teamsSectionTitle', 'Teams')} <span id="wgc-team-rules-info" class="info-tooltip-icon">&#9432;</span></h3>
                 <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy all stats to clipboard')}"><span class="wgc-copy-team-stats-icon" aria-hidden="true"></span></span>
+                <span id="wgc-open-presets-btn" class="wgc-presets-icon-btn" role="button" tabindex="0" aria-label="${getWGCText('presetsTitle', 'Stat Presets')}"><span class="wgc-presets-icon-btn-icon" aria-hidden="true"></span></span>
               </div>
               <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
                 <span class="wgc-story-toggle__track" aria-hidden="true">
@@ -1545,10 +1551,24 @@ function initializeWGCUI() {
     renderWGCPresetsUI();
 
     const openBtn = document.getElementById('wgc-open-presets-btn');
-    if (openBtn) openBtn.addEventListener('click', openWGCPresetsDialog);
+    if (openBtn) {
+      openBtn.addEventListener('click', openWGCPresetsDialog);
+      openBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWGCPresetsDialog(); } });
+    }
 
     const closeBtn = document.getElementById('wgc-presets-close');
     if (closeBtn) closeBtn.addEventListener('click', closeWGCPresetsDialog);
+
+    const respecToggle = document.getElementById('wgc-respec-toggle');
+    if (respecToggle) {
+      respecToggle.addEventListener('click', () => {
+        const on = respecToggle.getAttribute('aria-pressed') === 'true';
+        respecToggle.setAttribute('aria-pressed', String(!on));
+        respecToggle.classList.toggle('is-on', !on);
+        const label = respecToggle.querySelector('.wgc-respec-toggle__label');
+        if (label) label.textContent = !on ? getWGCText('presetApplyModeRespec', 'Respec') : getWGCText('presetApplyModeUnspent', 'Unspent only');
+      });
+    }
 
     const overlay = document.getElementById('wgc-presets-overlay');
     if (overlay) {
@@ -1625,7 +1645,6 @@ function updateOperationProgressSegments(op, refs) {
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   updateWGCStoryToggleButton();
-  renderWGCPresetsUI();
   setTooltipText(wgcRDPurchaseTooltip, buildWGCRDPurchaseTooltipText(), wgcTooltipCache, 'wgcRDPurchase');
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
@@ -1897,17 +1916,49 @@ function renderWGCPresetsUI() {
     btn.addEventListener('click', () => {
       const pid = btn.getAttribute('data-preset-id');
       if (!manager) return;
+      const preset = manager.presets.find(p => p.id === pid);
+      if (!preset) return;
+      const respec = document.getElementById('wgc-respec-toggle')?.getAttribute('aria-pressed') === 'true';
+      const s = preset.scope || { type: 'global' };
+      const { power = 0, athletics = 0, wit = 0 } = preset.ratios || {};
+      const ratioSum = power + athletics + wit;
+      if (ratioSum <= 0) return;
       manager.teams.forEach((team, tIdx) => {
         team.forEach(m => {
           if (!m) return;
-          const preset = manager.presets.find(p => p.id === pid);
-          if (!preset) return;
-          const s = preset.scope || { type: 'global' };
           let matches = false;
           if (s.type === 'global') matches = true;
           else if (s.type === 'team') matches = s.value === tIdx;
           else if (s.type === 'class') matches = s.value === m.classType;
-          if (matches) manager.applyPresetToMember(m, tIdx);
+          if (!matches) return;
+          if (respec) m.respec();
+          const points = m.getPointsToAllocate();
+          if (points <= 0) return;
+          const base = WGCTeamMember.getBaseStats(m.classType);
+          const current = { power: m.power - base.power, athletics: m.athletics - base.athletics, wit: m.wit - base.wit };
+          const stats = ['power', 'athletics', 'wit'].filter(stat => preset.ratios[stat] > 0);
+          let remaining = points;
+          let total = current.power + current.athletics + current.wit;
+          while (remaining > 0) {
+            let best = '';
+            let bestErr = Infinity;
+            for (const stat of stats) {
+              const nextTotal = total + 1;
+              let mse = 0;
+              for (const s2 of stats) {
+                const desired = preset.ratios[s2] / ratioSum;
+                const actual = (current[s2] + (s2 === stat ? 1 : 0)) / nextTotal;
+                mse += (desired - actual) ** 2;
+              }
+              const err = mse / stats.length;
+              if (err + 1e-9 < bestErr) { bestErr = err; best = stat; }
+            }
+            if (!best) break;
+            current[best] += 1;
+            m[best] += 1;
+            total += 1;
+            remaining -= 1;
+          }
         });
       });
       updateWGCUI();
@@ -1918,6 +1969,7 @@ function renderWGCPresetsUI() {
       const pid = btn.getAttribute('data-preset-id');
       if (!manager) return;
       manager.deletePreset(pid);
+      if (typeof saveGameToSlot === 'function') saveGameToSlot('autosave');
       renderWGCPresetsUI();
     });
   });
@@ -1942,6 +1994,7 @@ function attachWGCPresetFormHandlers() {
     const wit = parseInt((document.getElementById('wgc-preset-wit') || {}).value || '0', 10) || 0;
     manager.addPreset(name, scope, { power, athletics, wit });
     if (document.getElementById('wgc-preset-name')) document.getElementById('wgc-preset-name').value = '';
+    if (typeof saveGameToSlot === 'function') saveGameToSlot('autosave');
     renderWGCPresetsUI();
   });
 

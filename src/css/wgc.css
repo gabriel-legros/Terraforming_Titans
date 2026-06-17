@@ -925,27 +925,38 @@
 }
 
 /* Toolbar (above the main WGC layout) */
-.wgc-toolbar {
-  display: flex;
+/* Presets icon button */
+.wgc-presets-icon-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 0 10px;
-}
-
-.wgc-toolbar-btn {
-  background-color: var(--wgc-bg-light);
-  border: 1px solid var(--wgc-border-color);
-  color: var(--wgc-text-light);
-  border-radius: 4px;
-  padding: 5px 14px;
-  font-size: 0.88em;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  padding: 2px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  position: relative;
 }
 
-.wgc-toolbar-btn:hover {
+.wgc-presets-icon-btn-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
   background-color: var(--wgc-border-color);
-  color: var(--wgc-bg-dark);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+.wgc-presets-icon-btn:hover .wgc-presets-icon-btn-icon {
+  background-color: var(--wgc-border-color);
+  opacity: 0.75;
+}
+
+.wgc-presets-icon-btn:focus-visible {
+  outline: 1px dashed var(--wgc-border-color);
+  outline-offset: 2px;
 }
 
 /* Stat Presets dialog overlay */
@@ -1010,7 +1021,8 @@
 /* Form inside the dialog */
 .wgc-preset-description {
   color: var(--wgc-text-medium);
-  font-size: 0.85em;
+  font-size: 0.82em;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -1075,6 +1087,62 @@
   color: var(--wgc-bg-dark);
 }
 
+/* Respec toggle */
+.wgc-respec-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--wgc-text-medium);
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.wgc-respec-toggle__track {
+  width: 36px;
+  height: 18px;
+  background-color: var(--wgc-bg-light);
+  border-radius: 999px;
+  position: relative;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.wgc-respec-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--wgc-text-light);
+  transition: transform 0.2s ease;
+}
+
+.wgc-respec-toggle.is-on .wgc-respec-toggle__track {
+  background-color: var(--wgc-border-color);
+}
+
+.wgc-respec-toggle.is-on .wgc-respec-toggle__thumb {
+  transform: translateX(18px);
+}
+
+.wgc-container .wgc-presets-dialog .wgc-respec-toggle:hover {
+  background: transparent;
+  color: var(--wgc-text-light);
+  border: none;
+  box-shadow: none;
+}
+
+.wgc-respec-toggle:focus-visible {
+  outline: 2px solid var(--wgc-border-color);
+  outline-offset: 2px;
+}
+
 /* Preset list */
 .wgc-presets-list {
   display: flex;
@@ -1128,7 +1196,7 @@
   flex-shrink: 0;
 }
 
-.wgc-preset-apply {
+.wgc-presets-dialog .wgc-preset-apply {
   background-color: var(--wgc-bg-medium);
   border: 1px solid var(--wgc-border-color);
   color: var(--wgc-text-light);
@@ -1139,12 +1207,13 @@
   transition: background-color 0.2s;
 }
 
-.wgc-preset-apply:hover {
+.wgc-presets-dialog .wgc-preset-apply:hover {
   background-color: var(--wgc-border-color);
   color: var(--wgc-bg-dark);
+  box-shadow: none;
 }
 
-.wgc-preset-delete {
+.wgc-presets-dialog .wgc-preset-delete {
   background: transparent;
   border: 1px solid var(--wgc-red);
   color: var(--wgc-red);
@@ -1155,9 +1224,10 @@
   transition: background-color 0.2s;
 }
 
-.wgc-preset-delete:hover {
+.wgc-presets-dialog .wgc-preset-delete:hover {
   background-color: var(--wgc-red);
   color: #fff;
+  box-shadow: none;
 }
 
 /* Stats */
