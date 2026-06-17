@@ -499,12 +499,12 @@ body.dark-mode {
 }
 
 .dark-mode #mirror-flux-table th {
-    background-color: #1e1e1e;
+    background-color: #161b26;
 }
 
 .dark-mode .section-title {
-    color: #ffffff;
-    border-bottom-color: #444;
+    color: #e7ecf7;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .resource-disposal-builder-header {
@@ -558,20 +558,20 @@ body.dark-mode {
 }
 
 .dark-mode .android-assignment-headers {
-    color: #ffffff;
-    border-bottom-color: #3c3c3c;
+    color: #e7ecf7;
+    border-bottom-color: #1d293b;
 }
 
 .dark-mode .android-subheading {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .android-speed-row {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .android-speed-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .battle-of-olympus-progress-wrap {
@@ -589,16 +589,16 @@ body.dark-mode {
 }
 
 .dark-mode .battle-of-olympus-metric-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .colony-slider label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .colony-slider .slider-value,
 .dark-mode .colony-slider .slider-effect {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .moon-warning {
@@ -606,59 +606,59 @@ body.dark-mode {
 }
 
 .dark-mode .reorder-buttons button.disabled {
-    color: #666;
+    color: #4a5568;
 }
 
 .dark-mode .cargo-resource-label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .progress-button {
     background-color: #007bff;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .progress-button:hover {
     background-color: #0056b3;
 }
 .dark-mode .resource-wrapper {
-    background-color: #1e1e1e;
+    background-color: #161b26;
 }
 
 .dark-mode .resource-divider-top::before {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .resource-divider-bottom::after {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .storage-resource-separator {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .terraforming-infographic-button {
     background-color: #2b2b2b;
-    border-color: #555;
-    color: #f0f0f0;
+    border-color: #374151;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-infographic-button:hover,
 .dark-mode .terraforming-infographic-button:focus {
-    background-color: #3a3a3a;
+    background-color: #1a2538;
     border-color: #6a6a6a;
     color: #9ac4ff;
 }
 
 .dark-mode .terraforming-graphs-button {
-    background: linear-gradient(180deg, #303030 0%, #242424 100%);
-    border-color: #555;
+    background: linear-gradient(180deg, #303030 0%, #131b29 100%);
+    border-color: #374151;
     color: #9ac4ff;
 }
 
 .dark-mode .terraforming-graphs-button:hover,
 .dark-mode .terraforming-graphs-button:focus {
-    background-color: #3a3a3a;
+    background-color: #1a2538;
     border-color: #6a6a6a;
 }
 
@@ -667,19 +667,19 @@ body.dark-mode {
 }
 
 .dark-mode .terraforming-graphs-window {
-    background: #1e1e1e;
+    background: #161b26;
 }
 
 .dark-mode .terraforming-graphs-header {
     background: #2a2a2a;
-    border-bottom-color: #444;
-    color: #f0f0f0;
+    border-bottom-color: #2d3a50;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-graphs-close {
-    background: #333333;
-    border-color: #555;
-    color: #f0f0f0;
+    background: #1a2538;
+    border-color: #374151;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-graphs-close:hover,
@@ -689,42 +689,42 @@ body.dark-mode {
 
 .dark-mode .terraforming-graphs-menu {
     background: #232323;
-    border-right-color: #444;
-    border-bottom-color: #444;
+    border-right-color: #2d3a50;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-menu-button {
     background: #2b2b2b;
-    border-color: #444;
+    border-color: #2d3a50;
     color: #dcdcdc;
 }
 
 .dark-mode .terraforming-graphs-menu-button.active {
     background: #1b6ac9;
     border-color: #1b6ac9;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-graphs-canvas {
-    background: #151515;
-    border-color: #444;
+    background: #0c1019;
+    border-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-note {
-    color: #aaaaaa;
+    color: #7a93b8;
 }
 
 .dark-mode .terraforming-graphs-phase {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-phase-canvas {
-    background: #151515;
-    border-color: #444;
+    background: #0c1019;
+    border-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-phase-note {
-    color: #aaaaaa;
+    color: #7a93b8;
 }
 
 .dark-mode .terraforming-graphs-phase-disclaimer {
@@ -735,58 +735,58 @@ body.dark-mode {
 
 .dark-mode .terraforming-graphs-phase-button {
     background: #2b2b2b;
-    border-color: #444;
+    border-color: #2d3a50;
     color: #dcdcdc;
 }
 
 .dark-mode .terraforming-graphs-phase-button.active {
     background: #1b6ac9;
     border-color: #1b6ac9;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 
 .dark-mode .scanning-progress {
-    color: #aaa;
+    color: #7a93b8;
 }
 .dark-mode .combined-building-row {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .building-description {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .building-display {
-    background-color: #1e1e1e;
+    background-color: #161b26;
 }
 
 .dark-mode .hide-button:disabled {
-    color: #666;
+    color: #4a5568;
 }
 
 .dark-mode .unhide-obsolete-button {
-    background-color: #4d4d4d;
-    color: #ffffff;
+    background-color: #24324a;
+    color: #e7ecf7;
 }
 
 .dark-mode .unhide-obsolete-button:hover {
-    background-color: #666666;
+    background-color: #4a5568;
 }
 
 .dark-mode button {
-    background-color: #4d4d4d;
-    color: #ffffff;
-    border: 1px solid #666;
+    background-color: #24324a;
+    color: #e7ecf7;
+    border: 1px solid #4a5568;
 }
 
 .dark-mode button:hover {
-    background-color: #666666;
+    background-color: #4a5568;
 }
 
 .dark-mode button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
     cursor: not-allowed;
 }
 
@@ -807,22 +807,22 @@ body.dark-mode {
 .dark-mode .milestone-button.completed {
     background-color: #3cb371;
     border-color: #3cb371;
-    color: #fff;
+    color: #e7ecf7;
 }
 
 .dark-mode input,
 .dark-mode select,
 .dark-mode textarea {
-    background-color: #1e1e1e;
-    color: #ffffff;
-    border: 1px solid #444;
+    background-color: #161b26;
+    color: #e7ecf7;
+    border: 1px solid #2d3a50;
 }
 
 .dark-mode .auto-build-header-input:disabled,
 .dark-mode .auto-build-input:disabled {
     background-color: #2a2a2a;
     color: #9aa0a6;
-    border-color: #666;
+    border-color: #4a5568;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
     cursor: not-allowed;
 }
@@ -910,22 +910,22 @@ body.dark-mode {
     border-top-color: rgba(100, 116, 139, 0.45);
 }
 .dark-mode .research-item {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .toggle-completed-button {
-    background-color: #4d4d4d;
-    color: #ffffff;
+    background-color: #24324a;
+    color: #e7ecf7;
 }
 
 .dark-mode .research-hide-toggle {
-    background-color: #3a3a3a;
-    color: #f0f0f0;
-    border-color: #666;
+    background-color: #1a2538;
+    color: #e7ecf7;
+    border-color: #4a5568;
 }
 .dark-mode .settings-container h2 {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .space-storage-settings-window {
@@ -955,34 +955,34 @@ body.dark-mode {
 }
 
 .dark-mode .save-slots table {
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode .save-slots td {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .save-slots tr:not(:last-child) {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .save-slots th {
-    background-color: #1e1e1e;
-    color: #ffffff;
+    background-color: #161b26;
+    color: #e7ecf7;
 }
 
 .dark-mode .save-slots button {
-    background-color: #4d4d4d;
-    color: #ffffff;
+    background-color: #24324a;
+    color: #e7ecf7;
 }
 
 .dark-mode .save-slots button:hover {
-    background-color: #666666;
+    background-color: #4a5568;
 }
 
 .dark-mode .save-slots button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode .save-slots button.delete-button {
@@ -993,16 +993,16 @@ body.dark-mode {
     background-color: #cc0000;
 }
 .dark-mode .terraforming-box {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .terraforming-box h3 {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-box p {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 /* Solis Tab Dark Mode */
 .dark-mode .solis-container {
