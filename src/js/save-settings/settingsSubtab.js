@@ -624,7 +624,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.spaceshipEnergyBeforeSpaceElevatorMultiplierTooltip',
         {},
-        'Multiplies colony energy costs for spaceship projects before the Space Elevator is completed.'
+        'Multiplies colony energy costs for spaceship projects before the Space Elevator is completed.  Use 100-500 if you want a realistic value.'
       )
     );
   }
@@ -635,7 +635,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.spaceshipEnergyAfterSpaceElevatorMultiplierTooltip',
         {},
-        'Multiplies colony energy costs for spaceship projects after the Space Elevator is completed.'
+        'Multiplies colony energy costs for spaceship projects after the Space Elevator is completed.  Use 10-20 if you want a realistic value.'
       )
     );
   }
