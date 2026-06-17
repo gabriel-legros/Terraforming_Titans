@@ -48,6 +48,8 @@ function cacheSettingsElements() {
     unfulfilledMaintenancePenaltiesTooltip: document.getElementById('unfulfilled-maintenance-penalties-tooltip'),
     earlyAdvancedOversightToggle: document.getElementById('early-advanced-oversight-toggle'),
     earlyAdvancedOversightTooltip: document.getElementById('early-advanced-oversight-tooltip'),
+    factoryHeatingToggle: document.getElementById('factory-heating-toggle'),
+    factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -555,6 +557,28 @@ function addSettingsListeners() {
         'ui.settings.earlyAdvancedOversightTooltip',
         {},
         'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.'
+      )
+    );
+  }
+
+  if (cached.factoryHeatingToggle) {
+    cached.factoryHeatingToggle.checked = gameSettings.factoryHeating;
+    cached.factoryHeatingToggle.addEventListener('change', () => {
+      gameSettings.factoryHeating = cached.factoryHeatingToggle.checked;
+      if (!gameSettings.factoryHeating && terraforming) {
+        terraforming.setFactoryHeatPower(0);
+      }
+      updateTerraformingUI();
+    });
+  }
+
+  if (cached.factoryHeatingTooltip) {
+    attachDynamicInfoTooltip(
+      cached.factoryHeatingTooltip,
+      t(
+        'ui.settings.factoryHeatingTooltip',
+        {},
+        'When enabled, part of local building and colony energy use becomes planetary heat. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
       )
     );
   }

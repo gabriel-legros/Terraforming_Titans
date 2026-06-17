@@ -1613,6 +1613,30 @@ function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, acc
   }
 }
 
+function updateFactoryHeatPower(deltaTime, structures) {
+  if (!terraforming || !terraforming.setFactoryHeatPower) {
+    return;
+  }
+  if (!gameSettings.factoryHeating || !(deltaTime > 0)) {
+    terraforming.setFactoryHeatPower(0);
+    return;
+  }
+
+  let power = 0;
+  for (const structureName in structures) {
+    const structure = structures[structureName];
+    const coefficient = structure.factoryHeatCoefficient || 0;
+    if (!(coefficient > 0)) {
+      continue;
+    }
+    const consumedEnergy = structure.currentConsumption?.colony?.energy || 0;
+    if (consumedEnergy > 0) {
+      power += consumedEnergy * (1000 / deltaTime) * coefficient;
+    }
+  }
+  terraforming.setFactoryHeatPower(power);
+}
+
 function produceResources(deltaTime, buildings) {
   if (typeof spaceManager !== 'undefined') {
     spaceManager.beginTerraformedWorldCountCache?.();
@@ -1842,6 +1866,8 @@ function produceResources(deltaTime, buildings) {
     // Apply maintenance after production/consumption so conversions respect availability
     building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
   }
+
+  updateFactoryHeatPower(deltaTime, buildings);
 
   if (projectManager) {
     for (const [, data] of otherSpaceBuildingOperations) {

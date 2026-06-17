@@ -156,6 +156,7 @@ class Building extends EffectableEntity {
         ignoreResourceForProductivityResourceDisplay,
         alwaysShowProduction,
         alwaysShowConsumption,
+        factoryHeatCoefficient,
         kesslerDebrisSize,
         automationRequiresEverEnabled
       } = config;
@@ -183,6 +184,9 @@ class Building extends EffectableEntity {
       this.ignoreResourceForProductivityResourceDisplay = ignoreResourceForProductivityResourceDisplay || null;
       this.alwaysShowProduction = !!alwaysShowProduction;
       this.alwaysShowConsumption = !!alwaysShowConsumption;
+      this.factoryHeatCoefficient = Number.isFinite(factoryHeatCoefficient)
+        ? Math.max(0, factoryHeatCoefficient)
+        : 0;
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
       this.kesslerDebrisSize = kesslerDebrisSize || null;

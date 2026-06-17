@@ -83,6 +83,13 @@ function getCoreHeatTooltipText() {
   );
 }
 
+function getFactoryHeatTooltipText() {
+  return getTerraformingSummaryText(
+    'temperature.factoryHeatTooltip',
+    'Industrial waste heat from local building and colony energy consumption. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. This flux is not impacted by albedo or day-night averaging.'
+  );
+}
+
 const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
   carbonDioxide: 44.01,
   atmosphericWater: 18.01528,
@@ -1336,6 +1343,7 @@ function createTemperatureBox(row) {
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
+      <p id="temperature-factory-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netFactoryHeatFlux', 'Net Factory Heat Flux')}: <span id="temperature-factory-heat"></span> W/m^2</p>
       <table>
         <colgroup>
           <col class="gas-col">
@@ -1405,6 +1413,18 @@ function createTemperatureBox(row) {
       attachDynamicInfoTooltip(
         coreHeatInfo,
         getCoreHeatTooltipText()
+      );
+    }
+    const factoryHeatLine = temperatureBox.querySelector('#temperature-factory-heat-line');
+    const factoryHeatInfo = document.createElement('span');
+    factoryHeatInfo.classList.add('info-tooltip-icon');
+    factoryHeatInfo.innerHTML = '&#9432;';
+    if (factoryHeatLine) {
+      factoryHeatLine.appendChild(document.createTextNode(' '));
+      factoryHeatLine.appendChild(factoryHeatInfo);
+      attachDynamicInfoTooltip(
+        factoryHeatInfo,
+        getFactoryHeatTooltipText()
       );
     }
     const infographicElements = ensureTemperatureInfographicOverlay();
@@ -1485,6 +1505,9 @@ function createTemperatureBox(row) {
       coreHeatLine,
       coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
+      factoryHeatLine,
+      factoryHeatTooltip: factoryHeatInfo.querySelector('.resource-tooltip'),
+      factoryHeat: temperatureBox.querySelector('#temperature-factory-heat'),
       tropicalLabel: temperatureBox.querySelector('#tropical-temp')?.closest('tr')?.firstElementChild,
       tropicalTemp: temperatureBox.querySelector('#tropical-temp'),
       tropicalTrendTemp: temperatureBox.querySelector('#tropical-trend-temp'),
@@ -1565,6 +1588,17 @@ function createTemperatureBox(row) {
     }
     if (els.coreHeat) {
       els.coreHeat.textContent = formatNumber(netCoreHeatFlux, false, 2);
+    }
+    const factoryHeatFlux = terraforming.getFactoryHeatFlux ? terraforming.getFactoryHeatFlux() : 0;
+    const netFactoryHeatFlux = terraforming.getNetFactoryHeatFlux ? terraforming.getNetFactoryHeatFlux() : factoryHeatFlux;
+    if (els.factoryHeatLine) {
+      els.factoryHeatLine.style.display = factoryHeatFlux > 0 ? '' : 'none';
+    }
+    if (els.factoryHeatTooltip) {
+      setTooltipText(els.factoryHeatTooltip, getFactoryHeatTooltipText());
+    }
+    if (els.factoryHeat) {
+      els.factoryHeat.textContent = formatNumber(netFactoryHeatFlux, false, 2);
     }
 
     els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);

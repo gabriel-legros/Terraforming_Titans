@@ -502,6 +502,8 @@ class Terraforming extends EffectableEntity{
         availableByKey: {},
     };
     this.heatCapacityCache = null;
+    this.factoryHeatPower = 0;
+    this.factoryHeatFlux = 0;
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
     this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
@@ -701,14 +703,41 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
   }
 
-  getMegaHeatSinkCoolingFlux() {
+  setFactoryHeatPower(power) {
+    const surfaceArea = this.celestialParameters.surfaceArea
+      || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
+    this.factoryHeatPower = Math.max(0, Number(power) || 0);
+    this.factoryHeatFlux = surfaceArea > 0 ? this.factoryHeatPower / surfaceArea : 0;
+  }
+
+  getFactoryHeatFlux() {
+    if (!gameSettings.factoryHeating || isEquilibrating) {
+      return 0;
+    }
+    return Math.max(0, this.factoryHeatFlux || 0);
+  }
+
+  getNetFactoryHeatFlux() {
+    const factoryHeatFlux = this.getFactoryHeatFlux();
+    const sinkAfterCore = Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
+    return Math.max(0, factoryHeatFlux - sinkAfterCore);
+  }
+
+  getNetSurfaceHeatFlux() {
     const coreHeatFlux = this.getCoreHeatFlux();
+    const factoryHeatFlux = this.getFactoryHeatFlux();
+    const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
+    return Math.max(0, coreHeatFlux + factoryHeatFlux - megaHeatSinkFlux);
+  }
+
+  getMegaHeatSinkCoolingFlux() {
+    const totalHeatFlux = this.getCoreHeatFlux() + this.getFactoryHeatFlux();
     const megaHeatSinkFlux = this.getMegaHeatSinkRawFlux();
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
       return megaHeatSinkFlux;
     }
-    return Math.max(0, megaHeatSinkFlux - coreHeatFlux);
+    return Math.max(0, megaHeatSinkFlux - totalHeatFlux);
   }
 
   setTemperatureValuesToTrend() {
@@ -1608,7 +1637,7 @@ class Terraforming extends EffectableEntity{
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
     const zonalFluxOverrides = options && options.zonalFluxOverrides;
     const disableAvailableAdvancedHeating = !!(options && options.disableAvailableAdvancedHeating);
-    const netSurfaceHeatFlux = this.getNetCoreHeatFlux();
+    const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
     const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
     const allowAvailableHeating =
         !disableAvailableAdvancedHeating &&

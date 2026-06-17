@@ -7,6 +7,7 @@ const colonyParameters = {
       consumption: { colony: { energy: 50000, food: 1 } },
       production: { colony: { research: 1 } },
       storage: { colony: { colonists: 10, androids: 0 } },
+      factoryHeatCoefficient: 1,
       baseComfort: 0,
       dayNightActivity: false,
       canBeToggled: true,
@@ -23,6 +24,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 50000, food : 1}},
       production: {colony : {research : 1}},
       storage: { colony: { colonists: 10} },
+      factoryHeatCoefficient: 1,
       baseComfort : 0,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
@@ -39,6 +41,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 250000, food : 10}},
       production: {colony : {research : 10}},
       storage: { colony: { colonists: 100} },
+      factoryHeatCoefficient: 1,
       baseComfort : 0.2,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
@@ -56,6 +59,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 2500000, food : 100, electronics: 1}},
       production: {colony : {research : 100}},
       storage: { colony: { colonists: 1000} },
+      factoryHeatCoefficient: 1,
       baseComfort : 0.4,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
@@ -73,6 +77,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 25000000, food : 1000, electronics: 10, androids: 0.1}},
       production: {colony : {research : 1000}},
       storage: { colony: { colonists: 10000} },
+      factoryHeatCoefficient: 1,
       baseComfort : 0.6,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
@@ -89,6 +94,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 250000000, food : 10000, electronics: 100, androids: 1}},
       production: {colony : {research : 10000}},
       storage: { colony: { colonists: 100000} },
+      factoryHeatCoefficient: 1,
       baseComfort : 0.8,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
@@ -105,6 +111,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 2500000000, food : 100000, electronics: 1000, androids: 10}},
       production: {colony : {research : 100000}},
       storage: { colony: { colonists: 1000000} },
+      factoryHeatCoefficient: 1,
       baseComfort : 1,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
@@ -122,6 +129,7 @@ const colonyParameters = {
       consumption: { colony: { energy: 25000000000, food: 1000000, electronics: 10000, androids: 100 } },
       production: { colony: { research: 1000000 } },
       storage: { colony: { colonists: 10000000, androids: 100000000 } },
+      factoryHeatCoefficient: 1,
       baseComfort: 1,
       dayNightActivity: false,
       canBeToggled: true,

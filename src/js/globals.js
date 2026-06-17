@@ -92,6 +92,7 @@ let gameSettings = {
   disableSpeedControls: false,
   unfulfilledMaintenancePenalties: false,
   earlyAdvancedOversight: false,
+  factoryHeating: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,
