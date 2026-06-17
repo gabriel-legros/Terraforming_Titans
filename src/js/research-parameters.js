@@ -222,7 +222,8 @@ const researchParameters = {
         disabled: true,
         effects: [
           { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' },
-          { target: 'building', targetId: 'dysonReceiver', type: 'enable' }
+          { target: 'building', targetId: 'dysonReceiver', type: 'enable' },
+          { target: 'resource', resourceType: 'space', targetId: 'energy', type: 'enable' }
         ]
       },
       {

@@ -229,29 +229,6 @@ function getResourceNamesForDisplay(category, resourceMap, resourceSet = null) {
   });
 }
 
-function reorderSpaceStorageElements(container) {
-  if (!container) return;
-  const total = document.getElementById('space-storage-total-container');
-  if (total && container.firstChild !== total) {
-    container.insertBefore(total, container.firstChild);
-  }
-  let previousElement = total && total.parentElement === container ? total : null;
-  for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
-    const resourceName = SPACE_STORAGE_UI_ORDER[i];
-    const resourceElement = document.getElementById(getResourceDomId('spaceStorage', resourceName, 'container'));
-    if (resourceElement && resourceElement.parentElement === container) {
-      if (previousElement) {
-        if (previousElement.nextSibling !== resourceElement) {
-          container.insertBefore(resourceElement, previousElement.nextSibling);
-        }
-      } else if (container.firstChild !== resourceElement) {
-        container.insertBefore(resourceElement, container.firstChild);
-      }
-      previousElement = resourceElement;
-    }
-  }
-}
-
 function ensureSpaceStorageTotalElement(container) {
   if (!container) return;
   let totalElement = document.getElementById('space-storage-total-container');
@@ -1593,68 +1570,70 @@ function createResourceElement(category, resourceObj, resourceName) {
   return resourceElement;
 }
 
+function syncResourceElementsForCategory(category, resourceSet) {
+  if (!shouldRenderResourceCategory(category)) return;
+  const container = document.getElementById(`${category}-resources-resources-container`);
+  if (!container) return;
+
+  const currentIds = new Set();
+  let previousElement = null;
+  if (category === 'spaceStorage') {
+    ensureSpaceStorageTotalElement(container);
+    previousElement = document.getElementById('space-storage-total-container');
+    currentIds.add('space-storage-total-container');
+  }
+
+  const resourceNames = getResourceNamesForDisplay(category, resourceSet[category], resourceSet);
+  for (let i = 0; i < resourceNames.length; i += 1) {
+    const resourceName = resourceNames[i];
+    const resourceObj = getDisplayResourceObject(resourceSet, category, resourceName);
+    if (!resourceObj) continue;
+    const resourceContainerId = getResourceDomId(category, resourceName, 'container');
+    currentIds.add(resourceContainerId);
+
+    let resourceElement = document.getElementById(resourceContainerId);
+    if (!resourceElement) {
+      resourceElement = createResourceElement(category, resourceObj, resourceName);
+    }
+
+    if (previousElement) {
+      if (previousElement.nextSibling !== resourceElement) {
+        container.insertBefore(resourceElement, previousElement.nextSibling);
+      }
+    } else if (container.firstChild !== resourceElement) {
+      container.insertBefore(resourceElement, container.firstChild);
+    }
+    previousElement = resourceElement;
+  }
+
+  const existingResourceElements = container.querySelectorAll('.resource-item');
+  for (let i = 0; i < existingResourceElements.length; i += 1) {
+    const element = existingResourceElements[i];
+    if (!currentIds.has(element.id)) {
+      cleanupTrackedUIListeners(element);
+      cleanupDynamicTooltipsIn(element);
+      element.remove();
+    }
+  }
+}
+
 function populateResourceElements(resources) {
   const categories = getResourceCategoriesForDisplay(resources);
   for (let i = 0; i < categories.length; i += 1) {
-    const category = categories[i];
-    if (!shouldRenderResourceCategory(category)) continue;
-    const containerId = `${category}-resources-resources-container`;
-    const container = document.getElementById(containerId);
-
-    if (container) {
-      if (category === 'spaceStorage') {
-        ensureSpaceStorageTotalElement(container);
-      }
-      const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
-      const currentIds = new Set();
-      if (category === 'spaceStorage') {
-        currentIds.add('space-storage-total-container');
-      }
-      for (let i = 0; i < resourceNames.length; i += 1) {
-        const resourceName = resourceNames[i];
-        const resourceObj = getDisplayResourceObject(resources, category, resourceName);
-        if (!resourceObj) continue;
-        const resourceContainerId = getResourceDomId(category, resourceName, 'container');
-        currentIds.add(resourceContainerId);
-        if (!document.getElementById(resourceContainerId)) {
-          const resourceElement = createResourceElement(category, resourceObj, resourceName);
-          container.appendChild(resourceElement);
-        }
-      }
-      const existingResourceElements = container.querySelectorAll('.resource-item');
-      for (let j = 0; j < existingResourceElements.length; j += 1) {
-        const element = existingResourceElements[j];
-        if (!currentIds.has(element.id)) {
-          cleanupTrackedUIListeners(element);
-          cleanupDynamicTooltipsIn(element);
-          element.remove();
-        }
-      }
-      if (category === 'spaceStorage') {
-        reorderSpaceStorageElements(container);
-      }
-    }
+    syncResourceElementsForCategory(categories[i], resources);
   }
 }
 
 function unlockResource(resource) {
   if (!shouldRenderResourceCategory(resource.category)) return;
-  if (resource.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name) && !document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
+  if (resource.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
-    const container = document.getElementById(containerId);
 
-    if (container) {
-      if (resource.category === 'spaceStorage') {
-        ensureSpaceStorageTotalElement(container);
+    if (categoryContainer) {
+      if (!document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
+        syncResourceElementsForCategory(resource.category, resources);
       }
-      // Use helper function to create the resource element
-      const resourceElement = createResourceElement(resource.category, resource, resource.name);
-      container.appendChild(resourceElement);
-      if (resource.category === 'spaceStorage') {
-        reorderSpaceStorageElements(container);
-      }
-
       // Ensure the category container is visible
       categoryContainer.style.display = 'block';
 
@@ -1688,9 +1667,6 @@ function updateResourceDisplay(resources, deltaSeconds) {
       categoryContainer.style.display = 'none';
       if (header) header.style.display = 'none';
       continue;
-    }
-    if (category === 'spaceStorage') {
-      reorderSpaceStorageElements(container);
     }
 
     let hasUnlockedResources = false;
