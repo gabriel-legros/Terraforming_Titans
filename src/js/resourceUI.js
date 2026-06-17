@@ -235,11 +235,19 @@ function reorderSpaceStorageElements(container) {
   if (total && container.firstChild !== total) {
     container.insertBefore(total, container.firstChild);
   }
+  let previousElement = total && total.parentElement === container ? total : null;
   for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
     const resourceName = SPACE_STORAGE_UI_ORDER[i];
     const resourceElement = document.getElementById(getResourceDomId('spaceStorage', resourceName, 'container'));
     if (resourceElement && resourceElement.parentElement === container) {
-      container.appendChild(resourceElement);
+      if (previousElement) {
+        if (previousElement.nextSibling !== resourceElement) {
+          container.insertBefore(resourceElement, previousElement.nextSibling);
+        }
+      } else if (container.firstChild !== resourceElement) {
+        container.insertBefore(resourceElement, container.firstChild);
+      }
+      previousElement = resourceElement;
     }
   }
 }
