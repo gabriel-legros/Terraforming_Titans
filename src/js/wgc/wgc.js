@@ -178,7 +178,115 @@ class WarpGateCommand extends EffectableEntity {
     this.hideStoryLogs = false;
     this.teamUnlocks = WGC_TEAM_UNLOCKS.slice();
     this.unlockedTeams = this.teamUnlocks.map(threshold => this.totalOperations >= threshold);
+    this.presets = [];
     ensureOperationStoriesLoaded();
+  }
+
+  _generatePresetId() {
+    return `preset_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+  }
+
+  addPreset(name, scope, ratios) {
+    const id = this._generatePresetId();
+    this.presets.push({
+      id,
+      name: String(name).trim() || 'Preset',
+      scope: scope || { type: 'global' },
+      ratios: {
+        power: Math.max(0, parseInt(ratios.power, 10) || 0),
+        athletics: Math.max(0, parseInt(ratios.athletics, 10) || 0),
+        wit: Math.max(0, parseInt(ratios.wit, 10) || 0)
+      }
+    });
+    return id;
+  }
+
+  updatePreset(id, name, scope, ratios) {
+    const preset = this.presets.find(p => p.id === id);
+    if (!preset) return false;
+    preset.name = String(name).trim() || preset.name;
+    preset.scope = scope || preset.scope;
+    preset.ratios = {
+      power: Math.max(0, parseInt(ratios.power, 10) || 0),
+      athletics: Math.max(0, parseInt(ratios.athletics, 10) || 0),
+      wit: Math.max(0, parseInt(ratios.wit, 10) || 0)
+    };
+    return true;
+  }
+
+  deletePreset(id) {
+    const idx = this.presets.findIndex(p => p.id === id);
+    if (idx === -1) return false;
+    this.presets.splice(idx, 1);
+    return true;
+  }
+
+  _presetScopePriority(scope) {
+    if (!scope) return 0;
+    if (scope.type === 'class') return 3;
+    if (scope.type === 'team') return 2;
+    return 1;
+  }
+
+  getPresetForMember(member, teamIndex) {
+    if (!member || !Array.isArray(this.presets)) return null;
+    let best = null;
+    let bestPriority = -1;
+    for (const preset of this.presets) {
+      const s = preset.scope || { type: 'global' };
+      let matches = false;
+      if (s.type === 'global') matches = true;
+      else if (s.type === 'team') matches = s.value === teamIndex;
+      else if (s.type === 'class') matches = s.value === member.classType;
+      if (matches) {
+        const priority = this._presetScopePriority(s);
+        if (priority > bestPriority) {
+          bestPriority = priority;
+          best = preset;
+        }
+      }
+    }
+    return best;
+  }
+
+  applyPresetToMember(member, teamIndex) {
+    const preset = this.getPresetForMember(member, teamIndex);
+    if (!preset) return false;
+    const points = member.getPointsToAllocate();
+    if (points <= 0) return false;
+    const { power = 0, athletics = 0, wit = 0 } = preset.ratios;
+    const ratioSum = power + athletics + wit;
+    if (ratioSum <= 0) return false;
+    const base = WGCTeamMember.getBaseStats(member.classType);
+    const current = {
+      power: member.power - base.power,
+      athletics: member.athletics - base.athletics,
+      wit: member.wit - base.wit
+    };
+    let remaining = points;
+    let total = current.power + current.athletics + current.wit;
+    const stats = ['power', 'athletics', 'wit'].filter(s => preset.ratios[s] > 0);
+    while (remaining > 0) {
+      let best = '';
+      let bestErr = Infinity;
+      for (const stat of stats) {
+        const nextTotal = total + 1;
+        let mse = 0;
+        for (const s of stats) {
+          const desired = preset.ratios[s] / ratioSum;
+          const actual = (current[s] + (s === stat ? 1 : 0)) / nextTotal;
+          mse += (desired - actual) ** 2;
+        }
+        const err = mse / stats.length;
+        if (err + 1e-9 < bestErr) { bestErr = err; best = stat; }
+      }
+      if (!best) break;
+      current[best] += 1;
+      member[best] += 1;
+      total += 1;
+      remaining -= 1;
+    }
+    return remaining < points;
   }
 
   refreshUnlockedTeams() {
@@ -983,6 +1091,7 @@ class WarpGateCommand extends EffectableEntity {
         let gain = xpGain;
         if (m.xp < currentMax) gain *= 1.5;
         m.xp = Math.min(m.xp + gain, newMax);
+        const tIdx = this.teams.indexOf(team);
         let req = m.getXPForNextLevel();
         while (m.xp >= req && req > 0) {
           m.xp -= req;
@@ -990,6 +1099,7 @@ class WarpGateCommand extends EffectableEntity {
           m.maxHealth = 100 + (m.level - 1) * 10;
           m.health = Math.min(m.health, m.maxHealth);
           req = m.getXPForNextLevel();
+          this.applyPresetToMember(m, tIdx);
         }
       });
     }
@@ -1303,7 +1413,8 @@ class WarpGateCommand extends EffectableEntity {
       facilities: { ...this.facilities },
       facilityCooldown: this.facilityCooldown,
       teamNames: this.teamNames.slice(),
-      hideStoryLogs: !!this.hideStoryLogs
+      hideStoryLogs: !!this.hideStoryLogs,
+      presets: (this.presets || []).map(p => ({ ...p, ratios: { ...p.ratios }, scope: { ...p.scope } }))
     };
   }
 
@@ -1406,6 +1517,18 @@ class WarpGateCommand extends EffectableEntity {
     if (typeof data.facilityCooldown === 'number') {
       this.facilityCooldown = data.facilityCooldown;
     }
+    this.presets = Array.isArray(data.presets)
+      ? data.presets.filter(p => p && p.id && p.name).map(p => ({
+          id: p.id,
+          name: p.name,
+          scope: p.scope && p.scope.type ? { type: p.scope.type, value: p.scope.value } : { type: 'global' },
+          ratios: {
+            power: Math.max(0, parseInt(p.ratios && p.ratios.power, 10) || 0),
+            athletics: Math.max(0, parseInt(p.ratios && p.ratios.athletics, 10) || 0),
+            wit: Math.max(0, parseInt(p.ratios && p.ratios.wit, 10) || 0)
+          }
+        }))
+      : [];
     this.totalOperations = data.totalOperations || 0;
     this.totalArtifacts = data.totalArtifacts || 0;
     this.highestDifficulty = typeof data.highestDifficulty === 'number' ? data.highestDifficulty : -1;

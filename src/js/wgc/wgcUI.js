@@ -1306,6 +1306,7 @@ function generateWGCLayout() {
             <div id="wgc-stat-artifact"></div>
             <div id="wgc-stat-difficulty"></div>
           </div>
+          ${generateWGCPresetsCard()}
         </div>
       </div>
     </div>
@@ -1487,6 +1488,8 @@ function initializeWGCUI() {
     }
     populateRDMenu();
     populateFacilityMenu();
+    attachWGCPresetFormHandlers();
+    renderWGCPresetsUI();
   }
   wgcUIInitialized = true;
   if (typeof warpGateCommand !== 'undefined') {
@@ -1554,6 +1557,7 @@ function updateOperationProgressSegments(op, refs) {
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   updateWGCStoryToggleButton();
+  renderWGCPresetsUI();
   setTooltipText(wgcRDPurchaseTooltip, buildWGCRDPurchaseTooltipText(), wgcTooltipCache, 'wgcRDPurchase');
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
@@ -1780,6 +1784,167 @@ function updateWGCUI() {
     }
     if (syncAutoInputs) syncAutoInputs();
   }
+}
+
+function getPresetScopeLabel(scope) {
+  if (!scope || scope.type === 'global') return getWGCText('presetScopeGlobal', 'Global');
+  if (scope.type === 'team') {
+    const manager = getWGCManager();
+    const names = manager && manager.teamNames ? manager.teamNames : teamNames;
+    const name = names[scope.value] || `Team ${scope.value + 1}`;
+    return getWGCText('presetScopeTeam', 'Team: {name}', { name });
+  }
+  if (scope.type === 'class') {
+    return getWGCText('presetScopeClass', 'Class: {name}', { name: classLabels[scope.value] || scope.value });
+  }
+  return getWGCText('presetScopeGlobal', 'Global');
+}
+
+function renderWGCPresetsUI() {
+  const container = document.getElementById('wgc-presets-list');
+  if (!container) return;
+  const manager = getWGCManager();
+  const presets = manager && Array.isArray(manager.presets) ? manager.presets : [];
+  if (presets.length === 0) {
+    container.innerHTML = `<div class="wgc-preset-empty">${getWGCText('noPresets', 'No presets saved.')}</div>`;
+    return;
+  }
+  container.innerHTML = presets.map(preset => {
+    const { id, name, scope, ratios } = preset;
+    const r = ratios || {};
+    return `
+      <div class="wgc-preset-row" data-preset-id="${id}">
+        <div class="wgc-preset-info">
+          <span class="wgc-preset-name">${escapeWGCLogHTML(name)}</span>
+          <span class="wgc-preset-scope">${escapeWGCLogHTML(getPresetScopeLabel(scope))}</span>
+          <span class="wgc-preset-ratios">${getWGCText('ratios', 'P:{p} A:{a} W:{w}', { p: r.power || 0, a: r.athletics || 0, w: r.wit || 0 })}</span>
+        </div>
+        <div class="wgc-preset-actions">
+          <button class="wgc-preset-apply" data-preset-id="${id}">${getWGCText('presetApply', 'Apply')}</button>
+          <button class="wgc-preset-delete" data-preset-id="${id}">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+  container.querySelectorAll('.wgc-preset-apply').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pid = btn.getAttribute('data-preset-id');
+      if (!manager) return;
+      manager.teams.forEach((team, tIdx) => {
+        team.forEach(m => {
+          if (!m) return;
+          const preset = manager.presets.find(p => p.id === pid);
+          if (!preset) return;
+          const s = preset.scope || { type: 'global' };
+          let matches = false;
+          if (s.type === 'global') matches = true;
+          else if (s.type === 'team') matches = s.value === tIdx;
+          else if (s.type === 'class') matches = s.value === m.classType;
+          if (matches) manager.applyPresetToMember(m, tIdx);
+        });
+      });
+      updateWGCUI();
+    });
+  });
+  container.querySelectorAll('.wgc-preset-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pid = btn.getAttribute('data-preset-id');
+      if (!manager) return;
+      manager.deletePreset(pid);
+      renderWGCPresetsUI();
+    });
+  });
+}
+
+function attachWGCPresetFormHandlers() {
+  const form = document.getElementById('wgc-preset-form');
+  if (!form) return;
+  const saveBtn = document.getElementById('wgc-preset-save');
+  if (!saveBtn) return;
+  saveBtn.addEventListener('click', () => {
+    const manager = getWGCManager();
+    if (!manager) return;
+    const name = (document.getElementById('wgc-preset-name') || {}).value || 'Preset';
+    const scopeType = (document.getElementById('wgc-preset-scope-type') || {}).value || 'global';
+    const scopeVal = document.getElementById('wgc-preset-scope-value');
+    let scope = { type: 'global' };
+    if (scopeType === 'team') scope = { type: 'team', value: parseInt(scopeVal ? scopeVal.value : '0', 10) };
+    else if (scopeType === 'class') scope = { type: 'class', value: scopeVal ? scopeVal.value : 'Soldier' };
+    const power = parseInt((document.getElementById('wgc-preset-power') || {}).value || '0', 10) || 0;
+    const athletics = parseInt((document.getElementById('wgc-preset-athletics') || {}).value || '0', 10) || 0;
+    const wit = parseInt((document.getElementById('wgc-preset-wit') || {}).value || '0', 10) || 0;
+    manager.addPreset(name, scope, { power, athletics, wit });
+    if (document.getElementById('wgc-preset-name')) document.getElementById('wgc-preset-name').value = '';
+    renderWGCPresetsUI();
+  });
+
+  const scopeTypeSelect = document.getElementById('wgc-preset-scope-type');
+  const scopeValueWrap = document.getElementById('wgc-preset-scope-value-wrap');
+  const scopeValueSelect = document.getElementById('wgc-preset-scope-value');
+  if (scopeTypeSelect && scopeValueWrap && scopeValueSelect) {
+    const updateScopeValueOptions = () => {
+      const type = scopeTypeSelect.value;
+      if (type === 'global') {
+        scopeValueWrap.style.display = 'none';
+        return;
+      }
+      scopeValueWrap.style.display = '';
+      scopeValueSelect.innerHTML = '';
+      if (type === 'team') {
+        const manager = getWGCManager();
+        const names = manager && manager.teamNames ? manager.teamNames : teamNames;
+        names.forEach((n, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = n;
+          scopeValueSelect.appendChild(opt);
+        });
+      } else if (type === 'class') {
+        Object.keys(classLabels).forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = classLabels[k];
+          scopeValueSelect.appendChild(opt);
+        });
+      }
+    };
+    scopeTypeSelect.addEventListener('change', updateScopeValueOptions);
+    updateScopeValueOptions();
+  }
+}
+
+function generateWGCPresetsCard() {
+  const manager = getWGCManager();
+  const names = manager && manager.teamNames ? manager.teamNames : teamNames;
+  const teamOptions = names.map((n, i) => `<option value="${i}">${escapeWGCLogHTML(n)}</option>`).join('');
+  const classOptions = Object.keys(classLabels).map(k => `<option value="${k}">${escapeWGCLogHTML(classLabels[k])}</option>`).join('');
+  return `
+    <div class="wgc-card" id="wgc-presets-section">
+      <h3>${getWGCText('presetsTitle', 'Stat Presets')}</h3>
+      <p class="wgc-preset-description">${getWGCText('presetsDescription', 'Save ratio presets for auto-investing stat points on level-up.')}</p>
+      <div id="wgc-preset-form" class="wgc-preset-form">
+        <input id="wgc-preset-name" type="text" class="wgc-preset-name-input" placeholder="${getWGCText('presetNamePlaceholder', 'Preset name')}" maxlength="40">
+        <div class="wgc-preset-scope-row">
+          <select id="wgc-preset-scope-type" class="wgc-preset-select">
+            <option value="global">${getWGCText('presetScopeGlobal', 'Global')}</option>
+            <option value="team">${getWGCText('presetScopeTeamOpt', 'Team')}</option>
+            <option value="class">${getWGCText('presetScopeClassOpt', 'Class')}</option>
+          </select>
+          <span id="wgc-preset-scope-value-wrap" style="display:none">
+            <select id="wgc-preset-scope-value" class="wgc-preset-select">
+              ${teamOptions}
+              ${classOptions}
+            </select>
+          </span>
+        </div>
+        <div class="wgc-preset-ratios-row">
+          <label>${getWGCText('powerShort', 'Pow')}<input id="wgc-preset-power" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+          <label>${getWGCText('athleticsShort', 'Ath')}<input id="wgc-preset-athletics" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+          <label>${getWGCText('witShort', 'Wit')}<input id="wgc-preset-wit" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+        </div>
+        <button id="wgc-preset-save" class="wgc-preset-save-button">${getWGCText('presetSave', 'Save Preset')}</button>
+      </div>
+      <div id="wgc-presets-list" class="wgc-presets-list"></div>
+    </div>`;
 }
 
 function redrawWGCTeamCards() {

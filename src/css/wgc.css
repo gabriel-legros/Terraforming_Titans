@@ -917,6 +917,159 @@
   transition: height 0.3s ease, background-color 0.3s ease;
 }
 
+/* Stat Presets */
+.wgc-preset-description {
+  color: var(--wgc-text-medium);
+  font-size: 0.85em;
+  margin: 0 0 10px;
+}
+
+.wgc-preset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--wgc-bg-light);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.wgc-preset-name-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wgc-preset-scope-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wgc-preset-select {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+.wgc-preset-ratios-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wgc-preset-ratios-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88em;
+  color: var(--wgc-text-light);
+}
+
+.wgc-preset-ratio-input {
+  width: 52px;
+}
+
+.wgc-preset-save-button {
+  align-self: flex-start;
+  background-color: var(--wgc-bg-light);
+  border: 1px solid var(--wgc-border-color);
+  color: var(--wgc-text-light);
+  border-radius: 3px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.wgc-preset-save-button:hover {
+  background-color: var(--wgc-border-color);
+  color: var(--wgc-bg-dark);
+}
+
+.wgc-presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wgc-preset-empty {
+  color: var(--wgc-text-dark);
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+.wgc-preset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  background-color: var(--wgc-bg-light);
+  border: 1px solid var(--wgc-bg-light);
+  border-radius: 4px;
+}
+
+.wgc-preset-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wgc-preset-name {
+  font-weight: 600;
+  color: var(--wgc-text-light);
+  font-size: 0.9em;
+}
+
+.wgc-preset-scope {
+  color: var(--wgc-text-medium);
+  font-size: 0.8em;
+}
+
+.wgc-preset-ratios {
+  color: var(--wgc-text-dark);
+  font-size: 0.8em;
+}
+
+.wgc-preset-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.wgc-preset-apply {
+  background-color: var(--wgc-bg-medium);
+  border: 1px solid var(--wgc-border-color);
+  color: var(--wgc-text-light);
+  border-radius: 3px;
+  padding: 3px 10px;
+  font-size: 0.82em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.wgc-preset-apply:hover {
+  background-color: var(--wgc-border-color);
+  color: var(--wgc-bg-dark);
+}
+
+.wgc-preset-delete {
+  background: transparent;
+  border: 1px solid var(--wgc-red);
+  color: var(--wgc-red);
+  border-radius: 3px;
+  padding: 3px 7px;
+  font-size: 0.82em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.wgc-preset-delete:hover {
+  background-color: var(--wgc-red);
+  color: #fff;
+}
+
 /* Stats */
 #wgc-stats-section div {
     padding: 2px 0;
