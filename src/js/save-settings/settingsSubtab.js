@@ -240,7 +240,8 @@ function addSettingsListeners() {
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
       }
-      createResourceDisplay(resources);
+      updateResourceViewToggleState(resources);
+      updateResourceDisplay(resources, 0);
     });
   }
 

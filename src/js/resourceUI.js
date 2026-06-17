@@ -91,9 +91,6 @@ function shouldRenderResourceCategory(category) {
 
 function getResourceCategoriesForDisplay(resourceSet) {
   const categories = Object.keys(resourceSet || {});
-  if (!showSpaceStorageInDefaultPanel()) {
-    return categories;
-  }
   const colonyIndex = categories.indexOf('colony');
   const surfaceIndex = categories.indexOf('surface');
   const spaceStorageIndex = categories.indexOf('spaceStorage');
@@ -309,8 +306,8 @@ function setResourcePanelViewMode(showSpaceStorage) {
     return;
   }
   gameSettings.showSpaceStorageResources = nextMode;
-  invalidateResourceUICache();
-  createResourceDisplay(resources);
+  updateResourceViewToggleState(resources);
+  updateResourceDisplay(resources, 0);
 }
 
 function updateResourceViewToggleState(resourceSet) {
@@ -321,10 +318,7 @@ function updateResourceViewToggleState(resourceSet) {
   if (!showToggle && isSpaceStorageViewActive()) {
     resourceViewModeUpdating = true;
     gameSettings.showSpaceStorageResources = false;
-    invalidateResourceUICache();
-    createResourceDisplay(resourceSet);
     resourceViewModeUpdating = false;
-    return;
   }
   for (const key in toggles) {
     const toggle = toggles[key];
@@ -370,6 +364,7 @@ function createResourceContainers(resourcesData) {
   runWithTrackedUIListeners(resourcesContainer, () => {
     for (let i = 0; i < categories.length; i += 1) {
       const category = categories[i];
+      if (category === 'space') continue;
       const resourceListId = `${category}-resources-resources-container`;
       const existingList = document.getElementById(resourceListId);
       if (existingList) {
@@ -1590,7 +1585,7 @@ function createResourceElement(category, resourceObj, resourceName) {
 }
 
 function syncResourceElementsForCategory(category, resourceSet) {
-  if (!shouldRenderResourceCategory(category)) return;
+  if (category === 'space') return;
   const container = document.getElementById(`${category}-resources-resources-container`);
   if (!container) return;
 
@@ -1644,7 +1639,7 @@ function populateResourceElements(resources) {
 }
 
 function unlockResource(resource) {
-  if (!shouldRenderResourceCategory(resource.category)) return;
+  if (resource.category === 'space') return;
   if (resource.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
@@ -1675,6 +1670,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
   const categories = getResourceCategoriesForDisplay(resources);
   for (let i = 0; i < categories.length; i += 1) {
     const category = categories[i];
+    if (category === 'space') continue;
     const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
     const container = cat ? cat.container : null;
     const header = cat ? cat.header : null;
@@ -2751,7 +2747,7 @@ function cacheResourceElements(resources) {
   const categories = getResourceCategoriesForDisplay(resources);
   for (let i = 0; i < categories.length; i += 1) {
     const category = categories[i];
-    if (!shouldRenderResourceCategory(category)) continue;
+    if (category === 'space') continue;
     cacheResourceCategory(category);
     if (category === 'spaceStorage') {
       cacheSpaceStorageTotalEntry();
