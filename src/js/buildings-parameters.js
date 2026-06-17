@@ -5,6 +5,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 50, components: 10 } },
     consumption: { colony: { energy: 50000 } },
+    realisticEnergyConsumption: 1_250,
     production: { colony: { metal: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -24,6 +25,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 100, components: 50 } },
     consumption: { colony: { energy: 50000 } },
+    realisticEnergyConsumption: 1_250_000,
     production: { colony: { metal: 10, silicon: 20 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -42,6 +44,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 50, components: 5 } },
     consumption: { colony: { energy: 50000 } },
+    realisticEnergyConsumption: 250,
     production: { colony: { silicon: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -60,6 +63,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 10, electronics: 1 } },
     consumption: { colony : {energy : 10000}, surface: { ice: 1 } },
+    realisticEnergyConsumption: 4_700,
     production: { colony: { water: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -76,6 +80,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 10, components: 1 } },
     consumption: { colony : {energy : 10000}, surface: {liquidWater: 1000 } },
+    realisticEnergyConsumption: 20_000,
     production: { colony: { water: 1000 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -107,6 +112,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 100, components: 5 } },
     consumption: { colony: { energy: 100000, silicon: 1} },
+    realisticEnergyConsumption: 58_000,
     production: { colony: { glass: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -122,12 +128,14 @@ const buildingsParameters = {
       silica: {
         shortName: '',
         consumption: { colony: { energy: 100000, silicon: 1 } },
+        realisticEnergyConsumption: 58_000,
         production: { colony: { glass: 1 } }
       },
       graphite: {
         shortName: '',
         requiresBuildingFlag: 'silicaPhaseOutRecipe',
         consumption: { colony: { energy: 50000 }, surface: { graphite: 0.5 } },
+        realisticEnergyConsumption: 29_000,
         production: { colony: { glass: 0.5 } }
       }
     },
@@ -139,6 +147,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { glass: 50} },
     consumption: { colony: { energy: 500000} },
+    realisticEnergyConsumption: 250_000,
     production: { colony: { food: 5 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -154,7 +163,8 @@ const buildingsParameters = {
     category: 'production',
     description: '',
     cost: { colony: { metal: 1000, components: 100, electronics: 50} },
-    consumption: { colony: { energy: 25000000, metal: 5} },
+    consumption: { colony: { energy: 25_000_000, metal: 5} },
+    realisticEnergyConsumption: 20_000,
     production: { colony: { components: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -171,6 +181,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 50_000_000, metal: 1, silicon: 4} },
+    realisticEnergyConsumption: 830_000,
     production: { colony: { electronics: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -184,12 +195,14 @@ const buildingsParameters = {
       silica: {
         shortName: '',
         consumption: { colony: { energy: 50_000_000, metal: 1, silicon: 4 } },
+        realisticEnergyConsumption: 830_000,
         production: { colony: { electronics: 1 } }
       },
       graphite: {
         shortName: '',
         requiresBuildingFlag: 'silicaPhaseOutRecipe',
         consumption: { colony: { energy: 25_000_000, metal: 0.5 }, surface: { graphite: 2 } },
+        realisticEnergyConsumption: 415_000,
         production: { colony: { electronics: 0.5 } }
       }
     },
@@ -201,6 +214,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1500, glass: 500, components: 150, electronics: 75 } },
     consumption: { colony: { energy: 40_000_000 }, surface: { graphite: 50 } },
+    realisticEnergyConsumption: 1_000_000,
     production: { colony: { metal: 50 } },
     storage: {},
     factoryHeatCoefficient: 0.5,
@@ -217,6 +231,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1000, glass : 1000, components: 1000, electronics: 500} },
     consumption: { colony: { energy: 100_000_00, metal: 5} },
+    realisticEnergyConsumption: 210_000,
     production: { colony: { superconductors: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -234,9 +249,10 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 10000, glass: 10000, components: 10000, electronics: 5000, superconductors: 1000 } },
     consumption: { colony: { energy: 100_000_000_000, metal: 10 } },
+    realisticEnergyConsumption: 100_000_000_000,
     production: { colony: { superalloys: 0.01 } },
     storage: {},
-    factoryHeatCoefficient: 0.01,
+    factoryHeatCoefficient: 0.0001,
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
@@ -265,6 +281,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 500, glass : 200, components: 100, electronics: 50} },
     consumption: { colony: { energy: 100_000_000, metal: 0.4, electronics: 0.1} },
+    realisticEnergyConsumption: 10_000,
     production: { colony: { androids: 0.1 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -281,6 +298,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1000, components: 10, electronics: 10} },
     consumption: { colony: { energy: 100_000_000, metal: 5, components: 1, electronics: 0.1} },
+    realisticEnergyConsumption: 75_000,
     production: { special: { spaceships: 0.001 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -297,6 +315,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1000, glass: 10, components: 100, electronics: 50 } },
     consumption: { colony: { energy: 100_000_000 } },
+    realisticEnergyConsumption: 2_000,
     production: { colony: { colonists: 0.1 } },
     factoryHeatCoefficient: 1,
     defaultRecipe: 'colonists',
@@ -305,12 +324,14 @@ const buildingsParameters = {
         shortName: '',
         disabledByBuildingFlag: 'disableColonistCloningRecipe',
         consumption: { colony: { energy: 100_000_000 } },
+        realisticEnergyConsumption: 2_000,
         production: { colony: { colonists: 0.1 } }
       },
       crusaders: {
         shortName: '',
         requiresBuildingFlag: 'crusaderCloningRecipe',
         consumption: { colony: { energy: 100_000_000, food: 10, electronics: 0.1 } },
+        realisticEnergyConsumption: 2_000,
         production: { special: { crusaders: 0.1 } }
       }
     },
@@ -494,6 +515,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 10000, components: 1000, superconductors: 1000, electronics: 100 } },
     consumption: { colony: { energy: 2_000_000_000_000_000 } },
+    realisticEnergyConsumption: 2_000_000_000_000_000,
     production: { special: { antimatter: 1 } },
     storage: {},
     factoryHeatCoefficient: 0.01,
@@ -509,6 +531,7 @@ const buildingsParameters = {
       antimatter: {
         shortName: '',
         consumption: { colony: { energy: 2_000_000_000_000_000 } },
+        realisticEnergyConsumption: 2_000_000_000_000_000,
         production: { special: { antimatter: 1 } }
       }
     }
@@ -586,6 +609,7 @@ const buildingsParameters = {
         shortName: '',
         requiresBuildingFlag: 'warpStorageRecipe',
         consumption: { colony: { energy: 1_000_000 } },
+        realisticEnergyConsumption: 100_000,
         storage: {
           colony: {
             metal: 50_000,
@@ -603,6 +627,7 @@ const buildingsParameters = {
         shortName: '',
         requiresBuildingFlag: 'deepWarpStorageRecipe',
         consumption: { colony: { energy: 1_000_000_000 } },
+        realisticEnergyConsumption: 10_000_000,
         storage: {
           colony: {
             metal: 5_000_000,
@@ -665,6 +690,7 @@ const buildingsParameters = {
       intake: {
         shortName: '',
         consumption: { atmospheric: { hydrogen: 10 },  colony : {energy : 10000} },
+        realisticEnergyConsumption: 1_250_000,
         production: { colony: { colonyHydrogen: 10 } },
         storage: { colony: { colonyHydrogen: 5000 } }
       }
@@ -714,6 +740,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 100, components : 1} },
     consumption: {colony : {energy : 1000000}},
+    realisticEnergyConsumption: 100_000,
     production: {},
     storage: { colony: { androids: 1000 } },
     factoryHeatCoefficient: 1,
@@ -731,6 +758,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 500, components: 100, electronics: 20 } },
     consumption: { colony: { energy: 100000 } },
+    realisticEnergyConsumption: 62_500,
     production: { surface: { fineSand: 100 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -747,6 +775,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 5000, components: 500, electronics: 100 } },
     consumption: { colony: { energy: 5000000, metal: 100 } },
+    realisticEnergyConsumption: 2_100_000,
     production: { atmospheric: { vanadiumAerosol: 100 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -763,6 +792,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 10, components: 2 } },
     consumption: { colony: { energy: 500000 } },
+    realisticEnergyConsumption: 42_000,
     production: { special: { albedoUpgrades: 100 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -807,6 +837,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1e6, glass: 1e6, electronics: 1e6, components: 1e6 } },
     consumption: { colony: { energy: 1e12 } },
+    realisticEnergyConsumption: 1e12,
     production: {},
     storage: {},
     factoryHeatCoefficient: 0,
@@ -826,6 +857,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 10000000} },
+    realisticEnergyConsumption: 1_000_000,
     production: { atmospheric: { greenhouseGas: 5 } },
     storage: {},
     factoryHeatCoefficient: 1,
@@ -857,6 +889,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10} },
     consumption: { colony: { energy: 24000000, water: 100 } },
+    realisticEnergyConsumption: 15_300_000,
     production: { atmospheric: { oxygen: 88.89 }, colony: { colonyHydrogen: 11.11 } },
     storage: {},
     factoryHeatCoefficient: 0.1,
@@ -872,16 +905,19 @@ const buildingsParameters = {
       water: {
         shortName: '',
         consumption: { colony: { energy: 24000000, water: 100 } },
+        realisticEnergyConsumption: 15_300_000,
         production: { atmospheric: { oxygen: 88.89 }, colony: { colonyHydrogen: 11.11 } }
       },
       silicates: {
         shortName: '',
         consumption: { colony: { silicon : 100,energy: 150_000_000} },
+        realisticEnergyConsumption: 21_000_000,
         production: { atmospheric: { oxygen: 53.24 } }
       },
       rocks: {
         shortName: '',
         consumption: { colony: { energy: 200_000_000} },
+        realisticEnergyConsumption: 40_000_000,
         production: { atmospheric: { oxygen: 50 } },
         artificialAllowed: false
       }
@@ -895,6 +931,7 @@ const buildingsParameters = {
     consumption: {
       colony: { energy: 100_000 }
     },
+    realisticEnergyConsumption: 4_200_000,
     production: {},
     storage: {},
     factoryHeatCoefficient: 0.2,
@@ -913,6 +950,7 @@ const buildingsParameters = {
           colony: { energy: 100_000, colonyHydrogen: 9.09 },
           atmospheric: { carbonDioxide: 100 }
         },
+        realisticEnergyConsumption: 4_200_000,
         production: { colony: { water: 81.82 }, surface: { graphite: 27.27 } }
       },
       recipe2: {
@@ -921,6 +959,7 @@ const buildingsParameters = {
           colony: { energy: 100_000, colonyHydrogen: 9.09 },
           atmospheric: { oxygen: 72.73 }
         },
+        realisticEnergyConsumption: 4_200_000,
         production: { colony: { water: 81.82 } }
       },
       recipe3: {
@@ -929,6 +968,7 @@ const buildingsParameters = {
           colony: { energy: 100_000, colonyHydrogen: 18.18 },
           atmospheric: { carbonDioxide: 100 }
         },
+        realisticEnergyConsumption: 4_200_000,
         production: {
           atmospheric: { atmosphericMethane: 36.36 },
           colony: { water: 81.82 }
@@ -941,6 +981,7 @@ const buildingsParameters = {
           surface: { graphite: 27.27 },
           atmospheric: { oxygen: 72.73 }
         },
+        realisticEnergyConsumption: 4_200_000,
         production: { atmospheric: { carbonDioxide: 100 } }
       },
       haberBosch: {
@@ -950,6 +991,7 @@ const buildingsParameters = {
           colony: { energy: 100_000, colonyHydrogen: 21.43 },
           atmospheric: { inertGas: 100 }
         },
+        realisticEnergyConsumption: 45_500_000,
         production: { atmospheric: { atmosphericAmmonia: 121.43 } }
       },
       ammoniaCombustion: {
@@ -959,6 +1001,7 @@ const buildingsParameters = {
           colony: { energy: 100_000 },
           atmospheric: { atmosphericAmmonia: 100, oxygen: 141.18 }
         },
+        realisticEnergyConsumption: 100_000,
         production: {
           atmospheric: { inertGas: 82.35, atmosphericWater: 158.82 }
         }
@@ -987,6 +1030,7 @@ const buildingsParameters = {
     description: '',
     cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},
     consumption: {colony: {energy: { amount: 10000000, ignoreProductivity: true }, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
+    realisticEnergyConsumption: 50_000,
     production: {atmospheric: {oxygen : 0.177388}, surface: {biomass : 0.166612}},
     storage: {},
     factoryHeatCoefficient: 0.8,
@@ -1004,6 +1048,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 100, components: 30 } },
     consumption: { colony: { energy: 5_000_000 }, surface: { scrapMetal: 50 } },
+    realisticEnergyConsumption: 625_000,
     production: { colony: { metal: 50 } },
     factoryHeatCoefficient: 1,
     alwaysShowProduction: true,
@@ -1025,6 +1070,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 100, components: 10 } },
     consumption: { colony: { energy: 1000000 }, surface: { garbage: 100 } },
+    realisticEnergyConsumption: 83_000,
     production: { surface: { trash: 33.33, junk: 33.33, scrapMetal: 33.34 } },
     factoryHeatCoefficient: 1,
     alwaysShowProduction: true,
@@ -1046,6 +1092,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 200, components: 20 } },
     consumption: { colony: { energy: 500000 }, surface: { trash: 100 }, atmospheric: { oxygen: 106.67 } },
+    realisticEnergyConsumption: 62_500,
     production: { atmospheric: { carbonDioxide: 146.67 } },
     factoryHeatCoefficient: 1,
     defaultRecipe: 'trash',
@@ -1053,6 +1100,7 @@ const buildingsParameters = {
       trash: {
         shortName: '',
         consumption: { colony: { energy: 500000 }, surface: { trash: 100 }, atmospheric: { oxygen: 106.67 } },
+        realisticEnergyConsumption: 62_500,
         production: { atmospheric: { carbonDioxide: 146.67 } }
       },
       hazardousBiomass: {
@@ -1060,6 +1108,7 @@ const buildingsParameters = {
         requiresBuildingFlag: 'hazardousBiomassIncineration',
         disabledByBuildingFlag: 'disableHazardousBiomassIncineratorRecipe',
         consumption: { colony: { energy: 50000 }, surface: { hazardousBiomass: 10 }, atmospheric: { oxygen: 10.667 }, special : {spaceships : 0.001} },
+        realisticEnergyConsumption: 6_250,
         production: { atmospheric: { carbonDioxide: 14.667 } }
       }
     },
@@ -1082,6 +1131,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 500, components: 50, electronics: 25 } },
     consumption: { colony: { energy: 10000000}, surface: { junk: 50 } },
+    realisticEnergyConsumption: 1_050_000,
     production: { colony: { glass: 50 }},
     factoryHeatCoefficient: 1,
     alwaysShowProduction: true,
@@ -1103,6 +1153,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 600, components: 60, electronics: 20 } },
     consumption: { colony: { androids: 10, energy: 100_000_000 }, surface: { radioactiveWaste: 10 } },
+    realisticEnergyConsumption: 830_000,
     production: { colony: { metal: 10 } },
     factoryHeatCoefficient: 1,
     alwaysShowProduction: true,
@@ -1124,6 +1175,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 5000, components: 200, electronics: 150, superconductors: 50 } },
     consumption: { colony: { energy: 1_000_000_000, research: 100 } },
+    realisticEnergyConsumption: 1_000_000_000,
     production: { special: { orbitalDebris: -1 } },
     factoryHeatCoefficient: 0.05,
     alwaysShowProduction: true,

@@ -11,6 +11,7 @@ class MultiRecipesBuilding extends Building {
     super(config, buildingName);
     this._defaultDisplayName = config.name || this.displayName;
     this._staticConsumption = MultiRecipesBuilding._clone(config.consumption || {});
+    this._staticRealisticEnergyConsumption = config.realisticEnergyConsumption;
     this._defaultProduction = MultiRecipesBuilding._clone(config.production || {});
     this._defaultStorage = MultiRecipesBuilding._clone(config.storage || {});
     this._applyRecipeMapping();
@@ -104,8 +105,11 @@ class MultiRecipesBuilding extends Building {
 
     const recipe = (this.recipes || {})[this.currentRecipeKey];
     const consumptionSource = recipe?.consumption || this._staticConsumption;
-    this.consumption = MultiRecipesBuilding._clone(consumptionSource);
-    this._baseConsumption = MultiRecipesBuilding._clone(consumptionSource);
+    const realisticEnergyConsumption = recipe && 'realisticEnergyConsumption' in recipe
+      ? recipe.realisticEnergyConsumption
+      : this._staticRealisticEnergyConsumption;
+    this.consumption = this.getDifficultyConsumption(consumptionSource, realisticEnergyConsumption);
+    this._baseConsumption = MultiRecipesBuilding._clone(this.consumption);
 
     const productionSource = recipe?.production || this._defaultProduction;
     this.production = MultiRecipesBuilding._clone(productionSource);

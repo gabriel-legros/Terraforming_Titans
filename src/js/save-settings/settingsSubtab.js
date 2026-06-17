@@ -50,6 +50,8 @@ function cacheSettingsElements() {
     earlyAdvancedOversightTooltip: document.getElementById('early-advanced-oversight-tooltip'),
     factoryHeatingToggle: document.getElementById('factory-heating-toggle'),
     factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
+    realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
+    realisticFactoryEnergyConsumptionTooltip: document.getElementById('realistic-factory-energy-consumption-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -579,6 +581,26 @@ function addSettingsListeners() {
         'ui.settings.factoryHeatingTooltip',
         {},
         'When enabled, part of local building and colony energy use becomes planetary heat. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
+      )
+    );
+  }
+
+  if (cached.realisticFactoryEnergyConsumptionToggle) {
+    cached.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
+    cached.realisticFactoryEnergyConsumptionToggle.addEventListener('change', () => {
+      gameSettings.realisticFactoryEnergyConsumption = cached.realisticFactoryEnergyConsumptionToggle.checked;
+      applyDifficultySettingEffects();
+      updateBuildingDisplay(buildings);
+    });
+  }
+
+  if (cached.realisticFactoryEnergyConsumptionTooltip) {
+    attachDynamicInfoTooltip(
+      cached.realisticFactoryEnergyConsumptionTooltip,
+      t(
+        'ui.settings.realisticFactoryEnergyConsumptionTooltip',
+        {},
+        'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the legacy balance values.'
       )
     );
   }

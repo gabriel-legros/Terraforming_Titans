@@ -93,6 +93,7 @@ let gameSettings = {
   unfulfilledMaintenancePenalties: false,
   earlyAdvancedOversight: false,
   factoryHeating: false,
+  realisticFactoryEnergyConsumption: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,

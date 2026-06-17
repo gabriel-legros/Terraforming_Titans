@@ -99,6 +99,10 @@ function applyDifficultySettingEffects() {
   normalizeDifficultySettings();
   clearDifficultySettingEffects();
 
+  for (const id in buildings) {
+    buildings[id].refreshDifficultyConsumption();
+  }
+
   if (gameSettings.buildingCostMultiplier !== 1) {
     addDifficultySettingEffect({
       target: 'global',

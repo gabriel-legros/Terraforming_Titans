@@ -4083,6 +4083,8 @@ setLanguageData({
       earlyAdvancedOversightTooltip: 'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.',
       factoryHeating: 'Factory heating',
       factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.',
+      realisticFactoryEnergyConsumption: 'Realistic factory energy consumption',
+      realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the legacy balance values.',
       buildingCostMultiplier: 'Building Cost Multiplier',
       researchCostMultiplier: 'Research multiplier',
       workerRequirementMultiplier: 'Worker Requirement multiplier',

@@ -114,7 +114,8 @@ class Building extends EffectableEntity {
     this.recipes = config.recipes || null;
     this.defaultRecipe = config.defaultRecipe || null;
     this.currentRecipeKey = this.defaultRecipe || (this.recipes ? Object.keys(this.recipes)[0] : null);
-    this._baseConsumption = JSON.parse(JSON.stringify(this.consumption || {}));
+    this._legacyBaseConsumption = JSON.parse(JSON.stringify(this.consumption || {}));
+    this._baseConsumption = this.getDifficultyConsumption(this._legacyBaseConsumption, this.realisticEnergyConsumption);
     this._applyRecipeMapping();
   }
 
@@ -156,6 +157,7 @@ class Building extends EffectableEntity {
         ignoreResourceForProductivityResourceDisplay,
         alwaysShowProduction,
         alwaysShowConsumption,
+        realisticEnergyConsumption,
         factoryHeatCoefficient,
         kesslerDebrisSize,
         automationRequiresEverEnabled
@@ -184,6 +186,7 @@ class Building extends EffectableEntity {
       this.ignoreResourceForProductivityResourceDisplay = ignoreResourceForProductivityResourceDisplay || null;
       this.alwaysShowProduction = !!alwaysShowProduction;
       this.alwaysShowConsumption = !!alwaysShowConsumption;
+      this.realisticEnergyConsumption = realisticEnergyConsumption;
       this.factoryHeatCoefficient = Number.isFinite(factoryHeatCoefficient)
         ? Math.max(0, factoryHeatCoefficient)
         : 0;
@@ -342,6 +345,30 @@ class Building extends EffectableEntity {
     if (recipe.displayName) {
       this.displayName = recipe.displayName;
     }
+  }
+
+  getDifficultyConsumption(consumption, realisticEnergyConsumption) {
+    const adjusted = JSON.parse(JSON.stringify(consumption || {}));
+    if (
+      gameSettings.realisticFactoryEnergyConsumption &&
+      realisticEnergyConsumption !== undefined &&
+      adjusted.colony &&
+      adjusted.colony.energy !== undefined
+    ) {
+      const energyEntry = adjusted.colony.energy;
+      adjusted.colony.energy = Object(energyEntry) === energyEntry
+        ? { ...energyEntry, amount: realisticEnergyConsumption }
+        : realisticEnergyConsumption;
+    }
+    return adjusted;
+  }
+
+  refreshDifficultyConsumption() {
+    this._baseConsumption = this.getDifficultyConsumption(this._legacyBaseConsumption || {}, this.realisticEnergyConsumption);
+    this._applyRecipeMapping();
+    this.maintenanceCost = this.calculateMaintenanceCost();
+    this.currentConsumption = {};
+    this.clearTickEffectCache();
   }
 
   saveState() {
@@ -509,6 +536,7 @@ class Building extends EffectableEntity {
   }
 
   applyActiveEffects(firstTime = true) {
+    this._baseConsumption = this.getDifficultyConsumption(this._legacyBaseConsumption || {}, this.realisticEnergyConsumption);
     this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
     this.clearTickEffectCache();
     super.applyActiveEffects(firstTime);
