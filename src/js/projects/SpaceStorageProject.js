@@ -2170,7 +2170,7 @@ class SpaceStorageProject extends SpaceshipProject {
     return Math.max(0, Math.min(costScale, affordableScale));
   }
 
-  applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale = 1) {
+  applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale = 1, seconds = 0) {
     let nonEnergyCost = 0;
     for (const category in totalCost) {
       for (const resource in totalCost[category]) {
@@ -2179,6 +2179,9 @@ class SpaceStorageProject extends SpaceshipProject {
           continue;
         }
         this.applyAccumulatedResourceDelta(category, resource, -amount, accumulatedChanges);
+        if (seconds > 0 && resources?.[category]?.[resource]?.modifyRate) {
+          resources[category][resource].modifyRate(-amount / seconds, this.displayName || 'Space storage', 'project');
+        }
         if (resource !== 'energy') {
           nonEnergyCost += amount;
         }
@@ -2214,7 +2217,7 @@ class SpaceStorageProject extends SpaceshipProject {
     const costScale = shipCompletionCount;
     const successChance = this.isTeleporterTransferActive() ? 1 : this.getKesslerSuccessChance();
     const failureChance = 1 - successChance;
-    const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale);
+    const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, costScale, seconds);
     const paidEnergy = Math.max(0, (totalCost?.colony?.energy || 0) * costScale);
     const paidMetal = Math.max(0, (totalCost?.colony?.metal || 0) * costScale);
     const deliveredTotal = plan.total * successChance;
@@ -2275,7 +2278,7 @@ class SpaceStorageProject extends SpaceshipProject {
             });
             plan.total *= executionRatio;
           }
-          const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, affordableScale);
+          const nonEnergyCost = this.applyShipOperationCostForTick(totalCost, accumulatedChanges, affordableScale, seconds);
           this.applyTransferPlanToAccumulated(plan, accumulatedChanges, successChance, seconds);
           this.reconcileUsedStorage();
           if (failureChance > 0) {
@@ -2307,7 +2310,7 @@ class SpaceStorageProject extends SpaceshipProject {
       return;
     }
 
-    this.applyShipOperationCostForTick(totalCost, accumulatedChanges, 1);
+    this.applyShipOperationCostForTick(totalCost, accumulatedChanges, 1, durationSeconds);
     const reservePlan = { transfers: this.pendingTransfers };
     this.applyTransferPlanToAccumulated(reservePlan, accumulatedChanges, 1, durationSeconds);
     this.completeShipOperation();
