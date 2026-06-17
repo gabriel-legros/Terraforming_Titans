@@ -333,11 +333,11 @@ class Building extends EffectableEntity {
 
   // Internal: apply production/displayName for the active recipe (if configured)
   _applyRecipeMapping() {
-    if (!this.recipes || !this.currentRecipeKey) return;
     this.clearTickEffectCache();
-    const recipe = this.recipes[this.currentRecipeKey] || {};
     // Keep base energy/material consumption separate
     this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
+    if (!this.recipes || !this.currentRecipeKey) return;
+    const recipe = this.recipes[this.currentRecipeKey] || {};
     // Apply production from current recipe
     if (recipe.production) {
       this.production = JSON.parse(JSON.stringify(recipe.production));

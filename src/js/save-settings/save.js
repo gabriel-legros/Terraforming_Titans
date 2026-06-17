@@ -801,6 +801,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
         gameSettings.colorblindPalette = 'redGreen';
       }
       normalizeDifficultySettings();
+      applyDifficultySettingEffects();
       setPauseKeybindCode(gameSettings.pauseKeybind);
       applySpeedControlsSetting();
       applyColorblindPaletteSettings();

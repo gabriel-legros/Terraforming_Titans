@@ -4084,7 +4084,7 @@ setLanguageData({
       factoryHeating: 'Factory heating',
       factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.  \n\n You should use this setting alongside Realistic factory energy consumption',
       realisticFactoryEnergyConsumption: 'Realistic factory energy consumption',
-      realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.',
+      realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.',
       buildingCostMultiplier: 'Building Cost Multiplier',
       researchCostMultiplier: 'Research multiplier',
       workerRequirementMultiplier: 'Worker Requirement multiplier',

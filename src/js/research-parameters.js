@@ -1983,7 +1983,7 @@ const researchParameters = {
         id: 'orbital_rings',
         name: '',
         description: '',
-        cost: { advancedResearch: 150000 },
+        cost: { advancedResearch: 400000 },
         prerequisites: [],
         effects: [
           {
@@ -2011,7 +2011,7 @@ const researchParameters = {
         id: 'mega_heat_sink',
         name: '',
         description: '',
-        cost: { advancedResearch: 400000 },
+        cost: { advancedResearch: 150000 },
         prerequisites: [],
         effects: [
           {
