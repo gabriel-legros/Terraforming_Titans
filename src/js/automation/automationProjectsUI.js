@@ -76,7 +76,57 @@ function getSpaceStorageSingleResourceOptions() {
   return options;
 }
 
-function getProjectPresetJsonFieldOptions(fieldPath) {
+function getProjectPresetDisposalCategoryOptions(project, currentValue) {
+  const categoryMap = {};
+  if (project) {
+    const disposalGroupData = project.getDisposalGroupData();
+    disposalGroupData.groupList.forEach((group) => {
+      group.options.forEach((option) => {
+        categoryMap[option.category] = true;
+      });
+    });
+  } else {
+    Object.keys(resources).forEach((category) => {
+      categoryMap[category] = true;
+    });
+  }
+  if (currentValue) {
+    categoryMap[currentValue] = true;
+  }
+  return Object.keys(categoryMap).map((category) => ({
+    value: category,
+    label: t(`ui.resources.categories.${category}`, null, category)
+  }));
+}
+
+function getProjectPresetDisposalResourceOptions(project, category, currentValue) {
+  const resourceMap = {};
+  if (project) {
+    const disposalGroupData = project.getDisposalGroupData();
+    disposalGroupData.groupList.forEach((group) => {
+      group.options.forEach((option) => {
+        if (option.category !== category) {
+          return;
+        }
+        resourceMap[option.resource] = option.label || option.resource;
+      });
+    });
+  } else if (resources[category]) {
+    Object.keys(resources[category]).forEach((resource) => {
+      const resourceData = resources[category][resource];
+      resourceMap[resource] = resourceData.displayName || resourceData.name || resource;
+    });
+  }
+  if (currentValue && !resourceMap[currentValue]) {
+    resourceMap[currentValue] = currentValue;
+  }
+  return Object.keys(resourceMap).map((resource) => ({
+    value: resource,
+    label: resourceMap[resource]
+  }));
+}
+
+function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
   if (!Array.isArray(fieldPath) || fieldPath.length < 4) {
     return null;
   }
@@ -87,7 +137,33 @@ function getProjectPresetJsonFieldOptions(fieldPath) {
   if (!projectId) {
     return null;
   }
-  if (fieldPath[2] !== 'operations') {
+  const presetSection = fieldPath[2];
+  const isDisposalTargetSelectionPath = presetSection === 'operations'
+    && fieldPath[3] === 'disposalTargets'
+    && Number.isInteger(fieldPath[4])
+    && fieldPath[5] === 'selectedDisposalResource'
+    && fieldPath.length === 7;
+  if (isDisposalTargetSelectionPath) {
+    const project = automationManager.projectsAutomation.getProjectForAutomationId(projectId);
+    const disposalProject = project && project.getDisposalGroupData ? project : null;
+    const leafKey = fieldPath[6];
+    if (leafKey === 'category') {
+      return {
+        selectOptions: getProjectPresetDisposalCategoryOptions(disposalProject, value)
+      };
+    }
+    if (leafKey === 'resource') {
+      const selectionPath = ['projects', projectId, 'operations', 'disposalTargets', fieldPath[4], 'selectedDisposalResource'];
+      const selected = getAutomationPresetValueAtPath(
+        preset,
+        selectionPath
+      );
+      return {
+        selectOptions: getProjectPresetDisposalResourceOptions(disposalProject, selected.category, value)
+      };
+    }
+  }
+  if (presetSection !== 'operations') {
     return null;
   }
   if ((projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID || projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID)
@@ -154,6 +230,21 @@ function isProjectPresetFieldVisible(fieldPath, effectivePreset, automation) {
   const projectId = fieldPath[1];
   const settingKey = fieldPath[3];
   const project = automation.getProjectForAutomationId(projectId);
+  if (project && Array.isArray(project.disposalTargets)) {
+    if (
+      settingKey === 'selectedDisposalResource' ||
+      settingKey === 'waitForCapacity' ||
+      settingKey === 'disableBelowTemperature' ||
+      settingKey === 'disableTemperatureThreshold' ||
+      settingKey === 'disableBelowPressure' ||
+      settingKey === 'disablePressureThreshold' ||
+      settingKey === 'disableBelowCoverage' ||
+      settingKey === 'disableCoverageThreshold' ||
+      settingKey === 'disposalLimitSettings'
+    ) {
+      return false;
+    }
+  }
   if (!project || !project.attributes || !project.attributes.spaceMining) {
     return true;
   }
@@ -717,7 +808,7 @@ function updateProjectsAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
-    getFieldOptions: (fieldPath) => getProjectPresetJsonFieldOptions(fieldPath),
+    getFieldOptions: (fieldPath, value, preset) => getProjectPresetJsonFieldOptions(fieldPath, value, preset),
     onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!activePreset) {
         return;

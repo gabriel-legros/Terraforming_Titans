@@ -1850,7 +1850,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       if (input.tagName === 'SELECT') {
         const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(leafPath, valueToRender, effectivePreset) : null;
         if (fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length) {
-          input.value = String(valueToRender);
+          syncAutomationSelectOptions(input, fieldOptions.selectOptions, String(valueToRender));
         } else {
           input.value = valueToRender ? 'true' : 'false';
         }

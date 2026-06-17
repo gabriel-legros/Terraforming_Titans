@@ -269,10 +269,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       sanitized.push(this.createLegacyTarget());
     }
     this.disposalTargets = sanitized;
-    this.syncLegacySelectionState();
+    this.syncProjectAutoStartState();
   }
 
-  syncLegacySelectionState() {
+  syncProjectAutoStartState() {
     const firstTarget = this.disposalTargets[0];
     this.selectedDisposalResource = firstTarget ? this.cloneSelection(firstTarget.selectedDisposalResource) : null;
     this.waitForCapacity = false;
@@ -786,7 +786,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.disposalTargets.push(this.createDisposalTarget({
       selectedDisposalResource: nextSelection || this.getDefaultDisposalSelection(),
     }));
-    this.syncLegacySelectionState();
+    this.syncProjectAutoStartState();
     this.clearContinuousExecutionPlanCache();
     this.rebuildDisposalTargetList();
     this.updateUI();
@@ -797,7 +797,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       return;
     }
     this.disposalTargets = this.disposalTargets.filter(target => target.id !== targetId);
-    this.syncLegacySelectionState();
+    this.syncProjectAutoStartState();
     this.clearContinuousExecutionPlanCache();
     this.rebuildDisposalTargetList();
     this.updateUI();
@@ -815,7 +815,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const movingTarget = this.disposalTargets[fromIndex];
     this.disposalTargets[fromIndex] = this.disposalTargets[toIndex];
     this.disposalTargets[toIndex] = movingTarget;
-    this.syncLegacySelectionState();
+    this.syncProjectAutoStartState();
     this.clearContinuousExecutionPlanCache();
     this.rebuildDisposalTargetList();
     this.updateUI();
@@ -938,7 +938,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       const activeTarget = this.getTargetById(target.id);
       if (!phaseSelect.value) {
         activeTarget.selectedDisposalResource = null;
-        this.syncLegacySelectionState();
+        this.syncProjectAutoStartState();
         this.clearContinuousExecutionPlanCache();
         this.refreshDisposalTargetSelects();
         this.updateUI();
@@ -949,7 +949,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         category: parts[0],
         resource: parts[1],
       };
-      this.syncLegacySelectionState();
+      this.syncProjectAutoStartState();
       this.clearContinuousExecutionPlanCache();
       this.refreshDisposalTargetSelects();
       this.updateUI();
@@ -1007,7 +1007,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       (checked) => {
         const activeTarget = this.getTargetById(target.id);
         activeTarget.autoStart = checked;
-        this.syncLegacySelectionState();
+        this.syncProjectAutoStartState();
         this.clearContinuousExecutionPlanCache();
         this.updateUI();
       }
@@ -1100,7 +1100,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     addTrackedUIListener(container, checkbox, 'change', () => {
       const target = this.getTargetById(targetId);
       target[config.checkboxKey] = checkbox.checked;
-      this.syncLegacySelectionState();
+      this.syncProjectAutoStartState();
       this.clearContinuousExecutionPlanCache();
       this.updateUI();
     });
@@ -1121,7 +1121,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       onValue: (value) => {
         const target = this.getTargetById(targetId);
         target[config.thresholdKey] = config.parse(Math.max(0, value));
-        this.syncLegacySelectionState();
+        this.syncProjectAutoStartState();
         this.clearContinuousExecutionPlanCache();
         this.updateUI();
       },
@@ -1160,7 +1160,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
     if (groupKey === '') {
       target.selectedDisposalResource = null;
-      this.syncLegacySelectionState();
+      this.syncProjectAutoStartState();
       this.clearContinuousExecutionPlanCache();
       this.refreshDisposalTargetSelects();
       this.updateUI();
@@ -1195,7 +1195,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       category: selectedOption.category,
       resource: selectedOption.resource,
     };
-    this.syncLegacySelectionState();
+    this.syncProjectAutoStartState();
     this.clearContinuousExecutionPlanCache();
     this.refreshDisposalTargetSelects();
     this.updateUI();
@@ -1907,7 +1907,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       return;
     }
 
-    this.syncLegacySelectionState();
+    this.syncProjectAutoStartState();
 
     if (elements.autoStartCheckboxContainer) {
       elements.autoStartCheckboxContainer.style.display = 'none';
@@ -2102,6 +2102,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   saveAutomationSettings() {
     const settings = super.saveAutomationSettings();
+    delete settings.selectedDisposalResource;
+    delete settings.waitForCapacity;
+    delete settings.disableBelowTemperature;
+    delete settings.disableTemperatureThreshold;
+    delete settings.disableBelowPressure;
+    delete settings.disablePressureThreshold;
+    delete settings.disableBelowCoverage;
+    delete settings.disableCoverageThreshold;
+    delete settings.disposalLimitSettings;
     settings.disposalTargets = this.cloneDisposalTargets();
     return settings;
   }
