@@ -1664,3 +1664,752 @@ body.dark-mode {
 .dark-mode .atlas-community-note {
     color: #cbd5e1;
 }
+
+/* ============================================================
+   WGC Dark Mode
+   The WGC uses its own --wgc-* variables for internal colours,
+   which are already dark-navy by design. We only need to fix
+   the places where the global dark-mode button/input overrides
+   conflict with the WGC's own styles, and add container-level
+   background to prevent light-mode bleed.
+   ============================================================ */
+
+/* Restore WGC container/card backgrounds so they aren't
+   overridden by the generic dark-mode card or body rules */
+.dark-mode .wgc-container {
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-card {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-team-card {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-team-card .team-header {
+    color: var(--wgc-border-color);
+}
+
+/* Restore WGC buttons — the global .dark-mode button rule overrides
+   the internal wgc-variable styling */
+.dark-mode .wgc-container button {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-container button:hover:not(:disabled) {
+    background-color: var(--wgc-border-color);
+    color: var(--wgc-bg-dark);
+}
+
+.dark-mode .wgc-container button:disabled {
+    background-color: var(--wgc-bg-dark);
+    color: var(--wgc-text-dark);
+    border-color: var(--wgc-text-dark);
+    opacity: 0.5;
+}
+
+/* Restore WGC inputs and selects */
+.dark-mode .wgc-container select,
+.dark-mode .wgc-container input[type="number"],
+.dark-mode .wgc-container input[type="text"] {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+/* Team slot */
+.dark-mode .team-slot {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-text-dark);
+}
+
+.dark-mode .team-slot.filled {
+    border-color: var(--wgc-border-color);
+}
+
+.dark-mode .team-slot.filled:hover {
+    background-color: var(--wgc-bg-light);
+}
+
+.dark-mode .team-slot button {
+    background: none;
+    border: none;
+    color: var(--wgc-text-dark);
+}
+
+.dark-mode .team-slot button:hover {
+    background-color: var(--wgc-bg-light);
+    color: var(--wgc-text-light);
+}
+
+/* Team name input */
+.dark-mode .team-name-input {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+/* Rename button */
+.dark-mode .wgc-container button.rename-team-icon {
+    background: none;
+    border: none;
+    color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-container button.rename-team-icon:hover {
+    background: none;
+    color: var(--wgc-text-light);
+}
+
+/* Confirm rename button */
+.dark-mode .confirm-rename-btn {
+    background-color: var(--wgc-green);
+    border: none;
+    color: #ffffff;
+}
+
+/* Story toggle */
+.dark-mode .wgc-container .wgc-story-toggle {
+    background: transparent;
+    border: none;
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-container .wgc-story-toggle:hover {
+    background: transparent;
+    border: none;
+}
+
+.dark-mode .wgc-container .wgc-story-toggle__track {
+    background-color: var(--wgc-bg-light);
+}
+
+.dark-mode .wgc-container .wgc-story-toggle__thumb {
+    background-color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__track {
+    background-color: var(--wgc-border-color);
+}
+
+/* Popup window */
+.dark-mode .wgc-popup-overlay {
+    background-color: rgba(13, 26, 38, 0.85);
+}
+
+.dark-mode .wgc-popup-window {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-popup-window h2 {
+    color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-popup-window input,
+.dark-mode .wgc-popup-window select {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-popup-window button {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-popup-window button:hover:not(:disabled) {
+    background-color: var(--wgc-border-color);
+    color: var(--wgc-bg-dark);
+}
+
+/* Stat containers */
+.dark-mode .wgc-stat-container {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .wgc-stat-header-row {
+    background-color: transparent;
+    border: none;
+    color: var(--wgc-text-medium);
+}
+
+.dark-mode .wgc-auto-input {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-bg-light);
+    color: var(--wgc-text-light);
+}
+
+/* R&D section */
+.dark-mode .wgc-rd-item:nth-child(odd) {
+    background-color: var(--wgc-bg-dark);
+}
+
+.dark-mode .wgc-rd-header {
+    color: var(--wgc-text-light);
+    background-color: transparent;
+}
+
+.dark-mode .wgc-rd-mult {
+    color: var(--wgc-text-medium);
+}
+
+/* Facility progress */
+.dark-mode .wgc-facility-progress {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+/* Operation progress segments */
+.dark-mode .operation-progress {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .operation-progress-segment {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .operation-summary {
+    color: var(--wgc-text-medium);
+}
+
+/* Team log */
+.dark-mode .team-log {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .team-log-content {
+    color: var(--wgc-text-medium);
+}
+
+/* Locked overlay */
+.dark-mode .wgc-team-locked {
+    background-color: rgba(13, 26, 38, 0.95);
+    color: var(--wgc-border-color);
+}
+
+/* HP bar background */
+.dark-mode .team-hp-bar {
+    background-color: #333;
+}
+
+/* Stance labels */
+.dark-mode .team-stance label {
+    color: var(--wgc-text-medium);
+}
+
+.dark-mode .difficulty-label {
+    color: var(--wgc-text-medium);
+}
+
+/* Copy stats button */
+.dark-mode .wgc-copy-team-stats {
+    background-color: var(--wgc-border-color);
+}
+
+/* ============================================================
+   Patience (HOPE Tab) Dark Mode
+   The patience shell has a hard-coded dark-blue gradient in
+   light mode already, so colours are mostly readable. We override
+   the shell background and borders to match the dark-mode palette,
+   and fix the input/button to match the game's dark-mode style.
+   ============================================================ */
+
+.dark-mode .patience-shell {
+    background: linear-gradient(135deg, #0f1a26 0%, #141d2b 50%, #1a2537 100%);
+    border-color: #3c3c3c;
+    color: #ffffff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+}
+
+.dark-mode .patience-header h2 {
+    color: #f0f0f0;
+}
+
+.dark-mode .patience-subtitle {
+    color: #bbbbbb;
+}
+
+.dark-mode .patience-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: #3c3c3c;
+}
+
+.dark-mode .patience-card-label {
+    color: #bbbbbb;
+}
+
+.dark-mode .patience-card-value {
+    color: #ffffff;
+}
+
+.dark-mode .patience-card-meta {
+    color: #bbbbbb;
+}
+
+/* Patience meter */
+.dark-mode .patience-meter {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #444;
+}
+
+.dark-mode .patience-meter-text {
+    color: #c7c7c7;
+}
+
+/* Spend card */
+.dark-mode .patience-spend-card {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: #444;
+}
+
+/* Input */
+.dark-mode #patience-spend-input {
+    background-color: #1a1a1a;
+    border-color: #555;
+    color: #ffffff;
+}
+
+/* Primary spend button — keep its accent look, just ensure contrast */
+.dark-mode #patience-spend-button {
+    background: linear-gradient(135deg, #3a8abf 0%, #4a66cc 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.dark-mode #patience-spend-button:disabled {
+    opacity: 0.4;
+}
+
+.dark-mode .patience-preview {
+    color: #c7c7c7;
+}
+
+.dark-mode .patience-warning {
+    color: #ff6b6b;
+}
+
+/* Save-row buttons */
+.dark-mode .patience-save-row button {
+    background-color: #3a3a3a;
+    border-color: #666;
+    color: #f0f0f0;
+}
+
+.dark-mode .patience-save-row button:hover {
+    background-color: #4d4d4d;
+}
+
+.dark-mode .patience-shell .info-tooltip-icon {
+    color: #5db2ff;
+}
+
+/* ============================================================
+   Space Tab Dark Mode
+   The majority of space.css uses --rwg-* / --space-* CSS
+   variables that already resolve to dark-navy tones. Only
+   classes that embed hard-coded light colours need overrides.
+   The galactic-invasion section is already handled above.
+   ============================================================ */
+
+/* Space cards / panels — the --rwg-* vars are dark by default,
+   but we reinforce key backgrounds so they render correctly when
+   the surrounding page switches to #121212. */
+.dark-mode #space-story,
+.dark-mode #space-atlas {
+    background-color: #121212;
+}
+
+.dark-mode .space-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode .space-card-title {
+    color: #f0f0f0;
+}
+
+.dark-mode .space-card-subtitle {
+    color: #bbbbbb;
+}
+
+/* Details container */
+.dark-mode .details-container {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode .details-content {
+    border-left-color: #444;
+}
+
+/* Planet options */
+.dark-mode .planet-option {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode .planet-option h3 {
+    color: #f0f0f0;
+}
+
+.dark-mode .planet-stats {
+    color: #bbbbbb;
+}
+
+.dark-mode .planet-stats p {
+    border-bottom-color: #3c3c3c;
+}
+
+.dark-mode .planet-stats strong {
+    color: #bbbbbb;
+}
+
+.dark-mode .planet-status {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f0f0f0;
+}
+
+/* Select planet button */
+.dark-mode .select-planet-button {
+    border-color: #5db2ff;
+    color: #5db2ff;
+}
+
+.dark-mode .select-planet-button:hover:not(:disabled) {
+    background: #5db2ff;
+    color: #121212;
+}
+
+/* Atlas */
+.dark-mode .atlas-world-effects {
+    color: #bbbbbb;
+}
+
+.dark-mode .atlas-world-effects-title {
+    color: #f0f0f0;
+}
+
+.dark-mode .atlas-world-effect {
+    border-left-color: #444;
+}
+
+/* Space stat card */
+.dark-mode .space-stat-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode .space-stat-label {
+    color: #bbbbbb;
+}
+
+.dark-mode .space-stat-value {
+    color: #ffffff;
+}
+
+.dark-mode .space-stat-subvalue {
+    color: #bbbbbb;
+}
+
+/* Space sliders */
+.dark-mode .space-sliders-section {
+    border-top-color: #444;
+}
+
+.dark-mode .space-sliders-title {
+    color: #f0f0f0;
+}
+
+.dark-mode .space-slider-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode .space-slider-topline {
+    color: #f0f0f0;
+}
+
+.dark-mode .space-slider-tick {
+    color: #f0f0f0;
+}
+
+.dark-mode .space-slider-energy,
+.dark-mode .space-slider-productivity {
+    color: #bbbbbb;
+}
+
+/* Artificial worlds */
+.dark-mode .artificial-panel {
+    background-color: #1e1e1e;
+    border-color: #444;
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-panel h3 {
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-select,
+.dark-mode .artificial-radius-input,
+.dark-mode .artificial-name,
+.dark-mode .artificial-stash-grid input {
+    background-color: #1a1a1a;
+    border-color: #555;
+    color: #ffffff;
+}
+
+.dark-mode .artificial-radius-row {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-surface-box {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-gravity-row {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-gravity {
+    border-color: #444;
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-cost-row span:first-child {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-cost-value {
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-duration {
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-gains {
+    border-top-color: #444;
+}
+
+.dark-mode .artificial-gains h3 {
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-gains-list {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-gain-row span:first-child {
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-gain-value {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-effects {
+    border-top-color: #444;
+}
+
+.dark-mode .artificial-effects h3 {
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-secondary {
+    border-color: #666;
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-secondary:hover:not(:disabled) {
+    background-color: #2d2d2d;
+}
+
+.dark-mode .artificial-stash-row {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-stash-title {
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-stash-stock {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-stash-controls {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-stash-btn {
+    border-color: #666;
+    background: rgba(255, 255, 255, 0.03);
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-stash-btn:hover:not(:disabled) {
+    border-color: #5db2ff;
+    color: #5db2ff;
+}
+
+.dark-mode .artificial-stash-recommend {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-priority {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-progress {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: #444;
+}
+
+.dark-mode .artificial-history-row {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-history-header-row {
+    color: #bbbbbb;
+}
+
+.dark-mode .artificial-history-edit-btn {
+    border-color: #555;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-history-edit-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .artificial-history-name-input {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: #555;
+    color: #ffffff;
+}
+
+.dark-mode .artificial-history-travel-btn {
+    border-color: #555;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f0f0f0;
+}
+
+.dark-mode .artificial-history-travel-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .artificial-supermassive-card {
+    background: linear-gradient(180deg, rgba(40, 60, 90, 0.25), rgba(255, 255, 255, 0.02));
+}
+
+.dark-mode .artificial-supermassive-status {
+    border-color: #5db2ff;
+    background: rgba(93, 178, 255, 0.08);
+    color: #5db2ff;
+}
+
+/* ============================================================
+   Colony Orbitals Dark Mode
+   The orbital-ring-card uses shared .card-header / .stat-item
+   classes already covered. We add overrides for the colony
+   slider cards (sliders-box, colony-slider) and the
+   construction-office reserve window used in the colonies tab,
+   plus the nanocolony temperature warning.
+   ============================================================ */
+
+/* Colony slider card */
+.dark-mode .sliders-box {
+    background-color: #1e1e1e;
+    border-color: #444;
+    box-shadow: none;
+}
+
+.dark-mode .sliders-title {
+    color: #f0f0f0;
+}
+
+/* Colony slider track / thumb — scoped to colony tab only so we
+   don't conflict with the nanocolony or automation overrides */
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-runnable-track {
+    background: #4d4d4d;
+}
+
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-thumb {
+    background-color: #dddddd;
+}
+
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-track {
+    background: #4d4d4d;
+}
+
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-thumb {
+    background-color: #dddddd;
+}
+
+/* Tick marks for colony sliders */
+.dark-mode #colony-sliders-container .slider-container .tick-marks span {
+    background-color: #666;
+}
+
+.dark-mode #colony-sliders-container .slider-container .tick-marks span:first-child,
+.dark-mode #colony-sliders-container .slider-container .tick-marks span:last-child {
+    background-color: transparent;
+}
+
+/* Construction office reserve window */
+.dark-mode .construction-office-reserve-window {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border-color: #444;
+}
+
+.dark-mode .construction-office-reserve-intro {
+    color: #c7c7c7;
+}
+
+/* Nanocolony temperature warning */
+.dark-mode #nanocolony-container .nanotech-temperature-warning {
+    border-color: #8a3a3a;
+    background: #2a1515;
+    color: #ff9a9a;
+}
+
+/* Nanocolony allocation title and recycling toggle text */
+.dark-mode #nanocolony-container .nanotech-recycling-toggle,
+.dark-mode #nanocolony-container .nanotech-recycling-resource {
+    color: #bbbbbb;
+}
+
+/* Colony buoyancy capacity button */
+.dark-mode .colony-buoyancy-card .colony-buoyancy-capacity-button {
+    background-color: #3a3a3a;
+    border-color: #666;
+    color: #f0f0f0;
+}
+
+.dark-mode .colony-buoyancy-card .colony-buoyancy-capacity-button:disabled {
+    opacity: 0.5;
+}
+
+.dark-mode .colony-buoyancy-card .colony-buoyancy-notes-title {
+    color: #f0f0f0;
+}
