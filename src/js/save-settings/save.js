@@ -953,6 +953,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     if (typeof applyRWGEffects === 'function') {
       applyRWGEffects();
     }
+    if (typeof createResourceDisplay === 'function' && resources) {
+      createResourceDisplay(resources);
+    }
     globalGameIsLoadingFromSave = false;
     if (!options.skipRender && typeof updateRender === 'function') {
       updateRender(true, { forceAllSubtabs: true });
