@@ -1771,7 +1771,7 @@ body.dark-mode {
 .dark-mode .confirm-rename-btn {
     background-color: var(--wgc-green);
     border: none;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 /* Story toggle */
@@ -1902,7 +1902,7 @@ body.dark-mode {
 
 /* HP bar background */
 .dark-mode .team-hp-bar {
-    background-color: #333;
+    background-color: #1a2538;
 }
 
 /* Stance labels */
@@ -1929,63 +1929,63 @@ body.dark-mode {
 
 .dark-mode .patience-shell {
     background: linear-gradient(135deg, #0f1a26 0%, #141d2b 50%, #1a2537 100%);
-    border-color: #3c3c3c;
-    color: #ffffff;
+    border-color: #1d293b;
+    color: #e7ecf7;
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
 }
 
 .dark-mode .patience-header h2 {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .patience-subtitle {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .patience-card {
     background: rgba(255, 255, 255, 0.04);
-    border-color: #3c3c3c;
+    border-color: #1d293b;
 }
 
 .dark-mode .patience-card-label {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .patience-card-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .patience-card-meta {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 /* Patience meter */
 .dark-mode .patience-meter {
     background: rgba(255, 255, 255, 0.05);
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode .patience-meter-text {
-    color: #c7c7c7;
+    color: #8fa3c8;
 }
 
 /* Spend card */
 .dark-mode .patience-spend-card {
     background: rgba(0, 0, 0, 0.25);
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 /* Input */
 .dark-mode #patience-spend-input {
-    background-color: #1a1a1a;
-    border-color: #555;
-    color: #ffffff;
+    background-color: #0d1118;
+    border-color: #374151;
+    color: #e7ecf7;
 }
 
 /* Primary spend button — keep its accent look, just ensure contrast */
 .dark-mode #patience-spend-button {
     background: linear-gradient(135deg, #3a8abf 0%, #4a66cc 100%);
-    color: #ffffff;
+    color: #e7ecf7;
     border: none;
 }
 
@@ -1994,7 +1994,7 @@ body.dark-mode {
 }
 
 .dark-mode .patience-preview {
-    color: #c7c7c7;
+    color: #8fa3c8;
 }
 
 .dark-mode .patience-warning {
@@ -2003,13 +2003,13 @@ body.dark-mode {
 
 /* Save-row buttons */
 .dark-mode .patience-save-row button {
-    background-color: #3a3a3a;
-    border-color: #666;
-    color: #f0f0f0;
+    background-color: #1a2538;
+    border-color: #4a5568;
+    color: #e7ecf7;
 }
 
 .dark-mode .patience-save-row button:hover {
-    background-color: #4d4d4d;
+    background-color: #24324a;
 }
 
 .dark-mode .patience-shell .info-tooltip-icon {
@@ -2026,60 +2026,60 @@ body.dark-mode {
 
 /* Space cards / panels — the --rwg-* vars are dark by default,
    but we reinforce key backgrounds so they render correctly when
-   the surrounding page switches to #121212. */
+   the surrounding page switches to #0f141d. */
 .dark-mode #space-story,
 .dark-mode #space-atlas {
-    background-color: #121212;
+    background-color: #0f141d;
 }
 
 .dark-mode .space-card {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .space-card-title {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .space-card-subtitle {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 /* Details container */
 .dark-mode .details-container {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .details-content {
-    border-left-color: #444;
+    border-left-color: #2d3a50;
 }
 
 /* Planet options */
 .dark-mode .planet-option {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .planet-option h3 {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .planet-stats {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .planet-stats p {
-    border-bottom-color: #3c3c3c;
+    border-bottom-color: #1d293b;
 }
 
 .dark-mode .planet-stats strong {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .planet-status {
     background: rgba(255, 255, 255, 0.06);
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 /* Select planet button */
@@ -2090,178 +2090,178 @@ body.dark-mode {
 
 .dark-mode .select-planet-button:hover:not(:disabled) {
     background: #5db2ff;
-    color: #121212;
+    color: #0f141d;
 }
 
 /* Atlas */
 .dark-mode .atlas-world-effects {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .atlas-world-effects-title {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .atlas-world-effect {
-    border-left-color: #444;
+    border-left-color: #2d3a50;
 }
 
 /* Space stat card */
 .dark-mode .space-stat-card {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .space-stat-label {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .space-stat-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .space-stat-subvalue {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 /* Space sliders */
 .dark-mode .space-sliders-section {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .space-sliders-title {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .space-slider-card {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .space-slider-topline {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .space-slider-tick {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .space-slider-energy,
 .dark-mode .space-slider-productivity {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 /* Artificial worlds */
 .dark-mode .artificial-panel {
-    background-color: #1e1e1e;
-    border-color: #444;
-    color: #f0f0f0;
+    background-color: #161b26;
+    border-color: #2d3a50;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-panel h3 {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-select,
 .dark-mode .artificial-radius-input,
 .dark-mode .artificial-name,
 .dark-mode .artificial-stash-grid input {
-    background-color: #1a1a1a;
-    border-color: #555;
-    color: #ffffff;
+    background-color: #0d1118;
+    border-color: #374151;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-radius-row {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-surface-box {
-    border-color: #444;
+    border-color: #2d3a50;
     background: rgba(255, 255, 255, 0.02);
 }
 
 .dark-mode .artificial-gravity-row {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-gravity {
-    border-color: #444;
-    color: #f0f0f0;
+    border-color: #2d3a50;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-cost-row span:first-child {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-cost-value {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-duration {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-gains {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .artificial-gains h3 {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-gains-list {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-gain-row span:first-child {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-gain-value {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-effects {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .artificial-effects h3 {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-secondary {
-    border-color: #666;
-    color: #f0f0f0;
+    border-color: #4a5568;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-secondary:hover:not(:disabled) {
-    background-color: #2d2d2d;
+    background-color: #111827;
 }
 
 .dark-mode .artificial-stash-row {
-    border-color: #444;
+    border-color: #2d3a50;
     background: rgba(255, 255, 255, 0.02);
 }
 
 .dark-mode .artificial-stash-title {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-stash-stock {
-    border-color: #444;
+    border-color: #2d3a50;
     background: rgba(255, 255, 255, 0.02);
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-stash-controls {
-    border-color: #444;
+    border-color: #2d3a50;
     background: rgba(255, 255, 255, 0.02);
 }
 
 .dark-mode .artificial-stash-btn {
-    border-color: #666;
+    border-color: #4a5568;
     background: rgba(255, 255, 255, 0.03);
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-stash-btn:hover:not(:disabled) {
@@ -2270,31 +2270,31 @@ body.dark-mode {
 }
 
 .dark-mode .artificial-stash-recommend {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-priority {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-progress {
     background: rgba(255, 255, 255, 0.06);
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode .artificial-history-row {
-    border-color: #444;
+    border-color: #2d3a50;
     background: rgba(255, 255, 255, 0.02);
 }
 
 .dark-mode .artificial-history-header-row {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .artificial-history-edit-btn {
-    border-color: #555;
+    border-color: #374151;
     background-color: rgba(255, 255, 255, 0.06);
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-history-edit-btn:hover {
@@ -2303,14 +2303,14 @@ body.dark-mode {
 
 .dark-mode .artificial-history-name-input {
     background-color: rgba(255, 255, 255, 0.06);
-    border-color: #555;
-    color: #ffffff;
+    border-color: #374151;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-history-travel-btn {
-    border-color: #555;
+    border-color: #374151;
     background: rgba(255, 255, 255, 0.06);
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .artificial-history-travel-btn:hover {
@@ -2338,19 +2338,19 @@ body.dark-mode {
 
 /* Colony slider card */
 .dark-mode .sliders-box {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
     box-shadow: none;
 }
 
 .dark-mode .sliders-title {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 /* Colony slider track / thumb — scoped to colony tab only so we
    don't conflict with the nanocolony or automation overrides */
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-runnable-track {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-thumb {
@@ -2358,7 +2358,7 @@ body.dark-mode {
 }
 
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-track {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-thumb {
@@ -2367,7 +2367,7 @@ body.dark-mode {
 
 /* Tick marks for colony sliders */
 .dark-mode #colony-sliders-container .slider-container .tick-marks span {
-    background-color: #666;
+    background-color: #4a5568;
 }
 
 .dark-mode #colony-sliders-container .slider-container .tick-marks span:first-child,
@@ -2377,13 +2377,13 @@ body.dark-mode {
 
 /* Construction office reserve window */
 .dark-mode .construction-office-reserve-window {
-    background-color: #1e1e1e;
-    color: #ffffff;
-    border-color: #444;
+    background-color: #161b26;
+    color: #e7ecf7;
+    border-color: #2d3a50;
 }
 
 .dark-mode .construction-office-reserve-intro {
-    color: #c7c7c7;
+    color: #8fa3c8;
 }
 
 /* Nanocolony temperature warning */
@@ -2396,14 +2396,14 @@ body.dark-mode {
 /* Nanocolony allocation title and recycling toggle text */
 .dark-mode #nanocolony-container .nanotech-recycling-toggle,
 .dark-mode #nanocolony-container .nanotech-recycling-resource {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 /* Colony buoyancy capacity button */
 .dark-mode .colony-buoyancy-card .colony-buoyancy-capacity-button {
-    background-color: #3a3a3a;
-    border-color: #666;
-    color: #f0f0f0;
+    background-color: #1a2538;
+    border-color: #4a5568;
+    color: #e7ecf7;
 }
 
 .dark-mode .colony-buoyancy-card .colony-buoyancy-capacity-button:disabled {
@@ -2411,5 +2411,5 @@ body.dark-mode {
 }
 
 .dark-mode .colony-buoyancy-card .colony-buoyancy-notes-title {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
