@@ -1006,12 +1006,12 @@ body.dark-mode {
 }
 /* Solis Tab Dark Mode */
 .dark-mode .solis-container {
-    background-color: #1e1e1e;
-    color: #ffffff;
+    background-color: #161b26;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-header {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-header h2 {
@@ -1019,8 +1019,8 @@ body.dark-mode {
 }
 
 .dark-mode .solis-quest-area {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .solis-quest-quantity,
@@ -1033,12 +1033,12 @@ body.dark-mode {
 }
 
 .dark-mode .solis-progress-bar-container {
-    background-color: #4d4d4d;
+    background-color: #24324a;
 }
 
 .dark-mode .solis-multiplier-button {
     background-color: #81c784;
-    color: #121212;
+    color: #0f141d;
 }
 
 .dark-mode .solis-multiplier-button:hover {
@@ -1047,7 +1047,7 @@ body.dark-mode {
 
 .dark-mode #solis-refresh-button,
 .dark-mode #solis-complete-button {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #solis-refresh-button {
@@ -1055,37 +1055,37 @@ body.dark-mode {
 }
 
 .dark-mode #solis-refresh-button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode #solis-complete-button {
     background-color: #ffd54f;
-    color: #1a1a1a;
+    color: #0d1118;
 }
 
 .dark-mode #solis-complete-button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode .solis-shop-container {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-container h3 {
     color: #e91e63;
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-header {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-header-controls button {
     background-color: #64b5f6;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-shop-header-controls button:hover {
@@ -1093,12 +1093,12 @@ body.dark-mode {
 }
 
 .dark-mode .solis-shop-header-controls button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode .solis-shop-item {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-item:hover {
@@ -1106,20 +1106,20 @@ body.dark-mode {
 }
 
 .dark-mode .solis-shop-item-label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-shop-item-cost {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .solis-shop-item-count {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .solis-shop-item button {
     background-color: #64b5f6;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-shop-item button:hover {
@@ -1127,20 +1127,20 @@ body.dark-mode {
 }
 
 .dark-mode .solis-shop-item button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 .dark-mode .need-box {
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode .need-box .text-container {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .sliders-box {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .automation-card {
@@ -1406,8 +1406,8 @@ body.dark-mode {
 }
 
 .dark-mode .deep-mining-option {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .deep-mining-option-label {
@@ -1507,7 +1507,7 @@ body.dark-mode {
 .dark-mode .building-automation-section .building-automation-combination-save {
     background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
     border: 1px solid #3f7bf7;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .building-automation-section .building-automation-builder-save:hover,
@@ -1567,55 +1567,55 @@ body.dark-mode {
 }
 
 .dark-mode input[type="range"].pretty-slider::-webkit-slider-runnable-track {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode input[type="range"].pretty-slider::-webkit-slider-thumb {
-    background-color: #bbbbbb;
+    background-color: #8fa3c8;
 }
 
 .dark-mode input[type="range"].pretty-slider::-moz-range-track {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode input[type="range"].pretty-slider::-moz-range-thumb {
-    background-color: #bbbbbb;
+    background-color: #8fa3c8;
 }
 .dark-mode #life-designs-table th,
 .dark-mode #life-status-table th {
-    background-color: #1e1e1e;
-    color: #ffffff;
-    border-color: #444;
+    background-color: #161b26;
+    color: #e7ecf7;
+    border-color: #2d3a50;
 }
 .dark-mode #nanocolony-container .stat-item {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode #nanocolony-container .stat-label {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode #nanocolony-container .stat-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 
 .dark-mode #nanocolony-container .control-group label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .slider-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .slider-description {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode #nanocolony-container h4 {
-    color: #ffffff;
-    border-bottom-color: #444;
+    color: #e7ecf7;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .colony-buoyancy-card .colony-buoyancy-body {
@@ -1623,7 +1623,7 @@ body.dark-mode {
 }
 
 .dark-mode .colony-buoyancy-card .colony-buoyancy-lift-label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 /* HOPE Tab — Skill Tree */
