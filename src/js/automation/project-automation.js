@@ -64,6 +64,17 @@ const PROJECT_AUTOMATION_EXPANSION_KEYS = new Set([
   'expansionRecipeKey',
   'spaceStorageResourceMode'
 ]);
+const PROJECT_AUTOMATION_DISPOSAL_LEGACY_SETTING_KEYS = new Set([
+  'selectedDisposalResource',
+  'waitForCapacity',
+  'disableBelowTemperature',
+  'disableTemperatureThreshold',
+  'disableBelowPressure',
+  'disablePressureThreshold',
+  'disableBelowCoverage',
+  'disableCoverageThreshold',
+  'disposalLimitSettings'
+]);
 
 const PROJECT_AUTOMATION_PROJECT_EXPANSION_KEYS = {
   satellite: new Set(['step']),
@@ -614,7 +625,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   }
 
   splitProjectSettings(projectId, settings = {}) {
-    const source = settings || {};
+    let source = settings || {};
     const normalizedProjectId = this.normalizeProjectId(projectId);
     const singleResourceKey = this.parseSpaceStorageSingleResourceProjectId(normalizedProjectId);
     if (singleResourceKey) {
@@ -640,6 +651,31 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         expansion: {},
         operations: this.filterSpaceStorageOperationSettings(source)
       };
+    }
+    const project = this.getProjectForAutomationId(normalizedProjectId);
+    if (project && Array.isArray(project.disposalTargets)) {
+      const migratedSource = {};
+      const hasDisposalTargets = Array.isArray(source.disposalTargets) && source.disposalTargets.length > 0;
+      for (const key in source) {
+        if (PROJECT_AUTOMATION_DISPOSAL_LEGACY_SETTING_KEYS.has(key)) {
+          continue;
+        }
+        migratedSource[key] = this.deepClone(source[key]);
+      }
+      if (!hasDisposalTargets && source.selectedDisposalResource?.category && source.selectedDisposalResource?.resource) {
+        migratedSource.disposalTargets = [{
+          id: 1,
+          selectedDisposalResource: this.deepClone(source.selectedDisposalResource),
+          autoStart: source.autoStart === true,
+          disableBelowTemperature: source.disableBelowTemperature === true,
+          disableTemperatureThreshold: source.disableTemperatureThreshold ?? 303.15,
+          disableBelowPressure: source.disableBelowPressure === true,
+          disablePressureThreshold: source.disablePressureThreshold ?? 0,
+          disableBelowCoverage: source.disableBelowCoverage === true,
+          disableCoverageThreshold: source.disableCoverageThreshold ?? 0
+        }];
+      }
+      source = migratedSource;
     }
     const expansion = {};
     const operations = {};

@@ -594,7 +594,7 @@ function autoSlabHeatCapacity(
 
 function effectiveTemp(albedo, flux, options = {}) {
   const adjustment = (isRingWorld() || isAldersonDiskWorld()) ? 1 : 4;
-  const addedFlux = Math.max(0, options.addedFlux || 0);
+  const addedFlux = options.addedFlux || 0;
   const absorbedFlux = Math.max(0, ((1 - albedo) * flux / adjustment) + addedFlux);
   return Math.pow(absorbedFlux / SIGMA, 0.25);
 }

@@ -127,7 +127,8 @@ function buildScriptAutomationUI() {
   deleteButton.classList.add('script-automation-delete');
   deleteButton.textContent = getAutomationCardText('scriptDelete', {}, 'Delete');
 
-  scriptRow.append(scriptSelect, scriptName, newButton, duplicateButton, deleteButton);
+  const scriptTransferButtons = createAutomationPresetTransferButtons('script-automation-script');
+  scriptRow.append(scriptSelect, scriptName, newButton, duplicateButton, deleteButton, scriptTransferButtons.importButton, scriptTransferButtons.exportButton);
   body.appendChild(scriptRow);
 
   const linesContainer = document.createElement('div');
@@ -158,6 +159,8 @@ function buildScriptAutomationUI() {
   automationElements.scriptDeleteButton = deleteButton;
   automationElements.scriptLinesContainer = linesContainer;
   automationElements.scriptAddLineButton = addLineButton;
+  automationElements.scriptImportButton = scriptTransferButtons.importButton;
+  automationElements.scriptExportButton = scriptTransferButtons.exportButton;
 
   wireScriptAutomationEvents();
 }
@@ -285,6 +288,39 @@ function wireScriptAutomationEvents() {
     forceScriptAutomationRefresh = true;
     queueAutomationUIRefresh();
   });
+
+  els.scriptExportButton.addEventListener('click', () => {
+    const automation = getScriptAutomation();
+    const script = automation?.getSelectedScript();
+    if (!automation || !script) return;
+    exportAutomationPresetToClipboard('script', automation.exportScript(script.id), els.scriptExportButton);
+  });
+
+  els.scriptImportButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importScriptTitle', {}, 'Import Script'),
+      description: getAutomationCardText(
+        'importPresetDescription',
+        {},
+        'Paste an exported preset string below. Import adds it as a new preset.'
+      ),
+      onImport: (text) => {
+        const parsed = parseAutomationPresetTransferPayload(text, 'script');
+        if (!parsed.ok) {
+          return parsed;
+        }
+        const automation = getScriptAutomation();
+        if (!automation) {
+          return { ok: false, error: getAutomationCardText('importPresetFailed', {}, 'Could not import that preset.') };
+        }
+        automation.importScript(parsed.preset);
+        forceScriptAutomationRefresh = true;
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
 }
 
 function updateScriptAutomationUI() {
@@ -364,6 +400,8 @@ function updateScriptAutomationUI() {
   automationElements.scriptPauseButton.disabled = !automation.running;
   automationElements.scriptStepButton.disabled = !automation.enabled || !script;
   automationElements.scriptResetButton.disabled = !script;
+  automationElements.scriptImportButton.disabled = false;
+  automationElements.scriptExportButton.disabled = !script;
 
   const displayLineId = automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId;
   const currentLine = script?.lines.find(line => line.id === displayLineId);

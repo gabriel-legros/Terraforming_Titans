@@ -1599,7 +1599,7 @@ function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, acc
       : 1;
     const hasActiveSpaceStorageTransfer = project.attributes?.spaceStorage
       && project.shipOperationIsActive === true
-      && project.assignedSpaceships > 0;
+      && (project.isTeleporterTransferActive() || project.assignedSpaceships > 0);
     const shouldEstimate =
       hasActiveSpaceStorageTransfer ||
       project.autoStart !== false ||
@@ -1626,12 +1626,18 @@ function updateFactoryHeatPower(deltaTime, structures) {
   for (const structureName in structures) {
     const structure = structures[structureName];
     const coefficient = structure.factoryHeatCoefficient || 0;
-    if (!(coefficient > 0)) {
-      continue;
+    const coolingCoefficient = structure.factoryCoolingCoefficient || 0;
+    if (coefficient > 0) {
+      const consumedEnergy = structure.currentConsumption?.colony?.energy || 0;
+      if (consumedEnergy > 0) {
+        power += consumedEnergy * (1000 / deltaTime) * coefficient;
+      }
     }
-    const consumedEnergy = structure.currentConsumption?.colony?.energy || 0;
-    if (consumedEnergy > 0) {
-      power += consumedEnergy * (1000 / deltaTime) * coefficient;
+    if (coolingCoefficient > 0) {
+      const producedEnergy = structure.currentProduction?.colony?.energy || 0;
+      if (producedEnergy > 0) {
+        power -= producedEnergy * (1000 / deltaTime) * coolingCoefficient;
+      }
     }
   }
   terraforming.setFactoryHeatPower(power);

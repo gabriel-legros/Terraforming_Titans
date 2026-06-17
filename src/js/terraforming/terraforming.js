@@ -706,7 +706,7 @@ class Terraforming extends EffectableEntity{
   setFactoryHeatPower(power) {
     const surfaceArea = this.celestialParameters.surfaceArea
       || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
-    this.factoryHeatPower = Math.max(0, Number(power) || 0);
+    this.factoryHeatPower = Number(power) || 0;
     this.factoryHeatFlux = surfaceArea > 0 ? this.factoryHeatPower / surfaceArea : 0;
   }
 
@@ -714,11 +714,14 @@ class Terraforming extends EffectableEntity{
     if (!gameSettings.factoryHeating || isEquilibrating) {
       return 0;
     }
-    return Math.max(0, this.factoryHeatFlux || 0);
+    return this.factoryHeatFlux || 0;
   }
 
   getNetFactoryHeatFlux() {
     const factoryHeatFlux = this.getFactoryHeatFlux();
+    if (factoryHeatFlux <= 0) {
+      return factoryHeatFlux;
+    }
     const sinkAfterCore = Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
     return Math.max(0, factoryHeatFlux - sinkAfterCore);
   }
@@ -727,11 +730,13 @@ class Terraforming extends EffectableEntity{
     const coreHeatFlux = this.getCoreHeatFlux();
     const factoryHeatFlux = this.getFactoryHeatFlux();
     const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
-    return Math.max(0, coreHeatFlux + factoryHeatFlux - megaHeatSinkFlux);
+    const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
+    const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
+    return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux;
   }
 
   getMegaHeatSinkCoolingFlux() {
-    const totalHeatFlux = this.getCoreHeatFlux() + this.getFactoryHeatFlux();
+    const totalHeatFlux = this.getCoreHeatFlux() + Math.max(0, this.getFactoryHeatFlux());
     const megaHeatSinkFlux = this.getMegaHeatSinkRawFlux();
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {

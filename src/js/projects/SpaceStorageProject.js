@@ -50,7 +50,10 @@ const SPACE_STORAGE_IMPORT_LIMIT_RESOURCE_PROJECTS = {
 const SPACE_STORAGE_PRESSURE_LIMIT_RESOURCES = {
   oxygen: 'oxygen',
   atmosphericMethane: 'atmosphericMethane',
-  atmosphericAmmonia: 'atmosphericAmmonia'
+  atmosphericAmmonia: 'atmosphericAmmonia',
+  inertGas: 'inertGas',
+  carbonDioxide: 'carbonDioxide',
+  hydrogen: 'hydrogen'
 };
 const SPACE_STORAGE_AMOUNT_LIMIT_RESOURCES = {
   graphite: 'graphite'

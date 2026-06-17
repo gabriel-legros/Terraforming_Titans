@@ -94,6 +94,7 @@ const solisShopRepeatableKeys = [
   'startingShips',
   'research'
 ];
+const SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER = 1e50;
 const solisShopControls = {
   multiplier: 1,
   divideButton: null,
@@ -106,7 +107,7 @@ function isRepeatableSolisShopUpgrade(key) {
 }
 
 function setSolisShopMultiplier(nextValue) {
-  solisShopControls.multiplier = Math.max(1, Math.floor(nextValue));
+  solisShopControls.multiplier = Math.min(SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER, Math.max(1, Math.floor(nextValue)));
 }
 
 function updateSolisShopMultiplierControls() {
@@ -115,11 +116,12 @@ function updateSolisShopMultiplierControls() {
   }
   if (solisShopControls.multiplyButton) {
     solisShopControls.multiplyButton.textContent = 'x10';
+    solisShopControls.multiplyButton.disabled = getSolisShopPurchaseMultiplier() >= SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER;
   }
 }
 
 function getSolisShopPurchaseMultiplier() {
-  return solisShopControls.multiplier;
+  return Math.min(solisShopControls.multiplier, SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER);
 }
 
 function cacheSolisTabElements() {

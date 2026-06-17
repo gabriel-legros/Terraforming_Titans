@@ -357,6 +357,7 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
+    factoryCoolingCoefficient: 1,
     autoBuildMaxOption: true
   },
   windTurbine: {

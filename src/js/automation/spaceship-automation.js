@@ -1201,6 +1201,59 @@ class SpaceshipAutomation {
     this.ensureDefaultPreset();
     this.recordCurrentlyAvailableTargets();
   }
+
+  exportPreset(presetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return null;
+    }
+    return {
+      name: preset.name,
+      showInSidebar: preset.showInSidebar !== false,
+      steps: preset.steps.map(step => ({
+        id: step.id,
+        limit: step.limit,
+        mode: step.mode,
+        entries: step.entries.map(entry => ({ ...entry }))
+      }))
+    };
+  }
+
+  importPreset(presetData = {}) {
+    const id = this.nextPresetId++;
+    const importedPreset = {
+      id,
+      name: presetData.name || `Preset ${id}`,
+      showInSidebar: presetData.showInSidebar !== false,
+      steps: Array.isArray(presetData.steps) ? presetData.steps.map(step => {
+        const lv = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
+        let mode = step.mode || 'fill';
+        if (mode !== 'cappedMin' && mode !== 'cappedMax' && mode !== 'remainingPercent' && lv === null) {
+          mode = 'cappedMax';
+        }
+        return {
+          id: step.id,
+          limit: (mode === 'cappedMin' || mode === 'cappedMax') ? null : (mode === 'remainingPercent'
+            ? (lv === null ? 100 : Math.min(Math.max(lv, 0), 100))
+            : lv),
+          mode,
+          entries: Array.isArray(step.entries) ? step.entries.map(entry => {
+            const weight = Number(entry.weight);
+            const max = Number(entry.max);
+            return {
+              projectId: entry.projectId,
+              weight: Number.isFinite(weight) && weight > 0 ? weight : 0,
+              max: Number.isFinite(max) && max > 0 ? max : null,
+              maxMode: entry.maxMode || 'absolute'
+            };
+          }) : []
+        };
+      }) : []
+    };
+    this.presets.push(importedPreset);
+    this.activePresetId = importedPreset.id;
+    return importedPreset.id;
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

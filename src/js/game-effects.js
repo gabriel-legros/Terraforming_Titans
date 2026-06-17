@@ -12,6 +12,7 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   workerRequirementMultiplier: { min: 0 },
   projectDurationMultiplier: { min: 0.01 },
   popGrowthMultiplier: { min: 0 },
+  lifeGrowthMultiplier: { min: 0 },
   maintenanceCostMultiplier: { min: 0 },
   spaceshipEnergyBeforeSpaceElevatorMultiplier: { min: 0 },
   spaceshipEnergyAfterSpaceElevatorMultiplier: { min: 0 },
@@ -73,6 +74,9 @@ function clearDifficultySettingEffects() {
     researchManager.removeEffect(source);
     researchManager.updateAllResearchCosts();
   }
+  if (lifeManager) {
+    lifeManager.removeEffect(source);
+  }
   for (const id in buildings) {
     buildings[id].removeEffect(source);
   }
@@ -113,10 +117,10 @@ function applyDifficultySettingEffects() {
   }
   if (gameSettings.researchCostMultiplier !== 1) {
     addDifficultySettingEffect({
-      target: 'researchManager',
-      type: 'researchCostMultiplier',
-      value: gameSettings.researchCostMultiplier,
-      effectId: 'difficulty-research-cost'
+      target: 'global',
+      type: 'globalResearchBoost',
+      value: gameSettings.researchCostMultiplier - 1,
+      effectId: 'difficulty-research-multiplier'
     });
   }
   if (gameSettings.workerRequirementMultiplier !== 1) {
@@ -141,6 +145,14 @@ function applyDifficultySettingEffects() {
       type: 'growthMultiplier',
       value: gameSettings.popGrowthMultiplier,
       effectId: 'difficulty-pop-growth'
+    });
+  }
+  if (gameSettings.lifeGrowthMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'lifeManager',
+      type: 'lifeGrowthMultiplier',
+      value: gameSettings.lifeGrowthMultiplier,
+      effectId: 'difficulty-life-growth'
     });
   }
   if (gameSettings.maintenanceCostMultiplier !== 1) {

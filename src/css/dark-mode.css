@@ -1,10 +1,10 @@
 ﻿body.dark-mode {
-    background-color: #121212;
-    color: #ffffff;
+    background-color: #0f141d;
+    color: #e7ecf7;
 }
 
 body.dark-mode {
-    scrollbar-color: #8a8a8a #1a1a1a;
+    scrollbar-color: #8a8a8a #0d1118;
     scrollbar-width: thin;
 }
 
@@ -14,14 +14,14 @@ body.dark-mode {
 }
 
 .dark-mode ::-webkit-scrollbar-track {
-    background: #1a1a1a;
+    background: #0d1118;
     border-left: 1px solid #2a2a2a;
 }
 
 .dark-mode ::-webkit-scrollbar-thumb {
     background: #7f7f7f;
     border-radius: 6px;
-    border: 2px solid #1a1a1a;
+    border: 2px solid #0d1118;
 }
 
 .dark-mode ::-webkit-scrollbar-thumb:hover {
@@ -37,7 +37,7 @@ body.dark-mode {
 .dark-mode .hope-subtabs,
 .dark-mode .settings-subtabs,
 .dark-mode .space-subtabs {
-    background-color: #1e1e1e;
+    background-color: #161b26;
 }
 
 .dark-mode .tab,
@@ -49,8 +49,8 @@ body.dark-mode {
 .dark-mode .hope-subtab,
 .dark-mode .settings-subtab,
 .dark-mode .space-subtab {
-    background-color: #2d2d2d;
-    color: #ffffff;
+    background-color: #111827;
+    color: #e7ecf7;
 }
 
 .dark-mode .tab.active,
@@ -62,16 +62,16 @@ body.dark-mode {
 .dark-mode .hope-subtab.active,
 .dark-mode .settings-subtab.active,
 .dark-mode .space-subtab.active {
-    background-color: #4d4d4d;
+    background-color: #24324a;
 }
 
 .dark-mode .tab-content-wrapper {
-    background-color: #121212;
+    background-color: #0f141d;
 }
 
 .dark-mode .journal {
-    background-color: #1e1e1e;
-    border-left: 2px solid #444;
+    background-color: #161b26;
+    border-left: 2px solid #2d3a50;
 }
 
 .dark-mode .journal-header {
@@ -79,32 +79,32 @@ body.dark-mode {
 }
 
 .dark-mode .journal-index {
-    border-top: 1px solid #444;
+    border-top: 1px solid #2d3a50;
 }
 
 .dark-mode .journal-index-world {
-    background-color: #1e1e1e;
-    border: 1px solid #444;
+    background-color: #161b26;
+    border: 1px solid #2d3a50;
     border-radius: 4px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .dark-mode .journal-index-world-header {
-    background: linear-gradient(#2b2b2b, #1f1f1f);
-    color: #f0f0f0;
+    background: linear-gradient(#2b2b2b, #161b26);
+    color: #e7ecf7;
 }
 
 .dark-mode .journal-index-chapters {
-    background-color: #151515;
+    background-color: #0c1019;
 }
 
 .dark-mode .journal-index-chapter,
 .dark-mode .journal-index-directive {
-    color: #d9d9d9;
+    color: #b8c4d9;
 }
 
 .dark-mode #journal-entries p {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #journal-entries .prometheus-text,
@@ -138,12 +138,12 @@ body.dark-mode {
 }
 
 .dark-mode .journal-automation-section {
-    background-color: #1f1f1f;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .journal-automation-section-header {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .journal-automation-section-status {
@@ -151,63 +151,70 @@ body.dark-mode {
 }
 
 .dark-mode .history-window {
-    background-color: #2d2d2d;
-    color: #ffffff;
+    background-color: #111827;
+    color: #e7ecf7;
 }
 .dark-mode .project-card,
 .dark-mode .info-card,
 .dark-mode .mirror-oversight-card,
 .dark-mode .dyson-swarm-card {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .card-header {
-    background-color: #242424;
-    border-bottom-color: #3c3c3c;
-    color: #ffffff;
+    background-color: #131b29;
+    border-bottom-color: #1d293b;
+    color: #e7ecf7;
 }
 
 .dark-mode .card-title {
     color: inherit;
 }
 
+.dark-mode .mirror-details-card.facility-incomplete .mirror-facility-overlay,
+.dark-mode .lantern-details-card.facility-incomplete .mirror-facility-overlay {
+    border-color: #516177;
+    background: rgba(17, 24, 39, 0.92);
+    color: #e7ecf7;
+}
+
 .dark-mode .card-footer {
-    background-color: #2d2d2d;
-    border-top-color: #444;
+    background-color: #111827;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .cult-security-panel {
-    background: #242424;
-    border-color: #444;
+    background: #131b29;
+    border-color: #2d3a50;
 }
 
 .dark-mode .cult-security-title,
 .dark-mode .cult-security-label,
 .dark-mode .cult-security-status,
 .dark-mode .cult-security-progress-label {
-    color: #f2f2f2;
+    color: #e7ecf7;
 }
 
 .dark-mode .cult-security-summary,
 .dark-mode .cult-security-sublabel {
-    color: #c4c4c4;
+    color: #8fa3c8;
 }
 
 .dark-mode .cult-security-row {
-    background: #2d2d2d;
-    border-color: #444;
+    background: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .cult-security-button {
-    background: #333;
-    border-color: #666;
-    color: #f2f2f2;
+    background: #1a2538;
+    border-color: #4a5568;
+    color: #e7ecf7;
 }
 
 .dark-mode .cult-security-progress-track,
 .dark-mode .cult-security-row-meter {
-    background: #3a3a3a;
+    background: #1a2538;
 }
 
 .dark-mode .olympus-workshop-panel {
@@ -288,20 +295,20 @@ body.dark-mode {
 }
 
 .dark-mode .project-advanced-settings-button {
-    background: #3a3a3a;
-    color: #f0f0f0;
-    border-color: #666;
+    background: #1a2538;
+    color: #e7ecf7;
+    border-color: #4a5568;
 }
 
 .dark-mode .project-advanced-settings-button:hover {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode .building-card-header .building-header-button {
     background-color: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.32);
     border-radius: 4px;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .building-card-header .building-header-button:hover {
@@ -310,37 +317,37 @@ body.dark-mode {
 }
 
 .dark-mode .building-card .building-header-active {
-    color: #c7c7c7;
+    color: #8fa3c8;
 }
 
 .dark-mode .project-description {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .project-requirements {
-    color: #c7c7c7;
+    color: #8fa3c8;
 }
 
 .dark-mode .bioworld-shop {
-    border-top-color: #3c3c3c;
+    border-top-color: #1d293b;
 }
 
 .dark-mode .bioworld-shop-header {
     background: #1f252b;
-    border-color: #3c3c3c;
-    color: #f0f0f0;
+    border-color: #1d293b;
+    color: #e7ecf7;
 }
 
 .dark-mode .bioworld-shop-adaptation {
     background: #1f252b;
-    border-color: #3c3c3c;
-    color: #f0f0f0;
+    border-color: #1d293b;
+    color: #e7ecf7;
 }
 
 .dark-mode .bioworld-shop-item {
     background: #202327;
-    border-color: #3c3c3c;
-    color: #f0f0f0;
+    border-color: #1d293b;
+    color: #e7ecf7;
 }
 
 .dark-mode .bioworld-shop-cost,
@@ -351,7 +358,7 @@ body.dark-mode {
 .dark-mode .bioworld-shop-button {
     background: #2a2f35;
     border-color: #4a515a;
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode .bioworld-shop-button:hover {
@@ -359,13 +366,13 @@ body.dark-mode {
 }
 
 .dark-mode .import-cap-toggle {
-    color: #ffffff;
+    color: #e7ecf7;
     background: none;
     border: none;
 }
 
 .dark-mode .import-cap-text {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .import-cap-header {
@@ -377,59 +384,59 @@ body.dark-mode {
 }
 
 .dark-mode .stat-item {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .stat-label {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .stat-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .ringworld-terraforming-panel {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode .ringworld-terraforming-progress-bar {
-    background-color: #333;
+    background-color: #1a2538;
 }
 
 .dark-mode .ringworld-terraforming-progress-label,
 .dark-mode .ringworld-terraforming-notes {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .diskworld-stat-group-title {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .diskworld-operations-controls {
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode #nanocolony-container .nanotech-summary-card,
 .dark-mode #nanocolony-container .nanotech-slider-card {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode #nanocolony-container .nanotech-summary-card .summary-label {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode #nanocolony-container .nanotech-summary-card .summary-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .nanotech-energy-limit input,
 .dark-mode #nanocolony-container .nanotech-energy-limit select {
-    background-color: #121212;
-    border: 1px solid #555;
-    color: #ffffff;
+    background-color: #0f141d;
+    border: 1px solid #374151;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .nanotech-energy-stats .energy-label {
@@ -437,7 +444,7 @@ body.dark-mode {
 }
 
 .dark-mode #nanocolony-container .nanotech-energy-stats .energy-value {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .nanotech-hint,
@@ -446,18 +453,18 @@ body.dark-mode {
 }
 
 .dark-mode #nanocolony-container .nanotech-stage-header h4 {
-    color: #f0f0f0;
-    border-bottom-color: #444;
+    color: #e7ecf7;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode #nanocolony-container .nanotech-slider-card .slider-title,
 .dark-mode #nanocolony-container .nanotech-slider-card .slider-values,
 .dark-mode #nanocolony-container .nanotech-allocation-header .allocation-title {
-    color: #f0f0f0;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .slider-container .tick-marks span {
-    background-color: #555;
+    background-color: #374151;
 }
 
 .dark-mode #nanocolony-container .slider-container .tick-marks span:first-child,
@@ -467,7 +474,7 @@ body.dark-mode {
 
 .dark-mode #nanocolony-container input[type="range"].pretty-slider::-webkit-slider-runnable-track,
 .dark-mode #nanocolony-container input[type="range"].pretty-slider::-moz-range-track {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode #nanocolony-container input[type="range"].pretty-slider::-webkit-slider-thumb,
@@ -476,35 +483,35 @@ body.dark-mode {
 }
 
 .dark-mode .mirror-oversight-card select {
-    background-color: #1e1e1e;
-    border-color: #444;
-    color: #ffffff;
+    background-color: #161b26;
+    border-color: #2d3a50;
+    color: #e7ecf7;
 }
 
 .dark-mode .mirror-oversight-card input[type="range"] {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode .mirror-oversight-card label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .mirror-oversight-card .slider-value {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode #mirror-flux-table th,
 .dark-mode #mirror-flux-table td {
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode #mirror-flux-table th {
-    background-color: #1e1e1e;
+    background-color: #161b26;
 }
 
 .dark-mode .section-title {
-    color: #ffffff;
-    border-bottom-color: #444;
+    color: #e7ecf7;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .resource-disposal-builder-header {
@@ -558,20 +565,20 @@ body.dark-mode {
 }
 
 .dark-mode .android-assignment-headers {
-    color: #ffffff;
-    border-bottom-color: #3c3c3c;
+    color: #e7ecf7;
+    border-bottom-color: #1d293b;
 }
 
 .dark-mode .android-subheading {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .android-speed-row {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .android-speed-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .battle-of-olympus-progress-wrap {
@@ -589,16 +596,16 @@ body.dark-mode {
 }
 
 .dark-mode .battle-of-olympus-metric-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .colony-slider label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .colony-slider .slider-value,
 .dark-mode .colony-slider .slider-effect {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .moon-warning {
@@ -606,59 +613,59 @@ body.dark-mode {
 }
 
 .dark-mode .reorder-buttons button.disabled {
-    color: #666;
+    color: #4a5568;
 }
 
 .dark-mode .cargo-resource-label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .progress-button {
     background-color: #007bff;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .progress-button:hover {
     background-color: #0056b3;
 }
 .dark-mode .resource-wrapper {
-    background-color: #1e1e1e;
+    background-color: #161b26;
 }
 
 .dark-mode .resource-divider-top::before {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .resource-divider-bottom::after {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .storage-resource-separator {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .terraforming-infographic-button {
     background-color: #2b2b2b;
-    border-color: #555;
-    color: #f0f0f0;
+    border-color: #374151;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-infographic-button:hover,
 .dark-mode .terraforming-infographic-button:focus {
-    background-color: #3a3a3a;
+    background-color: #1a2538;
     border-color: #6a6a6a;
     color: #9ac4ff;
 }
 
 .dark-mode .terraforming-graphs-button {
-    background: linear-gradient(180deg, #303030 0%, #242424 100%);
-    border-color: #555;
+    background: linear-gradient(180deg, #303030 0%, #131b29 100%);
+    border-color: #374151;
     color: #9ac4ff;
 }
 
 .dark-mode .terraforming-graphs-button:hover,
 .dark-mode .terraforming-graphs-button:focus {
-    background-color: #3a3a3a;
+    background-color: #1a2538;
     border-color: #6a6a6a;
 }
 
@@ -667,19 +674,19 @@ body.dark-mode {
 }
 
 .dark-mode .terraforming-graphs-window {
-    background: #1e1e1e;
+    background: #161b26;
 }
 
 .dark-mode .terraforming-graphs-header {
     background: #2a2a2a;
-    border-bottom-color: #444;
-    color: #f0f0f0;
+    border-bottom-color: #2d3a50;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-graphs-close {
-    background: #333333;
-    border-color: #555;
-    color: #f0f0f0;
+    background: #1a2538;
+    border-color: #374151;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-graphs-close:hover,
@@ -689,42 +696,42 @@ body.dark-mode {
 
 .dark-mode .terraforming-graphs-menu {
     background: #232323;
-    border-right-color: #444;
-    border-bottom-color: #444;
+    border-right-color: #2d3a50;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-menu-button {
     background: #2b2b2b;
-    border-color: #444;
+    border-color: #2d3a50;
     color: #dcdcdc;
 }
 
 .dark-mode .terraforming-graphs-menu-button.active {
     background: #1b6ac9;
     border-color: #1b6ac9;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-graphs-canvas {
-    background: #151515;
-    border-color: #444;
+    background: #0c1019;
+    border-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-note {
-    color: #aaaaaa;
+    color: #7a93b8;
 }
 
 .dark-mode .terraforming-graphs-phase {
-    border-top-color: #444;
+    border-top-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-phase-canvas {
-    background: #151515;
-    border-color: #444;
+    background: #0c1019;
+    border-color: #2d3a50;
 }
 
 .dark-mode .terraforming-graphs-phase-note {
-    color: #aaaaaa;
+    color: #7a93b8;
 }
 
 .dark-mode .terraforming-graphs-phase-disclaimer {
@@ -735,58 +742,58 @@ body.dark-mode {
 
 .dark-mode .terraforming-graphs-phase-button {
     background: #2b2b2b;
-    border-color: #444;
+    border-color: #2d3a50;
     color: #dcdcdc;
 }
 
 .dark-mode .terraforming-graphs-phase-button.active {
     background: #1b6ac9;
     border-color: #1b6ac9;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 
 .dark-mode .scanning-progress {
-    color: #aaa;
+    color: #7a93b8;
 }
 .dark-mode .combined-building-row {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .building-description {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .building-display {
-    background-color: #1e1e1e;
+    background-color: #161b26;
 }
 
 .dark-mode .hide-button:disabled {
-    color: #666;
+    color: #4a5568;
 }
 
 .dark-mode .unhide-obsolete-button {
-    background-color: #4d4d4d;
-    color: #ffffff;
+    background-color: #24324a;
+    color: #e7ecf7;
 }
 
 .dark-mode .unhide-obsolete-button:hover {
-    background-color: #666666;
+    background-color: #4a5568;
 }
 
 .dark-mode button {
-    background-color: #4d4d4d;
-    color: #ffffff;
-    border: 1px solid #666;
+    background-color: #24324a;
+    color: #e7ecf7;
+    border: 1px solid #4a5568;
 }
 
 .dark-mode button:hover {
-    background-color: #666666;
+    background-color: #4a5568;
 }
 
 .dark-mode button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
     cursor: not-allowed;
 }
 
@@ -807,22 +814,22 @@ body.dark-mode {
 .dark-mode .milestone-button.completed {
     background-color: #3cb371;
     border-color: #3cb371;
-    color: #fff;
+    color: #e7ecf7;
 }
 
 .dark-mode input,
 .dark-mode select,
 .dark-mode textarea {
-    background-color: #1e1e1e;
-    color: #ffffff;
-    border: 1px solid #444;
+    background-color: #161b26;
+    color: #e7ecf7;
+    border: 1px solid #2d3a50;
 }
 
 .dark-mode .auto-build-header-input:disabled,
 .dark-mode .auto-build-input:disabled {
     background-color: #2a2a2a;
     color: #9aa0a6;
-    border-color: #666;
+    border-color: #4a5568;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
     cursor: not-allowed;
 }
@@ -910,22 +917,22 @@ body.dark-mode {
     border-top-color: rgba(100, 116, 139, 0.45);
 }
 .dark-mode .research-item {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .toggle-completed-button {
-    background-color: #4d4d4d;
-    color: #ffffff;
+    background-color: #24324a;
+    color: #e7ecf7;
 }
 
 .dark-mode .research-hide-toggle {
-    background-color: #3a3a3a;
-    color: #f0f0f0;
-    border-color: #666;
+    background-color: #1a2538;
+    color: #e7ecf7;
+    border-color: #4a5568;
 }
 .dark-mode .settings-container h2 {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .space-storage-settings-window {
@@ -955,34 +962,34 @@ body.dark-mode {
 }
 
 .dark-mode .save-slots table {
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode .save-slots td {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .save-slots tr:not(:last-child) {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .save-slots th {
-    background-color: #1e1e1e;
-    color: #ffffff;
+    background-color: #161b26;
+    color: #e7ecf7;
 }
 
 .dark-mode .save-slots button {
-    background-color: #4d4d4d;
-    color: #ffffff;
+    background-color: #24324a;
+    color: #e7ecf7;
 }
 
 .dark-mode .save-slots button:hover {
-    background-color: #666666;
+    background-color: #4a5568;
 }
 
 .dark-mode .save-slots button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode .save-slots button.delete-button {
@@ -993,25 +1000,25 @@ body.dark-mode {
     background-color: #cc0000;
 }
 .dark-mode .terraforming-box {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .terraforming-box h3 {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .terraforming-box p {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 /* Solis Tab Dark Mode */
 .dark-mode .solis-container {
-    background-color: #1e1e1e;
-    color: #ffffff;
+    background-color: #161b26;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-header {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-header h2 {
@@ -1019,8 +1026,8 @@ body.dark-mode {
 }
 
 .dark-mode .solis-quest-area {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .solis-quest-quantity,
@@ -1033,12 +1040,12 @@ body.dark-mode {
 }
 
 .dark-mode .solis-progress-bar-container {
-    background-color: #4d4d4d;
+    background-color: #24324a;
 }
 
 .dark-mode .solis-multiplier-button {
     background-color: #81c784;
-    color: #121212;
+    color: #0f141d;
 }
 
 .dark-mode .solis-multiplier-button:hover {
@@ -1047,7 +1054,7 @@ body.dark-mode {
 
 .dark-mode #solis-refresh-button,
 .dark-mode #solis-complete-button {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #solis-refresh-button {
@@ -1055,37 +1062,37 @@ body.dark-mode {
 }
 
 .dark-mode #solis-refresh-button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode #solis-complete-button {
     background-color: #ffd54f;
-    color: #1a1a1a;
+    color: #0d1118;
 }
 
 .dark-mode #solis-complete-button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode .solis-shop-container {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-container h3 {
     color: #e91e63;
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-header {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-header-controls button {
     background-color: #64b5f6;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-shop-header-controls button:hover {
@@ -1093,12 +1100,12 @@ body.dark-mode {
 }
 
 .dark-mode .solis-shop-header-controls button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 
 .dark-mode .solis-shop-item {
-    border-bottom-color: #444;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .solis-shop-item:hover {
@@ -1106,20 +1113,20 @@ body.dark-mode {
 }
 
 .dark-mode .solis-shop-item-label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-shop-item-cost {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .solis-shop-item-count {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode .solis-shop-item button {
     background-color: #64b5f6;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .solis-shop-item button:hover {
@@ -1127,20 +1134,85 @@ body.dark-mode {
 }
 
 .dark-mode .solis-shop-item button:disabled {
-    background-color: #2d2d2d;
-    color: #666;
+    background-color: #111827;
+    color: #4a5568;
 }
 .dark-mode .need-box {
-    border-color: #444;
+    border-color: #2d3a50;
 }
 
 .dark-mode .need-box .text-container {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .sliders-box {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
+}
+
+.dark-mode .automation-import-dialog-window {
+    background: #111827;
+    color: #e7ecf7;
+    border-color: #2d3a50;
+}
+
+.dark-mode .automation-import-dialog-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-import-dialog-description {
+    color: #8fa3c8;
+}
+
+.dark-mode .automation-import-dialog-textarea {
+    background: #0d1522;
+    border-color: #32435f;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-import-dialog-textarea:focus {
+    border-color: #74a0ff;
+    box-shadow: 0 0 0 2px rgba(116, 160, 255, 0.2);
+}
+
+.dark-mode .automation-import-dialog-message {
+    color: #f1a0a0;
+}
+
+.dark-mode .automation-import-dialog-cancel {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-import-dialog-cancel:hover {
+    background: #24324a;
+}
+
+.dark-mode .automation-import-dialog-confirm {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border-color: #3f7bf7;
+    color: #fff;
+}
+
+.dark-mode .automation-import-dialog-confirm:hover {
+    background: linear-gradient(180deg, #3f7bf7 0%, #2d63ff 100%);
+}
+
+.dark-mode .automation-global-toolbar {
+    border-bottom-color: #2d3a50;
+}
+
+.dark-mode .automation-global-export,
+.dark-mode .automation-global-import {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-global-export:hover,
+.dark-mode .automation-global-import:hover {
+    background: #24324a;
 }
 
 .dark-mode .automation-card {
@@ -1406,8 +1478,8 @@ body.dark-mode {
 }
 
 .dark-mode .deep-mining-option {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #111827;
+    border-color: #2d3a50;
 }
 
 .dark-mode .deep-mining-option-label {
@@ -1507,7 +1579,7 @@ body.dark-mode {
 .dark-mode .building-automation-section .building-automation-combination-save {
     background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
     border: 1px solid #3f7bf7;
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode .building-automation-section .building-automation-builder-save:hover,
@@ -1567,55 +1639,55 @@ body.dark-mode {
 }
 
 .dark-mode input[type="range"].pretty-slider::-webkit-slider-runnable-track {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode input[type="range"].pretty-slider::-webkit-slider-thumb {
-    background-color: #bbbbbb;
+    background-color: #8fa3c8;
 }
 
 .dark-mode input[type="range"].pretty-slider::-moz-range-track {
-    background: #4d4d4d;
+    background: #24324a;
 }
 
 .dark-mode input[type="range"].pretty-slider::-moz-range-thumb {
-    background-color: #bbbbbb;
+    background-color: #8fa3c8;
 }
 .dark-mode #life-designs-table th,
 .dark-mode #life-status-table th {
-    background-color: #1e1e1e;
-    color: #ffffff;
-    border-color: #444;
+    background-color: #161b26;
+    color: #e7ecf7;
+    border-color: #2d3a50;
 }
 .dark-mode #nanocolony-container .stat-item {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: #161b26;
+    border-color: #2d3a50;
 }
 
 .dark-mode #nanocolony-container .stat-label {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode #nanocolony-container .stat-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 
 .dark-mode #nanocolony-container .control-group label {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .slider-value {
-    color: #ffffff;
+    color: #e7ecf7;
 }
 
 .dark-mode #nanocolony-container .slider-description {
-    color: #bbbbbb;
+    color: #8fa3c8;
 }
 
 .dark-mode #nanocolony-container h4 {
-    color: #ffffff;
-    border-bottom-color: #444;
+    color: #e7ecf7;
+    border-bottom-color: #2d3a50;
 }
 
 .dark-mode .colony-buoyancy-card .colony-buoyancy-body {
@@ -1623,5 +1695,793 @@ body.dark-mode {
 }
 
 .dark-mode .colony-buoyancy-card .colony-buoyancy-lift-label {
-    color: #ffffff;
+    color: #e7ecf7;
+}
+
+/* HOPE Tab — Skill Tree */
+.dark-mode .skill-connector {
+    stroke: #888;
+}
+
+.dark-mode #skill-points-display {
+    background-color: #111827;
+    border-color: #4a5568;
+    color: #e7ecf7;
+}
+
+/* HOPE Tab — Solis: fix quest text and research colours inherited from light-mode base */
+.dark-mode #solis-quest-text {
+    color: #e0e0e0;
+}
+
+.dark-mode .solis-research-list {
+    color: #cccccc;
+}
+
+.dark-mode .solis-research-completed {
+    color: #888888;
+}
+
+/* Space Tab — Galactic Invasion: card name inherits correctly but make it explicit */
+.dark-mode .galactic-invasion-card__name {
+    color: #e2e8f0;
+}
+
+/* Space Tab — Galactic Invasion: section header chevron / collapse button colour */
+.dark-mode .galactic-invasion-section__header {
+    color: #e2e8f0;
+}
+
+/* Space Tab — ensure atlas community note text is readable */
+.dark-mode .atlas-community-note {
+    color: #cbd5e1;
+}
+
+/* ============================================================
+   WGC Dark Mode
+   The WGC uses its own --wgc-* variables for internal colours,
+   which are already dark-navy by design. We only need to fix
+   the places where the global dark-mode button/input overrides
+   conflict with the WGC's own styles, and add container-level
+   background to prevent light-mode bleed.
+   ============================================================ */
+
+/* Restore WGC container/card backgrounds so they aren't
+   overridden by the generic dark-mode card or body rules */
+.dark-mode .wgc-container {
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-card {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-team-card {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-team-card .team-header {
+    color: var(--wgc-border-color);
+}
+
+/* Restore WGC buttons — the global .dark-mode button rule overrides
+   the internal wgc-variable styling */
+.dark-mode .wgc-container button {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-container button:hover:not(:disabled) {
+    background-color: var(--wgc-border-color);
+    color: var(--wgc-bg-dark);
+}
+
+.dark-mode .wgc-container button:disabled {
+    background-color: var(--wgc-bg-dark);
+    color: var(--wgc-text-dark);
+    border-color: var(--wgc-text-dark);
+    opacity: 0.5;
+}
+
+/* Restore WGC inputs and selects */
+.dark-mode .wgc-container select,
+.dark-mode .wgc-container input[type="number"],
+.dark-mode .wgc-container input[type="text"] {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+/* Team slot */
+.dark-mode .team-slot {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-text-dark);
+}
+
+.dark-mode .team-slot.filled {
+    border-color: var(--wgc-border-color);
+}
+
+.dark-mode .team-slot.filled:hover {
+    background-color: var(--wgc-bg-light);
+}
+
+.dark-mode .team-slot button {
+    background: none;
+    border: none;
+    color: var(--wgc-text-dark);
+}
+
+.dark-mode .team-slot button:hover {
+    background-color: var(--wgc-bg-light);
+    color: var(--wgc-text-light);
+}
+
+/* Team name input */
+.dark-mode .team-name-input {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+/* Rename button */
+.dark-mode .wgc-container button.rename-team-icon {
+    background: none;
+    border: none;
+    color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-container button.rename-team-icon:hover {
+    background: none;
+    color: var(--wgc-text-light);
+}
+
+/* Confirm rename button */
+.dark-mode .confirm-rename-btn {
+    background-color: var(--wgc-green);
+    border: none;
+    color: #e7ecf7;
+}
+
+/* Story toggle */
+.dark-mode .wgc-container .wgc-story-toggle {
+    background: transparent;
+    border: none;
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-container .wgc-story-toggle:hover {
+    background: transparent;
+    border: none;
+}
+
+.dark-mode .wgc-container .wgc-story-toggle__track {
+    background-color: var(--wgc-bg-light);
+}
+
+.dark-mode .wgc-container .wgc-story-toggle__thumb {
+    background-color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__track {
+    background-color: var(--wgc-border-color);
+}
+
+/* Popup window */
+.dark-mode .wgc-popup-overlay {
+    background-color: rgba(13, 26, 38, 0.85);
+}
+
+.dark-mode .wgc-popup-window {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-popup-window h2 {
+    color: var(--wgc-border-color);
+}
+
+.dark-mode .wgc-popup-window input,
+.dark-mode .wgc-popup-window select {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-popup-window button {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-mode .wgc-popup-window button:hover:not(:disabled) {
+    background-color: var(--wgc-border-color);
+    color: var(--wgc-bg-dark);
+}
+
+/* Stat containers */
+.dark-mode .wgc-stat-container {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .wgc-stat-header-row {
+    background-color: transparent;
+    border: none;
+    color: var(--wgc-text-medium);
+}
+
+.dark-mode .wgc-auto-input {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-bg-light);
+    color: var(--wgc-text-light);
+}
+
+/* R&D section */
+.dark-mode .wgc-rd-item:nth-child(odd) {
+    background-color: var(--wgc-bg-dark);
+}
+
+.dark-mode .wgc-rd-header {
+    color: var(--wgc-text-light);
+    background-color: transparent;
+}
+
+.dark-mode .wgc-rd-mult {
+    color: var(--wgc-text-medium);
+}
+
+/* Facility progress */
+.dark-mode .wgc-facility-progress {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+/* Operation progress segments */
+.dark-mode .operation-progress {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .operation-progress-segment {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .operation-summary {
+    color: var(--wgc-text-medium);
+}
+
+/* Team log */
+.dark-mode .team-log {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-mode .team-log-content {
+    color: var(--wgc-text-medium);
+}
+
+/* Locked overlay */
+.dark-mode .wgc-team-locked {
+    background-color: rgba(13, 26, 38, 0.95);
+    color: var(--wgc-border-color);
+}
+
+/* HP bar background */
+.dark-mode .team-hp-bar {
+    background-color: #1a2538;
+}
+
+/* Stance labels */
+.dark-mode .team-stance label {
+    color: var(--wgc-text-medium);
+}
+
+.dark-mode .difficulty-label {
+    color: var(--wgc-text-medium);
+}
+
+/* Copy stats button */
+.dark-mode .wgc-copy-team-stats-icon {
+    background-color: var(--wgc-border-color);
+}
+
+/* ============================================================
+   Patience (HOPE Tab) Dark Mode
+   The patience shell has a hard-coded dark-blue gradient in
+   light mode already, so colours are mostly readable. We override
+   the shell background and borders to match the dark-mode palette,
+   and fix the input/button to match the game's dark-mode style.
+   ============================================================ */
+
+.dark-mode .patience-shell {
+    background: linear-gradient(135deg, #0f1a26 0%, #141d2b 50%, #1a2537 100%);
+    border-color: #1d293b;
+    color: #e7ecf7;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+}
+
+.dark-mode .patience-header h2 {
+    color: #e7ecf7;
+}
+
+.dark-mode .patience-subtitle {
+    color: #8fa3c8;
+}
+
+.dark-mode .patience-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: #1d293b;
+}
+
+.dark-mode .patience-card-label {
+    color: #8fa3c8;
+}
+
+.dark-mode .patience-card-value {
+    color: #e7ecf7;
+}
+
+.dark-mode .patience-card-meta {
+    color: #8fa3c8;
+}
+
+/* Patience meter */
+.dark-mode .patience-meter {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #2d3a50;
+}
+
+.dark-mode .patience-meter-text {
+    color: #8fa3c8;
+}
+
+/* Spend card */
+.dark-mode .patience-spend-card {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: #2d3a50;
+}
+
+/* Input */
+.dark-mode #patience-spend-input {
+    background-color: #0d1118;
+    border-color: #374151;
+    color: #e7ecf7;
+}
+
+/* Primary spend button — keep its accent look, just ensure contrast */
+.dark-mode #patience-spend-button {
+    background: linear-gradient(135deg, #3a8abf 0%, #4a66cc 100%);
+    color: #e7ecf7;
+    border: none;
+}
+
+.dark-mode #patience-spend-button:disabled {
+    opacity: 0.4;
+}
+
+.dark-mode .patience-preview {
+    color: #8fa3c8;
+}
+
+.dark-mode .patience-warning {
+    color: #ff6b6b;
+}
+
+/* Save-row buttons */
+.dark-mode .patience-save-row button {
+    background-color: #1a2538;
+    border-color: #4a5568;
+    color: #e7ecf7;
+}
+
+.dark-mode .patience-save-row button:hover {
+    background-color: #24324a;
+}
+
+.dark-mode .patience-shell .info-tooltip-icon {
+    color: #5db2ff;
+}
+
+/* ============================================================
+   Space Tab Dark Mode
+   The majority of space.css uses --rwg-* / --space-* CSS
+   variables that already resolve to dark-navy tones. Only
+   classes that embed hard-coded light colours need overrides.
+   The galactic-invasion section is already handled above.
+   ============================================================ */
+
+/* Space cards / panels — the --rwg-* vars are dark by default,
+   but we reinforce key backgrounds so they render correctly when
+   the surrounding page switches to #0f141d. */
+.dark-mode #space-story,
+.dark-mode #space-atlas {
+    background-color: #0f141d;
+}
+
+.dark-mode .space-card {
+    background-color: #161b26;
+    border-color: #2d3a50;
+}
+
+.dark-mode .space-card-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .space-card-subtitle {
+    color: #8fa3c8;
+}
+
+/* Details container */
+.dark-mode .details-container {
+    background-color: #161b26;
+    border-color: #2d3a50;
+}
+
+.dark-mode .details-content {
+    border-left-color: #2d3a50;
+}
+
+/* Planet options */
+.dark-mode .planet-option {
+    background-color: #161b26;
+    border-color: #2d3a50;
+}
+
+.dark-mode .planet-option h3 {
+    color: #e7ecf7;
+}
+
+.dark-mode .planet-stats {
+    color: #8fa3c8;
+}
+
+.dark-mode .planet-stats p {
+    border-bottom-color: #1d293b;
+}
+
+.dark-mode .planet-stats strong {
+    color: #8fa3c8;
+}
+
+.dark-mode .planet-status {
+    background: rgba(255, 255, 255, 0.06);
+    color: #e7ecf7;
+}
+
+/* Select planet button */
+.dark-mode .select-planet-button {
+    border-color: #5db2ff;
+    color: #5db2ff;
+}
+
+.dark-mode .select-planet-button:hover:not(:disabled) {
+    background: #5db2ff;
+    color: #0f141d;
+}
+
+/* Atlas */
+.dark-mode .atlas-world-effects {
+    color: #8fa3c8;
+}
+
+.dark-mode .atlas-world-effects-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .atlas-world-effect {
+    border-left-color: #2d3a50;
+}
+
+/* Space stat card */
+.dark-mode .space-stat-card {
+    background-color: #161b26;
+    border-color: #2d3a50;
+}
+
+.dark-mode .space-stat-label {
+    color: #8fa3c8;
+}
+
+.dark-mode .space-stat-value {
+    color: #e7ecf7;
+}
+
+.dark-mode .space-stat-subvalue {
+    color: #8fa3c8;
+}
+
+/* Space sliders */
+.dark-mode .space-sliders-section {
+    border-top-color: #2d3a50;
+}
+
+.dark-mode .space-sliders-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .space-slider-card {
+    background-color: #161b26;
+    border-color: #2d3a50;
+}
+
+.dark-mode .space-slider-topline {
+    color: #e7ecf7;
+}
+
+.dark-mode .space-slider-tick {
+    color: #e7ecf7;
+}
+
+.dark-mode .space-slider-energy,
+.dark-mode .space-slider-productivity {
+    color: #8fa3c8;
+}
+
+/* Artificial worlds */
+.dark-mode .artificial-panel {
+    background-color: #161b26;
+    border-color: #2d3a50;
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-panel h3 {
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-select,
+.dark-mode .artificial-radius-input,
+.dark-mode .artificial-name,
+.dark-mode .artificial-stash-grid input {
+    background-color: #0d1118;
+    border-color: #374151;
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-radius-row {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-surface-box {
+    border-color: #2d3a50;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-gravity-row {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-gravity {
+    border-color: #2d3a50;
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-cost-row span:first-child {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-cost-value {
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-duration {
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-gains {
+    border-top-color: #2d3a50;
+}
+
+.dark-mode .artificial-gains h3 {
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-gains-list {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-gain-row span:first-child {
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-gain-value {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-effects {
+    border-top-color: #2d3a50;
+}
+
+.dark-mode .artificial-effects h3 {
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-secondary {
+    border-color: #4a5568;
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-secondary:hover:not(:disabled) {
+    background-color: #111827;
+}
+
+.dark-mode .artificial-stash-row {
+    border-color: #2d3a50;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-stash-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-stash-stock {
+    border-color: #2d3a50;
+    background: rgba(255, 255, 255, 0.02);
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-stash-controls {
+    border-color: #2d3a50;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-stash-btn {
+    border-color: #4a5568;
+    background: rgba(255, 255, 255, 0.03);
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-stash-btn:hover:not(:disabled) {
+    border-color: #5db2ff;
+    color: #5db2ff;
+}
+
+.dark-mode .artificial-stash-recommend {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-priority {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-progress {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: #2d3a50;
+}
+
+.dark-mode .artificial-history-row {
+    border-color: #2d3a50;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .artificial-history-header-row {
+    color: #8fa3c8;
+}
+
+.dark-mode .artificial-history-edit-btn {
+    border-color: #374151;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-history-edit-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .artificial-history-name-input {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: #374151;
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-history-travel-btn {
+    border-color: #374151;
+    background: rgba(255, 255, 255, 0.06);
+    color: #e7ecf7;
+}
+
+.dark-mode .artificial-history-travel-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.dark-mode .artificial-supermassive-card {
+    background: linear-gradient(180deg, rgba(40, 60, 90, 0.25), rgba(255, 255, 255, 0.02));
+}
+
+.dark-mode .artificial-supermassive-status {
+    border-color: #5db2ff;
+    background: rgba(93, 178, 255, 0.08);
+    color: #5db2ff;
+}
+
+/* ============================================================
+   Colony Orbitals Dark Mode
+   The orbital-ring-card uses shared .card-header / .stat-item
+   classes already covered. We add overrides for the colony
+   slider cards (sliders-box, colony-slider) and the
+   construction-office reserve window used in the colonies tab,
+   plus the nanocolony temperature warning.
+   ============================================================ */
+
+/* Colony slider card */
+.dark-mode .sliders-box {
+    background-color: #161b26;
+    border-color: #2d3a50;
+    box-shadow: none;
+}
+
+.dark-mode .sliders-title {
+    color: #e7ecf7;
+}
+
+/* Colony slider track / thumb — scoped to colony tab only so we
+   don't conflict with the nanocolony or automation overrides */
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-runnable-track {
+    background: #24324a;
+}
+
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-thumb {
+    background-color: #dddddd;
+}
+
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-track {
+    background: #24324a;
+}
+
+.dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-thumb {
+    background-color: #dddddd;
+}
+
+/* Tick marks for colony sliders */
+.dark-mode #colony-sliders-container .slider-container .tick-marks span {
+    background-color: #4a5568;
+}
+
+.dark-mode #colony-sliders-container .slider-container .tick-marks span:first-child,
+.dark-mode #colony-sliders-container .slider-container .tick-marks span:last-child {
+    background-color: transparent;
+}
+
+/* Construction office reserve window */
+.dark-mode .construction-office-reserve-window {
+    background-color: #161b26;
+    color: #e7ecf7;
+    border-color: #2d3a50;
+}
+
+.dark-mode .construction-office-reserve-intro {
+    color: #8fa3c8;
+}
+
+/* Nanocolony temperature warning */
+.dark-mode #nanocolony-container .nanotech-temperature-warning {
+    border-color: #8a3a3a;
+    background: #2a1515;
+    color: #ff9a9a;
+}
+
+/* Nanocolony allocation title and recycling toggle text */
+.dark-mode #nanocolony-container .nanotech-recycling-toggle,
+.dark-mode #nanocolony-container .nanotech-recycling-resource {
+    color: #8fa3c8;
+}
+
+/* Colony buoyancy capacity button */
+.dark-mode .colony-buoyancy-card .colony-buoyancy-capacity-button {
+    background-color: #1a2538;
+    border-color: #4a5568;
+    color: #e7ecf7;
+}
+
+.dark-mode .colony-buoyancy-card .colony-buoyancy-capacity-button:disabled {
+    opacity: 0.5;
+}
+
+.dark-mode .colony-buoyancy-card .colony-buoyancy-notes-title {
+    color: #e7ecf7;
 }

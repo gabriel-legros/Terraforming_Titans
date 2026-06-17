@@ -16,6 +16,7 @@ function cacheSettingsElements() {
     silenceToggle: document.getElementById('solis-silence-toggle'),
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
     showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
+    netResourceRateDisplayToggle: document.getElementById('net-resource-rate-display-toggle'),
     immigrationPoolToggle: document.getElementById('immigration-pool-toggle'),
     immigrationPoolTooltip: document.getElementById('immigration-pool-tooltip'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
@@ -57,6 +58,7 @@ function cacheSettingsElements() {
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
     projectDurationMultiplierInput: document.getElementById('project-duration-multiplier-input'),
     popGrowthMultiplierInput: document.getElementById('pop-growth-multiplier-input'),
+    lifeGrowthMultiplierInput: document.getElementById('life-growth-multiplier-input'),
     maintenanceCostMultiplierInput: document.getElementById('maintenance-cost-multiplier-input'),
     spaceshipEnergyBeforeSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-before-space-elevator-multiplier-input'),
     spaceshipEnergyBeforeSpaceElevatorTooltip: document.getElementById('spaceship-energy-before-space-elevator-tooltip'),
@@ -128,6 +130,7 @@ function updateDifficultySettingInputs() {
     workerRequirementMultiplier: cached.workerRequirementMultiplierInput,
     projectDurationMultiplier: cached.projectDurationMultiplierInput,
     popGrowthMultiplier: cached.popGrowthMultiplierInput,
+    lifeGrowthMultiplier: cached.lifeGrowthMultiplierInput,
     maintenanceCostMultiplier: cached.maintenanceCostMultiplierInput,
     spaceshipEnergyBeforeSpaceElevatorMultiplier: cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     spaceshipEnergyAfterSpaceElevatorMultiplier: cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
@@ -237,7 +240,16 @@ function addSettingsListeners() {
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
       }
-      createResourceDisplay(resources);
+      updateResourceViewToggleState(resources);
+      updateResourceDisplay(resources, 0);
+    });
+  }
+
+  if (cached.netResourceRateDisplayToggle) {
+    cached.netResourceRateDisplayToggle.checked = gameSettings.showNetResourceRateWithAutobuild;
+    cached.netResourceRateDisplayToggle.addEventListener('change', () => {
+      gameSettings.showNetResourceRateWithAutobuild = cached.netResourceRateDisplayToggle.checked;
+      updateResourceDisplay(resources, 0);
     });
   }
 
@@ -582,7 +594,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.factoryHeatingTooltip',
         {},
-        'When enabled, part of local building and colony energy use becomes planetary heat. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
+        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
       )
     );
   }
@@ -612,6 +624,7 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.workerRequirementMultiplierInput, 'workerRequirementMultiplier');
   wireDifficultyMultiplierInput(cached.projectDurationMultiplierInput, 'projectDurationMultiplier');
   wireDifficultyMultiplierInput(cached.popGrowthMultiplierInput, 'popGrowthMultiplier');
+  wireDifficultyMultiplierInput(cached.lifeGrowthMultiplierInput, 'lifeGrowthMultiplier');
   wireDifficultyMultiplierInput(cached.maintenanceCostMultiplierInput, 'maintenanceCostMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput, 'spaceshipEnergyBeforeSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');
