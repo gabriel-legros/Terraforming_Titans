@@ -45,7 +45,10 @@ const SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES = new Set([
 const SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES = new Set([
   'oxygen',
   'atmosphericMethane',
-  'atmosphericAmmonia'
+  'atmosphericAmmonia',
+  'inertGas',
+  'carbonDioxide',
+  'hydrogen'
 ]);
 const SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES = new Set([
   'graphite'
