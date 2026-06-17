@@ -113,10 +113,10 @@ function applyDifficultySettingEffects() {
   }
   if (gameSettings.researchCostMultiplier !== 1) {
     addDifficultySettingEffect({
-      target: 'researchManager',
-      type: 'researchCostMultiplier',
-      value: gameSettings.researchCostMultiplier,
-      effectId: 'difficulty-research-cost'
+      target: 'global',
+      type: 'globalResearchBoost',
+      value: gameSettings.researchCostMultiplier - 1,
+      effectId: 'difficulty-research-multiplier'
     });
   }
   if (gameSettings.workerRequirementMultiplier !== 1) {
