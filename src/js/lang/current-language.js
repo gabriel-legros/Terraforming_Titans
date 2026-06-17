@@ -2597,7 +2597,7 @@ setLanguageData({
             '',
             'This flux is not impacted by albedo or day-night averaging.',
           ].join('\n'),
-          factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. This flux is not impacted by albedo or day-night averaging.',
+          factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption. A certain megastructure can help reduce this. This flux is not impacted by albedo or day-night averaging.',
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           labels: {
             globalMeanTemp: 'Global Mean Temp',
