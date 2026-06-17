@@ -45,7 +45,10 @@ const SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES = new Set([
 const SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES = new Set([
   'oxygen',
   'atmosphericMethane',
-  'atmosphericAmmonia'
+  'atmosphericAmmonia',
+  'inertGas',
+  'carbonDioxide',
+  'hydrogen'
 ]);
 const SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES = new Set([
   'graphite'
@@ -1014,7 +1017,7 @@ function renderSpaceStorageUI(project, container) {
       : String(Math.max(0, amountWithdrawLimit));
     limitBiomassDensityWithdrawalsRow.style.display = resourceKey === 'biomass' ? '' : 'none';
     respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(resourceKey) ? '' : 'none';
-    pressureWithdrawLimitRow.style.display = SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
+    pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey) && !(resourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
     amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
     updateCapInputState();
     updateReserveInputState();
@@ -1706,7 +1709,7 @@ function updateSpaceStorageUI(project) {
         els.pressureWithdrawLimitInput.dataset.spaceStoragePressureWithdrawLimit = String(pressureWithdrawLimit);
         els.pressureWithdrawLimitInput.value = formatNumber(Math.max(0, pressureWithdrawLimit), true, 2);
       }
-      els.pressureWithdrawLimitRow.style.display = SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
+      els.pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(els.capResourceKey) && !(els.capResourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
     }
     if (els.amountWithdrawLimitInput) {
       const amountWithdrawLimit = els.amountWithdrawLimitDraft || 0;
