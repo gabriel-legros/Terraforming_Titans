@@ -346,6 +346,14 @@ function isLanternMirrorFacilityAvailable() {
     && !(lantern.isBooleanFlagSet && lantern.isBooleanFlagSet('disableMirrorFacilityActivation')));
 }
 
+function canShowLanternMirrorFacilityStatus(project) {
+  const lantern = buildings.hyperionLantern;
+  return !!(project.isBooleanFlagSet('hyperionLanternFacilityAccess')
+    && lantern
+    && !lantern.permanentlyDisabled
+    && !(lantern.isBooleanFlagSet && lantern.isBooleanFlagSet('disableMirrorFacilityActivation')));
+}
+
 var mirrorOversightSettings = null;
 
 function formatResourceLabel(resource) {
@@ -2137,8 +2145,10 @@ class SpaceMirrorFacilityProject extends Project {
           <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.tooltip', 'Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.')}">&#9432;</span>
         </div>
       </div>
+      <div class="mirror-facility-overlay">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.incompleteLanternOverlay', 'Complete facility to enable lanterns')}</div>
     `;
     attachProjectInfoTooltips(lanternDetails);
+    lanternDetails.classList.toggle('facility-incomplete', !this.isCompleted);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(lanternDetails);
     container.appendChild(lanternDetails);
 
@@ -2377,8 +2387,10 @@ class SpaceMirrorFacilityProject extends Project {
 
     if (elements.lanternDetails) {
       const lantern = buildings.hyperionLantern;
+      const showLanternStatus = canShowLanternMirrorFacilityStatus(this);
       const showLantern = this.isCompleted && isLanternMirrorFacilityAvailable();
-      elements.lanternDetails.container.style.display = showLantern ? 'block' : 'none';
+      elements.lanternDetails.container.style.display = showLanternStatus ? 'block' : 'none';
+      elements.lanternDetails.container.classList.toggle('facility-incomplete', !this.isCompleted);
       if (elements.quickBuild && elements.quickBuild.lantern) {
         elements.quickBuild.lantern.container.style.display = showLantern ? 'grid' : 'none';
       }

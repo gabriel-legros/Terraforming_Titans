@@ -1658,6 +1658,7 @@ setLanguageData({
           totalPower: 'Total Power:',
           totalPowerPerArea: 'Total Power/m²:',
           incompleteOverlay: 'Complete facility to enable mirrors',
+          incompleteLanternOverlay: 'Complete facility to enable lanterns',
         },
         dayNight: {
           periodHours: 'Day-Night Period (hours):',

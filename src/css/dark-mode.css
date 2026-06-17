@@ -172,7 +172,8 @@ body.dark-mode {
     color: inherit;
 }
 
-.dark-mode .mirror-details-card.facility-incomplete .mirror-facility-overlay {
+.dark-mode .mirror-details-card.facility-incomplete .mirror-facility-overlay,
+.dark-mode .lantern-details-card.facility-incomplete .mirror-facility-overlay {
     border-color: #516177;
     background: rgba(17, 24, 39, 0.92);
     color: #e7ecf7;

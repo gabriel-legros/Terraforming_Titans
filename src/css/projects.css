@@ -49,11 +49,13 @@
     flex-grow: 1;
 }
 
-.mirror-details-card {
+.mirror-details-card,
+.lantern-details-card {
     position: relative;
 }
 
-.mirror-details-card.facility-incomplete .card-body {
+.mirror-details-card.facility-incomplete .card-body,
+.lantern-details-card.facility-incomplete .card-body {
     opacity: 0.38;
     filter: grayscale(1);
     pointer-events: none;
@@ -63,7 +65,8 @@
     display: none;
 }
 
-.mirror-details-card.facility-incomplete .mirror-facility-overlay {
+.mirror-details-card.facility-incomplete .mirror-facility-overlay,
+.lantern-details-card.facility-incomplete .mirror-facility-overlay {
     position: absolute;
     left: 12px;
     right: 12px;
@@ -84,7 +87,8 @@
     pointer-events: none;
 }
 
-.mirror-details-card.collapsed .mirror-facility-overlay {
+.mirror-details-card.collapsed .mirror-facility-overlay,
+.lantern-details-card.collapsed .mirror-facility-overlay {
     display: none;
 }
 
