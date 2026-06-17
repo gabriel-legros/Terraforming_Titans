@@ -86,7 +86,7 @@ function getCoreHeatTooltipText() {
 function getFactoryHeatTooltipText() {
   return getTerraformingSummaryText(
     'temperature.factoryHeatTooltip',
-    'Industrial waste heat from local building and colony energy consumption. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. This flux is not impacted by albedo or day-night averaging.'
+    'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. This flux is not impacted by albedo or day-night averaging.'
   );
 }
 
@@ -1592,7 +1592,7 @@ function createTemperatureBox(row) {
     const factoryHeatFlux = terraforming.getFactoryHeatFlux ? terraforming.getFactoryHeatFlux() : 0;
     const netFactoryHeatFlux = terraforming.getNetFactoryHeatFlux ? terraforming.getNetFactoryHeatFlux() : factoryHeatFlux;
     if (els.factoryHeatLine) {
-      els.factoryHeatLine.style.display = factoryHeatFlux > 0 ? '' : 'none';
+      els.factoryHeatLine.style.display = factoryHeatFlux !== 0 ? '' : 'none';
     }
     if (els.factoryHeatTooltip) {
       setTooltipText(els.factoryHeatTooltip, getFactoryHeatTooltipText());

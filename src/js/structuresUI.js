@@ -2900,7 +2900,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const sections = getProdConsSections(structure, buildCount);
     const keyString = sections
       .map(sec => {
-        const keys = sec.key === 'provides' || sec.key === 'heat'
+        const keys = isPlainProdConsSection(sec.key)
           ? sec.data.map((_, i) => String(i)).join('|')
           : (sec.keys || []).join('|');
         return `${sec.key}:${keys}`;
@@ -2912,7 +2912,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
     const combinedCosts = {};
     sections.forEach(sec => {
-      if (sec.key === 'heat') {
+      if (isPlainProdConsSection(sec.key)) {
         return;
       }
       if (sec.key === 'consumption') {
@@ -2933,7 +2933,7 @@ function updateDecreaseButtonText(button, buildCount) {
     sections.forEach(sec => {
       const info = productionConsumptionElement._sections[sec.key];
       if (!info) return;
-      if (sec.key === 'provides' || sec.key === 'heat') {
+      if (isPlainProdConsSection(sec.key)) {
         sec.data.forEach((text, i) => {
           const span = info.spans.get(String(i));
           if (span && span.textContent !== text) {
@@ -3093,8 +3093,22 @@ function updateDecreaseButtonText(button, buildCount) {
         data: [`${formatNumber(heatPower, false, 2)}W`]
       });
     }
+    const coolingCoefficient = structure.factoryCoolingCoefficient || 0;
+    const energyProduction = displayProduction.colony?.energy || 0;
+    const coolingPower = gameSettings.factoryHeating ? energyProduction * coolingCoefficient : 0;
+    if (coolingPower > 0) {
+      sections.push({
+        key: 'cooling',
+        label: getStructuresUIText('ui.structures.labels.cooling', 'Cooling'),
+        data: [`${formatNumber(coolingPower, false, 2)}W`]
+      });
+    }
 
     return sections;
+  }
+
+  function isPlainProdConsSection(key) {
+    return key === 'provides' || key === 'heat' || key === 'cooling';
   }
 
   function collectResourceKeys(resourceObject, { forceShow, allowNegative } = {}) {
@@ -3116,7 +3130,7 @@ function updateDecreaseButtonText(button, buildCount) {
   function buildProdConsElement(element, sections) {
     const keyString = sections
       .map(sec => {
-        const keys = sec.key === 'provides' || sec.key === 'heat'
+        const keys = isPlainProdConsSection(sec.key)
           ? sec.data.map((_, i) => String(i)).join('|')
           : (sec.keys || []).join('|');
         return `${sec.key}:${keys}`;
@@ -3228,7 +3242,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     function syncSectionItems(info, sec) {
-      const nextKeys = sec.key === 'provides' || sec.key === 'heat'
+      const nextKeys = isPlainProdConsSection(sec.key)
         ? sec.data.map((_, i) => String(i))
         : sec.keys;
       const nextKeySet = new Set(nextKeys);
