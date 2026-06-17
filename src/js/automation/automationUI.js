@@ -57,6 +57,8 @@ const automationElements = {
   scriptDeleteButton: null,
   scriptLinesContainer: null,
   scriptAddLineButton: null,
+  scriptImportButton: null,
+  scriptExportButton: null,
   shipAssignment: null,
   shipAssignmentStatus: null,
   shipAssignmentDescription: null,
@@ -72,6 +74,8 @@ const automationElements = {
   showPresetInSidebarCheckbox: null,
   stepsContainer: null,
   addStepButton: null,
+  shipImportPresetButton: null,
+  shipExportPresetButton: null,
   lifeDesign: null,
   lifeDesignStatus: null,
   lifeDesignDescription: null,
@@ -94,6 +98,10 @@ const automationElements = {
   lifeSeedButton: null,
   lifeDesignEnableCheckbox: null,
   lifeDeployNowButton: null,
+  lifeImportPresetButton: null,
+  lifeExportPresetButton: null,
+  globalExportButton: null,
+  globalImportButton: null,
   researchAutomation: null,
   researchAutomationStatus: null,
   researchAutomationDescription: null,
@@ -2084,6 +2092,131 @@ function openAutomationPresetImportDialog(options) {
   dialog.textarea.focus();
 }
 
+function buildAutomationGlobalPayload() {
+  const manager = automationManager;
+  return JSON.stringify({
+    format: 'terraforming-titans-all-automations',
+    version: 1,
+    autoTravel: manager.autoTravelAutomation ? manager.autoTravelAutomation.saveState() : null,
+    lifeAutomation: manager.lifeAutomation ? manager.lifeAutomation.saveState() : null,
+    spaceshipAutomation: manager.spaceshipAutomation ? manager.spaceshipAutomation.saveState() : null,
+    scriptAutomation: manager.scriptAutomation ? manager.scriptAutomation.saveState() : null,
+    buildingsAutomation: manager.buildingsAutomation ? manager.buildingsAutomation.saveState() : null,
+    researchAutomation: manager.researchAutomation ? manager.researchAutomation.saveState() : null,
+    projectsAutomation: manager.projectsAutomation ? manager.projectsAutomation.saveState() : null,
+    colonyAutomation: manager.colonyAutomation ? manager.colonyAutomation.saveState() : null
+  }, null, 2);
+}
+
+function exportAllAutomationsToClipboard(button) {
+  const payload = buildAutomationGlobalPayload();
+  copyTextToClipboard(payload, {
+    promptLabel: getAutomationCardText('exportAllAutomationsPrompt', {}, 'Copy all automations string:'),
+    onSuccess: () => {
+      setAutomationTransferButtonFeedback(
+        button,
+        getAutomationCardText('exportPresetCopied', {}, 'Copied')
+      );
+    }
+  });
+}
+
+function importAllAutomationsFromPayload(text) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed) {
+    return {
+      ok: false,
+      error: getAutomationCardText('importPresetEmptyError', {}, 'Paste a preset string first.')
+    };
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (error) {
+    return {
+      ok: false,
+      error: getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.')
+    };
+  }
+  if (!parsed || parsed.format !== 'terraforming-titans-all-automations') {
+    return {
+      ok: false,
+      error: getAutomationCardText('importAllWrongFormatError', {}, 'That string is not a valid all-automations export.')
+    };
+  }
+  const manager = automationManager;
+  if (parsed.autoTravel && manager.autoTravelAutomation) {
+    manager.autoTravelAutomation.loadState(parsed.autoTravel);
+  }
+  if (parsed.lifeAutomation && manager.lifeAutomation) {
+    manager.lifeAutomation.loadState(parsed.lifeAutomation);
+  }
+  if (parsed.spaceshipAutomation && manager.spaceshipAutomation) {
+    manager.spaceshipAutomation.loadState(parsed.spaceshipAutomation);
+  }
+  if (parsed.scriptAutomation && manager.scriptAutomation) {
+    manager.scriptAutomation.loadState(parsed.scriptAutomation);
+  }
+  if (parsed.buildingsAutomation && manager.buildingsAutomation) {
+    manager.buildingsAutomation.loadState(parsed.buildingsAutomation);
+  }
+  if (parsed.researchAutomation && manager.researchAutomation) {
+    manager.researchAutomation.loadState(parsed.researchAutomation);
+  }
+  if (parsed.projectsAutomation && manager.projectsAutomation) {
+    manager.projectsAutomation.loadState(parsed.projectsAutomation);
+  }
+  if (parsed.colonyAutomation && manager.colonyAutomation) {
+    manager.colonyAutomation.loadState(parsed.colonyAutomation);
+  }
+  return { ok: true };
+}
+
+function buildAutomationGlobalToolbar() {
+  const container = automationElements.container;
+  if (!container) {
+    return;
+  }
+  const toolbar = document.createElement('div');
+  toolbar.classList.add('automation-global-toolbar');
+
+  const exportButton = document.createElement('button');
+  exportButton.textContent = getAutomationCardText('exportAllAutomationsButton', {}, 'Export All Automations');
+  exportButton.classList.add('automation-global-export');
+  exportButton.addEventListener('click', () => {
+    exportAllAutomationsToClipboard(exportButton);
+  });
+
+  const importButton = document.createElement('button');
+  importButton.textContent = getAutomationCardText('importAllAutomationsButton', {}, 'Import All Automations');
+  importButton.classList.add('automation-global-import');
+  importButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importAllAutomationsTitle', {}, 'Import All Automations'),
+      description: getAutomationCardText(
+        'importAllAutomationsDescription',
+        {},
+        'Paste an exported all-automations string below.\nThis will replace all current automation settings.'
+      ),
+      importButtonText: getAutomationCardText('importAllAutomationsButton', {}, 'Import All Automations'),
+      onImport: (text) => {
+        const result = importAllAutomationsFromPayload(text);
+        if (!result.ok) {
+          return result;
+        }
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
+
+  toolbar.append(exportButton, importButton);
+  container.insertBefore(toolbar, container.firstChild);
+  automationElements.globalExportButton = exportButton;
+  automationElements.globalImportButton = importButton;
+}
+
 function createAutomationPresetRow(body) {
   const presetRow = document.createElement('div');
   presetRow.classList.add('automation-preset-row');
@@ -2216,6 +2349,7 @@ function initializeAutomationUI() {
     return;
   }
   cacheAutomationElements();
+  buildAutomationGlobalToolbar();
   buildAutoTravelUI();
   buildScriptAutomationUI();
   buildAutomationShipUI();

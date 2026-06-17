@@ -1108,6 +1108,68 @@ class LifeAutomation {
     const rounded = Math.round(parsed * 100) / 100;
     return Math.max(0, Math.min(100, rounded));
   }
+
+  exportPreset(presetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return null;
+    }
+    return {
+      name: preset.name,
+      showInSidebar: preset.showInSidebar !== false,
+      purchaseSettings: Object.fromEntries(
+        Object.entries(preset.purchaseSettings).map(([key, value]) => [key, { ...value }])
+      ),
+      purchaseEnabled: !!preset.purchaseEnabled,
+      designSteps: preset.designSteps.map(step => ({
+        id: step.id,
+        mode: step.mode,
+        limit: step.limit,
+        entries: step.entries.map(entry => ({
+          id: entry.id,
+          attribute: entry.attribute,
+          weight: entry.weight,
+          cap: entry.cap,
+          capMode: entry.capMode,
+          zones: this.normalizeTemperatureZoneSettings(entry.zones)
+        }))
+      })),
+      deployImprovement: preset.deployImprovement,
+      designEnabled: !!preset.designEnabled
+    };
+  }
+
+  importPreset(presetData = {}) {
+    const id = this.nextPresetId++;
+    const purchaseSettings = this.createDefaultPurchaseSettings();
+    const savedSettings = presetData.purchaseSettings || {};
+    Object.keys(purchaseSettings).forEach(category => {
+      const setting = savedSettings[category] || {};
+      const threshold = this.normalizePurchaseThreshold(
+        Number(setting.threshold) || purchaseSettings[category].threshold
+      );
+      const maxCost = Number(setting.maxCost) || 0;
+      purchaseSettings[category] = {
+        enabled: !!setting.enabled,
+        threshold,
+        maxCost: maxCost > 0 ? maxCost : null
+      };
+    });
+    const steps = (presetData.designSteps || []).map(step => this.normalizeDesignStep(step));
+    const importedPreset = {
+      id,
+      name: presetData.name || `Preset ${id}`,
+      showInSidebar: presetData.showInSidebar !== false,
+      purchaseSettings,
+      purchaseEnabled: presetData.purchaseEnabled !== false,
+      designSteps: steps,
+      deployImprovement: Math.max(0, Math.floor(Number(presetData.deployImprovement) || 0)),
+      designEnabled: presetData.designEnabled !== false
+    };
+    this.presets.push(importedPreset);
+    this.activePresetId = importedPreset.id;
+    return importedPreset.id;
+  }
 }
 
 try {
