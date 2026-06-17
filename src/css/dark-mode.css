@@ -1143,6 +1143,71 @@ body.dark-mode {
     border-color: #444;
 }
 
+.dark-mode .automation-import-dialog-window {
+    background: #111827;
+    color: #e7ecf7;
+    border-color: #2d3a50;
+}
+
+.dark-mode .automation-import-dialog-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-import-dialog-description {
+    color: #8fa3c8;
+}
+
+.dark-mode .automation-import-dialog-textarea {
+    background: #0d1522;
+    border-color: #32435f;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-import-dialog-textarea:focus {
+    border-color: #74a0ff;
+    box-shadow: 0 0 0 2px rgba(116, 160, 255, 0.2);
+}
+
+.dark-mode .automation-import-dialog-message {
+    color: #f1a0a0;
+}
+
+.dark-mode .automation-import-dialog-cancel {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-import-dialog-cancel:hover {
+    background: #24324a;
+}
+
+.dark-mode .automation-import-dialog-confirm {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border-color: #3f7bf7;
+    color: #fff;
+}
+
+.dark-mode .automation-import-dialog-confirm:hover {
+    background: linear-gradient(180deg, #3f7bf7 0%, #2d63ff 100%);
+}
+
+.dark-mode .automation-global-toolbar {
+    border-bottom-color: #2d3a50;
+}
+
+.dark-mode .automation-global-export,
+.dark-mode .automation-global-import {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-global-export:hover,
+.dark-mode .automation-global-import:hover {
+    background: #24324a;
+}
+
 .dark-mode .automation-card {
     background: linear-gradient(180deg, #161b26 0%, #0f141d 100%);
     border-color: #2d3a50;

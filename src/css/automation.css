@@ -1586,3 +1586,137 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Import dialog */
+.automation-import-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 6000;
+}
+
+.automation-import-dialog-overlay.is-visible {
+  display: flex;
+}
+
+.automation-import-dialog-window {
+  width: min(720px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  background: #fff;
+  color: #1a1f2e;
+  border: 1px solid #d0d6e4;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.automation-import-dialog-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1f2e;
+}
+
+.automation-import-dialog-description {
+  margin: 0;
+  font-size: 13px;
+  color: #5a6478;
+  white-space: pre-line;
+}
+
+.automation-import-dialog-textarea {
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  box-sizing: border-box;
+  background: #f7f9fc;
+  border: 1px solid #c4cad7;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  font-family: monospace;
+  color: #1a1f2e;
+}
+
+.automation-import-dialog-textarea:focus {
+  outline: none;
+  border-color: #7ba0f0;
+  box-shadow: 0 0 0 2px rgba(123, 160, 240, 0.2);
+}
+
+.automation-import-dialog-message {
+  min-height: 18px;
+  font-size: 13px;
+  color: #c0392b;
+}
+
+.automation-import-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.automation-import-dialog-cancel,
+.automation-import-dialog-confirm {
+  border: 1px solid #c4cad7;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.automation-import-dialog-cancel {
+  background: #f1f4f9;
+  color: #3a4460;
+}
+
+.automation-import-dialog-cancel:hover {
+  background: #e2e7f2;
+}
+
+.automation-import-dialog-confirm {
+  background: #3f7bf7;
+  border-color: #3f7bf7;
+  color: #fff;
+}
+
+.automation-import-dialog-confirm:hover {
+  background: #2d63e0;
+  border-color: #2d63e0;
+}
+
+/* Global toolbar */
+.automation-global-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e0e5ef;
+}
+
+.automation-global-export,
+.automation-global-import {
+  border: 1px solid #c4cad7;
+  background: #f1f4f9;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.08s ease;
+  color: #3a4460;
+}
+
+.automation-global-export:hover,
+.automation-global-import:hover {
+  background: #e2e7f2;
+  transform: translateY(-1px);
+}

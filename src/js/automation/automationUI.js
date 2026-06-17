@@ -1983,54 +1983,32 @@ function ensureAutomationPresetImportDialog() {
   }
 
   const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.inset = '0';
-  overlay.style.background = 'rgba(0, 0, 0, 0.6)';
-  overlay.style.display = 'none';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = '6000';
+  overlay.classList.add('automation-import-dialog-overlay');
 
   const windowEl = document.createElement('div');
-  windowEl.style.width = 'min(720px, calc(100vw - 32px))';
-  windowEl.style.maxHeight = 'calc(100vh - 32px)';
-  windowEl.style.overflow = 'auto';
-  windowEl.style.background = '#1f1f1f';
-  windowEl.style.color = '#f0f0f0';
-  windowEl.style.border = '1px solid rgba(255, 255, 255, 0.18)';
-  windowEl.style.borderRadius = '10px';
-  windowEl.style.padding = '16px';
-  windowEl.style.boxShadow = '0 16px 40px rgba(0, 0, 0, 0.45)';
+  windowEl.classList.add('automation-import-dialog-window');
 
   const title = document.createElement('h3');
-  title.style.margin = '0 0 8px';
-  title.style.fontSize = '18px';
+  title.classList.add('automation-import-dialog-title');
 
   const description = document.createElement('p');
-  description.style.margin = '0 0 12px';
-  description.style.whiteSpace = 'pre-line';
+  description.classList.add('automation-import-dialog-description');
 
   const textarea = document.createElement('textarea');
-  textarea.style.width = '100%';
-  textarea.style.minHeight = '240px';
-  textarea.style.resize = 'vertical';
-  textarea.style.boxSizing = 'border-box';
-  textarea.style.marginBottom = '8px';
+  textarea.classList.add('automation-import-dialog-textarea');
 
   const message = document.createElement('div');
-  message.style.minHeight = '20px';
-  message.style.marginBottom = '12px';
-  message.style.color = '#ff9a9a';
+  message.classList.add('automation-import-dialog-message');
 
   const actions = document.createElement('div');
-  actions.style.display = 'flex';
-  actions.style.justifyContent = 'flex-end';
-  actions.style.gap = '8px';
+  actions.classList.add('automation-import-dialog-actions');
 
   const cancelButton = document.createElement('button');
+  cancelButton.classList.add('automation-import-dialog-cancel');
   cancelButton.textContent = getAutomationCardText('cancelButton', {}, 'Cancel');
 
   const importButton = document.createElement('button');
+  importButton.classList.add('automation-import-dialog-confirm');
   importButton.textContent = getAutomationCardText('importPresetButton', {}, 'Import');
 
   actions.append(cancelButton, importButton);
@@ -2050,7 +2028,7 @@ function ensureAutomationPresetImportDialog() {
   };
 
   const closeDialog = () => {
-    overlay.style.display = 'none';
+    overlay.classList.remove('is-visible');
     message.textContent = '';
     textarea.value = '';
     automationPresetImportDialog.onImport = null;
@@ -2088,7 +2066,7 @@ function openAutomationPresetImportDialog(options) {
   dialog.message.textContent = '';
   dialog.textarea.value = '';
   dialog.onImport = options.onImport;
-  dialog.overlay.style.display = 'flex';
+  dialog.overlay.classList.add('is-visible');
   dialog.textarea.focus();
 }
 
