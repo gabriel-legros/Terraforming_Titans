@@ -300,7 +300,7 @@
       antimatter: { name: '', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false, preserveOnTravel: true, preserveOnTravelFields: ['value', 'unlocked', 'enabled', 'syncedToSpaceEnergy'] }
     },
     space: {
-      energy: { name: '', initialValue: 0, hasCap: true, baseCap: 0, unlocked: true, unit: 'Watt-day', preserveOnTravel: true }
+      energy: { name: '', initialValue: 0, hasCap: true, baseCap: 0, unlocked: false, unit: 'Watt-day', preserveOnTravel: true }
     },
     spaceStorage: {
       metal: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },

@@ -68,6 +68,10 @@ function showSpaceStorageInDefaultPanel() {
   return gameSettings.showSpaceStorageInDefaultPanel === true;
 }
 
+function shouldShowNetResourceRateWithAutobuild() {
+  return gameSettings.showNetResourceRateWithAutobuild === true;
+}
+
 function isSpaceStorageViewActive() {
   return !showSpaceStorageInDefaultPanel() && gameSettings.showSpaceStorageResources === true;
 }
@@ -87,9 +91,6 @@ function shouldRenderResourceCategory(category) {
 
 function getResourceCategoriesForDisplay(resourceSet) {
   const categories = Object.keys(resourceSet || {});
-  if (!showSpaceStorageInDefaultPanel()) {
-    return categories;
-  }
   const colonyIndex = categories.indexOf('colony');
   const surfaceIndex = categories.indexOf('surface');
   const spaceStorageIndex = categories.indexOf('spaceStorage');
@@ -229,21 +230,6 @@ function getResourceNamesForDisplay(category, resourceMap, resourceSet = null) {
   });
 }
 
-function reorderSpaceStorageElements(container) {
-  if (!container) return;
-  const total = document.getElementById('space-storage-total-container');
-  if (total && container.firstChild !== total) {
-    container.insertBefore(total, container.firstChild);
-  }
-  for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
-    const resourceName = SPACE_STORAGE_UI_ORDER[i];
-    const resourceElement = document.getElementById(getResourceDomId('spaceStorage', resourceName, 'container'));
-    if (resourceElement && resourceElement.parentElement === container) {
-      container.appendChild(resourceElement);
-    }
-  }
-}
-
 function ensureSpaceStorageTotalElement(container) {
   if (!container) return;
   let totalElement = document.getElementById('space-storage-total-container');
@@ -320,8 +306,8 @@ function setResourcePanelViewMode(showSpaceStorage) {
     return;
   }
   gameSettings.showSpaceStorageResources = nextMode;
-  invalidateResourceUICache();
-  createResourceDisplay(resources);
+  updateResourceViewToggleState(resources);
+  updateResourceDisplay(resources, 0);
 }
 
 function updateResourceViewToggleState(resourceSet) {
@@ -332,10 +318,7 @@ function updateResourceViewToggleState(resourceSet) {
   if (!showToggle && isSpaceStorageViewActive()) {
     resourceViewModeUpdating = true;
     gameSettings.showSpaceStorageResources = false;
-    invalidateResourceUICache();
-    createResourceDisplay(resourceSet);
     resourceViewModeUpdating = false;
-    return;
   }
   for (const key in toggles) {
     const toggle = toggles[key];
@@ -381,6 +364,7 @@ function createResourceContainers(resourcesData) {
   runWithTrackedUIListeners(resourcesContainer, () => {
     for (let i = 0; i < categories.length; i += 1) {
       const category = categories[i];
+      if (category === 'space') continue;
       const resourceListId = `${category}-resources-resources-container`;
       const existingList = document.getElementById(resourceListId);
       if (existingList) {
@@ -1000,6 +984,21 @@ function isAutobuildTrackedResource(resource) {
     || (resource.category === 'special' && resource.name === 'orbitalDebris');
 }
 
+function getAutobuildResourceRate(resource) {
+  if (!isAutobuildTrackedResource(resource)) {
+    return 0;
+  }
+  return autobuildCostTracker.getAverageCost(resource.category, resource.name);
+}
+
+function getDisplayedNetResourceRate(resource, consumptionDisplay) {
+  const rawNetRate = resource.productionRate - consumptionDisplay.total;
+  if (!shouldShowNetResourceRateWithAutobuild()) {
+    return rawNetRate;
+  }
+  return rawNetRate - getAutobuildResourceRate(resource);
+}
+
 function setResourceTooltipColumns(tooltip, cols) {
   if (!tooltip || !tooltip._columnsInfo) return;
   const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
@@ -1585,68 +1584,70 @@ function createResourceElement(category, resourceObj, resourceName) {
   return resourceElement;
 }
 
-function populateResourceElements(resources) {
-  const categories = getResourceCategoriesForDisplay(resources);
-  for (let i = 0; i < categories.length; i += 1) {
-    const category = categories[i];
-    if (!shouldRenderResourceCategory(category)) continue;
-    const containerId = `${category}-resources-resources-container`;
-    const container = document.getElementById(containerId);
+function syncResourceElementsForCategory(category, resourceSet) {
+  if (category === 'space') return;
+  const container = document.getElementById(`${category}-resources-resources-container`);
+  if (!container) return;
 
-    if (container) {
-      if (category === 'spaceStorage') {
-        ensureSpaceStorageTotalElement(container);
+  const currentIds = new Set();
+  let previousElement = null;
+  if (category === 'spaceStorage') {
+    ensureSpaceStorageTotalElement(container);
+    previousElement = document.getElementById('space-storage-total-container');
+    currentIds.add('space-storage-total-container');
+  }
+
+  const resourceNames = getResourceNamesForDisplay(category, resourceSet[category], resourceSet);
+  for (let i = 0; i < resourceNames.length; i += 1) {
+    const resourceName = resourceNames[i];
+    const resourceObj = getDisplayResourceObject(resourceSet, category, resourceName);
+    if (!resourceObj) continue;
+    const resourceContainerId = getResourceDomId(category, resourceName, 'container');
+    currentIds.add(resourceContainerId);
+
+    let resourceElement = document.getElementById(resourceContainerId);
+    if (!resourceElement) {
+      resourceElement = createResourceElement(category, resourceObj, resourceName);
+    }
+
+    if (previousElement) {
+      if (previousElement.nextSibling !== resourceElement) {
+        container.insertBefore(resourceElement, previousElement.nextSibling);
       }
-      const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
-      const currentIds = new Set();
-      if (category === 'spaceStorage') {
-        currentIds.add('space-storage-total-container');
-      }
-      for (let i = 0; i < resourceNames.length; i += 1) {
-        const resourceName = resourceNames[i];
-        const resourceObj = getDisplayResourceObject(resources, category, resourceName);
-        if (!resourceObj) continue;
-        const resourceContainerId = getResourceDomId(category, resourceName, 'container');
-        currentIds.add(resourceContainerId);
-        if (!document.getElementById(resourceContainerId)) {
-          const resourceElement = createResourceElement(category, resourceObj, resourceName);
-          container.appendChild(resourceElement);
-        }
-      }
-      const existingResourceElements = container.querySelectorAll('.resource-item');
-      for (let j = 0; j < existingResourceElements.length; j += 1) {
-        const element = existingResourceElements[j];
-        if (!currentIds.has(element.id)) {
-          cleanupTrackedUIListeners(element);
-          cleanupDynamicTooltipsIn(element);
-          element.remove();
-        }
-      }
-      if (category === 'spaceStorage') {
-        reorderSpaceStorageElements(container);
-      }
+    } else if (container.firstChild !== resourceElement) {
+      container.insertBefore(resourceElement, container.firstChild);
+    }
+    previousElement = resourceElement;
+  }
+
+  const existingResourceElements = container.querySelectorAll('.resource-item');
+  for (let i = 0; i < existingResourceElements.length; i += 1) {
+    const element = existingResourceElements[i];
+    if (!currentIds.has(element.id)) {
+      cleanupTrackedUIListeners(element);
+      cleanupDynamicTooltipsIn(element);
+      element.remove();
     }
   }
 }
 
+function populateResourceElements(resources) {
+  const categories = getResourceCategoriesForDisplay(resources);
+  for (let i = 0; i < categories.length; i += 1) {
+    syncResourceElementsForCategory(categories[i], resources);
+  }
+}
+
 function unlockResource(resource) {
-  if (!shouldRenderResourceCategory(resource.category)) return;
-  if (resource.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name) && !document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
+  if (resource.category === 'space') return;
+  if (resource.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
-    const container = document.getElementById(containerId);
 
-    if (container) {
-      if (resource.category === 'spaceStorage') {
-        ensureSpaceStorageTotalElement(container);
+    if (categoryContainer) {
+      if (!document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
+        syncResourceElementsForCategory(resource.category, resources);
       }
-      // Use helper function to create the resource element
-      const resourceElement = createResourceElement(resource.category, resource, resource.name);
-      container.appendChild(resourceElement);
-      if (resource.category === 'spaceStorage') {
-        reorderSpaceStorageElements(container);
-      }
-
       // Ensure the category container is visible
       categoryContainer.style.display = 'block';
 
@@ -1669,6 +1670,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
   const categories = getResourceCategoriesForDisplay(resources);
   for (let i = 0; i < categories.length; i += 1) {
     const category = categories[i];
+    if (category === 'space') continue;
     const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
     const container = cat ? cat.container : null;
     const header = cat ? cat.header : null;
@@ -1680,9 +1682,6 @@ function updateResourceDisplay(resources, deltaSeconds) {
       categoryContainer.style.display = 'none';
       if (header) header.style.display = 'none';
       continue;
-    }
-    if (category === 'spaceStorage') {
-      reorderSpaceStorageElements(container);
     }
 
     let hasUnlockedResources = false;
@@ -2040,7 +2039,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     } else {
       const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
       const consumptionDisplay = getDisplayConsumptionRates(resource);
-      const rawNetRate = resource.productionRate - consumptionDisplay.total;
+      const rawNetRate = getDisplayedNetResourceRate(resource, consumptionDisplay);
       const activityRate = Math.max(Math.abs(resource.productionRate), Math.abs(consumptionDisplay.total));
       const netRate = activityRate > 0 && Math.abs(rawNetRate) <= activityRate * 1e-12
         ? 0
@@ -2552,9 +2551,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   } else if (zonesDiv) {
     zonesDiv.style.display = 'none';
   }
-  const autobuildAvg = (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource))
-    ? autobuildCostTracker.getAverageCost(resource.category, resource.name)
-    : 0;
+  const autobuildAvg = getAutobuildResourceRate(resource);
   if (netDiv) {
     const autoLine = netDiv._lineAuto || netDiv.firstChild;
     const baseLine = netDiv._lineBase || netDiv.lastChild;
@@ -2750,7 +2747,7 @@ function cacheResourceElements(resources) {
   const categories = getResourceCategoriesForDisplay(resources);
   for (let i = 0; i < categories.length; i += 1) {
     const category = categories[i];
-    if (!shouldRenderResourceCategory(category)) continue;
+    if (category === 'space') continue;
     cacheResourceCategory(category);
     if (category === 'spaceStorage') {
       cacheSpaceStorageTotalEntry();

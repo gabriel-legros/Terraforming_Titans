@@ -821,6 +821,7 @@ setLanguageData({
         productivity: 'Productivity',
         cost: 'Cost:',
         heat: 'Heat',
+        cooling: 'Cooling',
       },
       controls: {
         title: 'Controls',
@@ -1656,6 +1657,8 @@ setLanguageData({
           powerPerArea: 'Power/m²:',
           totalPower: 'Total Power:',
           totalPowerPerArea: 'Total Power/m²:',
+          incompleteOverlay: 'Complete facility to enable mirrors',
+          incompleteLanternOverlay: 'Complete facility to enable lanterns',
         },
         dayNight: {
           periodHours: 'Day-Night Period (hours):',
@@ -2597,7 +2600,7 @@ setLanguageData({
             '',
             'This flux is not impacted by albedo or day-night averaging.',
           ].join('\n'),
-          factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. This flux is not impacted by albedo or day-night averaging.',
+          factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. A certain megastructure can help reduce this. This flux is not impacted by albedo or day-night averaging.',
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           labels: {
             globalMeanTemp: 'Global Mean Temp',
@@ -3478,7 +3481,7 @@ setLanguageData({
       },
       wgcUi: {
         clipboardPrompt: 'Copy Warp Gate Command team stats:',
-        copyTeamStatsTooltip: 'Copy Team Stats to Clipboard',
+        copyTeamStatsTooltip: 'Copy all stats to clipboard',
         showStory: 'Show Story',
         hideStory: 'Hide Story',
         teamNames: {
@@ -4044,6 +4047,7 @@ setLanguageData({
       },
       darkMode: 'Enable Dark Mode',
       showSpaceResources: 'Show space resources in default resource panel',
+      netResourceRateDisplay: 'Net resource rate display',
       immigrationPool: 'Immigration pool',
       immigrationPoolTooltip: 'When enabled, on any world other than Mars, a large portion of colony growth becomes directly dependent on galactic population via immigration.  Immigration will attempt to equalize the world colonist fill ratio with the galactic fill ratio, and all immigration is taken from the galactic population pool.  This may lead to very slow growth in some cases.',
       disableUnlockAlerts: 'Disable unlock alerts',
@@ -4083,7 +4087,7 @@ setLanguageData({
       earlyAdvancedOversight: 'Early Advanced Oversight',
       earlyAdvancedOversightTooltip: 'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.',
       factoryHeating: 'Factory heating',
-      factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. A certain megastructure can help mitigate factory heating.  \n\n You should use this setting alongside Realistic factory energy consumption',
+      factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. A certain megastructure can help mitigate factory heating.  \n\n You should use this setting alongside Realistic factory energy consumption',
       realisticFactoryEnergyConsumption: 'Realistic factory energy consumption',
       realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.',
       buildingCostMultiplier: 'Building Cost Multiplier',
@@ -4091,6 +4095,7 @@ setLanguageData({
       workerRequirementMultiplier: 'Worker Requirement multiplier',
       projectDurationMultiplier: 'Projection duration multiplier',
       popGrowthMultiplier: 'Pop growth multiplier',
+      lifeGrowthMultiplier: 'Life growth multiplier',
       maintenanceCostMultiplier: 'Maintenance Cost Multiplier',
       spaceshipEnergyBeforeSpaceElevatorMultiplier: 'Ship energy before Space Elevator',
       spaceshipEnergyBeforeSpaceElevatorMultiplierTooltip: 'Multiplies colony energy costs for spaceship projects before the Space Elevator is completed.  Use 100-500 if you want a realistic value.',

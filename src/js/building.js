@@ -159,6 +159,7 @@ class Building extends EffectableEntity {
         alwaysShowConsumption,
         realisticEnergyConsumption,
         factoryHeatCoefficient,
+        factoryCoolingCoefficient,
         kesslerDebrisSize,
         automationRequiresEverEnabled
       } = config;
@@ -189,6 +190,9 @@ class Building extends EffectableEntity {
       this.realisticEnergyConsumption = realisticEnergyConsumption;
       this.factoryHeatCoefficient = Number.isFinite(factoryHeatCoefficient)
         ? Math.max(0, factoryHeatCoefficient)
+        : 0;
+      this.factoryCoolingCoefficient = Number.isFinite(factoryCoolingCoefficient)
+        ? Math.max(0, factoryCoolingCoefficient)
         : 0;
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;

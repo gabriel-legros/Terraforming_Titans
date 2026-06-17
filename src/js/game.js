@@ -386,6 +386,7 @@ function initializeGameState(options = {}) {
     gameSettings.workerRequirementMultiplier = 1;
     gameSettings.projectDurationMultiplier = 1;
     gameSettings.popGrowthMultiplier = 1;
+    gameSettings.lifeGrowthMultiplier = 1;
     gameSettings.maintenanceCostMultiplier = 1;
     gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier = 1;
     gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier = 1;

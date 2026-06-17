@@ -1278,7 +1278,7 @@ function generateWGCLayout() {
             <div class="wgc-card-header">
               <div class="wgc-card-title">
                 <h3>${getWGCText('teamsSectionTitle', 'Teams')} <span id="wgc-team-rules-info" class="info-tooltip-icon">&#9432;</span></h3>
-                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy Team Stats to Clipboard')}"></span>
+                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy all stats to clipboard')}"><span class="wgc-copy-team-stats-icon" aria-hidden="true"></span></span>
               </div>
               <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
                 <span class="wgc-story-toggle__track" aria-hidden="true">
@@ -1326,7 +1326,7 @@ function initializeWGCUI() {
     }
     wgcCopyStatsButton = container.querySelector('#wgc-copy-team-stats');
     if (wgcCopyStatsButton) {
-      attachDynamicInfoTooltip(wgcCopyStatsButton, getWGCText('copyTeamStatsTooltip', 'Copy Team Stats to Clipboard'), false);
+      attachDynamicInfoTooltip(wgcCopyStatsButton, getWGCText('copyTeamStatsTooltip', 'Copy all stats to clipboard'), false);
       const triggerCopy = () => {
         copyWGCTeamStatsToClipboard();
       };

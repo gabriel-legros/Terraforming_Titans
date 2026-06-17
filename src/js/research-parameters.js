@@ -222,7 +222,8 @@ const researchParameters = {
         disabled: true,
         effects: [
           { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' },
-          { target: 'building', targetId: 'dysonReceiver', type: 'enable' }
+          { target: 'building', targetId: 'dysonReceiver', type: 'enable' },
+          { target: 'resource', resourceType: 'space', targetId: 'energy', type: 'enable' }
         ]
       },
       {
@@ -1771,9 +1772,11 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           {
-            target: 'building',
-            targetId: 'hyperionLantern',
-            type: 'enable'
+            target: 'project',
+            targetId: 'spaceMirrorFacility',
+            type: 'booleanFlag',
+            flagId: 'hyperionLanternFacilityAccess',
+            value: true
           }
         ]
       },

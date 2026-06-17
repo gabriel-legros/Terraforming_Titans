@@ -767,7 +767,6 @@ function updateBuildingsAutomationUI() {
             const preset = automationManager.buildingsAutomation.getPresetById(Number(presetId));
             if (preset && preset.buildings[name]) {
               delete preset.buildings[name];
-              buildingAutomationUIState.syncedPresetId = null;
             }
           }
           queueAutomationUIRefresh();

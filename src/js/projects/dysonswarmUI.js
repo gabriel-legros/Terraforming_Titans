@@ -219,7 +219,7 @@ function updateDysonSwarmUI(project) {
     els.startButton.style.background = getStatusProgressBackground(pct);
   } else {
     const can = project.canStartCollector();
-    const dur = Math.round(project.collectorDuration / 1000);
+    const dur = (project.collectorDuration / 1000).toFixed(2);
     els.startButton.textContent = getDysonSwarmText('ui.projects.dysonSwarm.deployCollector', 'Deploy Collector ({time}s)', { time: dur });
     els.startButton.style.background = can ? getStatusColor('success') : getStatusColor('failure');
     els.startButton.disabled = !can;
