@@ -150,7 +150,7 @@ const buildingsParameters = {
     realisticEnergyConsumption: 250_000,
     production: { colony: { food: 5 } },
     storage: {},
-    factoryHeatCoefficient: 1,
+    factoryHeatCoefficient: 0.9,
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
