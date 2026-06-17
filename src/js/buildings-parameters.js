@@ -518,7 +518,7 @@ const buildingsParameters = {
     realisticEnergyConsumption: 2_000_000_000_000_000,
     production: { special: { antimatter: 1 } },
     storage: {},
-    factoryHeatCoefficient: 0.01,
+    factoryHeatCoefficient: 0.0001,
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
