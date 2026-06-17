@@ -1106,4 +1106,46 @@ class ScriptAutomation {
     for (const key in value) clone[key] = this.deepClone(value[key]);
     return clone;
   }
+
+  exportScript(scriptId) {
+    const script = this.scripts.find(item => item.id === Number(scriptId));
+    if (!script) {
+      return null;
+    }
+    return this.deepClone(script);
+  }
+
+  importScript(scriptData = {}) {
+    const id = this.nextScriptId++;
+    const rawScript = {
+      id,
+      name: scriptData.name || `Script ${id}`,
+      lines: Array.isArray(scriptData.lines) && scriptData.lines.length
+        ? scriptData.lines.map(line => {
+            const oldId = line.id;
+            const newId = this.nextLineId++;
+            return { ...this.deepClone(line), id: newId, _oldId: oldId };
+          })
+        : [this.createLine('if')]
+    };
+    const lineIdMap = {};
+    rawScript.lines.forEach(line => {
+      if (line._oldId) {
+        lineIdMap[line._oldId] = line.id;
+      }
+      delete line._oldId;
+    });
+    rawScript.lines.forEach(line => {
+      line.linkedIfLineId = line.linkedIfLineId ? lineIdMap[line.linkedIfLineId] || null : null;
+    });
+    const normalizedScript = {
+      id: rawScript.id,
+      name: rawScript.name,
+      lines: rawScript.lines.map(line => this.normalizeLine(line))
+    };
+    this.normalizeLinkedElseLines(normalizedScript);
+    this.scripts.push(normalizedScript);
+    this.selectedScriptId = normalizedScript.id;
+    return normalizedScript.id;
+  }
 }
