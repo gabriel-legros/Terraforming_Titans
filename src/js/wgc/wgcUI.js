@@ -1269,9 +1269,63 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   }
 }
 
+function generateWGCPresetsDialogHTML() {
+  const manager = getWGCManager();
+  const names = manager && manager.teamNames ? manager.teamNames : teamNames;
+  const teamOptions = names.map((n, i) => `<option value="${i}">${escapeWGCLogHTML(n)}</option>`).join('');
+  const classOptions = Object.keys(classLabels).map(k => `<option value="${k}">${escapeWGCLogHTML(classLabels[k])}</option>`).join('');
+  return `
+    <div id="wgc-presets-overlay" class="wgc-presets-overlay">
+      <div class="wgc-presets-dialog" role="dialog" aria-modal="true" aria-labelledby="wgc-presets-dialog-title">
+        <div class="wgc-presets-dialog-header">
+          <h3 id="wgc-presets-dialog-title">${getWGCText('presetsTitle', 'Stat Presets')}</h3>
+          <button id="wgc-presets-close" class="wgc-presets-close" aria-label="Close">✕</button>
+        </div>
+        <p class="wgc-preset-description">${getWGCText('presetsDescription', 'Save ratio presets for auto-investing stat points on level-up.')}</p>
+        <div id="wgc-preset-form" class="wgc-preset-form">
+          <input id="wgc-preset-name" type="text" class="wgc-preset-name-input" placeholder="${getWGCText('presetNamePlaceholder', 'Preset name')}" maxlength="40">
+          <div class="wgc-preset-scope-row">
+            <select id="wgc-preset-scope-type" class="wgc-preset-select">
+              <option value="global">${getWGCText('presetScopeGlobal', 'Global')}</option>
+              <option value="team">${getWGCText('presetScopeTeamOpt', 'Team')}</option>
+              <option value="class">${getWGCText('presetScopeClassOpt', 'Class')}</option>
+            </select>
+            <span id="wgc-preset-scope-value-wrap" style="display:none">
+              <select id="wgc-preset-scope-value" class="wgc-preset-select">
+                ${teamOptions}
+                ${classOptions}
+              </select>
+            </span>
+          </div>
+          <div class="wgc-preset-ratios-row">
+            <label>${getWGCText('powerShort', 'Pow')}<input id="wgc-preset-power" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+            <label>${getWGCText('athleticsShort', 'Ath')}<input id="wgc-preset-athletics" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+            <label>${getWGCText('witShort', 'Wit')}<input id="wgc-preset-wit" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+          </div>
+          <button id="wgc-preset-save" class="wgc-preset-save-button">${getWGCText('presetSave', 'Save Preset')}</button>
+        </div>
+        <div id="wgc-presets-list" class="wgc-presets-list"></div>
+      </div>
+    </div>`;
+}
+
+function openWGCPresetsDialog() {
+  const overlay = document.getElementById('wgc-presets-overlay');
+  if (overlay) overlay.classList.add('is-open');
+}
+
+function closeWGCPresetsDialog() {
+  const overlay = document.getElementById('wgc-presets-overlay');
+  if (overlay) overlay.classList.remove('is-open');
+}
+
 function generateWGCLayout() {
   return `
     <div class="wgc-container">
+      <div class="wgc-toolbar">
+        <button id="wgc-open-presets-btn" class="wgc-toolbar-btn">${getWGCText('presetsTitle', 'Stat Presets')}</button>
+      </div>
+      ${generateWGCPresetsDialogHTML()}
       <div class="wgc-main">
         <div class="wgc-left">
           <div class="wgc-card" id="wgc-teams-section">
@@ -1306,7 +1360,6 @@ function generateWGCLayout() {
             <div id="wgc-stat-artifact"></div>
             <div id="wgc-stat-difficulty"></div>
           </div>
-          ${generateWGCPresetsCard()}
         </div>
       </div>
     </div>
@@ -1490,6 +1543,21 @@ function initializeWGCUI() {
     populateFacilityMenu();
     attachWGCPresetFormHandlers();
     renderWGCPresetsUI();
+
+    const openBtn = document.getElementById('wgc-open-presets-btn');
+    if (openBtn) openBtn.addEventListener('click', openWGCPresetsDialog);
+
+    const closeBtn = document.getElementById('wgc-presets-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeWGCPresetsDialog);
+
+    const overlay = document.getElementById('wgc-presets-overlay');
+    if (overlay) {
+      overlay.addEventListener('click', e => { if (e.target === overlay) closeWGCPresetsDialog(); });
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeWGCPresetsDialog();
+    });
   }
   wgcUIInitialized = true;
   if (typeof warpGateCommand !== 'undefined') {
@@ -1912,40 +1980,6 @@ function attachWGCPresetFormHandlers() {
   }
 }
 
-function generateWGCPresetsCard() {
-  const manager = getWGCManager();
-  const names = manager && manager.teamNames ? manager.teamNames : teamNames;
-  const teamOptions = names.map((n, i) => `<option value="${i}">${escapeWGCLogHTML(n)}</option>`).join('');
-  const classOptions = Object.keys(classLabels).map(k => `<option value="${k}">${escapeWGCLogHTML(classLabels[k])}</option>`).join('');
-  return `
-    <div class="wgc-card" id="wgc-presets-section">
-      <h3>${getWGCText('presetsTitle', 'Stat Presets')}</h3>
-      <p class="wgc-preset-description">${getWGCText('presetsDescription', 'Save ratio presets for auto-investing stat points on level-up.')}</p>
-      <div id="wgc-preset-form" class="wgc-preset-form">
-        <input id="wgc-preset-name" type="text" class="wgc-preset-name-input" placeholder="${getWGCText('presetNamePlaceholder', 'Preset name')}" maxlength="40">
-        <div class="wgc-preset-scope-row">
-          <select id="wgc-preset-scope-type" class="wgc-preset-select">
-            <option value="global">${getWGCText('presetScopeGlobal', 'Global')}</option>
-            <option value="team">${getWGCText('presetScopeTeamOpt', 'Team')}</option>
-            <option value="class">${getWGCText('presetScopeClassOpt', 'Class')}</option>
-          </select>
-          <span id="wgc-preset-scope-value-wrap" style="display:none">
-            <select id="wgc-preset-scope-value" class="wgc-preset-select">
-              ${teamOptions}
-              ${classOptions}
-            </select>
-          </span>
-        </div>
-        <div class="wgc-preset-ratios-row">
-          <label>${getWGCText('powerShort', 'Pow')}<input id="wgc-preset-power" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
-          <label>${getWGCText('athleticsShort', 'Ath')}<input id="wgc-preset-athletics" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
-          <label>${getWGCText('witShort', 'Wit')}<input id="wgc-preset-wit" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
-        </div>
-        <button id="wgc-preset-save" class="wgc-preset-save-button">${getWGCText('presetSave', 'Save Preset')}</button>
-      </div>
-      <div id="wgc-presets-list" class="wgc-presets-list"></div>
-    </div>`;
-}
 
 function redrawWGCTeamCards() {
   const teamContainer = document.getElementById('wgc-team-cards');
