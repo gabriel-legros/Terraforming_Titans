@@ -25,16 +25,44 @@ function cacheStatisticsElements() {
   return statisticsElements;
 }
 
+function getTerraformHistoryArtificialTypeLabel(typeKey) {
+  if (typeKey === 'shell') {
+    return t('ui.settings.terraformWorldTypeShell', null, 'Shellworld');
+  }
+  if (typeKey === 'ring') {
+    return t('ui.settings.terraformWorldTypeRing', null, 'Ringworld');
+  }
+  if (typeKey === 'disk') {
+    return t('ui.settings.terraformWorldTypeDisk', null, 'Alderson disk');
+  }
+  return t('ui.settings.terraformWorldTypeArtificial', null, 'Artificial');
+}
+
+function getTerraformHistoryWorldTypeLabel(entry) {
+  const worldArchetype = entry.worldArchetype || '';
+  if (worldArchetype.indexOf('artificial:') === 0) {
+    return getTerraformHistoryArtificialTypeLabel(worldArchetype.slice('artificial:'.length));
+  }
+  if (worldArchetype) {
+    return RWG_WORLD_TYPES[worldArchetype]?.displayName || worldArchetype;
+  }
+  if (entry.worldType === 'artificial') {
+    return t('ui.settings.terraformWorldTypeArtificial', null, 'Artificial');
+  }
+  return t('ui.settings.terraformWorldTypeUnknown', null, 'Unknown');
+}
+
 function buildTerraformHistoryText(entry) {
   const vars = {
     name: entry.name,
+    type: getTerraformHistoryWorldTypeLabel(entry),
     game: formatPlayTime(entry.playTimeSeconds),
     real: formatDurationDetailed(entry.realTimeSeconds),
   };
   return t(
     'ui.settings.recentTerraformHistoryEntry',
     vars,
-    '{name}: {game} ({real} real time)'
+    '{name} ({type}): {game} ({real} real time)'
   );
 }
 

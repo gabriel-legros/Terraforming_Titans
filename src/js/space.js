@@ -456,16 +456,23 @@ class SpaceManager extends EffectableEntity {
     _buildCurrentTerraformHistoryEntry(playTime, realTime) {
         let worldId = this.currentPlanetKey;
         let worldType = 'story';
+        let worldArchetype = this._getCurrentWorldArchetype();
         if (this.currentRandomSeed !== null) {
             worldId = String(this.currentRandomSeed);
             worldType = 'random';
         } else if (this.currentArtificialKey !== null) {
             worldId = String(this.currentArtificialKey);
             worldType = 'artificial';
+            const status = this.artificialWorldStatuses[worldId];
+            const artificialType = this._resolveArtificialWorldType(status)
+                || currentPlanetParameters?.classification?.type
+                || 'artificial';
+            worldArchetype = `artificial:${artificialType}`;
         }
         return {
             worldId,
             worldType,
+            worldArchetype,
             name: this._getCurrentWorldDisplayName(),
             playTimeSeconds: Math.max(0, Number(playTime) || 0),
             realTimeSeconds: Math.max(0, Number(realTime) || 0),
@@ -3472,6 +3479,7 @@ class SpaceManager extends EffectableEntity {
                 .map((entry) => ({
                     worldId: entry?.worldId == null ? '' : String(entry.worldId),
                     worldType: entry?.worldType === 'random' || entry?.worldType === 'artificial' ? entry.worldType : 'story',
+                    worldArchetype: entry?.worldArchetype == null ? '' : String(entry.worldArchetype),
                     name: entry?.name == null ? '' : String(entry.name),
                     playTimeSeconds: Math.max(0, Number(entry?.playTimeSeconds) || 0),
                     realTimeSeconds: Math.max(0, Number(entry?.realTimeSeconds) || 0),

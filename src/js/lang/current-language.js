@@ -4132,7 +4132,12 @@ setLanguageData({
       recentTerraformHistoryTitle: 'Last {count} Terraformed Worlds',
       recentTerraformHistoryAverage: 'Average: {game} ({real} real time)',
       recentTerraformHistoryEmpty: 'No terraformed worlds recorded yet.',
-      recentTerraformHistoryEntry: '{name}: {game} ({real} real time)',
+      recentTerraformHistoryEntry: '{name} ({type}): {game} ({real} real time)',
+      terraformWorldTypeArtificial: 'Artificial',
+      terraformWorldTypeShell: 'Shellworld',
+      terraformWorldTypeRing: 'Ringworld',
+      terraformWorldTypeDisk: 'Alderson disk',
+      terraformWorldTypeUnknown: 'Unknown',
       realTimeUnavailable: 'real time unavailable',
     },
     journal: {
