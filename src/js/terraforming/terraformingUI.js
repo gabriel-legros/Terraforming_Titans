@@ -86,7 +86,7 @@ function getCoreHeatTooltipText() {
 function getFactoryHeatTooltipText() {
   return getTerraformingSummaryText(
     'temperature.factoryHeatTooltip',
-    'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. This flux is not impacted by albedo or day-night averaging.'
+    'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is reduced by surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. Direct waste heat is not impacted by albedo or day-night averaging.'
   );
 }
 

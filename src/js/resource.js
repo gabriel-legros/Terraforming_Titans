@@ -1623,6 +1623,8 @@ function updateFactoryHeatPower(deltaTime, structures) {
   }
 
   let power = 0;
+  const surfaceAlbedo = Math.max(0, Math.min(1, terraforming.luminosity.surfaceAlbedo || 0));
+  const solarCoolingMultiplier = 1 - surfaceAlbedo;
   for (const structureName in structures) {
     const structure = structures[structureName];
     const coefficient = structure.factoryHeatCoefficient || 0;
@@ -1636,7 +1638,7 @@ function updateFactoryHeatPower(deltaTime, structures) {
     if (coolingCoefficient > 0) {
       const producedEnergy = structure.currentProduction?.colony?.energy || 0;
       if (producedEnergy > 0) {
-        power -= producedEnergy * (1000 / deltaTime) * coolingCoefficient;
+        power -= producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
       }
     }
   }

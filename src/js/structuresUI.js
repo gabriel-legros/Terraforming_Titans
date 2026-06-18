@@ -3117,7 +3117,8 @@ function updateDecreaseButtonText(button, buildCount) {
     }
     const coolingCoefficient = structure.factoryCoolingCoefficient || 0;
     const energyProduction = displayProduction.colony?.energy || 0;
-    const coolingPower = gameSettings.factoryHeating ? energyProduction * coolingCoefficient : 0;
+    const surfaceAlbedo = Math.max(0, Math.min(1, terraforming.luminosity.surfaceAlbedo || 0));
+    const coolingPower = gameSettings.factoryHeating ? energyProduction * coolingCoefficient * (1 - surfaceAlbedo) : 0;
     if (coolingPower > 0) {
       sections.push({
         key: 'cooling',
