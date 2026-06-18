@@ -99,7 +99,7 @@ function clearDifficultySettingEffects() {
 function addDifficultySettingEffect(effect) {
   addEffect({
     sourceId: DIFFICULTY_SETTINGS_EFFECT_SOURCE_ID,
-    name: 'Difficulty settings',
+    name: t('ui.gameEffects.difficultySettings', {}, 'Difficulty settings'),
     ...effect
   });
 }

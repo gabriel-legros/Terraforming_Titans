@@ -206,7 +206,7 @@ class Building extends EffectableEntity {
         ? [
             {
               value: 'aerostatCapacity',
-              label: 'Aerostat Capacity'
+              label: t('ui.buildings.automationBasis.aerostatCapacity', {}, 'Aerostat Capacity')
             }
           ]
         : null;

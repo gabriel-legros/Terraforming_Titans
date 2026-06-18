@@ -104,7 +104,7 @@ const defaultPlanetParameters = {
   fundingRate: 0, // Default
   // Default host star information (for Solar System worlds)
   star: {
-    name: 'Sun',
+    name: t('catalogs.planets.default.star.name', {}, 'Sun'),
     spectralType: 'G2V',
     luminositySolar: 1,
     massSolar: 1,
@@ -699,7 +699,7 @@ const ganymedeOverrides = {
 const vega2Overrides = {
   name: '',
   travelWarning: {
-    message: 'This world has no water.  Solis can help.  Five purchases is enough but more can help.  \n \n This world unlocks some very powerful upgrades and is strongly recommended.'
+    message: t('catalogs.planets.vega2.travelWarning.message', {}, 'This world has no water.  Solis can help.  Five purchases is enough but more can help.  \n \n This world unlocks some very powerful upgrades and is strongly recommended.')
   },
 
   resources: {
@@ -828,10 +828,10 @@ const vega2Overrides = {
 const venusOverrides = {
   name: '',
   travelWarning: {
-    message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.',
+    message: t('catalogs.planets.venus.travelWarning.message', {}, 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.'),
     hint: {
-      title: 'Hint',
-      body: '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable.  A high worker ratio can help with resource shortage (especially components). \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.'
+      title: t('catalogs.planets.venus.travelWarning.hint.title', {}, 'Hint'),
+      body: t('catalogs.planets.venus.travelWarning.hint.body', {}, '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable.  A high worker ratio can help with resource shortage (especially components). \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.')
     }
   },
 
@@ -1131,7 +1131,7 @@ const umbraOverrides = {
 const solisPrimeOverrides = {
   name: '',
   travelWarning: {
-    message: 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover. \n The story will give you some initial resources, but if some mega projects are on auto start you may end up using them instantly.',
+    message: t('catalogs.planets.solisprime.travelWarning.message', {}, 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover. \n The story will give you some initial resources, but if some mega projects are on auto start you may end up using them instantly.'),
   },
   specialAttributes: {
     hasSand: false,
@@ -1631,10 +1631,10 @@ const hadesOverrides = {
 const poseidonOverrides = {
   name: '',
   travelWarning: {
-    message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.  \n It is also possible to nearly softlock if using lifters too aggressively.  You have been warned.',
+    message: t('catalogs.planets.poseidon.travelWarning.message', {}, 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.  \n It is also possible to nearly softlock if using lifters too aggressively.  You have been warned.'),
     hint: {
-      title: 'Hint',
-      body: 'You can potentially save a lot of time by bringing in about 8T of superalloys from space storage.'
+      title: t('catalogs.planets.poseidon.travelWarning.hint.title', {}, 'Hint'),
+      body: t('catalogs.planets.poseidon.travelWarning.hint.body', {}, 'You can potentially save a lot of time by bringing in about 8T of superalloys from space storage.')
     }
   },
   star: {
@@ -1901,7 +1901,7 @@ const styxOverrides = {
 };
 
 const zeusOverrides = {
-  name: 'Zeus',
+  name: t('catalogs.planets.zeus.name', {}, 'Zeus'),
   travelWarning: {
     message: venusOverrides.travelWarning.message,
     hint: {
@@ -1915,7 +1915,7 @@ const zeusOverrides = {
     dynamicMass: true,
   },
   star: {
-    name: 'Okoth',
+    name: t('catalogs.planets.zeus.star.name', {}, 'Okoth'),
     spectralType: 'K1V',
     luminositySolar: 0.46,
     massSolar: 0.84,
@@ -2115,9 +2115,9 @@ const zeusOverrides = {
 };
 
 const olympusOverrides = {
-  name: 'Olympus',
+  name: t('catalogs.planets.olympus.name', {}, 'Olympus'),
   travelWarning: {
-    message: 'World 15 is the narrative ending to this game.  It is very narratively heavy.  It does not unlock anything new.  \n \n Once World 15 is complete, you will be forced into World 16.  A pre-travel save between 15 and 16 will not be taken.  Therefore, you will be able to return to your current point (unless you delete your pre-travel save). \n \n World 15 does not require preparation.'
+    message: t('catalogs.planets.olympus.travelWarning.message', {}, 'World 15 is the narrative ending to this game.  It is very narratively heavy.  It does not unlock anything new.  \n \n Once World 15 is complete, you will be forced into World 16.  A pre-travel save between 15 and 16 will not be taken.  Therefore, you will be able to return to your current point (unless you delete your pre-travel save). \n \n World 15 does not require preparation.')
   },
   gravityPenaltyEnabled: true,
   specialAttributes: {
@@ -2195,7 +2195,7 @@ const olympusOverrides = {
     core: 'b-star'
   },
   star: {
-    name: 'Vepive-015',
+    name: t('catalogs.planets.olympus.star.name', {}, 'Vepive-015'),
     spectralType: 'B',
     luminositySolar: 2187,
     massSolar: 9,
@@ -2423,7 +2423,7 @@ const olympusOverrides = {
 const earthOverrides = {
   name: '',
   travelWarning: {
-    message: 'This is the end of the road.  This world is very short.  A pre-travel save will not be taken.'
+    message: t('catalogs.planets.earth.travelWarning.message', {}, 'This is the end of the road.  This world is very short.  A pre-travel save will not be taken.')
   },
   gravityPenaltyEnabled: true,
   effects: [

@@ -36,6 +36,7 @@ const ignoredFiles = new Set([
 ]);
 
 const debugOnlyFiles = new Set([
+  'src/js/debug-tools.js',
   'src/js/planet-visualizer/debug.js',
   'src/js/debug-runtime-monitor.js',
 ]);
@@ -163,7 +164,8 @@ function isAlreadyLocalized(line) {
 
 function isInternalOrNonPlayerLine(line) {
   return /\b(console|throw new Error|className|classList|querySelector|addEventListener|removeEventListener|dataset|localStorage|sessionStorage)\b/.test(line)
-    || /\bsuper\(\{\s*description:/.test(line)
+    || /\bsuper\(\{\s*description\s*:/.test(line)
+    || /\bnew\s+EffectableEntity\(\{\s*description\s*:/.test(line)
     || /\bdescription:\s*["']Manages\b/.test(line)
     || /\bsource:\s*getStorySource\b/.test(line)
     || /\b(id|key|value|type|category|source|path|token|className)\s*:\s*["'][A-Za-z0-9_.:/# -]+["']/.test(line);

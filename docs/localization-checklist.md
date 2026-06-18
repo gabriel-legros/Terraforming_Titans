@@ -30,21 +30,23 @@ The audit is heuristic. Before changing a file, inspect its findings and decide 
 
 ## Current Progress
 
-Latest audit after Batch 5:
+Latest audit after final cleanup:
 
 | Category | Count |
 | --- | ---: |
-| `dom-static` | 3 |
-| `ui-runtime` | 10 |
-| `catalog-data` | 23 |
+| `dom-static` | 0 |
+| `ui-runtime` | 0 |
+| `catalog-data` | 0 |
 | `story-exempt` | 433 |
-| `ignore` | 617 |
+| `ignore` | 619 |
 
 Batch 1 removed all actionable findings under `src/js/automation/**` and reduced actionable counts by 33 total findings.
 Batch 2 removed all actionable findings under the targeted artificial worlds, galaxy/WGC, RWG, and special seed files. It also taught the audit to ignore format-only runtime fragments, unit strings, icon escapes, nearby localized fallbacks, and documented special-seed physical identifiers.
 Batch 3 localized terraforming category/effect labels, day-night status text, hazard effect names, and cycle rate labels. The remaining `planet-parameters.js` travel warning fallbacks are covered by planet catalog localization but remain visible for a broader planet catalog pass.
 Batch 4 removed all actionable project-file findings from the audit top list, including Nuclear Alchemy recipe labels, Lifters harvest labels, project progress captions, and project-specific effect names. Project values that only contain localized variables, icons, or measurement units are classified as `ignore`.
 Batch 5 cleared the targeted remaining runtime UI files: `lifeUI.js`, `structuresUI.js`, `resourceUI.js`, `journal.js`, `tab.js`, `gold-asteroid.js`, plus adjacent research/statistics/building/space one-offs. Remaining actionable findings are planet catalog fallbacks, nanotech/follower rate strings, static HTML shell text, and dev/internal catalog descriptions for the final pass.
+Batch 6 documents debug/dev strings as exempt. Debug tooling files and internal `EffectableEntity` manager descriptions are classified as `ignore`; remaining actionable findings are non-debug player-facing catalog/static/runtime candidates.
+Final cleanup cleared the remaining static HTML placeholders, planet travel warning/name fallbacks, nanotech/follower rate strings, and small catalog labels. The audit now reports no actionable non-story localization findings.
 
 ## Migration Batches
 
@@ -59,8 +61,9 @@ Batch 5 cleared the targeted remaining runtime UI files: `lifeUI.js`, `structure
   - Review Matrioshka Brain, Nuclear Alchemy Furnace, Space Mirror Facility, Space Storage, Galactic Market, and related project files.
 - [x] Batch 5: Remaining runtime UI text.
   - Review `lifeUI.js`, `structuresUI.js`, `resourceUI.js`, `journal.js`, `tab.js`, `gold-asteroid.js`, and small one-off files.
-- [ ] Batch 6: Debug/dev-only strings.
-  - Localize strings that are player-visible in debug-enabled UI, or document them as exempt and add script allowlist entries if the audit remains noisy.
+- [x] Batch 6: Debug/dev-only strings.
+  - Debug/dev-only strings are exempt unless they become part of normal player UI.
+  - `scripts/audit-localization.js` classifies debug tooling files and internal manager/effect container descriptions as `ignore`.
 
 ## Exemptions
 
@@ -71,7 +74,8 @@ Batch 5 cleared the targeted remaining runtime UI files: `lifeUI.js`, `structure
 - Entity-only icon HTML such as gear/warning symbols is exempt when it contains no visible words.
 - Special seed override names for planets, stars, and parent bodies are exempt as stable physical/proper identifiers. The player-facing special seed catalog names, difficulties, effects, and rewards remain localized through `catalogs.specialSeeds.*`.
 - Atmospheric-density layer names such as `lower`, `cold`, and `thermo` are internal model strata, not player-facing labels; the audit classifies them as `ignore`.
-- Debug-only tooling may remain exempt when it is not part of normal player UI; document those decisions in this file or encode them in `scripts/audit-localization.js`.
+- Debug-only tooling remains exempt when it is not part of normal player UI. This includes console helpers, runtime monitoring/debug panels gated by `DEBUG_MODE`, and development-only world/visualizer tools.
+- Internal `EffectableEntity` descriptions used only to identify manager/effect containers, such as global managers or one-off internal research/effect holders, are exempt metadata rather than player-facing catalog text.
 
 ## Verification
 

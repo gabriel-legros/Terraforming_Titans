@@ -17,6 +17,21 @@ function getNanotechText(path, fallback, vars) {
   }
 }
 
+function formatNanotechRate(current, optimal, unit) {
+  return getNanotechText('ui.colony.nanotech.rateWithUnit', '{current} / {optimal} {unit}', {
+    current: formatNumber(current, false, 2, true),
+    optimal: formatNumber(optimal, false, 2, true),
+    unit
+  });
+}
+
+function formatNanotechSingleRate(current, unit) {
+  return getNanotechText('ui.colony.nanotech.singleRateWithUnit', '{current} {unit}', {
+    current: formatNumber(current, false, 2, true),
+    unit
+  });
+}
+
 class NanotechManager extends EffectableEntity {
   constructor() {
     super({ description: getNanotechText('ui.colony.nanotech.managerDescription', 'Manages the nanobot swarm') });
@@ -909,7 +924,7 @@ class NanotechManager extends EffectableEntity {
           value: mult,
           effectId: `nanotechMaint_${res}`,
           sourceId: 'nanotechMaintenance',
-          name: 'Nanocolony',
+          name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
         };
           addEffect(effect);
       }
@@ -935,7 +950,7 @@ class NanotechManager extends EffectableEntity {
           value: mult2,
           effectId: `nanotechMaint2_${res}`,
           sourceId: 'nanotechMaintenance2',
-          name: 'Nanocolony',
+          name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
         };
         addEffect(effect);
       }
@@ -960,7 +975,7 @@ class NanotechManager extends EffectableEntity {
         value: mult3,
         effectId: 'nanotechMaint3_electronics',
         sourceId: 'nanotechMaintenance3',
-        name: 'Nanocolony',
+        name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
       };
       addEffect(effect);
     }
@@ -991,7 +1006,7 @@ class NanotechManager extends EffectableEntity {
           value: targetMultiplier,
           effectId: `nanotechMaint_${res}`,
           sourceId: 'nanotechMaintenance',
-          name: 'Nanocolony',
+          name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
         };
         addEffect(effect);
       }
@@ -1823,47 +1838,47 @@ class NanotechManager extends EffectableEntity {
     }
 
     if (C.energyRateEl) {
-      C.energyRateEl.textContent = `${formatNumber(this.currentEnergyConsumption, false, 2, true)} / ${formatNumber(this.optimalEnergyConsumption, false, 2, true)} W`;
+      C.energyRateEl.textContent = formatNanotechRate(this.currentEnergyConsumption, this.optimalEnergyConsumption, 'W');
       C.energyRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughEnergy ? 'orange' : '');
     }
     if (C.siliconRateEl) {
-      C.siliconRateEl.textContent = `${formatNumber(this.currentSiliconConsumption, false, 2, true)} / ${formatNumber(this.optimalSiliconConsumption, false, 2, true)} ton/s`;
+      C.siliconRateEl.textContent = formatNanotechRate(this.currentSiliconConsumption, this.optimalSiliconConsumption, 'ton/s');
       C.siliconRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughSilicon ? 'orange' : '');
     }
     if (C.metalRateEl) {
       const current = stage2Active ? this.currentMetalConsumption : 0;
       const optimal = stage2Active ? this.optimalMetalConsumption : 0;
-      C.metalRateEl.textContent = `${formatNumber(current, false, 2, true)} / ${formatNumber(optimal, false, 2, true)} ton/s`;
+      C.metalRateEl.textContent = formatNanotechRate(current, optimal, 'ton/s');
       C.metalRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughMetal ? 'orange' : '');
     }
     if (C.biomassRateEl) {
       const current = stage3Active ? this.currentBiomassConsumption : 0;
       const optimal = stage3Active ? this.optimalBiomassConsumption : 0;
-      C.biomassRateEl.textContent = `${formatNumber(current, false, 2, true)} / ${formatNumber(optimal, false, 2, true)} ton/s`;
+      C.biomassRateEl.textContent = formatNanotechRate(current, optimal, 'ton/s');
       C.biomassRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughBiomass ? 'orange' : '');
     }
     if (C.graphiteRateEl) {
       const current = stage4Active ? this.currentGraphiteConsumption : 0;
       const optimal = stage4Active ? this.optimalGraphiteConsumption : 0;
-      C.graphiteRateEl.textContent = `${formatNumber(current, false, 2, true)} / ${formatNumber(optimal, false, 2, true)} ton/s`;
+      C.graphiteRateEl.textContent = formatNanotechRate(current, optimal, 'ton/s');
       C.graphiteRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughGraphite ? 'orange' : '');
     }
     if (C.hazardousBiomassRateEl) {
       const baseOptimal = stageSkullActive ? this.nanobots * 1e-19 * this.getNanotechEfficiencyMultiplier() : 0;
       const current = stageSkullActive ? Math.min(this.currentHazardousBiomassConsumption, baseOptimal) : 0;
-      C.hazardousBiomassRateEl.textContent = `${formatNumber(current, false, 2, true)} / ${formatNumber(baseOptimal, false, 2, true)} ton/s`;
+      C.hazardousBiomassRateEl.textContent = formatNanotechRate(current, baseOptimal, 'ton/s');
       C.hazardousBiomassRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughHazardousBiomass ? 'orange' : '');
     }
     if (C.hazardousBiomassSliderRateEl) {
       const optimal = stageSkullActive ? this.nanobots * 1e-19 * (this.hazardousBiomassSlider / 10) * this.getNanotechEfficiencyMultiplier() : 0;
       const current = Math.min(stageSkullActive ? this.currentHazardousBiomassConsumption : 0, optimal);
-      C.hazardousBiomassSliderRateEl.textContent = `${formatNumber(current, false, 2, true)} ton/s`;
+      C.hazardousBiomassSliderRateEl.textContent = formatNanotechSingleRate(current, 'ton/s');
       C.hazardousBiomassSliderRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughHazardousBiomass ? 'orange' : '');
     }
     if (C.hazardousBiomass2SliderRateEl) {
       const optimal = stageSkullActive ? this.nanobots * 1e-19 * (this.hazardousBiomass2Slider / 10) * this.getNanotechEfficiencyMultiplier() : 0;
       const current = Math.min(stageSkullActive ? this.currentHazardousBiomassConsumption : 0, optimal);
-      C.hazardousBiomass2SliderRateEl.textContent = `${formatNumber(current, false, 2, true)} ton/s`;
+      C.hazardousBiomass2SliderRateEl.textContent = formatNanotechSingleRate(current, 'ton/s');
       C.hazardousBiomass2SliderRateEl.style.color = temperatureDisabled ? '#c92a2a' : (!this.hasEnoughHazardousBiomass ? 'orange' : '');
     }
     if (C.maintenanceRateEl)

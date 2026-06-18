@@ -29,6 +29,9 @@ setLanguageData({
       refresh: 'Refresh',
       close: 'Close',
     },
+    gameEffects: {
+      difficultySettings: 'Difficulty settings',
+    },
     debugRuntime: {
       panelTitle: 'Debug Runtime Monitor',
       stop: 'Stop',
@@ -792,6 +795,7 @@ setLanguageData({
         androidCapacity: '% android capacity',
         colonistCapacity: '% colonist capacity',
         sandQuarryGlassAndElectronics: '% of G.S. + E.F. Demand',
+        aerostatCapacity: 'Aerostat Capacity',
       },
       solarPanel: {
         limitTooltip: 'Solar panels are limited to 2.5x the base land amount.',
@@ -2472,6 +2476,8 @@ setLanguageData({
           crusadersTooltip: 'World conversion multiplier from Crusaders ratio (Crusaders / Colonists). Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at a 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.',
           galacticConversionPercent: 'Galactic Conversion (%)',
           galacticConversion: 'Galactic Conversion',
+          absoluteRate: '+{value}/s',
+          percentRate: '+{value}%/s',
           effects: 'Effects',
           bonuses: {
             pilgrims: 'Pilgrims (Growth)',
@@ -2544,7 +2550,10 @@ setLanguageData({
       nanotech: {
         managerDescription: 'Manages the nanobot swarm',
         title: 'Nanocolony',
+        effectName: 'Nanocolony',
         hint: 'The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide {travelCap} nanobots from the Dead Hand Protocol',
+        rateWithUnit: '{current} / {optimal} {unit}',
+        singleRateWithUnit: '{current} {unit}',
         summary: {
           nanobots: 'Nanobots',
           growthRate: 'Growth rate',
@@ -3521,6 +3530,7 @@ setLanguageData({
         cylindersHope: {
           label: 'Cylinders-HOPE Collaboration',
           energyOff: '0 space energy/s',
+          productivityFull: 'Productivity: 100%',
           energyLine: '{perCylinder} per cylinder/s, total {total}/s',
           combinedLine: 'Energy Cost: {energyPerCylinder} per cylinder/s, total {energyTotal}/s | Manufacturing Population Gain: {manufacturingPerCylinder} per cylinder, total {manufacturingTotal} | Worlds per Sector: {worldsPerSector} | Productivity: {productivity}%',
           productivityLine: 'Productivity: {value}%',
@@ -6189,9 +6199,19 @@ setLanguageData({
       vega2: {
         name: 'Vega-2',
         star: { name: 'Vega' },
+        travelWarning: {
+          message: 'This world has no water.  Solis can help.  Five purchases is enough but more can help.  \n \n This world unlocks some very powerful upgrades and is strongly recommended.',
+        },
       },
       venus: {
         name: 'Venus',
+        travelWarning: {
+          message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.',
+          hint: {
+            title: 'Hint',
+            body: '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable.  A high worker ratio can help with resource shortage (especially components). \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.',
+          },
+        },
       },
       umbra: {
         name: 'Umbra',
@@ -6200,6 +6220,9 @@ setLanguageData({
       solisprime: {
         name: 'Solis Prime',
         star: { name: 'Nyx-1' },
+        travelWarning: {
+          message: 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover. \n The story will give you some initial resources, but if some mega projects are on auto start you may end up using them instantly.',
+        },
       },
       gabbag: {
         name: 'Gabbag',
@@ -6221,6 +6244,13 @@ setLanguageData({
       poseidon: {
         name: 'Poseidon',
         star: { name: 'Nereid' },
+        travelWarning: {
+          message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.  \n It is also possible to nearly softlock if using lifters too aggressively.  You have been warned.',
+          hint: {
+            title: 'Hint',
+            body: 'You can potentially save a lot of time by bringing in about 8T of superalloys from space storage.',
+          },
+        },
       },
       styx: {
         name: 'Styx',
@@ -6240,6 +6270,9 @@ setLanguageData({
       olympus: {
         name: 'Olympus',
         star: { name: 'Vepive-015' },
+        travelWarning: {
+          message: 'World 15 is the narrative ending to this game.  It is very narratively heavy.  It does not unlock anything new.  \n \n Once World 15 is complete, you will be forced into World 16.  A pre-travel save between 15 and 16 will not be taken.  Therefore, you will be able to return to your current point (unless you delete your pre-travel save). \n \n World 15 does not require preparation.',
+        },
       },
       earth: {
         name: 'Earth',

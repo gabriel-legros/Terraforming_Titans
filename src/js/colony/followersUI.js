@@ -64,6 +64,10 @@ function getFollowersText(path, fallback, vars) {
   }
 }
 
+function getFollowersRateText(path, value, fallback) {
+  return getFollowersText(path, fallback, { value });
+}
+
 function cacheFollowersUIElements() {
   if (!followersUICache.host || !followersUICache.host.isConnected) {
     followersUICache.host = document.getElementById('followers-colonies-content');
@@ -1049,11 +1053,11 @@ function updateFollowersUI() {
   followersUICache.faithGalacticBelievers.textContent = `${formatNumber(faith.galacticBelievers, true)} / ${formatNumber(faith.galacticPopulation, true)}`;
   const worldCapText = `${formatNumber(faith.worldCapPercent * 100, false, 2)}%`;
   followersUICache.faithWorldCap.textContent = consecrated ? `${worldCapText}` : worldCapText;
-  followersUICache.faithWorldRate.textContent = `+${formatNumber(faith.rates.worldPerSecond * faith.worldPopulation, false, 2)}/s`;
-  followersUICache.faithWorldRatePercent.textContent = `+${formatNumber(faith.rates.worldPerSecond * 100, false, 4)}%/s`;
+  followersUICache.faithWorldRate.textContent = getFollowersRateText('ui.colony.followers.faith.absoluteRate', formatNumber(faith.rates.worldPerSecond * faith.worldPopulation, false, 2), '+{value}/s');
+  followersUICache.faithWorldRatePercent.textContent = getFollowersRateText('ui.colony.followers.faith.percentRate', formatNumber(faith.rates.worldPerSecond * 100, false, 4), '+{value}%/s');
   followersUICache.faithCrusadersBonus.textContent = `x${formatNumber(faith.crusadersWorldConversionMultiplier, false, 3)}`;
-  followersUICache.faithGalacticRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * 100, false, 4)}%/s`;
-  followersUICache.faithGalacticAbsoluteRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * faith.galacticPopulation, false, 2)}/s`;
+  followersUICache.faithGalacticRate.textContent = getFollowersRateText('ui.colony.followers.faith.percentRate', formatNumber(faith.rates.galacticPerSecond * 100, false, 4), '+{value}%/s');
+  followersUICache.faithGalacticAbsoluteRate.textContent = getFollowersRateText('ui.colony.followers.faith.absoluteRate', formatNumber(faith.rates.galacticPerSecond * faith.galacticPopulation, false, 2), '+{value}/s');
   followersUICache.faithPilgrimBonus.textContent = `+${formatNumber(faith.bonuses.pilgrim * 100, false, 2)}%`;
   followersUICache.faithZealBonus.textContent = `+${formatNumber(faith.bonuses.zeal * 100, false, 2)}%`;
   followersUICache.faithApostlesBonus.textContent = `+${formatNumber(faith.bonuses.apostles * 100, false, 2)}%`;
