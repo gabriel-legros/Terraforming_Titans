@@ -98,9 +98,14 @@ function isSymbolOrNumber(text) {
   if (!normalized) {
     return true;
   }
+  if (/^(?:(?:&#x?[0-9A-Fa-f]+;)|(?:&[A-Za-z][A-Za-z0-9]+;))+$/.test(normalized)) {
+    return true;
+  }
   const withoutTemplateExpressions = normalized
     .replace(/\$\{[^}]*\}/g, '')
     .replace(/\\u(?:\{[0-9A-Fa-f]+\}|[0-9A-Fa-f]{4})/g, '')
+    .replace(/\\[nrt]/g, '')
+    .replace(/<\/?[A-Za-z][^>]*>/g, '')
     .trim();
   if (!/[A-Za-z]/.test(withoutTemplateExpressions)) {
     return true;
@@ -115,7 +120,7 @@ function isSymbolOrNumber(text) {
     return true;
   }
   const unitTokens = withoutTemplateExpressions.replace(/[()]/g, ' ').split(/\s+/).filter(Boolean);
-  if (unitTokens.length > 0 && unitTokens.every((token) => /^(AU|R⊕|Rₑ|km|W\/m²|m\/s²|K|Pa|kPa|mSv\/day|ha|g|x|land)$/i.test(token))) {
+  if (unitTokens.length > 0 && unitTokens.every((token) => /^(AU|R⊕|Rₑ|km|W|W\/m²|W\/²|W\/m\^2|W-day\/t|energy\/s|m\/s²|K|Pa|kPa|mSv\/day|ha|g|t|ton\/s|x|land)$/i.test(token))) {
     return true;
   }
   if (/^[A-Z0-9_ .:+\-*/%/<>!=?()[\]{}|&;#.,]+$/.test(normalized) && normalized.length <= 12) {

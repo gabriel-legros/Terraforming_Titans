@@ -27,6 +27,7 @@ setLanguageData({
       gameSpeed4x: '4x speed',
       gameSpeed8x: '8x speed',
       refresh: 'Refresh',
+      close: 'Close',
     },
     debugRuntime: {
       panelTitle: 'Debug Runtime Monitor',
@@ -781,6 +782,8 @@ setLanguageData({
       },
     },
     buildings: {
+      categoryTitle: '{category} Buildings',
+      unhideObsolete: 'Unhide Obsolete Buildings',
       common: {
         recipeLabel: 'Recipe: ',
       },
@@ -923,6 +926,44 @@ setLanguageData({
         structuralNetFreeCapEffect: 'Aerostats occupying structural-net bonus slots ignore collision-avoidance research costs and powered-flight energy.',
       },
     },
+    life: {
+      shop: {
+        buyWithLabel: 'Buy {quantity} with {label}',
+        buyWithCost: 'Buy {quantity} with {cost} {label}',
+        research: {
+          label: 'research',
+          description: 'Focus the effort of your scientists',
+        },
+        funding: {
+          label: 'funding',
+          description: 'Bribe external scientists for help.',
+        },
+        androids: {
+          label: 'androids',
+          description: 'Deploy androids to assist biologists.',
+        },
+        components: {
+          label: 'components',
+          description: 'Construct advanced biological tools.',
+        },
+        electronics: {
+          label: 'electronics',
+          description: 'Simulate biology with cutting-edge supercomputers.',
+        },
+        advancedResearch: {
+          label: 'advanced research',
+          description: 'Push our knowledge even further.',
+          tooltip: 'Costs 1, 2, 4, 8, ... advanced research and persists when travelling.  Bonuses that grant more points per purchase apply retroactively.',
+        },
+      },
+      biodomeRate: '+{value}/hour',
+      deploying: 'Deploying: {time}s ({percent}%)',
+      deployDuration: 'Deploy: Duration {seconds} seconds',
+      cannotDeploy: 'Cannot deploy',
+      cannotSurviveAnywhere: 'Life cannot survive anywhere',
+      metabolismFallback: 'Metabolism',
+      survivesCannotGrow: 'Survives but cannot grow',
+    },
     structures: {
       common: {
         zero: '0',
@@ -941,6 +982,7 @@ setLanguageData({
         hide: 'Hide',
         reverse: 'Reverse',
         buildPrefix: 'Build ',
+        upgradePrefix: 'Upgrade ',
       },
       warnings: {
         biodomeLife: '⚠ Requires Active Life Design ⚠',
@@ -1022,6 +1064,7 @@ setLanguageData({
       space: 'Space',
       hope: 'H.O.P.E.',
       settings: 'Save and Settings',
+      settingsShort: 'Settings',
     },
     specialProjects: {
       resources: 'Resources',
@@ -1223,12 +1266,16 @@ setLanguageData({
         disableStripBelowPressureTooltip: 'Applies to all lifter strip recipes. Lifters clamp stripping so total atmospheric pressure will not fall below this value.',
         pa: 'Pa',
         supercharge: 'Supercharge',
+        superchargeEnergy: 'Energy x{value}',
         recipe: 'Recipe',
         complexity: 'Complexity',
         maxAssignment: 'Max',
         operationNote: 'Per recipe rate uses (Assigned / Complexity) x {value} units/s. Max is the current assignment cap after Warp Gate Network access, complexity, throughput, and supercharge.',
         maxAssignmentTooltip: 'Pool: {pool}\nTime divisor: {divisor} (10000 years)\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nMax harvest rate: {pool} / {divisor} x {networkScale} = {capRate}/s\nPer-lifter harvest rate: {unitRate} x {outputMultiplier} / {complexity}\nMax assignment: floor({capRate} x {complexity} / ({unitRate} x {outputMultiplier})) = {max}',
         starLiftingTooltip: 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.',
+        recipeLabels: {
+          hydrogen: 'Hydrogen',
+        },
         status: {
           idle: 'Idle',
           runDisabled: 'Run disabled',
@@ -1529,6 +1576,18 @@ setLanguageData({
           noHydrogen: 'No hydrogen in space storage',
           insufficientHydrogen: 'Insufficient hydrogen in space storage',
         },
+      },
+      particleAccelerator: {
+        researchBoostEffect: '{name} Research Boost',
+      },
+      spaceAntimatter: {
+        batteryStorageEffect: '{name} Battery Storage',
+      },
+      spaceExportBase: {
+        storageDepotResource: 'Storage Depot Resource',
+      },
+      undergroundExpansion: {
+        landExpansion: 'Land Expansion: {current} / {max}',
       },
       artificialStars: {
         recipeLabel: 'Space Energy',
@@ -2229,6 +2288,8 @@ setLanguageData({
         },
       },
       status: {
+        averageDepth: 'Average depth: {current} / {max}',
+        completedCount: 'Completed: {current} / {max}',
         maxDepthReached: 'Max depth reached',
         completed: 'Completed',
         completedNamed: 'Completed: {name}',
@@ -2590,6 +2651,20 @@ setLanguageData({
       terraformingTitle: 'Terraforming Research',
       advancedTitle: 'Advanced Research',
       toggleHidden: 'Toggle Hidden',
+      hide: 'Hide',
+      unhide: 'Unhide',
+      hideHidden: 'Hide Hidden',
+      showHidden: 'Show Hidden',
+      autoResearch: 'Auto Research ',
+      noResearchAvailable: 'No research available.',
+      researchedSuffix: ' - Researched',
+      priorityLabel: 'P{value}',
+      costLine: 'Cost: {cost}',
+      unknownCost: 'Cost: ???',
+      cost: {
+        researchPoints: '{value} Research Points',
+        advancedResearch: '{value} Advanced Research',
+      },
     },
     terraforming: {
       world: 'World',
@@ -4534,12 +4609,31 @@ setLanguageData({
       terraformWorldTypeDisk: 'Alderson disk',
       terraformWorldTypeUnknown: 'Unknown',
       realTimeUnavailable: 'real time unavailable',
+      realTimeLine: '{game} ({real} real time)',
+      realTimeUnavailableLine: '{game} (real time unavailable)',
     },
     journal: {
       title: 'Journal',
       automationShortcuts: 'Automation shortcuts',
       showJournalIndex: 'Show journal index',
+      hideJournalIndex: 'Hide journal index',
+      historyTitle: 'Journal History',
       returnToJournal: 'Return to journal',
+    },
+    goldAsteroid: {
+      effectName: 'Golden Asteroid',
+      button: 'Golden Asteroid!',
+      countdown: 'Gold asteroid 5x multiplier! {seconds}s',
+    },
+    planetVisualizer: {
+      environmentOverlay: 'Pop: {population}\nCO2: {co2} kPa',
+    },
+    space: {
+      stars: {
+        sol: 'Sol',
+        rogueSpace: 'Rogue Space',
+      },
+      randomWorldSeedName: 'Seed {seed}',
     },
   },
   catalogs: {

@@ -1,10 +1,10 @@
 const lifeShopCategories = [
-  { name: 'research', description: 'Focus the effort of your scientists' },
-  { name: 'funding', description: 'Bribe external scientists for help.' },
-  { name: 'androids', description: 'Deploy androids to assist biologists.' },
-  { name: 'components', description: 'Construct advanced biological tools.' },
-  { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' },
-  { name: 'advancedResearch', label: 'advanced research', description: 'Push our knowledge even further.', tooltip: 'Costs 1, 2, 4, 8, ... advanced research and persists when travelling.  Bonuses that grant more points per purchase apply retroactively.', requiresFlag: 'nextGenBioEngineering' }
+  { name: 'research', label: t('ui.life.shop.research.label', {}, 'research'), description: t('ui.life.shop.research.description', {}, 'Focus the effort of your scientists') },
+  { name: 'funding', label: t('ui.life.shop.funding.label', {}, 'funding'), description: t('ui.life.shop.funding.description', {}, 'Bribe external scientists for help.') },
+  { name: 'androids', label: t('ui.life.shop.androids.label', {}, 'androids'), description: t('ui.life.shop.androids.description', {}, 'Deploy androids to assist biologists.') },
+  { name: 'components', label: t('ui.life.shop.components.label', {}, 'components'), description: t('ui.life.shop.components.description', {}, 'Construct advanced biological tools.') },
+  { name: 'electronics', label: t('ui.life.shop.electronics.label', {}, 'electronics'), description: t('ui.life.shop.electronics.description', {}, 'Simulate biology with cutting-edge supercomputers.') },
+  { name: 'advancedResearch', label: t('ui.life.shop.advancedResearch.label', {}, 'advanced research'), description: t('ui.life.shop.advancedResearch.description', {}, 'Push our knowledge even further.'), tooltip: t('ui.life.shop.advancedResearch.tooltip', {}, 'Costs 1, 2, 4, 8, ... advanced research and persists when travelling.  Bonuses that grant more points per purchase apply retroactively.'), requiresFlag: 'nextGenBioEngineering' }
 ];
 const LIFE_UI_BIOSHIPS_FRACTION_PER_POINT_PER_SECOND = 0.0001;
 
@@ -35,9 +35,9 @@ function getActiveLifeMetabolismProcessForUI() {
   const requirements = getActiveLifeDesignRequirementsForUI();
   const metabolism = requirements.metabolism;
   const primaryProcessId = metabolism?.primaryProcessId;
-  return metabolism?.processes?.[primaryProcessId]
+    return metabolism?.processes?.[primaryProcessId]
     ?? metabolism?.processes?.photosynthesis
-    ?? { displayName: 'Metabolism', growth: { usesLuminosity: true, perBiomass: { surface: {}, atmospheric: {} } } };
+    ?? { displayName: getLifeUIText('ui.life.metabolismFallback', 'Metabolism'), growth: { usesLuminosity: true, perBiomass: { surface: {}, atmospheric: {} } } };
 }
 
 function formatMetabolismGrowthEquationForUI(process, options) {
@@ -845,7 +845,7 @@ function initializeLifeTerraformingDesignerUI() {
         const button = document.createElement('button');
         const quantity = lifePointPurchaseQuantity;
         const label = category.label || category.name;
-        button.textContent = `Buy ${quantity} with ${label}`;
+        button.textContent = getLifeUIText('ui.life.shop.buyWithLabel', 'Buy {quantity} with {label}', { quantity, label });
         button.dataset.category = category.name;
         button.classList.add('life-point-shop-btn');
         categoryContainer.appendChild(button);
@@ -951,7 +951,11 @@ function updateLifeUI() {
       biodomePointsSpan.textContent = formatNumber(lifeDesigner.biodomePoints || 0, false, 2);
     }
     if (biodomeRateSpan) {
-      biodomeRateSpan.textContent = `+${formatNumber(lifeDesigner.biodomePointRate, false, 2)}/hour`;
+      biodomeRateSpan.textContent = getLifeUIText(
+        'ui.life.biodomeRate',
+        '+{value}/hour',
+        { value: formatNumber(lifeDesigner.biodomePointRate, false, 2) }
+      );
     }
     // updateZonalBiomassDensities(); // Remove call to old function
     updateLifeStatusTable();
@@ -1020,7 +1024,11 @@ function updateLifeUI() {
             const timeRemaining = Math.max(0, lifeDesigner.remainingTime / 1000).toFixed(2);
             const progressPercent = lifeDesigner.getProgress();
             // Shorter button text
-            applyBtn.textContent = `Deploying: ${timeRemaining}s (${progressPercent.toFixed(0)}%)`;
+            applyBtn.textContent = getLifeUIText(
+              'ui.life.deploying',
+              'Deploying: {time}s ({percent}%)',
+              { time: timeRemaining, percent: progressPercent.toFixed(0) }
+            );
             applyBtn.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
             applyBtn.disabled = true; // Disable button during deployment
             applyBtn.classList.remove('life-apply-blocked');
@@ -1030,14 +1038,18 @@ function updateLifeUI() {
             const survivable = lifeDesigner.tentativeDesign && lifeDesigner.tentativeDesign.canSurviveAnywhere();
             const survivalReason = survivable ? '' : lifeDesigner.tentativeDesign.getPrimarySurvivalFailureReason();
             if (survivable) {
-              applyBtn.textContent = `Deploy: Duration ${(lifeDesigner.getTentativeDuration() / 1000).toFixed(2)} seconds`;
+              applyBtn.textContent = getLifeUIText(
+                'ui.life.deployDuration',
+                'Deploy: Duration {seconds} seconds',
+                { seconds: (lifeDesigner.getTentativeDuration() / 1000).toFixed(2) }
+              );
               applyBtn.classList.remove('life-apply-blocked');
             } else {
-              const reasonText = survivalReason || 'Life cannot survive anywhere';
+              const reasonText = survivalReason || getLifeUIText('ui.life.cannotSurviveAnywhere', 'Life cannot survive anywhere');
               applyBtn.textContent = '';
               const titleLine = document.createElement('span');
               titleLine.className = 'life-apply-title';
-              titleLine.textContent = 'Cannot deploy';
+              titleLine.textContent = getLifeUIText('ui.life.cannotDeploy', 'Cannot deploy');
               const reasonLine = document.createElement('span');
               reasonLine.className = 'life-apply-reason';
               reasonLine.textContent = reasonText;
@@ -1083,7 +1095,11 @@ function updateLifeUI() {
       }
       const totalCost = lifeDesigner.getTotalPointCost(category, quantity);
       const label = (categoryConfig && categoryConfig.label) || category;
-      button.textContent = `Buy ${quantity} with ${formatNumber(totalCost, true)} ${label}`;
+      button.textContent = getLifeUIText(
+        'ui.life.shop.buyWithCost',
+        'Buy {quantity} with {cost} {label}',
+        { quantity, cost: formatNumber(totalCost, true), label }
+      );
       const affordable = lifeDesigner.canAfford(category, quantity);
       button.disabled = !affordable;
       button.style.backgroundColor = affordable ? '' : 'red';
@@ -1363,7 +1379,7 @@ function updateLifeStatusTable() {
                 } else if (daySurvivalStatus.warning) {
                     title = daySurvivalStatus.reason || '';
                 } else {
-                    title = 'Survives but cannot grow';
+                    title = getLifeUIText('ui.life.survivesCannotGrow', 'Survives but cannot grow');
                 }
             } else {
                 symbol = '✅';

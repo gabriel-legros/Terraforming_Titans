@@ -124,7 +124,7 @@
         value: bonus,
         effectId: this.getStorageEffectId(),
         sourceId,
-        name: `${this.displayName} Battery Storage`
+        name: t('ui.projects.spaceAntimatter.batteryStorageEffect', { name: this.displayName }, '{name} Battery Storage')
       });
     }
 

@@ -1,26 +1,26 @@
 const NUCLEAR_ALCHEMY_RECIPES = {
   graphite: {
-    label: 'Carbon (Graphite)',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.graphite', {}, 'Carbon (Graphite)'),
     storageKey: 'graphite',
     complexity: 2
   },
   oxygen: {
-    label: 'Oxygen',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.oxygen', {}, 'Oxygen'),
     storageKey: 'oxygen',
     complexity: 3
   },
   inertGas: {
-    label: 'Nitrogen',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.inertGas', {}, 'Nitrogen'),
     storageKey: 'inertGas',
     complexity: 4
   },
   silicon: {
-    label: 'Silica',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.silicon', {}, 'Silica'),
     storageKey: 'silicon',
     complexity: 6
   },
   metal: {
-    label: 'Metal',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.metal', {}, 'Metal'),
     storageKey: 'metal',
     complexity: 10
   }

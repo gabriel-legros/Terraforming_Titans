@@ -30,19 +30,21 @@ The audit is heuristic. Before changing a file, inspect its findings and decide 
 
 ## Current Progress
 
-Latest audit after Batch 3:
+Latest audit after Batch 5:
 
 | Category | Count |
 | --- | ---: |
-| `dom-static` | 5 |
-| `ui-runtime` | 60 |
-| `catalog-data` | 62 |
+| `dom-static` | 3 |
+| `ui-runtime` | 10 |
+| `catalog-data` | 23 |
 | `story-exempt` | 433 |
-| `ignore` | 591 |
+| `ignore` | 617 |
 
 Batch 1 removed all actionable findings under `src/js/automation/**` and reduced actionable counts by 33 total findings.
 Batch 2 removed all actionable findings under the targeted artificial worlds, galaxy/WGC, RWG, and special seed files. It also taught the audit to ignore format-only runtime fragments, unit strings, icon escapes, nearby localized fallbacks, and documented special-seed physical identifiers.
 Batch 3 localized terraforming category/effect labels, day-night status text, hazard effect names, and cycle rate labels. The remaining `planet-parameters.js` travel warning fallbacks are covered by planet catalog localization but remain visible for a broader planet catalog pass.
+Batch 4 removed all actionable project-file findings from the audit top list, including Nuclear Alchemy recipe labels, Lifters harvest labels, project progress captions, and project-specific effect names. Project values that only contain localized variables, icons, or measurement units are classified as `ignore`.
+Batch 5 cleared the targeted remaining runtime UI files: `lifeUI.js`, `structuresUI.js`, `resourceUI.js`, `journal.js`, `tab.js`, `gold-asteroid.js`, plus adjacent research/statistics/building/space one-offs. Remaining actionable findings are planet catalog fallbacks, nanotech/follower rate strings, static HTML shell text, and dev/internal catalog descriptions for the final pass.
 
 ## Migration Batches
 
@@ -53,9 +55,9 @@ Batch 3 localized terraforming category/effect labels, day-night status text, ha
   - Primary targets include `src/js/space/artificial.js`, `src/js/galaxy/galaxyConstants.js`, `src/js/galaxy/galaxyUI.js`, `src/js/rwg/rwg.js`, and `src/js/special-seeds.js`.
 - [x] Batch 3: Terraforming cycle labels and requirement/process display strings.
   - Review cycle label arrays, terraforming requirement names/lore, and process labels that appear in summaries or tooltips.
-- [ ] Batch 4: Project-specific UI and catalog strings.
+- [x] Batch 4: Project-specific UI and catalog strings.
   - Review Matrioshka Brain, Nuclear Alchemy Furnace, Space Mirror Facility, Space Storage, Galactic Market, and related project files.
-- [ ] Batch 5: Remaining runtime UI text.
+- [x] Batch 5: Remaining runtime UI text.
   - Review `lifeUI.js`, `structuresUI.js`, `resourceUI.js`, `journal.js`, `tab.js`, `gold-asteroid.js`, and small one-off files.
 - [ ] Batch 6: Debug/dev-only strings.
   - Localize strings that are player-visible in debug-enabled UI, or document them as exempt and add script allowlist entries if the audit remains noisy.
@@ -66,6 +68,7 @@ Batch 3 localized terraforming category/effect labels, day-night status text, ha
 - Internal ids, save keys, automation ids, resource ids, project ids, effect ids, CSS classes, selectors, file paths, and script tokens stay stable and English-like.
 - Icons, symbols, arrows, punctuation, numeric step controls, units, and format-only strings do not need localization unless they include descriptive player-facing words.
 - Runtime text that consists only of formatted numbers, localized variables, unit tokens, multipliers, or icon escapes is exempt; `scripts/audit-localization.js` classifies these as `ignore`.
+- Entity-only icon HTML such as gear/warning symbols is exempt when it contains no visible words.
 - Special seed override names for planets, stars, and parent bodies are exempt as stable physical/proper identifiers. The player-facing special seed catalog names, difficulties, effects, and rewards remain localized through `catalogs.specialSeeds.*`.
 - Atmospheric-density layer names such as `lower`, `cold`, and `thermo` are internal model strata, not player-facing labels; the audit classifies them as `ignore`.
 - Debug-only tooling may remain exempt when it is not part of normal player UI; document those decisions in this file or encode them in `scripts/audit-localization.js`.

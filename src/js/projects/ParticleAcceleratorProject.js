@@ -270,7 +270,7 @@ class ParticleAcceleratorProject extends Project {
       value: multiplier,
       effectId: sourceId,
       sourceId,
-      name: `${this.displayName} Research Boost`
+      name: t('ui.projects.particleAccelerator.researchBoostEffect', { name: this.displayName }, '{name} Research Boost')
     });
   }
 

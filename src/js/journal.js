@@ -415,7 +415,7 @@ function openJournalIndex() {
   ensureJournalWorldData();
   journalIndexVisible = true;
   journalIndexIcon.classList.add('active');
-  journalIndexIcon.title = 'Hide journal index';
+  journalIndexIcon.title = t('ui.journal.hideJournalIndex', {}, 'Hide journal index');
   journalIndexContainer.classList.remove('hidden');
   journalEntriesContainer.classList.add('hidden');
   journalObjectiveContainer.classList.add('hidden');
@@ -426,7 +426,7 @@ function openJournalIndex() {
 function closeJournalIndex() {
   journalIndexVisible = false;
   journalIndexIcon.classList.remove('active');
-  journalIndexIcon.title = 'Show journal index';
+  journalIndexIcon.title = t('ui.journal.showJournalIndex', {}, 'Show journal index');
   journalIndexContainer.classList.add('hidden');
   journalEntriesContainer.classList.remove('hidden');
   journalObjectiveContainer.classList.remove('hidden');
@@ -769,7 +769,7 @@ function showJournalHistory() {
   windowDiv.classList.add('history-window');
 
   const title = document.createElement('h2');
-  title.textContent = 'Journal History';
+  title.textContent = t('ui.journal.historyTitle', {}, 'Journal History');
 
   const entriesContainer = document.createElement('div');
   entriesContainer.classList.add('history-entries');
@@ -781,7 +781,7 @@ function showJournalHistory() {
 
   const closeBtn = document.createElement('button');
   closeBtn.classList.add('history-close-button');
-  closeBtn.textContent = 'Close';
+  closeBtn.textContent = t('ui.common.close', {}, 'Close');
   closeBtn.addEventListener('click', () => {
     document.body.removeChild(overlay);
   });

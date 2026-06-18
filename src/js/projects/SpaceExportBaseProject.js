@@ -128,7 +128,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     if (storageDepotOptions.length) {
       const entry = {
         key: 'storageDepotResource',
-        label: 'Storage Depot Resource',
+        label: t('ui.projects.spaceExportBase.storageDepotResource', {}, 'Storage Depot Resource'),
         options: storageDepotOptions,
       };
       groupList.push(entry);

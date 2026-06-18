@@ -21,7 +21,7 @@ const LIFTER_GAS_GIANT_RESOURCE_POOLS = {
 
 const DEFAULT_LIFTER_HARVEST_RECIPES = {
   hydrogen: {
-    label: 'Hydrogen',
+    label: t('ui.projects.lifters.recipeLabels.hydrogen', {}, 'Hydrogen'),
     storageKey: 'hydrogen',
     outputMultiplier: 50,
     complexity: 1,

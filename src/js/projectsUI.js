@@ -1575,11 +1575,25 @@ function updateProjectUI(projectName) {
   // Update Repeat Count / Depth display if applicable
   if (elements.repeatCountElement) {
     if (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject) {
-      elements.repeatCountElement.textContent = `Average depth: ${formatNumber(project.averageDepth, true)} / ${formatNumber(project.maxDepth, true)}`;
+      elements.repeatCountElement.textContent = getProjectsUIText(
+        'ui.projects.status.averageDepth',
+        'Average depth: {current} / {max}',
+        {
+          current: formatNumber(project.averageDepth, true),
+          max: formatNumber(project.maxDepth, true),
+        }
+      );
       project.updateUnderworldMiningUI(elements);
       elements.underworldSection.style.display = project.isBooleanFlagSet('underworld_mining') ? 'flex' : 'none';
     } else {
-      elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
+      elements.repeatCountElement.textContent = getProjectsUIText(
+        'ui.projects.status.completedCount',
+        'Completed: {current} / {max}',
+        {
+          current: project.repeatCount,
+          max: project.maxRepeatCount,
+        }
+      );
     }
   }
 

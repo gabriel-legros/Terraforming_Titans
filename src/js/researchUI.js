@@ -28,6 +28,10 @@ let cachedToggleButtons = [];
 let researchUICacheInvalidated = true;
 let hiddenResearchIds = [];
 
+function getResearchUIText(path, fallback, vars) {
+    return t(path, vars, fallback);
+}
+
 function getResearchAutomation() {
     return automationManager ? automationManager.researchAutomation : null;
 }
@@ -101,10 +105,18 @@ function hasActiveDisableFlag(researchItem) {
 function formatResearchCost(cost) {
     const parts = [];
     if (cost.research) {
-        parts.push(`${formatNumber(cost.research, true)} Research Points`);
+        parts.push(getResearchUIText(
+            'ui.research.cost.researchPoints',
+            '{value} Research Points',
+            { value: formatNumber(cost.research, true) }
+        ));
     }
     if (cost.advancedResearch) {
-        parts.push(`${formatNumber(cost.advancedResearch, true)} Advanced Research`);
+        parts.push(getResearchUIText(
+            'ui.research.cost.advancedResearch',
+            '{value} Advanced Research',
+            { value: formatNumber(cost.advancedResearch, true) }
+        ));
     }
     return parts.join(' + ');
 }
@@ -136,14 +148,20 @@ function updateAllResearchButtons(researchData) {
             container.style.display = (researchItem.disabled || hiddenByDisableFlag || !isDisplayable) ? 'none' : '';
             updateResearchButtonText(button, researchItem, isVisible);
             if (hideToggle) {
-                hideToggle.textContent = researchItem.hiddenByUser ? 'Unhide' : 'Hide';
+                hideToggle.textContent = researchItem.hiddenByUser
+                    ? getResearchUIText('ui.research.unhide', 'Unhide')
+                    : getResearchUIText('ui.research.hide', 'Hide');
             }
             if (costEl && descEl) {
                 if (isVisible) {
-                    costEl.textContent = `Cost: ${formatResearchCost(researchItem.cost)}`;
+                    costEl.textContent = getResearchUIText(
+                        'ui.research.costLine',
+                        'Cost: {cost}',
+                        { cost: formatResearchCost(researchItem.cost) }
+                    );
                     descEl.textContent = researchItem.description;
                 } else {
-                    costEl.textContent = 'Cost: ???';
+                    costEl.textContent = getResearchUIText('ui.research.unknownCost', 'Cost: ???');
                     descEl.textContent = '???';
                 }
             }
@@ -178,7 +196,7 @@ function updateResearchButtonText(button, researchItem, visible) {
 
     // Check if the research is already done
     if (researchItem.isResearched && !researchItem.repeatable) {
-        buttonText += ' - Researched';
+        buttonText += getResearchUIText('ui.research.researchedSuffix', ' - Researched');
         button.disabled = true; // Disable the button if the research is already done
         button.style.color = 'grey'; // Set the text color to grey when research is completed
     } else if (!visible) {
@@ -336,8 +354,9 @@ function loadResearchCategory(category) {
         ? researchManager.getVisibleResearchIdsByCategory(category)
         : new Set(researches.map(r => r.id));
     if (researches.length === 0) {
-        if (researchListContainer.textContent !== 'No research available.') {
-            researchListContainer.textContent = 'No research available.';
+        const emptyText = getResearchUIText('ui.research.noResearchAvailable', 'No research available.');
+        if (researchListContainer.textContent !== emptyText) {
+            researchListContainer.textContent = emptyText;
         }
         return;
     }
@@ -364,7 +383,9 @@ function loadResearchCategory(category) {
             const hideToggle = document.createElement('button');
             hideToggle.type = 'button';
             hideToggle.classList.add('research-hide-toggle');
-            hideToggle.textContent = research.hiddenByUser ? 'Unhide' : 'Hide';
+            hideToggle.textContent = research.hiddenByUser
+                ? getResearchUIText('ui.research.unhide', 'Unhide')
+                : getResearchUIText('ui.research.hide', 'Hide');
             hideToggle.addEventListener('click', (event) => {
                 event.stopPropagation();
                 const currentResearch = getResearchById(hideToggle.dataset.researchId);
@@ -385,7 +406,9 @@ function loadResearchCategory(category) {
 
             const researchCost = document.createElement('p');
             researchCost.classList.add('research-cost');
-            researchCost.textContent = isVisible ? `Cost: ${formatResearchCost(research.cost)}` : 'Cost: ???';
+            researchCost.textContent = isVisible
+                ? getResearchUIText('ui.research.costLine', 'Cost: {cost}', { cost: formatResearchCost(research.cost) })
+                : getResearchUIText('ui.research.unknownCost', 'Cost: ???');
 
             if (research.disabled || (!research.isResearched && hasActiveDisableFlag(research))) {
                 researchContainer.style.display = 'none';
@@ -413,7 +436,7 @@ function loadResearchCategory(category) {
                 autoCheckbox.style.display = unlocked ? '' : 'none';
                 autoLabel = document.createElement('label');
                 autoLabel.classList.add('research-auto-label');
-                autoLabel.textContent = 'Auto Research ';
+                autoLabel.textContent = getResearchUIText('ui.research.autoResearch', 'Auto Research ');
                 autoLabel.appendChild(autoCheckbox);
                 autoLabel.style.display = unlocked ? '' : 'none';
 
@@ -422,7 +445,7 @@ function loadResearchCategory(category) {
                 ['1', '2', '3', '4'].forEach((value) => {
                     const option = document.createElement('option');
                     option.value = value;
-                    option.textContent = `P${value}`;
+                    option.textContent = getResearchUIText('ui.research.priorityLabel', 'P{value}', { value });
                     autoPrioritySelect.appendChild(option);
                 });
                 autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(research.id)}`;
@@ -504,7 +527,9 @@ function updateCompletedResearchVisibility() {
             toggleButton.style.display = 'none';
         } else {
             toggleButton.style.display = 'inline-block';
-            toggleButton.textContent = completedResearchHidden ? 'Show Hidden' : 'Hide Hidden';
+            toggleButton.textContent = completedResearchHidden
+                ? getResearchUIText('ui.research.showHidden', 'Show Hidden')
+                : getResearchUIText('ui.research.hideHidden', 'Hide Hidden');
         }
     });
 }

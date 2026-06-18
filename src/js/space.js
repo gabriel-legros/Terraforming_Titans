@@ -2,7 +2,7 @@
 
 // Simple representation of the Sun used for original planet summaries
 const SOL_STAR = {
-    name: 'Sol',
+    name: t('ui.space.stars.sol', {}, 'Sol'),
     spectralType: 'G2V',
     luminositySolar: 1,
     massSolar: 1,
@@ -11,7 +11,7 @@ const SOL_STAR = {
 };
 
 const ROGUE_STAR = {
-    name: 'Rogue Space',
+    name: t('ui.space.stars.rogueSpace', {}, 'Rogue Space'),
     spectralType: '—',
     luminositySolar: 0,
     massSolar: 0,
@@ -1705,7 +1705,7 @@ class SpaceManager extends EffectableEntity {
         const key = String(seed);
         if (!this.randomWorldStatuses[key]) {
             this.randomWorldStatuses[key] = {
-                name: `Seed ${key}`,
+                name: t('ui.space.randomWorldSeedName', { seed: key }, 'Seed {seed}'),
                 terraformed: false,
                 colonists: 0,
                 populationCapacity: 0,

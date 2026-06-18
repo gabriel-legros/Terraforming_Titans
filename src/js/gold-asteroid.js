@@ -19,7 +19,7 @@ const goldenEffects = [
     target: 'fundingModule',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-oreMineMultiplier`,
@@ -27,7 +27,7 @@ const goldenEffects = [
     targetId: 'oreMine',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-foundryMultiplier`,
@@ -37,7 +37,7 @@ const goldenEffects = [
     resourceCategory: 'colony',
     resourceTarget: 'metal',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-componentFactoryMultiplier`,
@@ -45,7 +45,7 @@ const goldenEffects = [
     targetId: 'componentFactory',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-electronicsFactoryMultiplier`,
@@ -53,7 +53,7 @@ const goldenEffects = [
     targetId: 'electronicsFactory',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-populationGrowth`,
@@ -156,7 +156,7 @@ class GoldenAsteroid {
       this.buttonElement ??= document.createElement('button');
       this.buttonElement.id = 'golden-asteroid-button';
       this.buttonElement.className = 'golden-asteroid-button';
-      this.buttonElement.textContent = 'Golden Asteroid!';
+      this.buttonElement.textContent = t('ui.goldAsteroid.button', {}, 'Golden Asteroid!');
       this.buttonElement.onmousedown = this.clickHandler;
       this.buttonElement.ontouchstart = this.clickHandler;
       if (this.buttonElement.parentElement !== this.countdownContainer) {
@@ -402,7 +402,11 @@ class GoldenAsteroid {
     
           if (this.countdownRemainingTime > 0) {
             const seconds = Math.ceil(this.countdownRemainingTime / 1000);
-            this.countdownElement.textContent = `Gold asteroid 5x multiplier! ${seconds}s`;
+            this.countdownElement.textContent = t(
+              'ui.goldAsteroid.countdown',
+              { seconds },
+              'Gold asteroid 5x multiplier! {seconds}s'
+            );
           } else {
             this.removeEffects();
             this.countdownActive = false;

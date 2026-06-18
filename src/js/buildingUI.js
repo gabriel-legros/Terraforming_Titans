@@ -54,7 +54,7 @@ function createBuildingCategoryTabs() {
             const header = document.createElement('div');
             header.className = 'category-header';
             const title = document.createElement('h3');
-            title.textContent = `${categoryLabel} Buildings`;
+            title.textContent = t('ui.buildings.categoryTitle', { category: categoryLabel }, '{category} Buildings');
             const unhideContainer = document.createElement('div');
             unhideContainer.className = 'unhide-obsolete-container';
             unhideContainer.id = `${category}-unhide-container`;
@@ -62,7 +62,7 @@ function createBuildingCategoryTabs() {
             const unhideButton = document.createElement('button');
             unhideButton.id = `${category}-unhide-button`;
             unhideButton.className = 'unhide-obsolete-button';
-            unhideButton.textContent = 'Unhide Obsolete Buildings';
+            unhideButton.textContent = t('ui.buildings.unhideObsolete', {}, 'Unhide Obsolete Buildings');
             unhideContainer.appendChild(unhideButton);
             header.append(title, unhideContainer);
 

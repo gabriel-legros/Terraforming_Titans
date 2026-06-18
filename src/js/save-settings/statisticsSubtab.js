@@ -133,7 +133,7 @@ function updateStatisticsDisplay() {
 
   const gameTime = formatPlayTime(totalPlayTimeSeconds);
   const realTime = formatDurationDetailed(totalRealPlayTimeSeconds);
-  playtimeElement.textContent = `${gameTime} (${realTime} real time)`;
+  playtimeElement.textContent = t('ui.settings.realTimeLine', { game: gameTime, real: realTime }, '{game} ({real} real time)');
 
   if (cached.fastestTerraformRow && cached.fastestTerraform) {
     if (fastestTerraformDays === null) {
@@ -141,10 +141,10 @@ function updateStatisticsDisplay() {
     } else {
       cached.fastestTerraformRow.style.display = '';
       if (fastestTerraformRealSeconds === null) {
-        cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (real time unavailable)`;
+        cached.fastestTerraform.textContent = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(fastestTerraformDays) }, '{game} (real time unavailable)');
       } else {
         const fastestRealTime = formatDurationDetailed(fastestTerraformRealSeconds);
-        cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (${fastestRealTime} real time)`;
+        cached.fastestTerraform.textContent = t('ui.settings.realTimeLine', { game: formatPlayTime(fastestTerraformDays), real: fastestRealTime }, '{game} ({real} real time)');
       }
     }
   }
@@ -154,10 +154,10 @@ function updateStatisticsDisplay() {
     } else {
       cached.birchWorldTerraformRow.style.display = '';
       if (birchWorldTerraformRealTimeSeconds === null) {
-        cached.birchWorldTerraform.textContent = `${formatPlayTime(birchWorldTerraformTimeSeconds)} (real time unavailable)`;
+        cached.birchWorldTerraform.textContent = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds) }, '{game} (real time unavailable)');
       } else {
         const birchRealTime = formatDurationDetailed(birchWorldTerraformRealTimeSeconds);
-        cached.birchWorldTerraform.textContent = `${formatPlayTime(birchWorldTerraformTimeSeconds)} (${birchRealTime} real time)`;
+        cached.birchWorldTerraform.textContent = t('ui.settings.realTimeLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds), real: birchRealTime }, '{game} ({real} real time)');
       }
     }
   }

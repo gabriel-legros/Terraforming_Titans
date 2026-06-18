@@ -1907,7 +1907,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const amountString = `${amount}`;
     if (!button._upgradePrefixNode) {
       button.textContent = '';
-      button._upgradePrefixNode = document.createTextNode('Upgrade ');
+      button._upgradePrefixNode = document.createTextNode(getStructuresUIText('ui.structures.controls.upgradePrefix', 'Upgrade '));
       button._upgradeAmountNode = document.createTextNode('');
       button.append(button._upgradePrefixNode, button._upgradeAmountNode);
     }

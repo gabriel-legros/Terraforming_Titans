@@ -2,49 +2,49 @@ const tabParameters = {
     tabs: [
       {
         id: "buildings-tab",
-        label: "Buildings",
+        label: t('ui.tabs.buildings', {}, 'Buildings'),
         isActive: false,
         isHidden: true
       },
       {
         id: "special-projects-tab",
-        label: "Special Projects",
+        label: t('ui.tabs.specialProjects', {}, 'Special Projects'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "colonies-tab",
-        label: "Colony",
+        label: t('ui.tabs.colony', {}, 'Colony'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "research-tab",
-        label: "Research",
+        label: t('ui.tabs.research', {}, 'Research'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "terraforming-tab",
-        label: "Terraforming",
+        label: t('ui.tabs.terraforming', {}, 'Terraforming'),
         isActive: false,
         isHidden: false // Visible by default
       },
       {
         id: "space-tab",
-        label: "Space",
+        label: t('ui.tabs.space', {}, 'Space'),
         isActive: false, // Not active when unlocked initially
         isHidden: true   // Start hidden
       },
       {
         id: "hope-tab",
-        label: "H.O.P.E.",
+        label: t('ui.tabs.hope', {}, 'H.O.P.E.'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "settings-tab",
-        label: "Settings",
+        label: t('ui.tabs.settingsShort', {}, 'Settings'),
         isActive: false,
         isHidden: false // Always visible
       }
