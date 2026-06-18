@@ -5,7 +5,7 @@ const buildingsParameters = {
     description: '',
     cost: { colony: { metal: 50, components: 10 } },
     consumption: { colony: { energy: 50000 } },
-    realisticEnergyConsumption: 1_250,
+    realisticEnergyConsumption: 50_000,
     production: { colony: { metal: 1 } },
     storage: {},
     factoryHeatCoefficient: 1,
