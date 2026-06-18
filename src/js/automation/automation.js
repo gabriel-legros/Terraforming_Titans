@@ -65,6 +65,7 @@ class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
     this.enabled = false;
+    this.uiDirty = true;
     this.automationCardOrder = [
       'autoTravel',
       'scripts',
@@ -177,7 +178,12 @@ class AutomationManager extends EffectableEntity {
       return;
     }
     this.enabled = true;
-    this.updateUI();
+    this.markUIDirty();
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
+    queueAutomationUIRefresh();
   }
 
   applyBooleanFlag(effect) {
@@ -206,10 +212,7 @@ class AutomationManager extends EffectableEntity {
 
   setFeature(flagId, value) {
     this.features[flagId] = !!value;
-    if (typeof queueAutomationUIRefresh === 'function') {
-      queueAutomationUIRefresh();
-    }
-    this.updateUI();
+    this.markUIDirty();
   }
 
   hasFeature(flagId) {
@@ -217,9 +220,8 @@ class AutomationManager extends EffectableEntity {
   }
 
   updateUI() {
-    if (typeof queueAutomationUIRefresh === 'function') {
-      queueAutomationUIRefresh();
-    }
+    this.uiDirty = false;
+    queueAutomationUIRefresh();
     updateAutomationVisibility();
     updateAutomationUI();
   }
@@ -250,7 +252,7 @@ class AutomationManager extends EffectableEntity {
       this.spaceshipAutomation.unlockManualControls();
     }
     if (this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
   }
 
@@ -306,10 +308,7 @@ class AutomationManager extends EffectableEntity {
 
     if (appliedTravelAutomation) {
       queueAutomationUIRefresh();
-      updateAutomationUI();
-      if (typeof updateResearchUI === 'function') {
-        updateResearchUI();
-      }
+      this.markUIDirty();
     }
 
     return appliedTravelAutomation;

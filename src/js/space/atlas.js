@@ -18,6 +18,13 @@ class AtlasManager extends EffectableEntity {
         super({ description: 'Manages Atlas challenge worlds.' });
         this.enabled = false;
         this.atlasWorldCompletions = {};
+        this.uiDirty = true;
+        this.forceUIRefresh = false;
+    }
+
+    markUIDirty(options = {}) {
+        this.uiDirty = true;
+        this.forceUIRefresh = this.forceUIRefresh || options.force === true;
     }
 
     getChallengeDefinitions() {
@@ -135,9 +142,7 @@ class AtlasManager extends EffectableEntity {
                 });
             });
         });
-        if (typeof updateRandomWorldUI === 'function') {
-            updateRandomWorldUI();
-        }
+        this.markUIDirty({ force: true });
     }
 
     grantCommunityCompletionArtifactReward(seedKey) {
@@ -178,7 +183,7 @@ class AtlasManager extends EffectableEntity {
             changed = true;
         }
         if (changed) {
-            this.updateUI({ force: true });
+            this.markUIDirty({ force: true });
         }
     }
 
@@ -265,10 +270,12 @@ class AtlasManager extends EffectableEntity {
         } else {
             hideSpaceAtlasTab();
         }
-        this.updateUI({ force: true });
+        this.markUIDirty({ force: true });
     }
 
     updateUI(options = {}) {
+        this.uiDirty = false;
+        this.forceUIRefresh = false;
         if (typeof updateAtlasUI === 'function') {
             updateAtlasUI(options);
         }

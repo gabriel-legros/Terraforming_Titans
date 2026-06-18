@@ -54,6 +54,7 @@ class NanotechManager extends EffectableEntity {
     this.optimalGraphiteConsumption = 0;
     this.optimalHazardousBiomassConsumption = 0;
     this.enabled = false;
+    this.uiDirty = true;
     this.travelNanobotFloor = 1;
     this.powerFraction = 1;
     this.siliconFraction = 1;
@@ -747,7 +748,11 @@ class NanotechManager extends EffectableEntity {
       return;
     }
     this.enabled = true;
-    this.updateUI();
+    this.markUIDirty();
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
   }
 
   prepareForTravel() {
@@ -794,7 +799,7 @@ class NanotechManager extends EffectableEntity {
     this.currentMaintenance2Reduction = 0;
     this.currentMaintenance3Reduction = 0;
     this.currentMaintenance4Reduction = 0;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   applyMaintenanceEffects() {
@@ -994,6 +999,7 @@ class NanotechManager extends EffectableEntity {
   }
 
   updateUI() {
+    this.uiDirty = false;
     if (typeof document === 'undefined') return;
     if (nanotechManager && nanotechManager !== this) return;
     const nanocolonyContentHost = document.getElementById('nanocolony-colonies-content');
@@ -2537,7 +2543,7 @@ class NanotechManager extends EffectableEntity {
     const max = this.getMaxNanobots();
     this.nanobots = Math.max(1, Math.min(this.nanobots, max));
     this.reapplyEffects();
-    this.updateUI();
+    this.markUIDirty();
   }
 
   reset() {
@@ -2610,7 +2616,7 @@ class NanotechManager extends EffectableEntity {
     this.maxGraphitePercent = 10;
     this.maxGraphiteAbsolute = 1e6;
     this.graphiteLimitMode = 'percent';
-    this.updateUI();
+    this.markUIDirty();
   }
 
   reapplyEffects() {

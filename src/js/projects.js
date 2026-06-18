@@ -1155,6 +1155,11 @@ class ProjectManager extends EffectableEntity {
 
     this.projects = {};
     this.projectOrder = [];
+    this.uiDirty = true;
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
   }
 
   currentWorldHasStar() {
@@ -1336,7 +1341,7 @@ class ProjectManager extends EffectableEntity {
     const project = this.projects[projectName];
     if (project && project.start(resources)) {
       if (options.updateUI !== false) {
-        updateProjectUI(projectName);
+        this.markUIDirty();
       }
     } else {
     }
@@ -1724,15 +1729,7 @@ class ProjectManager extends EffectableEntity {
       }
     }
 
-    if (typeof initializeProjectsUI === 'function') {
-      initializeProjectsUI();
-    }
-    if (typeof renderProjects === 'function') {
-      renderProjects();
-    }
-    if (typeof initializeProjectAlerts === 'function') {
-      initializeProjectAlerts();
-    }
+    this.markUIDirty();
   }
 
   saveTravelState() {
@@ -1845,9 +1842,7 @@ class ProjectManager extends EffectableEntity {
         if ('autoDeployCollectors' in project && project.autoDeployCollectors) {
           project.autoDeployCollectors = false;
         }
-        if (typeof updateProjectUI === 'function') {
-          updateProjectUI(name);
-        }
+        this.markUIDirty();
       }
     }
   }

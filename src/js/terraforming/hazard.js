@@ -159,6 +159,7 @@ function getTerraforming() {
 class HazardManager {
   constructor() {
     this.enabled = false;
+    this.uiDirty = true;
     this.parameters = {};
     this.lastSerializedParameters = '';
     this.cachedHazardousBiomassControl = 0;
@@ -191,6 +192,10 @@ class HazardManager {
     KesslerHazardCtor = resolveKesslerCtor(KesslerHazardCtor);
     this.kesslerHazard = KesslerHazardCtor ? new KesslerHazardCtor(this) : null;
     this.pulsarHazard = PulsarHazardCtor ? new PulsarHazardCtor(this) : null;
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
   }
 
   normalizeHazardParametersForKey(key, value) {
@@ -305,7 +310,7 @@ class HazardManager {
     }
 
     this.enabled = true;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   disable() {
@@ -322,7 +327,7 @@ class HazardManager {
     this.setHazardLandReservationShare('hazardousBiomass', 0);
     this.setHazardLandReservationShare('hazardousMachinery', 0);
     this.setHazardLandReservationShare('pulsar', 0);
-    this.updateUI();
+    this.markUIDirty();
   }
 
   initialize(parameters = null, options = {}) {
@@ -341,11 +346,12 @@ class HazardManager {
     this.syncHazardLandReservation(activeTerraforming);
 
     if (changed && this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
   }
 
   updateUI() {
+    this.uiDirty = false;
     let visibilityToggle = null;
     try {
       visibilityToggle = setTerraformingHazardsVisibility;
@@ -420,7 +426,7 @@ class HazardManager {
     this.crusaderTargetZone = normalized;
 
     if (this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
 
     return this.crusaderTargetZone;
@@ -514,7 +520,7 @@ class HazardManager {
     this.syncHazardLandReservation(activeTerraforming);
 
     if (this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
 
     return true;

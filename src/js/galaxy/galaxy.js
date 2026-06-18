@@ -38,6 +38,8 @@ class GalaxyManager extends EffectableEntity {
             this.fleetUpgradePurchases[key] = 0;
         });
         this.successfulOperations = 0;
+        this.uiDirty = true;
+        this.forceUIRefresh = false;
         const operationHooks = {
             uhfFactionId: UHF_FACTION_ID,
             hasNeighboringStronghold: (sector, factionId) => this.#hasNeighboringStronghold(sector, factionId),
@@ -61,14 +63,17 @@ class GalaxyManager extends EffectableEntity {
                 this.galacticInvasionManager?.handlePrometheanOperationResult?.(operation);
             },
             refreshUI: () => {
-                if (typeof updateGalaxyUI === 'function') {
-                    updateGalaxyUI();
-                }
+                this.markUIDirty();
             }
         };
         this.operationManager = new GalaxyOperationManager(this, {
             ...operationHooks
         });
+    }
+
+    markUIDirty(options = {}) {
+        this.uiDirty = true;
+        this.forceUIRefresh = this.forceUIRefresh || options.force === true;
     }
 
     initialize() {
@@ -118,6 +123,8 @@ class GalaxyManager extends EffectableEntity {
             if (typeof updateGalaxyUI === 'function') {
                 updateGalaxyUI({ force: true });
             }
+            this.uiDirty = false;
+            this.forceUIRefresh = false;
         } else if (typeof hideSpaceGalaxyTab === 'function') {
             hideSpaceGalaxyTab();
         }

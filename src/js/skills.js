@@ -25,6 +25,7 @@ class SkillManager {
     this.skills = {};
     this.skillPoints = 0;
     this.activeEffects = [];
+    this.uiDirty = true;
     if (skillData) {
       for (const key in skillData) {
         this.skills[key] = new Skill(skillData[key]);
@@ -229,9 +230,7 @@ class SkillManager {
   handleAtlasCompletionChange() {
     this.refreshMaxRanks();
     this.reapplyEffects();
-    if (typeof updateSkillTreeUI === 'function') {
-      updateSkillTreeUI();
-    }
+    this.uiDirty = true;
   }
 
   resetSkillTree() {

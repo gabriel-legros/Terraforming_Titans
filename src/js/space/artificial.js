@@ -422,6 +422,8 @@ class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
         this.enabled = false;
+        this.uiDirty = true;
+        this.forceUIRefresh = false;
         this.constructionHoursPer50B = CONSTRUCTION_HOURS_PER_50B;
         this.prioritizeSpaceStorage = true;
         this.autoStart = false;
@@ -736,32 +738,32 @@ class ArtificialManager extends EffectableEntity {
         if (isCurrentWorldManagerDisabled('artificialManager')) return;
         if (this.enabled) return;
         this.enabled = true;
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     disable() {
         if (!this.enabled) return;
         this.enabled = false;
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     enableRingworld() {
         if (this.unlockedTypes.has('ring')) return;
         this.unlockedTypes.add('ring');
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     enableAldersonDisk() {
         if (this.unlockedTypes.has('disk')) return;
         this.unlockedTypes.add('disk');
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     unlockCore(coreId) {
         if (!ARTIFICIAL_CORES.some((core) => core.value === coreId)) return;
         if (this.unlockedCores.has(coreId)) return;
         this.unlockedCores.add(coreId);
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     unlockRingStarCore(coreId) {
@@ -774,7 +776,7 @@ class ArtificialManager extends EffectableEntity {
         }
         if (this.unlockedRingStarCores.has(coreId)) return;
         this.unlockedRingStarCores.add(coreId);
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     unlockDiskStarCore(coreId) {
@@ -787,7 +789,7 @@ class ArtificialManager extends EffectableEntity {
         }
         if (this.unlockedDiskStarCores.has(coreId)) return;
         this.unlockedDiskStarCores.add(coreId);
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     refreshConditionalRingStarCoreUnlocks(options = {}) {
@@ -795,7 +797,7 @@ class ArtificialManager extends EffectableEntity {
         this._lastGalaxyConquestUnlockState = hasGalaxyConquest;
         this.draftSelection = this.normalizeDraftSelection(this.draftSelection);
         if (options.updateUI !== false) {
-            this.updateUI(true);
+            this.markUIDirty(true);
         }
     }
 
@@ -823,7 +825,7 @@ class ArtificialManager extends EffectableEntity {
                 terraformedValue
             );
         }
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     update(delta) {
@@ -1291,7 +1293,7 @@ class ArtificialManager extends EffectableEntity {
 
     clearPrepay() {
         this.resetPrepay();
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     getRemainingCost(cost, paid) {
@@ -1376,7 +1378,7 @@ class ArtificialManager extends EffectableEntity {
             this.prepay.paid[key] = (this.prepay.paid[key] || 0) + payload[key];
         });
         const nextState = this.getPrepayState(selection, cost);
-        this.updateUI(false);
+        this.markUIDirty(false);
         return { status: nextState.canStart ? 'ready' : 'prepaid', state: nextState };
     }
 
@@ -1423,9 +1425,6 @@ class ArtificialManager extends EffectableEntity {
             }
         });
 
-        if (useStorage && typeof updateSpaceStorageUI === 'function') {
-            updateSpaceStorageUI(storageProj);
-        }
         return plan;
     }
 
@@ -1520,7 +1519,7 @@ class ArtificialManager extends EffectableEntity {
       };
 
       this.nextId += 1;
-      this.updateUI(true);
+      this.markUIDirty(true);
       return true;
     }
 
@@ -1612,7 +1611,7 @@ class ArtificialManager extends EffectableEntity {
       };
 
       this.nextId += 1;
-      this.updateUI(true);
+      this.markUIDirty(true);
       return true;
     }
 
@@ -1701,7 +1700,7 @@ class ArtificialManager extends EffectableEntity {
       };
 
       this.nextId += 1;
-      this.updateUI(true);
+      this.markUIDirty(true);
       return true;
     }
 
@@ -1710,7 +1709,7 @@ class ArtificialManager extends EffectableEntity {
         this.recordHistoryEntry('cancelled');
         this.activeProject = null;
         this.clearAutoStart();
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1727,7 +1726,7 @@ class ArtificialManager extends EffectableEntity {
         this.recordHistoryEntry('discarded');
         this.activeProject = null;
         this.clearAutoStart();
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1796,7 +1795,7 @@ class ArtificialManager extends EffectableEntity {
         spaceManager._ensureGalacticPopulationTotals();
         this.recordHistoryEntry('stored');
         this.activeProject = null;
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1830,7 +1829,7 @@ class ArtificialManager extends EffectableEntity {
         this.activeProject.stockpile.metal += request.metal || 0;
         this.activeProject.stockpile.silicon += request.silicon || 0;
         this.activeProject.override = null;
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1861,7 +1860,7 @@ class ArtificialManager extends EffectableEntity {
         this.activeProject.stockpile.metal += request.metal || 0;
         this.activeProject.stockpile.silicon += request.silicon || 0;
         this.activeProject.override = null;
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1884,7 +1883,7 @@ class ArtificialManager extends EffectableEntity {
             resources?.colony?.metal?.increase?.(payout, true);
             resources?.colony?.silicon?.increase?.(payout, true);
         }
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -2226,7 +2225,7 @@ class ArtificialManager extends EffectableEntity {
                 currentPlanetParameters.name = nextName;
             }
         }
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -2257,7 +2256,7 @@ class ArtificialManager extends EffectableEntity {
         if (!traveled) return false;
         this.recordHistoryEntry('traveled');
         this.activeProject = null;
-        this.updateUI(true);
+        this.markUIDirty(true);
         resetGameFrameClock(true);
         return true;
     }
@@ -2307,7 +2306,7 @@ class ArtificialManager extends EffectableEntity {
         if (!status || (!status.stored && !status.abandoned)) return false;
         const discarded = spaceManager.discardStoredArtificialWorld(seed);
         if (!discarded) return false;
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -2326,7 +2325,7 @@ class ArtificialManager extends EffectableEntity {
             this.activeProject.override = null;
         }
         if (triggerUpdate) {
-            this.updateUI(true);
+            this.markUIDirty(true);
         }
         return true;
     }
@@ -2683,12 +2682,20 @@ class ArtificialManager extends EffectableEntity {
             }
         }
         this.nextId = Math.max(state.nextId || this.nextId, (this.activeProject?.id || 0) + 1, 1);
-        this.updateUI(true);
+        this.markUIDirty(true);
+    }
+
+    markUIDirty(force = false) {
+        this.uiDirty = true;
+        this.forceUIRefresh = this.forceUIRefresh || force === true || force?.force === true;
     }
 
     updateUI(force = false) {
+        const forceRefresh = force === true || force?.force === true;
+        this.uiDirty = false;
+        this.forceUIRefresh = false;
         if (typeof updateArtificialUI === 'function') {
-            updateArtificialUI({ force });
+            updateArtificialUI({ force: forceRefresh });
         }
     }
 }

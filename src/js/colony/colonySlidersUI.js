@@ -14,6 +14,18 @@ let mechanicalAssistanceEffect;
 let mechanicalAssistanceValue;
 let mechanicalAssistanceInput;
 let mechanicalAssistanceRefresh;
+let workforceInputRef;
+let workforceValueRef;
+let workforceEffectRef;
+let foodInputRef;
+let foodValueRef;
+let foodEffectRef;
+let waterInputRef;
+let waterValueRef;
+let waterEffectRef;
+let oreInputRef;
+let oreValueRef;
+let oreEffectRef;
 let warpnetRow;
 let warpnetInfo;
 let warpnetEffect;
@@ -101,6 +113,9 @@ function initializeColonySlidersUI() {
   effectSpan.id = 'workforce-slider-effect';
   effectSpan.classList.add('slider-effect');
   sliderRow.appendChild(effectSpan);
+  workforceInputRef = input;
+  workforceValueRef = valueSpan;
+  workforceEffectRef = effectSpan;
 
   const datalist = document.createElement('datalist');
   datalist.id = 'workforce-slider-ticks';
@@ -181,6 +196,9 @@ function initializeColonySlidersUI() {
   foodEffect.id = 'food-slider-effect';
   foodEffect.classList.add('slider-effect');
   foodRow.appendChild(foodEffect);
+  foodInputRef = foodInput;
+  foodValueRef = foodValue;
+  foodEffectRef = foodEffect;
   const foodList = document.createElement('datalist');
   foodList.id = 'food-slider-ticks';
   for (let i = 1; i <= 6; i += 0.5) {
@@ -264,6 +282,9 @@ function initializeColonySlidersUI() {
   }
   container.appendChild(waterList);
   body.appendChild(waterRow);
+  waterInputRef = waterInput;
+  waterValueRef = waterValue;
+  waterEffectRef = waterEffect;
 
   const updateWaterValue = (val) => {
     if (waterValue && waterEffect) {
@@ -340,6 +361,9 @@ function initializeColonySlidersUI() {
   }
   container.appendChild(oreList);
   body.appendChild(oreRow);
+  oreInputRef = oreInput;
+  oreValueRef = oreValue;
+  oreEffectRef = oreEffect;
 
   // Mechanical assistance slider
   mechanicalAssistanceRow = document.createElement('div');
@@ -670,11 +694,68 @@ function updateColonySlidersUI() {
     mechanicalAssistanceRow = document.getElementById('mechanical-assistance-row');
   }
   const manager = colonySliderSettings;
+  const workforcePercent = manager.workerRatio * 100;
+  if (workforceInputRef && document.activeElement !== workforceInputRef) {
+    workforceInputRef.value = workforcePercent;
+  }
+  if (workforceValueRef) {
+    const workers = Math.round(workforcePercent);
+    workforceValueRef.textContent = getColonySlidersText('ui.colony.sliders.workersValue', 'Workers: {value}%', { value: workers });
+  }
+  if (workforceEffectRef) {
+    workforceEffectRef.textContent = getColonySlidersText('ui.colony.sliders.scientistsValue', 'Scientists: {value}%', { value: 100 - Math.round(workforcePercent) });
+  }
+
+  if (foodInputRef && document.activeElement !== foodInputRef) {
+    foodInputRef.value = manager.foodConsumption;
+  }
+  if (foodValueRef) {
+    foodValueRef.textContent = `${manager.foodConsumption.toFixed(1)}x`;
+  }
+  if (foodEffectRef) {
+    const growthVal = 1 + (manager.foodConsumption - 1) * 0.02;
+    const percent = ((growthVal - 1) * 100).toFixed(1);
+    foodEffectRef.textContent = getColonySlidersText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
+  }
+
+  if (waterInputRef && document.activeElement !== waterInputRef) {
+    waterInputRef.value = manager.luxuryWater;
+  }
+  if (waterValueRef) {
+    waterValueRef.textContent = `${manager.luxuryWater.toFixed(1)}x`;
+  }
+  if (waterEffectRef) {
+    const growthVal = 1 + (manager.luxuryWater - 1) * 0.01;
+    const percent = ((growthVal - 1) * 100).toFixed(1);
+    waterEffectRef.textContent = getColonySlidersText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
+  }
+
+  if (oreInputRef && document.activeElement !== oreInputRef) {
+    oreInputRef.value = manager.oreMineWorkers;
+  }
+  if (oreValueRef || oreEffectRef) {
+    const minesBuilt = Number.isFinite(buildings?.oreMine?.countNumber)
+      ? buildings.oreMine.countNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(buildings?.oreMine?.count)
+        : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
+    if (oreValueRef) {
+      oreValueRef.textContent = `${manager.oreMineWorkers * 10 * minesBuilt}`;
+    }
+    if (oreEffectRef) {
+      const percent = ((manager.oreMineWorkers === 0 ? 0 : manager.oreMineWorkers) * 100).toFixed(0);
+      oreEffectRef.textContent = getColonySlidersText('ui.colony.sliders.boostEffect', 'Boost: {value}%', { value: percent });
+    }
+  }
+
   if (mechanicalAssistanceRow) {
     const unlocked = manager.isBooleanFlagSet('mechanicalAssistance');
     const gravity = terraforming.celestialParameters.gravity;
     const hasPenalty = gravity > 10;
     mechanicalAssistanceRow.style.display = unlocked && hasPenalty ? 'grid' : 'none';
+    if (mechanicalAssistanceInput && document.activeElement !== mechanicalAssistanceInput) {
+      mechanicalAssistanceInput.value = manager.mechanicalAssistance;
+    }
     if (mechanicalAssistanceRefresh) {
       mechanicalAssistanceRefresh();
     }
@@ -686,10 +767,14 @@ function updateColonySlidersUI() {
   if (warpnetRow) {
     const warpnetUnlocked = manager && manager.isBooleanFlagSet && manager.isBooleanFlagSet('warpnet');
     warpnetRow.style.display = warpnetUnlocked ? 'grid' : 'none';
+    if (warpnetInput && document.activeElement !== warpnetInput) {
+      warpnetInput.value = manager.warpnetLevel;
+    }
     if (warpnetUnlocked && warpnetRefresh) {
       warpnetRefresh();
     }
   }
+  manager.uiDirty = false;
 }
 
 if (typeof module !== "undefined" && module.exports) {

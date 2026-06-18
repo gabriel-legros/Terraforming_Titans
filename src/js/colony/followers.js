@@ -36,7 +36,12 @@ class FollowersManager extends EffectableEntity {
     this.holyWorldCompletions = 0;
     this.holyWorldConsecratedWorlds = {};
     this.holyWorldShopPurchases = this.createEmptyHolyWorldShopPurchases();
+    this.uiDirty = true;
     this.ensureTrackedOrbitals();
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
   }
 
   createEmptyHolyWorldShopPurchases() {
@@ -102,7 +107,7 @@ class FollowersManager extends EffectableEntity {
       return;
     }
     delete this.holyWorldConsecratedWorlds[key];
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getHolyWorldCostScale() {
@@ -235,7 +240,7 @@ class FollowersManager extends EffectableEntity {
     const key = this.getCurrentWorldHolyKey();
     this.holyWorldConsecratedWorlds[key] = true;
     this.holyWorldCompletions += 1;
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -284,7 +289,7 @@ class FollowersManager extends EffectableEntity {
     this.holyWorldPoints -= actual * item.cost;
     this.holyWorldShopPurchases[id] = currentPurchases + actual;
     this.applyHolyWorldEffects();
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -301,7 +306,7 @@ class FollowersManager extends EffectableEntity {
     this.holyWorldPoints += refund;
     this.holyWorldShopPurchases = this.createEmptyHolyWorldShopPurchases();
     this.applyHolyWorldEffects();
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getHolyWorldFestivalDurationBonusMs() {
@@ -446,13 +451,13 @@ class FollowersManager extends EffectableEntity {
   setArtifactInvestmentStep(step) {
     const next = Math.max(1, step);
     this.artifactInvestmentStep = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   setFundingInvestmentStep(step) {
     const next = Math.max(1, step);
     this.fundingInvestmentStep = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   divideArtifactInvestmentStep() {
@@ -491,7 +496,7 @@ class FollowersManager extends EffectableEntity {
     }
     artifactResource.decrease(invested);
     this.artifactsInvested += invested;
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -516,7 +521,7 @@ class FollowersManager extends EffectableEntity {
     }
     fundingResource.decrease(invested);
     this.fundingInvested += invested;
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -735,7 +740,7 @@ class FollowersManager extends EffectableEntity {
       this.lastFaithGalacticConversionRate = (baseWorldConversionRate / 250) * this.getMissionaryGalacticConversionMultiplier();
     }
     this.lastFaithWorldCap = this.getCurrentWorldBelieverCap();
-    this.updateUI();
+    this.markUIDirty();
     return gains;
   }
 
@@ -888,7 +893,7 @@ class FollowersManager extends EffectableEntity {
 
   setAssignmentMode(mode) {
     this.assignmentMode = mode === 'weight' ? 'weight' : 'manual';
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getAutoAssignId() {
@@ -904,15 +909,15 @@ class FollowersManager extends EffectableEntity {
       if (this.autoAssignId === id) {
         this.autoAssignId = null;
       }
-      this.updateUI();
+      this.markUIDirty();
       return;
     }
     if (this.isOrbitalRestrictedByKessler(id)) {
-      this.updateUI();
+      this.markUIDirty();
       return;
     }
     this.autoAssignId = id;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getAssignmentStep() {
@@ -922,7 +927,7 @@ class FollowersManager extends EffectableEntity {
   setAssignmentStep(step) {
     const next = Math.max(1, Math.floor(step));
     this.assignmentStep = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   multiplyAssignmentStep() {
@@ -942,7 +947,7 @@ class FollowersManager extends EffectableEntity {
     this.ensureTrackedOrbitals();
     const next = Math.max(0, Math.floor(value));
     this.weights[id] = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   adjustWeight(id, delta) {
@@ -984,7 +989,7 @@ class FollowersManager extends EffectableEntity {
     this.ensureTrackedOrbitals();
     if (this.isOrbitalRestrictedByKessler(id)) {
       this.manualAssignments[id] = 0;
-      this.updateUI();
+      this.markUIDirty();
       return;
     }
     let next = Math.max(0, Math.floor(value));
@@ -993,7 +998,7 @@ class FollowersManager extends EffectableEntity {
       next = maxForThis;
     }
     this.manualAssignments[id] = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   adjustManualAssignment(id, delta) {
@@ -1330,7 +1335,7 @@ class FollowersManager extends EffectableEntity {
       this.initializeFaithIfNeeded();
       this.applyHolyWorldEffects();
     }
-    this.updateUI();
+    this.markUIDirty();
   }
 
   prepareTravelState() {
@@ -1348,10 +1353,11 @@ class FollowersManager extends EffectableEntity {
       this.initializeFaithIfNeeded();
       this.setWorldBelieverPercent(this.getGalacticBelieverPercent());
     }
-    this.updateUI();
+    this.markUIDirty();
   }
 
   updateUI() {
+    this.uiDirty = false;
     updateColonySubtabsVisibility();
     updateFollowersUI();
   }
@@ -1361,7 +1367,7 @@ class FollowersManager extends EffectableEntity {
       return;
     }
     this.applyHolyWorldEffects();
-    this.updateUI();
+    this.markUIDirty();
   }
 
   saveState() {

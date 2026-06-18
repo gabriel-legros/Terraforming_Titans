@@ -161,10 +161,6 @@ class PatienceManager extends EffectableEntity {
             const capacity = oneillCapacity ?? 0;
             const next = currentCount + oneillGain;
             spaceManager.setOneillCylinderCount(next, capacity);
-            updateOneillCylinderStatsUI({
-                space: spaceManager,
-                galaxy: galaxyManager
-            });
         }
 
         if (faithGains.worldBelieverGain > 0 || faithGains.galacticBelieverGain > 0) {

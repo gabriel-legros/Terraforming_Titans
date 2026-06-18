@@ -881,6 +881,7 @@ function updateRender(force = false, options = {}) {
 
     if (isActive('special-projects')) {
       renderProjects();
+      if (projectManager) projectManager.uiDirty = false;
     }
 
     if (isActive('research')) {
@@ -888,6 +889,9 @@ function updateRender(force = false, options = {}) {
     }
 
     if (isActive('terraforming')) {
+      if (hazardManager && hazardManager.uiDirty) {
+        hazardManager.updateUI();
+      }
       updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
       // Ensure the visualizer resizes once the tab becomes visible
       if (!suppressPlanetVisualizerRuntime && typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
@@ -956,7 +960,14 @@ function updateRender(force = false, options = {}) {
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {
       updateSpaceUI();
-      if (typeof updateGalaxyUI === 'function') updateGalaxyUI({ force: force || forceAllSubtabs });
+      if (typeof updateGalaxyUI === 'function') {
+        const forceGalaxy = force || forceAllSubtabs || !!(galaxyManager && galaxyManager.forceUIRefresh);
+        updateGalaxyUI({ force: forceGalaxy });
+        if (galaxyManager) {
+          galaxyManager.uiDirty = false;
+          galaxyManager.forceUIRefresh = false;
+        }
+      }
       if (typeof updateRWGEffectsUI === 'function') updateRWGEffectsUI();
     }
 
@@ -975,6 +986,7 @@ function updateRender(force = false, options = {}) {
     updateColonySlidersUI();
     if (nanotechManager) nanotechManager.updateUI();
     renderProjects();
+    if (projectManager) projectManager.uiDirty = false;
     updateResearchUI();
     updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
     updateStatisticsDisplay();

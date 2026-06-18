@@ -309,8 +309,8 @@ class WarpGateCommand extends EffectableEntity {
       const name = this.teamNames[teamIndex] || `Team ${teamIndex + 1}`;
       this.addLog(teamIndex, `${name} unlocked`);
     });
-    if (newlyUnlockedTeams.length > 0 && typeof updateWGCUI === 'function') {
-      updateWGCUI();
+    if (newlyUnlockedTeams.length > 0) {
+      this.uiDirty = true;
     }
   }
 
@@ -1056,8 +1056,8 @@ class WarpGateCommand extends EffectableEntity {
         }
       });
     });
-    if (autoChanged && typeof updateWGCUI === 'function') {
-      updateWGCUI();
+    if (autoChanged) {
+      this.uiDirty = true;
     }
   }
 

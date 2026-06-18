@@ -775,7 +775,16 @@ function initializeSpaceUI(spaceManager) {
 function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
     if (typeof updateArtificialUI === 'function') {
-        updateArtificialUI();
+        updateArtificialUI({ force: artificialManager?.forceUIRefresh === true });
+        artificialManager.uiDirty = false;
+        artificialManager.forceUIRefresh = false;
+    }
+    const atlasSubtabContent = document.getElementById('space-atlas');
+    const atlasActive = atlasSubtabContent?.classList?.contains('active') === true;
+    if ((atlasActive || atlasManager?.uiDirty) && typeof updateAtlasUI === 'function') {
+        updateAtlasUI({ force: atlasManager?.forceUIRefresh === true });
+        atlasManager.uiDirty = false;
+        atlasManager.forceUIRefresh = false;
     }
     updateSpaceRandomVisibility();
     updateCurrentWorldUI();
@@ -783,7 +792,9 @@ function updateSpaceUI() {
     updateSpaceAlertUI();
     const invasionSubtabContent = document.getElementById('space-invasion');
     if (invasionSubtabContent?.classList?.contains('active') && typeof updateGalacticInvasionUI === 'function') {
-        updateGalacticInvasionUI();
+        updateGalacticInvasionUI({ force: galaxyInvasionManager?.forceUIRefresh === true });
+        galaxyInvasionManager.uiDirty = false;
+        galaxyInvasionManager.forceUIRefresh = false;
     }
 
     const statusContainer = document.getElementById('travel-status');

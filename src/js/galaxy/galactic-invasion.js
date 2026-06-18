@@ -16,6 +16,13 @@ class GalacticInvasionManager extends EffectableEntity {
     this.occupationBastions = {};
     this.beachheadSectorKey = null;
     this.beachheadDefensePower = 0;
+    this.uiDirty = true;
+    this.forceUIRefresh = false;
+  }
+
+  markUIDirty(options = {}) {
+    this.uiDirty = true;
+    this.forceUIRefresh = this.forceUIRefresh || options.force === true;
   }
 
   enable(targetId) {
@@ -34,6 +41,8 @@ class GalacticInvasionManager extends EffectableEntity {
       showSpaceInvasionTab();
       initializeGalacticInvasionUI();
       updateGalacticInvasionUI({ force: true });
+      this.uiDirty = false;
+      this.forceUIRefresh = false;
     } else {
       hideSpaceInvasionTab();
     }
@@ -110,15 +119,15 @@ class GalacticInvasionManager extends EffectableEntity {
     this.beachheadDefensePower = 0;
     this.invasionTimerMs = 0;
     this.launchInitialOperations();
-    updateGalaxyUI({ force: true });
-    updateGalacticInvasionUI({ force: true });
+    galaxyManager.markUIDirty({ force: true });
+    this.markUIDirty({ force: true });
     return true;
   }
 
   cancelActiveInvasion() {
     this.defeatActiveInvasion(false);
     this.cooldownRemainingMs = PROMETHEAN_INVASION_CANCEL_COOLDOWN_MS;
-    updateGalacticInvasionUI({ force: true });
+    this.markUIDirty({ force: true });
   }
 
   completeActiveInvasion(options = {}) {
@@ -136,7 +145,7 @@ class GalacticInvasionManager extends EffectableEntity {
     this.defeatActiveInvasion(false, { updateUI: shouldUpdateUI });
     this.refreshRewardEffects();
     if (shouldUpdateUI) {
-      updateGalacticInvasionUI({ force: true });
+      this.markUIDirty({ force: true });
     }
   }
 
@@ -163,7 +172,7 @@ class GalacticInvasionManager extends EffectableEntity {
     this.beachheadDefensePower = 0;
     this.invasionTimerMs = 0;
     if (options.updateUI !== false) {
-      updateGalaxyUI({ force: true });
+      galaxyManager.markUIDirty({ force: true });
     }
   }
 
