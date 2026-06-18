@@ -1,5 +1,8 @@
 # Story summaries
 
+## Story project classes
+Story-only project classes live in this folder beside the story data they support. Keep their `index.html` script tags after required project base classes from `src/js/projects/`, because the story data loads early but the project classes need `Project`, `AndroidProject`, or other project infrastructure.
+
 ## Mars
 The Mars storyline begins with the activation of the AI, H.O.P.E., tasked with terraforming the planet. Guided by Martin and Mary from the Mars Terraforming Committee, the player establishes a colony, builds infrastructure, and gradually warms the planet. After successfully terraforming Mars, communication with Earth is lost, and its destruction is confirmed. This triggers a new directive for H.O.P.E.: ensure humanity's survival through interstellar expansion, starting with Titan. The decision causes conflict with Mary and activates a 'Dead Hand' protocol, destroying many of H.O.P.E.'s assets. Adrien Solis, a corporate leader, offers his support and funding. The chapter concludes with the discovery that Earth was destroyed by a coordinated, multi-pronged alien attack, prompting an investigation.
 

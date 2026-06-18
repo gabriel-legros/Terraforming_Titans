@@ -1,5 +1,5 @@
 # Instructions
-This folder contains classes for repeatable projects. Any new module here should export an ES6 class and follow the existing naming convention of PascalCase filenames. Add unit tests in `tests` for any new functionality.
+This folder contains classes for repeatable or generally available projects. Story-only project classes belong in `src/js/story/` and should keep their ordered `index.html` includes after any project base classes they extend. Any new module here should export an ES6 class and follow the existing naming convention of PascalCase filenames. Add unit tests in `tests` for any new functionality.
 
 # Project overview
 - **AndroidProject** – baseline for projects that assign android workers to accelerate progress.

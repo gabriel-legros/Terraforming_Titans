@@ -10,7 +10,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - The game runs from `index.html` with ordered includes. Do not redefine globals/constants that are already defined upstream.
 - Use global variables where needed.
 - Code must run in a browser-like environment.
-- Place story projects in `progress-data.js` near the chapter where they unlock.
+- Place story project definitions in `progress-data.js` or the relevant file under `src/js/story/` near the chapter where they unlock.
 - Tooltips must use an attached tooltip icon: create `<span class="info-tooltip-icon">&#9432;</span>` and always attach tooltip content with `attachDynamicInfoTooltip(icon, text)` from `src/js/ui-utils.js`.
 - Keep tooltip copy browser-safe and readable; the attached dynamic tooltip is the default for both short and long help text.
 - Keep the Warp Gate Command Teams tooltip updated when special rules change.
@@ -38,6 +38,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Core simulation: `terraforming.js`, `physics.js`, cycle modules.
 - Economy/colony: `resource.js`, `building.js`, `colony.js`, related UI modules.
 - Story progression: `StoryManager` in `progress.js`.
+- Story-only project classes live under `src/js/story/`; keep their `index.html` script tags after required project base classes.
 - Planet travel/state: `SpaceManager`.
 
 ## Key Systems
