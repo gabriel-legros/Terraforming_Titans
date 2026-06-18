@@ -72,6 +72,16 @@
   box-shadow: 0 1px 0 #e6ebf3 inset;
 }
 
+.automation-preset-script-usage {
+  color: #4c5872;
+  font-size: 12px;
+  line-height: 1.4;
+  background: #f7f9fc;
+  border: 1px solid #dbe1ec;
+  border-radius: 6px;
+  padding: 7px 9px;
+}
+
 .automation-preset-json-summary {
   cursor: pointer;
   padding: 8px 10px;

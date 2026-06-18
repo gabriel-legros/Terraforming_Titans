@@ -220,6 +220,61 @@ class ScriptAutomation {
     return changed;
   }
 
+  getPresetUsageReferences(automationType, presetId) {
+    const numericPresetId = Number(presetId);
+    const target = this.getAutomationTarget(automationType);
+    const references = [];
+    if (!automationType || !numericPresetId || !target) {
+      return references;
+    }
+
+    const matchingCombinationNames = {};
+    if (Array.isArray(target.combinations)) {
+      target.combinations.forEach(combination => {
+        const assignments = Array.isArray(combination.assignments) ? combination.assignments : [];
+        if (assignments.find(entry => Number(entry.presetId) === numericPresetId && entry.enabled !== false)) {
+          matchingCombinationNames[combination.id] = combination.name || `${target.combinationLabel || 'Combination'} ${combination.id}`;
+        }
+      });
+    }
+
+    for (let scriptIndex = 0; scriptIndex < this.scripts.length; scriptIndex += 1) {
+      const script = this.scripts[scriptIndex];
+      const lines = Array.isArray(script.lines) ? script.lines : [];
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+        const line = lines[lineIndex];
+        const actions = Array.isArray(line.actions) ? line.actions : [];
+        for (let actionIndex = 0; actionIndex < actions.length; actionIndex += 1) {
+          const action = actions[actionIndex];
+          if (action.automationType !== automationType) {
+            continue;
+          }
+          if (action.kind === 'applyPreset' && Number(action.presetId) === numericPresetId) {
+            references.push({
+              scriptId: script.id,
+              scriptName: script.name || `Script ${script.id}`,
+              lineNumber: lineIndex + 1,
+              lineName: line.name || '',
+              viaCombinationName: ''
+            });
+          } else if (action.kind === 'applyCombination') {
+            const combinationName = matchingCombinationNames[Number(action.combinationId)] || '';
+            if (combinationName) {
+              references.push({
+                scriptId: script.id,
+                scriptName: script.name || `Script ${script.id}`,
+                lineNumber: lineIndex + 1,
+                lineName: line.name || '',
+                viaCombinationName: combinationName
+              });
+            }
+          }
+        }
+      }
+    }
+    return references;
+  }
+
   runScript(id) {
     const script = this.scripts.find(item => item.id === Number(id));
     if (!script) return false;

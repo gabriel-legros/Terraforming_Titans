@@ -23,6 +23,7 @@ const automationElements = {
   autoTravelPanelBody: null,
   autoTravelMasterToggle: null,
   autoTravelPresetSelect: null,
+  autoTravelPresetUsage: null,
   autoTravelPresetNameInput: null,
   autoTravelNewPresetButton: null,
   autoTravelDeletePresetButton: null,
@@ -65,6 +66,7 @@ const automationElements = {
   collapseButton: null,
   panelBody: null,
   presetSelect: null,
+  shipPresetUsage: null,
   presetMoveUpButton: null,
   presetMoveDownButton: null,
   presetNameInput: null,
@@ -82,6 +84,7 @@ const automationElements = {
   lifeCollapseButton: null,
   lifePanelBody: null,
   lifePresetSelect: null,
+  lifePresetUsage: null,
   lifePresetMoveUpButton: null,
   lifePresetMoveDownButton: null,
   lifePresetNameInput: null,
@@ -122,6 +125,7 @@ const automationElements = {
   researchApplyNextTravelSelect: null,
   researchApplyNextTravelPersistToggle: null,
   researchPresetJsonDetails: null,
+  researchPresetUsage: null,
   buildingsAutomation: null,
   buildingsAutomationStatus: null,
   buildingsAutomationDescription: null,
@@ -148,6 +152,7 @@ const automationElements = {
   buildingsBuilderClearButton: null,
   buildingsBuilderSelectedList: null,
   buildingsPresetJsonDetails: null,
+  buildingsPresetUsage: null,
   buildingsApplyList: null,
   buildingsApplyHint: null,
   buildingsApplyCombinationButton: null,
@@ -187,6 +192,7 @@ const automationElements = {
   projectsBuilderClearButton: null,
   projectsBuilderSelectedList: null,
   projectsPresetJsonDetails: null,
+  projectsPresetUsage: null,
   projectsApplyList: null,
   projectsApplyHint: null,
   projectsApplyCombinationButton: null,
@@ -228,6 +234,7 @@ const automationElements = {
   colonyBuilderClearButton: null,
   colonyBuilderSelectedList: null,
   colonyPresetJsonDetails: null,
+  colonyPresetUsage: null,
   colonyApplyList: null,
   colonyApplyHint: null,
   colonyApplyCombinationButton: null,
@@ -1549,6 +1556,69 @@ function showAutomationPresetJsonStatus(statusElement, text, isError) {
   statusElement.classList.toggle('automation-status-error', !!isError);
 }
 
+function createAutomationPresetUsageLine() {
+  const line = document.createElement('div');
+  line.classList.add('automation-preset-script-usage');
+  return line;
+}
+
+function updateAutomationPresetUsageLine(line, automationType, preset) {
+  if (!line) {
+    return;
+  }
+  if (!preset) {
+    line.textContent = '';
+    line.style.display = 'none';
+    line._usageSignature = '';
+    return;
+  }
+
+  const scriptAutomation = automationManager.scriptAutomation;
+  const references = scriptAutomation.getPresetUsageReferences(automationType, preset.id);
+  const signature = JSON.stringify(references);
+  if (line._usageSignature === signature && line.style.display !== 'none') {
+    return;
+  }
+  line._usageSignature = signature;
+  if (references.length === 0) {
+    line.textContent = '';
+    line.style.display = 'none';
+    return;
+  }
+
+  line.style.display = '';
+  const usageText = references.map(reference => {
+    const lineLabel = reference.lineName
+      ? getAutomationCardText(
+          'presetScriptUsageLineNamed',
+          { line: reference.lineNumber, name: reference.lineName },
+          `line ${reference.lineNumber} (${reference.lineName})`
+        )
+      : getAutomationCardText(
+          'presetScriptUsageLine',
+          { line: reference.lineNumber },
+          `line ${reference.lineNumber}`
+        );
+    if (reference.viaCombinationName) {
+      return getAutomationCardText(
+        'presetScriptUsageReferenceViaCombination',
+        { script: reference.scriptName, line: lineLabel, combination: reference.viaCombinationName },
+        `${reference.scriptName} ${lineLabel} via ${reference.viaCombinationName}`
+      );
+    }
+    return getAutomationCardText(
+      'presetScriptUsageReference',
+      { script: reference.scriptName, line: lineLabel },
+      `${reference.scriptName} ${lineLabel}`
+    );
+  }).join('; ');
+  line.textContent = getAutomationCardText(
+    'presetScriptUsageUsed',
+    { usage: usageText },
+    `Script usage: ${usageText}`
+  );
+}
+
 function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   if (!details) {
     return;
@@ -2247,9 +2317,13 @@ function createAutomationPresetRow(body) {
   presetButtons.append(newPreset, duplicatePreset, deletePreset);
   presetRow.appendChild(presetButtons);
 
+  const presetUsage = createAutomationPresetUsageLine();
+  body.appendChild(presetUsage);
+
   return {
     presetRow,
     presetSelect,
+    presetUsage,
     presetMoveUp,
     presetMoveDown,
     presetName,

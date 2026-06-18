@@ -221,6 +221,8 @@ function buildAutoTravelUI() {
   transferButtons.append(newPresetButton, deletePresetButton, transfer.importButton, transfer.exportButton);
   presetRow.appendChild(transferButtons);
   presetSection.appendChild(presetRow);
+  const presetUsage = createAutomationPresetUsageLine();
+  presetSection.appendChild(presetUsage);
 
   const destinationSection = createSection(getAutoTravelOptionText('destinationSection', 'Destination'), 'auto-travel-destination-section');
   const selectionRow = document.createElement('div');
@@ -332,6 +334,7 @@ function buildAutoTravelUI() {
   automationElements.autoTravelPanelBody = body;
   automationElements.autoTravelMasterToggle = toggle;
   automationElements.autoTravelPresetSelect = presetSelect;
+  automationElements.autoTravelPresetUsage = presetUsage;
   automationElements.autoTravelPresetNameInput = presetNameInput;
   automationElements.autoTravelNewPresetButton = newPresetButton;
   automationElements.autoTravelDeletePresetButton = deletePresetButton;
@@ -757,6 +760,7 @@ function updateAutoTravelUI() {
       automationElements.autoTravelHazardsSection.classList.toggle('hidden', storedOnlyTarget);
     }
   }
+  updateAutomationPresetUsageLine(automationElements.autoTravelPresetUsage, 'autoTravel', preset);
 
   const controls = [
     automationElements.autoTravelMasterToggle,

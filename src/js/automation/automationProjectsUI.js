@@ -413,6 +413,8 @@ function buildAutomationProjectsUI() {
 
   const presetJsonDetails = createAutomationPresetJsonDetails('project-automation-preset-json-details');
   builderSection.appendChild(presetJsonDetails);
+  const presetUsage = createAutomationPresetUsageLine();
+  builderSection.appendChild(presetUsage);
 
   body.appendChild(builderSection);
 
@@ -465,6 +467,7 @@ function buildAutomationProjectsUI() {
   automationElements.projectsBuilderClearButton = clearButton;
   automationElements.projectsBuilderSelectedList = selectedList;
   automationElements.projectsPresetJsonDetails = presetJsonDetails;
+  automationElements.projectsPresetUsage = presetUsage;
   automationElements.projectsApplyCombinationButton = applyParts.applyCombinationButton;
   automationElements.projectsApplyNextTravelSelect = applyParts.applyNextTravelSelect;
   automationElements.projectsApplyNextTravelPersistToggle = applyParts.applyNextTravelPersistToggle;
@@ -839,6 +842,7 @@ function updateProjectsAutomationUI() {
       }
     }
   });
+  updateAutomationPresetUsageLine(automationElements.projectsPresetUsage, 'projects', activePreset);
 
   if (document.activeElement !== projectsBuilderPresetNameInput) {
     projectsBuilderPresetNameInput.value = activePreset ? activePreset.name : projectAutomationUIState.builderName;

@@ -399,6 +399,8 @@ function buildAutomationColonyUI() {
 
   const presetJsonDetails = createAutomationPresetJsonDetails('colony-automation-preset-json-details');
   builderSection.appendChild(presetJsonDetails);
+  const presetUsage = createAutomationPresetUsageLine();
+  builderSection.appendChild(presetUsage);
 
   body.appendChild(builderSection);
 
@@ -450,6 +452,7 @@ function buildAutomationColonyUI() {
   automationElements.colonyBuilderClearButton = clearButton;
   automationElements.colonyBuilderSelectedList = selectedList;
   automationElements.colonyPresetJsonDetails = presetJsonDetails;
+  automationElements.colonyPresetUsage = presetUsage;
   automationElements.colonyApplyCombinationButton = applyParts.applyCombinationButton;
   automationElements.colonyApplyNextTravelSelect = applyParts.applyNextTravelSelect;
   automationElements.colonyApplyNextTravelPersistToggle = applyParts.applyNextTravelPersistToggle;
@@ -667,6 +670,7 @@ function updateColonyAutomationUI() {
       }
     }
   });
+  updateAutomationPresetUsageLine(automationElements.colonyPresetUsage, 'colony', activePreset);
 
   if (document.activeElement !== colonyBuilderPresetNameInput) {
     colonyBuilderPresetNameInput.value = activePreset ? activePreset.name : colonyAutomationUIState.builderName;

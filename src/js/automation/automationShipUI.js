@@ -156,6 +156,7 @@ function buildAutomationShipUI() {
   automationElements.collapseButton = header.collapse;
   automationElements.panelBody = body;
   automationElements.presetSelect = presetRow.presetSelect;
+  automationElements.shipPresetUsage = presetRow.presetUsage;
   automationElements.presetMoveUpButton = presetRow.presetMoveUp;
   automationElements.presetMoveDownButton = presetRow.presetMoveDown;
   automationElements.presetNameInput = presetRow.presetName;
@@ -227,6 +228,7 @@ function updateShipAutomationUI() {
   }
 
   const activePreset = automation.getActivePreset();
+  updateAutomationPresetUsageLine(automationElements.shipPresetUsage, 'ship', activePreset);
   if (activePreset) {
     if (document.activeElement !== presetNameInput) {
       presetNameInput.value = activePreset.name || '';

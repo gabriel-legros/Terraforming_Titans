@@ -3960,6 +3960,11 @@ setLanguageData({
         stepWithIndex: 'Step {index}',
         selectedPresetJsonSummary: 'Selected preset JSON',
         presetJsonIncludeFieldLabel: 'Include this field in saved preset',
+        presetScriptUsageUsed: 'Script usage: {usage}',
+        presetScriptUsageReference: '{script} {line}',
+        presetScriptUsageReferenceViaCombination: '{script} {line} via {combination}',
+        presetScriptUsageLine: 'line {line}',
+        presetScriptUsageLineNamed: 'line {line} ({name})',
         sidebar: {
           autoTravel: 'Auto-travel',
           scripting: 'Scripting',

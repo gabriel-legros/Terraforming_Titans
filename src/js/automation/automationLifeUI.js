@@ -113,6 +113,7 @@ function buildAutomationLifeUI() {
   automationElements.lifeCollapseButton = header.collapse;
   automationElements.lifePanelBody = body;
   automationElements.lifePresetSelect = presetRow.presetSelect;
+  automationElements.lifePresetUsage = presetRow.presetUsage;
   automationElements.lifePresetMoveUpButton = presetRow.presetMoveUp;
   automationElements.lifePresetMoveDownButton = presetRow.presetMoveDown;
   automationElements.lifePresetNameInput = presetRow.presetName;
@@ -190,6 +191,7 @@ function updateLifeAutomationUI() {
   }
 
   const activePreset = automation.getActivePreset();
+  updateAutomationPresetUsageLine(automationElements.lifePresetUsage, 'life', activePreset);
   if (document.activeElement !== lifePresetNameInput) {
     lifePresetNameInput.value = activePreset.name || '';
   }
