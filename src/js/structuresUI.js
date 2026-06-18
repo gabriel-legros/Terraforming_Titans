@@ -1869,6 +1869,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const nextName = structure.getNextTierName();
     const isColony = structure instanceof Colony;
     const next = nextName ? (isColony ? colonies[nextName] : buildings[nextName]) : null;
+    const fusionCountTooLow = structure.name === 'fusionPowerPlant' && structure.count < 10n;
 
     if (!next || !next.unlocked) {
       button.style.display = 'none';
@@ -1951,6 +1952,27 @@ function updateDecreaseButtonText(button, buildCount) {
     button.disabled = !canAfford;
     button.style.display = 'inline-block';
     button.style.color = '';
+
+    if (fusionCountTooLow) {
+      if (!button._upgradeRequirementIcon) {
+        const icon = document.createElement('span');
+        icon.classList.add('info-tooltip-icon');
+        icon.textContent = '\u24d8';
+        button.appendChild(icon);
+        button._upgradeRequirementIcon = icon;
+        button._upgradeRequirementTooltip = attachDynamicInfoTooltip(
+          icon,
+          getStructuresUIText('ui.structures.tooltips.fusionUpgradeRequiresTen', 'Requires at least 10 to upgrade')
+        );
+      }
+      button._upgradeRequirementIcon.style.display = '';
+      setTooltipText(
+        button._upgradeRequirementTooltip,
+        getStructuresUIText('ui.structures.tooltips.fusionUpgradeRequiresTen', 'Requires at least 10 to upgrade')
+      );
+    } else if (button._upgradeRequirementIcon) {
+      button._upgradeRequirementIcon.style.display = 'none';
+    }
   }
   
   function formatRwgMultiplierSource(sourceId) {

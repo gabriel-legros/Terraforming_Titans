@@ -897,6 +897,7 @@ setLanguageData({
         reverseBaseConsumption: 'Reverse-mode base consumption: {value}',
         baseWorkers: 'Base workers: {value}',
         addedWorkers: 'Added workers: {value}',
+        fusionUpgradeRequiresTen: 'Requires at least 10 to upgrade',
       },
     },
     tabs: {
