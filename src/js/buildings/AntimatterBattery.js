@@ -227,7 +227,9 @@ class AntimatterBattery extends Building {
       ? antimatterToSpaceEnergy(antimatterConsumed)
       : 0;
     energy.increase(energyGain);
-    energy.enable?.();
+    if (!energy.unlocked) {
+      energy.enable?.();
+    }
     if (!this.isBooleanFlagSet('antimatterWarpLogistics')) {
       this._fillCooldownEndsAtMs = Date.now() + (FILL_COOLDOWN_SECONDS * 1000);
     }

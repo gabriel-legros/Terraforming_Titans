@@ -9,6 +9,7 @@ let hopeSubtabManager = null;
 let hopeSubtabManagerActivateHookBound = false;
 let awakeningSubtabAlert = false;
 let hopeTabActivationHandlersRegistered = false;
+const hopeAlertElements = {};
 
 function getActiveHopeSubtabId() {
     if (hopeSubtabManager && typeof hopeSubtabManager.getActiveId === 'function') {
@@ -109,10 +110,26 @@ function initializeHopeUI() {
 }
 
 function updateHopeAlert() {
-    const alertEl = document.getElementById('hope-alert');
-    const awakeningEl = document.getElementById('awakening-subtab-alert');
-    const solisEl = document.getElementById('solis-subtab-alert');
-    const wgcEl = document.getElementById('wgc-subtab-alert');
+    let alertEl = hopeAlertElements.main;
+    if (!alertEl || !alertEl.isConnected) {
+        alertEl = document.getElementById('hope-alert');
+        hopeAlertElements.main = alertEl;
+    }
+    let awakeningEl = hopeAlertElements.awakening;
+    if (!awakeningEl || !awakeningEl.isConnected) {
+        awakeningEl = document.getElementById('awakening-subtab-alert');
+        hopeAlertElements.awakening = awakeningEl;
+    }
+    let solisEl = hopeAlertElements.solis;
+    if (!solisEl || !solisEl.isConnected) {
+        solisEl = document.getElementById('solis-subtab-alert');
+        hopeAlertElements.solis = solisEl;
+    }
+    let wgcEl = hopeAlertElements.wgc;
+    if (!wgcEl || !wgcEl.isConnected) {
+        wgcEl = document.getElementById('wgc-subtab-alert');
+        hopeAlertElements.wgc = wgcEl;
+    }
     if (!alertEl && !awakeningEl && !solisEl && !wgcEl) return;
     const awakeningShow = awakeningSubtabAlert;
     if (awakeningEl) awakeningEl.style.display = awakeningShow ? 'inline' : 'none';

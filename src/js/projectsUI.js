@@ -2200,6 +2200,7 @@ function activateProjectSubtab(subtabId) {
 }
 
 let projectTabAlertNeeded = false;
+const projectAlertElements = {};
 const projectSubtabAlerts = {
   'resources-projects': false,
   'infrastructure-projects': false,
@@ -2223,13 +2224,21 @@ function registerProjectUnlockAlert(subtabId) {
 }
 
 function updateProjectAlert() {
-  const alertEl = document.getElementById('projects-alert');
+  let alertEl = projectAlertElements.main;
+  if (!alertEl || !alertEl.isConnected) {
+    alertEl = document.getElementById('projects-alert');
+    projectAlertElements.main = alertEl;
+  }
   if (alertEl) {
     const display = (!gameSettings.silenceUnlockAlert && projectTabAlertNeeded) ? 'inline' : 'none';
     alertEl.style.display = display;
   }
   for (const key in projectSubtabAlerts) {
-    const el = document.getElementById(`${key}-alert`);
+    let el = projectAlertElements[key];
+    if (!el || !el.isConnected) {
+      el = document.getElementById(`${key}-alert`);
+      projectAlertElements[key] = el;
+    }
     if (el) {
       const display = (!gameSettings.silenceUnlockAlert && projectSubtabAlerts[key]) ? 'inline' : 'none';
       el.style.display = display;

@@ -848,9 +848,14 @@ function updateRender(force = false, options = {}) {
 
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {
+    const tabContentCache = updateRender.tabContentCache || (updateRender.tabContentCache = {});
     const isActive = (id) => {
       if (force) return true;
-      const el = document.getElementById(id);
+      let el = tabContentCache[id];
+      if (!el || !el.isConnected) {
+        el = document.getElementById(id);
+        tabContentCache[id] = el;
+      }
       return !!(el && el.classList.contains('active'));
     };
 

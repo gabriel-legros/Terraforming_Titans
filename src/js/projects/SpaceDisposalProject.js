@@ -2030,37 +2030,81 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       }
       const share = this.getTargetShare(target.id, displayTargets);
       const transportCount = this.getTargetTransportCount(target, this.getActiveShipCount(), displayTargets);
-      row.share.textContent = share > 0 ? `${formatNumber(transportCount, true)} ships eq` : '';
+      const shareText = share > 0 ? `${formatNumber(transportCount, true)} ships eq` : '';
+      if (row.share.textContent !== shareText) {
+        row.share.textContent = shareText;
+      }
 
-      row.autoToggle.checkbox.checked = target.autoStart === true;
+      const autoStart = target.autoStart === true;
+      if (row.autoToggle.checkbox.checked !== autoStart) {
+        row.autoToggle.checkbox.checked = autoStart;
+      }
 
-      row.temperatureControl.checkbox.checked = target.disableBelowTemperature === true;
+      const disableBelowTemperature = target.disableBelowTemperature === true;
+      if (row.temperatureControl.checkbox.checked !== disableBelowTemperature) {
+        row.temperatureControl.checkbox.checked = disableBelowTemperature;
+      }
       if (document.activeElement !== row.temperatureControl.input) {
-        row.temperatureControl.input.value = formatNumber(toDisplayTemperature(target.disableTemperatureThreshold), true, 2);
+        const temperatureValue = formatNumber(toDisplayTemperature(target.disableTemperatureThreshold), true, 2);
+        if (row.temperatureControl.input.value !== temperatureValue) {
+          row.temperatureControl.input.value = temperatureValue;
+        }
       }
-      row.temperatureControl.unit.textContent = getTemperatureUnit();
-      row.temperatureControl.container.style.display =
-        this.isTargetSafeGhgSelection(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+      const temperatureUnitText = getTemperatureUnit();
+      if (row.temperatureControl.unit.textContent !== temperatureUnitText) {
+        row.temperatureControl.unit.textContent = temperatureUnitText;
+      }
+      const temperatureDisplay = this.isTargetSafeGhgSelection(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+      if (row.temperatureControl.container.style.display !== temperatureDisplay) {
+        row.temperatureControl.container.style.display = temperatureDisplay;
+      }
 
-      row.pressureControl.checkbox.checked = target.disableBelowPressure === true;
+      const disableBelowPressure = target.disableBelowPressure === true;
+      if (row.pressureControl.checkbox.checked !== disableBelowPressure) {
+        row.pressureControl.checkbox.checked = disableBelowPressure;
+      }
       if (document.activeElement !== row.pressureControl.input) {
-        row.pressureControl.input.value = formatNumber(target.disablePressureThreshold * 1000, true, 2);
+        const pressureValue = formatNumber(target.disablePressureThreshold * 1000, true, 2);
+        if (row.pressureControl.input.value !== pressureValue) {
+          row.pressureControl.input.value = pressureValue;
+        }
       }
-      row.pressureControl.unit.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.pa', 'Pa');
-      row.pressureControl.container.style.display =
-        this.shouldTargetShowPressureControl(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+      const pressureUnitText = this.getSpaceDisposalText('ui.projects.spaceDisposal.pa', 'Pa');
+      if (row.pressureControl.unit.textContent !== pressureUnitText) {
+        row.pressureControl.unit.textContent = pressureUnitText;
+      }
+      const pressureDisplay = this.shouldTargetShowPressureControl(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+      if (row.pressureControl.container.style.display !== pressureDisplay) {
+        row.pressureControl.container.style.display = pressureDisplay;
+      }
 
-      row.coverageControl.checkbox.checked = target.disableBelowCoverage === true;
-      if (document.activeElement !== row.coverageControl.input) {
-        row.coverageControl.input.value = formatNumber(target.disableCoverageThreshold * 100, true, 2);
+      const disableBelowCoverage = target.disableBelowCoverage === true;
+      if (row.coverageControl.checkbox.checked !== disableBelowCoverage) {
+        row.coverageControl.checkbox.checked = disableBelowCoverage;
       }
-      row.coverageControl.unit.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.percent', '%');
-      row.coverageControl.container.style.display =
-        this.shouldTargetShowCoverageControl(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+      if (document.activeElement !== row.coverageControl.input) {
+        const coverageValue = formatNumber(target.disableCoverageThreshold * 100, true, 2);
+        if (row.coverageControl.input.value !== coverageValue) {
+          row.coverageControl.input.value = coverageValue;
+        }
+      }
+      const coverageUnitText = this.getSpaceDisposalText('ui.projects.spaceDisposal.percent', '%');
+      if (row.coverageControl.unit.textContent !== coverageUnitText) {
+        row.coverageControl.unit.textContent = coverageUnitText;
+      }
+      const coverageDisplay = this.shouldTargetShowCoverageControl(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+      if (row.coverageControl.container.style.display !== coverageDisplay) {
+        row.coverageControl.container.style.display = coverageDisplay;
+      }
 
       const statusText = this.getTargetStatusText(target, displayTargets);
-      row.status.textContent = statusText;
-      row.status.dataset.state = statusText.toLowerCase();
+      if (row.status.textContent !== statusText) {
+        row.status.textContent = statusText;
+      }
+      const statusState = statusText.toLowerCase();
+      if (row.status.dataset.state !== statusState) {
+        row.status.dataset.state = statusState;
+      }
     }
   }
 

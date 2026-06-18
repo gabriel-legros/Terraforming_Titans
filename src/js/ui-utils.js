@@ -440,9 +440,18 @@ function createToggleButton(options = {}) {
 }
 
 function setToggleButtonState(toggle, enabled) {
-  toggle.classList.toggle('is-on', !!enabled);
-  toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-  toggle._toggleLabel.textContent = enabled ? toggle.dataset.onLabel : toggle.dataset.offLabel;
+  const isEnabled = !!enabled;
+  if (toggle.classList.contains('is-on') !== isEnabled) {
+    toggle.classList.toggle('is-on', isEnabled);
+  }
+  const pressed = isEnabled ? 'true' : 'false';
+  if (toggle.getAttribute('aria-pressed') !== pressed) {
+    toggle.setAttribute('aria-pressed', pressed);
+  }
+  const label = isEnabled ? toggle.dataset.onLabel : toggle.dataset.offLabel;
+  if (toggle._toggleLabel.textContent !== label) {
+    toggle._toggleLabel.textContent = label;
+  }
 }
 
 function makeCollapsibleCard(card) {

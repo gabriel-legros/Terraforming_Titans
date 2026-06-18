@@ -1,6 +1,7 @@
 // Resource Class and Core Logic
 var debug_production = {};
 var debug_consumption = {};
+let resourceDebugRateTracking = false;
 const EXACT_LAND_SCALE_DIGITS = 15;
 let resolveWorldGeometricLandHelper = null;
 let getDynamicWorldPlanetaryMassAvailableTonsHelper = null;
@@ -15,6 +16,7 @@ if (typeof module !== 'undefined' && module.exports) {
     disposeDynamicWorldPlanetaryMass: disposeDynamicWorldPlanetaryMassHelper,
     addDynamicWorldPlanetaryMaterial: addDynamicWorldPlanetaryMaterialHelper
   } = require('./world-geometry.js'));
+  ({ DEBUG_MODE: resourceDebugRateTracking } = require('./debug_constants.js'));
 }
 
 function getDynamicWorldPlanetaryMassAvailableTonsSafe(terraformingState, celestialParameters) {
@@ -64,6 +66,44 @@ function collectWasteCleanupSlackByResource(buildings) {
     }
   }
   return cleanupSlack;
+}
+
+function clearObjectEntries(target) {
+  for (const key in target) {
+    delete target[key];
+  }
+}
+
+function clearRateTypeMap(target) {
+  for (const rateType in target) {
+    clearObjectEntries(target[rateType]);
+  }
+}
+
+function copyRateTypeMap(target, source) {
+  for (const rateType in target) {
+    if (!source[rateType]) {
+      delete target[rateType];
+    }
+  }
+  for (const rateType in source) {
+    const sourceRates = source[rateType];
+    const targetRates = target[rateType] || (target[rateType] = {});
+    clearObjectEntries(targetRates);
+    for (const sourceName in sourceRates) {
+      targetRates[sourceName] = sourceRates[sourceName];
+    }
+  }
+}
+
+function buildRateBySourceFromTypeMap(target, source) {
+  clearObjectEntries(target);
+  for (const rateType in source) {
+    const sourceRates = source[rateType];
+    for (const sourceName in sourceRates) {
+      target[sourceName] = (target[sourceName] || 0) + sourceRates[sourceName];
+    }
+  }
 }
 
 function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
@@ -941,8 +981,8 @@ class Resource extends EffectableEntity {
   recalculateTotalRates() {
     this.productionRate = 0;
     this.consumptionRate = 0;
-    this.productionRateBySource = {}; // Keep this for potential UI use, sum across types
-    this.consumptionRateBySource = {}; // Keep this for potential UI use, sum across types
+    clearObjectEntries(this.productionRateBySource); // Keep this for potential UI use, sum across types
+    clearObjectEntries(this.consumptionRateBySource); // Keep this for potential UI use, sum across types
 
     for (const type in this.productionRateByType) {
       for (const source in this.productionRateByType[type]) {
@@ -969,20 +1009,20 @@ class Resource extends EffectableEntity {
   resetRates({ keepProjected = false } = {}) {
     this.productionRate = 0;
     this.consumptionRate = 0;
-    this.productionRateByType = {};
-    this.consumptionRateByType = {};
-    this.productionRateBySource = {}; // Also reset the aggregated source map
-    this.consumptionRateBySource = {}; // Also reset the aggregated source map
+    clearRateTypeMap(this.productionRateByType);
+    clearRateTypeMap(this.consumptionRateByType);
+    clearObjectEntries(this.productionRateBySource); // Also reset the aggregated source map
+    clearObjectEntries(this.consumptionRateBySource); // Also reset the aggregated source map
     this.overflowRate = 0;
     this.automationLimited = false;
 
     if (!keepProjected) {
       this.projectedProductionRate = 0;
       this.projectedConsumptionRate = 0;
-      this.projectedProductionRateByType = {};
-      this.projectedConsumptionRateByType = {};
-      this.projectedProductionRateBySource = {};
-      this.projectedConsumptionRateBySource = {};
+      clearRateTypeMap(this.projectedProductionRateByType);
+      clearRateTypeMap(this.projectedConsumptionRateByType);
+      clearObjectEntries(this.projectedProductionRateBySource);
+      clearObjectEntries(this.projectedConsumptionRateBySource);
     }
   }
 
@@ -990,35 +1030,10 @@ class Resource extends EffectableEntity {
     this.projectedProductionRate = this.productionRate;
     this.projectedConsumptionRate = this.consumptionRate;
 
-    this.projectedProductionRateByType = {};
-    for (const rateType in this.productionRateByType) {
-      this.projectedProductionRateByType[rateType] = { ...this.productionRateByType[rateType] };
-    }
-
-    this.projectedConsumptionRateByType = {};
-    for (const rateType in this.consumptionRateByType) {
-      this.projectedConsumptionRateByType[rateType] = { ...this.consumptionRateByType[rateType] };
-    }
-
-    this.projectedProductionRateBySource = {};
-    for (const rateType in this.productionRateByType) {
-      for (const source in this.productionRateByType[rateType]) {
-        if (!this.projectedProductionRateBySource[source]) {
-          this.projectedProductionRateBySource[source] = 0;
-        }
-        this.projectedProductionRateBySource[source] += this.productionRateByType[rateType][source];
-      }
-    }
-
-    this.projectedConsumptionRateBySource = {};
-    for (const rateType in this.consumptionRateByType) {
-      for (const source in this.consumptionRateByType[rateType]) {
-        if (!this.projectedConsumptionRateBySource[source]) {
-          this.projectedConsumptionRateBySource[source] = 0;
-        }
-        this.projectedConsumptionRateBySource[source] += this.consumptionRateByType[rateType][source];
-      }
-    }
+    copyRateTypeMap(this.projectedProductionRateByType, this.productionRateByType);
+    copyRateTypeMap(this.projectedConsumptionRateByType, this.consumptionRateByType);
+    buildRateBySourceFromTypeMap(this.projectedProductionRateBySource, this.productionRateByType);
+    buildRateBySourceFromTypeMap(this.projectedConsumptionRateBySource, this.consumptionRateByType);
   }
 
   enable() {
@@ -1434,9 +1449,12 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
   // Reset rates using the new method
-  const localProduction = {};
-  const localConsumption = {};
+  const localProduction = resourceDebugRateTracking ? {} : null;
+  const localConsumption = resourceDebugRateTracking ? {} : null;
   const trackDebugRate = (target, category, resource, source, amount) => {
+    if (!target) {
+      return;
+    }
     if (!target[category]) {
       target[category] = {};
     }
@@ -1563,8 +1581,8 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     }
   }
 
-  debug_production = localProduction;
-  debug_consumption = localConsumption;
+  debug_production = localProduction || {};
+  debug_consumption = localConsumption || {};
 }
 
 function buildProjectOperationProductivityMap(projectEntries, projectProductivityMap, deltaTime) {

@@ -18,6 +18,7 @@ const researchSubtabAlerts = {
 };
 let researchSubtabManager = null;
 let researchSubtabManagerActivateHookBound = false;
+const researchAlertElements = {};
 
 // Cached DOM nodes keyed by research id
 const researchElementCache = new Map();
@@ -213,13 +214,21 @@ function registerResearchUnlockAlert(subtabId) {
 }
 
 function updateResearchAlert() {
-    const alertEl = document.getElementById('research-alert');
+    let alertEl = researchAlertElements.main;
+    if (!alertEl || !alertEl.isConnected) {
+        alertEl = document.getElementById('research-alert');
+        researchAlertElements.main = alertEl;
+    }
     if (alertEl) {
         const display = (!gameSettings.silenceUnlockAlert && researchTabAlertNeeded) ? 'inline' : 'none';
         alertEl.style.display = display;
     }
     for (const key in researchSubtabAlerts) {
-        const el = document.getElementById(`${key}-alert`);
+        let el = researchAlertElements[key];
+        if (!el || !el.isConnected) {
+            el = document.getElementById(`${key}-alert`);
+            researchAlertElements[key] = el;
+        }
         if (el) {
             const display = (!gameSettings.silenceUnlockAlert && researchSubtabAlerts[key]) ? 'inline' : 'none';
             el.style.display = display;

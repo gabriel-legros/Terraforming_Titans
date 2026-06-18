@@ -86,15 +86,15 @@ function createJournalAutomationToggle(title) {
 
 function cacheSidebarAutomationElements() {
   const elements = sidebarAutomationElements;
-  elements.journal = document.getElementById('journal');
-  elements.title = document.getElementById('journal-title');
-  elements.toggle = document.getElementById('journal-automation-toggle');
-  elements.panel = document.getElementById('journal-automation-panel');
-  elements.entries = document.getElementById('journal-entries');
-  elements.index = document.getElementById('journal-index');
-  elements.objective = document.getElementById('current-objective');
-  elements.nav = document.getElementById('journal-nav-container');
-  elements.indexIcon = document.getElementById('journal-index-icon');
+  if (!elements.journal || !elements.journal.isConnected) elements.journal = document.getElementById('journal');
+  if (!elements.title || !elements.title.isConnected) elements.title = document.getElementById('journal-title');
+  if (!elements.toggle || !elements.toggle.isConnected) elements.toggle = document.getElementById('journal-automation-toggle');
+  if (!elements.panel || !elements.panel.isConnected) elements.panel = document.getElementById('journal-automation-panel');
+  if (!elements.entries || !elements.entries.isConnected) elements.entries = document.getElementById('journal-entries');
+  if (!elements.index || !elements.index.isConnected) elements.index = document.getElementById('journal-index');
+  if (!elements.objective || !elements.objective.isConnected) elements.objective = document.getElementById('current-objective');
+  if (!elements.nav || !elements.nav.isConnected) elements.nav = document.getElementById('journal-nav-container');
+  if (!elements.indexIcon || !elements.indexIcon.isConnected) elements.indexIcon = document.getElementById('journal-index-icon');
   if (!elements.toggle) {
     elements.toggle = createJournalAutomationToggle(elements.title);
   }

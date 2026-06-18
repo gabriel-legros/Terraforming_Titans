@@ -1,3 +1,14 @@
+const NANOTECH_MAINTENANCE_RESOURCES = [
+  'metal',
+  'glass',
+  'water',
+  'components',
+  'superconductors',
+  'electronics'
+];
+const NANOTECH_STAGE_ONE_MAINTENANCE_RESOURCES = ['metal', 'glass', 'water'];
+const NANOTECH_STAGE_TWO_MAINTENANCE_RESOURCES = ['components', 'superconductors'];
+
 function getNanotechText(path, fallback, vars) {
   try {
     return t(path, vars, fallback);
@@ -79,6 +90,7 @@ class NanotechManager extends EffectableEntity {
     this.maxGraphiteAbsolute = 1e6;
     this.graphiteLimitMode = 'percent';
     this.uiCache = null; // cache of UI element references for fast updates
+    this.nanocolonyContentElement = null;
     this.uiState = {
       glassMax: 10,
       componentsMax: 10,
@@ -730,7 +742,17 @@ class NanotechManager extends EffectableEntity {
       }
     }
     this.applyMaintenanceEffects();
-    this.updateUI();
+    if (this.shouldUpdateUIFromTick()) {
+      this.updateUI();
+    }
+  }
+
+  shouldUpdateUIFromTick() {
+    if (typeof document === 'undefined') return false;
+    if (!this.nanocolonyContentElement || !this.nanocolonyContentElement.isConnected) {
+      this.nanocolonyContentElement = document.getElementById('nanocolony-colonies');
+    }
+    return !!(this.nanocolonyContentElement && this.nanocolonyContentElement.classList.contains('active'));
   }
 
   enable() {
@@ -843,7 +865,7 @@ class NanotechManager extends EffectableEntity {
         ? s.getEffectiveMaintenanceMultiplier()
         : 1;
       const resourceTotals = totals;
-      ['metal', 'glass', 'water', 'components', 'superconductors', 'electronics'].forEach((res) => {
+      NANOTECH_MAINTENANCE_RESOURCES.forEach((res) => {
         const resourceCost = colonyCost[res];
         if (!(resourceCost > 0)) {
           return;
@@ -958,16 +980,14 @@ class NanotechManager extends EffectableEntity {
       ? coverage4 * (this.maintenance4Slider / 10)
       : 0;
     this.currentMaintenance4Reduction = reduction4;
-    const netReductionByResource = {
-      metal: Math.min(1, reduction + reduction4),
-      glass: Math.min(1, reduction + reduction4),
-      water: Math.min(1, reduction + reduction4),
-      components: Math.min(1, reduction2 + reduction4),
-      superconductors: Math.min(1, reduction2 + reduction4),
-      electronics: Math.min(1, reduction3 + reduction4),
-    };
-    Object.keys(netReductionByResource).forEach((res) => {
-      const targetMultiplier = 1 - netReductionByResource[res];
+    NANOTECH_MAINTENANCE_RESOURCES.forEach((res) => {
+      let resourceReduction = reduction3;
+      if (NANOTECH_STAGE_ONE_MAINTENANCE_RESOURCES.includes(res)) {
+        resourceReduction = reduction;
+      } else if (NANOTECH_STAGE_TWO_MAINTENANCE_RESOURCES.includes(res)) {
+        resourceReduction = reduction2;
+      }
+      const targetMultiplier = 1 - Math.min(1, resourceReduction + reduction4);
       for (const name in structures) {
         const target = colonies && colonies[name] ? 'colony' : 'building';
         const effect = {

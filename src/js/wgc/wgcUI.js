@@ -399,9 +399,17 @@ function invalidateWGCTeamCache() {
   teamElements.length = 0;
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   names.forEach((_, tIdx) => {
-    const card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
+    const prev = previous[tIdx];
+    let card = prev && prev.card && prev.card.isConnected ? prev.card : null;
+    if (!card) {
+      card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
+    }
     if (!card) {
       teamElements[tIdx] = null;
+      return;
+    }
+    if (prev && prev.card === card) {
+      teamElements[tIdx] = prev;
       return;
     }
     const lockOverlay = card.querySelector('.wgc-team-locked');
@@ -413,7 +421,6 @@ function invalidateWGCTeamCache() {
       bar: slot.querySelector('.team-hp-bar-fill'),
       indicator: slot.querySelector('.unspent-points-indicator') || null
     }));
-    const prev = previous[tIdx];
     const isNewCard = !prev || prev.card !== card;
     const hideStory = typeof warpGateCommand !== 'undefined' && !!warpGateCommand.hideStoryLogs;
     const entry = {

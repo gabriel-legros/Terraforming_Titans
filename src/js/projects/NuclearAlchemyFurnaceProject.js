@@ -128,6 +128,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.lastOutputRatesByResource = {};
     this.operationPreRunThisTick = false;
     this.uiElements = null;
+    this.managedAssignmentKeys = null;
   }
 
   resolveUIElements() {
@@ -203,7 +204,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getAssignmentKeys() {
-    return NUCLEAR_ALCHEMY_RECIPE_KEYS.slice();
+    return NUCLEAR_ALCHEMY_RECIPE_KEYS;
   }
 
   getUnassignedAssignmentKey() {
@@ -211,7 +212,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getManagedAssignmentKeys() {
-    return [this.getUnassignedAssignmentKey()].concat(this.getAssignmentKeys());
+    if (!this.managedAssignmentKeys) {
+      this.managedAssignmentKeys = [this.getUnassignedAssignmentKey()].concat(this.getAssignmentKeys());
+    }
+    return this.managedAssignmentKeys;
   }
 
   isUnassignedAssignmentKey(key) {

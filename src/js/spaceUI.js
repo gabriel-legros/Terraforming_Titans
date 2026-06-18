@@ -244,12 +244,24 @@ function setSpaceIncomingAttackWarning(isActive, isThreat = true) {
         }
         return;
     }
-    warning.classList.remove('is-visible');
-    warning.classList.remove('is-safe');
-    warning.setAttribute('aria-hidden', 'true');
-    warning.removeAttribute('role');
-    warning.removeAttribute('aria-label');
-    warning.removeAttribute('title');
+    if (warning.classList.contains('is-visible')) {
+        warning.classList.remove('is-visible');
+    }
+    if (warning.classList.contains('is-safe')) {
+        warning.classList.remove('is-safe');
+    }
+    if (warning.getAttribute('aria-hidden') !== 'true') {
+        warning.setAttribute('aria-hidden', 'true');
+    }
+    if (warning.hasAttribute('role')) {
+        warning.removeAttribute('role');
+    }
+    if (warning.hasAttribute('aria-label')) {
+        warning.removeAttribute('aria-label');
+    }
+    if (warning.hasAttribute('title')) {
+        warning.removeAttribute('title');
+    }
 }
 
 function showSpaceAtlasTab() {

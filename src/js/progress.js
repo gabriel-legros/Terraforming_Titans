@@ -742,7 +742,10 @@ class StoryManager {
 
     updateCurrentObjectiveUI() {
         if (typeof document === 'undefined') return;
-        const el = document.getElementById('current-objective');
+        if (!this.currentObjectiveElement || !this.currentObjectiveElement.isConnected) {
+            this.currentObjectiveElement = document.getElementById('current-objective');
+        }
+        const el = this.currentObjectiveElement;
         if (!el) return;
         const texts = this.getCurrentObjectiveTexts();
         if (texts.length === 0) {

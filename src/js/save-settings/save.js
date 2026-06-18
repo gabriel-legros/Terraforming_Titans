@@ -1291,6 +1291,7 @@ function setAutosaveIntervalSeconds(intervalSeconds) {
 
 let autosaveInterval = DEFAULT_AUTOSAVE_INTERVAL_SECONDS;
 let autosaveTimer = autosaveInterval;
+let autosaveTextElement = null;
 
 function autosave(delta) {
   const intervalSeconds = getAutosaveIntervalSeconds();
@@ -1319,7 +1320,10 @@ function autosave(delta) {
 }
 
 function updateAutosaveText(overrideText) {
-  const autosaveText = document.getElementById('autosave-text');
+  if (!autosaveTextElement || !autosaveTextElement.isConnected) {
+    autosaveTextElement = document.getElementById('autosave-text');
+  }
+  const autosaveText = autosaveTextElement;
   if (!autosaveText) return;
   if (overrideText) {
     autosaveText.textContent = overrideText;

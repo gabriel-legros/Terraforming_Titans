@@ -7,6 +7,7 @@ if (typeof SubtabManager === 'undefined') {
     }
 }
 let buildingSubtabManager = null;
+const buildingAlertElements = {};
 
 function createBuildingCategoryTabs() {
     const categories = typeof getBuildingCategories === 'function' ? getBuildingCategories() : [];
@@ -146,13 +147,21 @@ function registerBuildingUnlockAlert(subtabId) {
 }
 
 function updateBuildingAlert() {
-    const alertEl = document.getElementById('buildings-alert');
+    let alertEl = buildingAlertElements.main;
+    if (!alertEl || !alertEl.isConnected) {
+        alertEl = document.getElementById('buildings-alert');
+        buildingAlertElements.main = alertEl;
+    }
     if (alertEl) {
         const display = (!gameSettings.silenceUnlockAlert && buildingTabAlertNeeded) ? 'inline' : 'none';
         alertEl.style.display = display;
     }
     for (const key in buildingSubtabAlerts) {
-        const el = document.getElementById(`${key}-alert`);
+        let el = buildingAlertElements[key];
+        if (!el || !el.isConnected) {
+            el = document.getElementById(`${key}-alert`);
+            buildingAlertElements[key] = el;
+        }
         if (el) {
             const display = (!gameSettings.silenceUnlockAlert && buildingSubtabAlerts[key]) ? 'inline' : 'none';
             el.style.display = display;

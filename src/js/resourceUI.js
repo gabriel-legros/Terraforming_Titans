@@ -173,12 +173,19 @@ function updateSpaceStorageCapDisplay(entry, resourceKey) {
   }
   const capLimit = getSpaceStorageResourceCapDisplay(resourceKey);
   const showCap = Number.isFinite(capLimit);
-  entry.rowEl.classList.toggle('no-cap', !showCap);
+  if (entry.rowEl.classList.contains('no-cap') === showCap) {
+    entry.rowEl.classList.toggle('no-cap', !showCap);
+  }
   entry.slashEl.style.display = showCap ? '' : 'none';
   entry.capWrapperEl.style.display = showCap ? '' : 'none';
-  entry.capEl.classList.remove('resource-cap-limited');
+  if (entry.capEl.classList.contains('resource-cap-limited')) {
+    entry.capEl.classList.remove('resource-cap-limited');
+  }
   if (showCap) {
-    entry.capEl.textContent = formatNumber(capLimit, false, 1, false, true);
+    const capText = formatNumber(capLimit, false, 1, false, true);
+    if (entry.capEl.textContent !== capText) {
+      entry.capEl.textContent = capText;
+    }
   }
 }
 
@@ -1707,10 +1714,16 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const maxStorage = storageProject ? Math.max(0, storageProject.maxStorage || 0) : 0;
       spaceStorageTotalHeadroom = Math.max(0, maxStorage - usedStorage);
       if (spaceStorageTotalEntry?.valueEl) {
-        spaceStorageTotalEntry.valueEl.textContent = formatNumber(usedStorage, false, 1, false, true);
+        const usedStorageText = formatNumber(usedStorage, false, 1, false, true);
+        if (spaceStorageTotalEntry.valueEl.textContent !== usedStorageText) {
+          spaceStorageTotalEntry.valueEl.textContent = usedStorageText;
+        }
       }
       if (spaceStorageTotalEntry?.capEl) {
-        spaceStorageTotalEntry.capEl.textContent = formatNumber(maxStorage, false, 1, false, true);
+        const maxStorageText = formatNumber(maxStorage, false, 1, false, true);
+        if (spaceStorageTotalEntry.capEl.textContent !== maxStorageText) {
+          spaceStorageTotalEntry.capEl.textContent = maxStorageText;
+        }
       }
       setResourceCapLimited(spaceStorageTotalEntry, false);
     }
@@ -1785,9 +1798,13 @@ function updateResourceDisplay(resources, deltaSeconds) {
       }
 
       if (resourceObj.isBooleanFlagSet('festival') && resourceNameElement) {
-        resourceNameElement.classList.add('resource-festival');
+        if (!resourceNameElement.classList.contains('resource-festival')) {
+          resourceNameElement.classList.add('resource-festival');
+        }
       } else if (resourceNameElement) {
-        resourceNameElement.classList.remove('resource-festival');
+        if (resourceNameElement.classList.contains('resource-festival')) {
+          resourceNameElement.classList.remove('resource-festival');
+        }
       }
 
       if (resourceNameElement && resourceNameElement.textContent !== resourceObj.displayName) {
@@ -1806,9 +1823,13 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
       // Check if the resource has the "golden" flag set
       if (resourceObj.isBooleanFlagSet('golden') && resourceNameElement) {
-        resourceNameElement.classList.add('sparkling-gold');
+        if (!resourceNameElement.classList.contains('sparkling-gold')) {
+          resourceNameElement.classList.add('sparkling-gold');
+        }
       } else if (resourceNameElement) {
-        resourceNameElement.classList.remove('sparkling-gold');
+        if (resourceNameElement.classList.contains('sparkling-gold')) {
+          resourceNameElement.classList.remove('sparkling-gold');
+        }
       }
 
       let stormActive = false;
@@ -1818,9 +1839,13 @@ function updateResourceDisplay(resources, deltaSeconds) {
         stormActive = false;
       }
       if (resourceNameElement && (resourceName === 'androids' || resourceName === 'electronics') && stormActive) {
-        resourceNameElement.classList.add('resource-electromagnetic-storm');
+        if (!resourceNameElement.classList.contains('resource-electromagnetic-storm')) {
+          resourceNameElement.classList.add('resource-electromagnetic-storm');
+        }
       } else if (resourceNameElement) {
-        resourceNameElement.classList.remove('resource-electromagnetic-storm');
+        if (resourceNameElement.classList.contains('resource-electromagnetic-storm')) {
+          resourceNameElement.classList.remove('resource-electromagnetic-storm');
+        }
       }
 
       if (allowRegularWarnings && resourceName === 'biomass' && entry.warningEl) {
@@ -1879,12 +1904,18 @@ function updateResourceDisplay(resources, deltaSeconds) {
         // Update population as an integer
         const valEl = entry ? entry.valueEl : null;
         if (valEl) {
-          valEl.textContent = formatNumber(Math.floor(resourceObj.value), true);
+          const valueText = formatNumber(Math.floor(resourceObj.value), true);
+          if (valEl.textContent !== valueText) {
+            valEl.textContent = valueText;
+          }
         }
 
         const capElement = entry ? entry.capEl : null;
         if (capElement) {
-          capElement.textContent = formatNumber(Math.floor(resourceObj.cap), true);
+          const capText = formatNumber(Math.floor(resourceObj.cap), true);
+          if (capElement.textContent !== capText) {
+            capElement.textContent = capText;
+          }
         }
 
         if (entry?.warningEl) {
@@ -1908,11 +1939,17 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
         if (availableElement) {
           const available = resourceObj.getAvailableAmount ? resourceObj.getAvailableAmount() : (resourceObj.value - resourceObj.reserved);
-          availableElement.textContent = formatNumber(Math.floor(available), true);
+          const availableText = formatNumber(Math.floor(available), true);
+          if (availableElement.textContent !== availableText) {
+            availableElement.textContent = availableText;
+          }
         }
 
         if (totalElement) {
-          totalElement.textContent = formatNumber(Math.floor(resourceObj.value), true);
+          const totalText = formatNumber(Math.floor(resourceObj.value), true);
+          if (totalElement.textContent !== totalText) {
+            totalElement.textContent = totalText;
+          }
         }
 
         // Update scanning progress if there is scanning strength using ScannerProject instance
@@ -1935,9 +1972,12 @@ function updateResourceDisplay(resources, deltaSeconds) {
           scanningProgressElement
         ) {
           scanningProgressElement.style.display = 'block';
-          scanningProgressElement.textContent = getResourceUICommonText('scanningProgress', 'Scanning Progress: {value}%', {
+          const scanningText = getResourceUICommonText('scanningProgress', 'Scanning Progress: {value}%', {
             value: (scanData.currentScanProgress * 100).toFixed(2),
           });
+          if (scanningProgressElement.textContent !== scanningText) {
+            scanningProgressElement.textContent = scanningText;
+          }
         } else if (scanningProgressElement) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
@@ -1951,21 +1991,27 @@ function updateResourceDisplay(resources, deltaSeconds) {
           const displayValue = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
             ? getAntimatterEquivalentValue(resources)
             : resourceObj.value;
-          valEl.textContent = formatNumber(
+          const valueText = formatNumber(
             getActiveResidueDisplayValue(resourceObj, displayValue),
             false,
             1,
             false,
             roundResourceBarAmountDown
           );
+          if (valEl.textContent !== valueText) {
+            valEl.textContent = valueText;
+          }
         }
-      
+
         const capElement = entry ? entry.capEl : null;
         if (capElement && (category !== 'spaceStorage' || resourceName === 'energy')) {
           const displayCap = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
             ? getAntimatterEquivalentCap(resources)
             : resourceObj.cap;
-          capElement.textContent = formatNumber(displayCap, false, 1, false, roundResourceBarAmountDown);
+          const capText = formatNumber(displayCap, false, 1, false, roundResourceBarAmountDown);
+          if (capElement.textContent !== capText) {
+            capElement.textContent = capText;
+          }
         }
       
         updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
@@ -1994,7 +2040,16 @@ function updateResourceDisplay(resources, deltaSeconds) {
 function getDisplayConsumptionRates(resource) {
   const baseBySource = resource.consumptionRateBySource || {};
   let total = resource.consumptionRate;
-  const adjustedBySource = { ...baseBySource };
+  const cached = resource._displayConsumptionRates || (resource._displayConsumptionRates = { total: 0, bySource: {} });
+  const adjustedBySource = cached.bySource;
+  for (const sourceName in adjustedBySource) {
+    if (baseBySource[sourceName] === undefined) {
+      delete adjustedBySource[sourceName];
+    }
+  }
+  for (const sourceName in baseBySource) {
+    adjustedBySource[sourceName] = baseBySource[sourceName];
+  }
 
   for (const name in buildings) {
     const building = buildings[name];
@@ -2018,7 +2073,8 @@ function getDisplayConsumptionRates(resource) {
     }
   }
 
-  return { total, bySource: adjustedBySource };
+  cached.total = total;
+  return cached;
 }
 
 function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = resource.category, displayName = resource.name){
@@ -2034,8 +2090,14 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     if (resource.name === 'workers') {
       const cap = resource.cap || 0;
       const freePercent = cap > 0 ? (resource.value / cap) * 100 : 0;
-      ppsElement.textContent = `${freePercent >= 0 ? '+' : ''}${formatNumber(freePercent, false, 2)}%`;
-      ppsElement.style.color = swapResourceRateColor(resource, '');
+      const workerRateText = `${freePercent >= 0 ? '+' : ''}${formatNumber(freePercent, false, 2)}%`;
+      if (ppsElement.textContent !== workerRateText) {
+        ppsElement.textContent = workerRateText;
+      }
+      const workerRateColor = swapResourceRateColor(resource, '');
+      if (ppsElement.style.color !== workerRateColor) {
+        ppsElement.style.color = workerRateColor;
+      }
     } else {
       const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
       const consumptionDisplay = getDisplayConsumptionRates(resource);
@@ -2088,13 +2150,22 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       unstableTimers[resourceKey] = timer;
 
       if (baseUnstable || timer > 0) {
-        ppsElement.textContent = getResourceUICommonText('unstable', 'Unstable');
-        ppsElement.style.color = '';
+        const unstableText = getResourceUICommonText('unstable', 'Unstable');
+        if (ppsElement.textContent !== unstableText) {
+          ppsElement.textContent = unstableText;
+        }
+        if (ppsElement.style.color) {
+          ppsElement.style.color = '';
+        }
       } else {
+        let rateText;
         if (Math.abs(netRate) < 1e-3) {
-          ppsElement.textContent = `0`;
+          rateText = '0';
         } else {
-          ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+          rateText = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+        }
+        if (ppsElement.textContent !== rateText) {
+          ppsElement.textContent = rateText;
         }
         let ppsColor = '';
         if (netRate < 0) {
