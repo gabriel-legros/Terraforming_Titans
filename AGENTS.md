@@ -99,6 +99,15 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Keep caches attached to the owning DOM container or local module cache, for example `container._rowCache`, `select._automationOptionsSignature`, or a module-level `uiCache`.
 - When a panel is rebuilt intentionally, clear or replace its associated cache at the same time so stale references do not point at detached nodes.
 
+### Render Path Boundary
+- Logic paths must not render UI. `updateLogic`, `produceResources`, manager `update(...)` methods, project/building production, automation execution, travel/reset state rebuilds, and other simulation paths should mutate game state only.
+- Do not call `update...UI()`, `render...()`, DOM query/manipulation APIs, tooltip attachment, or `document` reads/writes from simulation code just because a value changed.
+- Per-tick UI refresh belongs in `updateRender()` or a UI function called from `updateRender()`, gated by active tab/subtab state where appropriate.
+- If simulation code needs the render path to know something changed, store that fact as plain JS state on the owning manager/module, such as a dirty flag, cached summary, active-id field, or latest computed values. Let the render path consume that state and update DOM.
+- Active tab/subtab checks used by logic-adjacent render gating should come from UI-owned JS state, not from logic code reading `.classList`, `document.getElementById(...)`, or `querySelector(...)`.
+- Direct UI calls are acceptable from explicit UI events and lifecycle entry points whose purpose is presentation setup, such as button/input handlers, `initialize...UI`, first unlock reveal, load/travel final render refreshes, or `updateRender()` itself. Keep these calls out of recurring simulation loops.
+- When fixing a logic-to-UI leak, remove the UI call from the logic path instead of hiding it behind a DOM-active guard. Move the refresh to the render path and preserve any needed state on the manager.
+
 ### Repeated Lists, Cards, and Rows
 - Reconcile repeated children instead of rebuilding them:
   1. Build or reuse a `Map` from stable id to row/card.

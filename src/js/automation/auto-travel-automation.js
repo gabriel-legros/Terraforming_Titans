@@ -320,8 +320,8 @@ class AutoTravelAutomation {
   }
 
   _runAfterLoadingPaint(callback) {
-    if (document.hidden) {
-      window.setTimeout(callback, 80);
+    if (!window.requestAnimationFrame) {
+      setTimeout(callback, 80);
       return;
     }
     window.requestAnimationFrame(() => {
@@ -330,23 +330,13 @@ class AutoTravelAutomation {
   }
 
   _captureCurrentTabState() {
-    const activeMainTab = document.querySelector('.tab.active');
-    const mainTabId = activeMainTab?.dataset?.tab || '';
-    const getActiveSubtabId = (selector) => {
-      const node = document.querySelector(`${selector}.active`);
-      return node?.dataset?.subtab || '';
-    };
-    const getActiveContentId = (selector) => {
-      const node = document.querySelector(`${selector}.active`);
-      return node?.id || '';
-    };
     return {
-      mainTabId,
-      hopeSubtabId: getActiveSubtabId('.hope-subtab'),
-      spaceSubtabId: getActiveSubtabId('.space-subtab'),
-      terraformingSubtabId: getActiveSubtabId('.terraforming-subtab'),
-      colonySubtabId: getActiveSubtabId('.colony-subtab'),
-      settingsSubtabId: getActiveSubtabId('.settings-subtab') || getActiveContentId('.settings-subtab-content')
+      mainTabId: tabManager?.getActiveTabId?.() || '',
+      hopeSubtabId: hopeSubtabManager?.getActiveId?.() || 'awakening-hope',
+      spaceSubtabId: spaceSubtabManager?.getActiveId?.() || 'space-story',
+      terraformingSubtabId: terraformingSubtabManager?.getActiveId?.() || 'world-terraforming',
+      colonySubtabId: colonySubtabState.activeSubtabId || 'population-colonies',
+      settingsSubtabId: settingsSubtabManager?.getActiveId?.() || 'save-settings-subtab'
     };
   }
 

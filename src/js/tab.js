@@ -55,6 +55,7 @@ const tabParameters = {
     constructor(config, tabParams) {
       super(config);
       this.tabs = {}; // Object to store tab elements by their ID
+      this.activeTabId = null;
       this.loadTabs(tabParams); // Initialize tabs from parameters
     }
 
@@ -175,6 +176,7 @@ const tabParameters = {
 
         tabElement.classList.add('active');
         tabContentElement.classList.add('active');
+        this.activeTabId = tabId;
       } else {
         console.error(`Tab content with id "${tabId}" not found.`);
       }
@@ -200,6 +202,10 @@ const tabParameters = {
       if (tabId === 'space') {
         markSpaceTabAlertViewed();
       }
+    }
+
+    getActiveTabId() {
+      return this.activeTabId;
     }
 
     setSpaceTabAlert(effect) {

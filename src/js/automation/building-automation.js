@@ -565,7 +565,6 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       const nextAutoFillingEnabled = control.autoFillingEnabled === true;
       if (building.autoFillingEnabled !== nextAutoFillingEnabled) {
         building.autoFillingEnabled = nextAutoFillingEnabled;
-        building.updateUI(building._cachedUI || {});
         changed = true;
       }
     }

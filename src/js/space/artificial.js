@@ -790,11 +790,13 @@ class ArtificialManager extends EffectableEntity {
         this.updateUI(true);
     }
 
-    refreshConditionalRingStarCoreUnlocks() {
+    refreshConditionalRingStarCoreUnlocks(options = {}) {
         const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
         this._lastGalaxyConquestUnlockState = hasGalaxyConquest;
         this.draftSelection = this.normalizeDraftSelection(this.draftSelection);
-        this.updateUI(true);
+        if (options.updateUI !== false) {
+            this.updateUI(true);
+        }
     }
 
     isFleetCapacityWorldCapUncapped() {
@@ -828,7 +830,7 @@ class ArtificialManager extends EffectableEntity {
         if (isCurrentWorldManagerDisabled('artificialManager')) return;
         const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
         if (hasGalaxyConquest !== this._lastGalaxyConquestUnlockState) {
-            this.refreshConditionalRingStarCoreUnlocks();
+            this.refreshConditionalRingStarCoreUnlocks({ updateUI: false });
         }
         if (!this.enabled || !this.activeProject) return;
         if (this.activeProject.status === 'building') {
@@ -842,7 +844,6 @@ class ArtificialManager extends EffectableEntity {
         this._tickTimer += delta;
         if (this._tickTimer >= 500) {
             this._tickTimer = 0;
-            this.updateUI();
         }
     }
 

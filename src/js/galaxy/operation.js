@@ -1141,11 +1141,6 @@ class GalaxyOperationManager {
             availableAntimatter = 0;
         }
         let launched = false;
-        const uiAllocationUpdater = (typeof globalThis !== 'undefined'
-            && globalThis.GalaxyOperationUI
-            && typeof globalThis.GalaxyOperationUI.applyExternalAllocation === 'function')
-            ? globalThis.GalaxyOperationUI.applyExternalAllocation
-            : null;
         const candidates = autoMode === 'all'
             ? this.#getAutoLaunchCandidates(threshold)
             : this.#getSelectedAutoLaunchCandidates(threshold);
@@ -1212,14 +1207,8 @@ class GalaxyOperationManager {
                 return;
             }
             operation.launchCost = antimatterCost;
-            if (uiAllocationUpdater) {
-                uiAllocationUpdater(sectorKey, normalizedPower);
-            }
             launched = true;
         });
-        if (launched && typeof this.refreshUI === 'function') {
-            this.refreshUI();
-        }
     }
 
     #getAutoLaunchCandidates(threshold) {

@@ -268,9 +268,7 @@ class StoryManager {
     }
 
     update() {
-        // Keep the objective label live even while story progression is paused by UI typing/popups.
         if ((typeof window !== 'undefined' && window.popupActive) || (typeof journalTyping !== 'undefined' && journalTyping)) {
-            this.updateCurrentObjectiveUI();
             return;
         }
 
@@ -313,8 +311,6 @@ class StoryManager {
             }
         }
 
-        // 4. Update the displayed objective after processing events
-        this.updateCurrentObjectiveUI();
     }
 
     activateEvent(event) { // Keep as is

@@ -836,6 +836,7 @@ function updateRender(force = false, options = {}) {
   updateDayNightDisplay();           // Day/night display is global
   updateResourceDisplay(resources, deltaSeconds);  // Resources are global
   updateWarnings();                  // Global warnings
+  storyManager.updateCurrentObjectiveUI();
   // Always keep alert badges in sync regardless of active tab
   if (typeof updateBuildingAlert === 'function') updateBuildingAlert();
   updateColonyAlert();

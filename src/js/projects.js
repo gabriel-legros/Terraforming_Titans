@@ -529,9 +529,6 @@ class Project extends EffectableEntity {
       }
     }
 
-    if (storageProj && typeof updateSpaceStorageUI === 'function') {
-      updateSpaceStorageUI(storageProj.storageProject || storageProj);
-    }
   }
 
   hasSustainResources(deltaTime = 1000, includeNetProduction = true) {
@@ -1335,10 +1332,12 @@ class ProjectManager extends EffectableEntity {
     this.normalizeGroupedProjectOrder();
   }
 
-  startProject(projectName) {
+  startProject(projectName, options = {}) {
     const project = this.projects[projectName];
     if (project && project.start(resources)) {
-      updateProjectUI(projectName);
+      if (options.updateUI !== false) {
+        updateProjectUI(projectName);
+      }
     } else {
     }
   }
@@ -1382,11 +1381,9 @@ class ProjectManager extends EffectableEntity {
         project.canStart()
       ) {
         if (project.isPaused) {
-          if (project.resume() && typeof updateProjectUI === 'function') {
-            updateProjectUI(project.name);
-          }
+          project.resume();
         } else {
-          this.startProject(project.name);
+          this.startProject(project.name, { updateUI: false });
         }
       }
     }
@@ -1656,9 +1653,6 @@ class ProjectManager extends EffectableEntity {
         remaining -= toRemove;
         if (typeof project.adjustActiveDuration === 'function') {
           project.adjustActiveDuration();
-        }
-        if (typeof updateProjectUI === 'function') {
-          updateProjectUI(project.name);
         }
       }
     }

@@ -506,51 +506,16 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
   }
 
   applyResolvedMaps(controlMap, automationMap) {
-    let coloniesChanged = false;
-    let slidersChanged = false;
-    let constructionChanged = false;
-    let nanocolonyChanged = false;
-    let orbitalsChanged = false;
-
     for (const targetId in controlMap) {
       if (this.applyControlSettings(targetId, controlMap[targetId])) {
-        if (this.isColonyTarget(targetId)) {
-          coloniesChanged = true;
-        } else if (this.isSliderTarget(targetId)) {
-          slidersChanged = true;
-        } else if (targetId === 'constructionOffice') {
-          constructionChanged = true;
-        } else if (targetId === 'nanocolony') {
-          nanocolonyChanged = true;
-        } else if (targetId === 'orbitals') {
-          orbitalsChanged = true;
+        if (targetId === 'nanocolony') {
+          nanotechManager.reapplyEffects();
         }
       }
     }
 
     for (const targetId in automationMap) {
-      if (this.applyAutomationSettings(targetId, automationMap[targetId])) {
-        if (this.isColonyTarget(targetId)) {
-          coloniesChanged = true;
-        }
-      }
-    }
-
-    if (coloniesChanged) {
-      updateColonyDisplay(colonies);
-    }
-    if (slidersChanged) {
-      updateColonySlidersUI();
-    }
-    if (constructionChanged) {
-      updateConstructionOfficeUI();
-    }
-    if (nanocolonyChanged) {
-      nanotechManager.reapplyEffects();
-      nanotechManager.updateUI();
-    }
-    if (orbitalsChanged) {
-      followersManager.updateUI();
+      this.applyAutomationSettings(targetId, automationMap[targetId]);
     }
   }
 
