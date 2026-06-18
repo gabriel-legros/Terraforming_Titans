@@ -503,6 +503,7 @@ function applyRWGEffects() {
             resourceCategory: eff.resourceCategory,
             resourceId,
             excludeSpaceships: eff.excludeSpaceships,
+            disabledWhenGameSettingEnabled: eff.disabledWhenGameSettingEnabled,
             value,
           });
         }
@@ -520,6 +521,7 @@ function applyRWGEffects() {
         resourceId: eff.resourceId,
         resourceKey: eff.resourceKey,
         excludeSpaceships: eff.excludeSpaceships,
+        disabledWhenGameSettingEnabled: eff.disabledWhenGameSettingEnabled,
         value,
       });
     }
