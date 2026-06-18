@@ -954,7 +954,7 @@ function createAutomationCardHeader(card, titleText, onToggle, orderKey) {
   const collapse = document.createElement('button');
   collapse.classList.add('automation-collapse');
   collapse.textContent = '▼';
-  collapse.title = 'Toggle';
+  collapse.title = getAutomationCardText('toggleCard', {}, 'Toggle');
   const title = document.createElement('div');
   title.classList.add('automation-title');
   title.textContent = titleText;
@@ -1317,10 +1317,10 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     } else if (isBooleanLeaf) {
       const optionTrue = document.createElement('option');
       optionTrue.value = 'true';
-      optionTrue.textContent = 'true';
+      optionTrue.textContent = getAutomationCardText('booleanTrue', {}, 'true');
       const optionFalse = document.createElement('option');
       optionFalse.value = 'false';
-      optionFalse.textContent = 'false';
+      optionFalse.textContent = getAutomationCardText('booleanFalse', {}, 'false');
       input.append(optionTrue, optionFalse);
       input.value = valueToRender ? 'true' : 'false';
     } else {

@@ -695,7 +695,14 @@ function getScriptLinkedIfSummary(automation, script, line) {
 }
 
 function createLineTargetOptions(script) {
-  return script.lines.map((targetLine, targetIndex) => ({ id: targetLine.id, label: `#${targetIndex + 1} ${targetLine.name || getScriptLineKindLabel(targetLine.kind)}` }));
+  return script.lines.map((targetLine, targetIndex) => ({
+    id: targetLine.id,
+    label: getAutomationCardText(
+      'scriptLineOptionLabel',
+      { number: targetIndex + 1, label: targetLine.name || getScriptLineKindLabel(targetLine.kind) },
+      `#${targetIndex + 1} ${targetLine.name || getScriptLineKindLabel(targetLine.kind)}`
+    )
+  }));
 }
 
 function getScriptActionKinds() {
@@ -858,13 +865,13 @@ function renderExpressionEditor(automation, expression, container, titleText) {
   const title = document.createElement('div');
   title.classList.add('script-expression-title');
   const titleLabel = document.createElement('span');
-  titleLabel.textContent = `${titleText} (Current Value: `;
+  titleLabel.textContent = getAutomationCardText('scriptCurrentValuePrefix', { title: titleText }, '{title} (Current Value: ');
   const titleValue = document.createElement('span');
   titleValue.classList.add('script-expression-current-value');
   titleValue._scriptExpression = expression;
   titleValue.textContent = formatNumber(automation.evaluateExpression(expression), false, 3);
   const titleSuffix = document.createElement('span');
-  titleSuffix.textContent = ')';
+  titleSuffix.textContent = getAutomationCardText('scriptCurrentValueSuffix', {}, ')');
   title.append(titleLabel, titleValue, titleSuffix);
   wrap.appendChild(title);
 

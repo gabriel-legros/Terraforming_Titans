@@ -54,7 +54,7 @@ class ScriptAutomation {
     if (this.scripts.length > 0) return;
     const script = {
       id: this.nextScriptId++,
-      name: 'Default Script',
+      name: t('ui.hope.automationCards.defaultScriptName', {}, 'Default Script'),
       lines: [this.createLine('if')]
     };
     this.scripts.push(script);

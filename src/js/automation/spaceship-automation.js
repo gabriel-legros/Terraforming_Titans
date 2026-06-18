@@ -52,7 +52,7 @@ class SpaceshipAutomation {
     const areMassDriversEnabled = () => disposalProject.isBooleanFlagSet('massDriverEnabled');
     return {
       name: this.getMassDriverAutomationId(),
-      displayName: 'Resource Disposal (mass drivers included)',
+      displayName: t('ui.hope.automationCards.massDriverDisposalTarget', {}, 'Resource Disposal (mass drivers included)'),
       enabled: disposalProject.enabled !== false,
       unlocked: disposalProject.unlocked !== false,
       isVisible: () => disposalProject.isVisible(),
@@ -105,7 +105,7 @@ class SpaceshipAutomation {
     }
     const preset = {
       id: this.nextPresetId++,
-      name: 'Default',
+      name: t('ui.hope.automationCards.defaultPresetName', {}, 'Default'),
       showInSidebar: true,
       steps: []
     };
@@ -496,7 +496,7 @@ class SpaceshipAutomation {
   getUnassignedTarget() {
     return {
       name: 'unassignedShips',
-      displayName: 'Unassigned Ships',
+      displayName: t('ui.hope.automationCards.unassignedShipsTarget', {}, 'Unassigned Ships'),
       enabled: true,
       unlocked: true,
       isVisible: () => true,

@@ -136,6 +136,7 @@ function createHarness({
     enabled: true,
     hasFeature: () => true,
   }, originalGlobals);
+  setGlobal('t', (path, vars, fallback) => fallback || path, originalGlobals);
 
   const automation = new SpaceshipAutomation();
 

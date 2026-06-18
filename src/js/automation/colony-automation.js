@@ -7,46 +7,46 @@ const COLONY_AUTOMATION_CATEGORY_ORDER = [
 ];
 
 const COLONY_AUTOMATION_CATEGORY_LABELS = {
-  colonyBuildings: 'Colony Buildings',
-  colonySliders: 'Colony Sliders',
-  constructionOffice: 'Construction Office',
-  nanocolony: 'Nanocolony',
-  orbitals: 'Orbitals'
+  colonyBuildings: t('ui.hope.automationCards.colonyCategoryColonyBuildings', {}, 'Colony Buildings'),
+  colonySliders: t('ui.hope.automationCards.colonyCategoryColonySliders', {}, 'Colony Sliders'),
+  constructionOffice: t('ui.hope.automationCards.colonyTargetConstructionOffice', {}, 'Construction Office'),
+  nanocolony: t('ui.hope.automationCards.colonyTargetNanocolony', {}, 'Nanocolony'),
+  orbitals: t('ui.hope.automationCards.colonyTargetOrbitals', {}, 'Orbitals')
 };
 
 const COLONY_AUTOMATION_SLIDER_TARGETS = {
   workforceRatio: {
-    label: 'Workforce Allocation',
+    label: t('ui.hope.automationCards.colonySliderWorkforceAllocation', {}, 'Workforce Allocation'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.workerRatio,
     apply: (value) => colonySliderSettings.setWorkforceRatio(value)
   },
   foodConsumption: {
-    label: 'Food Consumption',
+    label: t('ui.hope.automationCards.colonySliderFoodConsumption', {}, 'Food Consumption'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.foodConsumption,
     apply: (value) => colonySliderSettings.setFoodConsumptionMultiplier(value)
   },
   luxuryWater: {
-    label: 'Luxury Water Use',
+    label: t('ui.hope.automationCards.colonySliderLuxuryWaterUse', {}, 'Luxury Water Use'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.luxuryWater,
     apply: (value) => colonySliderSettings.setLuxuryWaterMultiplier(value)
   },
   oreMineWorkers: {
-    label: 'Ore Mine Workers',
+    label: t('ui.hope.automationCards.colonySliderOreMineWorkers', {}, 'Ore Mine Workers'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.oreMineWorkers,
     apply: (value) => colonySliderSettings.setOreMineWorkerAssist(value)
   },
   mechanicalAssistance: {
-    label: 'Mechanical Assistance',
+    label: t('ui.hope.automationCards.colonySliderMechanicalAssistance', {}, 'Mechanical Assistance'),
     isAvailable: () => colonySliderSettings.isBooleanFlagSet('mechanicalAssistance') && terraforming.celestialParameters.gravity > 10,
     capture: () => colonySliderSettings.mechanicalAssistance,
     apply: (value) => colonySliderSettings.setMechanicalAssistance(value)
   },
   warpnetLevel: {
-    label: 'Warpnet',
+    label: t('ui.hope.automationCards.colonySliderWarpnet', {}, 'Warpnet'),
     isAvailable: () => colonySliderSettings.isBooleanFlagSet('warpnet'),
     capture: () => colonySliderSettings.warpnetLevel,
     apply: (value) => colonySliderSettings.setWarpnetLevel(value)
@@ -776,7 +776,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: 'constructionOffice',
         categoryId: 'constructionOffice',
         categoryLabel: COLONY_AUTOMATION_CATEGORY_LABELS.constructionOffice,
-        label: 'Construction Office',
+        label: t('ui.hope.automationCards.colonyTargetConstructionOffice', {}, 'Construction Office'),
         supportsAutomation: false
       });
     }
@@ -786,7 +786,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: 'nanocolony',
         categoryId: 'nanocolony',
         categoryLabel: COLONY_AUTOMATION_CATEGORY_LABELS.nanocolony,
-        label: 'Nanocolony',
+        label: t('ui.hope.automationCards.colonyTargetNanocolony', {}, 'Nanocolony'),
         supportsAutomation: false
       });
     }
@@ -796,7 +796,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: 'orbitals',
         categoryId: 'orbitals',
         categoryLabel: COLONY_AUTOMATION_CATEGORY_LABELS.orbitals,
-        label: 'Orbitals',
+        label: t('ui.hope.automationCards.colonyTargetOrbitals', {}, 'Orbitals'),
         supportsAutomation: false
       });
     }

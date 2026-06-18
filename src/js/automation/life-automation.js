@@ -267,7 +267,7 @@ class LifeAutomation {
     }
     const preset = {
       id: this.nextPresetId++,
-      name: 'Default',
+      name: t('ui.hope.automationCards.defaultPresetName', {}, 'Default'),
       showInSidebar: true,
       purchaseSettings: this.createDefaultPurchaseSettings(),
       purchaseEnabled: true,

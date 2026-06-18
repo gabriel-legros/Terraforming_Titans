@@ -4,6 +4,7 @@
   "private": true,
   "main": "electron/main.cjs",
   "scripts": {
+    "audit:localization": "node scripts/audit-localization.js",
     "electron:dev": "electron .",
     "test": "jest"
   },

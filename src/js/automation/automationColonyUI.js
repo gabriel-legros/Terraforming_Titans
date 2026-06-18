@@ -50,21 +50,21 @@ function getColonyAutomationTargetCatalog(automation) {
       id: 'constructionOffice',
       categoryId: 'constructionOffice',
       categoryLabel: automation.getCategoryLabel('constructionOffice'),
-      label: 'Construction Office',
+      label: getAutomationCardText('colonyTargetConstructionOffice', {}, 'Construction Office'),
       supportsAutomation: false
     },
     {
       id: 'nanocolony',
       categoryId: 'nanocolony',
       categoryLabel: automation.getCategoryLabel('nanocolony'),
-      label: 'Nanocolony',
+      label: getAutomationCardText('colonyTargetNanocolony', {}, 'Nanocolony'),
       supportsAutomation: false
     },
     {
       id: 'orbitals',
       categoryId: 'orbitals',
       categoryLabel: automation.getCategoryLabel('orbitals'),
-      label: 'Orbitals',
+      label: getAutomationCardText('colonyTargetOrbitals', {}, 'Orbitals'),
       supportsAutomation: false
     }
   );

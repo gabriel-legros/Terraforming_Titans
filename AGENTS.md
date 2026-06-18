@@ -179,6 +179,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## Localization
 - Do not add new player-facing English strings directly in HTML or JS. Put them in `src/js/lang/current-language.js`.
+- Use `npm run audit:localization` to find likely remaining non-story hardcoded strings. Keep `docs/localization-checklist.md` updated when migrating or exempting findings.
+- Localization changes must leave the audit baseline improved or unchanged with a documented exemption; do not introduce new actionable `dom-static`, `ui-runtime`, or `catalog-data` findings.
 - Keep internal ids, save keys, automation ids, resource ids, project ids, and effect ids stable and in English-like code form. Localize display text only.
 - For static HTML in `index.html`, use `data-i18n` and related localization attributes instead of hardcoding visible text.
 - For JS UI text, use `t(key, vars, fallback)` or a small local wrapper such as `getXText(...)` near the top of the file.

@@ -1,17 +1,21 @@
 class ScriptVariableRegistry {
   constructor() {
     this.sources = [
-      { id: 'constant', label: 'Constant' },
-      { id: 'resources', label: 'Resources' },
-      { id: 'buildings', label: 'Buildings' },
-      { id: 'colony', label: 'Colony' },
-      { id: 'projects', label: 'Special Projects' },
-      { id: 'terraforming', label: 'Terraforming' },
-      { id: 'celestial', label: 'Celestial Parameters' },
-      { id: 'artificial', label: t('ui.hope.automationCards.scriptVariables.artificial.source', {}, 'Artificial') },
-      { id: 'hazards', label: 'Hazards' },
-      { id: 'research', label: 'Research' }
+      { id: 'constant', label: this.getScriptVariableText('sources.constant', 'Constant') },
+      { id: 'resources', label: this.getScriptVariableText('sources.resources', 'Resources') },
+      { id: 'buildings', label: this.getScriptVariableText('sources.buildings', 'Buildings') },
+      { id: 'colony', label: this.getScriptVariableText('sources.colony', 'Colony') },
+      { id: 'projects', label: this.getScriptVariableText('sources.projects', 'Special Projects') },
+      { id: 'terraforming', label: this.getScriptVariableText('sources.terraforming', 'Terraforming') },
+      { id: 'celestial', label: this.getScriptVariableText('sources.celestial', 'Celestial Parameters') },
+      { id: 'artificial', label: this.getScriptVariableText('artificial.source', 'Artificial') },
+      { id: 'hazards', label: this.getScriptVariableText('sources.hazards', 'Hazards') },
+      { id: 'research', label: this.getScriptVariableText('sources.research', 'Research') }
     ];
+  }
+
+  getScriptVariableText(path, fallback) {
+    return t(`ui.hope.automationCards.scriptVariables.${path}`, {}, fallback);
   }
 
   getSources() {
@@ -19,26 +23,26 @@ class ScriptVariableRegistry {
   }
 
   getCategories(sourceId) {
-    if (sourceId === 'constant') return [{ id: 'constant', label: 'Constant' }];
+    if (sourceId === 'constant') return [{ id: 'constant', label: this.getScriptVariableText('sources.constant', 'Constant') }];
     if (sourceId === 'buildings') return this.getBuildingCategories();
     if (sourceId === 'colony') return this.getColonyCategories();
     if (sourceId === 'projects') return this.getProjectCategories();
     if (sourceId === 'terraforming') return this.getTerraformingCategories();
-    if (sourceId === 'celestial') return [{ id: 'celestial', label: 'Celestial Parameters' }];
+    if (sourceId === 'celestial') return [{ id: 'celestial', label: this.getScriptVariableText('sources.celestial', 'Celestial Parameters') }];
     if (sourceId === 'artificial') return this.getArtificialCategories();
-    if (sourceId === 'hazards') return [{ id: 'hazards', label: 'Hazards' }];
+    if (sourceId === 'hazards') return [{ id: 'hazards', label: this.getScriptVariableText('sources.hazards', 'Hazards') }];
     if (sourceId === 'research') return this.getResearchCategories();
     if (sourceId === 'resources') return this.getResourceCategories();
     return [];
   }
 
   getTargets(sourceId, categoryId) {
-    if (sourceId === 'constant') return [{ id: 'constant', label: 'Constant' }];
+    if (sourceId === 'constant') return [{ id: 'constant', label: this.getScriptVariableText('sources.constant', 'Constant') }];
     if (sourceId === 'buildings') return this.getBuildingTargets(categoryId);
     if (sourceId === 'colony') return this.getColonyTargets(categoryId);
     if (sourceId === 'projects') return this.getProjectTargets(categoryId);
     if (sourceId === 'terraforming') return this.getTerraformingTargets(categoryId);
-    if (sourceId === 'celestial') return [{ id: 'celestial', label: 'Celestial Parameters' }];
+    if (sourceId === 'celestial') return [{ id: 'celestial', label: this.getScriptVariableText('sources.celestial', 'Celestial Parameters') }];
     if (sourceId === 'artificial') return this.getArtificialTargets();
     if (sourceId === 'hazards') return this.getHazardTargets();
     if (sourceId === 'research') return this.getResearchTargets(categoryId);
@@ -47,7 +51,7 @@ class ScriptVariableRegistry {
   }
 
   getAttributes(sourceId, categoryId, targetId, optionId) {
-    if (sourceId === 'constant') return [{ id: 'value', label: 'Value', valueType: 'number' }];
+    if (sourceId === 'constant') return [{ id: 'value', label: this.getScriptVariableText('common.value', 'Value'), valueType: 'number' }];
     if (sourceId === 'buildings') return this.getBuildingAttributes(targetId);
     if (sourceId === 'colony') return this.getColonyAttributes(categoryId, targetId);
     if (sourceId === 'projects') return this.getProjectAttributes(targetId);
@@ -86,52 +90,52 @@ class ScriptVariableRegistry {
 
   getBuildingAttributes(buildingId) {
     const attributes = [
-      { id: 'count', label: 'Count', valueType: 'number' },
-      { id: 'active', label: 'Active', valueType: 'number' },
-      { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
-      { id: 'hidden', label: 'Hidden', valueType: 'boolean' },
-      { id: 'autoBuildEnabled', label: 'Auto-build Enabled', valueType: 'boolean' },
-      { id: 'autoActiveEnabled', label: 'Auto-active Enabled', valueType: 'boolean' },
-      { id: 'workerPriority', label: 'Worker Priority', valueType: 'number' },
-      { id: 'productionRatio', label: 'Production Ratio', valueType: 'number' },
-      { id: 'consumptionRatio', label: 'Consumption Ratio', valueType: 'number' }
+      { id: 'count', label: this.getScriptVariableText('common.count', 'Count'), valueType: 'number' },
+      { id: 'active', label: this.getScriptVariableText('common.active', 'Active'), valueType: 'number' },
+      { id: 'unlocked', label: this.getScriptVariableText('common.unlocked', 'Unlocked'), valueType: 'boolean' },
+      { id: 'hidden', label: this.getScriptVariableText('common.hidden', 'Hidden'), valueType: 'boolean' },
+      { id: 'autoBuildEnabled', label: this.getScriptVariableText('common.autoBuildEnabled', 'Auto-build Enabled'), valueType: 'boolean' },
+      { id: 'autoActiveEnabled', label: this.getScriptVariableText('common.autoActiveEnabled', 'Auto-active Enabled'), valueType: 'boolean' },
+      { id: 'workerPriority', label: this.getScriptVariableText('common.workerPriority', 'Worker Priority'), valueType: 'number' },
+      { id: 'productionRatio', label: this.getScriptVariableText('common.productionRatio', 'Production Ratio'), valueType: 'number' },
+      { id: 'consumptionRatio', label: this.getScriptVariableText('common.consumptionRatio', 'Consumption Ratio'), valueType: 'number' }
     ];
     const building = buildings[buildingId];
     if (building && building.storage) {
-      attributes.push({ id: 'storageFillPercent', label: 'Storage Fill %', valueType: 'number' });
+      attributes.push({ id: 'storageFillPercent', label: this.getScriptVariableText('common.storageFillPercent', 'Storage Fill %'), valueType: 'number' });
     }
     return attributes;
   }
 
   getColonyCategories() {
     return [
-      { id: 'global', label: 'Population' },
-      { id: 'colonyBuildings', label: 'Colony Buildings' },
-      { id: 'nanocolony', label: 'Nanocolony' },
-      { id: 'sliders', label: 'Colony Sliders' },
-      { id: 'orbitals', label: 'Orbitals' }
+      { id: 'global', label: this.getScriptVariableText('colony.categories.population', 'Population') },
+      { id: 'colonyBuildings', label: this.getScriptVariableText('colony.categories.colonyBuildings', 'Colony Buildings') },
+      { id: 'nanocolony', label: this.getScriptVariableText('colony.categories.nanocolony', 'Nanocolony') },
+      { id: 'sliders', label: this.getScriptVariableText('colony.categories.colonySliders', 'Colony Sliders') },
+      { id: 'orbitals', label: this.getScriptVariableText('colony.categories.orbitals', 'Orbitals') }
     ];
   }
 
   getColonyTargets(categoryId) {
     if (categoryId === 'global') {
-      return [{ id: 'global', label: 'Population' }];
+      return [{ id: 'global', label: this.getScriptVariableText('colony.categories.population', 'Population') }];
     }
     if (categoryId === 'nanocolony') {
-      return [{ id: 'nanocolony', label: 'Nanocolony' }];
+      return [{ id: 'nanocolony', label: this.getScriptVariableText('colony.categories.nanocolony', 'Nanocolony') }];
     }
     if (categoryId === 'sliders') {
       return [
-        { id: 'workforceRatio', label: 'Workforce Allocation' },
-        { id: 'foodConsumption', label: 'Food Consumption' },
-        { id: 'luxuryWater', label: 'Luxury Water Use' },
-        { id: 'oreMineWorkers', label: 'Ore Mine Workers' },
-        { id: 'mechanicalAssistance', label: 'Mechanical Assistance' },
-        { id: 'warpnetLevel', label: 'Warpnet' }
+        { id: 'workforceRatio', label: this.getScriptVariableText('colony.sliders.workforceAllocation', 'Workforce Allocation') },
+        { id: 'foodConsumption', label: this.getScriptVariableText('colony.sliders.foodConsumption', 'Food Consumption') },
+        { id: 'luxuryWater', label: this.getScriptVariableText('colony.sliders.luxuryWaterUse', 'Luxury Water Use') },
+        { id: 'oreMineWorkers', label: this.getScriptVariableText('colony.sliders.oreMineWorkers', 'Ore Mine Workers') },
+        { id: 'mechanicalAssistance', label: this.getScriptVariableText('colony.sliders.mechanicalAssistance', 'Mechanical Assistance') },
+        { id: 'warpnetLevel', label: this.getScriptVariableText('colony.sliders.warpnet', 'Warpnet') }
       ];
     }
     if (categoryId === 'orbitals') {
-      return [{ id: 'orbitals', label: 'Orbitals' }];
+      return [{ id: 'orbitals', label: this.getScriptVariableText('colony.categories.orbitals', 'Orbitals') }];
     }
     const targets = [];
     for (const colonyId in colonies) {
@@ -144,46 +148,46 @@ class ScriptVariableRegistry {
   getColonyAttributes(categoryId, targetId) {
     if (categoryId === 'global') {
       return [
-        { id: 'population', label: 'Population', valueType: 'number' },
-        { id: 'workers', label: 'Workers', valueType: 'number' },
-        { id: 'housingCapacity', label: 'Housing Capacity', valueType: 'number' },
-        { id: 'workerCapacity', label: 'Worker Capacity', valueType: 'number' },
-        { id: 'happiness', label: 'Happiness', valueType: 'number' }
+        { id: 'population', label: this.getScriptVariableText('colony.attributes.population', 'Population'), valueType: 'number' },
+        { id: 'workers', label: this.getScriptVariableText('colony.attributes.workers', 'Workers'), valueType: 'number' },
+        { id: 'housingCapacity', label: this.getScriptVariableText('colony.attributes.housingCapacity', 'Housing Capacity'), valueType: 'number' },
+        { id: 'workerCapacity', label: this.getScriptVariableText('colony.attributes.workerCapacity', 'Worker Capacity'), valueType: 'number' },
+        { id: 'happiness', label: this.getScriptVariableText('colony.attributes.happiness', 'Happiness'), valueType: 'number' }
       ];
     }
     if (categoryId === 'nanocolony') {
       return [
-        { id: 'enabled', label: 'Enabled', valueType: 'boolean' },
-        { id: 'nanobots', label: 'Nanobots', valueType: 'number' },
-        { id: 'maxNanobots', label: 'Max Nanobots', valueType: 'number' },
-        { id: 'powerFraction', label: 'Power Fraction', valueType: 'number' },
-        { id: 'maintenanceSlider', label: 'Maintenance I', valueType: 'number' },
-        { id: 'glassSlider', label: 'Glass Slider', valueType: 'number' },
-        { id: 'maintenance2Slider', label: 'Maintenance II', valueType: 'number' },
-        { id: 'componentsSlider', label: 'Components Slider', valueType: 'number' },
-        { id: 'maintenance3Slider', label: 'Maintenance III', valueType: 'number' },
-        { id: 'electronicsSlider', label: 'Electronics Slider', valueType: 'number' },
-        { id: 'maintenance4Slider', label: 'Maintenance IV', valueType: 'number' },
-        { id: 'grapheneSlider', label: 'Graphene Slider', valueType: 'number' }
+        { id: 'enabled', label: this.getScriptVariableText('common.enabled', 'Enabled'), valueType: 'boolean' },
+        { id: 'nanobots', label: this.getScriptVariableText('colony.attributes.nanobots', 'Nanobots'), valueType: 'number' },
+        { id: 'maxNanobots', label: this.getScriptVariableText('colony.attributes.maxNanobots', 'Max Nanobots'), valueType: 'number' },
+        { id: 'powerFraction', label: this.getScriptVariableText('colony.attributes.powerFraction', 'Power Fraction'), valueType: 'number' },
+        { id: 'maintenanceSlider', label: this.getScriptVariableText('colony.attributes.maintenanceI', 'Maintenance I'), valueType: 'number' },
+        { id: 'glassSlider', label: this.getScriptVariableText('colony.attributes.glassSlider', 'Glass Slider'), valueType: 'number' },
+        { id: 'maintenance2Slider', label: this.getScriptVariableText('colony.attributes.maintenanceII', 'Maintenance II'), valueType: 'number' },
+        { id: 'componentsSlider', label: this.getScriptVariableText('colony.attributes.componentsSlider', 'Components Slider'), valueType: 'number' },
+        { id: 'maintenance3Slider', label: this.getScriptVariableText('colony.attributes.maintenanceIII', 'Maintenance III'), valueType: 'number' },
+        { id: 'electronicsSlider', label: this.getScriptVariableText('colony.attributes.electronicsSlider', 'Electronics Slider'), valueType: 'number' },
+        { id: 'maintenance4Slider', label: this.getScriptVariableText('colony.attributes.maintenanceIV', 'Maintenance IV'), valueType: 'number' },
+        { id: 'grapheneSlider', label: this.getScriptVariableText('colony.attributes.grapheneSlider', 'Graphene Slider'), valueType: 'number' }
       ];
     }
     if (categoryId === 'sliders') {
-      return [{ id: 'value', label: 'Value', valueType: 'number' }];
+      return [{ id: 'value', label: this.getScriptVariableText('common.value', 'Value'), valueType: 'number' }];
     }
     if (categoryId === 'orbitals') {
       return [
-        { id: 'availableOrbitals', label: 'Available Orbitals', valueType: 'number' },
-        { id: 'assignedOrbitals', label: 'Assigned Orbitals', valueType: 'number' }
+        { id: 'availableOrbitals', label: this.getScriptVariableText('colony.attributes.availableOrbitals', 'Available Orbitals'), valueType: 'number' },
+        { id: 'assignedOrbitals', label: this.getScriptVariableText('colony.attributes.assignedOrbitals', 'Assigned Orbitals'), valueType: 'number' }
       ];
     }
     return [
-      { id: 'count', label: 'Count', valueType: 'number' },
-      { id: 'active', label: 'Active', valueType: 'number' },
-      { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
-      { id: 'hidden', label: 'Hidden', valueType: 'boolean' },
-      { id: 'autoBuildEnabled', label: 'Auto-build Enabled', valueType: 'boolean' },
-      { id: 'autoActiveEnabled', label: 'Auto-active Enabled', valueType: 'boolean' },
-      { id: 'workerPriority', label: 'Worker Priority', valueType: 'number' }
+      { id: 'count', label: this.getScriptVariableText('common.count', 'Count'), valueType: 'number' },
+      { id: 'active', label: this.getScriptVariableText('common.active', 'Active'), valueType: 'number' },
+      { id: 'unlocked', label: this.getScriptVariableText('common.unlocked', 'Unlocked'), valueType: 'boolean' },
+      { id: 'hidden', label: this.getScriptVariableText('common.hidden', 'Hidden'), valueType: 'boolean' },
+      { id: 'autoBuildEnabled', label: this.getScriptVariableText('common.autoBuildEnabled', 'Auto-build Enabled'), valueType: 'boolean' },
+      { id: 'autoActiveEnabled', label: this.getScriptVariableText('common.autoActiveEnabled', 'Auto-active Enabled'), valueType: 'boolean' },
+      { id: 'workerPriority', label: this.getScriptVariableText('common.workerPriority', 'Worker Priority'), valueType: 'number' }
     ];
   }
 
@@ -218,61 +222,61 @@ class ScriptVariableRegistry {
   getProjectAttributes(targetId) {
     const project = projectManager?.projects?.[targetId];
     const attributes = [
-      { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
-      { id: 'visible', label: 'Visible', valueType: 'boolean' },
-      { id: 'completed', label: 'Completed', valueType: 'boolean' },
-      { id: 'active', label: 'Construction Active', valueType: 'boolean' },
-      { id: 'running', label: 'Running', valueType: 'boolean' },
-      { id: 'progressPercent', label: 'Progress %', valueType: 'number' },
-      { id: 'assignedSpaceships', label: 'Assigned Spaceships', valueType: 'number' },
-      { id: 'durationRemaining', label: 'Duration Remaining', valueType: 'number' },
-      { id: 'repeatCount', label: 'Repeat Count', valueType: 'number' },
-      { id: 'maxRepeatCount', label: 'Max Repeat Count', valueType: 'number' },
-      { id: 'autoStart', label: 'Auto-start Construction', valueType: 'boolean' },
-      { id: 'autoContinuousOperation', label: 'Auto Operation Enabled', valueType: 'boolean' }
+      { id: 'unlocked', label: this.getScriptVariableText('common.unlocked', 'Unlocked'), valueType: 'boolean' },
+      { id: 'visible', label: this.getScriptVariableText('common.visible', 'Visible'), valueType: 'boolean' },
+      { id: 'completed', label: this.getScriptVariableText('common.completed', 'Completed'), valueType: 'boolean' },
+      { id: 'active', label: this.getScriptVariableText('projects.constructionActive', 'Construction Active'), valueType: 'boolean' },
+      { id: 'running', label: this.getScriptVariableText('common.running', 'Running'), valueType: 'boolean' },
+      { id: 'progressPercent', label: this.getScriptVariableText('common.progressPercent', 'Progress %'), valueType: 'number' },
+      { id: 'assignedSpaceships', label: this.getScriptVariableText('projects.assignedSpaceships', 'Assigned Spaceships'), valueType: 'number' },
+      { id: 'durationRemaining', label: this.getScriptVariableText('projects.durationRemaining', 'Duration Remaining'), valueType: 'number' },
+      { id: 'repeatCount', label: this.getScriptVariableText('projects.repeatCount', 'Repeat Count'), valueType: 'number' },
+      { id: 'maxRepeatCount', label: this.getScriptVariableText('projects.maxRepeatCount', 'Max Repeat Count'), valueType: 'number' },
+      { id: 'autoStart', label: this.getScriptVariableText('projects.autoStartConstruction', 'Auto-start Construction'), valueType: 'boolean' },
+      { id: 'autoContinuousOperation', label: this.getScriptVariableText('projects.autoOperationEnabled', 'Auto Operation Enabled'), valueType: 'boolean' }
     ];
     if (project instanceof SpaceshipProject) {
-      attributes.push({ id: 'spaceshipCostMultiplier', label: 'Spaceship Cost Multiplier', valueType: 'number' });
+      attributes.push({ id: 'spaceshipCostMultiplier', label: this.getScriptVariableText('projects.spaceshipCostMultiplier', 'Spaceship Cost Multiplier'), valueType: 'number' });
     }
     if (targetId === 'ringworldTerraforming') {
-      attributes.push({ id: 'currentMass', label: 'Current Mass', valueType: 'number' });
+      attributes.push({ id: 'currentMass', label: this.getScriptVariableText('projects.currentMass', 'Current Mass'), valueType: 'number' });
     }
     return attributes;
   }
 
   getTerraformingCategories() {
     return [
-      { id: 'status', label: 'Status' },
-      { id: 'dominion', label: t('ui.hope.automationCards.scriptVariables.terraforming.dominion.category', {}, 'Dominion') },
-      { id: 'specialization', label: 'Specialization' },
-      { id: 'life', label: t('ui.hope.automationCards.scriptVariables.terraforming.life.category', {}, 'Life') },
-      { id: 'temperature', label: 'Temperature' },
-      { id: 'atmosphere', label: 'Atmosphere' },
-      { id: 'surface', label: 'Surface' },
-      { id: 'luminosity', label: 'Luminosity' },
-      { id: 'others', label: 'Others' }
+      { id: 'status', label: this.getScriptVariableText('terraforming.categories.status', 'Status') },
+      { id: 'dominion', label: this.getScriptVariableText('terraforming.dominion.category', 'Dominion') },
+      { id: 'specialization', label: this.getScriptVariableText('terraforming.categories.specialization', 'Specialization') },
+      { id: 'life', label: this.getScriptVariableText('terraforming.life.category', 'Life') },
+      { id: 'temperature', label: this.getScriptVariableText('terraforming.categories.temperature', 'Temperature') },
+      { id: 'atmosphere', label: this.getScriptVariableText('terraforming.categories.atmosphere', 'Atmosphere') },
+      { id: 'surface', label: this.getScriptVariableText('terraforming.categories.surface', 'Surface') },
+      { id: 'luminosity', label: this.getScriptVariableText('terraforming.categories.luminosity', 'Luminosity') },
+      { id: 'others', label: this.getScriptVariableText('terraforming.categories.others', 'Others') }
     ];
   }
 
   getTerraformingTargets(categoryId) {
-    if (categoryId === 'status') return [{ id: 'status', label: 'Status' }];
+    if (categoryId === 'status') return [{ id: 'status', label: this.getScriptVariableText('terraforming.categories.status', 'Status') }];
     if (categoryId === 'dominion') {
-      return [{ id: 'dominion', label: t('ui.hope.automationCards.scriptVariables.terraforming.dominion.target', {}, 'Dominion') }];
+      return [{ id: 'dominion', label: this.getScriptVariableText('terraforming.dominion.target', 'Dominion') }];
     }
-    if (categoryId === 'specialization') return [{ id: 'specialization', label: 'Current Specialization' }];
-    if (categoryId === 'life') return [{ id: 'life', label: t('ui.hope.automationCards.scriptVariables.terraforming.life.target', {}, 'Life') }];
+    if (categoryId === 'specialization') return [{ id: 'specialization', label: this.getScriptVariableText('terraforming.specialization.currentSpecialization', 'Current Specialization') }];
+    if (categoryId === 'life') return [{ id: 'life', label: this.getScriptVariableText('terraforming.life.target', 'Life') }];
     return [{ id: categoryId, label: this.formatIdLabel(categoryId) }];
   }
 
   getTerraformingAttributes(categoryId) {
     if (categoryId === 'status') {
       return [
-        { id: 'pending', label: 'Pending', valueType: 'boolean' },
-        { id: 'readyForCompletion', label: 'Ready for completion', valueType: 'boolean' },
-        { id: 'complete', label: 'Complete', valueType: 'boolean' },
+        { id: 'pending', label: this.getScriptVariableText('terraforming.status.pending', 'Pending'), valueType: 'boolean' },
+        { id: 'readyForCompletion', label: this.getScriptVariableText('terraforming.status.readyForCompletion', 'Ready for completion'), valueType: 'boolean' },
+        { id: 'complete', label: this.getScriptVariableText('terraforming.status.complete', 'Complete'), valueType: 'boolean' },
         {
           id: 'timeSinceAwakeningSeconds',
-          label: t('ui.hope.automationCards.scriptVariables.terraforming.status.timeSinceAwakeningSeconds', {}, 'Time since awakening (seconds)'),
+          label: this.getScriptVariableText('terraforming.status.timeSinceAwakeningSeconds', 'Time since awakening (seconds)'),
           valueType: 'number'
         }
       ];
@@ -289,107 +293,107 @@ class ScriptVariableRegistry {
       return [
         {
           id: 'currentSpecialization',
-          label: 'Current Specialization',
+          label: this.getScriptVariableText('terraforming.specialization.currentSpecialization', 'Current Specialization'),
           valueType: 'enum',
           valueLabels: {
-            0: 'None',
-            1: 'BioWorld',
-            2: 'Manufacturing World',
-            3: 'Holy World',
-            4: 'Foundry World'
+            0: this.getScriptVariableText('terraforming.specialization.none', 'None'),
+            1: this.getScriptVariableText('terraforming.specialization.bioworld', 'BioWorld'),
+            2: this.getScriptVariableText('terraforming.specialization.manufacturingWorld', 'Manufacturing World'),
+            3: this.getScriptVariableText('terraforming.specialization.holyWorld', 'Holy World'),
+            4: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World')
           }
         },
-        { id: 'bioworld', label: 'BioWorld', valueType: 'boolean' },
-        { id: 'manufacturingWorld', label: 'Manufacturing World', valueType: 'boolean' },
-        { id: 'holyWorld', label: 'Holy World', valueType: 'boolean' },
-        { id: 'foundryWorld', label: 'Foundry World', valueType: 'boolean' }
+        { id: 'bioworld', label: this.getScriptVariableText('terraforming.specialization.bioworld', 'BioWorld'), valueType: 'boolean' },
+        { id: 'manufacturingWorld', label: this.getScriptVariableText('terraforming.specialization.manufacturingWorld', 'Manufacturing World'), valueType: 'boolean' },
+        { id: 'holyWorld', label: this.getScriptVariableText('terraforming.specialization.holyWorld', 'Holy World'), valueType: 'boolean' },
+        { id: 'foundryWorld', label: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World'), valueType: 'boolean' }
       ];
     }
     if (categoryId === 'life') {
       return [
         {
           id: 'canSurviveAnyZone',
-          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.canSurviveAnyZone', {}, 'Can Survive in Any Zone'),
+          label: this.getScriptVariableText('terraforming.life.canSurviveAnyZone', 'Can Survive in Any Zone'),
           valueType: 'boolean'
         },
         {
           id: 'canSurviveAllZones',
-          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.canSurviveAllZones', {}, 'Can Survive in All Zones'),
+          label: this.getScriptVariableText('terraforming.life.canSurviveAllZones', 'Can Survive in All Zones'),
           valueType: 'boolean'
         },
         {
           id: 'biomassDensity',
-          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.biomassDensity', {}, 'Biomass Density'),
+          label: this.getScriptVariableText('terraforming.life.biomassDensity', 'Biomass Density'),
           valueType: 'number'
         },
         {
           id: 'coverageRequirementPercent',
-          label: t('ui.hope.automationCards.scriptVariables.terraforming.life.coverageRequirementPercent', {}, 'Coverage Requirement %'),
+          label: this.getScriptVariableText('terraforming.life.coverageRequirementPercent', 'Coverage Requirement %'),
           valueType: 'number'
         }
       ];
     }
     if (categoryId === 'temperature') {
       return [
-        { id: 'averageTemperatureK', label: 'Average Temperature K', valueType: 'number' },
-        { id: 'averageTemperatureC', label: 'Average Temperature C', valueType: 'number' },
-        { id: 'trendTemperatureK', label: 'Trend Temperature K', valueType: 'number' },
-        { id: 'trendTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.trendTemperatureC', {}, 'Trend Temperature C'), valueType: 'number' },
-        { id: 'equilibriumTemperatureK', label: 'Equilibrium Temperature K', valueType: 'number' },
-        { id: 'equilibriumTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.equilibriumTemperatureC', {}, 'Equilibrium Temperature C'), valueType: 'number' },
-        { id: 'tropicalTemperatureK', label: 'Tropical Temperature K', valueType: 'number' },
-        { id: 'tropicalTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.tropicalTemperatureC', {}, 'Tropical Temperature C'), valueType: 'number' },
-        { id: 'temperateTemperatureK', label: 'Temperate Temperature K', valueType: 'number' },
-        { id: 'temperateTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.temperateTemperatureC', {}, 'Temperate Temperature C'), valueType: 'number' },
-        { id: 'polarTemperatureK', label: 'Polar Temperature K', valueType: 'number' },
-        { id: 'polarTemperatureC', label: t('ui.hope.automationCards.scriptVariables.terraforming.temperature.polarTemperatureC', {}, 'Polar Temperature C'), valueType: 'number' },
-        { id: 'coreHeatFlux', label: 'Core Heat Flux', valueType: 'number' },
+        { id: 'averageTemperatureK', label: this.getScriptVariableText('terraforming.temperature.averageTemperatureK', 'Average Temperature K'), valueType: 'number' },
+        { id: 'averageTemperatureC', label: this.getScriptVariableText('terraforming.temperature.averageTemperatureC', 'Average Temperature C'), valueType: 'number' },
+        { id: 'trendTemperatureK', label: this.getScriptVariableText('terraforming.temperature.trendTemperatureK', 'Trend Temperature K'), valueType: 'number' },
+        { id: 'trendTemperatureC', label: this.getScriptVariableText('terraforming.temperature.trendTemperatureC', 'Trend Temperature C'), valueType: 'number' },
+        { id: 'equilibriumTemperatureK', label: this.getScriptVariableText('terraforming.temperature.equilibriumTemperatureK', 'Equilibrium Temperature K'), valueType: 'number' },
+        { id: 'equilibriumTemperatureC', label: this.getScriptVariableText('terraforming.temperature.equilibriumTemperatureC', 'Equilibrium Temperature C'), valueType: 'number' },
+        { id: 'tropicalTemperatureK', label: this.getScriptVariableText('terraforming.temperature.tropicalTemperatureK', 'Tropical Temperature K'), valueType: 'number' },
+        { id: 'tropicalTemperatureC', label: this.getScriptVariableText('terraforming.temperature.tropicalTemperatureC', 'Tropical Temperature C'), valueType: 'number' },
+        { id: 'temperateTemperatureK', label: this.getScriptVariableText('terraforming.temperature.temperateTemperatureK', 'Temperate Temperature K'), valueType: 'number' },
+        { id: 'temperateTemperatureC', label: this.getScriptVariableText('terraforming.temperature.temperateTemperatureC', 'Temperate Temperature C'), valueType: 'number' },
+        { id: 'polarTemperatureK', label: this.getScriptVariableText('terraforming.temperature.polarTemperatureK', 'Polar Temperature K'), valueType: 'number' },
+        { id: 'polarTemperatureC', label: this.getScriptVariableText('terraforming.temperature.polarTemperatureC', 'Polar Temperature C'), valueType: 'number' },
+        { id: 'coreHeatFlux', label: this.getScriptVariableText('terraforming.temperature.coreHeatFlux', 'Core Heat Flux'), valueType: 'number' },
         {
           id: 'netCoreHeatFlux',
-          label: t('ui.terraformingSummary.temperature.labels.netCoreHeatFlux', {}, 'Net Core Heat Flux'),
+          label: this.getScriptVariableText('terraforming.temperature.netCoreHeatFlux', 'Net Core Heat Flux'),
           valueType: 'number'
         }
       ];
     }
     if (categoryId === 'atmosphere') {
       return [
-        { id: 'totalPressurePa', label: 'Total Pressure Pa', valueType: 'number' },
-        { id: 'totalPressureKPa', label: 'Total Pressure kPa', valueType: 'number' },
-        { id: 'co2PressurePa', label: 'CO₂ Pressure Pa', valueType: 'number' },
-        { id: 'o2PressurePa', label: 'O₂ Pressure Pa', valueType: 'number' },
-        { id: 'n2PressurePa', label: 'N₂ Pressure Pa', valueType: 'number' },
-        { id: 'ch4PressurePa', label: 'CH₄ Pressure Pa', valueType: 'number' },
-        { id: 'nh3PressurePa', label: 'NH₃ Pressure Pa', valueType: 'number' },
-        { id: 'h2PressurePa', label: 'H₂ Pressure Pa', valueType: 'number' },
-        { id: 'waterVaporPressurePa', label: 'Water Vapor Pressure Pa', valueType: 'number' }
+        { id: 'totalPressurePa', label: this.getScriptVariableText('terraforming.atmosphere.totalPressurePa', 'Total Pressure Pa'), valueType: 'number' },
+        { id: 'totalPressureKPa', label: this.getScriptVariableText('terraforming.atmosphere.totalPressureKPa', 'Total Pressure kPa'), valueType: 'number' },
+        { id: 'co2PressurePa', label: this.getScriptVariableText('terraforming.atmosphere.co2PressurePa', 'CO₂ Pressure Pa'), valueType: 'number' },
+        { id: 'o2PressurePa', label: this.getScriptVariableText('terraforming.atmosphere.o2PressurePa', 'O₂ Pressure Pa'), valueType: 'number' },
+        { id: 'n2PressurePa', label: this.getScriptVariableText('terraforming.atmosphere.n2PressurePa', 'N₂ Pressure Pa'), valueType: 'number' },
+        { id: 'ch4PressurePa', label: this.getScriptVariableText('terraforming.atmosphere.ch4PressurePa', 'CH₄ Pressure Pa'), valueType: 'number' },
+        { id: 'nh3PressurePa', label: this.getScriptVariableText('terraforming.atmosphere.nh3PressurePa', 'NH₃ Pressure Pa'), valueType: 'number' },
+        { id: 'h2PressurePa', label: this.getScriptVariableText('terraforming.atmosphere.h2PressurePa', 'H₂ Pressure Pa'), valueType: 'number' },
+        { id: 'waterVaporPressurePa', label: this.getScriptVariableText('terraforming.atmosphere.waterVaporPressurePa', 'Water Vapor Pressure Pa'), valueType: 'number' }
       ];
     }
     if (categoryId === 'surface') {
       return [
-        { id: 'land', label: 'Land', valueType: 'number' },
-        { id: 'geometricLand', label: 'Geometric Land', valueType: 'number' }
+        { id: 'land', label: this.getScriptVariableText('terraforming.surface.land', 'Land'), valueType: 'number' },
+        { id: 'geometricLand', label: this.getScriptVariableText('terraforming.surface.geometricLand', 'Geometric Land'), valueType: 'number' }
       ];
     }
     if (categoryId === 'luminosity') {
       return [
-        { id: 'solarFlux', label: 'Solar Flux', valueType: 'number' },
-        { id: 'modifiedSolarFlux', label: 'Modified Solar Flux', valueType: 'number' },
-        { id: 'albedo', label: 'Albedo', valueType: 'number' },
-        { id: 'opticalDepth', label: 'Optical Depth', valueType: 'number' }
+        { id: 'solarFlux', label: this.getScriptVariableText('terraforming.luminosity.solarFlux', 'Solar Flux'), valueType: 'number' },
+        { id: 'modifiedSolarFlux', label: this.getScriptVariableText('terraforming.luminosity.modifiedSolarFlux', 'Modified Solar Flux'), valueType: 'number' },
+        { id: 'albedo', label: this.getScriptVariableText('terraforming.luminosity.albedo', 'Albedo'), valueType: 'number' },
+        { id: 'opticalDepth', label: this.getScriptVariableText('terraforming.luminosity.opticalDepth', 'Optical Depth'), valueType: 'number' }
       ];
     }
     return [
-      { id: 'hasNaturalMagnetosphere', label: 'Natural Magnetosphere', valueType: 'boolean' },
-      { id: 'hasArtificialMagnetosphere', label: 'Artificial Magnetosphere', valueType: 'boolean' },
-      { id: 'magnetosphereStatus', label: 'Magnetosphere Status', valueType: 'boolean' },
+      { id: 'hasNaturalMagnetosphere', label: this.getScriptVariableText('terraforming.others.naturalMagnetosphere', 'Natural Magnetosphere'), valueType: 'boolean' },
+      { id: 'hasArtificialMagnetosphere', label: this.getScriptVariableText('terraforming.others.artificialMagnetosphere', 'Artificial Magnetosphere'), valueType: 'boolean' },
+      { id: 'magnetosphereStatus', label: this.getScriptVariableText('terraforming.others.magnetosphereStatus', 'Magnetosphere Status'), valueType: 'boolean' },
       {
         id: 'surfaceRadiation',
-        label: t('ui.hope.automationCards.scriptVariables.terraforming.others.surfaceRadiation', {}, 'Surface Radiation'),
+        label: this.getScriptVariableText('terraforming.others.surfaceRadiation', 'Surface Radiation'),
         valueType: 'number'
       },
       {
         id: 'orbitalRadiation',
-        label: t('ui.hope.automationCards.scriptVariables.terraforming.others.orbitalRadiation', {}, 'Orbital Radiation'),
+        label: this.getScriptVariableText('terraforming.others.orbitalRadiation', 'Orbital Radiation'),
         valueType: 'number'
       }
     ];
@@ -399,36 +403,36 @@ class ScriptVariableRegistry {
     return [
       {
         id: 'worldArchetype',
-        label: 'World Archetype',
+        label: this.getScriptVariableText('celestial.worldArchetype', 'World Archetype'),
         valueType: 'boolean'
       },
       {
         id: 'worldType',
-        label: 'World Type',
+        label: this.getScriptVariableText('celestial.worldType', 'World Type'),
         valueType: 'boolean'
       },
-      { id: 'gravity', label: 'Gravity', valueType: 'number' },
-      { id: 'radius', label: 'Radius', valueType: 'number' },
-      { id: 'mass', label: 'Mass', valueType: 'number' },
-      { id: 'surfaceArea', label: 'Surface Area', valueType: 'number' },
-      { id: 'distanceFromSun', label: 'Distance From Sun', valueType: 'number' },
-      { id: 'solarFlux', label: 'Solar Flux', valueType: 'number' },
-      { id: 'rotationPeriod', label: 'Rotation Period', valueType: 'number' },
-      { id: 'hasNaturalMagnetosphere', label: 'Natural Magnetosphere', valueType: 'boolean' },
-      { id: 'coreHeatFlux', label: 'Core Heat Flux', valueType: 'number' },
-      { id: 'density', label: 'Density', valueType: 'number' }
+      { id: 'gravity', label: this.getScriptVariableText('celestial.gravity', 'Gravity'), valueType: 'number' },
+      { id: 'radius', label: this.getScriptVariableText('celestial.radius', 'Radius'), valueType: 'number' },
+      { id: 'mass', label: this.getScriptVariableText('celestial.mass', 'Mass'), valueType: 'number' },
+      { id: 'surfaceArea', label: this.getScriptVariableText('celestial.surfaceArea', 'Surface Area'), valueType: 'number' },
+      { id: 'distanceFromSun', label: this.getScriptVariableText('celestial.distanceFromSun', 'Distance From Sun'), valueType: 'number' },
+      { id: 'solarFlux', label: this.getScriptVariableText('celestial.solarFlux', 'Solar Flux'), valueType: 'number' },
+      { id: 'rotationPeriod', label: this.getScriptVariableText('celestial.rotationPeriod', 'Rotation Period'), valueType: 'number' },
+      { id: 'hasNaturalMagnetosphere', label: this.getScriptVariableText('terraforming.others.naturalMagnetosphere', 'Natural Magnetosphere'), valueType: 'boolean' },
+      { id: 'coreHeatFlux', label: this.getScriptVariableText('terraforming.temperature.coreHeatFlux', 'Core Heat Flux'), valueType: 'number' },
+      { id: 'density', label: this.getScriptVariableText('celestial.density', 'Density'), valueType: 'number' }
     ];
   }
 
   getArtificialCategories() {
     return [
-      { id: 'artificial', label: t('ui.hope.automationCards.scriptVariables.artificial.category', {}, 'Artificial') }
+      { id: 'artificial', label: this.getScriptVariableText('artificial.category', 'Artificial') }
     ];
   }
 
   getArtificialTargets() {
     return [
-      { id: 'artificial', label: t('ui.hope.automationCards.scriptVariables.artificial.category', {}, 'Artificial') }
+      { id: 'artificial', label: this.getScriptVariableText('artificial.category', 'Artificial') }
     ];
   }
 
@@ -436,7 +440,7 @@ class ScriptVariableRegistry {
     return [
       {
         id: 'storedCount',
-        label: t('ui.hope.automationCards.scriptVariables.artificial.storedCount', {}, 'Stored Count'),
+        label: this.getScriptVariableText('artificial.storedCount', 'Stored Count'),
         valueType: 'number'
       }
     ];
@@ -444,19 +448,19 @@ class ScriptVariableRegistry {
 
   getHazardTargets() {
     return [
-      { id: 'hazardousBiomass', label: 'Hazardous Biomass' },
-      { id: 'hazardousMachinery', label: 'Hazardous Machinery' },
-      { id: 'kessler', label: 'Kessler Skies' },
-      { id: 'pulsar', label: 'Pulsar' },
-      { id: 'garbage', label: 'Garbage' }
+      { id: 'hazardousBiomass', label: this.getScriptVariableText('hazards.hazardousBiomass', 'Hazardous Biomass') },
+      { id: 'hazardousMachinery', label: this.getScriptVariableText('hazards.hazardousMachinery', 'Hazardous Machinery') },
+      { id: 'kessler', label: this.getScriptVariableText('hazards.kesslerSkies', 'Kessler Skies') },
+      { id: 'pulsar', label: this.getScriptVariableText('hazards.pulsar', 'Pulsar') },
+      { id: 'garbage', label: this.getScriptVariableText('hazards.garbage', 'Garbage') }
     ];
   }
 
   getHazardAttributes() {
     return [
-      { id: 'active', label: 'Active', valueType: 'boolean' },
-      { id: 'unclearedPercent', label: 'Uncleared %', valueType: 'number' },
-      { id: 'clearedPercent', label: 'Cleared %', valueType: 'number' }
+      { id: 'active', label: this.getScriptVariableText('common.active', 'Active'), valueType: 'boolean' },
+      { id: 'unclearedPercent', label: this.getScriptVariableText('hazards.unclearedPercent', 'Uncleared %'), valueType: 'number' },
+      { id: 'clearedPercent', label: this.getScriptVariableText('hazards.clearedPercent', 'Cleared %'), valueType: 'number' }
     ];
   }
 
@@ -475,14 +479,14 @@ class ScriptVariableRegistry {
 
   getResearchAttributes() {
     return [
-      { id: 'completed', label: 'Researched', valueType: 'boolean' },
-      { id: 'unlocked', label: 'Unlocked', valueType: 'boolean' },
-      { id: 'enabledForAutomation', label: 'Auto-research Enabled', valueType: 'boolean' },
-      { id: 'hiddenByUser', label: 'Hidden By User', valueType: 'boolean' },
-      { id: 'priority', label: 'Priority', valueType: 'number' },
-      { id: 'cost', label: 'Cost', valueType: 'number' },
-      { id: 'canAfford', label: 'Can Afford', valueType: 'boolean' },
-      { id: 'isAdvanced', label: 'Advanced', valueType: 'boolean' }
+      { id: 'completed', label: this.getScriptVariableText('research.researched', 'Researched'), valueType: 'boolean' },
+      { id: 'unlocked', label: this.getScriptVariableText('common.unlocked', 'Unlocked'), valueType: 'boolean' },
+      { id: 'enabledForAutomation', label: this.getScriptVariableText('research.autoResearchEnabled', 'Auto-research Enabled'), valueType: 'boolean' },
+      { id: 'hiddenByUser', label: this.getScriptVariableText('research.hiddenByUser', 'Hidden By User'), valueType: 'boolean' },
+      { id: 'priority', label: this.getScriptVariableText('research.priority', 'Priority'), valueType: 'number' },
+      { id: 'cost', label: this.getScriptVariableText('research.cost', 'Cost'), valueType: 'number' },
+      { id: 'canAfford', label: this.getScriptVariableText('research.canAfford', 'Can Afford'), valueType: 'boolean' },
+      { id: 'isAdvanced', label: this.getScriptVariableText('research.advanced', 'Advanced'), valueType: 'boolean' }
     ];
   }
 
@@ -512,45 +516,45 @@ class ScriptVariableRegistry {
     const resolvedTargetId = this.getResolvedResourceTargetId(categoryId, targetId, optionId);
     if (!resolvedTargetId) return [];
     const attributes = [
-      { id: 'value', label: 'Value', valueType: 'number' },
-      { id: 'cap', label: 'Cap', valueType: 'number' },
-      { id: 'fillPercent', label: 'Fill %', valueType: 'number' },
-      { id: 'productionRate', label: 'Production Rate', valueType: 'number' },
-      { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
-      { id: 'netRate', label: 'Net Rate', valueType: 'number' }
+      { id: 'value', label: this.getScriptVariableText('common.value', 'Value'), valueType: 'number' },
+      { id: 'cap', label: this.getScriptVariableText('resources.cap', 'Cap'), valueType: 'number' },
+      { id: 'fillPercent', label: this.getScriptVariableText('resources.fillPercent', 'Fill %'), valueType: 'number' },
+      { id: 'productionRate', label: this.getScriptVariableText('resources.productionRate', 'Production Rate'), valueType: 'number' },
+      { id: 'consumptionRate', label: this.getScriptVariableText('resources.consumptionRate', 'Consumption Rate'), valueType: 'number' },
+      { id: 'netRate', label: this.getScriptVariableText('resources.netRate', 'Net Rate'), valueType: 'number' }
     ];
     if (categoryId === 'atmospheric') {
-      attributes.push({ id: 'pressurePa', label: 'Pressure Pa', valueType: 'number' });
+      attributes.push({ id: 'pressurePa', label: this.getScriptVariableText('resources.pressurePa', 'Pressure Pa'), valueType: 'number' });
     }
     if (categoryId === 'special' && resolvedTargetId === 'spaceships') {
       attributes.push({
         id: 'totalAmount',
-        label: t('ui.hope.automationCards.scriptVariables.resources.totalAmount', {}, 'Total Amount'),
+        label: this.getScriptVariableText('resources.totalAmount', 'Total Amount'),
         valueType: 'number'
       });
     }
     if (categoryId === 'surface' && resolvedTargetId === 'land') {
       return [
-        { id: 'value', label: 'Value', valueType: 'number' },
-        { id: 'available', label: t('ui.hope.automationCards.scriptVariables.resources.available', {}, 'Available'), valueType: 'number' },
-        { id: 'fillPercent', label: 'Fill %', valueType: 'number' },
-        { id: 'productionRate', label: 'Production Rate', valueType: 'number' },
-        { id: 'consumptionRate', label: 'Consumption Rate', valueType: 'number' },
-        { id: 'netRate', label: 'Net Rate', valueType: 'number' }
+        { id: 'value', label: this.getScriptVariableText('common.value', 'Value'), valueType: 'number' },
+        { id: 'available', label: this.getScriptVariableText('resources.available', 'Available'), valueType: 'number' },
+        { id: 'fillPercent', label: this.getScriptVariableText('resources.fillPercent', 'Fill %'), valueType: 'number' },
+        { id: 'productionRate', label: this.getScriptVariableText('resources.productionRate', 'Production Rate'), valueType: 'number' },
+        { id: 'consumptionRate', label: this.getScriptVariableText('resources.consumptionRate', 'Consumption Rate'), valueType: 'number' },
+        { id: 'netRate', label: this.getScriptVariableText('resources.netRate', 'Net Rate'), valueType: 'number' }
       ];
     }
     if (this.getSurfaceResourceCoverageKey(categoryId, resolvedTargetId)) {
-      attributes.push({ id: 'coverage', label: 'Coverage', valueType: 'number' });
+      attributes.push({ id: 'coverage', label: this.getScriptVariableText('resources.coverage', 'Coverage'), valueType: 'number' });
     }
     return attributes;
   }
 
   getSurfaceResourceGroups() {
     return [
-      { id: 'solid', label: t('ui.hope.automationCards.scriptVariables.resources.surface.solid', {}, 'Solid') },
-      { id: 'liquid', label: t('ui.hope.automationCards.scriptVariables.resources.surface.liquid', {}, 'Liquid') },
-      { id: 'buried', label: t('ui.hope.automationCards.scriptVariables.resources.surface.buried', {}, 'Buried') },
-      { id: 'others', label: t('ui.hope.automationCards.scriptVariables.resources.surface.others', {}, 'Others') }
+      { id: 'solid', label: this.getScriptVariableText('resources.surface.solid', 'Solid') },
+      { id: 'liquid', label: this.getScriptVariableText('resources.surface.liquid', 'Liquid') },
+      { id: 'buried', label: this.getScriptVariableText('resources.surface.buried', 'Buried') },
+      { id: 'others', label: this.getScriptVariableText('resources.surface.others', 'Others') }
     ];
   }
 
@@ -884,31 +888,31 @@ class ScriptVariableRegistry {
   getCelestialAttributeOptions(attribute) {
     if (attribute === 'worldArchetype') {
       return [
-        { id: 'artificial', label: 'Artificial', value: 1 },
-        { id: 'random', label: 'Random', value: 2 },
-        { id: 'natural', label: 'Natural', value: 3 },
-        { id: 'story', label: 'Story', value: 4 },
-        { id: 'challenge', label: 'Challenge', value: 5 }
+        { id: 'artificial', label: this.getScriptVariableText('celestial.archetypes.artificial', 'Artificial'), value: 1 },
+        { id: 'random', label: this.getScriptVariableText('celestial.archetypes.random', 'Random'), value: 2 },
+        { id: 'natural', label: this.getScriptVariableText('celestial.archetypes.natural', 'Natural'), value: 3 },
+        { id: 'story', label: this.getScriptVariableText('celestial.archetypes.story', 'Story'), value: 4 },
+        { id: 'challenge', label: this.getScriptVariableText('celestial.archetypes.challenge', 'Challenge'), value: 5 }
       ];
     }
     if (attribute === 'worldType') {
       return [
-        { id: 'mars-like', label: 'Mars-like', value: 1 },
-        { id: 'cold-desert', label: 'Desert', value: 2 },
-        { id: 'icy-moon', label: 'Water-rich', value: 3 },
-        { id: 'titan-like', label: 'Titan-like', value: 4 },
-        { id: 'carbon-planet', label: 'Carbon', value: 5 },
-        { id: 'desiccated-desert', label: 'Desiccated Desert', value: 6 },
-        { id: 'super-earth', label: 'Super-Earth', value: 7 },
-        { id: 'chthonian', label: 'Chthonian', value: 8 },
-        { id: 'venus-like', label: 'Venus-like', value: 9 },
-        { id: 'rogue', label: 'Rogue', value: 10 },
-        { id: 'ammonia-rich', label: 'Ammonia-rich', value: 11 },
-        { id: 'molten', label: 'Molten', value: 12 },
-        { id: 'jupiter-like', label: 'Jupiter-like', value: 13 },
-        { id: 'shell', label: 'Shell World', value: 14 },
-        { id: 'ring', label: 'Ringworld', value: 15 },
-        { id: 'disk', label: 'Disk World', value: 16 }
+        { id: 'mars-like', label: this.getScriptVariableText('celestial.worldTypes.marsLike', 'Mars-like'), value: 1 },
+        { id: 'cold-desert', label: this.getScriptVariableText('celestial.worldTypes.desert', 'Desert'), value: 2 },
+        { id: 'icy-moon', label: this.getScriptVariableText('celestial.worldTypes.waterRich', 'Water-rich'), value: 3 },
+        { id: 'titan-like', label: this.getScriptVariableText('celestial.worldTypes.titanLike', 'Titan-like'), value: 4 },
+        { id: 'carbon-planet', label: this.getScriptVariableText('celestial.worldTypes.carbon', 'Carbon'), value: 5 },
+        { id: 'desiccated-desert', label: this.getScriptVariableText('celestial.worldTypes.desiccatedDesert', 'Desiccated Desert'), value: 6 },
+        { id: 'super-earth', label: this.getScriptVariableText('celestial.worldTypes.superEarth', 'Super-Earth'), value: 7 },
+        { id: 'chthonian', label: this.getScriptVariableText('celestial.worldTypes.chthonian', 'Chthonian'), value: 8 },
+        { id: 'venus-like', label: this.getScriptVariableText('celestial.worldTypes.venusLike', 'Venus-like'), value: 9 },
+        { id: 'rogue', label: this.getScriptVariableText('celestial.worldTypes.rogue', 'Rogue'), value: 10 },
+        { id: 'ammonia-rich', label: this.getScriptVariableText('celestial.worldTypes.ammoniaRich', 'Ammonia-rich'), value: 11 },
+        { id: 'molten', label: this.getScriptVariableText('celestial.worldTypes.molten', 'Molten'), value: 12 },
+        { id: 'jupiter-like', label: this.getScriptVariableText('celestial.worldTypes.jupiterLike', 'Jupiter-like'), value: 13 },
+        { id: 'shell', label: this.getScriptVariableText('celestial.worldTypes.shellWorld', 'Shell World'), value: 14 },
+        { id: 'ring', label: this.getScriptVariableText('celestial.worldTypes.ringworld', 'Ringworld'), value: 15 },
+        { id: 'disk', label: this.getScriptVariableText('celestial.worldTypes.diskWorld', 'Disk World'), value: 16 }
       ];
     }
     return [];
@@ -1182,7 +1186,7 @@ class ScriptVariableRegistry {
   }
 
   describeReference(ref) {
-    if (!ref || ref.constructor !== Object) return 'Value';
+    if (!ref || ref.constructor !== Object) return this.getScriptVariableText('common.value', 'Value');
     if (ref.source === 'constant') return `${ref.constant ?? 0}`;
     const source = this.sources.find(item => item.id === ref.source);
     if (ref.source === 'celestial') {

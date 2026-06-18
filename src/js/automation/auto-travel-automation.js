@@ -22,7 +22,7 @@ class AutoTravelAutomation {
     this.nextPresetId += 1;
     this.presets.push({
       id,
-      name: `Preset ${id}`,
+      name: t('ui.hope.automationCards.presetWithId', { id }, `Preset ${id}`),
       target: 'random',
       type: 'random',
       orbitPreset: 'random',

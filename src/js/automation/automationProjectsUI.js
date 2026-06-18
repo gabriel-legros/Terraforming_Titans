@@ -1455,17 +1455,17 @@ function getAutomatableProjects(extraProjectIds = []) {
       seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID] = true;
       projects.push({
         name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID,
-        displayName: 'Space Storage (Expansion)',
+        displayName: getAutomationCardText('spaceStorageExpansionPreset', {}, 'Space Storage (Expansion)'),
         category: project.category || 'general'
       });
       projects.push({
         name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID,
-        displayName: 'Space Storage (Caps and Reserve)',
+        displayName: getAutomationCardText('spaceStorageCapsAndReservePreset', {}, 'Space Storage (Caps and Reserve)'),
         category: project.category || 'general'
       });
       projects.push({
         name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID,
-        displayName: 'Space Storage (Operations)',
+        displayName: getAutomationCardText('spaceStorageOperationsPreset', {}, 'Space Storage (Operations)'),
         category: project.category || 'general'
       });
       projects.push({
@@ -1512,17 +1512,17 @@ function getProjectAutomationCatalog() {
       seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID] = true;
       projects.push({
         name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID,
-        displayName: 'Space Storage (Expansion)',
+        displayName: getAutomationCardText('spaceStorageExpansionPreset', {}, 'Space Storage (Expansion)'),
         category: project.category || 'general'
       });
       projects.push({
         name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID,
-        displayName: 'Space Storage (Caps and Reserve)',
+        displayName: getAutomationCardText('spaceStorageCapsAndReservePreset', {}, 'Space Storage (Caps and Reserve)'),
         category: project.category || 'general'
       });
       projects.push({
         name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID,
-        displayName: 'Space Storage (Operations)',
+        displayName: getAutomationCardText('spaceStorageOperationsPreset', {}, 'Space Storage (Operations)'),
         category: project.category || 'general'
       });
       projects.push({
