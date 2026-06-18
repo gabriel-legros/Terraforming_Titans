@@ -64,9 +64,11 @@ function cacheSettingsElements() {
     spaceshipEnergyBeforeSpaceElevatorTooltip: document.getElementById('spaceship-energy-before-space-elevator-tooltip'),
     spaceshipEnergyAfterSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-after-space-elevator-multiplier-input'),
     spaceshipEnergyAfterSpaceElevatorTooltip: document.getElementById('spaceship-energy-after-space-elevator-tooltip'),
+    advancedResearchMultiplierInput: document.getElementById('advanced-research-multiplier-input'),
     galaxyFleetCapacityMultiplierInput: document.getElementById('galaxy-fleet-capacity-multiplier-input'),
     galaxyThreatScalingMultiplierInput: document.getElementById('galaxy-threat-scaling-multiplier-input'),
     galaxyThreatScalingTooltip: document.getElementById('galaxy-threat-scaling-tooltip'),
+    artificialWorldConstructionTimeMultiplierInput: document.getElementById('artificial-world-construction-time-multiplier-input'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -117,6 +119,9 @@ function wireDifficultyMultiplierInput(input, settingId) {
       if (galaxyManager) {
         updateGalaxyUI({ force: true });
       }
+      if (artificialManager) {
+        artificialManager.updateUI(true);
+      }
     },
     datasetKey: settingId,
   });
@@ -134,8 +139,10 @@ function updateDifficultySettingInputs() {
     maintenanceCostMultiplier: cached.maintenanceCostMultiplierInput,
     spaceshipEnergyBeforeSpaceElevatorMultiplier: cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     spaceshipEnergyAfterSpaceElevatorMultiplier: cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
+    advancedResearchMultiplier: cached.advancedResearchMultiplierInput,
     galaxyFleetCapacityMultiplier: cached.galaxyFleetCapacityMultiplierInput,
     galaxyThreatScalingMultiplier: cached.galaxyThreatScalingMultiplierInput,
+    artificialWorldConstructionTimeMultiplier: cached.artificialWorldConstructionTimeMultiplierInput,
   };
 
   normalizeDifficultySettings();
@@ -628,8 +635,10 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.maintenanceCostMultiplierInput, 'maintenanceCostMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput, 'spaceshipEnergyBeforeSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');
+  wireDifficultyMultiplierInput(cached.advancedResearchMultiplierInput, 'advancedResearchMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyFleetCapacityMultiplierInput, 'galaxyFleetCapacityMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyThreatScalingMultiplierInput, 'galaxyThreatScalingMultiplier');
+  wireDifficultyMultiplierInput(cached.artificialWorldConstructionTimeMultiplierInput, 'artificialWorldConstructionTimeMultiplier');
 
   if (cached.spaceshipEnergyBeforeSpaceElevatorTooltip) {
     attachDynamicInfoTooltip(

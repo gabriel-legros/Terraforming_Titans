@@ -964,7 +964,17 @@ class ArtificialManager extends EffectableEntity {
         const hectares = this.calculateAreaHectares(radiusEarth);
         const batches = hectares / 50_000_000_000;
         const hours = this.constructionHoursPer50B * Math.max(batches, 0);
-        return hours * 3_600_000;
+        return hours * 3_600_000 * this.getConstructionTimeMultiplier();
+    }
+
+    getConstructionTimeMultiplier() {
+        let multiplier = 1;
+        for (const effect of this.activeEffects) {
+            if (effect.type === 'artificialWorldConstructionTimeMultiplier') {
+                multiplier *= effect.value;
+            }
+        }
+        return multiplier;
     }
 
     getDurationContext(radiusEarth) {

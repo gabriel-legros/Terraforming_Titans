@@ -104,8 +104,10 @@ let gameSettings = {
   maintenanceCostMultiplier: 1,
   spaceshipEnergyBeforeSpaceElevatorMultiplier: 1,
   spaceshipEnergyAfterSpaceElevatorMultiplier: 1,
+  advancedResearchMultiplier: 1,
   galaxyFleetCapacityMultiplier: 1,
   galaxyThreatScalingMultiplier: 1,
+  artificialWorldConstructionTimeMultiplier: 1,
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
 };

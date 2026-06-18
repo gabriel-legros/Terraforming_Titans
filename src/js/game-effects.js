@@ -16,8 +16,10 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   maintenanceCostMultiplier: { min: 0 },
   spaceshipEnergyBeforeSpaceElevatorMultiplier: { min: 0 },
   spaceshipEnergyAfterSpaceElevatorMultiplier: { min: 0 },
+  advancedResearchMultiplier: { min: 0 },
   galaxyFleetCapacityMultiplier: { min: 0 },
   galaxyThreatScalingMultiplier: { min: 0 },
+  artificialWorldConstructionTimeMultiplier: { min: 0.0001 },
 };
 
 function normalizeDifficultySettingValue(settingId, value) {
@@ -73,6 +75,9 @@ function clearDifficultySettingEffects() {
   if (researchManager) {
     researchManager.removeEffect(source);
     researchManager.updateAllResearchCosts();
+  }
+  if (artificialManager) {
+    artificialManager.removeEffect(source);
   }
   if (lifeManager) {
     lifeManager.removeEffect(source);
@@ -185,6 +190,14 @@ function applyDifficultySettingEffects() {
       effectId: 'difficulty-spaceship-energy-after-space-elevator'
     });
   }
+  if (gameSettings.advancedResearchMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'researchManager',
+      type: 'advancedResearchBoost',
+      value: gameSettings.advancedResearchMultiplier,
+      effectId: 'difficulty-advanced-research-multiplier'
+    });
+  }
   if (gameSettings.galaxyFleetCapacityMultiplier !== 1) {
     addDifficultySettingEffect({
       target: 'galaxyManager',
@@ -199,6 +212,14 @@ function applyDifficultySettingEffects() {
       type: 'threatScalingMultiplier',
       value: gameSettings.galaxyThreatScalingMultiplier,
       effectId: 'difficulty-galaxy-threat-scaling'
+    });
+  }
+  if (gameSettings.artificialWorldConstructionTimeMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'artificialManager',
+      type: 'artificialWorldConstructionTimeMultiplier',
+      value: gameSettings.artificialWorldConstructionTimeMultiplier,
+      effectId: 'difficulty-artificial-world-construction-time'
     });
   }
   if (gameSettings.earlyAdvancedOversight) {
