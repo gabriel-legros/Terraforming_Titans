@@ -90,7 +90,6 @@ class NanotechManager extends EffectableEntity {
     this.maxGraphiteAbsolute = 1e6;
     this.graphiteLimitMode = 'percent';
     this.uiCache = null; // cache of UI element references for fast updates
-    this.nanocolonyContentElement = null;
     this.uiState = {
       glassMax: 10,
       componentsMax: 10,
@@ -257,7 +256,6 @@ class NanotechManager extends EffectableEntity {
     if (this.isTemperatureDisabled()) {
       this.resetActivityState();
       this.applyMaintenanceEffects();
-      this.updateUI();
       return;
     }
     const extraStages = this.getExtraNanotechStages();
@@ -742,17 +740,6 @@ class NanotechManager extends EffectableEntity {
       }
     }
     this.applyMaintenanceEffects();
-    if (this.shouldUpdateUIFromTick()) {
-      this.updateUI();
-    }
-  }
-
-  shouldUpdateUIFromTick() {
-    if (typeof document === 'undefined') return false;
-    if (!this.nanocolonyContentElement || !this.nanocolonyContentElement.isConnected) {
-      this.nanocolonyContentElement = document.getElementById('nanocolony-colonies');
-    }
-    return !!(this.nanocolonyContentElement && this.nanocolonyContentElement.classList.contains('active'));
   }
 
   enable() {

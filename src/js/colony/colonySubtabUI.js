@@ -8,6 +8,7 @@ const COLONY_SUBTAB_IDS = {
 
 const colonySubtabState = {
   initialized: false,
+  activeSubtabId: COLONY_SUBTAB_IDS.population,
   populationEverUnlocked: false,
   nanocolonyEverUnlocked: false,
   followersEverUnlocked: false,
@@ -107,9 +108,15 @@ function activateColonySubtab(subtabId) {
   }
   if (colonySubtabManager) {
     colonySubtabManager.activate(subtabId);
+    colonySubtabState.activeSubtabId = colonySubtabManager.getActiveId() || subtabId;
   } else {
     activateSubtab('colony-subtab', 'colony-subtab-content', subtabId, true);
+    colonySubtabState.activeSubtabId = subtabId;
   }
+}
+
+function isColonySubtabActiveFromState(subtabId) {
+  return colonySubtabState.activeSubtabId === subtabId;
 }
 
 function updateColonySubtabsVisibility() {
@@ -135,6 +142,9 @@ function updateColonySubtabsVisibility() {
   }
 
   const activeId = getActiveColonySubtabId();
+  if (activeId) {
+    colonySubtabState.activeSubtabId = activeId;
+  }
   if (availableSubtabs.length > 0 && (!activeId || !availableSubtabs.includes(activeId))) {
     activateColonySubtab(availableSubtabs[0]);
   }
@@ -171,6 +181,9 @@ function initializeColonySubtabs() {
     colonySubtabManager = new SubtabManager('.colony-subtab', '.colony-subtab-content', true);
     colonySubtabManager.onActivate(() => {
       markColoniesViewed();
+    });
+    colonySubtabManager.onActivate((subtabId) => {
+      colonySubtabState.activeSubtabId = subtabId;
     });
   }
   colonySubtabState.initialized = false;

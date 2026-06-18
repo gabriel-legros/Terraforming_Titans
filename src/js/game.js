@@ -869,6 +869,12 @@ function updateRender(force = false, options = {}) {
         updateGrowthRateDisplay();
       }
       updateColonySlidersUI();
+      if (
+        nanotechManager &&
+        (forceAllSubtabs || isColonySubtabActiveFromState('nanocolony-colonies'))
+      ) {
+        nanotechManager.updateUI();
+      }
       updateFollowersUI();
     }
 
@@ -966,6 +972,7 @@ function updateRender(force = false, options = {}) {
     updateColonyDisplay(colonies);
     if (typeof updateGrowthRateDisplay === 'function') updateGrowthRateDisplay();
     updateColonySlidersUI();
+    if (nanotechManager) nanotechManager.updateUI();
     renderProjects();
     updateResearchUI();
     updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
