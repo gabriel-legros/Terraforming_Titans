@@ -360,9 +360,9 @@ function updateLiftersUI(project) {
   }
 
   project.normalizeAssignments();
-  const assigned = project.getAssignedTotal();
-  const totalBigInt = project.getAvailableLifters() + assigned;
-  const available = project.getAvailableLifters();
+  const assigned = project.getAssignedTotal(true);
+  const available = project.getAvailableLifters(true, assigned);
+  const totalBigInt = available + assigned;
   const step = project.getAssignmentStep();
 
   elements.totalValue.textContent = formatNumber(totalBigInt, true, 2);
@@ -410,7 +410,7 @@ function updateLiftersUI(project) {
     }
 
     const storedCurrent = project.getStoredAssignmentAmount(key);
-    const displayedCurrent = project.getDisplayedAssignmentAmount(key);
+    const displayedCurrent = isUnassigned ? available : storedCurrent;
     const maxForKey = project.getAssignmentMaxTarget(key);
     const displayedCap = isUnassigned ? null : project.getGasGiantMaxAssignmentForRecipe(key, recipe);
     const showMaxTooltip = displayedCap !== null && displayedCap > 0n;

@@ -32,36 +32,25 @@
     if (value === undefined || value === null || value === '') {
       return 0n;
     }
-    if (Object.prototype.toString.call(value) === '[object BigInt]') {
+    const valueType = Object.prototype.toString.call(value);
+    if (valueType === '[object BigInt]') {
       return value < 0n ? 0n : value;
     }
-    if (Object.prototype.toString.call(value) === '[object String]') {
+    if (valueType === '[object String]') {
       const trimmed = value.trim();
       if (/^\d+$/.test(trimmed)) {
         return BigInt(trimmed);
       }
       const parsed = parseFlexibleNumber(trimmed);
       if (Number.isFinite(parsed) && parsed > 0) {
-        if (Number.isSafeInteger(parsed)) {
-          return BigInt(parsed);
-        }
-        return BigInt(Math.floor(parsed).toLocaleString('fullwide', {
-          useGrouping: false,
-          maximumFractionDigits: 0
-        }));
+        return BigInt(Math.floor(parsed));
       }
     }
     const numeric = Number(value) || 0;
-    if (numeric <= 0) {
+    if (!Number.isFinite(numeric) || numeric <= 0) {
       return 0n;
     }
-    if (Number.isSafeInteger(numeric)) {
-      return BigInt(numeric);
-    }
-    return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
-      useGrouping: false,
-      maximumFractionDigits: 0
-    }));
+    return BigInt(Math.floor(numeric));
   }
 
   function serializeManufacturingInteger(value) {
@@ -651,14 +640,16 @@
       }
     }
 
-    getAssignedTotal() {
-      this.normalizeAssignments();
+    getAssignedTotal(skipNormalization = false) {
+      if (!skipNormalization) {
+        this.normalizeAssignments();
+      }
       return this.getAssignmentKeys().reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0n), 0n);
     }
 
-    getAvailablePopulation() {
+    getAvailablePopulation(skipNormalization = false, assignedTotal = null) {
       const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
-      const assigned = this.getAssignedTotal();
+      const assigned = assignedTotal === null ? this.getAssignedTotal(skipNormalization) : assignedTotal;
       return total > assigned ? (total - assigned) : 0n;
     }
 
@@ -971,9 +962,11 @@
       return 1;
     }
 
-    getOperationProductivityForTick() {
+    getOperationProductivityForTick(skipNormalization = false) {
       const productivityByRecipe = {};
-      this.normalizeAssignments();
+      if (!skipNormalization) {
+        this.normalizeAssignments();
+      }
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0n;
         if (assigned <= 0n) {
@@ -1024,13 +1017,21 @@
     }
 
     runManufacturing(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
-      if (!this.shouldOperate()) {
+      if (!this.isRunning || this.getTotalPotentialPopulation() <= 0) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
         if (!this.isRunning) {
           this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
         } else {
           this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.noCumulativePopulation'));
         }
+        this.shortfallLastTick = false;
+        return;
+      }
+
+      this.normalizeAssignments();
+      if (this.getAssignedTotal(true) <= 0n) {
+        this.setLastRunStats({ metal: 0, silicon: 0 }, {});
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.noCumulativePopulation'));
         this.shortfallLastTick = false;
         return;
       }
@@ -1051,7 +1052,6 @@
         return;
       }
 
-      this.normalizeAssignments();
       const entries = [];
       let hasInputShortfall = false;
 
@@ -1195,7 +1195,7 @@
 
     estimateOperationCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
       const totals = { cost: {}, gain: {} };
-      if (!this.shouldOperate()) {
+      if (!this.isRunning || this.getTotalPotentialPopulation() <= 0) {
         return totals;
       }
       const seconds = deltaTime / 1000;
@@ -1208,6 +1208,9 @@
       }
 
       this.normalizeAssignments();
+      if (this.getAssignedTotal(true) <= 0n) {
+        return totals;
+      }
       const entries = [];
 
       this.getAssignmentKeys().forEach((key) => {
@@ -1671,7 +1674,7 @@
       this.normalizeAssignmentStep();
       const total = this.getTotalPotentialPopulation();
       const totalBigInt = normalizeManufacturingInteger(total);
-      const assigned = this.getAssignedTotal();
+      const assigned = this.getAssignedTotal(true);
       const available = totalBigInt > assigned ? (totalBigInt - assigned) : 0n;
       const step = this.assignmentStep;
       const bonus = this.getCylindersHopePopulationBonus();
@@ -1692,7 +1695,7 @@
       elements.runCheckbox.disabled = totalBigInt <= 0n;
       elements.stepDownButton.disabled = totalBigInt <= 0n;
       elements.stepUpButton.disabled = totalBigInt <= 0n;
-      const productivityByRecipe = this.getOperationProductivityForTick();
+      const productivityByRecipe = this.getOperationProductivityForTick(true);
 
       this.getManagedAssignmentKeys().forEach((key) => {
         const row = elements.rowElements[key];
@@ -1700,7 +1703,7 @@
           return;
         }
         const storedCurrent = this.getStoredAssignmentAmount(key);
-        const displayedCurrent = this.getDisplayedAssignmentAmount(key);
+        const displayedCurrent = this.isUnassignedAssignmentKey(key) ? available : storedCurrent;
         const maxForKey = this.getAssignmentMaxTarget(key);
 
         row.value.textContent = formatNumber(displayedCurrent, true, 2);

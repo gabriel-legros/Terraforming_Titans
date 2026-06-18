@@ -33,26 +33,21 @@ function normalizeLifterInteger(value) {
   if (value === undefined || value === null || value === '') {
     return 0n;
   }
-  if (Object.prototype.toString.call(value) === '[object BigInt]') {
+  const valueType = Object.prototype.toString.call(value);
+  if (valueType === '[object BigInt]') {
     return value < 0n ? 0n : value;
   }
-  if (Object.prototype.toString.call(value) === '[object String]') {
+  if (valueType === '[object String]') {
     const trimmed = value.trim();
     if (/^\d+$/.test(trimmed)) {
       return BigInt(trimmed);
     }
   }
   const numeric = Number(value) || 0;
-  if (numeric <= 0) {
+  if (!Number.isFinite(numeric) || numeric <= 0) {
     return 0n;
   }
-  if (Number.isSafeInteger(numeric)) {
-    return BigInt(numeric);
-  }
-  return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
-    useGrouping: false,
-    maximumFractionDigits: 0
-  }));
+  return BigInt(Math.floor(numeric));
 }
 
 function serializeLifterInteger(value) {
@@ -742,14 +737,16 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     }
   }
 
-  getAssignedTotal() {
-    this.normalizeAssignments();
+  getAssignedTotal(skipNormalization = false) {
+    if (!skipNormalization) {
+      this.normalizeAssignments();
+    }
     return this.getAssignmentKeys().reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
   }
 
-  getAvailableLifters() {
+  getAvailableLifters(skipNormalization = false, assignedTotal = null) {
     const total = normalizeLifterInteger(this.repeatCount);
-    const assigned = this.getAssignedTotal();
+    const assigned = assignedTotal === null ? this.getAssignedTotal(skipNormalization) : assignedTotal;
     return total > assigned ? (total - assigned) : 0n;
   }
 
