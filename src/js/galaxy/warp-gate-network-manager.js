@@ -31,11 +31,11 @@ const IMPORT_CAP_FLAT_BONUSES = {
   water: 0,
 };
 const IMPORT_CAP_RESOURCES = [
-  { key: 'metal', label: 'Metal' },
-  { key: 'nitrogen', label: 'Nitrogen' },
-  { key: 'carbon', label: 'CO2' },
-  { key: 'silicon', label: 'Silicates' },
-  { key: 'water', label: 'Water' },
+  { key: 'metal', label: t('ui.galaxy.importCaps.resources.metal', {}, 'Metal') },
+  { key: 'nitrogen', label: t('ui.galaxy.importCaps.resources.nitrogen', {}, 'Nitrogen') },
+  { key: 'carbon', label: t('ui.galaxy.importCaps.resources.carbon', {}, 'CO2') },
+  { key: 'silicon', label: t('ui.galaxy.importCaps.resources.silicon', {}, 'Silicates') },
+  { key: 'water', label: t('ui.galaxy.importCaps.resources.water', {}, 'Water') },
 ];
 
 const getImportCapRatio = (resourceKey) => (
@@ -356,7 +356,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource, rwgReductionByResource),
-        hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+        hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
       };
     }
     if (!this.galaxyUnlocked) {
@@ -367,7 +367,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource, rwgReductionByResource),
-        hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+        hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
       };
     }
     const summary = this.getGalaxyBreakdown();
@@ -385,7 +385,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ],
       fullControlLine,
       caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap', bonusByResource, rwgReductionByResource),
-      hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+      hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
     };
   }
 

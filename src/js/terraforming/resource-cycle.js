@@ -14,6 +14,63 @@ if (isNodeResourceCycle) {
   }
 }
 
+function getCycleLabelKey(label) {
+  const keys = {
+    'Evaporation': 'evaporation',
+    'Sublimation': 'sublimation',
+    'Rapid Sublimation': 'rapidSublimation',
+    'Boiling': 'boiling',
+    'Rainfall': 'rainfall',
+    'Rain': 'rain',
+    'Snowfall': 'snowfall',
+    'Snow': 'snow',
+    'Melt': 'melt',
+    'Freeze': 'freeze',
+    'Freeze Out': 'freezeOut',
+    'Flow Melt': 'flowMelt',
+    'CO2 Evaporation': 'co2Evaporation',
+    'CO2 Sublimation': 'co2Sublimation',
+    'CO2 Boiling': 'co2Boiling',
+    'CO2 Rain': 'co2Rain',
+    'CO2 Snow': 'co2Snow',
+    'Methane Evaporation': 'methaneEvaporation',
+    'Methane Sublimation': 'methaneSublimation',
+    'Methane Boiling': 'methaneBoiling',
+    'Methane Rain': 'methaneRain',
+    'Methane Snow': 'methaneSnow',
+    'Ammonia Evaporation': 'ammoniaEvaporation',
+    'Ammonia Sublimation': 'ammoniaSublimation',
+    'Ammonia Boiling': 'ammoniaBoiling',
+    'Ammonia Rain': 'ammoniaRain',
+    'Ammonia Snow': 'ammoniaSnow',
+    'Oxygen Evaporation': 'oxygenEvaporation',
+    'Oxygen Sublimation': 'oxygenSublimation',
+    'Oxygen Boiling': 'oxygenBoiling',
+    'Oxygen Condensation': 'oxygenCondensation',
+    'Oxygen Deposition': 'oxygenDeposition',
+    'Nitrogen Evaporation': 'nitrogenEvaporation',
+    'Nitrogen Sublimation': 'nitrogenSublimation',
+    'Nitrogen Boiling': 'nitrogenBoiling',
+    'Nitrogen Condensation': 'nitrogenCondensation',
+    'Nitrogen Deposition': 'nitrogenDeposition',
+  };
+  return keys[label] || '';
+}
+
+function localizeRateMappings(rateMappings) {
+  for (const totalKey in rateMappings) {
+    const mappings = rateMappings[totalKey];
+    for (let i = 0; i < mappings.length; i += 1) {
+      const mapping = mappings[i];
+      const labelKey = getCycleLabelKey(mapping.label);
+      if (labelKey) {
+        mapping.label = t(`ui.terraforming.cycleLabels.${labelKey}`, {}, mapping.label);
+      }
+    }
+  }
+  return rateMappings;
+}
+
 class ResourceCycle {
   constructor({
     latentHeatVaporization,
@@ -49,7 +106,7 @@ class ResourceCycle {
     this.coverageKeys = coverageKeys;
     this.precipitationKeys = precipitationKeys;
     this.surfaceFlowFn = surfaceFlowFn;
-    this.rateMappings = rateMappings;
+    this.rateMappings = localizeRateMappings(rateMappings);
     this.finalizeProcesses = finalizeProcesses;
     this.rateTotalsPrefix = rateTotalsPrefix;
     this.tripleTemperature = tripleTemperature;

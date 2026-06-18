@@ -1405,12 +1405,14 @@ const specialSeedDefinitions = {
       {
         id: 'lifters-no-strip',
         descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip',
+        labelKey: 'catalogs.specialSeeds.commonEffects.liftersStripModeDisabled',
         label: 'Lifters Strip Mode Disabled',
         description: 'Lifters cannot use Atmosphere Strip mode.'
       },
       {
         id: 'incinerator-no-hazardous-biomass',
         descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.incineratorNoHazardousBiomass',
+        labelKey: 'catalogs.specialSeeds.commonEffects.incineratorRecipeDisabled',
         label: 'Incinerator Recipe Disabled',
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }
@@ -1522,17 +1524,23 @@ const specialSeedDefinitions = {
     specialEffects: [
       {
         id: 'lifters-no-strip',
+        labelKey: 'catalogs.specialSeeds.commonEffects.liftersStripModeDisabled',
         label: 'Lifters Strip Mode Disabled',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip',
         description: 'Lifters cannot use Atmosphere Strip mode.'
       },
       {
         id: 'planetary-thrusters-disabled',
+        labelKey: 'catalogs.specialSeeds.commonEffects.planetaryThrustersDisabled',
         label: 'Planetary Thrusters Disabled',
+        descriptionKey: 'catalogs.specialSeeds.sculkbioworld.effects.planetaryThrustersDisabled',
         description: 'Planetary Thrusters are permanently disabled on this world.'
       },
       {
         id: 'incinerator-no-hazardous-biomass',
+        labelKey: 'catalogs.specialSeeds.commonEffects.incineratorRecipeDisabled',
         label: 'Incinerator Recipe Disabled',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.incineratorNoHazardousBiomass',
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }
     ],
@@ -1550,7 +1558,9 @@ const specialSeedDefinitions = {
     specialEffects: [
       {
         id: 'incinerator-no-hazardous-biomass',
+        labelKey: 'catalogs.specialSeeds.commonEffects.incineratorRecipeDisabled',
         label: 'Incinerator Recipe Disabled',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.incineratorNoHazardousBiomass',
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }
     ],

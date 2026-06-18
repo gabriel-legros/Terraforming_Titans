@@ -213,7 +213,7 @@ const RWG_EFFECTS = {
       type: "projectDurationMultiplier",
       factor: 0.01,
       excludeSpaceships: true,
-      description: "Non-spaceship project duration (1% each)",
+      description: t('ui.rwg.rewardEffects.nonSpaceshipProjectDuration', {}, 'Non-spaceship project duration (1% each)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.01;
         return 1 / (1 + f * count);
@@ -225,7 +225,7 @@ const RWG_EFFECTS = {
       effectId: "rwg-chthonian-suffering",
       target: "global",
       type: "flavorText",
-      description: "Suffering Enjoyment",
+      description: t('ui.rwg.rewardEffects.sufferingEnjoyment', {}, 'Suffering Enjoyment'),
       computeValue() {
         return 0;
       },
@@ -237,7 +237,7 @@ const RWG_EFFECTS = {
       target: "global",
       type: "globalMaintenanceReduction",
       factor: 0.02,
-      description: "Maintenance divided by (1 + 2% each)",
+      description: t('ui.rwg.rewardEffects.maintenanceReduction', {}, 'Maintenance divided by (1 + 2% each)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.02;
         const divisor = 1 + f * count;
@@ -292,7 +292,7 @@ const RWG_EFFECTS = {
       resourceCategory: "colony",
       resourceTarget: "energy",
       factor: 0.05,
-      description: "Geothermal and fusion energy production increased (+5% each)",
+      description: t('ui.rwg.rewardEffects.geothermalAndFusionEnergy', {}, 'Geothermal and fusion energy production increased (+5% each)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.05;
         return 1 + f * count;
@@ -359,7 +359,7 @@ const RWG_EFFECTS = {
       target: "global",
       type: "globalCostReduction",
       factor: 0.01,
-      description: "Building and colony construction cost divided by (1 + 1% × √N)",
+      description: t('ui.rwg.rewardEffects.jupiterLikeConstructionCost', {}, 'Building and colony construction cost divided by (1 + 1% × √N)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.01;
         const divisor = 1 + f * Math.sqrt(Math.max(0, count));

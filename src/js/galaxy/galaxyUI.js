@@ -42,31 +42,31 @@ const UHF_FACTION_KEY = (typeof globalThis !== 'undefined' && typeof globalThis.
 const FLEET_UPGRADE_FALLBACKS = [
     {
         key: 'militaryResearch',
-        label: 'Military R&D',
-        description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
+        label: getGalaxyText('fleetUpgrades.militaryResearch.label', 'Military R&D'),
+        description: getGalaxyText('fleetUpgrades.militaryResearch.description', 'Channel advanced research into hangar expansions that squeeze in additional wings.'),
         increment: 0.1,
-        costLabel: 'Adv. Research'
+        costLabel: getGalaxyText('fleetUpgrades.cost.advancedResearch', 'Adv. Research')
     },
     {
         key: 'micOutsource',
-        label: 'MIC Contracts',
-        description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
+        label: getGalaxyText('fleetUpgrades.micOutsource.label', 'MIC Contracts'),
+        description: getGalaxyText('fleetUpgrades.micOutsource.description', 'Cut Solis a check so they can subcontract extra yards for the fleet.'),
         increment: 0.1,
-        costLabel: 'Solis Points'
+        costLabel: getGalaxyText('fleetUpgrades.cost.solisPoints', 'Solis Points')
     },
     {
         key: 'enemyLessons',
-        label: 'Reverse Engineering',
-        description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
+        label: getGalaxyText('fleetUpgrades.enemyLessons.label', 'Reverse Engineering'),
+        description: getGalaxyText('fleetUpgrades.enemyLessons.description', 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.'),
         increment: 0.1,
-        costLabel: 'Alien Artifacts'
+        costLabel: getGalaxyText('fleetUpgrades.cost.alienArtifacts', 'Alien Artifacts')
     },
     {
         key: 'pandoraBox',
-        label: "PANDORA'S Box",
-        description: 'Spend a skill point to greenlight unconventional fleet experiments.',
+        label: getGalaxyText('fleetUpgrades.pandoraBox.label', "PANDORA'S Box"),
+        description: getGalaxyText('fleetUpgrades.pandoraBox.description', 'Spend a skill point to greenlight unconventional fleet experiments.'),
         increment: 0.25,
-        costLabel: 'Skill Points'
+        costLabel: getGalaxyText('fleetUpgrades.cost.skillPoints', 'Skill Points')
     }
 ];
 

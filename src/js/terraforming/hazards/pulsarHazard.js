@@ -3,7 +3,7 @@ const PULSAR_STORM_DEFAULT_DURATION_SECONDS = 5;
 const PULSAR_STORM_ANDROID_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_NANOBOT_ATTRITION_RATE = 0.03;
-const PULSAR_STORM_EFFECT_LABEL = 'Electromagnetic Storm';
+const PULSAR_STORM_EFFECT_LABEL = t('ui.terraforming.hazardEffects.electromagneticStorm', {}, 'Electromagnetic Storm');
 const PULSAR_RADIATION_EFFECT_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_RADIATION_EFFECT_SOURCE_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_MIRROR_LOCKOUT_SOURCE_ID = 'pulsar-hazard-mirror-lockout';
@@ -29,7 +29,7 @@ function normalizePulsarParameters(parameters = {}) {
     clearAtDistanceAU: Number.isFinite(parameters.clearAtDistanceAU) && parameters.clearAtDistanceAU > 0
       ? parameters.clearAtDistanceAU
       : 0,
-    description: parameters.description || 'Pulsar hazard detected. Extreme radiation floods the planet.'
+    description: parameters.description || t('ui.terraforming.hazardEffects.pulsarDefaultDescription', {}, 'Pulsar hazard detected. Extreme radiation floods the planet.')
   };
 }
 
@@ -284,7 +284,7 @@ class PulsarHazard {
       orbitalDoseBoost_mSvPerDay: orbitalBoost,
       effectId: PULSAR_RADIATION_EFFECT_ID,
       sourceId: PULSAR_RADIATION_EFFECT_SOURCE_ID,
-      name: 'Pulsar Radiation'
+      name: t('ui.terraforming.hazardEffects.pulsarRadiation', {}, 'Pulsar Radiation')
     });
   }
 

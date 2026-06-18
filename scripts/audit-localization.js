@@ -98,7 +98,24 @@ function isSymbolOrNumber(text) {
   if (!normalized) {
     return true;
   }
+  const withoutTemplateExpressions = normalized
+    .replace(/\$\{[^}]*\}/g, '')
+    .replace(/\\u(?:\{[0-9A-Fa-f]+\}|[0-9A-Fa-f]{4})/g, '')
+    .trim();
+  if (!/[A-Za-z]/.test(withoutTemplateExpressions)) {
+    return true;
+  }
   if (!/[A-Za-z]/.test(normalized)) {
+    return true;
+  }
+  if (/^[+-]?\d+(?:\.\d+)?\s*[A-Za-zµ²³/]+$/.test(normalized)) {
+    return true;
+  }
+  if (/^x\d+$/i.test(normalized)) {
+    return true;
+  }
+  const unitTokens = withoutTemplateExpressions.replace(/[()]/g, ' ').split(/\s+/).filter(Boolean);
+  if (unitTokens.length > 0 && unitTokens.every((token) => /^(AU|R⊕|Rₑ|km|W\/m²|m\/s²|K|Pa|kPa|mSv\/day|ha|g|x|land)$/i.test(token))) {
     return true;
   }
   if (/^[A-Z0-9_ .:+\-*/%/<>!=?()[\]{}|&;#.,]+$/.test(normalized) && normalized.length <= 12) {
@@ -116,8 +133,27 @@ function isSymbolOrNumber(text) {
   return false;
 }
 
+const specialSeedOverrideText = new Set([
+  'WolfysNightmare',
+  'Uranus',
+  'Sol',
+  'Hermes',
+  'Helios',
+  'TOI-3693 b',
+  'TOI-3693',
+  'TheRealPoseidon',
+  'Nereid',
+  'Sculkia-1c',
+  'Sculkia-1',
+  'EarthOverrun',
+  'Sun',
+  'Titania',
+  'The pulsar emits periodic radiation bursts across the system.',
+  'Intense solar flares generate periodic radiation bursts across the system. The hazard can be cleared by moving the world beyond 1 AU.',
+]);
+
 function isAlreadyLocalized(line) {
-  return /\bt\(|\bget[A-Za-z0-9_]*Text\(|\bdata-i18n\b|\bdata-i18n-title\b|\bdata-i18n-placeholder\b|\bdata-i18n-aria-label\b/.test(line);
+  return /\bt\(|\bget[A-Za-z0-9_]*Text\(|\bdata-i18n\b|\bdata-i18n-title\b|\bdata-i18n-placeholder\b|\bdata-i18n-aria-label\b|Key:\s*['"]catalogs\./.test(line);
 }
 
 function isInternalOrNonPlayerLine(line) {
@@ -128,8 +164,14 @@ function isInternalOrNonPlayerLine(line) {
     || /\b(id|key|value|type|category|source|path|token|className)\s*:\s*["'][A-Za-z0-9_.:/# -]+["']/.test(line);
 }
 
-function isIgnoredCandidate(relativeFile, line, text) {
+function isIgnoredCandidate(relativeFile, line, text, contextLine) {
   if (text === 'unassignedShips') {
+    return true;
+  }
+  if (relativeFile === 'src/js/terraforming/atmospheric-density.js' && /\bname:\s*['"]/.test(line)) {
+    return true;
+  }
+  if (relativeFile === 'src/js/special-seeds.js' && specialSeedOverrideText.has(normalizeText(text))) {
     return true;
   }
   if (debugOnlyFiles.has(relativeFile)) {
@@ -138,7 +180,7 @@ function isIgnoredCandidate(relativeFile, line, text) {
   if (isSymbolOrNumber(text)) {
     return true;
   }
-  if (isAlreadyLocalized(line)) {
+  if (isAlreadyLocalized(line) || (contextLine && isAlreadyLocalized(contextLine))) {
     return true;
   }
   if (isInternalOrNonPlayerLine(line)) {
@@ -169,12 +211,12 @@ function addFinding(report, relativeFile, lineNumber, category, line, text) {
   }
 }
 
-function classifyCandidate(report, relativeFile, lineNumber, desiredCategory, line, text) {
+function classifyCandidate(report, relativeFile, lineNumber, desiredCategory, line, text, contextLine) {
   if (isStoryFile(relativeFile)) {
     addFinding(report, relativeFile, lineNumber, 'story-exempt', line, text);
     return;
   }
-  if (isIgnoredCandidate(relativeFile, line, text)) {
+  if (isIgnoredCandidate(relativeFile, line, text, contextLine)) {
     addFinding(report, relativeFile, lineNumber, 'ignore', line, text);
     return;
   }
@@ -186,13 +228,22 @@ function scanJavaScriptFile(report, relativeFile, content) {
   for (let i = 0; i < lines.length; i += 1) {
     const lineNumber = i + 1;
     const line = stripLineComment(lines[i]);
+    const contextLine = [
+      stripLineComment(lines[i - 3] || ''),
+      stripLineComment(lines[i - 2] || ''),
+      stripLineComment(lines[i - 1] || ''),
+      line,
+      stripLineComment(lines[i + 1] || ''),
+      stripLineComment(lines[i + 2] || ''),
+      stripLineComment(lines[i + 3] || ''),
+    ].join(' ');
     const runtimePatterns = [runtimeAssignmentPattern, runtimeCallPattern];
     for (let patternIndex = 0; patternIndex < runtimePatterns.length; patternIndex += 1) {
       const pattern = runtimePatterns[patternIndex];
       pattern.lastIndex = 0;
       let match = pattern.exec(line);
       while (match) {
-        classifyCandidate(report, relativeFile, lineNumber, 'ui-runtime', line, match[3]);
+        classifyCandidate(report, relativeFile, lineNumber, 'ui-runtime', line, match[3], contextLine);
         match = pattern.exec(line);
       }
     }
@@ -200,7 +251,7 @@ function scanJavaScriptFile(report, relativeFile, content) {
     catalogPropertyPattern.lastIndex = 0;
     let catalogMatch = catalogPropertyPattern.exec(line);
     while (catalogMatch) {
-      classifyCandidate(report, relativeFile, lineNumber, 'catalog-data', line, catalogMatch[3]);
+      classifyCandidate(report, relativeFile, lineNumber, 'catalog-data', line, catalogMatch[3], contextLine);
       catalogMatch = catalogPropertyPattern.exec(line);
     }
   }

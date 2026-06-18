@@ -6,24 +6,24 @@ const SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH = ShellworldGravityHelper.solveShellR
     preferRoot: 'inner'
 }).radiusEarth;
 const ARTIFICIAL_TYPES = [
-    { value: 'shell', label: 'Shellworld', disabled: false },
-    { value: 'ring', label: 'Ringworld', disabled: true, disabledSource: 'World 10' },
-    { value: 'disk', label: 'Alderson disk', disabled: true, disabledSource: 'Advanced Research & Galactic Conquest' }
+    { value: 'shell', label: t('ui.artificial.options.types.shell', {}, 'Shellworld'), disabled: false },
+    { value: 'ring', label: t('ui.artificial.options.types.ring', {}, 'Ringworld'), disabled: true, disabledSource: t('ui.artificial.options.sources.world10', {}, 'World 10') },
+    { value: 'disk', label: t('ui.artificial.options.types.disk', {}, 'Alderson disk'), disabled: true, disabledSource: t('ui.artificial.options.sources.advancedResearchGalacticConquest', {}, 'Advanced Research & Galactic Conquest') }
 ];
 const ARTIFICIAL_CORES = [
-    { value: 'super-earth', label: 'Super Earth', disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
-    { value: 'ice-giant', label: 'Ice giant', disabled: false, minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
-    { value: 'intermediate-giant', label: 'Intermediate giant', disabled: false, minRadiusEarth: 4.5, maxRadiusEarth: 20, allowStar: true, minFlux: 50, maxFlux: 800 },
-    { value: 'gas-giant', label: 'Gas giant', disabled: true, disabledSource : "World 9", minRadiusEarth: 20, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
-    { value: 'brown-dwarf', label: 'Brown Dwarf', disabled: true, disabledSource : "World 10", minRadiusEarth: 70, maxRadiusEarth: 160, allowStar: false},
-    { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
-    { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
-    { value: 'stellar-bh', label: 'Stellar Black Hole', disabled: true, disabledSource : "World 14", minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
-    { value: 'smbh', label: 'Supermassive Black Hole', disabled: true, disabledSource : "Birch World advanced research", minRadiusEarth: SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH, maxRadiusEarth: SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH, allowStar: false}
+    { value: 'super-earth', label: t('ui.artificial.options.cores.superEarth', {}, 'Super Earth'), disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
+    { value: 'ice-giant', label: t('ui.artificial.options.cores.iceGiant', {}, 'Ice giant'), disabled: false, minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
+    { value: 'intermediate-giant', label: t('ui.artificial.options.cores.intermediateGiant', {}, 'Intermediate giant'), disabled: false, minRadiusEarth: 4.5, maxRadiusEarth: 20, allowStar: true, minFlux: 50, maxFlux: 800 },
+    { value: 'gas-giant', label: t('ui.artificial.options.cores.gasGiant', {}, 'Gas giant'), disabled: true, disabledSource : t('ui.artificial.options.sources.world9', {}, 'World 9'), minRadiusEarth: 20, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
+    { value: 'brown-dwarf', label: t('ui.artificial.options.cores.brownDwarf', {}, 'Brown Dwarf'), disabled: true, disabledSource : t('ui.artificial.options.sources.world10', {}, 'World 10'), minRadiusEarth: 70, maxRadiusEarth: 160, allowStar: false},
+    { value: 'white-dwarf', label: t('ui.artificial.options.cores.whiteDwarf', {}, 'White Dwarf'), disabled: true, disabledSource : t('ui.artificial.options.sources.world12', {}, 'World 12'), minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
+    { value: 'neutron-star', label: t('ui.artificial.options.cores.neutronStar', {}, 'Neutron Star'), disabled: true, disabledSource : t('ui.artificial.options.sources.world13', {}, 'World 13'), minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
+    { value: 'stellar-bh', label: t('ui.artificial.options.cores.stellarBlackHole', {}, 'Stellar Black Hole'), disabled: true, disabledSource : t('ui.artificial.options.sources.world14', {}, 'World 14'), minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
+    { value: 'smbh', label: t('ui.artificial.options.cores.supermassiveBlackHole', {}, 'Supermassive Black Hole'), disabled: true, disabledSource : t('ui.artificial.options.sources.birchWorldResearch', {}, 'Birch World advanced research'), minRadiusEarth: SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH, maxRadiusEarth: SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH, allowStar: false}
 ];
 const ARTIFICIAL_STAR_CONTEXTS = [
-    { value: 'with-star', label: 'Star in system', hasStar: true, disabled: false },
-    { value: 'starless', label: 'Starless deep space', hasStar: false, disabled: false }
+    { value: 'with-star', label: t('ui.artificial.options.starContexts.withStar', {}, 'Star in system'), hasStar: true, disabled: false },
+    { value: 'starless', label: t('ui.artificial.options.starContexts.starless', {}, 'Starless deep space'), hasStar: false, disabled: false }
 ];
 const SOLAR_CONSTANT_WM2 = 1361;
 const AU_IN_KM = 149_597_870.7;
@@ -32,22 +32,22 @@ const RINGWORLD_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
 const RINGWORLD_TARGET_FLUX_WM2 = 1_300;
 const RINGWORLD_FLUX_BOUNDS_WM2 = { min: 1_000, max: 1_400 };
 const RINGWORLD_STAR_CORES = [
-    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 80_000 },
-    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 110_000 },
-    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: true, disabledSource: "World 12", minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 150_000 },
-    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: "World 13", minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 180_000 },
-    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 300_000 },
-    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 2_000_000 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", baseDisabledSource: "World 14 & Galactic Conquest", requiresFullGalaxyControl: true, minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 10_000_000 }
+    { value: 'm-dwarf', label: t('ui.artificial.options.starCores.mDwarf', {}, 'Red Dwarf (M-class)'), spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 80_000 },
+    { value: 'k-dwarf', label: t('ui.artificial.options.starCores.kDwarf', {}, 'Orange Dwarf (K-class)'), spectralType: 'K', disabled: true, disabledSource: t('ui.artificial.options.sources.world11', {}, 'World 11'), minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 110_000 },
+    { value: 'g-dwarf', label: t('ui.artificial.options.starCores.gDwarf', {}, 'Yellow Dwarf (G-class)'), spectralType: 'G', disabled: true, disabledSource: t('ui.artificial.options.sources.world12', {}, 'World 12'), minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 150_000 },
+    { value: 'f-dwarf', label: t('ui.artificial.options.starCores.fDwarf', {}, 'Yellow-White (F-class)'), spectralType: 'F', disabled: true, disabledSource: t('ui.artificial.options.sources.world13', {}, 'World 13'), minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 180_000 },
+    { value: 'a-star', label: t('ui.artificial.options.starCores.aStar', {}, 'White Star (A-class)'), spectralType: 'A', disabled: true, disabledSource: t('ui.artificial.options.sources.world14', {}, 'World 14'), minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 300_000 },
+    { value: 'b-star', label: t('ui.artificial.options.starCores.bStar', {}, 'Blue Star (B-class)'), spectralType: 'B', disabled: true, disabledSource: t('ui.artificial.options.sources.world14', {}, 'World 14'), minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 2_000_000 },
+    { value: 'o-star', label: t('ui.artificial.options.starCores.oStar', {}, 'O-class (very massive)'), spectralType: 'O', disabled: true, disabledSource: t('ui.artificial.options.sources.world14GalacticConquest', {}, 'World 14 & Galactic Conquest'), baseDisabledSource: t('ui.artificial.options.sources.world14GalacticConquest', {}, 'World 14 & Galactic Conquest'), requiresFullGalaxyControl: true, minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 10_000_000 }
 ];
 const DISK_STAR_CORES = [
-    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.042, maxRadiusAU: 0.354, minInnerRadiusAU: 0.031 },
-    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: false, minRadiusAU: 0.424, maxRadiusAU: 1.131, minInnerRadiusAU: 0.043 },
-    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: false, minRadiusAU: 1.202, maxRadiusAU: 2.263, minInnerRadiusAU: 0.050 },
-    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: false, minRadiusAU: 2.404, maxRadiusAU: 4.243, minInnerRadiusAU: 0.061 },
-    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: false, minRadiusAU: 4.525, maxRadiusAU: 11.314, minInnerRadiusAU: 0.084 },
-    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: false, minRadiusAU: 12.021, maxRadiusAU: 169.706, minInnerRadiusAU: 0.427 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: false, minRadiusAU: 180, maxRadiusAU: 250, minInnerRadiusAU: 1.230 }
+    { value: 'm-dwarf', label: t('ui.artificial.options.starCores.mDwarf', {}, 'Red Dwarf (M-class)'), spectralType: 'M', disabled: false, minRadiusAU: 0.042, maxRadiusAU: 0.354, minInnerRadiusAU: 0.031 },
+    { value: 'k-dwarf', label: t('ui.artificial.options.starCores.kDwarf', {}, 'Orange Dwarf (K-class)'), spectralType: 'K', disabled: false, minRadiusAU: 0.424, maxRadiusAU: 1.131, minInnerRadiusAU: 0.043 },
+    { value: 'g-dwarf', label: t('ui.artificial.options.starCores.gDwarf', {}, 'Yellow Dwarf (G-class)'), spectralType: 'G', disabled: false, minRadiusAU: 1.202, maxRadiusAU: 2.263, minInnerRadiusAU: 0.050 },
+    { value: 'f-dwarf', label: t('ui.artificial.options.starCores.fDwarf', {}, 'Yellow-White (F-class)'), spectralType: 'F', disabled: false, minRadiusAU: 2.404, maxRadiusAU: 4.243, minInnerRadiusAU: 0.061 },
+    { value: 'a-star', label: t('ui.artificial.options.starCores.aStar', {}, 'White Star (A-class)'), spectralType: 'A', disabled: false, minRadiusAU: 4.525, maxRadiusAU: 11.314, minInnerRadiusAU: 0.084 },
+    { value: 'b-star', label: t('ui.artificial.options.starCores.bStar', {}, 'Blue Star (B-class)'), spectralType: 'B', disabled: false, minRadiusAU: 12.021, maxRadiusAU: 169.706, minInnerRadiusAU: 0.427 },
+    { value: 'o-star', label: t('ui.artificial.options.starCores.oStar', {}, 'O-class (very massive)'), spectralType: 'O', disabled: false, minRadiusAU: 180, maxRadiusAU: 250, minInnerRadiusAU: 1.230 }
 ];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'

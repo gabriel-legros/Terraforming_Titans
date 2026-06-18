@@ -236,19 +236,19 @@ tuneHazardousMachineryForWorld = tuneHazardousMachineryForWorld || function noop
 
 // World type metadata
 globalThis.RWG_WORLD_TYPES = {
-  "mars-like": { displayName: "Mars-like" },
-  "cold-desert": { displayName: "Desert" },
-  "icy-moon": { displayName: "Water-rich" },
-  "titan-like": { displayName: "Titan-like" },
-  "carbon-planet": { displayName: "Carbon" },
-  "desiccated-desert": { displayName: "Desiccated Desert" },
-  "super-earth": { displayName: "Super-Earth" },
-  "chthonian": { displayName: "Chthonian" },
-  "venus-like": { displayName: "Venus-like" },
-  "rogue": { displayName: "Rogue" },
-  "ammonia-rich": { displayName: "Ammonia-rich" },
-  "molten": { displayName: "Molten" },
-  "jupiter-like": { displayName: "Jupiter-like" },
+  "mars-like": { displayName: t('ui.rwg.worldTypes.marsLike', {}, 'Mars-like') },
+  "cold-desert": { displayName: t('ui.rwg.worldTypes.desert', {}, 'Desert') },
+  "icy-moon": { displayName: t('ui.rwg.worldTypes.waterRich', {}, 'Water-rich') },
+  "titan-like": { displayName: t('ui.rwg.worldTypes.titanLike', {}, 'Titan-like') },
+  "carbon-planet": { displayName: t('ui.rwg.worldTypes.carbon', {}, 'Carbon') },
+  "desiccated-desert": { displayName: t('ui.rwg.worldTypes.desiccatedDesert', {}, 'Desiccated Desert') },
+  "super-earth": { displayName: t('ui.rwg.worldTypes.superEarth', {}, 'Super-Earth') },
+  "chthonian": { displayName: t('ui.rwg.worldTypes.chthonian', {}, 'Chthonian') },
+  "venus-like": { displayName: t('ui.rwg.worldTypes.venusLike', {}, 'Venus-like') },
+  "rogue": { displayName: t('ui.rwg.worldTypes.rogue', {}, 'Rogue') },
+  "ammonia-rich": { displayName: t('ui.rwg.worldTypes.ammoniaRich', {}, 'Ammonia-rich') },
+  "molten": { displayName: t('ui.rwg.worldTypes.molten', {}, 'Molten') },
+  "jupiter-like": { displayName: t('ui.rwg.worldTypes.jupiterLike', {}, 'Jupiter-like') },
 };
 const RWG_WORLD_TYPES = globalThis.RWG_WORLD_TYPES;
 
@@ -284,7 +284,7 @@ const ORBIT_PRESET_TO_FLUX_KEY = {
 };
 
 const ROGUE_STAR_TEMPLATE = {
-  name: 'Rogue Space',
+  name: t('ui.rwg.generatedLabels.rogueSpace', {}, 'Rogue Space'),
   spectralType: '—',
   luminositySolar: 0,
   massSolar: 0,
@@ -1819,7 +1819,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
 
   const underground = {
     ore: {
-      name: "Ore deposits",
+      name: t('ui.rwg.generatedLabels.oreDeposits', {}, 'Ore deposits'),
       initialValue: moltenOreDisabled ? 0 : oreCaps.initial,
       maxDeposits: moltenOreDisabled ? 0 : oreCaps.max,
       hasCap: true,
@@ -1828,7 +1828,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     },
     ...({
       geothermal: {
-        name: "Geo. vent",
+        name: t('ui.rwg.generatedLabels.geoVent', {}, 'Geo. vent'),
         initialValue: moltenGeothermalAmount ?? geoCaps.initial,
         maxDeposits: moltenGeothermalAmount ?? geoCaps.max,
         hasCap: true,
@@ -1840,10 +1840,10 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
 
   // Specials / collectibles
   const special = {};
-  if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: "Albedo upgrades", hasCap: true, initialValue: 0, unlocked: false };
-  if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: "Spaceships", hasCap: false, initialValue: 0, unlocked: false };
-  if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: "Alien artifact", hasCap: false, initialValue: 0, unlocked: false };
-  if (DEFAULT_PARAMS.specials.includeCrusaders)     special.crusaders      = { name: "Crusaders", hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: t('ui.rwg.generatedLabels.albedoUpgrades', {}, 'Albedo upgrades'), hasCap: true, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: t('ui.rwg.generatedLabels.spaceships', {}, 'Spaceships'), hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: t('ui.rwg.generatedLabels.alienArtifact', {}, 'Alien artifact'), hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeCrusaders)     special.crusaders      = { name: t('ui.rwg.generatedLabels.crusaders', {}, 'Crusaders'), hasCap: false, initialValue: 0, unlocked: false };
 
   // Optional parent body for moons
   let parentBody = undefined;
@@ -1878,7 +1878,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     const refDistanceRp = randRange(beltRng, 9.0, 12.0);
 
     parentBody = {
-      name: "Gas Giant",
+      name: t('ui.rwg.generatedLabels.gasGiant', {}, 'Gas Giant'),
       mass: gg.mass,
       radius: gg.radius_km,
       orbitRadius: gg.orbitRadius_km,

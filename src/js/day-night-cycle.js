@@ -136,7 +136,7 @@ function updateDayNightDisplay() {
       dayNightSun.style.display = 'none';
     }
     if (dayNightProgressText) {
-      dayNightProgressText.textContent = 'Too fast to display';
+      dayNightProgressText.textContent = t('ui.terraforming.dayNight.tooFastToDisplay', {}, 'Too fast to display');
     }
     return;
   }
@@ -181,7 +181,11 @@ function updateDayNightDisplay() {
 
   // Progress text
   if (dayNightProgressText) {
-    dayNightProgressText.textContent = `Day Cycle: ${dayProgressPercent.toFixed(1)}%`;
+    dayNightProgressText.textContent = t(
+      'ui.terraforming.dayNight.dayCycleProgress',
+      { value: dayProgressPercent.toFixed(1) },
+      'Day Cycle: {value}%'
+    );
   }
 }
 

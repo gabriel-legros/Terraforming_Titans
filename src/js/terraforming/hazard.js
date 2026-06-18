@@ -1212,7 +1212,7 @@ class HazardManager {
                 resourceId: resource,
                 value: buildCostMultiplier,
                 sourceId: 'hazardPenalties',
-                name: 'Hazardous Biomass'
+                name: t('ui.terraforming.hazardEffects.hazardousBiomass', {}, 'Hazardous Biomass')
               });
             });
           });
@@ -1232,7 +1232,7 @@ class HazardManager {
             type: 'maintenanceMultiplier',
             value: maintenanceMultiplier,
             sourceId: 'hazardPenalties',
-            name: 'Hazardous Biomass'
+            name: t('ui.terraforming.hazardEffects.hazardousBiomass', {}, 'Hazardous Biomass')
           });
         });
 
@@ -1244,7 +1244,7 @@ class HazardManager {
             type: 'maintenanceMultiplier',
             value: maintenanceMultiplier,
             sourceId: 'hazardPenalties',
-            name: 'Hazardous Biomass'
+            name: t('ui.terraforming.hazardEffects.hazardousBiomass', {}, 'Hazardous Biomass')
           });
         });
       }

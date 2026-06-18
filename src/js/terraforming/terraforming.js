@@ -528,7 +528,7 @@ class Terraforming extends EffectableEntity{
 
     // Global atmosphere properties (Now primarily accessed via global 'resources.atmospheric')
     this.atmosphere = {
-        name: 'Atmosphere',
+        name: t('ui.terraforming.coreNames.atmosphere', {}, 'Atmosphere'),
         // value: 0, // REMOVED - Calculated on the fly
         // gases: {}, // REMOVED - Stored in global resources
         // globalPressures: {}, // REMOVED - Calculated on the fly
@@ -537,7 +537,7 @@ class Terraforming extends EffectableEntity{
         unlocked: false // Keep track of unlock status if needed
     };
     this.temperature = {
-      name: 'Temperature',
+      name: t('ui.terraforming.coreNames.temperature', {}, 'Temperature'),
       value: 0,
       trendValue: 0,
       targetMin: this.requirements.temperatureRangeK.min,
@@ -576,7 +576,7 @@ class Terraforming extends EffectableEntity{
       }
     };
     this.luminosity = {
-      name: 'Luminosity',
+      name: t('ui.terraforming.coreNames.luminosity', {}, 'Luminosity'),
       value: 100,
       targetMin: this.requirements.luminosityRange.min,
       targetMax: this.requirements.luminosityRange.max,
@@ -603,14 +603,14 @@ class Terraforming extends EffectableEntity{
     });
     // Global life properties (name, target, unlock status)
     this.life = {
-        name: 'Life',
+        name: t('ui.terraforming.coreNames.life', {}, 'Life'),
         unlocked: false,
         target: this.requirements.lifeCoverageTarget,
         // biomassCoverage: 0, // Removed - will be calculated from zonalSurface.biomass
         // dryIceCoverage: 0 // Removed - will be calculated from zonalSurface.dryIce
     };
     this.magnetosphere = {
-      name: 'Others',
+      name: t('ui.terraforming.coreNames.others', {}, 'Others'),
       value: 0,
       target: this.requirements.magnetosphereThreshold,
       unlocked: false
@@ -2697,7 +2697,7 @@ class Terraforming extends EffectableEntity{
         targetId: 'solarPanel',
         type: 'productionMultiplier',
         value: solarPanelMultiplier,
-        name: 'Luminosity'
+        name: t('ui.terraforming.effects.luminosity', {}, 'Luminosity')
       }
       addEffect(solarPanelEffect);
 
@@ -2707,7 +2707,7 @@ class Terraforming extends EffectableEntity{
         targetId: 'windTurbine',
         type: 'productionMultiplier',
         value: windTurbineMultiplier,
-        name: 'Atmospheric pressure'
+        name: t('ui.terraforming.effects.atmosphericPressure', {}, 'Atmospheric pressure')
       }
       addEffect(windTurbineEffect);
 
@@ -2753,7 +2753,7 @@ class Terraforming extends EffectableEntity{
             resourceCategory: 'colony',
             resourceId: 'metal',
             value: colonyCostPenalty,
-            name: 'High pressure'
+            name: t('ui.terraforming.effects.highPressure', {}, 'High pressure')
         };
 
         const glassCostPenaltyEffect = {
@@ -2764,7 +2764,7 @@ class Terraforming extends EffectableEntity{
             resourceCategory: 'colony',
             resourceId: 'glass',
             value: colonyCostPenalty,
-            name: 'High pressure'
+            name: t('ui.terraforming.effects.highPressure', {}, 'High pressure')
         };
 
         addEffect(metalCostPenaltyEffect);
@@ -2802,7 +2802,7 @@ class Terraforming extends EffectableEntity{
                 resourceCategory: category,
                 resourceId: resource,
                 value: gravityCostMultiplier,
-                name: 'Gravity'
+                name: t('ui.terraforming.effects.gravity', {}, 'Gravity')
               });
             }
           }
@@ -2867,7 +2867,7 @@ class Terraforming extends EffectableEntity{
               resourceCategory: 'colony',
               resourceId: resource,
               value: penaltyValue,
-              name: 'Temperature penalty'
+              name: t('ui.terraforming.effects.temperaturePenalty', {}, 'Temperature penalty')
             });
           }
         }
@@ -2891,7 +2891,7 @@ class Terraforming extends EffectableEntity{
               resourceCategory: 'colony',
               resourceId: resource,
               value: penaltyValue,
-              name: 'Temperature penalty'
+              name: t('ui.terraforming.effects.temperaturePenalty', {}, 'Temperature penalty')
             });
           }
         }

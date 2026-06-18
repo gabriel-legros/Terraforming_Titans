@@ -5,6 +5,7 @@ const {
 
 global.planetParameters = global.planetParameters || planetParameters;
 global.defaultPlanetParameters = global.defaultPlanetParameters || defaultPlanetParameters;
+global.t = global.t || ((key, vars, fallback) => fallback);
 
 const { RwgManager } = require('../src/js/rwg/rwg.js');
 
