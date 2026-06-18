@@ -283,13 +283,6 @@ progressPoseidon.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
     ],
     reward: [
-      {
-        target: 'colony',
-        targetId: 'aerostat_colony',
-        type: 'booleanFlag',
-        flagId: 'aerostats_collision_avoidance',
-        value: true
-      }
     ]
   },
   {
