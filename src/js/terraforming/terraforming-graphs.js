@@ -439,10 +439,14 @@ class TerraformingGraphsManager {
     };
   }
 
-  reset() {
+  reset(options = {}) {
+    const preserveWindowState = !!options.preserveWindowState;
+    const previousSelectedGraph = this.selectedGraph;
+    const previousSelectedPhaseDiagram = this.selectedPhaseDiagram;
+    const wasOpen = this.isOpen;
     this.history = buildEmptyTerraformingGraphHistory();
-    this.selectedGraph = 'temperature';
-    this.selectedPhaseDiagram = 'water';
+    this.selectedGraph = preserveWindowState ? previousSelectedGraph : 'temperature';
+    this.selectedPhaseDiagram = preserveWindowState ? previousSelectedPhaseDiagram : 'water';
     this.atmosphereColors = {};
     this.legendSignature = '';
     this.phaseSignature = '';
@@ -452,7 +456,15 @@ class TerraformingGraphsManager {
     this.phaseViewport = {};
     this.phasePanState.pointerId = null;
     this.phasePanState.active = false;
-    this.hide();
+    if (preserveWindowState && this.ui.overlay) {
+      this.updateMenuState();
+      this.updatePhaseMenuState();
+      if (wasOpen) {
+        this.show();
+      }
+    } else {
+      this.hide();
+    }
   }
 
   saveState() {

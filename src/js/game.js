@@ -503,7 +503,9 @@ function initializeGameState(options = {}) {
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
-  terraformingGraphsManager.reset();
+  terraformingGraphsManager.reset({
+    preserveWindowState: preserveManagers && autoTravelContext && autoTravelContext.active
+  });
   if (typeof window !== 'undefined') {
     window.terraformingManager = terraforming;
   }
