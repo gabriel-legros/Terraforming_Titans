@@ -85,6 +85,7 @@
     cursor: pointer;
     font-weight: 600;
     padding: 4px 0;
+    width: fit-content;
   }
 
   .difficulty-spoiler-section .settings-grid-difficulty-inputs {
