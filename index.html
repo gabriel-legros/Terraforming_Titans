@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.itch.io https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'">
     <!-- Update title maybe? -->
     <title data-i18n="meta.documentTitle">Terraforming Titans</title>
     <link rel="icon" type="image/png" href="assets/images/cover_small.png">
     <link rel="preload" as="image" href="assets/images/hope_credits.webp" type="image/webp">
-    <script src="vendor/phaser-3.55.2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <!-- Stylesheets -->
     <link rel="stylesheet" href="src/css/style.css">
     <link rel="stylesheet" href="src/css/day-night-cycleUI.css">
@@ -85,7 +85,7 @@
     <script src="src/js/rwg/rwgEffectsUI.js"></script>
 
     <!-- Core Scripts -->
-    <script src="vendor/three-0.158.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
     <script src="src/js/numbers.js"></script>
     <script src="src/js/globals.js"></script>
     <script src="src/js/world-geometry.js"></script>
