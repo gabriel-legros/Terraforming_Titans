@@ -252,7 +252,13 @@ progressCallisto.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
-    reward: []
+    reward: [      
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'siliconMiningUnlocked',
+        value: true
+      }]
   },
 
   /* -- CHAPTER 9 : Hidden Forge -- */
@@ -260,7 +266,7 @@ progressCallisto.chapters.push(
     id: "chapter8.4",
     type: "journal",
     chapter: 8,
-    narrative: "Mary : 'Unsurprisingly HOPE we are going to need more industry for this.  Keep building up.'",
+    narrative: "Evelyn : 'Mary...'  \n Mary : 'What is it?' \n Evelyn : 'HOPE just... unlocked the ability to recover silica from asteroids.'  \n Mary : 'That sounds useful.'  \n Evelyn : 'Yes but...  that was not planned.  Mars has lots of rocks so we never planned for this.'  \n Mary : 'So?'  \n Evelyn : 'That means HOPE is... learning.'  \n Mary : '...  Good work HOPE.  Keep going.'  \n System Message : Silica space mining now available.",
     prerequisites: ["chapter8.3"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }

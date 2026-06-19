@@ -163,12 +163,6 @@ progressSolisPrime.chapters.push(
     ],
     reward: [
       {
-        target: 'researchManager',
-        type: 'booleanFlag',
-        flagId: 'siliconMiningUnlocked',
-        value: true
-      },
-      {
         target: 'project',
         targetId: 'solisprime_supply_drop',
         type: 'enable'
