@@ -136,11 +136,12 @@ class AutoTravelAutomation {
   }
 
   _finishTravelAttempt(preset, traveled) {
-    if (!traveled) {
-      autoTravelContext.active = false;
-    } else if (preset.turnOffAfterTravel) {
+    if (traveled && preset.turnOffAfterTravel) {
       this.enabled = false;
     }
+    autoTravelContext.active = false;
+    autoTravelContext.suppressTabSwitch = false;
+    autoTravelContext.restoreTabState = null;
     this._travelInProgress = false;
     this._cooldownMs = 1000;
     queueAutomationUIRefresh();
@@ -330,8 +331,9 @@ class AutoTravelAutomation {
   }
 
   _captureCurrentTabState() {
+    const activeTabButton = document.querySelector('.tab.active[data-tab]');
     return {
-      mainTabId: tabManager?.getActiveTabId?.() || '',
+      mainTabId: activeTabButton ? activeTabButton.dataset.tab : tabManager?.getActiveTabId?.() || '',
       hopeSubtabId: hopeSubtabManager?.getActiveId?.() || 'awakening-hope',
       spaceSubtabId: spaceSubtabManager?.getActiveId?.() || 'space-story',
       terraformingSubtabId: terraformingSubtabManager?.getActiveId?.() || 'world-terraforming',

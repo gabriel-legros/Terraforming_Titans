@@ -136,6 +136,14 @@ class EffectableEntity {
     if ('onTravel' in effect && effect.onTravel == false && globalGameIsTraveling) {
       return false;
     }
+    if (
+      autoTravelContext
+      && autoTravelContext.suppressTabSwitch
+      && (effect.type === 'activateTab' || effect.type === 'activateSubtab')
+      && effect.onTravel !== true
+    ) {
+      return false;
+    }
     const disabledWhenSetting = effect.disabledWhenGameSettingEnabled;
     if (disabledWhenSetting) {
       if (Array.isArray(disabledWhenSetting)) {
