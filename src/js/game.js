@@ -714,6 +714,10 @@ function initializeGameState(options = {}) {
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
   }
+  if (preserveManagers) {
+    researchManager.applyActiveEffects(false);
+    researchManager.reapplyEffects();
+  }
 
   applyPlanetParameterEffects();
   if (typeof applyRWGEffects === 'function') {
