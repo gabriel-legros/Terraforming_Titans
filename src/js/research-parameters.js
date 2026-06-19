@@ -2212,7 +2212,7 @@ const researchParameters = {
         id: 'ship_smelting',
         name: '',
         description: '',
-        cost: { advancedResearch: 200000 },
+        cost: { advancedResearch: 175000 },
         prerequisites: [],
         effects: [
           {
