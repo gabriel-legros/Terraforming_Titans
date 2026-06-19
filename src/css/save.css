@@ -71,6 +71,27 @@
     margin-bottom: 16px;
   }
 
+  .difficulty-spoiler-sections {
+    width: min(100%, 1200px);
+    margin-bottom: 16px;
+  }
+
+  .difficulty-spoiler-section {
+    margin-bottom: 8px;
+    text-align: left;
+  }
+
+  .difficulty-spoiler-section summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+  }
+
+  .difficulty-spoiler-section .settings-grid-difficulty-inputs {
+    width: 100%;
+    margin: 4px 0 12px;
+  }
+
   .difficulty-toggle-option {
     justify-content: flex-start;
     text-align: left;
