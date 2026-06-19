@@ -108,6 +108,14 @@ function getMirrorOversightProjectedState(settings) {
   return settings.lastProjectedTemperatureState || null;
 }
 
+function isSpaceMirrorFacilityFlagActive(flagId) {
+  const project = projectManager.projects.spaceMirrorFacility;
+  return !!(
+    (projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet(flagId)) ||
+    (project.isBooleanFlagSet && project.isBooleanFlagSet(flagId))
+  );
+}
+
 // Mirror oversight controls
 function createDefaultMirrorOversightSettings() {
   return {
@@ -1478,18 +1486,7 @@ function updateMirrorOversightUI() {
   if (rebuildMirrorOversightUiIfMissingZones(container)) return;
   ensureMirrorOversightCache();
   applyMirrorZoneVisibility();
-  let enabled = false;
-  if (typeof projectManager !== 'undefined') {
-    if (projectManager.isBooleanFlagSet &&
-        projectManager.isBooleanFlagSet('spaceMirrorFacilityOversight')) {
-      enabled = true;
-    } else if (projectManager.projects &&
-               projectManager.projects.spaceMirrorFacility &&
-               typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
-               projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight')) {
-      enabled = true;
-    }
-  }
+  const enabled = isSpaceMirrorFacilityFlagActive('spaceMirrorFacilityOversight');
   container.style.display = enabled ? 'block' : 'none';
   const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 };
   const vals = {
@@ -1546,21 +1543,7 @@ function updateMirrorOversightUI() {
       label.style.display = reversalAvailable ? '' : 'none';
     });
   }
-  // Advanced oversight unlock check (boolean flag name: advancedOversight)
-  let advancedUnlocked = false;
-  if (typeof projectManager !== 'undefined') {
-    if (projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('advancedOversight')) {
-      advancedUnlocked = true;
-    } else if (projectManager.projects &&
-               projectManager.projects.spaceMirrorFacility &&
-               typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
-               projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('advancedOversight')) {
-      advancedUnlocked = true;
-    }
-  }
-  if (!advancedUnlocked && mirrorOversightSettings.advancedOversight) {
-    toggleAdvancedOversight(false);
-  }
+  const advancedUnlocked = isSpaceMirrorFacilityFlagActive('advancedOversight');
   const advDiv = document.getElementById('mirror-advanced-oversight-div');
   const advCheckbox = document.getElementById('mirror-advanced-oversight');
   if (advDiv) advDiv.style.display = advancedUnlocked ? 'flex' : 'none';
@@ -2028,7 +2011,7 @@ class SpaceMirrorFacilityProject extends Project {
     this.enforceMirrorLockout();
     sanitizeMirrorDistribution();
     try {
-      if (mirrorOversightSettings.advancedOversight) {
+      if (mirrorOversightSettings.advancedOversight && isSpaceMirrorFacilityFlagActive('advancedOversight')) {
         runAdvancedOversightAssignments(this);
       }
     } catch (e) { /* swallow to avoid breaking tick */ }
