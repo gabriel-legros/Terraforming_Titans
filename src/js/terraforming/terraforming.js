@@ -722,7 +722,10 @@ class Terraforming extends EffectableEntity{
     if (factoryHeatFlux <= 0) {
       return factoryHeatFlux;
     }
-    const sinkAfterCore = Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    const sinkAfterCore = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
+      ? this.getMegaHeatSinkRawFlux()
+      : Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
     return Math.max(0, factoryHeatFlux - sinkAfterCore);
   }
 
@@ -732,6 +735,11 @@ class Terraforming extends EffectableEntity{
     const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
     const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
+      const factoryHeatAfterSink = Math.max(0, positiveFactoryHeatFlux - this.getMegaHeatSinkRawFlux());
+      return coreHeatFlux + factoryHeatAfterSink - factoryCoolingFlux;
+    }
     return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux;
   }
 

@@ -46,11 +46,11 @@
         blocksProgress: false,
         message: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenWarning',
-          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still be built, but they provide no core-heat reduction while any liquid hydrogen remains.'
+          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still mitigate factory heat, but they provide no core-heat reduction while any liquid hydrogen remains.'
         ),
         statusText: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenStatus',
-          'Blocked: liquid hydrogen prevents heat removal'
+          'Blocked: liquid hydrogen prevents core heat removal'
         )
       };
     }

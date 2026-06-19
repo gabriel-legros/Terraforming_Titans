@@ -2081,8 +2081,8 @@ setLanguageData({
         fluxMitigation: 'Total Flux mitigation',
         coolingPerSecond: 'Cooling per Second',
         control: 'Control',
-        liquidHydrogenWarning: 'Liquid hydrogen is preventing heat sinks from reducing core heat flux.  Heat sinks can still be built.',
-        liquidHydrogenStatus: 'Blocked: liquid hydrogen prevents heat removal',
+        liquidHydrogenWarning: 'Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory heat and can still be built.',
+        liquidHydrogenStatus: 'Blocked: liquid hydrogen prevents core heat removal',
         liquidHydrogenStatusShort: 'Blocked',
       },
       deeperMining: {
