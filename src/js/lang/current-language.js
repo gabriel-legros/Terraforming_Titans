@@ -5107,7 +5107,7 @@ setLanguageData({
       },
       dysonSphere: {
         name: 'Dyson Sphere',
-        description: 'Assemble a Dyson Sphere frame, enabling 100x faster collectors expansion.  Disables Dyson Swarm on completion, transferring all collectors.',
+        description: 'Assemble a Dyson Sphere frame, enabling 100x faster collectors expansion.  Disables Dyson Swarm on completion, transferring all collectors.  Construction progress persists between worlds.',
       },
       hephaestusMegaconstruction: {
         name: 'Hephaestus Megaconstruction Yard',
