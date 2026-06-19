@@ -1993,72 +1993,75 @@ body.dark-mode {
 
 /* ============================================================
    Patience (HOPE Tab) Dark Mode
-   The patience shell has a hard-coded dark-blue gradient in
-   light mode already, so colours are mostly readable. We override
-   the shell background and borders to match the dark-mode palette,
-   and fix the input/button to match the game's dark-mode style.
+   Patience uses WGC variables for its flat command-panel treatment.
+   Keep dark mode aligned with those variables rather than reintroducing
+   separate gradients or rounded controls.
    ============================================================ */
 
 .dark-mode .patience-shell {
-    background: linear-gradient(135deg, #0f1a26 0%, #141d2b 50%, #1a2537 100%);
-    border-color: #1d293b;
-    color: #e7ecf7;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+    box-shadow: var(--wgc-accent-glow);
 }
 
 .dark-mode .patience-header h2 {
-    color: #e7ecf7;
+    color: var(--wgc-border-color);
 }
 
 .dark-mode .patience-subtitle {
-    color: #8fa3c8;
+    color: var(--wgc-text-medium);
 }
 
 .dark-mode .patience-card {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: #1d293b;
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    box-shadow: var(--wgc-accent-glow);
 }
 
 .dark-mode .patience-card-label {
-    color: #8fa3c8;
+    color: var(--wgc-text-medium);
 }
 
 .dark-mode .patience-card-value {
-    color: #e7ecf7;
+    color: var(--wgc-text-light);
 }
 
 .dark-mode .patience-card-meta {
-    color: #8fa3c8;
+    color: var(--wgc-text-medium);
 }
 
 /* Patience meter */
 .dark-mode .patience-meter {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: #2d3a50;
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    box-shadow: var(--wgc-accent-glow);
 }
 
 .dark-mode .patience-meter-text {
-    color: #8fa3c8;
+    color: var(--wgc-text-light);
 }
 
 /* Spend card */
 .dark-mode .patience-spend-card {
-    background: rgba(0, 0, 0, 0.25);
-    border-color: #2d3a50;
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    box-shadow: var(--wgc-accent-glow);
 }
 
 /* Input */
 .dark-mode #patience-spend-input {
-    background-color: #0d1118;
-    border-color: #374151;
-    color: #e7ecf7;
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
 }
 
-/* Primary spend button — keep its accent look, just ensure contrast */
+/* Primary spend button */
 .dark-mode #patience-spend-button {
-    background: linear-gradient(135deg, #3a8abf 0%, #4a66cc 100%);
-    color: #e7ecf7;
-    border: none;
+    background-color: var(--wgc-bg-light);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+    box-shadow: var(--wgc-accent-glow);
 }
 
 .dark-mode #patience-spend-button:disabled {
@@ -2066,7 +2069,7 @@ body.dark-mode {
 }
 
 .dark-mode .patience-preview {
-    color: #8fa3c8;
+    color: var(--wgc-text-light);
 }
 
 .dark-mode .patience-warning {
@@ -2075,17 +2078,19 @@ body.dark-mode {
 
 /* Save-row buttons */
 .dark-mode .patience-save-row button {
-    background-color: #1a2538;
-    border-color: #4a5568;
-    color: #e7ecf7;
+    background-color: var(--wgc-bg-light);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+    box-shadow: var(--wgc-accent-glow);
 }
 
 .dark-mode .patience-save-row button:hover {
-    background-color: #24324a;
+    background-color: var(--wgc-border-color);
+    color: var(--wgc-bg-dark);
 }
 
 .dark-mode .patience-shell .info-tooltip-icon {
-    color: #5db2ff;
+    color: var(--wgc-border-color);
 }
 
 /* ============================================================
