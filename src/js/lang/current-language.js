@@ -5233,7 +5233,7 @@ setLanguageData({
       },
       foundryWorld: {
         name: 'Foundry World',
-        description: 'Tap into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(current world land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(base land / 50B) when travelling.',
+        description: 'Tap into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(current world land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(base land / 50B) when travelling.  Cannot use space storage.',
       },
       manufacturingWorld: {
         name: 'Manufacturing World',
