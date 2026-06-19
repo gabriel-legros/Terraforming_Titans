@@ -1,18 +1,3 @@
-function effectsAreShallowEqual(a, b) {
-  let aCount = 0;
-  let bCount = 0;
-  for (const key in a) {
-    aCount += 1;
-    if (a[key] !== b[key]) {
-      return false;
-    }
-  }
-  for (const key in b) {
-    bCount += 1;
-  }
-  return aCount === bCount;
-}
-
 class EffectableEntity {
     constructor(config) {
       this.description = config.description;
@@ -114,9 +99,6 @@ class EffectableEntity {
       const existingEffect = this.activeEffects.find((activeEffect) => activeEffect.effectId === effect.effectId);
 
       if (existingEffect && effect.effectId) {
-        if (this.shouldApplyEffect(effect) && effectsAreShallowEqual(existingEffect, effect)) {
-          return;
-        }
         this.replaceEffect(effect);
       } else {
         this.addEffect(effect);
