@@ -5808,7 +5808,7 @@ setLanguageData({
         },
         mega_heat_sink: {
           name: 'Mega Heat Sink',
-          description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling.',
+          description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling and mitigating factory heating.',
         },
         lifting: {
           name: 'Lifting',
