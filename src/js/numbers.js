@@ -198,10 +198,10 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false,
     } else if (allowSmall && absValue >= 1e-15 - 1e-18) {
 	        formatted = formatWithRounding(absValue / 1e-15, precision, roundDown) + 'f'; // Femto
     } else if (absValue < 1e-12 && !allowSmall) {
-      formatted = 0;
+      formatted = '0';
       value = 0;
     } else if (absValue < 1e-18){
-      formatted = 0;
+      formatted = '0';
       value = 0;
     }
     else {

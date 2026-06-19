@@ -260,7 +260,10 @@ function cacheSpaceStorageTotalEntry() {
 
 function setResourceCapLimited(entry, isLimited) {
   if (!entry || !entry.capEl) return;
-  entry.capEl.classList.toggle('resource-cap-limited', isLimited === true);
+  const limited = isLimited === true;
+  if (entry.capEl.classList.contains('resource-cap-limited') !== limited) {
+    entry.capEl.classList.toggle('resource-cap-limited', limited);
+  }
 }
 
 function shouldShowCapLimitedWithCooldown(timerKey, isLimited, frameDelta) {
