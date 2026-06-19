@@ -1,3 +1,51 @@
+function effectsAreShallowEqual(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+  for (let i = 0; i < aKeys.length; i += 1) {
+    const key = aKeys[i];
+    if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+const SHALLOW_EQUAL_REAPPLY_SAFE_EFFECT_TYPES = new Set([
+  'increaseResourceGain',
+  'productionMultiplier',
+  'consumptionMultiplier',
+  'maintenanceMultiplier',
+  'resourceConsumptionMultiplier',
+  'resourceProductionMultiplier',
+  'resourceCostMultiplier',
+  'spaceshipCostMultiplier',
+  'spaceshipCostPerTon',
+  'maintenanceCostMultiplier',
+  'addedWorkerNeed',
+  'workerMultiplier',
+  'workerRatio',
+  'addResourceConsumption',
+  'lifeGrowthMultiplier',
+  'nanoColonyGrowthMultiplier',
+  'happinessPenalty',
+  'throughputMultiplier'
+]);
+
+function canSkipShallowEqualReapply(effect) {
+  return effect
+    && effect.reapplyAlways !== true
+    && SHALLOW_EQUAL_REAPPLY_SAFE_EFFECT_TYPES.has(effect.type);
+}
+
 class EffectableEntity {
     constructor(config) {
       this.description = config.description;
@@ -99,6 +147,13 @@ class EffectableEntity {
       const existingEffect = this.activeEffects.find((activeEffect) => activeEffect.effectId === effect.effectId);
 
       if (existingEffect && effect.effectId) {
+        if (
+          this.shouldApplyEffect(effect) &&
+          effectsAreShallowEqual(existingEffect, effect) &&
+          canSkipShallowEqualReapply(effect)
+        ) {
+          return;
+        }
         this.replaceEffect(effect);
       } else {
         this.addEffect(effect);
