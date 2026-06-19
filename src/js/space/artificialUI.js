@@ -873,11 +873,11 @@ function getMaxStashAmount(resource, project, manager) {
   const colonyRes = resources && resources.colony ? resources.colony[resource] : null;
   const colonyAvailable = colonyRes ? colonyRes.value : 0;
   const storageProj = projectManager && projectManager.projects ? projectManager.projects.spaceStorage : null;
-  const storageAvailable = storageProj && storageProj.getAvailableStoredResource
+  const allowStorage = manager.getPrioritizeSpaceStorage();
+  const storageAvailable = allowStorage && storageProj && storageProj.getAvailableStoredResource
     ? storageProj.getAvailableStoredResource(resource)
     : 0;
-  const prioritize = manager.getPrioritizeSpaceStorage();
-  const total = prioritize ? storageAvailable + colonyAvailable : colonyAvailable + storageAvailable;
+  const total = colonyAvailable + storageAvailable;
   return Math.min(remaining, total);
 }
 

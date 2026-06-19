@@ -1243,22 +1243,22 @@ class ArtificialManager extends EffectableEntity {
         return `${baseName} ${count + 1}`;
     }
 
-    getTotalPaymentAvailability(resourceKey) {
+    getTotalPaymentAvailability(resourceKey, allowStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const colonyRes = resources.colony[resourceKey];
         const colonyAvailable = colonyRes ? colonyRes.value : 0;
         const storageKey = resourceKey === 'water' ? 'liquidWater' : resourceKey;
-        const storageAvailable = storageProj && storageProj.getAvailableStoredResource
+        const storageAvailable = allowStorage && storageProj && storageProj.getAvailableStoredResource
             ? storageProj.getAvailableStoredResource(storageKey)
             : 0;
         return colonyAvailable + storageAvailable;
     }
 
-    canCoverCost(cost) {
+    canCoverCost(cost, allowStorage = this.getPrioritizeSpaceStorage()) {
         for (const key of Object.keys(cost)) {
             const required = Math.max(cost[key] || 0, 0);
             if (!required) continue;
-            const total = this.getTotalPaymentAvailability(key);
+            const total = this.getTotalPaymentAvailability(key, allowStorage);
             if (total < required) {
                 return false;
             }
@@ -1306,7 +1306,7 @@ class ArtificialManager extends EffectableEntity {
         return remaining;
     }
 
-    getResourceAvailability(cost) {
+    getResourceAvailability(cost, allowStorage = this.getPrioritizeSpaceStorage()) {
         const availability = {};
         Object.keys(cost).forEach((key) => {
             const required = Math.max(cost[key] || 0, 0);
@@ -1314,7 +1314,7 @@ class ArtificialManager extends EffectableEntity {
                 availability[key] = 0;
                 return;
             }
-            availability[key] = this.getTotalPaymentAvailability(key);
+            availability[key] = this.getTotalPaymentAvailability(key, allowStorage);
         });
         return availability;
     }
@@ -1384,7 +1384,7 @@ class ArtificialManager extends EffectableEntity {
 
     pullResources(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
-        const useStorage = !!storageProj;
+        const useStorage = prioritizeStorage && !!storageProj;
         const plan = {};
 
         for (const key of Object.keys(cost)) {
