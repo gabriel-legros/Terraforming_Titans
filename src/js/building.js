@@ -1669,8 +1669,7 @@ class Building extends EffectableEntity {
         this.currentConsumption[category][resource] = scaledConsumption;
 
         if (this.category === 'waste' && category === 'surface') {
-          const maxScaledConsumption = baseConsumption * (deltaTime / 1000);
-          const cleanupSlack = Math.max(0, maxScaledConsumption - scaledConsumption);
+          const cleanupSlack = Math.max(0, displayConsumption - scaledConsumption);
           if (cleanupSlack > 0) {
             if (!this.currentWasteCleanupSlack[category]) {
               this.currentWasteCleanupSlack[category] = {};
