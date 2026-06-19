@@ -2182,7 +2182,7 @@ const researchParameters = {
         id: 'mechanical_assistance',
         name: '',
         description: '',
-        cost: { advancedResearch: 175000 },
+        cost: { advancedResearch: 400000 },
         prerequisites: [],
         effects: [
           {
