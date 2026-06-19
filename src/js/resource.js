@@ -1654,7 +1654,9 @@ function updateFactoryHeatPower(deltaTime, structures) {
       }
     }
     if (coolingCoefficient > 0) {
-      const producedEnergy = structure.currentProduction?.colony?.energy || 0;
+      const producedEnergy = structure.dayNightActivity && !gameSettings.disableDayNightCycle
+        ? (structure.production?.colony?.energy || 0) * structure.activeNumber * structure.getProductionRatio() * structure.getEffectiveProductionMultiplier() * structure.getEffectiveResourceProductionMultiplier('colony', 'energy') * 0.5 * (deltaTime / 1000)
+        : structure.currentProduction?.colony?.energy || 0;
       if (producedEnergy > 0) {
         power -= producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
       }
