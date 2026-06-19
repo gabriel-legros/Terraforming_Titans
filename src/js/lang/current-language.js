@@ -1393,6 +1393,9 @@ setLanguageData({
             antimatterBattery: 'Antimatter Battery',
             boschReactor: 'Chemical Reactor',
           },
+          project: {
+            manufacturingWorld: 'Manufacturing World',
+          },
           colony: {
             aerostat_colony: 'Aerostat Colony',
             t7_colony: 'Ecumenopolis District',

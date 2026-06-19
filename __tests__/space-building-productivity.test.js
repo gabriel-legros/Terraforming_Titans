@@ -1085,6 +1085,54 @@ describe('Space building productivity via produceResources', () => {
     cleanup();
   });
 
+  test('Manufacturing World throughputMultiplier effect scales production and consumption', () => {
+    const initialMetal = 10000;
+    const harness = setupHarness({ metal: initialMetal, superalloys: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ManufacturingWorldProject,
+      cleanup,
+    } = harness;
+
+    const manufacturing = new ManufacturingWorldProject({
+      name: 'Manufacturing World',
+      duration: 300000,
+      cost: {},
+      attributes: {
+        projectGroup: 'specializedWorlds',
+        keepStartBarVisible: true,
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+      },
+    }, 'manufacturingWorld');
+
+    manufacturing.isRunning = true;
+    manufacturing.cumulativePopulation = 200000;
+    manufacturing.manufacturingAssignments.superalloys = 200000;
+    manufacturing.autoStart = false;
+    manufacturing.isActive = false;
+    manufacturing.activeEffects.push({
+      type: 'throughputMultiplier',
+      value: 0.25,
+      sourceId: 'matrioshkaBrain',
+      effectId: 'matrioshkaBrain-project:manufacturingWorld-throughput',
+    });
+
+    projectManager.projects.manufacturingWorld = manufacturing;
+    projectManager.projectOrder = ['manufacturingWorld'];
+
+    produceResources(1000, {});
+
+    const consumedMetal = initialMetal - resources.spaceStorage.metal.value;
+    const producedSuperalloy = resources.spaceStorage.superalloys.value;
+
+    expectApprox(consumedMetal, 2500);
+    expectApprox(producedSuperalloy, 2.5);
+    cleanup();
+  });
+
   test.each([
     { extraDemand: 0 },
     { extraDemand: 200 },

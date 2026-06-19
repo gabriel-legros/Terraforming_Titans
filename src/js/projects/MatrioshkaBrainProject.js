@@ -18,6 +18,7 @@ const MATRIOSHKA_TARGETS = [
   { type: 'building', id: 'storageDepot', label: 'Storage Depot', storage: true },
   { type: 'building', id: 'antimatterBattery', label: 'Antimatter Battery' },
   { type: 'building', id: 'boschReactor', label: 'Chemical Reactor' },
+  { type: 'project', id: 'manufacturingWorld', label: 'Manufacturing World' },
   { type: 'colony', id: 'aerostat_colony', label: 'Aerostat Colony', storage: true },
   { type: 'colony', id: 't7_colony', label: 'Ecumenopolis District', storage: true },
 ];
