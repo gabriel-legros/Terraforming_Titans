@@ -1648,7 +1648,8 @@ function updateFactoryHeatPower(deltaTime, structures) {
     const coefficient = structure.factoryHeatCoefficient || 0;
     const coolingCoefficient = structure.factoryCoolingCoefficient || 0;
     if (coefficient > 0) {
-      const consumedEnergy = structure.currentConsumption?.colony?.energy || 0;
+      const heatConsumption = structure.currentFactoryHeatConsumption || structure.currentConsumption;
+      const consumedEnergy = heatConsumption?.colony?.energy || 0;
       if (consumedEnergy > 0) {
         power += consumedEnergy * (1000 / deltaTime) * coefficient;
       }

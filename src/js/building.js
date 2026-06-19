@@ -100,6 +100,7 @@ class Building extends EffectableEntity {
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
     this.currentConsumption = {};
+    this.currentFactoryHeatConsumption = null;
     this.currentMaintenance = {};
     this.currentWasteCleanupSlack = {};
     this._tickEffectCache = null;
@@ -1612,6 +1613,7 @@ class Building extends EffectableEntity {
       : this.productivity;
 
     this.currentConsumption = {}; // Reset current consumption
+    this.currentFactoryHeatConsumption = null;
     this.currentWasteCleanupSlack = {};
 
     // Reversal dynamic consumption: when reversed, consume the active recipe's produced resource

@@ -205,6 +205,35 @@ class Colony extends Building {
     return !!this.luxuryResourcesEnabled[resource] && !this.isLuxuryResourceTemporarilyDisabled(resource);
   }
 
+  getWarpnetEnergyConsumptionMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach(effect => {
+      if (
+        effect.effectId === 'warpnetEnergyConsumption' &&
+        effect.type === 'resourceConsumptionMultiplier' &&
+        effect.resourceCategory === 'colony' &&
+        effect.resourceTarget === 'energy'
+      ) {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  addFactoryHeatEnergyConsumption(amount) {
+    this.currentFactoryHeatConsumption.colony = this.currentFactoryHeatConsumption.colony || {};
+    this.currentFactoryHeatConsumption.colony.energy =
+      (this.currentFactoryHeatConsumption.colony.energy || 0) + amount;
+  }
+
+  trackEnergyFactoryHeatConsumption(fulfilledConsumption, scaledConsumption) {
+    const warpnetMultiplier = this.getWarpnetEnergyConsumptionMultiplier();
+    const heatConsumption = warpnetMultiplier > 1
+      ? Math.min(fulfilledConsumption, scaledConsumption / warpnetMultiplier)
+      : fulfilledConsumption;
+    this.addFactoryHeatEnergyConsumption(heatConsumption);
+  }
+
   getModifiedConsumption() {
     const modifiedConsumption = {};
     const consumption = this.getConsumption();
@@ -278,6 +307,7 @@ class Colony extends Building {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
   
     this.currentConsumption = {}; // Reset current consumption
+    this.currentFactoryHeatConsumption = {};
     this.currentNeedDemand = {};
     this.currentNeedFulfilled = {};
   
@@ -309,6 +339,9 @@ class Colony extends Building {
   
         // Track actual consumption in the building
         this.currentConsumption[category][resource] = fulfilledConsumption;
+        if (category === 'colony' && resource === 'energy') {
+          this.trackEnergyFactoryHeatConsumption(fulfilledConsumption, scaledConsumption);
+        }
         this.currentNeedDemand[resource] = (this.currentNeedDemand[resource] || 0) + scaledConsumption;
         this.currentNeedFulfilled[resource] = (this.currentNeedFulfilled[resource] || 0) + fulfilledConsumption;
   

@@ -3103,7 +3103,13 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const heatCoefficient = structure.factoryHeatCoefficient || 0;
-    const energyConsumption = displayConsumption.colony?.energy || 0;
+    let energyConsumption = displayConsumption.colony?.energy || 0;
+    if (structure.getWarpnetEnergyConsumptionMultiplier) {
+      const warpnetMultiplier = structure.getWarpnetEnergyConsumptionMultiplier();
+      if (warpnetMultiplier > 1) {
+        energyConsumption /= warpnetMultiplier;
+      }
+    }
     const heatPower = gameSettings.factoryHeating ? energyConsumption * heatCoefficient : 0;
     if (heatPower > 0) {
       sections.push({

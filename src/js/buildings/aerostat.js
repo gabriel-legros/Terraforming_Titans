@@ -1160,6 +1160,9 @@ class Aerostat extends BaseColony {
 
     this.currentConsumption.colony.energy =
       (this.currentConsumption.colony.energy || 0) + scaledConsumption;
+    if (this.currentFactoryHeatConsumption) {
+      this.addFactoryHeatEnergyConsumption(scaledConsumption);
+    }
     accumulatedChanges.colony.energy =
       (accumulatedChanges.colony.energy || 0) - scaledConsumption;
     resources.colony.energy.modifyRate(
