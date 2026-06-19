@@ -152,7 +152,10 @@ function updateColonySubtabsVisibility() {
   const populationFirstUnlock = populationUnlocked && !colonySubtabState.populationEverUnlocked;
   const nanocolonyFirstUnlock = nanocolonyUnlocked && !colonySubtabState.nanocolonyEverUnlocked;
   const followersFirstUnlock = followersUnlocked && !colonySubtabState.followersEverUnlocked;
-  const canAutoSwitch = colonySubtabState.initialized && !globalGameIsLoadingFromSave && !globalGameIsTraveling;
+  const canAutoSwitch = colonySubtabState.initialized
+    && !globalGameIsLoadingFromSave
+    && !globalGameIsTraveling
+    && !(storyManager && storyManager.suppressNavigationRewards);
   if (canAutoSwitch && populationFirstUnlock) {
     tabManager.activateTab('colonies');
     activateColonySubtab(COLONY_SUBTAB_IDS.population);

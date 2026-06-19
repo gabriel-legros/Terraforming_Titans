@@ -323,6 +323,13 @@ function initializeGameState(options = {}) {
       activateSubtabByDataId(pendingAutoTravelTabRestore.settingsSubtabId || 'save-settings-subtab');
     }
   };
+  const clearAutoTravelTabRestore = () => {
+    if (autoTravelContext && autoTravelContext.active) {
+      autoTravelContext.active = false;
+      autoTravelContext.suppressTabSwitch = false;
+      autoTravelContext.restoreTabState = null;
+    }
+  };
   let savedTravelResources = null;
   let savedProjectTravelState = null;
   let savedConstructionOffice = null;
@@ -687,11 +694,6 @@ function initializeGameState(options = {}) {
   if (preserveManagers && automationManager && typeof automationManager.reapplyEffects === 'function') {
     automationManager.reapplyEffects();
   }
-  if (autoTravelContext && autoTravelContext.active) {
-    autoTravelContext.active = false;
-    autoTravelContext.suppressTabSwitch = false;
-    autoTravelContext.restoreTabState = null;
-  }
   if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
     solisManager.reapplyEffects({ grantStartingResources: true });
     hazardManager.applyTravelAdjustments(terraforming);
@@ -736,7 +738,10 @@ function initializeGameState(options = {}) {
   if (pendingAutoTravelTabRestore && typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
     window.requestAnimationFrame(() => {
       restoreAutoTravelTabs();
+      clearAutoTravelTabRestore();
     });
+  } else {
+    clearAutoTravelTabRestore();
   }
 }
 

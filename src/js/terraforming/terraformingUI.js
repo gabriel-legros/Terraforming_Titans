@@ -1156,7 +1156,6 @@ function setTerraformingMilestonesVisibility(unlocked) {
 
 function openTerraformingWorldTab() {
   if (autoTravelContext && autoTravelContext.suppressTabSwitch) {
-    autoTravelContext.suppressTabSwitch = false;
     return;
   }
   initializeTerraformingTabs();

@@ -310,6 +310,7 @@ class StoryManager {
                 }
             }
         }
+        this.suppressNavigationRewards = false;
 
     }
 
@@ -773,6 +774,9 @@ class StoryManager {
         event.reward.forEach((effect, index) => {
             if (effect && effect.type) {
                 const storyEffect = this.prepareStoryEffect(event, effect, index);
+                const suppressNavigationReward = this.suppressNavigationRewards
+                    && (storyEffect.type === 'activateTab' || storyEffect.type === 'activateSubtab')
+                    && storyEffect.onTravel !== true;
                 setTimeout(() => {
                     if (!window.storyManager) {
                         console.warn("StoryManager gone, skipping delayed reward application.");
@@ -781,7 +785,7 @@ class StoryManager {
                     if (!storyEffect.oneTimeFlag) {
                         this.appliedEffects.push(storyEffect);
                     }
-                    if (this.shouldApplyEffect(storyEffect)) {
+                    if (!suppressNavigationReward && this.shouldApplyEffect(storyEffect)) {
                         addEffect(storyEffect);
                         console.log(`Applied reward for ${event.id}: ${storyEffect.type}`);
                     }
@@ -796,6 +800,9 @@ class StoryManager {
     // Reapply stored effects to newly created game objects. Used when
     // resetting the game state while keeping the existing story progress.
     reapplyEffects() {
+        if (globalGameIsTraveling) {
+            this.suppressNavigationRewards = true;
+        }
         const uniqueEffectsToApply = new Map();
         this.appliedEffects.forEach(effect => {
             const effectKey = JSON.stringify(effect);
@@ -991,6 +998,7 @@ class StoryManager {
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
         this.currentChapterPlanet = savedState.currentChapterPlanet || null;
+        this.suppressNavigationRewards = true;
 
         if (storyDebugMode) {
             this.completeAllJournalEventsForDebug();
