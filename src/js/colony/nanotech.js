@@ -1017,13 +1017,26 @@ class NanotechManager extends EffectableEntity {
     this.uiDirty = false;
     if (typeof document === 'undefined') return;
     if (nanotechManager && nanotechManager !== this) return;
-    const nanocolonyContentHost = document.getElementById('nanocolony-colonies-content');
-    const controlsSection =
-      document.getElementById('colony-controls-section') ||
-      document.getElementById('colony-controls-container') ||
-      document.getElementById('colony-buildings-buttons');
+    const uiCache = this.uiCache || (this.uiCache = {});
+    let nanocolonyContentHost = uiCache.nanocolonyContentHost;
+    if (!nanocolonyContentHost || !nanocolonyContentHost.isConnected) {
+      nanocolonyContentHost = document.getElementById('nanocolony-colonies-content');
+      uiCache.nanocolonyContentHost = nanocolonyContentHost;
+    }
+    let controlsSection = uiCache.controlsSection;
+    if (!controlsSection || !controlsSection.isConnected) {
+      controlsSection =
+        document.getElementById('colony-controls-section') ||
+        document.getElementById('colony-controls-container') ||
+        document.getElementById('colony-buildings-buttons');
+      uiCache.controlsSection = controlsSection;
+    }
     const hostContainer = nanocolonyContentHost || controlsSection;
-    let container = document.getElementById('nanocolony-container');
+    let container = uiCache.container;
+    if (!container || !container.isConnected) {
+      container = document.getElementById('nanocolony-container');
+      uiCache.container = container;
+    }
     if (container && nanocolonyContentHost && container.parentElement !== nanocolonyContentHost) {
       nanocolonyContentHost.appendChild(container);
     }
@@ -2345,7 +2358,10 @@ class NanotechManager extends EffectableEntity {
   cacheUIRefs(container) {
     // Cache all frequently accessed DOM nodes under the Nanotech card
     const qs = (selector) => container.querySelector(selector);
+    const previousCache = this.uiCache || {};
     this.uiCache = {
+      nanocolonyContentHost: previousCache.nanocolonyContentHost,
+      controlsSection: previousCache.controlsSection,
       container,
       controls: Array.from(container.querySelectorAll('input, select')),
       temperatureWarningEl: qs('#nanotech-temperature-warning'),

@@ -458,11 +458,31 @@ const constructionOfficeReserveSettingsElements = {
     inputs: {},
 };
 
+const constructionOfficeElements = {
+    container: null,
+    statusSpan: null,
+    pauseBtn: null,
+    reserveInput: null,
+};
+
 function updateConstructionOfficeUI() {
-    const container = typeof document !== 'undefined' ? document.getElementById('construction-office-container') : null;
-    const statusSpan = typeof document !== 'undefined' ? document.getElementById('autobuilder-status') : null;
-    const pauseBtn = typeof document !== 'undefined' ? document.getElementById('autobuilder-pause-btn') : null;
-    const reserveInput = typeof document !== 'undefined' ? document.getElementById('strategic-reserve-input') : null;
+    if (typeof document === 'undefined') return;
+    if (!constructionOfficeElements.container || !constructionOfficeElements.container.isConnected) {
+        constructionOfficeElements.container = document.getElementById('construction-office-container');
+    }
+    if (!constructionOfficeElements.statusSpan || !constructionOfficeElements.statusSpan.isConnected) {
+        constructionOfficeElements.statusSpan = document.getElementById('autobuilder-status');
+    }
+    if (!constructionOfficeElements.pauseBtn || !constructionOfficeElements.pauseBtn.isConnected) {
+        constructionOfficeElements.pauseBtn = document.getElementById('autobuilder-pause-btn');
+    }
+    if (!constructionOfficeElements.reserveInput || !constructionOfficeElements.reserveInput.isConnected) {
+        constructionOfficeElements.reserveInput = document.getElementById('strategic-reserve-input');
+    }
+    const container = constructionOfficeElements.container;
+    const statusSpan = constructionOfficeElements.statusSpan;
+    const pauseBtn = constructionOfficeElements.pauseBtn;
+    const reserveInput = constructionOfficeElements.reserveInput;
 
     if (container && typeof globalEffects !== 'undefined' && typeof globalEffects.isBooleanFlagSet === 'function') {
         const unlocked = globalEffects.isBooleanFlagSet('automateConstruction');

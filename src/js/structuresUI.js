@@ -10,6 +10,7 @@ function getStructuresUIText(path, fallback, vars) {
 
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
+const unhideButtonContainerCache = {};
 
 function resetSelectedBuildCounts() {
   for (const name in selectedBuildCounts) {
@@ -497,6 +498,7 @@ function invalidateStructureUICache() {
   structureUICacheInvalidated = true;
   // Explicitly clear element caches when UI is rebuilt
   for (const k in structureUIElements) delete structureUIElements[k];
+  for (const k in unhideButtonContainerCache) delete unhideButtonContainerCache[k];
 }
 
 function applyCollapseState(structureName) {
@@ -1116,10 +1118,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     constructedCountElement.innerHTML = `
       <strong>Constructed:</strong> <span id="${structure.name}-count-active">${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}</span>
     `;
+    cached.countActiveElement = constructedCountElement.querySelector(`#${structure.name}-count-active`);
   } else {
     constructedCountElement.innerHTML = `
       <strong>Constructed:</strong> <span id="${structure.name}-count">${formatBuildingCount(structure.count)}</span>
     `;
+    cached.countElement = constructedCountElement.querySelector(`#${structure.name}-count`);
   }
 
   constructedInfo.appendChild(constructedCountElement);
@@ -1140,6 +1144,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     productivityValue.id = `${structure.name}-productivity`;
     productivityValue.textContent = `${Math.round(structure.productivity * 100)}%`;
     productivityContainer.appendChild(productivityValue);
+    cached.productivityElement = productivityValue;
 
     if (structure.name === 'biodome') {
       const warning = document.createElement('span');
@@ -1158,6 +1163,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       dayNightIcon.classList.add('day-night-icon');
       dayNightIcon.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
       productivityContainer.appendChild(dayNightIcon);
+      cached.dayNightIcon = dayNightIcon;
     }
 
     constructedInfo.appendChild(productivityContainer);
@@ -2744,8 +2750,8 @@ function updateDecreaseButtonText(button, buildCount) {
         const btn = document.getElementById(`build-${structureName}`);
         return btn ? btn.closest('.building-row') : null;
       })();
-      const countElement = document.getElementById(`${structureName}-count`);
-      const countActiveElement = document.getElementById(`${structureName}-count-active`);
+      const countElement = els.countElement;
+      const countActiveElement = els.countActiveElement;
       const selectedBuildCount = selectedBuildCounts[structureName];
       const manualBuildCount = getManualBuildCount(structure, selectedBuildCount);
       const isColony = structure instanceof Colony;
@@ -2755,22 +2761,39 @@ function updateDecreaseButtonText(button, buildCount) {
         ? structure.isVisible()
         : structure.unlocked && !structure.isHidden;
       if (isVisible && structureRow) {
-        combinedStructureRow.classList.remove('hidden');
-        combinedStructureRow.style.display = 'flex'; // Show the building when unlocked
+        if (combinedStructureRow.classList.contains('hidden')) {
+          combinedStructureRow.classList.remove('hidden');
+        }
+        if (combinedStructureRow.style.display !== 'flex') {
+          combinedStructureRow.style.display = 'flex'; // Show the building when unlocked
+        }
       } else {
-        combinedStructureRow.classList.add('hidden');
-        combinedStructureRow.style.display = 'none';
+        if (!combinedStructureRow.classList.contains('hidden')) {
+          combinedStructureRow.classList.add('hidden');
+        }
+        if (combinedStructureRow.style.display !== 'none') {
+          combinedStructureRow.style.display = 'none';
+        }
         continue;
       }
   
       if (countElement) {
-        countElement.textContent = formatBuildingCount(structure.count);
+        const countText = formatBuildingCount(structure.count);
+        if (countElement.textContent !== countText) {
+          countElement.textContent = countText;
+        }
       } else if (countActiveElement) {
-        countActiveElement.textContent = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
+        const countActiveText = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
+        if (countActiveElement.textContent !== countActiveText) {
+          countActiveElement.textContent = countActiveText;
+        }
       }
-      els.headerActive.textContent = structure.canBeToggled
+      const headerActiveText = structure.canBeToggled
         ? `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`
         : `${formatBuildingCount(structure.count)}`;
+      if (els.headerActive.textContent !== headerActiveText) {
+        els.headerActive.textContent = headerActiveText;
+      }
 
       updateStructureKesslerWarning(structure, els, manualBuildCount);
 
@@ -2856,17 +2879,17 @@ function updateDecreaseButtonText(button, buildCount) {
         structure.updateUI?.(els);
       }
   
-      const productivityElement = document.getElementById(`${structureName}-productivity`);
+      const productivityElement = els.productivityElement;
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
         productivityElement.textContent = `${productivityValue}%`;
 
         if (structure.dayNightActivity && dayNightCycle.isNight() && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
-          productivityElement.style.color = 'darkblue';
+          if (productivityElement.style.color !== 'darkblue') productivityElement.style.color = 'darkblue';
         } else if (productivityValue < 100) {
-          productivityElement.style.color = 'red';
+          if (productivityElement.style.color !== 'red') productivityElement.style.color = 'red';
         } else {
-          productivityElement.style.color = 'inherit';
+          if (productivityElement.style.color !== 'inherit') productivityElement.style.color = 'inherit';
         }
       }
 
@@ -2877,7 +2900,7 @@ function updateDecreaseButtonText(button, buildCount) {
         }
       }
 
-      const iconElement = document.getElementById(`${structureName}-day-night-icon`);
+      const iconElement = els.dayNightIcon;
       if (iconElement) {
         if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
           iconElement.style.display = 'none';
@@ -2893,7 +2916,7 @@ function updateDecreaseButtonText(button, buildCount) {
       }
   
       // Update the production and consumption details
-      const productionConsumptionDetails = document.getElementById(`${structureName}-production-consumption`);
+      const productionConsumptionDetails = els.productionDetails;
       if (productionConsumptionDetails) {
         updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
       }
@@ -3504,13 +3527,22 @@ function updateBuildingSubtabsVisibility() {
 function updateUnhideButtons() {
   const categories = getBuildingCategories();
   categories.forEach(cat => {
-    const container = document.getElementById(`${cat}-unhide-container`);
+    const cacheKey = `${cat}-unhide-container`;
+    let container = unhideButtonContainerCache[cacheKey];
+    if (!container || !container.isConnected) {
+      container = document.getElementById(cacheKey);
+      unhideButtonContainerCache[cacheKey] = container;
+    }
     if (!container) return;
     const hasHidden = Object.values(buildings).some(b => b.category === cat && b.isHidden);
     container.style.display = hasHidden ? 'block' : 'none';
   });
 
-  const colonyContainer = document.getElementById('unhide-obsolete-container');
+  let colonyContainer = unhideButtonContainerCache.obsolete;
+  if (!colonyContainer || !colonyContainer.isConnected) {
+    colonyContainer = document.getElementById('unhide-obsolete-container');
+    unhideButtonContainerCache.obsolete = colonyContainer;
+  }
   if (colonyContainer) {
     const hasColonyHidden = Object.values(colonies).some(c => c.isHidden);
     colonyContainer.style.display = hasColonyHidden ? 'block' : 'none';

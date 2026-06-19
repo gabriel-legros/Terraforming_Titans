@@ -860,18 +860,27 @@ function updateRender(force = false, options = {}) {
     }
 
     if (isActive('colonies')) {
-      updateColonyDisplay(colonies);
-      if (typeof updateGrowthRateDisplay === 'function') {
-        updateGrowthRateDisplay();
+      const renderAllColonySubtabs = forceAllSubtabs;
+      const renderPopulationColonySubtab = renderAllColonySubtabs || isColonySubtabActiveFromState('population-colonies');
+      const renderNanocolonySubtab = renderAllColonySubtabs || isColonySubtabActiveFromState('nanocolony-colonies');
+      const renderFollowersSubtab = renderAllColonySubtabs || isColonySubtabActiveFromState('followers-colonies');
+
+      if (renderPopulationColonySubtab) {
+        updateColonyDisplay(colonies);
+        if (typeof updateGrowthRateDisplay === 'function') {
+          updateGrowthRateDisplay();
+        }
+        updateColonySlidersUI();
       }
-      updateColonySlidersUI();
       if (
         nanotechManager &&
-        (forceAllSubtabs || isColonySubtabActiveFromState('nanocolony-colonies'))
+        renderNanocolonySubtab
       ) {
         nanotechManager.updateUI();
       }
-      updateFollowersUI();
+      if (renderFollowersSubtab) {
+        updateFollowersUI();
+      }
     }
 
     if (isActive('special-projects')) {
