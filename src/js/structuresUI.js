@@ -546,9 +546,6 @@ function createBuildingButtons() {
   
   // Initialize unhide button event listeners
   initializeUnhideButtons();
-  
-  // Update subtab visibility after creating buttons
-  updateBuildingSubtabsVisibility();
 }
 
 function createColonyButtons(colonies) {
