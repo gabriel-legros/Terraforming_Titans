@@ -1986,7 +1986,7 @@ const researchParameters = {
         id: 'orbital_rings',
         name: '',
         description: '',
-        cost: { advancedResearch: 400000 },
+        cost: { advancedResearch: 200000 },
         prerequisites: [],
         effects: [
           {
