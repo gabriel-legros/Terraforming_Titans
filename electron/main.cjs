@@ -2,9 +2,12 @@ const { app, BrowserWindow, Menu, session, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
+const appDisplayName = 'Terraforming Titans';
 const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.png');
 const preloadPath = path.join(__dirname, 'preload.cjs');
 const saveSlotNames = new Set(['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
+
+app.setName(appDisplayName);
 
 function getSaveStoragePath(key) {
   if (key === 'saveSlotDates') {
@@ -111,7 +114,6 @@ function createWindow() {
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
-  app.setName('Terraforming Titans');
   app.setAppUserModelId('terraforming-titans');
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);

@@ -45,6 +45,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Skills: `skills.js`, `skillsUI.js`
 - Life Designer: `life.js`, `lifeUI.js`
 - Space travel/systems: `space.js`, `spaceUI.js`
+- Electron builds: `electron/main.cjs`, `electron/preload.cjs`, and `package.json` `build` config. Packaged saves are file-backed under the Electron user data `saves` directory, so Steam Auto-Cloud should target `Terraforming Titans/saves` under the platform app-data root.
 - Import Resources centralized UI: `projects/ImportResourcesProjectUI.js` (shared card for space-mining/import spaceship projects; owns assignment step controls, assigned/available displays, and row-level project controls that persist/update across travel)
 - Autobuild: `autobuild.js`
 - Milestones: `milestones.js`, `milestonesUI.js`
