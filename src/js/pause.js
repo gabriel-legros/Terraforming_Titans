@@ -130,17 +130,15 @@
     if (!controls) {
       return;
     }
-    if (gameSettings.disableSpeedControls) {
-      controls.classList.add('hidden');
-      updatePauseMessage();
-      return;
-    }
     controls.classList.remove('hidden');
     updatePauseMessage();
     const activeSpeed = paused ? 0 : gameSpeed;
     GAME_SPEED_OPTIONS.forEach(option => {
       const button = controls._buttons.get(option.speed);
+      const hidden = gameSettings.disableSpeedControls && option.speed > 1;
       const active = option.speed === activeSpeed;
+      button.hidden = hidden;
+      button.setAttribute('aria-hidden', hidden ? 'true' : 'false');
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
       button.setAttribute('aria-label', getGameSpeedOptionText(option));
@@ -154,15 +152,9 @@
     }
     let pauseMessage = container._pauseMessage;
     if (!pauseMessage) {
-      pauseMessage = document.createElement('div');
-      pauseMessage.classList.add('pause-message');
-      container._pauseMessage = pauseMessage;
+      return;
     }
-    pauseMessage.textContent = t('ui.common.pausedUpper', {}, 'PAUSED');
-    const shouldShow = paused && gameSettings.disableSpeedControls;
-    if (shouldShow && !pauseMessage.parentNode) {
-      container.appendChild(pauseMessage);
-    } else if (!shouldShow && pauseMessage.parentNode) {
+    if (pauseMessage.parentNode) {
       pauseMessage.remove();
     }
   }
@@ -191,7 +183,7 @@
       applyPauseState(true);
       return;
     }
-    lastActiveGameSpeed = speed;
+    lastActiveGameSpeed = gameSettings.disableSpeedControls ? 1 : speed;
     applyPauseState(false);
   }
 
