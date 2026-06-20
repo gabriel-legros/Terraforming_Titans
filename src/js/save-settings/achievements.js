@@ -82,7 +82,7 @@ class AchievementManager {
       ['orbital-ring', 'orbitalRing', 'We need more real estate', 'Build an orbital ring.', () => this.hasAnyOrbitalRing()],
       ['dream-big', 'dreamBig', 'Dream big', 'Construct an artificial world.', () => this.hasConstructedArtificialWorld()],
       ['ringworld-terraforming', 'ringworldTerraforming', 'How is this thing not ripping apart', 'Terraform a Ringworld.', () => this.hasTerraformedArtificialType('ring')],
-      ['diskworld-terraforming', 'diskworldTerraforming', 'Flat Earthers were right all along', 'Terraform a Disk World.', () => this.hasTerraformedArtificialType('disk')],
+      ['diskworld-terraforming', 'diskworldTerraforming', 'Flat Earthers were right all along', 'Terraform a Diskworld.', () => this.hasTerraformedArtificialType('disk')],
       ['galactic-hadron-collider', 'galacticHadronCollider', 'Galactic Hadron Collider', 'Build a particle accelerator with a radius of at least {value} meters.', () => this.isParticleAcceleratorComplete(), () => ({ value: formatNumber(5e20, true, 0) })],
       ['bosch-terraforming', 'boschTerraforming', 'Bosch Terraforming', 'Terraform a Venus-like world without ever disposing of CO2 or using lifters.', () => this.isBoschTerraformingComplete()],
       ['hazard-preservation', 'hazardPreservation', 'Hazard Preservation', 'Fulfill all terraforming requirements simultaneously on any RWG world with all 5 story hazards before clearing any of the hazards (use a natural magnetosphere).', () => this.isHazardPreservationComplete()],

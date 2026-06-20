@@ -4538,7 +4538,7 @@ setLanguageData({
         },
         diskworldTerraforming: {
           title: 'Flat Earthers were right all along',
-          requirement: 'Terraform a Disk World.'
+          requirement: 'Terraform a Diskworld.'
         },
         galacticHadronCollider: {
           title: 'Galactic Hadron Collider',
