@@ -382,6 +382,7 @@ function initializeGameState(options = {}) {
     gameSettings.earlyAdvancedOversight = false;
     gameSettings.factoryHeating = false;
     gameSettings.realisticFactoryEnergyConsumption = false;
+    gameSettings.infinitePatience = false;
     gameSettings.buildingCostMultiplier = 1;
     gameSettings.researchCostMultiplier = 1;
     gameSettings.workerRequirementMultiplier = 1;

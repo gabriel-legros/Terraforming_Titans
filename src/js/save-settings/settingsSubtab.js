@@ -53,6 +53,7 @@ function cacheSettingsElements() {
     factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
     realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
     realisticFactoryEnergyConsumptionTooltip: document.getElementById('realistic-factory-energy-consumption-tooltip'),
+    infinitePatienceToggle: document.getElementById('infinite-patience-toggle'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -651,6 +652,15 @@ function addSettingsListeners() {
         'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the legacy balance values.'
       )
     );
+  }
+
+  if (cached.infinitePatienceToggle) {
+    cached.infinitePatienceToggle.checked = gameSettings.infinitePatience;
+    cached.infinitePatienceToggle.addEventListener('change', () => {
+      gameSettings.infinitePatience = cached.infinitePatienceToggle.checked;
+      patienceManager.enforceInfinitePatience();
+      updatePatienceUI();
+    });
   }
 
   wireDifficultyMultiplierInput(cached.buildingCostMultiplierInput, 'buildingCostMultiplier');

@@ -26,6 +26,7 @@ class PatienceManager extends EffectableEntity {
             return;
         }
         this.enabled = true;
+        this.enforceInfinitePatience();
     }
 
     /**
@@ -49,6 +50,7 @@ class PatienceManager extends EffectableEntity {
      */
     addPatience(hours) {
         this.currentHours = Math.min(this.currentHours + hours, this.getEffectiveMaxHours());
+        this.enforceInfinitePatience();
     }
 
     getEffectiveMaxHours() {
@@ -64,8 +66,18 @@ class PatienceManager extends EffectableEntity {
 
     clampCurrentHoursToMax() {
         const maxHours = this.getEffectiveMaxHours();
+        if (gameSettings.infinitePatience) {
+            this.currentHours = maxHours;
+            return;
+        }
         if (this.currentHours > maxHours) {
             this.currentHours = maxHours;
+        }
+    }
+
+    enforceInfinitePatience() {
+        if (gameSettings.infinitePatience) {
+            this.currentHours = this.getEffectiveMaxHours();
         }
     }
 
@@ -138,7 +150,11 @@ class PatienceManager extends EffectableEntity {
             return false;
         }
 
-        this.currentHours -= hours;
+        if (gameSettings.infinitePatience) {
+            this.currentHours = this.getEffectiveMaxHours();
+        } else {
+            this.currentHours -= hours;
+        }
 
         if (superalloyGain > 0) {
             resources.colony.superalloys.increase(superalloyGain, false);
@@ -369,6 +385,7 @@ class PatienceManager extends EffectableEntity {
             return;
         }
         this.worldSecondsElapsed += deltaSeconds;
+        this.enforceInfinitePatience();
         if (this.worldTerraformingCompleted) {
             this.grantWorldPatience();
         }
@@ -412,6 +429,7 @@ class PatienceManager extends EffectableEntity {
         if (data.everPossibleSpendGainIds) {
             this.everPossibleSpendGainIds = new Set(data.everPossibleSpendGainIds);
         }
+        this.enforceInfinitePatience();
     }
 
     /**

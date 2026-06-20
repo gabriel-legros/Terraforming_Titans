@@ -95,6 +95,7 @@ let gameSettings = {
   earlyAdvancedOversight: false,
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,
+  infinitePatience: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,

@@ -800,6 +800,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'realisticFactoryEnergyConsumption')) {
         gameSettings.realisticFactoryEnergyConsumption = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'infinitePatience')) {
+        gameSettings.infinitePatience = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
@@ -853,6 +856,8 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
       cachedSettings.factoryHeatingToggle.checked = gameSettings.factoryHeating;
       cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
+      cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;
+      patienceManager.enforceInfinitePatience();
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {
