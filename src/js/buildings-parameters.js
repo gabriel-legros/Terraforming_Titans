@@ -533,7 +533,7 @@ const buildingsParameters = {
         shortName: '',
         consumption: { colony: { energy: 2_000_000_000_000_000 } },
         realisticEnergyConsumption: 2_000_000_000_000_000,
-        production: { special: { antimatter: 1 } }
+        production: { special: { antimatter: 0.9999 } }
       }
     }
   },
