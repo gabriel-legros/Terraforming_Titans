@@ -3749,6 +3749,7 @@ setLanguageData({
         clipboardPrompt: 'Copy Warp Gate Command team stats:',
         copyTeamStatsTooltip: 'Copy all stats to clipboard',
         showStory: 'Show Story',
+        showStoryTooltip: 'The mini-stories are AI generated flavour text.  It\'s just for flavour and not part of the main story.',
         hideStory: 'Hide Story',
         teamNames: {
           alpha: 'Alpha',

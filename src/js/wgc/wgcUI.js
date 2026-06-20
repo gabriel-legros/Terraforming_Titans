@@ -4,6 +4,7 @@ let wgcStoryToggleButton = null;
 let wgcStoryToggleLabel = null;
 let wgcCopyStatsButton = null;
 let wgcTeamRulesInfoIcon = null;
+let wgcStoryToggleInfoIcon = null;
 const wgcPendingLogScroll = new Set();
 
 function getWGCText(path, fallback, vars) {
@@ -1347,12 +1348,15 @@ function generateWGCLayout() {
                 <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy all stats to clipboard')}"><span class="wgc-copy-team-stats-icon" aria-hidden="true"></span></span>
                 <span id="wgc-open-presets-btn" class="wgc-presets-icon-btn" role="button" tabindex="0" aria-label="${getWGCText('presetsTitle', 'Stat Presets')}"><span class="wgc-presets-icon-btn-icon" aria-hidden="true"></span></span>
               </div>
-              <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
-                <span class="wgc-story-toggle__track" aria-hidden="true">
-                  <span class="wgc-story-toggle__thumb"></span>
-                </span>
-                <span class="wgc-story-toggle__label">${getWGCText('showStory', 'Show Story')}</span>
-              </button>
+              <div class="wgc-story-toggle-control">
+                <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
+                  <span class="wgc-story-toggle__track" aria-hidden="true">
+                    <span class="wgc-story-toggle__thumb"></span>
+                  </span>
+                  <span class="wgc-story-toggle__label">${getWGCText('showStory', 'Show Story')}</span>
+                </button>
+                <span id="wgc-story-toggle-info" class="info-tooltip-icon">&#9432;</span>
+              </div>
             </div>
             <div id="wgc-team-cards"></div>
           </div>
@@ -1407,6 +1411,16 @@ function initializeWGCUI() {
     wgcStoryToggleButton = container.querySelector('#wgc-story-toggle');
     if (wgcStoryToggleButton) {
       wgcStoryToggleLabel = wgcStoryToggleButton.querySelector('.wgc-story-toggle__label');
+    }
+    wgcStoryToggleInfoIcon = container.querySelector('#wgc-story-toggle-info');
+    if (wgcStoryToggleInfoIcon) {
+      const storyToggleTooltip = attachDynamicInfoTooltip(
+        wgcStoryToggleInfoIcon,
+        getWGCText('showStoryTooltip', "The mini-stories are AI generated flavour text.  It's just for flavour and not part of the main story.")
+      );
+      if (storyToggleTooltip) {
+        storyToggleTooltip.classList.add('wgc-info-tooltip');
+      }
     }
     if (wgcStoryToggleButton) {
       wgcStoryToggleButton.addEventListener('click', () => {

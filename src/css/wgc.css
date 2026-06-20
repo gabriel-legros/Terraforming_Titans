@@ -434,6 +434,12 @@
   color-scheme: dark;
 }
 
+.wgc-container .wgc-story-toggle-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .wgc-container .wgc-story-toggle {
   display: inline-flex;
   align-items: center;
