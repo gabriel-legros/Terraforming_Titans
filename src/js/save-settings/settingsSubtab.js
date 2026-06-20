@@ -69,6 +69,8 @@ function cacheSettingsElements() {
     galaxyThreatScalingMultiplierInput: document.getElementById('galaxy-threat-scaling-multiplier-input'),
     galaxyThreatScalingTooltip: document.getElementById('galaxy-threat-scaling-tooltip'),
     artificialWorldConstructionTimeMultiplierInput: document.getElementById('artificial-world-construction-time-multiplier-input'),
+    rwgRewardsCapInput: document.getElementById('rwg-rewards-cap-input'),
+    rwgRewardsCapTooltip: document.getElementById('rwg-rewards-cap-tooltip'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -127,6 +129,25 @@ function wireDifficultyMultiplierInput(input, settingId) {
   });
 }
 
+function wireDifficultyNullableCapInput(input, settingId) {
+  if (!input) {
+    return;
+  }
+  gameSettings[settingId] = normalizeDifficultySettingValue(settingId, gameSettings[settingId]);
+  input.value = formatDifficultyNullableCapValue(gameSettings[settingId]);
+  input.dataset[settingId] = gameSettings[settingId] === null ? '' : String(gameSettings[settingId]);
+  wireStringNumberInput(input, {
+    parseValue: value => normalizeDifficultySettingValue(settingId, value.trim() === '' ? null : parseFlexibleNumber(value)),
+    formatValue: value => formatDifficultyNullableCapValue(value),
+    onValue: parsed => {
+      gameSettings[settingId] = parsed;
+      applyRWGEffects();
+      updateRWGEffectsUI();
+    },
+    datasetKey: settingId,
+  });
+}
+
 function updateDifficultySettingInputs() {
   const cached = cacheSettingsElements();
   const inputs = {
@@ -143,6 +164,7 @@ function updateDifficultySettingInputs() {
     galaxyFleetCapacityMultiplier: cached.galaxyFleetCapacityMultiplierInput,
     galaxyThreatScalingMultiplier: cached.galaxyThreatScalingMultiplierInput,
     artificialWorldConstructionTimeMultiplier: cached.artificialWorldConstructionTimeMultiplierInput,
+    rwgRewardsCap: cached.rwgRewardsCapInput,
   };
 
   normalizeDifficultySettings();
@@ -151,8 +173,13 @@ function updateDifficultySettingInputs() {
     if (!input) {
       continue;
     }
-    input.value = formatDifficultyMultiplierValue(gameSettings[settingId]);
-    input.dataset[settingId] = String(gameSettings[settingId]);
+    if (settingId === 'rwgRewardsCap') {
+      input.value = formatDifficultyNullableCapValue(gameSettings[settingId]);
+      input.dataset[settingId] = gameSettings[settingId] === null ? '' : String(gameSettings[settingId]);
+    } else {
+      input.value = formatDifficultyMultiplierValue(gameSettings[settingId]);
+      input.dataset[settingId] = String(gameSettings[settingId]);
+    }
   }
 }
 
@@ -639,6 +666,18 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.galaxyFleetCapacityMultiplierInput, 'galaxyFleetCapacityMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyThreatScalingMultiplierInput, 'galaxyThreatScalingMultiplier');
   wireDifficultyMultiplierInput(cached.artificialWorldConstructionTimeMultiplierInput, 'artificialWorldConstructionTimeMultiplier');
+  wireDifficultyNullableCapInput(cached.rwgRewardsCapInput, 'rwgRewardsCap');
+
+  if (cached.rwgRewardsCapTooltip) {
+    attachDynamicInfoTooltip(
+      cached.rwgRewardsCapTooltip,
+      t(
+        'ui.settings.rwgRewardsCapTooltip',
+        {},
+        'Limits how many random worlds count toward rewards in each random world type. Leave blank for uncapped rewards. Hazard bonuses count toward the same cap.'
+      )
+    );
+  }
 
   if (cached.spaceshipEnergyBeforeSpaceElevatorTooltip) {
     attachDynamicInfoTooltip(

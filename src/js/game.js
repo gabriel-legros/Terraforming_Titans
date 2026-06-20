@@ -394,6 +394,7 @@ function initializeGameState(options = {}) {
     gameSettings.galaxyFleetCapacityMultiplier = 1;
     gameSettings.galaxyThreatScalingMultiplier = 1;
     gameSettings.artificialWorldConstructionTimeMultiplier = 1;
+    gameSettings.rwgRewardsCap = null;
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;

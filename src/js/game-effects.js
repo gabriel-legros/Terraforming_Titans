@@ -20,16 +20,21 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   galaxyFleetCapacityMultiplier: { min: 0 },
   galaxyThreatScalingMultiplier: { min: 0 },
   artificialWorldConstructionTimeMultiplier: { min: 0.0001 },
+  rwgRewardsCap: { min: 0, nullable: true, integer: true },
 };
 
 function normalizeDifficultySettingValue(settingId, value) {
   const definition = DIFFICULTY_SETTING_DEFINITIONS[settingId];
+  if (definition.nullable && (value === null || value === '')) {
+    return null;
+  }
   const parsed = Number(value);
-  const fallback = 1;
+  const fallback = definition.nullable ? null : 1;
   if (!Number.isFinite(parsed)) {
     return fallback;
   }
-  return Math.max(definition.min, parsed);
+  const normalized = Math.max(definition.min, parsed);
+  return definition.integer ? Math.floor(normalized) : normalized;
 }
 
 function normalizeDifficultySettings() {
@@ -44,6 +49,11 @@ function formatDifficultyMultiplierValue(value) {
     return '1';
   }
   return String(parsed);
+}
+
+function formatDifficultyNullableCapValue(value) {
+  const normalized = normalizeDifficultySettingValue('rwgRewardsCap', value);
+  return normalized === null ? '' : String(normalized);
 }
 
 function isSpaceElevatorCostProfileActiveForEffects() {

@@ -134,7 +134,9 @@ function _computeRWGEffectsSummary() {
     if (!unlocked.has(type)) continue;
     const baseCount = counts[type] || 0;
     const bonus = hazardBonuses[type] || 0;
-    const effectiveCount = baseCount + bonus;
+    const uncappedCount = baseCount + bonus;
+    const cap = gameSettings.rwgRewardsCap ?? null;
+    const effectiveCount = cap === null ? uncappedCount : Math.min(uncappedCount, cap);
     const effs = effects.filter((eff) => !eff.hideInSummary).map(eff => {
       const raw = typeof eff.computeValue === 'function' ? eff.computeValue(effectiveCount, eff) : eff.value;
       let display = '';
@@ -205,7 +207,7 @@ function _computeRWGEffectsSummary() {
       }
       return { effectId: eff.effectId, type: eff.type, description: descr, display };
     });
-    out.push({ type, count: baseCount, hazardBonus: bonus, totalCount: effectiveCount, effects: effs });
+    out.push({ type, count: baseCount, hazardBonus: bonus, totalCount: effectiveCount, uncappedTotalCount: uncappedCount, effects: effs });
   }
 
   return out;
@@ -234,7 +236,9 @@ function updateRWGEffectsUI() {
     // Flip once per group
     altFlip = !altFlip;
     const groupAlt = altFlip ? ' alt' : '';
-    const countText = entry.hazardBonus ? `${entry.count}+${entry.hazardBonus}` : `${entry.count}`;
+    const countText = entry.totalCount < entry.uncappedTotalCount
+      ? `${entry.totalCount}/${entry.uncappedTotalCount}`
+      : (entry.hazardBonus ? `${entry.count}+${entry.hazardBonus}` : `${entry.count}`);
     rows.push({
       kind: 'head',
       className: `rwg-effects-row rwg-effects-head${groupAlt}`,

@@ -108,6 +108,7 @@ let gameSettings = {
   galaxyFleetCapacityMultiplier: 1,
   galaxyThreatScalingMultiplier: 1,
   artificialWorldConstructionTimeMultiplier: 1,
+  rwgRewardsCap: null,
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
 };

@@ -488,7 +488,9 @@ function applyRWGEffects() {
   for (const [type, effects] of Object.entries(RWG_EFFECTS)) {
     const baseCount = counts[type] || 0;
     const bonus = hazardBonuses[type] || 0;
-    const effectiveCount = baseCount + bonus;
+    const uncappedCount = baseCount + bonus;
+    const cap = gameSettings.rwgRewardsCap ?? null;
+    const effectiveCount = cap === null ? uncappedCount : Math.min(uncappedCount, cap);
     for (const eff of effects) {
       if (eff.type === "flavorText") continue;
       const value = eff.computeValue instanceof Function ? eff.computeValue(effectiveCount, eff) : eff.value;
