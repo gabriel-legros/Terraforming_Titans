@@ -517,7 +517,7 @@ const buildingsParameters = {
     cost: { colony: { metal: 10000, components: 1000, superconductors: 1000, electronics: 100 } },
     consumption: { colony: { energy: 2_000_000_000_000_000 } },
     realisticEnergyConsumption: 2_000_000_000_000_000,
-    production: { special: { antimatter: 1 } },
+    production: { special: { antimatter: 0.9999 } },
     storage: {},
     factoryHeatCoefficient: 0.0001,
     dayNightActivity: false,
