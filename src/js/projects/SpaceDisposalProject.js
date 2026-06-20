@@ -1335,7 +1335,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
   }
 
-  getMassDriverContribution() {
+  getMassDriverContribution(applyProductivity = false) {
     if (!this.isBooleanFlagSet('massDriverEnabled')) {
       return 0;
     }
@@ -1345,7 +1345,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       : (typeof buildingCountToNumber === 'function'
         ? buildingCountToNumber(structure?.active)
         : Math.max(0, Math.floor(Number(structure?.active) || 0)));
-    return activeCount * this.massDriverShipEquivalency;
+    if (!applyProductivity) {
+      return activeCount * this.massDriverShipEquivalency;
+    }
+    const productivity = Number.isFinite(structure.productivity)
+      ? Math.max(0, Math.min(1, structure.productivity))
+      : 0;
+    return activeCount * this.massDriverShipEquivalency * productivity;
   }
 
   getSpaceshipOnlyCount() {
@@ -1368,7 +1374,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
     const fraction = duration > 0 ? deltaTime / duration : 0;
     const shipCount = this.getSpaceshipOnlyCount();
-    const auxiliaryCount = this.getMassDriverContribution();
+    const auxiliaryCount = this.getMassDriverContribution(true);
     const totalTransportCount = shipCount + auxiliaryCount;
     const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
     const failureChance = shipCount > 0 ? (1 - successChance) : 0;
@@ -1421,7 +1427,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const costPerShip = this.calculateSpaceshipCost();
     const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
     const shipCount = this.getSpaceshipOnlyCount();
-    const massDriverCount = this.getMassDriverContribution();
+    const massDriverCount = perSecond
+      ? this.getMassDriverContribution(true)
+      : this.getMassDriverContribution();
     const perSecondMultiplier = perSecond ? (1000 / duration) : 1;
     const shipMultiplier = perSecond
       ? shipCount * perSecondMultiplier
