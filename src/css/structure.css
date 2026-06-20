@@ -313,6 +313,14 @@
     flex: 0 0 auto;
 }
 
+.productivity-low {
+    color: red;
+}
+
+.productivity-day-night-inactive {
+    color: #1f4fbf;
+}
+
 .day-night-icon {
     margin-left: 4px;
 }

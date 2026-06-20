@@ -131,6 +131,10 @@ body.dark-mode {
     color: #7db7ff;
 }
 
+.dark-mode .productivity-day-night-inactive {
+    color: #8ab4ff;
+}
+
 .dark-mode #journal-entries .journal-white-text,
 .dark-mode .popup-text .journal-white-text,
 .dark-mode .history-entries .journal-white-text {

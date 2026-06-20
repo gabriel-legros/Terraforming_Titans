@@ -2883,13 +2883,17 @@ function updateDecreaseButtonText(button, buildCount) {
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
         productivityElement.textContent = `${productivityValue}%`;
+        productivityElement.style.color = '';
 
         if (structure.dayNightActivity && dayNightCycle.isNight() && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
-          if (productivityElement.style.color !== 'darkblue') productivityElement.style.color = 'darkblue';
+          productivityElement.classList.add('productivity-day-night-inactive');
+          productivityElement.classList.remove('productivity-low');
         } else if (productivityValue < 100) {
-          if (productivityElement.style.color !== 'red') productivityElement.style.color = 'red';
+          productivityElement.classList.add('productivity-low');
+          productivityElement.classList.remove('productivity-day-night-inactive');
         } else {
-          if (productivityElement.style.color !== 'inherit') productivityElement.style.color = 'inherit';
+          productivityElement.classList.remove('productivity-day-night-inactive');
+          productivityElement.classList.remove('productivity-low');
         }
       }
 
