@@ -1,4 +1,5 @@
 let achievementsElements = null;
+let achievementsShowHiddenText = false;
 
 function cacheAchievementsElements() {
   if (achievementsElements && achievementsElements.list) {
@@ -7,10 +8,33 @@ function cacheAchievementsElements() {
 
   achievementsElements = {
     summary: document.getElementById('settings-achievements-summary'),
+    hiddenToggle: document.getElementById('settings-achievements-hidden-toggle'),
     list: document.getElementById('settings-achievements-list'),
   };
 
   return achievementsElements;
+}
+
+function ensureAchievementsHiddenToggle(cached) {
+  if (!cached.summary || cached.hiddenToggle) {
+    return;
+  }
+  const label = t('ui.settings.achievements.showHiddenText', null, 'Show hidden achievement text');
+  const toggle = createToggleButton({
+    onLabel: label,
+    offLabel: label,
+    isOn: achievementsShowHiddenText
+  });
+  toggle.id = 'settings-achievements-hidden-toggle';
+  toggle.classList.add('settings-achievements-hidden-toggle');
+  toggle.addEventListener('click', () => {
+    achievementsShowHiddenText = !achievementsShowHiddenText;
+    setToggleButtonState(toggle, achievementsShowHiddenText);
+    updateAchievementsDisplay();
+  });
+
+  cached.summary.insertAdjacentElement('afterend', toggle);
+  cached.hiddenToggle = toggle;
 }
 
 function createAchievementRow() {
@@ -42,7 +66,8 @@ function updateAchievementRow(row, achievement) {
     ? t('ui.settings.achievements.achieved', null, 'Achieved')
     : t('ui.settings.achievements.locked', null, 'Not achieved');
   refs.title.textContent = achievement.title;
-  refs.requirement.textContent = achievement.requirement;
+  refs.requirement.textContent = achievement.displayRequirement || achievement.requirement;
+  refs.requirement.classList.toggle('settings-achievement-requirement--hidden', achievement.hidden && !achievementsShowHiddenText);
 }
 
 function syncAchievementRows(container, achievements) {
@@ -74,8 +99,15 @@ function updateAchievementsDisplay() {
   if (!cached.list || !achievementManager) {
     return;
   }
+  ensureAchievementsHiddenToggle(cached);
+  if (cached.hiddenToggle) {
+    const label = t('ui.settings.achievements.showHiddenText', null, 'Show hidden achievement text');
+    cached.hiddenToggle.dataset.onLabel = label;
+    cached.hiddenToggle.dataset.offLabel = label;
+    setToggleButtonState(cached.hiddenToggle, achievementsShowHiddenText);
+  }
 
-  const summary = achievementManager.getSummary();
+  const summary = achievementManager.getSummary(achievementsShowHiddenText);
   if (cached.summary) {
     cached.summary.textContent = t(
       'ui.settings.achievements.summary',
@@ -87,6 +119,6 @@ function updateAchievementsDisplay() {
 }
 
 function initializeAchievementsSubtab() {
-  cacheAchievementsElements();
+  ensureAchievementsHiddenToggle(cacheAchievementsElements());
   updateAchievementsDisplay();
 }

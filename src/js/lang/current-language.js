@@ -4492,8 +4492,102 @@ setLanguageData({
         summary: '{achieved}/{total} achieved',
         achieved: 'Achieved',
         locked: 'Not achieved',
+        hiddenRequirement: 'Hidden until unlocked.',
+        showHiddenText: 'Show hidden achievement text',
         storyWorldTitle: 'World {number}',
         storyWorldRequirement: 'Complete World {number}.',
+        thatWasFast: {
+          title: 'That was fast',
+          requirement: 'Terraform a world under 1 hour.'
+        },
+        thatWasFaster: {
+          title: 'That was faster',
+          requirement: 'Terraform a world under 60s.'
+        },
+        thatWasFastest: {
+          title: 'That was fastest',
+          requirement: 'Terraform a world under 5s.'
+        },
+        classicRenewables: {
+          title: 'Classic Renewables',
+          requirement: 'Terraform a world without building any power generators except solar panels and wind turbines.'
+        },
+        heatOfTheSun: {
+          title: 'Heat of the Sun',
+          requirement: 'Reach a global mean surface temperature of at least 5,500°C without using Planetary Thrusters.'
+        },
+        yoDawgTerraforming: {
+          title: 'Yo dawg, I heard you liked terraforming',
+          requirement: 'Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one.'
+        },
+        coruscant: {
+          title: 'Coruscant',
+          requirement: 'Build a full ecumenopolis.'
+        },
+        orbitalRing: {
+          title: 'We need more real estate',
+          requirement: 'Build an orbital ring.'
+        },
+        dreamBig: {
+          title: 'Dream big',
+          requirement: 'Construct an artificial world.'
+        },
+        ringworldTerraforming: {
+          title: 'How is this thing not ripping apart',
+          requirement: 'Terraform a Ringworld.'
+        },
+        diskworldTerraforming: {
+          title: 'Flat Earthers were right all along',
+          requirement: 'Terraform a Disk World.'
+        },
+        galacticHadronCollider: {
+          title: 'Galactic Hadron Collider',
+          requirement: 'Build a particle accelerator with a radius of at least 5e20 meters.'
+        },
+        boschTerraforming: {
+          title: 'Bosch Terraforming',
+          requirement: 'Terraform a Venus-like world without ever disposing of CO2 or using lifters.'
+        },
+        hazardPreservation: {
+          title: 'Hazard Preservation',
+          requirement: 'Fulfill all terraforming requirements simultaneously on any RWG world with all 5 story hazards before clearing any of the hazards.'
+        },
+        noBuildingLeftBehind: {
+          title: 'No Building Left Behind',
+          requirement: 'Terraform any random world without constructing any buildings or colonies.'
+        },
+        whereAreTheBlokkats: {
+          title: 'Where are the Blokkats?',
+          requirement: "Defeat the final and most powerful wave of Prometheus' galactic invasion fleet."
+        },
+        oneFaith: {
+          title: 'One Faith',
+          requirement: 'Have 100% of the galaxy believe in HOPE.'
+        },
+        kardashevI: {
+          title: 'Kardashev I',
+          requirement: 'Produce 200Q watts of power in total.'
+        },
+        kardashevII: {
+          title: 'Kardashev II',
+          requirement: 'Complete your first Dyson Sphere Frame and fill it completely with collectors.'
+        },
+        kardashevIII: {
+          title: 'Kardashev III',
+          requirement: 'Build 100 billion Dyson Spheres and fill them all with collectors.'
+        },
+        youLiveLikeThis: {
+          title: 'You live like this?',
+          requirement: 'Have a dynamic mass planet where the mass of all waste is greater than half the mass of the planet.'
+        },
+        paulBirch: {
+          title: 'Paul Birch',
+          requirement: 'Build and terraform a world around a supermassive black hole.'
+        },
+        timeForRetirement: {
+          title: 'Time for Retirement',
+          requirement: 'Build the maximum number of layers possible on a world around a supermassive black hole.'
+        },
       },
       slot: 'Slot',
       date: 'Date',

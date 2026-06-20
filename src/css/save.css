@@ -143,15 +143,21 @@
 
   #settings-achievements-list {
     display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     width: min(100%, 900px);
     margin-top: 12px;
   }
 
+  .settings-achievements-hidden-toggle {
+    margin: 0 auto 4px;
+    font-size: 0.95rem;
+  }
+
   .settings-achievement-row {
     display: grid;
-    grid-template-columns: 110px minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
     align-items: start;
     padding: 10px 12px;
     border: 1px solid #d7d7d7;
@@ -163,6 +169,7 @@
   .settings-achievement-status {
     color: var(--status-failure-color);
     font-weight: 600;
+    font-size: 0.9rem;
   }
 
   .settings-achievement-row--complete .settings-achievement-status {
@@ -178,10 +185,24 @@
     color: #555;
   }
 
+  .settings-achievement-requirement--hidden {
+    font-style: italic;
+  }
+
   @media (max-width: 560px) {
+    #settings-achievements-list {
+      grid-template-columns: 1fr;
+    }
+
     .settings-achievement-row {
       grid-template-columns: 1fr;
       gap: 4px;
+    }
+  }
+
+  @media (min-width: 561px) and (max-width: 860px) {
+    #settings-achievements-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   
