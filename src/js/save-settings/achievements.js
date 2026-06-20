@@ -412,7 +412,18 @@ class AchievementManager {
   }
 
   isEcumenopolisComplete() {
-    return getEcumenopolisLandFraction(terraforming) >= 1;
+    const ecumenopolis = colonies.t7_colony;
+    const geometricLand = resolveWorldGeometricLand(terraforming);
+    const requirement = Math.max(0, Number(ecumenopolis?.requiresLand) || 0);
+    if (!geometricLand || !requirement) {
+      return getEcumenopolisLandFraction(terraforming) >= 1;
+    }
+    const activeCount = Math.max(0, Number(ecumenopolis.activeNumber) || 0);
+    if (activeCount <= 0) {
+      return false;
+    }
+    const coveredLand = activeCount * requirement;
+    return Math.max(0, geometricLand - coveredLand) < requirement;
   }
 
   hasAnyOrbitalRing() {
