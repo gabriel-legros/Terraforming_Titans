@@ -18,6 +18,13 @@ const autobuildCostTracker = {
             }
         }
     },
+    reset() {
+        this.elapsed = 0;
+        this.currentCosts = {};
+        this.currentBuildingCosts = {};
+        this.costQueue = [];
+        this.buildingCostQueue = [];
+    },
     update(delta) {
         this.elapsed += delta;
         while (this.elapsed >= 1000) {

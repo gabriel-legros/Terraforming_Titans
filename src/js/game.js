@@ -291,6 +291,7 @@ function initializeGameState(options = {}) {
     shipEfficiency = 1;
   }
   globalGameIsTraveling = preserveManagers && !globalGameIsLoadingFromSave;
+  autobuildCostTracker.reset();
   const pendingAutoTravelTabRestore = (
     autoTravelContext
     && autoTravelContext.active
