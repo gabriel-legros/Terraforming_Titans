@@ -11,6 +11,7 @@ if (typeof document !== 'undefined' && document.addEventListener) {
     initializeSaveSubtab();
     initializePreferencesSettingsSubtab();
     initializeStatisticsSubtab();
+    initializeAchievementsSubtab();
     initializeCreditsSubtab();
   });
 }

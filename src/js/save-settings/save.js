@@ -265,6 +265,7 @@ function getGameState(saveDate = new Date()) {
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
     patienceManager: (typeof patienceManager !== 'undefined' && typeof patienceManager.saveState === 'function') ? patienceManager.saveState() : undefined,
     earthManager: (typeof earthManager !== 'undefined' && typeof earthManager.saveState === 'function') ? earthManager.saveState() : undefined,
+    achievementManager: achievementManager && achievementManager.saveState ? achievementManager.saveState() : undefined,
     followersManager: (typeof followersManager !== 'undefined' && typeof followersManager.saveState === 'function') ? followersManager.saveState() : undefined,
     artificialManager: (typeof artificialManager !== 'undefined' && typeof artificialManager.saveState === 'function') ? artificialManager.saveState() : undefined,
     atlasManager: (typeof atlasManager !== 'undefined' && typeof atlasManager.saveState === 'function') ? atlasManager.saveState() : undefined,
@@ -733,6 +734,11 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     }
     if(gameState.earthManager && typeof earthManager !== 'undefined' && typeof earthManager.loadState === 'function'){
       earthManager.loadState(gameState.earthManager);
+    }
+    if (gameState.achievementManager && achievementManager && achievementManager.loadState) {
+      achievementManager.loadState(gameState.achievementManager);
+    } else if (achievementManager && achievementManager.update) {
+      achievementManager.update();
     }
     if (gameState.followersManager && followersManager && followersManager.loadState) {
       followersManager.loadState(gameState.followersManager);

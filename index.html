@@ -95,6 +95,8 @@
     <script src="src/js/subtab-manager.js"></script>
     <script src="src/js/save-settings/settingsSubtab.js"></script>
     <script src="src/js/save-settings/statisticsSubtab.js"></script>
+    <script src="src/js/save-settings/achievements.js"></script>
+    <script src="src/js/save-settings/achievementsSubtab.js"></script>
     <script src="src/js/save-settings/creditsSubtab.js"></script>
     <script src="src/js/save-settings/save.js"></script>
     <script src="src/js/save-settings/saveSubtab.js"></script>
@@ -837,6 +839,7 @@
             <div class="settings-subtab active" data-subtab="save-settings-subtab" data-i18n="ui.settings.save">Save</div>
             <div class="settings-subtab" data-subtab="preferences-settings-subtab" data-i18n="ui.settings.settings">Settings</div>
             <div class="settings-subtab" data-subtab="statistics-settings-subtab" data-i18n="ui.settings.statistics">Statistics</div>
+            <div class="settings-subtab" data-subtab="achievements-settings-subtab" data-i18n="ui.settings.achievements.tab">Achievements</div>
             <div class="settings-subtab" data-subtab="credits-settings-subtab" data-i18n="ui.settings.credits">Credits</div>
           </div>
           <div class="subtab-content-wrapper settings-subtab-content-wrapper">
@@ -1142,6 +1145,11 @@
               <h3 id="recent-terraform-history-title" data-i18n="ui.settings.recentTerraformHistoryTitle">Last 10 Terraformed Worlds</h3>
               <p class="settings-stat-line" id="recent-terraform-average-display"></p>
               <div id="recent-terraform-history-list"></div>
+            </div>
+            <div id="achievements-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
+              <h2 data-i18n="ui.settings.achievements.title">Achievements</h2>
+              <p class="settings-stat-line" id="settings-achievements-summary"></p>
+              <div id="settings-achievements-list"></div>
             </div>
             <div id="credits-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
               <h2 data-i18n="ui.settings.creditsTitle">Credits</h2>

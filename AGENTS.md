@@ -51,6 +51,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Milestones: `milestones.js`, `milestonesUI.js`
 - Solis shop/quests: `solis.js`, `solisUI.js`
 - Patience: `hope/patienceUI.js` (terraforming patience banking/claim UI)
+- Achievements: `src/js/save-settings/achievements.js`, `src/js/save-settings/achievementsSubtab.js` (derived Save & Settings achievement list)
 - Gold asteroid event: `gold-asteroid.js`
 - ResearchManager persists across travel; regular research is reset while advanced is retained.
 
@@ -476,7 +477,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Resource Disposal now supports up to 15 configured disposal targets with per-target auto-start, wait-for-full-capacity, and monitoring thresholds; active auto-start targets split assigned spaceships and Mass Drivers evenly.
 - Resource panel keeps the Colony/Space view toggle only when the `Show space resources in default resource panel` setting is off; with the setting on, the toggle is hidden and `Space Resources` render directly below `Colony` once space resources are actually unlocked.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
-- Save & Settings now uses four subtabs (`Save`, `Settings`, `Statistics`, `Credits`) so utility controls and metadata are split into smaller panels instead of one long page.
+- Save & Settings now uses five subtabs (`Save`, `Settings`, `Statistics`, `Achievements`, `Credits`) so utility controls and metadata are split into smaller panels instead of one long page. Achievements are logic-side state owned by `AchievementManager`, evaluated during `updateLogic()`, persisted in saves, and displayed by the Settings subtab.
 - Space now supports an `Atlas` subtab between `Artificial` and `Galaxy`: `atlasManager` preserves across travel/save-load, reveals curated challenge worlds with featured and collapsible community sections, tracks lightweight completion state separately from `randomWorldStatuses`, and special seeds are no longer entered through RWG.
 - Atlas challenge worlds can grant persistent completion rewards as normal effects; Atlas must reapply earned reward effects on load/travel, and Titania specifically unlocks the RWG `Dynamic Mass` control via `rwgManager` boolean flag `enableDynamicMass`.
 - Atlas challenge cards now show a `Fastest completion` line per challenge using each seed's best recorded world completion time, with real-time shown when available.

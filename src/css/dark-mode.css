@@ -939,6 +939,15 @@ body.dark-mode {
     color: #e7ecf7;
 }
 
+.dark-mode .settings-achievement-row {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark-mode .settings-achievement-requirement {
+    color: #c8d2e3;
+}
+
 .dark-mode .space-storage-settings-window {
     background: #1f2937;
     color: #f8f9fa;

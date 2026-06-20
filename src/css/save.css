@@ -140,6 +140,50 @@
   #settings-credits-list .settings-stat-line:last-child {
     margin-bottom: 0;
   }
+
+  #settings-achievements-list {
+    display: grid;
+    gap: 8px;
+    width: min(100%, 900px);
+    margin-top: 12px;
+  }
+
+  .settings-achievement-row {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 10px 12px;
+    border: 1px solid #d7d7d7;
+    border-radius: 6px;
+    text-align: left;
+    background: #fff;
+  }
+
+  .settings-achievement-status {
+    color: var(--status-failure-color);
+    font-weight: 600;
+  }
+
+  .settings-achievement-row--complete .settings-achievement-status {
+    color: var(--status-success-color);
+  }
+
+  .settings-achievement-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .settings-achievement-requirement {
+    color: #555;
+  }
+
+  @media (max-width: 560px) {
+    .settings-achievement-row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
   
   .save-slots {
     width: 100%;

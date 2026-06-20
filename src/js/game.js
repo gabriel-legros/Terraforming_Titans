@@ -190,6 +190,8 @@ function initializeDefaultGlobals(){
   rwgManager = new RwgManager();
   patienceManager = new PatienceManager();
   earthManager = new EarthManager();
+  achievementManager = new AchievementManager();
+  achievementManager.update();
   registerDefaultTabActivationHandlers();
   }
 
@@ -218,6 +220,7 @@ function registerDefaultTabActivationHandlers() {
   });
   registerTabActivationHandler('settings', () => {
     updateStatisticsDisplay();
+    updateAchievementsDisplay();
   });
 }
 
@@ -626,6 +629,10 @@ function initializeGameState(options = {}) {
       globalThis.spaceManager = spaceManager;
     }
   }
+  if (!preserveManagers || !achievementManager) {
+    achievementManager = new AchievementManager();
+  }
+  achievementManager.update();
 
   hazardManager = setHazardManager(new HazardManager());
   const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
@@ -814,6 +821,7 @@ function updateLogic(delta, realDelta = delta) {
   // This will check objectives for active events, process completions,
   // apply rewards, and check for/activate newly available events.
   storyManager.update(); // <--- NEW CENTRAL UPDATE CALL
+  achievementManager.update();
 
   recalculateTotalRates();
 
@@ -984,6 +992,7 @@ function updateRender(force = false, options = {}) {
 
     if (isActive('settings')) {
       updateStatisticsDisplay();
+      updateAchievementsDisplay();
     }
   } else {
     // Non-DOM environment fallback (tests or headless): keep previous behavior
@@ -997,6 +1006,7 @@ function updateRender(force = false, options = {}) {
     updateResearchUI();
     updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
     updateStatisticsDisplay();
+    updateAchievementsDisplay();
     updateHopeUI();
     if (typeof updateSpaceUI === 'function') updateSpaceUI();
     if (typeof updateGalaxyUI === 'function') updateGalaxyUI({ force: force || forceAllSubtabs });
