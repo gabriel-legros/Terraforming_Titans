@@ -530,7 +530,31 @@
       }
       this.autoBuildTargetBlocked = false;
       this._autoBuildTargetRemaining = remaining;
+      const previousCount = normalizeSpaceAntimatterCount(this.repeatCount);
+      const cost = this.getScaledCost();
+      const beforeValues = {};
+      for (const category in cost) {
+        beforeValues[category] = {};
+        for (const resource in cost[category]) {
+          beforeValues[category][resource] = resources[category][resource].value;
+        }
+      }
       projectManager.startProject(this.name);
+      if (normalizeSpaceAntimatterCount(this.repeatCount) > previousCount) {
+        const actualCost = {};
+        for (const category in beforeValues) {
+          for (const resource in beforeValues[category]) {
+            const spent = beforeValues[category][resource] - resources[category][resource].value;
+            if (spent > 0) {
+              actualCost[category] = actualCost[category] || {};
+              actualCost[category][resource] = spent;
+            }
+          }
+        }
+        if (Object.keys(actualCost).length > 0) {
+          autobuildCostTracker.recordCost(this.displayName, actualCost);
+        }
+      }
     }
 
     update(deltaTime) {
