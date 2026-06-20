@@ -26,6 +26,12 @@
       "LICENSES/**/*",
       "package.json"
     ],
+    "extraFiles": [
+      {
+        "from": "LICENSES",
+        "to": "LICENSES"
+      }
+    ],
     "win": {
       "target": "dir",
       "icon": "assets/images/cover_small.png"
