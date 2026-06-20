@@ -500,6 +500,22 @@ function hasCompletedSpecializationProject() {
     return false;
 }
 
+function hasUnlockedSpecializationProject() {
+    const bioworld = projectManager.projects.bioworld;
+    if (bioworld.unlocked) {
+        return true;
+    }
+    const foundry = projectManager.projects.foundryWorld;
+    if (foundry.unlocked) {
+        return true;
+    }
+    const manufacturing = projectManager.projects.manufacturingWorld;
+    if (manufacturing.unlocked) {
+        return true;
+    }
+    return false;
+}
+
 function getSpecializationTravelWarningMessage(project = getActiveSpecializationProject()) {
     if (!project) {
         return '';
@@ -513,6 +529,9 @@ function getSpecializationTravelWarningMessage(project = getActiveSpecialization
 
 function getNoSpecializationTravelWarningMessage() {
     if (!gameSettings.noSpecializationWarningOnTravel) {
+        return '';
+    }
+    if (!hasUnlockedSpecializationProject()) {
         return '';
     }
     if (getActiveSpecializationProject()) {
