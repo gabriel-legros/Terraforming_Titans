@@ -83,7 +83,7 @@ class AchievementManager {
       ['dream-big', 'dreamBig', 'Dream big', 'Construct an artificial world.', () => this.hasConstructedArtificialWorld()],
       ['ringworld-terraforming', 'ringworldTerraforming', 'How is this thing not ripping apart', 'Terraform a Ringworld.', () => this.hasTerraformedArtificialType('ring')],
       ['diskworld-terraforming', 'diskworldTerraforming', 'Flat Earthers were right all along', 'Terraform a Disk World.', () => this.hasTerraformedArtificialType('disk')],
-      ['galactic-hadron-collider', 'galacticHadronCollider', 'Galactic Hadron Collider', 'Build a particle accelerator with a radius of at least 5e20 meters.', () => this.isParticleAcceleratorComplete()],
+      ['galactic-hadron-collider', 'galacticHadronCollider', 'Galactic Hadron Collider', 'Build a particle accelerator with a radius of at least {value} meters.', () => this.isParticleAcceleratorComplete(), () => ({ value: formatNumber(5e20, true, 0) })],
       ['bosch-terraforming', 'boschTerraforming', 'Bosch Terraforming', 'Terraform a Venus-like world without ever disposing of CO2 or using lifters.', () => this.isBoschTerraformingComplete()],
       ['hazard-preservation', 'hazardPreservation', 'Hazard Preservation', 'Fulfill all terraforming requirements simultaneously on any RWG world with all 5 story hazards before clearing any of the hazards (use a natural magnetosphere).', () => this.isHazardPreservationComplete()],
       ['no-building-left-behind', 'noBuildingLeftBehind', 'No Building Left Behind', 'Terraform any random world without constructing any buildings or colonies.', () => this.isNoBuildingLeftBehindComplete()],
@@ -102,12 +102,13 @@ class AchievementManager {
 
   addAchievementDefinitions(definitions, entries) {
     entries.forEach((entry) => {
-      const [id, key, titleFallback, requirementFallback, achieved] = entry;
+      const [id, key, titleFallback, requirementFallback, achieved, requirementVars] = entry;
       definitions.push({
         id,
         titleKey: `ui.settings.achievements.${key}.title`,
         titleFallback,
         requirementKey: `ui.settings.achievements.${key}.requirement`,
+        requirementVars,
         requirementFallback,
         hidden: true,
         achieved
@@ -629,7 +630,10 @@ class AchievementManager {
   getAchievements(showHiddenText = false) {
     return this.definitions.map((definition) => {
       const achieved = this.isAchieved(definition.id);
-      const requirement = t(definition.requirementKey, definition.requirementVars, definition.requirementFallback);
+      const requirementVars = typeof definition.requirementVars === 'function'
+        ? definition.requirementVars()
+        : definition.requirementVars;
+      const requirement = t(definition.requirementKey, requirementVars, definition.requirementFallback);
       const hidden = definition.hidden === true && !achieved;
       return {
         id: definition.id,
