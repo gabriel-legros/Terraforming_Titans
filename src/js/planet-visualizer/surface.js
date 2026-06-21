@@ -1397,29 +1397,77 @@
         }
         zoneThresholds[zi] = Math.max(0, Math.min(1, thrVal));
       }
-      const softness = 0.1;
+      const tropicalEdge = 23.5 / 90;
+      const polarEdge = 66.5 / 90;
+      const zoneBlend = 0.22;
+      const softness = 0.16;
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
         const x = i - y * w;
         const zi = this.getTextureZoneIndex(x, y, w, h);
-        const lifeFrac = lifeFracs[zi];
-        if (lifeFrac <= 0) continue;
         const thr = thrIdx[zi];
         if (thr >= 0) {
           const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
           if (hbin <= thr) continue;
         }
         const idx = i * 4;
-        let alpha = 0;
-        if (lifeFrac >= 1) {
-          alpha = 1;
+        let weights = null;
+        if (isRing) {
+          weights = [1, 0, 0];
+        } else if (isDisk) {
+          const dx = (x / Math.max(1, w - 1)) * 2 - 1;
+          const dy = (y / Math.max(1, h - 1)) * 2 - 1;
+          const radius = Math.sqrt(dx * dx + dy * dy);
+          const inner = this.getDiskInnerRatio();
+          const annulusT = Math.max(0, Math.min(0.999999, (radius - inner) / Math.max(0.001, 1 - inner)));
+          const grain = Math.sin(x * 43.217 + y * 87.971 + bioSeed.x * 991.7 + bioSeed.y * 577.3);
+          const noiseOffset = (grain - Math.floor(grain)) * 0.13 - 0.065;
+          const firstBlend = smoothstep((1 / 3) - 0.11, (1 / 3) + 0.11, annulusT + noiseOffset);
+          const secondBlend = smoothstep((2 / 3) - 0.11, (2 / 3) + 0.11, annulusT + noiseOffset);
+          weights = [
+            1 - firstBlend,
+            firstBlend * (1 - secondBlend),
+            secondBlend,
+          ];
         } else {
-          const thresh = Math.max(0, zoneThresholds[zi] - 0.02);
-          if (thresh < 0) continue;
-          const lower = Math.max(0, thresh - softness);
-          const upper = Math.min(1, thresh + softness);
-          alpha = smoothstep(lower, upper, lifeScore[i]);
+          const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+          const grain = Math.sin(x * 31.37 + y * 79.13 + bioSeed.x * 1871.9 + bioSeed.y * 947.1);
+          const noiseOffset = (grain - Math.floor(grain)) * 0.08 - 0.04;
+          let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, latAbs + noiseOffset);
+          let w2 = smoothstep(polarEdge - zoneBlend, polarEdge + zoneBlend, latAbs + noiseOffset);
+          let w1 = 1 - w0 - w2;
+          if (w1 < 0) w1 = 0;
+          const sum = w0 + w1 + w2;
+          if (sum > 0) {
+            const inv = 1 / sum;
+            w0 *= inv; w1 *= inv; w2 *= inv;
+          }
+          weights = [w0, w1, w2];
         }
+        let alphaSum = 0;
+        let weightSum = 0;
+        let lifeFracWeighted = 0;
+        for (let zoneIndex = 0; zoneIndex < 3; zoneIndex++) {
+          const weight = weights[zoneIndex];
+          const lifeFrac = lifeFracs[zoneIndex];
+          if (weight <= 0) continue;
+          weightSum += weight;
+          if (lifeFrac <= 0) continue;
+          const zoneThreshold = zoneThresholds[zoneIndex];
+          if (zoneThreshold < 0) continue;
+          lifeFracWeighted += lifeFrac * weight;
+          let zoneAlpha = 1;
+          if (lifeFrac < 1) {
+            const thresh = Math.max(0, zoneThreshold - 0.02);
+            const lower = Math.max(0, thresh - softness);
+            const upper = Math.min(1, thresh + softness);
+            zoneAlpha = smoothstep(lower, upper, lifeScore[i]);
+          }
+          alphaSum += zoneAlpha * weight;
+        }
+        if (weightSum <= 0) continue;
+        let alpha = alphaSum / weightSum;
+        const lifeFrac = lifeFracWeighted / weightSum;
         const alphaScale = 0.15 + 0.85 * lifeFrac;
         alpha = Math.max(0, Math.min(1, alpha * alphaScale));
         if (alpha < 0.00001) continue;
