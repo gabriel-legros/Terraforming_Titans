@@ -575,7 +575,7 @@ class AchievementManager {
     if (currentPlanetParameters?.specialAttributes?.dynamicMass !== true) {
       return false;
     }
-    const wasteMass = ['garbage', 'trash', 'junk', 'scrapMetal'].reduce((total, key) => (
+    const wasteMass = ['garbage', 'trash', 'junk', 'scrapMetal', 'radioactiveWaste'].reduce((total, key) => (
       total + Math.max(0, Number(resources.surface[key]?.value) || 0)
     ), 0);
     const planetMassTons = this.getCurrentPlanetMassTons();
@@ -583,9 +583,10 @@ class AchievementManager {
   }
 
   getCurrentPlanetMassTons() {
-    const massKg = Number(terraforming?.celestialParameters?.mass);
-    if (massKg > 0) {
-      return massKg / 1000;
+    const currentPlanetaryMassKg = Number(terraforming.celestialParameters.currentPlanetaryMassKg) || 0;
+    const currentSurfaceMassKg = Number(terraforming.celestialParameters.currentSurfaceMassKg) || 0;
+    if (currentPlanetaryMassKg > 0 || currentSurfaceMassKg > 0) {
+      return Math.max(0, currentPlanetaryMassKg + currentSurfaceMassKg) / 1000;
     }
     return Math.max(0, Number(resources.underground.planetaryMass?.value) || 0);
   }
