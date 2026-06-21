@@ -950,6 +950,9 @@
               <h2 data-i18n="ui.settings.settings">Settings</h2>
               <div class="settings-grid">
                 <label class="settings-option">
+                  <input type="checkbox" id="dark-mode-toggle"> <span data-i18n="ui.settings.darkMode">Enable Dark Mode</span>
+                </label>
+                <label id="white-noise-settings-option" class="settings-option build-target-hidden" hidden>
                   <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span id="white-noise-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
@@ -980,9 +983,6 @@
                     <option value="cyanMagenta" data-i18n="ui.settings.colorblindPalettes.cyanMagenta">Cyan / Magenta</option>
                     <option value="grayscale" data-i18n="ui.settings.colorblindPalettes.grayscale">Grayscale</option>
                   </select>
-                </label>
-                <label class="settings-option">
-                  <input type="checkbox" id="dark-mode-toggle"> <span data-i18n="ui.settings.darkMode">Enable Dark Mode</span>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="show-space-storage-in-default-panel-toggle"> <span data-i18n="ui.settings.showSpaceResources">Show space resources in default resource panel</span>

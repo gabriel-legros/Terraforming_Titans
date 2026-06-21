@@ -82,7 +82,7 @@ function initializeDefaultGlobals(){
 
   resetStructureDisplayState();
   resetProjectDisplayState();
-  if (gameSettings.keepTabRunningAudio) {
+  if (GAME_FEATURES.whiteNoiseKeepAlive && gameSettings.keepTabRunningAudio) {
     startBackgroundSilence();
   }
 

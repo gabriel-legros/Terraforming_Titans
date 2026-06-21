@@ -823,6 +823,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       delete gameSettings.formatAutoBuildTargets;
       const cachedSettings = cacheSettingsElements();
       cachedSettings.autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
+      if (!GAME_FEATURES.whiteNoiseKeepAlive) {
+        gameSettings.keepTabRunningAudio = false;
+      }
       cachedSettings.keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
       cachedSettings.terraformingSubstepsToggle.checked = gameSettings.enableTerraformingSubsteps;
       cachedSettings.celsiusToggle.checked = gameSettings.useCelsius;
@@ -869,7 +872,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();
       }
-      if (gameSettings.keepTabRunningAudio) {
+      if (GAME_FEATURES.whiteNoiseKeepAlive && gameSettings.keepTabRunningAudio) {
         startBackgroundSilence();
       } else {
         stopBackgroundSilence();

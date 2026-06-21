@@ -47,6 +47,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Space travel/systems: `space.js`, `spaceUI.js`
 - Electron builds: `electron/main.cjs`, `electron/preload.cjs`, and `package.json` `build` config. Packaged saves are file-backed under the Electron user data `saves` directory, so Steam Auto-Cloud should target `Terraforming Titans/saves` under the platform app-data root.
 - Build-target features: browser and Steam/Electron builds must use `src/js/build-target.js` and the release scripts under `scripts/` to select platform-specific feature behavior. Keep gameplay state and save data shared; branch only the trigger/UI capability (for example, browser Patience rewards from save/export while Steam uses a direct daily claim button). Do not fork full systems or persist build-target flags in saves.
+- Browser-only white-noise tab keepalive is controlled by `GAME_FEATURES.whiteNoiseKeepAlive`; Steam/Electron hides the setting and forces the loop off when loading browser saves.
 - Build scripts live under `scripts/`: `build-browser.sh` copies the browser build to `dist/browser`, and `build-steam.sh` generates the unpacked Windows Steam build at `dist/win-unpacked`.
 - Import Resources centralized UI: `projects/ImportResourcesProjectUI.js` (shared card for space-mining/import spaceship projects; owns assignment step controls, assigned/available displays, and row-level project controls that persist/update across travel)
 - Autobuild: `autobuild.js`

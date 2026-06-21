@@ -8,6 +8,7 @@ function cacheSettingsElements() {
 
   settingsElements = {
     autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
+    whiteNoiseOption: document.getElementById('white-noise-settings-option'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
     whiteNoiseTooltip: document.getElementById('white-noise-tooltip'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
@@ -195,7 +196,9 @@ function addSettingsListeners() {
     });
   }
 
-  if (cached.keepTabRunningAudioToggle) {
+  cached.whiteNoiseOption.hidden = !GAME_FEATURES.whiteNoiseKeepAlive;
+  cached.whiteNoiseOption.classList.toggle('build-target-hidden', !GAME_FEATURES.whiteNoiseKeepAlive);
+  if (GAME_FEATURES.whiteNoiseKeepAlive && cached.keepTabRunningAudioToggle) {
     cached.keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
     cached.keepTabRunningAudioToggle.addEventListener('pointerdown', () => {
       if (!cached.keepTabRunningAudioToggle.checked) {
@@ -210,9 +213,12 @@ function addSettingsListeners() {
         stopBackgroundSilence();
       }
     });
+  } else {
+    gameSettings.keepTabRunningAudio = false;
+    stopBackgroundSilence();
   }
 
-  if (cached.whiteNoiseTooltip) {
+  if (GAME_FEATURES.whiteNoiseKeepAlive && cached.whiteNoiseTooltip) {
     attachDynamicInfoTooltip(
       cached.whiteNoiseTooltip,
       t(

@@ -44,6 +44,9 @@ function initializeSilentLoopAudio() {
 }
 
 function startBackgroundSilence() {
+  if (!GAME_FEATURES.whiteNoiseKeepAlive) {
+    return;
+  }
   initializeSilentLoopAudio();
   if (!silentLoopAudioElement) {
     return;

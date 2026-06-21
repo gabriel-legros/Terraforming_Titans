@@ -31,6 +31,10 @@
     gap: 4px;
   }
 
+.settings-option.build-target-hidden {
+    display: none;
+  }
+
   .settings-stat-line {
     margin: 0;
   }
