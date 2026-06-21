@@ -425,6 +425,7 @@ class ArtificialManager extends EffectableEntity {
         this.uiDirty = true;
         this.forceUIRefresh = false;
         this.constructionHoursPer50B = CONSTRUCTION_HOURS_PER_50B;
+        this.allowSpaceStoragePayments = true;
         this.prioritizeSpaceStorage = true;
         this.autoStart = false;
         this.autoStore = false;
@@ -1132,6 +1133,14 @@ class ArtificialManager extends EffectableEntity {
         return Math.max(durationMs || 0, 0) > MAX_SHELL_DURATION_MS;
     }
 
+    setAllowSpaceStoragePayments(value) {
+        this.allowSpaceStoragePayments = !!value;
+    }
+
+    getAllowSpaceStoragePayments() {
+        return this.allowSpaceStoragePayments;
+    }
+
     setPrioritizeSpaceStorage(value) {
         this.prioritizeSpaceStorage = !!value;
     }
@@ -1243,7 +1252,7 @@ class ArtificialManager extends EffectableEntity {
         return `${baseName} ${count + 1}`;
     }
 
-    getTotalPaymentAvailability(resourceKey, allowStorage = this.getPrioritizeSpaceStorage()) {
+    getTotalPaymentAvailability(resourceKey, allowStorage = this.getAllowSpaceStoragePayments()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const colonyRes = resources.colony[resourceKey];
         const colonyAvailable = colonyRes ? colonyRes.value : 0;
@@ -1254,7 +1263,7 @@ class ArtificialManager extends EffectableEntity {
         return colonyAvailable + storageAvailable;
     }
 
-    canCoverCost(cost, allowStorage = this.getPrioritizeSpaceStorage()) {
+    canCoverCost(cost, allowStorage = this.getAllowSpaceStoragePayments()) {
         for (const key of Object.keys(cost)) {
             const required = Math.max(cost[key] || 0, 0);
             if (!required) continue;
@@ -1306,7 +1315,7 @@ class ArtificialManager extends EffectableEntity {
         return remaining;
     }
 
-    getResourceAvailability(cost, allowStorage = this.getPrioritizeSpaceStorage()) {
+    getResourceAvailability(cost, allowStorage = this.getAllowSpaceStoragePayments()) {
         const availability = {};
         Object.keys(cost).forEach((key) => {
             const required = Math.max(cost[key] || 0, 0);
@@ -1382,9 +1391,9 @@ class ArtificialManager extends EffectableEntity {
         return { status: nextState.canStart ? 'ready' : 'prepaid', state: nextState };
     }
 
-    pullResources(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
+    pullResources(cost, allowStorage = this.getAllowSpaceStoragePayments(), prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
-        const useStorage = prioritizeStorage && !!storageProj;
+        const useStorage = allowStorage && !!storageProj;
         const plan = {};
 
         for (const key of Object.keys(cost)) {
@@ -1824,7 +1833,7 @@ class ArtificialManager extends EffectableEntity {
         }
         if (!request.metal && !request.silicon) return false;
 
-        const deduction = this.pullResources(request, prioritizeStorage);
+        const deduction = this.pullResources(request, this.getAllowSpaceStoragePayments(), prioritizeStorage);
         if (!deduction) return false;
         this.activeProject.stockpile.metal += request.metal || 0;
         this.activeProject.stockpile.silicon += request.silicon || 0;
@@ -2479,6 +2488,7 @@ class ArtificialManager extends EffectableEntity {
         }
         return {
             enabled: this.enabled,
+            allowSpaceStoragePayments: this.allowSpaceStoragePayments,
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
             autoStart: this.autoStart,
             autoStore: this.autoStore,
@@ -2499,6 +2509,9 @@ class ArtificialManager extends EffectableEntity {
 
     loadState(state) {
         if (!state) return;
+        this.allowSpaceStoragePayments = Object.prototype.hasOwnProperty.call(state, 'allowSpaceStoragePayments')
+            ? state.allowSpaceStoragePayments !== false
+            : state.prioritizeSpaceStorage !== false;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
         this.autoStart = state.autoStart === true;
         this.autoStore = state.autoStore === true;

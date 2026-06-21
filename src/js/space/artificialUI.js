@@ -873,7 +873,7 @@ function getMaxStashAmount(resource, project, manager) {
   const colonyRes = resources && resources.colony ? resources.colony[resource] : null;
   const colonyAvailable = colonyRes ? colonyRes.value : 0;
   const storageProj = projectManager && projectManager.projects ? projectManager.projects.spaceStorage : null;
-  const allowStorage = manager.getPrioritizeSpaceStorage();
+  const allowStorage = manager.getAllowSpaceStoragePayments();
   const storageAvailable = allowStorage && storageProj && storageProj.getAvailableStoredResource
     ? storageProj.getAvailableStoredResource(resource)
     : 0;
@@ -1310,16 +1310,36 @@ function ensureArtificialLayout() {
   durationRow.appendChild(durationInfo);
   costs.appendChild(durationRow);
 
-  const priorityLabel = document.createElement('label');
+  const priorityLabel = document.createElement('div');
   priorityLabel.className = 'artificial-priority';
+  const allowStorageLabel = document.createElement('label');
+  allowStorageLabel.className = 'artificial-inline-checkbox';
+  const allowStorageCheckbox = document.createElement('input');
+  allowStorageCheckbox.type = 'checkbox';
+  allowStorageCheckbox.checked = true;
+  artificialUICache.allowSpaceStoragePayments = allowStorageCheckbox;
+  allowStorageLabel.appendChild(allowStorageCheckbox);
+  const allowStorageText = document.createElement('span');
+  allowStorageText.textContent = getArtificialText('costs.allowSpaceStorage', 'Allow');
+  allowStorageLabel.appendChild(allowStorageText);
+  priorityLabel.appendChild(allowStorageLabel);
+  const priorityJoinText = document.createElement('span');
+  priorityJoinText.textContent = getArtificialText('costs.allowAndPrioritizeJoin', 'and');
+  priorityLabel.appendChild(priorityJoinText);
+  const priorityCheckboxLabel = document.createElement('label');
+  priorityCheckboxLabel.className = 'artificial-inline-checkbox';
   const priorityCheckbox = document.createElement('input');
   priorityCheckbox.type = 'checkbox';
   priorityCheckbox.checked = true;
   artificialUICache.priority = priorityCheckbox;
-  priorityLabel.appendChild(priorityCheckbox);
+  priorityCheckboxLabel.appendChild(priorityCheckbox);
   const priorityText = document.createElement('span');
-  priorityText.textContent = getArtificialText('costs.prioritizeSpaceStorage', 'Allow and prioritize space storage payments');
-  priorityLabel.appendChild(priorityText);
+  priorityText.textContent = getArtificialText('costs.prioritizeSpaceStorage', 'prioritize');
+  priorityCheckboxLabel.appendChild(priorityText);
+  priorityLabel.appendChild(priorityCheckboxLabel);
+  const prioritySuffix = document.createElement('span');
+  prioritySuffix.textContent = getArtificialText('costs.spaceStoragePayments', 'space storage payments');
+  priorityLabel.appendChild(prioritySuffix);
   costs.appendChild(priorityLabel);
 
   const automationRow = document.createElement('div');
@@ -1881,6 +1901,12 @@ function ensureArtificialLayout() {
     const project = manager.activeProject;
     project && manager.setActiveProjectName(nameInput.value);
     project || manager.setDraftSelection({ name: nameInput.value });
+  });
+  allowStorageCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAllowSpaceStoragePayments(allowStorageCheckbox.checked);
+    }
+    updateArtificialUI();
   });
   priorityCheckbox.addEventListener('change', () => {
     if (artificialManager) {
@@ -3096,8 +3122,12 @@ function updateArtificialUI(options = {}) {
   applyStarContextBounds(force);
   applyRadiusBounds();
   applyRingBounds();
+  if (artificialUICache.allowSpaceStoragePayments) {
+    artificialUICache.allowSpaceStoragePayments.checked = manager.getAllowSpaceStoragePayments();
+  }
   if (artificialUICache.priority) {
     artificialUICache.priority.checked = manager.getPrioritizeSpaceStorage();
+    artificialUICache.priority.disabled = !manager.getAllowSpaceStoragePayments();
   }
   if (artificialUICache.autoStart) {
     artificialUICache.autoStart.checked = manager.getAutoStart();

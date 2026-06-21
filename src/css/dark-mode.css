@@ -2279,7 +2279,7 @@ body.dark-mode {
     color: #e7ecf7;
 }
 
-.dark-mode .artificial-cost-row span:first-child {
+.dark-mode .artificial-cost-row > span:first-child {
     color: #8fa3c8;
 }
 
@@ -2303,7 +2303,7 @@ body.dark-mode {
     color: #8fa3c8;
 }
 
-.dark-mode .artificial-gain-row span:first-child {
+.dark-mode .artificial-gain-row > span:first-child {
     color: #e7ecf7;
 }
 

@@ -388,7 +388,10 @@ setLanguageData({
       costs: {
         title: 'Materials & Time',
         constructionTime: 'Construction time',
-        prioritizeSpaceStorage: 'Allow and prioritize space storage payments',
+        allowSpaceStorage: 'Allow',
+        allowAndPrioritizeJoin: 'and',
+        prioritizeSpaceStorage: 'prioritize',
+        spaceStoragePayments: 'space storage payments',
         autoStart: 'Auto Start',
         autoStore: 'Auto Store',
         autoStoreWithMaxStockpile: 'with max stockpile',

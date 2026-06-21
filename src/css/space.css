@@ -510,7 +510,7 @@
   font-weight: 600;
 }
 
-.artificial-cost-row span:first-child {
+.artificial-cost-row > span:first-child {
   color: var(--space-fg-muted);
 }
 
@@ -557,7 +557,7 @@
   gap: 6px;
 }
 
-.artificial-gain-row span:first-child {
+.artificial-gain-row > span:first-child {
   font-weight: 700;
   color: var(--space-fg);
 }
@@ -603,7 +603,7 @@
   color: #ff6b6b;
 }
 
-.artificial-effect-penalty span:first-child {
+.artificial-effect-penalty > span:first-child {
   white-space: pre-line;
 }
 
@@ -617,6 +617,12 @@
   gap: 8px;
   color: var(--space-fg-muted);
   font-size: 13px;
+}
+
+.artificial-inline-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .artificial-automation-options {
