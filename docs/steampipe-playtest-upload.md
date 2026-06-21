@@ -17,7 +17,7 @@ Inside the packaged app, the project content should stay limited to the runtime 
 - `electron/`
 - `package.json`
 
-The Steam depot itself must include the full generated Electron runtime from `dist/win-unpacked`, including `Terraforming Titans.exe`, DLLs, `.pak` files, locale files, `resources/app.asar`, and license files.
+The Steam depot itself must include the full generated Electron runtime from `dist/win-unpacked`, including `Terraforming Titans.exe`, DLLs, `.pak` files, locale files, `resources/app/`, and license files. The current Electron package uses `"asar": false`, so the app payload is a loose `resources/app/` directory rather than `resources/app.asar`.
 
 ## Open Steamworks Values
 We already know:
@@ -82,7 +82,13 @@ C:\SteamPipe\TerraformingTitansPlaytest\
       three-0.158.0-MIT.txt
     locales\
     resources\
-      app.asar
+      app\
+        index.html
+        src\
+        assets\
+        vendor\
+        electron\
+        package.json
     *.dll
     *.pak
     *.bin
@@ -116,10 +122,10 @@ robocopy "$extractRoot\sdk\tools\ContentBuilder\builder" "$steamPipeRoot\builder
 ```
 
 ## Prepare Content
-From the repo root, build the Electron package:
+From the repo root, build the Steam-target Electron package. Use `scripts/build-steam.sh`, not raw `npm run dist:dir`, because the script temporarily writes `GAME_BUILD_TARGET = 'steam'` into `src/js/build-target.js` before packaging and restores the source file afterward.
 
 ```powershell
-cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm run dist:dir"
+cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && bash scripts/build-steam.sh"
 ```
 
 Then mirror the generated Windows package into the SteamPipe content folder:
@@ -137,7 +143,7 @@ Full staging command from this repo:
 $repo = "C:\Users\gabri\Documents\Terraforming Titans"
 $root = "C:\SteamPipe\TerraformingTitansPlaytest"
 
-cmd.exe /c "cd /d `"$repo`" && npm run dist:dir"
+cmd.exe /c "cd /d `"$repo`" && bash scripts/build-steam.sh"
 
 New-Item -ItemType Directory -Force -Path "$root\content", "$root\scripts", "$root\output" | Out-Null
 robocopy "$repo\dist\win-unpacked" "$root\content" /MIR
@@ -267,7 +273,8 @@ In Steamworks:
 3. Confirm the uploaded build contains the expected manifest.
 4. Check the depot manifest includes:
    - `Terraforming Titans.exe`
-   - `resources/app.asar`
+   - `resources/app/index.html`
+   - `resources/app/src/js/build-target.js`
    - Electron runtime DLLs and `.pak` files
    - `LICENSE.electron.txt`
    - `LICENSES.chromium.html`
@@ -278,7 +285,8 @@ In Steamworks:
 Before upload:
 
 - `Terraforming Titans.exe` is present in `content`.
-- `resources\app.asar` is present in `content`.
+- `resources\app\index.html` is present in `content`.
+- `resources\app\src\js\build-target.js` is present in `content` and contains `GAME_BUILD_TARGET = 'steam'`.
 - `LICENSE.electron.txt` and `LICENSES.chromium.html` are present in `content`.
 - `LICENSES\phaser-3.55.2-MIT.txt` and `LICENSES\three-0.158.0-MIT.txt` are present in `content`.
 - `locales`, DLLs, `.pak` files, and Electron runtime files are present in `content`.

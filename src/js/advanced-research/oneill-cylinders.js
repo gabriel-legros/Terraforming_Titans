@@ -111,13 +111,16 @@ function getOneillSectorCapMultiplier(space) {
   return Math.max(1, Math.min(10, 1 + bonus));
 }
 
-function getOneillCylinderCapacity(galaxy, space) {
+function getOneillCylinderCapacity(galaxy, space, options = {}) {
   const capacityPerSector = ONEILL_CAPACITY_PER_SECTOR * getOneillSectorCapMultiplier(space);
   const sectors = getUhfControlledSectors(galaxy);
   if (!sectors.length) {
     return capacityPerSector;
   }
-  if (!space?.isBooleanFlagSet?.(HYPERLANE_FLAG)) {
+  const hyperlaneEnabled = options.ignoreWorldDisabled === true
+    ? space?.booleanFlags?.has(HYPERLANE_FLAG)
+    : space?.isBooleanFlagSet?.(HYPERLANE_FLAG);
+  if (!hyperlaneEnabled) {
     return sectors.length * capacityPerSector;
   }
   let total = 0;

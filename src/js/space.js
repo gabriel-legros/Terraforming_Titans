@@ -1980,7 +1980,7 @@ class SpaceManager extends EffectableEntity {
         if (!(cylinders > 0)) {
             return 0;
         }
-        const capacity = getOneillCylinderCapacity(galaxyManager, this);
+        const capacity = getOneillCylinderCapacity(galaxyManager, this, { ignoreWorldDisabled: true });
         return Math.min(cylinders, capacity);
     }
 
