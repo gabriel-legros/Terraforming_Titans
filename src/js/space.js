@@ -117,6 +117,26 @@ function getSpecialSeedKeyFromWorldData(source) {
         || null;
 }
 
+function shouldPreserveRandomWorldGravityPenaltyDisabled(status, seed) {
+    const specialSeedKey = getSpecialSeedKeyFromWorldData(status) || seed;
+    const definition = getSpecialSeedDefinition(specialSeedKey);
+    return definition?.overrides?.gravityPenaltyEnabled === false;
+}
+
+function normalizeRandomWorldGravityPenaltyStatus(status, seed) {
+    if (!status || !status.original || shouldPreserveRandomWorldGravityPenaltyDisabled(status, seed)) {
+        return;
+    }
+
+    status.original.gravityPenaltyEnabled = true;
+    if (status.original.override) {
+        status.original.override.gravityPenaltyEnabled = true;
+    }
+    if (status.original.merged) {
+        status.original.merged.gravityPenaltyEnabled = true;
+    }
+}
+
 function getDominionIdFromWorldData(source) {
     if (!source) {
         return null;
@@ -3417,9 +3437,10 @@ class SpaceManager extends EffectableEntity {
 
         if (savedData.randomWorldStatuses) {
             this.randomWorldStatuses = savedData.randomWorldStatuses;
-            Object.values(this.randomWorldStatuses)
-                .filter(Boolean)
-                .forEach((entry) => {
+            Object.keys(this.randomWorldStatuses)
+                .forEach((seed) => {
+                    const entry = this.randomWorldStatuses[seed];
+                    if (!entry) return;
                     if (!Number.isFinite(Number(entry.populationCapacity))) {
                         entry.populationCapacity = Math.max(0, Number(entry.colonists) || 0);
                     }
@@ -3427,6 +3448,7 @@ class SpaceManager extends EffectableEntity {
                     entry.foundryLandFactor = entry.foundryLandFactor || 0;
                     entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
                     entry.dominionId = entry.dominionId || getDominionIdFromWorldData(entry);
+                    normalizeRandomWorldGravityPenaltyStatus(entry, seed);
                     assignSector(entry);
                     sanitizeCachedHazards(entry);
                 });
@@ -3451,6 +3473,7 @@ class SpaceManager extends EffectableEntity {
                 }
                 const status = this.randomWorldStatuses[seed];
                 if (!status) return;
+                normalizeRandomWorldGravityPenaltyStatus(status, seed);
                 const hazardList = (Array.isArray(hazards) ? hazards : [String(hazards)])
                     .map((hazardKey) => String(hazardKey))
                     .filter((hazardKey) => hazardKey && hazardKey !== 'none' && SPACE_HAZARD_KEY_SET.has(hazardKey));
