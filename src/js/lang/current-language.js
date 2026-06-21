@@ -4596,7 +4596,7 @@ setLanguageData({
           requirement: 'Have a dynamic mass planet where the mass of all waste is greater than half the mass of the planet.'
         },
         paulBirch: {
-          title: 'Paul Birch',
+          title: 'Paul Birch would be proud',
           requirement: 'Build and terraform a world around a supermassive black hole.'
         },
         timeForRetirement: {
