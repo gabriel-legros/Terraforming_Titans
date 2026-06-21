@@ -626,7 +626,33 @@ class AchievementManager {
   }
 
   onAchievementUnlocked(definition) {
-    // Future Steam integration should publish from this logic-side hook.
+    this.publishSteamAchievement(definition.id);
+  }
+
+  publishSteamAchievement(id) {
+    if (GAME_BUILD_TARGET !== 'steam' || window.steamAchievements === undefined) {
+      return;
+    }
+    window.steamAchievements.activate(this.getSteamAchievementId(id));
+  }
+
+  syncSteamAchievements() {
+    if (GAME_BUILD_TARGET !== 'steam' || window.steamAchievements === undefined) {
+      return;
+    }
+    const ids = [];
+    this.definitions.forEach((definition) => {
+      if (this.isAchieved(definition.id)) {
+        ids.push(this.getSteamAchievementId(definition.id));
+      }
+    });
+    if (ids.length > 0) {
+      window.steamAchievements.syncUnlocked(ids);
+    }
+  }
+
+  getSteamAchievementId(id) {
+    return String(id).toUpperCase();
   }
 
   update() {
@@ -713,5 +739,6 @@ class AchievementManager {
     this.tracking.hazardPreservationObserved = savedTracking.hazardPreservationObserved === true;
     this.pendingUnlocks = [];
     this.update();
+    this.syncSteamAchievements();
   }
 }

@@ -23,6 +23,7 @@ const GAME_FEATURES = {
 };
 BUILD_TARGET
 npx electron-builder --win --dir
+cp "$ROOT_DIR/node_modules/steamworks.js/dist/win64/steam_api64.dll" "$OUT_DIR/steam_api64.dll"
 BUILD_TARGET_PATH="$OUT_DIR/resources/app/src/js/build-target.js" node <<'NODE'
 const fs = require('fs');
 const data = fs.readFileSync(process.env.BUILD_TARGET_PATH, 'utf8');

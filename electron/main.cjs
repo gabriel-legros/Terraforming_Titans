@@ -3,11 +3,47 @@ const fs = require('fs');
 const path = require('path');
 
 const appDisplayName = 'Terraforming Titans';
+const steamAppId = Number(process.env.TERRAFORMING_TITANS_STEAM_APP_ID) || 4876760;
 const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.png');
 const preloadPath = path.join(__dirname, 'preload.cjs');
 const saveSlotNames = new Set(['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
 
 app.setName(appDisplayName);
+
+function isSteamBuildTarget() {
+  const buildTargetPath = path.join(__dirname, '..', 'src', 'js', 'build-target.js');
+  return fs.existsSync(buildTargetPath)
+    && fs.readFileSync(buildTargetPath, 'utf8').includes("GAME_BUILD_TARGET = 'steam'");
+}
+
+function createSteamIntegration() {
+  const integration = {
+    enabled: false,
+    initialized: false,
+    client: null,
+    error: ''
+  };
+
+  if (!isSteamBuildTarget()) {
+    return integration;
+  }
+
+  integration.enabled = true;
+  try {
+    const steamworks = require('steamworks.js');
+    steamworks.electronEnableSteamOverlay();
+    integration.client = steamworks.init(steamAppId);
+    integration.initialized = true;
+    console.log(`Steamworks initialized for AppID ${steamAppId}.`);
+  } catch (error) {
+    integration.error = error && error.message ? error.message : String(error);
+    console.warn(`Steamworks unavailable: ${integration.error}`);
+  }
+
+  return integration;
+}
+
+const steamIntegration = createSteamIntegration();
 
 function getSaveStoragePath(key) {
   if (key === 'saveSlotDates') {
@@ -61,6 +97,46 @@ function registerSaveStorageHandlers() {
   });
   ipcMain.on('save-storage:removeItem', (event, key) => {
     event.returnValue = removeSaveStorageItem(key);
+  });
+}
+
+function getSteamAchievementApiName(id) {
+  return String(id).toUpperCase();
+}
+
+function activateSteamAchievement(id) {
+  if (!steamIntegration.initialized) {
+    return false;
+  }
+
+  const achievementId = getSteamAchievementApiName(id);
+  try {
+    if (steamIntegration.client.achievement.isActivated(achievementId)) {
+      return true;
+    }
+    const activated = steamIntegration.client.achievement.activate(achievementId);
+    const stored = steamIntegration.client.stats.store();
+    if (activated && stored) {
+      console.log(`Steam achievement activated: ${achievementId}`);
+      return true;
+    }
+  } catch (error) {
+    const message = error && error.message ? error.message : String(error);
+    console.warn(`Steam achievement activation failed for ${achievementId}: ${message}`);
+  }
+  return false;
+}
+
+function registerSteamAchievementHandlers() {
+  const { ipcMain } = require('electron');
+  ipcMain.on('steam-achievements:activate', (_event, id) => {
+    activateSteamAchievement(id);
+  });
+  ipcMain.on('steam-achievements:syncUnlocked', (_event, ids) => {
+    if (!Array.isArray(ids)) {
+      return;
+    }
+    ids.forEach((id) => activateSteamAchievement(id));
   });
 }
 
@@ -119,6 +195,7 @@ app.whenReady().then(() => {
     callback(false);
   });
   registerSaveStorageHandlers();
+  registerSteamAchievementHandlers();
   createWindow();
 
   app.on('activate', () => {

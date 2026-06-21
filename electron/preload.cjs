@@ -11,3 +11,12 @@ contextBridge.exposeInMainWorld('electronSaveStorage', {
     return ipcRenderer.sendSync('save-storage:removeItem', String(key));
   }
 });
+
+contextBridge.exposeInMainWorld('steamAchievements', {
+  activate(id) {
+    ipcRenderer.send('steam-achievements:activate', String(id));
+  },
+  syncUnlocked(ids) {
+    ipcRenderer.send('steam-achievements:syncUnlocked', ids.map((id) => String(id)));
+  }
+});

@@ -72,5 +72,8 @@
     "transformIgnorePatterns": [
       "/node_modules/(?!jsdom|abab|cssom|cssstyle|data-urls|decimal.js|domexception|html-encoding-sniffer|is-potential-custom-element-name|nwsapi|parse5|saxes|symbol-tree|tough-cookie|w3c-xmlserializer|webidl-conversions|whatwg-url|xml-name-validator)"
     ]
+  },
+  "dependencies": {
+    "steamworks.js": "^0.4.0"
   }
 }

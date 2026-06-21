@@ -55,6 +55,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Solis shop/quests: `solis.js`, `solisUI.js`
 - Patience: `hope/patienceUI.js` (terraforming patience banking/claim UI)
 - Achievements: `src/js/save-settings/achievements.js`, `src/js/save-settings/achievementsSubtab.js` (derived Save & Settings achievement list)
+- Steam achievements: Steam builds initialize `steamworks.js` in `electron/main.cjs` only when packaged with `GAME_BUILD_TARGET = 'steam'`; `AchievementManager` publishes uppercase versions of its internal ids through `window.steamAchievements` on unlock/load resync, and the Electron main process also uppercases before calling Steam.
 - Gold asteroid event: `gold-asteroid.js`
 - ResearchManager persists across travel; regular research is reset while advanced is retained.
 
