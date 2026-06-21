@@ -6,6 +6,11 @@ const luxuryResources = {
   androids: true
 };
 
+const colonyOutputNeedResources = {
+  energy: true,
+  food: true
+};
+
 const colonyConstructors = {
   aerostat_colony: { className: 'Aerostat', file: 'aerostat.js' },
   t7_colony: { className: 'Ecumenopolis', file: 'Ecumenopolis.js' }
@@ -60,6 +65,7 @@ class Colony extends Building {
     this.autoUpgradeEnabled = false;
     this.currentNeedDemand = {};
     this.currentNeedFulfilled = {};
+    this.needProductivity = {};
     
   }
 
@@ -263,17 +269,52 @@ class Colony extends Building {
     return modifiedConsumption;
   }
 
-  updateProductivity(resources, deltaTime) {
-    let minRatio = this.calculateBaseMinRatio(resources, deltaTime);
-    const populationRatio = this.getConsumptionRatio();
+  calculateNeedProductivityMap(resources) {
+    const result = {};
+    const consumption = this.getConsumption();
+    for (const category in consumption) {
+      for (const resource in consumption[category]) {
+        const isLuxuryResource = luxuryResources[resource] !== undefined;
+        result[resource] = isLuxuryResource && !this.isLuxuryResourceActive(resource)
+          ? 0
+          : Math.max(0, Math.min(1, resources[category][resource].availabilityRatio));
+      }
+    }
+    return result;
+  }
 
+  calculateOutputNeedProductivity(needProductivity) {
+    let minRatio = Infinity;
+    const colonyConsumption = this.getConsumption().colony || {};
+    for (const resource in colonyOutputNeedResources) {
+      if (resource in colonyConsumption) {
+        minRatio = Math.min(minRatio, needProductivity[resource] ?? 1);
+      }
+    }
+    return minRatio === Infinity ? 1 : minRatio;
+  }
+
+  getTargetProductivity(resources, deltaTime) {
+    if (this.active === 0n) {
+      return 0;
+    }
+
+    this.needProductivity = this.calculateNeedProductivityMap(resources);
+    let minRatio = this.calculateOutputNeedProductivity(this.needProductivity);
+    const populationRatio = this.getConsumptionRatio();
     minRatio = Math.min(minRatio, populationRatio);
 
-    const targetProductivity = Math.max(0, Math.min(1, minRatio));
+    return Math.max(0, Math.min(1, minRatio));
+  }
+
+  updateProductivity(resources, deltaTime) {
+    const targetProductivity = this.getTargetProductivity(resources, deltaTime);
+
     const difference = Math.abs(targetProductivity - this.productivity);
     const baseFactor = difference < 0.05 ? 0.01 : 1;
     const dampingFactor = Building.getScaledDampingFactor(baseFactor, deltaTime);
     this.productivity += dampingFactor * (targetProductivity - this.productivity);
+    this.displayProductivity = this.productivity;
   }
 
   updateNeedsRatio(resources, deltaTime) {
@@ -327,22 +368,24 @@ class Colony extends Building {
         }
   
         const consumptionRatio = this.getConsumptionRatioForResource(category, resource);
-        const { amount } = this.getConsumptionResource(category, resource);
+        const { amount, ignoreProductivity } = this.getConsumptionResource(category, resource);
         const baseConsumption = this.activeNumber * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
-        const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
+        const fullConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
+        const needProductivity = ignoreProductivity ? 1 : (this.needProductivity[resource] ?? 1);
+        const productiveConsumption = fullConsumption * needProductivity;
 
         const availableAmount = Math.max(
           0,
           (resources[category][resource].value || 0) + (accumulatedChanges[category][resource] || 0)
         );
-        const fulfilledConsumption = Math.min(scaledConsumption, availableAmount);
+        const fulfilledConsumption = Math.min(productiveConsumption, availableAmount);
   
         // Track actual consumption in the building
         this.currentConsumption[category][resource] = fulfilledConsumption;
         if (category === 'colony' && resource === 'energy') {
-          this.trackEnergyFactoryHeatConsumption(fulfilledConsumption, scaledConsumption);
+          this.trackEnergyFactoryHeatConsumption(fulfilledConsumption, productiveConsumption);
         }
-        this.currentNeedDemand[resource] = (this.currentNeedDemand[resource] || 0) + scaledConsumption;
+        this.currentNeedDemand[resource] = (this.currentNeedDemand[resource] || 0) + fullConsumption;
         this.currentNeedFulfilled[resource] = (this.currentNeedFulfilled[resource] || 0) + fulfilledConsumption;
   
         // Accumulate consumption changes (as negative values)
@@ -350,7 +393,7 @@ class Colony extends Building {
   
         // Update consumption rate for the resource
         resources[category][resource].modifyRate(
-          - (scaledConsumption * (1000 / deltaTime)),
+          - (fullConsumption * (1000 / deltaTime)),
           this.displayName,
           'building'
         );
