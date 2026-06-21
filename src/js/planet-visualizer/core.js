@@ -984,8 +984,8 @@
         }
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));
         z[zone].ice = Math.max(0, Math.min(1, Number(i) || 0));
-        z[zone].life = Math.max(0, Math.min(0.5, Number(b) || 0));
-        z[zone].hazardousLife = Math.max(0, Math.min(0.5, Number(hb) || 0));
+        z[zone].life = Math.max(0, Math.min(0.75, Number(b) || 0));
+        z[zone].hazardousLife = Math.max(0, Math.min(0.75, Number(hb) || 0));
         const weight = t?.getZoneWeight ? t.getZoneWeight(zone) : 1;
         waterSum += z[zone].water * weight;
         lifeSum += z[zone].life * weight;
@@ -1011,8 +1011,8 @@
         ? Math.max(0, Math.min(1, t.luminosity.cloudFraction))
         : avgWater;
       this.viz.coverage.water = avgWater * 100;
-      this.viz.coverage.life = Math.min(0.5, avgLife) * 100;
-      this.viz.coverage.hazardousLife = Math.min(0.5, avgHazardousLife) * 100;
+      this.viz.coverage.life = Math.min(0.75, avgLife) * 100;
+      this.viz.coverage.hazardousLife = Math.min(0.75, avgHazardousLife) * 100;
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
     }
 
