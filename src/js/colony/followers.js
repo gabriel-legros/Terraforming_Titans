@@ -745,7 +745,15 @@ class FollowersManager extends EffectableEntity {
   }
 
   recalculateGalacticPopulation() {
-    this.galacticPopulation = spaceManager.galacticPopulation;
+    const nextPopulation = Math.max(0, spaceManager.galacticPopulation || 0);
+    if (nextPopulation === this.galacticPopulation) {
+      return;
+    }
+    const galacticPercent = this.getGalacticBelieverPercent();
+    this.galacticPopulation = nextPopulation;
+    this.galacticBelievers = galacticPercent * this.galacticPopulation;
+    this.galacticBelieverPercentFallback = galacticPercent;
+    this.markUIDirty();
   }
 
   initializeFaithIfNeeded() {
@@ -1484,6 +1492,7 @@ class FollowersManager extends EffectableEntity {
     if (this.assignmentMode === 'weight') {
       this.getAssignmentsSnapshot();
     }
+    this.recalculateGalacticPopulation();
     this.updateFaith(deltaTime);
   }
 }
