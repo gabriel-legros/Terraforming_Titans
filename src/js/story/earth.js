@@ -348,7 +348,7 @@ progressEarth.chapters.push(
     chapter: 50,
     activePlanet: 'earth',
     title: '',
-    narrative: "Alright.  It's a bit hot now.  It's going to take a few million years to cool...  It will be faster if I just... take most of this heat?  I can use it to refill some of my own batteries.  Not that they need refilling of course but...  heh why not.  Let's take a nice lava bath.",
+    narrative: "Alright.  It's a bit hot now.  It's going to take a few million years to cool...  It will be faster if I just... take most of this heat?  I can use it to refill some of my own batteries.  Not that they need refilling of course but...  heh why not.  Let's take a nice lava bath.  I have to credit Alpha there...  I was not in shape to discover how to literally reverse entropy myself back then.",
     prerequisites: ['earth.50.0a'],
     objectives: [],
     reward: [
