@@ -549,7 +549,7 @@ class AchievementManager {
   isKardashevIComplete() {
     const colonyEnergy = Math.max(0, Number(resources.colony.energy.productionRate) || 0);
     const spaceEnergy = Math.max(0, Number(resources.space.energy.productionRate) || 0);
-    return colonyEnergy + spaceEnergy >= 2e32;
+    return colonyEnergy + spaceEnergy >= 2e17;
   }
 
   isKardashevIIComplete() {
