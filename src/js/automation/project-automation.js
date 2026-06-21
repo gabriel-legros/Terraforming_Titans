@@ -870,6 +870,12 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         [resourceKey]: source.spaceStorageSingleResourceAmountWithdrawLimit
       };
     }
+    if (resourceKey === 'liquidWater' && Object.prototype.hasOwnProperty.call(source, 'waterWithdrawTarget')) {
+      filtered.waterWithdrawTarget = source.waterWithdrawTarget === 'surface' ? 'surface' : 'colony';
+    }
+    if (resourceKey === 'hydrogen' && Object.prototype.hasOwnProperty.call(source, 'hydrogenTransferTarget')) {
+      filtered.hydrogenTransferTarget = source.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+    }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
       filtered.transferWeight = Object.prototype.hasOwnProperty.call(weightSource, resourceKey)
         ? this.deepClone(weightSource[resourceKey])
@@ -1064,6 +1070,10 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourcePressureWithdrawLimitPa');
     const hasAmountLimit = Object.prototype.hasOwnProperty.call(settings, 'amountWithdrawLimit')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceAmountWithdrawLimit');
+    const hasWaterWithdrawTarget = resourceKey === 'liquidWater'
+      && Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget');
+    const hasHydrogenTransferTarget = resourceKey === 'hydrogen'
+      && Object.prototype.hasOwnProperty.call(settings, 'hydrogenTransferTarget');
     const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
     const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
     const weightHasKey = Object.prototype.hasOwnProperty.call(weightSource, resourceKey);
@@ -1071,7 +1081,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const biomassDensityLimitHasKey = Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey);
     const pressureLimitHasKey = Object.prototype.hasOwnProperty.call(pressureLimitSource, resourceKey);
     const amountLimitHasKey = Object.prototype.hasOwnProperty.call(amountLimitSource, resourceKey);
-    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !biomassDensityLimitHasKey && !pressureLimitHasKey && !amountLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits && !hasBiomassDensityLimit && !hasPressureLimit && !hasAmountLimit) {
+    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !biomassDensityLimitHasKey && !pressureLimitHasKey && !amountLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits && !hasBiomassDensityLimit && !hasPressureLimit && !hasAmountLimit && !hasWaterWithdrawTarget && !hasHydrogenTransferTarget) {
       return false;
     }
 
@@ -1083,6 +1093,8 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const beforeBiomassDensityLimit = project.resourceBiomassDensityWithdrawLimits?.[resourceKey] === true;
     const beforePressureLimit = project.resourcePressureWithdrawLimits?.[resourceKey];
     const beforeAmountLimit = project.resourceAmountWithdrawLimits?.[resourceKey];
+    const beforeWaterWithdrawTarget = project.waterWithdrawTarget;
+    const beforeHydrogenTransferTarget = project.hydrogenTransferTarget;
     const canonicalCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     const beforeSelectedResourceCount = Array.isArray(project.selectedResources)
       ? project.selectedResources.filter((entry) => entry?.resource === resourceKey).length
@@ -1188,6 +1200,14 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
           : settings.spaceStorageSingleResourceAmountWithdrawLimit);
       project.setAmountWithdrawLimit(resourceKey, amountLimit);
       changed = changed || !this.areSettingsEqual(beforeAmountLimit, project.resourceAmountWithdrawLimits?.[resourceKey]);
+    }
+    if (hasWaterWithdrawTarget) {
+      project.waterWithdrawTarget = settings.waterWithdrawTarget === 'surface' ? 'surface' : 'colony';
+      changed = changed || beforeWaterWithdrawTarget !== project.waterWithdrawTarget;
+    }
+    if (hasHydrogenTransferTarget) {
+      project.hydrogenTransferTarget = settings.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+      changed = changed || beforeHydrogenTransferTarget !== project.hydrogenTransferTarget;
     }
     if (hasSelectedFlag) {
       if (!Array.isArray(project.selectedResources)) {

@@ -61,19 +61,34 @@ function createSpaceStorageProject(selectedResources = []) {
     category: 'mega',
     selectedResources: selectedResources.map(entry => ({ ...entry })),
     resourceTransferModes: {},
+    resourceTransferWeights: {},
+    resourceImportLimitRespects: {},
     resourceCaps: {},
     resourceStrategicReserves: {},
+    waterWithdrawTarget: 'colony',
+    hydrogenTransferTarget: 'atmospheric',
     saveAutomationSettings() {
       return {
         selectedResources: this.selectedResources.map(entry => ({ ...entry })),
         resourceTransferModes: { ...this.resourceTransferModes },
+        resourceTransferWeights: { ...this.resourceTransferWeights },
+        resourceImportLimitRespects: { ...this.resourceImportLimitRespects },
         resourceCaps: { ...this.resourceCaps },
-        resourceStrategicReserves: { ...this.resourceStrategicReserves }
+        resourceStrategicReserves: { ...this.resourceStrategicReserves },
+        waterWithdrawTarget: this.waterWithdrawTarget,
+        hydrogenTransferTarget: this.hydrogenTransferTarget
       };
     },
     sanitizeTransferModes() {},
     sanitizeResourceCaps() {},
-    sanitizeResourceStrategicReserves() {}
+    sanitizeResourceStrategicReserves() {},
+    setRespectImportProjectLimits(resourceKey, enabled) {
+      if (enabled) {
+        this.resourceImportLimitRespects[resourceKey] = true;
+      } else {
+        delete this.resourceImportLimitRespects[resourceKey];
+      }
+    }
   };
 }
 
@@ -174,7 +189,8 @@ describe('Project automation visibility', () => {
     expect(preset.projects['spaceStorageSingleResource:liquidWater'].operations).toMatchObject({
       spaceStorageSingleResourceKey: 'liquidWater',
       category: 'surface',
-      selected: false
+      selected: false,
+      waterWithdrawTarget: 'colony'
     });
   });
 
@@ -212,5 +228,43 @@ describe('Project automation visibility', () => {
     automation.applyPresetOnce(1);
 
     expect(spaceStorage.selectedResources).toEqual([]);
+  });
+
+  it('applies Space Storage single-resource water import target and import limit settings', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject();
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+    automation.presets = [{
+      id: 1,
+      name: 'Water single resource',
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false,
+      projects: {
+        'spaceStorageSingleResource:liquidWater': {
+          operations: {
+            spaceStorageSingleResourceKey: 'liquidWater',
+            resourceImportLimitRespects: {
+              liquidWater: false
+            },
+            transferWeight: 1000,
+            mode: null,
+            selected: true,
+            category: 'surface',
+            waterWithdrawTarget: 'surface'
+          }
+        }
+      }
+    }];
+
+    spaceStorage.resourceImportLimitRespects.liquidWater = true;
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.waterWithdrawTarget).toBe('surface');
+    expect(spaceStorage.resourceImportLimitRespects.liquidWater).toBeUndefined();
+    expect(spaceStorage.resourceTransferWeights.liquidWater).toBe(1000);
+    expect(spaceStorage.selectedResources).toEqual([
+      { category: 'surface', resource: 'liquidWater' }
+    ]);
   });
 });

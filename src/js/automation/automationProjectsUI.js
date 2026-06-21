@@ -184,8 +184,29 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
       ]
     };
   }
+  const singleResourceKey = getSpaceStorageSingleResourceKey(projectId);
+  const isSpaceStorageOperationsProject = projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID
+    || projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID;
+  if ((isSpaceStorageOperationsProject || singleResourceKey === 'liquidWater')
+    && fieldPath[3] === 'waterWithdrawTarget') {
+    return {
+      selectOptions: [
+        { value: 'colony', label: getAutomationCardText('spaceStorageWaterTargetColony', {}, 'Colony') },
+        { value: 'surface', label: getAutomationCardText('spaceStorageWaterTargetSurface', {}, 'Surface') }
+      ]
+    };
+  }
+  if ((isSpaceStorageOperationsProject || singleResourceKey === 'hydrogen')
+    && fieldPath[3] === 'hydrogenTransferTarget') {
+    return {
+      selectOptions: [
+        { value: 'atmospheric', label: getAutomationCardText('spaceStorageHydrogenTargetAtmosphere', {}, 'Atmosphere') },
+        { value: 'colony', label: getAutomationCardText('spaceStorageHydrogenTargetColony', {}, 'Colony') }
+      ]
+    };
+  }
   if (fieldPath[3] === 'resourceImportLimitRespects'
-    && (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID || getSpaceStorageSingleResourceKey(projectId) !== '')
+    && (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID || singleResourceKey !== '')
     && PROJECT_AUTOMATION_UI_SPACE_STORAGE_IMPORT_LIMIT_RESOURCES.has(fieldPath[4])) {
     return {
       selectOptions: [
@@ -195,7 +216,7 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
     };
   }
   if (fieldPath[3] === 'resourceBiomassDensityWithdrawLimits'
-    && (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID || getSpaceStorageSingleResourceKey(projectId) !== '')
+    && (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID || singleResourceKey !== '')
     && fieldPath[4] === 'biomass') {
     return {
       selectOptions: [
@@ -204,7 +225,7 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
       ]
     };
   }
-  if (getSpaceStorageSingleResourceKey(projectId) === '') {
+  if (singleResourceKey === '') {
     return null;
   }
   if (fieldPath[3] !== 'mode' && fieldPath[3] !== 'spaceStorageSingleResourceTransferMode') {
