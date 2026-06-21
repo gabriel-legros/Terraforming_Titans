@@ -30,6 +30,7 @@ const PatienceUI = {
     worldMetaEl: null,
     saveFileButtonEl: null,
     saveClipboardButtonEl: null,
+    dailyClaimButtonEl: null,
 
     /**
      * Initialize the patience UI
@@ -83,6 +84,7 @@ const PatienceUI = {
         this.worldMetaEl = cards[3] ? cards[3].querySelector('.patience-card-meta') : null;
         this.saveFileButtonEl = document.getElementById('patience-save-file-button');
         this.saveClipboardButtonEl = document.getElementById('patience-save-clipboard-button');
+        this.dailyClaimButtonEl = document.getElementById('patience-daily-claim-button');
     },
 
     /**
@@ -117,20 +119,30 @@ const PatienceUI = {
         tooltip.className = 'info-tooltip-icon';
         attachDynamicInfoTooltip(
             tooltip,
-            getPatienceText(
-                'ui.hope.patiencePanel.titleTooltip',
-                'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
-            )
+            GAME_FEATURES.patienceDailyClaimButton
+                ? getPatienceText(
+                    'ui.hope.patiencePanel.titleTooltipSteam',
+                    'Claim patience once per day. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
+                )
+                : getPatienceText(
+                    'ui.hope.patiencePanel.titleTooltip',
+                    'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
+                )
         );
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
         const subtitle = document.createElement('p');
         subtitle.className = 'patience-subtitle';
-        subtitle.textContent = getPatienceText(
-            'ui.hope.patiencePanel.subtitle',
-            'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
-        );
+        subtitle.textContent = GAME_FEATURES.patienceDailyClaimButton
+            ? getPatienceText(
+                'ui.hope.patiencePanel.subtitleSteam',
+                'Claim daily patience directly. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
+            )
+            : getPatienceText(
+                'ui.hope.patiencePanel.subtitle',
+                'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
+            );
         header.appendChild(subtitle);
         shell.appendChild(header);
 
@@ -177,7 +189,9 @@ const PatienceUI = {
 
         const gainMeta = document.createElement('div');
         gainMeta.className = 'patience-card-meta';
-        gainMeta.textContent = getPatienceText('ui.hope.patiencePanel.dailyMeta', 'Save/export daily');
+        gainMeta.textContent = GAME_FEATURES.patienceDailyClaimButton
+            ? getPatienceText('ui.hope.patiencePanel.dailyMetaSteam', 'Claim daily')
+            : getPatienceText('ui.hope.patiencePanel.dailyMeta', 'Save/export daily');
         gainCard.appendChild(gainMeta);
 
         statsRow.appendChild(gainCard);
@@ -187,7 +201,9 @@ const PatienceUI = {
 
         const timerLabel = document.createElement('div');
         timerLabel.className = 'patience-card-label';
-        timerLabel.textContent = getPatienceText('ui.hope.patiencePanel.saveBonusStatus', 'Save bonus status');
+        timerLabel.textContent = GAME_FEATURES.patienceDailyClaimButton
+            ? getPatienceText('ui.hope.patiencePanel.dailyClaimStatus', 'Daily claim status')
+            : getPatienceText('ui.hope.patiencePanel.saveBonusStatus', 'Save bonus status');
         timerCard.appendChild(timerLabel);
 
         const timerValue = document.createElement('div');
@@ -289,15 +305,25 @@ const PatienceUI = {
         const saveRow = document.createElement('div');
         saveRow.className = 'patience-save-row';
 
-        const saveFileButton = document.createElement('button');
-        saveFileButton.id = 'patience-save-file-button';
-        saveFileButton.textContent = getPatienceText('ui.hope.patiencePanel.saveToFile', 'Save to file');
-        saveRow.appendChild(saveFileButton);
+        let saveFileButton = null;
+        let saveClipboardButton = null;
+        let dailyClaimButton = null;
+        if (GAME_FEATURES.patienceDailyClaimButton) {
+            dailyClaimButton = document.createElement('button');
+            dailyClaimButton.id = 'patience-daily-claim-button';
+            dailyClaimButton.textContent = getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
+            saveRow.appendChild(dailyClaimButton);
+        } else {
+            saveFileButton = document.createElement('button');
+            saveFileButton.id = 'patience-save-file-button';
+            saveFileButton.textContent = getPatienceText('ui.hope.patiencePanel.saveToFile', 'Save to file');
+            saveRow.appendChild(saveFileButton);
 
-        const saveClipboardButton = document.createElement('button');
-        saveClipboardButton.id = 'patience-save-clipboard-button';
-        saveClipboardButton.textContent = getPatienceText('ui.hope.patiencePanel.exportToClipboard', 'Export to clipboard');
-        saveRow.appendChild(saveClipboardButton);
+            saveClipboardButton = document.createElement('button');
+            saveClipboardButton.id = 'patience-save-clipboard-button';
+            saveClipboardButton.textContent = getPatienceText('ui.hope.patiencePanel.exportToClipboard', 'Export to clipboard');
+            saveRow.appendChild(saveClipboardButton);
+        }
 
         shell.appendChild(saveRow);
 
@@ -319,6 +345,7 @@ const PatienceUI = {
         this.worldMetaEl = worldMeta;
         this.saveFileButtonEl = saveFileButton;
         this.saveClipboardButtonEl = saveClipboardButton;
+        this.dailyClaimButtonEl = dailyClaimButton;
         this.updateSpendPreview();
         this.updateSpendDescription();
     },
@@ -338,6 +365,9 @@ const PatienceUI = {
         }
         if (this.saveClipboardButtonEl) {
             this.saveClipboardButtonEl.addEventListener('click', () => this.handleSaveClipboard());
+        }
+        if (this.dailyClaimButtonEl) {
+            this.dailyClaimButtonEl.addEventListener('click', () => this.handleDailyClaim());
         }
     },
 
@@ -368,6 +398,15 @@ const PatienceUI = {
     handleSaveClipboard() {
         if (typeof saveGameToClipboard === 'function') {
             saveGameToClipboard();
+        }
+    },
+
+    /**
+     * Handle daily patience claim shortcut
+     */
+    handleDailyClaim() {
+        if (patienceManager.claimDailyPatience()) {
+            this.render();
         }
     },
 
@@ -609,9 +648,15 @@ const PatienceUI = {
 
         if (this.gainMetaEl) {
             const claimedToday = patienceManager.hasClaimedToday();
-            this.gainMetaEl.textContent = claimedToday
-                ? getPatienceText('ui.hope.patiencePanel.status.claimedToday', 'Claimed today via save/export')
-                : getPatienceText('ui.hope.patiencePanel.status.claimViaSave', 'Save to file or export to claim');
+            if (GAME_FEATURES.patienceDailyClaimButton) {
+                this.gainMetaEl.textContent = claimedToday
+                    ? getPatienceText('ui.hope.patiencePanel.status.claimedTodayButton', 'Claimed today')
+                    : getPatienceText('ui.hope.patiencePanel.status.claimViaButton', 'Use the daily claim button');
+            } else {
+                this.gainMetaEl.textContent = claimedToday
+                    ? getPatienceText('ui.hope.patiencePanel.status.claimedToday', 'Claimed today via save/export')
+                    : getPatienceText('ui.hope.patiencePanel.status.claimViaSave', 'Save to file or export to claim');
+            }
         }
 
         if (this.timerMetaEl) {
@@ -672,6 +717,14 @@ const PatienceUI = {
             const maxHours = (patienceManager.getEffectiveMaxHours ? patienceManager.getEffectiveMaxHours() : patienceManager.maxHours) || 1;
             const ratio = Math.min(1, Math.max(0, patienceManager.currentHours / maxHours));
             this.meterFillEl.style.width = `${ratio * 100}%`;
+        }
+
+        if (this.dailyClaimButtonEl) {
+            const claimedToday = patienceManager.hasClaimedToday();
+            this.dailyClaimButtonEl.disabled = claimedToday;
+            this.dailyClaimButtonEl.textContent = claimedToday
+                ? getPatienceText('ui.hope.patiencePanel.claimedDaily', 'Daily patience claimed')
+                : getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
         }
 
         // Update preview on each render

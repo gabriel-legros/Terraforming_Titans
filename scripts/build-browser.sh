@@ -13,5 +13,13 @@ cp -R "$ROOT_DIR/LICENSES" "$OUT_DIR/LICENSES"
 cp -R "$ROOT_DIR/assets" "$OUT_DIR/assets"
 cp -R "$ROOT_DIR/src/js" "$OUT_DIR/src/js"
 cp -R "$ROOT_DIR/src/css" "$OUT_DIR/src/css"
+cat > "$OUT_DIR/src/js/build-target.js" <<'BUILD_TARGET'
+const GAME_BUILD_TARGET = 'browser';
+const GAME_FEATURES = {
+    patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
+    patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser'
+};
+BUILD_TARGET
+grep -q "GAME_BUILD_TARGET = 'browser'" "$OUT_DIR/src/js/build-target.js"
 
 echo "Browser build written to $OUT_DIR"

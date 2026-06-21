@@ -1093,8 +1093,10 @@ function saveGameToSlot(slot) {
 }
 
 function saveGameToFile() {
-  patienceManager.claimDailyPatience();
-  updatePatienceUI();
+  if (GAME_FEATURES.patienceDailyRewardFromExport) {
+    patienceManager.claimDailyPatience();
+    updatePatienceUI();
+  }
   const gameState = getGameState(new Date());
 
   const saveData = JSON.stringify(gameState);
@@ -1115,15 +1117,19 @@ function saveGameToFile() {
 }
 
 function saveGameToClipboard() {
-  patienceManager.claimDailyPatience();
-  updatePatienceUI();
+  if (GAME_FEATURES.patienceDailyRewardFromExport) {
+    patienceManager.claimDailyPatience();
+    updatePatienceUI();
+  }
   const saveData = JSON.stringify(getGameState(new Date()));
   copyTextToClipboard(saveData, {
     promptLabel: 'Copy save data:',
     onSuccess: () => {
       console.log('Game saved to clipboard.');
-      patienceManager.claimDailyPatience();
-      updatePatienceUI();
+      if (GAME_FEATURES.patienceDailyRewardFromExport) {
+        patienceManager.claimDailyPatience();
+        updatePatienceUI();
+      }
     },
     onError: (e) => console.warn('Unable to copy save to clipboard:', e)
   });
