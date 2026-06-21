@@ -15,6 +15,7 @@ cp -R "$ROOT_DIR/src/js" "$OUT_DIR/src/js"
 cp -R "$ROOT_DIR/src/css" "$OUT_DIR/src/css"
 cat > "$OUT_DIR/src/js/build-target.js" <<'BUILD_TARGET'
 const GAME_BUILD_TARGET = 'browser';
+const STEAM_APP_ID = null;
 const GAME_FEATURES = {
     patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
     patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',

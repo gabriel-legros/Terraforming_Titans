@@ -5,7 +5,7 @@ Upload a Windows Electron build depot for `Terraforming Titans Playtest` (`AppID
 
 The game still runs from `index.html`, but Steam needs an executable launch target. For Steam, use the Electron packaged build from:
 
-`dist/win-unpacked`
+`dist/steam-playtest-win-unpacked`
 
 Inside the packaged app, the project content should stay limited to the runtime files needed by the game:
 
@@ -17,7 +17,7 @@ Inside the packaged app, the project content should stay limited to the runtime 
 - `electron/`
 - `package.json`
 
-The Steam depot itself must include the full generated Electron runtime from `dist/win-unpacked`, including `Terraforming Titans.exe`, DLLs, `.pak` files, locale files, `resources/app/`, and license files. The current Electron package uses `"asar": false`, so the app payload is a loose `resources/app/` directory rather than `resources/app.asar`.
+The Steam depot itself must include the full generated Electron runtime from `dist/steam-playtest-win-unpacked`, including `Terraforming Titans.exe`, DLLs, `.pak` files, locale files, `resources/app/`, and license files. The current Electron package uses `"asar": false`, so the app payload is a loose `resources/app/` directory rather than `resources/app.asar`.
 
 ## Open Steamworks Values
 We already know:
@@ -57,7 +57,7 @@ The packaged app includes browser library licenses from this repo:
 - `vendor/phaser-3.55.2.min.js` -> `LICENSES/phaser-3.55.2-MIT.txt`
 - `vendor/three-0.158.0.min.js` -> `LICENSES/three-0.158.0-MIT.txt`
 
-The depot must also include the Electron/Chromium license files generated in `dist/win-unpacked`:
+The depot must also include the Electron/Chromium license files generated in `dist/steam-playtest-win-unpacked`:
 
 - `LICENSE.electron.txt`
 - `LICENSES.chromium.html`
@@ -122,10 +122,11 @@ robocopy "$extractRoot\sdk\tools\ContentBuilder\builder" "$steamPipeRoot\builder
 ```
 
 ## Prepare Content
-From the repo root, build the Steam-target Electron package. Use `scripts/build-steam.sh`, not raw `npm run dist:dir`, because the script temporarily writes `GAME_BUILD_TARGET = 'steam'` into `src/js/build-target.js` before packaging and restores the source file afterward.
+From the repo root, build the Steam Playtest-target Electron package. Use `scripts/build-steam-playtest.sh`, not raw `npm run dist:dir`, because the script temporarily writes `GAME_BUILD_TARGET = 'steam'` into `src/js/build-target.js` before packaging and restores the source file afterward.
+The script also bakes Playtest AppID `4876760` into the packaged `resources/app/src/js/build-target.js` as `STEAM_APP_ID`.
 
 ```powershell
-cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && bash scripts/build-steam.sh"
+cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && bash scripts/build-steam-playtest.sh"
 ```
 
 Then mirror the generated Windows package into the SteamPipe content folder:
@@ -134,7 +135,7 @@ Then mirror the generated Windows package into the SteamPipe content folder:
 $root = "C:\SteamPipe\TerraformingTitansPlaytest"
 New-Item -ItemType Directory -Force -Path "$root\content", "$root\scripts", "$root\output" | Out-Null
 
-robocopy "dist\win-unpacked" "$root\content" /MIR
+robocopy "dist\steam-playtest-win-unpacked" "$root\content" /MIR
 ```
 
 Full staging command from this repo:
@@ -143,16 +144,16 @@ Full staging command from this repo:
 $repo = "C:\Users\gabri\Documents\Terraforming Titans"
 $root = "C:\SteamPipe\TerraformingTitansPlaytest"
 
-cmd.exe /c "cd /d `"$repo`" && bash scripts/build-steam.sh"
+cmd.exe /c "cd /d `"$repo`" && bash scripts/build-steam-playtest.sh"
 
 New-Item -ItemType Directory -Force -Path "$root\content", "$root\scripts", "$root\output" | Out-Null
-robocopy "$repo\dist\win-unpacked" "$root\content" /MIR
+robocopy "$repo\dist\steam-playtest-win-unpacked" "$root\content" /MIR
 ```
 
 Do not copy source checkout folders directly into `content`:
 
 - `node_modules/`
-- loose repo root files outside `dist\win-unpacked`
+- loose repo root files outside `dist\steam-playtest-win-unpacked`
 - tests
 - docs
 - local save files

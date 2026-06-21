@@ -3,20 +3,39 @@ const fs = require('fs');
 const path = require('path');
 
 const appDisplayName = 'Terraforming Titans';
-const steamAppId = Number(process.env.TERRAFORMING_TITANS_STEAM_APP_ID) || 4876760;
+const defaultSteamAppId = 4864000;
 const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.png');
 const preloadPath = path.join(__dirname, 'preload.cjs');
 const saveSlotNames = new Set(['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
 
 app.setName(appDisplayName);
 
-function isSteamBuildTarget() {
+function readBuildTargetSource() {
   const buildTargetPath = path.join(__dirname, '..', 'src', 'js', 'build-target.js');
-  return fs.existsSync(buildTargetPath)
-    && fs.readFileSync(buildTargetPath, 'utf8').includes("GAME_BUILD_TARGET = 'steam'");
+  if (!fs.existsSync(buildTargetPath)) {
+    return '';
+  }
+  return fs.readFileSync(buildTargetPath, 'utf8');
+}
+
+function isSteamBuildTarget(buildTargetSource) {
+  return buildTargetSource.includes("GAME_BUILD_TARGET = 'steam'");
+}
+
+function getSteamAppId(buildTargetSource) {
+  const envAppId = Number(process.env.TERRAFORMING_TITANS_STEAM_APP_ID);
+  if (Number.isFinite(envAppId) && envAppId > 0) {
+    return envAppId;
+  }
+  const match = /STEAM_APP_ID\s*=\s*(\d+)/.exec(buildTargetSource);
+  if (match) {
+    return Number(match[1]);
+  }
+  return defaultSteamAppId;
 }
 
 function createSteamIntegration() {
+  const buildTargetSource = readBuildTargetSource();
   const integration = {
     enabled: false,
     initialized: false,
@@ -24,10 +43,11 @@ function createSteamIntegration() {
     error: ''
   };
 
-  if (!isSteamBuildTarget()) {
+  if (!isSteamBuildTarget(buildTargetSource)) {
     return integration;
   }
 
+  const steamAppId = getSteamAppId(buildTargetSource);
   integration.enabled = true;
   try {
     const steamworks = require('steamworks.js');
