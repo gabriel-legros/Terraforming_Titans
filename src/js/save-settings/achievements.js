@@ -85,15 +85,15 @@ class AchievementManager {
       ['diskworld-terraforming', 'diskworldTerraforming', 'Flat Earthers were right all along', 'Terraform a Diskworld.', () => this.hasTerraformedArtificialType('disk')],
       ['galactic-hadron-collider', 'galacticHadronCollider', 'Galactic Hadron Collider', 'Build a particle accelerator with a radius of at least {value} meters.', () => this.isParticleAcceleratorComplete(), () => ({ value: formatNumber(5e20, true, 0) })],
       ['bosch-terraforming', 'boschTerraforming', 'Bosch Terraforming', 'Terraform a Venus-like world without ever disposing of CO2 or using lifters.', () => this.isBoschTerraformingComplete()],
-      ['hazard-preservation', 'hazardPreservation', 'Hazard Preservation', 'Fulfill all terraforming requirements simultaneously on any RWG world with all 5 story hazards before clearing any of the hazards (use a natural magnetosphere).', () => this.isHazardPreservationComplete()],
+      ['hazard-preservation', 'hazardPreservation', 'Hazard Preservation', 'Fulfill all terraforming requirements simultaneously on any RWG world with all 5 story hazards before clearing any of the hazards (Hint : use a natural magnetosphere).', () => this.isHazardPreservationComplete()],
       ['no-building-left-behind', 'noBuildingLeftBehind', 'No Building Left Behind', 'Terraform any random world without constructing any buildings or colonies.', () => this.isNoBuildingLeftBehindComplete()],
       ['where-are-the-blokkats', 'whereAreTheBlokkats', 'Where are the Blokkats?', "Defeat the final and most powerful wave of Prometheus' galactic invasion fleet.", () => this.isFinalInvasionDefeated()],
       ['one-faith', 'oneFaith', 'One Faith', 'Have 100% of the galaxy believe in HOPE.', () => this.isOneFaithComplete()],
       ['kardashev-i', 'kardashevI', 'Kardashev I', 'Produce 200Q watts of power in total.', () => this.isKardashevIComplete()],
       ['kardashev-ii', 'kardashevII', 'Kardashev II', 'Complete your first Dyson Sphere Frame and fill it completely with collectors.', () => this.isKardashevIIComplete()],
       ['kardashev-iii', 'kardashevIII', 'Kardashev III', 'Build 100 billion Dyson Spheres and fill them all with collectors.', () => this.isKardashevIIIComplete()],
-      ['you-live-like-this', 'youLiveLikeThis', 'You live like this?', 'Have a dynamic mass planet where the mass of all waste is greater than half the mass of the planet.', () => this.isWasteMassAchievementComplete()],
-      ['paul-birch', 'paulBirch', 'Paul Birch', 'Build and terraform a world around a supermassive black hole.', () => this.hasTerraformedSupermassiveShellworld()],
+      ['you-live-like-this', 'youLiveLikeThis', 'You live like this?', 'Have a dynamic mass world where the mass of all waste is greater than half the mass of the planet.', () => this.isWasteMassAchievementComplete()],
+      ['paul-birch', 'paulBirch', 'Paul Birch would be proud', 'Build and terraform a world around a supermassive black hole.', () => this.hasTerraformedSupermassiveShellworld()],
       ['time-for-retirement', 'timeForRetirement', 'Time for Retirement', 'Build the maximum number of layers possible on a world around a supermassive black hole.', () => this.isBirchWorldMaxed()]
     ]);
 
