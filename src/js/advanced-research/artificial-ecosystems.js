@@ -56,8 +56,8 @@ function updateArtificialEcosystems(deltaTime, accumulatedChanges) {
     return;
   }
 
-  const availableWater = getStoredAmountForTick('liquidWater');
-  const availableCarbonDioxide = getStoredAmountForTick('carbonDioxide');
+  const availableWater = project.getAvailableStoredResourceForTick('liquidWater', 'consumption', accumulatedChanges);
+  const availableCarbonDioxide = project.getAvailableStoredResourceForTick('carbonDioxide', 'consumption', accumulatedChanges);
   const growthFromWater = availableWater / -ARTIFICIAL_ECOSYSTEMS_PHOTOSYNTHESIS.liquidWater;
   const growthFromCarbonDioxide = availableCarbonDioxide / -ARTIFICIAL_ECOSYSTEMS_PHOTOSYNTHESIS.carbonDioxide;
   const remainingBiomassCapacity = Math.max(0, biomassCap - currentBiomass);
