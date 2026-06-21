@@ -22,9 +22,9 @@ const GAME_FEATURES = {
 };
 BUILD_TARGET
 npx electron-builder --win --dir
-ASAR_PATH="$OUT_DIR/resources/app.asar" node <<'NODE'
-const asar = require('@electron/asar');
-const data = asar.extractFile(process.env.ASAR_PATH, 'src/js/build-target.js').toString();
+BUILD_TARGET_PATH="$OUT_DIR/resources/app/src/js/build-target.js" node <<'NODE'
+const fs = require('fs');
+const data = fs.readFileSync(process.env.BUILD_TARGET_PATH, 'utf8');
 if (!data.includes("GAME_BUILD_TARGET = 'steam'")) {
   throw new Error('Steam build did not package the steam build target');
 }
