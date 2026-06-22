@@ -5878,7 +5878,7 @@ setLanguageData({
         },
         hyperion_lantern: {
           name: 'Hyperion Lantern',
-          description: 'Research the construction of a large orbital facility that increases planetary luminosity.',
+          description: 'Research the construction of a large orbital facility that increases planetary luminosity.  Requires the space mirror facility.',
         },
         hydrocarbon_research: {
           name: 'Hydrocarbon Combustion Concept',
