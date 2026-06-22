@@ -1125,6 +1125,7 @@ function getEntryCards(entry) {
 function syncCategoryDomOrder(category, entries) {
   const container = getOrCreateCategoryContainer(category || 'general');
   const seen = new Set();
+  const orderedCards = [];
 
   entries.forEach((entry) => {
     const cards = getEntryCards(entry);
@@ -1133,8 +1134,26 @@ function syncCategoryDomOrder(category, entries) {
         return;
       }
       seen.add(card);
-      container.appendChild(card);
+      orderedCards.push(card);
     });
+  });
+
+  const currentCards = Array.from(container.children).filter(card => seen.has(card));
+  let alreadyOrdered = currentCards.length === orderedCards.length;
+  if (alreadyOrdered) {
+    for (let index = 0; index < orderedCards.length; index += 1) {
+      if (currentCards[index] !== orderedCards[index] || orderedCards[index].parentElement !== container) {
+        alreadyOrdered = false;
+        break;
+      }
+    }
+  }
+  if (alreadyOrdered) {
+    return;
+  }
+
+  orderedCards.forEach((card) => {
+    container.appendChild(card);
   });
 }
 

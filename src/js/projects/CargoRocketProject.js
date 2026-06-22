@@ -331,6 +331,45 @@ class CargoRocketProject extends Project {
     return basePrice * quantity + current * quantity + delta * quantity * (quantity - 1) / 2;
   }
 
+  getBuyTransactionCost(transaction, quantity) {
+    return transaction.resource === 'spaceships'
+      ? this.getSpaceshipTotalCost(quantity, transaction.basePrice)
+      : transaction.basePrice * quantity;
+  }
+
+  getScaledBuyCost(transactions, scale, seconds, productivity) {
+    let total = 0;
+    transactions.forEach((transaction) => {
+      total += this.getBuyTransactionCost(transaction, transaction.quantity * scale) * seconds * productivity;
+    });
+    return total;
+  }
+
+  getAffordableBuyScale(transactions, availableFunding, seconds, productivity) {
+    if (availableFunding <= 0) {
+      return 0;
+    }
+    const fullCost = this.getScaledBuyCost(transactions, 1, seconds, productivity);
+    if (fullCost <= availableFunding) {
+      return 1;
+    }
+
+    let low = 0;
+    let high = 1;
+    for (let i = 0; i < 512; i++) {
+      const mid = (low + high) / 2;
+      if (mid === low || mid === high) {
+        break;
+      }
+      if (this.getScaledBuyCost(transactions, mid, seconds, productivity) <= availableFunding) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    return low;
+  }
+
   update(delta) {
     if (this.spaceshipPriceIncrease > 0) {
       const decay = Math.pow(0.99, delta / 1000);
@@ -670,20 +709,22 @@ class CargoRocketProject extends Project {
     this.selectedResources.forEach(({ category, resource, quantity }) => {
       const scaledQuantity = quantity * tradeScale;
       const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-      const perSecCost = resource === 'spaceships'
-        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
-        : basePrice * scaledQuantity;
-      purchases.push({ category, resource, quantity: scaledQuantity, perSecCost });
-      costPerSecond += perSecCost;
+      purchases.push({ category, resource, quantity: scaledQuantity, basePrice, perSecCost: 0 });
+    });
+    purchases.forEach((purchase) => {
+      purchase.perSecCost = this.getBuyTransactionCost(purchase, purchase.quantity);
+      costPerSecond += purchase.perSecCost;
     });
     let totalCost = costPerSecond * seconds * productivity;
     let available = resources.colony.funding.value;
     if (totalCost > available) {
       this.shortfallLastTick = totalCost > 0;
-      if (available <= 0) return;
-      const scale = available / totalCost;
-      purchases.forEach(p => { p.quantity *= scale; p.perSecCost *= scale; });
-      totalCost = available;
+      const scale = this.getAffordableBuyScale(purchases, available, seconds, productivity);
+      purchases.forEach((purchase) => {
+        purchase.quantity *= scale;
+        purchase.perSecCost = this.getBuyTransactionCost(purchase, purchase.quantity);
+      });
+      totalCost = this.getScaledBuyCost(purchases, 1, seconds, productivity);
     }
     if (totalCost > 0) {
       if (accumulatedChanges) {

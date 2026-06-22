@@ -772,6 +772,45 @@ class GalacticMarketProject extends Project {
     return basePrice * quantity + currentIncrease * quantity + (delta * quantity * (quantity - 1)) / 2;
   }
 
+  getBuyTransactionCost(transaction, quantity) {
+    return transaction.resource === 'spaceships'
+      ? this.getSpaceshipTotalCost(quantity, transaction.basePrice)
+      : transaction.basePrice * quantity;
+  }
+
+  getScaledBuyCost(transactions, scale, seconds, productivity) {
+    let total = 0;
+    transactions.forEach((transaction) => {
+      total += this.getBuyTransactionCost(transaction, transaction.quantity * scale) * seconds * productivity;
+    });
+    return total;
+  }
+
+  getAffordableBuyScale(transactions, availableFunding, seconds, productivity) {
+    if (availableFunding <= 0) {
+      return 0;
+    }
+    const fullCost = this.getScaledBuyCost(transactions, 1, seconds, productivity);
+    if (fullCost <= availableFunding) {
+      return 1;
+    }
+
+    let low = 0;
+    let high = 1;
+    for (let i = 0; i < 512; i++) {
+      const mid = (low + high) / 2;
+      if (mid === low || mid === high) {
+        break;
+      }
+      if (this.getScaledBuyCost(transactions, mid, seconds, productivity) <= availableFunding) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    return low;
+  }
+
   static get SELL_MULTIPLIERS() {
     if (!this._SELL_MULTIPLIERS) {
       this._SELL_MULTIPLIERS = {
@@ -1045,11 +1084,12 @@ class GalacticMarketProject extends Project {
       }
       const scaledQuantity = quantity * tradeScale;
       const basePrice = this.getBasePrice(category, resource);
-      const perSecondCost = resource === 'spaceships'
-        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
-        : basePrice * scaledQuantity;
-      buyTransactions.push({ category, resource, quantity: scaledQuantity, perSecondCost });
-      buyCostPerSecond += perSecondCost;
+      buyTransactions.push({ category, resource, quantity: scaledQuantity, basePrice, perSecondCost: 0 });
+    });
+
+    buyTransactions.forEach((transaction) => {
+      transaction.perSecondCost = this.getBuyTransactionCost(transaction, transaction.quantity);
+      buyCostPerSecond += transaction.perSecondCost;
     });
 
     let totalBuyCost = buyCostPerSecond * seconds * effectiveProductivity;
@@ -1058,20 +1098,12 @@ class GalacticMarketProject extends Project {
 
     if (totalBuyCost > availableFunding && totalBuyCost > 0) {
       this.shortfallLastTick = true;
-      if (availableFunding <= 0) {
-        buyTransactions.forEach((transaction) => {
-          transaction.quantity = 0;
-          transaction.perSecondCost = 0;
-        });
-        totalBuyCost = 0;
-      } else {
-        const scale = availableFunding / totalBuyCost;
-        buyTransactions.forEach((transaction) => {
-          transaction.quantity *= scale;
-          transaction.perSecondCost *= scale;
-        });
-        totalBuyCost = availableFunding;
-      }
+      const scale = this.getAffordableBuyScale(buyTransactions, availableFunding, seconds, effectiveProductivity);
+      buyTransactions.forEach((transaction) => {
+        transaction.quantity *= scale;
+        transaction.perSecondCost = this.getBuyTransactionCost(transaction, transaction.quantity);
+      });
+      totalBuyCost = this.getScaledBuyCost(buyTransactions, 1, seconds, effectiveProductivity);
     }
 
     if (totalBuyCost !== 0) {
