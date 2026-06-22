@@ -699,7 +699,7 @@ const ganymedeOverrides = {
 const vega2Overrides = {
   name: '',
   travelWarning: {
-    message: t('catalogs.planets.vega2.travelWarning.message', {}, 'This world has no water.  Solis can help.  Five purchases is enough but more can help.  \n \n This world unlocks some very powerful upgrades and is strongly recommended.')
+    message: t('catalogs.planets.vega2.travelWarning.message', {}, 'This world has no water.  Solis can help.  Five purchases is enough but more can help.  \n \n This world unlocks some very powerful upgrades and is strongly recommended (see Early Advanced Oversight in difficulty settings for a description of one of them).')
   },
 
   resources: {
