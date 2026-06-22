@@ -1130,7 +1130,7 @@ class SpaceMiningProject extends SpaceshipProject {
       const zoneSurface = terraforming.zonalSurface[zone];
       const zoneArea = surfaceArea * getZonePercentage(zone);
       if (coverageKey === 'liquidWater') {
-        current += (zoneSurface.liquidWater || 0) + (zoneSurface.ice || 0);
+        current += zoneSurface.liquidWater || 0;
       } else {
         current += (zoneSurface.liquidCO2 || 0) + (zoneSurface.dryIce || 0);
       }
@@ -1138,7 +1138,6 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (coverageKey === 'liquidWater') {
       current += accumulatedChanges?.surface?.liquidWater || 0;
-      current += accumulatedChanges?.surface?.ice || 0;
     } else {
       current += accumulatedChanges?.surface?.liquidCO2 || 0;
       current += accumulatedChanges?.surface?.dryIce || 0;
