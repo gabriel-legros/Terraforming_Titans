@@ -175,6 +175,19 @@ class AchievementManager {
     };
   }
 
+  getCompanionMirrorAllowance() {
+    const companionMirror = researchManager.getResearchById('companion_mirror');
+    if (!companionMirror.isResearched) {
+      return 0;
+    }
+    return Math.max(0, Math.floor(spaceManager.getTerraformedPlanetCount())) * 1000;
+  }
+
+  isNoBuildingLeftBehindMirrorAllowance(key, current, baseline) {
+    return key === 'spaceMirror'
+      && current <= baseline + this.getCompanionMirrorAllowance();
+  }
+
   resetCurrentWorldTracking(worldId) {
     this.tracking.currentWorldId = worldId;
     this.tracking.buildingsBaseline = this.snapshotCounts(buildings);
@@ -217,7 +230,7 @@ class AchievementManager {
       if (this.isPowerGeneratorBuilding(key, building) && !ACHIEVEMENT_ALLOWED_RENEWABLE_BUILDINGS[key]) {
         this.tracking.disqualified.classicRenewables = true;
       }
-      if (this.isCurrentWorldRandom()) {
+      if (this.isCurrentWorldRandom() && !this.isNoBuildingLeftBehindMirrorAllowance(key, current, baseline)) {
         this.tracking.disqualified.noBuildingLeftBehind = true;
       }
     }
@@ -247,7 +260,7 @@ class AchievementManager {
       if (this.isPowerGeneratorBuilding(key, buildings[key]) && !ACHIEVEMENT_ALLOWED_RENEWABLE_BUILDINGS[key]) {
         this.tracking.disqualified.classicRenewables = true;
       }
-      if (this.isCurrentWorldRandom()) {
+      if (this.isCurrentWorldRandom() && !this.isNoBuildingLeftBehindMirrorAllowance(key, count, 0)) {
         this.tracking.disqualified.noBuildingLeftBehind = true;
       }
     }
