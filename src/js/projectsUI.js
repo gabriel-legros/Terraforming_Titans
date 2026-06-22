@@ -427,6 +427,18 @@ function renderProjects(activeSubtabId) {
     }
   });
 
+  const activeCategories = new Set();
+  projectsArray.forEach(project => {
+    if (!activeId || getProjectSubtabIdForProject(project) === activeId) {
+      activeCategories.add(project.category || 'resources');
+    }
+  });
+  activeCategories.forEach(category => {
+    const entries = getCategoryEntries(category);
+    syncCategoryDomOrder(category, entries);
+    updateCategoryReorderButtons(category, entries);
+  });
+
   // Update the UI for each project
   projectsArray.forEach(project => {
     const isActive = !activeId || getProjectSubtabIdForProject(project) === activeId;
