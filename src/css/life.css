@@ -208,6 +208,14 @@
     width: 100%;
     margin-bottom: 2px; /* Reduced margin */
   }
+
+  .life-point-shop-btn.life-point-shop-btn-unaffordable:disabled {
+    background: #b12727;
+    border-color: #7f1f1f;
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    opacity: 1;
+  }
   
   .shop-category-description {
     font-size: 0.9em;

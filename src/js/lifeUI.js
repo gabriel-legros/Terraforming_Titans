@@ -1090,7 +1090,7 @@ function updateLifeUI() {
       }
       if (!unlocked) {
         button.disabled = true;
-        button.style.backgroundColor = '';
+        button.classList.remove('life-point-shop-btn-unaffordable');
         return;
       }
       const totalCost = lifeDesigner.getTotalPointCost(category, quantity);
@@ -1102,7 +1102,7 @@ function updateLifeUI() {
       );
       const affordable = lifeDesigner.canAfford(category, quantity);
       button.disabled = !affordable;
-      button.style.backgroundColor = affordable ? '' : 'red';
+      button.classList.toggle('life-point-shop-btn-unaffordable', !affordable);
     });
 
   }
