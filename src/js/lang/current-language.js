@@ -28,6 +28,7 @@ setLanguageData({
       gameSpeed8x: '8x speed',
       refresh: 'Refresh',
       close: 'Close',
+      cancel: 'Cancel',
     },
     gameEffects: {
       difficultySettings: 'Difficulty settings',
@@ -4624,6 +4625,10 @@ setLanguageData({
       confirmDeleteSlot: 'Are you sure you want to delete the save file in {slot}? This action cannot be undone.',
       confirmNewGame: 'Are you sure you want to start a new game? Any unsaved progress will be lost.',
       pasteSaveData: 'Paste save data to load:',
+      loadStringDialogTitle: 'Load from string',
+      loadStringDialogDescription: 'Paste save data below.',
+      loadStringDialogEmpty: 'Paste save data before loading.',
+      loadStringDialogInvalid: 'Could not load that save data.',
       saveStorageWarning: 'Some browsers (especially Brave) or aggressive ad blockers can prevent saving to local storage or purge your saves on a restart.  Please be careful.  Alternative saving options (save to file and save to clipboard) are available.',
       autosaveDisabled: 'Autosave disabled',
       nextAutosaveLong: 'Next autosave in {hours}h {minutes}m {seconds}s',

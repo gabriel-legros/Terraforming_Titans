@@ -1012,6 +1012,46 @@ body.dark-mode {
 .dark-mode .save-slots button.delete-button:hover {
     background-color: #cc0000;
 }
+
+.dark-mode .load-string-dialog-window {
+    background: #1f2937;
+    color: #f3f4f6;
+    border: 1px solid #4b5563;
+}
+
+.dark-mode .load-string-dialog-description {
+    color: #d1d5db;
+}
+
+.dark-mode .load-string-dialog-textarea {
+    background: #111827;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+.dark-mode .load-string-dialog-textarea:focus {
+    outline-color: #60a5fa;
+}
+
+.dark-mode .load-string-dialog-message {
+    color: #fca5a5;
+}
+
+.dark-mode .load-string-dialog-cancel {
+    background: #4b5563;
+}
+
+.dark-mode .load-string-dialog-cancel:hover {
+    background: #374151;
+}
+
+.dark-mode .load-string-dialog-confirm {
+    background: #2563eb;
+}
+
+.dark-mode .load-string-dialog-confirm:hover {
+    background: #1d4ed8;
+}
 .dark-mode .terraforming-box {
     background-color: #111827;
     border-color: #2d3a50;

@@ -270,3 +270,97 @@
   .save-slots button.delete-button:hover {
     background-color: #d32f2f;
   }
+
+  .load-string-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 10000;
+    box-sizing: border-box;
+  }
+
+  .load-string-dialog-overlay.is-visible {
+    display: flex;
+  }
+
+  .load-string-dialog-window {
+    width: min(760px, 100%);
+    padding: 20px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1f2937;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+    box-sizing: border-box;
+    text-align: left;
+  }
+
+  .load-string-dialog-title {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+  }
+
+  .load-string-dialog-description {
+    margin: 0 0 12px;
+    color: #4b5563;
+  }
+
+  .load-string-dialog-textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-sizing: border-box;
+    resize: vertical;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .load-string-dialog-textarea:focus {
+    outline: 2px solid #4CAF50;
+    outline-offset: 2px;
+  }
+
+  .load-string-dialog-message {
+    min-height: 1.2em;
+    margin-top: 8px;
+    color: #b91c1c;
+    font-size: 0.95rem;
+  }
+
+  .load-string-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .load-string-dialog-cancel,
+  .load-string-dialog-confirm {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+  }
+
+  .load-string-dialog-cancel {
+    background: #6b7280;
+  }
+
+  .load-string-dialog-cancel:hover {
+    background: #4b5563;
+  }
+
+  .load-string-dialog-confirm {
+    background: #4CAF50;
+  }
+
+  .load-string-dialog-confirm:hover {
+    background: #45a049;
+  }

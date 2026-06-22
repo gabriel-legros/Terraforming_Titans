@@ -4,6 +4,7 @@ globalGameIsTraveling = false;
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let pendingAutomationSafetyRestoreState = null;
+let loadStringDialog = null;
 const SAVE_SLOTS = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 const SAVE_FALLBACK_LOAD_ORDER = ['autosave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
 
@@ -1155,11 +1156,97 @@ function loadGameFromFile(event) {
   }
 }
 
-function loadGameFromString() {
-  const text = window.prompt(t('ui.settings.pasteSaveData', null, 'Paste save data to load:'));
-  if (text) {
-    loadGame(text);
+function ensureLoadStringDialog() {
+  if (loadStringDialog) {
+    return loadStringDialog;
   }
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('load-string-dialog-overlay');
+
+  const windowEl = document.createElement('div');
+  windowEl.classList.add('load-string-dialog-window');
+
+  const title = document.createElement('h3');
+  title.classList.add('load-string-dialog-title');
+  title.textContent = t('ui.settings.loadStringDialogTitle', null, 'Load from string');
+
+  const description = document.createElement('p');
+  description.classList.add('load-string-dialog-description');
+  description.textContent = t('ui.settings.loadStringDialogDescription', null, 'Paste save data below.');
+
+  const textarea = document.createElement('textarea');
+  textarea.classList.add('load-string-dialog-textarea');
+  textarea.setAttribute('spellcheck', 'false');
+  textarea.setAttribute('autocomplete', 'off');
+  textarea.setAttribute('autocapitalize', 'off');
+
+  const message = document.createElement('div');
+  message.classList.add('load-string-dialog-message');
+
+  const actions = document.createElement('div');
+  actions.classList.add('load-string-dialog-actions');
+
+  const cancelButton = document.createElement('button');
+  cancelButton.classList.add('load-string-dialog-cancel');
+  cancelButton.textContent = t('ui.common.cancel', null, 'Cancel');
+
+  const loadButton = document.createElement('button');
+  loadButton.classList.add('load-string-dialog-confirm');
+  loadButton.textContent = t('ui.common.load', null, 'Load');
+
+  actions.append(cancelButton, loadButton);
+  windowEl.append(title, description, textarea, message, actions);
+  overlay.appendChild(windowEl);
+  document.body.appendChild(overlay);
+
+  loadStringDialog = {
+    overlay,
+    textarea,
+    message,
+    loadButton,
+    cancelButton
+  };
+
+  const closeDialog = () => {
+    overlay.classList.remove('is-visible');
+    textarea.value = '';
+    message.textContent = '';
+  };
+
+  cancelButton.addEventListener('click', closeDialog);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      closeDialog();
+    }
+  });
+  overlay.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeDialog();
+    }
+  });
+  loadButton.addEventListener('click', () => {
+    const text = textarea.value.trim();
+    if (!text) {
+      message.textContent = t('ui.settings.loadStringDialogEmpty', null, 'Paste save data before loading.');
+      return;
+    }
+    if (!loadGame(text)) {
+      message.textContent = t('ui.settings.loadStringDialogInvalid', null, 'Could not load that save data.');
+      return;
+    }
+    closeDialog();
+  });
+
+  return loadStringDialog;
+}
+
+function loadGameFromString() {
+  const dialog = ensureLoadStringDialog();
+  dialog.message.textContent = '';
+  dialog.textarea.value = '';
+  dialog.overlay.classList.add('is-visible');
+  dialog.textarea.focus();
 }
 
 // Delete save file from a specific slot
