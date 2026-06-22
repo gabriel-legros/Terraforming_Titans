@@ -3945,6 +3945,10 @@ setLanguageData({
             celestial: 'Celestial Parameters',
             hazards: 'Hazards',
             research: 'Research',
+            variables: 'Variables',
+          },
+          variables: {
+            source: 'Variables',
           },
           common: {
             value: 'Value',
@@ -4217,6 +4221,9 @@ setLanguageData({
         scriptApplyPreset: 'Apply Preset',
         scriptAutoTravelAndTurnOn: 'Auto Travel',
         scriptApplyCombination: 'Apply Combination',
+        scriptSetVariable: 'Set Variable',
+        scriptVariableLabel: 'Variable',
+        scriptVariableValue: 'Value',
         scriptToggleAutomation: 'Toggle Automation',
         scriptTogglePause: 'Toggle Pause',
         scriptGotoScript: 'GOTO Script',

@@ -2,6 +2,7 @@ class ScriptVariableRegistry {
   constructor() {
     this.sources = [
       { id: 'constant', label: this.getScriptVariableText('sources.constant', 'Constant') },
+      { id: 'variables', label: this.getScriptVariableText('variables.source', 'Variables') },
       { id: 'resources', label: this.getScriptVariableText('sources.resources', 'Resources') },
       { id: 'buildings', label: this.getScriptVariableText('sources.buildings', 'Buildings') },
       { id: 'colony', label: this.getScriptVariableText('sources.colony', 'Colony') },
@@ -33,6 +34,7 @@ class ScriptVariableRegistry {
     if (sourceId === 'hazards') return [{ id: 'hazards', label: this.getScriptVariableText('sources.hazards', 'Hazards') }];
     if (sourceId === 'research') return this.getResearchCategories();
     if (sourceId === 'resources') return this.getResourceCategories();
+    if (sourceId === 'variables') return [{ id: 'variables', label: this.getScriptVariableText('variables.source', 'Variables') }];
     return [];
   }
 
@@ -47,6 +49,7 @@ class ScriptVariableRegistry {
     if (sourceId === 'hazards') return this.getHazardTargets();
     if (sourceId === 'research') return this.getResearchTargets(categoryId);
     if (sourceId === 'resources') return this.getResourceTargets(categoryId);
+    if (sourceId === 'variables') return this.getVariableTargets();
     return [];
   }
 
@@ -61,7 +64,17 @@ class ScriptVariableRegistry {
     if (sourceId === 'hazards') return this.getHazardAttributes(targetId);
     if (sourceId === 'research') return this.getResearchAttributes(targetId);
     if (sourceId === 'resources') return this.getResourceAttributes(categoryId, targetId, optionId);
+    if (sourceId === 'variables') return [{ id: 'value', label: this.getScriptVariableText('common.value', 'Value'), valueType: 'number' }];
     return [];
+  }
+
+  getVariableTargets() {
+    const targets = [];
+    for (let index = 0; index < 26; index += 1) {
+      const letter = String.fromCharCode(65 + index);
+      targets.push({ id: letter, label: letter });
+    }
+    return targets;
   }
 
   getBuildingCategories() {
@@ -600,7 +613,12 @@ class ScriptVariableRegistry {
     if (ref.source === 'hazards') return this.resolveHazardValue(ref);
     if (ref.source === 'research') return this.resolveResearchValue(ref);
     if (ref.source === 'resources') return this.resolveResourceValue(ref);
+    if (ref.source === 'variables') return this.resolveVariableValue(ref);
     return 0;
+  }
+
+  resolveVariableValue(ref) {
+    return this.toNumber(automationManager.scriptAutomation.getVariableValue(ref.target));
   }
 
   resolveBuildingValue(ref) {

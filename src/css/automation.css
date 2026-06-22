@@ -1388,6 +1388,34 @@
   gap: 4px;
 }
 
+.script-set-variable-action {
+  align-items: stretch;
+}
+
+.script-set-variable-action > select {
+  align-self: center;
+}
+
+.script-set-variable-action .script-expression-editor {
+  flex: 1 1 420px;
+  min-width: 320px;
+  padding: 8px;
+}
+
+.script-set-variable-action .script-expression-title {
+  display: none;
+}
+
+.script-set-variable-action .script-term-row {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.script-set-variable-action .script-action-controls {
+  align-self: center;
+}
+
 .script-automation-body button,
 .script-line-header button,
 .script-line-editor button {

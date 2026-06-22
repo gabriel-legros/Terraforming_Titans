@@ -257,6 +257,10 @@ class AutomationManager extends EffectableEntity {
   }
 
   applyTravelCombinationPresets() {
+    if (this.scriptAutomation) {
+      this.scriptAutomation.resetVariables();
+    }
+
     const travelAutomations = [
       this.buildingsAutomation,
       this.projectsAutomation,

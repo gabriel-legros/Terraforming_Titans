@@ -28,6 +28,8 @@ class ScriptAutomation {
     this.maxLinesPerTick = 25;
     this.maxActionsPerTick = 25;
     this.registry = new ScriptVariableRegistry();
+    this.variableValues = {};
+    this.resetVariables();
     this.ensureDefaultScript();
   }
 
@@ -109,6 +111,29 @@ class ScriptAutomation {
         }
       ]
     };
+  }
+
+  resetVariables() {
+    this.variableValues = {};
+    for (let index = 0; index < 26; index += 1) {
+      this.variableValues[String.fromCharCode(65 + index)] = 0;
+    }
+  }
+
+  getVariableValue(variableId) {
+    const id = this.normalizeVariableId(variableId);
+    return this.registry.toNumber(this.variableValues[id]);
+  }
+
+  setVariableValue(variableId, value) {
+    const id = this.normalizeVariableId(variableId);
+    this.variableValues[id] = this.registry.toNumber(value);
+    return true;
+  }
+
+  normalizeVariableId(variableId) {
+    const id = String(variableId || 'A').toUpperCase();
+    return /^[A-Z]$/.test(id) ? id : 'A';
   }
 
   getSelectedScript() {
@@ -867,6 +892,9 @@ class ScriptAutomation {
 
   applyAutomationAction(action) {
     if (!action || action.constructor !== Object) return false;
+    if (action.kind === 'setVariable') {
+      return this.applySetVariableAction(action);
+    }
     if (action.kind === 'toggleAutomation') {
       return this.applyAutomationToggleAction(action);
     }
@@ -901,6 +929,13 @@ class ScriptAutomation {
       return true;
     }
     return false;
+  }
+
+  applySetVariableAction(action) {
+    const expression = action.valueExpression && action.valueExpression.constructor === Object
+      ? action.valueExpression
+      : this.createDefaultExpression();
+    return this.setVariableValue(action.variableId, this.evaluateExpression(expression));
   }
 
   getAutomationTarget(type) {
@@ -1014,6 +1049,9 @@ class ScriptAutomation {
 
   describeAction(action) {
     if (action.kind === 'sleep') return `Sleep ${formatNumber(this.registry.toNumber(action.durationMs), false, 0)} ms`;
+    if (action.kind === 'setVariable') {
+      return `Set ${this.normalizeVariableId(action.variableId)} = ${this.describeExpression(action.valueExpression)}`;
+    }
     if (action.kind === 'gotoScript') {
       const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
       if (!targetScript) return 'GOTO Script ?';
@@ -1053,6 +1091,7 @@ class ScriptAutomation {
       nextTravelScriptId: this.nextTravelScriptId,
       nextTravelPersistent: this.nextTravelPersistent,
       sleepRemainingMs: this.sleepRemainingMs,
+      variableValues: { ...this.variableValues },
       scripts: this.deepClone(this.scripts),
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
@@ -1076,6 +1115,12 @@ class ScriptAutomation {
     this.nextTravelScriptId = data.nextTravelScriptId ? Number(data.nextTravelScriptId) : null;
     this.nextTravelPersistent = data.nextTravelPersistent === true && !!this.nextTravelScriptId;
     this.sleepRemainingMs = this.registry.toNumber(data.sleepRemainingMs);
+    this.resetVariables();
+    if (data.variableValues && data.variableValues.constructor === Object) {
+      for (const id in data.variableValues) {
+        this.setVariableValue(id, data.variableValues[id]);
+      }
+    }
     this.scripts = Array.isArray(data.scripts) ? this.normalizeScripts(data.scripts) : [];
     this.selectedScriptId = data.selectedScriptId ? Number(data.selectedScriptId) : null;
     this.activeScriptId = data.activeScriptId ? Number(data.activeScriptId) : null;
@@ -1119,8 +1164,20 @@ class ScriptAutomation {
       enabled: line.enabled !== false,
       expanded: line.expanded !== false,
       condition: line.condition?.constructor === Object ? line.condition : this.createDefaultCondition(),
-      actions: Array.isArray(line.actions) ? line.actions : []
+      actions: Array.isArray(line.actions) ? line.actions.map(action => this.normalizeAction(action)) : []
     };
+  }
+
+  normalizeAction(action) {
+    if (!action || action.constructor !== Object) return { kind: 'applyPreset', automationType: 'buildings', presetId: null };
+    const normalized = this.deepClone(action);
+    if (normalized.kind === 'setVariable') {
+      normalized.variableId = this.normalizeVariableId(normalized.variableId);
+      if (!normalized.valueExpression || normalized.valueExpression.constructor !== Object) {
+        normalized.valueExpression = this.createDefaultExpression();
+      }
+    }
+    return normalized;
   }
 
   normalizeLinkedElseLines(script) {

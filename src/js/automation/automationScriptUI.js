@@ -653,6 +653,19 @@ function normalizeScriptSleepDuration(action) {
   }
 }
 
+function normalizeScriptAction(automation, action) {
+  if (action.kind === 'sleep') {
+    normalizeScriptSleepDuration(action);
+    return;
+  }
+  if (action.kind === 'setVariable') {
+    action.variableId = automation.normalizeVariableId(action.variableId);
+    if (!action.valueExpression || action.valueExpression.constructor !== Object) {
+      action.valueExpression = automation.createDefaultExpression();
+    }
+  }
+}
+
 function createLineKindSelect(selectedKind) {
   return createSelect([
     { id: 'if', label: getAutomationCardText('scriptLineTypeIf', {}, 'IF') },
@@ -709,6 +722,7 @@ function getScriptActionKinds() {
   return [
     { id: 'applyPreset', label: getAutomationCardText('scriptApplyPreset', {}, 'Apply Preset') },
     { id: 'applyCombination', label: getAutomationCardText('scriptApplyCombination', {}, 'Apply Combination') },
+    { id: 'setVariable', label: getAutomationCardText('scriptSetVariable', {}, 'Set Variable') },
     { id: 'toggleAutomation', label: getAutomationCardText('scriptToggleAutomation', {}, 'Toggle Automation') },
     { id: 'togglePause', label: getAutomationCardText('scriptTogglePause', {}, 'Toggle Pause') },
     { id: 'goto', label: 'GOTO' },
@@ -1147,17 +1161,20 @@ function renderActionsEditor(automation, script, line, container, actions, title
   actions.forEach((action, index) => {
     const row = document.createElement('div');
     row.classList.add('script-action-row');
+    if (action.kind === 'setVariable') row.classList.add('script-set-variable-action');
 
     const kind = createSelect(getScriptActionKinds(), action.kind || 'applyPreset');
     kind.addEventListener('change', event => {
       action.kind = event.target.value;
-      normalizeScriptSleepDuration(action);
+      normalizeScriptAction(automation, action);
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
     row.appendChild(kind);
 
-    if (action.kind === 'sleep') {
+    if (action.kind === 'setVariable') {
+      renderSetVariableActionEditor(automation, action, row);
+    } else if (action.kind === 'sleep') {
       normalizeScriptSleepDuration(action);
       const duration = document.createElement('input');
       duration.type = 'text';
@@ -1251,6 +1268,25 @@ function renderActionsEditor(automation, script, line, container, actions, title
   });
   section.appendChild(addAction);
   container.appendChild(section);
+}
+
+function renderSetVariableActionEditor(automation, action, row) {
+  normalizeScriptAction(automation, action);
+  const variables = automation.registry.getVariableTargets();
+  const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.variableId);
+  action.variableId = variableSelect.value || 'A';
+  variableSelect.addEventListener('change', event => {
+    action.variableId = event.target.value;
+    queueAutomationUIRefresh();
+  });
+  variableSelect.title = getAutomationCardText('scriptVariableLabel', {}, 'Variable');
+  row.appendChild(variableSelect);
+  renderExpressionEditor(
+    automation,
+    action.valueExpression,
+    row,
+    getAutomationCardText('scriptVariableValue', {}, 'Value')
+  );
 }
 
 function renderActionTargetPicker(action, row) {
