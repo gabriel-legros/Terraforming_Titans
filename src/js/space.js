@@ -12,7 +12,7 @@ const SOL_STAR = {
 
 const ROGUE_STAR = {
     name: t('ui.space.stars.rogueSpace', {}, 'Rogue Space'),
-    spectralType: '—',
+    spectralType: '-',
     luminositySolar: 0,
     massSolar: 0,
     temperatureK: 0,

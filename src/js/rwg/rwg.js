@@ -285,7 +285,7 @@ const ORBIT_PRESET_TO_FLUX_KEY = {
 
 const ROGUE_STAR_TEMPLATE = {
   name: t('ui.rwg.generatedLabels.rogueSpace', {}, 'Rogue Space'),
-  spectralType: '—',
+  spectralType: '-',
   luminositySolar: 0,
   massSolar: 0,
   radiusSolar: 0,

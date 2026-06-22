@@ -1459,7 +1459,7 @@ function resolveWorldStar(res) {
     ?? res?.merged?.celestialParameters?.starLuminosity;
   return {
     name: source.name || getRwgUiText('details.unknownStar', 'Unknown Star'),
-    spectralType: source.spectralType || '—',
+    spectralType: source.spectralType || '-',
     luminositySolar: Number(source.luminositySolar ?? celestialLum ?? 1),
     massSolar: Number(source.massSolar ?? 1),
     temperatureK: Number(source.temperatureK ?? 0),
