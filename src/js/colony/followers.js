@@ -21,7 +21,10 @@ class FollowersManager extends EffectableEntity {
     this.faithInitialized = false;
     this.worldBelieverRatio = 0.1;
     this.galacticPopulation = 0;
+    this.nonBirchGalacticBelievers = 0;
     this.galacticBelievers = 0;
+    this.birchWorldPopulation = 0;
+    this.birchWorldBelievers = 0;
     this.smbhGalacticPopulationContribution = 0;
     this.smbhGalacticBelieversContribution = 0;
     this.galacticBelieverPercentFallback = 0.1;
@@ -410,6 +413,18 @@ class FollowersManager extends EffectableEntity {
     return this.clampPercent(this.galacticBelieverPercentFallback);
   }
 
+  syncGalacticBelievers() {
+    const nonBirchBelievers = Math.max(0, this.nonBirchGalacticBelievers || 0);
+    const birchBelievers = Math.max(0, this.birchWorldBelievers || 0);
+    this.galacticPopulation = Math.max(0, spaceManager.galacticPopulation || 0);
+    this.galacticBelievers = this.isCurrentWorldSupermassiveShellworld()
+      ? nonBirchBelievers
+      : nonBirchBelievers + birchBelievers;
+    if (this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
+      this.galacticBelievers = this.galacticPopulation;
+    }
+  }
+
   getWorldBelieverPercent() {
     return this.clampPercent(this.worldBelieverRatio);
   }
@@ -633,6 +648,8 @@ class FollowersManager extends EffectableEntity {
       worldCapPercent: this.getCurrentWorldBelieverCap(),
       galacticPopulation: this.galacticPopulation,
       galacticBelievers: this.galacticBelievers,
+      birchWorldPopulation: this.birchWorldPopulation,
+      birchWorldBelievers: this.birchWorldBelievers,
       galacticPercent,
       rates: {
         worldPerSecond: faithSuppressed ? 0 : this.lastFaithWorldConversionRate,
@@ -727,7 +744,9 @@ class FollowersManager extends EffectableEntity {
 
     if (gains.galacticPercentGain > 0 && this.galacticPopulation > 0) {
       const galacticPercent = Math.min(1, this.getGalacticBelieverPercent() + gains.galacticPercentGain);
-      this.galacticBelievers = galacticPercent * this.galacticPopulation;
+      this.nonBirchGalacticBelievers = galacticPercent * Math.max(0, spaceManager.nonBirchGalacticPopulation || 0);
+      this.birchWorldBelievers = galacticPercent * Math.max(0, spaceManager.birchWorldPopulation || 0);
+      this.syncGalacticBelievers();
       this.galacticBelieverPercentFallback = galacticPercent;
     }
 
@@ -746,13 +765,16 @@ class FollowersManager extends EffectableEntity {
 
   recalculateGalacticPopulation() {
     const nextPopulation = Math.max(0, spaceManager.galacticPopulation || 0);
+    this.birchWorldPopulation = Math.max(0, spaceManager.birchWorldPopulation || 0);
     if (nextPopulation === this.galacticPopulation) {
+      this.syncGalacticBelievers();
       return;
     }
     const galacticPercent = this.getGalacticBelieverPercent();
     this.galacticPopulation = nextPopulation;
-    this.galacticBelievers = galacticPercent * this.galacticPopulation;
+    this.nonBirchGalacticBelievers = galacticPercent * Math.max(0, spaceManager.nonBirchGalacticPopulation || 0);
     this.galacticBelieverPercentFallback = galacticPercent;
+    this.syncGalacticBelievers();
     this.markUIDirty();
   }
 
@@ -761,7 +783,9 @@ class FollowersManager extends EffectableEntity {
       return;
     }
     this.recalculateGalacticPopulation();
-    this.galacticBelievers = this.galacticPopulation * 0.1;
+    this.nonBirchGalacticBelievers = Math.max(0, spaceManager.nonBirchGalacticPopulation || 0) * 0.1;
+    this.birchWorldBelievers = Math.max(0, spaceManager.birchWorldPopulation || 0) * 0.1;
+    this.syncGalacticBelievers();
     this.galacticBelieverPercentFallback = 0.1;
     this.setWorldBelieverPercent(this.getGalacticBelieverPercent());
     this.lastFaithWorldCap = this.getCurrentWorldBelieverCap();
@@ -795,16 +819,18 @@ class FollowersManager extends EffectableEntity {
     }
     const worldBelievers = worldPopulation * this.getWorldBelieverPercent();
     if (this.isCurrentWorldSupermassiveShellworld()) {
-      this.galacticBelievers = Math.max(
-        0,
-        this.galacticBelievers - this.smbhGalacticBelieversContribution
-      );
-      this.smbhGalacticPopulationContribution = worldPopulation;
-      this.smbhGalacticBelieversContribution = worldBelievers;
+      this.birchWorldPopulation = worldPopulation;
+      this.birchWorldBelievers = worldBelievers;
+      this.smbhGalacticPopulationContribution = this.birchWorldPopulation;
+      this.smbhGalacticBelieversContribution = this.birchWorldBelievers;
+      this.syncGalacticBelievers();
+      this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
+      this.markUIDirty();
+      return;
     }
     this.galacticPopulation = spaceManager.galacticPopulation;
-    this.galacticBelievers += worldBelievers;
-    this.galacticBelievers = Math.min(this.galacticBelievers, this.galacticPopulation);
+    this.nonBirchGalacticBelievers += worldBelievers;
+    this.syncGalacticBelievers();
     this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
     if (!this.isFaithSuppressed() && this.isCurrentWorldHolyConsecrated()) {
       this.holyWorldPoints += 1;
@@ -816,16 +842,22 @@ class FollowersManager extends EffectableEntity {
       return false;
     }
     const status = spaceManager.getCurrentWorldStatus();
-    const type = status?.type
-      || status?.classification?.type
-      || status?.original?.merged?.classification?.type
-      || status?.original?.classification?.type
-      || status?.artificialSnapshot?.type;
-    const core = status?.core
-      || status?.classification?.core
-      || status?.original?.merged?.classification?.core
-      || status?.original?.classification?.core
-      || status?.artificialSnapshot?.core;
+    const typeCandidates = [
+      status?.type,
+      status?.classification?.type,
+      status?.original?.merged?.classification?.type,
+      status?.original?.classification?.type,
+      status?.artificialSnapshot?.type
+    ];
+    const coreCandidates = [
+      status?.core,
+      status?.classification?.core,
+      status?.original?.merged?.classification?.core,
+      status?.original?.classification?.core,
+      status?.artificialSnapshot?.core
+    ];
+    const type = typeCandidates.find((value) => value && value !== 'unknown');
+    const core = coreCandidates.find((value) => value && value !== 'unknown');
     return type === 'shell' && core === 'smbh';
   }
 
@@ -874,7 +906,9 @@ class FollowersManager extends EffectableEntity {
     }
 
     galacticPercent += galacticDelta;
-    this.galacticBelievers = galacticPercent * this.galacticPopulation;
+    this.nonBirchGalacticBelievers = galacticPercent * Math.max(0, spaceManager.nonBirchGalacticPopulation || 0);
+    this.birchWorldBelievers = galacticPercent * Math.max(0, spaceManager.birchWorldPopulation || 0);
+    this.syncGalacticBelievers();
     this.galacticBelieverPercentFallback = galacticPercent;
 
     const syncedWorldPercent = Math.min(1, this.getWorldBelieverPercent() + galacticDelta);
@@ -1391,7 +1425,10 @@ class FollowersManager extends EffectableEntity {
         faithInitialized: this.faithInitialized,
         worldBelieverRatio: this.worldBelieverRatio,
         galacticPopulation: this.galacticPopulation,
+        nonBirchGalacticBelievers: this.nonBirchGalacticBelievers,
         galacticBelievers: this.galacticBelievers,
+        birchWorldPopulation: this.birchWorldPopulation,
+        birchWorldBelievers: this.birchWorldBelievers,
         smbhGalacticPopulationContribution: this.smbhGalacticPopulationContribution,
         smbhGalacticBelieversContribution: this.smbhGalacticBelieversContribution,
         galacticBelieverPercentFallback: this.galacticBelieverPercentFallback
@@ -1448,9 +1485,21 @@ class FollowersManager extends EffectableEntity {
     this.faithInitialized = !!faith.faithInitialized;
     this.worldBelieverRatio = this.clampPercent(faith.worldBelieverRatio ?? 0.1);
     this.galacticPopulation = spaceManager.galacticPopulation;
-    this.galacticBelievers = Math.max(0, faith.galacticBelievers || 0);
-    this.smbhGalacticPopulationContribution = Math.max(0, faith.smbhGalacticPopulationContribution || 0);
-    this.smbhGalacticBelieversContribution = Math.max(0, faith.smbhGalacticBelieversContribution || 0);
+    const hasSavedBirchWorldBelievers = Object.prototype.hasOwnProperty.call(faith, 'birchWorldBelievers');
+    const legacyBirchWorldPopulation = Math.max(0, faith.smbhGalacticPopulationContribution || 0);
+    const legacyBirchWorldBelievers = Math.max(0, faith.smbhGalacticBelieversContribution || 0);
+    this.birchWorldPopulation = Object.prototype.hasOwnProperty.call(faith, 'birchWorldPopulation')
+      ? Math.max(0, faith.birchWorldPopulation || 0)
+      : Math.max(0, spaceManager.birchWorldPopulation || legacyBirchWorldPopulation || 0);
+    this.birchWorldBelievers = hasSavedBirchWorldBelievers
+      ? Math.max(0, faith.birchWorldBelievers || 0)
+      : legacyBirchWorldBelievers;
+    this.nonBirchGalacticBelievers = Object.prototype.hasOwnProperty.call(faith, 'nonBirchGalacticBelievers')
+      ? Math.max(0, faith.nonBirchGalacticBelievers || 0)
+      : Math.max(0, (faith.galacticBelievers || 0) - this.birchWorldBelievers);
+    this.syncGalacticBelievers();
+    this.smbhGalacticPopulationContribution = this.birchWorldPopulation;
+    this.smbhGalacticBelieversContribution = this.birchWorldBelievers;
     this.galacticBelieverPercentFallback = this.clampPercent(
       faith.galacticBelieverPercentFallback ?? 0.1
     );
@@ -1475,8 +1524,11 @@ class FollowersManager extends EffectableEntity {
     this.fundingInvested = Math.max(0, artGallery.fundingInvested || 0);
     this.artifactInvestmentStep = Math.max(1, artGallery.artifactStep || 1);
     this.fundingInvestmentStep = Math.max(1, artGallery.fundingStep || 1000);
-    if (this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
+    if (hasSavedBirchWorldBelievers && this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
       this.galacticBelievers = this.galacticPopulation;
+    }
+    if (this.birchWorldPopulation > 0 && this.birchWorldBelievers > this.birchWorldPopulation) {
+      this.birchWorldBelievers = this.birchWorldPopulation;
     }
     if (this.enabled && !this.faithInitialized) {
       this.initializeFaithIfNeeded();

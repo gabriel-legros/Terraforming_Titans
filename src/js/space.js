@@ -84,16 +84,22 @@ function resolveSectorFromSources(...sources) {
 
 function isSupermassiveShellworldStatus(status) {
     if (!status) return false;
-    const type = status.type
-        || status.classification?.type
-        || status.original?.merged?.classification?.type
-        || status.original?.classification?.type
-        || status.artificialSnapshot?.type;
-    const core = status.core
-        || status.classification?.core
-        || status.original?.merged?.classification?.core
-        || status.original?.classification?.core
-        || status.artificialSnapshot?.core;
+    const typeCandidates = [
+        status.type,
+        status.classification?.type,
+        status.original?.merged?.classification?.type,
+        status.original?.classification?.type,
+        status.artificialSnapshot?.type
+    ];
+    const coreCandidates = [
+        status.core,
+        status.classification?.core,
+        status.original?.merged?.classification?.core,
+        status.original?.classification?.core,
+        status.artificialSnapshot?.core
+    ];
+    const type = typeCandidates.find((value) => value && value !== 'unknown');
+    const core = coreCandidates.find((value) => value && value !== 'unknown');
     return type === 'shell' && core === SPACE_SUPERMASSIVE_SHELL_CORE;
 }
 
@@ -197,8 +203,12 @@ class SpaceManager extends EffectableEntity {
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
         this.worldStatsCache = this._createEmptyWorldStatsCache();
+        this.nonBirchGalacticPopulation = 0;
+        this.nonBirchGalacticPopulationCapacity = 0;
         this.galacticPopulation = 0;
         this.galacticPopulationCapacity = 0;
+        this.birchWorldPopulation = 0;
+        this.birchWorldPopulationCapacity = 0;
         this.galacticPopulationGrowthRate = 0.005 / 365;
         this.terraformedWorldCountCache = null;
         this.travelPerfLoggingEnabled = true;
@@ -223,19 +233,31 @@ class SpaceManager extends EffectableEntity {
 
     update(delta) {
         const seconds = delta / 1000;
+        this._syncGalacticPopulationTotals();
         if (seconds <= 0 || this.galacticPopulation <= 0 || this.galacticPopulationCapacity <= 0) {
             return;
         }
         if (this.galacticPopulation >= this.galacticPopulationCapacity) {
-            this.galacticPopulation = this.galacticPopulationCapacity;
+            const birchContribution = this._isCurrentWorldBirchWorld()
+                ? 0
+                : Math.max(0, Number(this.birchWorldPopulation) || 0);
+            this.nonBirchGalacticPopulation = Math.max(
+                0,
+                this.galacticPopulationCapacity - birchContribution
+            );
+            this._syncGalacticPopulationTotals();
             return;
         }
         const capacityFactor = 1 - (this.galacticPopulation / this.galacticPopulationCapacity);
         const growth = this.galacticPopulation * this.galacticPopulationGrowthRate * capacityFactor * seconds;
-        this.galacticPopulation = Math.min(
-            this.galacticPopulationCapacity,
-            this.galacticPopulation + growth
+        this.nonBirchGalacticPopulation = Math.max(
+            0,
+            Math.min(
+                this.galacticPopulationCapacity,
+                this.galacticPopulation + growth
+            ) - (this._isCurrentWorldBirchWorld() ? 0 : Math.max(0, Number(this.birchWorldPopulation) || 0))
         );
+        this._syncGalacticPopulationTotals();
     }
 
     _recordTravelPerf(kind, elapsedMs, targetLabel) {
@@ -1589,6 +1611,9 @@ class SpaceManager extends EffectableEntity {
                 return;
             }
             const status = this.artificialWorldStatuses[key];
+            if (isSupermassiveShellworldStatus(status)) {
+                return;
+            }
             population += this._getStatusPopulation(status);
             populationCapacity += this._getStatusPopulationCapacity(status);
         });
@@ -1598,9 +1623,35 @@ class SpaceManager extends EffectableEntity {
 
     _refreshGalacticPopulationTotals(options = {}) {
         const stats = this._computeTotalPopulationStats(options);
-        this.galacticPopulation = stats.population;
-        this.galacticPopulationCapacity = stats.populationCapacity;
-        return stats;
+        this.nonBirchGalacticPopulation = stats.population;
+        this.nonBirchGalacticPopulationCapacity = stats.populationCapacity;
+        return this._syncGalacticPopulationTotals();
+    }
+
+    _isCurrentWorldBirchWorld() {
+        if (this.currentArtificialKey === null) {
+            return false;
+        }
+        return isSupermassiveShellworldStatus(this.artificialWorldStatuses[String(this.currentArtificialKey)])
+            || isSupermassiveShellworldStatus(currentPlanetParameters);
+    }
+
+    _syncGalacticPopulationTotals() {
+        const nonBirchPopulation = Math.max(0, Number(this.nonBirchGalacticPopulation) || 0);
+        const nonBirchCapacity = Math.max(0, Number(this.nonBirchGalacticPopulationCapacity) || 0);
+        const birchPopulation = Math.max(0, Number(this.birchWorldPopulation) || 0);
+        const birchCapacity = Math.max(0, Number(this.birchWorldPopulationCapacity) || 0);
+        if (this._isCurrentWorldBirchWorld()) {
+            this.galacticPopulation = nonBirchPopulation;
+            this.galacticPopulationCapacity = nonBirchCapacity;
+        } else {
+            this.galacticPopulation = nonBirchPopulation + birchPopulation;
+            this.galacticPopulationCapacity = nonBirchCapacity + birchCapacity;
+        }
+        return {
+            population: this.galacticPopulation,
+            populationCapacity: this.galacticPopulationCapacity
+        };
     }
 
     _hasGalacticPopulationTotals() {
@@ -1614,23 +1665,27 @@ class SpaceManager extends EffectableEntity {
 
     _ensureGalacticPopulationTotals(options = {}) {
         if (this._hasGalacticPopulationTotals()) {
-            return {
-                population: this.galacticPopulation,
-                populationCapacity: this.galacticPopulationCapacity
-            };
+            return this._syncGalacticPopulationTotals();
         }
         return this._refreshGalacticPopulationTotals(options);
     }
 
     _addGalacticPopulationTotals(population, populationCapacity) {
-        this.galacticPopulation = Math.max(0, Number(this.galacticPopulation) || 0)
-            + Math.max(0, Number(population) || 0);
-        this.galacticPopulationCapacity = Math.max(0, Number(this.galacticPopulationCapacity) || 0)
-            + Math.max(0, Number(populationCapacity) || 0);
-        return {
-            population: this.galacticPopulation,
-            populationCapacity: this.galacticPopulationCapacity
-        };
+        this.nonBirchGalacticPopulation = Math.max(
+            0,
+            Math.max(0, Number(this.nonBirchGalacticPopulation) || 0) + (Number(population) || 0)
+        );
+        this.nonBirchGalacticPopulationCapacity = Math.max(
+            0,
+            Math.max(0, Number(this.nonBirchGalacticPopulationCapacity) || 0) + (Number(populationCapacity) || 0)
+        );
+        return this._syncGalacticPopulationTotals();
+    }
+
+    _setBirchWorldPopulationTotals(population, populationCapacity) {
+        this.birchWorldPopulation = Math.max(0, Number(population) || 0);
+        this.birchWorldPopulationCapacity = Math.max(0, Number(populationCapacity) || 0);
+        return this._syncGalacticPopulationTotals();
     }
 
     getTotalPopulationStats(options = {}) {
@@ -2613,6 +2668,25 @@ class SpaceManager extends EffectableEntity {
                 specialization = SPACE_BIRCH_WORLD_SPECIALIZATION;
             }
         }
+        const isBirchWorldDeparture = this.currentArtificialKey !== null
+            && (
+                isSupermassiveShellworldStatus(this.artificialWorldStatuses[String(this.currentArtificialKey)])
+                || isSupermassiveShellworldStatus(currentPlanetParameters)
+            );
+        let previousPopulationContribution = 0;
+        let previousCapacityContribution = 0;
+        if (!isBirchWorldDeparture) {
+            let currentStatus = null;
+            if (this.currentRandomSeed !== null) {
+                currentStatus = this.randomWorldStatuses[String(this.currentRandomSeed)];
+            } else if (this.currentArtificialKey !== null) {
+                currentStatus = this.artificialWorldStatuses[String(this.currentArtificialKey)];
+            } else {
+                currentStatus = this.planetStatuses[this.currentPlanetKey];
+            }
+            previousPopulationContribution = this._getStatusPopulation(currentStatus);
+            previousCapacityContribution = this._getStatusPopulationCapacity(currentStatus);
+        }
         let foundryCompleted = false;
         try {
             foundryCompleted = projectManager.projects.foundryWorld.isCompleted;
@@ -2688,6 +2762,8 @@ class SpaceManager extends EffectableEntity {
                 };
             }
             const st = this.artificialWorldStatuses[key];
+            const isSupermassiveArtificialDeparture = isSupermassiveShellworldStatus(st)
+                || isSupermassiveShellworldStatus(currentPlanetParameters);
             st.visited = true;
             st.colonists = pop;
             st.populationCapacity = populationCapacity;
@@ -2698,8 +2774,12 @@ class SpaceManager extends EffectableEntity {
             st.specialization = specialization;
             st.stored = false;
             st.abandoned = !this._isCurrentWorldTerraformed();
-            st.type = currentPlanetParameters?.classification?.type || st.type || 'shell';
-            st.core = currentPlanetParameters?.classification?.core || st.core || this._resolveArtificialWorldCore(st, st.type);
+            st.type = isSupermassiveArtificialDeparture
+                ? 'shell'
+                : currentPlanetParameters?.classification?.type || st.type || 'shell';
+            st.core = isSupermassiveArtificialDeparture
+                ? SPACE_SUPERMASSIVE_SHELL_CORE
+                : currentPlanetParameters?.classification?.core || st.core || this._resolveArtificialWorldCore(st, st.type);
             if (!st.terraformedValue) {
                 st.terraformedValue = this._deriveArtificialTerraformValue({
                     landHa: this._getCurrentWorldLandHa(),
@@ -2712,7 +2792,18 @@ class SpaceManager extends EffectableEntity {
             }
             st.landHa = landHa;
             st.cachedLandHa = landHa;
-            st.artificialSnapshot = artificialManager.buildSnapshotFromParams(currentPlanetParameters);
+            const nextArtificialSnapshot = artificialManager.buildSnapshotFromParams(currentPlanetParameters);
+            if (isSupermassiveArtificialDeparture) {
+                st.artificialSnapshot = st.artificialSnapshot || nextArtificialSnapshot || {};
+                st.artificialSnapshot.type = 'shell';
+                st.artificialSnapshot.core = SPACE_SUPERMASSIVE_SHELL_CORE;
+                if (st.artificialSnapshot.classification) {
+                    st.artificialSnapshot.classification.type = 'shell';
+                    st.artificialSnapshot.classification.core = SPACE_SUPERMASSIVE_SHELL_CORE;
+                }
+            } else {
+                st.artificialSnapshot = nextArtificialSnapshot;
+            }
             const smbhSnapshot = captureCurrentSmbhShellworldSnapshot(this);
             if (smbhSnapshot) {
                 st.smbhSnapshot = smbhSnapshot;
@@ -2731,8 +2822,16 @@ class SpaceManager extends EffectableEntity {
         }
         this._compactRandomWorldStatuses();
         this._compactArtificialWorldStatuses();
-        if (this._hasGalacticPopulationTotals()) {
-            this._addGalacticPopulationTotals(pop, populationCapacity);
+        if (isBirchWorldDeparture) {
+            this._setBirchWorldPopulationTotals(pop, populationCapacity);
+            if (!this._hasGalacticPopulationTotals()) {
+                this._refreshGalacticPopulationTotals();
+            }
+        } else if (this._hasGalacticPopulationTotals()) {
+            this._addGalacticPopulationTotals(
+                pop - previousPopulationContribution,
+                populationCapacity - previousCapacityContribution
+            );
         } else {
             this._refreshGalacticPopulationTotals({ includeCurrentWorld: true });
         }
@@ -2802,6 +2901,9 @@ class SpaceManager extends EffectableEntity {
         this._ensureGalacticPopulationTotals();
         initializeGameState({ preserveManagers: true, preserveJournal: true });
         restoreCurrentSmbhShellworldSnapshot(this);
+        if (followersManager && followersManager.syncGalacticBelievers) {
+            followersManager.syncGalacticBelievers();
+        }
         resetGameFrameClock(true);
         const elapsedMs = performance.now() - startMs;
         this._recordTravelPerf(options?.travelKind, elapsedMs, options?.targetLabel);
@@ -3208,6 +3310,10 @@ class SpaceManager extends EffectableEntity {
             rwgSummary: this._sanitizeRwgSummary(this.rwgSummary),
             galacticPopulation: this.galacticPopulation,
             galacticPopulationCapacity: this.galacticPopulationCapacity,
+            nonBirchGalacticPopulation: this.nonBirchGalacticPopulation,
+            nonBirchGalacticPopulationCapacity: this.nonBirchGalacticPopulationCapacity,
+            birchWorldPopulation: this.birchWorldPopulation,
+            birchWorldPopulationCapacity: this.birchWorldPopulationCapacity,
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
@@ -3236,6 +3342,10 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
+        this.nonBirchGalacticPopulation = 0;
+        this.nonBirchGalacticPopulationCapacity = 0;
+        this.birchWorldPopulation = 0;
+        this.birchWorldPopulationCapacity = 0;
         this.spaceSliders = { cylindersHope: 0 };
         this.spaceSliderRuntime = {};
         this.terraformHistory = [];
@@ -3503,12 +3613,61 @@ class SpaceManager extends EffectableEntity {
         this.rwgSummary = this._sanitizeRwgSummary(savedData.rwgSummary);
         const savedGalacticPopulation = Number(savedData.galacticPopulation);
         const savedGalacticPopulationCapacity = Number(savedData.galacticPopulationCapacity);
+        const savedNonBirchGalacticPopulation = Number(savedData.nonBirchGalacticPopulation);
+        const savedNonBirchGalacticPopulationCapacity = Number(savedData.nonBirchGalacticPopulationCapacity);
+        const savedBirchWorldPopulation = Number(savedData.birchWorldPopulation);
+        const savedBirchWorldPopulationCapacity = Number(savedData.birchWorldPopulationCapacity);
+        const hasSavedBirchWorldPopulation = Object.prototype.hasOwnProperty.call(savedData, 'birchWorldPopulation')
+            && Number.isFinite(savedBirchWorldPopulation);
+        const hasSavedNonBirchGalacticPopulation = Object.prototype.hasOwnProperty.call(savedData, 'nonBirchGalacticPopulation')
+            && Number.isFinite(savedNonBirchGalacticPopulation);
+        let migratedBirchWorldPopulation = 0;
+        let migratedBirchWorldPopulationCapacity = 0;
+        if (!hasSavedBirchWorldPopulation) {
+            Object.values(this.artificialWorldStatuses).forEach((status) => {
+                if (!isSupermassiveShellworldStatus(status)) {
+                    return;
+                }
+                migratedBirchWorldPopulation = Math.max(
+                    migratedBirchWorldPopulation,
+                    this._getStatusPopulation(status)
+                );
+                migratedBirchWorldPopulationCapacity = Math.max(
+                    migratedBirchWorldPopulationCapacity,
+                    this._getStatusPopulationCapacity(status)
+                );
+            });
+        }
+        this.birchWorldPopulation = hasSavedBirchWorldPopulation
+            ? Math.max(0, savedBirchWorldPopulation)
+            : migratedBirchWorldPopulation;
+        this.birchWorldPopulationCapacity = Object.prototype.hasOwnProperty.call(savedData, 'birchWorldPopulationCapacity')
+            && Number.isFinite(savedBirchWorldPopulationCapacity)
+            ? Math.max(0, savedBirchWorldPopulationCapacity)
+            : migratedBirchWorldPopulationCapacity;
+        const recomputedNonBirchStats = this._computeTotalPopulationStats();
+        this.nonBirchGalacticPopulation = hasSavedNonBirchGalacticPopulation
+            ? Math.max(0, savedNonBirchGalacticPopulation)
+            : recomputedNonBirchStats.population > 0
+                ? recomputedNonBirchStats.population
+                : Number.isFinite(savedGalacticPopulation) && savedGalacticPopulation > 0
+                    ? Math.max(0, savedGalacticPopulation - migratedBirchWorldPopulation)
+                    : 0;
+        this.nonBirchGalacticPopulationCapacity = Object.prototype.hasOwnProperty.call(savedData, 'nonBirchGalacticPopulationCapacity')
+            && Number.isFinite(savedNonBirchGalacticPopulationCapacity)
+            ? Math.max(0, savedNonBirchGalacticPopulationCapacity)
+            : recomputedNonBirchStats.populationCapacity > 0
+                ? recomputedNonBirchStats.populationCapacity
+                : Number.isFinite(savedGalacticPopulationCapacity) && savedGalacticPopulationCapacity > 0
+                    ? Math.max(0, savedGalacticPopulationCapacity - migratedBirchWorldPopulationCapacity)
+                    : 0;
         this.galacticPopulation = Number.isFinite(savedGalacticPopulation) && savedGalacticPopulation > 0
             ? savedGalacticPopulation
             : 0;
         this.galacticPopulationCapacity = Number.isFinite(savedGalacticPopulationCapacity) && savedGalacticPopulationCapacity > 0
             ? savedGalacticPopulationCapacity
             : 0;
+        this._syncGalacticPopulationTotals();
 
         Object.keys(this.planetStatuses).forEach((planetKey) => {
             this._syncFoundryLandFactor(this.planetStatuses[planetKey], planetKey);
