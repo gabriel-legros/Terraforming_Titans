@@ -307,25 +307,22 @@ class CargoRocketProject extends Project {
     return this.spaceshipPriceIncrease;
   }
 
-  applySpaceshipPurchase(count) {
-    const total = typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
-      ? spaceManager.getTerraformedPlanetCount()
-      : 0;
-    const currentTerraformed = typeof spaceManager !== 'undefined' && typeof spaceManager.isPlanetTerraformed === 'function' && typeof spaceManager.getCurrentPlanetKey === 'function'
-      ? spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())
+  getSpaceshipDivisor() {
+    const total = spaceManager.getTerraformedPlanetCount() || 0;
+    const currentPlanetKey = spaceManager.getCurrentPlanetKey();
+    const currentTerraformed = currentPlanetKey
+      ? spaceManager.isPlanetTerraformed(currentPlanetKey)
       : false;
-    const divisor = Math.max(1, total - (currentTerraformed ? 1 : 0));
+    return Math.max(1, total - (currentTerraformed ? 1 : 0));
+  }
+
+  applySpaceshipPurchase(count) {
+    const divisor = this.getSpaceshipDivisor();
     this.spaceshipPriceIncrease += count / divisor;
   }
 
   getSpaceshipTotalCost(quantity, basePrice) {
-    const total = typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
-      ? spaceManager.getTerraformedPlanetCount()
-      : 0;
-    const currentTerraformed = typeof spaceManager !== 'undefined' && typeof spaceManager.isPlanetTerraformed === 'function' && typeof spaceManager.getCurrentPlanetKey === 'function'
-      ? spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())
-      : false;
-    const divisor = Math.max(1, total - (currentTerraformed ? 1 : 0));
+    const divisor = this.getSpaceshipDivisor();
     const delta = 1 / divisor;
     const current = this.spaceshipPriceIncrease;
     return basePrice * quantity + current * quantity + delta * quantity * (quantity - 1) / 2;
@@ -345,6 +342,26 @@ class CargoRocketProject extends Project {
     return total;
   }
 
+  getBuyCostCoefficients(transactions, seconds, productivity) {
+    const timeScale = seconds * productivity;
+    const divisor = this.getSpaceshipDivisor();
+    const delta = 1 / divisor;
+    let quadratic = 0;
+    let linear = 0;
+
+    transactions.forEach((transaction) => {
+      const quantity = transaction.quantity;
+      if (transaction.resource === 'spaceships') {
+        quadratic += (delta * quantity * quantity / 2) * timeScale;
+        linear += (transaction.basePrice + this.spaceshipPriceIncrease - delta / 2) * quantity * timeScale;
+      } else {
+        linear += transaction.basePrice * quantity * timeScale;
+      }
+    });
+
+    return { quadratic, linear };
+  }
+
   getAffordableBuyScale(transactions, availableFunding, seconds, productivity) {
     if (availableFunding <= 0) {
       return 0;
@@ -354,20 +371,20 @@ class CargoRocketProject extends Project {
       return 1;
     }
 
-    let low = 0;
-    let high = 1;
-    for (let i = 0; i < 512; i++) {
-      const mid = (low + high) / 2;
-      if (mid === low || mid === high) {
-        break;
-      }
-      if (this.getScaledBuyCost(transactions, mid, seconds, productivity) <= availableFunding) {
-        low = mid;
-      } else {
-        high = mid;
-      }
+    const coefficients = this.getBuyCostCoefficients(transactions, seconds, productivity);
+    if (coefficients.quadratic <= 0) {
+      return Math.max(0, Math.min(1, availableFunding / coefficients.linear));
     }
-    return low;
+
+    const normalizer = Math.max(coefficients.quadratic, Math.abs(coefficients.linear), availableFunding);
+    const quadratic = coefficients.quadratic / normalizer;
+    const linear = coefficients.linear / normalizer;
+    const funding = availableFunding / normalizer;
+    const discriminantRoot = Math.sqrt(linear * linear + 4 * quadratic * funding);
+    const scale = linear >= 0
+      ? (2 * funding) / (linear + discriminantRoot)
+      : (-linear + discriminantRoot) / (2 * quadratic);
+    return Math.max(0, Math.min(1, scale));
   }
 
   update(delta) {

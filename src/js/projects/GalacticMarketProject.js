@@ -786,6 +786,26 @@ class GalacticMarketProject extends Project {
     return total;
   }
 
+  getBuyCostCoefficients(transactions, seconds, productivity) {
+    const timeScale = seconds * productivity;
+    const divisor = this.getSpaceshipDivisor();
+    const delta = 1 / divisor;
+    let quadratic = 0;
+    let linear = 0;
+
+    transactions.forEach((transaction) => {
+      const quantity = transaction.quantity;
+      if (transaction.resource === 'spaceships') {
+        quadratic += (delta * quantity * quantity / 2) * timeScale;
+        linear += (transaction.basePrice + this.spaceshipPriceIncrease - delta / 2) * quantity * timeScale;
+      } else {
+        linear += transaction.basePrice * quantity * timeScale;
+      }
+    });
+
+    return { quadratic, linear };
+  }
+
   getAffordableBuyScale(transactions, availableFunding, seconds, productivity) {
     if (availableFunding <= 0) {
       return 0;
@@ -795,20 +815,20 @@ class GalacticMarketProject extends Project {
       return 1;
     }
 
-    let low = 0;
-    let high = 1;
-    for (let i = 0; i < 512; i++) {
-      const mid = (low + high) / 2;
-      if (mid === low || mid === high) {
-        break;
-      }
-      if (this.getScaledBuyCost(transactions, mid, seconds, productivity) <= availableFunding) {
-        low = mid;
-      } else {
-        high = mid;
-      }
+    const coefficients = this.getBuyCostCoefficients(transactions, seconds, productivity);
+    if (coefficients.quadratic <= 0) {
+      return Math.max(0, Math.min(1, availableFunding / coefficients.linear));
     }
-    return low;
+
+    const normalizer = Math.max(coefficients.quadratic, Math.abs(coefficients.linear), availableFunding);
+    const quadratic = coefficients.quadratic / normalizer;
+    const linear = coefficients.linear / normalizer;
+    const funding = availableFunding / normalizer;
+    const discriminantRoot = Math.sqrt(linear * linear + 4 * quadratic * funding);
+    const scale = linear >= 0
+      ? (2 * funding) / (linear + discriminantRoot)
+      : (-linear + discriminantRoot) / (2 * quadratic);
+    return Math.max(0, Math.min(1, scale));
   }
 
   static get SELL_MULTIPLIERS() {
