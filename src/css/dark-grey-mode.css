@@ -1190,6 +1190,12 @@ body.dark-grey-mode {
     box-shadow: 0 1px 0 #1b2536 inset;
 }
 
+.dark-grey-mode .automation-preset-script-usage {
+    background: #111827;
+    border-color: #24324a;
+    color: #c8d2e2;
+}
+
 .dark-grey-mode .automation-preset-json-summary {
     color: #e7ecf7;
 }
