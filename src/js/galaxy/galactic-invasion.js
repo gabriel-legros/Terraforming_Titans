@@ -6,6 +6,8 @@ class GalacticInvasionManager extends EffectableEntity {
     this.completedLetters = new Set();
     this.cooldownRemainingMs = 0;
     this.invasionTimerMs = 0;
+    this.operationLaunchCooldownMs = 0;
+    this.operationLaunchCooldownJustSet = false;
     this.externalFailurePending = false;
     this.rewardSignature = '';
     this.rewardTargets = new Set();
@@ -82,6 +84,16 @@ class GalacticInvasionManager extends EffectableEntity {
       this.completeActiveInvasion({ updateUI: false });
       return;
     }
+    if (this.operationLaunchCooldownMs > 0) {
+      if (this.operationLaunchCooldownJustSet) {
+        this.operationLaunchCooldownJustSet = false;
+        return;
+      }
+      this.operationLaunchCooldownMs = Math.max(0, this.operationLaunchCooldownMs - deltaMs);
+      if (this.operationLaunchCooldownMs > 0) {
+        return;
+      }
+    }
     this.invasionTimerMs += deltaMs;
     if (this.invasionTimerMs < PROMETHEAN_INVASION_OPERATION_MS) {
       return;
@@ -113,6 +125,8 @@ class GalacticInvasionManager extends EffectableEntity {
     this.initialFleetPower = letter.fleetPower;
     this.deepStrikeUsed = false;
     this.monolithCooldownMs = 0;
+    this.operationLaunchCooldownMs = 0;
+    this.operationLaunchCooldownJustSet = false;
     this.monolithSectorKey = null;
     this.occupationBastions = {};
     this.beachheadSectorKey = null;
@@ -166,6 +180,8 @@ class GalacticInvasionManager extends EffectableEntity {
     this.initialFleetPower = preserveLetter ? this.initialFleetPower : 0;
     this.deepStrikeUsed = false;
     this.monolithCooldownMs = 0;
+    this.operationLaunchCooldownMs = 0;
+    this.operationLaunchCooldownJustSet = false;
     this.monolithSectorKey = null;
     this.occupationBastions = {};
     this.beachheadSectorKey = null;
@@ -215,6 +231,8 @@ class GalacticInvasionManager extends EffectableEntity {
       this.externalFailurePending = true;
     }
     if (operation.factionId === PROMETHEAN_INVASION_FACTION_ID) {
+      this.operationLaunchCooldownMs = PROMETHEAN_INVASION_LAUNCH_COOLDOWN_MS;
+      this.operationLaunchCooldownJustSet = true;
       this.handleInvasionAttackResult(operation);
       return;
     }
@@ -629,7 +647,7 @@ class GalacticInvasionManager extends EffectableEntity {
     if (attackerId !== UHF_FACTION_ID || targetFactionId !== PROMETHEAN_INVASION_FACTION_ID) {
       return 0;
     }
-    return PROMETHEAN_INVASION_OPERATION_MS;
+    return PROMETHEAN_INVASION_UHF_COMMAND_BYPASS_OPERATION_MS;
   }
 
   adjustDefenseSummary(sector, originFactionId, targetFactionId, contributions) {
@@ -872,6 +890,7 @@ class GalacticInvasionManager extends EffectableEntity {
       completedLetters: Array.from(this.completedLetters),
       cooldownRemainingMs: this.cooldownRemainingMs,
       invasionTimerMs: this.invasionTimerMs,
+      operationLaunchCooldownMs: this.operationLaunchCooldownMs,
       externalFailurePending: this.externalFailurePending,
       initialFleetPower: this.initialFleetPower,
       deepStrikeUsed: this.deepStrikeUsed,
@@ -889,6 +908,8 @@ class GalacticInvasionManager extends EffectableEntity {
     this.completedLetters = new Set(Array.isArray(state.completedLetters) ? state.completedLetters : []);
     this.cooldownRemainingMs = Math.max(0, Number(state.cooldownRemainingMs) || 0);
     this.invasionTimerMs = Math.max(0, Number(state.invasionTimerMs) || 0);
+    this.operationLaunchCooldownMs = Math.max(0, Number(state.operationLaunchCooldownMs) || 0);
+    this.operationLaunchCooldownJustSet = false;
     this.externalFailurePending = state.externalFailurePending === true;
     this.initialFleetPower = Math.max(0, Number(state.initialFleetPower) || 0);
     this.deepStrikeUsed = state.deepStrikeUsed === true;
