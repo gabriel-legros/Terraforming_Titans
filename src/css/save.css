@@ -222,13 +222,29 @@
   }
   
   .save-slots table {
-    width: 80%;
+    width: min(100%, 900px);
     margin: 0 auto;
     border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .save-slots th:first-child,
+  .save-slots td:first-child:not([colspan]) {
+    width: 24%;
+  }
+
+  .save-slots th:nth-child(2),
+  .save-slots td:nth-child(2) {
+    width: 36%;
+  }
+
+  .save-slots th:nth-child(3),
+  .save-slots td:nth-child(3) {
+    width: 40%;
   }
   
   .save-slots td {
-    padding: 12px;
+    padding: 8px 10px;
     text-align: center;
     border-bottom: 1px solid #ddd;
   }
@@ -239,13 +255,13 @@
   
   .save-slots th {
     background-color: #f2f2f2;
-    padding: 12px;
+    padding: 8px 10px;
     text-align: center;
   }
   
   .save-slots button {
-    padding: 8px 16px;
-    margin: 0 5px;
+    padding: 7px 13px;
+    margin: 3px;
     border: none;
     border-radius: 4px;
     background-color: #4CAF50;
@@ -269,6 +285,57 @@
   
   .save-slots button.delete-button:hover {
     background-color: #d32f2f;
+  }
+
+  .save-slot-name-cell {
+    white-space: nowrap;
+  }
+
+  .save-slot-name-text {
+    display: inline-block;
+    max-width: calc(100% - 34px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
+
+  .save-slot-name-input {
+    width: min(150px, 100%);
+    min-width: 0;
+    padding: 4px 6px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .save-slots .save-slot-rename-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: #777;
+    opacity: 0.65;
+    vertical-align: middle;
+  }
+
+  .save-slots .save-slot-rename-button::before {
+    content: "\270e";
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .save-slots .save-slot-rename-button:hover {
+    border-color: #d8d8d8;
+    background: #f7f7f7;
+    color: #333;
+    opacity: 1;
   }
 
   .load-string-dialog-overlay {

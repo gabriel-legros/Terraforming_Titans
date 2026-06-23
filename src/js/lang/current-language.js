@@ -4623,6 +4623,8 @@ setLanguageData({
       slot3: 'Slot 3',
       slot4: 'Slot 4',
       slot5: 'Slot 5',
+      renameSaveSlotTitle: 'Rename save slot',
+      saveSlotNameInputLabel: 'Save slot name',
       confirmDeleteSlot: 'Are you sure you want to delete the save file in {slot}? This action cannot be undone.',
       confirmNewGame: 'Are you sure you want to start a new game? Any unsaved progress will be lost.',
       pasteSaveData: 'Paste save data to load:',

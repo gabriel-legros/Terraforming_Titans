@@ -69,6 +69,9 @@ function getSaveStoragePath(key) {
   if (key === 'saveSlotDates') {
     return path.join(app.getPath('userData'), 'saves', 'slot-dates.json');
   }
+  if (key === 'saveSlotNames') {
+    return path.join(app.getPath('userData'), 'saves', 'slot-names.json');
+  }
   const match = /^gameState_(.+)$/.exec(key);
   if (match && saveSlotNames.has(match[1])) {
     return path.join(app.getPath('userData'), 'saves', `${match[1]}.json`);

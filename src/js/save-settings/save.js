@@ -7,6 +7,7 @@ let pendingAutomationSafetyRestoreState = null;
 let loadStringDialog = null;
 const SAVE_SLOTS = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 const SAVE_FALLBACK_LOAD_ORDER = ['autosave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
+const RENAMABLE_SAVE_SLOTS = ['slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -1031,6 +1032,69 @@ function writeSaveSlotDates(saveSlotDates) {
     console.warn('Unable to access save storage for save slot dates:', e);
     return false;
   }
+}
+
+function readSaveSlotNames() {
+  try {
+    const saveSlotNames = JSON.parse(readSaveStorageItem('saveSlotNames')) || {};
+    return saveSlotNames && saveSlotNames.constructor === Object ? saveSlotNames : {};
+  } catch (e) {
+    console.warn('Unable to access save storage for save slot names:', e);
+    return {};
+  }
+}
+
+function writeSaveSlotNames(saveSlotNames) {
+  try {
+    writeSaveStorageItem('saveSlotNames', JSON.stringify(saveSlotNames));
+    return true;
+  } catch (e) {
+    console.warn('Unable to access save storage for save slot names:', e);
+    return false;
+  }
+}
+
+function getDefaultSaveSlotName(slot) {
+  return t(`ui.settings.${slot}`, null, slot);
+}
+
+function normalizeSaveSlotName(slot, value) {
+  const name = String(value || '').trim();
+  return name || getDefaultSaveSlotName(slot);
+}
+
+function getSaveSlotName(slot, saveSlotNames) {
+  if (RENAMABLE_SAVE_SLOTS.indexOf(slot) === -1) {
+    return getDefaultSaveSlotName(slot);
+  }
+  return normalizeSaveSlotName(slot, saveSlotNames[slot]);
+}
+
+function setSaveSlotLabel(slot, name) {
+  const label = document.getElementById(`${slot}-label`);
+  if (label) {
+    label.textContent = name;
+  }
+}
+
+function saveSaveSlotName(slot, name) {
+  const saveSlotNames = readSaveSlotNames();
+  saveSlotNames[slot] = normalizeSaveSlotName(slot, name);
+  writeSaveSlotNames(saveSlotNames);
+  setSaveSlotLabel(slot, saveSlotNames[slot]);
+}
+
+function loadSaveSlotNames() {
+  const saveSlotNames = readSaveSlotNames();
+  const repairedNames = {};
+  for (const slot of RENAMABLE_SAVE_SLOTS) {
+    const name = getSaveSlotName(slot, saveSlotNames);
+    if (saveSlotNames[slot] !== undefined) {
+      repairedNames[slot] = name;
+    }
+    setSaveSlotLabel(slot, name);
+  }
+  writeSaveSlotNames(repairedNames);
 }
 
 function getSavedStateForSlot(slot) {

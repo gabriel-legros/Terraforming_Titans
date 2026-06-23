@@ -992,6 +992,24 @@ body.dark-grey-mode {
 .dark-grey-mode .save-slots button.delete-button:hover {
     background-color: #cc0000;
 }
+
+.dark-grey-mode .save-slot-name-input {
+    background-color: #1e1e1e;
+    border-color: #555;
+    color: #ffffff;
+}
+
+.dark-grey-mode .save-slots .save-slot-rename-button {
+    border-color: transparent;
+    background: transparent;
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .save-slots .save-slot-rename-button:hover {
+    border-color: #555;
+    background: #3a3a3a;
+    color: #ffffff;
+}
 .dark-grey-mode .terraforming-box {
     background-color: #2d2d2d;
     border-color: #444;

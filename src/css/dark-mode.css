@@ -1013,6 +1013,24 @@ body.dark-mode {
     background-color: #cc0000;
 }
 
+.dark-mode .save-slot-name-input {
+    background-color: #111827;
+    border-color: #374151;
+    color: #e7ecf7;
+}
+
+.dark-mode .save-slots .save-slot-rename-button {
+    border-color: transparent;
+    background: transparent;
+    color: #9ca3af;
+}
+
+.dark-mode .save-slots .save-slot-rename-button:hover {
+    border-color: #374151;
+    background: #374151;
+    color: #e7ecf7;
+}
+
 .dark-mode .load-string-dialog-window {
     background: #1f2937;
     color: #f3f4f6;
