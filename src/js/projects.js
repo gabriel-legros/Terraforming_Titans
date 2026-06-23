@@ -634,22 +634,34 @@ class Project extends EffectableEntity {
       return;
     }
 
-    if (!this.hasSustainResources(deltaTime, false)) {
-      this.isActive = false;
-      this.isPaused = true;
-      return;
+    let progressDelta = Math.min(deltaTime, this.remainingTime);
+    if (this.sustainCost) {
+      for (const category in this.sustainCost) {
+        for (const resource in this.sustainCost[category]) {
+          const rate = this.sustainCost[category][resource];
+          if (rate > 0) {
+            const affordableDelta = (Math.max(0, resources[category][resource].value) / rate) * 1000;
+            progressDelta = Math.min(progressDelta, affordableDelta);
+          }
+        }
+      }
+      if (!(progressDelta > 0)) {
+        this.isActive = false;
+        this.isPaused = true;
+        return;
+      }
     }
 
     const kesslerDelta = this.kesslerRollPending
-      ? Math.min(deltaTime, this.remainingTime)
-      : deltaTime;
+      ? Math.min(progressDelta, this.remainingTime)
+      : progressDelta;
     if (this._checkKesslerFailure(kesslerDelta)) {
       return;
     }
 
-    this.deductSustainResources(deltaTime);
+    this.deductSustainResources(progressDelta);
 
-    this.remainingTime -= deltaTime;
+    this.remainingTime -= progressDelta;
 
     if (this.remainingTime <= 0) {
       if (this.kesslerRollPending) {
