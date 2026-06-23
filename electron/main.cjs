@@ -195,6 +195,24 @@ function createWindow() {
     win.show();
   });
 
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') {
+      return;
+    }
+    if (input.control && input.shift && input.key.toLowerCase() === 'i') {
+      event.preventDefault();
+      if (win.webContents.isDevToolsOpened()) {
+        win.webContents.closeDevTools();
+      } else {
+        win.webContents.openDevTools({ mode: 'detach' });
+      }
+    }
+    if (input.key === 'Escape' && win.webContents.isDevToolsOpened()) {
+      event.preventDefault();
+      win.webContents.closeDevTools();
+    }
+  });
+
   win.webContents.setWindowOpenHandler(({ url }) => {
     openExternalUrl(url);
     return { action: 'deny' };
