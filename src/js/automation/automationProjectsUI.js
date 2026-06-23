@@ -4,6 +4,8 @@ const projectAutomationUIState = {
   builderName: '',
   builderType: 'both',
   builderScope: 'all',
+  builderPresetMode: 'regular',
+  builderPresetModeInvalidMessage: '',
   builderShowInSidebar: true,
   builderSelectedProjects: [],
   jsonFilterProjectId: '',
@@ -400,8 +402,22 @@ function buildAutomationProjectsUI() {
   manualScope.value = 'manual';
   manualScope.textContent = getAutomationCardText('chooseProjects', {}, 'Choose projects');
   scopeSelect.append(allScope, manualScope);
-  builderModeRow.append(typeSelect, scopeSelect);
+  const presetModeSelect = document.createElement('select');
+  presetModeSelect.classList.add('project-automation-builder-preset-mode');
+  const regularModeOption = document.createElement('option');
+  regularModeOption.value = 'regular';
+  regularModeOption.textContent = getAutomationCardText('regularPresetMode', {}, 'Regular preset');
+  const parameterizedModeOption = document.createElement('option');
+  parameterizedModeOption.value = 'parameterized';
+  parameterizedModeOption.textContent = getAutomationCardText('parameterizedPresetMode', {}, 'Parametrized preset');
+  presetModeSelect.append(regularModeOption, parameterizedModeOption);
+  builderModeRow.append(typeSelect, scopeSelect, presetModeSelect);
   builderSection.appendChild(builderModeRow);
+
+  const presetModeMessage = document.createElement('div');
+  presetModeMessage.classList.add('automation-parameterized-preset-message');
+  presetModeMessage.style.display = 'none';
+  builderSection.appendChild(presetModeMessage);
 
   const builderHint = document.createElement('div');
   builderHint.classList.add('project-automation-hint', 'building-automation-hint');
@@ -480,6 +496,8 @@ function buildAutomationProjectsUI() {
   automationElements.projectsBuilderDirty = builderDirty;
   automationElements.projectsBuilderTypeSelect = typeSelect;
   automationElements.projectsBuilderScopeSelect = scopeSelect;
+  automationElements.projectsBuilderPresetModeSelect = presetModeSelect;
+  automationElements.projectsBuilderPresetModeMessage = presetModeMessage;
   automationElements.projectsBuilderCategorySelect = categorySelect;
   automationElements.projectsBuilderProjectSelect = projectSelect;
   automationElements.projectsBuilderResourceSelect = resourceSelect;
@@ -700,6 +718,8 @@ function updateProjectsAutomationUI() {
     projectsBuilderDirty,
     projectsBuilderTypeSelect,
     projectsBuilderScopeSelect,
+    projectsBuilderPresetModeSelect,
+    projectsBuilderPresetModeMessage,
     projectsBuilderCategorySelect,
     projectsBuilderProjectSelect,
     projectsBuilderResourceSelect,
@@ -780,6 +800,7 @@ function updateProjectsAutomationUI() {
       : includeExpansion
         ? 'expansion'
         : 'operations';
+    projectAutomationUIState.builderPresetMode = automation.getPresetModeValue(activePreset.presetMode);
     projectAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
     projectAutomationUIState.builderSelectedProjects = names.slice();
     projectAutomationUIState.builderSpaceStorageResourceValue = previousSpaceStorageResourceValue;
@@ -805,6 +826,9 @@ function updateProjectsAutomationUI() {
   }
   updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
     rootPath: ['projects'],
+    parameterInputPath: activePreset && automation.isParameterizedPreset(activePreset)
+      ? automation.getPresetParameterInfo(activePreset).parameterPath
+      : null,
     showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.projectsAutomationStatus, text, isError),
     isLeafVisible: (fieldPath, effectivePreset) => {
       const selectedProjectId = projectAutomationUIState.jsonFilterProjectId;
@@ -879,6 +903,20 @@ function updateProjectsAutomationUI() {
   if (document.activeElement !== projectsBuilderScopeSelect) {
     projectsBuilderScopeSelect.value = projectAutomationUIState.builderScope;
   }
+  const showPresetMode = manager.hasFeature('automationScripts');
+  projectsBuilderPresetModeSelect.style.display = showPresetMode ? '' : 'none';
+  if (!showPresetMode) {
+    projectAutomationUIState.builderPresetMode = 'regular';
+  }
+  if (document.activeElement !== projectsBuilderPresetModeSelect) {
+    projectsBuilderPresetModeSelect.value = projectAutomationUIState.builderPresetMode;
+  }
+  const parameterizedInvalidMessage = activePreset
+    && showPresetMode
+    ? automation.getParameterizedPresetInvalidMessage(activePreset)
+    : projectAutomationUIState.builderPresetModeInvalidMessage;
+  projectsBuilderPresetModeMessage.textContent = parameterizedInvalidMessage;
+  projectsBuilderPresetModeMessage.style.display = parameterizedInvalidMessage ? '' : 'none';
 
   const showManual = projectAutomationUIState.builderScope === 'manual';
   projectsBuilderCategorySelect.parentElement.style.display = showManual ? 'flex' : 'none';
@@ -1073,6 +1111,7 @@ function updateProjectsAutomationUI() {
       ? 'all'
       : 'manual'
     : 'all';
+  const savedPresetMode = activePreset && showPresetMode ? automation.getPresetModeValue(activePreset.presetMode) : 'regular';
   const savedProjectIds = activePreset ? Object.keys(activePreset.projects) : [];
   const savedProjectSet = new Set(savedProjectIds);
   const manualSelection = projectAutomationUIState.builderScope === 'manual';
@@ -1083,12 +1122,14 @@ function updateProjectsAutomationUI() {
     && (
       projectAutomationUIState.builderName.trim() !== ''
       || projectAutomationUIState.builderType !== 'both'
+      || (showPresetMode && projectAutomationUIState.builderPresetMode !== 'regular')
       || projectAutomationUIState.builderScope !== 'all'
       || projectAutomationUIState.builderSelectedProjects.length > 0
     );
   const existingDirty = !!activePreset
     && (
       projectAutomationUIState.builderType !== savedType
+      || (showPresetMode && projectAutomationUIState.builderPresetMode !== savedPresetMode)
       || projectAutomationUIState.builderScope !== savedScope
       || selectionChanged
     );
@@ -1120,6 +1161,7 @@ function attachProjectsAutomationHandlers() {
     projectsBuilderExportButton,
     projectsBuilderTypeSelect,
     projectsBuilderScopeSelect,
+    projectsBuilderPresetModeSelect,
     projectsBuilderShowInSidebarCheckbox,
     projectsBuilderCategorySelect,
     projectsBuilderProjectSelect,
@@ -1198,6 +1240,7 @@ function attachProjectsAutomationHandlers() {
     projectAutomationUIState.syncedPresetId = null;
     projectAutomationUIState.builderName = '';
     projectAutomationUIState.builderType = 'both';
+    projectAutomationUIState.builderPresetMode = 'regular';
     projectAutomationUIState.builderScope = 'manual';
     projectAutomationUIState.builderShowInSidebar = true;
     projectAutomationUIState.builderSelectedProjects = [];
@@ -1219,6 +1262,23 @@ function attachProjectsAutomationHandlers() {
 
   projectsBuilderScopeSelect.addEventListener('change', (event) => {
     projectAutomationUIState.builderScope = event.target.value;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  projectsBuilderPresetModeSelect.addEventListener('change', (event) => {
+    projectAutomationUIState.builderPresetMode = event.target.value === 'parameterized' ? 'parameterized' : 'regular';
+    projectAutomationUIState.builderPresetModeInvalidMessage = '';
+    if (projectAutomationUIState.builderPresetMode === 'parameterized' && projectAutomationUIState.builderScope === 'all') {
+      projectAutomationUIState.builderScope = 'manual';
+    }
+    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
+    if (presetId) {
+      const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
+      if (preset) {
+        preset.presetMode = projectAutomationUIState.builderPresetMode;
+      }
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -1357,6 +1417,7 @@ function attachProjectsAutomationHandlers() {
     const includeExpansion = type === 'expansion' || type === 'both';
     const includeOperations = type === 'operations' || type === 'both';
     const scopeAll = projectAutomationUIState.builderScope === 'all';
+    const presetMode = projectAutomationUIState.builderPresetMode;
     const showInSidebar = projectAutomationUIState.builderShowInSidebar;
     const projectIds = scopeAll
       ? getAutomatableProjects(projectAutomationUIState.builderSelectedProjects).map(project => project.name)
@@ -1365,13 +1426,21 @@ function attachProjectsAutomationHandlers() {
     if (presetId) {
       resetAutomationPresetJsonDetailsState(automationElements.projectsPresetJsonDetails, Number(presetId));
     }
+    const candidatePreset = automation.buildPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, presetMode }, presetId || automation.nextPresetId);
+    if (automation.isParameterizedPreset(candidatePreset) && !automation.getPresetParameterInfo(candidatePreset).valid) {
+      projectAutomationUIState.builderPresetModeInvalidMessage = automation.getParameterizedPresetInvalidMessage(candidatePreset);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+      return;
+    }
     if (presetId) {
-      automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
+      automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, presetMode });
     } else {
-      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar });
+      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, presetMode });
       projectAutomationUIState.syncedPresetId = null;
       projectAutomationUIState.builderName = '';
     }
+    projectAutomationUIState.builderPresetModeInvalidMessage = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

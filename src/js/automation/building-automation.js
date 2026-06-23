@@ -62,7 +62,8 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       useMasterEnabled: true,
       useAssignments: true,
       useCombinations: true,
-      nextTravelKind: 'combination'
+      nextTravelKind: 'combination',
+      presetCollectionKey: 'buildings'
     });
     this.everEnabledBuildings = new Set();
     this.elapsed = 0;
@@ -268,6 +269,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     return {
       name: preset.name,
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
@@ -292,6 +294,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       id,
       name: presetData.name || `Preset ${id}`,
       showInSidebar: presetData.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(presetData.presetMode),
       includeControl: presetData.includeControl !== false,
       includeAutomation: presetData.includeAutomation !== false,
       scopeAll: presetData.scopeAll === true,
@@ -324,6 +327,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       id,
       name: name || `Preset ${id}`,
       showInSidebar: options.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(options.presetMode),
       includeControl,
       includeAutomation,
       scopeAll,
@@ -372,6 +376,43 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       changed = true;
     }
     return changed;
+  }
+
+  isPresetParameterPathEligible(preset, path) {
+    if (!Array.isArray(path) || path[0] !== 'buildings') {
+      return true;
+    }
+    const section = path[2];
+    const leafKey = path[path.length - 1];
+    if (section === 'control' && path[3] === 'workerPriority') {
+      return false;
+    }
+    if (section !== 'automation') {
+      return true;
+    }
+    if (leafKey === 'autoBuildPriority') {
+      return false;
+    }
+    const buildingId = path[1];
+    const automation = preset.buildings[buildingId]?.automation || {};
+    const mode = automation.autoBuildBasis || '';
+    if (leafKey === 'autoBuildFixed') {
+      return mode === 'fixed';
+    }
+    if (leafKey === 'autoBuildFillPercent') {
+      return mode === 'fill';
+    }
+    if (leafKey === 'autoBuildPercent') {
+      if (mode === 'fixed' || mode === 'fill') {
+        return false;
+      }
+      if (mode !== 'max') {
+        return true;
+      }
+      const building = buildings[buildingId];
+      return building.hasAdjustableAutoBuildMaxTarget();
+    }
+    return true;
   }
 
   captureBuildingSettings(building, includeControl, includeAutomation) {
@@ -446,6 +487,9 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       if (!preset) {
         continue;
       }
+      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
+        continue;
+      }
       const entries = preset.buildings;
       for (const buildingId in entries) {
         const entry = entries[buildingId];
@@ -472,8 +516,8 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     this.applyPresets();
   }
 
-  applyPresetOnce(presetId) {
-    const preset = this.getPresetById(presetId);
+  applyPresetOnce(presetId, parameterValue = null) {
+    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
     if (!preset) {
       return;
     }
@@ -660,6 +704,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
         id: preset.id,
         name: preset.name,
         showInSidebar: preset.showInSidebar !== false,
+        presetMode: this.getPresetModeValue(preset.presetMode),
         includeControl: !!preset.includeControl,
         includeAutomation: !!preset.includeAutomation,
         scopeAll: !!preset.scopeAll,
@@ -696,6 +741,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       id: preset.id,
       name: preset.name || 'Preset',
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,

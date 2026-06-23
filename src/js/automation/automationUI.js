@@ -145,6 +145,8 @@ const automationElements = {
   buildingsBuilderShowInSidebarCheckbox: null,
   buildingsBuilderTypeSelect: null,
   buildingsBuilderScopeSelect: null,
+  buildingsBuilderPresetModeSelect: null,
+  buildingsBuilderPresetModeMessage: null,
   buildingsBuilderCategorySelect: null,
   buildingsBuilderBuildingSelect: null,
   buildingsBuilderAddButton: null,
@@ -185,6 +187,8 @@ const automationElements = {
   projectsBuilderApplyOnceButton: null,
   projectsBuilderShowInSidebarCheckbox: null,
   projectsBuilderScopeSelect: null,
+  projectsBuilderPresetModeSelect: null,
+  projectsBuilderPresetModeMessage: null,
   projectsBuilderCategorySelect: null,
   projectsBuilderProjectSelect: null,
   projectsBuilderAddButton: null,
@@ -227,6 +231,8 @@ const automationElements = {
   colonyBuilderDirty: null,
   colonyBuilderTypeSelect: null,
   colonyBuilderScopeSelect: null,
+  colonyBuilderPresetModeSelect: null,
+  colonyBuilderPresetModeMessage: null,
   colonyBuilderCategorySelect: null,
   colonyBuilderTargetSelect: null,
   colonyBuilderAddButton: null,
@@ -1083,6 +1089,7 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._boundPresetId = null;
   details._activePresetRef = null;
   details._activeOnFieldChange = null;
+  details._parameterInputPathKey = '';
   details._filterOptionSignature = '';
   details.style.display = 'none';
   return details;
@@ -1298,14 +1305,21 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     const draftEntry = details._jsonDraftMap[pathKey];
     const isIncluded = !draftEntry || draftEntry.included !== false;
     const valueToRender = draftEntry ? draftEntry.value : value;
+    const isParameterInput = pathKey === details._parameterInputPathKey;
     const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(path, value, preset) : null;
     const hasCustomSelectOptions = !!(fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length);
     const isBooleanLeaf = typeof value === 'boolean';
-    const useSelect = isBooleanLeaf || hasCustomSelectOptions;
+    const useSelect = !isParameterInput && (isBooleanLeaf || hasCustomSelectOptions);
     const input = useSelect ? document.createElement('select') : document.createElement('input');
     input.classList.add('automation-preset-json-field-input');
     input.dataset.fieldKey = pathKey;
-    if (hasCustomSelectOptions) {
+    if (isParameterInput) {
+      input.type = 'text';
+      input.value = getAutomationCardText('parameterizedPresetInputPlaceholder', {}, 'INPUT');
+      input.size = input.value.length;
+      input.disabled = true;
+      input.classList.add('automation-preset-json-field-input-disabled');
+    } else if (hasCustomSelectOptions) {
       for (let optionIndex = 0; optionIndex < fieldOptions.selectOptions.length; optionIndex += 1) {
         const optionData = fieldOptions.selectOptions[optionIndex];
         const option = document.createElement('option');
@@ -1336,7 +1350,7 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     input.style.lineHeight = 'inherit';
     input.style.padding = '0 2px';
     input.style.margin = '0';
-    input.disabled = path.length === 1 && path[0] === 'id';
+    input.disabled = input.disabled || (path.length === 1 && path[0] === 'id');
     if (input.disabled) {
       input.classList.add('automation-preset-json-field-input-disabled');
     }
@@ -1356,23 +1370,25 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
         const nextIncluded = !!event.target.checked;
         const basePreset = details._activePresetRef || preset;
         const baseValue = getAutomationPresetValueAtPath(basePreset, path);
-        const nextValue = hasCustomSelectOptions
-          ? parseAutomationPresetJsonFieldValue(input.value)
-          : isBooleanLeaf
-            ? input.value === 'true'
-            : isString
-              ? input.value
-              : parseAutomationPresetJsonFieldValue(input.value);
+        const nextValue = isParameterInput
+          ? baseValue
+          : hasCustomSelectOptions
+            ? parseAutomationPresetJsonFieldValue(input.value)
+            : isBooleanLeaf
+              ? input.value === 'true'
+              : isString
+                ? input.value
+                : parseAutomationPresetJsonFieldValue(input.value);
         const baseMatches = JSON.stringify(baseValue) === JSON.stringify(nextValue);
         if (nextIncluded && baseMatches) {
           delete details._jsonDraftMap[pathKey];
         } else {
           details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue, included: nextIncluded };
         }
-        input.disabled = !nextIncluded;
+        input.disabled = isParameterInput || !nextIncluded;
         if (!nextIncluded) {
           input.classList.add('automation-preset-json-field-input-disabled');
-        } else if (!(path.length === 1 && path[0] === 'id')) {
+        } else if (!isParameterInput && !(path.length === 1 && path[0] === 'id')) {
           input.classList.remove('automation-preset-json-field-input-disabled');
         }
         details._jsonDirty = Object.keys(details._jsonDraftMap).length > 0;
@@ -1679,11 +1695,17 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const onFilterChange = options.onFilterChange;
   const onClearFilter = options.onClearFilter;
   const showStatus = options.showStatus || null;
+  const parameterInputPath = Array.isArray(options.parameterInputPath)
+    ? options.parameterInputPath
+    : null;
   const toFullPath = (path) => (rootPath ? rootPath.concat(path) : path.slice());
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
   details._showStatus = showStatus;
+  details._parameterInputPathKey = parameterInputPath
+    ? buildAutomationPresetLeafPathKey(parameterInputPath)
+    : '';
 
   if (!preset) {
     details.open = false;
@@ -1829,7 +1851,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       delete details._jsonDraftMap[draftKey];
     }
   }
-  const nextFieldKeySignature = visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|');
+  const nextFieldKeySignature = `${visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|')}|parameter:${details._parameterInputPathKey}`;
   for (let pathIndex = 0; pathIndex < visibleLeafPaths.length; pathIndex += 1) {
     const path = visibleLeafPaths[pathIndex];
     const pathKey = buildAutomationPresetLeafPathKey(path);
@@ -1953,15 +1975,20 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         ? draftEntry.value
         : getAutomationPresetValueAtPath(preset, leafPath);
       const nextIncluded = !draftEntry || draftEntry.included !== false;
-      if (input.disabled !== !nextIncluded) {
-        input.disabled = !nextIncluded;
+      const isParameterInput = pathKey === details._parameterInputPathKey;
+      const nextDisabled = isParameterInput || !nextIncluded;
+      if (input.disabled !== nextDisabled) {
+        input.disabled = nextDisabled;
       }
-      if (nextIncluded) {
+      if (nextIncluded && !isParameterInput) {
         input.classList.remove('automation-preset-json-field-input-disabled');
       } else {
         input.classList.add('automation-preset-json-field-input-disabled');
       }
-      if (input.tagName === 'SELECT') {
+      if (isParameterInput) {
+        input.value = getAutomationCardText('parameterizedPresetInputPlaceholder', {}, 'INPUT');
+        input.size = input.value.length;
+      } else if (input.tagName === 'SELECT') {
         const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(leafPath, valueToRender, effectivePreset) : null;
         if (fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length) {
           syncAutomationSelectOptions(input, fieldOptions.selectOptions, String(valueToRender));

@@ -900,6 +900,17 @@
   color: #51617f;
 }
 
+.automation-parameterized-preset-message {
+  color: #c12d2d;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 8px 10px;
+  border: 1px solid #e3a4a4;
+  border-radius: 6px;
+  background: #fff4f4;
+}
+
 .building-automation-section-title {
   font-weight: 600;
   color: #2f3a4d;

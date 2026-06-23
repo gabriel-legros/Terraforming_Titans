@@ -4,6 +4,8 @@ const colonyAutomationUIState = {
   builderName: '',
   builderScope: 'all',
   builderType: 'both',
+  builderPresetMode: 'regular',
+  builderPresetModeInvalidMessage: '',
   builderShowInSidebar: true,
   builderSelectedTargets: [],
   jsonFilterTargetId: '',
@@ -367,8 +369,22 @@ function buildAutomationColonyUI() {
   manualScope.value = 'manual';
   manualScope.textContent = getAutomationCardText('chooseTargets', {}, 'Choose targets');
   scopeSelect.append(allScope, manualScope);
-  builderModeRow.append(typeSelect, scopeSelect);
+  const presetModeSelect = document.createElement('select');
+  presetModeSelect.classList.add('colony-automation-builder-preset-mode');
+  const regularModeOption = document.createElement('option');
+  regularModeOption.value = 'regular';
+  regularModeOption.textContent = getAutomationCardText('regularPresetMode', {}, 'Regular preset');
+  const parameterizedModeOption = document.createElement('option');
+  parameterizedModeOption.value = 'parameterized';
+  parameterizedModeOption.textContent = getAutomationCardText('parameterizedPresetMode', {}, 'Parametrized preset');
+  presetModeSelect.append(regularModeOption, parameterizedModeOption);
+  builderModeRow.append(typeSelect, scopeSelect, presetModeSelect);
   builderSection.appendChild(builderModeRow);
+
+  const presetModeMessage = document.createElement('div');
+  presetModeMessage.classList.add('automation-parameterized-preset-message');
+  presetModeMessage.style.display = 'none';
+  builderSection.appendChild(presetModeMessage);
 
   const builderHint = document.createElement('div');
   builderHint.classList.add('colony-automation-hint', 'building-automation-hint');
@@ -445,6 +461,8 @@ function buildAutomationColonyUI() {
   automationElements.colonyBuilderDirty = builderDirty;
   automationElements.colonyBuilderTypeSelect = typeSelect;
   automationElements.colonyBuilderScopeSelect = scopeSelect;
+  automationElements.colonyBuilderPresetModeSelect = presetModeSelect;
+  automationElements.colonyBuilderPresetModeMessage = presetModeMessage;
   automationElements.colonyBuilderCategorySelect = categorySelect;
   automationElements.colonyBuilderTargetSelect = targetSelect;
   automationElements.colonyBuilderAddButton = addButton;
@@ -493,6 +511,8 @@ function updateColonyAutomationUI() {
     colonyBuilderDirty,
     colonyBuilderTypeSelect,
     colonyBuilderScopeSelect,
+    colonyBuilderPresetModeSelect,
+    colonyBuilderPresetModeMessage,
     colonyBuilderCategorySelect,
     colonyBuilderTargetSelect,
     colonyBuilderAddButton,
@@ -560,6 +580,7 @@ function updateColonyAutomationUI() {
     : -1;
   if (activePreset && colonyAutomationUIState.syncedPresetId !== activePresetId) {
     colonyAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
+    colonyAutomationUIState.builderPresetMode = automation.getPresetModeValue(activePreset.presetMode);
     colonyAutomationUIState.builderSelectedTargets = Object.keys(activePreset.targets);
     colonyAutomationUIState.builderType = activePreset.includeControl && activePreset.includeAutomation
       ? 'both'
@@ -581,6 +602,9 @@ function updateColonyAutomationUI() {
   }
   updateAutomationPresetJsonDetails(colonyPresetJsonDetails, activePreset, {
     rootPath: ['targets'],
+    parameterInputPath: activePreset && automation.isParameterizedPreset(activePreset)
+      ? automation.getPresetParameterInfo(activePreset).parameterPath
+      : null,
     showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.colonyAutomationStatus, text, isError),
     isLeafVisible: (fieldPath, preset) => {
       const selectedTargetId = colonyAutomationUIState.jsonFilterTargetId;
@@ -686,6 +710,20 @@ function updateColonyAutomationUI() {
   if (document.activeElement !== colonyBuilderScopeSelect) {
     colonyBuilderScopeSelect.value = colonyAutomationUIState.builderScope;
   }
+  const showPresetMode = manager.hasFeature('automationScripts');
+  colonyBuilderPresetModeSelect.style.display = showPresetMode ? '' : 'none';
+  if (!showPresetMode) {
+    colonyAutomationUIState.builderPresetMode = 'regular';
+  }
+  if (document.activeElement !== colonyBuilderPresetModeSelect) {
+    colonyBuilderPresetModeSelect.value = colonyAutomationUIState.builderPresetMode;
+  }
+  const parameterizedInvalidMessage = activePreset
+    && showPresetMode
+    ? automation.getParameterizedPresetInvalidMessage(activePreset)
+    : colonyAutomationUIState.builderPresetModeInvalidMessage;
+  colonyBuilderPresetModeMessage.textContent = parameterizedInvalidMessage;
+  colonyBuilderPresetModeMessage.style.display = parameterizedInvalidMessage ? '' : 'none';
 
   const showManual = colonyAutomationUIState.builderScope === 'manual';
   colonyBuilderCategorySelect.parentElement.style.display = showManual ? 'flex' : 'none';
@@ -845,6 +883,7 @@ function updateColonyAutomationUI() {
       ? 'all'
       : 'manual'
     : 'all';
+  const savedPresetMode = activePreset && showPresetMode ? automation.getPresetModeValue(activePreset.presetMode) : 'regular';
   const savedTargetIds = activePreset ? Object.keys(activePreset.targets) : [];
   const savedTargetSet = new Set(savedTargetIds);
   const manualSelection = colonyAutomationUIState.builderScope === 'manual';
@@ -855,12 +894,14 @@ function updateColonyAutomationUI() {
     && (
       colonyAutomationUIState.builderName.trim() !== ''
       || colonyAutomationUIState.builderType !== 'both'
+      || (showPresetMode && colonyAutomationUIState.builderPresetMode !== 'regular')
       || colonyAutomationUIState.builderScope !== 'all'
       || colonyAutomationUIState.builderSelectedTargets.length > 0
     );
   const existingDirty = !!activePreset
     && (
       colonyAutomationUIState.builderType !== savedType
+      || (showPresetMode && colonyAutomationUIState.builderPresetMode !== savedPresetMode)
       || colonyAutomationUIState.builderScope !== savedScope
       || selectionChanged
     );
@@ -893,6 +934,7 @@ function attachColonyAutomationHandlers() {
     colonyBuilderExportButton,
     colonyBuilderTypeSelect,
     colonyBuilderScopeSelect,
+    colonyBuilderPresetModeSelect,
     colonyBuilderShowInSidebarCheckbox,
     colonyBuilderCategorySelect,
     colonyBuilderTargetSelect,
@@ -971,6 +1013,7 @@ function attachColonyAutomationHandlers() {
     colonyAutomationUIState.builderName = '';
     colonyAutomationUIState.builderScope = 'manual';
     colonyAutomationUIState.builderType = 'both';
+    colonyAutomationUIState.builderPresetMode = 'regular';
     colonyAutomationUIState.builderShowInSidebar = true;
     colonyAutomationUIState.builderSelectedTargets = [];
     colonyAutomationUIState.builderCategoryValue = 'all';
@@ -990,6 +1033,23 @@ function attachColonyAutomationHandlers() {
 
   colonyBuilderScopeSelect.addEventListener('change', (event) => {
     colonyAutomationUIState.builderScope = event.target.value;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  colonyBuilderPresetModeSelect.addEventListener('change', (event) => {
+    colonyAutomationUIState.builderPresetMode = event.target.value === 'parameterized' ? 'parameterized' : 'regular';
+    colonyAutomationUIState.builderPresetModeInvalidMessage = '';
+    if (colonyAutomationUIState.builderPresetMode === 'parameterized' && colonyAutomationUIState.builderScope === 'all') {
+      colonyAutomationUIState.builderScope = 'manual';
+    }
+    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (presetId) {
+      const preset = automationManager.colonyAutomation.getPresetById(Number(presetId));
+      if (preset) {
+        preset.presetMode = colonyAutomationUIState.builderPresetMode;
+      }
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -1107,6 +1167,7 @@ function attachColonyAutomationHandlers() {
     const includeControl = type === 'control' || type === 'both';
     const includeAutomation = type === 'automation' || type === 'both';
     const scopeAll = colonyAutomationUIState.builderScope === 'all';
+    const presetMode = colonyAutomationUIState.builderPresetMode;
     const showInSidebar = colonyAutomationUIState.builderShowInSidebar;
     const targetIds = scopeAll
       ? getColonyAutomationTargetCatalog(automation).map(target => target.id)
@@ -1115,13 +1176,21 @@ function attachColonyAutomationHandlers() {
     if (presetId) {
       resetAutomationPresetJsonDetailsState(automationElements.colonyPresetJsonDetails, Number(presetId));
     }
+    const candidatePreset = automation.buildPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar, presetMode }, presetId || automation.nextPresetId);
+    if (automation.isParameterizedPreset(candidatePreset) && !automation.getPresetParameterInfo(candidatePreset).valid) {
+      colonyAutomationUIState.builderPresetModeInvalidMessage = automation.getParameterizedPresetInvalidMessage(candidatePreset);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+      return;
+    }
     if (presetId) {
-      automation.updatePreset(Number(presetId), name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
+      automation.updatePreset(Number(presetId), name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar, presetMode });
     } else {
-      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
+      automation.addPreset(name, targetIds, { includeControl, includeAutomation, scopeAll, showInSidebar, presetMode });
       colonyAutomationUIState.syncedPresetId = null;
       colonyAutomationUIState.builderName = '';
     }
+    colonyAutomationUIState.builderPresetModeInvalidMessage = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

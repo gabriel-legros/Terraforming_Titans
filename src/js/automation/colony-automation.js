@@ -71,7 +71,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       useMasterEnabled: true,
       useAssignments: true,
       useCombinations: true,
-      nextTravelKind: 'combination'
+      nextTravelKind: 'combination',
+      presetCollectionKey: 'targets'
     });
   }
 
@@ -221,6 +222,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     return {
       name: preset.name,
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
@@ -246,6 +248,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       id,
       name: presetData.name || `Preset ${id}`,
       showInSidebar: presetData.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(presetData.presetMode),
       includeControl: presetData.includeControl !== false,
       includeAutomation: presetData.includeAutomation !== false,
       scopeAll: presetData.scopeAll === true,
@@ -282,6 +285,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       id,
       name: name || `Preset ${id}`,
       showInSidebar: options.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(options.presetMode),
       includeControl,
       includeAutomation,
       scopeAll,
@@ -322,6 +326,36 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       changed = true;
     }
     return changed;
+  }
+
+  isPresetParameterPathEligible(preset, path) {
+    if (!Array.isArray(path) || path[0] !== 'targets') {
+      return true;
+    }
+    const section = path[2];
+    const leafKey = path[path.length - 1];
+    if (section === 'control' && path[3] === 'workerPriority') {
+      return false;
+    }
+    if (section !== 'automation') {
+      return true;
+    }
+    if (leafKey === 'autoBuildPriority') {
+      return false;
+    }
+    const targetId = path[1];
+    const automation = preset.targets[targetId]?.automation || {};
+    const mode = automation.autoBuildBasis || '';
+    if (leafKey === 'autoBuildFixed') {
+      return mode === 'fixed';
+    }
+    if (leafKey === 'autoBuildFillPercent') {
+      return mode === 'fill';
+    }
+    if (leafKey === 'autoBuildPercent') {
+      return mode !== 'fixed' && mode !== 'fill' && mode !== 'max';
+    }
+    return true;
   }
 
   captureTargetSettings(targetId, includeControl, includeAutomation) {
@@ -459,6 +493,9 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       if (!preset) {
         continue;
       }
+      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
+        continue;
+      }
       const entries = preset.targets;
       for (const targetId in entries) {
         const entry = entries[targetId];
@@ -485,8 +522,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     this.applyPresets();
   }
 
-  applyPresetOnce(presetId) {
-    const preset = this.getPresetById(presetId);
+  applyPresetOnce(presetId, parameterValue = null) {
+    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
     if (!preset) {
       return;
     }
@@ -894,6 +931,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: preset.id,
         name: preset.name,
         showInSidebar: preset.showInSidebar !== false,
+        presetMode: this.getPresetModeValue(preset.presetMode),
         includeControl: !!preset.includeControl,
         includeAutomation: !!preset.includeAutomation,
         scopeAll: !!preset.scopeAll,
@@ -930,6 +968,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       id: preset.id,
       name: preset.name || 'Preset',
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,

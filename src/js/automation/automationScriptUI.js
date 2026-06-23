@@ -663,6 +663,10 @@ function normalizeScriptAction(automation, action) {
     if (!action.valueExpression || action.valueExpression.constructor !== Object) {
       action.valueExpression = automation.createDefaultExpression();
     }
+    return;
+  }
+  if (action.kind === 'applyPreset') {
+    action.parameterVariableId = automation.normalizeVariableId(action.parameterVariableId);
   }
 }
 
@@ -1385,9 +1389,27 @@ function renderActionTargetPicker(action, row) {
     action.presetId = presetSelect.value === '' ? null : Number(presetSelect.value);
     presetSelect.addEventListener('change', event => {
       action.presetId = event.target.value === '' ? null : Number(event.target.value);
+      forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
     row.appendChild(presetSelect);
+    const selectedPreset = action.presetId && target?.getPresetById
+      ? target.getPresetById(Number(action.presetId))
+      : null;
+    if (selectedPreset && target.isParameterizedPreset && target.isParameterizedPreset(selectedPreset)) {
+      action.parameterVariableId = automationManager.scriptAutomation.normalizeVariableId(action.parameterVariableId);
+      const variables = automationManager.scriptAutomation.registry.getVariableTargets();
+      const variableSelect = createSelect(
+        variables.map(item => ({ id: item.id, label: item.label })),
+        action.parameterVariableId
+      );
+      variableSelect.title = getAutomationCardText('scriptParameterVariableLabel', {}, 'Parameter variable');
+      variableSelect.addEventListener('change', event => {
+        action.parameterVariableId = event.target.value || 'A';
+        queueAutomationUIRefresh();
+      });
+      row.appendChild(variableSelect);
+    }
   }
 }
 

@@ -99,7 +99,8 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       useMasterEnabled: true,
       useAssignments: true,
       useCombinations: true,
-      nextTravelKind: 'combination'
+      nextTravelKind: 'combination',
+      presetCollectionKey: 'projects'
     });
     this.everEnabledProjects = new Set();
     this.elapsed = 0;
@@ -343,6 +344,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     return {
       name: preset.name,
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeExpansion: preset.includeExpansion !== false,
       includeOperations: preset.includeOperations !== false,
       scopeAll: preset.scopeAll === true,
@@ -356,6 +358,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       id,
       name: presetData.name || `Preset ${id}`,
       showInSidebar: presetData.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(presetData.presetMode),
       includeExpansion: presetData.includeExpansion !== false,
       includeOperations: presetData.includeOperations !== false,
       scopeAll: presetData.scopeAll === true,
@@ -375,6 +378,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       id,
       name: name || `Preset ${id}`,
       showInSidebar: options.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(options.presetMode),
       includeExpansion,
       includeOperations,
       scopeAll,
@@ -465,6 +469,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       if (!preset) {
         continue;
       }
+      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
+        continue;
+      }
       const entries = preset.projects || {};
       for (const projectId in entries) {
         const entry = entries[projectId];
@@ -491,8 +498,8 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     this.applyPresets();
   }
 
-  applyPresetOnce(presetId) {
-    const preset = this.getPresetById(presetId);
+  applyPresetOnce(presetId, parameterValue = null) {
+    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
     if (!preset) {
       return;
     }
@@ -1295,6 +1302,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         id: preset.id,
         name: preset.name,
         showInSidebar: preset.showInSidebar !== false,
+        presetMode: this.getPresetModeValue(preset.presetMode),
         includeExpansion: preset.includeExpansion !== false,
         includeOperations: preset.includeOperations !== false,
         scopeAll: !!preset.scopeAll,
@@ -1320,6 +1328,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       id: preset.id,
       name: preset.name || 'Preset',
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeExpansion: preset.includeExpansion !== false,
       includeOperations: preset.includeOperations !== false,
       scopeAll: preset.scopeAll === true,

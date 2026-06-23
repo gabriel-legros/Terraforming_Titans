@@ -7,6 +7,7 @@ class AutomationPresetManagerBase {
     this.useAssignments = config.useAssignments === true;
     this.useCombinations = config.useCombinations === true;
     this.nextTravelKind = config.nextTravelKind || '';
+    this.presetCollectionKey = config.presetCollectionKey || '';
 
     this.presets = [];
     this.selectedPresetId = null;
@@ -124,6 +125,98 @@ class AutomationPresetManagerBase {
     this.presets.push(duplicate);
     this.selectedPresetId = copyId;
     return copyId;
+  }
+
+  getPresetModeValue(value) {
+    return value === 'parameterized' ? 'parameterized' : 'regular';
+  }
+
+  isParameterizedPreset(preset) {
+    return !!preset && this.getPresetModeValue(preset.presetMode) === 'parameterized';
+  }
+
+  collectPresetParameterLeafPaths(value, path, outPaths) {
+    if (Array.isArray(value)) {
+      for (let index = 0; index < value.length; index += 1) {
+        this.collectPresetParameterLeafPaths(value[index], path.concat(index), outPaths);
+      }
+      return;
+    }
+    if (value && value.constructor === Object) {
+      const keys = Object.keys(value);
+      for (let index = 0; index < keys.length; index += 1) {
+        const key = keys[index];
+        this.collectPresetParameterLeafPaths(value[key], path.concat(key), outPaths);
+      }
+      return;
+    }
+    if (Number.isFinite(value)) {
+      outPaths.push(path);
+    }
+  }
+
+  getPresetParameterInfo(preset) {
+    if (!preset || !this.presetCollectionKey) {
+      return {
+        valid: false,
+        itemCount: 0,
+        parameterPath: null,
+        numericPathCount: 0
+      };
+    }
+    const collection = preset[this.presetCollectionKey] || {};
+    const itemKeys = Object.keys(collection);
+    const numericPaths = [];
+    this.collectPresetParameterLeafPaths(collection, [this.presetCollectionKey], numericPaths);
+    const eligibleNumericPaths = numericPaths.filter((path) => this.isPresetParameterPathEligible(preset, path));
+    return {
+      valid: itemKeys.length === 1 && eligibleNumericPaths.length === 1,
+      itemCount: itemKeys.length,
+      parameterPath: eligibleNumericPaths[0] || null,
+      numericPathCount: eligibleNumericPaths.length
+    };
+  }
+
+  isPresetParameterPathEligible() {
+    return true;
+  }
+
+  setValueAtPresetPath(target, path, value) {
+    let current = target;
+    for (let index = 0; index < path.length - 1; index += 1) {
+      current = current[path[index]];
+    }
+    current[path[path.length - 1]] = value;
+  }
+
+  buildPresetForApplication(preset, parameterValue) {
+    if (!this.isParameterizedPreset(preset)) {
+      return preset;
+    }
+    const parameterInfo = this.getPresetParameterInfo(preset);
+    if (!parameterInfo.valid) {
+      return null;
+    }
+    const appliedPreset = this.deepClone(preset);
+    if (parameterValue !== undefined && parameterValue !== null) {
+      this.setValueAtPresetPath(appliedPreset, parameterInfo.parameterPath, Number(parameterValue));
+    }
+    return appliedPreset;
+  }
+
+  getParameterizedPresetInvalidMessage(preset) {
+    if (!this.isParameterizedPreset(preset)) {
+      return '';
+    }
+    const parameterInfo = this.getPresetParameterInfo(preset);
+    if (parameterInfo.valid) {
+      return '';
+    }
+    return t(
+      'ui.hope.automationCards.parameterizedPresetInvalid',
+      {},
+      'Invalid parametrized preset: select exactly one building, project, or colony target and keep exactly one numerical row.'
+    );
   }
 
   getScriptAutomationType() {

@@ -938,13 +938,27 @@ class ScriptAutomation {
     if (!target) return false;
     if (action.kind === 'applyPreset' && action.presetId) {
       const presetId = Number(action.presetId);
-      if (target.getPresetById && !target.getPresetById(presetId)) {
+      const preset = target.getPresetById ? target.getPresetById(presetId) : null;
+      if (target.getPresetById && !preset) {
         this.lastError = t(
           'ui.automation.cards.scriptMissingPresetError',
           { type: action.automationType, id: presetId },
           `Script error: missing ${action.automationType} preset #${presetId}`
         );
         return false;
+      }
+      let parameterValue = null;
+      if (target.isParameterizedPreset && target.isParameterizedPreset(preset)) {
+        const parameterInfo = target.getPresetParameterInfo(preset);
+        if (!parameterInfo.valid) {
+          this.lastError = t(
+            'ui.hope.automationCards.scriptInvalidParameterizedPresetError',
+            { type: action.automationType, id: presetId },
+            `Script error: invalid parametrized ${action.automationType} preset #${presetId}`
+          );
+          return false;
+        }
+        parameterValue = this.getVariableValue(action.parameterVariableId);
       }
       if ((action.automationType === 'ship' || action.automationType === 'life') && !target.isToggledOn()) {
         this.lastError = t(
@@ -954,7 +968,7 @@ class ScriptAutomation {
         );
         return false;
       }
-      target.applyPresetOnce(presetId);
+      target.applyPresetOnce(presetId, parameterValue);
       return true;
     }
     if (action.kind === 'applyCombination' && action.combinationId && target.applyCombinationPresets) {
@@ -1100,7 +1114,10 @@ class ScriptAutomation {
     if (!target) return 'Action';
     if (action.kind === 'applyPreset') {
       const preset = target.getPresetById?.(Number(action.presetId));
-      return `Apply ${action.automationType} preset ${preset?.name || action.presetId}`;
+      const parameterText = preset && target.isParameterizedPreset && target.isParameterizedPreset(preset)
+        ? ` with ${this.normalizeVariableId(action.parameterVariableId)}`
+        : '';
+      return `Apply ${action.automationType} preset ${preset?.name || action.presetId}${parameterText}`;
     }
     if (action.kind === 'applyCombination') {
       const combo = target.getCombinationById?.(Number(action.combinationId));
@@ -1209,6 +1226,8 @@ class ScriptAutomation {
       if (!normalized.valueExpression || normalized.valueExpression.constructor !== Object) {
         normalized.valueExpression = this.createDefaultExpression();
       }
+    } else if (normalized.kind === 'applyPreset') {
+      normalized.parameterVariableId = this.normalizeVariableId(normalized.parameterVariableId);
     }
     return normalized;
   }
