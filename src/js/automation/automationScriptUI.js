@@ -1399,6 +1399,9 @@ function renderActionTargetPicker(action, row) {
     if (selectedPreset && target.isParameterizedPreset && target.isParameterizedPreset(selectedPreset)) {
       action.parameterVariableId = automationManager.scriptAutomation.normalizeVariableId(action.parameterVariableId);
       const variables = automationManager.scriptAutomation.registry.getVariableTargets();
+      const parameterLabel = document.createElement('span');
+      parameterLabel.classList.add('script-action-parameter-label');
+      parameterLabel.textContent = getAutomationCardText('scriptParameterWithValueLabel', {}, 'with value');
       const variableSelect = createSelect(
         variables.map(item => ({ id: item.id, label: item.label })),
         action.parameterVariableId
@@ -1408,6 +1411,7 @@ function renderActionTargetPicker(action, row) {
         action.parameterVariableId = event.target.value || 'A';
         queueAutomationUIRefresh();
       });
+      row.appendChild(parameterLabel);
       row.appendChild(variableSelect);
     }
   }
