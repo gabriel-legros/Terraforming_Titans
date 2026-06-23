@@ -198,6 +198,9 @@ function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
   });
   settings.applyToLantern = !!saved.applyToLantern;
   settings.useFinerControls = !!saved.useFinerControls;
+  if (settings.useFinerControls) {
+    settings.applyToLantern = true;
+  }
 
   const normalizeStep = (value) => {
     const num = Number(value);
@@ -670,6 +673,7 @@ function distributeAutoAssignments(type) {
 function toggleFinerControls(enabled) {
   mirrorOversightSettings.useFinerControls = enabled;
   if (enabled) {
+    mirrorOversightSettings.applyToLantern = true;
     distributeAssignmentsFromSliders('mirrors');
     distributeAssignmentsFromSliders('lanterns');
     releaseMirrorUnassignedAssignments(mirrorOversightSettings);
@@ -930,6 +934,9 @@ function initializeMirrorOversightUI(container) {
   lanternCheckbox.checked = mirrorOversightSettings.applyToLantern;
   lanternCheckbox.addEventListener('change', () => {
     mirrorOversightSettings.applyToLantern = lanternCheckbox.checked;
+    if (mirrorOversightSettings.useFinerControls) {
+      mirrorOversightSettings.applyToLantern = true;
+    }
     updateMirrorOversightUI();
   });
 

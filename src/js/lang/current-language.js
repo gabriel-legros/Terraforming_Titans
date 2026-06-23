@@ -1798,7 +1798,7 @@ setLanguageData({
           },
           focusingTooltip: 'Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion and melting.',
           applyToLantern: 'Apply Oversight to Hyperion Lantern',
-          applyToLanternTooltip: 'Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.',
+          applyToLanternTooltip: 'Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.  Mandatory when using finer controls.',
         },
         advanced: {
           title: 'Advanced Oversight',
