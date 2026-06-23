@@ -101,6 +101,29 @@ function updatePauseKeybindButtons() {
   cached.pauseKeybindCaptureButton.textContent = getPauseKeybindButtonLabel();
 }
 
+function normalizeThemeMode(mode) {
+  if (mode === 'darkGrey' || mode === 'darkBlue' || mode === 'light') {
+    return mode;
+  }
+  if (mode === 'default') {
+    return 'light';
+  }
+  return gameSettings.darkMode ? 'darkBlue' : 'light';
+}
+
+function applyThemeModeSetting() {
+  const mode = normalizeThemeMode(gameSettings.themeMode);
+  gameSettings.themeMode = mode;
+  gameSettings.darkMode = mode !== 'light';
+  document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+  document.body.classList.toggle('dark-grey-mode', mode === 'darkGrey');
+  document.body.classList.toggle('dark-blue-mode', mode === 'darkBlue');
+  const cached = cacheSettingsElements();
+  if (cached.darkModeSelect && cached.darkModeSelect.value !== mode) {
+    cached.darkModeSelect.value = mode;
+  }
+}
+
 function wireDifficultyMultiplierInput(input, settingId) {
   if (!input) {
     return;
@@ -345,11 +368,10 @@ function addSettingsListeners() {
   }
 
   if (cached.darkModeSelect) {
-    cached.darkModeSelect.value = gameSettings.darkMode ? 'darkBlue' : 'default';
-    document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+    applyThemeModeSetting();
     cached.darkModeSelect.addEventListener('change', () => {
-      gameSettings.darkMode = cached.darkModeSelect.value === 'darkBlue';
-      document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+      gameSettings.themeMode = cached.darkModeSelect.value;
+      applyThemeModeSetting();
     });
   }
 

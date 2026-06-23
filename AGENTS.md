@@ -83,6 +83,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Features with UI must use an `enabled` flag to reveal/hide.
 - Do not persist UI enabled flags in saves; re-enable via story/research/effects.
 - The Status colours setting controls the red/green status palette for terraforming requirement boxes, project progress bars, and resource/building rate colours; use `getStatusColor(...)` / `getStatusProgressBackground(...)` for those surfaces instead of hard-coded red/green.
+- The Theme setting uses `gameSettings.themeMode` (`light`, `darkGrey`, `darkBlue`) while keeping `gameSettings.darkMode` as the compatibility flag for dark-mode code paths.
 - The Net resource rate display setting makes compact resource row rates use net rate including autobuild; keep this in sync with the resource tooltip net-rate calculation.
 - Use refresh helpers correctly:
   - New game: `startNewGame()`

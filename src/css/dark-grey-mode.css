@@ -1,0 +1,2415 @@
+﻿body.dark-grey-mode {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+body.dark-grey-mode {
+    scrollbar-color: #8a8a8a #1a1a1a;
+    scrollbar-width: thin;
+}
+
+.dark-grey-mode ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+.dark-grey-mode ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-left: 1px solid #2a2a2a;
+}
+
+.dark-grey-mode ::-webkit-scrollbar-thumb {
+    background: #7f7f7f;
+    border-radius: 6px;
+    border: 2px solid #1a1a1a;
+}
+
+.dark-grey-mode ::-webkit-scrollbar-thumb:hover {
+    background: #9b9b9b;
+}
+
+.dark-grey-mode .tabs,
+.dark-grey-mode .buildings-subtabs,
+.dark-grey-mode .colonies-subtabs,
+.dark-grey-mode .research-subtabs,
+.dark-grey-mode .projects-subtabs,
+.dark-grey-mode .terraforming-subtabs,
+.dark-grey-mode .hope-subtabs,
+.dark-grey-mode .settings-subtabs,
+.dark-grey-mode .space-subtabs {
+    background-color: #1e1e1e;
+}
+
+.dark-grey-mode .tab,
+.dark-grey-mode .building-subtab,
+.dark-grey-mode .colony-subtab,
+.dark-grey-mode .research-subtab,
+.dark-grey-mode .projects-subtab,
+.dark-grey-mode .terraforming-subtab,
+.dark-grey-mode .hope-subtab,
+.dark-grey-mode .settings-subtab,
+.dark-grey-mode .space-subtab {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+.dark-grey-mode .tab.active,
+.dark-grey-mode .building-subtab.active,
+.dark-grey-mode .colony-subtab.active,
+.dark-grey-mode .research-subtab.active,
+.dark-grey-mode .projects-subtab.active,
+.dark-grey-mode .terraforming-subtab.active,
+.dark-grey-mode .hope-subtab.active,
+.dark-grey-mode .settings-subtab.active,
+.dark-grey-mode .space-subtab.active {
+    background-color: #4d4d4d;
+}
+
+.dark-grey-mode .tab-content-wrapper {
+    background-color: #121212;
+}
+
+.dark-grey-mode .journal {
+    background-color: #1e1e1e;
+    border-left: 2px solid #444;
+}
+
+.dark-grey-mode .journal-header {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.dark-grey-mode .journal-index {
+    border-top: 1px solid #444;
+}
+
+.dark-grey-mode .journal-index-world {
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.dark-grey-mode .journal-index-world-header {
+    background: linear-gradient(#2b2b2b, #1f1f1f);
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .journal-index-chapters {
+    background-color: #151515;
+}
+
+.dark-grey-mode .journal-index-chapter,
+.dark-grey-mode .journal-index-directive {
+    color: #d9d9d9;
+}
+
+.dark-grey-mode #journal-entries p {
+    color: #ffffff;
+}
+
+.dark-grey-mode #journal-entries .prometheus-text,
+.dark-grey-mode .popup-text .prometheus-text,
+.dark-grey-mode .history-entries .prometheus-text {
+    color: #ff6a6a;
+}
+
+.dark-grey-mode #journal-entries .diagnostic-text,
+.dark-grey-mode .popup-text .diagnostic-text,
+.dark-grey-mode .history-entries .diagnostic-text {
+    color: #7dff7d;
+}
+
+.dark-grey-mode #journal-entries .orange-text,
+.dark-grey-mode .popup-text .orange-text,
+.dark-grey-mode .history-entries .orange-text {
+    color: #ffb347;
+}
+
+.dark-grey-mode #journal-entries .blue-text,
+.dark-grey-mode .popup-text .blue-text,
+.dark-grey-mode .history-entries .blue-text {
+    color: #7db7ff;
+}
+
+.dark-grey-mode #journal-entries .journal-white-text,
+.dark-grey-mode .popup-text .journal-white-text,
+.dark-grey-mode .history-entries .journal-white-text {
+    color: inherit;
+}
+
+.dark-grey-mode .journal-automation-section {
+    background-color: #1f1f1f;
+    border-color: #444;
+}
+
+.dark-grey-mode .journal-automation-section-header {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .journal-automation-section-status {
+    color: #ff8c8c;
+}
+
+.dark-grey-mode .history-window {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+.dark-grey-mode .project-card,
+.dark-grey-mode .info-card,
+.dark-grey-mode .mirror-oversight-card,
+.dark-grey-mode .dyson-swarm-card {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .card-header {
+    background-color: #242424;
+    border-bottom-color: #3c3c3c;
+    color: #ffffff;
+}
+
+.dark-grey-mode .card-title {
+    color: inherit;
+}
+
+.dark-grey-mode .card-footer {
+    background-color: #2d2d2d;
+    border-top-color: #444;
+}
+
+.dark-grey-mode .cult-security-panel {
+    background: #242424;
+    border-color: #444;
+}
+
+.dark-grey-mode .cult-security-title,
+.dark-grey-mode .cult-security-label,
+.dark-grey-mode .cult-security-status,
+.dark-grey-mode .cult-security-progress-label {
+    color: #f2f2f2;
+}
+
+.dark-grey-mode .cult-security-summary,
+.dark-grey-mode .cult-security-sublabel {
+    color: #c4c4c4;
+}
+
+.dark-grey-mode .cult-security-row {
+    background: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .cult-security-button {
+    background: #333;
+    border-color: #666;
+    color: #f2f2f2;
+}
+
+.dark-grey-mode .cult-security-progress-track,
+.dark-grey-mode .cult-security-row-meter {
+    background: #3a3a3a;
+}
+
+.dark-grey-mode .olympus-workshop-panel {
+    background: #2f3439;
+    border-color: #4e5760;
+}
+
+.dark-grey-mode .olympus-workshop-android-panel {
+    background: #252b30;
+    border-color: #4e5760;
+}
+
+.dark-grey-mode .olympus-workshop-android-title,
+.dark-grey-mode .olympus-workshop-android-speed {
+    color: #edf3f6;
+}
+
+.dark-grey-mode .olympus-workshop-android-stats {
+    color: #b8c5cc;
+}
+
+.dark-grey-mode .olympus-workshop-action-status {
+    color: #d2dbe0;
+}
+
+.dark-grey-mode .olympus-workshop-action-flavor {
+    color: #b8c5cc;
+}
+
+.dark-grey-mode .olympus-workshop-progress-track {
+    background: #47515a;
+}
+
+.dark-grey-mode .self-improvement-panel {
+    background: #252b30;
+    border-color: #4e5760;
+}
+
+.dark-grey-mode .self-improvement-summary {
+    background: #2f3439;
+    border-color: #4e5760;
+}
+
+.dark-grey-mode .self-improvement-core-value,
+.dark-grey-mode .self-improvement-column-title,
+.dark-grey-mode .self-improvement-row-value {
+    color: #edf3f6;
+}
+
+.dark-grey-mode .self-improvement-core-label,
+.dark-grey-mode .self-improvement-row-label {
+    color: #b8c5cc;
+}
+
+.dark-grey-mode .self-improvement-progress-track {
+    background: #47515a;
+}
+
+.dark-grey-mode .self-improvement-column {
+    background: #2f3439;
+    border-color: #4e5760;
+}
+
+.dark-grey-mode .self-improvement-row {
+    background: #252b30;
+}
+
+.dark-grey-mode .self-improvement-row-complete {
+    background: #173149;
+}
+
+.dark-grey-mode .self-improvement-column-industrial .self-improvement-row-value {
+    color: #7bd88f;
+}
+
+.dark-grey-mode .self-improvement-column-research .self-improvement-row-value {
+    color: #8bbcff;
+}
+
+.dark-grey-mode .project-advanced-settings-button {
+    background: #3a3a3a;
+    color: #f0f0f0;
+    border-color: #666;
+}
+
+.dark-grey-mode .project-advanced-settings-button:hover {
+    background: #4d4d4d;
+}
+
+.dark-grey-mode .building-card-header .building-header-button {
+    background-color: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 4px;
+    color: #ffffff;
+}
+
+.dark-grey-mode .building-card-header .building-header-button:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.48);
+}
+
+.dark-grey-mode .building-card .building-header-active {
+    color: #c7c7c7;
+}
+
+.dark-grey-mode .project-description {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .project-requirements {
+    color: #c7c7c7;
+}
+
+.dark-grey-mode .bioworld-shop {
+    border-top-color: #3c3c3c;
+}
+
+.dark-grey-mode .bioworld-shop-header {
+    background: #1f252b;
+    border-color: #3c3c3c;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .bioworld-shop-adaptation {
+    background: #1f252b;
+    border-color: #3c3c3c;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .bioworld-shop-item {
+    background: #202327;
+    border-color: #3c3c3c;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .bioworld-shop-cost,
+.dark-grey-mode .bioworld-shop-count {
+    color: #c7cbd1;
+}
+
+.dark-grey-mode .bioworld-shop-button {
+    background: #2a2f35;
+    border-color: #4a515a;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .bioworld-shop-button:hover {
+    background: #343a40;
+}
+
+.dark-grey-mode .import-cap-toggle {
+    color: #ffffff;
+    background: none;
+    border: none;
+}
+
+.dark-grey-mode .import-cap-text {
+    color: #ffffff;
+}
+
+.dark-grey-mode .import-cap-header {
+    color: #e3e7ec;
+}
+
+.dark-grey-mode .import-cap-toggle:hover {
+    background: none;
+}
+
+.dark-grey-mode .stat-item {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode .stat-label {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .stat-value {
+    color: #ffffff;
+}
+
+.dark-grey-mode .ringworld-terraforming-panel {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode .ringworld-terraforming-progress-bar {
+    background-color: #333;
+}
+
+.dark-grey-mode .ringworld-terraforming-progress-label,
+.dark-grey-mode .ringworld-terraforming-notes {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .diskworld-stat-group-title {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .diskworld-operations-controls {
+    border-color: #444;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-summary-card,
+.dark-grey-mode #nanocolony-container .nanotech-slider-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-summary-card .summary-label {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-summary-card .summary-value {
+    color: #ffffff;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-energy-limit input,
+.dark-grey-mode #nanocolony-container .nanotech-energy-limit select {
+    background-color: #121212;
+    border: 1px solid #555;
+    color: #ffffff;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-energy-stats .energy-label {
+    color: #9ca3af;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-energy-stats .energy-value {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-hint,
+.dark-grey-mode #nanocolony-container .nanotech-slider-card .slider-description {
+    color: #9ca3af;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-stage-header h4 {
+    color: #f0f0f0;
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode #nanocolony-container .nanotech-slider-card .slider-title,
+.dark-grey-mode #nanocolony-container .nanotech-slider-card .slider-values,
+.dark-grey-mode #nanocolony-container .nanotech-allocation-header .allocation-title {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode #nanocolony-container .slider-container .tick-marks span {
+    background-color: #555;
+}
+
+.dark-grey-mode #nanocolony-container .slider-container .tick-marks span:first-child,
+.dark-grey-mode #nanocolony-container .slider-container .tick-marks span:last-child {
+    background-color: transparent;
+}
+
+.dark-grey-mode #nanocolony-container input[type="range"].pretty-slider::-webkit-slider-runnable-track,
+.dark-grey-mode #nanocolony-container input[type="range"].pretty-slider::-moz-range-track {
+    background: #4d4d4d;
+}
+
+.dark-grey-mode #nanocolony-container input[type="range"].pretty-slider::-webkit-slider-thumb,
+.dark-grey-mode #nanocolony-container input[type="range"].pretty-slider::-moz-range-thumb {
+    background-color: #dddddd;
+}
+
+.dark-grey-mode .mirror-oversight-card select {
+    background-color: #1e1e1e;
+    border-color: #444;
+    color: #ffffff;
+}
+
+.dark-grey-mode .mirror-oversight-card input[type="range"] {
+    background: #4d4d4d;
+}
+
+.dark-grey-mode .mirror-oversight-card label {
+    color: #ffffff;
+}
+
+.dark-grey-mode .mirror-oversight-card .slider-value {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode #mirror-flux-table th,
+.dark-grey-mode #mirror-flux-table td {
+    border-color: #444;
+}
+
+.dark-grey-mode #mirror-flux-table th {
+    background-color: #1e1e1e;
+}
+
+.dark-grey-mode .section-title {
+    color: #ffffff;
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .resource-disposal-builder-header {
+    border-color: #3f3f3f;
+}
+
+.dark-grey-mode .resource-disposal-builder-heading,
+.dark-grey-mode .resource-disposal-target-select-label,
+.dark-grey-mode .resource-disposal-target-share,
+.dark-grey-mode .resource-disposal-target-limit-unit,
+.dark-grey-mode .resource-disposal-target-checkbox span,
+.dark-grey-mode .resource-disposal-target-limit-control .checkbox-container span,
+.dark-grey-mode .resource-disposal-target-limit-control {
+    color: #c6d0dc;
+}
+
+.dark-grey-mode .resource-disposal-builder-subheading {
+    color: #aeb8c2;
+}
+
+.dark-grey-mode .resource-disposal-target-count {
+    background: #2b3540;
+    color: #e5edf6;
+}
+
+.dark-grey-mode .resource-disposal-target-card {
+    border-color: #485361;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-grey-mode .resource-disposal-target-badge {
+    background: #34465b;
+    color: #dce9ff;
+    box-shadow: inset 0 1px 0 #5b7594;
+}
+
+.dark-grey-mode .resource-disposal-target-status {
+    color: #d8ecff;
+}
+
+.dark-grey-mode .resource-disposal-target-status[data-state="idle"] {
+    color: #d0d7df;
+}
+
+.dark-grey-mode .resource-disposal-target-status[data-state="blocked"] {
+    color: #ffd7da;
+}
+
+.dark-grey-mode .resource-disposal-target-status[data-state="waiting"] {
+    color: #ffe9ae;
+}
+
+.dark-grey-mode .android-assignment-headers {
+    color: #ffffff;
+    border-bottom-color: #3c3c3c;
+}
+
+.dark-grey-mode .android-subheading {
+    color: #ffffff;
+}
+
+.dark-grey-mode .android-speed-row {
+    color: #ffffff;
+}
+
+.dark-grey-mode .android-speed-value {
+    color: #ffffff;
+}
+
+.dark-grey-mode .battle-of-olympus-progress-wrap {
+    border-color: #d16876;
+    background: #1f2630;
+}
+
+.dark-grey-mode .battle-of-olympus-metric {
+    border-color: #3c4b5e;
+    background: #202a36;
+}
+
+.dark-grey-mode .battle-of-olympus-metric-label {
+    color: #b9c7d8;
+}
+
+.dark-grey-mode .battle-of-olympus-metric-value {
+    color: #ffffff;
+}
+
+.dark-grey-mode .colony-slider label {
+    color: #ffffff;
+}
+
+.dark-grey-mode .colony-slider .slider-value,
+.dark-grey-mode .colony-slider .slider-effect {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .moon-warning {
+    color: #ffcc00;
+}
+
+.dark-grey-mode .reorder-buttons button.disabled {
+    color: #666;
+}
+
+.dark-grey-mode .cargo-resource-label {
+    color: #ffffff;
+}
+
+.dark-grey-mode .progress-button {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.dark-grey-mode .progress-button:hover {
+    background-color: #0056b3;
+}
+.dark-grey-mode .resource-wrapper {
+    background-color: #1e1e1e;
+}
+
+.dark-grey-mode .resource-divider-top::before {
+    border-top-color: #444;
+}
+
+.dark-grey-mode .resource-divider-bottom::after {
+    border-top-color: #444;
+}
+
+.dark-grey-mode .storage-resource-separator {
+    border-top-color: #444;
+}
+
+.dark-grey-mode .terraforming-infographic-button {
+    background-color: #2b2b2b;
+    border-color: #555;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .terraforming-infographic-button:hover,
+.dark-grey-mode .terraforming-infographic-button:focus {
+    background-color: #3a3a3a;
+    border-color: #6a6a6a;
+    color: #9ac4ff;
+}
+
+.dark-grey-mode .terraforming-graphs-button {
+    background: linear-gradient(180deg, #303030 0%, #242424 100%);
+    border-color: #555;
+    color: #9ac4ff;
+}
+
+.dark-grey-mode .terraforming-graphs-button:hover,
+.dark-grey-mode .terraforming-graphs-button:focus {
+    background-color: #3a3a3a;
+    border-color: #6a6a6a;
+}
+
+.dark-grey-mode .terraforming-graphs-overlay {
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.dark-grey-mode .terraforming-graphs-window {
+    background: #1e1e1e;
+}
+
+.dark-grey-mode .terraforming-graphs-header {
+    background: #2a2a2a;
+    border-bottom-color: #444;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .terraforming-graphs-close {
+    background: #333333;
+    border-color: #555;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .terraforming-graphs-close:hover,
+.dark-grey-mode .terraforming-graphs-close:focus {
+    background: #3f3f3f;
+}
+
+.dark-grey-mode .terraforming-graphs-menu {
+    background: #232323;
+    border-right-color: #444;
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .terraforming-graphs-menu-button {
+    background: #2b2b2b;
+    border-color: #444;
+    color: #dcdcdc;
+}
+
+.dark-grey-mode .terraforming-graphs-menu-button.active {
+    background: #1b6ac9;
+    border-color: #1b6ac9;
+    color: #ffffff;
+}
+
+.dark-grey-mode .terraforming-graphs-canvas {
+    background: #151515;
+    border-color: #444;
+}
+
+.dark-grey-mode .terraforming-graphs-note {
+    color: #aaaaaa;
+}
+
+.dark-grey-mode .terraforming-graphs-phase {
+    border-top-color: #444;
+}
+
+.dark-grey-mode .terraforming-graphs-phase-canvas {
+    background: #151515;
+    border-color: #444;
+}
+
+.dark-grey-mode .terraforming-graphs-phase-note {
+    color: #aaaaaa;
+}
+
+.dark-grey-mode .terraforming-graphs-phase-disclaimer {
+    color: #f1c0b9;
+    background: linear-gradient(90deg, #2a1b1b 0%, #2b2421 100%);
+    border-color: #6b423b;
+}
+
+.dark-grey-mode .terraforming-graphs-phase-button {
+    background: #2b2b2b;
+    border-color: #444;
+    color: #dcdcdc;
+}
+
+.dark-grey-mode .terraforming-graphs-phase-button.active {
+    background: #1b6ac9;
+    border-color: #1b6ac9;
+    color: #ffffff;
+}
+
+
+.dark-grey-mode .scanning-progress {
+    color: #aaa;
+}
+.dark-grey-mode .combined-building-row {
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .building-description {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .building-display {
+    background-color: #1e1e1e;
+}
+
+.dark-grey-mode .hide-button:disabled {
+    color: #666;
+}
+
+.dark-grey-mode .unhide-obsolete-button {
+    background-color: #4d4d4d;
+    color: #ffffff;
+}
+
+.dark-grey-mode .unhide-obsolete-button:hover {
+    background-color: #666666;
+}
+
+.dark-grey-mode button {
+    background-color: #4d4d4d;
+    color: #ffffff;
+    border: 1px solid #666;
+}
+
+.dark-grey-mode button:hover {
+    background-color: #666666;
+}
+
+.dark-grey-mode button:disabled {
+    background-color: #2d2d2d;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.dark-grey-mode .golden-asteroid-button {
+    background: #ffd700;
+    border: 2px solid #b8860b;
+    color: #000;
+}
+
+.dark-grey-mode .golden-asteroid-button:hover {
+    background: #ffed4e;
+}
+
+.dark-grey-mode .golden-asteroid-button:active {
+    background: #daa520;
+}
+
+.dark-grey-mode .milestone-button.completed {
+    background-color: #3cb371;
+    border-color: #3cb371;
+    color: #fff;
+}
+
+.dark-grey-mode input,
+.dark-grey-mode select,
+.dark-grey-mode textarea {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #444;
+}
+
+.dark-grey-mode .auto-build-header-input:disabled,
+.dark-grey-mode .auto-build-input:disabled {
+    background-color: #2a2a2a;
+    color: #9aa0a6;
+    border-color: #666;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    cursor: not-allowed;
+}
+.dark-grey-mode .galaxy-operations-launch__auto-threshold {
+    background: rgba(10, 18, 30, 0.85);
+    color: #f0f7ff;
+    border-color: rgba(124, 176, 244, 0.4);
+}
+.dark-grey-mode .galactic-invasion__overlay {
+    background: rgba(2, 6, 23, 0.86);
+    color: #f8fafc;
+}
+
+.dark-grey-mode .galactic-invasion-section {
+    border-color: rgba(100, 116, 139, 0.45);
+    background: rgba(15, 23, 42, 0.92);
+}
+
+.dark-grey-mode .galactic-invasion-section__header {
+    background: rgba(51, 65, 85, 0.5);
+    color: #e2e8f0;
+}
+
+.dark-grey-mode .galactic-invasion-section__description {
+    color: #94a3b8;
+}
+
+.dark-grey-mode .galactic-invasion-subsection {
+    background: rgba(30, 41, 59, 0.48);
+}
+
+.dark-grey-mode .galactic-invasion-card {
+    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.78);
+}
+
+.dark-grey-mode .galactic-invasion-card.active {
+    border-color: #a855f7;
+    box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.42);
+}
+
+.dark-grey-mode .galactic-invasion-card.completed {
+    background: rgba(20, 83, 45, 0.36);
+}
+
+.dark-grey-mode .galactic-invasion-card__glyph {
+    color: #c084fc;
+}
+
+.dark-grey-mode .galactic-invasion-card__status {
+    color: #86efac;
+}
+
+.dark-grey-mode .galactic-invasion-card__power,
+.dark-grey-mode .galactic-invasion-card__traits,
+.dark-grey-mode .galactic-invasion-card__reward,
+.dark-grey-mode .galactic-invasion-traits__item,
+.dark-grey-mode .galactic-invasion-summary__empty,
+.dark-grey-mode .galactic-invasion-summary__item {
+    color: #cbd5e1;
+}
+
+.dark-grey-mode .galactic-invasion-card__traits,
+.dark-grey-mode .galactic-invasion-traits__name {
+    color: #c084fc;
+}
+
+.dark-grey-mode .galactic-invasion-card__button {
+    border-color: #a855f7;
+    background: #6d28d9;
+    color: #f8fafc;
+}
+
+.dark-grey-mode .galactic-invasion-card__button:hover:not(:disabled) {
+    background: #7c3aed;
+}
+
+.dark-grey-mode .galactic-invasion-card__button:disabled {
+    border-color: #475569;
+    background: #334155;
+    color: #94a3b8;
+}
+
+.dark-grey-mode .galactic-invasion-summary {
+    border-top-color: rgba(100, 116, 139, 0.45);
+}
+.dark-grey-mode .research-item {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .toggle-completed-button {
+    background-color: #4d4d4d;
+    color: #ffffff;
+}
+
+.dark-grey-mode .research-hide-toggle {
+    background-color: #3a3a3a;
+    color: #f0f0f0;
+    border-color: #666;
+}
+.dark-grey-mode .settings-container h2 {
+    color: #ffffff;
+}
+
+.dark-grey-mode .space-storage-settings-window {
+    background: #1f2937;
+    color: #f8f9fa;
+}
+
+.dark-grey-mode .space-storage-settings-input,
+.dark-grey-mode .space-storage-settings-select {
+    background: #111827;
+    color: #f8f9fa;
+    border-color: #374151;
+}
+
+.dark-grey-mode .space-storage-settings-close {
+    background: #374151;
+    color: #f8f9fa;
+}
+
+.dark-grey-mode .space-storage-settings-confirm {
+    background: #2f9e44;
+    color: #f8f9fa;
+}
+
+.dark-grey-mode .construction-office-reserve-default-row {
+    border-bottom-color: #374151;
+}
+
+.dark-grey-mode .save-slots table {
+    border-color: #444;
+}
+
+.dark-grey-mode .save-slots td {
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .save-slots tr:not(:last-child) {
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .save-slots th {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+.dark-grey-mode .save-slots button {
+    background-color: #4d4d4d;
+    color: #ffffff;
+}
+
+.dark-grey-mode .save-slots button:hover {
+    background-color: #666666;
+}
+
+.dark-grey-mode .save-slots button:disabled {
+    background-color: #2d2d2d;
+    color: #666;
+}
+
+.dark-grey-mode .save-slots button.delete-button {
+    background-color: #990000;
+}
+
+.dark-grey-mode .save-slots button.delete-button:hover {
+    background-color: #cc0000;
+}
+.dark-grey-mode .terraforming-box {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .terraforming-box h3 {
+    color: #ffffff;
+}
+
+.dark-grey-mode .terraforming-box p {
+    color: #bbbbbb;
+}
+/* Solis Tab Dark Mode */
+.dark-grey-mode .solis-container {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+.dark-grey-mode .solis-header {
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .solis-header h2 {
+    color: #e91e63;
+}
+
+.dark-grey-mode .solis-quest-area {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .solis-quest-quantity,
+.dark-grey-mode .solis-quest-resource {
+    color: #64b5f6;
+}
+
+.dark-grey-mode #solis-cooldown {
+    color: #ff9800;
+}
+
+.dark-grey-mode .solis-progress-bar-container {
+    background-color: #4d4d4d;
+}
+
+.dark-grey-mode .solis-multiplier-button {
+    background-color: #81c784;
+    color: #121212;
+}
+
+.dark-grey-mode .solis-multiplier-button:hover {
+    background-color: #66bb6a;
+}
+
+.dark-grey-mode #solis-refresh-button,
+.dark-grey-mode #solis-complete-button {
+    color: #ffffff;
+}
+
+.dark-grey-mode #solis-refresh-button {
+    background-color: #64b5f6;
+}
+
+.dark-grey-mode #solis-refresh-button:disabled {
+    background-color: #2d2d2d;
+    color: #666;
+}
+
+.dark-grey-mode #solis-complete-button {
+    background-color: #ffd54f;
+    color: #1a1a1a;
+}
+
+.dark-grey-mode #solis-complete-button:disabled {
+    background-color: #2d2d2d;
+    color: #666;
+}
+
+.dark-grey-mode .solis-shop-container {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .solis-shop-container h3 {
+    color: #e91e63;
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .solis-shop-header {
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .solis-shop-header-controls button {
+    background-color: #64b5f6;
+    color: #ffffff;
+}
+
+.dark-grey-mode .solis-shop-header-controls button:hover {
+    background-color: #42a5f5;
+}
+
+.dark-grey-mode .solis-shop-header-controls button:disabled {
+    background-color: #2d2d2d;
+    color: #666;
+}
+
+.dark-grey-mode .solis-shop-item {
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .solis-shop-item:hover {
+    background-color: #424242;
+}
+
+.dark-grey-mode .solis-shop-item-label {
+    color: #ffffff;
+}
+
+.dark-grey-mode .solis-shop-item-cost {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .solis-shop-item-count {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .solis-shop-item button {
+    background-color: #64b5f6;
+    color: #ffffff;
+}
+
+.dark-grey-mode .solis-shop-item button:hover {
+    background-color: #42a5f5;
+}
+
+.dark-grey-mode .solis-shop-item button:disabled {
+    background-color: #2d2d2d;
+    color: #666;
+}
+.dark-grey-mode .need-box {
+    border-color: #444;
+}
+
+.dark-grey-mode .need-box .text-container {
+    color: #ffffff;
+}
+
+.dark-grey-mode .sliders-box {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .automation-card {
+    background: linear-gradient(180deg, #161b26 0%, #0f141d 100%);
+    border-color: #2d3a50;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+}
+
+.dark-grey-mode .automation-card-header {
+    background: linear-gradient(120deg, #1c2534, #131b29);
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-title {
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-description {
+    color: #c8d2e2;
+}
+
+.dark-grey-mode .automation-body {
+    background: transparent;
+}
+
+.dark-grey-mode .automation-preset-json-details {
+    background: #111827;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-grey-mode .automation-preset-json-summary {
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-preset-json-content {
+    color: #d7e2f3;
+}
+
+.dark-grey-mode .automation-preset-json-field-input {
+    background: #1a2435;
+    border-color: #41557a;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-preset-json-field-input:focus {
+    border-color: #74a0ff;
+    box-shadow: 0 0 0 1px rgba(116, 160, 255, 0.25);
+}
+
+.dark-grey-mode .automation-preset-json-field-input-disabled {
+    background: #172133;
+    color: #b8c4d9;
+}
+
+.dark-grey-mode .automation-preset-json-field-include-checkbox {
+    accent-color: #74a0ff;
+}
+
+.dark-grey-mode .automation-preset-row {
+    background: #111827;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-grey-mode .automation-preset-row select,
+.dark-grey-mode .automation-preset-row input {
+    background: #0d1522;
+    border-color: #32435f;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-step {
+    background: linear-gradient(180deg, #121a28 0%, #0b111b 100%);
+    border-color: #2a3650;
+    border-left-color: #3f7bf7;
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.6);
+}
+
+.dark-grey-mode .automation-step-header {
+    border-bottom-color: #1d293b;
+}
+
+.dark-grey-mode .automation-step-badge {
+    background: #1f2d45;
+    color: #a8c6ff;
+    box-shadow: 0 1px 0 #0d1627 inset;
+}
+
+.dark-grey-mode .automation-step-subtitle {
+    color: #acb6c6;
+}
+
+.dark-grey-mode .automation-limit-row select,
+.dark-grey-mode .automation-limit-row input {
+    background: #0f1725;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-limit-row input:disabled {
+    background: #131b2a;
+    color: #6e7a93;
+}
+
+.dark-grey-mode .automation-entry {
+    background: #0e1421;
+    border-color: #202d42;
+}
+
+.dark-grey-mode .automation-entry select,
+.dark-grey-mode .automation-entry input {
+    background: #0d1522;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .life-automation-entry-spend {
+    color: #cbd4e2;
+}
+
+.dark-grey-mode .automation-entry-exclude {
+    color: #cbd4e2;
+}
+
+.dark-grey-mode .automation-add-entry-row {
+    border-top-color: #273449;
+}
+
+.dark-grey-mode .automation-add-entry-row button,
+.dark-grey-mode .automation-add-step {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border: 1px solid #3f7bf7;
+}
+
+.dark-grey-mode .automation-add-entry-row button:disabled,
+.dark-grey-mode .automation-add-step:disabled {
+    background: #1a2335;
+    border-color: #2c3a52;
+}
+
+.dark-grey-mode .automation-preset-buttons button,
+.dark-grey-mode .automation-order-buttons button,
+.dark-grey-mode .automation-step-header button,
+.dark-grey-mode .automation-entry button,
+.dark-grey-mode .automation-entry-scale-controls button {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-collapse {
+    background: transparent;
+    border: none;
+}
+
+.dark-grey-mode .automation-preset-buttons button:hover,
+.dark-grey-mode .automation-order-buttons button:hover,
+.dark-grey-mode .automation-step-header button:hover,
+.dark-grey-mode .automation-entry button:hover,
+.dark-grey-mode .automation-entry-scale-controls button:hover {
+    background: #24324a;
+}
+
+.dark-grey-mode .automation-collapse:hover {
+    background: transparent;
+}
+
+.dark-grey-mode .automation-step-order button:disabled {
+    background: #141c2b;
+    border-color: #223049;
+    color: #6a778f;
+    opacity: 0.7;
+}
+
+.dark-grey-mode .life-automation-section {
+    background: #101826;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-grey-mode .life-automation-section-title {
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .life-automation-enable {
+    color: #cbd4e2;
+}
+
+.dark-grey-mode .life-automation-row {
+    background: #0e1421;
+    border-color: #202d42;
+}
+
+.dark-grey-mode .automation-toggle,
+.dark-grey-mode .ui-toggle {
+    background-color: transparent;
+    border: none;
+}
+
+.dark-grey-mode .automation-toggle:hover,
+.dark-grey-mode .ui-toggle:hover {
+    background-color: transparent;
+}
+
+.dark-grey-mode .automation-toggle__label,
+.dark-grey-mode .ui-toggle__label {
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .automation-toggle__track,
+.dark-grey-mode .ui-toggle__track {
+    background-color: transparent;
+    border-color: #4a5568;
+}
+
+.dark-grey-mode .automation-toggle.is-on .automation-toggle__track,
+.dark-grey-mode .ui-toggle.is-on .ui-toggle__track {
+    background-color: #3a66e1;
+    border-color: #3a66e1;
+    box-shadow: 0 0 6px rgba(58, 102, 225, 0.6);
+}
+
+.dark-grey-mode .automation-toggle__thumb,
+.dark-grey-mode .ui-toggle__thumb {
+    background-color: #e7ecf7;
+}
+
+.dark-grey-mode .kerati-hive-status-card,
+.dark-grey-mode .kerati-hive-panel,
+.dark-grey-mode .kerati-hive-action-card {
+    background: #101826;
+    border-color: #24324a;
+}
+
+.dark-grey-mode .kerati-hive-status-card {
+    background: linear-gradient(180deg, #132033 0%, #0f1928 100%);
+}
+
+.dark-grey-mode .kerati-hive-status-card__bar {
+    background: #24324a;
+}
+
+.dark-grey-mode .kerati-hive-status-card__text,
+.dark-grey-mode .kerati-hive-action-card__summary {
+    color: #d6deea;
+}
+
+.dark-grey-mode .kerati-hive-section-title,
+.dark-grey-mode .kerati-hive-action-card__title {
+    color: #eef3fb;
+}
+
+.dark-grey-mode .kerati-hive-section-meta,
+.dark-grey-mode .kerati-hive-action-card__meta {
+    color: #95a4bb;
+}
+
+.dark-grey-mode .kerati-hive-recover-button {
+    background: #0e1421;
+    border-color: #24324a;
+    color: #d6deea;
+}
+
+.dark-grey-mode .deep-mining-option {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-grey-mode .deep-mining-option-label {
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .life-automation-zone-row {
+    background: #0e1421;
+    border-color: #202d42;
+    color: #cbd4e2;
+}
+
+.dark-grey-mode .life-automation-zone-option {
+    color: #cbd4e2;
+}
+
+.dark-grey-mode .life-automation-toggle,
+.dark-grey-mode .life-automation-field,
+.dark-grey-mode .life-automation-deploy-row,
+.dark-grey-mode .life-automation-seed-row {
+    color: #cbd4e2;
+}
+
+.dark-grey-mode .life-automation-row input,
+.dark-grey-mode .life-automation-row select,
+.dark-grey-mode .life-automation-field input,
+.dark-grey-mode .life-automation-field select {
+    background: #0d1522;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .life-automation-max-button,
+.dark-grey-mode .life-automation-seed-button {
+    background: #1a2538;
+    border: 1px solid #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .life-automation-max-button:hover,
+.dark-grey-mode .life-automation-seed-button:hover {
+    background: #24324a;
+}
+
+.dark-grey-mode .building-automation-section {
+    background: #101826;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-grey-mode .building-automation-section-title {
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .building-automation-apply-next-travel-label {
+    background: rgba(34, 48, 74, 0.65);
+    border: 1px solid #2a3c5f;
+    color: #d4ddf1;
+}
+
+.dark-grey-mode .building-automation-builder-dirty {
+    color: #ff7b7b;
+}
+
+.dark-grey-mode .building-automation-hint,
+.dark-grey-mode .building-automation-apply-hint {
+    color: #c8d2e2;
+}
+
+.dark-grey-mode .building-automation-row select,
+.dark-grey-mode .building-automation-row input,
+.dark-grey-mode .building-automation-apply-row select {
+    background: #0d1522;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .building-automation-next-travel-select {
+    background: #0d1522;
+    border: 1px solid #30405a;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .building-automation-section button {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .building-automation-section button:hover {
+    background: #24324a;
+}
+
+.dark-grey-mode .building-automation-section .building-automation-builder-save,
+.dark-grey-mode .building-automation-section .building-automation-apply-add,
+.dark-grey-mode .building-automation-section .building-automation-apply-combination,
+.dark-grey-mode .building-automation-section .building-automation-combination-save {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border: 1px solid #3f7bf7;
+    color: #ffffff;
+}
+
+.dark-grey-mode .building-automation-section .building-automation-builder-save:hover,
+.dark-grey-mode .building-automation-section .building-automation-apply-add:hover,
+.dark-grey-mode .building-automation-section .building-automation-apply-combination:hover,
+.dark-grey-mode .building-automation-section .building-automation-combination-save:hover {
+    background: linear-gradient(180deg, #3a6bff 0%, #2344c2 100%);
+}
+
+.dark-grey-mode .building-automation-section .building-automation-builder-save:disabled,
+.dark-grey-mode .building-automation-section .building-automation-apply-add:disabled,
+.dark-grey-mode .building-automation-section .building-automation-apply-combination:disabled,
+.dark-grey-mode .building-automation-section .building-automation-combination-save:disabled {
+    background: #1a2335;
+    border-color: #2c3a52;
+    color: #6a778f;
+}
+
+.dark-grey-mode .building-automation-builder-list {
+    background: transparent;
+}
+
+.dark-grey-mode .building-automation-builder-pill {
+    background: #0e1421;
+    border-color: #202d42;
+    color: #cbd4e2;
+}
+
+.dark-grey-mode .building-automation-apply-row {
+    background: #0e1421;
+    border-color: #202d42;
+}
+
+.dark-grey-mode .building-automation-apply-detail {
+    color: #acb6c6;
+}
+
+.dark-grey-mode .building-automation-apply-controls button {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-grey-mode .building-automation-apply-controls button:hover {
+    background: #24324a;
+}
+
+.dark-grey-mode .building-automation-section .building-automation-apply-toggle {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.dark-grey-mode .building-automation-section .building-automation-apply-toggle:hover {
+    background: transparent;
+    transform: none;
+}
+
+.dark-grey-mode input[type="range"].pretty-slider::-webkit-slider-runnable-track {
+    background: #4d4d4d;
+}
+
+.dark-grey-mode input[type="range"].pretty-slider::-webkit-slider-thumb {
+    background-color: #bbbbbb;
+}
+
+.dark-grey-mode input[type="range"].pretty-slider::-moz-range-track {
+    background: #4d4d4d;
+}
+
+.dark-grey-mode input[type="range"].pretty-slider::-moz-range-thumb {
+    background-color: #bbbbbb;
+}
+.dark-grey-mode #life-designs-table th,
+.dark-grey-mode #life-status-table th {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border-color: #444;
+}
+.dark-grey-mode #nanocolony-container .stat-item {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode #nanocolony-container .stat-label {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode #nanocolony-container .stat-value {
+    color: #ffffff;
+}
+
+
+.dark-grey-mode #nanocolony-container .control-group label {
+    color: #ffffff;
+}
+
+.dark-grey-mode #nanocolony-container .slider-value {
+    color: #ffffff;
+}
+
+.dark-grey-mode #nanocolony-container .slider-description {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode #nanocolony-container h4 {
+    color: #ffffff;
+    border-bottom-color: #444;
+}
+
+.dark-grey-mode .colony-buoyancy-card .colony-buoyancy-body {
+    color: #dddddd;
+}
+
+.dark-grey-mode .colony-buoyancy-card .colony-buoyancy-lift-label {
+    color: #ffffff;
+}
+
+/* HOPE Tab — Skill Tree */
+.dark-grey-mode .skill-connector {
+    stroke: #888;
+}
+
+.dark-grey-mode #skill-points-display {
+    background-color: #2d2d2d;
+    border-color: #666;
+    color: #e0e0e0;
+}
+
+/* HOPE Tab — Solis: fix quest text and research colours inherited from light-mode base */
+.dark-grey-mode #solis-quest-text {
+    color: #e0e0e0;
+}
+
+.dark-grey-mode .solis-research-list {
+    color: #cccccc;
+}
+
+.dark-grey-mode .solis-research-completed {
+    color: #888888;
+}
+
+/* Space Tab — Galactic Invasion: card name inherits correctly but make it explicit */
+.dark-grey-mode .galactic-invasion-card__name {
+    color: #e2e8f0;
+}
+
+/* Space Tab — Galactic Invasion: section header chevron / collapse button colour */
+.dark-grey-mode .galactic-invasion-section__header {
+    color: #e2e8f0;
+}
+
+/* Space Tab — ensure atlas community note text is readable */
+.dark-grey-mode .atlas-community-note {
+    color: #cbd5e1;
+}
+
+/* ============================================================
+   WGC Dark Mode
+   The WGC uses its own --wgc-* variables for internal colours,
+   which are already dark-navy by design. We only need to fix
+   the places where the global dark-mode button/input overrides
+   conflict with the WGC's own styles, and add container-level
+   background to prevent light-mode bleed.
+   ============================================================ */
+
+/* Restore WGC container/card backgrounds so they aren't
+   overridden by the generic dark-mode card or body rules */
+.dark-grey-mode .wgc-container {
+    color: var(--wgc-text-light);
+}
+
+.dark-grey-mode .wgc-card {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-border-color);
+}
+
+.dark-grey-mode .wgc-team-card {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+}
+
+.dark-grey-mode .wgc-team-card .team-header {
+    color: var(--wgc-border-color);
+}
+
+/* Restore WGC buttons — the global .dark-grey-mode button rule overrides
+   the internal wgc-variable styling */
+.dark-grey-mode .wgc-container button {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-grey-mode .wgc-container button:hover:not(:disabled) {
+    background-color: var(--wgc-border-color);
+    color: var(--wgc-bg-dark);
+}
+
+.dark-grey-mode .wgc-container button:disabled {
+    background-color: var(--wgc-bg-dark);
+    color: var(--wgc-text-dark);
+    border-color: var(--wgc-text-dark);
+    opacity: 0.5;
+}
+
+/* Restore WGC inputs and selects */
+.dark-grey-mode .wgc-container select,
+.dark-grey-mode .wgc-container input[type="number"],
+.dark-grey-mode .wgc-container input[type="text"] {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+/* Team slot */
+.dark-grey-mode .team-slot {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-text-dark);
+}
+
+.dark-grey-mode .team-slot.filled {
+    border-color: var(--wgc-border-color);
+}
+
+.dark-grey-mode .team-slot.filled:hover {
+    background-color: var(--wgc-bg-light);
+}
+
+.dark-grey-mode .team-slot button {
+    background: none;
+    border: none;
+    color: var(--wgc-text-dark);
+}
+
+.dark-grey-mode .team-slot button:hover {
+    background-color: var(--wgc-bg-light);
+    color: var(--wgc-text-light);
+}
+
+/* Team name input */
+.dark-grey-mode .team-name-input {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+/* Rename button */
+.dark-grey-mode .wgc-container button.rename-team-icon {
+    background: none;
+    border: none;
+    color: var(--wgc-border-color);
+}
+
+.dark-grey-mode .wgc-container button.rename-team-icon:hover {
+    background: none;
+    color: var(--wgc-text-light);
+}
+
+/* Confirm rename button */
+.dark-grey-mode .confirm-rename-btn {
+    background-color: var(--wgc-green);
+    border: none;
+    color: #ffffff;
+}
+
+/* Story toggle */
+.dark-grey-mode .wgc-container .wgc-story-toggle {
+    background: transparent;
+    border: none;
+    color: var(--wgc-text-light);
+}
+
+.dark-grey-mode .wgc-container .wgc-story-toggle:hover {
+    background: transparent;
+    border: none;
+}
+
+.dark-grey-mode .wgc-container .wgc-story-toggle__track {
+    background-color: var(--wgc-bg-light);
+}
+
+.dark-grey-mode .wgc-container .wgc-story-toggle__thumb {
+    background-color: var(--wgc-text-light);
+}
+
+.dark-grey-mode .wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__track {
+    background-color: var(--wgc-border-color);
+}
+
+/* Popup window */
+.dark-grey-mode .wgc-popup-overlay {
+    background-color: rgba(13, 26, 38, 0.85);
+}
+
+.dark-grey-mode .wgc-popup-window {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-grey-mode .wgc-popup-window h2 {
+    color: var(--wgc-border-color);
+}
+
+.dark-grey-mode .wgc-popup-window input,
+.dark-grey-mode .wgc-popup-window select {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-grey-mode .wgc-popup-window button {
+    background-color: var(--wgc-bg-dark);
+    border: 1px solid var(--wgc-border-color);
+    color: var(--wgc-text-light);
+}
+
+.dark-grey-mode .wgc-popup-window button:hover:not(:disabled) {
+    background-color: var(--wgc-border-color);
+    color: var(--wgc-bg-dark);
+}
+
+/* Stat containers */
+.dark-grey-mode .wgc-stat-container {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-grey-mode .wgc-stat-header-row {
+    background-color: transparent;
+    border: none;
+    color: var(--wgc-text-medium);
+}
+
+.dark-grey-mode .wgc-auto-input {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-bg-light);
+    color: var(--wgc-text-light);
+}
+
+/* R&D section */
+.dark-grey-mode .wgc-rd-item:nth-child(odd) {
+    background-color: var(--wgc-bg-dark);
+}
+
+.dark-grey-mode .wgc-rd-header {
+    color: var(--wgc-text-light);
+    background-color: transparent;
+}
+
+.dark-grey-mode .wgc-rd-mult {
+    color: var(--wgc-text-medium);
+}
+
+/* Facility progress */
+.dark-grey-mode .wgc-facility-progress {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+/* Operation progress segments */
+.dark-grey-mode .operation-progress {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-grey-mode .operation-progress-segment {
+    background-color: var(--wgc-bg-medium);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-grey-mode .operation-summary {
+    color: var(--wgc-text-medium);
+}
+
+/* Team log */
+.dark-grey-mode .team-log {
+    background-color: var(--wgc-bg-dark);
+    border-color: var(--wgc-bg-light);
+}
+
+.dark-grey-mode .team-log-content {
+    color: var(--wgc-text-medium);
+}
+
+/* Locked overlay */
+.dark-grey-mode .wgc-team-locked {
+    background-color: rgba(13, 26, 38, 0.95);
+    color: var(--wgc-border-color);
+}
+
+/* HP bar background */
+.dark-grey-mode .team-hp-bar {
+    background-color: #333;
+}
+
+/* Stance labels */
+.dark-grey-mode .team-stance label {
+    color: var(--wgc-text-medium);
+}
+
+.dark-grey-mode .difficulty-label {
+    color: var(--wgc-text-medium);
+}
+
+/* Copy stats button */
+.dark-grey-mode .wgc-copy-team-stats {
+    background-color: var(--wgc-border-color);
+}
+
+/* ============================================================
+   Patience (HOPE Tab) Dark Mode
+   The patience shell has a hard-coded dark-blue gradient in
+   light mode already, so colours are mostly readable. We override
+   the shell background and borders to match the dark-mode palette,
+   and fix the input/button to match the game's dark-mode style.
+   ============================================================ */
+
+.dark-grey-mode .patience-shell {
+    background: linear-gradient(135deg, #0f1a26 0%, #141d2b 50%, #1a2537 100%);
+    border-color: #3c3c3c;
+    color: #ffffff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+}
+
+.dark-grey-mode .patience-header h2 {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .patience-subtitle {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .patience-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: #3c3c3c;
+}
+
+.dark-grey-mode .patience-card-label {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .patience-card-value {
+    color: #ffffff;
+}
+
+.dark-grey-mode .patience-card-meta {
+    color: #bbbbbb;
+}
+
+/* Patience meter */
+.dark-grey-mode .patience-meter {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #444;
+}
+
+.dark-grey-mode .patience-meter-text {
+    color: #c7c7c7;
+}
+
+/* Spend card */
+.dark-grey-mode .patience-spend-card {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: #444;
+}
+
+/* Input */
+.dark-grey-mode #patience-spend-input {
+    background-color: #1a1a1a;
+    border-color: #555;
+    color: #ffffff;
+}
+
+/* Primary spend button — keep its accent look, just ensure contrast */
+.dark-grey-mode #patience-spend-button {
+    background: linear-gradient(135deg, #3a8abf 0%, #4a66cc 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.dark-grey-mode #patience-spend-button:disabled {
+    opacity: 0.4;
+}
+
+.dark-grey-mode .patience-preview {
+    color: #c7c7c7;
+}
+
+.dark-grey-mode .patience-warning {
+    color: #ff6b6b;
+}
+
+/* Save-row buttons */
+.dark-grey-mode .patience-save-row button {
+    background-color: #3a3a3a;
+    border-color: #666;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .patience-save-row button:hover {
+    background-color: #4d4d4d;
+}
+
+.dark-grey-mode .patience-shell .info-tooltip-icon {
+    color: #5db2ff;
+}
+
+/* ============================================================
+   Space Tab Dark Mode
+   The majority of space.css uses --rwg-* / --space-* CSS
+   variables that already resolve to dark-navy tones. Only
+   classes that embed hard-coded light colours need overrides.
+   The galactic-invasion section is already handled above.
+   ============================================================ */
+
+/* Space cards / panels — the --rwg-* vars are dark by default,
+   but we reinforce key backgrounds so they render correctly when
+   the surrounding page switches to #121212. */
+.dark-grey-mode #space-story,
+.dark-grey-mode #space-atlas {
+    background-color: #121212;
+}
+
+.dark-grey-mode .space-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode .space-card-title {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .space-card-subtitle {
+    color: #bbbbbb;
+}
+
+/* Details container */
+.dark-grey-mode .details-container {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode .details-content {
+    border-left-color: #444;
+}
+
+/* Planet options */
+.dark-grey-mode .planet-option {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode .planet-option h3 {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .planet-stats {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .planet-stats p {
+    border-bottom-color: #3c3c3c;
+}
+
+.dark-grey-mode .planet-stats strong {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .planet-status {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f0f0f0;
+}
+
+/* Select planet button */
+.dark-grey-mode .select-planet-button {
+    border-color: #5db2ff;
+    color: #5db2ff;
+}
+
+.dark-grey-mode .select-planet-button:hover:not(:disabled) {
+    background: #5db2ff;
+    color: #121212;
+}
+
+/* Atlas */
+.dark-grey-mode .atlas-world-effects {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .atlas-world-effects-title {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .atlas-world-effect {
+    border-left-color: #444;
+}
+
+/* Space stat card */
+.dark-grey-mode .space-stat-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode .space-stat-label {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .space-stat-value {
+    color: #ffffff;
+}
+
+.dark-grey-mode .space-stat-subvalue {
+    color: #bbbbbb;
+}
+
+/* Space sliders */
+.dark-grey-mode .space-sliders-section {
+    border-top-color: #444;
+}
+
+.dark-grey-mode .space-sliders-title {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .space-slider-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-grey-mode .space-slider-topline {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .space-slider-tick {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .space-slider-energy,
+.dark-grey-mode .space-slider-productivity {
+    color: #bbbbbb;
+}
+
+/* Artificial worlds */
+.dark-grey-mode .artificial-panel {
+    background-color: #1e1e1e;
+    border-color: #444;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-panel h3 {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-select,
+.dark-grey-mode .artificial-radius-input,
+.dark-grey-mode .artificial-name,
+.dark-grey-mode .artificial-stash-grid input {
+    background-color: #1a1a1a;
+    border-color: #555;
+    color: #ffffff;
+}
+
+.dark-grey-mode .artificial-radius-row {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-surface-box {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-grey-mode .artificial-gravity-row {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-gravity {
+    border-color: #444;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-cost-row > span:first-child {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-cost-value {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-duration {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-gains {
+    border-top-color: #444;
+}
+
+.dark-grey-mode .artificial-gains h3 {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-gains-list {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-gain-row > span:first-child {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-gain-value {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-effects {
+    border-top-color: #444;
+}
+
+.dark-grey-mode .artificial-effects h3 {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-secondary {
+    border-color: #666;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-secondary:hover:not(:disabled) {
+    background-color: #2d2d2d;
+}
+
+.dark-grey-mode .artificial-stash-row {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-grey-mode .artificial-stash-title {
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-stash-stock {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-stash-controls {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-grey-mode .artificial-stash-btn {
+    border-color: #666;
+    background: rgba(255, 255, 255, 0.03);
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-stash-btn:hover:not(:disabled) {
+    border-color: #5db2ff;
+    color: #5db2ff;
+}
+
+.dark-grey-mode .artificial-stash-recommend {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-priority {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-progress {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: #444;
+}
+
+.dark-grey-mode .artificial-history-row {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-grey-mode .artificial-history-header-row {
+    color: #bbbbbb;
+}
+
+.dark-grey-mode .artificial-history-edit-btn {
+    border-color: #555;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-history-edit-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark-grey-mode .artificial-history-name-input {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: #555;
+    color: #ffffff;
+}
+
+.dark-grey-mode .artificial-history-travel-btn {
+    border-color: #555;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .artificial-history-travel-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.dark-grey-mode .artificial-supermassive-card {
+    background: linear-gradient(180deg, rgba(40, 60, 90, 0.25), rgba(255, 255, 255, 0.02));
+}
+
+.dark-grey-mode .artificial-supermassive-status {
+    border-color: #5db2ff;
+    background: rgba(93, 178, 255, 0.08);
+    color: #5db2ff;
+}
+
+/* ============================================================
+   Colony Orbitals Dark Mode
+   The orbital-ring-card uses shared .card-header / .stat-item
+   classes already covered. We add overrides for the colony
+   slider cards (sliders-box, colony-slider) and the
+   construction-office reserve window used in the colonies tab,
+   plus the nanocolony temperature warning.
+   ============================================================ */
+
+/* Colony slider card */
+.dark-grey-mode .sliders-box {
+    background-color: #1e1e1e;
+    border-color: #444;
+    box-shadow: none;
+}
+
+.dark-grey-mode .sliders-title {
+    color: #f0f0f0;
+}
+
+/* Colony slider track / thumb — scoped to colony tab only so we
+   don't conflict with the nanocolony or automation overrides */
+.dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-runnable-track {
+    background: #4d4d4d;
+}
+
+.dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-thumb {
+    background-color: #dddddd;
+}
+
+.dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-track {
+    background: #4d4d4d;
+}
+
+.dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-thumb {
+    background-color: #dddddd;
+}
+
+/* Tick marks for colony sliders */
+.dark-grey-mode #colony-sliders-container .slider-container .tick-marks span {
+    background-color: #666;
+}
+
+.dark-grey-mode #colony-sliders-container .slider-container .tick-marks span:first-child,
+.dark-grey-mode #colony-sliders-container .slider-container .tick-marks span:last-child {
+    background-color: transparent;
+}
+
+/* Construction office reserve window */
+.dark-grey-mode .construction-office-reserve-window {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border-color: #444;
+}
+
+.dark-grey-mode .construction-office-reserve-intro {
+    color: #c7c7c7;
+}
+
+/* Nanocolony temperature warning */
+.dark-grey-mode #nanocolony-container .nanotech-temperature-warning {
+    border-color: #8a3a3a;
+    background: #2a1515;
+    color: #ff9a9a;
+}
+
+/* Nanocolony allocation title and recycling toggle text */
+.dark-grey-mode #nanocolony-container .nanotech-recycling-toggle,
+.dark-grey-mode #nanocolony-container .nanotech-recycling-resource {
+    color: #bbbbbb;
+}
+
+/* Colony buoyancy capacity button */
+.dark-grey-mode .colony-buoyancy-card .colony-buoyancy-capacity-button {
+    background-color: #3a3a3a;
+    border-color: #666;
+    color: #f0f0f0;
+}
+
+.dark-grey-mode .colony-buoyancy-card .colony-buoyancy-capacity-button:disabled {
+    opacity: 0.5;
+}
+
+.dark-grey-mode .colony-buoyancy-card .colony-buoyancy-notes-title {
+    color: #f0f0f0;
+}

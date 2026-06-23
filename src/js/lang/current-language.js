@@ -4665,7 +4665,8 @@ setLanguageData({
       },
       themeMode: 'Theme',
       themeModes: {
-        default: 'Default',
+        light: 'Light',
+        darkGrey: 'Dark grey',
         darkBlue: 'Dark blue',
       },
       showSpaceResources: 'Show space resources in default resource panel',

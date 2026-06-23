@@ -63,6 +63,7 @@ let gameSettings = {
   autosaveIntervalSeconds: 300,
   useCelsius: false,
   colorblindPalette: 'redGreen',
+  themeMode: 'light',
   darkMode: false,
   keepTabRunningAudio: false,
   enableTerraformingSubsteps: true,

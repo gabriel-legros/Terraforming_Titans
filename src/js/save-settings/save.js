@@ -813,6 +813,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'themeMode')) {
+        gameSettings.themeMode = gameSettings.darkMode ? 'darkBlue' : 'light';
+      }
       normalizeDifficultySettings();
       applyDifficultySettingEffects();
       setPauseKeybindCode(gameSettings.pauseKeybind);
@@ -846,8 +849,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.immigrationPoolToggle.checked = gameSettings.immigrationPool;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
-      cachedSettings.darkModeSelect.value = gameSettings.darkMode ? 'darkBlue' : 'default';
-      document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+      applyThemeModeSetting();
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
