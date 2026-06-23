@@ -23,7 +23,7 @@ function cacheSettingsElements() {
     unlockToggle: document.getElementById('unlock-alert-toggle'),
     dayNightToggle: document.getElementById('day-night-toggle'),
     dayNightTooltip: document.getElementById('day-night-tooltip'),
-    darkModeToggle: document.getElementById('dark-mode-toggle'),
+    darkModeSelect: document.getElementById('dark-mode-select'),
     preserveAutoStartToggle: document.getElementById('preserve-project-auto-start-toggle'),
     preserveAutoStartTooltip: document.getElementById('preserve-project-auto-start-tooltip'),
     preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
@@ -344,11 +344,11 @@ function addSettingsListeners() {
     );
   }
 
-  if (cached.darkModeToggle) {
-    cached.darkModeToggle.checked = gameSettings.darkMode;
+  if (cached.darkModeSelect) {
+    cached.darkModeSelect.value = gameSettings.darkMode ? 'darkBlue' : 'default';
     document.body.classList.toggle('dark-mode', gameSettings.darkMode);
-    cached.darkModeToggle.addEventListener('change', () => {
-      gameSettings.darkMode = cached.darkModeToggle.checked;
+    cached.darkModeSelect.addEventListener('change', () => {
+      gameSettings.darkMode = cached.darkModeSelect.value === 'darkBlue';
       document.body.classList.toggle('dark-mode', gameSettings.darkMode);
     });
   }

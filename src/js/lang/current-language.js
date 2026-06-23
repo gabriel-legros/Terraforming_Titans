@@ -4663,7 +4663,11 @@ setLanguageData({
         cyanMagenta: 'Cyan / Magenta',
         grayscale: 'Grayscale',
       },
-      darkMode: 'Enable Dark Mode',
+      themeMode: 'Theme',
+      themeModes: {
+        default: 'Default',
+        darkBlue: 'Dark blue',
+      },
       showSpaceResources: 'Show space resources in default resource panel',
       netResourceRateDisplay: 'Net resource rate display',
       immigrationPool: 'Immigration pool',

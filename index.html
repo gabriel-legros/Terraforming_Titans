@@ -955,7 +955,11 @@
               <h2 data-i18n="ui.settings.settings">Settings</h2>
               <div class="settings-grid">
                 <label class="settings-option">
-                  <input type="checkbox" id="dark-mode-toggle"> <span data-i18n="ui.settings.darkMode">Enable Dark Mode</span>
+                  <span data-i18n="ui.settings.themeMode">Theme</span>
+                  <select id="dark-mode-select">
+                    <option value="default" data-i18n="ui.settings.themeModes.default">Default</option>
+                    <option value="darkBlue" data-i18n="ui.settings.themeModes.darkBlue">Dark blue</option>
+                  </select>
                 </label>
                 <label id="white-noise-settings-option" class="settings-option build-target-hidden" hidden>
                   <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span id="white-noise-tooltip" class="info-tooltip-icon">&#9432;</span>

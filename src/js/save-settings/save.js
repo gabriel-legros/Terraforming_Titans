@@ -846,7 +846,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.immigrationPoolToggle.checked = gameSettings.immigrationPool;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
-      cachedSettings.darkModeToggle.checked = gameSettings.darkMode;
+      cachedSettings.darkModeSelect.value = gameSettings.darkMode ? 'darkBlue' : 'default';
       document.body.classList.toggle('dark-mode', gameSettings.darkMode);
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
