@@ -500,6 +500,7 @@ function buildAutomationProjectsUI() {
   automationElements.projectsCombinationSaveButton = applyParts.combinationSaveButton;
   automationElements.projectsCombinationDeleteButton = applyParts.combinationDeleteButton;
   automationElements.projectsCombinationShowInSidebarCheckbox = applyParts.combinationShowInSidebarCheckbox;
+  automationElements.projectsCombinationUsage = applyParts.combinationUsage;
   automationElements.projectsApplyList = applyParts.applyList;
   automationElements.projectsApplyHint = applyParts.applyHint;
   automationElements.projectsAddApplyButton = applyParts.addApplyButton;
@@ -720,7 +721,8 @@ function updateProjectsAutomationUI() {
     projectsCombinationNewButton,
     projectsCombinationSaveButton,
     projectsCombinationDeleteButton,
-    projectsCombinationShowInSidebarCheckbox
+    projectsCombinationShowInSidebarCheckbox,
+    projectsCombinationUsage
   } = automationElements;
   const manager = automationManager;
   const automation = manager.projectsAutomation;
@@ -992,7 +994,7 @@ function updateProjectsAutomationUI() {
     persistToggleElement: projectsApplyNextTravelPersistToggle
   });
 
-  updateAutomationCombinationControls({
+  const combinationControlState = updateAutomationCombinationControls({
     automation,
     combinations,
     uiState: projectAutomationUIState,
@@ -1003,6 +1005,11 @@ function updateProjectsAutomationUI() {
     moveDownButtonElement: projectsCombinationMoveDownButton,
     deleteButtonElement: projectsCombinationDeleteButton
   });
+  updateAutomationCombinationUsageLine(
+    projectsCombinationUsage,
+    'projects',
+    combinationControlState ? combinationControlState.activeCombination : null
+  );
 
   const selectedHasFocus = projectsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';

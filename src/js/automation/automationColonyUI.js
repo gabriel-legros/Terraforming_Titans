@@ -464,6 +464,7 @@ function buildAutomationColonyUI() {
   automationElements.colonyCombinationSaveButton = applyParts.combinationSaveButton;
   automationElements.colonyCombinationDeleteButton = applyParts.combinationDeleteButton;
   automationElements.colonyCombinationShowInSidebarCheckbox = applyParts.combinationShowInSidebarCheckbox;
+  automationElements.colonyCombinationUsage = applyParts.combinationUsage;
   automationElements.colonyApplyList = applyParts.applyList;
   automationElements.colonyApplyHint = applyParts.applyHint;
   automationElements.colonyAddApplyButton = applyParts.addApplyButton;
@@ -512,7 +513,8 @@ function updateColonyAutomationUI() {
     colonyCombinationNewButton,
     colonyCombinationSaveButton,
     colonyCombinationDeleteButton,
-    colonyCombinationShowInSidebarCheckbox
+    colonyCombinationShowInSidebarCheckbox,
+    colonyCombinationUsage
   } = automationElements;
   const manager = automationManager;
   const automation = manager.colonyAutomation;
@@ -767,7 +769,7 @@ function updateColonyAutomationUI() {
     persistToggleElement: colonyApplyNextTravelPersistToggle
   });
 
-  updateAutomationCombinationControls({
+  const combinationControlState = updateAutomationCombinationControls({
     automation,
     combinations,
     uiState: colonyAutomationUIState,
@@ -778,6 +780,11 @@ function updateColonyAutomationUI() {
     moveDownButtonElement: colonyCombinationMoveDownButton,
     deleteButtonElement: colonyCombinationDeleteButton
   });
+  updateAutomationCombinationUsageLine(
+    colonyCombinationUsage,
+    'colony',
+    combinationControlState ? combinationControlState.activeCombination : null
+  );
 
   const selectedSignature = colonyAutomationUIState.builderSelectedTargets.join('|');
   if (selectedSignature !== colonyBuilderSelectedSignature) {

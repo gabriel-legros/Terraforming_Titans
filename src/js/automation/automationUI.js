@@ -1588,17 +1588,7 @@ function updateAutomationPresetUsageLine(line, automationType, preset) {
 
   line.style.display = '';
   const usageText = references.map(reference => {
-    const lineLabel = reference.lineName
-      ? getAutomationCardText(
-          'presetScriptUsageLineNamed',
-          { line: reference.lineNumber, name: reference.lineName },
-          `line ${reference.lineNumber} (${reference.lineName})`
-        )
-      : getAutomationCardText(
-          'presetScriptUsageLine',
-          { line: reference.lineNumber },
-          `line ${reference.lineNumber}`
-        );
+    const lineLabel = getAutomationScriptUsageLineText(reference);
     if (reference.viaCombinationName) {
       return getAutomationCardText(
         'presetScriptUsageReferenceViaCombination',
@@ -1616,6 +1606,60 @@ function updateAutomationPresetUsageLine(line, automationType, preset) {
     'presetScriptUsageUsed',
     { usage: usageText },
     `Script usage: ${usageText}`
+  );
+}
+
+function getAutomationScriptUsageLineText(reference) {
+  return reference.lineName
+    ? getAutomationCardText(
+        'presetScriptUsageLineNamed',
+        { line: reference.lineNumber, name: reference.lineName },
+        `line ${reference.lineNumber} (${reference.lineName})`
+      )
+    : getAutomationCardText(
+        'presetScriptUsageLine',
+        { line: reference.lineNumber },
+        `line ${reference.lineNumber}`
+      );
+}
+
+function updateAutomationCombinationUsageLine(line, automationType, combination) {
+  if (!line) {
+    return;
+  }
+  if (!combination) {
+    line.textContent = '';
+    line.style.display = 'none';
+    line._usageSignature = '';
+    return;
+  }
+
+  const scriptAutomation = automationManager.scriptAutomation;
+  const references = scriptAutomation.getCombinationUsageReferences(automationType, combination.id);
+  const signature = JSON.stringify(references);
+  if (line._usageSignature === signature && line.style.display !== 'none') {
+    return;
+  }
+  line._usageSignature = signature;
+  if (references.length === 0) {
+    line.textContent = '';
+    line.style.display = 'none';
+    return;
+  }
+
+  line.style.display = '';
+  const usageText = references.map(reference => {
+    const lineLabel = getAutomationScriptUsageLineText(reference);
+    return getAutomationCardText(
+      'presetScriptUsageReference',
+      { script: reference.scriptName, line: lineLabel },
+      `${reference.scriptName} ${lineLabel}`
+    );
+  }).join('; ');
+  line.textContent = getAutomationCardText(
+    'combinationScriptUsageUsed',
+    { usage: usageText },
+    `Combination script usage: ${usageText}`
   );
 }
 

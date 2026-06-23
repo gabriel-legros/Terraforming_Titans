@@ -300,6 +300,39 @@ class ScriptAutomation {
     return references;
   }
 
+  getCombinationUsageReferences(automationType, combinationId) {
+    const numericCombinationId = Number(combinationId);
+    const target = this.getAutomationTarget(automationType);
+    const references = [];
+    if (!automationType || !numericCombinationId || !target) {
+      return references;
+    }
+
+    for (let scriptIndex = 0; scriptIndex < this.scripts.length; scriptIndex += 1) {
+      const script = this.scripts[scriptIndex];
+      const lines = Array.isArray(script.lines) ? script.lines : [];
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+        const line = lines[lineIndex];
+        const actions = Array.isArray(line.actions) ? line.actions : [];
+        for (let actionIndex = 0; actionIndex < actions.length; actionIndex += 1) {
+          const action = actions[actionIndex];
+          if (action.automationType !== automationType) {
+            continue;
+          }
+          if (action.kind === 'applyCombination' && Number(action.combinationId) === numericCombinationId) {
+            references.push({
+              scriptId: script.id,
+              scriptName: script.name || `Script ${script.id}`,
+              lineNumber: lineIndex + 1,
+              lineName: line.name || ''
+            });
+          }
+        }
+      }
+    }
+    return references;
+  }
+
   runScript(id) {
     const script = this.scripts.find(item => item.id === Number(id));
     if (!script) return false;

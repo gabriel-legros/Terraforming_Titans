@@ -301,6 +301,9 @@ function buildAutomationCombinationApplySection(config = {}) {
   );
   section.appendChild(combinationRow);
 
+  const combinationUsage = createAutomationPresetUsageLine();
+  section.appendChild(combinationUsage);
+
   const applyList = document.createElement('div');
   (config.applyListClasses || []).forEach(className => applyList.classList.add(className));
   section.appendChild(applyList);
@@ -327,6 +330,7 @@ function buildAutomationCombinationApplySection(config = {}) {
     combinationSaveButton,
     combinationDeleteButton,
     combinationShowInSidebarCheckbox: combinationShowSidebar.checkbox,
+    combinationUsage,
     applyList,
     addApplyButton,
     applyHint

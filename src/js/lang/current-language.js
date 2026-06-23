@@ -4467,6 +4467,7 @@ setLanguageData({
         selectedPresetJsonSummary: 'Selected preset JSON',
         presetJsonIncludeFieldLabel: 'Include this field in saved preset',
         presetScriptUsageUsed: 'Script usage: {usage}',
+        combinationScriptUsageUsed: 'Combination script usage: {usage}',
         presetScriptUsageReference: '{script} {line}',
         presetScriptUsageReferenceViaCombination: '{script} {line} via {combination}',
         presetScriptUsageLine: 'line {line}',
