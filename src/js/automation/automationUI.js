@@ -1319,6 +1319,7 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
       input.size = input.value.length;
       input.disabled = true;
       input.classList.add('automation-preset-json-field-input-disabled');
+      input.classList.add('automation-preset-json-parameter-input');
     } else if (hasCustomSelectOptions) {
       for (let optionIndex = 0; optionIndex < fieldOptions.selectOptions.length; optionIndex += 1) {
         const optionData = fieldOptions.selectOptions[optionIndex];
