@@ -1487,10 +1487,46 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.statusText = text || 'Idle';
   }
 
+  syncExpansionContinuousState() {
+    if (!this.isActive) {
+      return;
+    }
+    const nowContinuous = this.isExpansionContinuous();
+    const wasContinuous = this.startingDuration === Infinity || this.remainingTime === Infinity;
+
+    if (nowContinuous && !wasContinuous) {
+      this.carryDiscreteExpansionProgress();
+      return;
+    }
+
+    const duration = this.getEffectiveDuration();
+    if (!nowContinuous && wasContinuous) {
+      this.isActive = false;
+      this.isPaused = false;
+      this.isCompleted = false;
+      this.startingDuration = duration;
+      this.remainingTime = duration;
+      return;
+    }
+
+    if (!nowContinuous) {
+      const ratio = this.startingDuration > 0
+        ? (this.startingDuration - this.remainingTime) / this.startingDuration
+        : 0;
+      this.startingDuration = duration;
+      this.remainingTime = duration * (1 - ratio);
+    }
+  }
+
   start(resources) {
     this.expansionProgress = 0;
     this.expansionShortfallLastTick = false;
     return this.startContinuousExpansion(resources);
+  }
+
+  update(deltaTime) {
+    this.syncExpansionContinuousState();
+    super.update(deltaTime);
   }
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -2205,6 +2241,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       this.setLastTickStats({});
       this.updateStatus(getLiftersProjectText('status.idle', null, 'Idle'));
     }
+    this.syncExpansionContinuousState();
   }
 
   saveTravelState() {
@@ -2279,6 +2316,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       this.isActive = true;
       this.startingDuration = state.startingDuration || this.getEffectiveDuration();
       this.remainingTime = state.remainingTime || this.startingDuration;
+      this.syncExpansionContinuousState();
       return;
     }
 

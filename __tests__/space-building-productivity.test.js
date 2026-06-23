@@ -1568,6 +1568,61 @@ describe('Space building productivity via produceResources', () => {
     cleanup();
   });
 
+  test('White Dwarf Harvesters reset finite progress when yard duration bonus removal exits continuous mode', () => {
+    const harness = setupHarness();
+    const { WhiteDwarfHarvestersProject, cleanup } = harness;
+
+    const harvesters = new WhiteDwarfHarvestersProject({
+      name: 'White Dwarf Harvesters',
+      duration: 2000,
+      cost: {},
+      attributes: {
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 1,
+        lifterHarvestRecipes: {
+          whiteDwarfHarvest: {
+            label: 'White Dwarf Harvesting',
+            storageKey: 'graphite',
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'whiteDwarfHarvesters');
+
+    harvesters.getDurationWithTerraformBonus = (duration) => {
+      let bonus = 0;
+      harvesters.activeEffects.forEach((effect) => {
+        if (effect.type === 'effectiveTerraformedWorlds') {
+          bonus += effect.value || 0;
+        }
+      });
+      return duration / Math.max(1, 1 + bonus);
+    };
+    harvesters.getEffectiveDuration = () => harvesters.getDurationWithTerraformBonus(harvesters.duration);
+    harvesters.activeEffects = [{
+      type: 'effectiveTerraformedWorlds',
+      value: 2,
+      effectId: 'hephaestus-yard-whiteDwarfHarvesters',
+      sourceId: 'hephaestusMegaconstruction',
+    }];
+    harvesters.autoStart = true;
+    harvesters.isActive = true;
+    harvesters.startingDuration = Infinity;
+    harvesters.remainingTime = Infinity;
+
+    expect(harvesters.isExpansionContinuous()).toBe(true);
+
+    harvesters.activeEffects = [];
+    harvesters.update(1000);
+
+    expect(harvesters.isExpansionContinuous()).toBe(false);
+    expect(harvesters.isActive).toBe(false);
+    expect(harvesters.startingDuration).toBe(2000);
+    expect(harvesters.remainingTime).toBe(2000);
+    cleanup();
+  });
+
   test('Artificial Quasars provide space energy for space building productivity', () => {
     const harness = setupHarness({ spaceEnergy: 0 });
     const {
