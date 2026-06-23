@@ -2645,7 +2645,7 @@ function updateDecreaseButtonText(button, buildCount) {
           desiredChange = landLimited;
         }
       }
-      if (desiredChange !== 0n && !structure.adjustLand(Number(desiredChange))) {
+      if (desiredChange !== 0n && !structure.adjustLand(desiredChange)) {
         return;
       }
     }

@@ -27,6 +27,37 @@ function normalizeBuildingCount(value) {
   }));
 }
 
+function normalizeSignedBuildingCount(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0n;
+  }
+  if (typeof value === 'bigint') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return 0n;
+    }
+    if (/^-?\d+$/.test(trimmed)) {
+      return BigInt(trimmed);
+    }
+  }
+  const numeric = Number(value) || 0;
+  if (numeric === 0) {
+    return 0n;
+  }
+  if (Number.isSafeInteger(numeric)) {
+    return BigInt(Math.trunc(numeric));
+  }
+  const sign = numeric < 0 ? -1n : 1n;
+  const absString = Math.floor(Math.abs(numeric)).toLocaleString('fullwide', {
+    useGrouping: false,
+    maximumFractionDigits: 0
+  });
+  return BigInt(absString) * sign;
+}
+
 function buildingCountToNumber(value) {
   return Number(normalizeBuildingCount(value));
 }
@@ -1256,7 +1287,7 @@ class Building extends EffectableEntity {
       return false;
     }
 
-    const normalizedChange = Number.isFinite(amount) ? amount : 0;
+    const normalizedChange = normalizeSignedBuildingCount(amount);
     const sourceKey = `building:${this.name}`;
 
     if (!landResource.setReservedAmountForSource) {
@@ -1268,8 +1299,9 @@ class Building extends EffectableEntity {
       typeof landResource.getExactLandAvailable === 'function'
     ) {
       const currentReservedForSource = landResource.getExactReservedAmountForSource(sourceKey);
-      const exactChange = numberToExactLandAmount(Math.abs(normalizedChange)) * BigInt(this.requiresLand);
-      let targetReserved = normalizedChange >= 0
+      const magnitude = normalizedChange < 0n ? -normalizedChange : normalizedChange;
+      const exactChange = magnitude * numberToExactLandAmount(this.requiresLand);
+      let targetReserved = normalizedChange >= 0n
         ? currentReservedForSource + exactChange
         : currentReservedForSource - exactChange;
 
@@ -1286,8 +1318,9 @@ class Building extends EffectableEntity {
       return true;
     }
 
+    const normalizedChangeNumber = Number(normalizedChange);
     const currentActive = this.activeNumber;
-    const targetActive = Math.max(0, currentActive + normalizedChange);
+    const targetActive = Math.max(0, currentActive + normalizedChangeNumber);
     const targetReserved = targetActive * this.requiresLand;
 
     const currentReservedForSource = landResource.getReservedAmountForSource
