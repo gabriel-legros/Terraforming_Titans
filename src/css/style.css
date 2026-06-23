@@ -1,10 +1,20 @@
 html {
     font-size: 16px;
+    height: 100%;
 }
 
 body {
     font-family: Arial, sans-serif;
+    height: 100%;
+    margin: 0;
     overflow:hidden;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
 .loading-overlay {
@@ -93,6 +103,7 @@ body {
 }
 
 .tabs {
+    flex: 0 0 auto;
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -172,14 +183,15 @@ body.journal-collapsed .space-subtabs
 .resource-wrapper {
     flex: 0 0 16%; /* Takes up 16% of the space */
     min-width: 300px;
-    height: calc(100vh - 120px); /* Scale with window height minus top area */
+    min-height: 0;
     overflow-y: auto; /* Scroll if content exceeds space */
 }
 
 .tab-content-wrapper {
     display: flex;
     gap: 10px;
-    height: calc(100vh - 120px); /* Fill remaining vertical space below tabs */
+    flex: 1 1 auto;
+    min-height: 0;
     background-color: white;
 }
 
@@ -187,7 +199,7 @@ body.journal-collapsed .space-subtabs
 .tab-content {
     flex: 1; /* Takes up the remaining space between resource and journal */
     display: none;
-    height: calc(100vh - 120px); /* Scale with window height minus top area */
+    min-height: 0;
     overflow-y: auto; /* Scroll if content exceeds space */
     padding-left:10px;
     padding-right:10px;
@@ -253,7 +265,7 @@ body.journal-collapsed .tab-content {
     padding: 15px; /* Adds padding to the journal text */
     box-sizing: border-box; /* Ensures padding is inside the element width */
     overflow-y: auto; /* Allows scrolling if content exceeds height */
-    height: calc(100vh - 120px); /* Scale with window height minus top area */
+    min-height: 0;
 }
 
 .journal-header {
@@ -394,6 +406,7 @@ body.journal-collapsed .tab-content {
 /* Top bar holding progress and journal toggle */
 .top-bar {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 10px;
 }
