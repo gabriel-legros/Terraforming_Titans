@@ -416,7 +416,7 @@ function updateLiftersUI(project) {
     const storedCurrent = project.getStoredAssignmentAmount(key);
     const displayedCurrent = isUnassigned ? available : storedCurrent;
     const maxForKey = project.getAssignmentMaxTarget(key);
-    const displayedCap = isUnassigned ? null : project.getGasGiantMaxAssignmentForRecipe(key, recipe);
+    const displayedCap = isUnassigned ? null : project.getMaxAssignmentForRecipe(key, recipe);
     const showMaxTooltip = displayedCap !== null && displayedCap > 0n;
 
     row.complexity.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
@@ -424,7 +424,7 @@ function updateLiftersUI(project) {
     row.maxValue.textContent = displayedCap === null ? '' : formatNumber(displayedCap, true, 2);
     row.maxInfo.style.display = showMaxTooltip ? '' : 'none';
     if (showMaxTooltip) {
-      row.maxTooltip.textContent = project.getGasGiantMaxAssignmentTooltipText(key, recipe);
+      row.maxTooltip.textContent = project.getMaxAssignmentTooltipText(key, recipe);
       row.maxTooltip.style.whiteSpace = 'pre-line';
     }
     row.minusButton.textContent = `-${formatNumber(step, true)}`;
@@ -454,7 +454,7 @@ function updateLiftersUI(project) {
     elements.note.textContent = getProjectLiftersUIText(
       project,
       'operationNote',
-      `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. Max is the current assignment cap after Warp Gate Network access, complexity, throughput, and supercharge.`,
+      `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. Max is the current assignment cap after Warp Gate Network access, lifter stripping cap, complexity, throughput, and supercharge.`,
       { value: unitRate }
     );
   }

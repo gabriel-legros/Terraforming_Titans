@@ -97,6 +97,7 @@ let gameSettings = {
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,
   infinitePatience: false,
+  liftersStrippingCap: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,

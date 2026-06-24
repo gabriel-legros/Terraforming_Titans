@@ -812,6 +812,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'infinitePatience')) {
         gameSettings.infinitePatience = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'liftersStrippingCap')) {
+        gameSettings.liftersStrippingCap = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
@@ -871,6 +874,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.factoryHeatingToggle.checked = gameSettings.factoryHeating;
       cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
       cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;
+      cachedSettings.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
       patienceManager.enforceInfinitePatience();
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();

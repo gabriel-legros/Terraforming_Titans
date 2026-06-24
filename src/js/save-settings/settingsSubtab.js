@@ -57,6 +57,8 @@ function cacheSettingsElements() {
     realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
     realisticFactoryEnergyConsumptionTooltip: document.getElementById('realistic-factory-energy-consumption-tooltip'),
     infinitePatienceToggle: document.getElementById('infinite-patience-toggle'),
+    liftersStrippingCapToggle: document.getElementById('lifters-stripping-cap-toggle'),
+    liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -719,6 +721,27 @@ function addSettingsListeners() {
       patienceManager.enforceInfinitePatience();
       updatePatienceUI();
     });
+  }
+
+  if (cached.liftersStrippingCapToggle) {
+    cached.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
+    cached.liftersStrippingCapToggle.addEventListener('change', () => {
+      gameSettings.liftersStrippingCap = cached.liftersStrippingCapToggle.checked;
+      const lifters = projectManager.projects.lifters;
+      lifters.normalizeAssignments();
+      lifters.updateUI();
+    });
+  }
+
+  if (cached.liftersStrippingCapTooltip) {
+    attachDynamicInfoTooltip(
+      cached.liftersStrippingCapTooltip,
+      t(
+        'ui.settings.liftersStrippingCapTooltip',
+        {},
+        'When enabled, Strip Atmosphere cannot have more lifters assigned than the current world geometric land value.'
+      )
+    );
   }
 
   wireDifficultyMultiplierInput(cached.buildingCostMultiplierInput, 'buildingCostMultiplier');

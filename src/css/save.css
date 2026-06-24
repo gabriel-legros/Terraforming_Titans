@@ -75,6 +75,11 @@
     margin-bottom: 16px;
   }
 
+  .settings-grid-difficulty-mixed {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    margin: 4px 0 12px;
+  }
+
   .difficulty-spoiler-sections {
     width: min(100%, 1200px);
     margin-bottom: 16px;
@@ -95,6 +100,10 @@
   .difficulty-spoiler-section .settings-grid-difficulty-inputs {
     width: 100%;
     margin: 4px 0 12px;
+  }
+
+  .difficulty-spoiler-section .settings-grid-difficulty-mixed {
+    width: 100%;
   }
 
   .difficulty-toggle-option {
@@ -124,6 +133,10 @@
 
   @media (max-width: 420px) {
     .settings-grid-difficulty-inputs {
+      grid-template-columns: 1fr;
+    }
+
+    .settings-grid-difficulty-mixed {
       grid-template-columns: 1fr;
     }
 

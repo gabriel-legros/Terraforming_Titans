@@ -541,6 +541,38 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return normalizeLifterInteger(maxAssigned);
   }
 
+  getAtmosphericStrippingMaxAssignmentForRecipe(recipeKey, recipe = null) {
+    const resolved = recipe || this.getRecipe(recipeKey);
+    if (!gameSettings.liftersStrippingCap || recipeKey !== LIFTER_STRIP_RECIPE_KEY || !resolved) {
+      return null;
+    }
+    return normalizeLifterInteger(resources.surface.land.value);
+  }
+
+  getMaxAssignmentForRecipe(recipeKey, recipe = null) {
+    const resolved = recipe || this.getRecipe(recipeKey);
+    const caps = [
+      this.getGasGiantMaxAssignmentForRecipe(recipeKey, resolved),
+      this.getAtmosphericStrippingMaxAssignmentForRecipe(recipeKey, resolved),
+    ].filter((cap) => cap !== null);
+    if (caps.length === 0) {
+      return null;
+    }
+    return caps.reduce((lowest, cap) => cap < lowest ? cap : lowest);
+  }
+
+  getMaxAssignmentTooltipText(recipeKey, recipe = null) {
+    const stripCap = this.getAtmosphericStrippingMaxAssignmentForRecipe(recipeKey, recipe);
+    if (stripCap !== null) {
+      return getLiftersProjectText(
+        'strippingMaxAssignmentTooltip',
+        { max: formatNumber(stripCap, true, 2) },
+        `Limited to ${formatNumber(stripCap, true, 2)} lifters by the current world geometric land value.`
+      );
+    }
+    return this.getGasGiantMaxAssignmentTooltipText(recipeKey, recipe);
+  }
+
   getGasGiantMaxAssignmentTooltipText(recipeKey, recipe = null) {
     const resolved = recipe || this.getRecipe(recipeKey);
     const resourceKey = this.getGasGiantCapResourceKey(recipeKey, resolved);
@@ -583,7 +615,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return total;
     }
     const recipe = this.getRecipe(key);
-    const cap = this.getGasGiantMaxAssignmentForRecipe(key, recipe);
+    const cap = this.getMaxAssignmentForRecipe(key, recipe);
     if (cap === null) {
       return total;
     }
