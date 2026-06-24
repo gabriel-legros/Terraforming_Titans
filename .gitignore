@@ -9,3 +9,4 @@ test_saves/player_saves/
 ideas/to_do.txt
 npm-ci.log
 scripts/manual-tests/memory-reports/
+src/js/build-target.js
