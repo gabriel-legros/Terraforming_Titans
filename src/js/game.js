@@ -399,6 +399,7 @@ function initializeGameState(options = {}) {
     gameSettings.advancedResearchMultiplier = 1;
     gameSettings.galaxyFleetCapacityMultiplier = 1;
     gameSettings.galaxyThreatScalingMultiplier = 1;
+    gameSettings.invasionMultiplier = 1;
     gameSettings.artificialWorldConstructionTimeMultiplier = 1;
     gameSettings.rwgRewardsCap = null;
     if (!globalGameIsLoadingFromSave) {

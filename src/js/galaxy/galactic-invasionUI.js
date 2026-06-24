@@ -274,7 +274,7 @@ function updateGalacticInvasionUI() {
         ? getGalacticInvasionText('active', 'Active')
         : '';
     card.power.textContent = getGalacticInvasionText('fleetPower', 'Fleet Power: {value}', {
-      value: formatGalacticInvasionPower(letter.fleetPower)
+      value: formatGalacticInvasionPower(galaxyInvasionManager.getLetterFleetPower(letter))
     });
     card.traits.textContent = getGalacticInvasionTraitListText(letter.traits);
     card.reward.textContent = getGalacticInvasionRewardText(letter.key);

@@ -19,6 +19,7 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   advancedResearchMultiplier: { min: 0 },
   galaxyFleetCapacityMultiplier: { min: 0 },
   galaxyThreatScalingMultiplier: { min: 0 },
+  invasionMultiplier: { min: 0 },
   artificialWorldConstructionTimeMultiplier: { min: 0.0001 },
   rwgRewardsCap: { min: 0, nullable: true, integer: true },
 };
@@ -100,6 +101,9 @@ function clearDifficultySettingEffects() {
   }
   if (galaxyManager) {
     galaxyManager.removeEffect(source);
+  }
+  if (galaxyInvasionManager) {
+    galaxyInvasionManager.removeEffect(source);
   }
   if (projectManager) {
     projectManager.updateProjectDurations();
@@ -222,6 +226,14 @@ function applyDifficultySettingEffects() {
       type: 'threatScalingMultiplier',
       value: gameSettings.galaxyThreatScalingMultiplier,
       effectId: 'difficulty-galaxy-threat-scaling'
+    });
+  }
+  if (gameSettings.invasionMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'galaxyInvasionManager',
+      type: 'invasionMultiplier',
+      value: gameSettings.invasionMultiplier,
+      effectId: 'difficulty-invasion-multiplier'
     });
   }
   if (gameSettings.artificialWorldConstructionTimeMultiplier !== 1) {

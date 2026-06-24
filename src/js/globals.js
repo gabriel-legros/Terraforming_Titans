@@ -109,6 +109,7 @@ let gameSettings = {
   advancedResearchMultiplier: 1,
   galaxyFleetCapacityMultiplier: 1,
   galaxyThreatScalingMultiplier: 1,
+  invasionMultiplier: 1,
   artificialWorldConstructionTimeMultiplier: 1,
   rwgRewardsCap: null,
   scientificNotationThreshold: 1e30,

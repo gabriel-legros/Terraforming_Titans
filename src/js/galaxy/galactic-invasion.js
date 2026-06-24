@@ -118,11 +118,12 @@ class GalacticInvasionManager extends EffectableEntity {
     galaxyManager.initialize();
     galaxyManager.enable('space-galaxy', { autoSwitch: false });
     const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
-    faction.setFleetPower(letter.fleetPower);
-    faction.fleetCapacity = letter.fleetPower;
+    const fleetPower = this.getLetterFleetPower(letter);
+    faction.setFleetPower(fleetPower);
+    faction.fleetCapacity = fleetPower;
     this.currentLetterKey = letter.key;
     this.externalFailurePending = false;
-    this.initialFleetPower = letter.fleetPower;
+    this.initialFleetPower = fleetPower;
     this.deepStrikeUsed = false;
     this.monolithCooldownMs = 0;
     this.operationLaunchCooldownMs = 0;
@@ -810,6 +811,25 @@ class GalacticInvasionManager extends EffectableEntity {
 
   getLetter(letterKey) {
     return GALACTIC_INVASION_LETTERS.find((entry) => entry.key === letterKey) || null;
+  }
+
+  getInvasionMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect?.type !== 'invasionMultiplier') {
+        return;
+      }
+      const value = Number(effect.value);
+      if (Number.isFinite(value) && value >= 0) {
+        multiplier *= value;
+      }
+    });
+    return multiplier;
+  }
+
+  getLetterFleetPower(letter) {
+    const basePower = Number(letter?.fleetPower) || 0;
+    return basePower * this.getInvasionMultiplier();
   }
 
   getActiveLetter() {

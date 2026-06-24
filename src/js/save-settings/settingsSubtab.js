@@ -72,6 +72,8 @@ function cacheSettingsElements() {
     galaxyFleetCapacityMultiplierInput: document.getElementById('galaxy-fleet-capacity-multiplier-input'),
     galaxyThreatScalingMultiplierInput: document.getElementById('galaxy-threat-scaling-multiplier-input'),
     galaxyThreatScalingTooltip: document.getElementById('galaxy-threat-scaling-tooltip'),
+    invasionMultiplierInput: document.getElementById('invasion-multiplier-input'),
+    invasionMultiplierTooltip: document.getElementById('invasion-multiplier-tooltip'),
     artificialWorldConstructionTimeMultiplierInput: document.getElementById('artificial-world-construction-time-multiplier-input'),
     rwgRewardsCapInput: document.getElementById('rwg-rewards-cap-input'),
     rwgRewardsCapTooltip: document.getElementById('rwg-rewards-cap-tooltip'),
@@ -149,6 +151,9 @@ function wireDifficultyMultiplierInput(input, settingId) {
       if (galaxyManager) {
         updateGalaxyUI({ force: true });
       }
+      if (galaxyInvasionManager) {
+        updateGalacticInvasionUI({ force: true });
+      }
       if (artificialManager) {
         artificialManager.updateUI(true);
       }
@@ -191,6 +196,7 @@ function updateDifficultySettingInputs() {
     advancedResearchMultiplier: cached.advancedResearchMultiplierInput,
     galaxyFleetCapacityMultiplier: cached.galaxyFleetCapacityMultiplierInput,
     galaxyThreatScalingMultiplier: cached.galaxyThreatScalingMultiplierInput,
+    invasionMultiplier: cached.invasionMultiplierInput,
     artificialWorldConstructionTimeMultiplier: cached.artificialWorldConstructionTimeMultiplierInput,
     rwgRewardsCap: cached.rwgRewardsCapInput,
   };
@@ -727,6 +733,7 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.advancedResearchMultiplierInput, 'advancedResearchMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyFleetCapacityMultiplierInput, 'galaxyFleetCapacityMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyThreatScalingMultiplierInput, 'galaxyThreatScalingMultiplier');
+  wireDifficultyMultiplierInput(cached.invasionMultiplierInput, 'invasionMultiplier');
   wireDifficultyMultiplierInput(cached.artificialWorldConstructionTimeMultiplierInput, 'artificialWorldConstructionTimeMultiplier');
   wireDifficultyNullableCapInput(cached.rwgRewardsCapInput, 'rwgRewardsCap');
 
@@ -770,6 +777,17 @@ function addSettingsListeners() {
         'ui.settings.galaxyThreatScalingTooltip',
         {},
         'Multiplies how much extra fleet capacity AI factions gain as they react to UHF expansion and late-game threat.'
+      )
+    );
+  }
+
+  if (cached.invasionMultiplierTooltip) {
+    attachDynamicInfoTooltip(
+      cached.invasionMultiplierTooltip,
+      t(
+        'ui.settings.invasionMultiplierTooltip',
+        {},
+        'Multiplies the fleet power of newly started galactic invasions.'
       )
     );
   }
