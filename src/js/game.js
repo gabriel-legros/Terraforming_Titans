@@ -66,6 +66,7 @@ function create() {
       }
       resetGameFrameClock(true);
     }
+    registerExitSaveHandler();
     return;
 }
 

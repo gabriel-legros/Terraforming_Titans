@@ -4624,6 +4624,7 @@ setLanguageData({
       date: 'Date',
       actions: 'Actions',
       autosave: 'Autosave',
+      exitsave: 'Exit Save',
       pretravel: 'Pre-travel',
       slot1: 'Slot 1',
       slot2: 'Slot 2',

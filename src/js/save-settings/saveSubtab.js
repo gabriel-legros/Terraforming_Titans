@@ -48,7 +48,9 @@ function addSaveSlotRenameListeners() {
 }
 
 function addSaveSlotListeners() {
-  const saveSlots = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+  const saveSlots = GAME_FEATURES.exitSaveSlot
+    ? ['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']
+    : ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 
   saveSlots.forEach(slot => {
     const saveButton = document.querySelector(`.save-button[data-slot="${slot}"]`);
@@ -102,6 +104,7 @@ function addSaveLoadListeners() {
 }
 
 function initializeSaveSubtab() {
+  initializeExitSaveSlot();
   loadSaveSlotNames();
   addSaveSlotRenameListeners();
   addSaveSlotListeners();

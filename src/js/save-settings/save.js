@@ -5,8 +5,9 @@ let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let pendingAutomationSafetyRestoreState = null;
 let loadStringDialog = null;
-const SAVE_SLOTS = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
-const SAVE_FALLBACK_LOAD_ORDER = ['autosave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
+let exitSaveHandlerRegistered = false;
+const SAVE_SLOTS = ['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+const SAVE_FALLBACK_LOAD_ORDER = ['autosave', 'exitsave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
 const RENAMABLE_SAVE_SLOTS = ['slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 
 function cacheLoadingOverlayElement() {
@@ -1160,6 +1161,27 @@ function saveGameToSlot(slot) {
   }
 
   return { success: true };
+}
+
+function initializeExitSaveSlot() {
+  const row = document.getElementById('exitsave-row');
+  if (GAME_FEATURES.exitSaveSlot) {
+    row.hidden = false;
+    row.classList.remove('build-target-hidden');
+  } else {
+    row.hidden = true;
+    row.classList.add('build-target-hidden');
+  }
+}
+
+function registerExitSaveHandler() {
+  if (!GAME_FEATURES.exitSaveSlot || exitSaveHandlerRegistered) {
+    return;
+  }
+  window.addEventListener('beforeunload', () => {
+    saveGameToSlot('exitsave');
+  });
+  exitSaveHandlerRegistered = true;
 }
 
 function saveGameToFile() {

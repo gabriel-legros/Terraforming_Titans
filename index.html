@@ -864,13 +864,22 @@
                           </tr>
                       </thead>
                       <tbody>
-                          <tr>
+                        <tr>
                             <td data-i18n="ui.settings.autosave">Autosave</td>
                             <td id="autosave-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
                                 <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
                                 <button class="load-button" data-slot="autosave" data-i18n="ui.common.load">Load</button>
                                 <button class="delete-button" data-slot="autosave" data-i18n="ui.common.delete">Delete</button>
+                            </td>
+                        </tr>
+                        <tr id="exitsave-row" class="build-target-hidden" hidden>
+                            <td data-i18n="ui.settings.exitsave">Exit Save</td>
+                            <td id="exitsave-date" data-i18n="ui.common.empty">Empty</td>
+                            <td>
+                                <button class="save-button" data-slot="exitsave" data-i18n="ui.common.save">Save</button>
+                                <button class="load-button" data-slot="exitsave" data-i18n="ui.common.load">Load</button>
+                                <button class="delete-button" data-slot="exitsave" data-i18n="ui.common.delete">Delete</button>
                             </td>
                         </tr>
                         <tr id="pretravel-row" class="hidden">
