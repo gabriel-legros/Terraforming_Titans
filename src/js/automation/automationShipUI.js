@@ -99,7 +99,7 @@ function updateShipStepSubtitleText(subtitle, step) {
     const percentText = Number(step.limit === null || step.limit === undefined ? 100 : step.limit).toLocaleString();
     subtitle.textContent = getAutomationCardText('shipStepSubtitleRemainingPercent', { percent: percentText }, 'Assign {percent}% of remaining ships');
   } else if (step.limit !== null && step.limit !== undefined) {
-    const limitText = Number(step.limit || 0).toLocaleString();
+    const limitText = formatNumber(step.limit || 0, true, 3);
     subtitle.textContent = getAutomationCardText('shipStepSubtitleAssignUpTo', { count: limitText }, `Assign up to ${limitText} ships`);
   } else {
     subtitle.textContent = getAutomationCardText('shipStepSubtitleByWeight', {}, 'Distribute ships by weight');
