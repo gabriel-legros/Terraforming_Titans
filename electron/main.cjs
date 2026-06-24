@@ -163,6 +163,23 @@ function registerSteamAchievementHandlers() {
   });
 }
 
+function registerWindowControlHandlers() {
+  const { ipcMain } = require('electron');
+  ipcMain.handle('window:is-fullscreen', event => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    return win.isFullScreen();
+  });
+  ipcMain.handle('window:set-fullscreen', (event, enabled) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    win.setFullScreen(enabled === true);
+    return win.isFullScreen();
+  });
+  ipcMain.on('window:exit-game', event => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    win.close();
+  });
+}
+
 function openExternalUrl(url) {
   try {
     const parsedUrl = new URL(url);
@@ -199,6 +216,16 @@ function createWindow() {
     if (input.type !== 'keyDown') {
       return;
     }
+    if (input.key === 'F11') {
+      event.preventDefault();
+      win.setFullScreen(!win.isFullScreen());
+      return;
+    }
+    if (input.key === 'Escape' && win.isFullScreen()) {
+      event.preventDefault();
+      win.setFullScreen(false);
+      return;
+    }
     if (input.control && input.shift && input.key.toLowerCase() === 'i') {
       event.preventDefault();
       if (win.webContents.isDevToolsOpened()) {
@@ -211,6 +238,13 @@ function createWindow() {
       event.preventDefault();
       win.webContents.closeDevTools();
     }
+  });
+
+  win.on('enter-full-screen', () => {
+    win.webContents.send('window:fullscreen-changed', true);
+  });
+  win.on('leave-full-screen', () => {
+    win.webContents.send('window:fullscreen-changed', false);
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -237,6 +271,7 @@ app.whenReady().then(() => {
   });
   registerSaveStorageHandlers();
   registerSteamAchievementHandlers();
+  registerWindowControlHandlers();
   createWindow();
 
   app.on('activate', () => {

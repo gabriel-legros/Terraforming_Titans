@@ -25,7 +25,8 @@ const GAME_FEATURES = {
     patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
     patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
     whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
-    exitSaveSlot: GAME_BUILD_TARGET !== 'browser'
+    exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
+    electronWindowControls: GAME_BUILD_TARGET !== 'browser'
 };
 BUILD_TARGET
 npx electron-builder --win --dir --config.directories.output=dist

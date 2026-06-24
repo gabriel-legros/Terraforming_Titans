@@ -11,6 +11,8 @@ function cacheSettingsElements() {
     whiteNoiseOption: document.getElementById('white-noise-settings-option'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
     whiteNoiseTooltip: document.getElementById('white-noise-tooltip'),
+    electronFullscreenOption: document.getElementById('electron-fullscreen-settings-option'),
+    electronFullscreenToggle: document.getElementById('electron-fullscreen-toggle'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
     celsiusToggle: document.getElementById('celsius-toggle'),
     colorblindPaletteSelect: document.getElementById('colorblind-palette-select'),
@@ -78,6 +80,7 @@ function cacheSettingsElements() {
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
     startBackgroundSilenceButton: document.getElementById('start-background-silence-button'),
     pauseButton: document.getElementById('pause-button'),
+    electronExitGameButton: document.getElementById('electron-exit-game-button'),
     pauseKeybindCaptureButton: document.getElementById('pause-keybind-capture-button'),
   };
 
@@ -250,6 +253,27 @@ function addSettingsListeners() {
         'After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution. Much more quiet on Firefox. May still work even if the tab is muted.'
       )
     );
+  }
+
+  cached.electronFullscreenOption.hidden = !GAME_FEATURES.electronWindowControls;
+  cached.electronFullscreenOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
+  cached.electronExitGameButton.hidden = !GAME_FEATURES.electronWindowControls;
+  cached.electronExitGameButton.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
+  if (GAME_FEATURES.electronWindowControls) {
+    window.electronWindowControls.isFullscreen().then(enabled => {
+      cached.electronFullscreenToggle.checked = enabled;
+    });
+    window.electronWindowControls.onFullscreenChanged(enabled => {
+      cached.electronFullscreenToggle.checked = enabled;
+    });
+    cached.electronFullscreenToggle.addEventListener('change', () => {
+      window.electronWindowControls.setFullscreen(cached.electronFullscreenToggle.checked).then(enabled => {
+        cached.electronFullscreenToggle.checked = enabled;
+      });
+    });
+    cached.electronExitGameButton.addEventListener('click', () => {
+      window.electronWindowControls.exitGame();
+    });
   }
 
   if (cached.terraformingSubstepsToggle) {

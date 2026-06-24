@@ -20,3 +20,20 @@ contextBridge.exposeInMainWorld('steamAchievements', {
     ipcRenderer.send('steam-achievements:syncUnlocked', ids.map((id) => String(id)));
   }
 });
+
+contextBridge.exposeInMainWorld('electronWindowControls', {
+  isFullscreen() {
+    return ipcRenderer.invoke('window:is-fullscreen');
+  },
+  setFullscreen(enabled) {
+    return ipcRenderer.invoke('window:set-fullscreen', enabled === true);
+  },
+  exitGame() {
+    ipcRenderer.send('window:exit-game');
+  },
+  onFullscreenChanged(callback) {
+    ipcRenderer.on('window:fullscreen-changed', (_event, enabled) => {
+      callback(enabled === true);
+    });
+  }
+});
