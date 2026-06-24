@@ -918,7 +918,12 @@ class FollowersManager extends EffectableEntity {
   getAvailableOrbitals() {
     const worlds = Math.floor(spaceManager.getTerraformedPlanetCount());
     const boosted = Math.floor(worlds * this.getApostlesOrbitalsMultiplier());
-    return boosted > 0 ? boosted : 0;
+    const available = boosted > 0 ? boosted : 0;
+    if (!gameSettings.orbitalCap) {
+      return available;
+    }
+    const landCap = Math.floor(resources.surface.land.value);
+    return Math.min(available, Math.max(0, landCap));
   }
 
   isKesslerOrbitalsRestricted() {

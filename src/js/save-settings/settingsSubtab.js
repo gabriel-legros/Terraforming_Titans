@@ -59,6 +59,8 @@ function cacheSettingsElements() {
     infinitePatienceToggle: document.getElementById('infinite-patience-toggle'),
     liftersStrippingCapToggle: document.getElementById('lifters-stripping-cap-toggle'),
     liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
+    orbitalCapToggle: document.getElementById('orbital-cap-toggle'),
+    orbitalCapTooltip: document.getElementById('orbital-cap-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -740,6 +742,26 @@ function addSettingsListeners() {
         'ui.settings.liftersStrippingCapTooltip',
         {},
         'When enabled, Strip Atmosphere cannot have more lifters assigned than the current world geometric land value.'
+      )
+    );
+  }
+
+  if (cached.orbitalCapToggle) {
+    cached.orbitalCapToggle.checked = gameSettings.orbitalCap;
+    cached.orbitalCapToggle.addEventListener('change', () => {
+      gameSettings.orbitalCap = cached.orbitalCapToggle.checked;
+      followersManager.markUIDirty();
+      updateFollowersUI();
+    });
+  }
+
+  if (cached.orbitalCapTooltip) {
+    attachDynamicInfoTooltip(
+      cached.orbitalCapTooltip,
+      t(
+        'ui.settings.orbitalCapTooltip',
+        {},
+        'When enabled, available Orbitals cannot exceed the current world geometric land value.'
       )
     );
   }

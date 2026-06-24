@@ -815,6 +815,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'liftersStrippingCap')) {
         gameSettings.liftersStrippingCap = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'orbitalCap')) {
+        gameSettings.orbitalCap = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
@@ -875,6 +878,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
       cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;
       cachedSettings.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
+      cachedSettings.orbitalCapToggle.checked = gameSettings.orbitalCap;
       patienceManager.enforceInfinitePatience();
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();
