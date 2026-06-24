@@ -2078,6 +2078,7 @@ class ArtificialManager extends EffectableEntity {
                     target: 'researchManager',
                     targetId: 'space_elevator',
                     type: 'researchDisable',
+                    clearOnTravel: true,
                     effectId: 'ringworld-disable-space-elevator-research'
                 },
                 {

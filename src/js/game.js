@@ -488,6 +488,9 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !researchManager) {
     researchManager = new ResearchManager(researchParameters);
   } else {
+    if (!globalGameIsLoadingFromSave && researchManager.clearEffectsOnTravel) {
+      researchManager.clearEffectsOnTravel();
+    }
     if (!globalGameIsLoadingFromSave && typeof researchManager.resetRegularResearch === 'function') {
       researchManager.resetRegularResearch();
     }

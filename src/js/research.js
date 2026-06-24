@@ -249,6 +249,43 @@ class Research {
       }
     }
 
+    reconcileResearchDisableEffects() {
+      let changed = false;
+      for (const category in this.researches) {
+        this.researches[category].forEach((research) => {
+          if (research.disabled !== research.baseDisabled) {
+            research.disabled = research.baseDisabled;
+            changed = true;
+          }
+        });
+      }
+      this.activeEffects.forEach((effect) => {
+        if (effect.type !== 'researchDisable') {
+          return;
+        }
+        const research = this.getResearchById(effect.targetId);
+        if (research && !research.disabled) {
+          research.disabled = true;
+          changed = true;
+        }
+      });
+      if (changed) {
+        this.orderDirty = true;
+      }
+    }
+
+    clearEffectsOnTravel() {
+      this.removeEffect({ sourceId: 'planet-parameters' });
+      super.clearEffectsOnTravel();
+      this.reconcileResearchDisableEffects();
+    }
+
+    removeEffect(effect) {
+      super.removeEffect(effect);
+      this.reconcileResearchDisableEffects();
+      return this;
+    }
+
     applyEnableResearch(effect) {
       const research = this.getResearchById(effect.targetId);
       if (!research) {

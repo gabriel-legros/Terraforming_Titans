@@ -46,4 +46,72 @@ describe('research travel effects', () => {
       dom.window.close();
     }
   });
+
+  it('clears ringworld-only research disable effects after travel', async () => {
+    const dom = await createGameDom({ trackEventListeners: false });
+
+    try {
+      const { window } = dom;
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      window.eval(`
+        researchManager.addAndReplace({
+          target: 'researchManager',
+          targetId: 'space_elevator',
+          type: 'researchDisable',
+          effectId: 'ringworld-disable-space-elevator-research',
+          sourceId: 'planet-parameters'
+        });
+        initializeGameState({ preserveManagers: true, preserveJournal: true });
+      `);
+
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const state = window.eval(`JSON.stringify({
+        spaceElevatorDisabled: researchManager.getResearchById('space_elevator').disabled,
+        hasRingworldDisableEffect: researchManager.activeEffects.some(effect => effect.effectId === 'ringworld-disable-space-elevator-research')
+      })`);
+
+      expect(JSON.parse(state)).toEqual({
+        spaceElevatorDisabled: false,
+        hasRingworldDisableEffect: false
+      });
+    } finally {
+      dom.window.close();
+    }
+  });
+
+  it('re-enables research when a researchDisable effect source is removed', async () => {
+    const dom = await createGameDom({ trackEventListeners: false });
+
+    try {
+      const { window } = dom;
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const state = window.eval(`JSON.stringify((() => {
+        researchManager.addAndReplace({
+          target: 'researchManager',
+          targetId: 'space_elevator',
+          type: 'researchDisable',
+          effectId: 'test-disable-space-elevator-research',
+          sourceId: 'test-source'
+        });
+        const disabledAfterAdd = researchManager.getResearchById('space_elevator').disabled;
+        researchManager.removeEffect({ sourceId: 'test-source' });
+        return {
+          disabledAfterAdd,
+          disabledAfterRemove: researchManager.getResearchById('space_elevator').disabled,
+          hasDisableEffect: researchManager.activeEffects.some(effect => effect.effectId === 'test-disable-space-elevator-research')
+        };
+      })())`);
+
+      expect(JSON.parse(state)).toEqual({
+        disabledAfterAdd: true,
+        disabledAfterRemove: false,
+        hasDisableEffect: false
+      });
+    } finally {
+      dom.window.close();
+    }
+  });
 });

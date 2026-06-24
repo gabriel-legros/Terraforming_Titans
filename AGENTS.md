@@ -511,6 +511,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Story, Planets, and Progression
 - Story effects support `onTravel: false`.
+- Active effects can opt into preserved-manager cleanup with `clearOnTravel: true`; use this for world-scoped effects that may be stored on managers that survive planet travel.
 - New/expanded worlds and arcs include Umbra, Solis Prime, Tartarus/Gabbag placeholders, and Hades (airless pulsar world at 20 AU with placeholder chapters 33-35).
 - Poseidon placeholder story arc was added with chapters 36-38, using colonist milestone objectives from 10 up to 10 billion; Hades chapter 35 now bridges with a sector-conquest objective (`R5-10`) and a travel objective to Poseidon.
 - Styx placeholder story arc follows Poseidon with chapters 39-41, using colonist milestone objectives at each `1x` and `5x` step from `50` through `10 billion`.

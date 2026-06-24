@@ -219,6 +219,53 @@ class EffectableEntity {
       this.clearTickEffectCache();
     }
   }
+
+  clearEffectsOnTravel() {
+    if (!this.activeEffects || this.activeEffects.length === 0) {
+      return;
+    }
+
+    const booleanFlagsToReconcile = new Set();
+    const filtered = [];
+    let removed = false;
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      if (effect.clearOnTravel === true) {
+        removed = true;
+        if (effect.type === 'booleanFlag') {
+          booleanFlagsToReconcile.add(effect.flagId);
+        }
+      } else {
+        filtered.push(effect);
+      }
+    }
+    if (!removed) {
+      return;
+    }
+
+    this.activeEffects = filtered;
+    booleanFlagsToReconcile.forEach(flagId => {
+      let enabled = false;
+      for (let i = 0; i < this.activeEffects.length; i += 1) {
+        const activeEffect = this.activeEffects[i];
+        if (activeEffect.type === 'booleanFlag' && activeEffect.flagId === flagId && activeEffect.value) {
+          enabled = true;
+          break;
+        }
+      }
+      if (enabled) {
+        this.booleanFlags.add(flagId);
+      } else {
+        this.booleanFlags.delete(flagId);
+      }
+      if (this[flagId] === true || this[flagId] === false) {
+        this[flagId] = enabled;
+      }
+    });
+    if (this.clearTickEffectCache) {
+      this.clearTickEffectCache();
+    }
+  }
   
   // Method to apply a specific effect
   applyEffect(effect) {
