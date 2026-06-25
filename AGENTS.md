@@ -322,6 +322,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - The Realistic factory energy consumption difficulty setting replaces building `colony.energy` consumption with per-building `realisticEnergyConsumption` values from `buildings-parameters.js`, including recipe-specific values. Energy is measured in Watt-days, so convert industrial energy intensity with `1 kWh = 41.6667 Wd` against the building's per-day throughput.
 - The Infinite patience difficulty setting lives under Post-World 3 and keeps patience at the current effective maximum, including max-patience bonuses. Spending patience still grants rewards but does not reduce the displayed reserve while the setting is enabled.
 - The Lifters stripping cap difficulty setting lives under Post-Mars and caps Strip Atmosphere lifter assignments to the current world geometric land value when enabled.
+- The Skill points gain multiplier difficulty setting lives under Post-Mars and multiplies the once-per-world skill points granted when leaving a terraformed world.
 - The Orbital cap difficulty setting lives under Post-World 11 and caps available Followers Orbitals to the current world geometric land value when enabled.
 - The No overpopulation cylinders difficulty setting lives under During World 14 and makes Overpopulation O'Neill Cylinders grant zero O'Neill cylinders on travel while leaving the project visible and buildable.
 

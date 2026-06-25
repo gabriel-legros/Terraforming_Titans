@@ -404,6 +404,7 @@ function initializeGameState(options = {}) {
     gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier = 1;
     gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier = 1;
     gameSettings.advancedResearchMultiplier = 1;
+    gameSettings.skillPointsGainMultiplier = 1;
     gameSettings.galaxyFleetCapacityMultiplier = 1;
     gameSettings.galaxyThreatScalingMultiplier = 1;
     gameSettings.invasionMultiplier = 1;

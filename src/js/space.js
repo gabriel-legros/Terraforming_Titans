@@ -2882,9 +2882,10 @@ class SpaceManager extends EffectableEntity {
         if (!status || status.departureSkillPointGranted || !this._isCurrentWorldTerraformed() || !skillManager) {
             return false;
         }
+        const skillPointGain = normalizeDifficultySettingValue('skillPointsGainMultiplier', gameSettings.skillPointsGainMultiplier);
         status.departureSkillPointGranted = true;
-        skillManager.skillPoints += 1;
-        notifySkillPointGained(1);
+        skillManager.skillPoints += skillPointGain;
+        notifySkillPointGained(skillPointGain);
         return true;
     }
 

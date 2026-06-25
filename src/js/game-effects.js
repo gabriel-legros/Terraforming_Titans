@@ -17,6 +17,7 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   spaceshipEnergyBeforeSpaceElevatorMultiplier: { min: 0 },
   spaceshipEnergyAfterSpaceElevatorMultiplier: { min: 0 },
   advancedResearchMultiplier: { min: 0 },
+  skillPointsGainMultiplier: { min: 0 },
   galaxyFleetCapacityMultiplier: { min: 0 },
   galaxyThreatScalingMultiplier: { min: 0 },
   invasionMultiplier: { min: 0 },

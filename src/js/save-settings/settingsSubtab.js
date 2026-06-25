@@ -76,6 +76,7 @@ function cacheSettingsElements() {
     spaceshipEnergyAfterSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-after-space-elevator-multiplier-input'),
     spaceshipEnergyAfterSpaceElevatorTooltip: document.getElementById('spaceship-energy-after-space-elevator-tooltip'),
     advancedResearchMultiplierInput: document.getElementById('advanced-research-multiplier-input'),
+    skillPointsGainMultiplierInput: document.getElementById('skill-points-gain-multiplier-input'),
     galaxyFleetCapacityMultiplierInput: document.getElementById('galaxy-fleet-capacity-multiplier-input'),
     galaxyThreatScalingMultiplierInput: document.getElementById('galaxy-threat-scaling-multiplier-input'),
     galaxyThreatScalingTooltip: document.getElementById('galaxy-threat-scaling-tooltip'),
@@ -244,6 +245,7 @@ function updateDifficultyLockUI() {
     cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
     cached.advancedResearchMultiplierInput,
+    cached.skillPointsGainMultiplierInput,
     cached.galaxyFleetCapacityMultiplierInput,
     cached.galaxyThreatScalingMultiplierInput,
     cached.invasionMultiplierInput,
@@ -376,6 +378,7 @@ function updateDifficultySettingInputs() {
     spaceshipEnergyBeforeSpaceElevatorMultiplier: cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     spaceshipEnergyAfterSpaceElevatorMultiplier: cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
     advancedResearchMultiplier: cached.advancedResearchMultiplierInput,
+    skillPointsGainMultiplier: cached.skillPointsGainMultiplierInput,
     galaxyFleetCapacityMultiplier: cached.galaxyFleetCapacityMultiplierInput,
     galaxyThreatScalingMultiplier: cached.galaxyThreatScalingMultiplierInput,
     invasionMultiplier: cached.invasionMultiplierInput,
@@ -1022,6 +1025,7 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput, 'spaceshipEnergyBeforeSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.advancedResearchMultiplierInput, 'advancedResearchMultiplier');
+  wireDifficultyMultiplierInput(cached.skillPointsGainMultiplierInput, 'skillPointsGainMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyFleetCapacityMultiplierInput, 'galaxyFleetCapacityMultiplier');
   wireDifficultyMultiplierInput(cached.galaxyThreatScalingMultiplierInput, 'galaxyThreatScalingMultiplier');
   wireDifficultyMultiplierInput(cached.invasionMultiplierInput, 'invasionMultiplier');
