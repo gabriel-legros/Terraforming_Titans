@@ -1,3 +1,13 @@
+let popupTypingSkip = null;
+
+function skipActivePopupTyping() {
+  if (!popupTypingSkip) {
+    return false;
+  }
+  popupTypingSkip();
+  return true;
+}
+
 function createPopup(title, text, buttonText, options = {}) {
   window.popupActive = true; // Flag that a popup is active
   game.scene.pause('mainScene');
@@ -57,6 +67,8 @@ function createPopup(title, text, buttonText, options = {}) {
   let segmentIndex = 0;
   let textIndex = 0;
   let lastTimestamp = 0;
+  let popupTypingFrameId = 0;
+  let popupTypingComplete = false;
 
   const appendNextPopupCharacter = () => {
     const segment = segments[segmentIndex];
@@ -85,7 +97,23 @@ function createPopup(title, text, buttonText, options = {}) {
     return character;
   };
 
+  const finishPopupTyping = () => {
+    if (popupTypingComplete) {
+      return;
+    }
+    popupTypingComplete = true;
+    cancelAnimationFrame(popupTypingFrameId);
+    while (segmentIndex < segments.length) {
+      appendNextPopupCharacter();
+    }
+    closeButton.style.display = 'block';
+    popupTypingSkip = null;
+  };
+
   const typeLetter = (timestamp) => {
+    if (popupTypingComplete) {
+      return;
+    }
     if (!lastTimestamp) {
       lastTimestamp = timestamp;
     }
@@ -102,13 +130,14 @@ function createPopup(title, text, buttonText, options = {}) {
     lastTimestamp = timestamp - elapsed;
 
     if (segmentIndex < segments.length) {
-      requestAnimationFrame(typeLetter);
+      popupTypingFrameId = requestAnimationFrame(typeLetter);
     } else {
-      closeButton.style.display = 'block';
+      finishPopupTyping();
     }
   };
 
-  requestAnimationFrame(typeLetter);
+  popupTypingSkip = finishPopupTyping;
+  popupTypingFrameId = requestAnimationFrame(typeLetter);
 }
 
 function createSystemPopup(title, text, buttonText) {

@@ -74,7 +74,11 @@ function initializeDefaultGlobals(){
   if (!gameSettings.pauseKeybind) {
     gameSettings.pauseKeybind = 'Space';
   }
+  if (!gameSettings.dialogueSkipKeybind) {
+    gameSettings.dialogueSkipKeybind = 'NumpadAdd';
+  }
   setPauseKeybindCode(gameSettings.pauseKeybind);
+  setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
   shipEfficiency = 1;
   // Instantiate the TabManager and load tabs from the constant
   tabManager = new TabManager({

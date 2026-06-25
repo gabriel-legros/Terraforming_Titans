@@ -1,5 +1,6 @@
 let settingsElements = null;
 let pauseKeybindCaptureActive = false;
+let dialogueSkipKeybindCaptureActive = false;
 
 function cacheSettingsElements() {
   if (settingsElements) {
@@ -92,6 +93,7 @@ function cacheSettingsElements() {
     pauseButton: document.getElementById('pause-button'),
     electronExitGameButton: document.getElementById('electron-exit-game-button'),
     pauseKeybindCaptureButton: document.getElementById('pause-keybind-capture-button'),
+    dialogueSkipKeybindCaptureButton: document.getElementById('dialogue-skip-keybind-capture-button'),
   };
 
   return settingsElements;
@@ -112,6 +114,23 @@ function updatePauseKeybindButtons() {
     return;
   }
   cached.pauseKeybindCaptureButton.textContent = getPauseKeybindButtonLabel();
+}
+
+function getDialogueSkipKeybindButtonLabel() {
+  const current = getDialogueSkipKeybindDisplay();
+  return t('ui.settings.dialogueSkipKeybindCaptureButton', { keybind: current }, `Capture key (${current})`);
+}
+
+function updateDialogueSkipKeybindButtons() {
+  const cached = cacheSettingsElements();
+  if (!cached.dialogueSkipKeybindCaptureButton) {
+    return;
+  }
+  if (dialogueSkipKeybindCaptureActive) {
+    cached.dialogueSkipKeybindCaptureButton.textContent = t('ui.settings.keybindCapturing', {}, 'Press any key...');
+    return;
+  }
+  cached.dialogueSkipKeybindCaptureButton.textContent = getDialogueSkipKeybindButtonLabel();
 }
 
 function normalizeThemeMode(mode) {
@@ -1107,6 +1126,26 @@ function addSettingsListeners() {
           );
         }
         updatePauseKeybindButtons();
+        document.removeEventListener('keydown', captureKeydown, true);
+      };
+      document.addEventListener('keydown', captureKeydown, true);
+    });
+  }
+
+  if (cached.dialogueSkipKeybindCaptureButton) {
+    updateDialogueSkipKeybindButtons();
+    cached.dialogueSkipKeybindCaptureButton.addEventListener('click', () => {
+      if (dialogueSkipKeybindCaptureActive) {
+        return;
+      }
+      dialogueSkipKeybindCaptureActive = true;
+      updateDialogueSkipKeybindButtons();
+      const captureKeydown = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        dialogueSkipKeybindCaptureActive = false;
+        setDialogueSkipKeybindCode(event.code);
+        updateDialogueSkipKeybindButtons();
         document.removeEventListener('keydown', captureKeydown, true);
       };
       document.addEventListener('keydown', captureKeydown, true);

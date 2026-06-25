@@ -120,6 +120,7 @@ let gameSettings = {
   difficultySettingsLockedWorldName: '',
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
+  dialogueSkipKeybind: 'NumpadAdd',
 };
 
 Object.defineProperty(globalThis, 'gameSettings', {

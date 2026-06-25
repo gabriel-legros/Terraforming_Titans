@@ -785,6 +785,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'pauseKeybind')) {
         gameSettings.pauseKeybind = 'Space';
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'dialogueSkipKeybind')) {
+        gameSettings.dialogueSkipKeybind = 'NumpadAdd';
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noSpecializationWarningOnTravel')) {
         gameSettings.noSpecializationWarningOnTravel = false;
       }
@@ -839,6 +842,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       normalizeDifficultySettings();
       applyDifficultySettingEffects();
       setPauseKeybindCode(gameSettings.pauseKeybind);
+      setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
       applySpeedControlsSetting();
       applyColorblindPaletteSettings();
       if (gameSettings.showSpaceStorageInDefaultPanel) {
@@ -895,6 +899,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       patienceManager.enforceInfinitePatience();
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();
+      updateDialogueSkipKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();
       }

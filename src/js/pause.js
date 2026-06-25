@@ -2,6 +2,7 @@
   let paused = false;
   let pauseKeyHandlerAttached = false;
   const DEFAULT_PAUSE_KEYBIND_CODE = 'Space';
+  const DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE = 'NumpadAdd';
   const GAME_SPEED_OPTIONS = [
     { speed: 0, label: '\u23f8\uFE0E', textKey: 'ui.common.gameSpeedPaused', fallback: 'Paused' },
     { speed: 1, label: '\u25B6', textKey: 'ui.common.gameSpeed1x', fallback: '1x speed' },
@@ -11,6 +12,7 @@
   ];
   let lastActiveGameSpeed = 1;
   let pauseKeybindCode = DEFAULT_PAUSE_KEYBIND_CODE;
+  let dialogueSkipKeybindCode = DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
 
   function isEditableTarget(target) {
     if (!target || !target.tagName) return false;
@@ -21,12 +23,24 @@
       || target.isContentEditable;
   }
 
-  function formatPauseKeybindFromCode(code) {
+  function formatKeybindFromCode(code) {
     if (!code) {
       return 'Spacebar';
     }
     if (code === 'Space') {
       return 'Spacebar';
+    }
+    if (code === 'NumpadAdd') {
+      return 'Numpad +';
+    }
+    if (code === 'NumpadSubtract') {
+      return 'Numpad -';
+    }
+    if (code === 'NumpadMultiply') {
+      return 'Numpad *';
+    }
+    if (code === 'NumpadDivide') {
+      return 'Numpad /';
     }
     if (code.startsWith('Key')) {
       return code.slice(3).toUpperCase();
@@ -53,7 +67,23 @@
   }
 
   function getPauseKeybindDisplay() {
-    return formatPauseKeybindFromCode(getPauseKeybindCode());
+    return formatKeybindFromCode(getPauseKeybindCode());
+  }
+
+  function setDialogueSkipKeybindCode(code) {
+    dialogueSkipKeybindCode = code || DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
+    if (typeof gameSettings !== 'undefined') {
+      gameSettings.dialogueSkipKeybind = dialogueSkipKeybindCode;
+    }
+  }
+
+  function getDialogueSkipKeybindCode() {
+    const fromSettings = typeof gameSettings !== 'undefined' ? gameSettings.dialogueSkipKeybind : '';
+    return fromSettings || dialogueSkipKeybindCode || DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
+  }
+
+  function getDialogueSkipKeybindDisplay() {
+    return formatKeybindFromCode(getDialogueSkipKeybindCode());
   }
 
   function handlePauseHotkey(event) {
@@ -65,6 +95,25 @@
     }
     event.preventDefault();
     togglePause();
+  }
+
+  function handleDialogueSkipHotkey(event) {
+    if (event.code !== getDialogueSkipKeybindCode() || event.repeat || event.ctrlKey || event.altKey || event.metaKey) {
+      return;
+    }
+    if (isEditableTarget(event.target)) {
+      return;
+    }
+    let handled = false;
+    if (window.skipActivePopupTyping) {
+      handled = window.skipActivePopupTyping() || handled;
+    }
+    if (window.skipJournalTyping) {
+      handled = window.skipJournalTyping() || handled;
+    }
+    if (handled) {
+      event.preventDefault();
+    }
   }
 
   function getPauseButtonLabel() {
@@ -202,21 +251,26 @@
 
   if (!pauseKeyHandlerAttached) {
     document.addEventListener('keydown', handlePauseHotkey);
+    document.addEventListener('keydown', handleDialogueSkipHotkey);
     pauseKeyHandlerAttached = true;
   }
 
   if(typeof module !== 'undefined' && module.exports){
-    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, updateSpeedControls, applySpeedControlsSetting, DEFAULT_PAUSE_KEYBIND_CODE };
+    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, getDialogueSkipKeybindDisplay, getDialogueSkipKeybindCode, setDialogueSkipKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, updateSpeedControls, applySpeedControlsSetting, DEFAULT_PAUSE_KEYBIND_CODE, DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE };
   } else {
     window.togglePause = togglePause;
     window.isGamePaused = isGamePaused;
     window.getPauseKeybindDisplay = getPauseKeybindDisplay;
     window.getPauseKeybindCode = getPauseKeybindCode;
     window.setPauseKeybindCode = setPauseKeybindCode;
+    window.getDialogueSkipKeybindDisplay = getDialogueSkipKeybindDisplay;
+    window.getDialogueSkipKeybindCode = getDialogueSkipKeybindCode;
+    window.setDialogueSkipKeybindCode = setDialogueSkipKeybindCode;
     window.initializeGameSpeedControls = initializeGameSpeedControls;
     window.setGameSpeedChoice = setGameSpeedChoice;
     window.updateSpeedControls = updateSpeedControls;
     window.applySpeedControlsSetting = applySpeedControlsSetting;
     window.DEFAULT_PAUSE_KEYBIND_CODE = DEFAULT_PAUSE_KEYBIND_CODE;
+    window.DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE = DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
   }
 })();

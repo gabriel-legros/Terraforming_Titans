@@ -87,6 +87,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - The Status colours setting controls the red/green status palette for terraforming requirement boxes, project progress bars, and resource/building rate colours; use `getStatusColor(...)` / `getStatusProgressBackground(...)` for those surfaces instead of hard-coded red/green.
 - The Theme setting uses `gameSettings.themeMode` (`light`, `darkGrey`, `darkBlue`) while keeping `gameSettings.darkMode` as the compatibility flag for dark-mode code paths.
 - The Net resource rate display setting makes compact resource row rates use net rate including autobuild; keep this in sync with the resource tooltip net-rate calculation.
+- Dialogue and typed pop-up text can be completed instantly with the rebindable `gameSettings.dialogueSkipKeybind`, defaulting to `NumpadAdd`.
 - Use refresh helpers correctly:
   - New game: `startNewGame()`
   - Load: `loadGame()` -> `initializeGameState({ skipStoryInitialization: true })`

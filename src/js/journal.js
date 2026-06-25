@@ -11,6 +11,7 @@ let journalTyping = false;  // flag indicating an entry is currently being typed
 let journalCurrentEventId = null; // id of the event whose text is typing
 let journalTypingSession = 0;
 let journalTypingFrameId = 0;
+let journalTypingSkip = null;
 let journalUserScrolling = false;
 let journalChapterIndex = 0;
 let journalIndexVisible = false;
@@ -503,12 +504,21 @@ function stopJournalTyping(completeEvent) {
   journalTypingSession += 1;
   cancelAnimationFrame(journalTypingFrameId);
   journalTypingFrameId = 0;
+  journalTypingSkip = null;
   if (completeEvent) {
     const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
     document.dispatchEvent(storyEvent);
   }
   journalTyping = false;
   journalCurrentEventId = null;
+}
+
+function skipJournalTyping() {
+  if (!journalTypingSkip) {
+    return false;
+  }
+  journalTypingSkip();
+  return true;
 }
 
 function addJournalEntry(text, eventId = null, source = null) {
@@ -591,9 +601,58 @@ function processNextJournalEntry() {
   let lastTimestamp = 0;
   let lastChar = '';
   let currentNode = null;
+  let entryTypingComplete = false;
+
+  const appendRemainingJournalText = () => {
+    while (segmentIndex < segments.length) {
+      const segment = segments[segmentIndex];
+      if (segment.isBreak) {
+        entry.appendChild(document.createElement('br'));
+        segmentIndex += 1;
+        charIndex = 0;
+        currentNode = null;
+        continue;
+      }
+      if (!currentNode) {
+        currentNode = segment.className
+          ? document.createElement('span')
+          : document.createTextNode('');
+        if (segment.className) {
+          currentNode.className = segment.className;
+        }
+        entry.appendChild(currentNode);
+      }
+      const remaining = segment.text.slice(charIndex);
+      if (currentNode.nodeType === 3) {
+        currentNode.nodeValue += remaining;
+      } else {
+        currentNode.textContent += remaining;
+      }
+      segmentIndex += 1;
+      charIndex = 0;
+      currentNode = null;
+    }
+  };
+
+  const finishCurrentJournalEntry = () => {
+    if (entryTypingComplete) {
+      return;
+    }
+    entryTypingComplete = true;
+    cancelAnimationFrame(journalTypingFrameId);
+    journalTypingFrameId = 0;
+    appendRemainingJournalText();
+    if (!journalUserScrolling && journalContainer) {
+      journalContainer.scrollTop = journalContainer.scrollHeight;
+    }
+    journalTypingSkip = null;
+    const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
+    document.dispatchEvent(storyEvent);
+    processNextJournalEntry();
+  };
 
   const typeLetter = (timestamp) => {
-    if (sessionId !== journalTypingSession) {
+    if (entryTypingComplete || sessionId !== journalTypingSession) {
       return;
     }
     if (!lastTimestamp) {
@@ -652,13 +711,11 @@ function processNextJournalEntry() {
         journalContainer.scrollTop = journalContainer.scrollHeight;
       }
 
-      const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
-      document.dispatchEvent(storyEvent);
-
-      processNextJournalEntry();
+      finishCurrentJournalEntry();
     }
   };
 
+  journalTypingSkip = finishCurrentJournalEntry;
   journalTypingFrameId = requestAnimationFrame(typeLetter);
 
   if (journalCollapsed) {
