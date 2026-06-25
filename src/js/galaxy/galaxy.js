@@ -262,6 +262,12 @@ class GalaxyManager extends EffectableEntity {
         artificialManager?.refreshConditionalRingStarCoreUnlocks?.();
     }
 
+    finalizeLoadedDefenseAssignments() {
+        this.factions.forEach((faction) => {
+            faction.finalizeLoadedDefenseAssignments?.(this);
+        });
+    }
+
     #serializeFleetUpgrades() {
         const entries = [];
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {

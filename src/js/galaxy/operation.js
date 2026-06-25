@@ -68,6 +68,7 @@ class GalaxyOperationManager {
         this.autoSectors = new Set();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         this.autoMode = DEFAULT_OPERATION_AUTO_MODE;
+        this.skipNextAutoLaunch = false;
         this.hasNeighboringStronghold = hasNeighboringStronghold;
         this.hasFactionPresence = hasFactionPresence;
         this.isFactionFullControlSector = isFactionFullControlSector;
@@ -173,6 +174,7 @@ class GalaxyOperationManager {
             this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         }
         this.autoMode = this.#normalizeAutoMode(state?.operationAutoMode);
+        this.skipNextAutoLaunch = true;
         const operationUI = getOperationUI();
         operationUI?.syncCacheFromManager?.(this.manager);
         operationUI?.updateOperationsPanel?.(this.manager);
@@ -189,6 +191,7 @@ class GalaxyOperationManager {
         this.autoSectors.clear();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         this.autoMode = DEFAULT_OPERATION_AUTO_MODE;
+        this.skipNextAutoLaunch = false;
     }
 
     #getOperationKey(sectorKey, factionId) {
@@ -1125,6 +1128,10 @@ class GalaxyOperationManager {
         if (autoMode === 'forceOff') {
             return;
         }
+        if (this.skipNextAutoLaunch) {
+            this.skipNextAutoLaunch = false;
+            return;
+        }
         const faction = this.manager.getFaction?.(this.uhfFactionId);
         if (!faction) {
             return;
@@ -1150,8 +1157,12 @@ class GalaxyOperationManager {
             if (currentOperation && currentOperation.status === 'running') {
                 return;
             }
-            let availablePower = faction.getOperationalFleetPower?.(this.manager);
-            if (!Number.isFinite(availablePower) || availablePower <= 0) {
+            let availablePower = 0;
+            const getOperationalFleetPower = faction.getOperationalFleetPower;
+            if (getOperationalFleetPower) {
+                const operationalPower = getOperationalFleetPower.call(faction, this.manager);
+                availablePower = Number.isFinite(operationalPower) && operationalPower > 0 ? operationalPower : 0;
+            } else {
                 availablePower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0
                     ? faction.fleetPower
                     : 0;
@@ -1190,12 +1201,6 @@ class GalaxyOperationManager {
             if (!(successChance > 0)) {
                 return;
             }
-            if (antimatterCost > 0 && antimatterResource) {
-                if (!spendAntimatterEquivalent(antimatterCost, resources)) {
-                    return;
-                }
-                availableAntimatter = Math.max(0, availableAntimatter - antimatterCost);
-            }
             const operation = this.startOperation({
                 sectorKey,
                 factionId: this.uhfFactionId,
@@ -1205,6 +1210,13 @@ class GalaxyOperationManager {
             });
             if (!operation) {
                 return;
+            }
+            if (antimatterCost > 0 && antimatterResource) {
+                if (!spendAntimatterEquivalent(antimatterCost, resources)) {
+                    this.cancelOperation(operation);
+                    return;
+                }
+                availableAntimatter = Math.max(0, availableAntimatter - antimatterCost);
             }
             operation.launchCost = antimatterCost;
             launched = true;

@@ -135,9 +135,10 @@ const GalaxyOperationUI = (() => {
         if (!faction) {
             return 0;
         }
-        const operational = faction.getOperationalFleetPower?.(manager);
-        if (Number.isFinite(operational) && operational > 0) {
-            return operational;
+        const getOperationalFleetPower = faction.getOperationalFleetPower;
+        if (getOperationalFleetPower) {
+            const operational = getOperationalFleetPower.call(faction, manager);
+            return Number.isFinite(operational) && operational > 0 ? operational : 0;
         }
         const fleet = Number(faction.fleetPower);
         if (!Number.isFinite(fleet) || fleet <= 0) {
@@ -548,9 +549,6 @@ const GalaxyOperationUI = (() => {
         }
         const targetFactionId = manager.getOperationTargetFaction?.(sectorKey, uhfFactionId) || null;
         const durationMs = getDefaultOperationDurationMs(manager, sectorKey, uhfFactionId, targetFactionId);
-        if (!spendAntimatterEquivalent(plannedCost, resources)) {
-            return;
-        }
         const operation = manager.startOperation({
             sectorKey,
             factionId: uhfFactionId,
@@ -559,6 +557,10 @@ const GalaxyOperationUI = (() => {
             targetFactionId
         });
         if (!operation) {
+            return;
+        }
+        if (!spendAntimatterEquivalent(plannedCost, resources)) {
+            manager.cancelOperation?.(operation);
             return;
         }
         const appliedPower = Number.isFinite(operation.assignedPower) && operation.assignedPower > 0

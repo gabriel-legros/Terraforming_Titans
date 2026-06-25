@@ -998,6 +998,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     if (typeof applyRWGEffects === 'function') {
       applyRWGEffects();
     }
+    galaxyManager?.finalizeLoadedDefenseAssignments?.();
     globalGameIsLoadingFromSave = false;
     if (!options.skipRender && typeof updateRender === 'function') {
       updateRender(true, { forceAllSubtabs: true });

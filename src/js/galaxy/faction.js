@@ -78,6 +78,7 @@ class GalaxyFaction {
         this.manualDefenseTotal = 0;
         this.autoDefenseAssignments = new Map();
         this.autoDefenseTotal = 0;
+        this.loadingDefenseAssignments = false;
         this.defenseStepSizes = new Map();
         this.noFleetRegeneration = options.noFleetRegeneration === true;
         this.ignoreSectorBaseDefense = options.ignoreSectorBaseDefense === true;
@@ -197,7 +198,9 @@ class GalaxyFaction {
         if (this.fleetPower < 0) {
             this.fleetPower = 0;
         }
-        if (this.id === UHF_FACTION_ID) {
+        if (this.id === UHF_FACTION_ID && this.loadingDefenseAssignments) {
+            this.#syncLoadedDefenseAssignments(manager);
+        } else if (this.id === UHF_FACTION_ID) {
             this.#syncDefenseAssignments(manager);
         }
     }
@@ -485,7 +488,7 @@ class GalaxyFaction {
         if (this.id !== UHF_FACTION_ID) {
             return 0;
         }
-        this.#syncDefenseAssignments(manager);
+        this.#syncCurrentDefenseAssignments(manager);
         const assigned = this.getDefenseAssignmentTotal();
         if (!(assigned > 0)) {
             return 0;
@@ -621,7 +624,7 @@ class GalaxyFaction {
     }
 
     getSectorDefense(sector, manager) {
-        this.#syncDefenseAssignments(manager);
+        this.#syncCurrentDefenseAssignments(manager);
         const controlValue = sector?.getControlValue?.(this.id) ?? 0;
         if (!(controlValue > 0)) {
             return 0;
@@ -682,6 +685,7 @@ class GalaxyFaction {
         }
         this.setFleetPower(state.fleetPower);
         if (this.id === UHF_FACTION_ID) {
+            this.loadingDefenseAssignments = true;
             this.defenseAssignments.clear();
             if (Array.isArray(state?.defenseAssignments)) {
                 state.defenseAssignments.forEach((entry) => {
@@ -710,9 +714,17 @@ class GalaxyFaction {
                     this.defenseStepSizes.set(String(sectorKey), normalizeDefenseStepValue(numericValue));
                 });
             }
-            this.#syncDefenseAssignments(manager);
+            this.#syncLoadedDefenseAssignments(manager);
         }
         this.markControlDirty();
+    }
+
+    finalizeLoadedDefenseAssignments(manager) {
+        if (this.id !== UHF_FACTION_ID) {
+            return;
+        }
+        this.loadingDefenseAssignments = false;
+        this.#syncDefenseAssignments(manager);
     }
 
     #getDefenseSector(sectorKey, manager) {
@@ -839,6 +851,41 @@ class GalaxyFaction {
             this.autoDefenseTotal = 0;
         }
         this.defenseAssignmentsTotal = this.manualDefenseTotal + this.autoDefenseTotal;
+    }
+
+    #syncLoadedDefenseAssignments(manager) {
+        if (this.id !== UHF_FACTION_ID) {
+            return;
+        }
+        let manualTotal = 0;
+        this.defenseAssignments.forEach((rawValue, key) => {
+            const value = Number(rawValue);
+            if (!Number.isFinite(value) || value <= 0) {
+                this.defenseAssignments.delete(key);
+                return;
+            }
+            if (manager) {
+                const sector = this.#getDefenseSector(key, manager);
+                const control = sector?.getControlValue?.(this.id) ?? 0;
+                if (!(control > BORDER_CONTROL_EPSILON)) {
+                    this.defenseAssignments.delete(key);
+                    return;
+                }
+            }
+            manualTotal += value;
+        });
+        this.manualDefenseTotal = manualTotal;
+        this.autoDefenseAssignments.clear();
+        this.autoDefenseTotal = 0;
+        this.defenseAssignmentsTotal = manualTotal;
+    }
+
+    #syncCurrentDefenseAssignments(manager) {
+        if (this.loadingDefenseAssignments) {
+            this.#syncLoadedDefenseAssignments(manager);
+            return;
+        }
+        this.#syncDefenseAssignments(manager);
     }
 
     #rebuildConflictCaches(manager) {
