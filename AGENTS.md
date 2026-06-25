@@ -53,7 +53,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Build scripts live under `scripts/`: `build-browser.sh` copies the browser build to `dist/browser`, `build-steam.sh` generates the production Steam build for AppID `4864000` at `dist/steam-win-unpacked`, and `build-steam-playtest.sh` generates the Steam Playtest build for AppID `4876760` at `dist/steam-playtest-win-unpacked`. SteamPipe upload wrappers are `upload-steam.sh` and `upload-steam-playtest.sh`; both call `upload-steam-target.sh`, stage `dist/*-win-unpacked` into `C:\SteamPipe\...`, write VDFs, and run SteamCMD without committed passwords.
 - Import Resources centralized UI: `projects/ImportResourcesProjectUI.js` (shared card for space-mining/import spaceship projects; owns assignment step controls, assigned/available displays, and row-level project controls that persist/update across travel)
 - Autobuild: `autobuild.js`
-- Construction Office guide: `autobuild.js` opens a numbered Autobuild Guide popup from the Construction Office question-mark button, using `assets/autobuild_guide/overall.png` with CSS callout markers and localized guide copy.
+- Construction Office guide: `autobuild.js` opens a numbered Autobuild Guide popup from the Construction Office question-mark button, using `assets/autobuild_guide/overall.png` with CSS callout markers and localized guide copy. Completing Construction Office research for the first time shows a once-per-save prompt that can open this guide immediately.
 - Milestones: `milestones.js`, `milestonesUI.js`
 - Solis shop/quests: `solis.js`, `solisUI.js`
 - Patience: `hope/patienceUI.js` (terraforming patience banking/claim UI)

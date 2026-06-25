@@ -583,6 +583,9 @@ class Research {
           research.timesResearched = (research.timesResearched || 0) + 1;
           console.log(`Research "${research.name}" has been completed.`);
           this.applyResearchEffects(research); // Apply the effects of the research
+          if (id === 'construction_office') {
+            showConstructionOfficeGuidePrompt();
+          }
           this.updateRepeatableResearchCost(research);
           if (research.category === 'advanced') {
             this.checkResearchUnlocks();
@@ -604,6 +607,9 @@ class Research {
         research.timesResearched = Math.max(research.timesResearched || 0, 1);
         this.updateRepeatableResearchCost(research);
         this.applyResearchEffects(research);
+        if (id === 'construction_office') {
+          showConstructionOfficeGuidePrompt();
+        }
         if (research.category === 'advanced') {
           this.checkResearchUnlocks();
         }

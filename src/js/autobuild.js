@@ -591,6 +591,7 @@ const constructionOfficeState = {
     autobuilderActive: true,
     strategicReserve: 0,
     strategicReserveResources: {},
+    guidePromptSeen: false,
 };
 
 const constructionOfficeReserveSettingsElements = {
@@ -801,6 +802,22 @@ function ensureConstructionOfficeReserveSettingsWindow() {
     }
 }
 
+function showConstructionOfficeGuidePrompt() {
+    if (constructionOfficeState.guidePromptSeen) return;
+    constructionOfficeState.guidePromptSeen = true;
+    createSystemChoicePopup(
+        getConstructionOfficeText('ui.colony.constructionOffice.guidePrompt.title', 'Autobuild Guide'),
+        getConstructionOfficeText(
+            'ui.colony.constructionOffice.guidePrompt.message',
+            'A guide for this feature is available.  Would you like to see the guide now?  (It is also accessible from the construction office under the colony tab)'
+        ),
+        getConstructionOfficeText('ui.colony.constructionOffice.guidePrompt.yes', 'Yes'),
+        getConstructionOfficeText('ui.colony.constructionOffice.guidePrompt.no', 'No'),
+        openConstructionOfficeGuide,
+        () => {}
+    );
+}
+
 function saveConstructionOfficeState() {
     return {
         ...constructionOfficeState,
@@ -812,6 +829,7 @@ function loadConstructionOfficeState(state) {
     if (!state) return;
     setAutobuilderActive(state.autobuilderActive);
     setStrategicReserve(state.strategicReserve);
+    constructionOfficeState.guidePromptSeen = state.guidePromptSeen === true;
     constructionOfficeState.strategicReserveResources = {};
     if (state.strategicReserveResources && state.strategicReserveResources.constructor === Object) {
         CONSTRUCTION_OFFICE_RESERVE_RESOURCES.forEach(option => {
@@ -1379,6 +1397,7 @@ if (typeof module !== 'undefined' && module.exports) {
         setStrategicReserve,
         setStrategicReserveForResource,
         getConstructionOfficeReserveSettings,
+        showConstructionOfficeGuidePrompt,
         saveConstructionOfficeState,
         loadConstructionOfficeState,
         captureConstructionOfficeSettings,
@@ -1401,6 +1420,7 @@ if (typeof window !== 'undefined') {
     window.setStrategicReserve = setStrategicReserve;
     window.setStrategicReserveForResource = setStrategicReserveForResource;
     window.getConstructionOfficeReserveSettings = getConstructionOfficeReserveSettings;
+    window.showConstructionOfficeGuidePrompt = showConstructionOfficeGuidePrompt;
     window.saveConstructionOfficeState = saveConstructionOfficeState;
     window.loadConstructionOfficeState = loadConstructionOfficeState;
     window.captureConstructionOfficeSettings = captureConstructionOfficeSettings;

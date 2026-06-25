@@ -286,9 +286,10 @@ input[type="range"].pretty-slider::-moz-range-thumb {
 .construction-office-guide-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
   margin-bottom: 14px;
+  position: relative;
 }
 
 .construction-office-guide-title {
@@ -305,6 +306,8 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   color: #1f2933;
   cursor: pointer;
   font-weight: 700;
+  position: absolute;
+  right: 0;
 }
 
 .construction-office-guide-image-wrap {
