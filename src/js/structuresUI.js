@@ -991,9 +991,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   customControlsContainer.classList.add('building-custom-controls');
   controlsColumn.appendChild(customControlsContainer);
 
-  const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
+  const { structureControls, increaseButton, decreaseButton, zeroButton, maxButton } = createStructureControls(structure, toggleCallback, isColony);
   cached.increaseButton = increaseButton;
   cached.decreaseButton = decreaseButton;
+  cached.zeroButton = zeroButton;
+  cached.maxButton = maxButton;
 
   if (structure.canBeToggled) {
     const toggleControlsWrapper = document.createElement('div');
@@ -1779,6 +1781,7 @@ function createStructureControls(structure, toggleCallback) {
     zeroButton = document.createElement('button');
     zeroButton.id = `${structure.name}-zero-button`;
     zeroButton.textContent = getStructuresUIText('ui.structures.common.zero', '0');
+    zeroButton.disabled = structure.count === 0n;
     zeroButton.addEventListener('click', function () {
       toggleCallback(structure, (-normalizeBuildingCount(structure.active)).toString());
       disableAutoActive(structure);
@@ -1788,6 +1791,7 @@ function createStructureControls(structure, toggleCallback) {
     decreaseButton = document.createElement('button');
     decreaseButton.id = `${structure.name}-decrease-button`;
     decreaseButton.textContent = '-1';
+    decreaseButton.disabled = structure.count === 0n;
     decreaseButton.addEventListener('click', function () {
       toggleCallback(structure, `-${selectedBuildCounts[structure.name]}`);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
@@ -1797,6 +1801,7 @@ function createStructureControls(structure, toggleCallback) {
     increaseButton = document.createElement('button');
     increaseButton.id = `${structure.name}-increase-button`;
     increaseButton.textContent = '+1';
+    increaseButton.disabled = structure.count === 0n;
     increaseButton.addEventListener('click', function () {
       toggleCallback(structure, selectedBuildCounts[structure.name]);
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
@@ -1807,7 +1812,9 @@ function createStructureControls(structure, toggleCallback) {
     structureControls.appendChild(increaseButton);
 
     maxButton = document.createElement('button');
+    maxButton.id = `${structure.name}-max-button`;
     maxButton.textContent = getStructuresUIText('ui.common.max', 'Max');
+    maxButton.disabled = structure.count === 0n;
     maxButton.addEventListener('click', function () {
       toggleCallback(structure, (normalizeBuildingCount(structure.count) - normalizeBuildingCount(structure.active)).toString());
       disableAutoActive(structure);
@@ -2804,6 +2811,21 @@ function updateDecreaseButtonText(button, buildCount) {
       const decBtn = els.decreaseButton || document.getElementById(`${structureName}-decrease-button`);
       if (decBtn) {
         updateDecreaseButtonText(decBtn, selectedBuildCount);
+      }
+      const hasConstructedStructures = structure.count > 0n;
+      const zeroBtn = els.zeroButton || document.getElementById(`${structureName}-zero-button`);
+      if (zeroBtn) {
+        zeroBtn.disabled = !hasConstructedStructures;
+      }
+      if (decBtn) {
+        decBtn.disabled = !hasConstructedStructures;
+      }
+      if (incBtn) {
+        incBtn.disabled = !hasConstructedStructures;
+      }
+      const maxBtn = els.maxButton || document.getElementById(`${structureName}-max-button`);
+      if (maxBtn) {
+        maxBtn.disabled = !hasConstructedStructures;
       }
 
       // Toggle visibility of the "Hide" button based on conditions
