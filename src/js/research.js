@@ -249,46 +249,74 @@ class Research {
       }
     }
 
-    reconcileResearchDisableEffects() {
-      let changed = false;
-      for (const category in this.researches) {
-        this.researches[category].forEach((research) => {
-          if (research.disabled !== research.baseDisabled) {
-            research.disabled = research.baseDisabled;
-            changed = true;
-          }
-        });
-      }
-      this.activeEffects.forEach((effect) => {
-        if (effect.type !== 'researchDisable') {
-          return;
+    hasActiveResearchEffect(targetId, type) {
+      for (let i = 0; i < this.activeEffects.length; i += 1) {
+        const effect = this.activeEffects[i];
+        if (effect.type === type && effect.targetId === targetId) {
+          return true;
         }
-        const research = this.getResearchById(effect.targetId);
-        if (research && !research.disabled) {
-          research.disabled = true;
-          changed = true;
+      }
+      return false;
+    }
+
+    updateDisabledStateForResearchId(targetId) {
+      const research = this.getResearchById(targetId);
+      if (!research) {
+        return;
+      }
+      let disabled = research.baseDisabled;
+      if (this.hasActiveResearchEffect(targetId, 'enableResearch')) {
+        disabled = false;
+      }
+      if (this.hasActiveResearchEffect(targetId, 'researchDisable')) {
+        disabled = true;
+      }
+      if (research.disabled === disabled) {
+        return;
+      }
+      research.disabled = disabled;
+      this.orderDirty = true;
+      if (typeof invalidateResearchUICache === 'function') {
+        invalidateResearchUICache();
+      }
+    }
+
+    collectResearchToggleTargets(effects) {
+      const targetIds = new Set();
+      effects.forEach((effect) => {
+        if ((effect.type === 'researchDisable' || effect.type === 'enableResearch') && effect.targetId) {
+          targetIds.add(effect.targetId);
         }
       });
-      if (changed) {
-        this.orderDirty = true;
-      }
+      return targetIds;
     }
 
     clearEffectsOnTravel() {
+      const clearOnTravelTargets = this.collectResearchToggleTargets(
+        this.activeEffects.filter((effect) => effect.clearOnTravel === true)
+      );
       this.removeEffect({ sourceId: 'planet-parameters' });
       super.clearEffectsOnTravel();
-      this.reconcileResearchDisableEffects();
+      clearOnTravelTargets.forEach((targetId) => this.updateDisabledStateForResearchId(targetId));
     }
 
     removeEffect(effect) {
+      const sourceId = effect.sourceId;
+      const removedEffects = sourceId
+        ? this.activeEffects.filter((activeEffect) => activeEffect.sourceId === sourceId)
+        : [];
+      const targetIds = this.collectResearchToggleTargets(removedEffects);
       super.removeEffect(effect);
-      this.reconcileResearchDisableEffects();
+      targetIds.forEach((targetId) => this.updateDisabledStateForResearchId(targetId));
       return this;
     }
 
     applyEnableResearch(effect) {
       const research = this.getResearchById(effect.targetId);
       if (!research) {
+        return;
+      }
+      if (this.hasActiveResearchEffect(effect.targetId, 'researchDisable')) {
         return;
       }
       const wasDisabled = research.disabled;

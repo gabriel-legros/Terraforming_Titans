@@ -114,4 +114,84 @@ describe('research travel effects', () => {
       dom.window.close();
     }
   });
+
+  it('preserves unrelated effect-enabled research when a researchDisable source is removed', async () => {
+    const dom = await createGameDom({ trackEventListeners: false });
+
+    try {
+      const { window } = dom;
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const state = window.eval(`JSON.stringify((() => {
+        researchManager.addAndReplace({
+          target: 'researchManager',
+          targetId: 'superalloy_foundry',
+          type: 'enableResearch',
+          effectId: 'test-enable-superalloy-foundry',
+          sourceId: 'test-enable-source'
+        });
+        const disabledAfterEnable = researchManager.getResearchById('superalloy_foundry').disabled;
+        researchManager.addAndReplace({
+          target: 'researchManager',
+          targetId: 'space_elevator',
+          type: 'researchDisable',
+          effectId: 'test-disable-space-elevator-research',
+          sourceId: 'test-disable-source'
+        });
+        researchManager.removeEffect({ sourceId: 'test-disable-source' });
+        return {
+          disabledAfterEnable,
+          disabledAfterReconcile: researchManager.getResearchById('superalloy_foundry').disabled,
+          hasEnableEffect: researchManager.activeEffects.some(effect => effect.effectId === 'test-enable-superalloy-foundry')
+        };
+      })())`);
+
+      expect(JSON.parse(state)).toEqual({
+        disabledAfterEnable: false,
+        disabledAfterReconcile: false,
+        hasEnableEffect: true
+      });
+    } finally {
+      dom.window.close();
+    }
+  });
+
+  it('keeps research disabled until the disabling effect is removed even when enableResearch is active', async () => {
+    const dom = await createGameDom({ trackEventListeners: false });
+
+    try {
+      const { window } = dom;
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const state = window.eval(`JSON.stringify((() => {
+        researchManager.addAndReplace({
+          target: 'researchManager',
+          targetId: 'superalloy_foundry',
+          type: 'enableResearch',
+          effectId: 'test-enable-superalloy-foundry',
+          sourceId: 'test-enable-source'
+        });
+        researchManager.addAndReplace({
+          target: 'researchManager',
+          targetId: 'superalloy_foundry',
+          type: 'researchDisable',
+          effectId: 'test-disable-superalloy-foundry',
+          sourceId: 'test-disable-source'
+        });
+        const disabledWithBothEffects = researchManager.getResearchById('superalloy_foundry').disabled;
+        researchManager.removeEffect({ sourceId: 'test-disable-source' });
+        return {
+          disabledWithBothEffects,
+          disabledAfterDisableRemoved: researchManager.getResearchById('superalloy_foundry').disabled
+        };
+      })())`);
+
+      expect(JSON.parse(state)).toEqual({
+        disabledWithBothEffects: true,
+        disabledAfterDisableRemoved: false
+      });
+    } finally {
+      dom.window.close();
+    }
+  });
 });
