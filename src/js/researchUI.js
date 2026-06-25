@@ -189,7 +189,7 @@ function updateAllResearchButtons(researchData) {
 
 function updateResearchButtonText(button, researchItem, visible) {
     const repeatCount = researchItem.repeatable
-        ? Math.max(1, researchItem.timesResearched || 0)
+        ? Math.max(1, (researchItem.timesResearched || 0) + 1)
         : 0;
     const levelText = repeatCount ? ` (${repeatCount})` : '';
     let buttonText = visible ? `${researchItem.name}${levelText}` : '???';
