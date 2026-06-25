@@ -33,10 +33,7 @@ class CargoRocketProject extends Project {
       priceSpans: [],
       minusButtons: [],
       plusButtons: [],
-      increment: this.selectionIncrement,
     };
-    elements.cargoSelectionState = elements.cargoSelectionState || {};
-    elements.cargoSelectionState.increment = this.selectionIncrement;
 
     const syncQuantityFromText = (input) => {
       const parsed = parseSelectionQuantity(input.value);
@@ -63,12 +60,11 @@ class CargoRocketProject extends Project {
     elements.setInputQuantity = setInputQuantity;
 
     const updateIncrementButtons = () => {
-      const increment = elements.cargoSelectionState.increment;
       elements.minusButtons.forEach((btn) => {
-        btn.textContent = `-${formatNumber(increment, true)}`;
+        btn.textContent = `-${formatNumber(this.selectionIncrement, true)}`;
       });
       elements.plusButtons.forEach((btn) => {
-        btn.textContent = `+${formatNumber(increment, true)}`;
+        btn.textContent = `+${formatNumber(this.selectionIncrement, true)}`;
       });
     };
     elements.updateIncrementButtons = updateIncrementButtons;
@@ -106,15 +102,11 @@ class CargoRocketProject extends Project {
     };
 
     createHeaderButton('/10', () => {
-      elements.cargoSelectionState.increment = Math.max(1, Math.floor(elements.cargoSelectionState.increment / 10));
-      elements.increment = elements.cargoSelectionState.increment;
-      this.selectionIncrement = elements.cargoSelectionState.increment;
+      this.selectionIncrement = Math.max(1, Math.floor(this.selectionIncrement / 10));
     });
 
     createHeaderButton('x10', () => {
-      elements.cargoSelectionState.increment *= 10;
-      elements.increment = elements.cargoSelectionState.increment;
-      this.selectionIncrement = elements.cargoSelectionState.increment;
+      this.selectionIncrement *= 10;
     });
 
     selectionGrid.appendChild(headerRow);
@@ -198,14 +190,14 @@ class CargoRocketProject extends Project {
           setInputQuantity(quantityInput, 0, true);
         });
 
-        const minusButton = createButton(`-${formatNumber(elements.cargoSelectionState.increment, true)}`, () => {
+        const minusButton = createButton(`-${formatNumber(this.selectionIncrement, true)}`, () => {
           const current = getInputQuantity(quantityInput);
-          setInputQuantity(quantityInput, current - elements.cargoSelectionState.increment, true);
+          setInputQuantity(quantityInput, current - this.selectionIncrement, true);
         });
 
-        const plusButton = createButton(`+${formatNumber(elements.cargoSelectionState.increment, true)}`, () => {
+        const plusButton = createButton(`+${formatNumber(this.selectionIncrement, true)}`, () => {
           const current = getInputQuantity(quantityInput);
-          setInputQuantity(quantityInput, current + elements.cargoSelectionState.increment, true);
+          setInputQuantity(quantityInput, current + this.selectionIncrement, true);
         });
 
         elements.minusButtons.push(minusButton);
@@ -250,9 +242,6 @@ class CargoRocketProject extends Project {
     const elements = projectElements[this.name];
     if (!elements) return;
 
-    elements.increment = this.selectionIncrement;
-    elements.cargoSelectionState = elements.cargoSelectionState || {};
-    elements.cargoSelectionState.increment = this.selectionIncrement;
     if (elements.updateIncrementButtons) {
       elements.updateIncrementButtons();
     }
@@ -688,12 +677,6 @@ class CargoRocketProject extends Project {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'selectionIncrement')) {
       this.selectionIncrement = Math.max(1, settings.selectionIncrement || 1);
-      const elements = projectElements[this.name];
-      if (elements) {
-        elements.increment = this.selectionIncrement;
-        elements.cargoSelectionState = elements.cargoSelectionState || {};
-        elements.cargoSelectionState.increment = this.selectionIncrement;
-      }
     }
     this.syncSelectionUIFromState();
   }
