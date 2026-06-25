@@ -199,6 +199,16 @@
   opacity: 0.9;
 }
 
+.rwg-equilibration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
 .rwg-columns {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
