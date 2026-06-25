@@ -88,6 +88,56 @@ const CONSTRUCTION_OFFICE_RESERVE_RESOURCES = [
     { key: 'surface.land', category: 'surface', resource: 'land', labelKey: 'land', fallbackLabel: 'Land' },
 ];
 
+const CONSTRUCTION_OFFICE_GUIDE_SECTIONS = [
+    {
+        key: 'section1',
+        marker: '1',
+        fallback: 'This section controls whether or not autobuild is active. The value entered and mode controls how your target is defined.',
+    },
+    {
+        key: 'section2a',
+        marker: '2a',
+        fallback: 'This can control the value in 1) without using the keyboard. Useful for making small adjustments.',
+    },
+    {
+        key: 'section2b',
+        marker: '2b',
+        fallback: 'This controls autobuild priority, higher priorities are built first.',
+    },
+    {
+        key: 'section3',
+        marker: '3',
+        fallback: 'This is your current autobuild target based on defined value. The construction office will attempt to build to that value.',
+    },
+    {
+        key: 'section4',
+        marker: '4',
+        fallback: 'Set active to target is useful to ensure newly built buildings are automatically activated when built, or to quickly change your number of active buildings.',
+    },
+    {
+        key: 'section5',
+        marker: '5',
+        fallback: 'This is a way to calculate a value in 1) that will match your current setup.',
+    },
+];
+
+const CONSTRUCTION_OFFICE_GUIDE_RECOMMENDATIONS = [
+    'Use autobuild on 1% of pop for hydroponics farm. Each upgraded farm can feed 100 people, so you need a number of farms equal to 1% of your pop.',
+    'Use sand quarries as 100% of Glass Smelter + Electronics Factory demand.',
+    '% of workers calculates your target based on your number of workers. % worker share calculates a target based on assigning the given % of your workers to this building. For example, if you want 50% of your workers to work in components factory, you can use 50% worker share.',
+    'When you unlock the construction office for the first time, try setting most of your buildings to % of workers or % worker share and press "Set Target to Active" then turn it on. The autobuilder will mostly imitate your current setup.',
+    'If you need a bit more of something or want to free up your workers a little, the box in 2a is great for small adjustments.',
+];
+
+const CONSTRUCTION_OFFICE_GUIDE_MARKERS = [
+    { label: '1', className: 'construction-office-guide-marker-1' },
+    { label: '2a', className: 'construction-office-guide-marker-2a' },
+    { label: '2b', className: 'construction-office-guide-marker-2b' },
+    { label: '3', className: 'construction-office-guide-marker-3' },
+    { label: '4', className: 'construction-office-guide-marker-4' },
+    { label: '5', className: 'construction-office-guide-marker-5' },
+];
+
 function normalizeConstructionOfficeReservePercent(value) {
     const parsed = parseFloat(value);
     if (Number.isNaN(parsed)) {
@@ -101,6 +151,89 @@ function getConstructionOfficeReserveResourceLabel(option) {
         `ui.colony.constructionOffice.reserveResources.${option.labelKey}`,
         option.fallbackLabel
     );
+}
+
+function closeConstructionOfficeGuide(overlay) {
+    overlay.remove();
+    window.popupActive = false;
+}
+
+function openConstructionOfficeGuide() {
+    window.popupActive = true;
+
+    const overlay = document.createElement('div');
+    overlay.classList.add('construction-office-guide-overlay');
+
+    const win = document.createElement('div');
+    win.classList.add('construction-office-guide-window');
+
+    const header = document.createElement('div');
+    header.classList.add('construction-office-guide-header');
+
+    const title = document.createElement('h2');
+    title.classList.add('construction-office-guide-title');
+    title.textContent = getConstructionOfficeText('ui.colony.constructionOffice.guide.title', 'Autobuild Guide');
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.classList.add('construction-office-guide-close');
+    close.textContent = getConstructionOfficeText('ui.colony.constructionOffice.close', 'X');
+    close.setAttribute('aria-label', getConstructionOfficeText('ui.colony.constructionOffice.guide.close', 'Close autobuild guide'));
+    close.addEventListener('click', () => closeConstructionOfficeGuide(overlay));
+
+    header.append(title, close);
+
+    const imageWrap = document.createElement('div');
+    imageWrap.classList.add('construction-office-guide-image-wrap');
+
+    const image = document.createElement('img');
+    image.classList.add('construction-office-guide-image');
+    image.src = 'assets/autobuild_guide/overall.png';
+    image.alt = getConstructionOfficeText('ui.colony.constructionOffice.guide.imageAlt', 'Autobuild controls with numbered guide sections');
+    imageWrap.appendChild(image);
+
+    CONSTRUCTION_OFFICE_GUIDE_MARKERS.forEach(marker => {
+        const label = document.createElement('span');
+        label.classList.add('construction-office-guide-marker', marker.className);
+        label.textContent = marker.label;
+        imageWrap.appendChild(label);
+    });
+
+    const sectionGrid = document.createElement('div');
+    sectionGrid.classList.add('construction-office-guide-sections');
+    CONSTRUCTION_OFFICE_GUIDE_SECTIONS.forEach(section => {
+        const item = document.createElement('div');
+        item.classList.add('construction-office-guide-section');
+        const marker = document.createElement('span');
+        marker.classList.add('construction-office-guide-section-marker');
+        marker.textContent = section.marker;
+        const text = document.createElement('span');
+        text.textContent = getConstructionOfficeText(`ui.colony.constructionOffice.guide.${section.key}`, section.fallback);
+        item.append(marker, text);
+        sectionGrid.appendChild(item);
+    });
+
+    const recommendationsTitle = document.createElement('h3');
+    recommendationsTitle.classList.add('construction-office-guide-recommendations-title');
+    recommendationsTitle.textContent = getConstructionOfficeText('ui.colony.constructionOffice.guide.recommendationsTitle', 'Recommendations');
+
+    const recommendations = document.createElement('ul');
+    recommendations.classList.add('construction-office-guide-recommendations');
+    CONSTRUCTION_OFFICE_GUIDE_RECOMMENDATIONS.forEach((fallback, index) => {
+        const item = document.createElement('li');
+        item.textContent = getConstructionOfficeText(`ui.colony.constructionOffice.guide.recommendation${index + 1}`, fallback);
+        recommendations.appendChild(item);
+    });
+
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) {
+            closeConstructionOfficeGuide(overlay);
+        }
+    });
+
+    win.append(header, imageWrap, sectionGrid, recommendationsTitle, recommendations);
+    overlay.appendChild(win);
+    document.body.appendChild(overlay);
 }
 
 function getConstructionOfficeReservePercentForResource(reserveSettings, category, resource) {
@@ -714,6 +847,17 @@ function initializeConstructionOfficeUI() {
     title.classList.add('card-title');
     title.textContent = getConstructionOfficeText('ui.colony.constructionOffice.title', 'Construction Office');
     header.appendChild(title);
+    const guideButton = document.createElement('button');
+    guideButton.type = 'button';
+    guideButton.classList.add('terraforming-infographic-button', 'construction-office-guide-button');
+    guideButton.title = getConstructionOfficeText('ui.colony.constructionOffice.guide.open', 'Open autobuild guide');
+    guideButton.setAttribute('aria-label', getConstructionOfficeText('ui.colony.constructionOffice.guide.open', 'Open autobuild guide'));
+    const guideIcon = document.createElement('span');
+    guideIcon.classList.add('terraforming-infographic-icon');
+    guideIcon.textContent = '?';
+    guideButton.appendChild(guideIcon);
+    guideButton.addEventListener('click', openConstructionOfficeGuide);
+    header.appendChild(guideButton);
     card.appendChild(header);
 
     const body = document.createElement('div');

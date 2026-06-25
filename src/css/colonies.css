@@ -248,6 +248,192 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   justify-content: center;
 }
 
+#construction-office-card .card-header {
+  align-items: center;
+  gap: 6px;
+}
+
+#construction-office-card .construction-office-guide-button {
+  width: 24px;
+  height: 24px;
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+.construction-office-guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.construction-office-guide-window {
+  width: min(980px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 18px;
+  border-radius: 6px;
+  background-color: #f7f7f7;
+  color: #1f2933;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.construction-office-guide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.construction-office-guide-title {
+  margin: 0;
+  font-size: 24px;
+}
+
+.construction-office-guide-close {
+  min-width: 32px;
+  min-height: 32px;
+  border: 1px solid #9ca3af;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1f2933;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.construction-office-guide-image-wrap {
+  position: relative;
+  width: min(674px, 100%);
+  margin: 0 auto 16px;
+}
+
+.construction-office-guide-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #b8c0cc;
+  border-radius: 4px;
+  background: #e9edf2;
+}
+
+.construction-office-guide-marker {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #1b6ac9;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+}
+
+.construction-office-guide-marker-1 {
+  left: 54%;
+  top: 14%;
+}
+
+.construction-office-guide-marker-2a {
+  left: 22%;
+  top: 40%;
+}
+
+.construction-office-guide-marker-2b {
+  left: 75%;
+  top: 45%;
+}
+
+.construction-office-guide-marker-3 {
+  left: 22%;
+  top: 56%;
+}
+
+.construction-office-guide-marker-4 {
+  left: 22%;
+  top: 70%;
+}
+
+.construction-office-guide-marker-5 {
+  left: 22%;
+  top: 85%;
+}
+
+.construction-office-guide-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.construction-office-guide-section {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid #d4d9e2;
+  border-radius: 4px;
+  background-color: #ffffff;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.construction-office-guide-section-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background-color: #1b6ac9;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.construction-office-guide-recommendations-title {
+  margin: 4px 0 8px;
+  font-size: 18px;
+}
+
+.construction-office-guide-recommendations {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.construction-office-guide-recommendations li {
+  margin: 6px 0;
+}
+
+.dark-mode .construction-office-guide-window {
+  background-color: #151515;
+  color: #f3f4f6;
+}
+
+.dark-mode .construction-office-guide-close,
+.dark-mode .construction-office-guide-section {
+  border-color: #4b5563;
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
 .construction-office-reserve-window {
   width: min(480px, 92vw);
 }
