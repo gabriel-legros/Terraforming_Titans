@@ -322,6 +322,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - The Infinite patience difficulty setting lives under Post-World 3 and keeps patience at the current effective maximum, including max-patience bonuses. Spending patience still grants rewards but does not reduce the displayed reserve while the setting is enabled.
 - The Lifters stripping cap difficulty setting lives under Post-Mars and caps Strip Atmosphere lifter assignments to the current world geometric land value when enabled.
 - The Orbital cap difficulty setting lives under Post-World 11 and caps available Followers Orbitals to the current world geometric land value when enabled.
+- The No overpopulation cylinders difficulty setting lives under During World 14 and makes Overpopulation O'Neill Cylinders grant zero O'Neill cylinders on travel while leaving the project visible and buildable.
 
 ### Immigration Pool
 - The Immigration pool setting makes non-Mars colony growth above the galactic baseline (`0.5% / 365` per second before capacity easing) draw from off-world galactic population when the current world is less full than the galactic pool. Immigration is capped so the transfer cannot push galactic fill below world fill, and colonist imports subtract from the same pool when available.

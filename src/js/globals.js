@@ -99,6 +99,7 @@ let gameSettings = {
   infinitePatience: false,
   liftersStrippingCap: false,
   orbitalCap: false,
+  noOverpopulationCylinders: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,

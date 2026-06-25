@@ -61,6 +61,8 @@ function cacheSettingsElements() {
     liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
     orbitalCapToggle: document.getElementById('orbital-cap-toggle'),
     orbitalCapTooltip: document.getElementById('orbital-cap-tooltip'),
+    noOverpopulationCylindersToggle: document.getElementById('no-overpopulation-cylinders-toggle'),
+    noOverpopulationCylindersTooltip: document.getElementById('no-overpopulation-cylinders-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
@@ -212,6 +214,7 @@ function updateDifficultyLockUI() {
     cached.infinitePatienceToggle,
     cached.liftersStrippingCapToggle,
     cached.orbitalCapToggle,
+    cached.noOverpopulationCylindersToggle,
     cached.buildingCostMultiplierInput,
     cached.researchCostMultiplierInput,
     cached.workerRequirementMultiplierInput,
@@ -963,6 +966,29 @@ function addSettingsListeners() {
         'ui.settings.orbitalCapTooltip',
         {},
         'When enabled, available Orbitals cannot exceed the current world geometric land value.'
+      )
+    );
+  }
+
+  if (cached.noOverpopulationCylindersToggle) {
+    cached.noOverpopulationCylindersToggle.checked = gameSettings.noOverpopulationCylinders;
+    cached.noOverpopulationCylindersToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.noOverpopulationCylindersToggle.checked = gameSettings.noOverpopulationCylinders;
+        return;
+      }
+      gameSettings.noOverpopulationCylinders = cached.noOverpopulationCylindersToggle.checked;
+      updateProjectUI('overpopulationOneillCylinders');
+    });
+  }
+
+  if (cached.noOverpopulationCylindersTooltip) {
+    attachDynamicInfoTooltip(
+      cached.noOverpopulationCylindersTooltip,
+      t(
+        'ui.settings.noOverpopulationCylindersTooltip',
+        {},
+        "World 14 has a feature known as the 'Zeus catapult' that is very powerful but makes a lot of sense narratively.  It is arguably too powerful.  By checking this box you can ensure you gain nothing from it.  The project will still appear."
       )
     );
   }

@@ -389,6 +389,7 @@ function initializeGameState(options = {}) {
     gameSettings.infinitePatience = false;
     gameSettings.liftersStrippingCap = false;
     gameSettings.orbitalCap = false;
+    gameSettings.noOverpopulationCylinders = false;
     gameSettings.buildingCostMultiplier = 1;
     gameSettings.researchCostMultiplier = 1;
     gameSettings.workerRequirementMultiplier = 1;

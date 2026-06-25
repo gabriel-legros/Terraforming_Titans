@@ -818,6 +818,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'orbitalCap')) {
         gameSettings.orbitalCap = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noOverpopulationCylinders')) {
+        gameSettings.noOverpopulationCylinders = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
         gameSettings.colorblindPalette = 'redGreen';
       }
@@ -888,6 +891,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;
       cachedSettings.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
       cachedSettings.orbitalCapToggle.checked = gameSettings.orbitalCap;
+      cachedSettings.noOverpopulationCylindersToggle.checked = gameSettings.noOverpopulationCylinders;
       patienceManager.enforceInfinitePatience();
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();
