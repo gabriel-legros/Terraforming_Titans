@@ -4778,6 +4778,8 @@ setLanguageData({
       keybindsTitle: 'Keybinds',
       pauseKeybindLabel: 'Pause key',
       dialogueSkipKeybindLabel: 'Skip dialogue typing',
+      fullscreenKeybindLabel: 'Fullscreen',
+      fullscreenKeybindValue: 'F11',
       pauseButtonLabel: 'Pause ({keybind})',
       pauseKeybindCaptureButton: 'Capture key ({keybind})',
       dialogueSkipKeybindCaptureButton: 'Capture key ({keybind})',

@@ -163,6 +163,13 @@
     justify-content: flex-start;
   }
 
+  .settings-keybind-static-value {
+    border: 1px solid var(--button-border-color, #888);
+    border-radius: 4px;
+    padding: 2px 8px;
+    background: var(--button-bg-color, #f0f0f0);
+  }
+
   #settings-credits-list .settings-stat-line {
     margin-bottom: 16px;
   }

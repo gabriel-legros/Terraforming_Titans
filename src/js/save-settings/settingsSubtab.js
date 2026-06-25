@@ -14,6 +14,7 @@ function cacheSettingsElements() {
     whiteNoiseTooltip: document.getElementById('white-noise-tooltip'),
     electronFullscreenOption: document.getElementById('electron-fullscreen-settings-option'),
     electronFullscreenToggle: document.getElementById('electron-fullscreen-toggle'),
+    electronFullscreenKeybindOption: document.getElementById('electron-fullscreen-keybind-option'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
     celsiusToggle: document.getElementById('celsius-toggle'),
     colorblindPaletteSelect: document.getElementById('colorblind-palette-select'),
@@ -455,6 +456,8 @@ function addSettingsListeners() {
 
   cached.electronFullscreenOption.hidden = !GAME_FEATURES.electronWindowControls;
   cached.electronFullscreenOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
+  cached.electronFullscreenKeybindOption.hidden = !GAME_FEATURES.electronWindowControls;
+  cached.electronFullscreenKeybindOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
   cached.electronExitGameButton.hidden = !GAME_FEATURES.electronWindowControls;
   cached.electronExitGameButton.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
   if (GAME_FEATURES.electronWindowControls) {
