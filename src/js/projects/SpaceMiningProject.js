@@ -56,6 +56,16 @@ function removeSelectOption(select, value) {
   }
 }
 
+function normalizeCoveragePercentInput(value) {
+  const parsed = parseFlexibleNumber(value);
+  const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(parsed, 100)) : 0;
+  return Math.round(clamped * 1000000) / 1000000;
+}
+
+function formatCoverageThresholdPercent(threshold) {
+  return String(normalizeCoveragePercentInput(threshold * 100));
+}
+
 class SpaceMiningProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -290,29 +300,17 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(modeSelect);
 
     const input = document.createElement('input');
-    input.type = 'number';
-    input.step = 'any';
-    input.min = '0';
-    input.max = '100';
+    input.type = 'text';
+    input.inputMode = 'decimal';
     input.classList.add('water-coverage-input');
-    input.value = this.waterCoverageThreshold * 100;
-    input.addEventListener('input', () => {
-      if (input.value === '') {
-        return;
-      }
-      const val = Number(input.value);
-      if (!Number.isFinite(val)) {
-        this.waterCoverageThreshold = 0;
-        return;
-      }
-      const clamped = Math.max(0, Math.min(val, 100));
-      this.waterCoverageThreshold = clamped / 100;
-      input.value = clamped;
-    });
-    input.addEventListener('blur', () => {
-      if (input.value === '') {
-        input.value = this.waterCoverageThreshold * 100;
-      }
+    input.value = formatCoverageThresholdPercent(this.waterCoverageThreshold);
+    wireStringNumberInput(input, {
+      parseValue: normalizeCoveragePercentInput,
+      formatValue: (value) => String(value),
+      onValue: (value) => {
+        this.waterCoverageThreshold = value / 100;
+      },
+      datasetKey: 'waterCoveragePercent',
     });
     control.appendChild(input);
 
@@ -382,29 +380,17 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(modeSelect);
 
     const input = document.createElement('input');
-    input.type = 'number';
-    input.step = 'any';
-    input.min = '0';
-    input.max = '100';
+    input.type = 'text';
+    input.inputMode = 'decimal';
     input.classList.add('co2-coverage-input');
-    input.value = this.co2CoverageThreshold * 100;
-    input.addEventListener('input', () => {
-      if (input.value === '') {
-        return;
-      }
-      const val = Number(input.value);
-      if (!Number.isFinite(val)) {
-        this.co2CoverageThreshold = 0;
-        return;
-      }
-      const clamped = Math.max(0, Math.min(val, 100));
-      this.co2CoverageThreshold = clamped / 100;
-      input.value = clamped;
-    });
-    input.addEventListener('blur', () => {
-      if (input.value === '') {
-        input.value = this.co2CoverageThreshold * 100;
-      }
+    input.value = formatCoverageThresholdPercent(this.co2CoverageThreshold);
+    wireStringNumberInput(input, {
+      parseValue: normalizeCoveragePercentInput,
+      formatValue: (value) => String(value),
+      onValue: (value) => {
+        this.co2CoverageThreshold = value / 100;
+      },
+      datasetKey: 'co2CoveragePercent',
     });
     control.appendChild(input);
 
@@ -878,7 +864,7 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.waterCoverageMode.value = this.waterCoverageDisableMode;
     }
     if (elements.waterCoverageInput && document.activeElement !== elements.waterCoverageInput) {
-      elements.waterCoverageInput.value = this.waterCoverageThreshold * 100;
+      elements.waterCoverageInput.value = formatCoverageThresholdPercent(this.waterCoverageThreshold);
     }
     if (elements.waterCoverageInput && elements.waterCoveragePercent) {
       const showInput = this.waterCoverageDisableMode === 'coverage';
@@ -896,7 +882,7 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.co2CoverageMode.value = this.co2CoverageDisableMode;
     }
     if (elements.co2CoverageInput && document.activeElement !== elements.co2CoverageInput) {
-      elements.co2CoverageInput.value = this.co2CoverageThreshold * 100;
+      elements.co2CoverageInput.value = formatCoverageThresholdPercent(this.co2CoverageThreshold);
     }
     if (elements.co2CoverageVisibilityUpdate) {
       elements.co2CoverageVisibilityUpdate();

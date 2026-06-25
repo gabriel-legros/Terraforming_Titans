@@ -3279,6 +3279,11 @@
     width: 60px;
 }
 
+.water-coverage-control .water-coverage-input,
+.co2-coverage-control .co2-coverage-input {
+    width: 60px;
+}
+
 .pressure-control .pressure-unit {
     width: 60px;
 }
