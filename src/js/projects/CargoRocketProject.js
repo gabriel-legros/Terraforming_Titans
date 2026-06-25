@@ -35,6 +35,8 @@ class CargoRocketProject extends Project {
       plusButtons: [],
       increment: this.selectionIncrement,
     };
+    elements.cargoSelectionState = elements.cargoSelectionState || {};
+    elements.cargoSelectionState.increment = this.selectionIncrement;
 
     const syncQuantityFromText = (input) => {
       const parsed = parseSelectionQuantity(input.value);
@@ -61,13 +63,15 @@ class CargoRocketProject extends Project {
     elements.setInputQuantity = setInputQuantity;
 
     const updateIncrementButtons = () => {
+      const increment = elements.cargoSelectionState.increment;
       elements.minusButtons.forEach((btn) => {
-        btn.textContent = `-${formatNumber(elements.increment, true)}`;
+        btn.textContent = `-${formatNumber(increment, true)}`;
       });
       elements.plusButtons.forEach((btn) => {
-        btn.textContent = `+${formatNumber(elements.increment, true)}`;
+        btn.textContent = `+${formatNumber(increment, true)}`;
       });
     };
+    elements.updateIncrementButtons = updateIncrementButtons;
 
     const headerRow = document.createElement('div');
     headerRow.classList.add('cargo-resource-row', 'cargo-grid-header');
@@ -102,13 +106,15 @@ class CargoRocketProject extends Project {
     };
 
     createHeaderButton('/10', () => {
-      elements.increment = Math.max(1, Math.floor(elements.increment / 10));
-      this.selectionIncrement = elements.increment;
+      elements.cargoSelectionState.increment = Math.max(1, Math.floor(elements.cargoSelectionState.increment / 10));
+      elements.increment = elements.cargoSelectionState.increment;
+      this.selectionIncrement = elements.cargoSelectionState.increment;
     });
 
     createHeaderButton('x10', () => {
-      elements.increment *= 10;
-      this.selectionIncrement = elements.increment;
+      elements.cargoSelectionState.increment *= 10;
+      elements.increment = elements.cargoSelectionState.increment;
+      this.selectionIncrement = elements.cargoSelectionState.increment;
     });
 
     selectionGrid.appendChild(headerRow);
@@ -192,14 +198,14 @@ class CargoRocketProject extends Project {
           setInputQuantity(quantityInput, 0, true);
         });
 
-        const minusButton = createButton(`-${formatNumber(elements.increment, true)}`, () => {
+        const minusButton = createButton(`-${formatNumber(elements.cargoSelectionState.increment, true)}`, () => {
           const current = getInputQuantity(quantityInput);
-          setInputQuantity(quantityInput, current - elements.increment, true);
+          setInputQuantity(quantityInput, current - elements.cargoSelectionState.increment, true);
         });
 
-        const plusButton = createButton(`+${formatNumber(elements.increment, true)}`, () => {
+        const plusButton = createButton(`+${formatNumber(elements.cargoSelectionState.increment, true)}`, () => {
           const current = getInputQuantity(quantityInput);
-          setInputQuantity(quantityInput, current + elements.increment, true);
+          setInputQuantity(quantityInput, current + elements.cargoSelectionState.increment, true);
         });
 
         elements.minusButtons.push(minusButton);
@@ -238,6 +244,29 @@ class CargoRocketProject extends Project {
       totalCostValue: totalCostValue,
       resourceSelectionContainer: container,
     };
+  }
+
+  syncSelectionUIFromState() {
+    const elements = projectElements[this.name];
+    if (!elements) return;
+
+    elements.increment = this.selectionIncrement;
+    elements.cargoSelectionState = elements.cargoSelectionState || {};
+    elements.cargoSelectionState.increment = this.selectionIncrement;
+    if (elements.updateIncrementButtons) {
+      elements.updateIncrementButtons();
+    }
+
+    const inputs = elements.selectionInputs || [];
+    const setInputQuantity = elements.setInputQuantity;
+    if (!setInputQuantity || inputs.length === 0) return;
+
+    inputs.forEach((input) => {
+      const selected = this.selectedResources.find(
+        (sr) => sr.category === input.dataset.category && sr.resource === input.dataset.resource
+      );
+      setInputQuantity(input, selected ? selected.quantity : 0, true);
+    });
   }
 
   updateUI() {
@@ -662,15 +691,16 @@ class CargoRocketProject extends Project {
       const elements = projectElements[this.name];
       if (elements) {
         elements.increment = this.selectionIncrement;
+        elements.cargoSelectionState = elements.cargoSelectionState || {};
+        elements.cargoSelectionState.increment = this.selectionIncrement;
       }
     }
+    this.syncSelectionUIFromState();
   }
 
   saveState() {
     const state = super.saveState();
-    if (this.autoStart) {
-      state.selectedResources = this.selectedResources;
-    }
+    state.selectedResources = normalizeSelectionEntries(this.selectedResources || []);
     state.spaceshipPriceIncrease = this.spaceshipPriceIncrease;
     state.selectionIncrement = this.selectionIncrement;
     return state;
@@ -678,25 +708,12 @@ class CargoRocketProject extends Project {
 
   loadState(state) {
     super.loadState(state);
-    this.selectedResources = this.autoStart && state.selectedResources
+    this.selectedResources = state.selectedResources
       ? normalizeSelectionEntries(state.selectedResources)
       : [];
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
     this.selectionIncrement = state.selectionIncrement || 1;
-    const elements = typeof projectElements !== 'undefined'
-      ? projectElements[this.name]
-      : null;
-    if (elements) {
-      elements.increment = this.selectionIncrement;
-      if (typeof formatNumber === 'function') {
-        elements.minusButtons?.forEach((btn) => {
-          btn.textContent = `-${formatNumber(elements.increment, true)}`;
-        });
-        elements.plusButtons?.forEach((btn) => {
-          btn.textContent = `+${formatNumber(elements.increment, true)}`;
-        });
-      }
-    }
+    this.syncSelectionUIFromState();
   }
 
   saveTravelState() {
