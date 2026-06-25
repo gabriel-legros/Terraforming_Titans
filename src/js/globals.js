@@ -114,6 +114,9 @@ let gameSettings = {
   invasionMultiplier: 1,
   artificialWorldConstructionTimeMultiplier: 1,
   rwgRewardsCap: null,
+  difficultySettingsLocked: false,
+  difficultySettingsLockedWorldKey: '',
+  difficultySettingsLockedWorldName: '',
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
 };

@@ -81,6 +81,8 @@ function cacheSettingsElements() {
     artificialWorldConstructionTimeMultiplierInput: document.getElementById('artificial-world-construction-time-multiplier-input'),
     rwgRewardsCapInput: document.getElementById('rwg-rewards-cap-input'),
     rwgRewardsCapTooltip: document.getElementById('rwg-rewards-cap-tooltip'),
+    lockDifficultySettingsButton: document.getElementById('lock-difficulty-settings-button'),
+    difficultyLockStatus: document.getElementById('difficulty-lock-status'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
     terraformingSubstepsTooltip: document.getElementById('terraforming-substeps-tooltip'),
@@ -133,6 +135,152 @@ function applyThemeModeSetting() {
   }
 }
 
+function isDifficultySettingsLocked() {
+  return gameSettings.difficultySettingsLocked === true;
+}
+
+const DIFFICULTY_LOCK_STORY_WORLDS = [
+  { key: 'mars', fallbackName: 'Mars', minChapter: 0 },
+  { key: 'titan', fallbackName: 'Titan', minChapter: 4 },
+  { key: 'callisto', fallbackName: 'Callisto', minChapter: 7 },
+  { key: 'ganymede', fallbackName: 'Ganymede', minChapter: 10 },
+  { key: 'vega2', fallbackName: 'Vega-2', minChapter: 14 },
+  { key: 'venus', fallbackName: 'Venus', minChapter: 18 },
+  { key: 'umbra', fallbackName: 'Umbra', minChapter: 21 },
+  { key: 'solisprime', fallbackName: 'Solis Prime', minChapter: 24 },
+  { key: 'gabbag', fallbackName: 'Gabbag', minChapter: 27 },
+  { key: 'tartarus', fallbackName: 'Tartarus', minChapter: 30 },
+  { key: 'hades', fallbackName: 'Hades', minChapter: 33 },
+  { key: 'poseidon', fallbackName: 'Poseidon', minChapter: 36 },
+  { key: 'styx', fallbackName: 'Styx', minChapter: 39 },
+  { key: 'zeus', fallbackName: 'Zeus', minChapter: 42 },
+  { key: 'olympus', fallbackName: 'Olympus', minChapter: 46 },
+  { key: 'earth', fallbackName: 'Earth', minChapter: 50 },
+];
+
+function getLatestStoryWorldForDifficultyLock() {
+  const chapter = Number(storyManager.currentChapter || 0);
+  let world = DIFFICULTY_LOCK_STORY_WORLDS[0];
+  for (let i = 1; i < DIFFICULTY_LOCK_STORY_WORLDS.length; i += 1) {
+    if (chapter >= DIFFICULTY_LOCK_STORY_WORLDS[i].minChapter) {
+      world = DIFFICULTY_LOCK_STORY_WORLDS[i];
+    }
+  }
+  return world;
+}
+
+function getDifficultyLockStoryWorldName(world) {
+  return t(`catalogs.planets.${world.key}.name`, {}, world.fallbackName);
+}
+
+function getDifficultyLockStoryWorldLabel(world) {
+  const number = DIFFICULTY_LOCK_STORY_WORLDS.indexOf(world) + 1;
+  const name = getDifficultyLockStoryWorldName(world);
+  return t('ui.settings.difficultyLockWorldLabel', { number, name }, `World ${number}: ${name}`);
+}
+
+function getDifficultyLockStoryWorldByKey(key) {
+  for (let i = 0; i < DIFFICULTY_LOCK_STORY_WORLDS.length; i += 1) {
+    if (DIFFICULTY_LOCK_STORY_WORLDS[i].key === key) {
+      return DIFFICULTY_LOCK_STORY_WORLDS[i];
+    }
+  }
+  return null;
+}
+
+function getDifficultyLockWorldLabel() {
+  const world = getDifficultyLockStoryWorldByKey(gameSettings.difficultySettingsLockedWorldKey);
+  if (world) {
+    return getDifficultyLockStoryWorldLabel(world);
+  }
+  const name = gameSettings.difficultySettingsLockedWorldName || gameSettings.difficultySettingsLockedWorldKey;
+  return name || t('ui.settings.difficultyLockUnknownWorld', {}, 'Unknown world');
+}
+
+function updateDifficultyLockUI() {
+  const cached = cacheSettingsElements();
+  const locked = isDifficultySettingsLocked();
+  const controls = [
+    cached.dayNightToggle,
+    cached.earlyAdvancedOversightToggle,
+    cached.disableFusionConsumptionScalingToggle,
+    cached.disableSpeedControlsToggle,
+    cached.immigrationPoolToggle,
+    cached.unfulfilledMaintenancePenaltiesToggle,
+    cached.factoryHeatingToggle,
+    cached.realisticFactoryEnergyConsumptionToggle,
+    cached.infinitePatienceToggle,
+    cached.liftersStrippingCapToggle,
+    cached.orbitalCapToggle,
+    cached.buildingCostMultiplierInput,
+    cached.researchCostMultiplierInput,
+    cached.workerRequirementMultiplierInput,
+    cached.projectDurationMultiplierInput,
+    cached.popGrowthMultiplierInput,
+    cached.lifeGrowthMultiplierInput,
+    cached.maintenanceCostMultiplierInput,
+    cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
+    cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
+    cached.advancedResearchMultiplierInput,
+    cached.galaxyFleetCapacityMultiplierInput,
+    cached.galaxyThreatScalingMultiplierInput,
+    cached.invasionMultiplierInput,
+    cached.artificialWorldConstructionTimeMultiplierInput,
+    cached.rwgRewardsCapInput,
+  ];
+
+  for (let i = 0; i < controls.length; i += 1) {
+    if (controls[i]) {
+      controls[i].disabled = locked;
+    }
+  }
+
+  if (cached.lockDifficultySettingsButton) {
+    cached.lockDifficultySettingsButton.disabled = locked;
+    cached.lockDifficultySettingsButton.textContent = locked
+      ? t('ui.settings.difficultyLockedButton', {}, 'Difficulty locked')
+      : t('ui.settings.lockDifficultySettings', {}, 'Lock difficulty settings');
+  }
+
+  if (cached.difficultyLockStatus) {
+    const world = getDifficultyLockWorldLabel();
+    cached.difficultyLockStatus.textContent = locked
+      ? t('ui.settings.difficultyLockedStatus', { world }, `Difficulty settings locked on ${world}.`)
+      : t('ui.settings.difficultyUnlockedStatus', {}, 'Difficulty settings are not locked.');
+  }
+}
+
+function lockDifficultySettings() {
+  if (isDifficultySettingsLocked()) {
+    return;
+  }
+  const world = getLatestStoryWorldForDifficultyLock();
+  gameSettings.difficultySettingsLocked = true;
+  gameSettings.difficultySettingsLockedWorldKey = world.key;
+  gameSettings.difficultySettingsLockedWorldName = getDifficultyLockStoryWorldName(world);
+  updateDifficultyLockUI();
+}
+
+function confirmDifficultySettingsLock() {
+  if (isDifficultySettingsLocked()) {
+    return;
+  }
+  const world = getLatestStoryWorldForDifficultyLock();
+  const worldLabel = getDifficultyLockStoryWorldLabel(world);
+  createSystemChoicePopup(
+    t('ui.settings.lockDifficultyConfirmTitle', {}, 'Lock difficulty settings?'),
+    t(
+      'ui.settings.lockDifficultyConfirmText',
+      { world: worldLabel },
+      `This permanently locks difficulty settings for this save. The lock will be recorded at latest story world: ${worldLabel}.`
+    ),
+    t('ui.settings.lockDifficultyConfirmYes', {}, 'Lock'),
+    t('ui.settings.lockDifficultyConfirmNo', {}, 'Cancel'),
+    lockDifficultySettings,
+    () => {}
+  );
+}
+
 function wireDifficultyMultiplierInput(input, settingId) {
   if (!input) {
     return;
@@ -144,6 +292,10 @@ function wireDifficultyMultiplierInput(input, settingId) {
     parseValue: value => normalizeDifficultySettingValue(settingId, parseFlexibleNumber(value)),
     formatValue: value => formatDifficultyMultiplierValue(value),
     onValue: parsed => {
+      if (isDifficultySettingsLocked()) {
+        updateDifficultySettingInputs();
+        return;
+      }
       gameSettings[settingId] = parsed;
       applyDifficultySettingEffects();
       updateBuildingDisplay(buildings);
@@ -177,6 +329,10 @@ function wireDifficultyNullableCapInput(input, settingId) {
     parseValue: value => normalizeDifficultySettingValue(settingId, value.trim() === '' ? null : parseFlexibleNumber(value)),
     formatValue: value => formatDifficultyNullableCapValue(value),
     onValue: parsed => {
+      if (isDifficultySettingsLocked()) {
+        updateDifficultySettingInputs();
+        return;
+      }
       gameSettings[settingId] = parsed;
       applyRWGEffects();
       updateRWGEffectsUI();
@@ -219,6 +375,7 @@ function updateDifficultySettingInputs() {
       input.dataset[settingId] = String(gameSettings[settingId]);
     }
   }
+  updateDifficultyLockUI();
 }
 
 function addSettingsListeners() {
@@ -354,6 +511,10 @@ function addSettingsListeners() {
   if (cached.immigrationPoolToggle) {
     cached.immigrationPoolToggle.checked = gameSettings.immigrationPool;
     cached.immigrationPoolToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.immigrationPoolToggle.checked = gameSettings.immigrationPool;
+        return;
+      }
       gameSettings.immigrationPool = cached.immigrationPoolToggle.checked;
     });
   }
@@ -381,6 +542,10 @@ function addSettingsListeners() {
   if (cached.dayNightToggle) {
     cached.dayNightToggle.checked = gameSettings.disableDayNightCycle;
     cached.dayNightToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.dayNightToggle.checked = gameSettings.disableDayNightCycle;
+        return;
+      }
       gameSettings.disableDayNightCycle = cached.dayNightToggle.checked;
       if (typeof applyDayNightSettingEffects === 'function') applyDayNightSettingEffects();
       updateDayNightDisplay();
@@ -594,6 +759,10 @@ function addSettingsListeners() {
   if (cached.disableFusionConsumptionScalingToggle) {
     cached.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
     cached.disableFusionConsumptionScalingToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
+        return;
+      }
       gameSettings.disableFusionConsumptionScaling = cached.disableFusionConsumptionScalingToggle.checked;
       reapplySharedManagerEffects({
         includeConditionalReconcile: true
@@ -615,6 +784,10 @@ function addSettingsListeners() {
   if (cached.disableSpeedControlsToggle) {
     cached.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
     cached.disableSpeedControlsToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
+        return;
+      }
       gameSettings.disableSpeedControls = cached.disableSpeedControlsToggle.checked;
       applySpeedControlsSetting();
     });
@@ -634,6 +807,10 @@ function addSettingsListeners() {
   if (cached.unfulfilledMaintenancePenaltiesToggle) {
     cached.unfulfilledMaintenancePenaltiesToggle.checked = gameSettings.unfulfilledMaintenancePenalties;
     cached.unfulfilledMaintenancePenaltiesToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.unfulfilledMaintenancePenaltiesToggle.checked = gameSettings.unfulfilledMaintenancePenalties;
+        return;
+      }
       gameSettings.unfulfilledMaintenancePenalties = cached.unfulfilledMaintenancePenaltiesToggle.checked;
       if (!gameSettings.unfulfilledMaintenancePenalties) {
         for (const buildingName in buildings) {
@@ -657,6 +834,10 @@ function addSettingsListeners() {
   if (cached.earlyAdvancedOversightToggle) {
     cached.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
     cached.earlyAdvancedOversightToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
+        return;
+      }
       gameSettings.earlyAdvancedOversight = cached.earlyAdvancedOversightToggle.checked;
       applyDifficultySettingEffects();
       updateProjectUI('spaceMirrorFacility');
@@ -677,6 +858,10 @@ function addSettingsListeners() {
   if (cached.factoryHeatingToggle) {
     cached.factoryHeatingToggle.checked = gameSettings.factoryHeating;
     cached.factoryHeatingToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.factoryHeatingToggle.checked = gameSettings.factoryHeating;
+        return;
+      }
       gameSettings.factoryHeating = cached.factoryHeatingToggle.checked;
       if (!gameSettings.factoryHeating && terraforming) {
         terraforming.setFactoryHeatPower(0);
@@ -699,6 +884,10 @@ function addSettingsListeners() {
   if (cached.realisticFactoryEnergyConsumptionToggle) {
     cached.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
     cached.realisticFactoryEnergyConsumptionToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
+        return;
+      }
       gameSettings.realisticFactoryEnergyConsumption = cached.realisticFactoryEnergyConsumptionToggle.checked;
       applyDifficultySettingEffects();
       updateBuildingDisplay(buildings);
@@ -719,6 +908,10 @@ function addSettingsListeners() {
   if (cached.infinitePatienceToggle) {
     cached.infinitePatienceToggle.checked = gameSettings.infinitePatience;
     cached.infinitePatienceToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.infinitePatienceToggle.checked = gameSettings.infinitePatience;
+        return;
+      }
       gameSettings.infinitePatience = cached.infinitePatienceToggle.checked;
       patienceManager.enforceInfinitePatience();
       updatePatienceUI();
@@ -728,6 +921,10 @@ function addSettingsListeners() {
   if (cached.liftersStrippingCapToggle) {
     cached.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
     cached.liftersStrippingCapToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
+        return;
+      }
       gameSettings.liftersStrippingCap = cached.liftersStrippingCapToggle.checked;
       const lifters = projectManager.projects.lifters;
       lifters.normalizeAssignments();
@@ -749,6 +946,10 @@ function addSettingsListeners() {
   if (cached.orbitalCapToggle) {
     cached.orbitalCapToggle.checked = gameSettings.orbitalCap;
     cached.orbitalCapToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.orbitalCapToggle.checked = gameSettings.orbitalCap;
+        return;
+      }
       gameSettings.orbitalCap = cached.orbitalCapToggle.checked;
       followersManager.markUIDirty();
       updateFollowersUI();
@@ -781,6 +982,11 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.invasionMultiplierInput, 'invasionMultiplier');
   wireDifficultyMultiplierInput(cached.artificialWorldConstructionTimeMultiplierInput, 'artificialWorldConstructionTimeMultiplier');
   wireDifficultyNullableCapInput(cached.rwgRewardsCapInput, 'rwgRewardsCap');
+
+  if (cached.lockDifficultySettingsButton) {
+    cached.lockDifficultySettingsButton.addEventListener('click', confirmDifficultySettingsLock);
+  }
+  updateDifficultyLockUI();
 
   if (cached.rwgRewardsCapTooltip) {
     attachDynamicInfoTooltip(

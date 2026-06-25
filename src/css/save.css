@@ -80,6 +80,19 @@
     margin: 4px 0 12px;
   }
 
+  .settings-grid-difficulty-lock {
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-lock-option {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .difficulty-lock-option button {
+    width: fit-content;
+  }
+
   .difficulty-spoiler-sections {
     width: min(100%, 1200px);
     margin-bottom: 16px;

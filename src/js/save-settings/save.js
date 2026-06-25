@@ -824,6 +824,15 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'themeMode')) {
         gameSettings.themeMode = gameSettings.darkMode ? 'darkBlue' : 'light';
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'difficultySettingsLocked')) {
+        gameSettings.difficultySettingsLocked = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'difficultySettingsLockedWorldKey')) {
+        gameSettings.difficultySettingsLockedWorldKey = '';
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'difficultySettingsLockedWorldName')) {
+        gameSettings.difficultySettingsLockedWorldName = '';
+      }
       normalizeDifficultySettings();
       applyDifficultySettingEffects();
       setPauseKeybindCode(gameSettings.pauseKeybind);
