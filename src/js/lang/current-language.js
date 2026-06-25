@@ -4765,6 +4765,8 @@ setLanguageData({
       spaceshipEnergyAfterSpaceElevatorMultiplierTooltip: 'Multiplies colony energy costs for spaceship projects after the Space Elevator is completed.  Use 10-20 if you want a realistic value.',
       advancedResearchMultiplier: 'Advanced Research Multiplier',
       skillPointsGainMultiplier: 'Skill points gain multiplier',
+      solisPointsGainMultiplier: 'Solis Points gain multiplier',
+      artifactsGainMultiplier: 'Artifacts Gain multiplier',
       galaxyFleetCapacityMultiplier: 'Galaxy fleet capacity',
       galaxyThreatScalingMultiplier: 'Galaxy threat scaling',
       galaxyThreatScalingTooltip: 'Multiplies how much extra fleet capacity imperial factions gain as they react to UHF expansion and late-game threat.',

@@ -154,10 +154,11 @@ class AtlasManager extends EffectableEntity {
         if (existing.communityArtifactRewardGranted) {
             return 0;
         }
-        resources.special.alienArtifact.increase(ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD);
+        const artifactGain = getArtifactGainAmount(ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD);
+        resources.special.alienArtifact.increase(artifactGain);
         existing.communityArtifactRewardGranted = true;
         this.atlasWorldCompletions[resolved] = existing;
-        return ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD;
+        return artifactGain;
     }
 
     markCompleted(seedKey, options = {}) {

@@ -134,7 +134,8 @@ class SolisManager extends EffectableEntity {
   }
 
   getCurrentReward() {
-    return this.rewardMultiplier * this.getTerraformedWorldBonus();
+    const gainMultiplier = normalizeDifficultySettingValue('solisPointsGainMultiplier', gameSettings.solisPointsGainMultiplier);
+    return this.rewardMultiplier * this.getTerraformedWorldBonus() * gainMultiplier;
   }
 
   clampRewardMultiplier(multiplier) {
@@ -580,7 +581,8 @@ class SolisManager extends EffectableEntity {
     } else {
       res.value -= count;
     }
-    this.solisPoints += count * 25;
+    const gainMultiplier = normalizeDifficultySettingValue('solisPointsGainMultiplier', gameSettings.solisPointsGainMultiplier);
+    this.solisPoints += count * 25 * gainMultiplier;
     return true;
   }
 

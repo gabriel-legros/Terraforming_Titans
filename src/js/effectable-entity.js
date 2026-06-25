@@ -473,7 +473,10 @@ class EffectableEntity {
     }
 
     applyInstantResourceGain(effect) {
-      const amount = effect.quantity !== undefined ? effect.quantity : effect.value;
+      let amount = effect.quantity !== undefined ? effect.quantity : effect.value;
+      if (typeof amount === 'number' && effect.target === 'resource' && effect.resourceType === 'special' && effect.targetId === 'alienArtifact') {
+        amount = getArtifactGainAmount(amount);
+      }
       if (typeof amount === 'number') {
         if (effect.ignoreCap) {
           this.value += amount;

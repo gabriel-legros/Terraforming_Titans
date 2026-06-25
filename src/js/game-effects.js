@@ -18,6 +18,8 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   spaceshipEnergyAfterSpaceElevatorMultiplier: { min: 0 },
   advancedResearchMultiplier: { min: 0 },
   skillPointsGainMultiplier: { min: 0 },
+  solisPointsGainMultiplier: { min: 0 },
+  artifactsGainMultiplier: { min: 0 },
   galaxyFleetCapacityMultiplier: { min: 0 },
   galaxyThreatScalingMultiplier: { min: 0 },
   invasionMultiplier: { min: 0 },
@@ -56,6 +58,11 @@ function formatDifficultyMultiplierValue(value) {
 function formatDifficultyNullableCapValue(value) {
   const normalized = normalizeDifficultySettingValue('rwgRewardsCap', value);
   return normalized === null ? '' : String(normalized);
+}
+
+function getArtifactGainAmount(amount) {
+  const gainMultiplier = normalizeDifficultySettingValue('artifactsGainMultiplier', gameSettings.artifactsGainMultiplier);
+  return amount * gainMultiplier;
 }
 
 function isSpaceElevatorCostProfileActiveForEffects() {

@@ -111,6 +111,8 @@ let gameSettings = {
   spaceshipEnergyAfterSpaceElevatorMultiplier: 1,
   advancedResearchMultiplier: 1,
   skillPointsGainMultiplier: 1,
+  solisPointsGainMultiplier: 1,
+  artifactsGainMultiplier: 1,
   galaxyFleetCapacityMultiplier: 1,
   galaxyThreatScalingMultiplier: 1,
   invasionMultiplier: 1,

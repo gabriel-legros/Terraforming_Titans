@@ -714,7 +714,10 @@ class Project extends EffectableEntity {
     // Apply the effective resource gain to the resources
     for (const resourceCategory in effectiveResourceGain) {
       for (const resource in effectiveResourceGain[resourceCategory]) {
-        const amount = effectiveResourceGain[resourceCategory][resource];
+        let amount = effectiveResourceGain[resourceCategory][resource];
+        if (resourceCategory === 'special' && resource === 'alienArtifact') {
+          amount = getArtifactGainAmount(amount);
+        }
         resources[resourceCategory][resource].increase(amount, ignoreCap);
       }
     }

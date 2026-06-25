@@ -1069,11 +1069,12 @@ class WarpGateCommand extends EffectableEntity {
     const op = this.operations[teamIndex];
     if (!op) return;
     const art = op.artifacts;
+    const artifactGain = getArtifactGainAmount(art);
     const successes = op.successes;
     if (art > 0 && typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
-      resources.special.alienArtifact.increase(art);
+      resources.special.alienArtifact.increase(artifactGain);
     }
-    this.totalArtifacts += art;
+    this.totalArtifacts += artifactGain;
     const team = this.teams[teamIndex];
     if (team) {
       const barracksBase = 1 + this.facilities.barracks * 0.01;
@@ -1114,11 +1115,12 @@ class WarpGateCommand extends EffectableEntity {
         bonus += lvl <= 0 ? 1 : lvl;
       }
       this.highestDifficulty = opDifficulty;
+      const bonusGain = getArtifactGainAmount(bonus);
       if (typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
-        resources.special.alienArtifact.increase(bonus);
+        resources.special.alienArtifact.increase(bonusGain);
       }
-      this.totalArtifacts += bonus;
-      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${opDifficulty} reached +${bonus} Artifact${bonus === 1 ? '' : 's'}`);
+      this.totalArtifacts += bonusGain;
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${opDifficulty} reached +${formatNumber(bonusGain, false, 2)} Artifact${bonusGain === 1 ? '' : 's'}`);
     }
 
     this.teamOperationCounts[teamIndex] += 1;
