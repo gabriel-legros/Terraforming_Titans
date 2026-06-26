@@ -1531,7 +1531,7 @@ setLanguageData({
         currentWorldRing: 'Current World Ring:',
         prepaidRings: 'Queued Rings:',
         prepay: 'Queue',
-        prepayTooltip: 'You can queue rings for past and current worlds that do not have a ring yet. You cannot queue rings for future worlds.',
+        prepayTooltip: 'You can queue rings using existing resources, which enables you to continue building them even once you move to a different world, however you can only queue rings that you can currently build, meaning that you cannot queue rings for worlds you have not yet terraformed.',
         notAllowedOnArtificial: 'Not allowed on artificial',
         yes: 'Yes',
         no: 'No',
@@ -5380,7 +5380,7 @@ setLanguageData({
       },
       orbitalRing: {
         name: 'Orbital Ring',
-        description: 'Orbital rings act as additional terraformed worlds. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed. A ring on your current world will increase land by its initial value. You can queue rings using existing resources, which enables you to continue building them even once you move to a different world, however you can only queue rings that you can currently build, meaning that you cant queue rings for worlds you have not yet terraformed.',
+        description: 'Orbital rings act as additional terraformed worlds. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed.  A ring on your current world will increase land by its initial value. ',
       },
       birchWorld: {
         name: 'Birch World',
