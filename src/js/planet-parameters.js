@@ -439,7 +439,7 @@ const callistoOverrides = {
     "tropical": {
       "liquidWater": 0,
       "ice": 234701.20681597744,
-      "buriedIce": 4000000000000000000,
+      "buriedIce": 4800000000000000000,
       "dryIce": 2.188939063830986e-14,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -458,7 +458,7 @@ const callistoOverrides = {
     "temperate": {
       "liquidWater": 0,
       "ice": 2272047.556094187,
-      "buriedIce": 5000000000000000000,
+      "buriedIce": 6000000000000000000,
       "dryIce": 1.2164918887818015e-9,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -477,7 +477,7 @@ const callistoOverrides = {
     "polar": {
       "liquidWater": 0,
       "ice": 39999644296512.875,
-      "buriedIce": 1000000000000000000,
+      "buriedIce": 1200000000000000000,
       "dryIce": 13448.182793617127,
       "buriedDryIce": 0,
       "liquidCO2": 0,
