@@ -290,7 +290,7 @@ const titanOverrides = {
     "tropical": {
       "liquidWater": 0,
       "ice": 3791.2417188821228,
-      "buriedIce": 150000000000000,
+      "buriedIce": 324000000000000000,
       "dryIce": 139.90393055759668,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -309,7 +309,7 @@ const titanOverrides = {
     "temperate": {
       "liquidWater": 0,
       "ice": 4628.180274946239,
-      "buriedIce": 1350000000000000,
+      "buriedIce": 2919000000000000000,
       "dryIce": 285.7580222734193,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -328,7 +328,7 @@ const titanOverrides = {
     "polar": {
       "liquidWater": 0,
       "ice": 9450000000001650,
-      "buriedIce": 4050000000000000,
+      "buriedIce": 8757000000000000000,
       "dryIce": 74787.24014496687,
       "buriedDryIce": 0,
       "liquidCO2": 0,
