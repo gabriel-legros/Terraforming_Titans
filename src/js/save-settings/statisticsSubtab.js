@@ -11,6 +11,8 @@ function cacheStatisticsElements() {
 
   statisticsElements = {
     totalPlaytime: document.getElementById('total-playtime-display'),
+    patienceSpentRow: document.getElementById('patience-spent-row'),
+    patienceSpent: document.getElementById('patience-spent-display'),
     fastestTerraformRow: document.getElementById('fastest-terraform-row'),
     fastestTerraform: document.getElementById('fastest-terraform-display'),
     birchWorldTerraformRow: document.getElementById('birch-world-terraform-row'),
@@ -163,6 +165,16 @@ function updateStatisticsDisplay() {
   }
 
   if (!cached.recentTerraformHistoryList || !cached.recentTerraformHistoryTitle || typeof spaceManager === 'undefined') return;
+
+  if (cached.patienceSpentRow && cached.patienceSpent) {
+    const patienceSpent = patienceManager.totalSpentHours;
+    if (patienceSpent > 0) {
+      cached.patienceSpentRow.style.display = '';
+      cached.patienceSpent.textContent = t('ui.settings.patienceSpentValue', { value: patienceSpent.toFixed(1) }, '{value}h');
+    } else {
+      cached.patienceSpentRow.style.display = 'none';
+    }
+  }
 
   if (cached.fastestTerraformByTypeTitle && cached.fastestTerraformByTypeList) {
     const byType = spaceManager.getFastestTerraformByWorldType();

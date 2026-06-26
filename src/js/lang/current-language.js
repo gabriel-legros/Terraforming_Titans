@@ -4819,6 +4819,8 @@ setLanguageData({
       creditsArtLunyaruName: 'Lunyaru',
       creditsTitle: 'Credits',
       totalPlaytime: 'Total Playtime:',
+      patienceSpent: 'Patience spent:',
+      patienceSpentValue: '{value}h',
       fastestTerraform: 'Fastest Terraform:',
       timeToTerraformedBirchWorld: 'Time to terraformed Birch World:',
       fastestTerraformByTypeTitle: 'Fastest Terraform by World Type',

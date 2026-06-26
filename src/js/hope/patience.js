@@ -15,6 +15,7 @@ class PatienceManager extends EffectableEntity {
         this.worldPatienceCapHours = 3;
         this.worldPatienceRateSeconds = 2;
         this.worldTerraformingCompleted = false;
+        this.totalSpentHours = 0;
         this.everPossibleSpendGainIds = new Set();
     }
 
@@ -39,6 +40,7 @@ class PatienceManager extends EffectableEntity {
         this.worldSecondsElapsed = 0;
         this.worldPatienceGranted = 0;
         this.worldTerraformingCompleted = false;
+        this.totalSpentHours = 0;
         this.everPossibleSpendGainIds = new Set();
         this.activeEffects = [];
         this.booleanFlags = new Set();
@@ -155,6 +157,7 @@ class PatienceManager extends EffectableEntity {
         } else {
             this.currentHours -= hours;
         }
+        this.totalSpentHours += hours;
 
         if (superalloyGain > 0) {
             resources.colony.superalloys.increase(superalloyGain, false);
@@ -402,6 +405,7 @@ class PatienceManager extends EffectableEntity {
             worldSecondsElapsed: this.worldSecondsElapsed,
             worldPatienceGranted: this.worldPatienceGranted,
             worldTerraformingCompleted: this.worldTerraformingCompleted,
+            totalSpentHours: this.totalSpentHours,
             everPossibleSpendGainIds: this.getEverPossibleSpendGainIds()
         };
     }
@@ -425,6 +429,9 @@ class PatienceManager extends EffectableEntity {
         }
         if (data.worldTerraformingCompleted !== undefined) {
             this.worldTerraformingCompleted = data.worldTerraformingCompleted;
+        }
+        if (data.totalSpentHours !== undefined) {
+            this.totalSpentHours = data.totalSpentHours;
         }
         if (data.everPossibleSpendGainIds) {
             this.everPossibleSpendGainIds = new Set(data.everPossibleSpendGainIds);
