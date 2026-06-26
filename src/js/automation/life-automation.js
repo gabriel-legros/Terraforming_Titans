@@ -725,7 +725,7 @@ class LifeAutomation {
       return Math.min(maxUpgrades, maximumSpendValue, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
     }
     if (capMode === 'needed' && attributeName === 'optimalGrowthTemperature') {
-      return Math.ceil(Math.abs(this.getOptimalGrowthTemperatureTarget(entry, maxUpgrades)));
+      return Math.round(Math.abs(this.getOptimalGrowthTemperatureTarget(entry, maxUpgrades)));
     }
     if (capMode === 'needed' && this.isRadiationToleranceAttribute(attributeName)) {
       return Math.min(maxUpgrades, this.getRadiationToleranceTarget());
