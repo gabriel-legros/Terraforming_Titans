@@ -2101,6 +2101,17 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (ppsElement.style.color !== workerRateColor) {
         ppsElement.style.color = workerRateColor;
       }
+    } else if (
+      resource.category === 'special' &&
+      resource.name === 'antimatter' &&
+      isAntimatterSpaceEnergySyncActive()
+    ) {
+      if (ppsElement.textContent !== '') {
+        ppsElement.textContent = '';
+      }
+      if (ppsElement.style.color) {
+        ppsElement.style.color = '';
+      }
     } else {
       const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
       const consumptionDisplay = getDisplayConsumptionRates(resource);
