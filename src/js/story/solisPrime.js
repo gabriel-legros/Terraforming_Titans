@@ -368,7 +368,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.3d',
     type: 'journal',
     chapter: 26,
-    narrative: "Drill worker : 'The antimatter is ready to go ma'am.  Whenever you are ready?'",
+    narrative: "Drill worker : 'The antimatter is ready to go ma'am.  Whenever you are ready?'  \n Mary : 'Let's do it.  I want to know what's down there.'",
     prerequisites: ['solisPrime.3c'],
     objectives: [
       { type: 'project', projectId: 'solisprime_antimatter_drilling', repeatCount: 3 },
