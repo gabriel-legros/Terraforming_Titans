@@ -19,10 +19,10 @@ function renderOrbitalRingUI(project, container) {
         <div class="stat-item"><span class="stat-label">${getOrbitalRingText('maxRings', null, 'Max Rings:')}</span><span id="or-max-rings"></span></div>
         <div class="stat-item"><span class="stat-label">${getOrbitalRingText('currentWorldRing', null, 'Current World Ring:')}</span><span id="or-current-world"></span></div>
         <div class="stat-item">
-          <span class="stat-label">${getOrbitalRingText('prepaidRings', null, 'Prepaid Rings:')} <span id="or-prepay-info" class="info-tooltip-icon">&#9432;</span></span>
+          <span class="stat-label">${getOrbitalRingText('prepaidRings', null, 'Queued Rings:')} <span id="or-prepay-info" class="info-tooltip-icon">&#9432;</span></span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span id="or-prepaid-rings"></span>
-            <button id="or-prepay-button" style="padding: 2px 10px; font-size: 0.85em; line-height: 1.2;">${getOrbitalRingText('prepay', null, 'Prepay')}</button>
+            <button id="or-prepay-button" style="padding: 2px 10px; font-size: 0.85em; line-height: 1.2;">${getOrbitalRingText('prepay', null, 'Queue')}</button>
           </div>
         </div>
       </div>
@@ -36,7 +36,7 @@ function renderOrbitalRingUI(project, container) {
     getOrbitalRingText(
       'prepayTooltip',
       null,
-      'You can prepay rings for past and current worlds that do not have a ring yet. You cannot prepay for future worlds.'
+      'You can queue rings for past and current worlds that do not have a ring yet. You cannot queue rings for future worlds.'
     )
   );
   prepayButton.addEventListener('click', () => {
