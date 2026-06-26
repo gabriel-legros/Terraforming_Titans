@@ -619,11 +619,3 @@ function applyLanguageToGameData() {
   applyLocalizedFactionFields(catalogs.factions);
   applyLocalizedStoryFields(catalogs.story);
 }
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    applyLanguageToDom();
-  });
-} else {
-  applyLanguageToDom();
-}

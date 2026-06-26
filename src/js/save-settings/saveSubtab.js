@@ -106,6 +106,7 @@ function addSaveLoadListeners() {
 function initializeSaveSubtab() {
   initializeExitSaveSlot();
   loadSaveSlotNames();
+  loadSaveSlotDates();
   addSaveSlotRenameListeners();
   addSaveSlotListeners();
   addSaveLoadListeners();

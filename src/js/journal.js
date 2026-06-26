@@ -951,9 +951,7 @@ function initializeJournalUI() {
   initializeSidebarAutomationUI();
 }
 
-initializeJournalUI();
-
-document.addEventListener('DOMContentLoaded', () => {
+function initializeJournalDom() {
   initializeJournalUI();
   loadJournalEntries(journalEntriesData, journalHistoryData, journalEntrySources, journalHistorySources);
-});
+}

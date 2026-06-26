@@ -16,10 +16,7 @@
   autoPause: false  // This prevents the game from pausing when the tab is inactive
 };
 
-const game = new Phaser.Game(config);
-if (typeof globalThis !== 'undefined') {
-  globalThis.game = game;
-}
+var game = null;
 let lastFrameTimeMs = 0;
 const LOGIC_DELTA_QUANTUM_MS = 10;
 let logicDeltaCarryMs = 0;
@@ -45,6 +42,20 @@ window.addEventListener('focus', () => {
 window.addEventListener('pageshow', () => {
   resetGameFrameClock();
 });
+
+function initializeTerraformingTitansDom() {
+  applyLanguageToDom();
+  initializeSettingsDom();
+  initializeColonyDomUI();
+  initializeJournalDom();
+}
+
+function startTerraformingTitansGame() {
+  initializeTerraformingTitansDom();
+  game = new Phaser.Game(config);
+}
+
+document.addEventListener('DOMContentLoaded', startTerraformingTitansGame);
 
 function preload() {
   // Load assets (images, sounds, etc.) here
