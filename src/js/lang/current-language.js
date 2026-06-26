@@ -4676,6 +4676,7 @@ setLanguageData({
       saveToClipboard: 'Save to Clipboard',
       loadFromString: 'Load from string',
       exitGame: 'Exit Game',
+      discord: 'Discord',
       whiteNoiseLabel: 'Use white noise to keep tab active',
       whiteNoiseTooltip: 'After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution. Much more quiet on Firefox. May still work even if the tab is muted.',
       fullscreen: 'Fullscreen',

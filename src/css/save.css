@@ -306,6 +306,32 @@
   .save-slots button:hover {
     background-color: #45a049;
   }
+
+  .save-slots .settings-discord-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    margin: 3px;
+    border-radius: 4px;
+    background-color: #5865f2;
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .save-slots .settings-discord-icon {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    flex: 0 0 auto;
+  }
+
+  .save-slots .settings-discord-button:hover,
+  .save-slots .settings-discord-button:focus {
+    background-color: #4752c4;
+  }
   
   .save-slots button:disabled {
     background-color: #ccc;
