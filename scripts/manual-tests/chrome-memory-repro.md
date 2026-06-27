@@ -66,6 +66,14 @@ Force garbage collection before each sample. This is useful for separating alloc
 node scripts/manual-tests/run-chrome-memory-repro.js --force-gc --duration 600 --sample 5
 ```
 
+Duplicate string summary options:
+
+```sh
+node scripts/manual-tests/run-chrome-memory-repro.js --headless --duplicate-string-min-length 32 --duplicate-string-limit 100
+```
+
+The duplicate string summary is enabled by default. Use `--no-string-duplicates` to skip the final heap snapshot if you only need time-series samples.
+
 ## Reading The Report
 
 The JSON report contains:
@@ -77,6 +85,7 @@ The JSON report contains:
 - `finalProbe.topRemoved`: most frequently removed node signatures during the run.
 - `finalProbe.topOperations`: hottest DOM creation/replacement call stacks during the run.
 - `topHeapAllocations`: hottest V8 allocation sampling sites during the run.
+- `duplicateStrings`: repeated string payloads from the final heap snapshot, with counts, previews, and estimated duplicate bytes.
 - `consoleMessages` and `pageErrors`: browser errors captured during the run.
 
 If normal samples trend up but `--force-gc` samples stay flat, the game is probably doing allocation churn rather than retaining objects.

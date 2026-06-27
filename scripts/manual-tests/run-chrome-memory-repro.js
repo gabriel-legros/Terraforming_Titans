@@ -25,7 +25,10 @@ function parseArgs(argv) {
     finalTab: null,
     finalSubtab: null,
     freezeLoop: false,
-    heapSampling: true
+    heapSampling: true,
+    stringDuplicates: true,
+    duplicateStringMinLength: 24,
+    duplicateStringLimit: 50
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -73,6 +76,14 @@ function parseArgs(argv) {
       options.freezeLoop = true;
     } else if (arg === '--no-heap-sampling') {
       options.heapSampling = false;
+    } else if (arg === '--no-string-duplicates') {
+      options.stringDuplicates = false;
+    } else if (arg === '--duplicate-string-min-length') {
+      options.duplicateStringMinLength = Number(next);
+      index += 1;
+    } else if (arg === '--duplicate-string-limit') {
+      options.duplicateStringLimit = Number(next);
+      index += 1;
     } else if (arg === '--help' || arg === '-h') {
       printHelp();
       process.exit(0);
@@ -89,6 +100,12 @@ function parseArgs(argv) {
   }
   if (!Number.isFinite(options.settleSeconds) || options.settleSeconds < 0) {
     throw new Error('--settle must be a non-negative number of seconds');
+  }
+  if (!Number.isFinite(options.duplicateStringMinLength) || options.duplicateStringMinLength < 0) {
+    throw new Error('--duplicate-string-min-length must be a non-negative number');
+  }
+  if (!Number.isFinite(options.duplicateStringLimit) || options.duplicateStringLimit <= 0) {
+    throw new Error('--duplicate-string-limit must be a positive number');
   }
 
   return options;
@@ -114,7 +131,10 @@ function printHelp() {
     '  --final-tab <id>      Activate this main tab before sampling, for example space',
     '  --final-subtab <id>   Activate this subtab before sampling, for example space-artificial',
     '  --freeze-loop         Set gameSpeed to 0 before sampling',
-    '  --no-heap-sampling    Disable V8 allocation sampling'
+    '  --no-heap-sampling    Disable V8 allocation sampling',
+    '  --no-string-duplicates Disable final heap snapshot duplicate-string summary',
+    '  --duplicate-string-min-length <n> Minimum string length to include. Default: 24',
+    '  --duplicate-string-limit <n> Number of duplicate string rows to keep. Default: 50'
   ].join('\n'));
 }
 
@@ -275,6 +295,90 @@ function summarizeHeapSamplingProfile(profile, limit = 30) {
     .filter(row => row.selfSize > 0)
     .sort((a, b) => b.selfSize - a.selfSize)
     .slice(0, limit);
+}
+
+async function takeHeapSnapshot(cdpSession) {
+  const chunks = [];
+  const onChunk = event => {
+    chunks.push(event.chunk);
+  };
+  cdpSession.on('HeapProfiler.addHeapSnapshotChunk', onChunk);
+  try {
+    await cdpSession.send('HeapProfiler.takeHeapSnapshot', { reportProgress: false });
+  } finally {
+    cdpSession.off('HeapProfiler.addHeapSnapshotChunk', onChunk);
+  }
+  return JSON.parse(chunks.join(''));
+}
+
+function summarizeDuplicateStrings(snapshot, options = {}) {
+  const minLength = options.minLength || 0;
+  const limit = options.limit || 50;
+  const meta = snapshot.snapshot && snapshot.snapshot.meta;
+  const nodeFields = meta.node_fields;
+  const nodeTypes = meta.node_types[0];
+  const fieldCount = nodeFields.length;
+  const typeOffset = nodeFields.indexOf('type');
+  const nameOffset = nodeFields.indexOf('name');
+  const selfSizeOffset = nodeFields.indexOf('self_size');
+  const stringTypeIds = new Set([
+    nodeTypes.indexOf('string'),
+    nodeTypes.indexOf('concatenated string'),
+    nodeTypes.indexOf('sliced string')
+  ].filter(index => index >= 0));
+  const rowsByText = new Map();
+  const nodes = snapshot.nodes || [];
+  const strings = snapshot.strings || [];
+  let stringNodeCount = 0;
+  let stringNodeBytes = 0;
+
+  for (let index = 0; index < nodes.length; index += fieldCount) {
+    if (!stringTypeIds.has(nodes[index + typeOffset])) {
+      continue;
+    }
+    const text = strings[nodes[index + nameOffset]] || '';
+    if (text.length < minLength) {
+      continue;
+    }
+    const selfSize = nodes[index + selfSizeOffset] || 0;
+    stringNodeCount += 1;
+    stringNodeBytes += selfSize;
+    const row = rowsByText.get(text) || {
+      text,
+      count: 0,
+      selfSize: 0
+    };
+    row.count += 1;
+    row.selfSize += selfSize;
+    rowsByText.set(text, row);
+  }
+
+  const allDuplicateRows = Array.from(rowsByText.values())
+    .filter(row => row.count > 1)
+    .map(row => ({
+      count: row.count,
+      length: row.text.length,
+      selfSize: row.selfSize,
+      estimatedDuplicateBytes: (row.count - 1) * row.text.length * 2,
+      preview: row.text.replace(/\s+/g, ' ').trim().slice(0, 160)
+    }))
+    .sort((a, b) => b.estimatedDuplicateBytes - a.estimatedDuplicateBytes);
+
+  const duplicateStringCount = allDuplicateRows.reduce((total, row) => total + row.count, 0);
+  const estimatedDuplicateBytes = allDuplicateRows.reduce((total, row) => total + row.estimatedDuplicateBytes, 0);
+  const duplicateRows = allDuplicateRows.slice(0, limit);
+
+  return {
+    minLength,
+    stringNodeCount,
+    stringNodeBytes,
+    uniqueStringCount: rowsByText.size,
+    duplicateRowCount: allDuplicateRows.length,
+    reportedDuplicateRowCount: duplicateRows.length,
+    duplicateStringCount,
+    estimatedDuplicateBytes,
+    top: duplicateRows
+  };
 }
 
 async function installProbe(page) {
@@ -871,6 +975,12 @@ async function main() {
     const heapSamplingProfile = options.heapSampling
       ? await cdpSession.send('HeapProfiler.stopSampling')
       : null;
+    const duplicateStrings = options.stringDuplicates
+      ? summarizeDuplicateStrings(await takeHeapSnapshot(cdpSession), {
+        minLength: options.duplicateStringMinLength,
+        limit: options.duplicateStringLimit
+      })
+      : null;
     const report = {
       createdAt: new Date().toISOString(),
       repoRoot,
@@ -884,12 +994,30 @@ async function main() {
       samples,
       finalProbe,
       topHeapAllocations: heapSamplingProfile ? summarizeHeapSamplingProfile(heapSamplingProfile.profile) : [],
+      duplicateStrings,
       consoleMessages,
       pageErrors
     };
 
     fs.writeFileSync(`${reportBase}.json`, JSON.stringify(report, null, 2));
     fs.writeFileSync(`${reportBase}.csv`, toCsv(samples));
+    if (duplicateStrings) {
+      console.log([
+        '[memory-repro] duplicate strings',
+        `rows=${duplicateStrings.duplicateRowCount}`,
+        `instances=${duplicateStrings.duplicateStringCount}`,
+        `estimatedDuplicate=${Math.round(duplicateStrings.estimatedDuplicateBytes / 1024)}KB`
+      ].join(' '));
+      duplicateStrings.top.slice(0, 10).forEach((row, index) => {
+        console.log([
+          `[memory-repro] duplicate #${index + 1}`,
+          `count=${row.count}`,
+          `length=${row.length}`,
+          `estimated=${Math.round(row.estimatedDuplicateBytes / 1024)}KB`,
+          JSON.stringify(row.preview)
+        ].join(' '));
+      });
+    }
     console.log(`[memory-repro] wrote ${pathToFileURL(`${reportBase}.json`).href}`);
     console.log(`[memory-repro] wrote ${pathToFileURL(`${reportBase}.csv`).href}`);
   } finally {
