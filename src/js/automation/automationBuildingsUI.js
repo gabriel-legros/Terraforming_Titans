@@ -617,6 +617,26 @@ function updateBuildingsAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
+    onSnapshotFilter: (buildingId) => {
+      if (!activePreset) {
+        return;
+      }
+      const changed = automation.snapshotBuildingIntoPreset(activePreset.id, buildingId);
+      if (changed) {
+        buildingAutomationUIState.builderSelectedBuildings = Object.keys(activePreset.buildings);
+        showAutomationPresetJsonStatus(
+          automationElements.buildingsAutomationStatus,
+          getAutomationCardText('snapshotPresetJsonSaved', {}, 'Snapshot saved.'),
+          false
+        );
+      } else {
+        showAutomationPresetJsonStatus(
+          automationElements.buildingsAutomationStatus,
+          getAutomationCardText('snapshotPresetJsonFailed', {}, 'Could not snapshot that selection.'),
+          true
+        );
+      }
+    },
     onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!activePreset) {
         return;

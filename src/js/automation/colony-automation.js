@@ -328,6 +328,23 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     return changed;
   }
 
+  snapshotTargetIntoPreset(presetId, targetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return false;
+    }
+    const entry = this.captureTargetSettings(
+      targetId,
+      preset.includeControl !== false,
+      preset.includeAutomation !== false
+    );
+    if (!entry.control && !entry.automation) {
+      return false;
+    }
+    preset.targets[targetId] = entry;
+    return true;
+  }
+
   isPresetParameterPathEligible(preset, path) {
     if (!Array.isArray(path) || path[0] !== 'targets') {
       return true;

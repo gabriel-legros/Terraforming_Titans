@@ -419,6 +419,25 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     return changed;
   }
 
+  snapshotProjectIntoPreset(presetId, projectId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return false;
+    }
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    const entry = this.captureProjectSettingsForId(
+      normalizedProjectId,
+      preset.includeExpansion !== false,
+      preset.includeOperations !== false
+    );
+    if (!entry) {
+      return false;
+    }
+    preset.projects[normalizedProjectId] = {};
+    this.mergePresetProjectEntry(preset.projects, normalizedProjectId, entry);
+    return true;
+  }
+
   captureProjectSettingsForId(projectId, includeExpansion = true, includeOperations = true) {
     const project = this.getProjectForAutomationId(projectId);
     if (!project || project.category === 'story') {

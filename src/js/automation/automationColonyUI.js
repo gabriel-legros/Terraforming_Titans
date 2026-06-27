@@ -645,6 +645,26 @@ function updateColonyAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
+    onSnapshotFilter: (targetId) => {
+      if (!activePreset) {
+        return;
+      }
+      const changed = automation.snapshotTargetIntoPreset(activePreset.id, targetId);
+      if (changed) {
+        colonyAutomationUIState.builderSelectedTargets = Object.keys(activePreset.targets);
+        showAutomationPresetJsonStatus(
+          automationElements.colonyAutomationStatus,
+          getAutomationCardText('snapshotPresetJsonSaved', {}, 'Snapshot saved.'),
+          false
+        );
+      } else {
+        showAutomationPresetJsonStatus(
+          automationElements.colonyAutomationStatus,
+          getAutomationCardText('snapshotPresetJsonFailed', {}, 'Could not snapshot that selection.'),
+          true
+        );
+      }
+    },
     getFieldOptions: (fieldPath, value) => {
       const priorityOptions = getColonyAutomationPrioritySelectOptions(fieldPath);
       if (priorityOptions) {

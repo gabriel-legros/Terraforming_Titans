@@ -8,11 +8,19 @@ OUT_DIR_NAME="${3:?output directory name required}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$ROOT_DIR/dist/$OUT_DIR_NAME"
 BUILD_TARGET_FILE="$ROOT_DIR/src/js/build-target.js"
-ORIGINAL_BUILD_TARGET="$(mktemp)"
-cp "$BUILD_TARGET_FILE" "$ORIGINAL_BUILD_TARGET"
+
 restore_build_target() {
-  cp "$ORIGINAL_BUILD_TARGET" "$BUILD_TARGET_FILE"
-  rm -f "$ORIGINAL_BUILD_TARGET"
+  cat > "$BUILD_TARGET_FILE" <<'BUILD_TARGET'
+const GAME_BUILD_TARGET = 'browser';
+const STEAM_APP_ID = null;
+const GAME_FEATURES = {
+    patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
+    patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
+    whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
+    exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
+    electronWindowControls: GAME_BUILD_TARGET !== 'browser'
+};
+BUILD_TARGET
 }
 trap restore_build_target EXIT
 

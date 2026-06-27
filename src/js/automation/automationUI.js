@@ -1040,6 +1040,17 @@ function createAutomationPresetJsonDetails(extraClassName) {
     event.preventDefault();
     event.stopPropagation();
   });
+  const snapshotButton = document.createElement('button');
+  snapshotButton.type = 'button';
+  snapshotButton.textContent = getAutomationCardText('snapshotPresetJsonButton', {}, 'Snapshot');
+  snapshotButton.classList.add('automation-preset-json-snapshot');
+  snapshotButton.style.marginLeft = '8px';
+  snapshotButton.style.display = 'none';
+  snapshotButton.disabled = true;
+  snapshotButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
 
   const filterRow = document.createElement('div');
   filterRow.classList.add('automation-preset-json-filter-row');
@@ -1058,10 +1069,11 @@ function createAutomationPresetJsonDetails(extraClassName) {
   });
   filterRow.append(filterSelect, filterClearButton);
 
-  summary.append(summaryText, filterRow, saveButton);
+  summary.append(summaryText, filterRow, saveButton, snapshotButton);
   details.appendChild(summary);
   details.addEventListener('toggle', () => {
     saveButton.style.display = details.open ? '' : 'none';
+    snapshotButton.style.display = details.open && details._hasSnapshotButton ? '' : 'none';
     filterRow.style.display = details.open && filterRow._hasFilters ? 'inline-flex' : 'none';
   });
 
@@ -1074,6 +1086,7 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._saveButton = saveButton;
   details._saveButtonTextNode = saveButtonText;
   details._saveButtonStarNode = saveButtonStar;
+  details._snapshotButton = snapshotButton;
   details._contentNode = pre;
   details._filterRowNode = filterRow;
   details._filterSelectNode = filterSelect;
@@ -1089,6 +1102,9 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._boundPresetId = null;
   details._activePresetRef = null;
   details._activeOnFieldChange = null;
+  details._activeOnSnapshotFilter = null;
+  details._activeSelectedFilterValue = '';
+  details._hasSnapshotButton = false;
   details._parameterInputPathKey = '';
   details._filterOptionSignature = '';
   details.style.display = 'none';
@@ -1695,6 +1711,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const selectedFilterValue = options.selectedFilterValue || '';
   const onFilterChange = options.onFilterChange;
   const onClearFilter = options.onClearFilter;
+  const onSnapshotFilter = options.onSnapshotFilter;
   const showStatus = options.showStatus || null;
   const parameterInputPath = Array.isArray(options.parameterInputPath)
     ? options.parameterInputPath
@@ -1703,6 +1720,9 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
+  details._activeOnSnapshotFilter = onSnapshotFilter || null;
+  details._activeSelectedFilterValue = selectedFilterValue || '';
+  details._hasSnapshotButton = !!onSnapshotFilter;
   details._showStatus = showStatus;
   details._parameterInputPathKey = parameterInputPath
     ? buildAutomationPresetLeafPathKey(parameterInputPath)
@@ -1729,6 +1749,10 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         details._saveButtonStarNode.style.display = 'none';
       }
     }
+    if (details._snapshotButton) {
+      details._snapshotButton.style.display = 'none';
+      details._snapshotButton.disabled = true;
+    }
     if (details._renderedPresetJson) {
       details._contentNode.textContent = '';
       details._renderedPresetJson = '';
@@ -1751,6 +1775,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     details._renderedSummaryText = summaryText;
   }
   details._saveButton.style.display = details.open ? '' : 'none';
+  details._snapshotButton.style.display = details.open && details._hasSnapshotButton ? '' : 'none';
+  details._snapshotButton.disabled = !details._activeOnSnapshotFilter || !details._activeSelectedFilterValue;
   const filterOptions = filterOptionsResolver ? filterOptionsResolver(preset) : [];
   if (details._filterRowNode && details._filterSelectNode && details._filterClearButtonNode) {
     const hasFilters = Array.isArray(filterOptions) && filterOptions.length > 0;
@@ -1949,6 +1975,22 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       updateAutomationUI();
     });
     details._saveButton._boundClick = true;
+  }
+  if (!details._snapshotButton._boundClick) {
+    details._snapshotButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const currentOnSnapshotFilter = details._activeOnSnapshotFilter;
+      const currentSelectedFilterValue = details._activeSelectedFilterValue;
+      if (!details._activePresetRef || !currentOnSnapshotFilter || !currentSelectedFilterValue) {
+        return;
+      }
+      currentOnSnapshotFilter(currentSelectedFilterValue);
+      resetAutomationPresetJsonDetailsState(details, details._activePresetRef.id);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    details._snapshotButton._boundClick = true;
   }
 
   const shouldRebuildJson = details._renderedFieldKeySignature !== nextFieldKeySignature || details._boundPresetId !== preset.id;

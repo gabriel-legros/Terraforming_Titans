@@ -378,6 +378,24 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     return changed;
   }
 
+  snapshotBuildingIntoPreset(presetId, buildingId) {
+    const preset = this.getPresetById(Number(presetId));
+    const building = buildings[buildingId];
+    if (!preset || !building) {
+      return false;
+    }
+    const entry = this.captureBuildingSettings(
+      building,
+      preset.includeControl !== false,
+      preset.includeAutomation !== false
+    );
+    if (!entry.control && !entry.automation) {
+      return false;
+    }
+    preset.buildings[buildingId] = entry;
+    return true;
+  }
+
   isPresetParameterPathEligible(preset, path) {
     if (!Array.isArray(path) || path[0] !== 'buildings') {
       return true;
