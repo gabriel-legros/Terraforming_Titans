@@ -973,13 +973,14 @@ class Resource extends EffectableEntity {
   // Method to update the storage cap based on active structures
   updateStorageCap() {
     let newCap = this.getEffectiveBaseStorageCap();
-    const providers = getStorageProvidersForResource(this.category, this.name);
 
-    for (let i = 0; i < providers.length; i += 1) {
-      const structure = providers[i];
-      if (structure.activeNumber <= 0) {
-        continue;
-      }
+    for (const structureName in structures) {
+      const structure = structures[structureName];
+      if (!structure.storage || structure.active <= 0n) continue;
+
+      const storageByCategory = structure.storage[this.category];
+      if (!storageByCategory || storageByCategory[this.name] === undefined) continue;
+
       newCap += structure.getStorageContribution(this.category, this.name);
     }
 

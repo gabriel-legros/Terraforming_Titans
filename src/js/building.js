@@ -1056,7 +1056,7 @@ class Building extends EffectableEntity {
   }
 
   getStorageContribution(category, resource) {
-    if (this.activeNumber <= 0) {
+    if (this.active <= 0n) {
       return 0;
     }
 
