@@ -148,7 +148,6 @@ class EffectableEntity {
 
       if (existingEffect && effect.effectId) {
         if (
-          this.shouldApplyEffect(effect) &&
           effectsAreShallowEqual(existingEffect, effect) &&
           canSkipShallowEqualReapply(effect)
         ) {
@@ -826,19 +825,25 @@ class EffectableEntity {
 
     // Method to check if a boolean flag is set
     isBooleanFlagSet(flag) {
-      if (isCurrentWorldAdvancedResearchDisabled()) {
-        const advancedFlagEffect = this.activeEffects.find((effect) => {
-          if (effect.type !== 'booleanFlag' || effect.flagId !== flag || !effect.sourceId || !researchManager) {
-            return false;
-          }
-          const sourceResearch = researchManager.getResearchById(effect.sourceId);
-          return sourceResearch && sourceResearch.category === 'advanced';
-        });
-        if (advancedFlagEffect) {
+      if (!this.booleanFlags.has(flag)) {
+        return false;
+      }
+
+      if (!isCurrentWorldAdvancedResearchDisabled()) {
+        return true;
+      }
+
+      for (let i = 0; i < this.activeEffects.length; i += 1) {
+        const effect = this.activeEffects[i];
+        if (effect.type !== 'booleanFlag' || effect.flagId !== flag || !effect.sourceId || !researchManager) {
+          continue;
+        }
+        const sourceResearch = researchManager.getResearchById(effect.sourceId);
+        if (sourceResearch && sourceResearch.category === 'advanced') {
           return false;
         }
       }
-      return this.booleanFlags.has(flag);
+      return true;
     }
 
     // Retrieves the effective cost multiplier for a specific resource based on active effects

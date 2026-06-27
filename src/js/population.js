@@ -431,19 +431,28 @@ class PopulationModule extends EffectableEntity {
       return 1; // If no workers are required, ratio is 1 (everything is fulfilled)
     }
 
-    const tiers = [
-      { req: this.totalWorkersRequiredHigh, match: priority > 0 },
-      { req: this.totalWorkersRequiredNormal, match: priority === 0 },
-      { req: this.totalWorkersRequiredLow, match: priority < 0 }
-    ];
-
     let remaining = this.workerResource.cap;
-    for (const t of tiers) {
-      if (t.match) {
-        return t.req === 0 ? 1 : Math.min(1, remaining / t.req);
-      }
-      remaining = Math.max(0, remaining - t.req);
+
+    if (priority > 0) {
+      return this.totalWorkersRequiredHigh === 0
+        ? 1
+        : Math.min(1, remaining / this.totalWorkersRequiredHigh);
     }
+
+    remaining = Math.max(0, remaining - this.totalWorkersRequiredHigh);
+    if (priority === 0) {
+      return this.totalWorkersRequiredNormal === 0
+        ? 1
+        : Math.min(1, remaining / this.totalWorkersRequiredNormal);
+    }
+
+    remaining = Math.max(0, remaining - this.totalWorkersRequiredNormal);
+    if (priority < 0) {
+      return this.totalWorkersRequiredLow === 0
+        ? 1
+        : Math.min(1, remaining / this.totalWorkersRequiredLow);
+    }
+
     return 1;
   }
 

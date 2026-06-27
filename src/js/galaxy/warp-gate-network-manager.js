@@ -131,18 +131,17 @@ class WarpGateNetworkManager extends EffectableEntity {
     }
     const deltaHours = deltaMs / 3600000;
     const sectors = galaxyManager.getUhfControlledSectors();
+    let sliderBonus = getCylindersHopeWarpGateWorldBonusPerSector(spaceManager, galaxyManager);
+    const sliderTick = spaceManager.getSpaceSliderTick('cylindersHope');
+    let sliderProductivity = spaceManager.getSpaceSliderRuntimeProductivity('cylindersHope');
+    if (sliderTick > 0 && sliderProductivity <= 0) {
+      sliderProductivity = 1;
+    }
+    sliderBonus *= Math.max(0, Math.min(1, sliderProductivity));
     let levelChanged = false;
     for (let index = 0; index < sectors.length; index += 1) {
       const sector = sectors[index];
       const baseWorldCount = galaxyManager.getTerraformedWorldCountForSector(sector);
-      let sliderBonus = 0;
-      sliderBonus = getCylindersHopeWarpGateWorldBonusPerSector(spaceManager, galaxyManager);
-      const sliderTick = spaceManager.getSpaceSliderTick('cylindersHope');
-      let sliderProductivity = spaceManager.getSpaceSliderRuntimeProductivity('cylindersHope');
-      if (sliderTick > 0 && sliderProductivity <= 0) {
-        sliderProductivity = 1;
-      }
-      sliderBonus *= Math.max(0, Math.min(1, sliderProductivity));
       const worldCount = baseWorldCount + sliderBonus;
       if (!(worldCount > 0)) {
         continue;
@@ -480,8 +479,8 @@ class WarpGateNetworkManager extends EffectableEntity {
     return this.allSectorWarpGateAverageCache;
   }
 
-  getWarpGateMultiplier(sector) {
-    if (!this.isBooleanFlagSet('warpGateFabrication')) {
+  getWarpGateMultiplier(sector, warpGateFabricationEnabled = this.isBooleanFlagSet('warpGateFabrication')) {
+    if (!warpGateFabricationEnabled) {
       return 1;
     }
     const level = sector.warpGateNetworkLevel || 0;

@@ -25,34 +25,52 @@ if (isNode) {
 }
 
 function calculateAverageCoverage(terraforming, resourceType) {
-  const coverageMap = {
-    liquidWater: { cycle: terraformUtilsWaterCycle, key: 'liquidWaterCoverage' },
-    ice: { cycle: terraformUtilsWaterCycle, key: 'iceCoverage' },
-    liquidMethane: { cycle: terraformUtilsMethaneCycle, key: 'liquidMethaneCoverage' },
-    hydrocarbonIce: { cycle: terraformUtilsMethaneCycle, key: 'hydrocarbonIceCoverage' },
-    dryIce: { cycle: terraformUtilsCo2Cycle, key: 'dryIceCoverage' },
-    liquidCO2: { key: 'liquidCO2' },
-    liquidHydrogen: { key: 'liquidHydrogen' },
-    liquidAmmonia: { cycle: terraformUtilsAmmoniaCycle, key: 'liquidAmmoniaCoverage' },
-    ammoniaIce: { cycle: terraformUtilsAmmoniaCycle, key: 'ammoniaIceCoverage' },
-    liquidOxygen: { cycle: terraformUtilsOxygenCycle, key: 'liquidOxygenCoverage' },
-    oxygenIce: { cycle: terraformUtilsOxygenCycle, key: 'oxygenIceCoverage' },
-    liquidNitrogen: { cycle: terraformUtilsNitrogenCycle, key: 'liquidNitrogenCoverage' },
-    nitrogenIce: { cycle: terraformUtilsNitrogenCycle, key: 'nitrogenIceCoverage' },
-    fineSand: { key: 'fineSand' },
-    biomass: { key: 'biomass' },
-  };
-  const mapping = coverageMap[resourceType];
+  let cycle = null;
+  let key = resourceType;
+  if (resourceType === 'liquidWater') {
+    cycle = terraformUtilsWaterCycle;
+    key = 'liquidWaterCoverage';
+  } else if (resourceType === 'ice') {
+    cycle = terraformUtilsWaterCycle;
+    key = 'iceCoverage';
+  } else if (resourceType === 'liquidMethane') {
+    cycle = terraformUtilsMethaneCycle;
+    key = 'liquidMethaneCoverage';
+  } else if (resourceType === 'hydrocarbonIce') {
+    cycle = terraformUtilsMethaneCycle;
+    key = 'hydrocarbonIceCoverage';
+  } else if (resourceType === 'dryIce') {
+    cycle = terraformUtilsCo2Cycle;
+    key = 'dryIceCoverage';
+  } else if (resourceType === 'liquidAmmonia') {
+    cycle = terraformUtilsAmmoniaCycle;
+    key = 'liquidAmmoniaCoverage';
+  } else if (resourceType === 'ammoniaIce') {
+    cycle = terraformUtilsAmmoniaCycle;
+    key = 'ammoniaIceCoverage';
+  } else if (resourceType === 'liquidOxygen') {
+    cycle = terraformUtilsOxygenCycle;
+    key = 'liquidOxygenCoverage';
+  } else if (resourceType === 'oxygenIce') {
+    cycle = terraformUtilsOxygenCycle;
+    key = 'oxygenIceCoverage';
+  } else if (resourceType === 'liquidNitrogen') {
+    cycle = terraformUtilsNitrogenCycle;
+    key = 'liquidNitrogenCoverage';
+  } else if (resourceType === 'nitrogenIce') {
+    cycle = terraformUtilsNitrogenCycle;
+    key = 'nitrogenIceCoverage';
+  }
   let weightedAverageCoverage = 0;
   const zones = (terraforming && Array.isArray(terraforming.zoneKeys) && terraforming.zoneKeys.length)
     ? terraforming.zoneKeys
     : ZONES_LIST;
   for (const zone of zones) {
     let cov = 0;
-    if (mapping?.cycle && typeof mapping.cycle.getCoverage === 'function') {
-      cov = mapping.cycle.getCoverage(zone, terraforming.zonalCoverageCache)[mapping.key] ?? 0;
-    } else if (mapping) {
-      cov = terraforming.zonalCoverageCache[zone]?.[mapping.key] ?? 0;
+    if (cycle && cycle.getCoverage) {
+      cov = cycle.getCoverage(zone, terraforming.zonalCoverageCache)[key] ?? 0;
+    } else if (key) {
+      cov = terraforming.zonalCoverageCache[zone]?.[key] ?? 0;
     }
     const zonePct = terraforming && terraforming.getZoneWeight
       ? terraforming.getZoneWeight(zone)

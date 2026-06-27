@@ -2032,12 +2032,23 @@ class SpaceManager extends EffectableEntity {
     }
 
     getOneillCylinderEffectiveWorldCount() {
+        const cachedCylinders = this.terraformedWorldCountCache?.oneillEffectiveWorldCount;
+        if (Number.isFinite(cachedCylinders)) {
+            return cachedCylinders;
+        }
         const cylinders = this.getOneillCylinderCount();
         if (!(cylinders > 0)) {
+            if (this.terraformedWorldCountCache) {
+                this.terraformedWorldCountCache.oneillEffectiveWorldCount = 0;
+            }
             return 0;
         }
         const capacity = getOneillCylinderCapacity(galaxyManager, this, { ignoreWorldDisabled: true });
-        return Math.min(cylinders, capacity);
+        const effective = Math.min(cylinders, capacity);
+        if (this.terraformedWorldCountCache) {
+            this.terraformedWorldCountCache.oneillEffectiveWorldCount = effective;
+        }
+        return effective;
     }
 
     getSpaceSliderTick(sliderId) {
@@ -2206,12 +2217,14 @@ class SpaceManager extends EffectableEntity {
         if (!this.terraformedWorldCountCache) {
             this.terraformedWorldCountCache = {
                 base: NaN,
-                includingCurrent: NaN
+                includingCurrent: NaN,
+                oneillEffectiveWorldCount: NaN
             };
             return;
         }
         this.terraformedWorldCountCache.base = NaN;
         this.terraformedWorldCountCache.includingCurrent = NaN;
+        this.terraformedWorldCountCache.oneillEffectiveWorldCount = NaN;
     }
 
     clearTerraformedWorldCountCache() {

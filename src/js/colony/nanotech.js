@@ -857,6 +857,33 @@ class NanotechManager extends EffectableEntity {
       'nanotechMaintenance3',
       'nanotechMaintenance4',
     ]);
+    const effectName = getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony');
+    const applyMaintenanceEffect = (structureName, resourceId, value, effectId, sourceId) => {
+      const isColony = colonies && colonies[structureName];
+      const targetObject = isColony ? colonies[structureName] : structures[structureName];
+      const existingEffect = targetObject?.activeEffects?.find((effect) => effect.effectId === effectId);
+      if (
+        existingEffect &&
+        existingEffect.type === 'maintenanceCostMultiplier' &&
+        existingEffect.resourceCategory === 'colony' &&
+        existingEffect.resourceId === resourceId &&
+        existingEffect.sourceId === sourceId &&
+        Math.abs(existingEffect.value - value) < 1e-12
+      ) {
+        return;
+      }
+      addEffect({
+        target: isColony ? 'colony' : 'building',
+        targetId: structureName,
+        type: 'maintenanceCostMultiplier',
+        resourceCategory: 'colony',
+        resourceId,
+        value,
+        effectId,
+        sourceId,
+        name: effectName,
+      });
+    };
     for (const name in structures) {
       const s = structures[name];
       if (!s || !s.maintenanceCost) continue;
@@ -914,19 +941,7 @@ class NanotechManager extends EffectableEntity {
     const mult = 1 - reduction;
     ['metal', 'glass', 'water'].forEach((res) => {
       for (const name in structures) {
-        const target = colonies && colonies[name] ? 'colony' : 'building';
-        const effect = {
-          target,
-          targetId: name,
-          type: 'maintenanceCostMultiplier',
-          resourceCategory: 'colony',
-          resourceId: res,
-          value: mult,
-          effectId: `nanotechMaint_${res}`,
-          sourceId: 'nanotechMaintenance',
-          name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
-        };
-          addEffect(effect);
+        applyMaintenanceEffect(name, res, mult, `nanotechMaint_${res}`, 'nanotechMaintenance');
       }
     });
 
@@ -940,19 +955,7 @@ class NanotechManager extends EffectableEntity {
     const mult2 = 1 - reduction2;
     ['components', 'superconductors'].forEach((res) => {
       for (const name in structures) {
-        const target = colonies && colonies[name] ? 'colony' : 'building';
-        const effect = {
-          target,
-          targetId: name,
-          type: 'maintenanceCostMultiplier',
-          resourceCategory: 'colony',
-          resourceId: res,
-          value: mult2,
-          effectId: `nanotechMaint2_${res}`,
-          sourceId: 'nanotechMaintenance2',
-          name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
-        };
-        addEffect(effect);
+        applyMaintenanceEffect(name, res, mult2, `nanotechMaint2_${res}`, 'nanotechMaintenance2');
       }
     });
 
@@ -965,19 +968,13 @@ class NanotechManager extends EffectableEntity {
     this.currentMaintenance3Reduction = reduction3;
     const mult3 = 1 - reduction3;
     for (const name in structures) {
-      const target = colonies && colonies[name] ? 'colony' : 'building';
-      const effect = {
-        target,
-        targetId: name,
-        type: 'maintenanceCostMultiplier',
-        resourceCategory: 'colony',
-        resourceId: 'electronics',
-        value: mult3,
-        effectId: 'nanotechMaint3_electronics',
-        sourceId: 'nanotechMaintenance3',
-        name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
-      };
-      addEffect(effect);
+      applyMaintenanceEffect(
+        name,
+        'electronics',
+        mult3,
+        'nanotechMaint3_electronics',
+        'nanotechMaintenance3'
+      );
     }
 
     const stage4Total = total + stage2Total + stage3Total;
@@ -996,19 +993,13 @@ class NanotechManager extends EffectableEntity {
       }
       const targetMultiplier = 1 - Math.min(1, resourceReduction + reduction4);
       for (const name in structures) {
-        const target = colonies && colonies[name] ? 'colony' : 'building';
-        const effect = {
-          target,
-          targetId: name,
-          type: 'maintenanceCostMultiplier',
-          resourceCategory: 'colony',
-          resourceId: res,
-          value: targetMultiplier,
-          effectId: `nanotechMaint_${res}`,
-          sourceId: 'nanotechMaintenance',
-          name: getNanotechText('ui.colony.nanotech.effectName', 'Nanocolony'),
-        };
-        addEffect(effect);
+        applyMaintenanceEffect(
+          name,
+          res,
+          targetMultiplier,
+          `nanotechMaint_${res}`,
+          'nanotechMaintenance'
+        );
       }
     });
   }

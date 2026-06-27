@@ -2734,6 +2734,23 @@ class Terraforming extends EffectableEntity{
           : this.getFactoryTemperatureMaintenancePenaltyReduction();
       const buildingMitigationById =
         aerostatMitigationDetails?.buildingCoverage?.byId ?? {};
+      const applyTerraformingPenaltyEffect = (effect) => {
+        let targetObject = null;
+        if (effect.target === 'building') {
+          targetObject = buildings?.[effect.targetId];
+        } else if (effect.target === 'colony') {
+          targetObject = colonies?.[effect.targetId];
+        }
+        const existingEffect = targetObject?.activeEffects?.find((activeEffect) => activeEffect.effectId === effect.effectId);
+        if (
+          existingEffect &&
+          effectsAreShallowEqual(existingEffect, effect) &&
+          canSkipShallowEqualReapply(effect)
+        ) {
+          return;
+        }
+        addEffect(effect);
+      };
 
       for (let i = 1; i <= 7; i++) {
         const energyPenaltyEffect = {
@@ -2751,7 +2768,7 @@ class Terraforming extends EffectableEntity{
             )
         };
 
-        addEffect(energyPenaltyEffect);
+        applyTerraformingPenaltyEffect(energyPenaltyEffect);
 
         const metalCostPenaltyEffect = {
             effectId: 'pressureCostPenalty-metal',
@@ -2775,8 +2792,8 @@ class Terraforming extends EffectableEntity{
             name: t('ui.terraforming.effects.highPressure', {}, 'High pressure')
         };
 
-        addEffect(metalCostPenaltyEffect);
-        addEffect(glassCostPenaltyEffect);
+        applyTerraformingPenaltyEffect(metalCostPenaltyEffect);
+        applyTerraformingPenaltyEffect(glassCostPenaltyEffect);
       }
 
       if (this.gravityPenaltyEnabled) {
@@ -2802,7 +2819,7 @@ class Terraforming extends EffectableEntity{
                 resource === 'water' ||
                 resource === 'research'
               ) continue;
-              addEffect({
+              applyTerraformingPenaltyEffect({
                 effectId: `gravityCostPenalty-${category}-${resource}`,
                 target,
                 targetId: id,
@@ -2867,7 +2884,7 @@ class Terraforming extends EffectableEntity{
           if (!categoryCosts) continue;
           for (const resource in categoryCosts) {
             if (resource === 'research') continue;
-            addEffect({
+            applyTerraformingPenaltyEffect({
               effectId: `temperatureMaintenancePenalty-${resource}`,
               target: 'building',
               targetId: id,
@@ -2891,7 +2908,7 @@ class Terraforming extends EffectableEntity{
           if (!colonyCosts) continue;
           for (const resource in colonyCosts) {
             if (resource === 'research') continue;
-            addEffect({
+            applyTerraformingPenaltyEffect({
               effectId: `temperatureMaintenancePenalty-${resource}`,
               target: 'colony',
               targetId: id,

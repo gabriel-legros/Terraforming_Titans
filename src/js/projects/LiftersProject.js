@@ -10,6 +10,7 @@ const LIFTER_RECIPE_TYPES = {
 
 const LIFTER_STRIP_RECIPE_KEY = 'stripAtmosphere';
 const LIFTERS_UNASSIGNED_KEY = 'idleUnassigned';
+const LIFTER_EMPTY_OUTPUTS = [];
 const LIFTER_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
 const LIFTER_GAS_GIANT_CAP_WARP_GATE_LEVEL = 1_000_000;
 const LIFTER_GAS_GIANT_CAP_RATE_DIVISOR = 10000 * 365;
@@ -100,6 +101,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.superchargeMultiplier = 1;
     this.harvestRecipes = this.attributes?.lifterHarvestRecipes || DEFAULT_LIFTER_HARVEST_RECIPES;
     this.lifterRecipes = this.buildLifterRecipes();
+    this.recipeKeys = this.buildRecipeKeys();
+    this.harvestRecipeKeys = this.recipeKeys.filter((key) => key !== LIFTER_STRIP_RECIPE_KEY);
 
     this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
     this.pendingHarvestRecipeKey = '';
@@ -136,6 +139,12 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.operationPreRunThisTick = false;
     this.stripPressureAutomationElements = null;
     this.deferAssignmentCapClamp = false;
+    this.assignmentsDirty = true;
+    this.assignmentsLastTotal = null;
+    this.assignmentsLastClamp = null;
+    this.assignmentsLastLand = null;
+    this.assignmentsLastWarpAverage = null;
+    this.cachedAssignedTotal = 0n;
   }
 
   getLifterTextPath() {
@@ -266,12 +275,20 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         outputs[outputKey] = outputMultiplier > 0 ? outputMultiplier : 1;
       }
       const outputKeys = Object.keys(outputs);
+      const outputEntries = [];
+      outputKeys.forEach((resourceKey) => {
+        const multiplier = Number(outputs[resourceKey]);
+        if (Number.isFinite(multiplier) && multiplier > 0) {
+          outputEntries.push({ resourceKey, multiplier });
+        }
+      });
       recipes[key] = {
         label: source.label || key,
         type: LIFTER_RECIPE_TYPES.HARVEST,
         storageKey: source.storageKey || outputKeys[0] || key,
         outputMultiplier: outputs[source.storageKey || outputKeys[0] || key] || 1,
         outputs,
+        outputEntries,
         complexity: Number.isFinite(source.complexity) && source.complexity > 0 ? source.complexity : 1,
         displayOrder: Number.isFinite(displayOrder) && displayOrder > 0 ? displayOrder : null,
         requiresProjectFlag: source.requiresProjectFlag || null,
@@ -281,7 +298,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return recipes;
   }
 
-  getRecipeKeys() {
+  buildRecipeKeys() {
     return Object.keys(this.lifterRecipes || {}).sort((leftKey, rightKey) => {
       const left = this.lifterRecipes[leftKey] || {};
       const right = this.lifterRecipes[rightKey] || {};
@@ -296,12 +313,16 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     });
   }
 
+  getRecipeKeys() {
+    return this.recipeKeys;
+  }
+
   getRecipe(key) {
     return this.lifterRecipes[key] || null;
   }
 
   getHarvestRecipeKeys() {
-    return this.getRecipeKeys().filter((key) => key !== LIFTER_STRIP_RECIPE_KEY);
+    return this.harvestRecipeKeys;
   }
 
   isAtmosphereStripDisabled() {
@@ -410,6 +431,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         this.lifterAssignments[targetKey] = normalizeLifterInteger(this.repeatCount);
       }
     }
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
   }
 
@@ -471,21 +493,11 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   getRecipeOutputs(recipe) {
     if (recipe?.type !== LIFTER_RECIPE_TYPES.HARVEST) {
-      return [];
+      return LIFTER_EMPTY_OUTPUTS;
     }
 
-    const outputs = recipe.outputs || null;
-    if (outputs) {
-      const entries = [];
-      Object.keys(outputs).forEach((resourceKey) => {
-        const multiplier = Number(outputs[resourceKey]);
-        if (Number.isFinite(multiplier) && multiplier > 0) {
-          entries.push({ resourceKey, multiplier });
-        }
-      });
-      if (entries.length > 0) {
-        return entries;
-      }
+    if (recipe.outputEntries && recipe.outputEntries.length > 0) {
+      return recipe.outputEntries;
     }
 
     return [{
@@ -658,12 +670,27 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.deferAssignmentCapClamp = true;
   }
 
+  markAssignmentsDirty() {
+    this.assignmentsDirty = true;
+  }
+
   normalizeAssignments() {
     const idleKey = this.getUnassignedAssignmentKey();
     const allKeys = [idleKey].concat(this.getRecipeKeys());
     const availableKeys = this.getManagedAssignmentKeys();
     const total = normalizeLifterInteger(this.repeatCount);
     const clampAssignmentCaps = this.shouldClampAssignmentCaps();
+    const landValue = resources.surface.land.value;
+    const warpAverage = warpGateNetworkManager.getAverageWarpGateLevelAllSectors();
+    if (
+      !this.assignmentsDirty &&
+      this.assignmentsLastTotal === total &&
+      this.assignmentsLastClamp === clampAssignmentCaps &&
+      this.assignmentsLastLand === landValue &&
+      this.assignmentsLastWarpAverage === warpAverage
+    ) {
+      return;
+    }
 
     allKeys.forEach((key) => {
       this.lifterAssignments[key] = normalizeLifterInteger(this.lifterAssignments[key]);
@@ -707,6 +734,12 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       }
       assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
     }
+    this.cachedAssignedTotal = assignedTotal;
+    this.assignmentsLastTotal = total;
+    this.assignmentsLastClamp = clampAssignmentCaps;
+    this.assignmentsLastLand = landValue;
+    this.assignmentsLastWarpAverage = warpAverage;
+    this.assignmentsDirty = false;
   }
 
   distributeAutoAssignments(autoKeys, remaining, total) {
@@ -773,7 +806,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     if (!skipNormalization) {
       this.normalizeAssignments();
     }
-    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.lifterAssignments[key] || 0n), 0n);
+    return this.cachedAssignedTotal;
   }
 
   getAvailableLifters(skipNormalization = false, assignedTotal = null) {
@@ -888,6 +921,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       next = maxForKey;
     }
     this.lifterAssignments[key] = next;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -897,6 +931,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return;
     }
     this.lifterAssignments[key] = 0n;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -907,6 +942,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     }
     this.normalizeAssignments();
     this.lifterAssignments[key] = this.getAssignmentMaxTarget(key);
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -924,6 +960,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
   setAutoAssignTarget(key, enabled) {
     this.autoAssignFlags[key] = enabled === true;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -2117,6 +2154,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.applyPendingHarvestRecipe();
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -2206,6 +2244,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
     this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
     this.syncStripPressureAutomationUI();
@@ -2266,6 +2305,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
     this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
 
@@ -2336,6 +2376,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
     this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
 

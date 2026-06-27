@@ -10,6 +10,27 @@ function getColonySliderText(path, fallback, vars) {
 
 const colonyIds = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
+function getColonySliderEffectTarget(effect) {
+  if (effect.target === 'population') return populationModule;
+  if (effect.target === 'global') return globalEffects;
+  if (effect.target === 'building') return buildings[effect.targetId];
+  if (effect.target === 'colony') return colonies[effect.targetId];
+  return null;
+}
+
+function applyColonySliderEffect(effect) {
+  const target = getColonySliderEffectTarget(effect);
+  const existingEffect = target?.activeEffects?.find((activeEffect) => activeEffect.effectId === effect.effectId);
+  if (
+    existingEffect &&
+    effectsAreShallowEqual(existingEffect, effect) &&
+    canSkipShallowEqualReapply(effect)
+  ) {
+    return;
+  }
+  addEffect(effect);
+}
+
 class ColonySlidersManager extends EffectableEntity {
   constructor() {
     super({ description: getColonySliderText('ui.colony.sliders.managerDescription', 'Manages colony sliders') });
@@ -87,7 +108,7 @@ class ColonySlidersManager extends EffectableEntity {
   applyWorkforceRatioEffects(value = this.workerRatio) {
     const researchMultiplier = (1 - value) / 0.5;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'population',
       type: 'workerRatio',
       value: value,
@@ -96,7 +117,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'resourceProductionMultiplier',
@@ -113,7 +134,7 @@ class ColonySlidersManager extends EffectableEntity {
   applyFoodConsumptionEffects(value = this.foodConsumption) {
     const growth = 1 + (value - 1) * 0.02;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'population',
       type: 'growthMultiplier',
       value: growth,
@@ -122,7 +143,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'resourceConsumptionMultiplier',
@@ -139,7 +160,7 @@ class ColonySlidersManager extends EffectableEntity {
   applyLuxuryWaterEffects(value = this.luxuryWater) {
     const growth = 1 + (value - 1) * 0.01;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'population',
       type: 'growthMultiplier',
       value: growth,
@@ -148,7 +169,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'maintenanceCostMultiplier',
@@ -163,7 +184,7 @@ class ColonySlidersManager extends EffectableEntity {
   }
 
   applyOreMineWorkerEffects(value = this.oreMineWorkers) {
-    addEffect({
+    applyColonySliderEffect({
       target: 'building',
       targetId: 'oreMine',
       type: 'addedWorkerNeed',
@@ -174,7 +195,7 @@ class ColonySlidersManager extends EffectableEntity {
 
     const multiplier = value === 0 ? 1 : 1 + value;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'building',
       targetId: 'oreMine',
       type: 'productionMultiplier',
@@ -201,7 +222,7 @@ class ColonySlidersManager extends EffectableEntity {
         effectId: 'mechanicalAssistanceComponents',
         sourceId: 'mechanicalAssistance'
       };
-      addEffect(effect);
+      applyColonySliderEffect(effect);
     });
   }
 
@@ -209,7 +230,7 @@ class ColonySlidersManager extends EffectableEntity {
     value = this.getEffectiveWarpnetLevel();
     const energyMultiplier = value === 0 ? 1 : Math.pow(10, value);
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'global',
       type: 'globalResearchBoost',
       value: value,
@@ -217,7 +238,7 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'warpnet'
     });
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'building',
       targetId: 'androidHousing',
       type: 'resourceConsumptionMultiplier',
@@ -229,7 +250,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'resourceConsumptionMultiplier',

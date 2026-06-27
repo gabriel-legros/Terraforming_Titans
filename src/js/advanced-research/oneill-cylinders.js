@@ -81,6 +81,23 @@ function getWarpGateCapacityMultiplier(sector) {
   return multiplier;
 }
 
+function getEnabledWarpGateCapacityMultiplier(sector) {
+  let multiplier = 1;
+  try {
+    multiplier = warpGateNetworkManager?.getWarpGateMultiplier?.(sector, true);
+  } catch (error) {
+    multiplier = 1;
+  }
+  if (!Number.isFinite(multiplier) || multiplier <= 0) {
+    return 1;
+  }
+  return multiplier;
+}
+
+function isWarpGateCapacityEnabled() {
+  return !!(warpGateNetworkManager && warpGateNetworkManager.isBooleanFlagSet('warpGateFabrication'));
+}
+
 function getLocalizedOneillText(path, vars, fallback) {
   try {
     return t(path, vars, fallback);
@@ -123,9 +140,15 @@ function getOneillCylinderCapacity(galaxy, space, options = {}) {
   if (!hyperlaneEnabled) {
     return sectors.length * capacityPerSector;
   }
+  const warpGateEnabled = options.warpGateEnabled === undefined
+    ? isWarpGateCapacityEnabled()
+    : options.warpGateEnabled === true;
+  if (!warpGateEnabled) {
+    return sectors.length * capacityPerSector;
+  }
   let total = 0;
   sectors.forEach((sector) => {
-    total += capacityPerSector * getWarpGateCapacityMultiplier(sector);
+    total += capacityPerSector * getEnabledWarpGateCapacityMultiplier(sector);
   });
   return total > 0 ? total : capacityPerSector;
 }

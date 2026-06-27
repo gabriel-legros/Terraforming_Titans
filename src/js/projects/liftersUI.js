@@ -274,6 +274,7 @@ function renderLiftersUI(project, container) {
     weightInput.addEventListener('input', () => {
       const value = Number(weightInput.value);
       project.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
+      project.markAssignmentsDirty();
       project.normalizeAssignments();
       project.updateUI();
     });

@@ -129,6 +129,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.operationPreRunThisTick = false;
     this.uiElements = null;
     this.managedAssignmentKeys = null;
+    this.assignmentsDirty = true;
+    this.assignmentsLastTotal = null;
+    this.cachedAssignedTotal = 0n;
   }
 
   resolveUIElements() {
@@ -302,10 +305,18 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return '';
   }
 
+  markAssignmentsDirty() {
+    this.assignmentsDirty = true;
+  }
+
   normalizeAssignments() {
+    const total = this.getTotalFurnaces();
+    if (!this.assignmentsDirty && this.assignmentsLastTotal === total) {
+      return;
+    }
+
     const keys = this.getManagedAssignmentKeys();
     const keySet = new Set(keys);
-    const total = this.getTotalFurnaces();
 
     keys.forEach((key) => {
       this.furnaceAssignments[key] = normalizeNuclearAlchemyInteger(this.furnaceAssignments[key]);
@@ -399,11 +410,14 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       }
       assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0n), 0n);
     }
+    this.cachedAssignedTotal = assignedTotal;
+    this.assignmentsLastTotal = total;
+    this.assignmentsDirty = false;
   }
 
   getAssignedTotal() {
     this.normalizeAssignments();
-    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0n), 0n);
+    return this.cachedAssignedTotal;
   }
 
   getAvailableFurnaces() {
@@ -478,6 +492,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
   setAutoAssignTarget(key, enabled) {
     this.autoAssignFlags[key] = enabled === true;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -501,6 +516,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       next = maxForKey;
     }
     this.furnaceAssignments[key] = next;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -510,6 +526,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       return;
     }
     this.furnaceAssignments[key] = 0n;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -520,6 +537,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     }
     this.normalizeAssignments();
     this.furnaceAssignments[key] = this.getAssignmentMaxTarget(key);
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.updateUI();
   }
@@ -1209,6 +1227,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       weightInput.addEventListener('input', () => {
         const value = Number(weightInput.value);
         this.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
+        this.markAssignmentsDirty();
         this.normalizeAssignments();
         this.updateUI();
       });
@@ -1370,6 +1389,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
       this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
     }
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
   }
@@ -1394,6 +1414,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.assignmentStep = state.assignmentStep || 1;
     this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
     this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
     if (!this.isRunning) {
@@ -1435,6 +1456,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         ? getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle')
         : getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.runDisabled', 'Run disabled')
     );
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
     if (state.isActive) {

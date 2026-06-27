@@ -9,6 +9,9 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     this.lastSpaceEnergyPerSecond = 0;
     this.lastCapGainPerSecond = { metal: 0, silicon: 0, carbon: 0, water: 0 };
     this.lastAppliedCapKey = '';
+    this.planetTypeConfigs = null;
+    this.planetTypeMap = null;
+    this.assignmentKeys = null;
   }
 
   getText(path, vars, fallback = '') {
@@ -36,6 +39,10 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
   }
 
   getPlanetTypeConfigs() {
+    if (this.planetTypeConfigs) {
+      return this.planetTypeConfigs;
+    }
+
     const config = this.getCrackerConfig();
     const configuredTypes = config.planetTypes;
     const resolved = [];
@@ -48,10 +55,11 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     }
 
     if (resolved.length > 0) {
+      this.planetTypeConfigs = resolved;
       return resolved;
     }
 
-    return [
+    this.planetTypeConfigs = [
       this.normalizePlanetTypeConfig('ironRich', {
         label: this.getText('ironRichPlanets', null, 'Iron-rich planets'),
         complexity: 1,
@@ -64,6 +72,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
         },
       }),
     ];
+    return this.planetTypeConfigs;
   }
 
   normalizePlanetTypeConfig(key, typeConfig) {
@@ -90,15 +99,22 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
   }
 
   getPlanetTypeMap() {
+    if (this.planetTypeMap) {
+      return this.planetTypeMap;
+    }
     const map = {};
     this.getPlanetTypeConfigs().forEach((typeConfig) => {
       map[typeConfig.key] = typeConfig;
     });
+    this.planetTypeMap = map;
     return map;
   }
 
   getAssignmentKeys() {
-    return this.getPlanetTypeConfigs().map((entry) => entry.key);
+    if (!this.assignmentKeys) {
+      this.assignmentKeys = this.getPlanetTypeConfigs().map((entry) => entry.key);
+    }
+    return this.assignmentKeys;
   }
 
   getUnassignedAssignmentKey() {
