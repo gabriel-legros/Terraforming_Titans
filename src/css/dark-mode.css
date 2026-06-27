@@ -1923,30 +1923,6 @@ body.dark-mode {
     color: #e7ecf7;
 }
 
-/* Story toggle */
-.dark-mode .wgc-container .wgc-story-toggle {
-    background: transparent;
-    border: none;
-    color: var(--wgc-text-light);
-}
-
-.dark-mode .wgc-container .wgc-story-toggle:hover {
-    background: transparent;
-    border: none;
-}
-
-.dark-mode .wgc-container .wgc-story-toggle__track {
-    background-color: var(--wgc-bg-light);
-}
-
-.dark-mode .wgc-container .wgc-story-toggle__thumb {
-    background-color: var(--wgc-text-light);
-}
-
-.dark-mode .wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__track {
-    background-color: var(--wgc-border-color);
-}
-
 /* Popup window */
 .dark-mode .wgc-popup-overlay {
     background-color: rgba(13, 26, 38, 0.85);

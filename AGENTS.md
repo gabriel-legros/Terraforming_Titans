@@ -258,6 +258,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Warp Gate Command
 - Team/operation progression persists across planets.
 - Operation logs are not saved (save-size control).
+- Generated WGC operation storylines and their show/hide toggle have been removed; operations now log challenge results only.
 - R&D supports shift-click bulk purchase.
 - Superalloy Fusion Efficiency upgrade exists (+1% per level, high cap).
 - UHF operations can crit for extra sector control: each whole offense/defense multiplier above 1 adds 10% control, so 2x takes 10%, 3x takes 20%, 4x takes 30%, and so on.

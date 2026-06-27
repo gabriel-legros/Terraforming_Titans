@@ -1,10 +1,7 @@
 let wgcTabVisible = false;
 let wgcUIInitialized = false;
-let wgcStoryToggleButton = null;
-let wgcStoryToggleLabel = null;
 let wgcCopyStatsButton = null;
 let wgcTeamRulesInfoIcon = null;
-let wgcStoryToggleInfoIcon = null;
 const wgcPendingLogScroll = new Set();
 
 function getWGCText(path, fallback, vars) {
@@ -80,18 +77,6 @@ function copyWGCTeamStatsToClipboard() {
   });
 }
 
-function updateWGCStoryToggleButton() {
-  if (!wgcStoryToggleButton || typeof warpGateCommand === 'undefined') return;
-  const hidden = !!warpGateCommand.hideStoryLogs;
-  wgcStoryToggleButton.classList.toggle('is-visible', !hidden);
-  wgcStoryToggleButton.classList.toggle('is-hidden', hidden);
-  wgcStoryToggleButton.setAttribute('aria-pressed', hidden ? 'false' : 'true');
-  if (wgcStoryToggleLabel) {
-    wgcStoryToggleLabel.textContent = hidden
-      ? getWGCText('hideStory', 'Hide Story')
-      : getWGCText('showStory', 'Show Story');
-  }
-}
 function queueWGCLogScroll(teamIndex) {
   if (!Number.isInteger(teamIndex) || teamIndex < 0) return;
   wgcPendingLogScroll.add(teamIndex);
@@ -253,12 +238,7 @@ function formatWGCLogLine(line) {
 
 function renderWGCLogLines(entries) {
   if (!Array.isArray(entries) || entries.length === 0) return '';
-  const hideStory = typeof warpGateCommand !== 'undefined' && warpGateCommand.hideStoryLogs;
-  const filtered = hideStory
-    ? entries.filter(line => typeof line !== 'string' || line.indexOf('Story Step') === -1)
-    : entries;
-  if (filtered.length === 0) return '';
-  return filtered.map(line => `<div class="wgc-log-line">${formatWGCLogLine(line)}</div>`).join('');
+  return entries.map(line => `<div class="wgc-log-line">${formatWGCLogLine(line)}</div>`).join('');
 }
 
 function showWGCTab() {
@@ -423,7 +403,6 @@ function invalidateWGCTeamCache() {
       indicator: slot.querySelector('.unspent-points-indicator') || null
     }));
     const isNewCard = !prev || prev.card !== card;
-    const hideStory = typeof warpGateCommand !== 'undefined' && !!warpGateCommand.hideStoryLogs;
     const entry = {
       card,
       startBtn: card.querySelector('.start-button'),
@@ -446,7 +425,6 @@ function invalidateWGCTeamCache() {
       logEl: logContent,
       logPinned: prev && prev.logPinned === false ? false : isWGCLogPinned(logContainer),
       lastRenderedCount: !isNewCard && prev ? prev.lastRenderedCount || 0 : 0,
-      lastRenderedHideState: !isNewCard && prev ? prev.lastRenderedHideState : hideStory,
       lastRenderedHtml: !isNewCard && prev ? prev.lastRenderedHtml || '' : '',
       lockOverlay,
       lockDetail: lockOverlay ? lockOverlay.querySelector('.wgc-team-locked-detail') : null,
@@ -1348,15 +1326,6 @@ function generateWGCLayout() {
                 <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy all stats to clipboard')}"><span class="wgc-copy-team-stats-icon" aria-hidden="true"></span></span>
                 <span id="wgc-open-presets-btn" class="wgc-presets-icon-btn" role="button" tabindex="0" aria-label="${getWGCText('presetsTitle', 'Stat Presets')}"><span class="wgc-presets-icon-btn-icon" aria-hidden="true"></span></span>
               </div>
-              <div class="wgc-story-toggle-control">
-                <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
-                  <span class="wgc-story-toggle__track" aria-hidden="true">
-                    <span class="wgc-story-toggle__thumb"></span>
-                  </span>
-                  <span class="wgc-story-toggle__label">${getWGCText('showStory', 'Show Story')}</span>
-                </button>
-                <span id="wgc-story-toggle-info" class="info-tooltip-icon">&#9432;</span>
-              </div>
             </div>
             <div id="wgc-team-cards"></div>
           </div>
@@ -1407,29 +1376,6 @@ function initializeWGCUI() {
           triggerCopy();
         }
       });
-    }
-    wgcStoryToggleButton = container.querySelector('#wgc-story-toggle');
-    if (wgcStoryToggleButton) {
-      wgcStoryToggleLabel = wgcStoryToggleButton.querySelector('.wgc-story-toggle__label');
-    }
-    wgcStoryToggleInfoIcon = container.querySelector('#wgc-story-toggle-info');
-    if (wgcStoryToggleInfoIcon) {
-      const storyToggleTooltip = attachDynamicInfoTooltip(
-        wgcStoryToggleInfoIcon,
-        getWGCText('showStoryTooltip', "The mini-stories are AI generated flavour text.  It's just for flavour and not part of the main story.")
-      );
-      if (storyToggleTooltip) {
-        storyToggleTooltip.classList.add('wgc-info-tooltip');
-      }
-    }
-    if (wgcStoryToggleButton) {
-      wgcStoryToggleButton.addEventListener('click', () => {
-        if (typeof warpGateCommand === 'undefined') return;
-        warpGateCommand.hideStoryLogs = !warpGateCommand.hideStoryLogs;
-        updateWGCStoryToggleButton();
-        updateWGCUI();
-      });
-      updateWGCStoryToggleButton();
     }
     const teamContainer = container.querySelector('#wgc-team-cards');
     if (teamContainer) {
@@ -1665,7 +1611,6 @@ function updateOperationProgressSegments(op, refs) {
 
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
-  updateWGCStoryToggleButton();
   setTooltipText(wgcRDPurchaseTooltip, buildWGCRDPurchaseTooltipText(), wgcTooltipCache, 'wgcRDPurchase');
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
@@ -1809,11 +1754,7 @@ function updateWGCUI() {
     updateOperationProgressSegments(op, refs);
     if (logEl) {
       const logEntries = warpGateCommand.logs[tIdx] || [];
-      const hideStory = typeof warpGateCommand !== 'undefined' && warpGateCommand.hideStoryLogs;
-      const visibleEntries = hideStory
-        ? logEntries.filter(line => typeof line !== 'string' || line.indexOf('Story Step') === -1)
-        : logEntries;
-      const visibleCount = visibleEntries.length;
+      const visibleCount = logEntries.length;
       const logVisible = logContainer && !logContainer.classList.contains('hidden');
       const wasPinned = logVisible ? isWGCLogPinned(logContainer) : refs.logPinned !== false;
       const newHtml = renderWGCLogLines(logEntries);
@@ -1823,7 +1764,6 @@ function updateWGCUI() {
         logEl.innerHTML = newHtml;
         refs.lastRenderedHtml = newHtml;
         refs.lastRenderedCount = visibleCount;
-        refs.lastRenderedHideState = hideStory;
       }
       if (logVisible) {
         if ((contentChanged && visibleCount > 0 && refs.logPinned !== false && wasPinned) || forceScroll) {

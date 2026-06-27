@@ -36,74 +36,17 @@ const facilityLabels = {
   library: 'Library'
 };
 
-const baseEventTemplatesByName = baseOperationEvents.reduce((map, evt) => {
-  const { aliases, ...template } = evt;
-  map[evt.name] = template;
-  if (Array.isArray(aliases)) {
-    aliases.map(String).forEach(alias => {
-      if (!(alias in map)) {
-        map[alias] = template;
-      }
-    });
-  }
-  return map;
-}, Object.create(null));
-
-const operationStoriesModulePaths = [
-  '../../../assets/wgc_ops/operation_stories.js',
-  '../../../assets/wgc_ops/operation_stories.json'
-];
-let cachedOperationStories = null;
-
-function ensureOperationStoriesLoaded() {
-  if (Array.isArray(cachedOperationStories)) {
-    return cachedOperationStories;
-  }
-  if (typeof window !== 'undefined' && window && Array.isArray(window.WGC_OPERATION_STORIES)) {
-    cachedOperationStories = window.WGC_OPERATION_STORIES;
-    return cachedOperationStories;
-  }
-  if (isNodeWGC) {
-    for (const path of operationStoriesModulePaths) {
-      try {
-        const data = require(path);
-        cachedOperationStories = Array.isArray(data) ? data : [];
-        return cachedOperationStories;
-      } catch (err) {}
-    }
-    cachedOperationStories = [];
-    return cachedOperationStories;
-  }
-  cachedOperationStories = [];
-  return cachedOperationStories;
-}
-
-function getOperationStories() {
-  const stories = ensureOperationStoriesLoaded();
-  if (Array.isArray(stories) && stories.length > 0) {
-    return stories;
-  }
-  return null;
-}
-
-function replaceStoryPlaceholders(line, team, selected) {
-  if (!line) return '';
-  const roster = Array.isArray(team) ? team : [];
-  let formatted = line.replace(/\$TEAM_MEMBER_([1-4])/g, (_, rawIndex) => {
-    const index = parseInt(rawIndex, 10) - 1;
-    const member = roster[index];
-    if (member && member.firstName) return member.firstName;
-    return `Member ${rawIndex}`;
-  });
-  const preferred = selected && selected.firstName ? selected.firstName : (roster[0] && roster[0].firstName ? roster[0].firstName : 'Operative');
-  formatted = formatted.replace(/\$TEAM_MEMBER_SELECTED/g, preferred);
-  return formatted;
-}
-
 function formatOperationLogHeader(op) {
   const number = op && op.number ? op.number : 0;
   const difficulty = op ? (op.activeDifficulty ?? op.difficulty ?? 0) : 0;
   return `=== Operation #${number} (DC ${formatNumber(difficulty, false, 0)}) ===`;
+}
+
+function sanitizeOperationEvent(event) {
+  const sanitized = { ...event };
+  delete sanitized.storyLines;
+  delete sanitized.storyStep;
+  return sanitized;
 }
 
 class WarpGateCommand extends EffectableEntity {
@@ -175,11 +118,9 @@ class WarpGateCommand extends EffectableEntity {
     };
     this.facilityCooldown = 0;
     this.teamNames = defaultTeamNames.slice();
-    this.hideStoryLogs = false;
     this.teamUnlocks = WGC_TEAM_UNLOCKS.slice();
     this.unlockedTeams = this.teamUnlocks.map(threshold => this.totalOperations >= threshold);
     this.presets = [];
-    ensureOperationStoriesLoaded();
   }
 
   _generatePresetId() {
@@ -375,63 +316,14 @@ class WarpGateCommand extends EffectableEntity {
 
   generateOperationEvents(op, teamIndex, count = 10) {
     const list = [];
-    const stories = getOperationStories();
-    if (stories && stories.length > 0) {
-      const selected = stories[Math.floor(Math.random() * stories.length)];
-      const storyEvents = selected && Array.isArray(selected.events) ? selected.events.slice(0, count) : [];
-      if (storyEvents.length === count) {
-        let invalid = false;
-        for (let i = 0; i < storyEvents.length; i += 1) {
-          const storyEvent = storyEvents[i];
-          const template = baseEventTemplatesByName[storyEvent.name] || null;
-          const event = template ? { ...template } : { name: storyEvent.name };
-          const usedAlias = !!template && event.name !== storyEvent.name;
-          if (storyEvent.type && !usedAlias) event.type = storyEvent.type;
-          if (storyEvent.skill && !usedAlias) event.skill = storyEvent.skill;
-          if (storyEvent.specialty && !usedAlias) event.specialty = storyEvent.specialty;
-          if (Array.isArray(storyEvent.lines) && storyEvent.lines.length > 0) {
-            event.storyLines = storyEvent.lines.slice();
-          }
-          event.storyStep = storyEvent.step || (list.length + 1);
-          event.isBase = true;
-          if (!event.type) {
-            invalid = true;
-            break;
-          }
-          this.applyStanceDifficulty(event, teamIndex);
-          list.push(event);
-        }
-        if (invalid) {
-          list.length = 0;
-        }
-      }
-    }
-    if (list.length !== count) {
-      list.length = 0;
-      for (let i = 0; i < count; i++) {
-        const event = this.cloneEvent(this.chooseEvent(teamIndex));
-        if (event) {
-          event.isBase = true;
-          list.push(event);
-        }
+    for (let i = 0; i < count; i++) {
+      const event = this.cloneEvent(this.chooseEvent(teamIndex));
+      if (event) {
+        event.isBase = true;
+        list.push(event);
       }
     }
     return list;
-  }
-
-  logStoryStep(teamIndex, op, event, roller) {
-    if (this.hideStoryLogs) return;
-    if (!event || !Array.isArray(event.storyLines) || event.storyLines.length === 0) return;
-    const team = this.teams[teamIndex];
-    const operationNumber = op && op.number ? op.number : '?';
-    const baseStep = Number.isFinite(event.storyStep) ? event.storyStep : (op && Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted + 1 : 1);
-    const formattedLines = event.storyLines.map(line => {
-      const formatted = replaceStoryPlaceholders(line, team, roller);
-      return formatted ? formatted.trim() : '';
-    }).filter(text => text);
-    if (formattedLines.length === 0) return;
-    const paragraph = formattedLines.join(' ');
-    this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${operationNumber} - Story Step ${baseStep}: ${paragraph}`);
   }
 
   getEventDelay(event, teamIndex) {
@@ -788,7 +680,6 @@ class WarpGateCommand extends EffectableEntity {
     }
     const total = rollResult.sum + skillTotal;
     const damageText = damageDetail ? ` | ${damageDetail}` : '';
-    this.logStoryStep(teamIndex, op, event, roller);
     const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${formatNumber(dc, false, 2)} => ${outcome}${artText}${damageText}${rerollNote}${criticalNote}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
@@ -1373,7 +1264,7 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary,
         number: op.number,
         nextEvent: op.nextEvent,
-        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(evt => ({ ...evt })) : [],
+        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(sanitizeOperationEvent) : [],
         currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0,
         baseEventsTotal: Number.isFinite(op.baseEventsTotal) ? op.baseEventsTotal : 10,
         baseEventsCompleted: Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted : 0,
@@ -1415,7 +1306,6 @@ class WarpGateCommand extends EffectableEntity {
       facilities: { ...this.facilities },
       facilityCooldown: this.facilityCooldown,
       teamNames: this.teamNames.slice(),
-      hideStoryLogs: !!this.hideStoryLogs,
       presets: (this.presets || []).map(p => ({ ...p, ratios: { ...p.ratios }, scope: { ...p.scope } }))
     };
   }
@@ -1423,7 +1313,6 @@ class WarpGateCommand extends EffectableEntity {
   loadState(data = {}) {
     this.enabled = data.enabled || false;
     warpGateNetworkManager.setWarpGateUnlocked(this.enabled);
-    this.hideStoryLogs = !!data.hideStoryLogs;
     if (data.upgrades) {
       for (const k in data.upgrades) {
         if (this.rdUpgrades[k]) {
@@ -1456,7 +1345,7 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary || '',
         number: op.number || 1,
         nextEvent: op.nextEvent || 60,
-        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(evt => ({ ...evt })) : [],
+        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(sanitizeOperationEvent) : [],
         currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0,
         baseEventsTotal: Number.isFinite(op.baseEventsTotal) ? op.baseEventsTotal : 10,
         baseEventsCompleted: Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted : 0,

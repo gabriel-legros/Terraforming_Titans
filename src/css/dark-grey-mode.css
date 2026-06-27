@@ -1798,30 +1798,6 @@ body.dark-grey-mode {
     color: #ffffff;
 }
 
-/* Story toggle */
-.dark-grey-mode .wgc-container .wgc-story-toggle {
-    background: transparent;
-    border: none;
-    color: var(--wgc-text-light);
-}
-
-.dark-grey-mode .wgc-container .wgc-story-toggle:hover {
-    background: transparent;
-    border: none;
-}
-
-.dark-grey-mode .wgc-container .wgc-story-toggle__track {
-    background-color: var(--wgc-bg-light);
-}
-
-.dark-grey-mode .wgc-container .wgc-story-toggle__thumb {
-    background-color: var(--wgc-text-light);
-}
-
-.dark-grey-mode .wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__track {
-    background-color: var(--wgc-border-color);
-}
-
 /* Popup window */
 .dark-grey-mode .wgc-popup-overlay {
     background-color: rgba(13, 26, 38, 0.85);
