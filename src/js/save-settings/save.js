@@ -648,9 +648,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     }
 
       if (gameState.journalEntrySources) {
-        const entries = mapSourcesToText(gameState.journalEntrySources);
         const historySources = gameState.journalHistorySources || gameState.journalEntrySources;
-        const history = mapSourcesToText(historySources);
+        const entries = new Array(gameState.journalEntrySources.length).fill(null);
+        const history = new Array(historySources.length).fill(null);
         loadJournalEntries(entries, history, gameState.journalEntrySources, historySources);
       } else if (gameState.journalEntries) {
         const history = gameState.journalHistory || gameState.journalEntries;

@@ -2435,6 +2435,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const activeKeys = new Set(items.map(item => item.key));
+    const orderedSpans = [];
     items.forEach(item => {
       let span = costElement._spans.get(item.key);
       if (!span) {
@@ -2466,16 +2467,31 @@ function updateDecreaseButtonText(button, buildCount) {
             addTrackedUIListener(costElement, span, 'pointerdown', span._updateCostTooltip);
         }
         costElement._spans.set(item.key, span);
-        list.appendChild(span);
       }
-      span.style.display = '';
+      if (span.style.display) {
+        span.style.display = '';
+      }
+      orderedSpans.push(span);
     });
 
     costElement._spans.forEach((span, key) => {
       if (!activeKeys.has(key)) {
-        span.style.display = 'none';
+        cleanupDynamicTooltipsIn(span);
+        span.remove();
+        costElement._spans.delete(key);
       }
     });
+
+    orderedSpans.forEach((span, index) => {
+      if (list.childNodes[index] !== span) {
+        list.insertBefore(span, list.childNodes[index] || null);
+      }
+    });
+    while (list.childNodes.length > orderedSpans.length) {
+      const child = list.childNodes[list.childNodes.length - 1];
+      cleanupDynamicTooltipsIn(child);
+      child.remove();
+    }
 
     items.forEach((item, idx) => {
       const span = costElement._spans.get(item.key);

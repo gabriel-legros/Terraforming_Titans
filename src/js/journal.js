@@ -1,6 +1,6 @@
-let journalEntriesData = []; // Array to store entry text currently shown
+let journalEntriesData = []; // Legacy/ad hoc entry text currently shown; sourced entries store null
 let journalEntrySources = []; // Matching array of entry sources
-let journalHistoryData = []; // Array to store all journal history text
+let journalHistoryData = []; // Legacy/ad hoc journal history text; sourced entries store null
 let journalHistorySources = []; // Matching array of history entry sources
 let journalCollapsed = false;
 let journalUnread = false;
@@ -238,6 +238,34 @@ function getChapterNumberFromSource(src) {
   return null;
 }
 
+function compactJournalText(text, source) {
+  return source ? null : text;
+}
+
+function compactJournalTexts(entries, sources) {
+  const compacted = [];
+  for (let i = 0; i < entries.length; i++) {
+    compacted.push(compactJournalText(entries[i], sources && sources[i]));
+  }
+  return compacted;
+}
+
+function getResolvedJournalText(storedText, source) {
+  if (storedText !== null && storedText !== undefined) {
+    return storedText;
+  }
+  const sourceText = getJournalTextFromSource(source);
+  return sourceText ? resolveStoryPlaceholders(sourceText) : '';
+}
+
+function getResolvedJournalTexts(entries, sources) {
+  const resolved = [];
+  for (let i = 0; i < entries.length; i++) {
+    resolved.push(getResolvedJournalText(entries[i], sources && sources[i]));
+  }
+  return resolved;
+}
+
 function getJournalChapterGroups() {
   ensureJournalWorldData();
   const groups = [];
@@ -245,7 +273,7 @@ function getJournalChapterGroups() {
   let current = null;
   for (let i = 0; i < journalHistoryData.length; i++) {
     const src = journalHistorySources[i];
-    const text = journalHistoryData[i];
+    const text = getResolvedJournalText(journalHistoryData[i], src);
     const chNum = getChapterNumberFromSource(src);
     const meta = src && src.id ? journalChapterMetaById && journalChapterMetaById.get(src.id) : null;
     const worldId = meta ? meta.worldId : null;
@@ -492,9 +520,10 @@ function renderJournalEntries(entries) {
 
 function setDisplayedJournalEntries(entries, entrySources) {
   const journalContainer = journalContainerElement;
-  renderJournalEntries(entries);
-  journalEntriesData = entries.slice();
   journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
+  const displayEntries = getResolvedJournalTexts(entries, journalEntrySources);
+  renderJournalEntries(displayEntries);
+  journalEntriesData = compactJournalTexts(entries, journalEntrySources);
   if (!journalUserScrolling && journalContainer) {
     journalContainer.scrollTop = journalContainer.scrollHeight;
   }
@@ -561,7 +590,7 @@ function processNextJournalEntry() {
   const segments = buildJournalSegments(text);
 
   const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
-  journalHistoryData.push(text); // Also keep it in the full history
+  journalHistoryData.push(compactJournalText(text, srcObj)); // Also keep it in the full history
   journalHistorySources.push(srcObj);
   const groups = getJournalChapterGroups();
   const targetChapter = getChapterNumberFromSource(srcObj);
@@ -586,7 +615,7 @@ function processNextJournalEntry() {
     journalChapterIndex = 0;
   }
 
-  journalEntriesData.push(text);
+  journalEntriesData.push(compactJournalText(text, srcObj));
   journalEntrySources.push(srcObj);
   updateJournalNavArrows();
   if (journalIndexVisible) {
@@ -729,11 +758,11 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
   journalQueue = [];
   setDisplayedJournalEntries(entries, entrySources);
   if (history) {
-    journalHistoryData = history.slice();
     journalHistorySources = historySourcesParam ? historySourcesParam.slice() : journalEntrySources.slice();
+    journalHistoryData = compactJournalTexts(history, journalHistorySources);
   } else {
-    journalHistoryData = entries.slice();
     journalHistorySources = journalEntrySources.slice();
+    journalHistoryData = compactJournalTexts(entries, journalHistorySources);
   }
   journalChapterIndex = getJournalChapterGroups().length - 1;
   updateJournalNavArrows();
@@ -751,7 +780,7 @@ function clearJournal() {
   if (journalQueue && journalQueue.length) {
     journalQueue.forEach(({ text, eventId, source }) => {
       const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
-      journalHistoryData.push(text);
+      journalHistoryData.push(compactJournalText(text, srcObj));
       journalHistorySources.push(srcObj);
     });
   }
@@ -830,9 +859,9 @@ function showJournalHistory() {
 
   const entriesContainer = document.createElement('div');
   entriesContainer.classList.add('history-entries');
-  journalHistoryData.forEach(text => {
+  journalHistoryData.forEach((text, index) => {
     const entry = document.createElement('p');
-    appendJournalSegments(entry, buildJournalSegments(text));
+    appendJournalSegments(entry, buildJournalSegments(getResolvedJournalText(text, journalHistorySources[index])));
     entriesContainer.appendChild(entry);
   });
 
@@ -880,7 +909,12 @@ function getJournalTextFromSource(source) {
         return text;
       }
     }
-    const steps = proj && proj.attributes && (proj.attributes.storyStepLines || proj.attributes.storySteps);
+    const steps = proj && proj.attributes && (
+      proj.attributes.formattedStoryStepLines ||
+      proj.attributes.formattedStorySteps ||
+      proj.attributes.storyStepLines ||
+      proj.attributes.storySteps
+    );
     if (steps && steps[source.step] !== undefined) {
       let text = joinLines(steps[source.step]);
       if (proj && proj.name) {
@@ -897,6 +931,10 @@ function getJournalTextFromSource(source) {
 
 function mapSourcesToText(sources) {
   return (sources || []).map(getJournalTextFromSource);
+}
+
+function mapStoredJournalEntriesToText(entries, sources) {
+  return getResolvedJournalTexts(entries || [], sources || []);
 }
 
 function initializeJournalUI() {
