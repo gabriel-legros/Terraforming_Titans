@@ -10,7 +10,7 @@
     update: update
   },
   fps: {
-    limit: 30,  // The game will run at 30 updates per second
+    limit: 30,  // The game defaults to 30 updates per second
     forceSetTimeOut: true  // Don't use RAF
   },
   autoPause: false  // This prevents the game from pausing when the tab is inactive
@@ -20,6 +20,35 @@ var game = null;
 let lastFrameTimeMs = 0;
 const LOGIC_DELTA_QUANTUM_MS = 10;
 let logicDeltaCarryMs = 0;
+const GAME_FRAMERATE_OPTIONS = [10, 20, 30];
+const DEFAULT_GAME_FRAMERATE = 30;
+
+function normalizeGameFramerate(framerate) {
+  const parsedValue = Number(framerate);
+  return GAME_FRAMERATE_OPTIONS.includes(parsedValue)
+    ? parsedValue
+    : DEFAULT_GAME_FRAMERATE;
+}
+
+function getGameFramerate() {
+  return normalizeGameFramerate(gameSettings.framerate);
+}
+
+function applyGameFramerateSetting() {
+  const framerate = getGameFramerate();
+  gameSettings.framerate = framerate;
+  config.fps.limit = framerate;
+  if (game && game.loop) {
+    const targetMs = 1000 / framerate;
+    game.loop.targetFps = framerate;
+    game.loop._target = targetMs;
+    game.loop.actualFps = Math.min(game.loop.actualFps, framerate);
+    if (game.loop.raf) {
+      game.loop.raf.target = targetMs;
+    }
+    resetGameFrameClock(true);
+  }
+}
 
 function resetGameFrameClock(resetCarry = false) {
   lastFrameTimeMs = performance.now();
@@ -53,6 +82,7 @@ function initializeTerraformingTitansDom() {
 function startTerraformingTitansGame() {
   initializeTerraformingTitansDom();
   game = new Phaser.Game(config);
+  applyGameFramerateSetting();
 }
 
 document.addEventListener('DOMContentLoaded', startTerraformingTitansGame);
@@ -392,6 +422,8 @@ function initializeGameState(options = {}) {
 
   if (!preserveManagers) {
     gameSettings.autosaveIntervalSeconds = 300;
+    gameSettings.framerate = DEFAULT_GAME_FRAMERATE;
+    applyGameFramerateSetting();
     gameSettings.useCelsius = false;
     gameSettings.disableDayNightCycle = false;
     gameSettings.showSpaceStorageResources = false;

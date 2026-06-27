@@ -766,6 +766,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
         gameSettings.autosaveIntervalSeconds = gameState.settings.disableAutosave ? 0 : 300;
       }
       setAutosaveIntervalSeconds(gameSettings.autosaveIntervalSeconds);
+      applyGameFramerateSetting();
       delete gameSettings.disableAutosave;
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageResources')) {
         gameSettings.showSpaceStorageResources = false;
@@ -851,6 +852,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       delete gameSettings.formatAutoBuildTargets;
       const cachedSettings = cacheSettingsElements();
       cachedSettings.autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
+      cachedSettings.framerateSelect.value = String(getGameFramerate());
       if (!GAME_FEATURES.whiteNoiseKeepAlive) {
         gameSettings.keepTabRunningAudio = false;
       }

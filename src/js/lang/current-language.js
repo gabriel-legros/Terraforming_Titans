@@ -4692,6 +4692,12 @@ setLanguageData({
         h1: '1 hour',
         never: 'Never',
       },
+      framerate: 'Framerate',
+      framerates: {
+        fps10: '10 FPS',
+        fps20: '20 FPS',
+        fps30: '30 FPS',
+      },
       terraformingSubsteps: 'Use 10ms terraforming substeps',
       terraformingSubstepsTooltip: 'By default, the climate model runs on a 10ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.',
       celsius: 'Display temperature in Celsius',

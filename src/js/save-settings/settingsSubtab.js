@@ -9,6 +9,7 @@ function cacheSettingsElements() {
 
   settingsElements = {
     autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
+    framerateSelect: document.getElementById('framerate-select'),
     whiteNoiseOption: document.getElementById('white-noise-settings-option'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
     whiteNoiseTooltip: document.getElementById('white-noise-tooltip'),
@@ -418,6 +419,15 @@ function addSettingsListeners() {
     cached.autosaveIntervalSelect.addEventListener('change', () => {
       setAutosaveIntervalSeconds(Number(cached.autosaveIntervalSelect.value));
       updateAutosaveText();
+    });
+  }
+
+  if (cached.framerateSelect) {
+    applyGameFramerateSetting();
+    cached.framerateSelect.value = String(getGameFramerate());
+    cached.framerateSelect.addEventListener('change', () => {
+      gameSettings.framerate = Number(cached.framerateSelect.value);
+      applyGameFramerateSetting();
     });
   }
 
