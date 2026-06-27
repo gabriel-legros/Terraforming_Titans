@@ -597,7 +597,7 @@ class Research {
 
     // Instantly mark a research as completed without cost or prerequisite checks,
     // but still respect planet and flag requirements.
-    completeResearchInstant(id) {
+    completeResearchInstant(id, options = {}) {
         const research = this.getResearchById(id);
         if (!research || (research.isResearched && !research.repeatable) || !this.isResearchDisplayable(research)) {
           return;
@@ -607,7 +607,7 @@ class Research {
         research.timesResearched = Math.max(research.timesResearched || 0, 1);
         this.updateRepeatableResearchCost(research);
         this.applyResearchEffects(research);
-        if (id === 'construction_office') {
+        if (id === 'construction_office' && options.showConstructionOfficeGuidePrompt !== false) {
           showConstructionOfficeGuidePrompt();
         }
         if (research.category === 'advanced') {

@@ -533,12 +533,12 @@ class SolisManager extends EffectableEntity {
     return purchased;
   }
 
-  applyResearchUpgrade() {
+  applyResearchUpgrade(options = {}) {
     const upgrade = this.shopUpgrades.researchUpgrade;
     if (!upgrade || upgrade.purchases <= 0) return;
     if (!researchManager || typeof researchManager.completeResearchInstant !== 'function') return;
     for (let i = 0; i < upgrade.purchases && i < RESEARCH_UPGRADE_ORDER.length; i++) {
-      researchManager.completeResearchInstant(RESEARCH_UPGRADE_ORDER[i]);
+      researchManager.completeResearchInstant(RESEARCH_UPGRADE_ORDER[i], options);
     }
   }
 
@@ -640,7 +640,7 @@ class SolisManager extends EffectableEntity {
       });
     }
 
-    this.applyResearchUpgrade();
+    this.applyResearchUpgrade({ showConstructionOfficeGuidePrompt: false });
     this.applyTerraformingMeasurementUpgrade();
     this.applyShipbuildingPermanentResearch();
     this.applyAndroidsPermanentResearch();
