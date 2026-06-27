@@ -675,6 +675,18 @@ function createTooltipElement(category, resourceName) {
   overflowTable.appendChild(overflowTotalRow);
   overflowDiv._info = { table: overflowTable, rows: new Map(), totalRow: overflowTotalRow, totalRight: overflowTotalRightStrong };
 
+  const reserveDiv = document.createElement('div');
+  reserveDiv.id = getResourceDomId(category, resourceName, 'tooltip-reserve');
+  reserveDiv.style.display = 'none';
+  reserveDiv.appendChild(document.createElement('br'));
+  const reserveHeader = document.createElement('strong');
+  reserveHeader.textContent = getResourceUICommonText('strategicReserveTarget', 'Strategic reserve target:');
+  reserveDiv.appendChild(reserveHeader);
+  reserveDiv.appendChild(document.createTextNode(' '));
+  const reserveValue = document.createElement('span');
+  reserveDiv.appendChild(reserveValue);
+  reserveDiv._info = { header: reserveHeader, value: reserveValue };
+
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = getResourceDomId(category, resourceName, 'tooltip-autobuild');
   autobuildDiv.style.display = 'none';
@@ -710,6 +722,7 @@ function createTooltipElement(category, resourceName) {
   col1.appendChild(headerDiv);
   col1.appendChild(productionDiv);
   col1.appendChild(consumptionDiv);
+  col1.appendChild(reserveDiv);
   col1.appendChild(overflowDiv);
   col1.appendChild(autobuildDiv);
   col1.appendChild(overflowLossDiv);
@@ -718,7 +731,7 @@ function createTooltipElement(category, resourceName) {
   const col2 = document.createElement('div');
   const col3 = document.createElement('div');
   // Store references needed for dynamic column reflow
-  tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv };
+  tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, reserveDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv };
   tooltip._prepareTooltipContent = function() {
     updateResourceRateDisplay(getDisplayResourceObject(resources, category, resourceName), 0, category, resourceName);
   };
@@ -1001,6 +1014,19 @@ function getAutobuildResourceRate(resource) {
   return autobuildCostTracker.getAverageCost(resource.category, resource.name);
 }
 
+function getConstructionOfficeResourceReserveTarget(resource) {
+  if (resource.name === 'workers') {
+    return 0;
+  }
+  const reservePercent = getConstructionOfficeReservePercentForResource(
+    getConstructionOfficeReserveSettings(),
+    resource.category,
+    resource.name
+  );
+  const cap = resource.cap;
+  return reservePercent > 0 && Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
+}
+
 function getDisplayedNetResourceRate(resource, consumptionDisplay) {
   const rawNetRate = resource.productionRate - consumptionDisplay.total;
   if (!shouldShowNetResourceRateWithAutobuild()) {
@@ -1011,7 +1037,7 @@ function getDisplayedNetResourceRate(resource, consumptionDisplay) {
 
 function setResourceTooltipColumns(tooltip, cols) {
   if (!tooltip || !tooltip._columnsInfo) return;
-  const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
+  const { headerDiv, productionDiv, consumptionDiv, reserveDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
   col1.innerHTML = '';
   if (cols === 3) {
     col2.innerHTML = '';
@@ -1036,12 +1062,16 @@ function setResourceTooltipColumns(tooltip, cols) {
     col2.appendChild(timeDiv);
     col2.appendChild(consumptionDiv);
     col2.appendChild(overflowDiv);
-    // Net rate above autobuild
+    // Net rate above reserve/autobuild
     // Remove any leading <br> so the header aligns cleanly at the top of its column
+    if (reserveDiv.firstChild && reserveDiv.firstChild.tagName === 'BR') {
+      reserveDiv.removeChild(reserveDiv.firstChild);
+    }
     if (autobuildDiv.firstChild && autobuildDiv.firstChild.tagName === 'BR') {
       autobuildDiv.removeChild(autobuildDiv.firstChild);
     }
     col3.appendChild(netDiv);
+    col3.appendChild(reserveDiv);
     col3.appendChild(autobuildDiv);
     col3.appendChild(overflowLossDiv);
     if (!col2.parentNode) tooltip.appendChild(col2);
@@ -1056,9 +1086,11 @@ function setResourceTooltipColumns(tooltip, cols) {
     const prodMargin = Math.max(maxPreHeader - headerHeight, 0);
     const consMargin = Math.max(maxPreHeader - timeHeight, 0);
     const autoMargin = Math.max(maxPreHeader - netHeight, 0);
+    const reserveVisible = reserveDiv.style.display !== 'none';
     productionDiv.style.marginTop = prodMargin ? prodMargin + 'px' : '0px';
     consumptionDiv.style.marginTop = consMargin ? consMargin + 'px' : '0px';
-    autobuildDiv.style.marginTop = autoMargin ? autoMargin + 'px' : '0px';
+    reserveDiv.style.marginTop = reserveVisible && autoMargin ? autoMargin + 'px' : '0px';
+    autobuildDiv.style.marginTop = !reserveVisible && autoMargin ? autoMargin + 'px' : '0px';
   } else {
     // Restore time and net into the header for single-column layout
     if (timeDiv.parentNode && timeDiv.parentNode !== headerDiv) timeDiv.parentNode.removeChild(timeDiv);
@@ -1080,15 +1112,20 @@ function setResourceTooltipColumns(tooltip, cols) {
     if (!consumptionDiv.firstChild || consumptionDiv.firstChild.tagName !== 'BR') {
       consumptionDiv.insertBefore(document.createElement('br'), consumptionDiv.firstChild || null);
     }
+    if (!reserveDiv.firstChild || reserveDiv.firstChild.tagName !== 'BR') {
+      reserveDiv.insertBefore(document.createElement('br'), reserveDiv.firstChild || null);
+    }
     if (!autobuildDiv.firstChild || autobuildDiv.firstChild.tagName !== 'BR') {
       autobuildDiv.insertBefore(document.createElement('br'), autobuildDiv.firstChild || null);
     }
     // Reset margins that were applied for alignment in 3-column mode
     productionDiv.style.marginTop = '';
     consumptionDiv.style.marginTop = '';
+    reserveDiv.style.marginTop = '';
     autobuildDiv.style.marginTop = '';
 
     col1.appendChild(consumptionDiv);
+    col1.appendChild(reserveDiv);
     col1.appendChild(overflowDiv);
     col1.appendChild(autobuildDiv);
     col1.appendChild(overflowLossDiv);
@@ -2208,6 +2245,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   const limitDiv = entry?.tooltip?.limitDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-limit'));
   const productionDiv = entry?.tooltip?.productionDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-production'));
   const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-consumption'));
+  const reserveDiv = entry?.tooltip?.reserveDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-reserve'));
   const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-overflow'));
   const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-autobuild'));
   const overflowLossDiv = entry?.tooltip?.overflowLossDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-overflow-loss'));
@@ -2695,6 +2733,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     consumptionDiv.style.display = showConsumption ? 'block' : 'none';
   }
 
+  if (reserveDiv) {
+    const reserveTarget = getConstructionOfficeResourceReserveTarget(resource);
+    if (reserveTarget > 0) {
+      reserveDiv.style.display = 'block';
+      reserveDiv._info.value.textContent = `${formatNumber(reserveTarget, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
+    } else {
+      reserveDiv.style.display = 'none';
+    }
+  }
+
   if (overflowDiv) {
     const overflowEntries = antimatterSynced ? [] : [
       ...Object.entries(resource.consumptionRateByType?.overflow || {}),
@@ -2817,6 +2865,7 @@ function cacheSingleResource(category, resourceName) {
       limitDiv: document.getElementById(`${domPrefix}-tooltip-limit`),
       productionDiv: document.getElementById(`${domPrefix}-tooltip-production`),
       consumptionDiv: document.getElementById(`${domPrefix}-tooltip-consumption`),
+      reserveDiv: document.getElementById(`${domPrefix}-tooltip-reserve`),
       overflowDiv: document.getElementById(`${domPrefix}-tooltip-overflow`),
       autobuildDiv: document.getElementById(`${domPrefix}-tooltip-autobuild`),
       overflowLossDiv: document.getElementById(`${domPrefix}-tooltip-overflow-loss`),

@@ -1396,6 +1396,7 @@ if (typeof module !== 'undefined' && module.exports) {
         toggleAutobuilder,
         setStrategicReserve,
         setStrategicReserveForResource,
+        getConstructionOfficeReservePercentForResource,
         getConstructionOfficeReserveSettings,
         showConstructionOfficeGuidePrompt,
         saveConstructionOfficeState,
@@ -1419,6 +1420,7 @@ if (typeof window !== 'undefined') {
     window.toggleAutobuilder = toggleAutobuilder;
     window.setStrategicReserve = setStrategicReserve;
     window.setStrategicReserveForResource = setStrategicReserveForResource;
+    window.getConstructionOfficeReservePercentForResource = getConstructionOfficeReservePercentForResource;
     window.getConstructionOfficeReserveSettings = getConstructionOfficeReserveSettings;
     window.showConstructionOfficeGuidePrompt = showConstructionOfficeGuidePrompt;
     window.saveConstructionOfficeState = saveConstructionOfficeState;

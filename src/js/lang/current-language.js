@@ -704,6 +704,7 @@ setLanguageData({
         zonalAmounts: 'Zonal Amounts:',
         production: 'Production:',
         consumptionAndMaintenance: 'Consumption and Maintenance:',
+        strategicReserveTarget: 'Strategic reserve target:',
         overflow: 'Overflow:',
         lostToOverflowLast1s: 'Lost to overflow (last 1s):',
         autobuildCost: 'Autobuild Cost (avg 10s):',
