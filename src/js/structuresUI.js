@@ -2904,8 +2904,13 @@ function updateDecreaseButtonText(button, buildCount) {
       const productivityElement = els.productivityElement;
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
-        productivityElement.textContent = `${productivityValue}%`;
-        productivityElement.style.color = '';
+        const productivityText = `${productivityValue}%`;
+        if (productivityElement.textContent !== productivityText) {
+          productivityElement.textContent = productivityText;
+        }
+        if (productivityElement.style.color) {
+          productivityElement.style.color = '';
+        }
 
         if (structure.dayNightActivity && dayNightCycle.isNight() && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
           productivityElement.classList.add('productivity-day-night-inactive');
@@ -2932,7 +2937,10 @@ function updateDecreaseButtonText(button, buildCount) {
           iconElement.style.display = 'none';
         } else {
           iconElement.style.display = '';
-          iconElement.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
+          const iconText = dayNightCycle.isDay() ? '☀️' : '🌙';
+          if (iconElement.textContent !== iconText) {
+            iconElement.textContent = iconText;
+          }
         }
       }
   
@@ -3052,18 +3060,21 @@ function updateDecreaseButtonText(button, buildCount) {
           }
           if (resObj) {
             const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
+            let color = '';
             if (sec.key === 'production') {
-              const color = netRate < 0 ? 'green' : '';
-              textSpan.style.color = swapResourceRateColor(resObj, color);
+              color = swapResourceRateColor(resObj, netRate < 0 ? 'green' : '');
             } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
               const totalCost = combinedCosts[`${category}.${resource}`] || amount;
               const projectedNet = netRate - totalCost;
-              textSpan.style.color = projectedNet < 0 ? 'orange' : '';
-            } else {
-              textSpan.style.color = '';
+              color = projectedNet < 0 ? 'orange' : '';
+            }
+            if (textSpan.style.color !== color) {
+              textSpan.style.color = color;
             }
           } else {
-            textSpan.style.color = '';
+            if (textSpan.style.color) {
+              textSpan.style.color = '';
+            }
           }
         });
       }
