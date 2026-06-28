@@ -4623,7 +4623,7 @@ setLanguageData({
         },
         kardashevI: {
           title: 'Kardashev I',
-          requirement: 'Produce 200Q watts of power in total.'
+          requirement: 'Produce 200Q (2e17) watts of power in total.'
         },
         kardashevII: {
           title: 'Kardashev II',
