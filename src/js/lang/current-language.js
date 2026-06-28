@@ -5335,7 +5335,7 @@ setLanguageData({
       },
       hephaestusMegaconstruction: {
         name: 'Hephaestus Megaconstruction Yard',
-        description: 'Assemble a legendary construction yard that accelerates repeatable mega and giga projects. Each completion adds a yard that can be assigned, counting as an extra world.  Project duration scales with terraformed worlds.',
+        description: 'Assemble a legendary construction yard that accelerates repeatable mega and giga projects. Each completion adds a yard that can be assigned, counting as an extra world for the construction speed of the project.  Project duration scales with terraformed worlds.',
       },
       spaceChemistry: {
         name: 'Space Chemistry Array',
