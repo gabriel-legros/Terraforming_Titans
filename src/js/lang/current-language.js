@@ -5822,7 +5822,7 @@ setLanguageData({
         },
         enhanced_colonist_import_2: {
           name: 'Bigger rockets',
-          description: 'Further increase the capacity of each colonist import by 5 using bigger rockets.',
+          description: 'Increases the capacity of each colonist import by 5 using bigger rockets.',
         },
         t3_colony: {
           name: 'Large outpost',
@@ -5830,7 +5830,7 @@ setLanguageData({
         },
         enhanced_colonist_import_3: {
           name: 'Biggest rockets',
-          description: 'Further increase the capacity of each colonist import by 30 using the biggest rockets available.',
+          description: 'Further increases the capacity of each colonist import by 30 using the biggest rockets available.',
         },
         colony_sliders: {
           name: 'Colony Management',
