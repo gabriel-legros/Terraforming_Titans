@@ -809,7 +809,7 @@ setLanguageData({
         limitTooltip: 'Wind turbine arrays are limited to 1 per 50 units of base land.',
       },
       sandQuarry: {
-        limitTooltip: 'Sand quarries are limited to 5x the current world land amount.',
+        limitTooltip: 'Sand quarries are limited to 2.5x the current world land amount.',
       },
       foundry: {
         limitTooltip: 'Foundries are limited to 1 per unit of base land on the current world.',
