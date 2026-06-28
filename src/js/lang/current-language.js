@@ -3580,7 +3580,7 @@ setLanguageData({
       },
       galaxyWelcome: {
         title: 'Galactic Overview',
-        body: 'Welcome to the galaxy map.  With the galaxy in disarray, the United Human Federation is forced to participate in the Great Imperial Civil War, willing or not.\n\nThey begin in Sector R5-07.  You will have to take over this sector to expand further.\n\nWhile you can be attacked by Imperial factions, the war is designed to be unloseable.  \n\n  The story chapters should be understood to happen around the same time the UHF becomes capable of taking over the corresponding required sectors.',
+        body: 'Welcome to the galaxy map.  With the galaxy in disarray, the United Human Federation is forced to participate in the Great Imperial Civil War, willing or not.\n\nThey begin in Sector R5-07.  You will have to take over this sector to expand further.\n\nWhile you can be attacked by Imperial factions, the war is designed to be unloseable.  \n\n  Some story worlds have sector requirements.  The story chapters should be understood to happen around the same time the UHF becomes capable of taking over the corresponding required sectors.',
         close: 'Continue',
       },
       travelWarning: {
