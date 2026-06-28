@@ -1299,7 +1299,7 @@ function autoBuild(buildings, delta = 0) {
                 extraReserves = reserveForPriorityZeroToTwo;
             }
             const maxCount = building.getAutoBuildMaxCount(reserve, extraReserves);
-            const buildLimit = building.getBuildLimit() ?? Infinity;
+            const buildLimit = building.getAutoBuildCountLimit();
             const maxTargetCount = maxMode && building.getAutoBuildMaxTargetCount
                 ? building.getAutoBuildMaxTargetCount()
                 : buildLimit;

@@ -277,6 +277,10 @@ class Building extends EffectableEntity {
     return Math.max(this.getBuildLimit() - this.countNumber, 0);
   }
 
+  getAutoBuildCountLimit() {
+    return this.getBuildLimit();
+  }
+
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
     let maxBuildable = this.maxBuildable(reservePercent, additionalReserves);
 

@@ -60,10 +60,19 @@ class DysonReceiver extends Building {
     return Math.ceil(capacity * percent / 100);
   }
 
+  getAutoBuildCountLimit() {
+    const base = super.getAutoBuildCountLimit();
+    if (!this.shouldClampSetActiveToSupported()) {
+      return base;
+    }
+    return Math.min(base, this.getSupportedActiveCap());
+  }
+
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
     const base = super.getAutoBuildMaxCount(reservePercent, additionalReserves);
     if (this.autoBuildBasis !== 'max') {
-      return base;
+      const remaining = Math.max(this.getAutoBuildCountLimit() - this.countNumber, 0);
+      return Math.min(base, remaining);
     }
 
     const target = this.getAutoBuildMaxTargetCount();
