@@ -775,7 +775,7 @@ const theRealPoseidonOverrides = {
     hasNaturalMagnetosphere: true,
     radius: 7600,
     mass: 1.31e25,
-    baseLand: 72_500_000_000,
+    baseLand: 72_583_356_668.53859,
     albedo: 0.08,
     rotationPeriod: 21.8,
     spinPeriod: 21.8,
@@ -817,7 +817,7 @@ const theRealPoseidonOverrides = {
   ],
   resources: {
     surface: {
-      land: { initialValue: 72_500_000_000, baseLand: 72_500_000_000 },
+      land: { initialValue: 72_583_356_668.53859, baseLand: 72_583_356_668.53859 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
@@ -828,7 +828,7 @@ const theRealPoseidonOverrides = {
     },
     underground: {
       ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
-      geothermal: { initialValue: 72_500_000_000, maxDeposits: 72_500_000_000, areaTotal: 72500000000 }
+      geothermal: { initialValue: 72_583_356_668.53859, maxDeposits: 72_583_356_668.53859, areaTotal: 72_583_356_668.53859 }
     },
     atmospheric: {
       carbonDioxide: { initialValue: 0 },
