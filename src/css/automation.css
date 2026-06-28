@@ -584,7 +584,7 @@
 
 .automation-entry-scale-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(240px, 1.6fr) auto 56px;
+  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(260px, 1.6fr) auto 56px;
   gap: 6px 8px;
   position: absolute;
   inset: 0;
@@ -620,7 +620,7 @@
 
 .automation-entry {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(240px, 1.6fr) auto 56px;
+  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(260px, 1.6fr) auto 56px;
   gap: 6px 8px;
   align-items: center;
   padding: 8px;
@@ -642,9 +642,13 @@
 
 .automation-max-wrapper {
   display: grid;
-  grid-template-columns: 1fr minmax(80px, 100px);
+  grid-template-columns: auto minmax(150px, 1fr) minmax(80px, 100px);
   gap: 6px;
   align-items: center;
+}
+
+.automation-max-label {
+  color: #4c5872;
 }
 
 .automation-max-wrapper select {

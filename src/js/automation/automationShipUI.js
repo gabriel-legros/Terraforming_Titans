@@ -755,6 +755,9 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
 
       const maxWrapper = document.createElement('div');
       maxWrapper.classList.add('automation-max-wrapper');
+      const maxLabel = document.createElement('span');
+      maxLabel.classList.add('automation-max-label');
+      maxLabel.textContent = getAutomationCardText('shipCapLabel', {}, 'Cap');
 
       const maxMode = document.createElement('select');
       maxMode._shipEntryBinding = entryBinding;
@@ -814,7 +817,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
         }
       });
 
-      maxWrapper.append(maxMode, maxInput);
+      maxWrapper.append(maxLabel, maxMode, maxInput);
       row.appendChild(maxWrapper);
 
       const projectObject = projects.find(item => item.name === entry.projectId);

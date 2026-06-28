@@ -4335,6 +4335,7 @@ setLanguageData({
         shipWeightScaleUpButton: 'x10',
         shipWeightScaleDownTitle: 'Divide all step weights by 10',
         shipWeightScaleUpTitle: 'Multiply all step weights by 10',
+        shipCapLabel: 'Cap',
         shipMaxLabel: 'Max',
         shipPercentPopulation: '% Population',
         shipPercentWorkers: '% Workers',
