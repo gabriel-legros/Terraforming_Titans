@@ -4599,7 +4599,7 @@ setLanguageData({
         },
         galacticHadronCollider: {
           title: 'Galactic Hadron Collider',
-          requirement: 'Build a particle accelerator with a radius of at least {value} meters.'
+          requirement: 'Build a particle accelerator with a radius of at least 500Qi (5e20) meters.'
         },
         boschTerraforming: {
           title: 'Bosch Terraforming',
