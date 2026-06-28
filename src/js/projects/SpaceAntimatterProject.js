@@ -512,6 +512,46 @@
       return BigInt(Math.floor(effectiveWorlds * multiplier));
     }
 
+    getAutoBuildCostSnapshot(cost) {
+      const snapshot = {};
+      const addSnapshotResource = (category, resource) => {
+        const resourceObject = resources[category]?.[resource];
+        if (!resourceObject) {
+          return;
+        }
+        snapshot[category] = snapshot[category] || {};
+        snapshot[category][resource] = resourceObject.value;
+      };
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          addSnapshotResource(category, resource);
+          if (this.attributes?.canUseSpaceStorage) {
+            const storageKey = resource === 'water' ? 'liquidWater' : resource;
+            addSnapshotResource('spaceStorage', storageKey);
+          }
+        }
+      }
+      return snapshot;
+    }
+
+    getAutoBuildActualCost(beforeValues) {
+      const actualCost = {};
+      for (const category in beforeValues) {
+        for (const resource in beforeValues[category]) {
+          const resourceObject = resources[category]?.[resource];
+          if (!resourceObject) {
+            continue;
+          }
+          const spent = beforeValues[category][resource] - resourceObject.value;
+          if (spent > 0) {
+            actualCost[category] = actualCost[category] || {};
+            actualCost[category][resource] = spent;
+          }
+        }
+      }
+      return actualCost;
+    }
+
     tryAutoBuildToTarget() {
       if (!this.autoBuildToTargetEnabled || this.isActive || this.isCompleted || this.isPaused) {
         this.autoBuildTargetBlocked = false;
@@ -532,25 +572,10 @@
       this._autoBuildTargetRemaining = remaining;
       const previousCount = normalizeSpaceAntimatterCount(this.repeatCount);
       const cost = this.getScaledCost();
-      const beforeValues = {};
-      for (const category in cost) {
-        beforeValues[category] = {};
-        for (const resource in cost[category]) {
-          beforeValues[category][resource] = resources[category][resource].value;
-        }
-      }
+      const beforeValues = this.getAutoBuildCostSnapshot(cost);
       projectManager.startProject(this.name);
       if (normalizeSpaceAntimatterCount(this.repeatCount) > previousCount) {
-        const actualCost = {};
-        for (const category in beforeValues) {
-          for (const resource in beforeValues[category]) {
-            const spent = beforeValues[category][resource] - resources[category][resource].value;
-            if (spent > 0) {
-              actualCost[category] = actualCost[category] || {};
-              actualCost[category][resource] = spent;
-            }
-          }
-        }
+        const actualCost = this.getAutoBuildActualCost(beforeValues);
         if (Object.keys(actualCost).length > 0) {
           autobuildCostTracker.recordCost(this.displayName, actualCost);
         }

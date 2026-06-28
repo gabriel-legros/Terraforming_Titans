@@ -1004,6 +1004,7 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta, 
 
 function isAutobuildTrackedResource(resource) {
   return resource.category === 'colony'
+    || resource.category === 'spaceStorage'
     || (resource.category === 'special' && resource.name === 'orbitalDebris');
 }
 
