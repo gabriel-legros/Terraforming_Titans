@@ -241,6 +241,116 @@
       return scaled;
     }
 
+    getReservePercentForResource(reserveSettings, category, resource) {
+      if (reserveSettings && reserveSettings.constructor === Object) {
+        const key = `${category}.${resource}`;
+        if (Object.prototype.hasOwnProperty.call(reserveSettings, key)) {
+          return Math.max(0, Math.min(100, Number(reserveSettings[key]) || 0));
+        }
+        if (Object.prototype.hasOwnProperty.call(reserveSettings, resource)) {
+          return Math.max(0, Math.min(100, Number(reserveSettings[resource]) || 0));
+        }
+        return Math.max(0, Math.min(100, Number(reserveSettings.default) || 0));
+      }
+      return Math.max(0, Math.min(100, Number(reserveSettings) || 0));
+    }
+
+    getColonyResourceAvailableAfterReserve(category, resource, reserveSettings) {
+      const resourceObject = resources[category][resource];
+      const reservePercent = this.getReservePercentForResource(reserveSettings, category, resource);
+      const reserve = Number.isFinite(resourceObject.cap) ? resourceObject.cap * reservePercent / 100 : 0;
+      return Math.max(0, resourceObject.value - reserve);
+    }
+
+    getCostForBatteryCount(count) {
+      const base = super.getScaledCost();
+      const multiplier = spaceAntimatterCountToNumber(count);
+      const scaled = {};
+      for (const category in base) {
+        scaled[category] = {};
+        for (const resource in base[category]) {
+          scaled[category][resource] = base[category][resource] * multiplier;
+        }
+      }
+      return scaled;
+    }
+
+    getAutoBuildAffordableCount(maxCount, reserveSettings) {
+      const base = super.getScaledCost();
+      const storageProj = this.createSpaceStorageAccess('expansions');
+      let affordable = Number(maxCount);
+      for (const category in base) {
+        for (const resource in base[category]) {
+          const costPerBattery = base[category][resource];
+          if (!(costPerBattery > 0)) {
+            continue;
+          }
+          const storageKey = resource === 'water' ? 'liquidWater' : resource;
+          const colonyAvailable = this.getColonyResourceAvailableAfterReserve(category, resource, reserveSettings);
+          const available = getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
+          affordable = Math.min(affordable, Math.floor(available / costPerBattery));
+        }
+      }
+      if (!(affordable > 0)) {
+        return 0n;
+      }
+      const affordableCount = normalizeSpaceAntimatterCount(Math.floor(affordable));
+      return affordableCount > maxCount ? maxCount : affordableCount;
+    }
+
+    spendAutoBuildResources(cost, reserveSettings) {
+      const storageProj = this.createSpaceStorageAccess('expansions', { reconcileOnDirectSpend: true });
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          const amount = cost[category][resource];
+          if (storageProj) {
+            const storageKey = resource === 'water' ? 'liquidWater' : resource;
+            const colonyAvailable = this.getColonyResourceAvailableAfterReserve(category, resource, reserveSettings);
+            const allocation = getMegaProjectResourceAllocation(storageProj, storageKey, amount, colonyAvailable);
+            if (allocation.fromColony > 0) {
+              resources[category][resource].decrease(allocation.fromColony);
+            }
+            if (allocation.fromStorage > 0) {
+              storageProj.spendStoredResource(storageKey, allocation.fromStorage);
+              storageProj.reconcileUsedStorage();
+            }
+          } else {
+            resources[category][resource].decrease(amount);
+          }
+        }
+      }
+    }
+
+    canAutoBuildStart() {
+      if (this.isPermanentlyDisabled()) {
+        return false;
+      }
+      if (!this.unlocked) {
+        return false;
+      }
+      if (this.requireStar && !projectManager.currentWorldHasStar()) {
+        return false;
+      }
+      if (this.repeatCount && this.maxRepeatCount && this.repeatCount >= this.maxRepeatCount) {
+        return false;
+      }
+      if (this.isActive || this.isPaused || this.isHazardDisabled()) {
+        return false;
+      }
+      const warningState = this.getWarningState();
+      if (warningState && warningState.blocksStart) {
+        return false;
+      }
+      if (
+        this.category === 'story' &&
+        this.attributes.planet &&
+        spaceManager.getCurrentPlanetKey() !== this.attributes.planet
+      ) {
+        return false;
+      }
+      return true;
+    }
+
     adjustBuildCount(delta) {
       const current = normalizeSpaceAntimatterCount(this.buildCount);
       const next = current + BigInt(Math.round(delta));
@@ -564,16 +674,23 @@
         return;
       }
       const remaining = targetCount - currentCount;
-      if (!this.canStart()) {
+      if (!this.canAutoBuildStart()) {
+        this.autoBuildTargetBlocked = true;
+        return;
+      }
+      const reserveSettings = getConstructionOfficeReserveSettings();
+      const affordableCount = this.getAutoBuildAffordableCount(remaining, reserveSettings);
+      if (affordableCount <= 0n) {
         this.autoBuildTargetBlocked = true;
         return;
       }
       this.autoBuildTargetBlocked = false;
-      this._autoBuildTargetRemaining = remaining;
       const previousCount = normalizeSpaceAntimatterCount(this.repeatCount);
-      const cost = this.getScaledCost();
+      const cost = this.getCostForBatteryCount(affordableCount);
       const beforeValues = this.getAutoBuildCostSnapshot(cost);
-      projectManager.startProject(this.name);
+      this.activeBuildCount = serializeSpaceAntimatterCount(affordableCount);
+      this.spendAutoBuildResources(cost, reserveSettings);
+      this.complete();
       if (normalizeSpaceAntimatterCount(this.repeatCount) > previousCount) {
         const actualCost = this.getAutoBuildActualCost(beforeValues);
         if (Object.keys(actualCost).length > 0) {
