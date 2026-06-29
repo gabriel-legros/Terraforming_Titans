@@ -70,6 +70,10 @@ function createSteamIntegration() {
 
 const steamIntegration = createSteamIntegration();
 
+function shouldLaunchSteamDeckFullscreen() {
+  return process.env.SteamDeck === '1';
+}
+
 function getSaveStoragePath(key) {
   if (key === 'saveSlotDates') {
     return path.join(app.getPath('userData'), 'saves', 'slot-dates.json');
@@ -196,11 +200,13 @@ function openExternalUrl(url) {
 }
 
 function createWindow() {
+  const launchFullscreen = shouldLaunchSteamDeckFullscreen();
   const win = new BrowserWindow({
-    width: 1400,
-    height: 950,
+    width: launchFullscreen ? 1280 : 1400,
+    height: launchFullscreen ? 800 : 950,
     minWidth: 1024,
     minHeight: 700,
+    fullscreen: launchFullscreen,
     backgroundColor: '#111827',
     icon: appIconPath,
     show: false,
