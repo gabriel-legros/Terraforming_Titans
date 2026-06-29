@@ -48,10 +48,8 @@ class AchievementManager {
         classicRenewables: false,
         heatOfTheSun: false,
         boschTerraforming: false,
-        hazardPreservation: false,
         noBuildingLeftBehind: false
-      },
-      hazardPreservationObserved: false
+      }
     };
   }
 
@@ -197,10 +195,8 @@ class AchievementManager {
       classicRenewables: false,
       heatOfTheSun: false,
       boschTerraforming: false,
-      hazardPreservation: false,
       noBuildingLeftBehind: false
     };
-    this.tracking.hazardPreservationObserved = false;
     this.applyBaselineChallengeDisqualifiers();
   }
 
@@ -216,7 +212,6 @@ class AchievementManager {
     this.updateBuildingChallengeTracking();
     this.updateHeatOfTheSunTracking();
     this.updateBoschTracking();
-    this.updateHazardPreservationTracking();
   }
 
   updateBuildingChallengeTracking() {
@@ -279,10 +274,6 @@ class AchievementManager {
         || this.hasObservedCo2Disposal()) {
         this.tracking.disqualified.boschTerraforming = true;
       }
-    }
-    if (this.isHazardPreservationCandidateWorld()
-      && (this.areAnyAchievementHazardsCleared() || this.areNonHazardTerraformRequirementsMet())) {
-      this.tracking.disqualified.hazardPreservation = true;
     }
   }
 
@@ -352,22 +343,6 @@ class AchievementManager {
       return false;
     }
     return lifters.isRunning === true && lifters.mode === 'stripAtmosphere';
-  }
-
-  updateHazardPreservationTracking() {
-    if (!this.isHazardPreservationCandidateWorld()) {
-      return;
-    }
-    if (this.tracking.hazardPreservationObserved) {
-      return;
-    }
-    if (this.areAnyAchievementHazardsCleared()) {
-      this.tracking.disqualified.hazardPreservation = true;
-      return;
-    }
-    if (this.areNonHazardTerraformRequirementsMet()) {
-      this.tracking.hazardPreservationObserved = true;
-    }
   }
 
   isCurrentWorldRandom() {
@@ -540,8 +515,9 @@ class AchievementManager {
   }
 
   isHazardPreservationComplete() {
-    return this.tracking.hazardPreservationObserved === true
-      && !this.tracking.disqualified.hazardPreservation;
+    return this.isHazardPreservationCandidateWorld()
+      && !this.areAnyAchievementHazardsCleared()
+      && this.areNonHazardTerraformRequirementsMet();
   }
 
   isNoBuildingLeftBehindComplete() {
@@ -717,8 +693,7 @@ class AchievementManager {
         buildingsBaseline: { ...this.tracking.buildingsBaseline },
         coloniesBaseline: { ...this.tracking.coloniesBaseline },
         liftersBaseline: { ...this.tracking.liftersBaseline },
-        disqualified: { ...this.tracking.disqualified },
-        hazardPreservationObserved: this.tracking.hazardPreservationObserved === true
+        disqualified: { ...this.tracking.disqualified }
       },
     };
   }
@@ -750,7 +725,6 @@ class AchievementManager {
         ...savedTracking.disqualified
       };
     }
-    this.tracking.hazardPreservationObserved = savedTracking.hazardPreservationObserved === true;
     this.pendingUnlocks = [];
     this.update();
     this.syncSteamAchievements();
