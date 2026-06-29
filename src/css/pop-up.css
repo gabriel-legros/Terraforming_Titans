@@ -78,6 +78,7 @@
   color: black;
   border: 2px solid black;
   padding: 10px 20px;
+  width: min(720px, calc(100vw - 48px));
   max-width: 80%;
   text-align: center;
   border-radius: 4px;
@@ -89,6 +90,7 @@
 
 .system-popup-text {
   margin: 10px 0;
+  line-height: 1.45;
   white-space: pre-line;
 }
 

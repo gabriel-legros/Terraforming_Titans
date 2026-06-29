@@ -20,7 +20,8 @@ const GAME_FEATURES = {
     whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
     exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
     electronWindowControls: GAME_BUILD_TARGET !== 'browser',
-    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser'
+    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveResearch: GAME_BUILD_TARGET !== 'browser'
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -41,7 +42,8 @@ const GAME_FEATURES = {
     whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
     exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
     electronWindowControls: GAME_BUILD_TARGET !== 'browser',
-    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser'
+    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveResearch: GAME_BUILD_TARGET !== 'browser'
 };
 
 if (typeof module !== 'undefined' && module.exports) {

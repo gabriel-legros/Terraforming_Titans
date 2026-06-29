@@ -56,10 +56,15 @@ class PopulationModule extends EffectableEntity {
     const artMultiplier = isManagerEffectivelyEnabled(followersManager, 'followersManager')
       ? followersManager.getArtWorkerPerColonistMultiplier()
       : 1;
+    const resortWorld = projectManager.projects.resortWorld;
+    const resortMultiplier = resortWorld && resortWorld.isVacationPrepActive()
+      ? resortWorld.getVacationWorkerMultiplier()
+      : 1;
     return {
       zealMultiplier,
       artMultiplier,
-      colonistMultiplier: zealMultiplier * artMultiplier
+      resortMultiplier,
+      colonistMultiplier: zealMultiplier * artMultiplier * resortMultiplier
     };
   }
 

@@ -313,13 +313,15 @@ class ScriptVariableRegistry {
             1: this.getScriptVariableText('terraforming.specialization.bioworld', 'BioWorld'),
             2: this.getScriptVariableText('terraforming.specialization.manufacturingWorld', 'Manufacturing World'),
             3: this.getScriptVariableText('terraforming.specialization.holyWorld', 'Holy World'),
-            4: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World')
+            4: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World'),
+            5: this.getScriptVariableText('terraforming.specialization.resortWorld', 'Resort World')
           }
         },
         { id: 'bioworld', label: this.getScriptVariableText('terraforming.specialization.bioworld', 'BioWorld'), valueType: 'boolean' },
         { id: 'manufacturingWorld', label: this.getScriptVariableText('terraforming.specialization.manufacturingWorld', 'Manufacturing World'), valueType: 'boolean' },
         { id: 'holyWorld', label: this.getScriptVariableText('terraforming.specialization.holyWorld', 'Holy World'), valueType: 'boolean' },
-        { id: 'foundryWorld', label: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World'), valueType: 'boolean' }
+        { id: 'foundryWorld', label: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World'), valueType: 'boolean' },
+        { id: 'resortWorld', label: this.getScriptVariableText('terraforming.specialization.resortWorld', 'Resort World'), valueType: 'boolean' }
       ];
     }
     if (categoryId === 'life') {
@@ -827,6 +829,7 @@ class ScriptVariableRegistry {
     if (attribute === 'manufacturingWorld') return current === 2 ? 1 : 0;
     if (attribute === 'holyWorld') return current === 3 ? 1 : 0;
     if (attribute === 'foundryWorld') return current === 4 ? 1 : 0;
+    if (attribute === 'resortWorld') return current === 5 ? 1 : 0;
     return 0;
   }
 
@@ -849,6 +852,7 @@ class ScriptVariableRegistry {
     if (projects.manufacturingWorld && (projects.manufacturingWorld.isCompleted || projects.manufacturingWorld.isActive)) return 2;
     if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) return 3;
     if (projects.foundryWorld && (projects.foundryWorld.isCompleted || projects.foundryWorld.isActive)) return 4;
+    if (projects.resortWorld && (projects.resortWorld.isCompleted || projects.resortWorld.isActive)) return 5;
     return 0;
   }
 

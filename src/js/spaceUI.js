@@ -326,12 +326,9 @@ function maybeShowGalaxyWelcomePopup() {
     if (!galaxyManager.enabled || galaxyManager.hasSeenWelcomePopup) {
         return;
     }
-    const title = getSpaceUIText('galaxyWelcome.title', 'Galactic Overview');
-    const text = getSpaceUIText(
-        'galaxyWelcome.body',
-        'Welcome to the galaxy map.  With the galaxy in disarray, the United Human Federation will be forced to participate.\n\nYou begin in Sector R5-07.  You will have to take over this sector to expand further.\n\nWhile you can be attacked by Imperial factions, the war is designed to be unloseable.'
-    );
-    const buttonText = getSpaceUIText('galaxyWelcome.close', 'Continue');
+    const title = t('ui.space.galaxyWelcome.title', null, 'Galactic Overview');
+    const text = t('ui.space.galaxyWelcome.body', null, '');
+    const buttonText = t('ui.space.galaxyWelcome.close', null, 'Continue');
     createSystemPopup(title, text, buttonText);
     galaxyManager.hasSeenWelcomePopup = true;
 }
@@ -462,58 +459,15 @@ function showTravelWarningPopup(warningData, onConfirm) {
 }
 
 function getActiveSpecializationProject() {
-    const bioworld = projectManager.projects.bioworld;
-    if (bioworld.isActive && !bioworld.isCompleted) {
-        return bioworld;
-    }
-    const foundry = projectManager.projects.foundryWorld;
-    if (foundry.isActive && !foundry.isCompleted) {
-        return foundry;
-    }
-    const manufacturing = projectManager.projects.manufacturingWorld;
-    if (manufacturing.isActive && !manufacturing.isCompleted) {
-        return manufacturing;
-    }
-    return null;
+    return getActiveWorldSpecializationProject();
 }
 
 function hasCompletedSpecializationProject() {
-    const birchWorld = projectManager.projects.birchWorld;
-    if (birchWorld.unlocked && birchWorld.isCurrentSmbhShellworld()) {
-        return true;
-    }
-    const bioworld = projectManager.projects.bioworld;
-    if (bioworld.isCompleted) {
-        return true;
-    }
-    const foundry = projectManager.projects.foundryWorld;
-    if (foundry.isCompleted) {
-        return true;
-    }
-    const manufacturing = projectManager.projects.manufacturingWorld;
-    if (manufacturing.isCompleted) {
-        return true;
-    }
-    if (followersManager.isCurrentWorldHolyConsecrated()) {
-        return true;
-    }
-    return false;
+    return hasCompletedWorldSpecialization();
 }
 
 function hasUnlockedSpecializationProject() {
-    const bioworld = projectManager.projects.bioworld;
-    if (bioworld.unlocked) {
-        return true;
-    }
-    const foundry = projectManager.projects.foundryWorld;
-    if (foundry.unlocked) {
-        return true;
-    }
-    const manufacturing = projectManager.projects.manufacturingWorld;
-    if (manufacturing.unlocked) {
-        return true;
-    }
-    return false;
+    return hasUnlockedWorldSpecializationProject();
 }
 
 function getSpecializationTravelWarningMessage(project = getActiveSpecializationProject()) {

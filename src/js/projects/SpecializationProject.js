@@ -15,6 +15,80 @@
     }
   }
 
+  function isWorldSpecializationProject(project) {
+    return !!(project && project.attributes && project.attributes.projectGroup === 'specializedWorlds');
+  }
+
+  function getWorldSpecializationProjects() {
+    const list = [];
+    const projects = projectManager.projects;
+    for (const id in projects) {
+      const project = projects[id];
+      if (isWorldSpecializationProject(project)) {
+        list.push(project);
+      }
+    }
+    return list;
+  }
+
+  function isSpecializationStartedOrCompleted(project) {
+    return !!(project && (project.isActive || project.isCompleted));
+  }
+
+  function isBirchWorldCurrentSpecialization() {
+    const birchWorld = projectManager.projects.birchWorld;
+    return !!(birchWorld && birchWorld.unlocked && birchWorld.isCurrentSmbhShellworld());
+  }
+
+  function isHolyWorldCurrentSpecialization() {
+    return !!(followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated());
+  }
+
+  function hasOtherWorldSpecialization(currentProject) {
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      const project = projects[i];
+      if (project !== currentProject && isSpecializationStartedOrCompleted(project)) {
+        return true;
+      }
+    }
+    return isBirchWorldCurrentSpecialization() || isHolyWorldCurrentSpecialization();
+  }
+
+  function getActiveWorldSpecializationProject() {
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      const project = projects[i];
+      if (project.isActive && !project.isCompleted) {
+        return project;
+      }
+    }
+    return null;
+  }
+
+  function hasCompletedWorldSpecialization() {
+    if (isBirchWorldCurrentSpecialization() || isHolyWorldCurrentSpecialization()) {
+      return true;
+    }
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      if (projects[i].isCompleted) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function hasUnlockedWorldSpecializationProject() {
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      if (projects[i].unlocked) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   class SpecializationProject extends ProjectBase {
     constructor(config, name, options) {
       super(config, name);
@@ -167,6 +241,9 @@
       if (this.isCompleted) {
         return '';
       }
+      if (hasOtherWorldSpecialization(this)) {
+        return getSpecializationText('anotherCompleted', null, 'Another Specialization has been completed');
+      }
       for (let i = 0; i < this.otherSpecializationIds.length; i += 1) {
         const projectId = this.otherSpecializationIds[i];
         const otherSpecialization = projectManager.projects[projectId];
@@ -175,6 +252,10 @@
         }
       }
       return '';
+    }
+
+    canStart() {
+      return super.canStart() && !hasOtherWorldSpecialization(this);
     }
 
     getTravelPointGain() {
@@ -398,9 +479,23 @@
 
   try {
     window.SpecializationProject = SpecializationProject;
+    window.isWorldSpecializationProject = isWorldSpecializationProject;
+    window.getWorldSpecializationProjects = getWorldSpecializationProjects;
+    window.hasOtherWorldSpecialization = hasOtherWorldSpecialization;
+    window.getActiveWorldSpecializationProject = getActiveWorldSpecializationProject;
+    window.hasCompletedWorldSpecialization = hasCompletedWorldSpecialization;
+    window.hasUnlockedWorldSpecializationProject = hasUnlockedWorldSpecializationProject;
   } catch (error) {}
 
   try {
-    module.exports = SpecializationProject;
+    module.exports = {
+      SpecializationProject,
+      isWorldSpecializationProject,
+      getWorldSpecializationProjects,
+      hasOtherWorldSpecialization,
+      getActiveWorldSpecializationProject,
+      hasCompletedWorldSpecialization,
+      hasUnlockedWorldSpecializationProject,
+    };
   } catch (error) {}
 })();

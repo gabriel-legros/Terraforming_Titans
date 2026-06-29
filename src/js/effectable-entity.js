@@ -1193,6 +1193,18 @@ function removeEffect(effect) {
   addOrRemoveEffect(effect, 'removeEffect');
 }
 
+function createResourceFlagEffects(resourceType, resourceIds, flagId, effectPrefix) {
+  return resourceIds.map(resourceId => ({
+    effectId: `${effectPrefix}-${resourceId}-${flagId}`,
+    type: 'booleanFlag',
+    target: 'resource',
+    resourceType,
+    targetId: resourceId,
+    flagId,
+    value: true
+  }));
+}
+
 function applyPlanetParameterEffects() {
   const effects = currentPlanetParameters.effects || [];
   for (let i = 0; i < effects.length; i += 1) {

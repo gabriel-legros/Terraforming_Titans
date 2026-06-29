@@ -90,7 +90,7 @@
         shopItems: BIOWORLD_SHOP_ITEMS,
         shopItemMap: BIOWORLD_SHOP_ITEM_MAP,
         specializationSourceId: 'bioworld',
-        otherSpecializationIds: ['foundryWorld', 'manufacturingWorld'],
+        otherSpecializationIds: [],
         ecumenopolisEffectPrefix: 'bioworld',
         hazardPointBonusPerHazard: 0.1,
       });
@@ -117,9 +117,6 @@
     }
 
     getSpecializationRequirements() {
-      const foundry = projectManager.projects.foundryWorld;
-      const manufacturing = projectManager.projects.manufacturingWorld;
-      const holyWorldBlocked = followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated();
       return [
         {
           id: 'terraformed',
@@ -139,20 +136,12 @@
         {
           id: 'otherSpecialization',
           label: getBioworldText('catalogs.specializations.bioworld.requirements.otherSpecialization'),
-          met: !holyWorldBlocked
-            && !foundry.isActive
-            && !foundry.isCompleted
-            && !manufacturing.isActive
-            && !manufacturing.isCompleted
-            && !(projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked),
+          met: !hasOtherWorldSpecialization(this),
         },
       ];
     }
 
     getSpecializationLockedText() {
-      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return getBioworldText('catalogs.specializations.bioworld.lockedByHolyWorld');
-      }
       return super.getSpecializationLockedText();
     }
 
@@ -160,24 +149,10 @@
       if (!super.canStart()) {
         return false;
       }
-      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return false;
-      }
       if (!spaceManager.isCurrentWorldTerraformed()) {
         return false;
       }
       if (this.getBiomassDensity() <= 1) {
-        return false;
-      }
-      const foundry = projectManager.projects.foundryWorld;
-      const manufacturing = projectManager.projects.manufacturingWorld;
-      if (foundry.isActive || foundry.isCompleted) {
-        return false;
-      }
-      if (manufacturing.isActive || manufacturing.isCompleted) {
-        return false;
-      }
-      if (projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked) {
         return false;
       }
       return colonies.t7_colony.count < 1000;

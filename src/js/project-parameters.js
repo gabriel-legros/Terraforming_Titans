@@ -1386,6 +1386,20 @@ const projectParameters = {
       spaceBuildingProductivity: true
     }
   },
+  resortWorld: {
+    type: 'ResortWorldProject',
+    name: '',
+    category: 'mega',
+    cost: {},
+    duration: 300000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      projectGroup: 'specializedWorlds',
+      keepStartBarVisible: true
+    }
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : '',

@@ -245,7 +245,7 @@
         shopItems: MANUFACTURING_SHOP_ITEMS,
         shopItemMap: MANUFACTURING_SHOP_ITEM_MAP,
         specializationSourceId: 'manufacturingWorld',
-        otherSpecializationIds: ['bioworld', 'foundryWorld'],
+        otherSpecializationIds: [],
         ecumenopolisEffectPrefix: 'manufacturingWorld',
         hazardPointBonusPerHazard: 0.1,
       });
@@ -415,9 +415,6 @@
     }
 
     getSpecializationRequirements() {
-      const foundry = projectManager.projects.foundryWorld;
-      const bioworld = projectManager.projects.bioworld;
-      const holyWorldBlocked = followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated();
       return [
         {
           id: 'terraformed',
@@ -427,20 +424,12 @@
         {
           id: 'otherSpecialization',
           label: getManufacturingText('catalogs.specializations.manufacturing.requirements.otherSpecialization'),
-          met: !holyWorldBlocked
-            && !foundry.isActive
-            && !foundry.isCompleted
-            && !bioworld.isActive
-            && !bioworld.isCompleted
-            && !(projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked),
+          met: !hasOtherWorldSpecialization(this),
         },
       ];
     }
 
     getSpecializationLockedText() {
-      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return getManufacturingText('catalogs.specializations.manufacturing.lockedByHolyWorld');
-      }
       return super.getSpecializationLockedText();
     }
 
@@ -448,21 +437,7 @@
       if (!super.canStart()) {
         return false;
       }
-      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return false;
-      }
       if (!spaceManager.isCurrentWorldTerraformed()) {
-        return false;
-      }
-      const foundry = projectManager.projects.foundryWorld;
-      const bioworld = projectManager.projects.bioworld;
-      if (foundry.isActive || foundry.isCompleted) {
-        return false;
-      }
-      if (bioworld.isActive || bioworld.isCompleted) {
-        return false;
-      }
-      if (projectManager.projects.birchWorld.isCurrentSmbhShellworld() && projectManager.projects.birchWorld.unlocked) {
         return false;
       }
       return true;

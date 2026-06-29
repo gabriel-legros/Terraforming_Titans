@@ -89,6 +89,21 @@ function shouldRenderResourceCategory(category) {
   return category !== 'spaceStorage';
 }
 
+function updateResourceFlagClass(resourceObj, resourceNameElement, flagId, className) {
+  if (!resourceNameElement) {
+    return;
+  }
+  if (resourceObj.isBooleanFlagSet(flagId)) {
+    if (!resourceNameElement.classList.contains(className)) {
+      resourceNameElement.classList.add(className);
+    }
+    return;
+  }
+  if (resourceNameElement.classList.contains(className)) {
+    resourceNameElement.classList.remove(className);
+  }
+}
+
 function getResourceCategoriesForDisplay(resourceSet) {
   const categories = Object.keys(resourceSet || {});
   const colonyIndex = categories.indexOf('colony');
@@ -1838,15 +1853,8 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       }
 
-      if (resourceObj.isBooleanFlagSet('festival') && resourceNameElement) {
-        if (!resourceNameElement.classList.contains('resource-festival')) {
-          resourceNameElement.classList.add('resource-festival');
-        }
-      } else if (resourceNameElement) {
-        if (resourceNameElement.classList.contains('resource-festival')) {
-          resourceNameElement.classList.remove('resource-festival');
-        }
-      }
+      updateResourceFlagClass(resourceObj, resourceNameElement, 'festival', 'resource-festival');
+      updateResourceFlagClass(resourceObj, resourceNameElement, 'resortVacation', 'resource-resort-vacation');
 
       if (resourceNameElement && resourceNameElement.textContent !== resourceObj.displayName) {
         resourceNameElement.textContent = resourceObj.displayName;
@@ -1862,16 +1870,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       }
 
-      // Check if the resource has the "golden" flag set
-      if (resourceObj.isBooleanFlagSet('golden') && resourceNameElement) {
-        if (!resourceNameElement.classList.contains('sparkling-gold')) {
-          resourceNameElement.classList.add('sparkling-gold');
-        }
-      } else if (resourceNameElement) {
-        if (resourceNameElement.classList.contains('sparkling-gold')) {
-          resourceNameElement.classList.remove('sparkling-gold');
-        }
-      }
+      updateResourceFlagClass(resourceObj, resourceNameElement, 'golden', 'sparkling-gold');
 
       let stormActive = false;
       try {

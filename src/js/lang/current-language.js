@@ -3485,6 +3485,11 @@ setLanguageData({
       artificial: 'Artificial',
       atlas: 'Atlas',
       galaxy: 'Galaxy',
+      stars: {
+        sol: 'Sol',
+        rogueSpace: 'Rogue Space',
+      },
+      randomWorldSeedName: 'Seed {seed}',
       invasion: {
         tab: 'Invasion',
         trainingTitle: 'Invasion Training',
@@ -4093,6 +4098,7 @@ setLanguageData({
               manufacturingWorld: 'Manufacturing World',
               holyWorld: 'Holy World',
               foundryWorld: 'Foundry World',
+              resortWorld: 'Resort World',
             },
             life: {
               category: 'Life',
@@ -4867,13 +4873,6 @@ setLanguageData({
     planetVisualizer: {
       environmentOverlay: 'Pop: {population}\nCO2: {co2} kPa',
     },
-    space: {
-      stars: {
-        sol: 'Sol',
-        rogueSpace: 'Rogue Space',
-      },
-      randomWorldSeedName: 'Seed {seed}',
-    },
   },
   catalogs: {
     specialSeeds: {
@@ -5464,6 +5463,10 @@ setLanguageData({
       manufacturingWorld: {
         name: 'Manufacturing World',
         description: "Designate this world as a planet-scale manufacturing center. Completing it grants MP and banks this world's population permanently as manufacturing potential.  These benefits apply on travel.  All production is from space storage to space storage.",
+      },
+      resortWorld: {
+        name: 'Resort World',
+        description: 'Designate this world as a planet-scale resort. Requires 75% liquid-water coverage, every zone at least 293.15 K, and enough silica to beach the non-water surface. Resort effects will be added later.',
       },
       callisto_cult_security: {
         name: 'Factory Security',
@@ -6075,6 +6078,10 @@ setLanguageData({
         manufacturing_worlds: {
           name: 'Manufacturing Worlds',
           description: 'Unlocks a new world specialization to convert the world into a hub of conveyor belts, underground pipes and logistics robots.',
+        },
+        resort_worlds: {
+          name: 'Resort Worlds',
+          description: 'HOPE?  You... want to build more beaches?  Alright then.  Unlocks a new specialization.',
         },
         next_gen_bioengineering: {
           name: 'Next-generation bio-engineering',
@@ -6826,6 +6833,59 @@ setLanguageData({
           superalloyEfficiency: {
             label: 'Superalloy Manufacturing +1%',
             description: 'Increases both superalloy production and metal consumption by 1%.',
+          },
+        },
+      },
+      resort: {
+        pointsLabel: 'Resort Points:',
+        shopTitle: 'Resort Shop',
+        shopTooltip: 'Resort Points are earned when travelling from a completed Resort World. Upgrades have quadratic costs: 1, 4, 9, and so on.',
+        emptyShopText: '',
+        requirements: {
+          terraformed: 'World is fully terraformed',
+          waterCoverage: 'Liquid water coverage at least 75% ({value}%)',
+          zoneTemperature: 'Every zone at least 293.15 K (coldest: {value} K)',
+          beachSilica: 'Available silica for beaches: {value}',
+          ecumenopolisCount: 'Fewer than 1,000 Ecumenopolis Districts constructed (not active)',
+          otherSpecialization: 'No other specialization started or completed',
+        },
+        shop: {
+          buy: 'Buy',
+          buyMax: 'Max',
+          purchases: 'Purchased: {value}',
+        },
+        shopItems: {
+          happiness: {
+            label: 'Happiness +1%',
+            description: 'Increases Resort Vacation happiness by 1 percentage point.',
+          },
+          factoryThroughput: {
+            label: 'Factory Throughput +0.05',
+            description: 'Increases the unscaled Resort Vacation factory throughput bonus by 0.05.',
+          },
+          fundingPerColonist: {
+            label: 'Funding per Colonist +2',
+            description: 'Increases Resort Vacation funding by 2 funding per colonist per second.',
+          },
+        },
+        vacation: {
+          button: 'Begin Vacation',
+          locked: '',
+          ready: 'Ready for vacation.',
+          prep: 'Vacation: {time}s.',
+          effect: 'Glow Period: {time}s.',
+          cooldown: 'Vacation cooldown: {time}s.',
+          fundingSource: 'Resort Vacation',
+          fundingRate: '{value} / colonist / s',
+          showAboveResources: 'Show Vacation button above resources',
+          happinessTooltip: 'Gain happiness during the Glow Period after the vacation.',
+          factoryThroughputTooltip: 'Factory throughput is 1 + 0.25 multiplied by colonist worker share. Colonist worker share is colonist workers divided by colonist workers plus androids plus bioworkers. The multiplier increases factory production and consumption during the Glow Period.',
+          fundingTooltip: 'HOPE receives royalties in the form of funding during the vacation.',
+          stats: {
+            happiness: 'Happiness',
+            throughput: 'Factory throughput',
+            composition: 'Colonist workforce share',
+            funding: 'Funding',
           },
         },
       },

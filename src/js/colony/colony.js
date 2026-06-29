@@ -469,8 +469,12 @@ class Colony extends Building {
     const artGalleryHappinessBonus = isManagerEffectivelyEnabled(followersManager, 'followersManager')
       ? followersManager.getArtHappinessBonus()
       : 0;
+    const resortWorld = projectManager.projects.resortWorld;
+    const resortHappinessBonus = resortWorld && resortWorld.isVacationEffectActive()
+      ? resortWorld.getHappinessBonus()
+      : 0;
     const targetHappiness = ((nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness) * (1 - gravityPenalty) - hazardPenalty * 100)
-      * (1 + artGalleryHappinessBonus);
+      * (1 + artGalleryHappinessBonus + resortHappinessBonus);
 
     // Adjust the happiness towards the target value and ensure it doesn't drop below 0
     this.happiness = this.adjustToTarget(this.happiness, Math.max(0, targetHappiness) / 100, deltaTime);

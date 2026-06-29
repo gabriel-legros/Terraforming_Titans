@@ -2103,6 +2103,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'resort_worlds',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 3_000_000_000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'project',
+            targetId: 'resortWorld',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'next_gen_bioengineering',
         name: '',
         description: '',

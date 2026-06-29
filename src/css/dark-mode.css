@@ -369,6 +369,52 @@ body.dark-mode {
     background: #343a40;
 }
 
+.dark-mode .resort-vacation-stat > span:first-child {
+    color: #c7cbd1;
+}
+
+.dark-blue-mode .bioworld-shop {
+    border-top-color: #263a5f;
+}
+
+.dark-blue-mode .bioworld-shop-header,
+.dark-blue-mode .bioworld-shop-adaptation {
+    background: #14233c;
+    border-color: #263a5f;
+    color: #eef5ff;
+}
+
+.dark-blue-mode .bioworld-shop-item {
+    background: #101b30;
+    border-color: #263a5f;
+    color: #eef5ff;
+}
+
+.dark-blue-mode .bioworld-shop-cost,
+.dark-blue-mode .bioworld-shop-count {
+    color: #b8c8e6;
+}
+
+.dark-blue-mode .bioworld-shop-empty {
+    background: #0f1a2e;
+    border-color: #3b5481;
+    color: #aebfde;
+}
+
+.dark-blue-mode .bioworld-shop-button {
+    background: #1b3156;
+    border-color: #4d6fa8;
+    color: #eef5ff;
+}
+
+.dark-blue-mode .bioworld-shop-button:hover {
+    background: #264473;
+}
+
+.dark-blue-mode .resort-vacation-stat > span:first-child {
+    color: #b8c8e6;
+}
+
 .dark-mode .import-cap-toggle {
     color: #e7ecf7;
     background: none;

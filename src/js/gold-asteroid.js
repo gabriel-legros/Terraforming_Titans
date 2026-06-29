@@ -61,51 +61,7 @@ const goldenEffects = [
     type: 'growthMultiplier',
     value: 5
   },
-  {
-    effectId: `${goldenEffectPrefix}-fundingFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'funding',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-metalFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'metal',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-componentsFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'components',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-electronicsFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'electronics',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-colonistsFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'colonists',
-    flagId: 'golden',
-    value: true
-  }
+  ...createResourceFlagEffects('colony', ['funding', 'metal', 'components', 'electronics', 'colonists'], 'golden', goldenEffectPrefix)
 ]
 
 class GoldenAsteroid {
@@ -367,6 +323,7 @@ class GoldenAsteroid {
     }
   
     update(delta, realDelta = delta) {
+        updateResortVacationGoldButton();
         if (this.celebrationActive) {
           this.celebrationRemainingTime -= realDelta;
           if (this.celebrationRemainingTime > 0) {

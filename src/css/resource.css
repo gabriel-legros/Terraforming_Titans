@@ -71,6 +71,12 @@
     text-shadow: 1px 1px 2px black;
   }
 
+  .resource-resort-vacation {
+    color: #2fb35d;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #0d3a1d;
+  }
+
   .sparkling-gold {
     color: gold;
     font-weight: bold;

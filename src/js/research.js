@@ -474,6 +474,9 @@ class Research {
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
         return false;
       }
+      if (research.requiredGameFeature && !GAME_FEATURES[research.requiredGameFeature]) {
+        return false;
+      }
       if (research.disableFlag) {
         const flags = Array.isArray(research.disableFlag)
           ? research.disableFlag

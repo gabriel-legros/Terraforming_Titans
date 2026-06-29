@@ -39,46 +39,7 @@ const festivalEffects = [
       type: 'growthMultiplier',
       value: 3
   },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'funding',
-        flagId: 'festival',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'metal',
-        flagId: 'festival',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'components',
-        flagId: 'festival',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'electronics',
-        flagId: 'festival',
-        value: true
-    },   
-    {
-      type: 'booleanFlag',
-      target: 'resource',
-      resourceType: 'colony',
-      targetId: 'colonists',
-      flagId: 'festival',
-      value: true
-  }
+    ...createResourceFlagEffects('colony', ['funding', 'metal', 'components', 'electronics', 'colonists'], 'festival', 'festival')
 ]
 
 function getGlobalFestivalDurationBonusMs() {
