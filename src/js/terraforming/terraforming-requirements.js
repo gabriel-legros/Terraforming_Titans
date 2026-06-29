@@ -679,9 +679,22 @@ const terraformingRequirements = {
     liquidCoverageTarget: 0.3,
     liquidType: 'water',
     lifeCoverageTarget: 0,
-    lifeBiomassDensityTargetTPerM2: 1_000_000_000,
+    lifeBiomassDensityTargetTPerM2: 100_000,
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
+    appliedEffects: [
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'ecumenopolisDisabled',
+        value: true,
+      },
+      {
+        target: 'researchManager',
+        type: 'researchDisable',
+        targetId: 'ai_ecumenopolis_expansion',
+      },
+    ],
     lifeDesign: {
       survivalTemperatureRangeK: { min: 273.15, max: 333.15 },
       optimalGrowthTemperatureBaseK: 303.15,
