@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, session, shell } = require('electron');
+const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -8,6 +8,10 @@ const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.
 const preloadPath = path.join(__dirname, 'preload.cjs');
 const saveSlotNames = new Set(['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
 
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 app.setName(appDisplayName);
 
 function readBuildTargetSource() {
@@ -204,7 +208,8 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      webSecurity: true
+      webSecurity: true,
+      backgroundThrottling: false
     }
   });
 
@@ -272,6 +277,7 @@ app.whenReady().then(() => {
   registerSaveStorageHandlers();
   registerSteamAchievementHandlers();
   registerWindowControlHandlers();
+  powerSaveBlocker.start('prevent-app-suspension');
   createWindow();
 
   app.on('activate', () => {

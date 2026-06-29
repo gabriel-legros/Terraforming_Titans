@@ -279,6 +279,13 @@ function setupBrowserStubs(window, options = {}) {
     window.HTMLMediaElement.prototype.pause = () => {};
   }
 
+  window.electronWindowControls = {
+    isFullscreen: () => Promise.resolve(false),
+    setFullscreen: enabled => Promise.resolve(!!enabled),
+    onFullscreenChanged() {},
+    exitGame() {}
+  };
+
   window.Phaser = {
     AUTO: 'AUTO',
     Game: class {

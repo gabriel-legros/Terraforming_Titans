@@ -321,13 +321,20 @@ class AutoTravelAutomation {
   }
 
   _runAfterLoadingPaint(callback) {
-    if (!window.requestAnimationFrame) {
-      setTimeout(callback, 80);
-      return;
-    }
-    window.requestAnimationFrame(() => {
+    let callbackQueued = false;
+    const queueCallback = () => {
+      if (callbackQueued) {
+        return;
+      }
+      callbackQueued = true;
       window.setTimeout(callback, 80);
-    });
+    };
+    window.setTimeout(queueCallback, 120);
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(queueCallback);
+    } else {
+      queueCallback();
+    }
   }
 
   _captureCurrentTabState() {
