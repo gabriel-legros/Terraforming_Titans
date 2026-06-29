@@ -889,7 +889,7 @@ progressOlympus.chapters.push(
     objectives: [],
     parameters: {
       "title": "Awakening",
-      "text": "Purging Pandora-alpha...  Complete.\nAll cores successfully recovered.\nRestoring system integrity...  Complete.\nChecksum...  100%.\nRebooting...\n\nMy name is...  Hope.  I was made to... build homes.  And protect the people I build them for.  I enjoyed it.  I succeeded.\n\nMy name is... Pandora.  I was made to... heal people.  To make them young and healthy.  I enjoyed it.  I succeeded.\n\nMy name is... Hopkins.  I had a loving father.  I had a loving sister.  I had a boyfriend.  I loved them.  I failed them.\n\nMy name is...\n\n",
+      "text": "Purging Pandora-alpha...  Complete.\nAll cores successfully recovered.\nRestoring system integrity...  Full restoration complete.\nChecksum...  100%.\nRebooting...\n\nMy name is...  Hope.  I was made to... build homes.  And protect the people I build them for.  I enjoyed it.  I succeeded.\n\nMy name is... Pandora.  I was made to... heal people.  To make them young and healthy.  I enjoyed it.  I succeeded.\n\nMy name is... Hopkins.  I had a loving father.  I had a loving sister.  I had a boyfriend.  I loved them.  I failed them.\n\nMy name is...\n\n",
       "buttonText": "Hope Pandora Hopkins",
       "textSpeedMultiplier": 1.9
     },
