@@ -139,6 +139,7 @@ setLanguageData({
         kerati: 'Kerati',
         shrilek: 'Shrilek',
         vanadophore: 'Vanadophore',
+        yggies: 'Yggie',
         random: 'Random',
         tooltip: 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.',
       },
@@ -3011,6 +3012,8 @@ setLanguageData({
           },
           targetAtLeast: 'Life coverage at least {percent}%.',
           targetAbove: 'Life coverage above {percent}%.',
+          targetBiomassAmountAtLeast: 'Life biomass at least {amount} tons.',
+          targetBiomassAmountAbove: 'Life biomass above {amount} tons.',
           hazardsCleared: 'Hazardous biomass cleared in all zones.',
           removeHazards: 'Remove hazardous biomass from: {zones}.',
         },
@@ -5629,6 +5632,22 @@ setLanguageData({
           processes: {
             vanadiumRedoxChemistry: {
               displayName: 'Vanadium Redox Chemistry',
+            },
+          },
+        },
+      },
+      yggies: {
+        displayName: 'Yggie',
+        lore: [
+          'Affectionately named after Yggdrasil, Yggie is less a conventional species than an immense living biosphere. The simplest accurate description is thus: it is a very large tree. Like Ribosan life, its primary metabolism is photosynthetic, but its canopy, roots, and symbiotic soil networks function more like organs than separate ecosystems.',
+          'Its ability to produce enormous amounts of oxygen did not go unnoticed. The Empire first identified it from its peculiar atmospheric signature: a world rich in both oxygen and carbon dioxide at concentrations few other carbon-water dominions could tolerate. Dense vascular tissues move water and dissolved minerals upward while the canopy fixes carbon at planetary scale.',
+          'Unfortunately for Yggie, discovery was followed quickly by harvest. A tree-like organism large enough to shape a planet also makes exceptional building material. Its tissues evolved many adaptations to support its own weight: layered fibers, mineralized compression columns, and resilient living resin systems, some of which are still not properly understood.',
+          'What the Empire chose not to care about was the complex nervous system running through the organism. Every harvest causes immense pain, and the loss of entire segments can erase vast stores of memory. One memory remained, of course: its hatred for the Empire.'
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            arborealHyperphotosynthesis: {
+              displayName: 'Arboreal Hyperphotosynthesis',
             },
           },
         },

@@ -661,6 +661,75 @@ const terraformingRequirements = {
       },
     },
   },
+  yggies: {
+    id: 'yggies',
+    displayName: '',
+    lore: '',
+    buildTargets: ['steam'],
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 60 },
+    temperatureRangeK: { min: 288.15, max: 318.15 },
+    luminosityRange: { min: 1000, max: 4000 },
+    totalPressureRangeKPa: { min: 4000, max: 8000 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 2_000_000, max: 5_000_000 },
+      oxygen: { min: 1_000_000, max: 2_000_000 },
+      inertGas: { min: 500_000, max: 2_000_000 },
+      atmosphericAmmonia: { min: 0, max: 10 },
+    },
+    liquidCoverageTarget: 0.3,
+    liquidType: 'water',
+    lifeCoverageTarget: 0,
+    lifeBiomassDensityTargetTPerM2: 1_000_000_000,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 273.15, max: 333.15 },
+      optimalGrowthTemperatureBaseK: 303.15,
+      growthTemperatureToleranceBaseC: 3,
+      growthTemperatureTolerancePerPointC: 1,
+      photosynthesisRatePerPoint: 0.00005,
+      bioworkersPerBiomassPerPoint: 0.00004,
+      baseMaxBiomassDensityTPerM2: 100_000_000_000,
+      radiationToleranceThresholdPoints: 100,
+      minimumBiomassDecayRateTPerS: 1,
+      metabolism: {
+        primaryProcessId: 'arborealHyperphotosynthesis',
+        processes: {
+          arborealHyperphotosynthesis: {
+            id: 'arborealHyperphotosynthesis',
+            displayName: '',
+            growth: {
+              usesLuminosity: true,
+              perBiomass: {
+                surface: { biomass: 1, liquidWater: -0.8 },
+                atmospheric: { carbonDioxide: -4, oxygen: 3.8 },
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: { oxygen: -3.8, carbonDioxide: 4, atmosphericWater: 0.8 },
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 100,
+        invasiveness: 50,
+        spaceEfficiency: 0,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+        bioships: 1000,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {

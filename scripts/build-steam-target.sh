@@ -18,8 +18,13 @@ const GAME_FEATURES = {
     patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
     whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
     exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
-    electronWindowControls: GAME_BUILD_TARGET !== 'browser'
+    electronWindowControls: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser'
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { GAME_BUILD_TARGET, STEAM_APP_ID, GAME_FEATURES };
+}
 BUILD_TARGET
 }
 trap restore_build_target EXIT
@@ -34,8 +39,13 @@ const GAME_FEATURES = {
     patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
     whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
     exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
-    electronWindowControls: GAME_BUILD_TARGET !== 'browser'
+    electronWindowControls: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser'
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { GAME_BUILD_TARGET, STEAM_APP_ID, GAME_FEATURES };
+}
 BUILD_TARGET
 npx electron-builder --win --dir --config.directories.output=dist
 if [ -d "$ROOT_DIR/dist/win-unpacked" ]; then

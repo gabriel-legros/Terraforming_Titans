@@ -328,6 +328,35 @@ function getEffectiveLifeFraction(terraforming) {
     return Math.max(0, (terraforming.life?.target || 0) - fraction);
 }
 
+function getLifeBiomassDensityTarget(terraforming) {
+    return Math.max(0, terraforming?.requirements?.lifeBiomassDensityTargetTPerM2 || 0);
+}
+
+function getTerraformingTotalBiomass(terraforming) {
+    let totalBiomass = 0;
+    const zones = (terraforming && Array.isArray(terraforming.zoneKeys) && terraforming.zoneKeys.length)
+      ? terraforming.zoneKeys
+      : getZones();
+    for (let i = 0; i < zones.length; i += 1) {
+        const zone = zones[i];
+        totalBiomass += terraforming.zonalSurface[zone]?.biomass || 0;
+    }
+    return totalBiomass;
+}
+
+function getLifeBiomassDensity(terraforming) {
+    const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
+    return surfaceArea > 0 ? getTerraformingTotalBiomass(terraforming) / surfaceArea : 0;
+}
+
+function getEffectiveLifeTargetAmount(terraforming) {
+    const densityTarget = getLifeBiomassDensityTarget(terraforming);
+    if (densityTarget <= 0) {
+        return 0;
+    }
+    return densityTarget * (terraforming?.celestialParameters?.surfaceArea || 0);
+}
+
 var runAtmosphericChemistry;
 var applyAtmosphericChemistryRates;
 var METHANE_COMBUSTION_PARAMETER_CONST;
@@ -807,6 +836,10 @@ class Terraforming extends EffectableEntity{
   }
 
   getLifeStatus() {
+    const densityTarget = getLifeBiomassDensityTarget(this);
+    if (densityTarget > 0) {
+      return getLifeBiomassDensity(this) >= densityTarget;
+    }
      // Compare average biomass coverage to the global target
     return (calculateAverageCoverage(this, 'biomass') >= getEffectiveLifeFraction(this));
   }
@@ -3249,6 +3282,9 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports.setStarLuminosity = setStarLuminosity;
   module.exports.getStarLuminosity = getStarLuminosity;
   module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
+  module.exports.getLifeBiomassDensityTarget = getLifeBiomassDensityTarget;
+  module.exports.getLifeBiomassDensity = getLifeBiomassDensity;
+  module.exports.getEffectiveLifeTargetAmount = getEffectiveLifeTargetAmount;
   module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER_CONST;
   module.exports.buildAtmosphereContext = buildAtmosphereContext;
   module.exports.calculateInitialAtmosphericPressureForDelta = calculateInitialAtmosphericPressureForDelta;

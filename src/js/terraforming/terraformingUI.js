@@ -2341,13 +2341,22 @@ function createWaterBox(row) {
 
     const targetSpan = document.createElement('span');
     const effectiveLifeTarget = getEffectiveLifeFraction(terraforming);
-    targetSpan.textContent = formatTerraformingTargetText(
-      getTerraformingSummaryText(
-        'lifeSummary.targetAtLeast',
-        'Life coverage at least {percent}%.',
-        { percent: (effectiveLifeTarget * 100).toFixed(0) }
+    const densityTarget = getLifeBiomassDensityTarget(terraforming);
+    targetSpan.textContent = densityTarget > 0
+      ? formatTerraformingTargetText(
+        getTerraformingSummaryText(
+          'lifeSummary.targetBiomassAmountAtLeast',
+          'Life biomass at least {amount} tons.',
+          { amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true) }
+        )
       )
-    );
+      : formatTerraformingTargetText(
+        getTerraformingSummaryText(
+          'lifeSummary.targetAtLeast',
+          'Life coverage at least {percent}%.',
+          { percent: (effectiveLifeTarget * 100).toFixed(0) }
+        )
+      );
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     lifeBox.appendChild(targetSpan);
@@ -2389,30 +2398,37 @@ function updateLifeBox() {
       row.style.display = zones.includes(zone) ? '' : 'none';
     });
 
-    // Calculate total biomass from zonal data
-    let totalBiomass = 0;
-    zones.forEach(zone => {
-        totalBiomass += terraforming.zonalSurface[zone].biomass || 0;
-    });
+    const totalBiomass = getTerraformingTotalBiomass(terraforming);
 
     // Calculate average biomass coverage percentage using the centralized helper function
     const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
 
     const effectiveTarget = getEffectiveLifeFraction(terraforming);
+    const densityTarget = getLifeBiomassDensityTarget(terraforming);
     const hazardTolerance = 1e-6;
     const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
       ? terraforming.getHazardClearanceStatus()
       : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
-    const lifeTargetMet = avgBiomassCoverage >= effectiveTarget;
+    const lifeTargetMet = densityTarget > 0
+      ? getLifeBiomassDensity(terraforming) >= densityTarget
+      : avgBiomassCoverage >= effectiveTarget;
     lifeBox.style.borderColor = lifeTargetMet ? getStatusColor('success') : getStatusColor('failure');
     if (els.target) {
-      els.target.textContent = formatTerraformingTargetText(
-        getTerraformingSummaryText(
-          'lifeSummary.targetAbove',
-          'Life coverage above {percent}%.',
-          { percent: (effectiveTarget * 100).toFixed(0) }
+      els.target.textContent = densityTarget > 0
+        ? formatTerraformingTargetText(
+          getTerraformingSummaryText(
+            'lifeSummary.targetBiomassAmountAbove',
+            'Life biomass above {amount} tons.',
+            { amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true) }
+          )
         )
-      );
+        : formatTerraformingTargetText(
+          getTerraformingSummaryText(
+            'lifeSummary.targetAbove',
+            'Life coverage above {percent}%.',
+            { percent: (effectiveTarget * 100).toFixed(0) }
+          )
+        );
     }
 
     const zoneLines = zones.map(zone => {

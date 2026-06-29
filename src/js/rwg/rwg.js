@@ -23,6 +23,17 @@ try {
   }
 }
 
+let rwgBuildFeatures = { steamExclusiveDominions: false };
+try {
+  rwgBuildFeatures = GAME_FEATURES;
+} catch (error) {
+  try {
+    ({ GAME_FEATURES: rwgBuildFeatures } = require('../build-target.js'));
+  } catch (innerError) {
+    rwgBuildFeatures = { steamExclusiveDominions: false };
+  }
+}
+
 let getSpecialSeedDefinitionCatalog;
 let getSpecialSeedParametersCatalog;
 try {
@@ -762,9 +773,16 @@ const RWG_HAZARD_PRESETS = {
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery'];
-const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore'];
+const RWG_DOMINION_BASE_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore'];
+const RWG_STEAM_EXCLUSIVE_DOMINIONS = ['yggies'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
+
+function getRwgDominionOrder() {
+  return rwgBuildFeatures.steamExclusiveDominions
+    ? RWG_DOMINION_BASE_ORDER.concat(RWG_STEAM_EXCLUSIVE_DOMINIONS)
+    : RWG_DOMINION_BASE_ORDER.slice();
+}
 
 function getDominionUnlockRule(dominionId) {
   try {
@@ -2067,7 +2085,7 @@ class RwgManager extends EffectableEntity {
     this.lockedFeatures = new Set(['hazards', 'dominions']);
     this.lockedHazards = new Set(['hazardousBiomass', 'hazardousMachinery', 'garbage', 'kessler', 'pulsar']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
-      RWG_DOMINION_ORDER.filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
+      getRwgDominionOrder().filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
     );
     this.lockedDominions = new Set(dominionLocks);
     this.dominionUnlockCacheVersion = -1;
@@ -2108,8 +2126,8 @@ class RwgManager extends EffectableEntity {
   unlockHazard(id) { if (id) this.lockedHazards.delete(id); }
   setEnabledHazards(hazards) { this.enabledHazards = orderHazardList(normalizeHazardList(hazards)); }
   getEnabledHazards() { return this.enabledHazards.slice(); }
-  getDominionOrder() { return RWG_DOMINION_ORDER.slice(); }
-  getAvailableDominions() { return RWG_DOMINION_ORDER.filter((d) => !this.lockedDominions.has(d)); }
+  getDominionOrder() { return getRwgDominionOrder(); }
+  getAvailableDominions() { return getRwgDominionOrder().filter((d) => !this.lockedDominions.has(d)); }
   isDominionUnlocked(id) { return !id ? false : !this.lockedDominions.has(id); }
   getDominionUnlockRule(id) { return getDominionUnlockRule(id); }
   getDominionUnlockLabel(id) { return formatDominionUnlockLabel(getDominionUnlockRule(id)); }
@@ -2124,7 +2142,7 @@ class RwgManager extends EffectableEntity {
     }
     this.dominionUnlockCacheVersion = cacheVersion;
     this.dominionUnlockControlledCount = controlledCount;
-    RWG_DOMINION_ORDER.forEach((dominionId) => {
+    getRwgDominionOrder().forEach((dominionId) => {
       const rule = getDominionUnlockRule(dominionId);
       switch (rule.type) {
         case 'fullyControlledSectors': {

@@ -240,6 +240,11 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Hydrogen space mining set to colony-only estimates its full same-tick import for productivity without storage-cap limiting; the actual imported amount is tracked so that cap overflow from that import is not routed into atmospheric hydrogen.
 - Colony structures use direct `colony.energy` consumption of 500 Watt-day per supported colonist per day, except `t1_colony` uses 1000 Watt-day per supported colonist per day.
 
+### Life metabolism definitions
+- Every `lifeDesign.metabolism.processes.*.growth.perBiomass` and matching `decay.perBiomass` recipe must conserve mass. For each 1 ton of biomass produced, total consumed mass must equal `1 ton biomass + all byproducts`; decay should be the matching reverse process unless there is a clearly documented reason.
+- Do not add life metabolism coefficients by feel. Check the arithmetic before committing: negative coefficients are inputs, positive coefficients are outputs, and the absolute input total must equal the output total.
+- If a metabolism is meant to represent a variant of photosynthesis, keep the chemistry explicit in the coefficients. Extreme atmospheric requirements do not justify unbalanced per-biomass recipes.
+
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.
 - Growth requires surplus power; max bots scale with land area; only `1e15` persist through travel.
@@ -290,6 +295,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Supports dominion selector and dominion-specific terraforming requirements.
 - RWG dominion `Shrilek` unlocks at 40 fully controlled sectors and uses a methane-desert terraforming profile: methane atmosphere, 100% fine sand coverage via the dominion-only `Sand Seeder`, a required `Deep Hydrocarbon Reserves` project, and a minimum 30-Earth-day day-night cycle.
 - RWG dominion `Vanadophore` unlocks at 50 fully controlled sectors and uses a gas/ice-giant atmospheric profile: broad pressure and temperature tolerance, strongly ammonia-rich hydrogen atmosphere, trace `Vanadium Aerosol` requirement, no liquid-surface terraforming target, and a dominion-only `Vanadium Haze Seeder` building that maintains the aerosol supply.
+- RWG dominion `Yggie` is Steam/Electron-only (`GAME_FEATURES.steamExclusiveDominions`), unlocks at 60 fully controlled sectors, and represents a single planetary tree. It uses extreme carbon dioxide and oxygen atmospheric targets, Arboreal Hyperphotosynthesis, no spendable Space Efficiency life-density points, a `100B ton/m^2` biomass carrying capacity, and a terraforming completion requirement of `1B ton/m^2` total biomass density displayed as total biomass tons in the Life terraforming box.
 - Some dominions/world types are story/sector gated.
 - Special seeds can define world-specific effects (project/building flags), are replayable by seed, and surface effect descriptions in RWG world details.
 - RWG `Dynamic Mass` is no longer available by default; show that control only when `rwgManager` has boolean flag `enableDynamicMass`, and hide the RWG settings card when none of its controls are unlocked.
