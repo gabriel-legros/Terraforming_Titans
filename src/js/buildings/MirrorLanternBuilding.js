@@ -155,6 +155,11 @@ class MirrorLanternBuilding extends MirrorBase {
     );
   }
 
+  getConsumptionRatio() {
+    const assignmentData = this._getAssignmentData(1);
+    return assignmentData ? assignmentData.cap : 1;
+  }
+
 }
 
 if (typeof module !== 'undefined' && module.exports) {
