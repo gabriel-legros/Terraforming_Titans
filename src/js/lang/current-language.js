@@ -6844,7 +6844,7 @@ setLanguageData({
         requirements: {
           terraformed: 'World is fully terraformed',
           waterCoverage: 'Liquid water coverage at least 75% ({value}%)',
-          zoneTemperature: 'Every zone at least 293.15 K (coldest: {value} K)',
+          zoneTemperature: 'Every zone at least {target} {unit} (coldest: {value} {unit})',
           beachSilica: 'Available silica for beaches: {value}',
           ecumenopolisCount: 'Fewer than 1,000 Ecumenopolis Districts constructed (not active)',
           otherSpecialization: 'No other specialization started or completed',
