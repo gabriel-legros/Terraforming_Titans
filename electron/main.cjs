@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker } = require('electron');
+const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -201,9 +201,10 @@ function openExternalUrl(url) {
 
 function createWindow() {
   const launchFullscreen = shouldLaunchSteamDeckFullscreen();
+  const displaySize = launchFullscreen ? screen.getPrimaryDisplay().bounds : null;
   const win = new BrowserWindow({
-    width: launchFullscreen ? 1280 : 1400,
-    height: launchFullscreen ? 800 : 950,
+    width: launchFullscreen ? displaySize.width : 1400,
+    height: launchFullscreen ? displaySize.height : 950,
     minWidth: 1024,
     minHeight: 700,
     fullscreen: launchFullscreen,
