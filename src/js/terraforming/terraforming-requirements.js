@@ -668,7 +668,7 @@ const terraformingRequirements = {
     buildTargets: ['steam'],
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 60 },
     temperatureRangeK: { min: 288.15, max: 318.15 },
-    luminosityRange: { min: 1000, max: 4000 },
+    luminosityRange: { min: 50, max: 1000 },
     totalPressureRangeKPa: { min: 4000, max: 8000 },
     gasTargetsPa: {
       carbonDioxide: { min: 2_000_000, max: 5_000_000 },
