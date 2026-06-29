@@ -4,6 +4,7 @@ set -euo pipefail
 TARGET_NAME="${1:?target name required}"
 STEAM_APP_ID="${2:?Steam AppID required}"
 OUT_DIR_NAME="${3:?output directory name required}"
+PLATFORM="${4:-win}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$ROOT_DIR/dist/$OUT_DIR_NAME"
@@ -47,11 +48,26 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { GAME_BUILD_TARGET, STEAM_APP_ID, GAME_FEATURES };
 }
 BUILD_TARGET
-npx electron-builder --win --dir --config.directories.output=dist
-if [ -d "$ROOT_DIR/dist/win-unpacked" ]; then
-  mv "$ROOT_DIR/dist/win-unpacked" "$OUT_DIR"
-fi
-cp "$ROOT_DIR/node_modules/steamworks.js/dist/win64/steam_api64.dll" "$OUT_DIR/steam_api64.dll"
+case "$PLATFORM" in
+  win)
+    npx electron-builder --win --dir --config.directories.output=dist
+    if [ -d "$ROOT_DIR/dist/win-unpacked" ]; then
+      mv "$ROOT_DIR/dist/win-unpacked" "$OUT_DIR"
+    fi
+    cp "$ROOT_DIR/node_modules/steamworks.js/dist/win64/steam_api64.dll" "$OUT_DIR/steam_api64.dll"
+    ;;
+  linux)
+    npx electron-builder --linux --dir --config.directories.output=dist
+    if [ -d "$ROOT_DIR/dist/linux-unpacked" ]; then
+      mv "$ROOT_DIR/dist/linux-unpacked" "$OUT_DIR"
+    fi
+    cp "$ROOT_DIR/node_modules/steamworks.js/dist/linux64/libsteam_api.so" "$OUT_DIR/libsteam_api.so"
+    ;;
+  *)
+    echo "Unsupported Steam build platform: $PLATFORM" >&2
+    exit 1
+    ;;
+esac
 BUILD_TARGET_PATH="$OUT_DIR/resources/app/src/js/build-target.js" EXPECTED_STEAM_APP_ID="$STEAM_APP_ID" TARGET_NAME="$TARGET_NAME" node <<'NODE'
 const fs = require('fs');
 const data = fs.readFileSync(process.env.BUILD_TARGET_PATH, 'utf8');

@@ -1,11 +1,15 @@
 # Terraforming Titans Playtest SteamPipe Upload Plan
 
 ## Goal
-Upload a Windows Electron build depot for `Terraforming Titans Playtest` (`AppID 4876760`) using SteamPipe.
+Upload Windows and Linux/SteamOS Electron build depots for `Terraforming Titans Playtest` (`AppID 4876760`) using SteamPipe.
 
 The game still runs from `index.html`, but Steam needs an executable launch target. For Steam, use the Electron packaged build from:
 
 `dist/steam-playtest-win-unpacked`
+
+The Linux/SteamOS build is generated at:
+
+`dist/steam-playtest-linux-unpacked`
 
 Inside the packaged app, the project content should stay limited to the runtime files needed by the game:
 
@@ -17,7 +21,7 @@ Inside the packaged app, the project content should stay limited to the runtime 
 - `electron/`
 - `package.json`
 
-The Steam depot itself must include the full generated Electron runtime from `dist/steam-playtest-win-unpacked`, including `Terraforming Titans.exe`, DLLs, `.pak` files, locale files, `resources/app/`, and license files. The current Electron package uses `"asar": false`, so the app payload is a loose `resources/app/` directory rather than `resources/app.asar`.
+The Windows Steam depot itself must include the full generated Electron runtime from `dist/steam-playtest-win-unpacked`, including `Terraforming Titans.exe`, DLLs, `.pak` files, locale files, `resources/app/`, and license files. The Linux/SteamOS depot uses the matching runtime from `dist/steam-playtest-linux-unpacked`, including `terraforming-titans` and `libsteam_api.so`. The current Electron package uses `"asar": false`, so the app payload is a loose `resources/app/` directory rather than `resources/app.asar`.
 
 ## Open Steamworks Values
 We already know:
@@ -29,11 +33,10 @@ Still needed from Steamworks:
 
 - Target branch, likely `default` unless we create a private beta branch
 
-Depot:
+Depots:
 
-- Depot ID: `4876761`
-- Depot name: `Terraforming Titans Playtest Content`
-- Configuration: `All`
+- Windows depot ID: `4876761`
+- Linux/SteamOS depot ID: `4876762`
 
 ## Important Launch Setup
 Steam should launch the Electron executable from the installed depot:
@@ -48,6 +51,11 @@ Use:
 
 - Executable: `Terraforming Titans.exe`
 - Operating system: Windows
+
+Also add a Linux launch option:
+
+- Executable: `terraforming-titans`
+- Operating system: Linux + SteamOS
 
 ## Licenses
 Include licenses because the Steam depot ships both third-party browser libraries and Electron/Chromium runtime files.
@@ -74,28 +82,22 @@ C:\SteamPipe\TerraformingTitansPlaytest\
   builder\
     steamcmd.exe
   content\
-    Terraforming Titans.exe
-    LICENSE.electron.txt
-    LICENSES.chromium.html
-    LICENSES\
-      phaser-3.55.2-MIT.txt
-      three-0.158.0-MIT.txt
-    locales\
-    resources\
-      app\
-        index.html
-        src\
-        assets\
-        vendor\
-        electron\
-        package.json
-    *.dll
-    *.pak
-    *.bin
+    4876761\
+      Terraforming Titans.exe
+      resources\
+        app\
+          index.html
+    4876762\
+      terraforming-titans
+      libsteam_api.so
+      resources\
+        app\
+          index.html
   output\
   scripts\
     app_build_4876760.vdf
     depot_build_4876761.vdf
+    depot_build_4876762.vdf
 ```
 
 Copy the `builder` folder from the Steamworks SDK:
@@ -122,38 +124,23 @@ robocopy "$extractRoot\sdk\tools\ContentBuilder\builder" "$steamPipeRoot\builder
 ```
 
 ## Prepare Content
-From the repo root, build the Steam Playtest-target Electron package. Use `scripts/build-steam-playtest.sh`, not raw `npm run dist:dir`, because the script temporarily writes `GAME_BUILD_TARGET = 'steam'` into `src/js/build-target.js` before packaging and restores the source file afterward.
-The script also bakes Playtest AppID `4876760` into the packaged `resources/app/src/js/build-target.js` as `STEAM_APP_ID`.
+From the repo root, build the Steam Playtest-target Electron packages. Use `scripts/build-steam-playtest.sh`, not raw `npm run dist:dir`, because the script temporarily writes `GAME_BUILD_TARGET = 'steam'` into `src/js/build-target.js` before each package and restores the source file afterward.
+The script also bakes Playtest AppID `4876760` into each packaged `resources/app/src/js/build-target.js` as `STEAM_APP_ID`.
 
 ```powershell
 cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && bash scripts/build-steam-playtest.sh"
 ```
 
-Then mirror the generated Windows package into the SteamPipe content folder:
+To build, stage both depots, write VDFs, and upload:
 
 ```powershell
-$root = "C:\SteamPipe\TerraformingTitansPlaytest"
-New-Item -ItemType Directory -Force -Path "$root\content", "$root\scripts", "$root\output" | Out-Null
-
-robocopy "dist\steam-playtest-win-unpacked" "$root\content" /MIR
-```
-
-Full staging command from this repo:
-
-```powershell
-$repo = "C:\Users\gabri\Documents\Terraforming Titans"
-$root = "C:\SteamPipe\TerraformingTitansPlaytest"
-
-cmd.exe /c "cd /d `"$repo`" && bash scripts/build-steam-playtest.sh"
-
-New-Item -ItemType Directory -Force -Path "$root\content", "$root\scripts", "$root\output" | Out-Null
-robocopy "$repo\dist\steam-playtest-win-unpacked" "$root\content" /MIR
+cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && bash scripts/upload-steam-playtest.sh"
 ```
 
 Do not copy source checkout folders directly into `content`:
 
 - `node_modules/`
-- loose repo root files outside `dist\steam-playtest-win-unpacked`
+- loose repo root files outside `dist\steam-playtest-*-unpacked`
 - tests
 - docs
 - local save files
@@ -180,6 +167,7 @@ PowerShell command:
   "Depots"
   {
     "4876761" "depot_build_4876761.vdf"
+    "4876762" "depot_build_4876762.vdf"
   }
 }
 '@ | Set-Content -LiteralPath "C:\SteamPipe\TerraformingTitansPlaytest\scripts\app_build_4876760.vdf" -Encoding ASCII
@@ -198,16 +186,19 @@ PowerShell command:
   "Depots"
   {
     "4876761" "depot_build_4876761.vdf"
+    "4876762" "depot_build_4876762.vdf"
   }
 }
 ```
 
 Keep `"SetLive" ""` for the first upload so the build appears in Steamworks without automatically going live.
 
-## Depot Build VDF
-Create:
+## Depot Build VDFs
+Create one depot VDF per platform:
 
 `C:\SteamPipe\TerraformingTitansPlaytest\scripts\depot_build_4876761.vdf`
+
+`C:\SteamPipe\TerraformingTitansPlaytest\scripts\depot_build_4876762.vdf`
 
 PowerShell command:
 
@@ -216,7 +207,7 @@ PowerShell command:
 "DepotBuildConfig"
 {
   "DepotID" "4876761"
-  "ContentRoot" "..\content\"
+  "ContentRoot" "..\content\4876761\"
   "FileMapping"
   {
     "LocalPath" "*"
@@ -227,11 +218,41 @@ PowerShell command:
 '@ | Set-Content -LiteralPath "C:\SteamPipe\TerraformingTitansPlaytest\scripts\depot_build_4876761.vdf" -Encoding ASCII
 ```
 
+```powershell
+@'
+"DepotBuildConfig"
+{
+  "DepotID" "4876762"
+  "ContentRoot" "..\content\4876762\"
+  "FileMapping"
+  {
+    "LocalPath" "*"
+    "DepotPath" "."
+    "recursive" "1"
+  }
+}
+'@ | Set-Content -LiteralPath "C:\SteamPipe\TerraformingTitansPlaytest\scripts\depot_build_4876762.vdf" -Encoding ASCII
+```
+
 ```vdf
 "DepotBuildConfig"
 {
   "DepotID" "4876761"
-  "ContentRoot" "..\content\"
+  "ContentRoot" "..\content\4876761\"
+  "FileMapping"
+  {
+    "LocalPath" "*"
+    "DepotPath" "."
+    "recursive" "1"
+  }
+}
+```
+
+```vdf
+"DepotBuildConfig"
+{
+  "DepotID" "4876762"
+  "ContentRoot" "..\content\4876762\"
   "FileMapping"
   {
     "LocalPath" "*"
@@ -272,31 +293,28 @@ In Steamworks:
 1. Open `Terraforming Titans Playtest`.
 2. Go to `SteamPipe > Builds`.
 3. Confirm the uploaded build contains the expected manifest.
-4. Check the depot manifest includes:
-   - `Terraforming Titans.exe`
-   - `resources/app/index.html`
-   - `resources/app/src/js/build-target.js`
-   - Electron runtime DLLs and `.pak` files
-   - `LICENSE.electron.txt`
-   - `LICENSES.chromium.html`
-5. Set the build live on the chosen branch only after launch settings are confirmed.
-6. Install the playtest from Steam and run it.
+4. Check the Windows depot manifest includes `Terraforming Titans.exe`, `resources/app/index.html`, Electron runtime DLLs, `.pak` files, and license files.
+5. Check the Linux/SteamOS depot manifest includes `terraforming-titans`, `libsteam_api.so`, `resources/app/index.html`, Electron runtime `.so` files, `.pak` files, and license files.
+6. Set the build live on the chosen branch only after launch settings are confirmed.
+7. Install the playtest from Steam and run it on each platform.
 
 ## Verification Checklist
 Before upload:
 
-- `Terraforming Titans.exe` is present in `content`.
-- `resources\app\index.html` is present in `content`.
-- `resources\app\src\js\build-target.js` is present in `content` and contains `GAME_BUILD_TARGET = 'steam'`.
-- `LICENSE.electron.txt` and `LICENSES.chromium.html` are present in `content`.
-- `LICENSES\phaser-3.55.2-MIT.txt` and `LICENSES\three-0.158.0-MIT.txt` are present in `content`.
-- `locales`, DLLs, `.pak` files, and Electron runtime files are present in `content`.
+- `Terraforming Titans.exe` is present in `content\4876761`.
+- `terraforming-titans` and `libsteam_api.so` are present in `content\4876762`.
+- `resources\app\index.html` is present in both depot content folders.
+- `resources\app\src\js\build-target.js` is present in both depot content folders and contains `GAME_BUILD_TARGET = 'steam'`.
+- `LICENSE.electron.txt` and `LICENSES.chromium.html` are present in both depot content folders.
+- `LICENSES\phaser-3.55.2-MIT.txt` and `LICENSES\three-0.158.0-MIT.txt` are present in both depot content folders.
+- `locales`, `.pak` files, and Electron runtime files are present in both depot content folders.
 - No `node_modules`, test saves, docs, or loose repo source checkout are present in `content`.
-- Depot ID in both VDF files is `4876761`.
+- Depot IDs in the VDF files are `4876761` and `4876762`.
 
 After upload:
 
 - Build appears under `SteamPipe > Builds`.
 - Manifest paths match the expected install layout.
 - Steam install downloads the expected files.
-- Launch option starts `Terraforming Titans.exe` successfully.
+- Windows launch option starts `Terraforming Titans.exe` successfully.
+- Linux/SteamOS launch option starts `terraforming-titans` successfully.
