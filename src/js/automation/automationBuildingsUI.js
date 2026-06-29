@@ -427,6 +427,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsCombinationNameInput = applyParts.combinationNameInput;
   automationElements.buildingsCombinationNewButton = applyParts.combinationNewButton;
   automationElements.buildingsCombinationSaveButton = applyParts.combinationSaveButton;
+  automationElements.buildingsCombinationDirtyIndicator = applyParts.combinationDirtyIndicator;
   automationElements.buildingsCombinationDeleteButton = applyParts.combinationDeleteButton;
   automationElements.buildingsCombinationShowInSidebarCheckbox = applyParts.combinationShowInSidebarCheckbox;
   automationElements.buildingsCombinationUsage = applyParts.combinationUsage;
@@ -479,6 +480,7 @@ function updateBuildingsAutomationUI() {
     buildingsCombinationNameInput,
     buildingsCombinationNewButton,
     buildingsCombinationSaveButton,
+    buildingsCombinationDirtyIndicator,
     buildingsCombinationDeleteButton,
     buildingsCombinationShowInSidebarCheckbox,
     buildingsCombinationUsage
@@ -791,7 +793,8 @@ function updateBuildingsAutomationUI() {
     showCheckboxElement: buildingsCombinationShowInSidebarCheckbox,
     moveUpButtonElement: buildingsCombinationMoveUpButton,
     moveDownButtonElement: buildingsCombinationMoveDownButton,
-    deleteButtonElement: buildingsCombinationDeleteButton
+    deleteButtonElement: buildingsCombinationDeleteButton,
+    dirtyIndicatorElement: buildingsCombinationDirtyIndicator
   });
   updateAutomationCombinationUsageLine(
     buildingsCombinationUsage,

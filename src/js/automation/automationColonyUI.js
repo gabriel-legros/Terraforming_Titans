@@ -480,6 +480,7 @@ function buildAutomationColonyUI() {
   automationElements.colonyCombinationNameInput = applyParts.combinationNameInput;
   automationElements.colonyCombinationNewButton = applyParts.combinationNewButton;
   automationElements.colonyCombinationSaveButton = applyParts.combinationSaveButton;
+  automationElements.colonyCombinationDirtyIndicator = applyParts.combinationDirtyIndicator;
   automationElements.colonyCombinationDeleteButton = applyParts.combinationDeleteButton;
   automationElements.colonyCombinationShowInSidebarCheckbox = applyParts.combinationShowInSidebarCheckbox;
   automationElements.colonyCombinationUsage = applyParts.combinationUsage;
@@ -532,6 +533,7 @@ function updateColonyAutomationUI() {
     colonyCombinationNameInput,
     colonyCombinationNewButton,
     colonyCombinationSaveButton,
+    colonyCombinationDirtyIndicator,
     colonyCombinationDeleteButton,
     colonyCombinationShowInSidebarCheckbox,
     colonyCombinationUsage
@@ -836,7 +838,8 @@ function updateColonyAutomationUI() {
     showCheckboxElement: colonyCombinationShowInSidebarCheckbox,
     moveUpButtonElement: colonyCombinationMoveUpButton,
     moveDownButtonElement: colonyCombinationMoveDownButton,
-    deleteButtonElement: colonyCombinationDeleteButton
+    deleteButtonElement: colonyCombinationDeleteButton,
+    dirtyIndicatorElement: colonyCombinationDirtyIndicator
   });
   updateAutomationCombinationUsageLine(
     colonyCombinationUsage,

@@ -4417,6 +4417,7 @@ setLanguageData({
         filterSelectionOption: 'Filter selection',
         clearFilterButton: 'Clear filter',
         saveCombinationButton: 'Save',
+        combinationUnsavedChanges: 'Pending unsaved changes',
         duplicatePresetButton: 'Duplicate',
         deletePresetButton: 'Delete',
         deleteCombinationButton: 'Delete',

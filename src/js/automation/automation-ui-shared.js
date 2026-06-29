@@ -69,6 +69,42 @@ function getDefaultAutomationCombinationLabel(combination) {
   return combination.name || getAutomationCardText('combinationWithId', { id: combination.id }, `Combination ${combination.id}`);
 }
 
+function getAutomationCombinationAssignmentSnapshot(automation) {
+  return automation.getAssignments().map((entry) => ({
+    presetId: entry.presetId,
+    enabled: entry.enabled !== false
+  }));
+}
+
+function areAutomationCombinationAssignmentsEqual(leftAssignments, rightAssignments) {
+  const left = Array.isArray(leftAssignments) ? leftAssignments : [];
+  const right = Array.isArray(rightAssignments) ? rightAssignments : [];
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index].presetId !== right[index].presetId
+      || (left[index].enabled !== false) !== (right[index].enabled !== false)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isAutomationCombinationDirty(automation, uiState, activeCombination) {
+  if (!activeCombination) {
+    return uiState.combinationName !== ''
+      || uiState.combinationShowInSidebar === false
+      || automation.getAssignments().length > 0;
+  }
+  return uiState.combinationName !== activeCombination.name
+    || (uiState.combinationShowInSidebar !== false) !== (activeCombination.showInSidebar !== false)
+    || !areAutomationCombinationAssignmentsEqual(
+      getAutomationCombinationAssignmentSnapshot(automation),
+      activeCombination.assignments
+    );
+}
+
 function syncAutomationSelectOptions(select, options, selectedValue) {
   const selectedString = selectedValue !== undefined ? String(selectedValue) : null;
   const optionSignature = options.map(optionData => [
@@ -283,8 +319,16 @@ function buildAutomationCombinationApplySection(config = {}) {
   combinationNewButton.textContent = getAutomationCardText('newCombinationButton', {}, 'New');
   (config.combinationNewButtonClasses || []).forEach(className => combinationNewButton.classList.add(className));
   const combinationSaveButton = document.createElement('button');
-  combinationSaveButton.textContent = getAutomationCardText('saveCombinationButton', {}, 'Save');
   (config.combinationSaveButtonClasses || []).forEach(className => combinationSaveButton.classList.add(className));
+  const combinationSaveText = document.createElement('span');
+  combinationSaveText.textContent = getAutomationCardText('saveCombinationButton', {}, 'Save');
+  const combinationDirtyIndicator = document.createElement('span');
+  combinationDirtyIndicator.classList.add('automation-combination-dirty-indicator');
+  combinationDirtyIndicator.textContent = '*';
+  combinationDirtyIndicator.title = getAutomationCardText('combinationUnsavedChanges', {}, 'Pending unsaved changes');
+  combinationDirtyIndicator.setAttribute('aria-label', getAutomationCardText('combinationUnsavedChanges', {}, 'Pending unsaved changes'));
+  combinationDirtyIndicator.hidden = true;
+  combinationSaveButton.append(combinationSaveText, combinationDirtyIndicator);
   const combinationDeleteButton = document.createElement('button');
   combinationDeleteButton.textContent = getAutomationCardText('deleteCombinationButton', {}, 'Delete');
   (config.combinationDeleteButtonClasses || []).forEach(className => combinationDeleteButton.classList.add(className));
@@ -328,6 +372,7 @@ function buildAutomationCombinationApplySection(config = {}) {
     combinationNameInput,
     combinationNewButton,
     combinationSaveButton,
+    combinationDirtyIndicator,
     combinationDeleteButton,
     combinationShowInSidebarCheckbox: combinationShowSidebar.checkbox,
     combinationUsage,
@@ -382,6 +427,7 @@ function updateAutomationCombinationControls(config = {}) {
   const moveUpButton = config.moveUpButtonElement;
   const moveDownButton = config.moveDownButtonElement;
   const deleteButton = config.deleteButtonElement;
+  const dirtyIndicator = config.dirtyIndicatorElement;
   if (!automation || !uiState || !select || !nameInput || !showCheckbox || !moveUpButton || !moveDownButton || !deleteButton) {
     return null;
   }
@@ -413,13 +459,14 @@ function updateAutomationCombinationControls(config = {}) {
   }
 
   if (document.activeElement !== nameInput) {
-    nameInput.value = activeCombination
-      ? activeCombination.name
-      : uiState.combinationName;
+    nameInput.value = uiState.combinationName;
   }
-  showCheckbox.checked = activeCombination
-    ? activeCombination.showInSidebar !== false
-    : uiState.combinationShowInSidebar;
+  showCheckbox.checked = uiState.combinationShowInSidebar;
+
+  const isDirty = isAutomationCombinationDirty(automation, uiState, activeCombination);
+  if (dirtyIndicator) {
+    dirtyIndicator.hidden = !isDirty;
+  }
 
   deleteButton.disabled = !activeCombination;
   moveUpButton.disabled = activeCombinationIndex <= 0;
@@ -428,7 +475,8 @@ function updateAutomationCombinationControls(config = {}) {
   return {
     activeCombinationId,
     activeCombination,
-    activeCombinationIndex
+    activeCombinationIndex,
+    isDirty
   };
 }
 
@@ -520,8 +568,7 @@ function attachAutomationCombinationHandlers(config = {}) {
       updateAutomationUI();
       return;
     }
-    const combo = automation.getCombinationById(Number(comboId));
-    combo.name = event.target.value || '';
+    uiState.combinationName = event.target.value || '';
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -539,10 +586,6 @@ function attachAutomationCombinationHandlers(config = {}) {
   combinationShowInSidebarCheckbox.addEventListener('change', () => {
     const automation = getAutomation();
     uiState.combinationShowInSidebar = combinationShowInSidebarCheckbox.checked;
-    const comboId = automation.getSelectedCombinationId();
-    if (comboId) {
-      automation.setCombinationShowInSidebar(Number(comboId), uiState.combinationShowInSidebar);
-    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -550,14 +593,12 @@ function attachAutomationCombinationHandlers(config = {}) {
   combinationSaveButton.addEventListener('click', () => {
     const automation = getAutomation();
     const name = combinationNameInput.value || uiState.combinationName || '';
-    const snapshot = automation.getAssignments().map((entry) => ({
-      presetId: entry.presetId,
-      enabled: entry.enabled !== false
-    }));
+    const snapshot = getAutomationCombinationAssignmentSnapshot(automation);
     const comboId = automation.getSelectedCombinationId();
     if (comboId) {
       automation.updateCombination(Number(comboId), name, snapshot);
       automation.setCombinationShowInSidebar(Number(comboId), uiState.combinationShowInSidebar);
+      uiState.combinationSyncedId = null;
     } else {
       const newComboId = automation.addCombination(name, snapshot);
       automation.setCombinationShowInSidebar(newComboId, uiState.combinationShowInSidebar);
