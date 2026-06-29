@@ -4611,7 +4611,7 @@ setLanguageData({
         },
         hazardPreservation: {
           title: 'Hazard Preservation',
-          requirement: 'Fulfill all terraforming requirements simultaneously on any RWG world with all 5 story hazards before clearing any of the hazards.'
+          requirement: 'Fulfill all terraforming requirements simultaneously on any RWG world with all 5 story hazards before clearing any of the hazards. (Hint : Use a natural magnetosphere)'
         },
         noBuildingLeftBehind: {
           title: 'No Building Left Behind',
