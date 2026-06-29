@@ -33,6 +33,7 @@ const SHALLOW_EQUAL_REAPPLY_SAFE_EFFECT_TYPES = new Set([
   'addedWorkerNeed',
   'workerMultiplier',
   'workerRatio',
+  'colonistWorkerEfficiencyMultiplier',
   'addResourceConsumption',
   'lifeGrowthMultiplier',
   'nanoColonyGrowthMultiplier',
@@ -308,6 +309,9 @@ class EffectableEntity {
           break;
         case 'workerRatio':
           this.applyWorkerRatio(effect);
+          break;
+        case 'colonistWorkerEfficiencyMultiplier':
+          this.applyColonistWorkerEfficiencyMultiplier(effect);
           break;
         case 'addResourceConsumption':
           if (typeof this.applyAddResourceConsumption === 'function') {
@@ -789,6 +793,10 @@ class EffectableEntity {
 
   applyThroughputMultiplier(effect) {
     // throughput multipliers are computed on demand by consumers
+  }
+
+  applyColonistWorkerEfficiencyMultiplier(effect) {
+    // colonist worker efficiency multipliers are computed on demand in PopulationModule
   }
 
 

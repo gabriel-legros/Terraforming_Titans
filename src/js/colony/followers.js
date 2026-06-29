@@ -6,6 +6,9 @@ function getFollowersText(path, fallback, vars) {
   }
 }
 
+const FOLLOWERS_ZEAL_WORKER_EFFECT_SOURCE_ID = 'followersZealWorkerEfficiency';
+const FOLLOWERS_ART_WORKER_EFFECT_SOURCE_ID = 'followersArtWorkerEfficiency';
+
 class FollowersManager extends EffectableEntity {
   constructor() {
     super({ description: getFollowersText('ui.colony.followers.managerDescription', 'Manages followers systems') });
@@ -352,6 +355,41 @@ class FollowersManager extends EffectableEntity {
       effectId: 'holyworld-patience-max',
       sourceId: 'holyWorld'
     });
+  }
+
+  syncPopulationWorkerEffect(sourceId, effectId, multiplier, name) {
+    if (Math.abs(multiplier - 1) <= 1e-9) {
+      removeEffect({ target: 'population', sourceId });
+      return;
+    }
+    addEffect({
+      target: 'population',
+      type: 'colonistWorkerEfficiencyMultiplier',
+      value: multiplier,
+      effectId,
+      sourceId,
+      name
+    });
+  }
+
+  applyPopulationEffects() {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager') || this.isFaithSuppressed()) {
+      removeEffect({ target: 'population', sourceId: FOLLOWERS_ZEAL_WORKER_EFFECT_SOURCE_ID });
+      removeEffect({ target: 'population', sourceId: FOLLOWERS_ART_WORKER_EFFECT_SOURCE_ID });
+      return;
+    }
+    this.syncPopulationWorkerEffect(
+      FOLLOWERS_ZEAL_WORKER_EFFECT_SOURCE_ID,
+      'followers-zeal-worker-efficiency',
+      1 + this.getZealWorkerEfficiencyBonus(),
+      getFollowersText('ui.colony.followers.faith.bonuses.zeal', 'Zeal (Worker Efficiency)')
+    );
+    this.syncPopulationWorkerEffect(
+      FOLLOWERS_ART_WORKER_EFFECT_SOURCE_ID,
+      'followers-art-worker-efficiency',
+      this.getArtWorkerPerColonistMultiplier(),
+      getFollowersText('ui.colony.followers.art.title', 'Art Gallery')
+    );
   }
 
   getOrbitalConfigs() {
@@ -1403,9 +1441,11 @@ class FollowersManager extends EffectableEntity {
 
   reapplyEffects() {
     if (isCurrentWorldManagerDisabled('followersManager')) {
+      this.applyPopulationEffects();
       return;
     }
     this.applyHolyWorldEffects();
+    this.applyPopulationEffects();
     this.markUIDirty();
   }
 
@@ -1543,5 +1583,6 @@ class FollowersManager extends EffectableEntity {
     }
     this.recalculateGalacticPopulation();
     this.updateFaith(deltaTime);
+    this.applyPopulationEffects();
   }
 }

@@ -4,6 +4,7 @@
   const RESORT_VACATION_COOLDOWN_SECONDS = 320;
   const RESORT_VACATION_SOURCE_ID = 'resortWorldVacation';
   const RESORT_VACATION_RESOURCE_SOURCE_ID = 'resortWorldVacationResourceGlow';
+  const RESORT_VACATION_WORKER_SOURCE_ID = 'resortWorldVacationWorker';
   const RESORT_GLOW_RESOURCE_SOURCE_ID = 'resortWorldGlowResourceGlow';
   const RESORT_RESOURCE_FLAG_ID = 'resortVacation';
   const RESORT_GLOW_RESOURCE_IDS = ['food', 'components', 'electronics', 'superconductors', 'superalloys', 'androids'];
@@ -281,6 +282,7 @@
       this.vacationState = 'prep';
       this.vacationTimer = RESORT_VACATION_PREP_SECONDS;
       this.removeFactoryEffects();
+      this.applyVacationWorkerEffect();
       projectManager.markUIDirty();
       return true;
     }
@@ -401,6 +403,24 @@
       this.removeGlowResourceEffects(force);
     }
 
+    applyVacationWorkerEffect() {
+      if (!this.isVacationPrepActive()) {
+        return;
+      }
+      addEffect({
+        target: 'population',
+        type: 'colonistWorkerEfficiencyMultiplier',
+        value: this.getVacationWorkerMultiplier(),
+        effectId: 'resort-vacation-worker-efficiency',
+        sourceId: RESORT_VACATION_WORKER_SOURCE_ID,
+        name: getResortWorldText('catalogs.specializations.resort.vacation.button'),
+      });
+    }
+
+    removeVacationWorkerEffect() {
+      removeEffect({ target: 'population', sourceId: RESORT_VACATION_WORKER_SOURCE_ID });
+    }
+
     applyFactoryEffects() {
       const multiplier = this.getCurrentFactoryMultiplier();
       if (Math.abs(multiplier - this.lastFactoryMultiplier) <= 1e-9 && this.factoryEffectsApplied) {
@@ -457,21 +477,25 @@
         this.vacationState = 'ready';
         this.vacationTimer = 0;
         this.removeFactoryEffects();
+        this.removeVacationWorkerEffect();
         this.removeAllResourceEffects();
         return;
       }
       if (this.vacationState === 'ready') {
         this.removeFactoryEffects();
+        this.removeVacationWorkerEffect();
         this.removeAllResourceEffects();
         return;
       }
       const seconds = deltaTime / 1000;
       this.vacationTimer = Math.max(0, this.vacationTimer - seconds);
       if (this.vacationState === 'prep') {
+        this.applyVacationWorkerEffect();
         this.applyVacationResourceEffects();
         this.removeGlowResourceEffects();
         this.applyVacationFunding(deltaTime);
         if (this.vacationTimer <= 0) {
+          this.removeVacationWorkerEffect();
           this.removeVacationResourceEffects();
           this.vacationState = 'effect';
           this.vacationTimer = RESORT_VACATION_EFFECT_SECONDS;
@@ -481,6 +505,7 @@
       }
       if (this.vacationState === 'effect') {
         this.applyFactoryEffects();
+        this.removeVacationWorkerEffect();
         this.applyGlowResourceEffects();
         if (this.vacationTimer <= 0) {
           this.removeFactoryEffects();
@@ -509,6 +534,7 @@
       this.vacationState = 'ready';
       this.vacationTimer = 0;
       this.removeFactoryEffects(true);
+      this.removeVacationWorkerEffect();
       this.removeAllResourceEffects(true);
     }
 
@@ -635,7 +661,9 @@
         this.vacationTimer = 0;
       }
       this.removeFactoryEffects(true);
+      this.removeVacationWorkerEffect();
       this.removeAllResourceEffects(true);
+      this.applyVacationWorkerEffect();
     }
 
     loadState(state = {}) {
@@ -648,6 +676,7 @@
       this.vacationState = 'ready';
       this.vacationTimer = 0;
       this.removeFactoryEffects(true);
+      this.removeVacationWorkerEffect();
       this.removeAllResourceEffects(true);
     }
   }

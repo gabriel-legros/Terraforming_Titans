@@ -50,21 +50,29 @@ class PopulationModule extends EffectableEntity {
   }
 
   getWorkerEfficiencyMultipliers() {
-    const zealMultiplier = isManagerEffectivelyEnabled(followersManager, 'followersManager')
-      ? (1 + followersManager.getZealWorkerEfficiencyBonus())
-      : 1;
-    const artMultiplier = isManagerEffectivelyEnabled(followersManager, 'followersManager')
-      ? followersManager.getArtWorkerPerColonistMultiplier()
-      : 1;
-    const resortWorld = projectManager.projects.resortWorld;
-    const resortMultiplier = resortWorld && resortWorld.isVacationPrepActive()
-      ? resortWorld.getVacationWorkerMultiplier()
-      : 1;
+    let zealMultiplier = 1;
+    let artMultiplier = 1;
+    let resortMultiplier = 1;
+    let colonistMultiplier = 1;
+    this.activeEffects.forEach(effect => {
+      if (effect.type !== 'colonistWorkerEfficiencyMultiplier') {
+        return;
+      }
+      const multiplier = effect.value;
+      colonistMultiplier *= multiplier;
+      if (effect.effectId === 'followers-zeal-worker-efficiency') {
+        zealMultiplier = multiplier;
+      } else if (effect.effectId === 'followers-art-worker-efficiency') {
+        artMultiplier = multiplier;
+      } else if (effect.effectId === 'resort-vacation-worker-efficiency') {
+        resortMultiplier = multiplier;
+      }
+    });
     return {
       zealMultiplier,
       artMultiplier,
       resortMultiplier,
-      colonistMultiplier: zealMultiplier * artMultiplier * resortMultiplier
+      colonistMultiplier
     };
   }
 
