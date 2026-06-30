@@ -582,7 +582,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Planet visualizer supports Alderson disks as annulus worlds with a central star, cropped inner hole, and flat-world overlay/cloud geometry.
 - Ringworld rendering, cloud wrapping/noise, shoreline and terrain blending were improved.
 - Planet visualizer passive surface rebakes keep a 5s cadence but reuse the main canvas/texture and composite water/ice/life into one pixel buffer to reduce periodic CPU stalls; cloud coverage no longer invalidates the main surface texture, and replaced cloud textures are disposed.
-- Steam/Electron planet visualizer gradually turns exposed land into an ecumenopolis city-world texture based on `getEcumenopolisLandFraction(terraforming)`, including metallic surface material, megastructure grids, lit transit corridors, and denser night-side city lights. Browser builds leave this ratio ignored.
+- Steam/Electron planet visualizer gradually turns worlds into an ecumenopolis city-world texture based on `getEcumenopolisLandFraction(terraforming)`, including metallic surface material, megastructure grids, lit transit corridors, and denser night-side city lights. Browser builds leave this ratio ignored. Disk worlds use a simplified 512px ecumenopolis texture path for performance.
 - Awakening supports hidden standalone bottom-row skills that stay invisible until Atlas completion rewards apply `skillManager` reveal effects; revealed nodes do not use prerequisite connectors.
 - Multiple UI performance improvements reduce unnecessary DOM rebuilds and preserve subtab scroll/context.
 
