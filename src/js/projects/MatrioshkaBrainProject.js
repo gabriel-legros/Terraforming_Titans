@@ -45,11 +45,46 @@ function getMatrioshkaCurrentPlanetKey() {
   return spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : spaceManager.currentPlanetKey;
 }
 
+function createEmptyMatrioshkaBonusTotals() {
+  const totals = {};
+  for (let i = 0; i < MATRIOSHKA_TARGETS.length; i += 1) {
+    totals[getMatrioshkaTargetKey(MATRIOSHKA_TARGETS[i])] = 0;
+  }
+  return totals;
+}
+
+function compactMatrioshkaBonuses(state) {
+  const totals = createEmptyMatrioshkaBonusTotals();
+  if (state.bonusTotals) {
+    for (const key in state.bonusTotals) {
+      totals[key] = state.bonusTotals[key] || 0;
+    }
+  }
+  if (Array.isArray(state.bonuses)) {
+    for (let i = 0; i < state.bonuses.length; i += 1) {
+      const bonus = state.bonuses[i];
+      const key = `${bonus.targetType}:${bonus.targetId}`;
+      totals[key] = (totals[key] || 0) + (bonus.value || 0);
+    }
+  }
+  return totals;
+}
+
+function compactNonZeroMatrioshkaBonusTotals(totals) {
+  const compacted = {};
+  for (const key in totals) {
+    if (totals[key] > 0) {
+      compacted[key] = totals[key];
+    }
+  }
+  return compacted;
+}
+
 class MatrioshkaBrainProject extends TerraformingDurationProject {
   constructor(config, name) {
     super(config, name);
     this.el = {};
-    this.bonuses = [];
+    this.bonusTotals = createEmptyMatrioshkaBonusTotals();
     this.experiment = null;
     this.selectedTarget = 'random';
     this.investment = MATRIOSHKA_MIN_ADVANCED_RESEARCH;
@@ -61,7 +96,7 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
   }
 
   isVisible() {
-    return (this.unlocked || this.isCompleted || this.repeatCount > 0 || this.bonuses.length > 0) && !this.isPermanentlyDisabled();
+    return (this.unlocked || this.isCompleted || this.repeatCount > 0 || this.hasBonuses()) && !this.isPermanentlyDisabled();
   }
 
   complete() {
@@ -142,14 +177,8 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
       : getMatrioshkaTargetFromKey(selectedTarget);
     const maxBonus = this.getProjectedMaxBonus(experiment.investment, experiment.duration, selectedTarget);
     const bonus = maxBonus * Math.random();
-    this.bonuses.push({
-      targetType: target.type,
-      targetId: target.id,
-      value: bonus,
-      investment: experiment.investment,
-      duration: experiment.duration,
-      targeted: selectedTarget !== 'random'
-    });
+    const targetKey = getMatrioshkaTargetKey(target);
+    this.bonusTotals[targetKey] = (this.bonusTotals[targetKey] || 0) + bonus;
     this.experiment = null;
     this.applyEffects();
     this.updateUI();
@@ -162,14 +191,13 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
     }
   }
 
-  getBonusTotals() {
-    const totals = {};
-    for (let i = 0; i < this.bonuses.length; i += 1) {
-      const bonus = this.bonuses[i];
-      const key = `${bonus.targetType}:${bonus.targetId}`;
-      totals[key] = (totals[key] || 0) + bonus.value;
+  hasBonuses() {
+    for (const key in this.bonusTotals) {
+      if (this.bonusTotals[key] > 0) {
+        return true;
+      }
     }
-    return totals;
+    return false;
   }
 
   applyEffects() {
@@ -178,11 +206,10 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
       return;
     }
 
-    const totals = this.getBonusTotals();
     for (let i = 0; i < MATRIOSHKA_TARGETS.length; i += 1) {
       const target = MATRIOSHKA_TARGETS[i];
       const key = getMatrioshkaTargetKey(target);
-      const value = totals[key] || 0;
+      const value = this.bonusTotals[key] || 0;
       if (!(value > 0)) {
         continue;
       }
@@ -333,12 +360,11 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
       return;
     }
 
-    const totals = this.getBonusTotals();
     const activeKeys = new Set();
     for (let i = 0; i < MATRIOSHKA_TARGETS.length; i += 1) {
       const target = MATRIOSHKA_TARGETS[i];
       const key = getMatrioshkaTargetKey(target);
-      const value = totals[key] || 0;
+      const value = this.bonusTotals[key] || 0;
       if (!(value > 0)) {
         continue;
       }
@@ -419,7 +445,7 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
   saveState() {
     return {
       ...super.saveState(),
-      bonuses: this.bonuses,
+      bonusTotals: compactNonZeroMatrioshkaBonusTotals(this.bonusTotals),
       experiment: this.experiment,
       selectedTarget: this.selectedTarget,
       investment: this.investment,
@@ -429,7 +455,7 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
 
   loadState(state = {}) {
     super.loadState(state);
-    this.bonuses = Array.isArray(state.bonuses) ? state.bonuses : [];
+    this.bonusTotals = compactMatrioshkaBonuses(state);
     this.experiment = state.experiment || null;
     this.selectedTarget = state.selectedTarget || 'random';
     this.investment = state.investment || MATRIOSHKA_MIN_ADVANCED_RESEARCH;
@@ -440,7 +466,7 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
   saveTravelState() {
     return {
       ...super.saveTravelState(),
-      bonuses: this.bonuses,
+      bonusTotals: compactNonZeroMatrioshkaBonusTotals(this.bonusTotals),
       experiment: this.experiment,
       selectedTarget: this.selectedTarget,
       investment: this.investment,
@@ -450,7 +476,7 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
 
   loadTravelState(state = {}) {
     super.loadTravelState(state);
-    this.bonuses = Array.isArray(state.bonuses) ? state.bonuses : [];
+    this.bonusTotals = compactMatrioshkaBonuses(state);
     this.experiment = state.experiment || null;
     this.selectedTarget = state.selectedTarget || 'random';
     this.investment = state.investment || MATRIOSHKA_MIN_ADVANCED_RESEARCH;
