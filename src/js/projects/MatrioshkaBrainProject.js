@@ -16,7 +16,7 @@ const MATRIOSHKA_TARGETS = [
   { type: 'building', id: 'cloningFacility', label: 'Cloning Facility' },
   { type: 'building', id: 'superalloyFusionReactor', label: 'Superalloy Fusion Reactor' },
   { type: 'building', id: 'storageDepot', label: 'Storage Depot', storage: true },
-  { type: 'building', id: 'antimatterBattery', label: 'Antimatter Battery' },
+  { type: 'building', id: 'antimatterBattery', label: 'Antimatter Battery', storage: true },
   { type: 'building', id: 'boschReactor', label: 'Chemical Reactor' },
   { type: 'project', id: 'manufacturingWorld', label: 'Manufacturing World' },
   { type: 'colony', id: 'aerostat_colony', label: 'Aerostat Colony', storage: true },

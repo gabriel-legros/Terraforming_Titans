@@ -256,7 +256,8 @@ class Colony extends Building {
         const { amount } = this.getConsumptionResource(category, resource);
         const consumptionMultiplier =
           this.getEffectiveConsumptionMultiplier() *
-          this.getEffectiveResourceConsumptionMultiplier(category, resource);
+          this.getEffectiveResourceConsumptionMultiplier(category, resource) *
+          this.getEffectiveThroughputMultiplier();
         const consumptionRatio = this.getConsumptionRatioForResource(
           category,
           resource
@@ -345,7 +346,9 @@ class Colony extends Building {
   
 
   consume(accumulatedChanges, deltaTime) {
-    const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
+    const effectiveMultiplier =
+      this.getEffectiveConsumptionMultiplier() *
+      this.getEffectiveThroughputMultiplier();
   
     this.currentConsumption = {}; // Reset current consumption
     this.currentFactoryHeatConsumption = {};
@@ -494,18 +497,29 @@ class Colony extends Building {
   calculateBaseMinRatio(resources, deltaTime) {
       let minRatio = Infinity;
 
-        // Calculate minRatio based on NON-LUXURY resource consumption
-        const consumption = this.getConsumption();
-        for (const category in consumption) {
-            for (const resource in consumption[category]) {
-              // Skip luxury resources
-              if (luxuryResources[resource]) {
-                  continue;
-              }
-
-              const ratio = resources[category][resource].availabilityRatio;
-              minRatio = Math.min(minRatio, ratio);
+      // Calculate minRatio based on NON-LUXURY resource consumption
+      const consumption = this.getConsumption();
+      const consumptionMultiplier =
+        this.getEffectiveConsumptionMultiplier() *
+        this.getEffectiveThroughputMultiplier();
+      for (const category in consumption) {
+        for (const resource in consumption[category]) {
+          // Skip luxury resources
+          if (luxuryResources[resource]) {
+            continue;
           }
+
+          const { amount } = this.getConsumptionResource(category, resource);
+          const effectiveAmount =
+            amount *
+            consumptionMultiplier *
+            this.getEffectiveResourceConsumptionMultiplier(category, resource);
+          if (effectiveAmount <= 0) {
+            continue;
+          }
+          const ratio = resources[category][resource].availabilityRatio;
+          minRatio = Math.min(minRatio, ratio);
+        }
       }
 
       // Worker check is NOT needed here because Colony's overridden updateProductivity handles population ratio separately.

@@ -202,6 +202,9 @@ function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 
     getEffectiveResourceConsumptionMultiplier() {
       return 1;
     },
+    getEffectiveThroughputMultiplier() {
+      return 1;
+    },
     getTargetProductivity(resources) {
       if (this.active <= 0n) {
         return 0;
@@ -249,6 +252,9 @@ function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, na
       return 1;
     },
     getEffectiveResourceProductionMultiplier() {
+      return 1;
+    },
+    getEffectiveThroughputMultiplier() {
       return 1;
     },
     getConsumption() {

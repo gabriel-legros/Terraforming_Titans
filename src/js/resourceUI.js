@@ -2100,7 +2100,12 @@ function getDisplayConsumptionRates(resource) {
     if (amount <= 0 || building.active <= 0n) {
       continue;
     }
-    const baseRate = building.activeNumber * amount * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name);
+    const baseRate =
+      building.activeNumber *
+      amount *
+      building.getEffectiveConsumptionMultiplier() *
+      building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name) *
+      building.getEffectiveThroughputMultiplier();
     const sourceName = building.displayName || name;
     const current = adjustedBySource[sourceName] || 0;
     const displayFactor = building.ignoreResourceForProductivityResourceDisplay
