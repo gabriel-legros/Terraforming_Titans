@@ -110,6 +110,7 @@
       const minimumZoneTemperature = this.getMinimumZoneTemperature();
       const beachSilicaCost = this.getBeachSilicaCost();
       const temperatureUnit = getTemperatureUnit();
+      const coldestDisplayTemperature = Math.floor(toDisplayTemperature(minimumZoneTemperature) * 100) / 100;
       return [
         {
           id: 'terraformed',
@@ -127,7 +128,7 @@
           id: 'zoneTemperature',
           label: getResortWorldText('catalogs.specializations.resort.requirements.zoneTemperature', {
             target: formatNumber(toDisplayTemperature(293.15), false, 2),
-            value: formatNumber(toDisplayTemperature(minimumZoneTemperature), false, 2),
+            value: formatNumber(coldestDisplayTemperature, false, 2),
             unit: temperatureUnit,
           }),
           met: minimumZoneTemperature >= 293.15,
