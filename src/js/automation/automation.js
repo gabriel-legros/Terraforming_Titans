@@ -381,11 +381,14 @@ class AutomationManager extends EffectableEntity {
   }
 
   update(delta) {
-    if (isCurrentWorldManagerDisabled('automationManager')) {
+    if (isEquilibrating || isCurrentWorldManagerDisabled('automationManager')) {
       return;
     }
     if (this.autoTravelAutomation) {
       this.autoTravelAutomation.update(delta || 0);
+    }
+    if (isEquilibrating) {
+      return;
     }
     if (this.scriptAutomation) {
       this.scriptAutomation.update(delta || 0);

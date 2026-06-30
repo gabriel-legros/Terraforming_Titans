@@ -295,7 +295,7 @@
       try {
         isEquilibrating = true;
         const TF = TerraformingCtor || (typeof Terraforming === 'function' ? Terraforming : undefined);
-        if (typeof TF !== 'function') {G
+        if (typeof TF !== 'function') {
           isEquilibrating = false;
           reject(new Error('Terraforming module unavailable'));
           return;
