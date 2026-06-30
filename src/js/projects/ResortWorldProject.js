@@ -675,10 +675,18 @@
       this.loadSpecializationState(state);
     }
 
+    saveTravelState() {
+      return {
+        ...super.saveTravelState(),
+        showVacationButtonAboveResources: this.showVacationButtonAboveResources,
+      };
+    }
+
     loadTravelState(state = {}) {
       super.loadTravelState(state);
       this.vacationState = 'ready';
       this.vacationTimer = 0;
+      this.showVacationButtonAboveResources = state.showVacationButtonAboveResources === true;
       this.removeFactoryEffects(true);
       this.removeVacationWorkerEffect();
       this.removeAllResourceEffects(true);
