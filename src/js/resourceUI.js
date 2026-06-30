@@ -2100,18 +2100,20 @@ function getDisplayConsumptionRates(resource) {
     if (amount <= 0 || building.active <= 0n) {
       continue;
     }
-    const baseRate =
-      building.activeNumber *
-      amount *
-      building.getEffectiveConsumptionMultiplier() *
-      building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name) *
-      building.getEffectiveThroughputMultiplier();
     const sourceName = building.displayName || name;
     const current = adjustedBySource[sourceName] || 0;
     const displayFactor = building.ignoreResourceForProductivityResourceDisplay
       ? building.displayProductivity
       : 1;
-    const displayRate = ignoreProductivity ? current : baseRate * displayFactor;
+    const displayRate = ignoreProductivity
+      ? current
+      : building.getProjectedConsumptionRate(resource.category, resource.name, {
+          includeConsumptionRatio: false,
+          includeAutomation: false,
+          includeWorkerRatio: false,
+          useProductivity: true,
+          productivity: displayFactor
+        });
     if (displayRate !== current) {
       adjustedBySource[sourceName] = displayRate;
       total += displayRate - current;

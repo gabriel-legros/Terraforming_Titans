@@ -143,13 +143,90 @@ function createResources(initial = {}) {
   };
 }
 
+function addProjectedRateMethods(building) {
+  building.getProjectedProductionRate = function(category, resource, options = {}) {
+    const automationMultiplier = options.automationMultiplier !== undefined
+      ? options.automationMultiplier
+      : this.getAutomationActivityMultiplier();
+    const workerRatio = options.workerRatio !== undefined ? options.workerRatio : 1;
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+    return (this.production[category][resource] || 0) *
+      this.activeNumber *
+      this.getProductionRatio() *
+      this.getEffectiveProductionMultiplier() *
+      this.getEffectiveResourceProductionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
+  };
+  building.getProjectedConsumptionRate = function(category, resource, options = {}) {
+    const { amount } = this.getConsumptionResource(category, resource);
+    const automationMultiplier = options.includeAutomation === false
+      ? 1
+      : (options.automationMultiplier !== undefined
+          ? options.automationMultiplier
+          : this.getAutomationActivityMultiplier());
+    const workerRatio = options.includeWorkerRatio === false
+      ? 1
+      : (options.workerRatio !== undefined ? options.workerRatio : 1);
+    const consumptionRatio = options.includeConsumptionRatio === false
+      ? 1
+      : this.getConsumptionRatio();
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+    return amount *
+      this.activeNumber *
+      consumptionRatio *
+      this.getEffectiveConsumptionMultiplier() *
+      this.getEffectiveResourceConsumptionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
+  };
+  return building;
+}
+
 function createDysonReceiverBuilding(energyPerSecond = 0) {
-  return {
+  return addProjectedRateMethods({
     active: energyPerSecond > 0 ? 1 : 0,
+    activeNumber: energyPerSecond > 0 ? 1 : 0,
     productivity: energyPerSecond > 0 ? 1 : 0,
     displayProductivity: energyPerSecond > 0 ? 1 : 0,
     dayNightActivity: false,
+    displayName: 'Dyson Receiver',
+    production: {},
     consumption: { space: { energy: energyPerSecond } },
+    getAutomationActivityMultiplier() {
+      return 1;
+    },
+    getTotalWorkerNeed() {
+      return 0;
+    },
+    getConsumption() {
+      return this.consumption;
+    },
+    getConsumptionResource(category, resource) {
+      return { amount: this.consumption[category][resource] };
+    },
+    getConsumptionRatio() {
+      return 1;
+    },
+    getEffectiveConsumptionMultiplier() {
+      return 1;
+    },
+    getEffectiveResourceConsumptionMultiplier() {
+      return 1;
+    },
+    getEffectiveThroughputMultiplier() {
+      return 1;
+    },
     getTargetProductivity() {
       return this.active > 0 ? 1 : 0;
     },
@@ -168,11 +245,11 @@ function createDysonReceiverBuilding(energyPerSecond = 0) {
       resources.space.energy.modifyRate(-(amount / seconds), 'Dyson Receiver', 'building');
     },
     applyMaintenance() {},
-  };
+  });
 }
 
 function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 'Dyson Receiver') {
-  return {
+  return addProjectedRateMethods({
     active: energyPerSecond > 0 ? 1n : 0n,
     activeNumber: energyPerSecond > 0 ? 1 : 0,
     productivity: energyPerSecond > 0 ? 1 : 0,
@@ -226,11 +303,11 @@ function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 
       resources.space.energy.modifyRate(-(amount / seconds), this.displayName, 'building');
     },
     applyMaintenance() {},
-  };
+  });
 }
 
 function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, name = 'Space Storage Producer') {
-  return {
+  return addProjectedRateMethods({
     active: amountPerSecond > 0 ? 1 : 0,
     activeNumber: amountPerSecond > 0 ? 1 : 0,
     productivity: amountPerSecond > 0 ? 1 : 0,
@@ -277,7 +354,7 @@ function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, na
     },
     consume() {},
     applyMaintenance() {},
-  };
+  });
 }
 
 function createDysonCollectorProject(collectorPowerPerSecond = 0) {

@@ -1173,6 +1173,65 @@ class Building extends EffectableEntity {
     return 1;
   }
 
+  getProjectedProductionRate(category, resource, options = {}) {
+    const automationMultiplier = options.automationMultiplier !== undefined
+      ? options.automationMultiplier
+      : this.getAutomationActivityMultiplier();
+    const workerRatio = options.workerRatio !== undefined
+      ? options.workerRatio
+      : (this.getTotalWorkerNeed() > 0
+          ? populationModule.getWorkerAvailabilityRatio(this.workerPriority)
+          : 1);
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+    const baseProduction = this.production[category][resource] || 0;
+
+    return baseProduction *
+      this.activeNumber *
+      this.getProductionRatio() *
+      this.getEffectiveProductionMultiplier() *
+      this.getEffectiveResourceProductionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
+  }
+
+  getProjectedConsumptionRate(category, resource, options = {}) {
+    const { amount } = this.getConsumptionResource(category, resource);
+    const automationMultiplier = options.includeAutomation === false
+      ? 1
+      : (options.automationMultiplier !== undefined
+          ? options.automationMultiplier
+          : this.getAutomationActivityMultiplier());
+    const workerRatio = options.includeWorkerRatio === false
+      ? 1
+      : (options.workerRatio !== undefined
+          ? options.workerRatio
+          : (this.getTotalWorkerNeed() > 0
+              ? populationModule.getWorkerAvailabilityRatio(this.workerPriority)
+              : 1));
+    const consumptionRatio = options.includeConsumptionRatio === false
+      ? 1
+      : this.getConsumptionRatio();
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+
+    return amount *
+      this.activeNumber *
+      consumptionRatio *
+      this.getEffectiveConsumptionMultiplier() *
+      this.getEffectiveResourceConsumptionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
+  }
+
   calculateMaintenanceCost() {
     const cache = this._tickEffectCache;
     if (cache && cache.maintenanceCost) {
