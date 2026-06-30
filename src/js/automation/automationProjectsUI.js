@@ -560,6 +560,7 @@ function createProjectsApplyRow(automation, assignment) {
   const row = document.createElement('div');
   row.classList.add('project-automation-apply-row', 'building-automation-apply-row');
   row.dataset.assignmentId = String(assignment.id);
+  row._automation = automation;
   const getAssignmentId = () => Number(row.dataset.assignmentId);
 
   const primary = document.createElement('div');
@@ -571,19 +572,21 @@ function createProjectsApplyRow(automation, assignment) {
   });
   toggle.classList.add('project-automation-apply-toggle', 'building-automation-apply-toggle');
   toggle.addEventListener('click', () => {
+    const currentAutomation = row._automation;
     const assignmentId = getAssignmentId();
-    const current = automation.getAssignments().find(item => item.id === assignmentId);
+    const current = currentAutomation.getAssignments().find(item => item.id === assignmentId);
     if (!current) return;
-    automation.setAssignmentEnabled(current.id, !current.enabled);
+    currentAutomation.setAssignmentEnabled(current.id, !current.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
 
   const select = document.createElement('select');
   select.addEventListener('change', (event) => {
+    const currentAutomation = row._automation;
     const assignmentId = getAssignmentId();
     const presetId = Number(event.target.value);
-    automation.setAssignmentPreset(assignmentId, presetId);
+    currentAutomation.setAssignmentPreset(assignmentId, presetId);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -597,7 +600,7 @@ function createProjectsApplyRow(automation, assignment) {
   moveUp.textContent = '↑';
   moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
   moveUp.addEventListener('click', () => {
-    automation.moveAssignment(getAssignmentId(), -1);
+    row._automation.moveAssignment(getAssignmentId(), -1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -605,7 +608,7 @@ function createProjectsApplyRow(automation, assignment) {
   moveDown.textContent = '↓';
   moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
   moveDown.addEventListener('click', () => {
-    automation.moveAssignment(getAssignmentId(), 1);
+    row._automation.moveAssignment(getAssignmentId(), 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -613,7 +616,7 @@ function createProjectsApplyRow(automation, assignment) {
   remove.textContent = '✕';
   remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
   remove.addEventListener('click', () => {
-    automation.removeAssignment(getAssignmentId());
+    row._automation.removeAssignment(getAssignmentId());
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -626,6 +629,7 @@ function createProjectsApplyRow(automation, assignment) {
 }
 
 function updateProjectsApplyRow(row, automation, assignment, index, assignments, presets, automatableProjectLookup) {
+  row._automation = automation;
   row.dataset.assignmentId = String(assignment.id);
   row.style.display = '';
   const refs = row._projectsApplyRefs;

@@ -120,6 +120,7 @@ function getColonyAutomationPresetOptionData(presets) {
 function createColonyAutomationApplyRow(automation) {
   const row = document.createElement('div');
   row.classList.add('building-automation-apply-row');
+  row._automation = automation;
   const primary = document.createElement('div');
   primary.classList.add('building-automation-apply-primary');
   const toggle = createToggleButton({
@@ -129,21 +130,23 @@ function createColonyAutomationApplyRow(automation) {
   });
   toggle.classList.add('building-automation-apply-toggle');
   toggle.addEventListener('click', () => {
+    const currentAutomation = row._automation;
     const assignmentId = Number(row.dataset.assignmentId);
-    const assignment = automation.getAssignments().find(entry => entry.id === assignmentId);
+    const assignment = currentAutomation.getAssignments().find(entry => entry.id === assignmentId);
     if (!assignment) {
       return;
     }
-    automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
+    currentAutomation.setAssignmentEnabled(assignment.id, !assignment.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
   const select = document.createElement('select');
   select.addEventListener('change', (event) => {
+    const currentAutomation = row._automation;
     const assignmentId = Number(row.dataset.assignmentId);
     const presetId = Number(event.target.value);
-    automation.setAssignmentPreset(assignmentId, presetId);
-    updateColonyAutomationApplyDetail(row._refs.detail, automation, presetId);
+    currentAutomation.setAssignmentPreset(assignmentId, presetId);
+    updateColonyAutomationApplyDetail(row._refs.detail, currentAutomation, presetId);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -155,7 +158,7 @@ function createColonyAutomationApplyRow(automation) {
   moveUp.textContent = '↑';
   moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
   moveUp.addEventListener('click', () => {
-    automation.moveAssignment(Number(row.dataset.assignmentId), -1);
+    row._automation.moveAssignment(Number(row.dataset.assignmentId), -1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -163,7 +166,7 @@ function createColonyAutomationApplyRow(automation) {
   moveDown.textContent = '↓';
   moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
   moveDown.addEventListener('click', () => {
-    automation.moveAssignment(Number(row.dataset.assignmentId), 1);
+    row._automation.moveAssignment(Number(row.dataset.assignmentId), 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -171,7 +174,7 @@ function createColonyAutomationApplyRow(automation) {
   remove.textContent = '✕';
   remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
   remove.addEventListener('click', () => {
-    automation.removeAssignment(Number(row.dataset.assignmentId));
+    row._automation.removeAssignment(Number(row.dataset.assignmentId));
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -183,6 +186,7 @@ function createColonyAutomationApplyRow(automation) {
 }
 
 function prepareColonyAutomationApplyRow(row, automation, presets, assignment, index, assignmentCount) {
+  row._automation = automation;
   row.dataset.assignmentId = String(assignment.id);
   row.style.display = '';
   setToggleButtonState(row._refs.toggle, assignment.enabled);
