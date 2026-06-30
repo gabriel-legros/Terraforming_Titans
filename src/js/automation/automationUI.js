@@ -1102,6 +1102,9 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._boundPresetId = null;
   details._activePresetRef = null;
   details._activeOnFieldChange = null;
+  details._activeFieldOptionsResolver = null;
+  details._activeOnFilterChange = null;
+  details._activeOnClearFilter = null;
   details._activeOnSnapshotFilter = null;
   details._activeSelectedFilterValue = '';
   details._hasSnapshotButton = false;
@@ -1720,6 +1723,9 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
+  details._activeFieldOptionsResolver = fieldOptionsResolver || null;
+  details._activeOnFilterChange = onFilterChange || null;
+  details._activeOnClearFilter = onClearFilter || null;
   details._activeOnSnapshotFilter = onSnapshotFilter || null;
   details._activeSelectedFilterValue = selectedFilterValue || '';
   details._hasSnapshotButton = !!onSnapshotFilter;
@@ -1797,8 +1803,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       details._filterClearButtonNode.disabled = !selectedFilterValue;
       if (!details._filterSelectNode._boundFilterChange) {
         details._filterSelectNode.addEventListener('change', (event) => {
-          if (onFilterChange) {
-            onFilterChange(event.target.value || '');
+          if (details._activeOnFilterChange) {
+            details._activeOnFilterChange(event.target.value || '');
           }
         });
         details._filterSelectNode._boundFilterChange = true;
@@ -1807,8 +1813,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         details._filterClearButtonNode.addEventListener('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-          if (onClearFilter) {
-            onClearFilter();
+          if (details._activeOnClearFilter) {
+            details._activeOnClearFilter();
           }
         });
         details._filterClearButtonNode._boundFilterClick = true;
@@ -1917,6 +1923,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       event.stopPropagation();
       const currentPreset = details._activePresetRef;
       const currentOnFieldChange = details._activeOnFieldChange;
+      const currentFieldOptionsResolver = details._activeFieldOptionsResolver;
       if (!currentOnFieldChange || !currentPreset) {
         return;
       }
@@ -1927,8 +1934,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
           continue;
         }
         const baseValue = getAutomationPresetValueAtPath(currentPreset, draftEntry.path);
-        const fieldOptions = fieldOptionsResolver
-          ? fieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
+        const fieldOptions = currentFieldOptionsResolver
+          ? currentFieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
           : null;
         const hasCustomSelectOptions = !!(fieldOptions
           && Array.isArray(fieldOptions.selectOptions)
