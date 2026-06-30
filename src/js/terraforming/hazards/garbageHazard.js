@@ -212,7 +212,7 @@ class GarbageHazard {
     if (!resourcesObj) {
       return;
     }
-    const initialLand = resolveWorldBaseLand(terraforming, resourcesObj.surface.land);
+    const initialLand = resolveWorldGeometricLand(terraforming, resourcesObj.surface.land);
     const unlockOnly = options.unlockOnly === true;
 
     let ResourceClass = null;
