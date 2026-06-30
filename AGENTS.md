@@ -52,6 +52,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Steam/Electron builds expose native window controls through `electron/preload.cjs`: F11 toggles fullscreen, Escape exits fullscreen, Settings has a fullscreen checkbox, and Save & Settings has an Exit Game button beside Pause. Browser builds hide these controls.
 - Steam/Electron builds launch fullscreen at the primary display size when Steam sets `SteamDeck=1`; regular desktop launches keep the standard 1400x950 window.
 - Steam/Electron builds disable Chromium/Electron background throttling and app suspension in `electron/main.cjs` so simulation and automation keep running while minimized or occluded.
+- Steam/Electron builds enable the ecumenopolis city-world visualizer through `GAME_FEATURES.steamExclusiveEcumenopolisVisualizer`; browser builds keep the standard planet surface visuals.
 - Build scripts live under `scripts/`: `build-browser.sh` copies the browser build to `dist/browser`, `build-steam.sh` generates the production Steam build for AppID `4864000` at `dist/steam-win-unpacked`, and `build-steam-playtest.sh` generates Steam Playtest builds for AppID `4876760` at `dist/steam-playtest-win-unpacked` and `dist/steam-playtest-linux-unpacked`. SteamPipe upload wrappers are `upload-steam.sh` and `upload-steam-playtest.sh`; both call `upload-steam-target.sh`, stage depot-specific `dist/*-unpacked` output into `C:\SteamPipe\...`, write VDFs, and run SteamCMD without committed passwords. Playtest uploads target Windows depot `4876761` and Linux/SteamOS depot `4876762`.
 - Import Resources centralized UI: `projects/ImportResourcesProjectUI.js` (shared card for space-mining/import spaceship projects; owns assignment step controls, assigned/available displays, and row-level project controls that persist/update across travel)
 - Autobuild: `autobuild.js`
@@ -581,6 +582,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Planet visualizer supports Alderson disks as annulus worlds with a central star, cropped inner hole, and flat-world overlay/cloud geometry.
 - Ringworld rendering, cloud wrapping/noise, shoreline and terrain blending were improved.
 - Planet visualizer passive surface rebakes keep a 5s cadence but reuse the main canvas/texture and composite water/ice/life into one pixel buffer to reduce periodic CPU stalls; cloud coverage no longer invalidates the main surface texture, and replaced cloud textures are disposed.
+- Steam/Electron planet visualizer gradually turns exposed land into an ecumenopolis city-world texture based on `getEcumenopolisLandFraction(terraforming)`, including metallic surface material, megastructure grids, lit transit corridors, and denser night-side city lights. Browser builds leave this ratio ignored.
 - Awakening supports hidden standalone bottom-row skills that stay invisible until Atlas completion rewards apply `skillManager` reveal effects; revealed nodes do not use prerequisite connectors.
 - Multiple UI performance improvements reduce unnecessary DOM rebuilds and preserve subtab scroll/context.
 

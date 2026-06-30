@@ -55,6 +55,7 @@
     makeRow('hbTrop', 'Hazard Biomass Trop (%)', 0, 100, 0.1);
     makeRow('hbTemp', 'Hazard Biomass Temp (%)', 0, 100, 0.1);
     makeRow('hbPol', 'Hazard Biomass Polar (%)', 0, 100, 0.1);
+    makeRow('ecumenopolis', 'Ecumenopolis (%)', 0, 100, 0.1);
     makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
     makeRow('cloudWind', 'Cloud Wind', 0, 0.05, 0.0005);
 
@@ -266,6 +267,7 @@
     setVal('h2o', Number(r.h2o.range.value));
     setVal('ch4', Number(r.ch4.range.value));
     setVal('cloudCov', Number(r.cloudCov?.range?.value || 0));
+    if (r.ecumenopolis) setVal('ecumenopolis', Number(r.ecumenopolis.range.value));
     if (r.cloudWind) setVal('cloudWind', Number(r.cloudWind.range.value));
     const sv = (id) => { if (r[id]) setVal(id, Number(r[id].range.value)); };
     ['wTrop', 'wTemp', 'wPol', 'iTrop', 'iTemp', 'iPol', 'bTrop', 'bTemp', 'bPol', 'hbTrop', 'hbTemp', 'hbPol'].forEach(sv);
@@ -324,6 +326,7 @@
     this.viz.coverage.water = ((wT + wM + wP) / 3) * 100;
     this.viz.coverage.life = ((bT + bM + bP) / 3) * 100;
     this.viz.coverage.hazardousLife = ((hbT + hbM + hbP) / 3) * 100;
+    if (r.ecumenopolis) this.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer ? clampFrom(r.ecumenopolis) : 0;
     if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
     if (r.cloudWind) this.cloudDriftSpeed = clampFrom(r.cloudWind);
 
@@ -579,6 +582,10 @@
       const s = String(Math.max(0, Math.min(100, cloudGame)).toFixed(2));
       r.cloudCov.range.value = s; r.cloudCov.number.value = s;
     }
+    if (r.ecumenopolis) {
+      const s = String(Math.max(0, Math.min(100, this.viz.coverage?.ecumenopolis || 0)).toFixed(2));
+      r.ecumenopolis.range.value = s; r.ecumenopolis.number.value = s;
+    }
     if (r.cloudWind) {
       const s = String(this.cloudDriftSpeed);
       r.cloudWind.range.value = s; r.cloudWind.number.value = s;
@@ -617,6 +624,9 @@
       life: avg(z.tropical.life, z.temperate.life, z.polar.life) * 100,
       hazardousLife: avg(z.tropical.hazardousLife, z.temperate.hazardousLife, z.polar.hazardousLife) * 100,
       cloud: cloudGame,
+      ecumenopolis: GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
+        ? Math.max(0, Math.min(100, this.viz.coverage?.ecumenopolis || 0))
+        : 0,
     };
     this.viz.ships = Number(r.ships ? r.ships.range.value : 0);
     if (this.debug && this.debug.mode === 'debug' && this.sunLight) {

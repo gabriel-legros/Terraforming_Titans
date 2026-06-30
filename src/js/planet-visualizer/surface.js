@@ -288,19 +288,34 @@
     return baseStrength;
   };
 
+  PlanetVisualizer.prototype.getEcumenopolisVisualizerStrength = function getEcumenopolisVisualizerStrength() {
+    if (!GAME_FEATURES.steamExclusiveEcumenopolisVisualizer) return 0;
+    return clamp01((this.viz.coverage?.ecumenopolis || 0) / 100);
+  };
+
   PlanetVisualizer.prototype.updateSurfaceHeatMaterial = function updateSurfaceHeatMaterial() {
     const surface = this.surfaceMesh || this.sphere;
     const material = surface?.material;
     if (!material) return;
 
     const lava = this.getLavaTransitionStrength();
+    const city = this.getEcumenopolisVisualizerStrength();
     const baseRoughness = surface.userData?.baseRoughness ?? (this.isRingWorld() ? 0.85 : 0.9);
     const baseMetalness = surface.userData?.baseMetalness ?? 0;
-    material.roughness = Math.max(0.22, baseRoughness - lava * 0.45);
-    material.metalness = Math.min(0.16, baseMetalness + lava * 0.06);
+    material.roughness = Math.max(0.18, baseRoughness - lava * 0.45 - city * 0.28);
+    material.metalness = Math.min(0.34, baseMetalness + lava * 0.06 + city * 0.24);
     if (material.emissive) {
-      material.emissive.setRGB(0.95, 0.18 + lava * 0.16, 0.03 + lava * 0.07);
-      material.emissiveIntensity = lava * 0.72;
+      if (city > 0 && material.emissiveMap) {
+        material.emissive.setRGB(1, 0.82, 0.18);
+        material.emissiveIntensity = Math.max(lava * 0.72, 1.35 * city);
+      } else {
+        material.emissive.setRGB(
+          0.95,
+          0.18 + lava * 0.16,
+          0.03 + lava * 0.07
+        );
+        material.emissiveIntensity = lava * 0.72;
+      }
     }
   };
 
@@ -652,6 +667,7 @@
     const water = (this.viz.coverage?.water || 0) / 100;
     const life = (this.viz.coverage?.life || 0) / 100;
     const hazardousLife = (this.viz.coverage?.hazardousLife || 0) / 100;
+    const ecumenopolis = this.getEcumenopolisVisualizerStrength();
     const z = this.viz.zonalCoverage || {};
     const zKey = ['tropical', 'temperate', 'polar']
       .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}_${(z[k]?.hazardousLife ?? 0).toFixed(2)}`)
@@ -674,7 +690,7 @@
       this.heightMap = null;
       this.heightZoneHists = null;
     }
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -684,7 +700,13 @@
     if (surface && surface.material) {
       const previousMap = surface.material.map;
       surface.material.map = tex;
+      if (ecumenopolis > 0 && this._ecumenopolisEmissionTexture) {
+        surface.material.emissiveMap = this._ecumenopolisEmissionTexture;
+      } else {
+        surface.material.emissiveMap = null;
+      }
       surface.material.needsUpdate = true;
+      this.updateSurfaceHeatMaterial();
       if (previousMap && previousMap !== tex && previousMap.dispose) {
         previousMap.dispose();
       }
@@ -872,6 +894,11 @@
       this._surfaceCanvasTexture = null;
       this._waterAlpha = null;
       this._iceAlpha = null;
+      if (this._ecumenopolisEmissionTexture && this._ecumenopolisEmissionTexture.dispose) {
+        this._ecumenopolisEmissionTexture.dispose();
+      }
+      this._ecumenopolisEmissionTexture = null;
+      this._ecumenopolisEmissionCanvas = null;
     }
     const ctx = canvas.getContext('2d');
 
@@ -1515,6 +1542,245 @@
       low: [150, 42, 34],
       high: [205, 36, 42],
     });
+
+    const renderEcumenopolisOverlay = () => {
+      const cityRatio = this.getEcumenopolisVisualizerStrength();
+      if (cityRatio <= 0) return;
+
+      if (!this._ecumenopolisScore || this._ecumenopolisScore.length !== w * h) {
+        this._ecumenopolisScore = new Float32Array(w * h);
+      }
+      if (!this._ecumenopolisExposure || this._ecumenopolisExposure.length !== w * h) {
+        this._ecumenopolisExposure = new Float32Array(w * h);
+      }
+
+      const score = this._ecumenopolisScore;
+      const exposure = this._ecumenopolisExposure;
+      if (!this._ecumenopolisEmissionCanvas) {
+        this._ecumenopolisEmissionCanvas = document.createElement('canvas');
+      }
+      const emissionCanvas = this._ecumenopolisEmissionCanvas;
+      if (emissionCanvas.width !== w || emissionCanvas.height !== h) {
+        emissionCanvas.width = w;
+        emissionCanvas.height = h;
+        if (this._ecumenopolisEmissionTexture && this._ecumenopolisEmissionTexture.dispose) {
+          this._ecumenopolisEmissionTexture.dispose();
+        }
+        this._ecumenopolisEmissionTexture = null;
+      }
+      const emissionCtx = emissionCanvas.getContext('2d');
+      const emissionImg = emissionCtx.createImageData(w, h);
+      const emissionData = emissionImg.data;
+      const citySeedVal = Math.floor((seed.x * 786433) ^ (seed.y * 1572869)) >>> 0;
+      const hashCity = (x, y) => {
+        const n = Math.sin(x * 127.1 + y * 311.7 + citySeedVal * 0.000037) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      const smooth = (t) => t * t * (3 - 2 * t);
+      const valueCity = (x, y) => {
+        const xi = Math.floor(x);
+        const yi = Math.floor(y);
+        const xf = x - xi;
+        const yf = y - yi;
+        const u = smooth(xf);
+        const v = smooth(yf);
+        const a = hashCity(xi, yi);
+        const b = hashCity(xi + 1, yi);
+        const c = hashCity(xi, yi + 1);
+        const d = hashCity(xi + 1, yi + 1);
+        return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+      };
+      const cityFbm = (x, y, octaves) => {
+        let total = 0;
+        let amp = 0.54;
+        let freq = 1;
+        for (let octave = 0; octave < octaves; octave++) {
+          total += valueCity(x * freq, y * freq) * amp;
+          freq *= 2.05;
+          amp *= 0.52;
+        }
+        return clamp01(total);
+      };
+      const fract = (v) => v - Math.floor(v);
+      const lineMask = (v, width) => {
+        const f = fract(v);
+        const d = Math.min(f, 1 - f);
+        return 1 - smoothstep(width * 0.35, width, d);
+      };
+      const segmentGate = (coord, phase) => {
+        const noise = valueCity(coord * 2.4 + phase, phase * 0.37);
+        const slow = valueCity(coord * 0.42 - phase * 0.19, phase * 0.23 + 7.1);
+        return smoothstep(0.32, 0.78, noise * 0.62 + slow * 0.38);
+      };
+      const longCorridorMask = (px, py, angle, offset, width, frequency, phase) => {
+        const ca = Math.cos(angle);
+        const sa = Math.sin(angle);
+        const along = px * ca + py * sa;
+        const across = -px * sa + py * ca;
+        const warp = (cityFbm(along * 0.25 + phase, across * 0.35 - phase, 3) - 0.5) * 0.34;
+        const line = lineMask(across * frequency + offset + warp, width);
+        const broken = segmentGate(along * 0.7, phase);
+        return line * broken;
+      };
+      const ringMask = (px, py, cx, cy, radius, width, phase) => {
+        const dx = px - cx;
+        const dy = py - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) / (Math.PI * 2);
+        const radial = 1 - smoothstep(width * 0.45, width, Math.abs(dist - radius));
+        const broken = segmentGate(angle * 10.5 + radius * 1.7, phase);
+        return radial * broken;
+      };
+      const hist = new Uint32Array(256);
+      let eligible = 0;
+      const scale = isDisk ? 7.5 : 1;
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const u = x / Math.max(1, w - 1);
+        const v = y / Math.max(1, h - 1);
+        const exposed = 1;
+        exposure[i] = exposed;
+        if (exposed <= 0.08) {
+          score[i] = 0;
+          continue;
+        }
+
+        const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+        const latAbs = (isRing || isDisk) ? 0.32 : Math.min(1, Math.abs(v - 0.5) * 2);
+        const ux = u * ringAspect;
+        const continental = cityFbm(ux * 5.7 * scale + 17.3, v * 4.2 * scale - 9.1, 5);
+        const district = cityFbm(ux * 18.5 * scale - 4.6, v * 12.0 * scale + 31.4, 4);
+        const arterial = Math.max(
+          lineMask(ux * 15.0 * scale + district * 1.6, 0.065),
+          lineMask(v * 9.0 * scale + continental * 1.3, 0.06)
+        );
+        const highlandBias = smoothstep(0.18, 0.72, hgt) * 0.08;
+        const equatorBias = (1 - latAbs) * 0.08;
+        const cityScore = clamp01(
+          continental * 0.46 +
+          district * 0.31 +
+          arterial * 0.12 +
+          highlandBias +
+          equatorBias
+        ) * exposed;
+        score[i] = cityScore;
+        const bin = Math.max(0, Math.min(255, Math.floor(cityScore * 255)));
+        hist[bin]++;
+        eligible++;
+      }
+
+      if (eligible === 0) return;
+      const target = Math.max(1, Math.min(eligible, Math.round(eligible * cityRatio)));
+      let acc = 0;
+      let thresholdBin = 0;
+      for (let bin = 255; bin >= 0; bin--) {
+        acc += hist[bin];
+        if (acc >= target) {
+          thresholdBin = bin;
+          break;
+        }
+      }
+      const threshold = thresholdBin / 255;
+      const softness = Math.max(0.035, 0.11 - cityRatio * 0.06);
+      const cityIntensity = smoothstep(0.01, 0.32, cityRatio);
+      for (let i = 0; i < w * h; i++) {
+        const exposed = exposure[i];
+        if (exposed <= 0.08) continue;
+        const districtAlpha = cityRatio >= 0.995
+          ? exposed
+          : smoothstep(threshold - softness, threshold + softness, score[i]) * exposed;
+        if (districtAlpha <= 0.002) continue;
+
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const u = x / Math.max(1, w - 1);
+        const v = y / Math.max(1, h - 1);
+        const ux = u * ringAspect;
+        const panelX = Math.floor(ux * 104 * scale);
+        const panelY = Math.floor(v * 56 * scale);
+        const panelHash = hashCity(panelX, panelY);
+        const plazaHash = hashCity(panelX * 0.23 + 91.4, panelY * 0.29 - 18.6);
+        const px = ux * scale;
+        const py = v * scale;
+        const districtWarp = cityFbm(px * 1.9 + 4.1, py * 1.4 - 8.7, 4);
+        const longA = longCorridorMask(px, py, 0.1 + districtWarp * 0.28, plazaHash * 3.2, 0.027, 5.2, 2.1);
+        const longB = longCorridorMask(px, py, 1.42 + panelHash * 0.32, panelHash * 2.8, 0.023, 4.6, 5.7);
+        const longC = longCorridorMask(px, py, -0.82 + plazaHash * 0.42, districtWarp * 3.4, 0.019, 6.8, 9.4);
+        const longD = longCorridorMask(px, py, 0.58 + panelHash * 0.5, plazaHash * 4.1, 0.016, 8.4, 17.8);
+        const longE = longCorridorMask(px, py, -1.18 + districtWarp * 0.44, panelHash * 3.7, 0.015, 9.6, 23.2);
+        const cx = Math.floor(px * 1.45 + panelHash) / 1.45 + 0.32 + panelHash * 0.18;
+        const cy = Math.floor(py * 1.7 + plazaHash) / 1.7 + 0.26 + plazaHash * 0.15;
+        const radius = 0.08 + hashCity(panelX * 0.47 + 12.9, panelY * 0.53 - 6.2) * 0.22;
+        const ring = ringMask(px, py, cx, cy, radius, 0.018 + radius * 0.08, panelHash * 11.3);
+        const radial = Math.max(
+          longCorridorMask(px - cx, py - cy, Math.atan2(py - cy, px - cx), plazaHash * 2.1, 0.018, 3.4, 13.1),
+          longCorridorMask(px - cx, py - cy, Math.atan2(py - cy, px - cx) + Math.PI / 2, panelHash * 2.4, 0.014, 4.2, 16.3)
+        ) * smoothstep(radius * 1.6, radius * 0.35, Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy)));
+        const oldGrid = Math.max(
+          lineMask(ux * 17 * scale + plazaHash * 0.45 + districtWarp * 1.1, 0.025),
+          lineMask(v * 12 * scale + panelHash * 0.42 + districtWarp * 0.9, 0.024)
+        );
+        const fineLine = Math.max(
+          lineMask((ux + districtWarp * 0.02) * 150 * scale + panelHash * 0.65, 0.019),
+          lineMask((v - districtWarp * 0.018) * 92 * scale + plazaHash * 0.58, 0.018)
+        );
+        const alleyGate = segmentGate(ux * 11.5 + v * 7.3, panelHash * 19.1);
+        const alleyLine = Math.max(
+          lineMask((ux * 46 + v * 7.5 + districtWarp * 2.2) * scale + panelHash, 0.018),
+          lineMask((v * 38 - ux * 5.2 + districtWarp * 1.6) * scale + plazaHash, 0.017)
+        ) * alleyGate;
+        const diagonalLine = lineMask((ux + v * (0.44 + panelHash * 0.62)) * 22 * scale + panelHash + districtWarp * 1.8, 0.018);
+        const transit = Math.max(longA, longB, longC, longD * 0.72, longE * 0.68, ring * 0.94, radial * 0.72, diagonalLine * 0.6, oldGrid * 0.5, alleyLine * 0.56);
+        const street = Math.max(transit, fineLine * 0.36, alleyLine * 0.62);
+        const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+        const tower = smoothstep(0.42, 0.92, score[i] + panelHash * 0.22 + hgt * 0.08);
+        const metalShade = 0.36 + panelHash * 0.26 + tower * 0.12 + street * 0.08;
+        const idx = i * 4;
+        const cityR = Math.round(6 + 18 * metalShade);
+        const cityG = Math.round(7 + 18 * metalShade);
+        const cityB = Math.round(8 + 20 * metalShade);
+        const alpha = clamp01((0.8 + cityIntensity * 0.18) * districtAlpha);
+        blendPixel(
+          tdata,
+          idx,
+          cityR,
+          cityG,
+          cityB,
+          alpha
+        );
+
+        const transitGold = smoothstep(0.34, 0.82, street * 0.86 + tower * 0.14) * districtAlpha;
+        const windowHash = hashCity(x * 0.83 + tower * 19.1, y * 0.91 - street * 7.4);
+        const warmWindows = smoothstep(0.82, 0.995, windowHash) * districtAlpha * (0.22 + tower * 0.42);
+        const whiteGoldWindows = smoothstep(0.92, 0.999, hashCity(x * 1.17 - 33.2, y * 0.77 + 10.6)) * districtAlpha * street * 0.42;
+        const goldAlpha = clamp01(transitGold * 0.78 + warmWindows * 0.7 + whiteGoldWindows * 0.95);
+        if (goldAlpha > 0.01) {
+          const goldR = whiteGoldWindows > warmWindows ? 255 : 245;
+          const goldG = whiteGoldWindows > warmWindows ? 244 : 188;
+          const goldB = whiteGoldWindows > warmWindows ? 160 : 24;
+          blendPixel(tdata, idx, goldR, goldG, goldB, goldAlpha);
+          const glow = Math.max(0, Math.min(1, goldAlpha * (0.75 + street * 0.5)));
+          emissionData[idx] = Math.max(emissionData[idx], Math.round(goldR * glow));
+          emissionData[idx + 1] = Math.max(emissionData[idx + 1], Math.round(goldG * glow));
+          emissionData[idx + 2] = Math.max(emissionData[idx + 2], Math.round(goldB * glow));
+          emissionData[idx + 3] = 255;
+        }
+      }
+
+      emissionCtx.putImageData(emissionImg, 0, 0);
+      if (!this._ecumenopolisEmissionTexture) {
+        this._ecumenopolisEmissionTexture = new THREE.CanvasTexture(emissionCanvas);
+        if (THREE && THREE.SRGBColorSpace) {
+          this._ecumenopolisEmissionTexture.colorSpace = THREE.SRGBColorSpace;
+        }
+        this._ecumenopolisEmissionTexture.wrapS = THREE.RepeatWrapping;
+        this._ecumenopolisEmissionTexture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+      }
+      this._ecumenopolisEmissionTexture.needsUpdate = true;
+    };
+
+    renderEcumenopolisOverlay();
 
     ctx.putImageData(timg, 0, 0);
     if (!this._surfaceCanvasTexture) {

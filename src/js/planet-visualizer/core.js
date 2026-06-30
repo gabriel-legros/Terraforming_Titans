@@ -48,7 +48,7 @@
       this.starField = null;
       this.cityLightsGroup = null;
       this.cityLights = [];
-      this.maxCityLights = 200;
+      this.maxCityLights = 720;
       this.lastCityLightCount = -1;
 
       // Spaceships
@@ -123,7 +123,7 @@
         illum: 1,
         pop: 0,
         kpa: { co2: 0, o2: 0, inert: 0, h2o: 0, ch4: 0 },
-        coverage: { water: 0, life: 0, hazardousLife: 0, cloud: 0 },
+        coverage: { water: 0, life: 0, hazardousLife: 0, cloud: 0, ecumenopolis: 0 },
         zonalCoverage: {
           tropical: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
           temperate: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
@@ -1014,6 +1014,9 @@
       this.viz.coverage.life = Math.min(0.75, avgLife) * 100;
       this.viz.coverage.hazardousLife = Math.min(0.75, avgHazardousLife) * 100;
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
+      this.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
+        ? Math.max(0, Math.min(100, getEcumenopolisLandFraction(t) * 100))
+        : 0;
     }
 
     getCurrentPopulation() {

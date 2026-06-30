@@ -2,6 +2,12 @@
   const PlanetVisualizer = window.PlanetVisualizer;
   if (!PlanetVisualizer) return;
 
+  function smoothstep(edge0, edge1, value) {
+    const span = Math.max(1e-6, edge1 - edge0);
+    const t = Math.max(0, Math.min(1, (value - edge0) / span));
+    return t * t * (3 - 2 * t);
+  }
+
   PlanetVisualizer.prototype.updateOverlayText = function updateOverlayText() {
     const overlay = this.elements.overlay;
     if (!overlay) return;
@@ -53,8 +59,8 @@
     this.cityLightsGroup = new THREE.Group();
     this.sphere.add(this.cityLightsGroup);
 
-    const geom = new THREE.SphereGeometry(0.005, 8, 8);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffd37a });
+    const geom = new THREE.SphereGeometry(0.003, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffd447 });
 
     for (let i = 0; i < this.maxCityLights; i++) {
       const u = Math.random();
@@ -75,7 +81,10 @@
 
   PlanetVisualizer.prototype.updateCityLights = function updateCityLights() {
     const pop = this.getCurrentPopulation();
-    const target = Math.max(0, Math.min(this.maxCityLights, Math.floor((pop / 1_000_000) * this.maxCityLights)));
+    const ecumenopolis = this.getEcumenopolisVisualizerStrength();
+    const populationTarget = Math.floor((pop / 1_000_000) * this.maxCityLights);
+    const ecumenopolisTarget = Math.floor(smoothstep(0.01, 0.48, ecumenopolis) * this.maxCityLights);
+    const target = Math.max(0, Math.min(this.maxCityLights, Math.max(populationTarget, ecumenopolisTarget)));
     this.lastCityLightCount = target;
 
     const sunDir = this.sunLight ? this.sunLight.position.clone().normalize() : new THREE.Vector3(1, 0, 0);
@@ -88,6 +97,15 @@
       if (!baseVisible) {
         m.visible = false;
         continue;
+      }
+      if (ecumenopolis > 0) {
+        const scale = 1 + ecumenopolis * 0.45;
+        m.scale.setScalar(scale);
+        const hue = i % 5 === 0 ? 0xfff1a6 : 0xffc928;
+        m.material.color.setHex(hue);
+      } else {
+        m.scale.setScalar(1);
+        m.material.color.setHex(0xffd447);
       }
       m.getWorldPosition(tmp);
       tmp.normalize();

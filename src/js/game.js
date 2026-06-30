@@ -988,6 +988,9 @@ function updateRender(force = false, options = {}) {
             ? Math.max(0, Math.min(1, terraforming.luminosity.cloudFraction))
             : waterFrac;
           pv.viz.coverage.cloud = pct(cloudFrac);
+          pv.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
+            ? pct(getEcumenopolisLandFraction(terraforming))
+            : 0;
 
           // Zonal coverages for rendering bands
           const zones = ['tropical', 'temperate', 'polar'];
