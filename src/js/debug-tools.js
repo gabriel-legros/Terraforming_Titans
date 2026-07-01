@@ -71,6 +71,7 @@
       oxygenIce: resources.surface.oxygenIce?.value || 0,
       liquidNitrogen: resources.surface.liquidNitrogen?.value || 0,
       nitrogenIce: resources.surface.nitrogenIce?.value || 0,
+      land: resources.surface.land.value || 0,
       co2: resources.atmospheric.carbonDioxide?.value || 0,
       waterVapor: resources.atmospheric.atmosphericWater?.value || 0,
       atmosphericMethane: resources.atmospheric.atmosphericMethane?.value || 0,
@@ -150,7 +151,8 @@
       liquidOxygen: { initialValue: values.global.liquidOxygen },
       oxygenIce: { initialValue: values.global.oxygenIce },
       liquidNitrogen: { initialValue: values.global.liquidNitrogen },
-      nitrogenIce: { initialValue: values.global.nitrogenIce }
+      nitrogenIce: { initialValue: values.global.nitrogenIce },
+      land: { initialValue: values.global.land }
     };
     const atmospheric = {
       carbonDioxide: { initialValue: values.global.co2 },
@@ -284,9 +286,11 @@
     const override = JSON.parse(snippet);
     const oxygenOverride = override.resources.atmospheric.oxygen.initialValue;
     const inertOverride = override.resources.atmospheric.inertGas.initialValue;
+    const landOverride = override.resources.surface.land.initialValue;
     console.log('Override snippet:\n' + snippet);
     console.log('Oxygen override initialValue:', oxygenOverride);
     console.log('Inert gas override initialValue:', inertOverride);
+    console.log('Land override initialValue:', landOverride);
     console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(override.zonalTemperatures || {}));
     return snippet;
   }

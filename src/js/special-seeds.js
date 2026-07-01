@@ -532,100 +532,161 @@ const teeBeePeeOverrides = {
       }
     ]
   },
-  resources: {
-    surface: {
-      land: { initialValue: 14_000_000_000, baseLand: 14_000_000_000 },
-      ice: { initialValue: 25_000_000_000, unlocked: true },
-      liquidWater: { initialValue: 0, unlocked: true },
-      dryIce: { initialValue: 0 },
-      liquidMethane: { initialValue: 0 },
-      hydrocarbonIce: { initialValue: 0 },
-      biomass: { initialValue: 0 },
-      hazardousBiomass: { initialValue: 0 }
+  "resources": {
+    "surface": {
+      "ice": {
+        "initialValue": 167037900983155.6
+      },
+      "liquidWater": {
+        "initialValue": 0
+      },
+      "dryIce": {
+        "initialValue": 619070857944.7534
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidHydrogen": {
+        "initialValue": 0
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      },
+      "liquidOxygen": {
+        "initialValue": 0
+      },
+      "oxygenIce": {
+        "initialValue": 0
+      },
+      "liquidNitrogen": {
+        "initialValue": 0
+      },
+      "nitrogenIce": {
+        "initialValue": 0
+      },
+      "land": {
+        "initialValue": 11983795359.96175
+      }
     },
-    underground: {
-      ore: { initialValue: 6, maxDeposits: 14000, areaTotal: 140000 },
-      geothermal: { initialValue: 1, maxDeposits: 1400, areaTotal: 140000 }
-    },
-    atmospheric: {
-      carbonDioxide: { initialValue: 14_000_000_000_000_000 },
-      atmosphericWater: { initialValue: 50_000_000_000 },
-      atmosphericMethane: { initialValue: 0 },
-      atmosphericAmmonia: { initialValue: 0 },
-      oxygen: { initialValue: 0 },
-      inertGas: { initialValue: 28_000_000_000_000_000 },
-      hydrogen: { initialValue: 0 },
-      sulfuricAcid: { initialValue: 0 }
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 42201707404101.26
+      },
+      "atmosphericWater": {
+        "initialValue": 43050301.25265384
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 36088765720.46206
+      },
+      "inertGas": {
+        "initialValue": 8520844402885.591
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
     }
   },
-  zonalSurface: {
-    tropical: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 0,
+      "ice": 15407065.790560551,
+      "buriedIce": 44543451742256.53,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    temperate: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0
+    "temperate": {
+      "liquidWater": 0,
+      "ice": 30652915.20203349,
+      "buriedIce": 44543451742256.53,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    polar: {
-      liquidWater: 0,
-      ice: 25_000_000_000,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0
+    "polar": {
+      "liquidWater": 0,
+      "ice": 55679225567533.266,
+      "buriedIce": 22271725871128.266,
+      "dryIce": 619070857944.7534,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     }
   },
-  zonalTemperatures: {
-    tropical: {
-      value: 304.8,
-      day: 327.1,
-      night: 282.5
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 237.13965535388692,
+      "day": 254.5282062226445,
+      "night": 219.75110448512933
     },
-    temperate: {
-      value: 292.4,
-      day: 310.6,
-      night: 274.2
+    "temperate": {
+      "value": 220.7262283442197,
+      "day": 235.18615401448454,
+      "night": 206.26630267395484
     },
-    polar: {
-      value: 246.9,
-      day: 257.3,
-      night: 236.5
+    "polar": {
+      "value": 165.81932666267048,
+      "day": 173.3249048281644,
+      "night": 158.31374849717656
     }
   },
   celestialParameters: {
-    distanceFromSun: 1,
-    gravity: 9.35,
-    radius: 6120,
-    mass: 5.24e24,
-    baseLand: 14_000_000_000,
-    albedo: 0.36,
-    rotationPeriod: 31,
-    spinPeriod: 31,
-    surfaceArea: 470_857_120_627_689,
+    distanceFromSun: 0.05245772339140234,
+    gravity: 4.711319460302461,
+    radius: 3088.1064331881703,
+    mass: 6.731647247967333e+23,
+    baseLand: 11983795360,
+    albedo: 0.5,
+    rotationPeriod: 36.410134547390044,
+    spinPeriod: 36.410134547390044,
+    surfaceArea: 119837953599617.55,
     sector: 'R5-11'
   },
   visualization: {
