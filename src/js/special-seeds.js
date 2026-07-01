@@ -527,7 +527,8 @@ const teeBeePeeOverrides = {
         projectId: 'stellarEngine',
         labelKey: 'catalogs.specialSeeds.teebeepee.otherRequirements.stellarEngine.label',
         targetTextKey: 'catalogs.specialSeeds.teebeepee.otherRequirements.stellarEngine.targetText',
-        buttonTextKey: 'ui.terraforming.summaryUi.actions.completeStellarEngineFirst'
+        buttonTextKey: 'ui.terraforming.summaryUi.actions.completeStellarEngineFirst',
+        hideFromChallengeRules: true
       }
     ]
   },
