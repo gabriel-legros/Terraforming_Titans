@@ -1254,7 +1254,7 @@ setLanguageData({
         max: 'Max',
       },
       spaceship: {
-        assignment: 'Assignment',
+        assignment: 'Spaceship Assignment',
         assigned: 'Assigned:',
         available: 'Available:',
         costAndGain: 'Cost & Gain',
@@ -1982,6 +1982,37 @@ setLanguageData({
         segmentCost: 'Segment Cost:',
         buildRate: 'Build Rate: {value} segments/s',
         segmentsBuilt: 'Segments Built: {built} / {max}',
+      },
+      stellarEngine: {
+        costRateLabel: 'Stellar Engine',
+        eventName: 'Chaotic stellar flux',
+        unknownStar: 'Unknown',
+        ejectButton: 'Eject Bee',
+        none: 'None',
+        penaltySummary: 'x{maintenance} maintenance, {decay}%/s attrition',
+        cards: {
+          flux: 'Three Body Chaos',
+          construction: 'Construction',
+          ejection: 'Ejection',
+        },
+        labels: {
+          state: 'State',
+          star: 'Star',
+          addedFlux: 'Added flux',
+          penalties: 'Penalties',
+          segments: 'Segments',
+          buildRate: 'Build rate',
+          segmentCost: 'Segment cost',
+          cost: 'Cost',
+        },
+        status: {
+          stabilized: 'System stabilized',
+          active: 'Active: {time}',
+          cooldown: 'Cooldown: {time}',
+          readyToEject: 'Ready',
+          locked: 'Build engine first',
+          complete: 'Bee ejected',
+        },
       },
       artificialCrust: {
         costRateLabel: 'Artificial Crust',
@@ -5236,7 +5267,7 @@ setLanguageData({
       },
       stellarEngine: {
         name: 'Stellar Engine',
-        description: 'Build the first components of a system-scale engine to stabilize TeeBeePee against its unstable three-star environment.',
+        description: 'This star system has three stars, creating a highly unstable situation where no long-term flux predictions can be trusted. We could simply escape this system, but that would be the coward\'s way out. No. We will stand our ground. Most three-body problems are unstable and often end with one of the three bodies being ejected. We can accelerate that process. We must eject one of the stars, Bee, to stabilize this system once and for all.',
       },
       cargo_rocket: {
         name: 'Cargo Rocket',

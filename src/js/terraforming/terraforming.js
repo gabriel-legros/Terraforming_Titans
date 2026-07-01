@@ -1509,7 +1509,13 @@ class Terraforming extends EffectableEntity{
         : albRes.penalty;
       this.luminosity.albedo = this.luminosity.actualAlbedo;
       const fixedZonalAverageFlux = currentPlanetParameters.specialAttributes?.fixedZonalAverageFlux;
-      this.luminosity.solarFlux = fixedZonalAverageFlux ?? this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      let solarFlux = fixedZonalAverageFlux ?? this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      for (const effect of this.activeEffects) {
+        if (effect.type === 'stellarFluxAddition') {
+          solarFlux += effect.value || 0;
+        }
+      }
+      this.luminosity.solarFlux = Math.max(0, solarFlux);
     }
 
     saveTemperatureState() {

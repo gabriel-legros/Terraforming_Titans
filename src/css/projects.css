@@ -2425,6 +2425,47 @@
     padding-bottom: 10px;
 }
 
+.stellar-engine-top-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stellar-engine-status-section {
+    min-width: 0;
+}
+
+.stellar-engine-panel {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.stellar-engine-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stellar-engine-summary-grid {
+    margin-bottom: 0;
+}
+
+.stellar-engine-summary-grid .project-summary-box {
+    min-height: 48px;
+}
+
+.stellar-engine-stat-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.stellar-engine-eject-button {
+    margin-top: 4px;
+    width: 100%;
+}
+
 .project-section-container {
     display: flex;
     flex-direction: column;

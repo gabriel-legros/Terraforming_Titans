@@ -157,7 +157,8 @@ body.dark-grey-mode {
 .dark-grey-mode .project-card,
 .dark-grey-mode .info-card,
 .dark-grey-mode .mirror-oversight-card,
-.dark-grey-mode .dyson-swarm-card {
+.dark-grey-mode .dyson-swarm-card,
+.dark-grey-mode .stellar-engine-panel {
     background-color: #2d2d2d;
     border-color: #444;
 }
