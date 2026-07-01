@@ -1651,6 +1651,41 @@ describe('Space building productivity via produceResources', () => {
     cleanup();
   });
 
+  test('White Dwarf Harvesters display stored idle assignments from loaded saves', () => {
+    const harness = setupHarness();
+    const { WhiteDwarfHarvestersProject, cleanup } = harness;
+
+    const harvesters = new WhiteDwarfHarvestersProject({
+      name: 'White Dwarf Harvesters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 1,
+        lifterHarvestRecipes: {
+          whiteDwarfHarvest: {
+            label: 'White Dwarf Harvesting',
+            storageKey: 'graphite',
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'whiteDwarfHarvesters');
+
+    harvesters.repeatCount = 223;
+    harvesters.lifterAssignments.idleUnassigned = 223;
+    harvesters.lifterAssignments.whiteDwarfHarvest = 0;
+    harvesters.autoAssignFlags.whiteDwarfHarvest = true;
+    harvesters.normalizeAssignments();
+
+    expect(harvesters.getDisplayedAssignmentAmount('idleUnassigned')).toBe(223n);
+    expect(harvesters.getDisplayedAssignmentAmount('whiteDwarfHarvest')).toBe(0n);
+    expect(harvesters.getAssignedTotal()).toBe(223n);
+    expect(harvesters.getAvailableLifters()).toBe(0n);
+    cleanup();
+  });
+
   test('White Dwarf Harvesters reset finite progress when yard duration bonus removal exits continuous mode', () => {
     const harness = setupHarness();
     const { WhiteDwarfHarvestersProject, cleanup } = harness;

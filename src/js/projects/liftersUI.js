@@ -415,7 +415,7 @@ function updateLiftersUI(project) {
     }
 
     const storedCurrent = project.getStoredAssignmentAmount(key);
-    const displayedCurrent = isUnassigned ? available : storedCurrent;
+    const displayedCurrent = project.getDisplayedAssignmentAmount(key);
     const maxForKey = project.getAssignmentMaxTarget(key);
     const displayedCap = isUnassigned ? null : project.getMaxAssignmentForRecipe(key, recipe);
     const showMaxTooltip = displayedCap !== null && displayedCap > 0n;

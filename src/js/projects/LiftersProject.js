@@ -820,9 +820,6 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   getDisplayedAssignmentAmount(key) {
-    if (this.isUnassignedAssignmentKey(key)) {
-      return this.getAvailableLifters();
-    }
     return this.getStoredAssignmentAmount(key);
   }
 
