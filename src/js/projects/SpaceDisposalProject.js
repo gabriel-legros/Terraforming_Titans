@@ -17,6 +17,17 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.ensureDisposalTargets();
   }
 
+  getMassDriverShipEquivalency() {
+    let multiplier = 1;
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      if (effect.type === 'massDriverShipEquivalencyMultiplier') {
+        multiplier += Math.max(0, effect.value || 0);
+      }
+    }
+    return this.massDriverShipEquivalency * multiplier;
+  }
+
   isPlanetaryMassSelection(selection) {
     return selection?.category === 'special' && selection?.resource === 'planetaryMass';
   }
@@ -1345,13 +1356,14 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       : (typeof buildingCountToNumber === 'function'
         ? buildingCountToNumber(structure?.active)
         : Math.max(0, Math.floor(Number(structure?.active) || 0)));
+    const equivalency = this.getMassDriverShipEquivalency();
     if (!applyProductivity) {
-      return activeCount * this.massDriverShipEquivalency;
+      return activeCount * equivalency;
     }
     const productivity = Number.isFinite(structure.productivity)
       ? Math.max(0, Math.min(1, structure.productivity))
       : 0;
-    return activeCount * this.massDriverShipEquivalency * productivity;
+    return activeCount * equivalency * productivity;
   }
 
   getSpaceshipOnlyCount() {

@@ -230,6 +230,22 @@ const skillParameters = {
       perRank: true
     },
     requires: []
+  },
+  mass_driver_effectiveness: {
+    id: 'mass_driver_effectiveness',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effect: {
+      target: 'project',
+      targetId: 'disposeResources',
+      type: 'massDriverShipEquivalencyMultiplier',
+      baseValue: 0.4,
+      perRank: true
+    },
+    requires: []
   }
 };
 

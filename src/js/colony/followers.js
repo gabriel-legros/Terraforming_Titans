@@ -946,6 +946,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   getAvailableOrbitals() {
+    if (this.isBooleanFlagSet('disableOrbitals')) {
+      return 0;
+    }
     const worlds = Math.floor(spaceManager.getTerraformedPlanetCount());
     const boosted = Math.floor(worlds * this.getApostlesOrbitalsMultiplier());
     const available = boosted > 0 ? boosted : 0;

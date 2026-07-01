@@ -516,6 +516,137 @@ const hermesOverrides = {
   ]
 };
 
+const teeBeePeeOverrides = {
+  name: 'TeeBeePee',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: true
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 14_000_000_000, baseLand: 14_000_000_000 },
+      ice: { initialValue: 25_000_000_000, unlocked: true },
+      liquidWater: { initialValue: 0, unlocked: true },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 6, maxDeposits: 14000, areaTotal: 140000 },
+      geothermal: { initialValue: 1, maxDeposits: 1400, areaTotal: 140000 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 14_000_000_000_000_000 },
+      atmosphericWater: { initialValue: 50_000_000_000 },
+      atmosphericMethane: { initialValue: 0 },
+      atmosphericAmmonia: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 28_000_000_000_000_000 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    temperate: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    polar: {
+      liquidWater: 0,
+      ice: 25_000_000_000,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    }
+  },
+  zonalTemperatures: {
+    tropical: {
+      value: 304.8,
+      day: 327.1,
+      night: 282.5
+    },
+    temperate: {
+      value: 292.4,
+      day: 310.6,
+      night: 274.2
+    },
+    polar: {
+      value: 246.9,
+      day: 257.3,
+      night: 236.5
+    }
+  },
+  celestialParameters: {
+    distanceFromSun: 1,
+    gravity: 9.35,
+    radius: 6120,
+    mass: 5.24e24,
+    baseLand: 14_000_000_000,
+    albedo: 0.36,
+    rotationPeriod: 31,
+    spinPeriod: 31,
+    surfaceArea: 470_857_120_627_689,
+    sector: 'R5-11'
+  },
+  visualization: {
+    baseColor: '#b78955'
+  },
+  effects: [
+    {
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'teebeepee-disable-planetary-thrusters'
+    },
+    {
+      target: 'followersManager',
+      type: 'booleanFlag',
+      flagId: 'disableOrbitals',
+      value: true,
+      effectId: 'teebeepee-disable-orbitals'
+    },
+    {
+      target: 'project',
+      targetId: 'spaceStorage',
+      type: 'booleanFlag',
+      flagId: 'disableWithdrawal',
+      value: true,
+      effectId: 'teebeepee-disable-space-storage-withdrawals'
+    }
+  ]
+};
+
 const toi3693bOverrides = {
   name: 'TOI-3693 b',
   gravityPenaltyEnabled: true,
@@ -1483,6 +1614,59 @@ const specialSeedDefinitions = {
       }
     ],
     overrides: theRealPoseidonOverrides
+  },
+  teebeepee: {
+    key: 'teebeepee',
+    seed: 'TeeBeePee',
+    name: 'TeeBeePee',
+    nameKey: 'catalogs.specialSeeds.teebeepee.name',
+    difficultyKey: 'catalogs.specialSeeds.teebeepee.difficulty',
+    difficultyRating: 'Very Hard',
+    replayable: true,
+    steamExclusive: true,
+    target: 'planet',
+    archetype: 'mars-like',
+    orbitPreset: 'hz-mid',
+    specialEffects: [
+      {
+        id: 'three-stars',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.threeStars',
+        description: 'The planet in this system has three stars. Expect very chaotic solar flux.'
+      },
+      {
+        id: 'planetary-thrusters-disabled',
+        labelKey: 'catalogs.specialSeeds.commonEffects.planetaryThrustersDisabled',
+        label: 'Planetary Thrusters Disabled',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.planetaryThrustersDisabled',
+        description: 'Planetary Thrusters are permanently disabled on this world. A story special project will handle the problem instead.'
+      },
+      {
+        id: 'orbitals-disabled',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.orbitalsDisabled',
+        description: 'Orbitals are capped at 0 on this world.'
+      },
+      {
+        id: 'space-storage-no-withdrawal',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.noSpaceWithdrawal',
+        description: 'Space Storage cannot withdraw any resources on this world.'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'reveal-mass-driver-effectiveness',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.rewards.revealMassDriverEffectiveness',
+        description: 'Reveals the Mass Driver Effectiveness awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'mass_driver_effectiveness',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
+      }
+    ],
+    overrides: teeBeePeeOverrides
   },
   toi3693b: {
     key: 'toi3693b',

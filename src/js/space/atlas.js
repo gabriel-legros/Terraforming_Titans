@@ -1,4 +1,4 @@
-const ATLAS_FEATURED_SEED_KEYS = ['hermes', 'titania', 'therealposeidon', 'wolfysnightmare'];
+const ATLAS_FEATURED_SEED_KEYS = ['hermes', 'titania', 'therealposeidon', 'teebeepee', 'wolfysnightmare'];
 const ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD = 1000;
 
 function getAtlasSpecialSeedKey(source) {
@@ -31,6 +31,7 @@ class AtlasManager extends EffectableEntity {
         const definitions = getAllSpecialSeedDefinitions();
         return definitions
             .filter((definition) => definition && definition.key)
+            .filter((definition) => !definition.steamExclusive || GAME_FEATURES.steamExclusiveAtlasWorlds)
             .sort((left, right) => {
                 const leftFeatured = ATLAS_FEATURED_SEED_KEYS.includes(left.key);
                 const rightFeatured = ATLAS_FEATURED_SEED_KEYS.includes(right.key);

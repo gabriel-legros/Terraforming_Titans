@@ -4932,6 +4932,19 @@ setLanguageData({
           revealCloningExpertise: 'Reveals a new Awakening skill',
         },
       },
+      teebeepee: {
+        name: 'TeeBeePee',
+        difficulty: 'Very Hard',
+        effects: {
+          threeStars: 'The planet in this system has three stars. Expect very chaotic solar flux.',
+          planetaryThrustersDisabled: 'Planetary Thrusters are permanently disabled on this world because we are not cowards. A story special project will handle the problem instead.',
+          orbitalsDisabled: 'Orbitals do not want to deal with this mess and are capped at 0.',
+          noSpaceWithdrawal: 'Space Storage withdrawals are disabled on this world.',
+        },
+        rewards: {
+          revealMassDriverEffectiveness: 'Reveals a new Awakening skill',
+        },
+      },
       wolfysnightmare: {
         name: 'WolfysNightmare',
         difficulty: 'Extreme',
@@ -6979,6 +6992,10 @@ setLanguageData({
       cloning_expertise: {
         name: 'Cloning Expertise',
         description: 'Increases cloning facility production by 40% per rank',
+      },
+      mass_driver_effectiveness: {
+        name: 'Mass Driver Effectiveness',
+        description: 'Each Mass Driver is worth 40% more of its base 10 spaceship equivalency per rank',
       },
       project_speed: {
         name: 'Faster Projects',
