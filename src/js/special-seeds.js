@@ -658,6 +658,21 @@ const teeBeePeeOverrides = {
       flagId: 'disableWithdrawal',
       value: true,
       effectId: 'teebeepee-disable-space-storage-withdrawals'
+    },
+    {
+      target: 'building',
+      targetId: 'antimatterBattery',
+      type: 'booleanFlag',
+      flagId: 'antimatterBatteryFillDisabled',
+      value: true,
+      effectId: 'teebeepee-disable-antimatter-battery-fill'
+    },
+    {
+      target: 'building',
+      targetId: 'dysonReceiver',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'teebeepee-disable-dyson-receiver'
     }
   ]
 };
