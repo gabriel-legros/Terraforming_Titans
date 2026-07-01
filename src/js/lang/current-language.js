@@ -4970,7 +4970,7 @@ setLanguageData({
         difficulty: 'Very Hard',
         effects: {
           threeStars: 'The system this world is in has three stars. Expect very chaotic stellar flux with harsh penalties.',
-          stellarEngineAvailable: 'Stellar Engine story project is available on this world.',
+          stellarEngineAvailable: 'A special story project for a Stellar Engine will be made available on this world.',
           planetaryThrustersDisabled: 'Planetary Thrusters are permanently disabled on this world because we are not cowards.',
           orbitalsDisabled: 'Orbitals do not want to deal with this mess and are capped at 0.',
           noSpaceWithdrawal: 'Many other powerful features are disabled or limited.',
