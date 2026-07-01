@@ -1635,6 +1635,7 @@ setLanguageData({
         buyPrice: 'Buy Price',
         stepTooltip: 'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.',
         spaceshipPriceTooltip: 'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by terraforming more worlds.',
+        purchaseCapWarning: 'Galactic Market purchases are limited to 100 per second.',
         sat: 'Sat',
         minusMax: '-Max',
         plusMax: '+Max',

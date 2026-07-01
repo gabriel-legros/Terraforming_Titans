@@ -660,6 +660,14 @@ const teeBeePeeOverrides = {
       effectId: 'teebeepee-disable-space-storage-withdrawals'
     },
     {
+      target: 'project',
+      targetId: 'galactic_market',
+      type: 'booleanFlag',
+      flagId: 'galacticMarketPurchaseCap',
+      value: true,
+      effectId: 'teebeepee-cap-galactic-market-purchases'
+    },
+    {
       target: 'building',
       targetId: 'antimatterBattery',
       type: 'booleanFlag',
