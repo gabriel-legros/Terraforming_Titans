@@ -3251,6 +3251,17 @@ function updateLifeBox() {
     }
   }
 
+function getTerraformingCompletionBlockerText() {
+  const statuses = terraforming.getOtherRequirementStatuses();
+  for (let i = 0; i < statuses.length; i += 1) {
+    const status = statuses[i];
+    if (!status.passed && status.buttonText) {
+      return status.buttonText;
+    }
+  }
+  return '';
+}
+
 function completeTerraformingNow() {
   const isSmbhShellworld = currentPlanetParameters.classification?.type === 'shell'
     && currentPlanetParameters.classification?.core === 'smbh';
@@ -3276,6 +3287,9 @@ function completeTerraformingNow() {
     ? terraforming.getHazardClearanceStatus()
     : true;
   if (!hazardsCleared) {
+    return false;
+  }
+  if (getTerraformingCompletionBlockerText()) {
     return false;
   }
   const planetTerraformed = (typeof spaceManager !== 'undefined' &&
@@ -3396,6 +3410,15 @@ function completeTerraformingNow() {
         'actions.removeAllHazardsFirst',
         'Remove all hazards first'
       );
+      button.style.backgroundColor = getStatusColor('failure');
+      button.style.cursor = 'not-allowed';
+      button.disabled = true;
+      return;
+  }
+
+  const completionBlockerText = getTerraformingCompletionBlockerText();
+  if (completionBlockerText) {
+      button.textContent = completionBlockerText;
       button.style.backgroundColor = getStatusColor('failure');
       button.style.cursor = 'not-allowed';
       button.disabled = true;

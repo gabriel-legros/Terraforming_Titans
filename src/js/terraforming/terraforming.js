@@ -884,6 +884,9 @@ class Terraforming extends EffectableEntity{
           targetText: requirement.targetTextKey
             ? t(requirement.targetTextKey, null, requirement.targetText || `Complete ${label}.`)
             : (requirement.targetText || `Complete ${label}.`),
+          buttonText: requirement.buttonTextKey
+            ? t(requirement.buttonTextKey, null, requirement.buttonText || `Complete ${label} first`)
+            : requirement.buttonText,
           currentText: complete ? 'Completed' : 'Not completed'
         });
         continue;

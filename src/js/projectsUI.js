@@ -1556,11 +1556,7 @@ function updateProjectUI(projectName) {
   if (projectItem) {
     const groupId = elements.groupId;
     const isGroupActive = !groupId || getActiveGroupProjectName(groupId) === project.name;
-    const planetOk =
-      !project.attributes.planet ||
-      (typeof spaceManager !== 'undefined' &&
-        spaceManager.getCurrentPlanetKey &&
-        spaceManager.getCurrentPlanetKey() === project.attributes.planet);
+    const planetOk = projectManager.isProjectRelevantToCurrentPlanet(project);
     const visible = !(project.isPermanentlyDisabled?.()) && (typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked);
 
     if (isImportProject && importUI) {
@@ -2186,12 +2182,9 @@ function updateCategoryProjectsVisibility(category, subtabId) {
   let visible = false;
   if (typeof projectManager !== 'undefined' && projectManager.projects) {
     visible = Object.values(projectManager.projects).some(p => {
-      const planetOk = !p.attributes.planet ||
-        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
-         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
       return (
         p.category === category &&
-        planetOk &&
+        projectManager.isProjectRelevantToCurrentPlanet(p) &&
         !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
       );
@@ -2204,14 +2197,11 @@ function updateStoryProjectsVisibility() {
   let visible = false;
   if (typeof projectManager !== 'undefined' && projectManager.projects) {
     visible = Object.values(projectManager.projects).some(p => {
-      const planetOk = !p.attributes.planet ||
-        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
-         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
       return (
         p.category === 'story' &&
         !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) &&
-        planetOk
+        projectManager.isProjectRelevantToCurrentPlanet(p)
       );
     });
   }

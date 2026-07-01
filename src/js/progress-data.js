@@ -7,6 +7,7 @@ var progressZeus;
 var progressZeusBattle;
 var progressOlympus;
 var progressEarth;
+var progressAtlasProject;
 
 if (typeof progressMars === 'undefined') {
   if (typeof module !== 'undefined') {
@@ -65,6 +66,7 @@ try { progressZeus = require('./story/zeus.js'); } catch (e) {}
 try { progressZeusBattle = require('./story/zeus-battle.js'); } catch (e) {}
 try { progressOlympus = require('./story/olympus.js'); } catch (e) {}
 try { progressEarth = require('./story/earth.js'); } catch (e) {}
+try { progressAtlasProject = require('./story/atlasProject.js'); } catch (e) {}
 
 function mergeProgress(source) {
   if (!source) return;
@@ -93,6 +95,7 @@ mergeProgress(progressZeus);
 mergeProgress(progressZeusBattle);
 mergeProgress(progressOlympus);
 mergeProgress(progressEarth);
+mergeProgress(progressAtlasProject);
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);

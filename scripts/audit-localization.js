@@ -154,6 +154,7 @@ const specialSeedOverrideText = new Set([
   'EarthOverrun',
   'Sun',
   'Titania',
+  'TeeBeePee',
   'The pulsar emits periodic radiation bursts across the system.',
   'Intense solar flares generate periodic radiation bursts across the system. The hazard can be cleared by moving the world beyond 1 AU.',
 ]);

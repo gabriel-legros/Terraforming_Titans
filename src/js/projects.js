@@ -472,11 +472,7 @@ class Project extends EffectableEntity {
       return false;
     }
 
-    if (
-      this.category === 'story' &&
-      this.attributes.planet &&
-      spaceManager.getCurrentPlanetKey() !== this.attributes.planet
-    ) {
+    if (this.category === 'story' && !projectManager.isProjectRelevantToCurrentPlanet(this)) {
       return false;
     }
 
@@ -621,11 +617,7 @@ class Project extends EffectableEntity {
     }
     if (!this.isActive || this.isCompleted || this.isPaused) return;
 
-    if (
-      this.category === 'story' &&
-      this.attributes.planet &&
-      spaceManager.getCurrentPlanetKey() !== this.attributes.planet
-    ) {
+    if (this.category === 'story' && !projectManager.isProjectRelevantToCurrentPlanet(this)) {
       this.isActive = false;
       return;
     }
@@ -1189,21 +1181,34 @@ class ProjectManager extends EffectableEntity {
 
   isProjectRelevantToCurrentPlanet(project) {
     const targetPlanet = project?.category === 'story' ? project.attributes?.planet : null;
+    const targetSpecialSeed = project?.category === 'story' ? project.attributes?.specialSeedKey : null;
     const manager = this.spaceManager || spaceManager;
     const fallbackParameters = manager?.currentPlanetParameters || currentPlanetParameters;
+    const originalParameters = targetSpecialSeed ? manager?.getCurrentWorldOriginal?.() : null;
     const currentPlanetKey =
       manager?.getCurrentPlanetKey?.() ??
       manager?.currentPlanetKey ??
       fallbackParameters?.key ??
       fallbackParameters?.planetKey ??
       null;
+    const currentSpecialSeed =
+      fallbackParameters?.rwgMeta?.specialSeedKey ||
+      fallbackParameters?.merged?.rwgMeta?.specialSeedKey ||
+      fallbackParameters?.override?.rwgMeta?.specialSeedKey ||
+      originalParameters?.specialSeedKey ||
+      originalParameters?.rwgMeta?.specialSeedKey ||
+      originalParameters?.merged?.rwgMeta?.specialSeedKey ||
+      originalParameters?.override?.rwgMeta?.specialSeedKey ||
+      null;
 
     if (typeof project?.isRelevantToCurrentPlanet === 'function') {
       return project.isRelevantToCurrentPlanet(currentPlanetKey, fallbackParameters, manager) !== false
-        && (!targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey);
+        && (!targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey)
+        && (!targetSpecialSeed || targetSpecialSeed === currentSpecialSeed);
     }
 
-    return !targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey;
+    return (!targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey)
+      && (!targetSpecialSeed || targetSpecialSeed === currentSpecialSeed);
   }
 
   getDurationMultiplier(project, options) {

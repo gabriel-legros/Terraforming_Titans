@@ -520,7 +520,16 @@ const teeBeePeeOverrides = {
   name: 'TeeBeePee',
   gravityPenaltyEnabled: true,
   specialAttributes: {
-    hasSand: true
+    hasSand: true,
+    otherRequirements: [
+      {
+        type: 'projectCompletion',
+        projectId: 'stellarEngine',
+        labelKey: 'catalogs.specialSeeds.teebeepee.otherRequirements.stellarEngine.label',
+        targetTextKey: 'catalogs.specialSeeds.teebeepee.otherRequirements.stellarEngine.targetText',
+        buttonTextKey: 'ui.terraforming.summaryUi.actions.completeStellarEngineFirst'
+      }
+    ]
   },
   resources: {
     surface: {
@@ -622,6 +631,12 @@ const teeBeePeeOverrides = {
     baseColor: '#b78955'
   },
   effects: [
+    {
+      target: 'project',
+      targetId: 'stellarEngine',
+      type: 'enable',
+      effectId: 'teebeepee-enable-stellar-engine'
+    },
     {
       target: 'project',
       targetId: 'planetaryThruster',
@@ -1632,6 +1647,11 @@ const specialSeedDefinitions = {
         id: 'three-stars',
         descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.threeStars',
         description: 'The planet in this system has three stars. Expect very chaotic solar flux.'
+      },
+      {
+        id: 'stellar-engine-available',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.stellarEngineAvailable',
+        description: 'Stellar Engine story project is available on this world.'
       },
       {
         id: 'planetary-thrusters-disabled',
