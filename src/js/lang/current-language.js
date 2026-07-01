@@ -4969,11 +4969,11 @@ setLanguageData({
         name: 'TeeBeePee',
         difficulty: 'Very Hard',
         effects: {
-          threeStars: 'The planet in this system has three stars. Expect very chaotic solar flux.',
+          threeStars: 'The system this world is in has three stars. Expect very chaotic stellar flux with harsh penalties.',
           stellarEngineAvailable: 'Stellar Engine story project is available on this world.',
-          planetaryThrustersDisabled: 'Planetary Thrusters are permanently disabled on this world because we are not cowards. A story special project will handle the problem instead.',
+          planetaryThrustersDisabled: 'Planetary Thrusters are permanently disabled on this world because we are not cowards.',
           orbitalsDisabled: 'Orbitals do not want to deal with this mess and are capped at 0.',
-          noSpaceWithdrawal: 'Space Storage withdrawals are disabled on this world.',
+          noSpaceWithdrawal: 'Many other powerful features are disabled or limited.',
         },
         otherRequirements: {
           stellarEngine: {
