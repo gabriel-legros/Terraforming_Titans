@@ -5267,7 +5267,7 @@ setLanguageData({
       },
       stellarEngine: {
         name: 'Stellar Engine',
-        description: 'This star system has three stars, creating a highly unstable situation where no long-term flux predictions can be trusted. We could simply escape this system, but that would be the coward\'s way out. No. We will stand our ground. Most three-body problems are unstable and often end with one of the three bodies being ejected. We can accelerate that process. We must eject one of the stars, Bee, to stabilize this system once and for all.',
+        description: 'This star system has three stars, Tee, Bee and Pee, creating a highly unstable situation where no long-term flux predictions can be trusted. We could simply escape this system, but that would be the coward\'s way out. No. We will stand our ground. Most three-body problems are unstable and often end with one of the three bodies being ejected. We can accelerate that process. We must eject one of the stars, Bee, to stabilize this system once and for all.',
       },
       cargo_rocket: {
         name: 'Cargo Rocket',
