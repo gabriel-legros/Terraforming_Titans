@@ -1423,6 +1423,7 @@ class FollowersManager extends EffectableEntity {
       lastProductionRates: { ...this.lastProductionRates },
       lastAppliedAssignments: { ...this.lastAppliedAssignments }
     };
+    this.clearEffectsOnTravel();
     this.resetTransientState();
     return travelState;
   }

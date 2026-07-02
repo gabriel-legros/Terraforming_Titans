@@ -1222,7 +1222,9 @@ function applyPlanetParameterEffects() {
     addEffect({
       ...baseEffect,
       effectId,
-      sourceId
+      sourceId,
+      worldEffect: true,
+      clearOnTravel: true
     });
   }
 }
