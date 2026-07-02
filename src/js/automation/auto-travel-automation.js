@@ -29,6 +29,7 @@ class AutoTravelAutomation {
       dominion: 'random',
       randomTypeExclusions: ['jupiter-like'],
       hazards: [],
+      randomHazardSubset: false,
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
       skipEquilibration: false,
@@ -90,6 +91,7 @@ class AutoTravelAutomation {
       dominion: 'random',
       randomTypeExclusions: ['jupiter-like'],
       hazards: [],
+      randomHazardSubset: false,
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
       skipEquilibration: false,
@@ -112,6 +114,7 @@ class AutoTravelAutomation {
       dominion: rawPreset.dominion || 'random',
       randomTypeExclusions: this._normalizeRandomTypeExclusions(rawPreset.randomTypeExclusions),
       hazards: this._normalizeHazards(rawPreset.hazards),
+      randomHazardSubset: !!rawPreset.randomHazardSubset,
       autoCompleteTerraforming: rawPreset.autoCompleteTerraforming !== false,
       waitForSpecialization: !!rawPreset.waitForSpecialization,
       skipEquilibration: !!rawPreset.skipEquilibration,
@@ -218,6 +221,20 @@ class AutoTravelAutomation {
       normalized.push(hazardId);
     }
     return normalized;
+  }
+
+  _rollHazardsForTravel(preset) {
+    const hazards = this._normalizeHazards(preset.hazards);
+    if (!preset.randomHazardSubset) {
+      return hazards;
+    }
+    const rolled = [];
+    for (let index = 0; index < hazards.length; index += 1) {
+      if (Math.random() < 0.5) {
+        rolled.push(hazards[index]);
+      }
+    }
+    return rolled;
   }
 
   _normalizeTypeId(typeId) {
@@ -397,7 +414,7 @@ class AutoTravelAutomation {
       target: this._resolveRandomWorldSelection(preset.target, 'auto'),
       orbitPreset: this._resolveRandomWorldSelection(preset.orbitPreset, 'auto'),
       type: this._resolveRandomWorldSelection(typeId, 'auto'),
-      hazards: this._normalizeHazards(preset.hazards)
+      hazards: this._rollHazardsForTravel(preset)
     };
     if (typeId === 'random') {
       options.availableTypes = this._getRandomTypeCandidates(preset);
@@ -561,6 +578,7 @@ class AutoTravelAutomation {
         dominion: preset.dominion || 'random',
         randomTypeExclusions: this._normalizeRandomTypeExclusions(preset.randomTypeExclusions),
         hazards: this._normalizeHazards(preset.hazards),
+        randomHazardSubset: !!preset.randomHazardSubset,
         autoCompleteTerraforming: preset.autoCompleteTerraforming !== false,
         waitForSpecialization: !!preset.waitForSpecialization,
         skipEquilibration: !!preset.skipEquilibration,

@@ -3986,6 +3986,7 @@ setLanguageData({
           presetSection: 'Preset',
           destinationSection: 'Destination',
           hazardsSection: 'Hazards',
+          randomHazardSubset: 'Random subset of selected',
           behaviorSection: 'Behavior',
           runScriptAfterTravel: 'Run following automation script after travel',
           runScriptAfterTravelNone: 'Select script',

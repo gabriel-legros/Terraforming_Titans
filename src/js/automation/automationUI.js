@@ -34,6 +34,7 @@ const automationElements = {
   autoTravelOrbitSelect: null,
   autoTravelDominionSelect: null,
   autoTravelHazardsWrap: null,
+  autoTravelRandomHazardSubsetToggle: null,
   autoTravelAutoCompleteToggle: null,
   autoTravelWaitSpecializationToggle: null,
   autoTravelBlockIfNoStoredToggle: null,

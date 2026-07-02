@@ -263,8 +263,17 @@ function buildAutoTravelUI() {
   const hazardsSection = createSection(getAutoTravelOptionText('hazardsSection', 'Hazards'), 'auto-travel-hazards-section');
   const hazardsRow = document.createElement('div');
   hazardsRow.classList.add('auto-travel-hazards-row');
+  const randomHazardSubsetLabel = document.createElement('label');
+  randomHazardSubsetLabel.classList.add('auto-travel-checkbox-row', 'auto-travel-random-hazard-subset-row');
+  const randomHazardSubsetToggle = document.createElement('input');
+  randomHazardSubsetToggle.type = 'checkbox';
+  randomHazardSubsetToggle.classList.add('auto-travel-random-hazard-subset');
+  const randomHazardSubsetText = document.createElement('span');
+  randomHazardSubsetText.textContent = getAutoTravelOptionText('randomHazardSubset', 'Random subset of selected');
+  randomHazardSubsetLabel.append(randomHazardSubsetToggle, randomHazardSubsetText);
   const hazardsWrap = document.createElement('div');
   hazardsWrap.classList.add('auto-travel-hazards');
+  hazardsRow.appendChild(randomHazardSubsetLabel);
   hazardsRow.appendChild(hazardsWrap);
   hazardsSection.appendChild(hazardsRow);
 
@@ -350,6 +359,7 @@ function buildAutoTravelUI() {
   automationElements.autoTravelSelectionRow = selectionRow;
   automationElements.autoTravelHazardsSection = hazardsSection;
   automationElements.autoTravelHazardsWrap = hazardsWrap;
+  automationElements.autoTravelRandomHazardSubsetToggle = randomHazardSubsetToggle;
   automationElements.autoTravelAutoCompleteToggle = autoCompleteToggle;
   automationElements.autoTravelWaitSpecializationToggle = waitSpecializationToggle;
   automationElements.autoTravelBlockIfNoStoredToggle = blockIfNoStoredToggle;
@@ -473,6 +483,7 @@ function wireAutoTravelEvents() {
   }
 
   els.autoTravelAutoCompleteToggle.addEventListener('change', (event) => setPresetFlag('autoCompleteTerraforming', event.target.checked));
+  els.autoTravelRandomHazardSubsetToggle.addEventListener('change', (event) => setPresetFlag('randomHazardSubset', event.target.checked));
   els.autoTravelWaitSpecializationToggle.addEventListener('change', (event) => setPresetFlag('waitForSpecialization', event.target.checked));
   els.autoTravelBlockIfNoStoredToggle.addEventListener('change', (event) => setPresetFlag('blockIfNoStoredFromArtificial', event.target.checked));
   els.autoTravelTurnOffAfterTravelToggle.addEventListener('change', (event) => setPresetFlag('turnOffAfterTravel', event.target.checked));
@@ -620,26 +631,41 @@ function updateAutoTravelHazards(preset) {
     return;
   }
   wrap.dataset.signature = signature;
-  wrap.innerHTML = '';
+  if (!wrap._rowCache) {
+    wrap._rowCache = new Map();
+  }
+  const activeIds = new Set();
   hazardIds.forEach((hazardId) => {
-    const row = document.createElement('label');
-    row.classList.add('auto-travel-hazard-row');
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.checked = selected.has(hazardId);
-    input.addEventListener('change', (event) => {
-      const currentPreset = getAutoTravelAutomation()?.getSelectedPreset();
-      if (!currentPreset) return;
-      const next = new Set(Array.isArray(currentPreset.hazards) ? currentPreset.hazards : []);
-      if (event.target.checked) next.add(hazardId);
-      else next.delete(hazardId);
-      currentPreset.hazards = Array.from(next);
-      queueAutomationUIRefresh();
-    });
-    const text = document.createElement('span');
-    text.textContent = getRwgUiText(`hazards.names.${hazardId}`, hazardId);
-    row.append(input, text);
+    activeIds.add(hazardId);
+    let row = wrap._rowCache.get(hazardId);
+    if (!row) {
+      row = document.createElement('label');
+      row.classList.add('auto-travel-hazard-row');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      const text = document.createElement('span');
+      input.addEventListener('change', (event) => {
+        const currentPreset = getAutoTravelAutomation()?.getSelectedPreset();
+        if (!currentPreset) return;
+        const next = new Set(Array.isArray(currentPreset.hazards) ? currentPreset.hazards : []);
+        if (event.target.checked) next.add(hazardId);
+        else next.delete(hazardId);
+        currentPreset.hazards = Array.from(next);
+        queueAutomationUIRefresh();
+      });
+      row.append(input, text);
+      row._refs = { input, text };
+      wrap._rowCache.set(hazardId, row);
+    }
+    row._refs.input.checked = selected.has(hazardId);
+    row._refs.text.textContent = getRwgUiText(`hazards.names.${hazardId}`, hazardId);
+    row.style.display = '';
     wrap.appendChild(row);
+  });
+  wrap._rowCache.forEach((row, id) => {
+    if (!activeIds.has(id)) {
+      row.style.display = 'none';
+    }
   });
 }
 
@@ -730,6 +756,7 @@ function updateAutoTravelUI() {
       }
     }
     automationElements.autoTravelScriptAfterTravelToggle.checked = !!preset.runScriptAfterTravelEnabled;
+    automationElements.autoTravelRandomHazardSubsetToggle.checked = !!preset.randomHazardSubset;
     automationElements.autoTravelAutoCompleteToggle.checked = preset.autoCompleteTerraforming !== false;
     automationElements.autoTravelWaitSpecializationToggle.checked = !!preset.waitForSpecialization;
     automationElements.autoTravelBlockIfNoStoredToggle.checked = preset.blockIfNoStoredFromArtificial !== false;
@@ -767,6 +794,7 @@ function updateAutoTravelUI() {
     automationElements.autoTravelPresetSelect,
     automationElements.autoTravelPresetNameInput,
     automationElements.autoTravelTargetSelect,
+    automationElements.autoTravelRandomHazardSubsetToggle,
     automationElements.autoTravelScriptAfterTravelToggle,
     automationElements.autoTravelAutoCompleteToggle,
     automationElements.autoTravelWaitSpecializationToggle,
