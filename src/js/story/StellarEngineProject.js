@@ -41,6 +41,10 @@ class StellarEngineProject extends ArtificialSkyProject {
     return segments;
   }
 
+  getScaledCost() {
+    return Project.prototype.getScaledCost.call(this);
+  }
+
   getBuiltSegmentsWithProgress() {
     if (this.engineBuilt || this.stabilized || this.isCompleted) {
       return this.getMaxRepeats();
@@ -398,6 +402,9 @@ class StellarEngineProject extends ArtificialSkyProject {
     ejectionButton.classList.add('progress-button', 'stellar-engine-eject-button');
     ejectionButton.addEventListener('click', () => this.ejectPee());
 
+    const ejectionNote = document.createElement('div');
+    ejectionNote.classList.add('stellar-engine-ejection-note');
+
     projectElements[this.name] = {
       ...projectElements[this.name],
       stellarFluxState: addStatBox(fluxPanel.grid, getStellarEngineText('labels.state', null, 'State')),
@@ -409,10 +416,12 @@ class StellarEngineProject extends ArtificialSkyProject {
       stellarSegmentCost: addStatBox(buildPanel.grid, getStellarEngineText('labels.segmentCost', null, 'Segment cost')),
       stellarEjectionState: addStatBox(ejectionPanel.grid, getStellarEngineText('labels.state', null, 'State')),
       stellarEjectionCost: addStatBox(ejectionPanel.grid, getStellarEngineText('labels.cost', null, 'Cost')),
+      stellarEjectionNote: ejectionNote,
       stellarConstructionBody: buildPanel.body,
       stellarEjectionButton: ejectionButton
     };
 
+    ejectionPanel.body.appendChild(ejectionNote);
     ejectionPanel.body.appendChild(ejectionButton);
     container.appendChild(section);
   }
@@ -487,9 +496,9 @@ class StellarEngineProject extends ArtificialSkyProject {
     if (elements.stellarSegmentCost) {
       updateTotalCostDisplayElement(
         elements.stellarSegmentCost,
-        this.calculateSpaceshipTotalCost(this.isContinuous()),
+        this.calculateSpaceshipCost(),
         this,
-        this.isContinuous(),
+        false,
         ' '
       );
     }
@@ -509,6 +518,13 @@ class StellarEngineProject extends ArtificialSkyProject {
         this,
         false,
         ' '
+      );
+    }
+    if (elements.stellarEjectionNote) {
+      elements.stellarEjectionNote.textContent = getStellarEngineText(
+        'ejectionNote',
+        null,
+        'Energy must be delivered all at once if we aim to succeed.'
       );
     }
   }

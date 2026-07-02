@@ -2461,6 +2461,11 @@
     overflow-wrap: anywhere;
 }
 
+.stellar-engine-ejection-note {
+    color: #6c757d;
+    font-size: 0.95em;
+}
+
 .stellar-engine-eject-button {
     margin-top: 4px;
     width: 100%;

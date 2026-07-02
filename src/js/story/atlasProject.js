@@ -7,21 +7,17 @@ progressAtlasProject.storyProjects.stellarEngine = {
   chapter: -1,
   cost: {
     colony: {
-      metal: 1_000_000_000_000,
-      components: 100_000_000_000,
-      electronics: 10_000_000_000,
-      superalloys: 1_000_000_000,
-      superconductors: 100_000_000,
+      superalloys: 100_000_000,
+      superconductors: 10_000_000,
       energy: 1_000_000_000_000_000
     }
   },
-  duration: 300_000,
+  duration: 30_000_000_000,
   description: '',
   repeatable: false,
   unlocked: false,
   attributes: {
     specialSeedKey: 'teebeepee',
-    hideAutoStart: true,
     spaceMining: true,
     stellarEngine: {
       segmentCount: 100_000_000,
@@ -34,7 +30,7 @@ progressAtlasProject.storyProjects.stellarEngine = {
       decayPerSecond: 0.10,
       ejectionCost: {
         colony: {
-          energy: 1e30
+          energy: 1e29
         }
       }
     }

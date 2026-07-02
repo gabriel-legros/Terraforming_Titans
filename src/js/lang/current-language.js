@@ -1989,6 +1989,7 @@ setLanguageData({
         eventName: 'Chaotic stellar flux',
         unknownStar: 'Unknown',
         ejectButton: 'Eject Bee',
+        ejectionNote: 'Energy must be delivered all at once if we aim to succeed.',
         none: 'None',
         penaltySummary: 'x{maintenance} maintenance, {decay}%/s attrition',
         cards: {
