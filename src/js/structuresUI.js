@@ -2465,6 +2465,10 @@ function updateDecreaseButtonText(button, buildCount) {
             addTrackedUIListener(costElement, span, 'mouseenter', span._updateCostTooltip);
             addTrackedUIListener(costElement, span, 'focusin', span._updateCostTooltip);
             addTrackedUIListener(costElement, span, 'pointerdown', span._updateCostTooltip);
+        } else if (!item.isWorkerRequirement) {
+          const textSpan = document.createElement('span');
+          span.appendChild(textSpan);
+          span._textSpan = textSpan;
         }
         costElement._spans.set(item.key, span);
       }

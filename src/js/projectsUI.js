@@ -761,9 +761,13 @@ function createProjectItem(project) {
     }
     items.forEach((item, idx) => {
       const span = document.createElement('span');
+      const separator = document.createElement('span');
+      const text = document.createElement('span');
       if (idx > 0) {
         span.dataset.leadingComma = 'true';
       }
+      span.append(separator, text);
+      span._refs = { separator, text };
       list.appendChild(span);
       costItems[`${item.category}.${item.resource}`] = span;
     });
@@ -1260,9 +1264,10 @@ function updateCostDisplay(project) {
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
-        item.textContent = `${prefix}${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        item._refs.separator.textContent = prefix;
+        item._refs.text.textContent = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
         const highlight = shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount);
-        item.style.color = highlight ? 'red' : '';
+        item._refs.text.style.color = highlight ? 'red' : '';
         item.style.display = '';
       } else {
         item.style.display = 'none';
