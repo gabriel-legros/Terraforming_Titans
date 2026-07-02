@@ -1187,11 +1187,14 @@ function autoBuild(buildings, delta = 0) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (!building || building.isHidden || !building.unlocked) continue;
+        const skipAutoBuildForAutoUpgradeColony = gameSettings.autobuildIgnoreAutoUpgradeColonies
+            && colonies[buildingName] === building
+            && building.autoUpgradeEnabled;
         if (building.autoBuildEnabled || building.autoActiveEnabled || (building.shouldClampSetActiveToSupported && building.shouldClampSetActiveToSupported())) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {
                 const fillData = getAutoBuildFillData(building);
-                if (building.autoBuildEnabled && fillData.requiredAmount > 0) {
+                if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony && fillData.requiredAmount > 0) {
                     buildableBuildings.push({
                         building,
                         currentRatio: Math.max(0, 1 - fillData.fillRatio),
@@ -1230,7 +1233,7 @@ function autoBuild(buildings, delta = 0) {
                                 ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
                             : roundedPercentTarget;
 
-            if (building.autoBuildEnabled) {
+            if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony) {
                 const currentRatio = usesMaxBasis && !usesAdjustableMaxBasis ? 0 : (targetCount > 0 ? building.countNumber / targetCount : 0);
                 const requiredAmount = usesMaxBasis && !usesAdjustableMaxBasis ? 1 : targetCount - building.countNumber;
 

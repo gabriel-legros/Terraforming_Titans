@@ -883,6 +883,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.noSpecializationWarningOnTravelToggle.checked = gameSettings.noSpecializationWarningOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       cachedSettings.colonyUpgradeUncheckAutobuildToggle.checked = gameSettings.colonyUpgradeUnchecksAutobuild;
+      cachedSettings.autobuildIgnoreAutoUpgradeColoniesToggle.checked = gameSettings.autobuildIgnoreAutoUpgradeColonies;
       cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
       cachedSettings.scientificNotationThresholdInput.value = formatScientific(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);

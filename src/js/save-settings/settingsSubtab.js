@@ -40,6 +40,7 @@ function cacheSettingsElements() {
     noSpecializationWarningOnTravelTooltip: document.getElementById('no-specialization-warning-on-travel-tooltip'),
     autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
     colonyUpgradeUncheckAutobuildToggle: document.getElementById('colony-upgrade-uncheck-autobuild-toggle'),
+    autobuildIgnoreAutoUpgradeColoniesToggle: document.getElementById('autobuild-ignore-auto-upgrade-colonies-toggle'),
     roundBuildingToggle: document.getElementById('round-building-toggle'),
     roundBuildingTooltip: document.getElementById('round-building-tooltip'),
     scientificNotationThresholdInput: document.getElementById('scientific-notation-threshold-input'),
@@ -715,6 +716,13 @@ function addSettingsListeners() {
     cached.colonyUpgradeUncheckAutobuildToggle.checked = gameSettings.colonyUpgradeUnchecksAutobuild;
     cached.colonyUpgradeUncheckAutobuildToggle.addEventListener('change', () => {
       gameSettings.colonyUpgradeUnchecksAutobuild = cached.colonyUpgradeUncheckAutobuildToggle.checked;
+    });
+  }
+
+  if (cached.autobuildIgnoreAutoUpgradeColoniesToggle) {
+    cached.autobuildIgnoreAutoUpgradeColoniesToggle.checked = gameSettings.autobuildIgnoreAutoUpgradeColonies;
+    cached.autobuildIgnoreAutoUpgradeColoniesToggle.addEventListener('change', () => {
+      gameSettings.autobuildIgnoreAutoUpgradeColonies = cached.autobuildIgnoreAutoUpgradeColoniesToggle.checked;
     });
   }
 

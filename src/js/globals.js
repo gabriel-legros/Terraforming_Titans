@@ -79,6 +79,7 @@ let gameSettings = {
   preserveProjectSettingsOnTravel: false,
   autobuildAlsoSetsActive: true,
   colonyUpgradeUnchecksAutobuild: false,
+  autobuildIgnoreAutoUpgradeColonies: false,
   roundBuildingConstruction: false,
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
