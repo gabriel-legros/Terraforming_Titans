@@ -56,7 +56,7 @@ if (typeof module !== 'undefined' && module.exports) {
 BUILD_TARGET
 case "$PLATFORM" in
   win)
-    npx electron-builder --win --dir --config.directories.output=dist
+    npx electron-builder --win --dir --config.directories.output=dist --config.electronDist=node_modules/electron/dist
     if [ -d "$ROOT_DIR/dist/win-unpacked" ]; then
       mv "$ROOT_DIR/dist/win-unpacked" "$OUT_DIR"
     fi

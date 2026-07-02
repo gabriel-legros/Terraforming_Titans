@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WINDOWS_DEPOT_ID="${STEAM_WINDOWS_DEPOT_ID:-${STEAM_DEPOT_ID:-4876761}}"
 LINUX_DEPOT_ID="${STEAM_LINUX_DEPOT_ID:-4876762}"
+export STEAM_PLAYTEST_PLATFORMS=all
 
 exec bash "$SCRIPT_DIR/upload-steam-target.sh" \
   "Terraforming Titans Playtest" \
