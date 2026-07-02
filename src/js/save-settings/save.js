@@ -1107,6 +1107,13 @@ function setSaveSlotLabel(slot, name) {
   }
 }
 
+function setSaveSlotCompletedIndicator(slot, isCompleted) {
+  const indicator = document.getElementById(`${slot}-completed-star`);
+  if (indicator) {
+    indicator.hidden = !isCompleted;
+  }
+}
+
 function saveSaveSlotName(slot, name) {
   const saveSlotNames = readSaveSlotNames();
   saveSlotNames[slot] = normalizeSaveSlotName(slot, name);
@@ -1146,6 +1153,14 @@ function getTimestampFromSavedState(savedState) {
   }
 }
 
+function getGameCompletedFromSavedState(savedState) {
+  try {
+    return JSON.parse(savedState).gameCompleted === true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function getSaveSlotTimestamp(slot, saveSlotDates) {
   const savedState = getSavedStateForSlot(slot);
   if (!savedState) {
@@ -1180,6 +1195,7 @@ function saveGameToSlot(slot) {
   const formattedSaveDate = formatDate(saveDate);
 
   setSaveSlotStatus(slot, formattedSaveDate);
+  setSaveSlotCompletedIndicator(slot, gameState.gameCompleted === true);
 
   // Save the save slot dates as UNIX timestamps
   saveSaveSlotDates(slot, saveDate);
@@ -1377,6 +1393,7 @@ function deleteSaveFileFromSlot(slot) {
 
   // Clear the save date for the slot
   document.getElementById(`${slot}-date`).textContent = t('ui.common.empty', null, 'Empty');
+  setSaveSlotCompletedIndicator(slot, false);
 
   // Delete the save slot date
   deleteSaveSlotDate(slot);
@@ -1404,6 +1421,7 @@ function loadSaveSlotDates() {
     const dateCell = document.getElementById(`${slot}-date`);
     if (!savedState) {
       if (dateCell) dateCell.textContent = t('ui.common.empty', null, 'Empty');
+      setSaveSlotCompletedIndicator(slot, false);
       if (repairedDates[slot] !== undefined) {
         delete repairedDates[slot];
       }
@@ -1417,6 +1435,7 @@ function loadSaveSlotDates() {
       if (dateCell) dateCell.textContent = formattedDate;
       repairedDates[slot] = timestamp;
     }
+    setSaveSlotCompletedIndicator(slot, getGameCompletedFromSavedState(savedState));
   }
 
   writeSaveSlotDates(repairedDates);

@@ -867,7 +867,10 @@
                       </thead>
                       <tbody>
                         <tr>
-                            <td data-i18n="ui.settings.autosave">Autosave</td>
+                            <td class="save-slot-name-cell">
+                                <span id="autosave-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                <span data-i18n="ui.settings.autosave">Autosave</span>
+                            </td>
                             <td id="autosave-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
                                 <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
@@ -876,7 +879,10 @@
                             </td>
                         </tr>
                         <tr id="exitsave-row" class="build-target-hidden" hidden>
-                            <td data-i18n="ui.settings.exitsave">Exit Save</td>
+                            <td class="save-slot-name-cell">
+                                <span id="exitsave-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                <span data-i18n="ui.settings.exitsave">Exit Save</span>
+                            </td>
                             <td id="exitsave-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
                                 <button class="save-button" data-slot="exitsave" data-i18n="ui.common.save">Save</button>
@@ -885,7 +891,10 @@
                             </td>
                         </tr>
                         <tr id="pretravel-row" class="hidden">
-                            <td data-i18n="ui.settings.pretravel">Pre-travel</td>
+                            <td class="save-slot-name-cell">
+                                <span id="pretravel-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                <span data-i18n="ui.settings.pretravel">Pre-travel</span>
+                            </td>
                             <td id="pretravel-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
                                 <button class="save-button" data-slot="pretravel" disabled data-i18n="ui.common.save">Save</button>
@@ -900,6 +909,7 @@
                         </tr>
                         <tr>
                             <td class="save-slot-name-cell">
+                                <span id="slot1-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
                                 <span id="slot1-label" class="save-slot-name-text" data-i18n="ui.settings.slot1">Slot 1</span>
                                 <button type="button" class="save-slot-rename-button" data-slot="slot1" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
                             </td>
@@ -913,6 +923,7 @@
                         <!-- ... other slots ... -->
                          <tr>
                               <td class="save-slot-name-cell">
+                                  <span id="slot2-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
                                   <span id="slot2-label" class="save-slot-name-text" data-i18n="ui.settings.slot2">Slot 2</span>
                                   <button type="button" class="save-slot-rename-button" data-slot="slot2" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
                               </td>
@@ -925,6 +936,7 @@
                           </tr>
                           <tr>
                               <td class="save-slot-name-cell">
+                                  <span id="slot3-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
                                   <span id="slot3-label" class="save-slot-name-text" data-i18n="ui.settings.slot3">Slot 3</span>
                                   <button type="button" class="save-slot-rename-button" data-slot="slot3" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
                               </td>
@@ -937,6 +949,7 @@
                           </tr>
                           <tr>
                               <td class="save-slot-name-cell">
+                                  <span id="slot4-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
                                   <span id="slot4-label" class="save-slot-name-text" data-i18n="ui.settings.slot4">Slot 4</span>
                                   <button type="button" class="save-slot-rename-button" data-slot="slot4" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
                               </td>
@@ -949,6 +962,7 @@
                           </tr>
                           <tr>
                               <td class="save-slot-name-cell">
+                                  <span id="slot5-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
                                   <span id="slot5-label" class="save-slot-name-text" data-i18n="ui.settings.slot5">Slot 5</span>
                                   <button type="button" class="save-slot-rename-button" data-slot="slot5" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
                               </td>

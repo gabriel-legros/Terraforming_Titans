@@ -350,9 +350,24 @@
     white-space: nowrap;
   }
 
+  .save-slot-completed-star {
+    display: inline-block;
+    width: 14px;
+    margin-right: 4px;
+    color: #d9a300;
+    font-size: 12px;
+    line-height: 1;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .save-slot-completed-star[hidden] {
+    display: none;
+  }
+
   .save-slot-name-text {
     display: inline-block;
-    max-width: calc(100% - 34px);
+    max-width: calc(100% - 52px);
     overflow: hidden;
     text-overflow: ellipsis;
     vertical-align: middle;
