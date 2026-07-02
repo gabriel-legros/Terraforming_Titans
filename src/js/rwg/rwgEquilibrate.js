@@ -125,9 +125,10 @@
 
   function buildSandboxResourcesFromOverride(overrideResources) {
     const res = {};
-    for (const cat of Object.keys(overrideResources)) {
+    const mergedResources = deepMerge((baseDefaultParams && baseDefaultParams.resources) || {}, overrideResources || {});
+    for (const cat of Object.keys(mergedResources)) {
       res[cat] = {};
-      const bucket = overrideResources[cat];
+      const bucket = mergedResources[cat];
       for (const key of Object.keys(bucket)) {
         const entry = bucket[key] || {};
         const initialValue = entry.initialValue || 0;

@@ -535,13 +535,13 @@ const teeBeePeeOverrides = {
   "resources": {
     "surface": {
       "ice": {
-        "initialValue": 167037900983155.6
+        "initialValue": 167037900983160.06
       },
       "liquidWater": {
         "initialValue": 0
       },
       "dryIce": {
-        "initialValue": 619070857944.7534
+        "initialValue": 619070857947.785
       },
       "liquidCO2": {
         "initialValue": 0
@@ -568,15 +568,15 @@ const teeBeePeeOverrides = {
         "initialValue": 0
       },
       "land": {
-        "initialValue": 11983795359.96175
+        "initialValue": 11983795360
       }
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 42201707404101.26
+        "initialValue": 42201707404097.06
       },
       "atmosphericWater": {
-        "initialValue": 43050301.25265384
+        "initialValue": 43050301.037099026
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -601,7 +601,10 @@ const teeBeePeeOverrides = {
   "zonalSurface": {
     "tropical": {
       "liquidWater": 0,
-      "ice": 15407065.790560551,
+      "ice": 15407065.63708217,
+      "liquidAmmonia": 0,
+      "ammoniaIce": 0,
+      "buriedAmmoniaIce": 0,
       "buriedIce": 44543451742256.53,
       "dryIce": 0,
       "buriedDryIce": 0,
@@ -621,7 +624,10 @@ const teeBeePeeOverrides = {
     },
     "temperate": {
       "liquidWater": 0,
-      "ice": 30652915.20203349,
+      "ice": 30652906.16910652,
+      "liquidAmmonia": 0,
+      "ammoniaIce": 0,
+      "buriedAmmoniaIce": 0,
       "buriedIce": 44543451742256.53,
       "dryIce": 0,
       "buriedDryIce": 0,
@@ -641,9 +647,12 @@ const teeBeePeeOverrides = {
     },
     "polar": {
       "liquidWater": 0,
-      "ice": 55679225567533.266,
+      "ice": 55679225567546.93,
+      "liquidAmmonia": 0,
+      "ammoniaIce": 0,
+      "buriedAmmoniaIce": 0,
       "buriedIce": 22271725871128.266,
-      "dryIce": 619070857944.7534,
+      "dryIce": 619070857947.785,
       "buriedDryIce": 0,
       "liquidCO2": 0,
       "liquidHydrogen": 0,
@@ -682,15 +691,42 @@ const teeBeePeeOverrides = {
     gravity: 4.711319460302461,
     radius: 3088.1064331881703,
     mass: 6.731647247967333e+23,
+    baseGravity: 4.711319460302461,
+    baseRadius: 3088.1064331881703,
+    baseMass: 6.731647247967333e+23,
     baseLand: 11983795360,
+    basePlanetaryMass: 6.731647247967333e+23,
+    basePlanetaryVolumeM3: 123357451817028120000,
+    baseSurfaceMassKg: 0,
+    baseAtmosphericMassKg: 0,
     albedo: 0.5,
     rotationPeriod: 36.410134547390044,
     spinPeriod: 36.410134547390044,
+    starLuminosity: 0.002013612234820151,
     surfaceArea: 119837953599617.55,
-    sector: 'R5-11'
+    actualAlbedo: 0.5,
+    hasNaturalMagnetosphere: false,
+    sector: 'R5-07',
+    rogue: false,
+    roguePulsar: false,
+    coreHeatFlux: 0,
+    crossSectionArea: 29959488399904.387
+  },
+  star: {
+    name: 'Tee Bee and Pee',
+    spectralType: 'M',
+    luminositySolar: 0.002013612234820151,
+    massSolar: 0.16970998037606477,
+    radiusSolar: 0.24197244153298497,
+    temperatureK: 2486,
+    habitableZone: null
+  },
+  classification: {
+    archetype: 'cold-desert',
+    TeqK: 216
   },
   visualization: {
-    baseColor: '#b78955'
+    baseColor: '#b38c61'
   },
   effects: [
     {
@@ -1725,7 +1761,7 @@ const specialSeedDefinitions = {
     replayable: true,
     steamExclusive: true,
     target: 'planet',
-    archetype: 'mars-like',
+    archetype: 'cold-desert',
     orbitPreset: 'hz-mid',
     specialEffects: [
       {
