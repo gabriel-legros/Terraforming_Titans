@@ -26,7 +26,7 @@ function normalizeGasImportTarget(target, gas) {
   if (target === 'spaceStorage') {
     return 'spaceStorage';
   }
-  if (gas === 'hydrogen' && (target === 'colony' || target === 'colonyOnly')) {
+  if (gas === 'hydrogen' && (target === 'colony' || target === 'colonyOnly' || target === 'colonyAndSpaceStorage')) {
     return target;
   }
   return 'atmospheric';
@@ -518,13 +518,16 @@ class SpaceMiningProject extends SpaceshipProject {
 
   isHydrogenColonyImportSelected() {
     return this.getTargetAtmosphericResource() === 'hydrogen'
-      && (this.gasImportTarget === 'colony' || this.gasImportTarget === 'colonyOnly');
+      && (this.gasImportTarget === 'colony'
+        || this.gasImportTarget === 'colonyOnly'
+        || this.gasImportTarget === 'colonyAndSpaceStorage');
   }
 
   isSpaceStorageImportSelected() {
     return (this.attributes.dynamicWaterImport && this.waterImportTarget === 'spaceStorage')
       || (this.getPlanetaryMassImportResource() && this.materialImportTarget === 'spaceStorage')
-      || this.isGasStorageImportSelected();
+      || this.isGasStorageImportSelected()
+      || this.gasImportTarget === 'colonyAndSpaceStorage';
   }
 
   shouldSkipSpaceshipCostEffect(effect) {
@@ -682,6 +685,7 @@ class SpaceMiningProject extends SpaceshipProject {
         1,
         0,
         { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndAtmosphere', 'Colony and Atmosphere') },
+        { value: 'colonyAndSpaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony and Space Storage') },
         { value: 'colonyOnly', text: getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only') }
       );
     }
@@ -690,6 +694,9 @@ class SpaceMiningProject extends SpaceshipProject {
       option.value = optionData.value;
       option.textContent = optionData.text;
       if (optionData.value === 'spaceStorage') {
+        option.style.display = this.isSpaceStorageTargetAvailable() ? '' : 'none';
+      }
+      if (optionData.value === 'colonyAndSpaceStorage') {
         option.style.display = this.isSpaceStorageTargetAvailable() ? '' : 'none';
       }
       select.appendChild(option);
@@ -707,6 +714,7 @@ class SpaceMiningProject extends SpaceshipProject {
       gasImportTargetLabel: label,
       gasImportTargetSelect: select,
       gasImportTargetSpaceStorageOption: select.querySelector('option[value="spaceStorage"]'),
+      gasImportTargetColonyAndSpaceStorageOption: select.querySelector('option[value="colonyAndSpaceStorage"]'),
     };
 
     return control;
@@ -989,6 +997,13 @@ class SpaceMiningProject extends SpaceshipProject {
       const allowSpaceStorage = this.isSpaceStorageTargetAvailable();
       elements.gasImportTargetSpaceStorageOption.style.display = allowSpaceStorage ? '' : 'none';
       if (!allowSpaceStorage && this.gasImportTarget === 'spaceStorage') {
+        this.gasImportTarget = 'atmospheric';
+      }
+    }
+    if (elements.gasImportTargetColonyAndSpaceStorageOption) {
+      const allowSpaceStorage = this.isSpaceStorageTargetAvailable();
+      elements.gasImportTargetColonyAndSpaceStorageOption.style.display = allowSpaceStorage ? '' : 'none';
+      if (!allowSpaceStorage && this.gasImportTarget === 'colonyAndSpaceStorage') {
         this.gasImportTarget = 'atmospheric';
       }
     }
@@ -1615,6 +1630,16 @@ class SpaceMiningProject extends SpaceshipProject {
     return amount - toColony;
   }
 
+  getHydrogenImportColonyOverflow(amount, accumulatedChanges = null) {
+    const resource = resources.colony.colonyHydrogen;
+    const pending = accumulatedChanges?.colony?.colonyHydrogen || 0;
+    const current = resource.value + pending;
+    const limit = resource.hasCap
+      ? (current >= resource.cap ? current : resource.cap)
+      : current + amount;
+    return Math.max(0, amount - Math.max(0, limit - current));
+  }
+
   getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
     let ratio = super.getContinuousGainScaleLimit(context, gainBase, accumulatedChanges, productivity);
     if (gainBase.spaceStorage) {
@@ -1628,6 +1653,26 @@ class SpaceMiningProject extends SpaceshipProject {
             gainRatio
           );
           ratio = Math.min(ratio, intakePlan.ratio);
+          intakePlan.limitedResources.forEach((resourceKey) => {
+            resources.spaceStorage[resourceKey].automationLimited = true;
+          });
+        }
+      }
+    }
+    if (this.gasImportTarget === 'colonyAndSpaceStorage' && gainBase.colony?.colonyHydrogen) {
+      const spaceStorageProject = projectManager.projects?.spaceStorage;
+      if (spaceStorageProject && spaceStorageProject.computeStorageIntakePlan) {
+        const gainRatio = context.fraction * context.successChance * productivity;
+        const desired = gainBase.colony.colonyHydrogen * gainRatio;
+        const colonyOverflow = this.getHydrogenImportColonyOverflow(desired, accumulatedChanges);
+        if (colonyOverflow > 0) {
+          const storageScale = gainRatio > 0 ? colonyOverflow / gainBase.colony.colonyHydrogen : 0;
+          const intakePlan = spaceStorageProject.computeStorageIntakePlan(
+            { hydrogen: gainBase.colony.colonyHydrogen },
+            accumulatedChanges,
+            storageScale
+          );
+          ratio = Math.min(ratio, (desired - colonyOverflow + intakePlan.allowedTotal) / desired);
           intakePlan.limitedResources.forEach((resourceKey) => {
             resources.spaceStorage[resourceKey].automationLimited = true;
           });
@@ -1697,12 +1742,17 @@ class SpaceMiningProject extends SpaceshipProject {
     if (this.isHydrogenColonyImportSelected() && gain.colony?.colonyHydrogen) {
       const amount = gain.colony.colonyHydrogen * fraction * productivity;
       const importWithoutOverflow = this.gasImportTarget === 'colonyOnly';
-      this.applyHydrogenImportToColony(
+      const overflow = this.applyHydrogenImportToColony(
         amount,
         accumulatedChanges,
         this.gasImportTarget === 'colony' || importWithoutOverflow,
         importWithoutOverflow ? accumulatedSpecialChanges : null
       );
+      if (this.gasImportTarget === 'colonyAndSpaceStorage' && overflow > 0) {
+        const scale = fraction * productivity;
+        const storageGain = { spaceStorage: { hydrogen: scale > 0 ? overflow / scale : 0 } };
+        this.applySpaceshipResourceGain(storageGain, fraction, accumulatedChanges, productivity, accumulatedSpecialChanges);
+      }
       return;
     }
     if (this.isPlanetaryMassImportSelected() && gain.underground?.planetaryMass) {

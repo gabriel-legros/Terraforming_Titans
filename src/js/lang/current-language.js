@@ -1869,6 +1869,7 @@ setLanguageData({
         surface: 'Surface',
         colony: 'Colony',
         colonyAndAtmosphere: 'Colony and Atmosphere',
+        colonyAndSpaceStorage: 'Colony and Space Storage',
         colonyOnly: 'Colony only',
         spaceStorage: 'Space Storage',
         planetaryMass: 'Planetary Mass',
