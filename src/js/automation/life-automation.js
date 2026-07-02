@@ -13,6 +13,7 @@ const LIFE_AUTOMATION_ATTRIBUTES = [
 ];
 const LIFE_AUTOMATION_ZONE_KEYS = ['tropical', 'temperate', 'polar'];
 const LIFE_AUTOMATION_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY = 0.01;
+const LIFE_AUTOMATION_DEFAULT_GROWTH_TEMPERATURE_TARGET = 0.95;
 class LifeAutomation {
   constructor() {
     this.presets = [];
@@ -56,6 +57,7 @@ class LifeAutomation {
       weight: 1,
       cap,
       capMode: this.normalizeEntryCapMode(attribute, capMode),
+      target: LIFE_AUTOMATION_DEFAULT_GROWTH_TEMPERATURE_TARGET,
       zones: this.createTemperatureZoneSettings()
     };
   }
@@ -72,6 +74,9 @@ class LifeAutomation {
     }
     if (capMode === 'needed' && this.isAsNeededAttribute(attributeName)) {
       return 'needed';
+    }
+    if (capMode === 'aiming' && attributeName === 'growthTemperatureTolerance') {
+      return 'aiming';
     }
     return 'fixed';
   }
@@ -138,6 +143,7 @@ class LifeAutomation {
       weight: Number.isFinite(weight) && weight > 0 ? weight : 0,
       cap,
       capMode,
+      target: this.normalizeGrowthTemperatureTarget(entry.target),
       zones: this.normalizeTemperatureZoneSettings(entry.zones)
     };
   }
@@ -184,6 +190,14 @@ class LifeAutomation {
     return normalized;
   }
 
+  normalizeGrowthTemperatureTarget(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return LIFE_AUTOMATION_DEFAULT_GROWTH_TEMPERATURE_TARGET;
+    }
+    return Math.max(0, Math.min(0.999999, Math.round(parsed * 1000000) / 1000000));
+  }
+
   isTemperatureToleranceAttribute(attributeName) {
     return attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance';
   }
@@ -196,6 +210,11 @@ class LifeAutomation {
     return attributeName === 'optimalGrowthTemperature'
       || this.isTemperatureToleranceAttribute(attributeName)
       || this.isRadiationToleranceAttribute(attributeName);
+  }
+
+  isDynamicCapEntry(entry) {
+    return (entry.capMode === 'needed' && this.isAsNeededAttribute(entry.attribute))
+      || (entry.capMode === 'aiming' && entry.attribute === 'growthTemperatureTolerance');
   }
 
   getTemperatureZoneNames(step) {
@@ -248,6 +267,38 @@ class LifeAutomation {
       return targetSign * calculateRawLifeAttributeValueForEffectiveValue(targetMagnitude, maxUpgrades);
     }
     return targetSign * Math.min(maxUpgrades, targetMagnitude);
+  }
+
+  getGrowthTemperatureToleranceTarget(entry, candidate) {
+    const zoneNames = this.getTemperatureZoneNames(entry);
+    if (zoneNames.length === 0) {
+      return 0;
+    }
+    const target = this.normalizeGrowthTemperatureTarget(entry.target);
+    if (target <= 0) {
+      return 0;
+    }
+    const requirements = getActiveLifeDesignRequirements();
+    const optimal = requirements.optimalGrowthTemperatureBaseK
+      + candidate.optimalGrowthTemperature.getEffectiveValue();
+    let widestRequiredTolerance = 0;
+    for (let index = 0; index < zoneNames.length; index += 1) {
+      const day = terraforming.temperature.zones[zoneNames[index]].day;
+      const diff = Math.abs(day - optimal);
+      const requiredTolerance = diff === 0 ? 0 : diff / Math.sqrt(-2 * Math.log(target));
+      if (requiredTolerance > widestRequiredTolerance) {
+        widestRequiredTolerance = requiredTolerance;
+      }
+    }
+    const effectivePoints = Math.max(
+      0,
+      (widestRequiredTolerance - requirements.growthTemperatureToleranceBaseC)
+        / requirements.growthTemperatureTolerancePerPointC
+    );
+    const rawPoints = lifeManager.isBooleanFlagSet('quantumBiology')
+      ? calculateRawLifeAttributeValueForEffectiveValue(effectivePoints, candidate.growthTemperatureTolerance.maxUpgrades)
+      : effectivePoints;
+    return Math.ceil(rawPoints);
   }
 
   getRadiationToleranceTarget() {
@@ -548,6 +599,9 @@ class LifeAutomation {
     }
     if (Object.prototype.hasOwnProperty.call(updates, 'capMode')) {
       entry.capMode = this.normalizeEntryCapMode(entry.attribute, updates.capMode);
+      if (entry.capMode === 'aiming') {
+        entry.target = this.normalizeGrowthTemperatureTarget(entry.target);
+      }
       if (
         entry.attribute === 'optimalGrowthTemperature'
         && entry.capMode === 'needed'
@@ -558,6 +612,9 @@ class LifeAutomation {
         step.mode = 'cappedMax';
         step.limit = null;
       }
+    }
+    if (Object.prototype.hasOwnProperty.call(updates, 'target')) {
+      entry.target = this.normalizeGrowthTemperatureTarget(updates.target);
     }
     this.refreshActiveDeployment(preset);
   }
@@ -642,6 +699,7 @@ class LifeAutomation {
           weight: 1,
           cap: isMetabolism ? null : amount,
           capMode: 'fixed',
+          target: LIFE_AUTOMATION_DEFAULT_GROWTH_TEMPERATURE_TARGET,
           zones: this.normalizeTemperatureZoneSettings()
         }]
       });
@@ -729,6 +787,9 @@ class LifeAutomation {
     }
     if (capMode === 'needed' && this.isRadiationToleranceAttribute(attributeName)) {
       return Math.min(maxUpgrades, this.getRadiationToleranceTarget());
+    }
+    if (capMode === 'aiming' && attributeName === 'growthTemperatureTolerance') {
+      return Math.min(maximumSpendValue, this.getGrowthTemperatureToleranceTarget(entry, candidate));
     }
     if (entry.cap === null || entry.cap === undefined) {
       return lifeManager.isBooleanFlagSet('quantumBiology') ? maximumSpendValue : Math.min(maxUpgrades, maximumSpendValue);
@@ -929,23 +990,33 @@ class LifeAutomation {
     return value;
   }
 
-  getAsNeededReassignedPoints(candidate, currentDesign) {
-    let freedFromAsNeeded = 0;
-    let gainedOutsideAsNeeded = 0;
+  getDynamicReassignedPoints(preset, candidate, currentDesign) {
+    const dynamicAttributes = new Set();
+    for (let stepIndex = 0; stepIndex < preset.designSteps.length; stepIndex += 1) {
+      const entries = Array.isArray(preset.designSteps[stepIndex].entries) ? preset.designSteps[stepIndex].entries : [];
+      for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+        const entry = entries[entryIndex];
+        if (this.isDynamicCapEntry(entry)) {
+          dynamicAttributes.add(entry.attribute);
+        }
+      }
+    }
+    let freedFromDynamic = 0;
+    let gainedOutsideDynamic = 0;
     for (let index = 0; index < LIFE_AUTOMATION_ATTRIBUTES.length; index += 1) {
       const attributeName = LIFE_AUTOMATION_ATTRIBUTES[index];
       const candidateCost = this.getAttributePointCost(attributeName, candidate[attributeName].value);
       const currentCost = this.getAttributePointCost(attributeName, currentDesign[attributeName].value);
       const delta = candidateCost - currentCost;
-      if (this.isAsNeededAttribute(attributeName)) {
+      if (dynamicAttributes.has(attributeName)) {
         if (delta < 0) {
-          freedFromAsNeeded += -delta;
+          freedFromDynamic += -delta;
         }
       } else if (delta > 0) {
-        gainedOutsideAsNeeded += delta;
+        gainedOutsideDynamic += delta;
       }
     }
-    return Math.min(freedFromAsNeeded, gainedOutsideAsNeeded);
+    return Math.min(freedFromDynamic, gainedOutsideDynamic);
   }
 
   applyAutoDesign(preset) {
@@ -969,7 +1040,7 @@ class LifeAutomation {
       const entries = Array.isArray(step.entries) ? step.entries : [];
       for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
         const entry = entries[entryIndex];
-        if (entry.capMode !== 'needed' || !this.isAsNeededAttribute(entry.attribute)) {
+        if (!this.isDynamicCapEntry(entry)) {
           continue;
         }
         if (entry.attribute === 'optimalGrowthTemperature') {
@@ -988,8 +1059,8 @@ class LifeAutomation {
     }
     const improvement = candidate.getDesignCost() - currentDesign.getDesignCost();
     const improvementMagnitude = Math.abs(improvement);
-    const reassignedAsNeededPoints = this.getAsNeededReassignedPoints(candidate, currentDesign);
-    const effectiveImprovement = Math.max(improvementMagnitude, reassignedAsNeededPoints);
+    const reassignedDynamicPoints = this.getDynamicReassignedPoints(preset, candidate, currentDesign);
+    const effectiveImprovement = Math.max(improvementMagnitude, reassignedDynamicPoints);
     if (!needsAsNeededDeployment && effectiveImprovement < preset.deployImprovement) {
       return false;
     }
@@ -1047,6 +1118,7 @@ class LifeAutomation {
             weight: entry.weight,
             cap: entry.cap,
             capMode: entry.capMode,
+            target: this.normalizeGrowthTemperatureTarget(entry.target),
             zones: this.normalizeTemperatureZoneSettings(entry.zones)
           }))
         })),
@@ -1131,6 +1203,7 @@ class LifeAutomation {
           weight: entry.weight,
           cap: entry.cap,
           capMode: entry.capMode,
+          target: this.normalizeGrowthTemperatureTarget(entry.target),
           zones: this.normalizeTemperatureZoneSettings(entry.zones)
         }))
       })),

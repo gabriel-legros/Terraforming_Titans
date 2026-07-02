@@ -62,6 +62,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Milestones: `milestones.js`, `milestonesUI.js`
 - Solis shop/quests: `solis.js`, `solisUI.js`
 - Patience: `hope/patienceUI.js` (terraforming patience banking/claim UI)
+- Life Automation: Growth Temperature Tolerance supports an `Aiming for` substep cap mode with selectable zones and a target growth multiplier, defaulting to `0.95`; it spends enough points for the selected zones' daytime temperature growth multipliers to reach the target.
 - Automation scripting variables: `script-automation.js`, `script-variable-registry.js`, and `automationScriptUI.js` expose numeric variables A-Z through the scripting registry, provide a Set Variable action using the expression builder, persist values in saves, and reset them on planet travel.
 - Achievements: `src/js/save-settings/achievements.js`, `src/js/save-settings/achievementsSubtab.js` (derived Save & Settings achievement list)
 - Steam achievements: Steam builds initialize `steamworks.js` in `electron/main.cjs` only when packaged with `GAME_BUILD_TARGET = 'steam'`; `AchievementManager` publishes uppercase versions of its internal ids through `window.steamAchievements` on unlock/load resync, and the Electron main process also uppercases before calling Steam.
@@ -499,7 +500,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Colony automation presets/combinations mirror building automation for colony buildings, colony sliders, Construction Office, Nanocolony, and Orbitals, with autobuild available only for colony-building targets and journal sidebar deploy shortcuts for presets/combinations
   - Research automation adds Solis-unlocked preset management in the Hope automation tab without combinations; presets directly capture the Research tab's manual hidden state plus per-research auto-research toggle and priority, switching presets reapplies those saved research UI states, and a single preset can be queued for next travel with optional persistence
   - Sensitive automation picker entries can use `automationRequiresEverEnabled`; they stay hidden until the building/project has been available once, and automation preserves that discovery through save/load/travel
-  - Life automation presets use ordered steps with weighted substeps; step caps support fixed point budgets or capped-by-highest substep max, and substep caps support fixed, max, or as-needed where applicable. Optimal Growth Temperature as-needed mode targets the average daytime temperature of the selected zones.
+  - Life automation presets use ordered steps with weighted substeps; step caps support fixed point budgets or capped-by-highest substep max, and substep caps support fixed, max, as-needed, or Growth Temperature Tolerance `Aiming for` where applicable. Optimal Growth Temperature as-needed mode targets the average daytime temperature of the selected zones.
   - Script Automation can inspect Terraforming -> Life survivability with Any Zone and All Zones checks.
   - GHG/calcite and dust factory automation targeting
 - String numeric input handling standardized across major controls.
