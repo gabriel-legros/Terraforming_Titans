@@ -1598,7 +1598,6 @@ function ensureArtificialLayout() {
   bailoutRow.appendChild(bailoutBody);
 
   artificialUICache.bailoutBtn = bailoutBtn;
-  artificialUICache.bailoutBtnTooltipContent = attachDynamicInfoTooltip(bailoutBtn, '', false);
   artificialUICache.bailoutStock = bailoutStock;
 
   stashList.appendChild(bailoutRow);
@@ -2446,14 +2445,6 @@ function renderBailout(project, manager) {
   const allowed = onArtificial && canAfford;
   btn.disabled = !allowed;
   btn.classList.toggle('artificial-stash-unaffordable', !allowed);
-  setTooltipText(artificialUICache.bailoutBtnTooltipContent, '');
-  if (!allowed) {
-    if (!onArtificial) {
-      setTooltipText(artificialUICache.bailoutBtnTooltipContent, getArtificialText('bailout.availableOnlyOnArtificial', 'Available only on an artificial world.'));
-    } else if (!canAfford) {
-      setTooltipText(artificialUICache.bailoutBtnTooltipContent, getArtificialText('bailout.needArtifacts', 'Need 10 alien artifacts.'));
-    }
-  }
 }
 
 function buildArtificialSelection(project, manager) {
