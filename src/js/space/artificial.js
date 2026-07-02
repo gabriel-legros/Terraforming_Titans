@@ -835,8 +835,8 @@ class ArtificialManager extends EffectableEntity {
         if (hasGalaxyConquest !== this._lastGalaxyConquestUnlockState) {
             this.refreshConditionalRingStarCoreUnlocks({ updateUI: false });
         }
-        if (!this.enabled || !this.activeProject) return;
-        if (this.activeProject.status === 'building') {
+        if (!this.enabled) return;
+        if (this.activeProject && this.activeProject.status === 'building') {
             this.setRemainingTime(this.activeProject.remainingMs - delta, false);
             if (this.activeProject && this.activeProject.status === 'completed') {
                 this.runAutomation();
