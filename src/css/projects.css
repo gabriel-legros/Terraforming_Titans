@@ -2880,6 +2880,22 @@
     margin: 0;
 }
 
+.mega-heat-sink-cap-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mega-heat-sink-cap-input {
+    width: 110px;
+}
+
+.mega-heat-sink-cap-status {
+    font-size: 0.9em;
+    color: var(--muted-text-color, #6c757d);
+}
+
 
 /* --- Space Export Project --- */
 .disposal-container {
