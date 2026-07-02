@@ -1872,6 +1872,7 @@ setLanguageData({
         colonyAndSpaceStorage: 'Colony and Space Storage',
         colonyOnly: 'Colony only',
         spaceStorage: 'Space Storage',
+        colonyAndPlanetaryMass: 'Colony and Planetary Mass',
         planetaryMass: 'Planetary Mass',
         pa: 'Pa',
         percent: '%',

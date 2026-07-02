@@ -89,6 +89,8 @@ function initializeAccumulatedSpecialChanges() {
   return {
     planetaryMass: {},
     planetaryMassImports: {},
+    materialOverflowToPlanetaryMass: {},
+    colonyHydrogenOverflowToSpaceStorage: 0,
     colonyHydrogenNoOverflow: 0
   };
 }
@@ -218,6 +220,79 @@ function routeColonyHydrogenOverflow(deltaTime, accumulatedChanges, accumulatedS
   });
 }
 
+function routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
+  const eligibleOverflow = accumulatedSpecialChanges.colonyHydrogenOverflowToSpaceStorage || 0;
+  if (!(eligibleOverflow > 0)) {
+    return;
+  }
+
+  const resource = resources.colony.colonyHydrogen;
+  if (!resource.hasCap) {
+    return;
+  }
+
+  const previousValue = resource.value;
+  const newValue = resource.value + accumulatedChanges.colony.colonyHydrogen;
+  const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+  const overflow = newValue > limit ? newValue - limit : 0;
+  const routedOverflow = Math.min(overflow, eligibleOverflow);
+  if (!(routedOverflow > 0)) {
+    return;
+  }
+
+  accumulatedChanges.colony.colonyHydrogen -= routedOverflow;
+  accumulatedChanges.spaceStorage.hydrogen += routedOverflow;
+  accumulatedSpecialChanges.colonyHydrogenNoOverflow += routedOverflow;
+
+  const seconds = deltaTime / 1000;
+  const rate = seconds > 0 ? routedOverflow / seconds : 0;
+  resources.spaceStorage.hydrogen.modifyRate(rate, 'Overflow', 'overflow');
+  resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+}
+
+function routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
+  const overflowEntries = accumulatedSpecialChanges.materialOverflowToPlanetaryMass;
+  for (const materialKey in overflowEntries) {
+    const resource = resources.colony[materialKey];
+    if (!resource.hasCap) {
+      continue;
+    }
+
+    const previousValue = resource.value;
+    const newValue = resource.value + accumulatedChanges.colony[materialKey];
+    const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+    let overflow = newValue > limit ? newValue - limit : 0;
+    if (overflow <= 0) {
+      continue;
+    }
+
+    const sourceEntries = overflowEntries[materialKey];
+    let eligibleOverflow = 0;
+    for (const source in sourceEntries) {
+      eligibleOverflow += sourceEntries[source] || 0;
+    }
+    let routedOverflow = Math.min(overflow, eligibleOverflow);
+    if (routedOverflow <= 0) {
+      continue;
+    }
+
+    const totalRoutedOverflow = routedOverflow;
+    accumulatedChanges.colony[materialKey] -= totalRoutedOverflow;
+    const seconds = deltaTime / 1000;
+    const rate = seconds > 0 ? totalRoutedOverflow / seconds : 0;
+    resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+    for (const source in sourceEntries) {
+      if (routedOverflow <= 0) {
+        break;
+      }
+      const sourceAmount = sourceEntries[source] || 0;
+      const amount = Math.min(routedOverflow, sourceAmount);
+      accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source, materialKey, amount, true, 'project');
+      routedOverflow -= amount;
+    }
+  }
+}
+
 function accumulateSpecialPlanetaryMassChange(accumulatedSpecialChanges, source, amount) {
   if (!(amount > 0)) {
     return;
@@ -241,6 +316,17 @@ function accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, source,
   entry.reportRate = reportRate;
   entry.rateType = rateType;
   entry.materials[materialKey] = (entry.materials[materialKey] || 0) + amount;
+}
+
+function accumulateMaterialOverflowToPlanetaryMass(accumulatedSpecialChanges, source, materialKey, amount) {
+  if (!(amount > 0) || !materialKey) {
+    return;
+  }
+  if (!accumulatedSpecialChanges.materialOverflowToPlanetaryMass[materialKey]) {
+    accumulatedSpecialChanges.materialOverflowToPlanetaryMass[materialKey] = {};
+  }
+  const entries = accumulatedSpecialChanges.materialOverflowToPlanetaryMass[materialKey];
+  entries[source] = (entries[source] || 0) + amount;
 }
 
 function isExactLandResource(resource) {
@@ -2056,7 +2142,9 @@ function produceResources(deltaTime, buildings) {
 
   if (terraforming) {
     routeColonyWaterOverflow(deltaTime, accumulatedChanges);
+    routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyHydrogenOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
+    routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     terraforming.distributeSurfaceChangesToZones(accumulatedChanges.surface);
   }
 
