@@ -4902,6 +4902,7 @@ setLanguageData({
       effectName: 'Golden Asteroid',
       button: 'Golden Asteroid!',
       countdown: 'Gold asteroid 5x multiplier! {seconds}s',
+      chaosWarning: 'EXTINCTION',
     },
     planetVisualizer: {
       environmentOverlay: 'Pop: {population}\nCO2: {co2} kPa',

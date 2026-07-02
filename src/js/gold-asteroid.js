@@ -88,6 +88,8 @@ class GoldenAsteroid {
         this.celebrationRemainingTime = 0;
         this.confettiContainer = null;
         this.confettiSpawnCarry = 0;
+        this.chaosWarningElement = null;
+        this.chaosWarningVisible = false;
         this.cacheContainers();
         this.cacheElements();
         }
@@ -105,6 +107,7 @@ class GoldenAsteroid {
       this.imageElement = this.imageElement?.isConnected ? this.imageElement : document.getElementById('golden-asteroid-image');
       this.buttonElement = this.buttonElement?.isConnected ? this.buttonElement : document.getElementById('golden-asteroid-button');
       this.countdownElement = this.countdownElement?.isConnected ? this.countdownElement : document.getElementById('gold-asteroid-countdown');
+      this.chaosWarningElement = this.chaosWarningElement?.isConnected ? this.chaosWarningElement : document.getElementById('gold-asteroid-chaos-warning');
     }
 
     ensureButtonElement() {
@@ -165,6 +168,44 @@ class GoldenAsteroid {
     hideAsteroidElements() {
       this.buttonElement?.style && (this.buttonElement.style.display = 'none');
       this.imageElement?.style && (this.imageElement.style.display = 'none');
+    }
+
+    isChaosActive() {
+      for (let i = 0; i < terraforming.activeEffects.length; i += 1) {
+        const effect = terraforming.activeEffects[i];
+        if (effect.sourceId === STELLAR_ENGINE_SOURCE_ID && effect.effectId === STELLAR_ENGINE_FLUX_EFFECT_ID) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    ensureChaosWarningElement() {
+      this.cacheContainers();
+      this.cacheElements();
+      this.chaosWarningElement ??= document.createElement('div');
+      this.chaosWarningElement.id = 'gold-asteroid-chaos-warning';
+      this.chaosWarningElement.className = 'gold-asteroid-chaos-warning';
+      this.chaosWarningElement.textContent = t('ui.goldAsteroid.chaosWarning', {}, 'CHAOS');
+      if (this.chaosWarningElement.parentElement !== this.countdownContainer) {
+        this.countdownContainer.appendChild(this.chaosWarningElement);
+      }
+    }
+
+    updateChaosWarning() {
+      const active = this.isChaosActive();
+      if (!active) {
+        if (this.chaosWarningVisible && this.chaosWarningElement) {
+          this.chaosWarningElement.style.display = 'none';
+          this.chaosWarningVisible = false;
+        }
+        return;
+      }
+      this.ensureChaosWarningElement();
+      if (!this.chaosWarningVisible) {
+        this.chaosWarningElement.style.display = 'block';
+        this.chaosWarningVisible = true;
+      }
     }
 
     ensureConfettiContainer() {
@@ -314,6 +355,7 @@ class GoldenAsteroid {
       this.despawn();
       this.countdownActive = false;
       this.countdownRemainingTime = 0;
+      this.updateChaosWarning();
       this.celebrationActive = false;
       this.celebrationRemainingTime = 0;
       this.stopConfetti();
@@ -323,6 +365,7 @@ class GoldenAsteroid {
     }
   
     update(delta, realDelta = delta) {
+        this.updateChaosWarning();
         updateResortVacationGoldButton();
         if (this.celebrationActive) {
           this.celebrationRemainingTime -= realDelta;
