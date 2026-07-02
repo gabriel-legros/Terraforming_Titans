@@ -1046,23 +1046,31 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
 
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
+    let assignmentSettingsChanged = false;
     if (Object.prototype.hasOwnProperty.call(settings, 'yardAssignments')) {
       this.yardAssignments = { ...(settings.yardAssignments || {}) };
+      assignmentSettingsChanged = true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
       this.assignmentStep = settings.assignmentStep || 1;
+      assignmentSettingsChanged = true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
       this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
+      assignmentSettingsChanged = true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
       this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
+      assignmentSettingsChanged = true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'releaseIfDisabledFlags')) {
       this.releaseIfDisabledFlags = { ...(settings.releaseIfDisabledFlags || {}) };
+      assignmentSettingsChanged = true;
     }
-    this.normalizeAssignments();
-    this.normalizeAssignmentStep();
+    if (assignmentSettingsChanged) {
+      this.normalizeAssignments();
+      this.normalizeAssignmentStep();
+    }
   }
 
   saveState() {

@@ -1372,6 +1372,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     const isPresetApplication = options.isPresetApplication === true;
+    let assignmentSettingsChanged = false;
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
     }
@@ -1379,19 +1380,25 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       this.furnaceAssignments = isPresetApplication
         ? this.getPresetFurnaceAssignments(settings)
         : { ...(settings.furnaceAssignments || {}) };
+      assignmentSettingsChanged = true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
       this.assignmentStep = settings.assignmentStep || 1;
+      assignmentSettingsChanged = true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
       this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
+      assignmentSettingsChanged = true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
       this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
+      assignmentSettingsChanged = true;
     }
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.normalizeAssignmentStep();
+    if (assignmentSettingsChanged) {
+      this.markAssignmentsDirty();
+      this.normalizeAssignments();
+      this.normalizeAssignmentStep();
+    }
   }
 
   saveState() {

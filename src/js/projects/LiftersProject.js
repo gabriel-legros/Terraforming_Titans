@@ -2199,6 +2199,9 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       || Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')
       || Object.prototype.hasOwnProperty.call(settings, 'disableStripBelowPressure')
       || Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold');
+    const hasLegacyRecipeConfiguration =
+      Object.prototype.hasOwnProperty.call(settings, 'mode')
+      || Object.prototype.hasOwnProperty.call(settings, 'harvestRecipeKey');
 
     if (hasAssignmentState) {
       if (!isPresetApplication) {
@@ -2227,7 +2230,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       if (Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold')) {
         this.stripPressureThreshold = Math.max(0, Number(settings.stripPressureThreshold) || 0);
       }
-    } else {
+    } else if (hasLegacyRecipeConfiguration) {
       if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
         this.mode = settings.mode || LIFTER_MODES.GAS_HARVEST;
       }
@@ -2239,12 +2242,14 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, true);
     }
 
-    this.normalizeModeForFlags();
-    this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.normalizeAssignmentStep();
-    this.syncStripPressureAutomationUI();
+    if (hasAssignmentState || hasLegacyRecipeConfiguration) {
+      this.normalizeModeForFlags();
+      this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
+      this.markAssignmentsDirty();
+      this.normalizeAssignments();
+      this.normalizeAssignmentStep();
+      this.syncStripPressureAutomationUI();
+    }
   }
 
   saveState() {
