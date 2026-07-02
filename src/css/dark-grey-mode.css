@@ -1916,7 +1916,7 @@ body.dark-grey-mode {
 }
 
 /* Copy stats button */
-.dark-grey-mode .wgc-copy-team-stats {
+.dark-grey-mode .wgc-copy-team-stats-icon {
     background-color: var(--wgc-border-color);
 }
 
