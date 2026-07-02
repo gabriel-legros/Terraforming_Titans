@@ -77,6 +77,8 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveWaterCoverage = false;
     this.waterCoverageThreshold = 0.2;
     this.waterCoverageDisableMode = 'coverage';
+    this.includeIceInWaterCoverage = false;
+    this.includeVaporInWaterCoverage = false;
     this.disableAboveCo2Coverage = false;
     this.co2CoverageThreshold = 0.2;
     this.co2CoverageDisableMode = 'coverage';
@@ -105,6 +107,13 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getMaxAssignableShips() {
     return warpGateNetworkManager.getCapForProject(this);
+  }
+
+  applyLegacyWaterCoverageMode(mode) {
+    if (mode === 'target') {
+      this.includeIceInWaterCoverage = true;
+      this.waterCoverageThreshold = Math.max(0, Math.min(terraforming.waterTarget, 1));
+    }
   }
 
   assignSpaceships(count) {
@@ -285,19 +294,9 @@ class SpaceMiningProject extends SpaceshipProject {
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
-    const modeSelect = document.createElement('select');
-    modeSelect.classList.add('water-coverage-mode');
-    [
-      { value: 'coverage', text: getSpaceMiningText('ui.projects.spaceMining.waterCoverageAbove', 'water coverage above') },
-      { value: 'target', text: getSpaceMiningText('ui.projects.spaceMining.waterIceAboveTarget', 'water+ice above target') }
-    ].forEach(optionData => {
-      const option = document.createElement('option');
-      option.value = optionData.value;
-      option.textContent = optionData.text;
-      modeSelect.appendChild(option);
-    });
-    modeSelect.value = this.waterCoverageDisableMode;
-    control.appendChild(modeSelect);
+    const coverageLabel = document.createElement('span');
+    coverageLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.waterCoverageAbove', 'water coverage above');
+    control.appendChild(coverageLabel);
 
     const input = document.createElement('input');
     input.type = 'text';
@@ -319,26 +318,44 @@ class SpaceMiningProject extends SpaceshipProject {
     percent.textContent = getSpaceMiningText('ui.projects.spaceMining.percent', '%');
     control.appendChild(percent);
 
-    const updateInputVisibility = () => {
-      const showInput = this.waterCoverageDisableMode === 'coverage';
-      input.style.display = showInput ? '' : 'none';
-      percent.style.display = showInput ? '' : 'none';
-    };
-
-    modeSelect.addEventListener('change', () => {
-      this.waterCoverageDisableMode = modeSelect.value;
-      updateInputVisibility();
+    const includeIceCheckbox = document.createElement('input');
+    includeIceCheckbox.type = 'checkbox';
+    includeIceCheckbox.id = `${this.name}-water-coverage-include-ice-checkbox`;
+    includeIceCheckbox.classList.add('water-coverage-include-ice-checkbox');
+    includeIceCheckbox.checked = this.includeIceInWaterCoverage === true;
+    includeIceCheckbox.addEventListener('change', () => {
+      this.includeIceInWaterCoverage = includeIceCheckbox.checked;
     });
+    control.appendChild(includeIceCheckbox);
 
-    updateInputVisibility();
+    const includeIceLabel = document.createElement('label');
+    includeIceLabel.htmlFor = includeIceCheckbox.id;
+    includeIceLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.includeIceInCount', 'Include ice in count');
+    control.appendChild(includeIceLabel);
+
+    const includeVaporCheckbox = document.createElement('input');
+    includeVaporCheckbox.type = 'checkbox';
+    includeVaporCheckbox.id = `${this.name}-water-coverage-include-vapor-checkbox`;
+    includeVaporCheckbox.classList.add('water-coverage-include-vapor-checkbox');
+    includeVaporCheckbox.checked = this.includeVaporInWaterCoverage === true;
+    includeVaporCheckbox.addEventListener('change', () => {
+      this.includeVaporInWaterCoverage = includeVaporCheckbox.checked;
+    });
+    control.appendChild(includeVaporCheckbox);
+
+    const includeVaporLabel = document.createElement('label');
+    includeVaporLabel.htmlFor = includeVaporCheckbox.id;
+    includeVaporLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.includeVapourInCount', 'Include vapour in count');
+    control.appendChild(includeVaporLabel);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       waterCoverageControl: control,
       waterCoverageCheckbox: checkbox,
       waterCoverageInput: input,
-      waterCoverageMode: modeSelect,
       waterCoveragePercent: percent,
+      waterCoverageIncludeIceCheckbox: includeIceCheckbox,
+      waterCoverageIncludeVaporCheckbox: includeVaporCheckbox,
     };
 
     return control;
@@ -860,16 +877,14 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.waterCoverageCheckbox) {
       elements.waterCoverageCheckbox.checked = this.disableAboveWaterCoverage;
     }
-    if (elements.waterCoverageMode) {
-      elements.waterCoverageMode.value = this.waterCoverageDisableMode;
-    }
     if (elements.waterCoverageInput && document.activeElement !== elements.waterCoverageInput) {
       elements.waterCoverageInput.value = formatCoverageThresholdPercent(this.waterCoverageThreshold);
     }
-    if (elements.waterCoverageInput && elements.waterCoveragePercent) {
-      const showInput = this.waterCoverageDisableMode === 'coverage';
-      elements.waterCoverageInput.style.display = showInput ? '' : 'none';
-      elements.waterCoveragePercent.style.display = showInput ? '' : 'none';
+    if (elements.waterCoverageIncludeIceCheckbox) {
+      elements.waterCoverageIncludeIceCheckbox.checked = this.includeIceInWaterCoverage === true;
+    }
+    if (elements.waterCoverageIncludeVaporCheckbox) {
+      elements.waterCoverageIncludeVaporCheckbox.checked = this.includeVaporInWaterCoverage === true;
     }
     if (elements.co2CoverageControl) {
       const shouldShowCo2Control = this.isBooleanFlagSet('atmosphericMonitoring') && this.hasCo2LiquidTarget();
@@ -1094,17 +1109,36 @@ class SpaceMiningProject extends SpaceshipProject {
     return total;
   }
 
+  getEffectiveWaterCoverage(accumulatedChanges = null) {
+    if (this.includeIceInWaterCoverage !== true && this.includeVaporInWaterCoverage !== true) {
+      return calculateAverageCoverage(terraforming, 'liquidWater') || 0;
+    }
+    const surfaceArea = terraforming.celestialParameters.surfaceArea;
+    const vaporAmount = this.includeVaporInWaterCoverage === true
+      ? (resources.atmospheric.atmosphericWater.value || 0) + (accumulatedChanges?.atmospheric?.atmosphericWater || 0)
+      : 0;
+    let totalCoverage = 0;
+    for (const zone of getZones()) {
+      const zoneSurface = terraforming.zonalSurface[zone];
+      const zoneWeight = getZonePercentage(zone);
+      const zoneArea = surfaceArea * zoneWeight;
+      let amount = zoneSurface.liquidWater || 0;
+      amount += accumulatedChanges?.surface?.liquidWater || 0;
+      if (this.includeIceInWaterCoverage === true) {
+        amount += zoneSurface.ice || 0;
+        amount += accumulatedChanges?.surface?.ice || 0;
+      }
+      amount += vaporAmount * zoneWeight;
+      totalCoverage += estimateCoverage(amount, zoneArea) * zoneWeight;
+    }
+    return Math.max(0, Math.min(totalCoverage, 1));
+  }
+
   exceedsWaterCoverageLimit(hasMonitoring) {
     if (!this.waterCoverageLimitEnabled(hasMonitoring)) {
       return false;
     }
-    if (this.waterCoverageDisableMode === 'target') {
-      const totalAmount = this.getWaterIceTotalAmount();
-      const targetAmount = this.getWaterTargetAmount();
-      return totalAmount >= (targetAmount * (1 - ATMOSPHERIC_MONITORING_TOLERANCE));
-    }
-    const liquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
-    const totalCoverage = Math.min(1, liquidCoverage);
+    const totalCoverage = this.getEffectiveWaterCoverage();
     return totalCoverage >= (this.waterCoverageThreshold - ATMOSPHERIC_MONITORING_TOLERANCE);
   }
 
@@ -1117,6 +1151,9 @@ class SpaceMiningProject extends SpaceshipProject {
       const zoneArea = surfaceArea * getZonePercentage(zone);
       if (coverageKey === 'liquidWater') {
         current += zoneSurface.liquidWater || 0;
+        if (this.includeIceInWaterCoverage === true) {
+          current += zoneSurface.ice || 0;
+        }
       } else {
         current += (zoneSurface.liquidCO2 || 0) + (zoneSurface.dryIce || 0);
       }
@@ -1124,6 +1161,12 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (coverageKey === 'liquidWater') {
       current += accumulatedChanges?.surface?.liquidWater || 0;
+      if (this.includeIceInWaterCoverage === true) {
+        current += accumulatedChanges?.surface?.ice || 0;
+      }
+      if (this.includeVaporInWaterCoverage === true) {
+        current += (resources.atmospheric.atmosphericWater.value || 0) + (accumulatedChanges?.atmospheric?.atmosphericWater || 0);
+      }
     } else {
       current += accumulatedChanges?.surface?.liquidCO2 || 0;
       current += accumulatedChanges?.surface?.dryIce || 0;
@@ -1134,10 +1177,6 @@ class SpaceMiningProject extends SpaceshipProject {
   getWaterImportLimitRemaining(accumulatedChanges = null) {
     if (!this.isBooleanFlagSet('atmosphericMonitoring') || !this.attributes.dynamicWaterImport || !this.disableAboveWaterCoverage) {
       return Infinity;
-    }
-    if (this.waterCoverageDisableMode === 'target') {
-      const current = this.getWaterIceTotalAmount() + (accumulatedChanges?.surface?.liquidWater || 0) + (accumulatedChanges?.surface?.ice || 0);
-      return Math.max(0, this.getWaterTargetAmount() - current);
     }
     return this.getSurfaceCoverageLimitRemaining('liquidWater', this.waterCoverageThreshold, accumulatedChanges);
   }
@@ -1289,7 +1328,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
       disableAboveWaterCoverage: this.disableAboveWaterCoverage === true,
       waterCoverageThreshold: this.waterCoverageThreshold,
-      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      includeIceInWaterCoverage: this.includeIceInWaterCoverage === true,
+      includeVaporInWaterCoverage: this.includeVaporInWaterCoverage === true,
       disableAboveCo2Coverage: this.disableAboveCo2Coverage === true,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
@@ -1328,7 +1368,13 @@ class SpaceMiningProject extends SpaceshipProject {
       this.waterCoverageThreshold = Math.max(0, Math.min(settings.waterCoverageThreshold || 0, 1));
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'waterCoverageDisableMode')) {
-      this.waterCoverageDisableMode = settings.waterCoverageDisableMode || this.waterCoverageDisableMode;
+      this.applyLegacyWaterCoverageMode(settings.waterCoverageDisableMode);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'includeIceInWaterCoverage')) {
+      this.includeIceInWaterCoverage = settings.includeIceInWaterCoverage === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'includeVaporInWaterCoverage')) {
+      this.includeVaporInWaterCoverage = settings.includeVaporInWaterCoverage === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'disableAboveCo2Coverage')) {
       this.disableAboveCo2Coverage = settings.disableAboveCo2Coverage === true;
@@ -1368,7 +1414,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
-      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      includeIceInWaterCoverage: this.includeIceInWaterCoverage === true,
+      includeVaporInWaterCoverage: this.includeVaporInWaterCoverage === true,
       disableAboveCo2Coverage: this.disableAboveCo2Coverage,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
@@ -1396,7 +1443,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (Number.isFinite(state.waterCoverageThreshold)) {
       this.waterCoverageThreshold = Math.max(0, Math.min(state.waterCoverageThreshold, 1));
     }
-    this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    this.applyLegacyWaterCoverageMode(state.waterCoverageDisableMode);
+    this.includeIceInWaterCoverage = this.includeIceInWaterCoverage === true || state.includeIceInWaterCoverage === true;
+    this.includeVaporInWaterCoverage = state.includeVaporInWaterCoverage === true;
     this.disableAboveCo2Coverage = state.disableAboveCo2Coverage ?? this.disableAboveCo2Coverage;
     if (Number.isFinite(state.co2CoverageThreshold)) {
       this.co2CoverageThreshold = Math.max(0, Math.min(state.co2CoverageThreshold, 1));
@@ -1421,7 +1470,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
-      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      includeIceInWaterCoverage: this.includeIceInWaterCoverage === true,
+      includeVaporInWaterCoverage: this.includeVaporInWaterCoverage === true,
       disableAboveCo2Coverage: this.disableAboveCo2Coverage,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
@@ -1449,7 +1499,9 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableOxygenPressureThreshold = state.disableOxygenPressureThreshold ?? this.disableOxygenPressureThreshold;
     this.disableAboveWaterCoverage = state.disableAboveWaterCoverage ?? this.disableAboveWaterCoverage;
     this.waterCoverageThreshold = state.waterCoverageThreshold ?? this.waterCoverageThreshold;
-    this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    this.applyLegacyWaterCoverageMode(state.waterCoverageDisableMode);
+    this.includeIceInWaterCoverage = this.includeIceInWaterCoverage === true || state.includeIceInWaterCoverage === true;
+    this.includeVaporInWaterCoverage = state.includeVaporInWaterCoverage === true;
     this.disableAboveCo2Coverage = state.disableAboveCo2Coverage ?? this.disableAboveCo2Coverage;
     this.co2CoverageThreshold = state.co2CoverageThreshold ?? this.co2CoverageThreshold;
     this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;

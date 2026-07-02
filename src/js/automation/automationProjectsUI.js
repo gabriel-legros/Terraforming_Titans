@@ -38,7 +38,8 @@ const SPACE_MINING_WATER_ONLY_FIELDS = new Set([
   'waterImportTarget',
   'disableAboveWaterCoverage',
   'waterCoverageThreshold',
-  'waterCoverageDisableMode'
+  'includeIceInWaterCoverage',
+  'includeVaporInWaterCoverage'
 ]);
 const SPACE_MINING_GAS_ONLY_FIELDS = new Set([
   'gasImportTarget',
@@ -299,10 +300,7 @@ function isProjectPresetFieldVisible(fieldPath, effectivePreset, automation) {
   }
 
   if (settingKey === 'waterCoverageDisableMode') {
-    const disableEnabled = !!getAutomationPresetValueAtPath(effectivePreset, ['projects', projectId, 'operations', 'disableAboveWaterCoverage']);
-    if (!disableEnabled) {
-      return false;
-    }
+    return false;
   }
   if (settingKey === 'co2CoverageDisableMode') {
     const disableEnabled = !!getAutomationPresetValueAtPath(effectivePreset, ['projects', projectId, 'operations', 'disableAboveCo2Coverage']);
