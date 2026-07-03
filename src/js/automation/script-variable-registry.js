@@ -1117,7 +1117,13 @@ class ScriptVariableRegistry {
     if (!resource) return 0;
     if (ref.attribute === 'value') return this.toNumber(resource.value);
     if (ref.attribute === 'available') return this.resolveAvailableResourceValue(ref.category, resourceId, resource);
+    if (ref.attribute === 'cap' && ref.category === 'spaceStorage') {
+      return this.toNumber(this.resolveSpaceStorageResourceCapLimit(resourceId));
+    }
     if (ref.attribute === 'cap') return this.toNumber(resource.cap);
+    if (ref.attribute === 'fillPercent' && ref.category === 'spaceStorage') {
+      return this.resolveSpaceStorageResourceFillPercent(resourceId, resource);
+    }
     if (ref.attribute === 'fillPercent') return resource.cap > 0 ? (this.toNumber(resource.value) / this.toNumber(resource.cap)) * 100 : 0;
     if (ref.attribute === 'productionRate') return this.toNumber(resource.productionRate);
     if (ref.attribute === 'consumptionRate') return this.toNumber(resource.consumptionRate);
@@ -1128,6 +1134,16 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'totalAmount') return this.resolveSpecialResourceTotalAmount(ref.category, resourceId, resource);
     if (ref.attribute === 'coverage') return this.resolveSurfaceResourceCoverage(ref.category, resourceId);
     return 0;
+  }
+
+  resolveSpaceStorageResourceCapLimit(resourceId) {
+    return projectManager.projects.spaceStorage.getResourceCapLimit(resourceId);
+  }
+
+  resolveSpaceStorageResourceFillPercent(resourceId, resource) {
+    const cap = Number(this.resolveSpaceStorageResourceCapLimit(resourceId));
+    if (!Number.isFinite(cap) || cap <= 0) return 0;
+    return (this.toNumber(resource.value) / cap) * 100;
   }
 
   resolveSpecialResourceTotalAmount(categoryId, resourceId, resource) {
