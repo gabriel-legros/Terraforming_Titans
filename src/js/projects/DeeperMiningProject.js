@@ -297,17 +297,6 @@ class DeeperMiningProject extends AndroidProject {
       );
       elements.costElement.appendChild(info);
     }
-    if (!elements.costItems['colony.superalloys']) {
-      const superalloyCost = document.createElement('span');
-      const separator = document.createElement('span');
-      const text = document.createElement('span');
-      superalloyCost.dataset.leadingComma = 'true';
-      superalloyCost.append(separator, text);
-      superalloyCost._refs = { separator, text };
-      elements.costList.appendChild(superalloyCost);
-      elements.costItems['colony.superalloys'] = superalloyCost;
-    }
-
     const sectionContainer = document.createElement('div');
     sectionContainer.classList.add('project-section-container', 'underworld-mining-section');
 

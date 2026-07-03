@@ -15,6 +15,18 @@ function getProjectsUIText(path, fallback, vars) {
   }
 }
 
+function createProjectCostItem(leadingComma) {
+  const span = document.createElement('span');
+  const separator = document.createElement('span');
+  const text = document.createElement('span');
+  if (leadingComma) {
+    span.dataset.leadingComma = 'true';
+  }
+  span.append(separator, text);
+  span._refs = { separator, text };
+  return span;
+}
+
 // Centralized, browser-friendly caches for Projects UI
 const projectsUICache = {
   contentWrapper: null,
@@ -760,14 +772,7 @@ function createProjectItem(project) {
       }
     }
     items.forEach((item, idx) => {
-      const span = document.createElement('span');
-      const separator = document.createElement('span');
-      const text = document.createElement('span');
-      if (idx > 0) {
-        span.dataset.leadingComma = 'true';
-      }
-      span.append(separator, text);
-      span._refs = { separator, text };
+      const span = createProjectCostItem(idx > 0);
       list.appendChild(span);
       costItems[`${item.category}.${item.resource}`] = span;
     });
@@ -1249,6 +1254,20 @@ function updateCostDisplay(project) {
   const elements = projectElements[project.name];
   if (elements && elements.costItems) {
     const cost = project.getScaledCost();
+    let costItemCount = Object.keys(elements.costItems).length;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (cost[category][resource] > 0) {
+          const key = `${category}.${resource}`;
+          if (!elements.costItems[key]) {
+            const item = createProjectCostItem(costItemCount > 0);
+            elements.costList.appendChild(item);
+            elements.costItems[key] = item;
+            costItemCount += 1;
+          }
+        }
+      }
+    }
     const storageAccess = project && project.attributes?.canUseSpaceStorage
       ? project.createSpaceStorageAccess('expansions')
       : null;
