@@ -299,7 +299,11 @@ class DeeperMiningProject extends AndroidProject {
     }
     if (!elements.costItems['colony.superalloys']) {
       const superalloyCost = document.createElement('span');
+      const separator = document.createElement('span');
+      const text = document.createElement('span');
       superalloyCost.dataset.leadingComma = 'true';
+      superalloyCost.append(separator, text);
+      superalloyCost._refs = { separator, text };
       elements.costList.appendChild(superalloyCost);
       elements.costItems['colony.superalloys'] = superalloyCost;
     }
