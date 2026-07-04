@@ -29,6 +29,7 @@ class ScriptAutomation {
     this.maxActionsPerTick = 25;
     this.registry = new ScriptVariableRegistry();
     this.variableValues = {};
+    this.scriptVariableValues = {};
     this.resetVariables();
     this.ensureDefaultScript();
   }
@@ -115,8 +116,11 @@ class ScriptAutomation {
 
   resetVariables() {
     this.variableValues = {};
+    this.scriptVariableValues = {};
     for (let index = 0; index < 26; index += 1) {
-      this.variableValues[String.fromCharCode(65 + index)] = 0;
+      const id = String.fromCharCode(65 + index);
+      this.variableValues[id] = 0;
+      this.scriptVariableValues[id] = null;
     }
   }
 
@@ -128,6 +132,19 @@ class ScriptAutomation {
   setVariableValue(variableId, value) {
     const id = this.normalizeVariableId(variableId);
     this.variableValues[id] = this.registry.toNumber(value);
+    return true;
+  }
+
+  getScriptVariableValue(variableId) {
+    const id = this.normalizeVariableId(variableId);
+    const scriptId = Number(this.scriptVariableValues[id]);
+    return this.scripts.find(script => script.id === scriptId) ? scriptId : null;
+  }
+
+  setScriptVariableValue(variableId, scriptId) {
+    const id = this.normalizeVariableId(variableId);
+    const numericId = Number(scriptId);
+    this.scriptVariableValues[id] = this.scripts.find(script => script.id === numericId) ? numericId : null;
     return true;
   }
 
@@ -204,6 +221,9 @@ class ScriptAutomation {
     if (this.nextTravelScriptId === numericId) {
       this.nextTravelScriptId = null;
       this.nextTravelPersistent = false;
+    }
+    for (const id in this.scriptVariableValues) {
+      if (Number(this.scriptVariableValues[id]) === numericId) this.scriptVariableValues[id] = null;
     }
     return true;
   }
@@ -894,7 +914,8 @@ class ScriptAutomation {
       }
       if (action.kind === 'gotoScript') {
         if (gotoUsed) continue;
-        const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+        const targetScriptId = this.resolveGotoScriptTargetId(action);
+        const targetScript = this.scripts.find(item => item.id === Number(targetScriptId));
         const targetLine = targetScript?.lines?.[0] || null;
         if (targetScript && targetLine) {
           this.activeScriptId = targetScript.id;
@@ -906,8 +927,12 @@ class ScriptAutomation {
           summaries.push(`GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`);
         }
         actionsUsed += 1;
-        nextActionIndex = 0;
-        break;
+        if (gotoTriggered) {
+          nextActionIndex = 0;
+          break;
+        }
+        nextActionIndex = index + 1;
+        continue;
       }
 
       if (this.applyAutomationAction(action)) {
@@ -979,10 +1004,20 @@ class ScriptAutomation {
   }
 
   applySetVariableAction(action) {
+    if (action.variableType === 'script') {
+      return this.setScriptVariableValue(action.variableId, action.targetScriptId);
+    }
     const expression = action.valueExpression && action.valueExpression.constructor === Object
       ? action.valueExpression
       : this.createDefaultExpression();
     return this.setVariableValue(action.variableId, this.evaluateExpression(expression));
+  }
+
+  resolveGotoScriptTargetId(action) {
+    if (action.scriptTargetMode === 'variable') {
+      return this.getScriptVariableValue(action.scriptVariableId);
+    }
+    return action.targetScriptId;
   }
 
   getAutomationTarget(type) {
@@ -1108,10 +1143,14 @@ class ScriptAutomation {
   describeAction(action) {
     if (action.kind === 'sleep') return `Sleep ${formatNumber(this.registry.toNumber(action.durationMs), false, 0)} ms`;
     if (action.kind === 'setVariable') {
+      if (action.variableType === 'script') {
+        const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+        return `Set Script ${this.normalizeVariableId(action.variableId)} = ${targetScript?.name || targetScript?.id || 'NULL'}`;
+      }
       return `Set ${this.normalizeVariableId(action.variableId)} = ${this.describeExpression(action.valueExpression)}`;
     }
     if (action.kind === 'gotoScript') {
-      const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+      const targetScript = this.scripts.find(item => item.id === Number(this.resolveGotoScriptTargetId(action)));
       if (!targetScript) return 'GOTO Script ?';
       return `GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`;
     }
@@ -1153,6 +1192,7 @@ class ScriptAutomation {
       nextTravelPersistent: this.nextTravelPersistent,
       sleepRemainingMs: this.sleepRemainingMs,
       variableValues: { ...this.variableValues },
+      scriptVariableValues: { ...this.scriptVariableValues },
       scripts: this.deepClone(this.scripts),
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
@@ -1183,6 +1223,11 @@ class ScriptAutomation {
       }
     }
     this.scripts = Array.isArray(data.scripts) ? this.normalizeScripts(data.scripts) : [];
+    if (data.scriptVariableValues && data.scriptVariableValues.constructor === Object) {
+      for (const id in data.scriptVariableValues) {
+        this.setScriptVariableValue(id, data.scriptVariableValues[id]);
+      }
+    }
     this.selectedScriptId = data.selectedScriptId ? Number(data.selectedScriptId) : null;
     this.activeScriptId = data.activeScriptId ? Number(data.activeScriptId) : null;
     this.pcLineId = data.pcLineId ? Number(data.pcLineId) : null;
@@ -1233,10 +1278,17 @@ class ScriptAutomation {
     if (!action || action.constructor !== Object) return { kind: 'applyPreset', automationType: 'buildings', presetId: null };
     const normalized = this.deepClone(action);
     if (normalized.kind === 'setVariable') {
+      normalized.variableType = normalized.variableType === 'script' ? 'script' : 'number';
       normalized.variableId = this.normalizeVariableId(normalized.variableId);
-      if (!normalized.valueExpression || normalized.valueExpression.constructor !== Object) {
+      if (normalized.variableType === 'script') {
+        normalized.targetScriptId = normalized.targetScriptId ? Number(normalized.targetScriptId) : null;
+      } else if (!normalized.valueExpression || normalized.valueExpression.constructor !== Object) {
         normalized.valueExpression = this.createDefaultExpression();
       }
+    } else if (normalized.kind === 'gotoScript') {
+      normalized.scriptTargetMode = normalized.scriptTargetMode === 'variable' ? 'variable' : 'script';
+      normalized.scriptVariableId = this.normalizeVariableId(normalized.scriptVariableId);
+      normalized.targetScriptId = normalized.targetScriptId ? Number(normalized.targetScriptId) : null;
     } else if (normalized.kind === 'applyPreset') {
       normalized.parameterVariableId = this.normalizeVariableId(normalized.parameterVariableId);
     }

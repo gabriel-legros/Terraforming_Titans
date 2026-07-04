@@ -607,7 +607,7 @@ function describeScriptActions(automation, script, actions) {
       return target ? `GOTO ${automation.getLineLabel(script, target)}` : 'GOTO ?';
     }
     if (action.kind === 'gotoScript') {
-      const targetScript = automation.scripts.find(item => item.id === Number(action.targetScriptId));
+      const targetScript = automation.scripts.find(item => item.id === Number(automation.resolveGotoScriptTargetId(action)));
       if (!targetScript) return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ?`;
       return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ${targetScript.name || `Script ${targetScript.id}`} #1`;
     }
@@ -659,9 +659,24 @@ function normalizeScriptAction(automation, action) {
     return;
   }
   if (action.kind === 'setVariable') {
+    action.variableType = action.variableType === 'script' ? 'script' : 'number';
     action.variableId = automation.normalizeVariableId(action.variableId);
-    if (!action.valueExpression || action.valueExpression.constructor !== Object) {
+    if (action.variableType === 'script') {
+      const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
+      if (!scripts.find(script => script.id === Number(action.targetScriptId))) action.targetScriptId = null;
+    } else if (!action.valueExpression || action.valueExpression.constructor !== Object) {
       action.valueExpression = automation.createDefaultExpression();
+    }
+    return;
+  }
+  if (action.kind === 'gotoScript') {
+    action.scriptTargetMode = action.scriptTargetMode === 'variable' ? 'variable' : 'script';
+    action.scriptVariableId = automation.normalizeVariableId(action.scriptVariableId);
+    if (action.scriptTargetMode === 'script') {
+      const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
+      if (!scripts.find(script => script.id === Number(action.targetScriptId))) {
+        action.targetScriptId = scripts[0]?.id || null;
+      }
     }
     return;
   }
@@ -1210,19 +1225,7 @@ function renderActionsEditor(automation, script, line, container, actions, title
       });
       row.appendChild(lineSelect);
     } else if (action.kind === 'gotoScript') {
-      const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
-      const scriptOptions = scripts.map(targetScript => ({
-        id: targetScript.id,
-        label: targetScript.name || `Script ${targetScript.id}`
-      }));
-      const defaultScriptId = action.targetScriptId || script.id || scriptOptions[0]?.id || '';
-      const scriptSelect = createSelect(scriptOptions, defaultScriptId);
-      action.targetScriptId = scriptSelect.value ? Number(scriptSelect.value) : null;
-      scriptSelect.addEventListener('change', event => {
-        action.targetScriptId = Number(event.target.value);
-        queueAutomationUIRefresh();
-      });
-      row.appendChild(scriptSelect);
+      renderGotoScriptActionEditor(automation, script, action, row);
     } else {
       renderActionTargetPicker(action, row);
     }
@@ -1277,6 +1280,20 @@ function renderActionsEditor(automation, script, line, container, actions, title
 
 function renderSetVariableActionEditor(automation, action, row) {
   normalizeScriptAction(automation, action);
+  const typeSelect = createSelect([
+    { id: 'number', label: getAutomationCardText('scriptVariableTypeNumber', {}, 'Number') },
+    { id: 'script', label: getAutomationCardText('scriptVariableTypeScript', {}, 'Script') }
+  ], action.variableType || 'number');
+  action.variableType = typeSelect.value;
+  typeSelect.addEventListener('change', event => {
+    action.variableType = event.target.value;
+    normalizeScriptAction(automation, action);
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+  typeSelect.title = getAutomationCardText('scriptVariableTypeLabel', {}, 'Variable type');
+  row.appendChild(typeSelect);
+
   const variables = automation.registry.getVariableTargets();
   const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.variableId);
   action.variableId = variableSelect.value || 'A';
@@ -1286,12 +1303,73 @@ function renderSetVariableActionEditor(automation, action, row) {
   });
   variableSelect.title = getAutomationCardText('scriptVariableLabel', {}, 'Variable');
   row.appendChild(variableSelect);
-  renderExpressionEditor(
-    automation,
-    action.valueExpression,
-    row,
-    getAutomationCardText('scriptVariableValue', {}, 'Value')
-  );
+
+  if (action.variableType === 'script') {
+    const scriptSelect = createSelect(createScriptTargetOptions(automation, true), action.targetScriptId || '');
+    action.targetScriptId = scriptSelect.value === '' ? null : Number(scriptSelect.value);
+    scriptSelect.addEventListener('change', event => {
+      action.targetScriptId = event.target.value === '' ? null : Number(event.target.value);
+      queueAutomationUIRefresh();
+    });
+    scriptSelect.title = getAutomationCardText('scriptChooseScript', {}, 'Choose Script');
+    row.appendChild(scriptSelect);
+  } else {
+    renderExpressionEditor(
+      automation,
+      action.valueExpression,
+      row,
+      getAutomationCardText('scriptVariableValue', {}, 'Value')
+    );
+  }
+}
+
+function renderGotoScriptActionEditor(automation, script, action, row) {
+  normalizeScriptAction(automation, action);
+  const modeSelect = createSelect([
+    { id: 'script', label: getAutomationCardText('scriptChooseScript', {}, 'Choose Script') },
+    { id: 'variable', label: getAutomationCardText('scriptVariableTypeScriptVariable', {}, 'Script variable') }
+  ], action.scriptTargetMode || 'script');
+  action.scriptTargetMode = modeSelect.value;
+  modeSelect.addEventListener('change', event => {
+    action.scriptTargetMode = event.target.value;
+    normalizeScriptAction(automation, action);
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+  row.appendChild(modeSelect);
+
+  if (action.scriptTargetMode === 'variable') {
+    const variables = automation.registry.getVariableTargets();
+    const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.scriptVariableId);
+    action.scriptVariableId = variableSelect.value || 'A';
+    variableSelect.addEventListener('change', event => {
+      action.scriptVariableId = event.target.value || 'A';
+      queueAutomationUIRefresh();
+    });
+    variableSelect.title = getAutomationCardText('scriptVariableTypeScriptVariable', {}, 'Script variable');
+    row.appendChild(variableSelect);
+  } else {
+    const defaultScriptId = action.targetScriptId || script.id || automation.scripts[0]?.id || '';
+    const scriptSelect = createSelect(createScriptTargetOptions(automation, false), defaultScriptId);
+    action.targetScriptId = scriptSelect.value ? Number(scriptSelect.value) : null;
+    scriptSelect.addEventListener('change', event => {
+      action.targetScriptId = Number(event.target.value);
+      queueAutomationUIRefresh();
+    });
+    row.appendChild(scriptSelect);
+  }
+}
+
+function createScriptTargetOptions(automation, includeNull) {
+  const options = [];
+  if (includeNull) {
+    options.push({ id: '', label: getAutomationCardText('scriptNullTargetOption', {}, '(null)') });
+  }
+  const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
+  scripts.forEach(targetScript => {
+    options.push({ id: targetScript.id, label: targetScript.name || `Script ${targetScript.id}` });
+  });
+  return options;
 }
 
 function renderActionTargetPicker(action, row) {

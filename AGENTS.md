@@ -63,7 +63,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Solis shop/quests: `solis.js`, `solisUI.js`
 - Patience: `hope/patienceUI.js` (terraforming patience banking/claim UI)
 - Life Automation: Growth Temperature Tolerance supports an `Aiming for` substep cap mode with selectable zones and a target growth multiplier, defaulting to `0.95`; it spends enough points for the selected zones' daytime temperature growth multipliers to reach the target.
-- Automation scripting variables: `script-automation.js`, `script-variable-registry.js`, and `automationScriptUI.js` expose numeric variables A-Z through the scripting registry, provide a Set Variable action using the expression builder, persist values in saves, and reset them on planet travel.
+- Automation scripting variables: `script-automation.js`, `script-variable-registry.js`, and `automationScriptUI.js` expose numeric variables A-Z through the scripting registry and script variables A-Z for `GOTO Script`; Set Variable can assign numeric expressions or script selections, values persist in saves, and both variable types reset on planet travel.
 - Achievements: `src/js/save-settings/achievements.js`, `src/js/save-settings/achievementsSubtab.js` (derived Save & Settings achievement list)
 - Steam achievements: Steam builds initialize `steamworks.js` in `electron/main.cjs` only when packaged with `GAME_BUILD_TARGET = 'steam'`; `AchievementManager` publishes uppercase versions of its internal ids through `window.steamAchievements` on unlock/load resync, and the Electron main process also uppercases before calling Steam.
 - Gold asteroid event: `gold-asteroid.js`
