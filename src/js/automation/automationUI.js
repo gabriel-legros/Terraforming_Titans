@@ -1109,7 +1109,7 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._activeOnSnapshotFilter = null;
   details._activeSelectedFilterValue = '';
   details._hasSnapshotButton = false;
-  details._parameterInputPathKey = '';
+  details._parameterInputPathKeys = new Set();
   details._filterOptionSignature = '';
   details.style.display = 'none';
   return details;
@@ -1325,7 +1325,7 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     const draftEntry = details._jsonDraftMap[pathKey];
     const isIncluded = !draftEntry || draftEntry.included !== false;
     const valueToRender = draftEntry ? draftEntry.value : value;
-    const isParameterInput = pathKey === details._parameterInputPathKey;
+    const isParameterInput = details._parameterInputPathKeys.has(pathKey);
     const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(path, value, preset) : null;
     const hasCustomSelectOptions = !!(fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length);
     const isBooleanLeaf = typeof value === 'boolean';
@@ -1708,6 +1708,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const onDirtyChange = options.onDirtyChange;
   const isLeafVisible = options.isLeafVisible;
   const fieldOptionsResolver = options.getFieldOptions;
+  const parameterInputPathsResolver = options.getParameterInputPaths;
   const filterOptionsResolver = options.getFilterOptions;
   const rootPath = Array.isArray(options.rootPath) && options.rootPath.length
     ? options.rootPath.slice()
@@ -1720,6 +1721,11 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const parameterInputPath = Array.isArray(options.parameterInputPath)
     ? options.parameterInputPath
     : null;
+  const parameterInputPaths = Array.isArray(options.parameterInputPaths)
+    ? options.parameterInputPaths
+    : parameterInputPath
+      ? [parameterInputPath]
+      : [];
   const toFullPath = (path) => (rootPath ? rootPath.concat(path) : path.slice());
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
@@ -1731,9 +1737,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   details._activeSelectedFilterValue = selectedFilterValue || '';
   details._hasSnapshotButton = !!onSnapshotFilter;
   details._showStatus = showStatus;
-  details._parameterInputPathKey = parameterInputPath
-    ? buildAutomationPresetLeafPathKey(parameterInputPath)
-    : '';
+  details._parameterInputPathKeys = new Set(parameterInputPaths.map((path) => buildAutomationPresetLeafPathKey(path)));
 
   if (!preset) {
     details.open = false;
@@ -1874,6 +1878,9 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     }
     setAutomationPresetValueAtPath(effectivePreset, draftEntry.path, draftEntry.value);
   }
+  if (parameterInputPathsResolver) {
+    details._parameterInputPathKeys = new Set(parameterInputPathsResolver(effectivePreset).map((path) => buildAutomationPresetLeafPathKey(path)));
+  }
   const visibleLeafPaths = isLeafVisible
     ? leafPaths.filter((path) => isLeafVisible(path, effectivePreset))
     : leafPaths;
@@ -1885,7 +1892,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       delete details._jsonDraftMap[draftKey];
     }
   }
-  const nextFieldKeySignature = `${visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|')}|parameter:${details._parameterInputPathKey}`;
+  const nextFieldKeySignature = `${visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|')}|parameter:${Array.from(details._parameterInputPathKeys).join(',')}`;
   for (let pathIndex = 0; pathIndex < visibleLeafPaths.length; pathIndex += 1) {
     const path = visibleLeafPaths[pathIndex];
     const pathKey = buildAutomationPresetLeafPathKey(path);
@@ -2026,7 +2033,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         ? draftEntry.value
         : getAutomationPresetValueAtPath(preset, leafPath);
       const nextIncluded = !draftEntry || draftEntry.included !== false;
-      const isParameterInput = pathKey === details._parameterInputPathKey;
+      const isParameterInput = details._parameterInputPathKeys.has(pathKey);
       const nextDisabled = isParameterInput || !nextIncluded;
       if (input.disabled !== nextDisabled) {
         input.disabled = nextDisabled;

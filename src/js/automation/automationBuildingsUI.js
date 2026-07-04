@@ -556,9 +556,9 @@ function updateBuildingsAutomationUI() {
   }
   updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset, {
     rootPath: ['buildings'],
-    parameterInputPath: activePreset && automation.isParameterizedPreset(activePreset)
-      ? automation.getPresetParameterInfo(activePreset).parameterPath
-      : null,
+    getParameterInputPaths: (preset) => automation.isParameterizedPreset(preset)
+      ? automation.getPresetParameterInfo(preset).parameterPaths
+      : [],
     showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.buildingsAutomationStatus, text, isError),
     isLeafVisible: (fieldPath, preset) => {
       const selectedBuildingId = buildingAutomationUIState.jsonFilterBuildingId;

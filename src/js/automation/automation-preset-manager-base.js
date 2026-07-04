@@ -161,6 +161,7 @@ class AutomationPresetManagerBase {
         valid: false,
         itemCount: 0,
         parameterPath: null,
+        parameterPaths: [],
         numericPathCount: 0
       };
     }
@@ -173,6 +174,7 @@ class AutomationPresetManagerBase {
       valid: itemKeys.length === 1 && eligibleNumericPaths.length === 1,
       itemCount: itemKeys.length,
       parameterPath: eligibleNumericPaths[0] || null,
+      parameterPaths: eligibleNumericPaths,
       numericPathCount: eligibleNumericPaths.length
     };
   }
@@ -199,7 +201,9 @@ class AutomationPresetManagerBase {
     }
     const appliedPreset = this.deepClone(preset);
     if (parameterValue !== undefined && parameterValue !== null) {
-      this.setValueAtPresetPath(appliedPreset, parameterInfo.parameterPath, Number(parameterValue));
+      for (let index = 0; index < parameterInfo.parameterPaths.length; index += 1) {
+        this.setValueAtPresetPath(appliedPreset, parameterInfo.parameterPaths[index], Number(parameterValue));
+      }
     }
     return appliedPreset;
   }
