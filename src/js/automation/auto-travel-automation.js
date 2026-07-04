@@ -293,23 +293,7 @@ class AutoTravelAutomation {
   }
 
   _hasCompletedSpecialization() {
-    const projects = projectManager?.projects;
-    if (!projects) {
-      return false;
-    }
-    if (projects.bioworld && projects.bioworld.isCompleted) {
-      return true;
-    }
-    if (projects.manufacturingWorld && projects.manufacturingWorld.isCompleted) {
-      return true;
-    }
-    if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-      return true;
-    }
-    if (projects.foundryWorld && projects.foundryWorld.isCompleted) {
-      return true;
-    }
-    return false;
+    return hasCompletedWorldSpecialization();
   }
 
   _getOldestStoredArtificialSeed() {
