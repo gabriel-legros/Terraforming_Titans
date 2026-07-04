@@ -510,7 +510,7 @@
       const seconds = deltaTime / 1000;
       const rate = seconds > 0 ? progress / seconds : 0;
       const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.createSpaceStorageAccess('consumption');
+      const storageProj = this.createSpaceStorageAccess('expansions');
       for (const category in cost) {
         if (!totals.cost[category]) {
           totals.cost[category] = {};
@@ -560,7 +560,7 @@
       }
 
       const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.createSpaceStorageAccess('consumption', { accumulatedChanges });
+      const storageProj = this.createSpaceStorageAccess('expansions', { accumulatedChanges });
       let paidProgress = Math.min(requestedProgress, remainingCap);
       for (const category in cost) {
         for (const resource in cost[category]) {

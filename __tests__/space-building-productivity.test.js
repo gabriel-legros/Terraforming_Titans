@@ -733,6 +733,10 @@ function setupHarness(initialStorage = {}) {
       });
       return multiplier > 0 ? multiplier : 1;
     }
+
+    getEffectiveCostMultiplier() {
+      return 1;
+    }
   }
 
   class BaseProject extends EffectableEntity {
@@ -843,7 +847,12 @@ function setupHarness(initialStorage = {}) {
   setGlobal('EffectableEntity', EffectableEntity, originalGlobals);
   setGlobal('TerraformingDurationProject', TerraformingDurationProject, originalGlobals);
   setGlobal('SpecializationProject', SpecializationProject, originalGlobals);
-  setGlobal('MEGA_PROJECT_RESOURCE_MODES', { SPACE_FIRST: 'spaceFirst' }, originalGlobals);
+  setGlobal('MEGA_PROJECT_RESOURCE_MODES', {
+    SPACE_FIRST: 'space-first',
+    COLONY_FIRST: 'colony-first',
+    SPACE_ONLY: 'space-only',
+    COLONY_ONLY: 'colony-only',
+  }, originalGlobals);
   setGlobal('getMegaProjectResourceAvailability', (storage, storageKey, colonyAvailable) => {
     const colony = Math.max(0, colonyAvailable || 0);
     const space = storage?.getAvailableStoredResource ? storage.getAvailableStoredResource(storageKey) : 0;
@@ -851,8 +860,21 @@ function setupHarness(initialStorage = {}) {
   }, originalGlobals);
   setGlobal('getMegaProjectResourceAllocation', (storage, storageKey, amount, colonyAvailable) => {
     const colony = Math.max(0, colonyAvailable || 0);
-    const fromColony = Math.min(amount, colony);
-    const fromStorage = Math.max(0, amount - fromColony);
+    const space = storage?.getAvailableStoredResource ? storage.getAvailableStoredResource(storageKey) : 0;
+    const mode = storage?.megaProjectResourceMode || 'colony-only';
+    if (mode === 'space-only') {
+      return { fromColony: 0, fromStorage: Math.min(amount, Math.max(0, space)) };
+    }
+    if (mode === 'colony-only') {
+      return { fromColony: Math.min(amount, colony), fromStorage: 0 };
+    }
+    if (mode === 'colony-first') {
+      const fromColony = Math.min(amount, colony);
+      const fromStorage = Math.min(Math.max(0, amount - fromColony), Math.max(0, space));
+      return { fromColony, fromStorage };
+    }
+    const fromStorage = Math.min(amount, Math.max(0, space));
+    const fromColony = Math.min(Math.max(0, amount - fromStorage), colony);
     return { fromColony, fromStorage };
   }, originalGlobals);
   setGlobal('resources', resourcesObj, originalGlobals);
@@ -888,6 +910,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('getZonePercentage', () => 0, originalGlobals);
   setGlobal('buildings', {}, originalGlobals);
   setGlobal('resolveWorldBaseLand', () => 0, originalGlobals);
+  setGlobal('resolveWorldGeometricLand', () => 0, originalGlobals);
   setGlobal('calculateSurfaceAreaHectaresFromRadius', () => 0, originalGlobals);
   setGlobal('getDynamicWorldPlanetaryMassAvailableTons', () => 0, originalGlobals);
   setGlobal('hasDynamicMassEnabled', () => false, originalGlobals);
@@ -904,10 +927,13 @@ function setupHarness(initialStorage = {}) {
   };
   setGlobal('projectManager', projectManager, originalGlobals);
 
+  const { Project } = require(path.resolve(__dirname, '../src/js/projects.js'));
+  setGlobal('Project', Project, originalGlobals);
   const resourceModule = require(path.resolve(__dirname, '../src/js/resource.js'));
   jest.doMock(path.resolve(__dirname, '../src/js/projects/SpecializationProject.js'), () => ({
     SpecializationProject,
   }));
+  const MegaHeatSinkProject = require(path.resolve(__dirname, '../src/js/projects/MegaHeatSinkProject.js'));
   const NuclearAlchemyFurnaceProject = require(path.resolve(__dirname, '../src/js/projects/NuclearAlchemyFurnaceProject.js'));
   const SuperalloyGigafoundryProject = require(path.resolve(__dirname, '../src/js/projects/SuperalloyGigafoundryProject.js'));
   const ManufacturingWorldProject = require(path.resolve(__dirname, '../src/js/projects/ManufacturingWorldProject.js'));
@@ -930,6 +956,7 @@ function setupHarness(initialStorage = {}) {
     produceResources: resourceModule.produceResources,
     projectManager,
     resources: resourcesObj,
+    MegaHeatSinkProject,
     NuclearAlchemyFurnaceProject,
     SuperalloyGigafoundryProject,
     ManufacturingWorldProject,
@@ -948,6 +975,42 @@ function expectApprox(received, expected, tolerance = 1e-6) {
 }
 
 describe('Space building productivity via produceResources', () => {
+  test('Mega Heat Sink continuous expansion respects expansion reserve scope', () => {
+    const harness = setupHarness({ superalloys: 20 });
+    const {
+      MegaHeatSinkProject,
+      projectManager,
+      resources,
+      cleanup,
+    } = harness;
+
+    resources.colony.workers.cap = 120_000_000_000;
+    projectManager.projects.spaceStorage.resourceStrategicReserves.superalloys = {
+      value: 20,
+      scope: { expansions: false, consumption: true },
+    };
+
+    const heatSink = new MegaHeatSinkProject({
+      name: 'Mega Heat Sink',
+      duration: 60000,
+      cost: { colony: { superalloys: 20 } },
+      attributes: { canUseSpaceStorage: true },
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      category: 'mega',
+    }, 'megaHeatSink');
+    heatSink.isActive = true;
+    projectManager.projects.megaHeatSink = heatSink;
+
+    const accumulatedChanges = { colony: {}, spaceStorage: {} };
+    heatSink.applyCostAndGain(1000, accumulatedChanges, 1);
+
+    expectApprox(heatSink.repeatCount, 1);
+    expectApprox(accumulatedChanges.spaceStorage.superalloys, -20);
+    cleanup();
+  });
+
   test('continuous project productivity uses full desired cost when normal estimate clamps to available energy', () => {
     const harness = setupHarness();
     const {
