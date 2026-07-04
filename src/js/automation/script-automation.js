@@ -1070,9 +1070,20 @@ class ScriptAutomation {
       const next = this.registry.resolveValue(term.ref);
       if (term.op === 'subtract') value -= next;
       else if (term.op === 'multiply') value *= next;
+      else if (term.op === 'safeDivide') {
+        const quotient = next === 0 ? 0 : value / next;
+        value = Number.isFinite(quotient) ? quotient : 0;
+      }
       else value += next;
     }
     return value;
+  }
+
+  getExpressionOperatorLabel(op) {
+    if (op === 'subtract') return t('ui.hope.automationCards.scriptOperatorSubtract', {}, 'SUBTRACT');
+    if (op === 'multiply') return t('ui.hope.automationCards.scriptOperatorMultiply', {}, 'MULTIPLY');
+    if (op === 'safeDivide') return t('ui.hope.automationCards.scriptOperatorSafeDivide', {}, 'SAFE DIVIDE');
+    return t('ui.hope.automationCards.scriptOperatorAdd', {}, 'ADD');
   }
 
   describeCondition(condition) {
@@ -1089,7 +1100,7 @@ class ScriptAutomation {
     const terms = Array.isArray(expression?.terms) ? expression.terms : [];
     if (terms.length === 0) return '0';
     return terms.map((term, index) => {
-      const op = index === 0 ? '' : ` ${String(term.op || 'add').toUpperCase()} `;
+      const op = index === 0 ? '' : ` ${this.getExpressionOperatorLabel(term.op || 'add')} `;
       return `${op}${this.registry.describeReference(term.ref)}`;
     }).join('');
   }

@@ -898,9 +898,10 @@ function renderExpressionEditor(automation, expression, container, titleText) {
     row.classList.add('script-term-row');
     if (index > 0) {
       const op = createSelect([
-        { id: 'add', label: 'ADD' },
-        { id: 'subtract', label: 'SUBTRACT' },
-        { id: 'multiply', label: 'MULTIPLY' }
+        { id: 'add', label: automation.getExpressionOperatorLabel('add') },
+        { id: 'subtract', label: automation.getExpressionOperatorLabel('subtract') },
+        { id: 'multiply', label: automation.getExpressionOperatorLabel('multiply') },
+        { id: 'safeDivide', label: automation.getExpressionOperatorLabel('safeDivide') }
       ], term.op || 'add');
       op.addEventListener('change', event => {
         term.op = event.target.value;
