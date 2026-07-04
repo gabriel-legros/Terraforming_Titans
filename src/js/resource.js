@@ -90,6 +90,7 @@ function initializeAccumulatedSpecialChanges() {
     planetaryMass: {},
     planetaryMassImports: {},
     materialOverflowToPlanetaryMass: {},
+    colonyWaterNoOverflow: 0,
     colonyHydrogenOverflowToSpaceStorage: 0,
     colonyHydrogenNoOverflow: 0
   };
@@ -186,10 +187,13 @@ function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
   resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
 }
 
-function routeColonyWaterOverflow(deltaTime, accumulatedChanges) {
+function routeColonyWaterOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
   routeColonyResourceOverflow(deltaTime, accumulatedChanges, {
     sourceCategory: 'colony',
     sourceResource: 'water',
+    getProtectedOverflow() {
+      return accumulatedSpecialChanges.colonyWaterNoOverflow || 0;
+    },
     resolveTarget() {
       const zones = getZones();
       const zoneTemp = zone => terraforming.temperature.zones[zone].value;
@@ -1675,7 +1679,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
           const fullCostTotals = project.estimateProductivityCostAndGain
             ? project.estimateProductivityCostAndGain(deltaTime)
             : project.estimateCostAndGain(deltaTime, false, 1);
-          const scaledTotals = project.estimateCostAndGain(deltaTime, false, projectProductivity) || {};
+          const scaledTotals = project.estimateProductionRateCostAndGain?.(deltaTime, false, projectProductivity)
+            || project.estimateCostAndGain(deltaTime, false, projectProductivity)
+            || {};
           applyProjectResourceRatesForAvailability(
             project,
             fullCostTotals.cost || {},
@@ -1683,7 +1689,10 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
             deltaTime
           );
         } else {
-          project.estimateCostAndGain(deltaTime, true, projectProductivity);
+          const rateTotals = project.estimateProductionRateCostAndGain?.(deltaTime, true, projectProductivity);
+          if (!rateTotals) {
+            project.estimateCostAndGain(deltaTime, true, projectProductivity);
+          }
         }
       }
     }
@@ -2141,7 +2150,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (terraforming) {
-    routeColonyWaterOverflow(deltaTime, accumulatedChanges);
+    routeColonyWaterOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyHydrogenOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChanges, accumulatedSpecialChanges);

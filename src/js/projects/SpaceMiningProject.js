@@ -1606,32 +1606,112 @@ class SpaceMiningProject extends SpaceshipProject {
     return super.calculateSpaceshipTotalResourceGain(perSecond);
   }
 
-  applyWaterImportToColony(amount, accumulatedChanges = null, allowOverflow = false) {
-    const resource = resources.colony.water;
-    const pending = accumulatedChanges?.colony?.water || 0;
-    const current = resource.value + pending;
-    const limit = resource.hasCap
-      ? (allowOverflow ? current + amount : (current >= resource.cap ? current : resource.cap))
-      : current + amount;
-    const available = Math.max(0, limit - current);
-    const toColony = Math.min(amount, available);
-    if (toColony > 0) {
-      if (accumulatedChanges) {
-        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
-        accumulatedChanges.colony.water = (accumulatedChanges.colony.water || 0) + toColony;
-      } else {
-        resource.value += toColony;
+  estimateProductionRateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const material = this.getPlanetaryMassImportResource();
+    if (!material || !this.isActive || !this.isContinuous() || this.isBlockedByPulsarStorm()) {
+      return null;
+    }
+
+    const context = this.getContinuousOperationContext(deltaTime, productivity);
+    if (context.fraction <= 0 || context.totalTransportCount <= 0) {
+      return { cost: {}, gain: {} };
+    }
+
+    const totals = { cost: {}, gain: {} };
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
+        }
+        const count = this.getContinuousCostCountForResource(category, resource, context);
+        const amount = costPerShip[category][resource] * count * context.fraction * productivity;
+        this.addAmountToResourceMap(totals.cost, category, resource, amount);
       }
     }
-    return amount - toColony;
+
+    const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
+    const gainCount = this.getContinuousGainCount(context);
+    for (const category in gainPerShip) {
+      for (const resource in gainPerShip[category]) {
+        const amount = gainPerShip[category][resource] *
+          gainCount *
+          context.fraction *
+          context.successChance *
+          context.productivity;
+        this.addAmountToResourceMap(totals.gain, category, resource, amount);
+      }
+    }
+    if (this.applyMetalCostPenalty) {
+      const metalPenalty = (costPerShip.colony?.metal || 0) *
+        gainCount *
+        context.fraction *
+        context.successChance *
+        context.productivity;
+      this.applyMetalCostPenalty(totals.gain, metalPenalty);
+    }
+
+    if (applyRates) {
+      const seconds = deltaTime / 1000;
+      if (seconds > 0) {
+        const costLabel = this.getCostRateLabel();
+        for (const category in totals.cost) {
+          for (const resource in totals.cost[category]) {
+            resources[category][resource].modifyRate(
+              -(totals.cost[category][resource] / seconds),
+              costLabel,
+              'project'
+            );
+          }
+        }
+        const gainLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
+        for (const category in totals.gain) {
+          for (const resource in totals.gain[category]) {
+            resources[category][resource].modifyRate(
+              totals.gain[category][resource] / seconds,
+              gainLabel,
+              'project'
+            );
+          }
+        }
+      }
+    }
+
+    return totals;
   }
 
-  applyMaterialImportToColony(resourceName, amount, accumulatedChanges = null) {
+  applyColonyResourceImport(resourceName, amount, accumulatedChanges = null, accumulatedSpecialChanges = null, options = {}) {
     const resource = resources.colony[resourceName];
+    const allowOverflow = options.allowOverflow === true;
+    const deferOverflow = options.deferOverflow === true;
+    const specialChangeKey = options.specialChangeKey;
+
+    if (accumulatedChanges && (allowOverflow || deferOverflow)) {
+      if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
+      accumulatedChanges.colony[resourceName] = (accumulatedChanges.colony[resourceName] || 0) + amount;
+      if (specialChangeKey) {
+        accumulatedSpecialChanges[specialChangeKey] =
+          (accumulatedSpecialChanges[specialChangeKey] || 0) + amount;
+      }
+      return 0;
+    }
+
+    if (!accumulatedChanges && deferOverflow) {
+      const previousValue = resource.value;
+      resource.value += amount;
+      if (!resource.hasCap) {
+        return 0;
+      }
+      const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+      const overflow = Math.max(0, resource.value - limit);
+      resource.value -= overflow;
+      return overflow;
+    }
+
     const pending = accumulatedChanges?.colony?.[resourceName] || 0;
     const current = resource.value + pending;
     const limit = resource.hasCap
-      ? (current >= resource.cap ? current : resource.cap)
+      ? (allowOverflow ? current + amount : (current >= resource.cap ? current : resource.cap))
       : current + amount;
     const available = Math.max(0, limit - current);
     const toColony = Math.min(amount, available);
@@ -1642,6 +1722,10 @@ class SpaceMiningProject extends SpaceshipProject {
       } else {
         resource.value += toColony;
       }
+    }
+    if (allowOverflow && specialChangeKey) {
+      accumulatedSpecialChanges[specialChangeKey] =
+        (accumulatedSpecialChanges[specialChangeKey] || 0) + amount;
     }
     return amount - toColony;
   }
@@ -1661,40 +1745,6 @@ class SpaceMiningProject extends SpaceshipProject {
     reconcileLandResourceValue();
   }
 
-  applyHydrogenImportToColony(amount, accumulatedChanges = null, allowOverflow = false, accumulatedSpecialChanges = null) {
-    const resource = resources.colony.colonyHydrogen;
-    const pending = accumulatedChanges?.colony?.colonyHydrogen || 0;
-    const current = resource.value + pending;
-    const limit = resource.hasCap
-      ? (allowOverflow ? current + amount : (current >= resource.cap ? current : resource.cap))
-      : current + amount;
-    const available = Math.max(0, limit - current);
-    const toColony = Math.min(amount, available);
-    if (toColony > 0) {
-      if (accumulatedChanges) {
-        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
-        accumulatedChanges.colony.colonyHydrogen = (accumulatedChanges.colony.colonyHydrogen || 0) + toColony;
-      } else {
-        resource.value += toColony;
-      }
-    }
-    if (allowOverflow && accumulatedSpecialChanges) {
-      accumulatedSpecialChanges.colonyHydrogenNoOverflow =
-        (accumulatedSpecialChanges.colonyHydrogenNoOverflow || 0) + amount;
-    }
-    return amount - toColony;
-  }
-
-  getHydrogenImportColonyOverflow(amount, accumulatedChanges = null) {
-    const resource = resources.colony.colonyHydrogen;
-    const pending = accumulatedChanges?.colony?.colonyHydrogen || 0;
-    const current = resource.value + pending;
-    const limit = resource.hasCap
-      ? (current >= resource.cap ? current : resource.cap)
-      : current + amount;
-    return Math.max(0, amount - Math.max(0, limit - current));
-  }
-
   getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
     let ratio = super.getContinuousGainScaleLimit(context, gainBase, accumulatedChanges, productivity);
     if (gainBase.spaceStorage) {
@@ -1708,26 +1758,6 @@ class SpaceMiningProject extends SpaceshipProject {
             gainRatio
           );
           ratio = Math.min(ratio, intakePlan.ratio);
-          intakePlan.limitedResources.forEach((resourceKey) => {
-            resources.spaceStorage[resourceKey].automationLimited = true;
-          });
-        }
-      }
-    }
-    if (this.gasImportTarget === 'colonyAndSpaceStorage' && gainBase.colony?.colonyHydrogen) {
-      const spaceStorageProject = projectManager.projects?.spaceStorage;
-      if (spaceStorageProject && spaceStorageProject.computeStorageIntakePlan) {
-        const gainRatio = context.fraction * context.successChance * productivity;
-        const desired = gainBase.colony.colonyHydrogen * gainRatio;
-        const colonyOverflow = this.getHydrogenImportColonyOverflow(desired, accumulatedChanges);
-        if (colonyOverflow > 0) {
-          const storageScale = gainRatio > 0 ? colonyOverflow / gainBase.colony.colonyHydrogen : 0;
-          const intakePlan = spaceStorageProject.computeStorageIntakePlan(
-            { hydrogen: gainBase.colony.colonyHydrogen },
-            accumulatedChanges,
-            storageScale
-          );
-          ratio = Math.min(ratio, (desired - colonyOverflow + intakePlan.allowedTotal) / desired);
           intakePlan.limitedResources.forEach((resourceKey) => {
             resources.spaceStorage[resourceKey].automationLimited = true;
           });
@@ -1782,7 +1812,17 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       let amount = entry[resourceName] * fraction * productivity;
       if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
-        this.applyWaterImportToColony(amount, accumulatedChanges, this.waterImportTarget === 'colony');
+        const importWithoutOverflow = this.waterImportTarget === 'colonyOnly';
+        this.applyColonyResourceImport(
+          'water',
+          amount,
+          accumulatedChanges,
+          importWithoutOverflow ? accumulatedSpecialChanges : null,
+          {
+            allowOverflow: this.waterImportTarget === 'colony' || importWithoutOverflow,
+            specialChangeKey: importWithoutOverflow ? 'colonyWaterNoOverflow' : null
+          }
+        );
         return;
       }
       const surfaceResource = (allBelow || resourceName === 'ice') ? 'ice' : 'liquidWater';
@@ -1798,17 +1838,27 @@ class SpaceMiningProject extends SpaceshipProject {
       const amount = gain.colony.colonyHydrogen * fraction * productivity;
       const importWithoutOverflow = this.gasImportTarget === 'colonyOnly';
       if (this.gasImportTarget === 'colonyAndSpaceStorage' && accumulatedChanges) {
-        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
-        accumulatedChanges.colony.colonyHydrogen = (accumulatedChanges.colony.colonyHydrogen || 0) + amount;
-        accumulatedSpecialChanges.colonyHydrogenOverflowToSpaceStorage =
-          (accumulatedSpecialChanges.colonyHydrogenOverflowToSpaceStorage || 0) + amount;
+        this.applyColonyResourceImport(
+          'colonyHydrogen',
+          amount,
+          accumulatedChanges,
+          accumulatedSpecialChanges,
+          {
+            allowOverflow: true,
+            specialChangeKey: 'colonyHydrogenOverflowToSpaceStorage'
+          }
+        );
         return;
       }
-      const overflow = this.applyHydrogenImportToColony(
+      const overflow = this.applyColonyResourceImport(
+        'colonyHydrogen',
         amount,
         accumulatedChanges,
-        this.gasImportTarget === 'colony' || importWithoutOverflow,
-        importWithoutOverflow ? accumulatedSpecialChanges : null
+        importWithoutOverflow ? accumulatedSpecialChanges : null,
+        {
+          allowOverflow: this.gasImportTarget === 'colony' || importWithoutOverflow,
+          specialChangeKey: importWithoutOverflow ? 'colonyHydrogenNoOverflow' : null
+        }
       );
       if (this.gasImportTarget === 'colonyAndSpaceStorage' && overflow > 0) {
         const scale = fraction * productivity;
@@ -1824,12 +1874,11 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       const amount = gain.colony[material] * fraction * productivity;
       if (accumulatedChanges) {
-        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
-        accumulatedChanges.colony[material] = (accumulatedChanges.colony[material] || 0) + amount;
+        this.applyColonyResourceImport(material, amount, accumulatedChanges, null, { deferOverflow: true });
         const sourceLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
         accumulateMaterialOverflowToPlanetaryMass(accumulatedSpecialChanges, sourceLabel, material, amount);
       } else {
-        const overflow = this.applyMaterialImportToColony(material, amount);
+        const overflow = this.applyColonyResourceImport(material, amount, null, null, { deferOverflow: true });
         this.applyPlanetaryMassImport(material, overflow);
       }
       return;
