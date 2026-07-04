@@ -2186,16 +2186,22 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     const isPresetApplication = options.isPresetApplication === true;
+    const shouldApplyPresetAssignments = !isPresetApplication
+      || Object.keys(settings.lifterAssignments || {}).length > 0;
+    const shouldApplyPresetAutoFlags = !isPresetApplication
+      || Object.keys(settings.autoAssignFlags || {}).length > 0;
+    const shouldApplyPresetAutoWeights = !isPresetApplication
+      || Object.keys(settings.autoAssignWeights || {}).length > 0;
 
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
     }
 
     const hasAssignmentState =
-      Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')
+      (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments') && shouldApplyPresetAssignments)
       || Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')
-      || Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')
-      || Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')
+      || (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags)
+      || (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights)
       || Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')
       || Object.prototype.hasOwnProperty.call(settings, 'disableStripBelowPressure')
       || Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold');
@@ -2207,7 +2213,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       if (!isPresetApplication) {
         this.deferLoadedAssignmentCapClamp();
       }
-      if (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')) {
+      if (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments') && shouldApplyPresetAssignments) {
         this.lifterAssignments = isPresetApplication
           ? this.getPresetLifterAssignments(settings)
           : { ...(settings.lifterAssignments || {}) };
@@ -2215,10 +2221,10 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
         this.assignmentStep = settings.assignmentStep || 1;
       }
-      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
+      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags) {
         this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
       }
-      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
+      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {
         this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')) {

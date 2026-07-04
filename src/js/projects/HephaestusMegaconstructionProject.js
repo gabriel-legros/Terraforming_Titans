@@ -1044,10 +1044,19 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     };
   }
 
-  loadAutomationSettings(settings = {}) {
+  loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
+    const isPresetApplication = options.isPresetApplication === true;
+    const shouldApplyPresetAssignments = !isPresetApplication
+      || Object.keys(settings.yardAssignments || {}).length > 0;
+    const shouldApplyPresetAutoFlags = !isPresetApplication
+      || Object.keys(settings.autoAssignFlags || {}).length > 0;
+    const shouldApplyPresetAutoWeights = !isPresetApplication
+      || Object.keys(settings.autoAssignWeights || {}).length > 0;
+    const shouldApplyPresetReleaseFlags = !isPresetApplication
+      || Object.keys(settings.releaseIfDisabledFlags || {}).length > 0;
     let assignmentSettingsChanged = false;
-    if (Object.prototype.hasOwnProperty.call(settings, 'yardAssignments')) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'yardAssignments') && shouldApplyPresetAssignments) {
       this.yardAssignments = { ...(settings.yardAssignments || {}) };
       assignmentSettingsChanged = true;
     }
@@ -1055,15 +1064,15 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       this.assignmentStep = settings.assignmentStep || 1;
       assignmentSettingsChanged = true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags) {
       this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
       assignmentSettingsChanged = true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {
       this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
       assignmentSettingsChanged = true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'releaseIfDisabledFlags')) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'releaseIfDisabledFlags') && shouldApplyPresetReleaseFlags) {
       this.releaseIfDisabledFlags = { ...(settings.releaseIfDisabledFlags || {}) };
       assignmentSettingsChanged = true;
     }

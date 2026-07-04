@@ -1372,11 +1372,17 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     const isPresetApplication = options.isPresetApplication === true;
+    const shouldApplyPresetAssignments = !isPresetApplication
+      || Object.keys(settings.furnaceAssignments || {}).length > 0;
+    const shouldApplyPresetAutoFlags = !isPresetApplication
+      || Object.keys(settings.autoAssignFlags || {}).length > 0;
+    const shouldApplyPresetAutoWeights = !isPresetApplication
+      || Object.keys(settings.autoAssignWeights || {}).length > 0;
     let assignmentSettingsChanged = false;
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'furnaceAssignments')) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'furnaceAssignments') && shouldApplyPresetAssignments) {
       this.furnaceAssignments = isPresetApplication
         ? this.getPresetFurnaceAssignments(settings)
         : { ...(settings.furnaceAssignments || {}) };
@@ -1386,11 +1392,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       this.assignmentStep = settings.assignmentStep || 1;
       assignmentSettingsChanged = true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags) {
       this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
       assignmentSettingsChanged = true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {
       this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
       assignmentSettingsChanged = true;
     }
