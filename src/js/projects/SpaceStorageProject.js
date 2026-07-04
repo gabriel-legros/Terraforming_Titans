@@ -584,6 +584,23 @@ class SpaceStorageProject extends SpaceshipProject {
     return { entries, total };
   }
 
+  getBiomassWithdrawalTargetZones() {
+    const zones = getZones();
+    const design = lifeDesigner?.currentDesign;
+    let growZones = [];
+    let surviveZones = [];
+    if (design && design.getGrowableZones && design.temperatureSurvivalCheck) {
+      const growable = design.getGrowableZones() || [];
+      const survival = design.temperatureSurvivalCheck() || {};
+      growZones = growable.filter(zone => survival?.[zone]?.pass);
+      surviveZones = Object.keys(survival || {}).filter(zone =>
+        zone !== 'global' && survival[zone]?.pass && !growZones.includes(zone));
+    } else if (terraforming.biomassDyingZones) {
+      growZones = Object.keys(terraforming.biomassDyingZones).filter(zone => !terraforming.biomassDyingZones[zone]);
+    }
+    return growZones.length ? growZones : (surviveZones.length ? surviveZones : zones);
+  }
+
   removeBiomassFromZones(amount) {
     if (!terraforming || amount <= 0) return 0;
     const { entries, total } = this.getBiomassZones();
@@ -603,20 +620,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   addBiomassToZones(amount) {
     if (!terraforming || amount <= 0) return 0;
-    const zones = getZones();
-    const design = lifeDesigner?.currentDesign;
-    let growZones = [];
-    let surviveZones = [];
-    if (design && typeof design.getGrowableZones === 'function' && typeof design.temperatureSurvivalCheck === 'function') {
-      const growable = design.getGrowableZones() || [];
-      const survival = design.temperatureSurvivalCheck() || {};
-      growZones = growable.filter(zone => survival?.[zone]?.pass);
-      surviveZones = Object.keys(survival || {}).filter(zone =>
-        zone !== 'global' && survival[zone]?.pass && !growZones.includes(zone));
-    } else if (terraforming.biomassDyingZones) {
-      growZones = Object.keys(terraforming.biomassDyingZones).filter(zone => !terraforming.biomassDyingZones[zone]);
-    }
-    const targets = growZones.length ? growZones : (surviveZones.length ? surviveZones : zones);
+    const targets = this.getBiomassWithdrawalTargetZones();
     const totalPercent = targets.reduce((sum, zone) => sum + (getZonePercentage(zone) || 0), 0) || targets.length;
 
     targets.forEach(zone => {
@@ -1497,7 +1501,11 @@ class SpaceStorageProject extends SpaceshipProject {
     const design = lifeDesigner?.currentDesign;
     const maxDensity = design?.getMaxBiomassDensity ? Math.max(0, design.getMaxBiomassDensity()) : 0.1;
     const effectiveMaxDensity = maxDensity > 0 ? maxDensity : 0.1;
-    const landAreaM2 = resolveWorldGeometricLand(terraforming, resources.surface.land) * 10000;
+    const landMultiplier = getLifeLandMultiplier(terraforming);
+    const targetZones = this.getBiomassWithdrawalTargetZones();
+    const landAreaM2 = targetZones.reduce((sum, zone) => {
+      return sum + terraforming.celestialParameters.surfaceArea * (getZonePercentage(zone) || 0) * landMultiplier;
+    }, 0);
     const maxBiomass = landAreaM2 > 0 ? landAreaM2 * effectiveMaxDensity : 0;
     const currentBiomass = this.getResourceValueForTick('surface', 'biomass', accumulatedChanges);
     return Math.max(0, maxBiomass - currentBiomass);
