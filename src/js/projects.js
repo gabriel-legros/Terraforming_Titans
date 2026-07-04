@@ -1169,6 +1169,10 @@ class ProjectManager extends EffectableEntity {
     this.uiDirty = true;
   }
 
+  addAndReplace(effect) {
+    super.addAndReplace({ ...effect });
+  }
+
   currentWorldHasStar() {
     const params =
       this.spaceManager?.currentPlanetParameters ||
