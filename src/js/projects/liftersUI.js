@@ -136,19 +136,15 @@ function renderLiftersUI(project, container) {
   const assignmentGrid = document.createElement('div');
   assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'lifters-assignment-list');
 
-  const stepDownButton = document.createElement('button');
-  stepDownButton.textContent = getLiftersUIText('ui.projects.common.divideTen', '/10');
-  stepDownButton.addEventListener('click', () => {
-    project.divideAssignmentStepByTen();
-    project.updateUI();
+  const stepButtons = project.createAssignmentStepButtons((key, fallback) => {
+    const paths = {
+      divideTen: 'ui.projects.common.divideTen',
+      timesTen: 'ui.projects.common.timesTen'
+    };
+    return getLiftersUIText(paths[key], fallback);
   });
-
-  const stepUpButton = document.createElement('button');
-  stepUpButton.textContent = getLiftersUIText('ui.projects.common.timesTen', 'x10');
-  stepUpButton.addEventListener('click', () => {
-    project.multiplyAssignmentStepByTen();
-    project.updateUI();
-  });
+  const stepDownButton = stepButtons.stepDownButton;
+  const stepUpButton = stepButtons.stepUpButton;
 
   const headerRow = document.createElement('div');
   headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
@@ -226,70 +222,21 @@ function renderLiftersUI(project, container) {
     const maxTooltip = attachDynamicInfoTooltip(maxInfo, '');
     maxWrap.append(maxEl, maxInfo);
 
-    const zeroButton = document.createElement('button');
-    zeroButton.textContent = getLiftersUIText('ui.projects.common.zero', '0');
-    zeroButton.addEventListener('click', () => {
-      project.clearAssignment(key);
+    const assignmentControls = project.createAssignmentControls(key, {
+      textProvider: (controlKey, fallback) => {
+        const paths = {
+          zero: 'ui.projects.common.zero',
+          max: 'ui.projects.common.max',
+          auto: 'ui.projects.common.auto'
+        };
+        return getLiftersUIText(paths[controlKey], fallback);
+      }
     });
-
-    const minusButton = document.createElement('button');
-    minusButton.addEventListener('click', () => {
-      project.adjustAssignment(key, -project.getAssignmentStep());
-    });
-
-    const plusButton = document.createElement('button');
-    plusButton.addEventListener('click', () => {
-      project.adjustAssignment(key, project.getAssignmentStep());
-    });
-
-    const maxButton = document.createElement('button');
-    maxButton.textContent = getLiftersUIText('ui.projects.common.max', 'Max');
-    maxButton.addEventListener('click', () => {
-      project.maximizeAssignment(key);
-    });
-
-    const autoAssignContainer = document.createElement('div');
-    autoAssignContainer.classList.add('hephaestus-auto-assign');
-    const autoAssign = document.createElement('input');
-    autoAssign.type = 'checkbox';
-    autoAssign.addEventListener('change', () => {
-      project.setAutoAssignTarget(key, autoAssign.checked);
-    });
-    const autoAssignLabel = document.createElement('span');
-    autoAssignLabel.textContent = getLiftersUIText('ui.projects.common.auto', 'Auto');
-    autoAssignLabel.addEventListener('click', () => {
-      autoAssign.checked = !autoAssign.checked;
-      project.setAutoAssignTarget(key, autoAssign.checked);
-    });
-    autoAssignContainer.append(autoAssign, autoAssignLabel);
-
-    const weightInput = document.createElement('input');
-    weightInput.type = 'number';
-    weightInput.min = '0';
-    weightInput.step = '0.1';
-    weightInput.value = String(
-      Object.prototype.hasOwnProperty.call(project.autoAssignWeights, key) ? project.autoAssignWeights[key] : 1
-    );
-    weightInput.classList.add('hephaestus-weight-input');
-    weightInput.addEventListener('input', () => {
-      const value = Number(weightInput.value);
-      project.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
-      project.markAssignmentsDirty();
-      project.normalizeAssignments();
-      project.updateUI();
-    });
-
-    const controls = document.createElement('div');
-    controls.classList.add('hephaestus-assignment-controls');
-    const controlButtons = document.createElement('div');
-    controlButtons.classList.add('hephaestus-control-buttons');
-    controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
-    controls.append(controlButtons, weightInput);
 
     const rateEl = document.createElement('div');
     rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
 
-    row.append(nameWrap, complexityEl, amountEl, maxWrap, controls, rateEl);
+    row.append(nameWrap, complexityEl, amountEl, maxWrap, assignmentControls.controls, rateEl);
     assignmentGrid.appendChild(row);
 
     rowElements[key] = {
@@ -300,12 +247,12 @@ function renderLiftersUI(project, container) {
       maxValue: maxEl,
       maxInfo,
       maxTooltip,
-      zeroButton,
-      minusButton,
-      plusButton,
-      maxButton,
-      autoAssign,
-      weightInput,
+      zeroButton: assignmentControls.zeroButton,
+      minusButton: assignmentControls.minusButton,
+      plusButton: assignmentControls.plusButton,
+      maxButton: assignmentControls.maxButton,
+      autoAssign: assignmentControls.autoAssign,
+      weightInput: assignmentControls.weightInput,
       rate: rateEl,
     };
   });
@@ -428,20 +375,7 @@ function updateLiftersUI(project) {
       row.maxTooltip.textContent = project.getMaxAssignmentTooltipText(key, recipe);
       row.maxTooltip.style.whiteSpace = 'pre-line';
     }
-    row.minusButton.textContent = `-${formatNumber(step, true)}`;
-    row.plusButton.textContent = `+${formatNumber(step, true)}`;
-    row.autoAssign.checked = project.autoAssignFlags[key] === true;
-    row.autoAssign.disabled = totalBigInt <= 0n;
-    if (document.activeElement !== row.weightInput) {
-      row.weightInput.value = String(
-        Object.prototype.hasOwnProperty.call(project.autoAssignWeights, key) ? project.autoAssignWeights[key] : 1
-      );
-    }
-    row.weightInput.disabled = totalBigInt <= 0n;
-    row.zeroButton.disabled = storedCurrent <= 0n || project.autoAssignFlags[key];
-    row.maxButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || project.autoAssignFlags[key];
-    row.minusButton.disabled = storedCurrent <= 0n || project.autoAssignFlags[key];
-    row.plusButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || project.autoAssignFlags[key];
+    project.updateAssignmentControls(row, key, totalBigInt, step);
 
     const rate = isUnassigned ? 0 : (project.lastDisplayedRatesByRecipe?.[key] || 0);
     row.rate.textContent = isUnassigned ? '' : formatPerSecond(rate);

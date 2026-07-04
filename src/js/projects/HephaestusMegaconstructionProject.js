@@ -9,55 +9,29 @@ function getHephaestusText(path, fallback, vars) {
 const HEPHAESTUS_UNASSIGNED_KEY = 'idleUnassigned';
 const HEPHAESTUS_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
 
+let HephaestusAssignmentTools = {};
+try {
+  HephaestusAssignmentTools = {
+    createProjectAssignmentBase,
+    normalizeProjectAssignmentInteger,
+    serializeProjectAssignmentInteger,
+    serializeProjectAssignments
+  };
+} catch (error) {}
+try {
+  HephaestusAssignmentTools = require('./ProjectAssignmentBase.js');
+} catch (error) {}
+
 function normalizeHephaestusInteger(value) {
-  if (value === undefined || value === null || value === '') {
-    return 0n;
-  }
-  if (Object.prototype.toString.call(value) === '[object BigInt]') {
-    return value < 0n ? 0n : value;
-  }
-  if (Object.prototype.toString.call(value) === '[object String]') {
-    const trimmed = value.trim();
-    if (/^\d+$/.test(trimmed)) {
-      return BigInt(trimmed);
-    }
-    const parsed = parseFlexibleNumber(trimmed);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      if (Number.isSafeInteger(parsed)) {
-        return BigInt(parsed);
-      }
-      return BigInt(Math.floor(parsed).toLocaleString('fullwide', {
-        useGrouping: false,
-        maximumFractionDigits: 0
-      }));
-    }
-  }
-  const numeric = Number(value) || 0;
-  if (numeric <= 0) {
-    return 0n;
-  }
-  if (Number.isSafeInteger(numeric)) {
-    return BigInt(numeric);
-  }
-  return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
-    useGrouping: false,
-    maximumFractionDigits: 0
-  }));
+  return HephaestusAssignmentTools.normalizeProjectAssignmentInteger(value);
 }
 
 function serializeHephaestusInteger(value) {
-  const normalized = normalizeHephaestusInteger(value);
-  return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
-    ? Number(normalized)
-    : normalized.toString();
+  return HephaestusAssignmentTools.serializeProjectAssignmentInteger(value);
 }
 
 function serializeYardAssignments(assignments = {}) {
-  const serialized = {};
-  Object.keys(assignments).forEach((key) => {
-    serialized[key] = serializeHephaestusInteger(assignments[key]);
-  });
-  return serialized;
+  return HephaestusAssignmentTools.serializeProjectAssignments(assignments);
 }
 
 let HephaestusContinuousExpansionBase = null;
@@ -71,7 +45,7 @@ try {
   HephaestusContinuousExpansionBase = HephaestusContinuousExpansionBase || TerraformingDurationProject;
 } catch (error) {}
 
-class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBase {
+class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.createProjectAssignmentBase(HephaestusContinuousExpansionBase) {
   constructor(config, name) {
     super(config, name);
     this.continuousThreshold = 1000;
@@ -110,6 +84,10 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       stepUpButton: dummyButton,
       assignmentGrid: dummyWrapper
     };
+    this.initializeAssignmentState({
+      assignmentStateKey: 'yardAssignments',
+      assignmentStepMax: HEPHAESTUS_ASSIGNMENT_STEP_MAX
+    });
   }
 
   resolveUIElements() {
@@ -278,7 +256,15 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     return key === this.getUnassignedAssignmentKey();
   }
 
-  normalizeAssignments() {
+  getAssignmentTotalCapacity() {
+    return this.getTotalYards();
+  }
+
+  getPersistentAssignmentKeys() {
+    return [this.getUnassignedAssignmentKey()].concat(this.getAllAssignableKeys());
+  }
+
+  prepareAssignmentsForNormalization() {
     const activeDyson = this.getActiveDysonKey();
     const inactiveDyson = this.getInactiveDysonKey();
     const inactiveValue = normalizeHephaestusInteger(this.yardAssignments[inactiveDyson]);
@@ -286,182 +272,39 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       this.yardAssignments[activeDyson] = normalizeHephaestusInteger(this.yardAssignments[activeDyson]) + inactiveValue;
     }
     this.yardAssignments[inactiveDyson] = 0n;
-
-    const keys = this.getManagedAssignmentKeys();
     this.yardAssignments[this.getUnassignedAssignmentKey()] = 0n;
-    // Keep assignments for temporarily hidden optional targets (for example,
-    // Nuclear Alchemy during load/travel sequencing) so saved auto-assign
-    // flags and yard allocations are restored once that target is visible.
-    const total = this.getTotalYards();
-    const activeKey = this.getActiveDysonKey();
-    let usedManual = 0n;
-    const blockedAutoKeys = {};
-
-    keys.forEach((key) => {
-      if (this.isUnassignedAssignmentKey(key)) {
-        return;
-      }
-      if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
-        const targetKey = key === activeKey ? key : activeKey;
-        this.autoAssignFlags[targetKey] = this.autoAssignFlags[targetKey] || false;
-      }
-      if (this.releaseIfDisabledFlags[key] && !this.isAssignmentExpansionEnabled(key)) {
-        this.yardAssignments[key] = 0n;
-        blockedAutoKeys[key] = true;
-        return;
-      }
-      if (this.autoAssignFlags[key]) {
-        this.yardAssignments[key] = normalizeHephaestusInteger(this.yardAssignments[key]);
-        return;
-      }
-      const value = normalizeHephaestusInteger(this.yardAssignments[key]);
-      this.yardAssignments[key] = value;
-      usedManual += value;
-    });
 
     if (this.autoAssignFlags['dysonSwarmReceiver'] || this.autoAssignFlags['dysonSphere']) {
-      if (activeKey === 'dysonSphere') {
+      if (activeDyson === 'dysonSphere') {
         this.autoAssignFlags.dysonSwarmReceiver = false;
       } else {
         this.autoAssignFlags.dysonSphere = false;
       }
     }
-
-    const autoKeys = keys.filter((key) => this.autoAssignFlags[key] && !blockedAutoKeys[key]);
-    const remaining = total > usedManual ? (total - usedManual) : 0n;
-    if (autoKeys.length > 0) {
-      let totalWeight = 0;
-      const weights = {};
-      autoKeys.forEach((key) => {
-        const weight = Math.max(0, Number(this.autoAssignWeights[key] || 1));
-        this.autoAssignWeights[key] = weight || 0;
-        weights[key] = weight || 0;
-        totalWeight += weight || 0;
-      });
-
-      if (!totalWeight) {
-        autoKeys.forEach((key) => {
-          this.yardAssignments[key] = 0n;
-        });
-      } else {
-        const remainders = [];
-        let assigned = 0n;
-        autoKeys.forEach((key) => {
-          const exact = Number(remaining) * (weights[key] / totalWeight);
-          const finiteExact = Number.isFinite(exact) && exact > 0 ? exact : 0;
-          const floorNumber = Math.floor(finiteExact);
-          const floorVal = normalizeHephaestusInteger(floorNumber);
-          this.yardAssignments[key] = floorVal;
-          assigned += floorVal;
-          remainders.push({ key, remainder: finiteExact - floorNumber });
-        });
-
-        let leftover = remaining - assigned;
-        remainders.sort((a, b) => b.remainder - a.remainder);
-        for (let i = 0; i < remainders.length && leftover > 0n; i++) {
-          this.yardAssignments[remainders[i].key] += 1n;
-          leftover -= 1n;
-        }
-        if (leftover > 0n && autoKeys.length > 0) {
-          const idleKey = this.getUnassignedAssignmentKey();
-          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
-          this.yardAssignments[targetKey] += leftover;
-        }
-      }
-    }
-
-    const totalAssigned = keys.reduce((sum, key) => sum + normalizeHephaestusInteger(this.yardAssignments[key]), 0n);
-    if (totalAssigned > total && autoKeys.length === 0) {
-      let excess = totalAssigned - total;
-      for (let i = keys.length - 1; i >= 0 && excess > 0n; i--) {
-        const key = keys[i];
-        const current = this.yardAssignments[key] || 0n;
-        const reduction = current < excess ? current : excess;
-        this.yardAssignments[key] = current - reduction;
-        excess -= reduction;
-      }
-    }
   }
 
-  getAssignedTotal() {
-    this.normalizeAssignments();
+  getAssignmentCapForKey(key, total = this.getAssignmentTotalCapacity()) {
+    if (!this.isUnassignedAssignmentKey(key) && this.releaseIfDisabledFlags[key] && !this.isAssignmentExpansionEnabled(key)) {
+      return 0n;
+    }
+    return total;
+  }
+
+  getAvailableYards(skipNormalization = false, assignedTotal = null) {
+    return this.getAvailableAssignments(skipNormalization, assignedTotal);
+  }
+
+  getAssignedTotal(skipNormalization = false) {
+    if (!skipNormalization) {
+      this.normalizeAssignments();
+    }
     return this.getAssignmentKeys().reduce(
       (sum, key) => sum + normalizeHephaestusInteger(this.yardAssignments[key]),
       0n
     );
   }
 
-  getAvailableYards() {
-    const total = this.getTotalYards();
-    const assigned = this.getAssignedTotal();
-    return total > assigned ? (total - assigned) : 0n;
-  }
-
-  getStoredAssignmentAmount(key) {
-    const normalized = normalizeHephaestusInteger(this.yardAssignments[key]);
-    this.yardAssignments[key] = normalized;
-    return normalized;
-  }
-
-  getDisplayedAssignmentAmount(key) {
-    if (this.isUnassignedAssignmentKey(key)) {
-      return this.getAvailableYards();
-    }
-    return this.getStoredAssignmentAmount(key);
-  }
-
-  getAssignmentMaxTarget(key) {
-    const keys = this.getManagedAssignmentKeys();
-    const total = this.getTotalYards();
-    const usedOther = keys.reduce((sum, otherKey) => {
-      if (otherKey === key) return sum;
-      if (this.autoAssignFlags[otherKey]) return sum;
-      return sum + this.getStoredAssignmentAmount(otherKey);
-    }, 0n);
-    return total > usedOther ? (total - usedOther) : 0n;
-  }
-
-  setAssignmentStep(step) {
-    const next = normalizeHephaestusInteger(step);
-    this.assignmentStep = next < 1n ? 1n : (next > HEPHAESTUS_ASSIGNMENT_STEP_MAX ? HEPHAESTUS_ASSIGNMENT_STEP_MAX : next);
-  }
-
-  normalizeAssignmentStep() {
-    this.assignmentStep = normalizeHephaestusInteger(this.assignmentStep);
-    if (this.assignmentStep < 1n) {
-      this.assignmentStep = 1n;
-    }
-  }
-
-  getSignedAssignmentDelta(delta) {
-    const valueType = Object.prototype.toString.call(delta);
-    if (valueType === '[object BigInt]') {
-      return delta;
-    }
-    if (valueType === '[object String]') {
-      const trimmed = delta.trim();
-      if (!trimmed || trimmed === '-') {
-        return 0n;
-      }
-      const isNegative = trimmed.startsWith('-');
-      const digits = isNegative || trimmed.startsWith('+') ? trimmed.slice(1) : trimmed;
-      if (!/^\d+$/.test(digits)) {
-        return 0n;
-      }
-      const magnitude = BigInt(digits);
-      return isNegative ? -magnitude : magnitude;
-    }
-    const numeric = Number(delta);
-    if (!Number.isFinite(numeric) || numeric === 0) {
-      return 0n;
-    }
-    const magnitude = normalizeHephaestusInteger(Math.abs(numeric));
-    return numeric < 0 ? -magnitude : magnitude;
-  }
-
-  setAutoAssignTarget(key, enabled) {
-    this.autoAssignFlags[key] = enabled === true;
-    this.normalizeAssignments();
+  afterAssignmentsChanged() {
     this.applyYardEffects();
     this.updateUI();
     this.refreshProjectUI();
@@ -469,10 +312,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
 
   setReleaseIfDisabledTarget(key, enabled) {
     this.releaseIfDisabledFlags[key] = enabled === true;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
-    this.applyYardEffects();
-    this.updateUI();
-    this.refreshProjectUI();
+    this.afterAssignmentsChanged();
   }
 
   isAssignmentExpansionEnabled(key) {
@@ -492,54 +334,6 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       return project.isActive && !project.isPaused && project.autoStart;
     }
     return project.isActive && !project.isPaused;
-  }
-
-  adjustAssignment(key, delta) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.normalizeAssignments();
-    const signedDelta = this.getSignedAssignmentDelta(delta);
-    if (signedDelta === 0n) {
-      return;
-    }
-    const current = this.getStoredAssignmentAmount(key);
-    const maxForKey = this.getAssignmentMaxTarget(key);
-    let next = current + signedDelta;
-    if (next < 0n) {
-      next = 0n;
-    }
-    if (next > maxForKey) {
-      next = maxForKey;
-    }
-    this.yardAssignments[key] = next;
-    this.normalizeAssignments();
-    this.applyYardEffects();
-    this.updateUI();
-    this.refreshProjectUI();
-  }
-
-  clearAssignment(key) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.yardAssignments[key] = 0n;
-    this.normalizeAssignments();
-    this.applyYardEffects();
-    this.updateUI();
-    this.refreshProjectUI();
-  }
-
-  maximizeAssignment(key) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.normalizeAssignments();
-    this.yardAssignments[key] = this.getAssignmentMaxTarget(key);
-    this.normalizeAssignments();
-    this.applyYardEffects();
-    this.updateUI();
-    this.refreshProjectUI();
   }
 
   applyContinuousProgress(progress) {
@@ -779,22 +573,17 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     assignmentGrid.classList.add('hephaestus-assignment-list', 'hephaestus-yards-assignment-list');
     assignmentGrid.dataset.hephaestusUi = 'assignmentGrid';
 
-    const stepDownButton = document.createElement('button');
+    const stepButtons = this.createAssignmentStepButtons((key, fallback) => {
+      const paths = {
+        divideTen: 'ui.projects.common.divideTen',
+        timesTen: 'ui.projects.common.timesTen'
+      };
+      return getHephaestusText(paths[key], fallback);
+    });
+    const stepDownButton = stepButtons.stepDownButton;
     stepDownButton.dataset.hephaestusUi = 'stepDownButton';
-    stepDownButton.textContent = getHephaestusText('ui.projects.common.divideTen', '/10');
-    stepDownButton.addEventListener('click', () => {
-      this.normalizeAssignmentStep();
-      this.setAssignmentStep(this.assignmentStep > 1n ? (this.assignmentStep / 10n) : 1n);
-      this.updateUI();
-    });
-    const stepUpButton = document.createElement('button');
+    const stepUpButton = stepButtons.stepUpButton;
     stepUpButton.dataset.hephaestusUi = 'stepUpButton';
-    stepUpButton.textContent = getHephaestusText('ui.projects.common.timesTen', 'x10');
-    stepUpButton.addEventListener('click', () => {
-      this.normalizeAssignmentStep();
-      this.setAssignmentStep(this.assignmentStep * 10n);
-      this.updateUI();
-    });
 
     const headerRow = document.createElement('div');
     headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row');
@@ -839,42 +628,17 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       amountEl.classList.add('stat-value');
       amountEl.dataset.hephaestusRole = 'value';
 
-      const zeroButton = document.createElement('button');
-      zeroButton.dataset.hephaestusRole = 'zeroButton';
-      zeroButton.textContent = getHephaestusText('ui.projects.common.zero', '0');
-      zeroButton.addEventListener('click', () => {
-        this.clearAssignment(key);
+      const assignmentControls = this.createAssignmentControls(key, {
+        rolePrefix: 'hephaestus',
+        textProvider: (controlKey, fallback) => {
+          const paths = {
+            zero: 'ui.projects.common.zero',
+            max: 'ui.projects.common.max',
+            auto: 'ui.projects.common.auto'
+          };
+          return getHephaestusText(paths[controlKey], fallback);
+        }
       });
-
-      const minusButton = document.createElement('button');
-      const plusButton = document.createElement('button');
-      minusButton.dataset.hephaestusRole = 'minusButton';
-      plusButton.dataset.hephaestusRole = 'plusButton';
-      minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
-      plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
-
-      const maxButton = document.createElement('button');
-      maxButton.dataset.hephaestusRole = 'maxButton';
-      maxButton.textContent = getHephaestusText('ui.projects.common.max', 'Max');
-      maxButton.addEventListener('click', () => {
-        this.maximizeAssignment(key);
-      });
-
-      const autoAssignContainer = document.createElement('div');
-      autoAssignContainer.classList.add('hephaestus-auto-assign');
-      const autoAssign = document.createElement('input');
-      autoAssign.type = 'checkbox';
-      autoAssign.dataset.hephaestusRole = 'autoAssign';
-      autoAssign.addEventListener('change', () => {
-        this.setAutoAssignTarget(key, autoAssign.checked);
-      });
-      const autoAssignLabel = document.createElement('span');
-      autoAssignLabel.textContent = getHephaestusText('ui.projects.common.auto', 'Auto');
-      autoAssignLabel.addEventListener('click', () => {
-        autoAssign.checked = !autoAssign.checked;
-        this.setAutoAssignTarget(key, autoAssign.checked);
-      });
-      autoAssignContainer.append(autoAssign, autoAssignLabel);
       const releaseIfDisabledContainer = document.createElement('div');
       releaseIfDisabledContainer.classList.add('hephaestus-auto-assign');
       const releaseIfDisabled = document.createElement('input');
@@ -890,45 +654,22 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         this.setReleaseIfDisabledTarget(key, releaseIfDisabled.checked);
       });
       releaseIfDisabledContainer.append(releaseIfDisabled, releaseIfDisabledLabel);
-
-      const weightInput = document.createElement('input');
-      weightInput.type = 'number';
-      weightInput.min = '0';
-      weightInput.step = '0.1';
-      weightInput.value = String(
-        Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-      );
-      weightInput.classList.add('hephaestus-weight-input');
-      weightInput.dataset.hephaestusRole = 'weightInput';
-      weightInput.addEventListener('input', () => {
-        this.autoAssignWeights[key] = Number(weightInput.value || 0);
-        this.normalizeAssignments();
-        this.applyYardEffects();
-        this.updateUI();
-        this.refreshProjectUI();
-      });
-
-      const controlBox = document.createElement('div');
-      controlBox.classList.add('hephaestus-assignment-controls');
-      const controlButtons = document.createElement('div');
-      controlButtons.classList.add('hephaestus-control-buttons');
-      controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer, releaseIfDisabledContainer);
-      controlBox.append(controlButtons, weightInput);
+      assignmentControls.controlButtons.appendChild(releaseIfDisabledContainer);
       const rowSpacer = document.createElement('div');
       rowSpacer.classList.add('hephaestus-row-spacer');
-      row.append(nameEl, amountEl, controlBox, rowSpacer);
+      row.append(nameEl, amountEl, assignmentControls.controls, rowSpacer);
       assignmentGrid.appendChild(row);
 
       rowElements[key] = {
         wrapper: row,
         value: amountEl,
-        zeroButton,
-        maxButton,
-        autoAssign,
+        zeroButton: assignmentControls.zeroButton,
+        maxButton: assignmentControls.maxButton,
+        autoAssign: assignmentControls.autoAssign,
         releaseIfDisabled,
-        weightInput,
-        minusButton,
-        plusButton
+        weightInput: assignmentControls.weightInput,
+        minusButton: assignmentControls.minusButton,
+        plusButton: assignmentControls.plusButton
       };
     };
 
@@ -990,22 +731,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       const maxForKey = this.getAssignmentMaxTarget(key);
 
       row.value.textContent = formatNumber(displayedCurrent, true, 2);
-      row.minusButton.textContent = `-${formatNumber(step, true)}`;
-      row.plusButton.textContent = `+${formatNumber(step, true)}`;
-      row.autoAssign.checked = this.autoAssignFlags[key] === true;
-      row.autoAssign.disabled = total === 0;
+      this.updateAssignmentControls(row, key, total, step);
       row.releaseIfDisabled.checked = this.releaseIfDisabledFlags[key] === true;
       row.releaseIfDisabled.disabled = this.isUnassignedAssignmentKey(key);
-      if (document.activeElement !== row.weightInput) {
-        row.weightInput.value = String(
-          Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-        );
-      }
-      row.weightInput.disabled = total === 0;
-      row.zeroButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-      row.maxButton.disabled = storedCurrent >= maxForKey || total === 0 || this.autoAssignFlags[key];
-      row.minusButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-      row.plusButton.disabled = storedCurrent >= maxForKey || total === 0 || this.autoAssignFlags[key];
       if (this.isUnassignedAssignmentKey(key)) {
         row.wrapper.style.display = '';
       } else if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
@@ -1036,10 +764,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   saveAutomationSettings() {
     return {
       ...super.saveAutomationSettings(),
-      yardAssignments: serializeYardAssignments(this.yardAssignments),
-      assignmentStep: serializeHephaestusInteger(this.assignmentStep),
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights },
+      ...this.saveAssignmentSettings(),
       releaseIfDisabledFlags: { ...this.releaseIfDisabledFlags }
     };
   }
@@ -1047,31 +772,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     const isPresetApplication = options.isPresetApplication === true;
-    const shouldApplyPresetAssignments = !isPresetApplication
-      || Object.keys(settings.yardAssignments || {}).length > 0;
-    const shouldApplyPresetAutoFlags = !isPresetApplication
-      || Object.keys(settings.autoAssignFlags || {}).length > 0;
-    const shouldApplyPresetAutoWeights = !isPresetApplication
-      || Object.keys(settings.autoAssignWeights || {}).length > 0;
     const shouldApplyPresetReleaseFlags = !isPresetApplication
       || Object.keys(settings.releaseIfDisabledFlags || {}).length > 0;
-    let assignmentSettingsChanged = false;
-    if (Object.prototype.hasOwnProperty.call(settings, 'yardAssignments') && shouldApplyPresetAssignments) {
-      this.yardAssignments = { ...(settings.yardAssignments || {}) };
-      assignmentSettingsChanged = true;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
-      this.assignmentStep = settings.assignmentStep || 1;
-      assignmentSettingsChanged = true;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags) {
-      this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
-      assignmentSettingsChanged = true;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {
-      this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
-      assignmentSettingsChanged = true;
-    }
+    let assignmentSettingsChanged = this.loadAssignmentSettings(settings, options);
     if (Object.prototype.hasOwnProperty.call(settings, 'releaseIfDisabledFlags') && shouldApplyPresetReleaseFlags) {
       this.releaseIfDisabledFlags = { ...(settings.releaseIfDisabledFlags || {}) };
       assignmentSettingsChanged = true;
@@ -1086,10 +789,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     return {
       ...super.saveState(),
       fractionalRepeatCount: this.fractionalRepeatCount,
-      yardAssignments: serializeYardAssignments(this.yardAssignments),
-      assignmentStep: serializeHephaestusInteger(this.assignmentStep),
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights },
+      ...this.saveAssignmentSettings(),
       releaseIfDisabledFlags: { ...this.releaseIfDisabledFlags }
     };
   }
@@ -1097,10 +797,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   loadState(state = {}) {
     super.loadState(state);
     this.fractionalRepeatCount = state.fractionalRepeatCount || 0;
-    this.yardAssignments = { ...(state.yardAssignments || {}) };
-    this.assignmentStep = state.assignmentStep || 1;
-    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.loadAssignmentSettings(state);
     this.releaseIfDisabledFlags = { ...(state.releaseIfDisabledFlags || {}) };
     this.normalizeAssignments();
     this.normalizeAssignmentStep();
@@ -1109,10 +806,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   saveTravelState() {
     const state = {
       ...super.saveTravelState(),
-      yardAssignments: serializeYardAssignments(this.yardAssignments),
-      assignmentStep: serializeHephaestusInteger(this.assignmentStep),
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights },
+      ...this.saveAssignmentSettings(),
       releaseIfDisabledFlags: { ...this.releaseIfDisabledFlags },
       fractionalRepeatCount: this.fractionalRepeatCount
     };
@@ -1126,10 +820,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
 
   loadTravelState(state = {}) {
     super.loadTravelState(state);
-    this.yardAssignments = { ...(state.yardAssignments || {}) };
-    this.assignmentStep = state.assignmentStep || 1;
-    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.loadAssignmentSettings(state);
     this.releaseIfDisabledFlags = { ...(state.releaseIfDisabledFlags || {}) };
     this.fractionalRepeatCount = state.fractionalRepeatCount || 0;
     if (state.isActive) {

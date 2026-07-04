@@ -36,55 +36,29 @@ const NUCLEAR_ALCHEMY_RECIPE_KEYS = [
 const NUCLEAR_ALCHEMY_UNASSIGNED_KEY = 'idleUnassigned';
 const NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
 
+let NuclearAlchemyAssignmentTools = {};
+try {
+  NuclearAlchemyAssignmentTools = {
+    createProjectAssignmentBase,
+    normalizeProjectAssignmentInteger,
+    serializeProjectAssignmentInteger,
+    serializeProjectAssignments
+  };
+} catch (error) {}
+try {
+  NuclearAlchemyAssignmentTools = require('./ProjectAssignmentBase.js');
+} catch (error) {}
+
 function normalizeNuclearAlchemyInteger(value) {
-  if (value === undefined || value === null || value === '') {
-    return 0n;
-  }
-  if (Object.prototype.toString.call(value) === '[object BigInt]') {
-    return value < 0n ? 0n : value;
-  }
-  if (Object.prototype.toString.call(value) === '[object String]') {
-    const trimmed = value.trim();
-    if (/^\d+$/.test(trimmed)) {
-      return BigInt(trimmed);
-    }
-    const parsed = parseFlexibleNumber(trimmed);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      if (Number.isSafeInteger(parsed)) {
-        return BigInt(parsed);
-      }
-      return BigInt(Math.floor(parsed).toLocaleString('fullwide', {
-        useGrouping: false,
-        maximumFractionDigits: 0
-      }));
-    }
-  }
-  const numeric = Number(value) || 0;
-  if (numeric <= 0) {
-    return 0n;
-  }
-  if (Number.isSafeInteger(numeric)) {
-    return BigInt(numeric);
-  }
-  return BigInt(Math.floor(numeric).toLocaleString('fullwide', {
-    useGrouping: false,
-    maximumFractionDigits: 0
-  }));
+  return NuclearAlchemyAssignmentTools.normalizeProjectAssignmentInteger(value);
 }
 
 function serializeNuclearAlchemyInteger(value) {
-  const normalized = normalizeNuclearAlchemyInteger(value);
-  return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
-    ? Number(normalized)
-    : normalized.toString();
+  return NuclearAlchemyAssignmentTools.serializeProjectAssignmentInteger(value);
 }
 
 function serializeNuclearAlchemyAssignments(assignments = {}) {
-  const serialized = {};
-  Object.keys(assignments).forEach((key) => {
-    serialized[key] = serializeNuclearAlchemyInteger(assignments[key]);
-  });
-  return serialized;
+  return NuclearAlchemyAssignmentTools.serializeProjectAssignments(assignments);
 }
 
 function getNuclearAlchemyText(path, fallback, vars) {
@@ -106,7 +80,7 @@ try {
   NuclearAlchemyContinuousExpansionBase = NuclearAlchemyContinuousExpansionBase || TerraformingDurationProject;
 } catch (error) {}
 
-class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase {
+class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createProjectAssignmentBase(NuclearAlchemyContinuousExpansionBase) {
   constructor(config, name) {
     super(config, name);
     this.continuousThreshold = 1000;
@@ -132,6 +106,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.assignmentsDirty = true;
     this.assignmentsLastTotal = null;
     this.cachedAssignedTotal = 0n;
+    this.initializeAssignmentState({
+      assignmentStateKey: 'furnaceAssignments',
+      assignmentStepMax: NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX
+    });
   }
 
   resolveUIElements() {
@@ -305,241 +283,12 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return '';
   }
 
-  markAssignmentsDirty() {
-    this.assignmentsDirty = true;
+  getAssignmentTotalCapacity() {
+    return this.getTotalFurnaces();
   }
 
-  normalizeAssignments() {
-    const total = this.getTotalFurnaces();
-    if (!this.assignmentsDirty && this.assignmentsLastTotal === total) {
-      return;
-    }
-
-    const keys = this.getManagedAssignmentKeys();
-    const keySet = new Set(keys);
-
-    keys.forEach((key) => {
-      this.furnaceAssignments[key] = normalizeNuclearAlchemyInteger(this.furnaceAssignments[key]);
-      this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
-      const weight = Number(this.autoAssignWeights[key]);
-      this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
-    });
-
-    Object.keys(this.furnaceAssignments).forEach((key) => {
-      if (!keySet.has(key)) {
-        this.furnaceAssignments[key] = 0n;
-      }
-    });
-
-    let usedManual = 0n;
-    keys.forEach((key) => {
-      if (!this.autoAssignFlags[key]) {
-        usedManual += this.furnaceAssignments[key];
-      }
-    });
-
-    const autoKeys = keys.filter((key) => this.autoAssignFlags[key]);
-    const remaining = total > usedManual ? (total - usedManual) : 0n;
-
-    if (autoKeys.length > 0) {
-      let totalWeight = 0;
-      autoKeys.forEach((key) => {
-        totalWeight += this.autoAssignWeights[key];
-      });
-
-      if (totalWeight <= 0) {
-        autoKeys.forEach((key) => {
-          this.furnaceAssignments[key] = 0n;
-        });
-      } else {
-        const autoWeightScale = 1000000;
-        const scaledWeights = {};
-        let totalScaledWeight = 0n;
-        autoKeys.forEach((key) => {
-          const weightValue = this.autoAssignWeights[key];
-          const scaled = Math.floor(Math.max(0, weightValue) * autoWeightScale);
-          const normalizedScaled = scaled > 0 ? BigInt(scaled) : 0n;
-          scaledWeights[key] = normalizedScaled;
-          totalScaledWeight += normalizedScaled;
-        });
-        if (totalScaledWeight <= 0n) {
-          autoKeys.forEach((key) => {
-            scaledWeights[key] = 1n;
-          });
-          totalScaledWeight = BigInt(autoKeys.length);
-        }
-        const remainders = [];
-        let assigned = 0n;
-        autoKeys.forEach((key) => {
-          const scaledWeight = scaledWeights[key];
-          const weightedTotal = remaining * scaledWeight;
-          const floorBigInt = totalScaledWeight > 0n ? (weightedTotal / totalScaledWeight) : 0n;
-          const remainderValue = totalScaledWeight > 0n ? (weightedTotal % totalScaledWeight) : 0n;
-          this.furnaceAssignments[key] = floorBigInt;
-          assigned += floorBigInt;
-          remainders.push({ key, value: remainderValue });
-        });
-        let leftover = remaining - assigned;
-        remainders.sort((left, right) => {
-          if (left.value === right.value) {
-            return 0;
-          }
-          return left.value > right.value ? -1 : 1;
-        });
-        for (let i = 0; i < remainders.length && leftover > 0n; i += 1) {
-          this.furnaceAssignments[remainders[i].key] += 1n;
-          leftover -= 1n;
-        }
-        if (leftover > 0n && autoKeys.length > 0) {
-          const idleKey = this.getUnassignedAssignmentKey();
-          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
-          this.furnaceAssignments[targetKey] += leftover;
-        }
-      }
-    }
-
-    let assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0n), 0n);
-    if (assignedTotal > total) {
-      let excess = assignedTotal - total;
-      for (let i = keys.length - 1; i >= 0 && excess > 0n; i -= 1) {
-        const key = keys[i];
-        const current = this.furnaceAssignments[key] || 0n;
-        const reduction = current < excess ? current : excess;
-        this.furnaceAssignments[key] = current - reduction;
-        excess -= reduction;
-      }
-      assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0n), 0n);
-    }
-    this.cachedAssignedTotal = assignedTotal;
-    this.assignmentsLastTotal = total;
-    this.assignmentsDirty = false;
-  }
-
-  getAssignedTotal() {
-    this.normalizeAssignments();
-    return this.cachedAssignedTotal;
-  }
-
-  getAvailableFurnaces() {
-    const total = this.getTotalFurnaces();
-    const assigned = this.getAssignedTotal();
-    return total > assigned ? (total - assigned) : 0n;
-  }
-
-  getStoredAssignmentAmount(key) {
-    return this.furnaceAssignments[key] || 0n;
-  }
-
-  getDisplayedAssignmentAmount(key) {
-    if (this.isUnassignedAssignmentKey(key)) {
-      return this.getAvailableFurnaces();
-    }
-    return this.getStoredAssignmentAmount(key);
-  }
-
-  getAssignmentMaxTarget(key) {
-    const keys = this.getManagedAssignmentKeys();
-    const total = this.getTotalFurnaces();
-    const usedOther = keys.reduce((sum, otherKey) => {
-      if (otherKey === key) {
-        return sum;
-      }
-      if (this.autoAssignFlags[otherKey]) {
-        return sum;
-      }
-      return sum + this.getStoredAssignmentAmount(otherKey);
-    }, 0n);
-    return total > usedOther ? (total - usedOther) : 0n;
-  }
-
-  setAssignmentStep(step) {
-    const next = normalizeNuclearAlchemyInteger(step);
-    this.assignmentStep = next < 1n ? 1n : (next > NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX ? NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX : next);
-  }
-
-  normalizeAssignmentStep() {
-    this.assignmentStep = normalizeNuclearAlchemyInteger(this.assignmentStep);
-    if (this.assignmentStep < 1n) {
-      this.assignmentStep = 1n;
-    }
-  }
-
-  getSignedAssignmentDelta(delta) {
-    const valueType = Object.prototype.toString.call(delta);
-    if (valueType === '[object BigInt]') {
-      return delta;
-    }
-    if (valueType === '[object String]') {
-      const trimmed = delta.trim();
-      if (!trimmed || trimmed === '-') {
-        return 0n;
-      }
-      const isNegative = trimmed.startsWith('-');
-      const digits = isNegative || trimmed.startsWith('+') ? trimmed.slice(1) : trimmed;
-      if (!/^\d+$/.test(digits)) {
-        return 0n;
-      }
-      const magnitude = BigInt(digits);
-      return isNegative ? -magnitude : magnitude;
-    }
-    const numeric = Number(delta);
-    if (!Number.isFinite(numeric) || numeric === 0) {
-      return 0n;
-    }
-    const magnitude = normalizeNuclearAlchemyInteger(Math.abs(numeric));
-    return numeric < 0 ? -magnitude : magnitude;
-  }
-
-  setAutoAssignTarget(key, enabled) {
-    this.autoAssignFlags[key] = enabled === true;
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.updateUI();
-  }
-
-  adjustAssignment(key, delta) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.normalizeAssignments();
-    const signedDelta = this.getSignedAssignmentDelta(delta);
-    if (signedDelta === 0n) {
-      return;
-    }
-    const current = this.getStoredAssignmentAmount(key);
-    const maxForKey = this.getAssignmentMaxTarget(key);
-    let next = current + signedDelta;
-    if (next < 0n) {
-      next = 0n;
-    }
-    if (next > maxForKey) {
-      next = maxForKey;
-    }
-    this.furnaceAssignments[key] = next;
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.updateUI();
-  }
-
-  clearAssignment(key) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.furnaceAssignments[key] = 0n;
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.updateUI();
-  }
-
-  maximizeAssignment(key) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.normalizeAssignments();
-    this.furnaceAssignments[key] = this.getAssignmentMaxTarget(key);
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.updateUI();
+  getAvailableFurnaces(skipNormalization = false, assignedTotal = null) {
+    return this.getAvailableAssignments(skipNormalization, assignedTotal);
   }
 
   getSpaceStorageProject() {
@@ -1086,22 +835,17 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const assignmentGrid = document.createElement('div');
     assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list');
 
-    const stepDownButton = document.createElement('button');
+    const stepButtons = this.createAssignmentStepButtons((key, fallback) => {
+      const paths = {
+        divideTen: 'ui.projects.common.divideTen',
+        timesTen: 'ui.projects.common.timesTen'
+      };
+      return getNuclearAlchemyText(paths[key], fallback);
+    });
+    const stepDownButton = stepButtons.stepDownButton;
     stepDownButton.dataset.nuclearUi = 'stepDownButton';
-    stepDownButton.textContent = getNuclearAlchemyText('ui.projects.common.divideTen', '/10');
-    stepDownButton.addEventListener('click', () => {
-      this.normalizeAssignmentStep();
-      this.setAssignmentStep(this.assignmentStep > 1n ? (this.assignmentStep / 10n) : 1n);
-      this.updateUI();
-    });
-    const stepUpButton = document.createElement('button');
+    const stepUpButton = stepButtons.stepUpButton;
     stepUpButton.dataset.nuclearUi = 'stepUpButton';
-    stepUpButton.textContent = getNuclearAlchemyText('ui.projects.common.timesTen', 'x10');
-    stepUpButton.addEventListener('click', () => {
-      this.normalizeAssignmentStep();
-      this.setAssignmentStep(this.assignmentStep * 10n);
-      this.updateUI();
-    });
 
     const headerRow = document.createElement('div');
     headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
@@ -1177,84 +921,34 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       amountEl.classList.add('stat-value');
       amountEl.dataset.nuclearRole = 'value';
 
-      const zeroButton = document.createElement('button');
-      zeroButton.dataset.nuclearRole = 'zeroButton';
-      zeroButton.textContent = getNuclearAlchemyText('ui.projects.common.zero', '0');
-      zeroButton.addEventListener('click', () => {
-        this.clearAssignment(key);
+      const assignmentControls = this.createAssignmentControls(key, {
+        rolePrefix: 'nuclear',
+        textProvider: (controlKey, fallback) => {
+          const paths = {
+            zero: 'ui.projects.common.zero',
+            max: 'ui.projects.common.max',
+            auto: 'ui.projects.common.auto'
+          };
+          return getNuclearAlchemyText(paths[controlKey], fallback);
+        }
       });
-
-      const minusButton = document.createElement('button');
-      minusButton.dataset.nuclearRole = 'minusButton';
-      minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
-
-      const plusButton = document.createElement('button');
-      plusButton.dataset.nuclearRole = 'plusButton';
-      plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
-
-      const maxButton = document.createElement('button');
-      maxButton.dataset.nuclearRole = 'maxButton';
-      maxButton.textContent = getNuclearAlchemyText('ui.projects.common.max', 'Max');
-      maxButton.addEventListener('click', () => {
-        this.maximizeAssignment(key);
-      });
-
-      const autoAssignContainer = document.createElement('div');
-      autoAssignContainer.classList.add('hephaestus-auto-assign');
-      const autoAssign = document.createElement('input');
-      autoAssign.type = 'checkbox';
-      autoAssign.dataset.nuclearRole = 'autoAssign';
-      autoAssign.addEventListener('change', () => {
-        this.setAutoAssignTarget(key, autoAssign.checked);
-      });
-      const autoAssignLabel = document.createElement('span');
-      autoAssignLabel.textContent = getNuclearAlchemyText('ui.projects.common.auto', 'Auto');
-      autoAssignLabel.addEventListener('click', () => {
-        autoAssign.checked = !autoAssign.checked;
-        this.setAutoAssignTarget(key, autoAssign.checked);
-      });
-      autoAssignContainer.append(autoAssign, autoAssignLabel);
-
-      const weightInput = document.createElement('input');
-      weightInput.type = 'number';
-      weightInput.min = '0';
-      weightInput.step = '0.1';
-      weightInput.value = String(
-        Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-      );
-      weightInput.classList.add('hephaestus-weight-input');
-      weightInput.dataset.nuclearRole = 'weightInput';
-      weightInput.addEventListener('input', () => {
-        const value = Number(weightInput.value);
-        this.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
-        this.markAssignmentsDirty();
-        this.normalizeAssignments();
-        this.updateUI();
-      });
-
-      const controls = document.createElement('div');
-      controls.classList.add('hephaestus-assignment-controls');
-      const controlButtons = document.createElement('div');
-      controlButtons.classList.add('hephaestus-control-buttons');
-      controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
-      controls.append(controlButtons, weightInput);
 
       const rateEl = document.createElement('div');
       rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
       rateEl.dataset.nuclearRole = 'rate';
 
-      row.append(nameEl, complexityEl, amountEl, controls, rateEl);
+      row.append(nameEl, complexityEl, amountEl, assignmentControls.controls, rateEl);
       assignmentGrid.appendChild(row);
 
       rowElements[key] = {
         complexity: complexityEl,
         value: amountEl,
-        zeroButton,
-        minusButton,
-        plusButton,
-        maxButton,
-        autoAssign,
-        weightInput,
+        zeroButton: assignmentControls.zeroButton,
+        minusButton: assignmentControls.minusButton,
+        plusButton: assignmentControls.plusButton,
+        maxButton: assignmentControls.maxButton,
+        autoAssign: assignmentControls.autoAssign,
+        weightInput: assignmentControls.weightInput,
         rate: rateEl
       };
     });
@@ -1327,20 +1021,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       const maxForKey = this.getAssignmentMaxTarget(key);
 
       row.value.textContent = formatNumber(displayedCurrent, true, 2);
-      row.minusButton.textContent = `-${formatNumber(step, true)}`;
-      row.plusButton.textContent = `+${formatNumber(step, true)}`;
-      row.autoAssign.checked = this.autoAssignFlags[key] === true;
-      row.autoAssign.disabled = total <= 0;
-      if (document.activeElement !== row.weightInput) {
-        row.weightInput.value = String(
-          Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-        );
-      }
-      row.weightInput.disabled = total <= 0;
-      row.zeroButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-      row.maxButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
-      row.minusButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-      row.plusButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
+      this.updateAssignmentControls(row, key, total, step);
       row.rate.textContent = this.isUnassignedAssignmentKey(key)
         ? ''
         : `${formatNumber(this.lastOutputRatesByResource[key] || 0, true, 3)}/s`;
@@ -1351,60 +1032,16 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return {
       ...super.saveAutomationSettings(),
       isRunning: this.isRunning === true,
-      furnaceAssignments: serializeNuclearAlchemyAssignments(this.furnaceAssignments),
-      assignmentStep: serializeNuclearAlchemyInteger(this.assignmentStep),
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      ...this.saveAssignmentSettings()
     };
-  }
-
-  getPresetFurnaceAssignments(settings = {}) {
-    const assignments = { ...(settings.furnaceAssignments || {}) };
-    const autoAssignFlags = settings.autoAssignFlags || {};
-    for (const key in autoAssignFlags) {
-      if (autoAssignFlags[key] === true) {
-        delete assignments[key];
-      }
-    }
-    return assignments;
   }
 
   loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
-    const isPresetApplication = options.isPresetApplication === true;
-    const shouldApplyPresetAssignments = !isPresetApplication
-      || Object.keys(settings.furnaceAssignments || {}).length > 0;
-    const shouldApplyPresetAutoFlags = !isPresetApplication
-      || Object.keys(settings.autoAssignFlags || {}).length > 0;
-    const shouldApplyPresetAutoWeights = !isPresetApplication
-      || Object.keys(settings.autoAssignWeights || {}).length > 0;
-    let assignmentSettingsChanged = false;
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'furnaceAssignments') && shouldApplyPresetAssignments) {
-      this.furnaceAssignments = isPresetApplication
-        ? this.getPresetFurnaceAssignments(settings)
-        : { ...(settings.furnaceAssignments || {}) };
-      assignmentSettingsChanged = true;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
-      this.assignmentStep = settings.assignmentStep || 1;
-      assignmentSettingsChanged = true;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags) {
-      this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
-      assignmentSettingsChanged = true;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {
-      this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
-      assignmentSettingsChanged = true;
-    }
-    if (assignmentSettingsChanged) {
-      this.markAssignmentsDirty();
-      this.normalizeAssignments();
-      this.normalizeAssignmentStep();
-    }
+    this.loadAssignmentSettings(settings, options);
   }
 
   saveState() {
@@ -1412,10 +1049,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       ...super.saveState(),
       isRunning: this.isRunning,
       expansionProgress: this.expansionProgress,
-      furnaceAssignments: serializeNuclearAlchemyAssignments(this.furnaceAssignments),
-      assignmentStep: serializeNuclearAlchemyInteger(this.assignmentStep),
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      ...this.saveAssignmentSettings()
     };
   }
 
@@ -1423,13 +1057,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     super.loadState(state);
     this.isRunning = state.isRunning === true;
     this.expansionProgress = state.expansionProgress || 0;
-    this.furnaceAssignments = { ...(state.furnaceAssignments || {}) };
-    this.assignmentStep = state.assignmentStep || 1;
-    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.normalizeAssignmentStep();
+    this.loadAssignmentSettings(state);
     if (!this.isRunning) {
       this.setLastRunStats(0, {});
       this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle'));
@@ -1441,10 +1069,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       repeatCount: this.repeatCount,
       expansionProgress: this.expansionProgress,
       isRunning: this.isRunning,
-      furnaceAssignments: serializeNuclearAlchemyAssignments(this.furnaceAssignments),
-      assignmentStep: serializeNuclearAlchemyInteger(this.assignmentStep),
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      ...this.saveAssignmentSettings()
     };
     if (this.isActive) {
       state.isActive = true;
@@ -1458,10 +1083,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.repeatCount = state.repeatCount || 0;
     this.expansionProgress = state.expansionProgress || 0;
     this.isRunning = state.isRunning === true;
-    this.furnaceAssignments = { ...(state.furnaceAssignments || {}) };
-    this.assignmentStep = state.assignmentStep || 1;
-    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.loadAssignmentSettings(state);
     this.isCompleted = false;
     this.setLastRunStats(0, {});
     this.updateStatus(
@@ -1469,9 +1091,6 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         ? getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle')
         : getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.runDisabled', 'Run disabled')
     );
-    this.markAssignmentsDirty();
-    this.normalizeAssignments();
-    this.normalizeAssignmentStep();
     if (state.isActive) {
       this.isActive = true;
       this.startingDuration = state.startingDuration || this.getEffectiveDuration();

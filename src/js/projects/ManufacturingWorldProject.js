@@ -28,44 +28,29 @@
   const MANUFACTURING_UNASSIGNED_KEY = 'idleUnassigned';
   const MANUFACTURING_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
 
+  let ManufacturingAssignmentTools = {};
+  try {
+    ManufacturingAssignmentTools = {
+      createProjectAssignmentBase,
+      normalizeProjectAssignmentInteger,
+      serializeProjectAssignmentInteger,
+      serializeProjectAssignments
+    };
+  } catch (error) {}
+  try {
+    ManufacturingAssignmentTools = require('./ProjectAssignmentBase.js');
+  } catch (error) {}
+
   function normalizeManufacturingInteger(value) {
-    if (value === undefined || value === null || value === '') {
-      return 0n;
-    }
-    const valueType = Object.prototype.toString.call(value);
-    if (valueType === '[object BigInt]') {
-      return value < 0n ? 0n : value;
-    }
-    if (valueType === '[object String]') {
-      const trimmed = value.trim();
-      if (/^\d+$/.test(trimmed)) {
-        return BigInt(trimmed);
-      }
-      const parsed = parseFlexibleNumber(trimmed);
-      if (Number.isFinite(parsed) && parsed > 0) {
-        return BigInt(Math.floor(parsed));
-      }
-    }
-    const numeric = Number(value) || 0;
-    if (!Number.isFinite(numeric) || numeric <= 0) {
-      return 0n;
-    }
-    return BigInt(Math.floor(numeric));
+    return ManufacturingAssignmentTools.normalizeProjectAssignmentInteger(value);
   }
 
   function serializeManufacturingInteger(value) {
-    const normalized = normalizeManufacturingInteger(value);
-    return normalized <= BigInt(Number.MAX_SAFE_INTEGER)
-      ? Number(normalized)
-      : normalized.toString();
+    return ManufacturingAssignmentTools.serializeProjectAssignmentInteger(value);
   }
 
   function serializeManufacturingAssignments(assignments = {}) {
-    const serialized = {};
-    Object.keys(assignments).forEach((key) => {
-      serialized[key] = serializeManufacturingInteger(assignments[key]);
-    });
-    return serialized;
+    return ManufacturingAssignmentTools.serializeProjectAssignments(assignments);
   }
 
   const MANUFACTURING_RECIPES = {
@@ -233,7 +218,7 @@
     superalloys: getManufacturingText('catalogs.specializations.manufacturing.outputLabels.superalloys'),
   };
 
-  class ManufacturingWorldProject extends SpecializationBase {
+  class ManufacturingWorldProject extends ManufacturingAssignmentTools.createProjectAssignmentBase(SpecializationBase) {
     constructor(config, name) {
       super(config, name, {
         pointsKey: 'manufacturingPoints',
@@ -271,6 +256,10 @@
       this.cachedManagedAssignmentKeys = null;
       this.cachedAssignmentKeys = null;
       this.cachedAssignedTotal = 0n;
+      this.initializeAssignmentState({
+        assignmentStateKey: 'manufacturingAssignments',
+        assignmentStepMax: MANUFACTURING_ASSIGNMENT_STEP_MAX
+      });
     }
 
     createEmptyInputRates() {
@@ -559,229 +548,20 @@
       );
     }
 
-    markAssignmentsDirty() {
-      this.assignmentsDirty = true;
+    getAssignmentTotalCapacity() {
+      return normalizeManufacturingInteger(this.getTotalPotentialPopulation());
     }
 
-    normalizeAssignments() {
-      const keys = this.getManagedAssignmentKeys();
-      const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
-      if (!this.assignmentsDirty && this.assignmentsLastTotal === total) {
-        return;
-      }
-
-      keys.forEach((key) => {
-        this.manufacturingAssignments[key] = normalizeManufacturingInteger(this.manufacturingAssignments[key]);
-        this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
-        const weight = Number(this.autoAssignWeights[key]);
-        this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
-      });
-
-      const persistentKeys = new Set([this.getUnassignedAssignmentKey(), ...MANUFACTURING_RECIPE_KEYS]);
-      Object.keys(this.manufacturingAssignments).forEach((key) => {
-        if (!persistentKeys.has(key)) {
-          delete this.manufacturingAssignments[key];
-        }
-      });
-
-      // Save loading restores projects before all space, galaxy, and research
-      // effects are available. Do not permanently trim cylinder-backed
-      // assignments against that incomplete capacity snapshot.
-      if (globalGameIsLoadingFromSave) {
-        this.cachedAssignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0n), 0n);
-        this.assignmentsLastTotal = total;
-        this.assignmentsDirty = false;
-        return;
-      }
-
-      let usedManual = 0n;
-      keys.forEach((key) => {
-        if (!this.autoAssignFlags[key]) {
-          usedManual += this.manufacturingAssignments[key];
-        }
-      });
-
-      const autoKeys = keys.filter((key) => this.autoAssignFlags[key]);
-      const remaining = total > usedManual ? (total - usedManual) : 0n;
-      if (autoKeys.length > 0) {
-        let totalWeight = 0;
-        autoKeys.forEach((key) => {
-          totalWeight += this.autoAssignWeights[key];
-        });
-
-        if (totalWeight <= 0) {
-          autoKeys.forEach((key) => {
-            this.manufacturingAssignments[key] = 0n;
-          });
-        } else {
-        const remainders = [];
-        let assigned = 0n;
-        autoKeys.forEach((key) => {
-          const exact = Number(remaining) * (this.autoAssignWeights[key] / totalWeight);
-          const floorValue = Math.floor(exact);
-            const floorBigInt = normalizeManufacturingInteger(floorValue);
-            this.manufacturingAssignments[key] = floorBigInt;
-            assigned += floorBigInt;
-            remainders.push({ key, value: exact - floorValue });
-          });
-        let leftover = remaining - assigned;
-        remainders.sort((left, right) => right.value - left.value);
-        if (leftover > 0n && remainders.length > 0) {
-          this.manufacturingAssignments[remainders[0].key] += leftover;
-          leftover = 0n;
-        }
-        if (leftover > 0n && autoKeys.length > 0) {
-          const idleKey = this.getUnassignedAssignmentKey();
-          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
-          this.manufacturingAssignments[targetKey] += leftover;
-        }
-      }
+    getPersistentAssignmentKeys() {
+      return [this.getUnassignedAssignmentKey()].concat(MANUFACTURING_RECIPE_KEYS);
     }
 
-      let assignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0n), 0n);
-      if (assignedTotal > total) {
-        let excess = assignedTotal - total;
-        for (let i = keys.length - 1; i >= 0 && excess > 0n; i -= 1) {
-          const key = keys[i];
-          const current = this.manufacturingAssignments[key] || 0n;
-          const reduction = current < excess ? current : excess;
-          this.manufacturingAssignments[key] = current - reduction;
-          excess -= reduction;
-        }
-        assignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0n), 0n);
-      }
-      this.cachedAssignedTotal = assignedTotal;
-      this.assignmentsLastTotal = total;
-      this.assignmentsDirty = false;
-    }
-
-    getAssignedTotal(skipNormalization = false) {
-      if (!skipNormalization) {
-        this.normalizeAssignments();
-      }
-      return this.cachedAssignedTotal;
+    shouldPreserveAssignmentsDuringNormalization() {
+      return globalGameIsLoadingFromSave === true;
     }
 
     getAvailablePopulation(skipNormalization = false, assignedTotal = null) {
-      const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
-      const assigned = assignedTotal === null ? this.getAssignedTotal(skipNormalization) : assignedTotal;
-      return total > assigned ? (total - assigned) : 0n;
-    }
-
-    getStoredAssignmentAmount(key) {
-      return this.manufacturingAssignments[key] || 0n;
-    }
-
-    getDisplayedAssignmentAmount(key) {
-      if (this.isUnassignedAssignmentKey(key)) {
-        return this.getAvailablePopulation();
-      }
-      return this.getStoredAssignmentAmount(key);
-    }
-
-    getAssignmentMaxTarget(key) {
-      const keys = this.getManagedAssignmentKeys();
-      const total = normalizeManufacturingInteger(this.getTotalPotentialPopulation());
-      const usedOther = keys.reduce((sum, otherKey) => {
-        if (otherKey === key) {
-          return sum;
-        }
-        if (this.autoAssignFlags[otherKey]) {
-          return sum;
-        }
-        return sum + this.getStoredAssignmentAmount(otherKey);
-      }, 0n);
-      return total > usedOther ? (total - usedOther) : 0n;
-    }
-
-    setAssignmentStep(step) {
-      const next = normalizeManufacturingInteger(step);
-      this.assignmentStep = next < 1n ? 1n : (next > MANUFACTURING_ASSIGNMENT_STEP_MAX ? MANUFACTURING_ASSIGNMENT_STEP_MAX : next);
-    }
-
-    normalizeAssignmentStep() {
-      this.assignmentStep = normalizeManufacturingInteger(this.assignmentStep);
-      if (this.assignmentStep < 1n) {
-        this.assignmentStep = 1n;
-      }
-    }
-
-    getSignedAssignmentDelta(delta) {
-      const valueType = Object.prototype.toString.call(delta);
-      if (valueType === '[object BigInt]') {
-        return delta;
-      }
-      if (valueType === '[object String]') {
-        const trimmed = delta.trim();
-        if (!trimmed || trimmed === '-') {
-          return 0n;
-        }
-        const isNegative = trimmed.startsWith('-');
-        const digits = isNegative || trimmed.startsWith('+') ? trimmed.slice(1) : trimmed;
-        if (!/^\d+$/.test(digits)) {
-          return 0n;
-        }
-        const magnitude = BigInt(digits);
-        return isNegative ? -magnitude : magnitude;
-      }
-      const numeric = Number(delta);
-      if (!Number.isFinite(numeric) || numeric === 0) {
-        return 0n;
-      }
-      const magnitude = normalizeManufacturingInteger(Math.abs(numeric));
-      return numeric < 0 ? -magnitude : magnitude;
-    }
-
-    setAutoAssignTarget(key, enabled) {
-      this.autoAssignFlags[key] = enabled === true;
-      this.markAssignmentsDirty();
-      this.normalizeAssignments();
-      this.updateUI();
-    }
-
-    adjustAssignment(key, delta) {
-      if (this.autoAssignFlags[key]) {
-        return;
-      }
-      this.normalizeAssignments();
-      const signedDelta = this.getSignedAssignmentDelta(delta);
-      if (signedDelta === 0n) {
-        return;
-      }
-      const current = this.getStoredAssignmentAmount(key);
-      const maxForKey = this.getAssignmentMaxTarget(key);
-      let next = current + signedDelta;
-      if (next < 0n) {
-        next = 0n;
-      }
-      if (next > maxForKey) {
-        next = maxForKey;
-      }
-      this.manufacturingAssignments[key] = next;
-      this.markAssignmentsDirty();
-      this.normalizeAssignments();
-      this.updateUI();
-    }
-
-    clearAssignment(key) {
-      if (this.autoAssignFlags[key]) {
-      return;
-      }
-      this.manufacturingAssignments[key] = 0n;
-      this.markAssignmentsDirty();
-      this.normalizeAssignments();
-      this.updateUI();
-    }
-
-    maximizeAssignment(key) {
-      if (this.autoAssignFlags[key]) {
-        return;
-      }
-      this.normalizeAssignments();
-      this.manufacturingAssignments[key] = this.getAssignmentMaxTarget(key);
-      this.markAssignmentsDirty();
-      this.normalizeAssignments();
-      this.updateUI();
+      return this.getAvailableAssignments(skipNormalization, assignedTotal);
     }
 
     setRunning(enabled) {
@@ -1408,25 +1188,17 @@
       const assignmentGrid = document.createElement('div');
       assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'manufacturing-assignment-list');
 
-      const stepDownButton = document.createElement('button');
+      const sharedStepButtons = this.createAssignmentStepButtons((key, fallback) => {
+        const paths = {
+          divideTen: 'catalogs.specializations.manufacturing.ui.common.divideTen',
+          timesTen: 'catalogs.specializations.manufacturing.ui.common.timesTen'
+        };
+        return getManufacturingText(paths[key]) || fallback;
+      });
+      const stepDownButton = sharedStepButtons.stepDownButton;
       stepDownButton.dataset.manufacturingUi = 'stepDownButton';
-      stepDownButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.divideTen') || '/10';
-      stepDownButton.addEventListener('click', () => {
-        this.normalizeAssignmentStep();
-        this.assignmentStep = this.assignmentStep > 1n ? (this.assignmentStep / 10n) : 1n;
-        this.updateUI();
-      });
-      const stepUpButton = document.createElement('button');
+      const stepUpButton = sharedStepButtons.stepUpButton;
       stepUpButton.dataset.manufacturingUi = 'stepUpButton';
-      stepUpButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.timesTen') || 'x10';
-      stepUpButton.addEventListener('click', () => {
-        this.normalizeAssignmentStep();
-        this.assignmentStep = this.assignmentStep * 10n;
-        if (this.assignmentStep > MANUFACTURING_ASSIGNMENT_STEP_MAX) {
-          this.assignmentStep = MANUFACTURING_ASSIGNMENT_STEP_MAX;
-        }
-        this.updateUI();
-      });
 
       const stepButtons = document.createElement('div');
       stepButtons.classList.add('hephaestus-control-buttons', 'hephaestus-step-header');
@@ -1529,73 +1301,18 @@
         amountEl.dataset.manufacturingRole = 'value';
         amountEl.dataset.manufacturingAssignmentKey = key;
 
-        const zeroButton = document.createElement('button');
-        zeroButton.dataset.manufacturingRole = 'zeroButton';
-        zeroButton.dataset.manufacturingAssignmentKey = key;
-        zeroButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.zero') || '0';
-        zeroButton.addEventListener('click', () => {
-          this.clearAssignment(key);
+        const assignmentControls = this.createAssignmentControls(key, {
+          rolePrefix: 'manufacturing',
+          assignmentKeyDataset: 'manufacturingAssignmentKey',
+          textProvider: (controlKey, fallback) => {
+            const paths = {
+              zero: 'catalogs.specializations.manufacturing.ui.common.zero',
+              max: 'catalogs.specializations.manufacturing.ui.common.max',
+              auto: 'catalogs.specializations.manufacturing.ui.auto'
+            };
+            return getManufacturingText(paths[controlKey]) || fallback;
+          }
         });
-
-        const minusButton = document.createElement('button');
-        minusButton.dataset.manufacturingRole = 'minusButton';
-        minusButton.dataset.manufacturingAssignmentKey = key;
-        minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
-
-        const plusButton = document.createElement('button');
-        plusButton.dataset.manufacturingRole = 'plusButton';
-        plusButton.dataset.manufacturingAssignmentKey = key;
-        plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
-
-        const maxButton = document.createElement('button');
-        maxButton.dataset.manufacturingRole = 'maxButton';
-        maxButton.dataset.manufacturingAssignmentKey = key;
-        maxButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.max') || 'Max';
-        maxButton.addEventListener('click', () => {
-          this.maximizeAssignment(key);
-        });
-
-        const autoAssignContainer = document.createElement('div');
-        autoAssignContainer.classList.add('hephaestus-auto-assign');
-        const autoAssign = document.createElement('input');
-        autoAssign.type = 'checkbox';
-        autoAssign.dataset.manufacturingRole = 'autoAssign';
-        autoAssign.dataset.manufacturingAssignmentKey = key;
-        autoAssign.addEventListener('change', () => {
-          this.setAutoAssignTarget(key, autoAssign.checked);
-        });
-        const autoAssignLabel = document.createElement('span');
-        autoAssignLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.auto');
-        autoAssignLabel.addEventListener('click', () => {
-          autoAssign.checked = !autoAssign.checked;
-          this.setAutoAssignTarget(key, autoAssign.checked);
-        });
-        autoAssignContainer.append(autoAssign, autoAssignLabel);
-
-        const weightInput = document.createElement('input');
-        weightInput.type = 'number';
-        weightInput.min = '0';
-        weightInput.step = '0.1';
-        weightInput.value = String(
-          Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-        );
-        weightInput.classList.add('hephaestus-weight-input');
-        weightInput.dataset.manufacturingRole = 'weightInput';
-        weightInput.dataset.manufacturingAssignmentKey = key;
-        weightInput.addEventListener('input', () => {
-          const value = Number(weightInput.value);
-          this.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
-          this.markAssignmentsDirty();
-          this.normalizeAssignments();
-          this.updateUI();
-        });
-
-        const controls = document.createElement('div');
-        controls.classList.add('hephaestus-assignment-controls');
-        const controlButtons = document.createElement('div');
-        controlButtons.classList.add('hephaestus-control-buttons');
-        controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
-        controls.append(controlButtons);
 
         const rateEl = document.createElement('div');
         rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
@@ -1609,7 +1326,7 @@
         if (isUnassigned) {
           rowB.classList.add('assignment-divider-row');
         }
-        rowB.append(amountEl, controls);
+        rowB.append(amountEl, assignmentControls.controls);
 
         const rowC = document.createElement('div');
         rowC.dataset.manufacturingRole = 'rowC';
@@ -1618,7 +1335,7 @@
         if (isUnassigned) {
           rowC.classList.add('assignment-divider-row');
         }
-        rowC.append(weightInput, rateEl);
+        rowC.append(assignmentControls.weightInput, rateEl);
 
         blockABody.appendChild(rowA);
         blockBBody.appendChild(rowB);
@@ -1630,12 +1347,12 @@
           rowC,
           unitProduction: unitProductionEl,
           value: amountEl,
-          zeroButton,
-          minusButton,
-          plusButton,
-          maxButton,
-          autoAssign,
-          weightInput,
+          zeroButton: assignmentControls.zeroButton,
+          minusButton: assignmentControls.minusButton,
+          plusButton: assignmentControls.plusButton,
+          maxButton: assignmentControls.maxButton,
+          autoAssign: assignmentControls.autoAssign,
+          weightInput: assignmentControls.weightInput,
           rate: rateEl,
           recipeTooltip,
           recipeTooltipCache,
@@ -1734,20 +1451,7 @@
           ? (recipe.baseOutput * this.getRecipeOutputMultiplier(key)) / recipe.complexity
           : 0;
         row.unitProduction.textContent = recipe ? `${formatNumber(unitProduction, true, 3)}/s` : '';
-        row.minusButton.textContent = `-${formatNumber(step, true)}`;
-        row.plusButton.textContent = `+${formatNumber(step, true)}`;
-        row.autoAssign.checked = this.autoAssignFlags[key] === true;
-        row.autoAssign.disabled = totalBigInt <= 0n;
-        if (document.activeElement !== row.weightInput) {
-          row.weightInput.value = String(
-            Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-          );
-        }
-        row.weightInput.disabled = totalBigInt <= 0n;
-        row.zeroButton.disabled = storedCurrent <= 0n || this.autoAssignFlags[key];
-        row.maxButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || this.autoAssignFlags[key];
-        row.minusButton.disabled = storedCurrent <= 0n || this.autoAssignFlags[key];
-        row.plusButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || this.autoAssignFlags[key];
+        this.updateAssignmentControls(row, key, totalBigInt, step);
         row.rate.textContent = recipe ? `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s` : '';
         const recipeProductivity = recipe ? (productivityByRecipe[key] ?? 1) : 1;
         const productivityLimited = !!recipe && this.isRunning && storedCurrent > 0n && recipeProductivity < 1;
@@ -1769,47 +1473,16 @@
       return {
         ...super.saveAutomationSettings(),
         isRunning: this.isRunning === true,
-        manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
-        assignmentStep: serializeManufacturingInteger(this.assignmentStep),
-        autoAssignFlags: { ...this.autoAssignFlags },
-        autoAssignWeights: { ...this.autoAssignWeights },
+        ...this.saveAssignmentSettings(),
       };
     }
 
     loadAutomationSettings(settings = {}, options = {}) {
       super.loadAutomationSettings(settings);
-      const isPresetApplication = options.isPresetApplication === true;
-      const shouldApplyPresetAssignments = !isPresetApplication
-        || Object.keys(settings.manufacturingAssignments || {}).length > 0;
-      const shouldApplyPresetAutoFlags = !isPresetApplication
-        || Object.keys(settings.autoAssignFlags || {}).length > 0;
-      const shouldApplyPresetAutoWeights = !isPresetApplication
-        || Object.keys(settings.autoAssignWeights || {}).length > 0;
-      let assignmentSettingsChanged = false;
       if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
         this.isRunning = settings.isRunning === true;
       }
-      if (Object.prototype.hasOwnProperty.call(settings, 'manufacturingAssignments') && shouldApplyPresetAssignments) {
-        this.manufacturingAssignments = { ...(settings.manufacturingAssignments || {}) };
-        assignmentSettingsChanged = true;
-      }
-      if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
-        this.assignmentStep = settings.assignmentStep || 1;
-        assignmentSettingsChanged = true;
-      }
-      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags) {
-        this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
-        assignmentSettingsChanged = true;
-      }
-      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {
-        this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
-        assignmentSettingsChanged = true;
-      }
-      if (assignmentSettingsChanged) {
-        this.markAssignmentsDirty();
-        this.normalizeAssignments();
-        this.normalizeAssignmentStep();
-      }
+      this.loadAssignmentSettings(settings, options);
     }
 
     saveState() {
@@ -1819,10 +1492,7 @@
         isRunning: this.isRunning,
         shopRefactorCounts: { ...this.shopRefactorCounts },
         adaptationPoints: this.getAdaptationPoints(),
-        manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
-        assignmentStep: serializeManufacturingInteger(this.assignmentStep),
-        autoAssignFlags: { ...this.autoAssignFlags },
-        autoAssignWeights: { ...this.autoAssignWeights },
+        ...this.saveAssignmentSettings(),
       };
     }
 
@@ -1836,17 +1506,11 @@
         ...(state.shopRefactorCounts || {}),
       };
       this.adaptationPoints = Math.max(0, state.adaptationPoints || 0);
-      this.manufacturingAssignments = { ...(state.manufacturingAssignments || {}) };
-      this.assignmentStep = state.assignmentStep || 1;
-      this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-      this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+      this.loadAssignmentSettings(state);
       this.setLastRunStats({ metal: 0, silicon: 0 }, {});
       this.updateStatus(this.isRunning
         ? getManufacturingText('catalogs.specializations.manufacturing.status.idle')
         : getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
-      this.markAssignmentsDirty();
-      this.normalizeAssignments();
-      this.normalizeAssignmentStep();
     }
 
     saveTravelState() {
@@ -1856,10 +1520,7 @@
         isRunning: this.isRunning,
         shopRefactorCounts: { ...this.shopRefactorCounts },
         adaptationPoints: this.getAdaptationPoints(),
-        manufacturingAssignments: serializeManufacturingAssignments(this.manufacturingAssignments),
-        assignmentStep: serializeManufacturingInteger(this.assignmentStep),
-        autoAssignFlags: { ...this.autoAssignFlags },
-        autoAssignWeights: { ...this.autoAssignWeights },
+        ...this.saveAssignmentSettings(),
       };
     }
 
@@ -1872,17 +1533,11 @@
         ...(state.shopRefactorCounts || {}),
       };
       this.adaptationPoints = Math.max(0, state.adaptationPoints || 0);
-      this.manufacturingAssignments = { ...(state.manufacturingAssignments || {}) };
-      this.assignmentStep = state.assignmentStep || 1;
-      this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-      this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+      this.loadAssignmentSettings(state);
       this.setLastRunStats({ metal: 0, silicon: 0 }, {});
       this.updateStatus(this.isRunning
         ? getManufacturingText('catalogs.specializations.manufacturing.status.idle')
         : getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
-      this.markAssignmentsDirty();
-      this.normalizeAssignments();
-      this.normalizeAssignmentStep();
     }
   }
 
