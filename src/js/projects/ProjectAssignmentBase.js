@@ -128,11 +128,12 @@ function createProjectAssignmentBase(BaseClass) {
     prepareAssignmentsForNormalization() {}
 
     shouldPreserveAssignmentsDuringNormalization() {
-      return false;
+      return globalGameIsLoadingFromSave === true;
     }
 
     normalizeAssignments() {
-      const signature = this.getAssignmentNormalizationSignature();
+      const preserveAssignments = this.shouldPreserveAssignmentsDuringNormalization();
+      const signature = `${this.getAssignmentNormalizationSignature()}|preserve:${preserveAssignments}`;
       if (!this.assignmentsDirty && this.assignmentsLastSignature === signature) {
         return;
       }
@@ -160,7 +161,7 @@ function createProjectAssignmentBase(BaseClass) {
         }
       });
 
-      if (this.shouldPreserveAssignmentsDuringNormalization()) {
+      if (preserveAssignments) {
         this.cachedAssignedTotal = keys.reduce((sum, key) => sum + (assignments[key] || 0n), 0n);
         this.assignmentsLastSignature = signature;
         this.assignmentsDirty = false;

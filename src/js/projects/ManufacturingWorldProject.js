@@ -556,10 +556,6 @@
       return [this.getUnassignedAssignmentKey()].concat(MANUFACTURING_RECIPE_KEYS);
     }
 
-    shouldPreserveAssignmentsDuringNormalization() {
-      return globalGameIsLoadingFromSave === true;
-    }
-
     getAvailablePopulation(skipNormalization = false, assignedTotal = null) {
       return this.getAvailableAssignments(skipNormalization, assignedTotal);
     }
