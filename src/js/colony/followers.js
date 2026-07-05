@@ -950,7 +950,11 @@ class FollowersManager extends EffectableEntity {
       return 0;
     }
     const worlds = Math.floor(spaceManager.getTerraformedPlanetCount());
-    const boosted = Math.floor(worlds * this.getApostlesOrbitalsMultiplier());
+    const boosted = Math.floor(
+      worlds
+      * this.getApostlesOrbitalsMultiplier()
+      * this.getActiveEffectMultiplier('availableOrbitalsMultiplier')
+    );
     const available = boosted > 0 ? boosted : 0;
     if (!gameSettings.orbitalCap) {
       return available;

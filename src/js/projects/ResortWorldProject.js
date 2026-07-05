@@ -16,6 +16,7 @@
     {
       id: 'happiness',
       stat: 'happiness',
+      costScaling: 'quadratic',
       maxPurchases: Infinity,
       label: getResortWorldText('catalogs.specializations.resort.shopItems.happiness.label'),
       description: getResortWorldText('catalogs.specializations.resort.shopItems.happiness.description'),
@@ -23,6 +24,7 @@
     {
       id: 'factoryThroughput',
       stat: 'factoryThroughput',
+      costScaling: 'quadratic',
       maxPurchases: Infinity,
       label: getResortWorldText('catalogs.specializations.resort.shopItems.factoryThroughput.label'),
       description: getResortWorldText('catalogs.specializations.resort.shopItems.factoryThroughput.description'),
@@ -30,6 +32,7 @@
     {
       id: 'fundingPerColonist',
       stat: 'fundingPerColonist',
+      costScaling: 'quadratic',
       maxPurchases: Infinity,
       label: getResortWorldText('catalogs.specializations.resort.shopItems.fundingPerColonist.label'),
       description: getResortWorldText('catalogs.specializations.resort.shopItems.fundingPerColonist.description'),
@@ -165,51 +168,12 @@
       return this.isCompleted ? 1 : 0;
     }
 
-    getShopItemCost(item) {
-      const purchases = this.getShopPurchaseCount(item.id);
-      return (purchases + 1) * (purchases + 1);
-    }
-
     getShopBuyButtonText() {
       return getResortWorldText('catalogs.specializations.resort.shop.buy');
     }
 
     getShopMaxButtonText() {
       return getResortWorldText('catalogs.specializations.resort.shop.buyMax');
-    }
-
-    getMaxShopPurchases(item) {
-      const points = this.getSpecializationPoints();
-      if (points < this.getShopItemCost(item)) {
-        return 0;
-      }
-      const current = this.getShopPurchaseCount(item.id);
-      let low = 0;
-      let high = 1;
-      while (this.getCumulativeQuadraticCost(current, high) <= points) {
-        high *= 2;
-      }
-      while (low + 1 < high) {
-        const mid = Math.floor((low + high) / 2);
-        if (this.getCumulativeQuadraticCost(current, mid) <= points) {
-          low = mid;
-        } else {
-          high = mid;
-        }
-      }
-      return low;
-    }
-
-    getCumulativeQuadraticCost(currentPurchases, purchaseCount) {
-      if (purchaseCount <= 0) {
-        return 0;
-      }
-      const end = currentPurchases + purchaseCount;
-      return this.sumSquares(end) - this.sumSquares(currentPurchases);
-    }
-
-    sumSquares(value) {
-      return value * (value + 1) * (2 * value + 1) / 6;
     }
 
     getSpentResortPoints() {

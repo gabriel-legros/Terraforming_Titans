@@ -2118,6 +2118,23 @@ const researchParameters = {
         ]
       },
       {
+        id: 'leviathans',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 500_000_000_000_000_000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'project',
+            targetId: 'bioworld',
+            type: 'booleanFlag',
+            flagId: 'leviathans',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'next_gen_bioengineering',
         name: '',
         description: '',

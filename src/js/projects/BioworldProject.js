@@ -7,9 +7,9 @@
     ({ SpecializationProject: SpecializationBase } = require('./SpecializationProject.js'));
   } catch (error) {}
 
-  function getBioworldText(path) {
+  function getBioworldText(path, vars) {
     try {
-      return t(path, null, '');
+      return t(path, vars, '');
     } catch (error) {
       return '';
     }
@@ -20,6 +20,7 @@
   const MAX_EVOLUTION_UPGRADES = 400;
   const MAX_BIOWORKERS_UPGRADES = 200;
   const MAX_LIFE_POINT_GAIN_UPGRADES = 900;
+  const LEVIATHAN_ORBITAL_SOURCE_ID = 'bioworld-leviathans';
 
   const BIOWORLD_SHOP_ITEMS = [
     {
@@ -71,6 +72,15 @@
       maxPurchases: MAX_BIOWORKERS_UPGRADES,
       description: getBioworldText('catalogs.specializations.bioworld.shopItems.bioworkersMax.description'),
     },
+    {
+      id: 'leviathans',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.leviathans.label'),
+      cost: 1,
+      costScaling: 'quadratic',
+      maxPurchases: Infinity,
+      requiresFlag: 'leviathans',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.leviathans.description'),
+    },
   ];
 
   const BIOWORLD_SHOP_ITEM_MAP = BIOWORLD_SHOP_ITEMS.reduce((acc, item) => {
@@ -114,6 +124,15 @@
     getTravelPointGain() {
       const basePoints = this.getEvolutionPointGain(resources.surface.biomass.value);
       return this.applyHazardPointBonus(basePoints);
+    }
+
+    getShopPurchaseCountText(item, purchases, maxPurchases) {
+      if (item.id === 'leviathans') {
+        return getBioworldText('catalogs.specializations.bioworld.shop.purchases', {
+          value: formatNumber(purchases, true),
+        });
+      }
+      return super.getShopPurchaseCountText(item, purchases, maxPurchases);
     }
 
     getSpecializationRequirements() {
@@ -204,9 +223,26 @@
         researchManager.completeResearchInstant('life');
       }
 
+      this.applyLeviathanOrbitalEffect();
+
       if (this.ecumenopolisDisabled) {
         this.applyEcumenopolisDisable();
       }
+    }
+
+    applyLeviathanOrbitalEffect() {
+      const purchases = this.getShopPurchaseCount('leviathans');
+      if (!this.isBooleanFlagSet('leviathans') || purchases <= 0) {
+        removeEffect({ target: 'orbitalManager', sourceId: LEVIATHAN_ORBITAL_SOURCE_ID });
+        return;
+      }
+      addEffect({
+        target: 'orbitalManager',
+        type: 'availableOrbitalsMultiplier',
+        value: 1 + purchases * 0.01,
+        effectId: 'bioworld-leviathans-orbitals',
+        sourceId: LEVIATHAN_ORBITAL_SOURCE_ID,
+      });
     }
 
     applyEffects() {

@@ -34,6 +34,7 @@ const SHALLOW_EQUAL_REAPPLY_SAFE_EFFECT_TYPES = new Set([
   'workerMultiplier',
   'workerRatio',
   'colonistWorkerEfficiencyMultiplier',
+  'availableOrbitalsMultiplier',
   'addResourceConsumption',
   'lifeGrowthMultiplier',
   'nanoColonyGrowthMultiplier',
@@ -312,6 +313,9 @@ class EffectableEntity {
           break;
         case 'colonistWorkerEfficiencyMultiplier':
           this.applyColonistWorkerEfficiencyMultiplier(effect);
+          break;
+        case 'availableOrbitalsMultiplier':
+          this.applyAvailableOrbitalsMultiplier(effect);
           break;
         case 'addResourceConsumption':
           if (typeof this.applyAddResourceConsumption === 'function') {
@@ -797,6 +801,21 @@ class EffectableEntity {
 
   applyColonistWorkerEfficiencyMultiplier(effect) {
     // colonist worker efficiency multipliers are computed on demand in PopulationModule
+  }
+
+  applyAvailableOrbitalsMultiplier(effect) {
+    // available orbitals multipliers are computed on demand in FollowersManager
+  }
+
+  getActiveEffectMultiplier(type) {
+    let multiplier = 1;
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      if (effect.type === type) {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
   }
 
 

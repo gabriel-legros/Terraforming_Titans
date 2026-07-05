@@ -6167,6 +6167,10 @@ setLanguageData({
           name: 'Resort Worlds',
           description: 'HOPE?  You... want to build more beaches?  Alright then.  Unlocks a new specialization.',
         },
+        leviathans: {
+          name: 'Leviathans',
+          description: 'Our scientists were so preoccupied with whether or not they could, they did not stop to think if they should.  Enables a new bioworld shop item.',
+        },
         next_gen_bioengineering: {
           name: 'Next-generation bio-engineering',
           description: 'Enables the use of advanced research to permanently increase life design potential',
@@ -6779,6 +6783,9 @@ setLanguageData({
         shopTooltip: 'You gain evolution points when travelling after completing this project: 3*log10(total biomass / 1T) + 1, then +10% per hazard on this world.',
         lockedByHolyWorld: 'Blocked by Holy World',
         biocortexEffectName: 'Biocortex-human integration',
+        shop: {
+          purchases: 'Purchased: {value}',
+        },
         requirements: {
           terraformed: 'World is fully terraformed',
           biomassDensity: 'Biomass density above 1 ton/m^2',
@@ -6813,6 +6820,10 @@ setLanguageData({
           bioworkersMax: {
             label: 'Bioworkers Max +1',
             description: 'Raises the max investments for bioworkers by 1.',
+          },
+          leviathans: {
+            label: 'Leviathans',
+            description: 'Increases available orbitals by 1% per purchase. Costs scale quadratically: 1, 4, 9, and so on.',
           },
         },
       },
