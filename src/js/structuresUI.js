@@ -152,7 +152,7 @@ function applyStructureDisplayPreferences(structureCollection) {
 
 const AUTO_BUILD_DEFAULT_STEP = 0.01;
 const AUTO_BUILD_MIN_STEP = 0.000001;
-const AUTO_BUILD_MAX_STEP = 1000000;
+const AUTO_BUILD_MAX_STEP = 1e50;
 
 function sanitizeAutoBuildStep(value) {
   if (!Number.isFinite(value) || value <= 0) return AUTO_BUILD_DEFAULT_STEP;
@@ -163,6 +163,9 @@ function sanitizeAutoBuildStep(value) {
 
 function formatAutoBuildStepValue(step) {
   const normalized = sanitizeAutoBuildStep(step);
+  if (normalized > 1000) {
+    return normalized.toExponential(0).replace('e+', 'e');
+  }
   let decimals = 2;
   if (normalized < 1) decimals = 3;
   if (normalized < 0.1) decimals = 4;
@@ -216,9 +219,7 @@ function updateAutoBuildStepButtonLabels(structure, incrementBtn, decrementBtn) 
   if (!structure) return;
   structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
   const stepValue = getAutoBuildStepValue(structure);
-  const label = structure.autoBuildBasis === 'fixed'
-    ? formatNumber(stepValue, true)
-    : formatAutoBuildStepValue(stepValue);
+  const label = formatAutoBuildStepValue(stepValue);
   if (incrementBtn) incrementBtn.textContent = `+${label}`;
   if (decrementBtn) decrementBtn.textContent = `-${label}`;
 }
