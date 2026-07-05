@@ -1723,7 +1723,7 @@ class SpaceMiningProject extends SpaceshipProject {
         resource.value += toColony;
       }
     }
-    if (allowOverflow && specialChangeKey) {
+    if (accumulatedSpecialChanges && allowOverflow && specialChangeKey) {
       accumulatedSpecialChanges[specialChangeKey] =
         (accumulatedSpecialChanges[specialChangeKey] || 0) + amount;
     }

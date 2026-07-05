@@ -76,8 +76,12 @@ function setupGlobals() {
   }, originalGlobals);
   setGlobal('resources', {
     atmospheric: {
+      hydrogen: { value: 0, automationLimited: false, modifyRate: () => {} },
       carbonDioxide: { value: 4, automationLimited: false, modifyRate: () => {} },
       oxygen: { value: 0, automationLimited: false, modifyRate: () => {} },
+    },
+    colony: {
+      colonyHydrogen: { value: 90, cap: 100, hasCap: true },
     },
     surface: {
       liquidCO2: { automationLimited: false },
@@ -201,6 +205,29 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
     );
 
     expect(ratio).toBeCloseTo(0.105, 8);
+
+    cleanup();
+  });
+
+  it('does not require an accumulated special ledger for direct colony-only hydrogen completion', () => {
+    const cleanup = setupGlobals();
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        costPerShip: { colony: { energy: 10, metal: 2 } },
+        resourceGainPerShip: {
+          atmospheric: { hydrogen: 1 },
+          colony: { colonyHydrogen: 25 },
+        },
+      },
+    }, 'hydrogenSpaceMining');
+
+    project.gasImportTarget = 'colonyOnly';
+
+    expect(() => {
+      project.applySpaceshipResourceGain({ colony: { colonyHydrogen: 25 } }, 1);
+    }).not.toThrow();
+    expect(resources.colony.colonyHydrogen.value).toBe(115);
 
     cleanup();
   });
