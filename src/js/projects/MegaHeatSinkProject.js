@@ -658,6 +658,35 @@
       }
     }
 
+    saveTravelState() {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return {};
+      }
+      return {
+        capEnabled: this.capEnabled === true,
+        capValue: this.capValue,
+        capMode: this.capMode
+      };
+    }
+
+    loadTravelState(state = {}) {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capEnabled')) {
+        this.capEnabled = state.capEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capValue')) {
+        const value = Number(state.capValue);
+        this.capValue = Number.isFinite(value) && value >= 0 ? value : 100;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capMode')) {
+        this.capMode = state.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED
+          ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+          : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
+      }
+    }
+
     saveState() {
       return {
         ...super.saveState(),
