@@ -643,6 +643,35 @@ function updateBuildingsAutomationUI() {
         );
       }
     },
+    onRegenerateFilter: (buildingId) => {
+      if (!activePreset) {
+        return null;
+      }
+      const referencePreset = JSON.parse(JSON.stringify(activePreset));
+      const buildingIds = buildingId ? [buildingId] : selectedBuildingIds;
+      let changed = false;
+      for (let index = 0; index < buildingIds.length; index += 1) {
+        const targetBuildingId = buildingIds[index];
+        const building = buildings[targetBuildingId];
+        if (!building) {
+          continue;
+        }
+        const entry = automation.captureBuildingSettings(
+          building,
+          activePreset.includeControl !== false,
+          activePreset.includeAutomation !== false
+        );
+        if (!entry.control && !entry.automation) {
+          continue;
+        }
+        referencePreset.buildings[targetBuildingId] = entry;
+        changed = true;
+      }
+      if (!changed) {
+        return null;
+      }
+      return referencePreset;
+    },
     onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!activePreset) {
         return;

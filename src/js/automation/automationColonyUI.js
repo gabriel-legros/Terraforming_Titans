@@ -671,6 +671,31 @@ function updateColonyAutomationUI() {
         );
       }
     },
+    onRegenerateFilter: (targetId) => {
+      if (!activePreset) {
+        return null;
+      }
+      const referencePreset = JSON.parse(JSON.stringify(activePreset));
+      const targetIds = targetId ? [targetId] : selectedTargetIds;
+      let changed = false;
+      for (let index = 0; index < targetIds.length; index += 1) {
+        const targetEntryId = targetIds[index];
+        const entry = automation.captureTargetSettings(
+          targetEntryId,
+          activePreset.includeControl !== false,
+          activePreset.includeAutomation !== false
+        );
+        if (!entry.control && !entry.automation) {
+          continue;
+        }
+        referencePreset.targets[targetEntryId] = entry;
+        changed = true;
+      }
+      if (!changed) {
+        return null;
+      }
+      return referencePreset;
+    },
     getFieldOptions: (fieldPath, value) => {
       const priorityOptions = getColonyAutomationPrioritySelectOptions(fieldPath);
       if (priorityOptions) {

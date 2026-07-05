@@ -882,6 +882,31 @@ function updateProjectsAutomationUI() {
         );
       }
     },
+    onRegenerateFilter: (projectId) => {
+      if (!activePreset) {
+        return null;
+      }
+      const referencePreset = JSON.parse(JSON.stringify(activePreset));
+      const projectIds = projectId ? [projectId] : selectedProjectIds;
+      let changed = false;
+      for (let index = 0; index < projectIds.length; index += 1) {
+        const targetProjectId = projectIds[index];
+        const entry = automation.captureProjectSettingsForId(
+          targetProjectId,
+          activePreset.includeExpansion !== false,
+          activePreset.includeOperations !== false
+        );
+        if (!entry) {
+          continue;
+        }
+        referencePreset.projects[targetProjectId] = entry;
+        changed = true;
+      }
+      if (!changed) {
+        return null;
+      }
+      return referencePreset;
+    },
     getFieldOptions: (fieldPath, value, preset) => getProjectPresetJsonFieldOptions(fieldPath, value, preset),
     onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!activePreset) {
