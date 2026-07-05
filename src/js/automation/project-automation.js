@@ -1250,6 +1250,11 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       const afterSelected = project.selectedResources.some((entry) => entry?.category === canonicalCategory && entry?.resource === resourceKey);
       changed = changed || beforeSelected !== afterSelected || beforeSelectedResourceCount !== afterSelectedResourceCount;
     }
+    if (hasTransferMode || hasSelectedFlag) {
+      const resourceKeys = Object.keys(PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY)
+        .filter((key) => project.isResourceUnlocked(key));
+      project.updateShipTransferModeFromResources(resourceKeys);
+    }
     return changed;
   }
 

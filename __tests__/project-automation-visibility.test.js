@@ -59,6 +59,8 @@ function createSpaceStorageProject(selectedResources = []) {
     name: 'spaceStorage',
     displayName: 'Space Storage',
     category: 'mega',
+    shipTransferMode: 'store',
+    lastUniformTransferMode: 'store',
     selectedResources: selectedResources.map(entry => ({ ...entry })),
     resourceTransferModes: {},
     resourceTransferWeights: {},
@@ -80,6 +82,41 @@ function createSpaceStorageProject(selectedResources = []) {
       };
     },
     sanitizeTransferModes() {},
+    isResourceUnlocked() {
+      return true;
+    },
+    getResourceTransferMode(resourceKey) {
+      const storedMode = this.resourceTransferModes[resourceKey];
+      if (storedMode === 'store' || storedMode === 'withdraw') {
+        return storedMode;
+      }
+      if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
+        return this.shipTransferMode;
+      }
+      return this.lastUniformTransferMode || 'store';
+    },
+    setShipTransferMode(mode) {
+      this.shipTransferMode = mode;
+      if (mode === 'store' || mode === 'withdraw') {
+        this.lastUniformTransferMode = mode;
+        this.resourceTransferModes = {};
+      }
+    },
+    updateShipTransferModeFromResources(resourceKeys) {
+      const uniformMode = this.getResourceTransferMode(resourceKeys[0]);
+      let mixed = false;
+      for (let i = 1; i < resourceKeys.length; i += 1) {
+        if (this.getResourceTransferMode(resourceKeys[i]) !== uniformMode) {
+          mixed = true;
+          break;
+        }
+      }
+      if (mixed) {
+        this.shipTransferMode = 'mixed';
+      } else {
+        this.setShipTransferMode(uniformMode);
+      }
+    },
     sanitizeResourceCaps() {},
     sanitizeResourceStrategicReserves() {},
     setRespectImportProjectLimits(resourceKey, enabled) {
@@ -220,6 +257,7 @@ describe('Project automation visibility', () => {
     automation.applyPresetOnce(1);
 
     expect(spaceStorage.resourceTransferModes.liquidWater).toBe('withdraw');
+    expect(spaceStorage.shipTransferMode).toBe('mixed');
     expect(spaceStorage.selectedResources).toEqual([
       { category: 'surface', resource: 'liquidWater' }
     ]);
