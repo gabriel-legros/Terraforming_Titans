@@ -257,8 +257,12 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     const importedTargets = presetData.targets || {};
     for (const targetId in importedTargets) {
       const entry = importedTargets[targetId] || {};
-      const control = entry.control ? this.deepClone(entry.control) : null;
-      const automation = entry.automation ? this.deepClone(entry.automation) : null;
+      const control = entry.control && Object.keys(entry.control).length > 0
+        ? this.deepClone(entry.control)
+        : null;
+      const automation = entry.automation && Object.keys(entry.automation).length > 0
+        ? this.deepClone(entry.automation)
+        : null;
       if (automation && automation.autoBuildBasis === 'initialLand') {
         automation.autoBuildBasis = 'geometricLand';
       }
@@ -671,20 +675,22 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       return false;
     }
     let changed = false;
-    if (colony.autoBuildEnabled !== automation.autoBuildEnabled) {
+    if ('autoBuildEnabled' in automation && colony.autoBuildEnabled !== automation.autoBuildEnabled) {
       colony.autoBuildEnabled = automation.autoBuildEnabled;
       changed = true;
     }
-    if (colony.autoBuildPriority !== automation.autoBuildPriority) {
+    if ('autoBuildPriority' in automation && colony.autoBuildPriority !== automation.autoBuildPriority) {
       colony.autoBuildPriority = automation.autoBuildPriority;
       changed = true;
     }
-    const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
-    if (colony.autoBuildBasis !== automationBasis) {
-      colony.autoBuildBasis = automationBasis;
-      changed = true;
+    if ('autoBuildBasis' in automation) {
+      const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
+      if (colony.autoBuildBasis !== automationBasis) {
+        colony.autoBuildBasis = automationBasis;
+        changed = true;
+      }
     }
-    if (colony.autoBuildPercent !== automation.autoBuildPercent) {
+    if ('autoBuildPercent' in automation && colony.autoBuildPercent !== automation.autoBuildPercent) {
       colony.autoBuildPercent = automation.autoBuildPercent;
       changed = true;
     }
@@ -692,19 +698,19 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       colony.autoBuildFixed = automation.autoBuildFixed;
       changed = true;
     }
-    if (colony.autoBuildFillPercent !== automation.autoBuildFillPercent) {
+    if ('autoBuildFillPercent' in automation && colony.autoBuildFillPercent !== automation.autoBuildFillPercent) {
       colony.autoBuildFillPercent = automation.autoBuildFillPercent;
       changed = true;
     }
-    if (colony.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
+    if ('autoBuildFillResourcePrimary' in automation && colony.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
       colony.autoBuildFillResourcePrimary = automation.autoBuildFillResourcePrimary;
       changed = true;
     }
-    if (colony.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
+    if ('autoBuildFillResourceSecondary' in automation && colony.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
       colony.autoBuildFillResourceSecondary = automation.autoBuildFillResourceSecondary;
       changed = true;
     }
-    if (colony.autoActiveEnabled !== automation.autoActiveEnabled) {
+    if ('autoActiveEnabled' in automation && colony.autoActiveEnabled !== automation.autoActiveEnabled) {
       colony.autoActiveEnabled = automation.autoActiveEnabled;
       changed = true;
     }
@@ -991,10 +997,13 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       scopeAll: preset.scopeAll === true,
       targets: Object.fromEntries(
         Object.entries(preset.targets || {}).map(([targetId, entry]) => {
-          const control = entry?.control ? { ...entry.control } : null;
+          let control = entry?.control ? { ...entry.control } : null;
           let automation = entry?.automation ? { ...entry.automation } : null;
           if (control && 'autoUpgradeEnabled' in control && !automation) {
-            automation = {};
+            automation = {
+              autoUpgradeEnabled: control.autoUpgradeEnabled === true
+            };
+            delete control.autoUpgradeEnabled;
           }
           if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
             automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
@@ -1002,6 +1011,12 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
           }
           if (automation && automation.autoBuildBasis === 'initialLand') {
             automation.autoBuildBasis = 'geometricLand';
+          }
+          if (control && Object.keys(control).length === 0) {
+            control = null;
+          }
+          if (automation && Object.keys(automation).length === 0) {
+            automation = null;
           }
           return [targetId, {
             categoryId: entry?.categoryId || this.getTargetCategoryId(targetId),

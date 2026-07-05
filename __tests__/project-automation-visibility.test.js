@@ -268,6 +268,48 @@ describe('Project automation visibility', () => {
     expect(spaceStorage.selectedResources).toEqual([]);
   });
 
+  it('ignores empty Space Storage cap and reserve artifacts in single-resource presets', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject();
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+    const biomassCap = { mode: 'remaining', value: 0 };
+    spaceStorage.resourceCaps.biomass = { ...biomassCap };
+    automation.presets = [{
+      id: 1,
+      name: 'Dump Life',
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false,
+      projects: {
+        'spaceStorageSingleResource:biomass': {
+          operations: {
+            spaceStorageSingleResourceKey: 'biomass',
+            mode: 'withdraw',
+            selected: true,
+            category: 'surface',
+            resourceStrategicReserves: {
+              biomass: {
+                scope: {}
+              }
+            },
+            resourceCaps: {
+              biomass: {}
+            },
+            transferWeight: 1
+          }
+        }
+      }
+    }];
+
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.resourceCaps.biomass).toEqual(biomassCap);
+    expect(spaceStorage.resourceTransferModes.biomass).toBe('withdraw');
+    expect(spaceStorage.selectedResources).toEqual([
+      { category: 'surface', resource: 'biomass' }
+    ]);
+  });
+
   it('applies Space Storage single-resource water import target and import limit settings', () => {
     const automation = new ProjectAutomation();
     const spaceStorage = createSpaceStorageProject();

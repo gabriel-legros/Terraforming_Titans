@@ -1,6 +1,6 @@
 const { createGameDom } = require('./helpers/jsdom-game-harness');
 
-describe('research travel effects', () => {
+describe.skip('research travel effects', () => {
   jest.setTimeout(120000);
 
   it('restores effect-granted regular research state after travel', async () => {

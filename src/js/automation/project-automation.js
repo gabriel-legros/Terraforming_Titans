@@ -801,17 +801,23 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     if (Object.prototype.hasOwnProperty.call(source, 'resourceStrategicReserves')) {
       const reserveSource = source.resourceStrategicReserves || {};
       if (Object.prototype.hasOwnProperty.call(reserveSource, resourceKey)) {
-        filtered.resourceStrategicReserves = {
-          [resourceKey]: this.deepClone(reserveSource[resourceKey])
-        };
+        const reserveSetting = reserveSource[resourceKey] || {};
+        if (reserveSetting.mode === 'amount' || reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal') {
+          filtered.resourceStrategicReserves = {
+            [resourceKey]: this.deepClone(reserveSetting)
+          };
+        }
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceCaps')) {
       const capSource = source.resourceCaps || {};
       if (Object.prototype.hasOwnProperty.call(capSource, resourceKey)) {
-        filtered.resourceCaps = {
-          [resourceKey]: this.deepClone(capSource[resourceKey])
-        };
+        const capSetting = capSource[resourceKey] || {};
+        if (capSetting.mode === 'amount' || capSetting.mode === 'percent' || capSetting.mode === 'weight' || capSetting.mode === 'remaining') {
+          filtered.resourceCaps = {
+            [resourceKey]: this.deepClone(capSetting)
+          };
+        }
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceTransferWeights')) {
@@ -1100,8 +1106,12 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       && Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget');
     const hasHydrogenTransferTarget = resourceKey === 'hydrogen'
       && Object.prototype.hasOwnProperty.call(settings, 'hydrogenTransferTarget');
-    const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
-    const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
+    const capSetting = capsSource[resourceKey] || {};
+    const reserveSetting = reserveSource[resourceKey] || {};
+    const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey)
+      && (capSetting.mode === 'amount' || capSetting.mode === 'percent' || capSetting.mode === 'weight' || capSetting.mode === 'remaining');
+    const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey)
+      && (reserveSetting.mode === 'amount' || reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal');
     const weightHasKey = Object.prototype.hasOwnProperty.call(weightSource, resourceKey);
     const importLimitHasKey = Object.prototype.hasOwnProperty.call(importLimitSource, resourceKey);
     const biomassDensityLimitHasKey = Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey);

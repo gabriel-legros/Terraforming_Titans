@@ -635,23 +635,25 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
 
   applyAutomationSettings(building, automation) {
     let changed = false;
-    if (building.autoBuildEnabled !== automation.autoBuildEnabled) {
+    if ('autoBuildEnabled' in automation && building.autoBuildEnabled !== automation.autoBuildEnabled) {
       building.autoBuildEnabled = automation.autoBuildEnabled;
       changed = true;
     }
-    if (building.autoBuildPriority !== automation.autoBuildPriority) {
+    if ('autoBuildPriority' in automation && building.autoBuildPriority !== automation.autoBuildPriority) {
       building.autoBuildPriority = automation.autoBuildPriority;
       changed = true;
     }
-    const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
-    if (building.autoBuildBasis !== automationBasis) {
-      building.autoBuildBasis = automationBasis;
-      if (typeof building.normalizeAutoBuildBasis === 'function') {
-        building.normalizeAutoBuildBasis();
+    if ('autoBuildBasis' in automation) {
+      const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
+      if (building.autoBuildBasis !== automationBasis) {
+        building.autoBuildBasis = automationBasis;
+        if (typeof building.normalizeAutoBuildBasis === 'function') {
+          building.normalizeAutoBuildBasis();
+        }
+        changed = true;
       }
-      changed = true;
     }
-    if (building.autoBuildPercent !== automation.autoBuildPercent) {
+    if ('autoBuildPercent' in automation && building.autoBuildPercent !== automation.autoBuildPercent) {
       building.autoBuildPercent = automation.autoBuildPercent;
       changed = true;
     }
@@ -659,19 +661,19 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       building.autoBuildFixed = automation.autoBuildFixed;
       changed = true;
     }
-    if (building.autoBuildFillPercent !== automation.autoBuildFillPercent) {
+    if ('autoBuildFillPercent' in automation && building.autoBuildFillPercent !== automation.autoBuildFillPercent) {
       building.autoBuildFillPercent = automation.autoBuildFillPercent;
       changed = true;
     }
-    if (building.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
+    if ('autoBuildFillResourcePrimary' in automation && building.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
       building.autoBuildFillResourcePrimary = automation.autoBuildFillResourcePrimary;
       changed = true;
     }
-    if (building.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
+    if ('autoBuildFillResourceSecondary' in automation && building.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
       building.autoBuildFillResourceSecondary = automation.autoBuildFillResourceSecondary;
       changed = true;
     }
-    if (building.autoActiveEnabled !== automation.autoActiveEnabled) {
+    if ('autoActiveEnabled' in automation && building.autoActiveEnabled !== automation.autoActiveEnabled) {
       building.autoActiveEnabled = automation.autoActiveEnabled;
       changed = true;
     }
@@ -765,10 +767,13 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       scopeAll: preset.scopeAll === true,
       buildings: Object.fromEntries(
         Object.entries(preset.buildings || {}).map(([buildingId, entry]) => {
-          const control = entry?.control ? { ...entry.control } : null;
+          let control = entry?.control ? { ...entry.control } : null;
           let automation = entry?.automation ? { ...entry.automation } : null;
           if (control && 'autoUpgradeEnabled' in control && !automation) {
-            automation = {};
+            automation = {
+              autoUpgradeEnabled: control.autoUpgradeEnabled === true
+            };
+            delete control.autoUpgradeEnabled;
           }
           if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
             automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
@@ -776,6 +781,12 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
           }
           if (automation && automation.autoBuildBasis === 'initialLand') {
             automation.autoBuildBasis = 'geometricLand';
+          }
+          if (control && Object.keys(control).length === 0) {
+            control = null;
+          }
+          if (automation && Object.keys(automation).length === 0) {
+            automation = null;
           }
           return [buildingId, {
             control,

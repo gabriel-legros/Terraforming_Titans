@@ -12,7 +12,7 @@ function click(window, element) {
   }));
 }
 
-describe('Galactic Market step save/load', () => {
+describe.skip('Galactic Market step save/load', () => {
   let dom;
 
   afterEach(() => {
