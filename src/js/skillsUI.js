@@ -59,6 +59,8 @@ function getSkillPreviewValue(skill, rank) {
             return formatSkillPercent(0.4 * safeRank);
         case 'mass_driver_effectiveness':
             return formatSkillPercent(0.4 * safeRank);
+        case 'ecumenopolis_capacity':
+            return formatSkillPercent(0.2 * safeRank);
         case 'life_design_points':
             return getSkillsUIText(
                 'common.lifeDesignValue',
@@ -149,7 +151,8 @@ const skillLayout = {
     nanotech_efficiency: { row: 4, col: 2 },
     cloning_expertise: { row: 4, col: 4 },
     chemistry_mastery: { row: 4, col: 6 },
-    mass_driver_effectiveness: { row: 5, col: 3 }
+    mass_driver_effectiveness: { row: 5, col: 2 },
+    ecumenopolis_capacity: { row: 5, col: 4 }
 };
 
 function updateSkillPointDisplay() {

@@ -246,6 +246,22 @@ const skillParameters = {
       perRank: true
     },
     requires: []
+  },
+  ecumenopolis_capacity: {
+    id: 'ecumenopolis_capacity',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effect: {
+      target: 'colony',
+      targetId: 't7_colony',
+      type: 'storageMultiplier',
+      baseValue: 0.2,
+      perRank: true
+    },
+    requires: []
   }
 };
 

@@ -40,6 +40,75 @@ function normalizeSpecialSeedKey(seedInput) {
   return base.trim().toLowerCase();
 }
 
+const specialSeedStoryHazards = {
+  hazardousBiomass: {
+    baseGrowth: { value: 0.4, maxDensity: 1 },
+    invasivenessResistance: { value: 20, severity: 0.005 },
+    oxygenPressure: { min: 0, max: 10, unit: 'kPa', severity: 0.01 },
+    co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
+    atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
+    landPreference: { value: 'Land', severity: 0.1 },
+    temperaturePreference: {
+      min: 223.15,
+      max: 303.15,
+      unit: 'K',
+      severityBelow: 0.004,
+      severityHigh: 0.005
+    },
+    radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 0.1 },
+    penalties: {
+      buildCost: 0.75,
+      maintenanceCost: 0.75,
+      populationGrowth: 1
+    }
+  },
+  hazardousMachinery: {
+    initialCoverage: 1,
+    maxCoverageBase: 1,
+    waterCoveragePenalty: 0.5,
+    baseGrowth: { value: 1 },
+    invasivenessPreference: { min: 0, max: 50, severityHigh: 0.001 },
+    oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.001 },
+    temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.003 },
+    crusaderRemovalPerSecond: 0.5,
+    researchToDisableCost: 10000,
+    penalties: {
+      availableAndroidDecayRate: 0.05,
+      nanoColonyGrowthMultiplier: 0,
+      researchMultiplier: 0.1,
+      buildCostMultiplier: 2,
+      electronicsMaintenanceMultiplier: 10,
+      shipWorkersPerAssignedShip: 100
+    }
+  },
+  garbage: {
+    surfaceResources: {
+      garbage: { amountMultiplier: 1000 },
+      trash: { amountMultiplier: 100 },
+      junk: { amountMultiplier: 100 },
+      scrapMetal: { amountMultiplier: 100 },
+      radioactiveWaste: { amountMultiplier: 0.25 }
+    },
+    penalties: {
+      garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
+      trash: { happiness: -0.05 },
+      junk: { happiness: -0.05 },
+      scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
+      radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
+    }
+  },
+  kessler: {
+    orbitalDebrisPerLand: 100
+  },
+  pulsar: {
+    pulsePeriodSeconds: 1.337,
+    stormDurationSeconds: 5,
+    severity: 1,
+    orbitalDoseBoost_mSvPerDay: 4900,
+    description: ''
+  }
+};
+
 const wolfysNightmareOverrides = {
   name: 'WolfysNightmare',
   gravityPenaltyEnabled: true,
@@ -781,6 +850,166 @@ const teeBeePeeOverrides = {
       effectId: 'teebeepee-disable-dyson-receiver'
     }
   ]
+};
+
+const shadesNightmareOverrides = {
+  name: 'ShadesNightmare',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: false,
+    dynamicMass: true
+  },
+  star: {
+    name: 'Nyx',
+    spectralType: 'K1V',
+    luminositySolar: 0.46,
+    massSolar: 0.84,
+    temperatureK: 5100,
+    habitableZone: { inner: 0.67, outer: 1.05 }
+  },
+  visualization: {
+    baseColor: '#b9915b'
+  },
+  resources: {
+    surface: {
+      ice: { initialValue: 0 },
+      liquidWater: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidCO2: { initialValue: 0 },
+      liquidHydrogen: { initialValue: 1.6305400223685466e+24 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      liquidOxygen: { initialValue: 0 },
+      oxygenIce: { initialValue: 0 },
+      liquidNitrogen: { initialValue: 0 },
+      nitrogenIce: { initialValue: 0 },
+      land: { initialValue: 6291545240475.356 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 183600000000000000 },
+      atmosphericMethane: { initialValue: 742000000000000000 },
+      atmosphericAmmonia: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 52700000000000000000 },
+      hydrogen: { initialValue: 2.44912245678809e+22 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 6.50176315764808e+23,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    temperate: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 8.451268384364132e+23,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    polar: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      liquidHydrogen: 1.3523686816732544e+23,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    }
+  },
+  zonalTemperatures: {
+    tropical: {
+      value: 2957.5591517739394,
+      day: 2957.5591583742544,
+      night: 2957.5591451736245
+    },
+    temperate: {
+      value: 2957.5589662377447,
+      day: 2957.5589711514504,
+      night: 2957.558961324039
+    },
+    polar: {
+      value: 2957.5586259608326,
+      day: 2957.558627781265,
+      night: 2957.5586241404003
+    }
+  },
+  celestialParameters: {
+    distanceFromSun: 9.58,
+    hasNaturalMagnetosphere: true,
+    albedo: 0.499,
+    rotationPeriod: 10.7,
+    spinPeriod: 10.7,
+    starLuminosity: 0.46,
+    coreHeatFlux: 4112684,
+    sector: 'R5-29',
+    baseLand: 6291545240475.356,
+    baseRadius: 58232,
+    baseMass: 5.6834e+26,
+    baseGravity: 10.44,
+    basePlanetaryMass: 6.619e+25,
+    basePlanetaryVolumeM3: 1.047e+22,
+    baseSurfaceMassKg: 4.827393374640416e+26,
+    baseAtmosphericMassKg: 1.9274754494824067e+25,
+    dynamicDirectMassDeltaKg: 0,
+    dynamicDirectVolumeDeltaM3: 0,
+    dynamicMassDeltaKg: 7.177033604151992e+23,
+    dynamicSurfaceVolumeDeltaM3: 1.2393178671461328e+21,
+    currentPlanetaryMassKg: 6.619e+25,
+    currentSurfaceMassKg: 4.827393374640416e+26,
+    currentAtmosphericMassKg: 1.9274754494824067e+25,
+    currentPlanetaryVolumeM3: 1.047e+22,
+    currentSurfaceVolumeM3: 4.235376061349671e+23,
+    mass: 5.690577033604152e+26,
+    radius: 58440.8484147897,
+    gravity: 10.43983932649662
+  },
+  hazards: cloneSpecialSeedValue(specialSeedStoryHazards)
 };
 
 const toi3693bOverrides = {
@@ -1808,6 +2037,47 @@ const specialSeedDefinitions = {
       }
     ],
     overrides: teeBeePeeOverrides
+  },
+  shadesnightmare: {
+    key: 'shadesnightmare',
+    seed: 'ShadesNightmare',
+    name: 'ShadesNightmare',
+    nameKey: 'catalogs.specialSeeds.shadesnightmare.name',
+    difficultyKey: 'catalogs.specialSeeds.shadesnightmare.difficulty',
+    difficultyRating: 'Extreme',
+    replayable: true,
+    steamExclusive: true,
+    target: 'planet',
+    archetype: 'jupiter-like',
+    orbitPreset: 'cold',
+    specialEffects: [
+      {
+        id: 'all-five-hazards',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.allFiveHazards',
+        description: 'All five hazard systems are active on this world.'
+      },
+      {
+        id: 'resembles-saturn',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.resemblesSaturn',
+        description: 'May resemble Saturn.'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'reveal-ecumenopolis-capacity',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.revealEcumenopolisCapacity',
+        description: 'Reveals the Ecumenopolis Capacity awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'ecumenopolis_capacity',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
+      }
+    ],
+    overrides: shadesNightmareOverrides
   },
   toi3693b: {
     key: 'toi3693b',

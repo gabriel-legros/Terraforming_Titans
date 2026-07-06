@@ -5012,6 +5012,17 @@ setLanguageData({
           revealMassDriverEffectiveness: 'Reveals a new Awakening skill',
         },
       },
+      shadesnightmare: {
+        name: 'ShadesNightmare',
+        difficulty: 'Extreme',
+        effects: {
+          allFiveHazards: 'All five hazard systems are active on this world.',
+          resemblesSaturn: 'May resemble Saturn.',
+        },
+        rewards: {
+          revealEcumenopolisCapacity: 'Reveals a new Awakening skill',
+        },
+      },
       wolfysnightmare: {
         name: 'WolfysNightmare',
         difficulty: 'Extreme',
@@ -7078,6 +7089,10 @@ setLanguageData({
       mass_driver_effectiveness: {
         name: 'Mass Driver Effectiveness',
         description: 'Each Mass Driver is worth 40% more of its base 10 spaceship equivalency per rank',
+      },
+      ecumenopolis_capacity: {
+        name: 'Ecumenopolis Capacity',
+        description: 'Increases Ecumenopolis District capacity by 20% per rank',
       },
       project_speed: {
         name: 'Faster Projects',
