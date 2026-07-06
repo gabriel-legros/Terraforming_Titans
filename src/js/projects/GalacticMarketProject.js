@@ -789,6 +789,32 @@ class GalacticMarketProject extends Project {
     return entry ? entry.quantity : 0;
   }
 
+  mergePresetSelectionEntries(currentSelections, presetSelections) {
+    const merged = new Map();
+    normalizeSelectionEntries(currentSelections || []).forEach((entry) => {
+      merged.set(this.getSelectionKey(entry.category, entry.resource), entry);
+    });
+    if (!Array.isArray(presetSelections)) {
+      return Array.from(merged.values());
+    }
+    presetSelections.forEach((entry) => {
+      if (!entry || !entry.category || !entry.resource) {
+        return;
+      }
+      if (!Object.prototype.hasOwnProperty.call(entry, 'quantity')) {
+        return;
+      }
+      const key = this.getSelectionKey(entry.category, entry.resource);
+      const quantity = parseSelectionQuantity(entry.quantity);
+      if (quantity > 0) {
+        merged.set(key, { category: entry.category, resource: entry.resource, quantity });
+      } else {
+        merged.delete(key);
+      }
+    });
+    return Array.from(merged.values());
+  }
+
   isSelectionResourceUnlocked(category, resourceId) {
     const resourceData = resources[category]?.[resourceId];
     return !!(resourceData && resourceData.unlocked);
@@ -1246,17 +1272,21 @@ class GalacticMarketProject extends Project {
     };
   }
 
-  loadAutomationSettings(settings = {}) {
+  loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     const elements = projectElements[this.name];
     if (elements) {
       elements.marketProject = this;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'buySelections')) {
-      this.buySelections = normalizeSelectionEntries(settings.buySelections || []);
+      this.buySelections = options.isPresetApplication === true
+        ? this.mergePresetSelectionEntries(this.buySelections, settings.buySelections)
+        : normalizeSelectionEntries(settings.buySelections || []);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'sellSelections')) {
-      this.sellSelections = normalizeSelectionEntries(settings.sellSelections || []);
+      this.sellSelections = options.isPresetApplication === true
+        ? this.mergePresetSelectionEntries(this.sellSelections, settings.sellSelections)
+        : normalizeSelectionEntries(settings.sellSelections || []);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'selectionIncrement')) {
       this.selectionIncrement = Math.max(1, settings.selectionIncrement || 1);
