@@ -239,7 +239,7 @@
       addEffect({
         target: 'orbitalManager',
         type: 'availableOrbitalsMultiplier',
-        value: 1 + purchases * 0.01,
+        value: 1 + purchases * 0.05,
         effectId: 'bioworld-leviathans-orbitals',
         sourceId: LEVIATHAN_ORBITAL_SOURCE_ID,
       });

@@ -6834,7 +6834,7 @@ setLanguageData({
           },
           leviathans: {
             label: 'Leviathans',
-            description: 'Increases available orbitals by 1% per purchase. Costs scale quadratically: 1, 4, 9, and so on.',
+            description: 'Increases available orbitals by 5% per purchase. Costs scale quadratically: 1, 4, 9, and so on.',
           },
         },
       },
