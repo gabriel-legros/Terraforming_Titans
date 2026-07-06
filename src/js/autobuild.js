@@ -1187,9 +1187,12 @@ function autoBuild(buildings, delta = 0) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (!building || building.isHidden || !building.unlocked) continue;
-        const skipAutoBuildForAutoUpgradeColony = gameSettings.autobuildIgnoreAutoUpgradeColonies
-            && colonies[buildingName] === building
-            && building.autoUpgradeEnabled;
+        let skipAutoBuildForAutoUpgradeColony = false;
+        if (gameSettings.autobuildIgnoreAutoUpgradeColonies && colonies[buildingName] === building && building.autoUpgradeEnabled) {
+            const nextName = building.getNextTierName();
+            const next = nextName ? buildings[nextName] : null;
+            skipAutoBuildForAutoUpgradeColony = !!(next && next.unlocked && !next.isHidden);
+        }
         if (building.autoBuildEnabled || building.autoActiveEnabled || (building.shouldClampSetActiveToSupported && building.shouldClampSetActiveToSupported())) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {

@@ -58,7 +58,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Import Resources centralized UI: `projects/ImportResourcesProjectUI.js` (shared card for space-mining/import spaceship projects; owns assignment step controls, assigned/available displays, and row-level project controls that persist/update across travel)
 - Shared project assignment controls: `projects/ProjectAssignmentBase.js` centralizes BigInt assignment normalization, auto-assignment weights, step controls, row button wiring, and save/preset serialization for Manufacturing World, Lifters, Hephaestus Yards, and Nuclear Alchemy-style projects.
 - Autobuild: `autobuild.js`
-- General setting `Autobuild ignores auto-upgrade colonies` makes the autobuilder skip building colony structures that have Auto-upgrade checked, while leaving their auto-upgrade behavior active.
+- General setting `Autobuild ignores auto-upgrade colonies` makes the autobuilder skip building colony structures that have Auto-upgrade checked and an available next tier, while leaving their auto-upgrade behavior active.
 - Construction Office guide: `autobuild.js` opens a numbered Autobuild Guide popup from the Construction Office question-mark button, using `assets/autobuild_guide/overall.png` with CSS callout markers and localized guide copy. Completing Construction Office research for the first time shows a once-per-save prompt that can open this guide immediately.
 - Milestones: `milestones.js`, `milestonesUI.js`
 - Solis shop/quests: `solis.js`, `solisUI.js`
