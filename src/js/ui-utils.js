@@ -322,6 +322,7 @@ function cleanupDynamicTooltipsIn(root) {
   const dynamicTooltipListeners = [
     '_updateCostTooltip',
     '_updateWorkerTooltip',
+    '_updateProductivityTooltip',
     '_updateMaintenanceTooltip',
     '_updateProductionTooltip',
     '_updateConsumptionTooltip'

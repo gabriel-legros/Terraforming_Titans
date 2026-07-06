@@ -72,6 +72,62 @@ function swapResourceRateColor(resource, color) {
   return color;
 }
 
+function formatProductivityTooltipPercent(value) {
+  const percent = Math.max(0, Math.min(100, value * 100));
+  const decimals = percent > 0 && percent < 1 ? 2 : 1;
+  return formatNumber(percent, false, decimals);
+}
+
+function buildStructureProductivityTooltip(structure) {
+  const info = structure.productivityLimitInfo;
+  if (structure.active === 0n) {
+    return getStructuresUIText('ui.structures.tooltips.productivityNoActive', 'No active structures');
+  }
+
+  if (info.target >= 0.9995) {
+    return getStructuresUIText('ui.structures.tooltips.productivityTrendingFull', 'Trending to 100%');
+  }
+
+  const lines = [
+    getStructuresUIText('ui.structures.tooltips.productivityLimitedHeader', 'Limited to {value}%', {
+      value: formatProductivityTooltipPercent(info.target),
+    })
+  ];
+  const factors = info.factors || [];
+  if (factors.length === 0) {
+    lines.push(getStructuresUIText('ui.structures.tooltips.productivityNoDetails', 'No limiting factor found.'));
+    return lines.join('\n');
+  }
+
+  for (let i = 0; i < factors.length; i += 1) {
+    const factor = factors[i];
+    const percent = formatProductivityTooltipPercent(factor.ratio);
+    if (factor.type === 'resource') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityResourceLine', '{resource}: {available} available / {required} demanded ({percent}%)', {
+        resource: factor.label,
+        available: formatNumber(factor.availableAmount, true, 3),
+        required: formatNumber(factor.requiredAmount, true, 3),
+        percent,
+      }));
+    } else if (factor.type === 'workers') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityWorkerLine', '{resource}: {available} available / {required} needed ({percent}%)', {
+        resource: factor.label,
+        available: formatNumber(factor.availableAmount, true, 3),
+        required: formatNumber(factor.requiredAmount, true, 3),
+        percent,
+      }));
+    } else if (factor.type === 'maintenance') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityMaintenanceLine', 'Maintenance paid: {percent}%', {
+        percent,
+      }));
+    } else if (factor.type === 'dayNight') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityDayNight', 'Inactive at night'));
+    }
+  }
+
+  return lines.join('\n');
+}
+
 // Helper function to get all unique building categories from buildings-parameters.js
 function getBuildingCategories() {
   if (typeof buildingsParameters === 'undefined') {
@@ -1145,7 +1201,30 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
     const productivityValue = document.createElement('span');
     productivityValue.id = `${structure.name}-productivity`;
-    productivityValue.textContent = `${Math.round(structure.productivity * 100)}%`;
+    productivityValue.classList.add('productivity-tooltip-anchor', 'inline-tooltip-anchor');
+    const productivityTextNode = document.createTextNode(`${Math.round(structure.productivity * 100)}%`);
+    productivityValue._valueNode = productivityTextNode;
+    productivityValue.appendChild(productivityTextNode);
+
+    const productivityTooltip = attachDynamicInfoTooltip(
+      productivityValue,
+      buildStructureProductivityTooltip(structure)
+    );
+    productivityValue._productivityTooltip = productivityTooltip;
+    productivityValue._productivityTooltipCache = {};
+    productivityValue._updateProductivityTooltip = () => {
+      const text = buildStructureProductivityTooltip(structure);
+      setTooltipText(
+        productivityTooltip,
+        text,
+        productivityValue._productivityTooltipCache,
+        'text'
+      );
+    };
+    productivityValue.addEventListener('mouseenter', productivityValue._updateProductivityTooltip);
+    productivityValue.addEventListener('focusin', productivityValue._updateProductivityTooltip);
+    productivityValue.addEventListener('pointerdown', productivityValue._updateProductivityTooltip);
+
     productivityContainer.appendChild(productivityValue);
     cached.productivityElement = productivityValue;
 
@@ -2926,8 +3005,8 @@ function updateDecreaseButtonText(button, buildCount) {
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
         const productivityText = `${productivityValue}%`;
-        if (productivityElement.textContent !== productivityText) {
-          productivityElement.textContent = productivityText;
+        if (productivityElement._valueNode && productivityElement._valueNode.nodeValue !== productivityText) {
+          productivityElement._valueNode.nodeValue = productivityText;
         }
         if (productivityElement.style.color) {
           productivityElement.style.color = '';

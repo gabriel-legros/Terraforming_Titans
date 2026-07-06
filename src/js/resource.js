@@ -458,6 +458,14 @@ class Resource extends EffectableEntity {
     this.projectedConsumptionRateByType = {};
     this.projectedProductionRateBySource = {};
     this.projectedConsumptionRateBySource = {};
+    this.availabilityRatio = 0;
+    this.availabilityDetails = {
+      availableAmount: 0,
+      requiredAmount: 0,
+      producedAmount: 0,
+      storedAmount: 0,
+      ratio: 0,
+    };
     this.reserved = resourceData.reserved || 0;
     this.reservedSources = {};
     this.unlocked = resourceData.unlocked;
@@ -1935,6 +1943,7 @@ function produceResources(deltaTime, buildings) {
     if (!isDay && building.dayNightActivity) {
       building.productivity = 0;
       building.displayProductivity = 0;
+      building.setProductivityLimitInfo(0, 0, [{ type: 'dayNight', ratio: 0 }]);
     } else {
       // Otherwise, update productivity as usual
       building.updateProductivity(resources, deltaTime);
@@ -2462,11 +2471,17 @@ function getAvailabilityProductionRate(resource, extraReserve) {
   return productionRate;
 }
 
-function calculateResourceAvailabilityRatio(resource, deltaTime, extraReserve = 0) {
+function calculateResourceAvailabilityDetails(resource, deltaTime, extraReserve = 0) {
   const seconds = deltaTime / 1000;
   const requiredAmount = resource.consumptionRate * seconds;
   if (requiredAmount <= 0) {
-    return 0;
+    return {
+      availableAmount: 0,
+      requiredAmount: 0,
+      producedAmount: 0,
+      storedAmount: 0,
+      ratio: 0,
+    };
   }
   const producedAmount = Math.max(0, getAvailabilityProductionRate(resource, extraReserve) * seconds);
   const hasUsableStorage = !resource.hasCap || resource.cap > 0;
@@ -2476,7 +2491,18 @@ function calculateResourceAvailabilityRatio(resource, deltaTime, extraReserve = 
   const availableAmount = extraReserve > 0
     ? Math.max(0, storedAmount + producedAmount - extraReserve)
     : storedAmount + producedAmount;
-  return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
+  const ratio = Math.max(0, Math.min(availableAmount / requiredAmount, 1));
+  return {
+    availableAmount,
+    requiredAmount,
+    producedAmount,
+    storedAmount,
+    ratio,
+  };
+}
+
+function calculateResourceAvailabilityRatio(resource, deltaTime, extraReserve = 0) {
+  return calculateResourceAvailabilityDetails(resource, deltaTime, extraReserve).ratio;
 }
 
 function updateResourceAvailabilityRatios(resources, deltaTime) {
@@ -2485,12 +2511,15 @@ function updateResourceAvailabilityRatios(resources, deltaTime) {
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
+      let availabilityDetails;
       if (category === 'spaceStorage' && hasReserveMethod) {
         const consumptionReserve = spaceStorageProj.getResourceStrategicReserveAmount(resourceName, 'consumption');
-        resource.availabilityRatio = calculateResourceAvailabilityRatio(resource, deltaTime, consumptionReserve);
+        availabilityDetails = calculateResourceAvailabilityDetails(resource, deltaTime, consumptionReserve);
       } else {
-        resource.availabilityRatio = calculateResourceAvailabilityRatio(resource, deltaTime);
+        availabilityDetails = calculateResourceAvailabilityDetails(resource, deltaTime);
       }
+      resource.availabilityDetails = availabilityDetails;
+      resource.availabilityRatio = availabilityDetails.ratio;
     }
   }
 }
@@ -2501,6 +2530,7 @@ if (typeof module !== 'undefined' && module.exports) {
     checkResourceAvailability,
     createResources,
     produceResources,
+    calculateResourceAvailabilityDetails,
     calculateResourceAvailabilityRatio,
     updateResourceAvailabilityRatios,
     calculateProjectProductivities,
@@ -2510,6 +2540,7 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 try {
+  window.calculateResourceAvailabilityDetails = calculateResourceAvailabilityDetails;
   window.calculateResourceAvailabilityRatio = calculateResourceAvailabilityRatio;
   window.updateResourceAvailabilityRatios = updateResourceAvailabilityRatios;
 } catch (error) {

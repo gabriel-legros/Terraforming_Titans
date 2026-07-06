@@ -113,6 +113,11 @@ class Building extends EffectableEntity {
     this.productivity = 0;
     this.displayProductivity = 0;
     this.maintenanceProductivity = 1;
+    this.productivityLimitInfo = {
+      target: 0,
+      displayTarget: 0,
+      factors: [],
+    };
     this.isHidden = false; // track whether the building is hidden in the UI
     this.permanentlyDisabled = false;
     this.alertedWhenUnlocked = this.unlocked ? true : false;
@@ -1499,7 +1504,8 @@ class Building extends EffectableEntity {
   }
 
   // Method to calculate the base minRatio based on resource consumption and worker availability
-  calculateBaseMinRatio(resources, deltaTime, ignoreMap) {
+  getBaseProductivityFactors(resources, deltaTime, ignoreMap) {
+    const factors = [];
     let minRatio = Infinity;
     const ignore = ignoreMap || {};
 
@@ -1518,8 +1524,18 @@ class Building extends EffectableEntity {
         if (effectiveAmount <= 0) {
           continue;
         }
-        const ratio = resources[category][resource].availabilityRatio;
+        const resourceData = resources[category][resource];
+        const ratio = resourceData.availabilityRatio;
         minRatio = Math.min(minRatio, ratio);
+        factors.push({
+          type: 'resource',
+          category,
+          resource,
+          label: resourceData.displayName,
+          ratio,
+          availableAmount: resourceData.availabilityDetails.availableAmount,
+          requiredAmount: resourceData.availabilityDetails.requiredAmount,
+        });
       }
     }
 
@@ -1527,9 +1543,66 @@ class Building extends EffectableEntity {
     if (this.getTotalWorkerNeed() > 0) {
       const workerRatio = populationModule.getWorkerAvailabilityRatio(this.workerPriority);
       minRatio = Math.min(minRatio, workerRatio);
+      let availableWorkers = populationModule.workerResource.cap;
+      let requiredWorkers = populationModule.totalWorkersRequiredHigh;
+      if (this.workerPriority === 0) {
+        availableWorkers = Math.max(0, populationModule.workerResource.cap - populationModule.totalWorkersRequiredHigh);
+        requiredWorkers = populationModule.totalWorkersRequiredNormal;
+      } else if (this.workerPriority < 0) {
+        availableWorkers = Math.max(
+          0,
+          populationModule.workerResource.cap -
+            populationModule.totalWorkersRequiredHigh -
+            populationModule.totalWorkersRequiredNormal
+        );
+        requiredWorkers = populationModule.totalWorkersRequiredLow;
+      }
+      factors.push({
+        type: 'workers',
+        category: 'colony',
+        resource: 'workers',
+        label: resources.colony.workers.displayName,
+        ratio: workerRatio,
+        availableAmount: availableWorkers,
+        requiredAmount: requiredWorkers,
+      });
     }
 
-    return minRatio;
+    return { minRatio, factors };
+  }
+
+  calculateBaseMinRatio(resources, deltaTime, ignoreMap) {
+    return this.getBaseProductivityFactors(resources, deltaTime, ignoreMap).minRatio;
+  }
+
+  updateProductivityLimitInfo(resources, deltaTime, target, displayTarget, maintenanceCap, ignoreMap) {
+    const details = this.getBaseProductivityFactors(resources, deltaTime, ignoreMap);
+    const factors = [];
+    for (let i = 0; i < details.factors.length; i += 1) {
+      if (details.factors[i].ratio < 0.9995) {
+        factors.push(details.factors[i]);
+      }
+    }
+    if (maintenanceCap < 0.9995) {
+      factors.push({
+        type: 'maintenance',
+        ratio: maintenanceCap,
+      });
+    }
+    factors.sort((a, b) => a.ratio - b.ratio);
+    this.productivityLimitInfo = {
+      target: Math.max(0, Math.min(1, target)),
+      displayTarget: Math.max(0, Math.min(1, displayTarget)),
+      factors,
+    };
+  }
+
+  setProductivityLimitInfo(target, displayTarget, factors) {
+    this.productivityLimitInfo = {
+      target: Math.max(0, Math.min(1, target)),
+      displayTarget: Math.max(0, Math.min(1, displayTarget)),
+      factors: factors || [],
+    };
   }
 
   computeBaseProductivity(resources, deltaTime) {
@@ -1635,6 +1708,7 @@ class Building extends EffectableEntity {
       this.productivity = 0;
       this.displayProductivity = 0;
       this.maintenanceProductivity = 1;
+      this.setProductivityLimitInfo(0, 0, []);
       return;
     }
 
@@ -1642,10 +1716,19 @@ class Building extends EffectableEntity {
     const maintenanceCap = gameSettings.unfulfilledMaintenancePenalties
       ? Math.max(0, Math.min(1, this.maintenanceProductivity))
       : 1;
+    const cappedTargetProductivity = Math.min(targetProductivity, maintenanceCap);
+    const cappedDisplayTarget = Math.min(displayTarget, maintenanceCap);
+    this.updateProductivityLimitInfo(
+      resources,
+      deltaTime,
+      cappedTargetProductivity,
+      cappedDisplayTarget,
+      maintenanceCap
+    );
 
     if (this.snapProductivity) {
-      this.productivity = Math.min(targetProductivity, maintenanceCap);
-      this.displayProductivity = Math.min(displayTarget, maintenanceCap);
+      this.productivity = cappedTargetProductivity;
+      this.displayProductivity = cappedDisplayTarget;
       return;
     }
 
