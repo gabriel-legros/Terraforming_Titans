@@ -393,7 +393,7 @@ class ScriptAutomation {
   runTravelScript(scriptId, statusText) {
     const script = this.scripts.find(item => item.id === Number(scriptId));
     if (!script) return false;
-    this.enabled = true;
+    this.enable();
     this.selectedScriptId = script.id;
     this.runScript(script.id);
     this.applyGoToRowOneOnTravel(script);

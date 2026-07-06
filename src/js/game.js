@@ -909,6 +909,7 @@ function updateRender(force = false, options = {}) {
   if (typeof updateResearchAlert === 'function') updateResearchAlert();
   if (typeof updateHopeAlert === 'function') updateHopeAlert();
   updateSidebarAutomationToggleVisibility();
+  updateAutomationUI();
   updateAutoTravelLoadingPopupVisibility();
 
   // Gate heavy per-tab UI updates behind tab visibility
