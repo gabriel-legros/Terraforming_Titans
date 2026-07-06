@@ -14,6 +14,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.maxDisposalTargets = 15;
     this.nextDisposalTargetId = 1;
     this.disposalTargets = [];
+    this.lastDisposalEnergyDemand = 0;
     this.ensureDisposalTargets();
   }
 
@@ -1492,6 +1493,83 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }));
   }
 
+  getDisposalConstrainedContinuousDemand(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
+    const totals = { cost: {}, disposalRatio: 0 };
+    if (!this.isContinuous() || !this.isActive || this.isBlockedByPulsarStorm()) {
+      return totals;
+    }
+
+    const context = this.getContinuousOperationContext(deltaTime, productivity);
+    if (context.fraction <= 0 || context.totalTransportCount <= 0) {
+      return totals;
+    }
+
+    const potentialCost = {};
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
+        }
+        const count = this.getContinuousCostCountForResource(category, resource, context);
+        const amount = costPerShip[category][resource] * count * context.fraction * productivity;
+        if (amount > 0) {
+          this.addAmountToResourceMap(potentialCost, category, resource, amount);
+        }
+      }
+    }
+
+    const disposalEntries = this.getContinuousDisposalEntries(context, productivity);
+    if (!disposalEntries.length) {
+      return totals;
+    }
+
+    const disposalResourceKeys = {};
+    for (let i = 0; i < disposalEntries.length; i += 1) {
+      const entry = disposalEntries[i];
+      disposalResourceKeys[`${entry.category}:${entry.resource}`] = true;
+    }
+
+    let disposalRatio = 1;
+    const hasIndependentDisposalScaling = Object.keys(disposalResourceKeys).length > 1;
+    if (!hasIndependentDisposalScaling) {
+      for (let i = 0; i < disposalEntries.length; i += 1) {
+        const entry = disposalEntries[i];
+        if (entry.requestedAmount <= 0) {
+          continue;
+        }
+        const sharedCostNeed = potentialCost[entry.category]?.[entry.resource] || 0;
+        const available = this.getEffectiveAvailableAmount(entry.category, entry.resource, accumulatedChanges);
+        const combinedPotential = entry.requestedAmount + sharedCostNeed;
+        const combinedNeeded = this.getClampedDisposalAmountForEntry({
+          ...entry,
+          requestedAmount: combinedPotential,
+        }, available);
+        const entryRatio = combinedPotential > 0
+          ? Math.max(0, Math.min(1, combinedNeeded / combinedPotential))
+          : 1;
+        disposalRatio = Math.min(disposalRatio, entryRatio);
+      }
+    }
+
+    this.addScaledResourceMap(totals.cost, potentialCost, disposalRatio);
+    totals.disposalRatio = disposalRatio;
+    return totals;
+  }
+
+  estimateProductivityCostAndGain(deltaTime = 1000) {
+    const totals = this.getDisposalConstrainedContinuousDemand(deltaTime, 1, null);
+    const previousEnergyDemand = Math.max(0, this.lastDisposalEnergyDemand || 0);
+    const currentEnergyDemand = totals.cost.colony?.energy || 0;
+    if (previousEnergyDemand > currentEnergyDemand) {
+      if (!totals.cost.colony) {
+        totals.cost.colony = {};
+      }
+      totals.cost.colony.energy = previousEnergyDemand;
+    }
+    return { cost: totals.cost, gain: {} };
+  }
+
   calculateSpaceshipTotalResourceGain(perSecond = false) {
     const totalResourceGain = {};
     const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
@@ -1835,6 +1913,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   }
 
   applyContinuousPlan(plan, accumulatedChanges = null) {
+    const demand = this.getDisposalConstrainedContinuousDemand(plan.context?.deltaTime || 0, 1, accumulatedChanges);
+    this.lastDisposalEnergyDemand = demand.cost.colony?.energy || 0;
+
     if (!plan.context || !plan.hasContinuousWork) {
       return;
     }
@@ -2196,11 +2277,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       ...super.saveState(),
       disposalTargets: this.cloneDisposalTargets(),
       nextDisposalTargetId: this.nextDisposalTargetId,
+      lastDisposalEnergyDemand: this.lastDisposalEnergyDemand,
     };
   }
 
   loadState(state) {
     super.loadState(state);
+    this.lastDisposalEnergyDemand = Math.max(0, state.lastDisposalEnergyDemand || 0);
     if (Array.isArray(state.disposalTargets) && state.disposalTargets.length) {
       this.nextDisposalTargetId = state.nextDisposalTargetId || 1;
       this.disposalTargets = state.disposalTargets.map(target => this.createDisposalTarget(target));
