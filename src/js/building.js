@@ -1368,6 +1368,14 @@ class Building extends EffectableEntity {
       const cap = land.cap || 0;
       const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
       const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+      if (land.getExactLandAvailable) {
+        const exactAvailable = land.getExactLandAvailable() - numberToExactLandAmount(strategicReserve);
+        const exactRequired = normalizeBuildingCount(amount) * numberToExactLandAmount(this.requiresLand);
+        if (exactRequired <= 0n) {
+          return true;
+        }
+        return exactAvailable >= exactRequired;
+      }
       const available = (land.getAvailableAmount ? land.getAvailableAmount() : land.value - land.reserved) - strategicReserve;
       if (available < this.requiresLand * amount) {
         return false;
@@ -1385,6 +1393,14 @@ class Building extends EffectableEntity {
     const cap = land.cap || 0;
     const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
     const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+    if (land.getExactLandAvailable) {
+      const exactAvailable = land.getExactLandAvailable() - numberToExactLandAmount(strategicReserve);
+      const exactRequirement = numberToExactLandAmount(this.requiresLand);
+      if (exactAvailable <= 0n || exactRequirement <= 0n) {
+        return 0;
+      }
+      return bigIntToConservativeNumber(exactAvailable / exactRequirement);
+    }
     const available = Math.max((land.getAvailableAmount ? land.getAvailableAmount() : land.value - land.reserved) - strategicReserve, 0);
     return Math.floor(available / this.requiresLand);
   }
