@@ -1779,6 +1779,7 @@ const earthOverrunOverrides = {
 const specialSeedDefinitions = {
   titania: {
     key: 'titania',
+    enabled: true,
     seed: 'Titania',
     name: 'Titania',
     nameKey: 'catalogs.specialSeeds.titania.name',
@@ -1827,6 +1828,7 @@ const specialSeedDefinitions = {
   },
   hermes: {
     key: 'hermes',
+    enabled: true,
     seed: 'Hermes',
     name: 'Hermes',
     nameKey: 'catalogs.specialSeeds.hermes.name',
@@ -1884,6 +1886,7 @@ const specialSeedDefinitions = {
   },
   wolfysnightmare: {
     key: 'wolfysnightmare',
+    enabled: true,
     seed: 'WolfysNightmare',
     name: 'WolfysNightmare',
     difficultyKey: 'catalogs.specialSeeds.wolfysnightmare.difficulty',
@@ -1932,6 +1935,7 @@ const specialSeedDefinitions = {
   },
   therealposeidon: {
     key: 'therealposeidon',
+    enabled: true,
     seed: 'TheRealPoseidon',
     name: 'TheRealPoseidon',
     nameKey: 'catalogs.specialSeeds.therealposeidon.name',
@@ -1982,6 +1986,7 @@ const specialSeedDefinitions = {
   },
   teebeepee: {
     key: 'teebeepee',
+    enabled: true,
     seed: 'TeeBeePee',
     name: 'TeeBeePee',
     nameKey: 'catalogs.specialSeeds.teebeepee.name',
@@ -2040,6 +2045,7 @@ const specialSeedDefinitions = {
   },
   shadesnightmare: {
     key: 'shadesnightmare',
+    enabled: false,
     seed: 'ShadesNightmare',
     name: 'ShadesNightmare',
     nameKey: 'catalogs.specialSeeds.shadesnightmare.name',
@@ -2081,6 +2087,7 @@ const specialSeedDefinitions = {
   },
   toi3693b: {
     key: 'toi3693b',
+    enabled: true,
     seed: 'TOI3693B',
     name: 'TOI-3693 b',
     designer: 'JamesM',
@@ -2109,6 +2116,7 @@ const specialSeedDefinitions = {
   },
   sculkbioworld: {
     key: 'sculkbioworld',
+    enabled: true,
     seed: 'SculkBioworld',
     name: 'Sculkia-1c',
     designer: 'JamesM',
@@ -2143,6 +2151,7 @@ const specialSeedDefinitions = {
   },
   earthoverrun: {
     key: 'earthoverrun',
+    enabled: true,
     seed: 'EarthOverrun',
     name: 'EarthOverrun',
     designer: 'Off Kinter Space',

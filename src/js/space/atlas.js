@@ -31,6 +31,7 @@ class AtlasManager extends EffectableEntity {
         const definitions = getAllSpecialSeedDefinitions();
         return definitions
             .filter((definition) => definition && definition.key)
+            .filter((definition) => definition.enabled !== false)
             .filter((definition) => !definition.steamExclusive || GAME_FEATURES.steamExclusiveAtlasWorlds)
             .sort((left, right) => {
                 const leftFeatured = ATLAS_FEATURED_SEED_KEYS.includes(left.key);
