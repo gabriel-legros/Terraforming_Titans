@@ -1136,6 +1136,21 @@ const buildingsParameters = {
     realisticEnergyConsumption: 1_050_000,
     production: { colony: { glass: 50 }},
     factoryHeatCoefficient: 1,
+    defaultRecipe: 'glass',
+    recipes: {
+      glass: {
+        shortName: '',
+        consumption: { colony: { energy: 10000000 }, surface: { junk: 50 } },
+        realisticEnergyConsumption: 1_050_000,
+        production: { colony: { glass: 50 } }
+      },
+      silica: {
+        shortName: '',
+        consumption: { colony: { energy: 10000000 }, surface: { junk: 50 } },
+        realisticEnergyConsumption: 1_050_000,
+        production: { colony: { silicon: 50 } }
+      }
+    },
     alwaysShowProduction: true,
     alwaysShowConsumption: true,
     storage: {},

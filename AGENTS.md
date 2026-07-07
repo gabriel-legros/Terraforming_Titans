@@ -246,6 +246,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Colony hydrogen is a capped colony resource backed by Hydrogen Reservoir storage. Colony hydrogen overflow spills into atmospheric hydrogen through the shared resource overflow path, mirroring colony water overflow behavior.
 - Hydrogen space mining set to colony-only estimates its full same-tick import for productivity without storage-cap limiting; the actual imported amount is tracked so that cap overflow from that import is not routed into atmospheric hydrogen.
 - Colony structures use direct `colony.energy` consumption of 500 Watt-day per supported colonist per day, except `t1_colony` uses 1000 Watt-day per supported colonist per day.
+- Junk Recycler is a multi-recipe building with glass and silica outputs from junk.
 
 ### Life metabolism definitions
 - Every `lifeDesign.metabolism.processes.*.growth.perBiomass` and matching `decay.perBiomass` recipe must conserve mass. For each 1 ton of biomass produced, total consumed mass must equal `1 ton biomass + all byproducts`; decay should be the matching reverse process unless there is a clearly documented reason.

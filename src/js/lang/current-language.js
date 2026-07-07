@@ -5330,7 +5330,11 @@ setLanguageData({
       },
       junkRecycler: {
         name: 'Junk Recycler',
-        description: 'Recycles junk into glass using energy.',
+        description: 'Recycles junk into glass or silica using energy.',
+        recipes: {
+          glass: { shortName: 'Glass' },
+          silica: { shortName: 'Silica' },
+        },
       },
       radioactiveRecycler: {
         name: 'Radioactive Recycler',

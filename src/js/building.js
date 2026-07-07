@@ -2078,6 +2078,7 @@ const constructors = {
   androidHousing: 'AndroidHousing',
   hyperionLantern: 'HyperionLantern',
   trashIncinerator: 'MultiRecipesBuilding',
+  junkRecycler: 'MultiRecipesBuilding',
   storageDepot: 'MultiRecipesBuilding',
   antimatterFarm: 'MultiRecipesBuilding',
   fusionPowerPlant: 'FusionPowerPlant',
