@@ -48,6 +48,7 @@ const projectParameters = {
           food: 1,
           components: 10,
           electronics: 10,
+          superconductors: 100,
           androids: 200,
         },
         special: {

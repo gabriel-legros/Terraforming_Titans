@@ -913,6 +913,7 @@ class GalacticMarketProject extends Project {
         food: 100_000_000,
         components: 100_000_000,
         electronics: 100_000_000,
+        superconductors: 10_000_000,
         androids: 1_000_000,
         spaceships: 100_000,
       };
@@ -929,6 +930,7 @@ class GalacticMarketProject extends Project {
         food: 0.5,
         components: 0.5,
         electronics: 0.5,
+        superconductors: 0.5,
         androids: 0.5,
         spaceships: 0.5,
       };

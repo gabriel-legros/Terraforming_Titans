@@ -463,6 +463,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Galactic Market uses fixed 1x estimates for cost/gain (ignores productivity).
 - Galactic Market runtime trades now execute in the post-project end-of-tick pass (after regular project cost/gain application, alongside other post-project ship operations), so sell proceeds can use same-tick late resource changes before buy scaling.
 - Galactic Market resource tooltips keep ideal consumption from selected trades, but replace market production with actual post-trade output after resource and funding limits are applied.
+- Galactic Market includes superconductors at 10x components price and 1/10 components sell saturation.
 - Projects can set `attributes.ignoreDurationModifiers: true` to lock runtime to base duration and ignore all project duration modifiers.
 
 ### Automation and UI
