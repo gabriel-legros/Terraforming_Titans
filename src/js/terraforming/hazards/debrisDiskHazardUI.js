@@ -171,7 +171,7 @@ function ensureDebrisDiskLayout() {
   const effectsList = doc.createElement('ul');
   effectsList.className = 'hazard-effects__list';
   const effectItems = [];
-  for (let i = 0; i < 3; i += 1) {
+  for (let i = 0; i < 4; i += 1) {
     const item = doc.createElement('li');
     item.className = 'hazard-effects__item';
     effectsList.appendChild(item);
@@ -294,6 +294,7 @@ function updateDebrisDiskHazardUI(debrisDiskParameters) {
   const effects = [
     getDebrisDiskHazardText('effectsList.orbitals', 'Orbitals are capped at 0 while system debris remains.'),
     getDebrisDiskHazardText('effectsList.disabledSystems', 'Lifters atmospheric stripping, Mega Heat Sink, Dyson Receivers, and Space Mirror Facility are disabled while active. The companion mirror is too afraid to come.'),
+    getDebrisDiskHazardText('effectsList.kesslerRegeneration', 'If Kessler Skies is also active, Debris Disk regenerates orbital debris by {value}% of each Kessler bin per second.', { value: formatNumber((debrisDiskParameters.kesslerRegenerationRatePerBinPerSecond || 0.01) * 100, false, 2) }),
     getDebrisDiskHazardText('effectsList.attrition', 'Buildings and colonies lose up to {value}%/s of constructed count, convert construction materials into scrap metal and junk, and never drop below 10 from this hazard.', { value: formatNumber((debrisDiskParameters.attritionRatePerSecond || 0.01) * 100, false, 2) }),
   ];
   for (let i = 0; i < debrisDiskHazardUICache.effectsItems.length; i += 1) {

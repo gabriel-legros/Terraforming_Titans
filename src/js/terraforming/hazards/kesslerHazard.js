@@ -337,6 +337,8 @@ class KesslerHazard {
       return;
     }
     const resource = resources.special.orbitalDebris;
+    resource.unlocked = true;
+    this.permanentlyCleared = false;
     if (!this.periapsisDistribution.length) {
       this.ensurePeriapsisDistribution(terraforming, this.manager.parameters.kessler, resource.value || 0);
     }
@@ -366,6 +368,40 @@ class KesslerHazard {
       entry.massTons += addedTons * (weight / weightTotal);
     });
     resource.value += addedTons;
+  }
+
+  regenerateDebrisFromDisk(terraforming, kesslerParameters, deltaSeconds, ratePerBinPerSecond = 0.01) {
+    if (!(deltaSeconds > 0) || !(ratePerBinPerSecond > 0)) {
+      return 0;
+    }
+    const resource = resources.special.orbitalDebris;
+    resource.unlocked = true;
+    if (!this.periapsisDistribution.length) {
+      this.ensurePeriapsisDistribution(terraforming, kesslerParameters, resource.value || 0);
+    }
+    if (!this.periapsisDistribution.length) {
+      return 0;
+    }
+
+    let regenerated = 0;
+    for (let i = 0; i < this.periapsisDistribution.length; i += 1) {
+      const entry = this.periapsisDistribution[i];
+      const baseline = this.periapsisBaseline[i];
+      const baselineMass = baseline && baseline.massTons > 0
+        ? baseline.massTons
+        : (resource.initialValue || 0) / this.periapsisDistribution.length;
+      const added = Math.max(0, baselineMass * ratePerBinPerSecond * deltaSeconds);
+      entry.massTons += added;
+      entry.maxSinceZero = Math.max(entry.maxSinceZero || 0, entry.massTons);
+      regenerated += added;
+    }
+
+    if (regenerated > 0) {
+      resource.value += regenerated;
+      resource.modifyRate(regenerated / deltaSeconds, 'Debris Disk regeneration', 'hazard');
+      this.permanentlyCleared = false;
+    }
+    return regenerated;
   }
 
   ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {

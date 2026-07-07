@@ -14,11 +14,15 @@ function normalizeDebrisDiskParameters(parameters = {}) {
   const initialDebrisTons = Number.isFinite(parameters.initialDebrisTons)
     ? Math.max(0, parameters.initialDebrisTons)
     : 0;
+  const kesslerRegenerationRatePerBinPerSecond = Number.isFinite(parameters.kesslerRegenerationRatePerBinPerSecond)
+    ? Math.max(0, parameters.kesslerRegenerationRatePerBinPerSecond)
+    : 0.01;
   return {
     debrisPerLand,
     initialDebrisTons,
     attritionRatePerSecond: attritionRate,
-    colonistGrowthPenalty
+    colonistGrowthPenalty,
+    kesslerRegenerationRatePerBinPerSecond
   };
 }
 
@@ -320,6 +324,18 @@ class DebrisDiskHazard {
     this.lastJunkPerSecond = seconds > 0 ? junk / seconds : 0;
   }
 
+  regenerateKesslerIfPresent(terraformingState, seconds, debrisDiskParameters) {
+    if (!(seconds > 0) || !this.manager.parameters.kessler) {
+      return;
+    }
+    this.manager.kesslerHazard.regenerateDebrisFromDisk(
+      terraformingState,
+      this.manager.parameters.kessler,
+      seconds,
+      debrisDiskParameters.kesslerRegenerationRatePerBinPerSecond
+    );
+  }
+
   update(deltaSeconds, terraformingState, debrisDiskParameters) {
     const parameters = this.normalize(debrisDiskParameters);
     this.syncEffects(terraformingState, parameters);
@@ -331,6 +347,7 @@ class DebrisDiskHazard {
       return;
     }
     this.companionMirrorReleased = false;
+    this.regenerateKesslerIfPresent(terraformingState, deltaSeconds, parameters);
     const attritionRate = this.getCurrentAttritionRate(terraformingState, parameters);
     this.applyAttrition(deltaSeconds, attritionRate);
   }
