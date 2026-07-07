@@ -153,6 +153,7 @@ setLanguageData({
           garbage: 'Garbage',
           kessler: 'Kessler Skies',
           pulsar: 'Pulsar',
+          debrisDisk: 'Debris Disk',
         },
       },
       warnings: {
@@ -1215,6 +1216,7 @@ setLanguageData({
       hazards: {
         kessler: 'Kessler',
         pulsar: 'Pulsar',
+        debrisDisk: 'Debris Disk',
       },
       resourceModes: {
         spaceFirst: 'Prioritize space resources for mega+ projects',
@@ -3303,6 +3305,31 @@ setLanguageData({
             nanobotCurrentCleared: 'Current Cap: x{current}\nUnderground {underground}% | Net mitigation 100.00%',
           },
         },
+        debrisDisk: {
+          title: 'Debris Disk',
+          systemDebris: 'System Debris',
+          operationalImpact: 'Operational Impact',
+          attrition: 'Attrition',
+          effects: 'Effects',
+          howToClear: 'How to Clear',
+          clearText: 'Remove all system debris or go rogue.',
+          summary: {
+            debris: 'Debris: {current} / {initial} t\nCleared: {clearance}',
+            impact: 'Colonist Growth: x{growth}',
+            attrition: 'Attrition: {attrition}%/s\nSalvage: {scrap}/s scrap, {junk}/s junk',
+          },
+          bar: {
+            cleared: '{value}% Cleared',
+            remaining: '{value}% Remaining',
+            details: 'System Debris remaining: {remaining}%',
+            clearedDetails: 'Debris Disk cleared.',
+          },
+          effectsList: {
+            orbitals: 'Orbitals are capped at 0 while the hazard is active.',
+            disabledSystems: 'Lifters atmospheric stripping, Mega Heat Sink, Dyson Receivers, and Space Mirror Facility are disabled while the hazard is active. The companion mirror is too afraid to come.',
+            attrition: 'Buildings and colonies lose up to {value}%/s of constructed count.  This is converted into scrap metal and junk.  However, buildings will not drop below 10 from this attrition.',
+          },
+        },
         kessler: {
           title: 'Kessler Skies',
           debrisField: 'Debris Field',
@@ -3710,6 +3737,7 @@ setLanguageData({
         garbage: 'Garbage',
         kessler: 'Kessler Skies',
         pulsar: 'Pulsar',
+        debrisDisk: 'Debris Disk',
       },
     },
     hope: {
@@ -4246,6 +4274,7 @@ setLanguageData({
             hazardousMachinery: 'Hazardous Machinery',
             kesslerSkies: 'Kessler Skies',
             pulsar: 'Pulsar',
+            debrisDisk: 'Debris Disk',
             garbage: 'Garbage',
             unclearedPercent: 'Uncleared %',
             clearedPercent: 'Cleared %',
@@ -5025,6 +5054,7 @@ setLanguageData({
         difficulty: 'Extreme',
         effects: {
           allFiveHazards: 'All five hazard systems are active on this world.',
+          allSixHazards: 'All six hazard systems are active on this world.',
           resemblesSaturn: 'May resemble Saturn.',
         },
         rewards: {
@@ -6450,6 +6480,7 @@ setLanguageData({
       special: {
         albedoUpgrades: { name: 'Black Dust', displayName: 'Black Dust' },
         orbitalDebris: { name: 'Orbital Debris' },
+        systemDebris: { name: 'System Debris' },
         spaceships: { name: 'Spaceships' },
         alienArtifact: { name: 'Alien artifact' },
         crusaders: { name: 'Crusaders' },

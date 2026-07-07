@@ -446,7 +446,8 @@ const buildingsParameters = {
     autoBuildPercent: 100,
     autoBuildMaxOption: true,
     temperatureMaintenanceImmune: true,
-    kesslerDebrisSize: 'large'
+    kesslerDebrisSize: 'large',
+    disableWhenHazard: ['debrisDisk']
   },
   fusionPowerPlant: {
     name: '',

@@ -180,7 +180,7 @@ const projectParameters = {
     unlocked: false,
     kesslerDebrisSize: 'large',
     attributes: {
-      disableWhenHazard: ['pulsar'],
+      disableWhenHazard: ['pulsar', 'debrisDisk'],
       spaceMirrorFacility: true,
       completionEffect: [
         {
@@ -1219,7 +1219,7 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
-      disableWhenHazard: ['kessler', 'pulsar'],
+      disableWhenHazard: ['kessler', 'pulsar', 'debrisDisk'],
       canUseSpaceStorage: true,
       megaHeatSink: true,
       workersPerCompletion: 1_000_000_000,

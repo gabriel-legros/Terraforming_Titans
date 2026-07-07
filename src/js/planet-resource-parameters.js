@@ -293,6 +293,7 @@
       // Dust caps derive from land area during resource creation
       albedoUpgrades: {name: '', displayName: '', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true},
       orbitalDebris: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
+      systemDebris: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       spaceships: {name: '', hasCap: false, initialValue: 0, unlocked: false},
       alienArtifact: { name: '', hasCap: false, initialValue: 0, unlocked: false, preserveOnTravel: true },
       crusaders: { name: '', hasCap: false, initialValue: 0, hideWhenSmall : true, unlocked: false },

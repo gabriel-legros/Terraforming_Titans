@@ -198,6 +198,7 @@ class Building extends EffectableEntity {
         factoryHeatCoefficient,
         factoryCoolingCoefficient,
         kesslerDebrisSize,
+        disableWhenHazard,
         automationRequiresEverEnabled
       } = config;
   
@@ -234,6 +235,9 @@ class Building extends EffectableEntity {
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
       this.kesslerDebrisSize = kesslerDebrisSize || null;
+      this.disableWhenHazard = Array.isArray(disableWhenHazard)
+        ? disableWhenHazard.slice()
+        : [];
       this.automationRequiresEverEnabled = automationRequiresEverEnabled === true;
       this.aerostatReduction = Math.max(
         0,
@@ -1165,7 +1169,40 @@ class Building extends EffectableEntity {
     );
   }
 
+  getDisableHazards() {
+    return this.disableWhenHazard || [];
+  }
+
+  isHazardActiveForDisable(hazardKey) {
+    if (!hazardManager || !hazardManager.parameters) {
+      return false;
+    }
+    if (hazardKey === 'kessler') {
+      return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+    }
+    if (hazardKey === 'pulsar') {
+      return hazardManager.parameters.pulsar && !hazardManager.pulsarHazard.isCleared(terraforming, hazardManager.parameters.pulsar);
+    }
+    if (hazardKey === 'debrisDisk') {
+      return hazardManager.parameters.debrisDisk && !hazardManager.debrisDiskHazard.isCleared(terraforming, hazardManager.parameters.debrisDisk);
+    }
+    return false;
+  }
+
+  isHazardDisabled() {
+    const disableHazards = this.getDisableHazards();
+    for (let i = 0; i < disableHazards.length; i += 1) {
+      if (this.isHazardActiveForDisable(disableHazards[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   getProductionRatio(){
+    if (this.isHazardDisabled()) {
+      return 0;
+    }
     const isDay = dayNightCycle.isDay();
     if(this.dayNightActivity && !isDay){
       return 0;
@@ -1175,6 +1212,9 @@ class Building extends EffectableEntity {
   }
 
   getConsumptionRatio(){
+    if (this.isHazardDisabled()) {
+      return 0;
+    }
     return 1;
   }
 

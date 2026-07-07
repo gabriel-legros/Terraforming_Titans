@@ -106,6 +106,11 @@ const specialSeedStoryHazards = {
     severity: 1,
     orbitalDoseBoost_mSvPerDay: 4900,
     description: ''
+  },
+  debrisDisk: {
+    debrisPerLand: 1e10,
+    attritionRatePerSecond: 0.01,
+    colonistGrowthPenalty: 0.9
   }
 };
 
@@ -2058,9 +2063,9 @@ const specialSeedDefinitions = {
     orbitPreset: 'cold',
     specialEffects: [
       {
-        id: 'all-five-hazards',
-        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.allFiveHazards',
-        description: 'All five hazard systems are active on this world.'
+        id: 'all-six-hazards',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.allSixHazards',
+        description: 'All six hazard systems are active on this world.'
       },
       {
         id: 'resembles-saturn',

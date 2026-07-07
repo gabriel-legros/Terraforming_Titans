@@ -239,6 +239,9 @@ class Project extends EffectableEntity {
       }
       return hazardManager.parameters.pulsar && !hazardManager.pulsarHazard.isCleared(terraformingState, hazardManager.parameters.pulsar);
     }
+    if (hazardKey === 'debrisDisk') {
+      return hazardManager.parameters.debrisDisk && !hazardManager.debrisDiskHazard.isCleared(terraforming, hazardManager.parameters.debrisDisk);
+    }
     return false;
   }
 
@@ -264,6 +267,9 @@ class Project extends EffectableEntity {
     }
     if (hazardKey === 'pulsar') {
       return getProjectsText('ui.projects.hazards.pulsar', 'Pulsar');
+    }
+    if (hazardKey === 'debrisDisk') {
+      return getProjectsText('ui.projects.hazards.debrisDisk', 'Debris Disk');
     }
     return '';
   }
