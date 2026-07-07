@@ -1178,6 +1178,10 @@ class Building extends EffectableEntity {
     return 1;
   }
 
+  getConsumptionRatioForResource(category, resource) {
+    return this.getConsumptionRatio();
+  }
+
   getProjectedProductionRate(category, resource, options = {}) {
     const automationMultiplier = options.automationMultiplier !== undefined
       ? options.automationMultiplier
@@ -1220,7 +1224,7 @@ class Building extends EffectableEntity {
               : 1));
     const consumptionRatio = options.includeConsumptionRatio === false
       ? 1
-      : this.getConsumptionRatio();
+      : this.getConsumptionRatioForResource(category, resource);
     const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
     const productivityScale = options.useProductivity === true
       ? productivityValue / (workerRatio || 1)
