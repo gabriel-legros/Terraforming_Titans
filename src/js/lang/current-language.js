@@ -5054,7 +5054,7 @@ setLanguageData({
         difficulty: 'Extreme',
         effects: {
           allFiveHazards: 'All five hazard systems are active on this world.',
-          allSixHazards: 'All six hazard systems are active on this world.',
+          allSixHazards: 'Features all hazards and even a new horrible one.',
           resemblesSaturn: 'May resemble Saturn.',
         },
         rewards: {
