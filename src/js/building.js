@@ -1966,20 +1966,20 @@ class Building extends EffectableEntity {
         // Check for a maintenance conversion for this resource
         const resourceData = resources.colony[resource];
         if (resourceData.maintenanceConversion) {
-          for (const targetCategory in resourceData.maintenanceConversion) {
-            const targetResourceName = resourceData.maintenanceConversion[targetCategory];
-            const conversionValue = resourceData.conversionValue || 1;
+          const conversionEntries = getMaintenanceConversionEntries(resourceData);
+          for (let i = 0; i < conversionEntries.length; i += 1) {
+            const conversion = conversionEntries[i];
 
             // Apply conversion by adding the scaled maintenance cost to the target resource
-            const convertedAmount = maintenanceCost * conversionValue * conversionScale;
-            const displayConvertedAmount = displayMaintenanceCost * conversionValue * conversionScale;
+            const convertedAmount = maintenanceCost * conversion.value * conversionScale;
+            const displayConvertedAmount = displayMaintenanceCost * conversion.value * conversionScale;
 
-            if (resources[targetCategory] && resources[targetCategory][targetResourceName]) {
-              accumulatedChanges[targetCategory][targetResourceName] = 
-                (accumulatedChanges[targetCategory][targetResourceName] || 0) + convertedAmount;
+            if (resources[conversion.category] && resources[conversion.category][conversion.resource]) {
+              accumulatedChanges[conversion.category][conversion.resource] =
+                (accumulatedChanges[conversion.category][conversion.resource] || 0) + convertedAmount;
 
               // Update production rate for the converted resource
-              resources[targetCategory][targetResourceName].modifyRate(
+              resources[conversion.category][conversion.resource].modifyRate(
                 displayConvertedAmount * (1000 / deltaTime),
                 this.displayName,
                 'building'

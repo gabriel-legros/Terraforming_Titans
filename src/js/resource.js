@@ -430,6 +430,38 @@ function updateOverflowLostWindowForResource(resource, lossAmount, deltaTimeMs) 
   resource.overflowLostLast1s = total;
 }
 
+function getMaintenanceConversionEntries(sourceData) {
+  const entries = [];
+  if (!sourceData || !sourceData.maintenanceConversion) {
+    return entries;
+  }
+
+  const baseValue = sourceData.conversionValue || 1;
+  Object.keys(sourceData.maintenanceConversion).forEach((targetCategory) => {
+    const targetConfig = sourceData.maintenanceConversion[targetCategory];
+    if (targetConfig === String(targetConfig)) {
+      entries.push({
+        category: targetCategory,
+        resource: targetConfig,
+        value: baseValue,
+      });
+      return;
+    }
+
+    Object.keys(targetConfig).forEach((targetResource) => {
+      const conversionValue = targetConfig[targetResource];
+      if (conversionValue > 0) {
+        entries.push({
+          category: targetCategory,
+          resource: targetResource,
+          value: conversionValue * baseValue,
+        });
+      }
+    });
+  });
+  return entries;
+}
+
 class Resource extends EffectableEntity {
   constructor(resourceData) {
     super(resourceData);
@@ -1655,11 +1687,11 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
       const base = maintenanceCost[resource] * building.activeNumber * automationMultiplier * (useProductivity ? productivityValue : 1);
-        const conversionValue = sourceData.conversionValue || 1;
-        for (const targetCategory in sourceData.maintenanceConversion) {
-          const targetResource = sourceData.maintenanceConversion[targetCategory];
-          const conversionRate = base * conversionValue;
-          const target = routeAntimatterProductionTarget(targetCategory, targetResource, conversionRate);
+      const conversionEntries = getMaintenanceConversionEntries(sourceData);
+      for (let i = 0; i < conversionEntries.length; i += 1) {
+        const conversion = conversionEntries[i];
+        const conversionRate = base * conversion.value;
+        const target = routeAntimatterProductionTarget(conversion.category, conversion.resource, conversionRate);
         resources[target.category][target.resource].modifyRate(
           target.amount,
           building.displayName,

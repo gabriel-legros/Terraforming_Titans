@@ -20,7 +20,7 @@
       colonyHydrogen: { name: '', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false, maintenanceConversion : {atmospheric : 'hydrogen'}, unit: 'ton'},
       food: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'packs', marginBottom: 10 },
       components: { name: '', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton' },
-      electronics: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton', conversionValue : 0.2},
+      electronics: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : { scrapMetal: 0.2, junk: 0.8 }}, unit: 'ton'},
       superconductors: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} , unit: 'ton' },
       superalloys: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, maintenanceMultiplier: 0 , unit: 'ton' },
       androids: {name: '', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'junk'}},

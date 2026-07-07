@@ -65,12 +65,21 @@ function addDebrisDiskSurfaceResource(resourceKey, amount, seconds) {
   }
 }
 
-function getDebrisDiskSalvageTarget(category, resource) {
+function addDebrisDiskConversionSalvage(salvage, category, resource, amount) {
   const resourceData = resources[category] ? resources[category][resource] : null;
-  const conversion = resourceData && resourceData.maintenanceConversion && resourceData.maintenanceConversion.surface;
-  if (conversion === 'scrapMetal' || conversion === 'junk') {
-    return conversion;
+  const conversionEntries = getMaintenanceConversionEntries(resourceData);
+  let added = false;
+  for (let i = 0; i < conversionEntries.length; i += 1) {
+    const conversion = conversionEntries[i];
+    if (conversion.category === 'surface' && (conversion.resource === 'scrapMetal' || conversion.resource === 'junk')) {
+      salvage[conversion.resource] += amount * conversion.value;
+      added = true;
+    }
   }
+  if (added) {
+    return;
+  }
+
   if (
     resource === 'metal' ||
     resource === 'components' ||
@@ -78,12 +87,12 @@ function getDebrisDiskSalvageTarget(category, resource) {
     resource === 'superconductors' ||
     resource === 'superalloys'
   ) {
-    return 'scrapMetal';
+    salvage.scrapMetal += amount;
+    return;
   }
   if (resource === 'glass' || resource === 'silicon' || resource === 'androids') {
-    return 'junk';
+    salvage.junk += amount;
   }
-  return null;
 }
 
 class DebrisDiskHazard {
@@ -283,11 +292,7 @@ class DebrisDiskHazard {
     const salvage = { losses: Number.isFinite(lossCount) ? lossCount : 0, scrapMetal: 0, junk: 0 };
     Object.keys(cost || {}).forEach((category) => {
       Object.keys(cost[category] || {}).forEach((resource) => {
-        const target = getDebrisDiskSalvageTarget(category, resource);
-        if (!target) {
-          return;
-        }
-        salvage[target] += (cost[category][resource] || 0) * salvage.losses;
+        addDebrisDiskConversionSalvage(salvage, category, resource, (cost[category][resource] || 0) * salvage.losses);
       });
     });
     return salvage;
