@@ -2822,6 +2822,9 @@ setLanguageData({
       hazardEffects: {
         hazardousBiomass: 'Hazardous Biomass',
         electromagneticStorm: 'Electromagnetic Storm',
+        debrisDisk: 'Debris Disk',
+        debrisDiskAttrition: 'Debris Disk Attrition',
+        debrisDiskKesslerRegeneration: 'Debris Disk Regeneration',
         pulsarDefaultDescription: 'Pulsar hazard detected. Extreme radiation floods the planet.',
         pulsarRadiation: 'Pulsar Radiation',
       },

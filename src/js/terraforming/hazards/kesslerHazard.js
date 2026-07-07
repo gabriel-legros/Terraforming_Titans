@@ -398,7 +398,11 @@ class KesslerHazard {
 
     if (regenerated > 0) {
       resource.value += regenerated;
-      resource.modifyRate(regenerated / deltaSeconds, 'Debris Disk regeneration', 'hazard');
+      resource.modifyRate(
+        regenerated / deltaSeconds,
+        t('ui.terraforming.hazardEffects.debrisDiskKesslerRegeneration', {}, 'Debris Disk Regeneration'),
+        'hazard'
+      );
       this.permanentlyCleared = false;
     }
     return regenerated;
