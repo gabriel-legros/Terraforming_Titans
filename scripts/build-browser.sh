@@ -13,6 +13,7 @@ cp -R "$ROOT_DIR/LICENSES" "$OUT_DIR/LICENSES"
 cp -R "$ROOT_DIR/assets" "$OUT_DIR/assets"
 cp -R "$ROOT_DIR/src/js" "$OUT_DIR/src/js"
 cp -R "$ROOT_DIR/src/css" "$OUT_DIR/src/css"
+node "$ROOT_DIR/scripts/purge-browser-parameters.js" "$OUT_DIR"
 cat > "$OUT_DIR/src/js/build-target.js" <<'BUILD_TARGET'
 const GAME_BUILD_TARGET = 'browser';
 const STEAM_APP_ID = null;

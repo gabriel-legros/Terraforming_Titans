@@ -1389,6 +1389,7 @@ const projectParameters = {
   },
   resortWorld: {
     type: 'ResortWorldProject',
+    buildTargets: ['steam'],
     name: '',
     category: 'mega',
     cost: {},
