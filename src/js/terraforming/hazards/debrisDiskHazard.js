@@ -312,6 +312,9 @@ class DebrisDiskHazard {
 
     Object.keys(resources.colony).forEach((resourceKey) => {
       const resource = resources.colony[resourceKey];
+      if (resource.hasCap !== true) {
+        return;
+      }
       const currentValue = resource.value || 0;
       const attritableValue = Math.max(0, currentValue - DEBRIS_DISK_COLONY_RESOURCE_MINIMUM);
       const loss = Math.min(attritableValue, currentValue * attritionRate * seconds);
