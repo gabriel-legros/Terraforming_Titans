@@ -1024,7 +1024,79 @@ const shadesNightmareOverrides = {
     radius: 58440.8484147897,
     gravity: 10.43983932649662
   },
-  hazards: cloneSpecialSeedValue(specialSeedStoryHazards)
+  hazards: {
+    hazardousBiomass: {
+      baseGrowth: { value: 0.4, maxDensity: 1 },
+      invasivenessResistance: { value: 20, severity: 0.005 },
+      oxygenPressure: { min: 0, max: 10, unit: 'kPa', severity: 0.01 },
+      co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
+      atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
+      landPreference: { value: 'Land', severity: 0.1 },
+      temperaturePreference: {
+        min: 223.15,
+        max: 303.15,
+        unit: 'K',
+        severityBelow: 0.004,
+        severityHigh: 0.005
+      },
+      radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 0.1 },
+      penalties: {
+        buildCost: 0.75,
+        maintenanceCost: 0.75,
+        populationGrowth: 1
+      }
+    },
+    hazardousMachinery: {
+      initialCoverage: 1,
+      maxCoverageBase: 1,
+      waterCoveragePenalty: 0.5,
+      baseGrowth: { value: 1 },
+      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.001 },
+      oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.001 },
+      temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.003 },
+      crusaderRemovalPerSecond: 0.5,
+      researchToDisableCost: 10000,
+      penalties: {
+        availableAndroidDecayRate: 0.05,
+        nanoColonyGrowthMultiplier: 0,
+        researchMultiplier: 0.1,
+        buildCostMultiplier: 2,
+        electronicsMaintenanceMultiplier: 10,
+        shipWorkersPerAssignedShip: 100
+      }
+    },
+    garbage: {
+      surfaceResources: {
+        garbage: { amountMultiplier: 1000 },
+        trash: { amountMultiplier: 100 },
+        junk: { amountMultiplier: 100 },
+        scrapMetal: { amountMultiplier: 100 },
+        radioactiveWaste: { amountMultiplier: 0.25 }
+      },
+      penalties: {
+        garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
+        trash: { happiness: -0.05 },
+        junk: { happiness: -0.05 },
+        scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
+        radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
+      }
+    },
+    kessler: {
+      orbitalDebrisPerLand: 100
+    },
+    pulsar: {
+      pulsePeriodSeconds: 1.337,
+      stormDurationSeconds: 5,
+      severity: 1,
+      orbitalDoseBoost_mSvPerDay: 4900,
+      description: ''
+    },
+    debrisDisk: {
+      debrisPerLand: 1e10,
+      attritionRatePerSecond: 0.01,
+      colonistGrowthPenalty: 0.9
+    }
+  }
 };
 
 const toi3693bOverrides = {
