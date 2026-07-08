@@ -668,6 +668,12 @@
   function updateResortVacationGoldButton() {
     const container = document.getElementById('gold-asteroid-container');
     const project = getResortWorldProject();
+    if (!project) {
+      if (resortVacationGoldButton) {
+        resortVacationGoldButton.style.display = 'none';
+      }
+      return;
+    }
     if (!project.showVacationButtonAboveResources || !project.canStartVacation()) {
       if (resortVacationGoldButton) {
         resortVacationGoldButton.style.display = 'none';
