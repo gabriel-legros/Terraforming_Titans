@@ -735,6 +735,17 @@ class PlanetaryThrustersProject extends Project{
       ? fmt(p.parentBody.orbitRadius||0,false,0)+" km"
       : fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrMode.value = this.powerMode;
+    if (!isBoundToParent(p)) {
+      const currentAU = p.distanceFromSun || 0;
+      this.el.distNow.textContent = getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.motion.distanceValue',
+        `${fmt(currentAU, false, 3)} AU / ${fmt(stellarFluxFromOrbitAU(currentAU), false, 0)} W/m^2`,
+        {
+          distance: fmt(currentAU, false, 3),
+          flux: fmt(stellarFluxFromOrbitAU(currentAU), false, 0)
+        }
+      );
+    }
     this.el.distTargetMode.value = this.motionTargetMode;
     if(document.activeElement !== this.el.pwrVal){
       this.el.pwrVal.value = this.powerMode === THRUSTER_POWER_MODE_PERCENT
