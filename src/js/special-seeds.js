@@ -2159,14 +2159,21 @@ const specialSeedDefinitions = {
       {
         id: 'reveal-ecumenopolis-capacity',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.revealEcumenopolisCapacity',
-        description: 'Reveals the Ecumenopolis Capacity awakening skill and permanently enables Pyrolyzers after Chemical Reactor research.',
+        description: 'Reveals the Ecumenopolis Capacity awakening skill.',
         effects: [
           {
             target: 'skillManager',
             targetId: 'ecumenopolis_capacity',
             type: 'skillReveal',
             value: true
-          },
+          }
+        ]
+      },
+      {
+        id: 'enable-pyrolyzer',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.enablePyrolyzer',
+        description: 'Chemical reactor research will also enable pyrolyzers.',
+        effects: [
           {
             target: 'building',
             targetId: 'pyrolyzer',

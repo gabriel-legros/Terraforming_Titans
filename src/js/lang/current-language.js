@@ -5066,7 +5066,8 @@ setLanguageData({
           resemblesSaturn: 'May resemble Saturn.',
         },
         rewards: {
-          revealEcumenopolisCapacity: 'Reveals a new Awakening skill and permanently enables Pyrolyzers after Chemical Reactor research',
+          revealEcumenopolisCapacity: 'Reveals a new Awakening skill',
+          enablePyrolyzer: 'Chemical reactor research will also enable pyrolyzers.',
         },
       },
       wolfysnightmare: {

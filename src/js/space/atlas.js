@@ -128,8 +128,8 @@ class AtlasManager extends EffectableEntity {
             if (!seedKey) {
                 return;
             }
-            const sourceId = `atlas-reward-${seedKey}`;
             this.getCompletionRewards(seedKey).forEach((reward, rewardIndex) => {
+                const sourceId = `atlas-reward-${seedKey}-${reward.id}`;
                 const effects = Array.isArray(reward.effects) ? reward.effects : [];
                 effects.forEach((effect, effectIndex) => {
                     const rewardEffect = {
