@@ -864,6 +864,16 @@ const shadesNightmareOverrides = {
     hasSand: false,
     dynamicMass: true
   },
+  effects: [
+    {
+      target: 'building',
+      targetId: 'pyrolyzer',
+      type: 'booleanFlag',
+      flagId: 'pyrolyzer',
+      value: true,
+      effectId: 'shades-nightmare-enable-pyrolyzer'
+    }
+  ],
   star: {
     name: 'Nyx',
     spectralType: 'K1V',
@@ -2077,12 +2087,19 @@ const specialSeedDefinitions = {
       {
         id: 'reveal-ecumenopolis-capacity',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.revealEcumenopolisCapacity',
-        description: 'Reveals the Ecumenopolis Capacity awakening skill.',
+        description: 'Reveals the Ecumenopolis Capacity awakening skill and permanently enables Pyrolyzers after Chemical Reactor research.',
         effects: [
           {
             target: 'skillManager',
             targetId: 'ecumenopolis_capacity',
             type: 'skillReveal',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'pyrolyzer',
+            type: 'booleanFlag',
+            flagId: 'pyrolyzer',
             value: true
           }
         ]

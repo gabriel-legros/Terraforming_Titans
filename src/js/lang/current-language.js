@@ -5066,7 +5066,7 @@ setLanguageData({
           resemblesSaturn: 'May resemble Saturn.',
         },
         rewards: {
-          revealEcumenopolisCapacity: 'Reveals a new Awakening skill',
+          revealEcumenopolisCapacity: 'Reveals a new Awakening skill and permanently enables Pyrolyzers after Chemical Reactor research',
         },
       },
       wolfysnightmare: {
@@ -5306,6 +5306,14 @@ setLanguageData({
           methanePyrolysis: { shortName: 'Methane Pyrolysis' },
           waterElectrolysis: { shortName: 'Water Electrolysis' },
           silicates: { shortName: 'Silicates -> Oxygen' },
+        },
+      },
+      pyrolyzer: {
+        name: 'Pyrolyzer',
+        description: 'Runs high-temperature decomposition chemistry to split methane or ammonia into useful atmospheric and surface products.',
+        recipes: {
+          methanePyrolysis: { shortName: 'Methane Pyrolysis' },
+          ammoniaCracking: { shortName: 'Ammonia Cracking' },
         },
       },
       massDriver: {

@@ -1530,6 +1530,11 @@ const researchParameters = {
             targetId: 'boschReactor',
             type: 'enable'
           },
+          {
+            target: 'building',
+            targetId: 'pyrolyzer',
+            type: 'enable'
+          },
         ],
       },
       {

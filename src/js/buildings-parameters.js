@@ -1010,6 +1010,39 @@ const buildingsParameters = {
       }
     }
   },
+  pyrolyzer: {
+    name: '',
+    category: 'terraforming',
+    description: '',
+    cost: { colony: { metal: 250, glass: 25, components: 10, electronics: 5 } },
+    consumption: { colony: { energy: 7_000_000 }, atmospheric: { atmosphericMethane: 100 } },
+    realisticEnergyConsumption: 7_000_000,
+    production: { surface: { graphite: 74.87 }, atmospheric: { hydrogen: 25.13 } },
+    storage: {},
+    factoryHeatCoefficient: 0.2,
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    aerostatReduction: 1,
+    unlocked: false,
+    defaultRecipe: 'methanePyrolysis',
+    recipes: {
+      methanePyrolysis: {
+        shortName: '',
+        consumption: { colony: { energy: 7_000_000 }, atmospheric: { atmosphericMethane: 100 } },
+        realisticEnergyConsumption: 7_000_000,
+        production: { surface: { graphite: 74.87 }, atmospheric: { hydrogen: 25.13 } }
+      },
+      ammoniaCracking: {
+        shortName: '',
+        consumption: { colony: { energy: 4_000_000 }, atmospheric: { atmosphericAmmonia: 100 } },
+        realisticEnergyConsumption: 4_000_000,
+        production: { atmospheric: { inertGas: 82.35, hydrogen: 17.65 } }
+      }
+    }
+  },
   massDriver: {
     name: '',
     category: 'terraforming',

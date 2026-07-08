@@ -2071,6 +2071,7 @@ const constructors = {
   solarPanel: 'solarPanel',
   windTurbine: 'windTurbine',
   boschReactor: 'ChemicalReactor',
+  pyrolyzer: 'Pyrolyzer',
   waterTank: 'WaterTank',
   hydrogenReservoir: 'HydrogenReservoir',
   antimatterBattery: 'AntimatterBattery',
