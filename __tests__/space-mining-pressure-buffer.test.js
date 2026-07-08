@@ -81,9 +81,12 @@ function setupGlobals() {
       oxygen: { value: 0, automationLimited: false, modifyRate: () => {} },
     },
     colony: {
+      water: { value: 0, cap: 100, hasCap: true },
       colonyHydrogen: { value: 90, cap: 100, hasCap: true },
     },
     surface: {
+      ice: { automationLimited: false },
+      liquidWater: { automationLimited: false },
       liquidCO2: { automationLimited: false },
     },
   }, originalGlobals);
@@ -228,6 +231,88 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
       project.applySpaceshipResourceGain({ colony: { colonyHydrogen: 25 } }, 1);
     }).not.toThrow();
     expect(resources.colony.colonyHydrogen.value).toBe(115);
+
+    cleanup();
+  });
+
+  it('ignores water coverage when importing water to colony only', () => {
+    const cleanup = setupGlobals();
+    calculateAverageCoverage = () => 1;
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        dynamicWaterImport: true,
+        resourceGainPerShip: {
+          surface: { ice: 100 },
+        },
+      },
+    }, 'waterSpaceMining');
+
+    project.flags.atmosphericMonitoring = true;
+    project.flags.waterImportTargeting = true;
+    project.disableAboveWaterCoverage = true;
+    project.waterImportTarget = 'colonyOnly';
+
+    project.applySpaceshipResourceGain({ colony: { water: 100 } }, 1);
+
+    expect(resources.colony.water.value).toBe(100);
+    expect(resources.surface.ice.automationLimited).toBe(false);
+
+    cleanup();
+  });
+
+  it('ignores water coverage when colony tanks can receive the full water import', () => {
+    const cleanup = setupGlobals();
+    calculateAverageCoverage = () => 1;
+    resources.colony.water.value = 10;
+    resources.colony.water.cap = 200;
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        dynamicWaterImport: true,
+        resourceGainPerShip: {
+          surface: { ice: 100 },
+        },
+      },
+    }, 'waterSpaceMining');
+
+    project.flags.atmosphericMonitoring = true;
+    project.flags.waterImportTargeting = true;
+    project.disableAboveWaterCoverage = true;
+    project.waterImportTarget = 'colony';
+
+    project.applySpaceshipResourceGain({ colony: { water: 100 } }, 1);
+
+    expect(resources.colony.water.value).toBe(110);
+    expect(resources.surface.ice.automationLimited).toBe(false);
+
+    cleanup();
+  });
+
+  it('limits only the overflowing portion of colony water import when coverage is already full', () => {
+    const cleanup = setupGlobals();
+    calculateAverageCoverage = () => 1;
+    resources.colony.water.value = 150;
+    resources.colony.water.cap = 200;
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        dynamicWaterImport: true,
+        resourceGainPerShip: {
+          surface: { ice: 100 },
+        },
+      },
+    }, 'waterSpaceMining');
+
+    project.flags.atmosphericMonitoring = true;
+    project.flags.waterImportTargeting = true;
+    project.disableAboveWaterCoverage = true;
+    project.waterImportTarget = 'colony';
+
+    project.applySpaceshipResourceGain({ colony: { water: 100 } }, 1);
+
+    expect(resources.colony.water.value).toBe(200);
+    expect(resources.surface.ice.automationLimited).toBe(true);
 
     cleanup();
   });
