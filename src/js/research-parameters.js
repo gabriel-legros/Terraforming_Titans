@@ -615,7 +615,7 @@ const researchParameters = {
         id: 'graphene_factory',
         name: '',
         description: '',
-        cost: { research: 10_000_000 },
+        cost: { research: 5_000_000 },
         prerequisites: [],
         disabled: true,
         effects: [
