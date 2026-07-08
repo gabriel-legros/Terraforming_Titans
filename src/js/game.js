@@ -332,6 +332,15 @@ function prepareForTravel(options = {}) {
   return travelState;
 }
 
+function rebaseDynamicMassInitialGeometryAfterHazards() {
+  if (currentPlanetParameters.specialAttributes?.dynamicMass !== true) {
+    return;
+  }
+  terraforming.synchronizeGlobalResources();
+  terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+  Object.assign(terraforming.initialCelestialParameters, terraforming.celestialParameters);
+}
+
 function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
   const preserveJournal = options.preserveJournal || false;
@@ -700,6 +709,7 @@ function initializeGameState(options = {}) {
   if (preserveManagers && savedHazardousMachineryTravelState && hazardManager?.hazardousMachineryHazard?.load) {
     hazardManager.hazardousMachineryHazard.load(savedHazardousMachineryTravelState);
   }
+  rebaseDynamicMassInitialGeometryAfterHazards();
 
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display

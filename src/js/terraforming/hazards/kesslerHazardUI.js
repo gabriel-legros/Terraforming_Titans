@@ -245,11 +245,11 @@ function getTerraforming() {
 function calculateKesslerUIRadiusContext(terraformingState, entries) {
   const referenceRadiusKm = entries && entries.length && entries[0].referenceRadiusKm
     ? entries[0].referenceRadiusKm
-    : terraformingState?.baseRadius
-    || terraformingState?.initialCelestialParameters?.baseRadius
-    || terraformingState?.initialCelestialParameters?.radius
-    || terraformingState?.celestialParameters?.baseRadius
+    : terraformingState?.initialCelestialParameters?.radius
     || terraformingState?.celestialParameters?.radius
+    || terraformingState?.baseRadius
+    || terraformingState?.initialCelestialParameters?.baseRadius
+    || terraformingState?.celestialParameters?.baseRadius
     || 0;
   const currentRadiusKm = terraformingState?.celestialParameters?.radius || referenceRadiusKm;
   return {

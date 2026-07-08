@@ -60,6 +60,18 @@ function measureDragLineAltitudeMeters(waterPressurePa, options = {}) {
   return hazard.getDecaySummary().dragThresholdHeightMeters;
 }
 
+function createDynamicRadiusTerraforming() {
+  const terraforming = createTerraformingForWaterPressurePa(10);
+  terraforming.baseRadius = 5000;
+  terraforming.initialCelestialParameters = {
+    baseRadius: 5000,
+    radius: 6500
+  };
+  terraforming.celestialParameters.baseRadius = 5000;
+  terraforming.celestialParameters.radius = 6500;
+  return terraforming;
+}
+
 describe('Kessler drag line altitude for low-pressure water-only atmospheres', () => {
   const originalResources = global.resources;
 
@@ -115,5 +127,57 @@ describe('Kessler drag line altitude for low-pressure water-only atmospheres', (
       69250.16641616821
     ]);
     expect(dragLineAltitudesFromCalcPressure).toEqual(dragLineAltitudesFromMassPressure);
+  });
+
+  it('anchors Kessler debris to the initialized radius on dynamic-radius worlds', () => {
+    const terraforming = createDynamicRadiusTerraforming();
+    global.resources = terraforming.resources;
+
+    const hazard = new KesslerHazard({
+      parameters: {
+        kessler: {}
+      }
+    });
+
+    hazard.update(1, terraforming, {});
+
+    const distribution = hazard.getPeriapsisDistribution();
+    const baseline = hazard.getPeriapsisBaseline();
+    expect(distribution.length).toBeGreaterThan(0);
+    expect(distribution[0].referenceRadiusKm).toBe(6500);
+    expect(baseline[0].referenceRadiusKm).toBe(6500);
+  });
+
+  it('rebases old base-radius Kessler distributions on dynamic-radius worlds', () => {
+    const terraforming = createDynamicRadiusTerraforming();
+    global.resources = terraforming.resources;
+
+    const hazard = new KesslerHazard({
+      parameters: {
+        kessler: {}
+      }
+    });
+    hazard.load({
+      periapsisDistribution: [
+        {
+          periapsisMeters: 10000,
+          referenceRadiusKm: 5000,
+          massTons: ORBITAL_DEBRIS_TONS,
+          maxSinceZero: ORBITAL_DEBRIS_TONS
+        }
+      ],
+      periapsisBaseline: [
+        {
+          periapsisMeters: 10000,
+          referenceRadiusKm: 5000,
+          massTons: ORBITAL_DEBRIS_TONS
+        }
+      ]
+    });
+
+    hazard.update(1, terraforming, {});
+
+    expect(hazard.getPeriapsisDistribution()[0].referenceRadiusKm).toBe(6500);
+    expect(hazard.getPeriapsisBaseline()[0].referenceRadiusKm).toBe(6500);
   });
 });

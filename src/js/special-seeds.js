@@ -101,7 +101,6 @@ const specialSeedStoryHazards = {
     orbitalDebrisPerLand: 100
   },
   pulsar: {
-    pulsePeriodSeconds: 1.337,
     stormDurationSeconds: 5,
     severity: 1,
     orbitalDoseBoost_mSvPerDay: 4900,
@@ -256,7 +255,6 @@ const wolfysNightmareOverrides = {
       orbitalDebrisPerLand: 10000
     },
     pulsar: {
-      pulsePeriodSeconds: 1.337,
       stormDurationSeconds: 25,
       severity: 1,
       orbitalDoseBoost_mSvPerDay: 4900,
@@ -885,161 +883,202 @@ const shadesNightmareOverrides = {
   visualization: {
     baseColor: '#b9915b'
   },
-  resources: {
-    surface: {
-      ice: { initialValue: 0 },
-      liquidWater: { initialValue: 0 },
-      dryIce: { initialValue: 0 },
-      liquidCO2: { initialValue: 0 },
-      liquidHydrogen: { initialValue: 1.6305400223685466e+24 },
-      liquidMethane: { initialValue: 0 },
-      hydrocarbonIce: { initialValue: 0 },
-      liquidOxygen: { initialValue: 0 },
-      oxygenIce: { initialValue: 0 },
-      liquidNitrogen: { initialValue: 0 },
-      nitrogenIce: { initialValue: 0 },
-      land: { initialValue: 6291545240475.356 }
+  "resources": {
+    "surface": {
+      "ice": {
+        "initialValue": 0
+      },
+      "liquidWater": {
+        "initialValue": 6.710866e-317
+      },
+      "dryIce": {
+        "initialValue": 0
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidHydrogen": {
+        "initialValue": 1.629420421159057e+24
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      },
+      "liquidOxygen": {
+        "initialValue": 0
+      },
+      "oxygenIce": {
+        "initialValue": 0
+      },
+      "liquidNitrogen": {
+        "initialValue": 0
+      },
+      "nitrogenIce": {
+        "initialValue": 0
+      },
+      "hazardousBiomass": {
+        "initialValue": 6166178966127.875
+      },
+      "land": {
+        "initialValue": 6166178966127.875
+      }
     },
-    underground: {
-      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
-      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
-    },
-    atmospheric: {
-      carbonDioxide: { initialValue: 0 },
-      atmosphericWater: { initialValue: 183600000000000000 },
-      atmosphericMethane: { initialValue: 742000000000000000 },
-      atmosphericAmmonia: { initialValue: 0 },
-      oxygen: { initialValue: 0 },
-      inertGas: { initialValue: 52700000000000000000 },
-      hydrogen: { initialValue: 2.44912245678809e+22 },
-      sulfuricAcid: { initialValue: 0 }
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 0
+      },
+      "atmosphericWater": {
+        "initialValue": 183600002014997730
+      },
+      "atmosphericMethane": {
+        "initialValue": 742000000000000000
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 0
+      },
+      "inertGas": {
+        "initialValue": 52700000000000000000
+      },
+      "hydrogen": {
+        "initialValue": 2.561082577751886e+22
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
     }
   },
-  zonalSurface: {
-    tropical: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      liquidHydrogen: 6.50176315764808e+23,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 2.10619e-317,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 6.497298758249565e+23,
+      "biomass": 0,
+      "hazardousBiomass": 2458758121569.9272,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    temperate: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      liquidHydrogen: 8.451268384364132e+23,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+    "temperate": {
+      "liquidWater": 2.4272773e-317,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 8.445465368078084e+23,
+      "biomass": 0,
+      "hazardousBiomass": 3195998419779.2886,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    polar: {
-      liquidWater: 0,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      liquidHydrogen: 1.3523686816732544e+23,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+    "polar": {
+      "liquidWater": 2.1773987e-317,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 1.3514400852629204e+23,
+      "biomass": 0,
+      "hazardousBiomass": 511422424778.6587,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     }
   },
-  zonalTemperatures: {
-    tropical: {
-      value: 2957.5591517739394,
-      day: 2957.5591583742544,
-      night: 2957.5591451736245
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 2958.019933485666,
+      "day": 2958.0199343687177,
+      "night": 2958.0199326026145
     },
-    temperate: {
-      value: 2957.5589662377447,
-      day: 2957.5589711514504,
-      night: 2957.558961324039
+    "temperate": {
+      "value": 2958.019908515422,
+      "day": 2958.0199091728227,
+      "night": 2958.019907858021
     },
-    polar: {
-      value: 2957.5586259608326,
-      day: 2957.558627781265,
-      night: 2957.5586241404003
+    "polar": {
+      "value": 2958.019862719553,
+      "day": 2958.0198629631072,
+      "night": 2958.019862475999
     }
   },
-  celestialParameters: {
-    distanceFromSun: 9.58,
-    hasNaturalMagnetosphere: true,
-    albedo: 0.499,
-    rotationPeriod: 10.7,
-    spinPeriod: 10.7,
-    starLuminosity: 0.46,
-    coreHeatFlux: 4112684,
-    sector: 'R5-29',
-    baseLand: 6291545240475.356,
-    baseRadius: 58232,
-    baseMass: 5.6834e+26,
-    baseGravity: 10.44,
-    basePlanetaryMass: 6.619e+25,
-    basePlanetaryVolumeM3: 1.047e+22,
-    baseSurfaceMassKg: 4.827393374640416e+26,
-    baseAtmosphericMassKg: 1.9274754494824067e+25,
-    dynamicDirectMassDeltaKg: 0,
-    dynamicDirectVolumeDeltaM3: 0,
-    dynamicMassDeltaKg: 7.177033604151992e+23,
-    dynamicSurfaceVolumeDeltaM3: 1.2393178671461328e+21,
-    currentPlanetaryMassKg: 6.619e+25,
-    currentSurfaceMassKg: 4.827393374640416e+26,
-    currentAtmosphericMassKg: 1.9274754494824067e+25,
-    currentPlanetaryVolumeM3: 1.047e+22,
-    currentSurfaceVolumeM3: 4.235376061349671e+23,
-    mass: 5.690577033604152e+26,
-    radius: 58440.8484147897,
-    gravity: 10.43983932649662
+  "celestialParameters": {
+    "distanceFromSun": 9.58,
+    "hasNaturalMagnetosphere": true,
+    "albedo": 0.499,
+    "rotationPeriod": 10.7,
+    "spinPeriod": 10.7,
+    "starLuminosity": 0.46,
+    "coreHeatFlux": 4112684,
+    "surfaceArea": 61661789661278750,
+    "crossSectionArea": 15415447415319688,
+    "baseLand": 6291545240475.356,
+    "baseRadius": 58232,
+    "baseMass": 5.6834e+26,
+    "baseGravity": 11.186404873657612,
+    "basePlanetaryMass": 6.619e+25,
+    "basePlanetaryVolumeM3": 1.047e+22,
+    "baseSurfaceMassKg": 1.6294204291766313e+27,
+    "baseAtmosphericMassKg": 2.566445137752086e+25,
+    "dynamicDirectMassDeltaKg": 0,
+    "dynamicDirectVolumeDeltaM3": 0,
+    "dynamicMassDeltaKg": 1.1529348805541522e+27,
+    "dynamicSurfaceVolumeDeltaM3": 6.126562676823222e+23,
+    "currentPlanetaryMassKg": 6.619e+25,
+    "currentSurfaceMassKg": 1.6294204291766313e+27,
+    "currentAtmosphericMassKg": 2.5664451377520873e+25,
+    "currentPlanetaryVolumeM3": 1.047e+22,
+    "currentSurfaceVolumeM3": 1.4293161828332198e+24,
+    "mass": 1.721274880554152e+27,
+    "radius": 70049.19208843612,
+    "gravity": 23.412602576176756,
+    "sector": "R5-29"
   },
   hazards: {
     hazardousBiomass: {
-      baseGrowth: { value: 0.4, maxDensity: 1 },
-      invasivenessResistance: { value: 20, severity: 0.005 },
-      oxygenPressure: { min: 0, max: 10, unit: 'kPa', severity: 0.01 },
-      co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
-      atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
+      baseGrowth: { value: 1, maxDensity: 1 },
+      invasivenessResistance: { value: 100, severity: 0.001 },
+      oxygenPressure: { min: 0, max: 100000, unit: 'kPa', severity: 0.00001 },
+      co2Pressure: { min: 0, max: 500000, unit: 'kPa', severity: 0.00001 },
+      atmosphericPressure: { min: 0, max: 12000000, unit: 'kPa', severity: 0.000001 },
       landPreference: { value: 'Land', severity: 0.1 },
       temperaturePreference: {
-        min: 223.15,
-        max: 303.15,
+        min: 300,
+        max: 3300,
         unit: 'K',
-        severityBelow: 0.004,
-        severityHigh: 0.005
+        severityBelow: 0.001,
+        severityHigh: 0.001
       },
-      radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 0.1 },
+      radiationPreference: { min: 0, max: 5000, unit: 'mSv/day', severity: 0.1 },
       penalties: {
         buildCost: 0.75,
         maintenanceCost: 0.75,
@@ -1051,13 +1090,13 @@ const shadesNightmareOverrides = {
       maxCoverageBase: 1,
       waterCoveragePenalty: 0.5,
       baseGrowth: { value: 1 },
-      invasivenessPreference: { min: 0, max: 50, severityHigh: 0.001 },
-      oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.001 },
-      temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.003 },
+      invasivenessPreference: { min: 0, max: 1000, severityHigh: 0.0001 },
+      oxygenPreference: { min: 0, max: 100000, unit: 'kPa', severityHigh: 0.00001 },
+      temperaturePreference: { min: 0, max: 3300, unit: 'K', severityBelow: 0, severityHigh: 0.001 },
       crusaderRemovalPerSecond: 0.5,
       researchToDisableCost: 10000,
       penalties: {
-        availableAndroidDecayRate: 0.05,
+        availableAndroidDecayRate: 0.50,
         nanoColonyGrowthMultiplier: 0,
         researchMultiplier: 0.1,
         buildCostMultiplier: 2,
@@ -1067,32 +1106,31 @@ const shadesNightmareOverrides = {
     },
     garbage: {
       surfaceResources: {
-        garbage: { amountMultiplier: 1000 },
-        trash: { amountMultiplier: 100 },
-        junk: { amountMultiplier: 100 },
-        scrapMetal: { amountMultiplier: 100 },
-        radioactiveWaste: { amountMultiplier: 0.25 }
+        garbage: { amountMultiplier: 0 },
+        trash: { amountMultiplier: 10000 },
+        junk: { amountMultiplier: 10000 },
+        scrapMetal: { amountMultiplier: 0 },
+        radioactiveWaste: { amountMultiplier: 100 }
       },
       penalties: {
-        garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
+        garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.1 },
         trash: { happiness: -0.05 },
         junk: { happiness: -0.05 },
         scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
-        radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
+        radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.05 }
       }
     },
     kessler: {
       orbitalDebrisPerLand: 100
     },
     pulsar: {
-      pulsePeriodSeconds: 1.337,
-      stormDurationSeconds: 5,
+      stormDurationSeconds: 25,
       severity: 1,
       orbitalDoseBoost_mSvPerDay: 4900,
       description: ''
     },
     debrisDisk: {
-      debrisPerLand: 1e10,
+      debrisPerLand: 1e11,
       attritionRatePerSecond: 0.01,
       colonistGrowthPenalty: 0.9
     }
@@ -1312,7 +1350,6 @@ const toi3693bOverrides = {
   },
   hazards: {
     pulsar: {
-      pulsePeriodSeconds: 1.337,
       stormDurationSeconds: 2,
       stormIntervalSeconds: 7.094741,
       severity: 0.25,

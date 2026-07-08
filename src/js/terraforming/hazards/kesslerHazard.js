@@ -49,11 +49,11 @@ function resolveDensityModel(terraforming) {
 
 function calculateKesslerRadiusContext(terraforming, entry) {
   const referenceRadiusKm = entry?.referenceRadiusKm
+    || terraforming?.initialCelestialParameters?.radius
+    || terraforming?.celestialParameters?.radius
     || terraforming?.baseRadius
     || terraforming?.initialCelestialParameters?.baseRadius
-    || terraforming?.initialCelestialParameters?.radius
     || terraforming?.celestialParameters?.baseRadius
-    || terraforming?.celestialParameters?.radius
     || 0;
   const currentRadiusKm = terraforming?.celestialParameters?.radius || referenceRadiusKm;
   return {
@@ -66,6 +66,31 @@ function calculateKesslerRadiusContext(terraforming, entry) {
 function getEffectivePeriapsisAltitudeMeters(entry, terraforming) {
   const radiusContext = calculateKesslerRadiusContext(terraforming, entry);
   return Math.max(0, entry.periapsisMeters + radiusContext.altitudeOffsetMeters);
+}
+
+function shouldRebaseKesslerRadiusReference(terraforming, referenceRadiusKm) {
+  const initialRadiusKm = terraforming?.initialCelestialParameters?.radius || 0;
+  const baseRadiusKm = terraforming?.baseRadius
+    || terraforming?.initialCelestialParameters?.baseRadius
+    || terraforming?.celestialParameters?.baseRadius
+    || 0;
+  return Boolean(
+    initialRadiusKm
+    && baseRadiusKm
+    && referenceRadiusKm
+    && Math.abs(referenceRadiusKm - baseRadiusKm) < 1e-6
+    && initialRadiusKm > baseRadiusKm
+  );
+}
+
+function normalizeKesslerRadiusReferences(terraforming, entries) {
+  const referenceRadiusKm = calculateKesslerRadiusContext(terraforming).referenceRadiusKm;
+  entries.forEach((entry) => {
+    entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
+    if (shouldRebaseKesslerRadiusReference(terraforming, entry.referenceRadiusKm)) {
+      entry.referenceRadiusKm = terraforming.initialCelestialParameters.radius;
+    }
+  });
 }
 
 function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters, referenceRadiusKm, samples = PERIAPSIS_SAMPLE_COUNT) {
@@ -410,13 +435,8 @@ class KesslerHazard {
 
   ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {
     if (this.periapsisDistribution.length) {
-      const referenceRadiusKm = calculateKesslerRadiusContext(terraforming).referenceRadiusKm;
-      this.periapsisDistribution.forEach((entry) => {
-        entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
-      });
-      this.periapsisBaseline.forEach((entry) => {
-        entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
-      });
+      normalizeKesslerRadiusReferences(terraforming, this.periapsisDistribution);
+      normalizeKesslerRadiusReferences(terraforming, this.periapsisBaseline);
       return;
     }
     const densityModel = resolveDensityModel(terraforming);
@@ -447,6 +467,8 @@ class KesslerHazard {
     if (!this.periapsisDistribution.length) {
       this.ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass);
     }
+    normalizeKesslerRadiusReferences(terraforming, this.periapsisDistribution);
+    normalizeKesslerRadiusReferences(terraforming, this.periapsisBaseline);
     let distributionTotal = 0;
     this.periapsisDistribution.forEach((entry) => {
       distributionTotal += entry.massTons;
