@@ -323,6 +323,10 @@ class NanotechManager extends EffectableEntity {
     let siliconProvided = 0;
     let metalProvided = 0;
     let graphiteProvided = 0;
+    let glassProductionFraction = 1;
+    let componentsProductionFraction = 1;
+    let electronicsProductionFraction = 1;
+    let grapheneProductionFraction = 1;
     this.resetActivityState();
     this.optimalEnergyConsumption = this.nanobots * 1e-12;
     this.optimalSiliconConsumption = this.nanobots * 1e-18 * (siliconAllocation / 10) * efficiencyMultiplier;
@@ -602,7 +606,8 @@ class NanotechManager extends EffectableEntity {
         
         // Produce glass from the remainder (what wasn't covered by junk)
         const actualGlassProduced = glassAmount;
-        this.currentGlassProduction = actualGlassProduced / (deltaTime / 1000);
+        this.currentGlassProduction = deltaTime > 0 ? actualGlassProduced / (deltaTime / 1000) : 0;
+        glassProductionFraction = glassRate > 0 ? Math.max(0, Math.min(1, this.currentGlassProduction / glassRate)) : 1;
         
         if (actualGlassProduced > 0) {
           accumulatedChanges.colony.glass =
@@ -618,6 +623,7 @@ class NanotechManager extends EffectableEntity {
           ? Math.min(componentsRate * (deltaTime / 1000), metalProvided)
           : componentsRate * (deltaTime / 1000);
         this.currentComponentsProduction = deltaTime > 0 ? componentsAmount / (deltaTime / 1000) : 0;
+        componentsProductionFraction = componentsRate > 0 ? Math.max(0, Math.min(1, this.currentComponentsProduction / componentsRate)) : 1;
         if (componentsAmount > 0) {
           accumulatedChanges.colony.components =
             (accumulatedChanges.colony.components || 0) + componentsAmount;
@@ -633,6 +639,7 @@ class NanotechManager extends EffectableEntity {
           ? Math.min(electronicsRate * (deltaTime / 1000), biomassConsumed)
           : electronicsRate * (deltaTime / 1000);
         this.currentElectronicsProduction = deltaTime > 0 ? electronicsAmount / (deltaTime / 1000) : 0;
+        electronicsProductionFraction = electronicsRate > 0 ? Math.max(0, Math.min(1, this.currentElectronicsProduction / electronicsRate)) : 1;
         if (electronicsAmount > 0) {
           accumulatedChanges.colony.electronics =
             (accumulatedChanges.colony.electronics || 0) + electronicsAmount;
@@ -648,6 +655,7 @@ class NanotechManager extends EffectableEntity {
           ? Math.min(grapheneAmountBase, graphiteProvided)
           : grapheneAmountBase;
         this.currentGrapheneProduction = deltaTime > 0 ? grapheneAmount / (deltaTime / 1000) : 0;
+        grapheneProductionFraction = grapheneRate > 0 ? Math.max(0, Math.min(1, this.currentGrapheneProduction / grapheneRate)) : 1;
         if (grapheneAmount > 0) {
           accumulatedChanges.colony.metal =
             (accumulatedChanges.colony.metal || 0) + grapheneAmount;
@@ -708,13 +716,13 @@ class NanotechManager extends EffectableEntity {
       : 0;
     const penalty =
       (this.maintenanceSlider / 10) * 0.0015 +
-      (this.glassSlider / 10) * 0.0015 +
+      (this.glassSlider / 10) * 0.0015 * glassProductionFraction +
       (stage2Enabled ? (this.maintenance2Slider / 10) * 0.0015 : 0) +
-      (stage2Enabled ? (this.componentsSlider / 10) * 0.0015 : 0) +
+      (stage2Enabled ? (this.componentsSlider / 10) * 0.0015 * componentsProductionFraction : 0) +
       (stage3Enabled ? (this.maintenance3Slider / 10) * 0.0015 : 0) +
-      (stage3Enabled ? (this.electronicsSlider / 10) * 0.0015 : 0) +
+      (stage3Enabled ? (this.electronicsSlider / 10) * 0.0015 * electronicsProductionFraction : 0) +
       (stage4Enabled ? (this.maintenance4Slider / 10) * 0.0015 : 0) +
-      (stage4Enabled ? (this.grapheneSlider / 10) * 0.0015 : 0) +
+      (stage4Enabled ? (this.grapheneSlider / 10) * 0.0015 * grapheneProductionFraction : 0) +
       (stageSkullEnabled ? (this.hazardousBiomassSlider / 10) * 0.0015 : 0) +
       (stageSkullEnabled ? (this.hazardousBiomass2Slider / 10) * 0.0015 : 0);
 
@@ -1461,6 +1469,29 @@ class NanotechManager extends EffectableEntity {
     const hasGraphite = this.hasGraphiteDeposits();
     const hasOre = this.hasOreDeposits();
     const isArtificialWorld = currentPlanetParameters?.classification?.archetype === 'artificial';
+    const productionEfficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
+    const optimalGlassProduction = this.nanobots * 1e-18 * (this.glassSlider / 10) * productionEfficiencyMultiplier;
+    const optimalComponentsProduction = stage2Active
+      ? this.nanobots * 1e-19 * (this.componentsSlider / 10) * productionEfficiencyMultiplier
+      : 0;
+    const optimalElectronicsProduction = stage3Active
+      ? this.nanobots * 1e-19 * (this.electronicsSlider / 10) * productionEfficiencyMultiplier
+      : 0;
+    const optimalGrapheneProduction = stage4Active
+      ? this.nanobots * 1e-19 * (this.grapheneSlider / 10) * productionEfficiencyMultiplier
+      : 0;
+    const glassProductionFraction = optimalGlassProduction > 0
+      ? Math.max(0, Math.min(1, this.currentGlassProduction / optimalGlassProduction))
+      : 1;
+    const componentsProductionFraction = optimalComponentsProduction > 0
+      ? Math.max(0, Math.min(1, this.currentComponentsProduction / optimalComponentsProduction))
+      : 1;
+    const electronicsProductionFraction = optimalElectronicsProduction > 0
+      ? Math.max(0, Math.min(1, this.currentElectronicsProduction / optimalElectronicsProduction))
+      : 1;
+    const grapheneProductionFraction = optimalGrapheneProduction > 0
+      ? Math.max(0, Math.min(1, this.currentGrapheneProduction / optimalGrapheneProduction))
+      : 1;
 
     const glassMax = hasSand ? 10 : siliconAllocation;
     if (this.glassSlider > glassMax) {
@@ -1549,13 +1580,13 @@ class NanotechManager extends EffectableEntity {
         const graphiteOpt = stage4Active ? (graphiteAllocation / 10) * 0.0015 : 0;
         const penalty =
           (this.maintenanceSlider / 10) * 0.0015 +
-          (this.glassSlider / 10) * 0.0015 +
+          (this.glassSlider / 10) * 0.0015 * glassProductionFraction +
           (stage2Active ? (this.maintenance2Slider / 10) * 0.0015 : 0) +
-          (stage2Active ? (this.componentsSlider / 10) * 0.0015 : 0) +
+          (stage2Active ? (this.componentsSlider / 10) * 0.0015 * componentsProductionFraction : 0) +
           (stage3Active ? (this.maintenance3Slider / 10) * 0.0015 : 0) +
-          (stage3Active ? (this.electronicsSlider / 10) * 0.0015 : 0) +
+          (stage3Active ? (this.electronicsSlider / 10) * 0.0015 * electronicsProductionFraction : 0) +
           (stage4Active ? (this.maintenance4Slider / 10) * 0.0015 : 0) +
-          (stage4Active ? (this.grapheneSlider / 10) * 0.0015 : 0) +
+          (stage4Active ? (this.grapheneSlider / 10) * 0.0015 * grapheneProductionFraction : 0) +
           (stageSkullActive ? (this.hazardousBiomassSlider / 10) * 0.0015 : 0) +
           (stageSkullActive ? (this.hazardousBiomass2Slider / 10) * 0.0015 : 0);
         const effectiveRate =
@@ -1575,7 +1606,14 @@ class NanotechManager extends EffectableEntity {
         C.growthEl.textContent = Math.abs(growthMultiplier - 1) > 1e-6
           ? `${rawLabel} -> ${actualLabel}`
           : actualLabel;
-        C.growthEl.style.color = (!this.hasEnoughEnergy || !this.hasEnoughSilicon || !this.hasEnoughMetal || !this.hasEnoughBiomass) ? 'orange' : '';
+        C.growthEl.style.color = (
+          !this.hasEnoughEnergy ||
+          !this.hasEnoughSilicon ||
+          !this.hasEnoughMetal ||
+          !this.hasEnoughBiomass ||
+          !this.hasEnoughGraphite ||
+          !this.hasEnoughHazardousBiomass
+        ) ? 'orange' : '';
         this.effectiveGrowthRate = actualRate;
       }
       if (C.timeToFullEl) {
@@ -1811,24 +1849,24 @@ class NanotechManager extends EffectableEntity {
       C.maintenance4ImpactEl.style.color = temperatureDisabled ? '#c92a2a' : '';
     }
     if (C.glassImpactEl) {
-      const value = temperatureDisabled ? 0 : -(this.glassSlider / 10) * 0.15;
+      const value = temperatureDisabled ? 0 : -(this.glassSlider / 10) * 0.15 * glassProductionFraction;
       C.glassImpactEl.textContent = `${value.toFixed(3)}%`;
-      C.glassImpactEl.style.color = temperatureDisabled ? '#c92a2a' : '';
+      C.glassImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (glassProductionFraction < 1 ? 'orange' : '');
     }
     if (C.componentsImpactEl) {
-      const value = temperatureDisabled ? 0 : (stage2Active ? -(this.componentsSlider / 10) * 0.15 : 0);
+      const value = temperatureDisabled ? 0 : (stage2Active ? -(this.componentsSlider / 10) * 0.15 * componentsProductionFraction : 0);
       C.componentsImpactEl.textContent = `${value.toFixed(3)}%`;
-      C.componentsImpactEl.style.color = temperatureDisabled ? '#c92a2a' : '';
+      C.componentsImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (stage2Active && componentsProductionFraction < 1 ? 'orange' : '');
     }
     if (C.electronicsImpactEl) {
-      const value = temperatureDisabled ? 0 : (stage3Active ? -(this.electronicsSlider / 10) * 0.15 : 0);
+      const value = temperatureDisabled ? 0 : (stage3Active ? -(this.electronicsSlider / 10) * 0.15 * electronicsProductionFraction : 0);
       C.electronicsImpactEl.textContent = `${value.toFixed(3)}%`;
-      C.electronicsImpactEl.style.color = temperatureDisabled ? '#c92a2a' : '';
+      C.electronicsImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (stage3Active && electronicsProductionFraction < 1 ? 'orange' : '');
     }
     if (C.grapheneImpactEl) {
-      const value = temperatureDisabled ? 0 : (stage4Active ? -(this.grapheneSlider / 10) * 0.15 : 0);
+      const value = temperatureDisabled ? 0 : (stage4Active ? -(this.grapheneSlider / 10) * 0.15 * grapheneProductionFraction : 0);
       C.grapheneImpactEl.textContent = `${value.toFixed(3)}%`;
-      C.grapheneImpactEl.style.color = temperatureDisabled ? '#c92a2a' : '';
+      C.grapheneImpactEl.style.color = temperatureDisabled ? '#c92a2a' : (stage4Active && grapheneProductionFraction < 1 ? 'orange' : '');
     }
     if (C.hazardousBiomassSliderImpactEl) {
       const value = temperatureDisabled ? 0 : (stageSkullActive ? -(this.hazardousBiomassSlider / 10) * 0.15 : 0);
@@ -1901,14 +1939,22 @@ class NanotechManager extends EffectableEntity {
       C.maintenance4RateEl.textContent = temperatureDisabled
         ? '0.00%'
         : `-${(this.currentMaintenance4Reduction * 100).toFixed(2)}%`;
-    if (C.glassRateEl)
+    if (C.glassRateEl) {
       C.glassRateEl.textContent = `${formatNumber(this.currentGlassProduction, false, 2, true)} ton/s`;
-    if (C.componentsRateEl)
+      C.glassRateEl.style.color = temperatureDisabled ? '#c92a2a' : (glassProductionFraction < 1 ? 'orange' : '');
+    }
+    if (C.componentsRateEl) {
       C.componentsRateEl.textContent = `${formatNumber(stage2Active ? this.currentComponentsProduction : 0, false, 2, true)} ton/s`;
-    if (C.electronicsRateEl)
+      C.componentsRateEl.style.color = temperatureDisabled ? '#c92a2a' : (stage2Active && componentsProductionFraction < 1 ? 'orange' : '');
+    }
+    if (C.electronicsRateEl) {
       C.electronicsRateEl.textContent = `${formatNumber(stage3Active ? this.currentElectronicsProduction : 0, false, 2, true)} ton/s`;
-    if (C.grapheneRateEl)
+      C.electronicsRateEl.style.color = temperatureDisabled ? '#c92a2a' : (stage3Active && electronicsProductionFraction < 1 ? 'orange' : '');
+    }
+    if (C.grapheneRateEl) {
       C.grapheneRateEl.textContent = `${formatNumber(stage4Active ? this.currentGrapheneProduction : 0, false, 2, true)} ton/s`;
+      C.grapheneRateEl.style.color = temperatureDisabled ? '#c92a2a' : (stage4Active && grapheneProductionFraction < 1 ? 'orange' : '');
+    }
 
     if (C.stage2Container) {
       C.stage2Container.style.display = stage2Active ? '' : 'none';
