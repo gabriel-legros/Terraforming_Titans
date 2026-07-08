@@ -3323,7 +3323,7 @@ setLanguageData({
           summary: {
             debris: 'Debris: {current} / {initial} t\nCleared: {clearance}',
             impact: 'Colonist Growth: x{growth}',
-            attrition: 'Attrition: {attrition}%/s\nSalvage: {scrap}/s scrap, {junk}/s junk',
+            attrition: 'Attrition: {attrition}%/s\nColony stockpiles: -{resources}/s\nSalvage: {scrap}/s scrap, {junk}/s junk',
           },
           bar: {
             cleared: '{value}% Cleared',
@@ -3335,7 +3335,7 @@ setLanguageData({
             orbitals: 'Orbitals are capped at 0 while the hazard is active.',
             disabledSystems: 'Lifters atmospheric stripping, Mega Heat Sink, Dyson Receivers, and Space Mirror Facility are disabled while the hazard is active. The companion mirror is too afraid to come.',
             kesslerRegeneration: 'If Kessler Skies is also active, Debris Disk regenerates orbital debris by {value}% of each Kessler bin per second.',
-            attrition: 'Buildings and colonies lose up to {value}%/s of constructed count.  This is converted into scrap metal and junk.  However, buildings will not drop below 10 from this attrition.',
+            attrition: 'Buildings, colonies, and colony stockpiles lose up to {value}%/s. Constructed structures do not drop below 10 and colony stockpiles do not drop below 1,000 from this attrition. Lost materials convert into scrap metal and junk.',
           },
         },
         kessler: {

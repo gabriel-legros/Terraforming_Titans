@@ -1,5 +1,6 @@
 const DEBRIS_DISK_EFFECT_SOURCE_ID = 'debris-disk-hazard';
 const DEBRIS_DISK_ATTRITION_LABEL = t('ui.terraforming.hazardEffects.debrisDiskAttrition', {}, 'Debris Disk Attrition');
+const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = 1000;
 
 function normalizeDebrisDiskParameters(parameters = {}) {
   const attritionRate = Number.isFinite(parameters.attritionRatePerSecond)
@@ -105,6 +106,7 @@ class DebrisDiskHazard {
     this.permanentlyCleared = false;
     this.partialAttritionByStructure = {};
     this.lastAttritionLosses = 0;
+    this.lastColonyResourceLossPerSecond = 0;
     this.lastScrapMetalPerSecond = 0;
     this.lastJunkPerSecond = 0;
     this.effectsActive = false;
@@ -302,8 +304,32 @@ class DebrisDiskHazard {
     return salvage;
   }
 
+  applyAttritionToColonyResources(seconds, attritionRate) {
+    const salvage = { resourceLoss: 0, scrapMetal: 0, junk: 0 };
+    if (!(attritionRate > 0) || !(seconds > 0)) {
+      return salvage;
+    }
+
+    Object.keys(resources.colony).forEach((resourceKey) => {
+      const resource = resources.colony[resourceKey];
+      const currentValue = resource.value || 0;
+      const attritableValue = Math.max(0, currentValue - DEBRIS_DISK_COLONY_RESOURCE_MINIMUM);
+      const loss = Math.min(attritableValue, currentValue * attritionRate * seconds);
+      if (!(loss > 0)) {
+        return;
+      }
+
+      resource.decrease(loss);
+      resource.modifyRate(-loss / seconds, DEBRIS_DISK_ATTRITION_LABEL, 'hazard');
+      addDebrisDiskConversionSalvage(salvage, 'colony', resourceKey, loss);
+      salvage.resourceLoss += loss;
+    });
+    return salvage;
+  }
+
   applyAttrition(seconds, attritionRate) {
     let losses = 0;
+    let colonyResourceLoss = 0;
     let scrapMetal = 0;
     let junk = 0;
     const applyGroup = (group, prefix) => {
@@ -317,9 +343,14 @@ class DebrisDiskHazard {
 
     applyGroup(buildings, 'building');
     applyGroup(colonies, 'colony');
+    const colonyResourceResult = this.applyAttritionToColonyResources(seconds, attritionRate);
+    colonyResourceLoss += colonyResourceResult.resourceLoss;
+    scrapMetal += colonyResourceResult.scrapMetal;
+    junk += colonyResourceResult.junk;
     addDebrisDiskSurfaceResource('scrapMetal', scrapMetal, seconds);
     addDebrisDiskSurfaceResource('junk', junk, seconds);
     this.lastAttritionLosses = losses;
+    this.lastColonyResourceLossPerSecond = seconds > 0 ? colonyResourceLoss / seconds : 0;
     this.lastScrapMetalPerSecond = seconds > 0 ? scrapMetal / seconds : 0;
     this.lastJunkPerSecond = seconds > 0 ? junk / seconds : 0;
   }
@@ -341,6 +372,7 @@ class DebrisDiskHazard {
     this.syncEffects(terraformingState, parameters);
     if (this.isCleared(terraformingState)) {
       this.lastAttritionLosses = 0;
+      this.lastColonyResourceLossPerSecond = 0;
       this.lastScrapMetalPerSecond = 0;
       this.lastJunkPerSecond = 0;
       this.releaseCompanionMirrorIfReady();

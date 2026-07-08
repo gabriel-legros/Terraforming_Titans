@@ -263,9 +263,10 @@ function updateDebrisDiskHazardUI(debrisDiskParameters) {
   );
   debrisDiskHazardUICache.summaryAttritionBody.textContent = getDebrisDiskHazardText(
     'summary.attrition',
-    'Attrition: {attrition}%/s\nSalvage: {scrap}/s scrap, {junk}/s junk',
+    'Attrition: {attrition}%/s\nColony stockpiles: -{resources}/s\nSalvage: {scrap}/s scrap, {junk}/s junk',
     {
       attrition: formatNumber(attritionRate * 100, false, 3),
+      resources: formatDebrisDiskNumber(hazard ? hazard.lastColonyResourceLossPerSecond : 0, 2, true),
       scrap: formatDebrisDiskNumber(hazard ? hazard.lastScrapMetalPerSecond : 0, 2, true),
       junk: formatDebrisDiskNumber(hazard ? hazard.lastJunkPerSecond : 0, 2, true),
     }
@@ -295,7 +296,7 @@ function updateDebrisDiskHazardUI(debrisDiskParameters) {
     getDebrisDiskHazardText('effectsList.orbitals', 'Orbitals are capped at 0 while system debris remains.'),
     getDebrisDiskHazardText('effectsList.disabledSystems', 'Lifters atmospheric stripping, Mega Heat Sink, Dyson Receivers, and Space Mirror Facility are disabled while active. The companion mirror is too afraid to come.'),
     getDebrisDiskHazardText('effectsList.kesslerRegeneration', 'If Kessler Skies is also active, Debris Disk regenerates orbital debris by {value}% of each Kessler bin per second.', { value: formatNumber((debrisDiskParameters.kesslerRegenerationRatePerBinPerSecond || 0.01) * 100, false, 2) }),
-    getDebrisDiskHazardText('effectsList.attrition', 'Buildings and colonies lose up to {value}%/s of constructed count, convert construction materials into scrap metal and junk, and never drop below 10 from this hazard.', { value: formatNumber((debrisDiskParameters.attritionRatePerSecond || 0.01) * 100, false, 2) }),
+    getDebrisDiskHazardText('effectsList.attrition', 'Buildings, colonies, and colony stockpiles lose up to {value}%/s. Constructed structures do not drop below 10 and colony stockpiles do not drop below 1,000 from this hazard. Lost materials convert into scrap metal and junk.', { value: formatNumber((debrisDiskParameters.attritionRatePerSecond || 0.01) * 100, false, 2) }),
   ];
   for (let i = 0; i < debrisDiskHazardUICache.effectsItems.length; i += 1) {
     debrisDiskHazardUICache.effectsItems[i].textContent = effects[i] || '';
