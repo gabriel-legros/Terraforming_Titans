@@ -3536,6 +3536,20 @@
     align-items: center;
     gap: 6px;
 }
+
+.thruster-motion-target-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.thruster-motion-target-input {
+    width: 76px;
+}
+
+.thruster-motion-target-mode {
+    width: 76px;
+}
 .storage-full-icon {
     color: #ffc107;
     cursor: help;

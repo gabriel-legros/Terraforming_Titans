@@ -1927,9 +1927,11 @@ setLanguageData({
         },
         motion: {
           title: 'Motion',
-          tooltip: 'Use planetary thrusters to change the world\'s orbit. If bound to a parent body, investment first drives a slow spiral to the Hill radius for escape. After escape, investment changes heliocentric distance toward the target AU. Investment consumes energy continuously; only one mode, Spin or Motion, can be active at a time.',
+          tooltip: 'Use planetary thrusters to change the world\'s orbit. If bound to a parent body, investment first drives a slow spiral to the Hill radius for escape. After escape, investment changes heliocentric distance toward the target orbit. The target can be entered as AU or stellar flux in W/m^2. Investment consumes energy continuously; only one mode, Spin or Motion, can be active at a time.',
           distance: 'Distance:',
           around: 'Around:',
+          targetAu: 'AU',
+          targetFlux: 'W/m^2',
           spiralDv: 'Spiral Δv:',
           escapeDv: 'Escape Δv:',
           hillRadius: 'Hill Radius:',
