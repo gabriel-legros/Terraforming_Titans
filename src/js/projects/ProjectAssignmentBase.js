@@ -573,8 +573,8 @@ function createProjectAssignmentBase(BaseClass) {
     updateAssignmentControls(row, key, total, step) {
       const storedCurrent = this.getStoredAssignmentAmount(key);
       const maxForKey = this.getAssignmentMaxTarget(key);
-      row.minusButton.textContent = `-${formatNumber(step, true)}`;
-      row.plusButton.textContent = `+${formatNumber(step, true)}`;
+      row.minusButton.textContent = `-${formatNumber(step, true, 0)}`;
+      row.plusButton.textContent = `+${formatNumber(step, true, 0)}`;
       row.autoAssign.checked = this.autoAssignFlags[key] === true;
       row.autoAssign.disabled = total <= 0n;
       if (document.activeElement !== row.weightInput) {
