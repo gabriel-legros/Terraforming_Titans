@@ -133,8 +133,11 @@ function getStarLuminositySolar(){
 }
 
 function orbitAUFromStellarFlux(fluxWm2){
-  const flux = Number.isFinite(fluxWm2) && fluxWm2 > 0 ? fluxWm2 : 1;
-  return Math.sqrt((getStarLuminositySolar() * THRUSTER_SOLAR_CONSTANT_WM2) / flux);
+  if (!Number.isFinite(fluxWm2) || fluxWm2 <= 0) return ROGUE_DISTANCE_AU;
+  return Math.min(
+    ROGUE_DISTANCE_AU,
+    Math.sqrt((getStarLuminositySolar() * THRUSTER_SOLAR_CONSTANT_WM2) / fluxWm2)
+  );
 }
 
 function stellarFluxFromOrbitAU(orbitAU){

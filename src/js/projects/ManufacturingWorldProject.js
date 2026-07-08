@@ -681,6 +681,174 @@
       this.shopElements = shopElements;
     }
 
+    createManufacturingAssignmentRow(key, blockABody, blockBBody, blockCBody) {
+      const isUnassigned = this.isUnassignedAssignmentKey(key);
+      const recipe = isUnassigned ? null : this.getRecipe(key);
+      const rowA = document.createElement('div');
+      rowA.dataset.manufacturingRole = 'rowA';
+      rowA.dataset.manufacturingAssignmentKey = key;
+      rowA.classList.add('manufacturing-block-row', 'manufacturing-block-grid-a');
+      if (isUnassigned) {
+        rowA.classList.add('assignment-divider-row');
+      }
+
+      const nameWrap = document.createElement('span');
+      nameWrap.classList.add('stat-value', 'manufacturing-resource-name');
+      const nameEl = document.createElement('span');
+      nameEl.textContent = isUnassigned ? this.getUnassignedAssignmentLabel() : recipe.label;
+      let recipeTooltip = null;
+      let recipeTooltipCache = null;
+      nameWrap.appendChild(nameEl);
+      if (!isUnassigned) {
+        const nameInfo = document.createElement('span');
+        nameInfo.classList.add('info-tooltip-icon');
+        nameInfo.innerHTML = '&#9432;';
+        recipeTooltip = attachDynamicInfoTooltip(nameInfo, '');
+        recipeTooltipCache = {};
+        nameWrap.appendChild(nameInfo);
+      }
+
+      const complexityEl = document.createElement('span');
+      complexityEl.classList.add('stat-value');
+      complexityEl.textContent = isUnassigned ? '' : formatNumber(recipe.complexity, true);
+
+      const unitProductionEl = document.createElement('span');
+      unitProductionEl.classList.add('stat-value');
+      unitProductionEl.dataset.manufacturingRole = 'unitProduction';
+      rowA.append(nameWrap, complexityEl, unitProductionEl);
+
+      const amountEl = document.createElement('span');
+      amountEl.classList.add('stat-value');
+      amountEl.dataset.manufacturingRole = 'value';
+      amountEl.dataset.manufacturingAssignmentKey = key;
+
+      const assignmentControls = this.createAssignmentControls(key, {
+        rolePrefix: 'manufacturing',
+        assignmentKeyDataset: 'manufacturingAssignmentKey',
+        textProvider: (controlKey, fallback) => {
+          const paths = {
+            zero: 'catalogs.specializations.manufacturing.ui.common.zero',
+            max: 'catalogs.specializations.manufacturing.ui.common.max',
+            auto: 'catalogs.specializations.manufacturing.ui.auto'
+          };
+          return getManufacturingText(paths[controlKey]) || fallback;
+        }
+      });
+
+      const rateEl = document.createElement('div');
+      rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
+      rateEl.dataset.manufacturingRole = 'rate';
+      rateEl.dataset.manufacturingAssignmentKey = key;
+
+      const rowB = document.createElement('div');
+      rowB.dataset.manufacturingRole = 'rowB';
+      rowB.dataset.manufacturingAssignmentKey = key;
+      rowB.classList.add('manufacturing-block-row', 'manufacturing-block-grid-b');
+      if (isUnassigned) {
+        rowB.classList.add('assignment-divider-row');
+      }
+      rowB.append(amountEl, assignmentControls.controls);
+
+      const rowC = document.createElement('div');
+      rowC.dataset.manufacturingRole = 'rowC';
+      rowC.dataset.manufacturingAssignmentKey = key;
+      rowC.classList.add('manufacturing-block-row', 'manufacturing-block-grid-c');
+      if (isUnassigned) {
+        rowC.classList.add('assignment-divider-row');
+      }
+      rowC.append(assignmentControls.weightInput, rateEl);
+
+      blockABody.appendChild(rowA);
+      blockBBody.appendChild(rowB);
+      blockCBody.appendChild(rowC);
+
+      return {
+        rowA,
+        rowB,
+        rowC,
+        unitProduction: unitProductionEl,
+        value: amountEl,
+        zeroButton: assignmentControls.zeroButton,
+        minusButton: assignmentControls.minusButton,
+        plusButton: assignmentControls.plusButton,
+        maxButton: assignmentControls.maxButton,
+        autoAssign: assignmentControls.autoAssign,
+        weightInput: assignmentControls.weightInput,
+        rate: rateEl,
+        recipeTooltip,
+        recipeTooltipCache,
+      };
+    }
+
+    syncManufacturingAssignmentRows(elements) {
+      if (!elements || !elements.blockABody || !elements.blockBBody || !elements.blockCBody) {
+        return;
+      }
+      const rowElements = elements.rowElements || {};
+      const activeKeys = new Set(this.getManagedAssignmentKeys());
+      let changed = false;
+
+      activeKeys.forEach((key) => {
+        if (!rowElements[key]) {
+          rowElements[key] = this.createManufacturingAssignmentRow(
+            key,
+            elements.blockABody,
+            elements.blockBBody,
+            elements.blockCBody
+          );
+          changed = true;
+        }
+      });
+
+      Object.keys(rowElements).forEach((key) => {
+        if (activeKeys.has(key)) {
+          return;
+        }
+        const row = rowElements[key];
+        if (row.rowA) {
+          row.rowA.remove();
+        }
+        if (row.rowB) {
+          row.rowB.remove();
+        }
+        if (row.rowC) {
+          row.rowC.remove();
+        }
+        delete rowElements[key];
+        changed = true;
+      });
+
+      let previousRowA = null;
+      let previousRowB = null;
+      let previousRowC = null;
+      this.getManagedAssignmentKeys().forEach((key) => {
+        const row = rowElements[key];
+        if (!row) {
+          return;
+        }
+        if (row.rowA.parentNode !== elements.blockABody || row.rowA.previousSibling !== previousRowA) {
+          elements.blockABody.insertBefore(row.rowA, previousRowA ? previousRowA.nextSibling : elements.blockABody.firstChild);
+          changed = true;
+        }
+        previousRowA = row.rowA;
+        if (row.rowB.parentNode !== elements.blockBBody || row.rowB.previousSibling !== previousRowB) {
+          elements.blockBBody.insertBefore(row.rowB, previousRowB ? previousRowB.nextSibling : elements.blockBBody.firstChild);
+          changed = true;
+        }
+        previousRowB = row.rowB;
+        if (row.rowC.parentNode !== elements.blockCBody || row.rowC.previousSibling !== previousRowC) {
+          elements.blockCBody.insertBefore(row.rowC, previousRowC ? previousRowC.nextSibling : elements.blockCBody.firstChild);
+          changed = true;
+        }
+        previousRowC = row.rowC;
+      });
+
+      elements.rowElements = rowElements;
+      if (changed) {
+        this.assignmentRowHeightsDirty = true;
+      }
+    }
+
     resolveUIElements() {
       if (this.uiElements?.runCheckbox?.isConnected) {
         return this.uiElements;
@@ -717,6 +885,9 @@
       this.uiElements = {
         controlsCard: card.querySelector('[data-manufacturing-ui="controlsCard"]'),
         assignmentLayout,
+        blockABody: assignmentLayout.querySelector('[data-manufacturing-ui="blockABody"]'),
+        blockBBody: assignmentLayout.querySelector('[data-manufacturing-ui="blockBBody"]'),
+        blockCBody: assignmentLayout.querySelector('[data-manufacturing-ui="blockCBody"]'),
         cumulativeValue: card.querySelector('[data-manufacturing-ui="cumulativeValue"]'),
         assignedValue: card.querySelector('[data-manufacturing-ui="assignedValue"]'),
         freeValue: card.querySelector('[data-manufacturing-ui="freeValue"]'),
@@ -1220,6 +1391,7 @@
       blockAHeader.append(blockAHeaderResource, blockAHeaderComplexity, blockAHeaderUnit);
       const blockABody = document.createElement('div');
       blockABody.classList.add('manufacturing-block-body');
+      blockABody.dataset.manufacturingUi = 'blockABody';
       blockA.append(blockAHeader, blockABody);
 
       const blockB = document.createElement('div');
@@ -1235,6 +1407,7 @@
       blockBHeader.append(blockBHeaderAssigned, blockBHeaderControls);
       const blockBBody = document.createElement('div');
       blockBBody.classList.add('manufacturing-block-body');
+      blockBBody.dataset.manufacturingUi = 'blockBBody';
       blockB.append(blockBHeader, blockBBody);
 
       const blockC = document.createElement('div');
@@ -1250,6 +1423,7 @@
       blockCHeader.append(blockCHeaderWeight, blockCHeaderRate);
       const blockCBody = document.createElement('div');
       blockCBody.classList.add('manufacturing-block-body');
+      blockCBody.dataset.manufacturingUi = 'blockCBody';
       blockC.append(blockCHeader, blockCBody);
 
       assignmentLayout.append(blockA, blockB, blockC);
@@ -1257,102 +1431,7 @@
 
       const rowElements = {};
       this.getManagedAssignmentKeys().forEach((key) => {
-        const isUnassigned = this.isUnassignedAssignmentKey(key);
-        const recipe = isUnassigned ? null : this.getRecipe(key);
-        const rowA = document.createElement('div');
-        rowA.dataset.manufacturingRole = 'rowA';
-        rowA.dataset.manufacturingAssignmentKey = key;
-        rowA.classList.add('manufacturing-block-row', 'manufacturing-block-grid-a');
-        if (isUnassigned) {
-          rowA.classList.add('assignment-divider-row');
-        }
-
-        const nameWrap = document.createElement('span');
-        nameWrap.classList.add('stat-value', 'manufacturing-resource-name');
-        const nameEl = document.createElement('span');
-        nameEl.textContent = isUnassigned ? this.getUnassignedAssignmentLabel() : recipe.label;
-        let recipeTooltip = null;
-        let recipeTooltipCache = null;
-        nameWrap.appendChild(nameEl);
-        if (!isUnassigned) {
-          const nameInfo = document.createElement('span');
-          nameInfo.classList.add('info-tooltip-icon');
-          nameInfo.innerHTML = '&#9432;';
-          recipeTooltip = attachDynamicInfoTooltip(nameInfo, '');
-          recipeTooltipCache = {};
-          nameWrap.appendChild(nameInfo);
-        }
-
-        const complexityEl = document.createElement('span');
-        complexityEl.classList.add('stat-value');
-        complexityEl.textContent = isUnassigned ? '' : formatNumber(recipe.complexity, true);
-
-        const unitProductionEl = document.createElement('span');
-        unitProductionEl.classList.add('stat-value');
-        unitProductionEl.dataset.manufacturingRole = 'unitProduction';
-        rowA.append(nameWrap, complexityEl, unitProductionEl);
-
-        const amountEl = document.createElement('span');
-        amountEl.classList.add('stat-value');
-        amountEl.dataset.manufacturingRole = 'value';
-        amountEl.dataset.manufacturingAssignmentKey = key;
-
-        const assignmentControls = this.createAssignmentControls(key, {
-          rolePrefix: 'manufacturing',
-          assignmentKeyDataset: 'manufacturingAssignmentKey',
-          textProvider: (controlKey, fallback) => {
-            const paths = {
-              zero: 'catalogs.specializations.manufacturing.ui.common.zero',
-              max: 'catalogs.specializations.manufacturing.ui.common.max',
-              auto: 'catalogs.specializations.manufacturing.ui.auto'
-            };
-            return getManufacturingText(paths[controlKey]) || fallback;
-          }
-        });
-
-        const rateEl = document.createElement('div');
-        rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
-        rateEl.dataset.manufacturingRole = 'rate';
-        rateEl.dataset.manufacturingAssignmentKey = key;
-
-        const rowB = document.createElement('div');
-        rowB.dataset.manufacturingRole = 'rowB';
-        rowB.dataset.manufacturingAssignmentKey = key;
-        rowB.classList.add('manufacturing-block-row', 'manufacturing-block-grid-b');
-        if (isUnassigned) {
-          rowB.classList.add('assignment-divider-row');
-        }
-        rowB.append(amountEl, assignmentControls.controls);
-
-        const rowC = document.createElement('div');
-        rowC.dataset.manufacturingRole = 'rowC';
-        rowC.dataset.manufacturingAssignmentKey = key;
-        rowC.classList.add('manufacturing-block-row', 'manufacturing-block-grid-c');
-        if (isUnassigned) {
-          rowC.classList.add('assignment-divider-row');
-        }
-        rowC.append(assignmentControls.weightInput, rateEl);
-
-        blockABody.appendChild(rowA);
-        blockBBody.appendChild(rowB);
-        blockCBody.appendChild(rowC);
-
-        rowElements[key] = {
-          rowA,
-          rowB,
-          rowC,
-          unitProduction: unitProductionEl,
-          value: amountEl,
-          zeroButton: assignmentControls.zeroButton,
-          minusButton: assignmentControls.minusButton,
-          plusButton: assignmentControls.plusButton,
-          maxButton: assignmentControls.maxButton,
-          autoAssign: assignmentControls.autoAssign,
-          weightInput: assignmentControls.weightInput,
-          rate: rateEl,
-          recipeTooltip,
-          recipeTooltipCache,
-        };
+        rowElements[key] = this.createManufacturingAssignmentRow(key, blockABody, blockBBody, blockCBody);
       });
 
       body.appendChild(assignmentGrid);
@@ -1367,6 +1446,9 @@
       this.uiElements = {
         controlsCard: card,
         assignmentLayout,
+        blockABody,
+        blockBBody,
+        blockCBody,
         cumulativeValue,
         assignedValue,
         freeValue,
@@ -1405,6 +1487,7 @@
         return;
       }
 
+      this.syncManufacturingAssignmentRows(elements);
       this.normalizeAssignments();
       this.normalizeAssignmentStep();
       const total = this.getTotalPotentialPopulation();
