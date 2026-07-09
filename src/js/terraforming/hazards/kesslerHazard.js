@@ -395,7 +395,7 @@ class KesslerHazard {
     resource.value += addedTons;
   }
 
-  regenerateDebrisFromDisk(terraforming, kesslerParameters, deltaSeconds, ratePerBinPerSecond = 0.01) {
+  regenerateDebrisFromDisk(terraforming, kesslerParameters, deltaSeconds, ratePerBinPerSecond = 0.01, maxGeneratedTons = Infinity) {
     if (!(deltaSeconds > 0) || !(ratePerBinPerSecond > 0)) {
       return 0;
     }
@@ -408,14 +408,25 @@ class KesslerHazard {
       return 0;
     }
 
-    let regenerated = 0;
+    const additions = [];
+    let rawRegeneration = 0;
     for (let i = 0; i < this.periapsisDistribution.length; i += 1) {
-      const entry = this.periapsisDistribution[i];
       const baseline = this.periapsisBaseline[i];
       const baselineMass = baseline && baseline.massTons > 0
         ? baseline.massTons
         : (resource.initialValue || 0) / this.periapsisDistribution.length;
       const added = Math.max(0, baselineMass * ratePerBinPerSecond * deltaSeconds);
+      additions.push(added);
+      rawRegeneration += added;
+    }
+
+    const generationScale = rawRegeneration > 0
+      ? Math.min(1, maxGeneratedTons / rawRegeneration)
+      : 0;
+    let regenerated = 0;
+    for (let i = 0; i < this.periapsisDistribution.length; i += 1) {
+      const entry = this.periapsisDistribution[i];
+      const added = additions[i] * generationScale;
       entry.massTons += added;
       entry.maxSinceZero = Math.max(entry.maxSinceZero || 0, entry.massTons);
       regenerated += added;

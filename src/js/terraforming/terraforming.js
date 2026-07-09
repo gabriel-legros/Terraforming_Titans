@@ -1280,7 +1280,7 @@ class Terraforming extends EffectableEntity{
 
     runHazardUpdate(deltaTime = 0, options = {}) {
       if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
-        hazardManager.update(deltaTime, this);
+        hazardManager.update(deltaTime, this, options);
       }
     }
 

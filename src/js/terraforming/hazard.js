@@ -565,7 +565,7 @@ class HazardManager {
     return true;
   }
 
-  update(deltaTime = 0, terraformingState = null) {
+  update(deltaTime = 0, terraformingState = null, options = {}) {
     if (isCurrentWorldManagerDisabled('hazardManager')) {
       return;
     }
@@ -615,7 +615,7 @@ class HazardManager {
       this.kesslerHazard.update(deltaSeconds, terraformingState, this.parameters.kessler);
     }
     if (this.debrisDiskHazard && this.hasHazardParameters('debrisDisk')) {
-      this.debrisDiskHazard.update(deltaSeconds, terraformingState, this.parameters.debrisDisk);
+      this.debrisDiskHazard.update(deltaSeconds, terraformingState, this.parameters.debrisDisk, options);
     } else if (this.debrisDiskHazard) {
       this.debrisDiskHazard.clearEffects();
     }

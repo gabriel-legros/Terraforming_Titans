@@ -2153,7 +2153,10 @@ function produceResources(deltaTime, buildings) {
   // but BEFORE applying accumulatedChanges to resource values.
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
   if(terraforming) {
-    terraforming.updateResources(deltaTime);
+    terraforming.updateResources(deltaTime, {
+      accumulatedChanges,
+      accumulatedSpecialChanges
+    });
   }
 
   // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,

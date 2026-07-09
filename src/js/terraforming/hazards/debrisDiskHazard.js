@@ -3,6 +3,7 @@ const DEBRIS_DISK_ATTRITION_LABEL = t('ui.terraforming.hazardEffects.debrisDiskA
 const DEBRIS_DISK_STRUCTURE_MINIMUM = 10n;
 const DEBRIS_DISK_AEROSTAT_MINIMUM = 500n;
 const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = 10000;
+const DEBRIS_DISK_SPACESHIP_MINING_SOURCE = 'Spaceship Mining';
 
 function normalizeDebrisDiskParameters(parameters = {}) {
   const attritionRate = Number.isFinite(parameters.attritionRatePerSecond)
@@ -70,6 +71,33 @@ function addDebrisDiskSurfaceResource(resourceKey, amount, seconds) {
   } catch (error) {
     // Missing UI helpers are acceptable in isolated tests.
   }
+}
+
+function getDebrisDiskSpaceshipMiningRate(category, resourceKey) {
+  const resource = resources[category] && resources[category][resourceKey];
+  if (!resource || !resource.productionRateByType || !resource.productionRateByType.project) {
+    return 0;
+  }
+  return Math.max(0, resource.productionRateByType.project[DEBRIS_DISK_SPACESHIP_MINING_SOURCE] || 0);
+}
+
+function getDebrisDiskPositiveAccumulatedChange(accumulatedChanges, category, resourceKey) {
+  return Math.max(0, accumulatedChanges?.[category]?.[resourceKey] || 0);
+}
+
+function getDebrisDiskMinedResourceAmount(category, resourceKey, seconds, accumulatedChanges) {
+  const rateAmount = getDebrisDiskSpaceshipMiningRate(category, resourceKey) * seconds;
+  if (!(rateAmount > 0)) {
+    return 0;
+  }
+  const accumulatedAmount = getDebrisDiskPositiveAccumulatedChange(accumulatedChanges, category, resourceKey);
+  return accumulatedAmount > 0 ? Math.min(rateAmount, accumulatedAmount) : rateAmount;
+}
+
+function getDebrisDiskPlanetaryMassImportAmount(accumulatedSpecialChanges, materialKey) {
+  const imports = accumulatedSpecialChanges?.planetaryMassImports?.[DEBRIS_DISK_SPACESHIP_MINING_SOURCE];
+  const amount = imports?.materials?.[materialKey] || 0;
+  return Math.max(0, amount);
 }
 
 function addDebrisDiskConversionSalvage(salvage, category, resource, amount) {
@@ -208,6 +236,67 @@ class DebrisDiskHazard {
   getCurrentGrowthMultiplier(terraformingState, parameters) {
     const penalty = (parameters.colonistGrowthPenalty || 0) * this.getRemainingRatio(terraformingState);
     return Math.max(0, 1 - penalty);
+  }
+
+  consumeSystemDebris(amount, seconds = 0, sourceName = null, rateType = 'hazard') {
+    if (!(amount > 0)) {
+      return 0;
+    }
+    const resource = getDebrisDiskResource();
+    const removed = Math.min(resource.value || 0, amount);
+    if (!(removed > 0)) {
+      return 0;
+    }
+    resource.decrease(removed);
+    if (seconds > 0) {
+      resource.modifyRate(
+        -(removed / seconds),
+        sourceName || t('ui.terraforming.hazardEffects.debrisDisk', {}, 'Debris Disk'),
+        rateType
+      );
+    }
+    if ((resource.value || 0) <= 0) {
+      this.permanentlyCleared = true;
+    }
+    return removed;
+  }
+
+  consumeMinedSystemDebris(seconds, options = {}) {
+    if (!(seconds > 0)) {
+      return 0;
+    }
+    const accumulatedChanges = options.accumulatedChanges || null;
+    const accumulatedSpecialChanges = options.accumulatedSpecialChanges || null;
+    const metalResourceAmount =
+      getDebrisDiskMinedResourceAmount('colony', 'metal', seconds, accumulatedChanges) +
+      getDebrisDiskMinedResourceAmount('spaceStorage', 'metal', seconds, accumulatedChanges);
+    const siliconResourceAmount =
+      getDebrisDiskMinedResourceAmount('colony', 'silicon', seconds, accumulatedChanges) +
+      getDebrisDiskMinedResourceAmount('spaceStorage', 'silicon', seconds, accumulatedChanges);
+    const waterMiningAmount =
+      getDebrisDiskMinedResourceAmount('surface', 'ice', seconds, accumulatedChanges) +
+      getDebrisDiskMinedResourceAmount('surface', 'liquidWater', seconds, accumulatedChanges) +
+      getDebrisDiskMinedResourceAmount('colony', 'water', seconds, accumulatedChanges) +
+      getDebrisDiskMinedResourceAmount('spaceStorage', 'liquidWater', seconds, accumulatedChanges);
+    const metalPlanetaryMassAmount = Math.max(
+      0,
+      getDebrisDiskPlanetaryMassImportAmount(accumulatedSpecialChanges, 'metal') - metalResourceAmount
+    );
+    const siliconPlanetaryMassAmount = Math.max(
+      0,
+      getDebrisDiskPlanetaryMassImportAmount(accumulatedSpecialChanges, 'silicon') - siliconResourceAmount
+    );
+    const minedAmount = metalResourceAmount +
+      siliconResourceAmount +
+      waterMiningAmount +
+      metalPlanetaryMassAmount +
+      siliconPlanetaryMassAmount;
+    return this.consumeSystemDebris(
+      minedAmount,
+      seconds,
+      DEBRIS_DISK_SPACESHIP_MINING_SOURCE,
+      'project'
+    );
   }
 
   clearEffects() {
@@ -388,15 +477,22 @@ class DebrisDiskHazard {
     if (!(seconds > 0) || !this.manager.parameters.kessler) {
       return;
     }
-    this.manager.kesslerHazard.regenerateDebrisFromDisk(
+    const regenerated = this.manager.kesslerHazard.regenerateDebrisFromDisk(
       terraformingState,
       this.manager.parameters.kessler,
       seconds,
-      debrisDiskParameters.kesslerRegenerationRatePerBinPerSecond
+      debrisDiskParameters.kesslerRegenerationRatePerBinPerSecond,
+      getDebrisDiskResource().value || 0
+    );
+    this.consumeSystemDebris(
+      regenerated,
+      seconds,
+      t('ui.terraforming.hazardEffects.debrisDiskKesslerRegeneration', {}, 'Debris Disk Regeneration'),
+      'hazard'
     );
   }
 
-  update(deltaSeconds, terraformingState, debrisDiskParameters) {
+  update(deltaSeconds, terraformingState, debrisDiskParameters, options = {}) {
     const parameters = this.normalize(debrisDiskParameters);
     this.syncEffects(terraformingState, parameters);
     if (this.isCleared(terraformingState)) {
@@ -408,6 +504,7 @@ class DebrisDiskHazard {
       return;
     }
     this.companionMirrorReleased = false;
+    this.consumeMinedSystemDebris(deltaSeconds, options);
     this.regenerateKesslerIfPresent(terraformingState, deltaSeconds, parameters);
     const attritionRate = this.getCurrentAttritionRate(terraformingState, parameters);
     this.applyAttrition(deltaSeconds, attritionRate);

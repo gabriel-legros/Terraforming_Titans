@@ -3319,7 +3319,7 @@ setLanguageData({
           attrition: 'Attrition',
           effects: 'Effects',
           howToClear: 'How to Clear',
-          clearText: 'Remove all system debris or go rogue.',
+          clearText: 'Remove all system debris.  Debris are reduced when converted into Kessler orbital debris or by mining metal/silica/ice with spaceship import projects. The hazard also clears if you go rogue.',
           summary: {
             debris: 'Debris: {current} / {initial} t\nCleared: {clearance}',
             impact: 'Colonist Growth: x{growth}',

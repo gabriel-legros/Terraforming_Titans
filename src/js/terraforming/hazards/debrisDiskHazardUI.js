@@ -303,7 +303,7 @@ function updateDebrisDiskHazardUI(debrisDiskParameters) {
   }
   debrisDiskHazardUICache.clearItem.textContent = getDebrisDiskHazardText(
     'clearText',
-    'Remove all system debris or go rogue.'
+    'Remove all system debris, convert it into Kessler orbital debris, mine metal/silica/ice with spaceship import projects, or go rogue.'
   );
 }
 
