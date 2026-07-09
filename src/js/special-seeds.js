@@ -916,7 +916,7 @@ const shadesNightmareOverrides = {
         "initialValue": 0
       },
       "liquidWater": {
-        "initialValue": 6.710866e-317
+        "initialValue": 0
       },
       "dryIce": {
         "initialValue": 0
@@ -925,7 +925,7 @@ const shadesNightmareOverrides = {
         "initialValue": 0
       },
       "liquidHydrogen": {
-        "initialValue": 1.629420421159057e+24
+        "initialValue": 1.6286500778183345e+24
       },
       "liquidMethane": {
         "initialValue": 0
@@ -945,11 +945,8 @@ const shadesNightmareOverrides = {
       "nitrogenIce": {
         "initialValue": 0
       },
-      "hazardousBiomass": {
-        "initialValue": 6166178966127.875
-      },
       "land": {
-        "initialValue": 6166178966127.875
+        "initialValue": 6164253525061.392
       }
     },
     "atmospheric": {
@@ -957,10 +954,10 @@ const shadesNightmareOverrides = {
         "initialValue": 0
       },
       "atmosphericWater": {
-        "initialValue": 183600002014997730
+        "initialValue": 183600002029996700
       },
       "atmosphericMethane": {
-        "initialValue": 742000000000000000
+        "initialValue": 7420000000000000000
       },
       "atmosphericAmmonia": {
         "initialValue": 0
@@ -972,7 +969,7 @@ const shadesNightmareOverrides = {
         "initialValue": 52700000000000000000
       },
       "hydrogen": {
-        "initialValue": 2.561082577751886e+22
+        "initialValue": 2.638116911824148e+22
       },
       "sulfuricAcid": {
         "initialValue": 0
@@ -981,15 +978,15 @@ const shadesNightmareOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 2.10619e-317,
+      "liquidWater": 0,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
-      "liquidHydrogen": 6.497298758249565e+23,
+      "liquidHydrogen": 6.494227021350906e+23,
       "biomass": 0,
-      "hazardousBiomass": 2458758121569.9272,
+      "hazardousBiomass": 2457990353297.125,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -1001,15 +998,15 @@ const shadesNightmareOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 2.4272773e-317,
+      "liquidWater": 0,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
-      "liquidHydrogen": 8.445465368078084e+23,
+      "liquidHydrogen": 8.441472593763293e+23,
       "biomass": 0,
-      "hazardousBiomass": 3195998419779.2886,
+      "hazardousBiomass": 3195000441911.835,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -1021,15 +1018,15 @@ const shadesNightmareOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 2.1773987e-317,
+      "liquidWater": 0,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
-      "liquidHydrogen": 1.3514400852629204e+23,
+      "liquidHydrogen": 1.3508011630691461e+23,
       "biomass": 0,
-      "hazardousBiomass": 511422424778.6587,
+      "hazardousBiomass": 511262728748.2395,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -1043,19 +1040,19 @@ const shadesNightmareOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 2958.019933485666,
-      "day": 2958.0199343687177,
-      "night": 2958.0199326026145
+      "value": 3003.4861741909726,
+      "day": 3003.4861750407317,
+      "night": 3003.4861733412135
     },
     "temperate": {
-      "value": 2958.019908515422,
-      "day": 2958.0199091728227,
-      "night": 2958.019907858021
+      "value": 3003.4861488513216,
+      "day": 3003.4861494839374,
+      "night": 3003.4861482187057
     },
     "polar": {
-      "value": 2958.019862719553,
-      "day": 2958.0198629631072,
-      "night": 2958.019862475999
+      "value": 3003.486102377955,
+      "day": 3003.4861026123267,
+      "night": 3003.486102143583
     }
   },
   "celestialParameters": {
@@ -1066,28 +1063,28 @@ const shadesNightmareOverrides = {
     "spinPeriod": 10.7,
     "starLuminosity": 0.46,
     "coreHeatFlux": 4112684,
-    "surfaceArea": 61661789661278750,
-    "crossSectionArea": 15415447415319688,
+    "surfaceArea": 61642535250613910,
+    "crossSectionArea": 15410633812653478,
     "baseLand": 6291545240475.356,
     "baseRadius": 58232,
     "baseMass": 5.6834e+26,
     "baseGravity": 11.186404873657612,
     "basePlanetaryMass": 6.619e+25,
     "basePlanetaryVolumeM3": 1.047e+22,
-    "baseSurfaceMassKg": 1.6294204291766313e+27,
-    "baseAtmosphericMassKg": 2.566445137752086e+25,
+    "baseSurfaceMassKg": 1.628650756502195e+27,
+    "baseAtmosphericMassKg": 2.6441472718243496e+25,
     "dynamicDirectMassDeltaKg": 0,
     "dynamicDirectVolumeDeltaM3": 0,
-    "dynamicMassDeltaKg": 1.1529348805541522e+27,
-    "dynamicSurfaceVolumeDeltaM3": 6.126562676823222e+23,
+    "dynamicMassDeltaKg": 1.1529422292204387e+27,
+    "dynamicSurfaceVolumeDeltaM3": 6.11981942374499e+23,
     "currentPlanetaryMassKg": 6.619e+25,
-    "currentSurfaceMassKg": 1.6294204291766313e+27,
-    "currentAtmosphericMassKg": 2.5664451377520873e+25,
+    "currentSurfaceMassKg": 1.6286507565021952e+27,
+    "currentAtmosphericMassKg": 2.644147271824351e+25,
     "currentPlanetaryVolumeM3": 1.047e+22,
-    "currentSurfaceVolumeM3": 1.4293161828332198e+24,
-    "mass": 1.721274880554152e+27,
-    "radius": 70049.19208843612,
-    "gravity": 23.412602576176756,
+    "currentSurfaceVolumeM3": 1.4286418575253966e+24,
+    "mass": 1.7212822292204387e+27,
+    "radius": 70038.25451084432,
+    "gravity": 23.420015628158335,
     "sector": "R5-29"
   },
   hazards: {
@@ -1135,7 +1132,7 @@ const shadesNightmareOverrides = {
       surfaceResources: {
         garbage: { amountMultiplier: 0 },
         trash: { amountMultiplier: 10000 },
-        junk: { amountMultiplier: 10000 },
+        junk: { amountMultiplier: 100000 },
         scrapMetal: { amountMultiplier: 0 },
         radioactiveWaste: { amountMultiplier: 100 }
       },
@@ -2217,11 +2214,6 @@ const specialSeedDefinitions = {
         id: 'teleporters-disabled',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
         description: 'The 100Q advanced research is disabled.'
-      },
-      {
-        id: 'powerful-features-limited',
-        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.powerfulFeaturesLimited',
-        description: 'Many other powerful features are disabled or limited.'
       }
     ],
     completionRewards: [
