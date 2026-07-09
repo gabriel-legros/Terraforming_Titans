@@ -180,6 +180,20 @@ const skillParameters = {
         type: 'consumptionMultiplier',
         baseValue: 0.2,
         perRank: true
+      },
+      {
+        target: 'building',
+        targetId: 'pyrolyzer',
+        type: 'productionMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'building',
+        targetId: 'pyrolyzer',
+        type: 'consumptionMultiplier',
+        baseValue: 0.2,
+        perRank: true
       }
     ],
     requires: []
