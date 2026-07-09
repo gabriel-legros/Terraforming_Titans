@@ -870,6 +870,12 @@ const shadesNightmareOverrides = {
       flagId: 'pyrolyzer',
       value: true,
       effectId: 'shades-nightmare-enable-pyrolyzer'
+    },
+    {
+      target: 'researchManager',
+      targetId: 'teleporters',
+      type: 'researchDisable',
+      effectId: 'shades-nightmare-disable-teleporters-research'
     }
   ],
   star: {
@@ -2187,9 +2193,9 @@ const specialSeedDefinitions = {
         description: 'All six hazard systems are active on this world.'
       },
       {
-        id: 'resembles-saturn',
-        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.resemblesSaturn',
-        description: 'May resemble Saturn.'
+        id: 'teleporters-disabled',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
+        description: 'The 100Q advanced research is disabled.'
       }
     ],
     completionRewards: [

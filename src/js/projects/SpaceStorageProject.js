@@ -683,7 +683,8 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   isTeleporterTransferUnlocked() {
-    return this.isBooleanFlagSet('teleporters');
+    const research = researchManager.getResearchById('teleporters');
+    return this.isBooleanFlagSet('teleporters') && !research.disabled;
   }
 
   isTeleporterTransferActive() {
