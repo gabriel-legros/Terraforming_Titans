@@ -431,6 +431,7 @@ class ArtificialManager extends EffectableEntity {
         this.autoStore = false;
         this.autoStoreWithMaxStockpile = true;
         this.nextId = 1;
+        this.constructedCounts = { shell: 0, ring: 0, disk: 0 };
         this.activeProject = null;
         this.unlockedTypes = new Set(
             ARTIFICIAL_TYPES
@@ -1240,16 +1241,34 @@ class ArtificialManager extends EffectableEntity {
 
     getDefaultWorldName(type) {
         const baseName = type === 'ring' ? 'Ringworld' : (type === 'disk' ? 'Alderson Disk' : 'Shellworld');
-        const pattern = new RegExp(`^${baseName} \\d+$`);
+        return `${baseName} ${this.constructedCounts[type] + 1}`;
+    }
+
+    incrementConstructedCount(type) {
+        this.constructedCounts[type] += 1;
+    }
+
+    migrateConstructedCounts(savedCounts, activeProject) {
+        const counts = {
+            shell: Math.max(0, Math.floor(savedCounts?.shell || 0)),
+            ring: Math.max(0, Math.floor(savedCounts?.ring || 0)),
+            disk: Math.max(0, Math.floor(savedCounts?.disk || 0))
+        };
+        if (savedCounts) {
+            this.constructedCounts = counts;
+            return;
+        }
         const statuses = spaceManager?.artificialWorldStatuses || {};
-        const count = Object.values(statuses).reduce((total, status) => {
-            const name = status?.name
-                || status?.original?.merged?.name
-                || status?.artificialSnapshot?.name
-                || '';
-            return pattern.test(name) ? total + 1 : total;
-        }, 0);
-        return `${baseName} ${count + 1}`;
+        Object.values(statuses).forEach((status) => {
+            const type = status?.type || status?.artificialSnapshot?.type || status?.original?.merged?.classification?.type || status?.original?.classification?.type || 'shell';
+            if (counts[type] !== undefined) {
+                counts[type] += 1;
+            }
+        });
+        if (activeProject && counts[activeProject.type] !== undefined) {
+            counts[activeProject.type] += 1;
+        }
+        this.constructedCounts = counts;
     }
 
     getTotalPaymentAvailability(resourceKey, allowStorage = this.getAllowSpaceStoragePayments()) {
@@ -1527,6 +1546,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
+      this.incrementConstructedCount('shell');
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -1619,6 +1639,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
+      this.incrementConstructedCount('ring');
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -1708,6 +1729,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
+      this.incrementConstructedCount('disk');
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -2496,6 +2518,7 @@ class ArtificialManager extends EffectableEntity {
             autoStoreWithMaxStockpile: this.autoStoreWithMaxStockpile,
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
+            constructedCounts: { ...this.constructedCounts },
             activeProject: project,
             unlockedTypes: Array.from(this.unlockedTypes),
             unlockedCores: Array.from(this.unlockedCores),
@@ -2517,6 +2540,7 @@ class ArtificialManager extends EffectableEntity {
         this.autoStart = state.autoStart === true;
         this.autoStore = state.autoStore === true;
         this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile !== false;
+        this.migrateConstructedCounts(state.constructedCounts, state.activeProject || null);
         if (Array.isArray(state.unlockedTypes)) {
             this.unlockedTypes = new Set(state.unlockedTypes);
         }
