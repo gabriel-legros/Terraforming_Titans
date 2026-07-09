@@ -1031,6 +1031,11 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
   if (hazardText) canonicalParts.push(hazardText);
   const canonicalSeed = canonicalParts.join('|');
 
+  merged.classification = merged.classification || {};
+  merged.classification.archetype = archetype;
+  override.classification = override.classification || {};
+  override.classification.archetype = archetype;
+
   merged.rwgMeta = merged.rwgMeta || {};
   merged.rwgMeta.specialSeedKey = definition.key || null;
   merged.rwgMeta.specialSeedName = definition.name || merged.name || null;
