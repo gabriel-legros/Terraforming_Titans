@@ -2217,6 +2217,11 @@ const specialSeedDefinitions = {
         id: 'teleporters-disabled',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
         description: 'The 100Q advanced research is disabled.'
+      },
+      {
+        id: 'powerful-features-limited',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.powerfulFeaturesLimited',
+        description: 'Many other powerful features are disabled or limited.'
       }
     ],
     completionRewards: [

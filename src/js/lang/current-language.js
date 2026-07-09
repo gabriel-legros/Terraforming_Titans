@@ -5073,6 +5073,7 @@ setLanguageData({
           allFiveHazards: 'All five hazard systems are active on this world.',
           allSixHazards: 'Features all hazards and even a new horrible one.',
           teleportersDisabled: 'The 100Q advanced research is disabled.',
+          powerfulFeaturesLimited: 'Many other powerful features are disabled or limited.',
         },
         rewards: {
           revealEcumenopolisCapacity: 'Reveals a new Awakening skill',
