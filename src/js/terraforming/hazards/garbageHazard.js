@@ -231,17 +231,17 @@ class GarbageHazard {
 
     surfaceResourceKeys.forEach((resourceKey) => {
       const resourceConfig = surfaceResourcesConfig[resourceKey] || {};
-      const amountMultiplier = resourceConfig.amountMultiplier || 1;
+      const amountMultiplier = resourceConfig.amountMultiplier === undefined ? 1 : resourceConfig.amountMultiplier;
       const calculatedValue = initialLand * amountMultiplier;
       const resourceValue = unlockOnly ? 0 : calculatedValue;
 
       if (resourcesObj.surface[resourceKey]) {
         const existingResource = resourcesObj.surface[resourceKey];
         existingResource.unlocked = true;
-        if (!unlockOnly && (options.resetValue === true || existingResource.value === 0) && resourceValue > 0) {
+        if (!unlockOnly && (options.resetValue === true || existingResource.value === 0)) {
           existingResource.value = resourceValue;
         }
-        existingResource.initialValue = calculatedValue || existingResource.initialValue || 0;
+        existingResource.initialValue = calculatedValue;
         if (unlock && unlock.call) {
           unlock(existingResource);
         }

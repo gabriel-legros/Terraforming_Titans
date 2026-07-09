@@ -296,7 +296,7 @@ function updateDebrisDiskHazardUI(debrisDiskParameters) {
     getDebrisDiskHazardText('effectsList.orbitals', 'Orbitals are capped at 0 while system debris remains.'),
     getDebrisDiskHazardText('effectsList.disabledSystems', 'Lifters atmospheric stripping, Mega Heat Sink, Dyson Receivers, and Space Mirror Facility are disabled while active. The companion mirror is too afraid to come.'),
     getDebrisDiskHazardText('effectsList.kesslerRegeneration', 'If Kessler Skies is also active, Debris Disk regenerates orbital debris by {value}% of each Kessler bin per second.', { value: formatNumber((debrisDiskParameters.kesslerRegenerationRatePerBinPerSecond || 0.01) * 100, false, 2) }),
-    getDebrisDiskHazardText('effectsList.attrition', 'Buildings, colonies, and capped colony stockpiles lose up to {value}%/s. Constructed structures do not drop below 10 and capped colony stockpiles do not drop below 1,000 from this hazard. Lost materials convert into scrap metal and junk.', { value: formatNumber((debrisDiskParameters.attritionRatePerSecond || 0.01) * 100, false, 2) }),
+    getDebrisDiskHazardText('effectsList.attrition', 'Buildings, colonies, and capped colony stockpiles lose up to {value}%/s. Constructed structures do not drop below 10, aerostats do not drop below 500, and capped colony stockpiles do not drop below 10,000 or their effective Solis storage bonus from this hazard. Lost materials convert into scrap metal and junk.', { value: formatNumber((debrisDiskParameters.attritionRatePerSecond || 0.01) * 100, false, 2) }),
   ];
   for (let i = 0; i < debrisDiskHazardUICache.effectsItems.length; i += 1) {
     debrisDiskHazardUICache.effectsItems[i].textContent = effects[i] || '';

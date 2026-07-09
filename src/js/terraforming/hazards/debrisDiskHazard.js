@@ -1,6 +1,8 @@
 const DEBRIS_DISK_EFFECT_SOURCE_ID = 'debris-disk-hazard';
 const DEBRIS_DISK_ATTRITION_LABEL = t('ui.terraforming.hazardEffects.debrisDiskAttrition', {}, 'Debris Disk Attrition');
-const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = 1000;
+const DEBRIS_DISK_STRUCTURE_MINIMUM = 10n;
+const DEBRIS_DISK_AEROSTAT_MINIMUM = 500n;
+const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = 10000;
 
 function normalizeDebrisDiskParameters(parameters = {}) {
   const attritionRate = Number.isFinite(parameters.attritionRatePerSecond)
@@ -98,6 +100,28 @@ function addDebrisDiskConversionSalvage(salvage, category, resource, amount) {
   if (resource === 'glass' || resource === 'silicon' || resource === 'androids') {
     salvage.junk += amount;
   }
+}
+
+function getDebrisDiskColonyResourceMinimum(resourceKey, resource) {
+  let solisStorage = 0;
+  const effects = resource.activeEffects || [];
+  for (let i = 0; i < effects.length; i += 1) {
+    const effect = effects[i];
+    if (effect.effectId === `solisStorage-${resourceKey}`) {
+      solisStorage += effect.value || 0;
+    }
+  }
+  const kesslerActive = hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+  if (kesslerActive && resourceKey !== 'metal' && resourceKey !== 'research') {
+    solisStorage = Math.min(solisStorage, 1000);
+  }
+  return Math.max(DEBRIS_DISK_COLONY_RESOURCE_MINIMUM, solisStorage);
+}
+
+function getDebrisDiskStructureMinimum(structureKey) {
+  return structureKey === 'colony:aerostat_colony'
+    ? DEBRIS_DISK_AEROSTAT_MINIMUM
+    : DEBRIS_DISK_STRUCTURE_MINIMUM;
 }
 
 class DebrisDiskHazard {
@@ -249,7 +273,8 @@ class DebrisDiskHazard {
       return { losses: 0, scrapMetal: 0, junk: 0 };
     }
 
-    if (structure.count <= 10n) {
+    const minimumCount = getDebrisDiskStructureMinimum(structureKey);
+    if (structure.count <= minimumCount) {
       this.partialAttritionByStructure[structureKey] = 0;
       return { losses: 0, scrapMetal: 0, junk: 0 };
     }
@@ -263,7 +288,7 @@ class DebrisDiskHazard {
       return { losses: 0, scrapMetal: 0, junk: 0 };
     }
 
-    const maxLoss = structure.count - 10n;
+    const maxLoss = structure.count - minimumCount;
     let lossBigInt = Number.isFinite(accumulated)
       ? normalizeBuildingCount(Math.floor(accumulated))
       : maxLoss;
@@ -316,7 +341,8 @@ class DebrisDiskHazard {
         return;
       }
       const currentValue = resource.value || 0;
-      const attritableValue = Math.max(0, currentValue - DEBRIS_DISK_COLONY_RESOURCE_MINIMUM);
+      const minimumValue = getDebrisDiskColonyResourceMinimum(resourceKey, resource);
+      const attritableValue = Math.max(0, currentValue - minimumValue);
       const loss = Math.min(attritableValue, currentValue * attritionRate * seconds);
       if (!(loss > 0)) {
         return;

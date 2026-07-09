@@ -3335,7 +3335,7 @@ setLanguageData({
             orbitals: 'Orbitals are capped at 0 while the hazard is active.',
             disabledSystems: 'Lifters atmospheric stripping, Mega Heat Sink, Dyson Receivers, and Space Mirror Facility are disabled while the hazard is active. The companion mirror is too afraid to come.',
             kesslerRegeneration: 'If Kessler Skies is also active, Debris Disk regenerates orbital debris by {value}% of each Kessler bin per second.',
-            attrition: 'Buildings, colonies, and capped colony stockpiles lose up to {value}%/s. Constructed structures do not drop below 10 and capped colony stockpiles do not drop below 1,000 from this attrition. Lost materials convert into scrap metal and junk.',
+            attrition: 'Buildings, colonies, and capped colony stockpiles lose up to {value}%/s. Constructed structures do not drop below 10, aerostats do not drop below 500, and capped colony stockpiles do not drop below 10,000 or their effective Solis storage bonus from this attrition. Lost materials convert into scrap metal and junk.',
           },
         },
         kessler: {
