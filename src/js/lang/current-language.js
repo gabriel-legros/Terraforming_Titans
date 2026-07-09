@@ -5068,7 +5068,7 @@ setLanguageData({
       },
       shadesnightmare: {
         name: 'ShadesNightmare',
-        difficulty: 'Extreme',
+        difficulty: 'Absurd',
         effects: {
           allFiveHazards: 'All five hazard systems are active on this world.',
           allSixHazards: 'Features all hazards and even a new horrible one.',
