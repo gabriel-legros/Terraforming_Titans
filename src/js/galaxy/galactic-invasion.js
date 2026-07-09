@@ -618,13 +618,16 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   getUhfInvasionOperationControlFraction(operation) {
-    const defensePower = Number(operation?.defensePower);
-    if (!Number.isFinite(defensePower) || defensePower <= 0) {
-      return 0.1;
-    }
     const offensePower = Number(operation.offensePower);
     if (!Number.isFinite(offensePower) || offensePower <= 0) {
       return 0.1;
+    }
+    const defensePower = Number(operation?.defensePower);
+    if (!Number.isFinite(defensePower) || defensePower < 0) {
+      return 0.1;
+    }
+    if (defensePower === 0) {
+      return 1;
     }
     const multiplier = Math.floor(offensePower / defensePower);
     const gainSteps = Math.max(1, multiplier - 1);
