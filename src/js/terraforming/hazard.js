@@ -623,6 +623,9 @@ class HazardManager {
   }
 
   applyPostClampResourceProduction() {
+    if (this.pulsarHazard && this.pulsarHazard.applyPendingSurfaceSalvage) {
+      this.pulsarHazard.applyPendingSurfaceSalvage();
+    }
     if (this.debrisDiskHazard && this.debrisDiskHazard.applyPendingSurfaceSalvage) {
       this.debrisDiskHazard.applyPendingSurfaceSalvage();
     }

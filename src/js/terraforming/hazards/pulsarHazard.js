@@ -8,6 +8,7 @@ const PULSAR_RADIATION_EFFECT_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_RADIATION_EFFECT_SOURCE_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_MIRROR_LOCKOUT_SOURCE_ID = 'pulsar-hazard-mirror-lockout';
 const PULSAR_TRACTOR_BEAMS_SOURCE_ID = 'pulsar-hazard-tractor-beams';
+const PULSAR_STORM_SALVAGE_RESOURCES = { scrapMetal: true, junk: true };
 
 function normalizePulsarParameters(parameters = {}) {
   const severity = Number.isFinite(parameters.severity) ? Math.max(0, parameters.severity) : 1;
@@ -122,9 +123,43 @@ function isPulsarClearedByDistance(terraforming, pulsarParameters) {
   return distanceAU >= pulsarParameters.clearAtDistanceAU;
 }
 
-function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
-  if (!seconds || seconds <= 0 || hazardStrength <= 0) {
+function createPulsarStormSalvage() {
+  return { scrapMetal: 0, junk: 0, seconds: 0 };
+}
+
+function addPulsarStormConversionSalvage(salvage, category, resourceKey, amount) {
+  if (!(amount > 0)) {
     return;
+  }
+
+  const resource = resources[category][resourceKey];
+  const conversionEntries = getMaintenanceConversionEntries(resource);
+  for (let i = 0; i < conversionEntries.length; i += 1) {
+    const conversion = conversionEntries[i];
+    if (conversion.category === 'surface' && PULSAR_STORM_SALVAGE_RESOURCES[conversion.resource]) {
+      salvage[conversion.resource] += amount * conversion.value;
+    }
+  }
+}
+
+function addPulsarStormSurfaceResource(resourceKey, amount, seconds) {
+  if (!(amount > 0)) {
+    return;
+  }
+
+  const resource = resources.surface[resourceKey];
+  resource.unlocked = true;
+  resource.increase(amount, true);
+  if (seconds > 0) {
+    resource.modifyRate(amount / seconds, PULSAR_STORM_EFFECT_LABEL, 'hazard');
+  }
+  unlockResource(resource);
+}
+
+function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
+  const salvage = createPulsarStormSalvage();
+  if (!seconds || seconds <= 0 || hazardStrength <= 0) {
+    return salvage;
   }
 
   const attritionScale = Math.max(0, Math.min(1, hazardStrength));
@@ -141,6 +176,7 @@ function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
   const androidLoss = exposedAndroids * androidAttritionRate * seconds;
   if (androidLoss > 0) {
     androidResource.value = Math.max(0, currentAndroids - androidLoss);
+    addPulsarStormConversionSalvage(salvage, 'colony', 'androids', androidLoss);
     if (androidResource.modifyRate) {
       androidResource.modifyRate(
         -exposedAndroids * androidAttritionRate,
@@ -155,6 +191,7 @@ function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
   const electronicsLoss = currentElectronics * electronicsAttritionRate * seconds;
   if (electronicsLoss > 0) {
     electronicsResource.value = Math.max(0, currentElectronics - electronicsLoss);
+    addPulsarStormConversionSalvage(salvage, 'colony', 'electronics', electronicsLoss);
     if (electronicsResource.modifyRate) {
       electronicsResource.modifyRate(
         -currentElectronics * electronicsAttritionRate,
@@ -175,6 +212,9 @@ function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
       nanotechManager.nanobots = Math.max(protectedFloor, currentNanobots - nanobotLoss);
     }
   }
+
+  salvage.seconds = seconds;
+  return salvage;
 }
 
 function calculatePulsarRadiationBoost(terraforming, pulsarParameters, hazardStrength = 1) {
@@ -208,6 +248,7 @@ class PulsarHazard {
     this.artificialSkyCompletion = 0;
     this.initialDistanceFromSunAU = 0;
     this.distanceFromSunMultiplier = 1;
+    this.pendingSurfaceSalvage = createPulsarStormSalvage();
   }
 
   normalize(parameters = {}) {
@@ -434,6 +475,21 @@ class PulsarHazard {
     this.stormRemainingSeconds = 0;
   }
 
+  queueSurfaceSalvage(salvage) {
+    this.pendingSurfaceSalvage.scrapMetal += salvage.scrapMetal;
+    this.pendingSurfaceSalvage.junk += salvage.junk;
+    this.pendingSurfaceSalvage.seconds += salvage.seconds;
+  }
+
+  applyPendingSurfaceSalvage() {
+    const salvage = this.pendingSurfaceSalvage;
+    addPulsarStormSurfaceResource('scrapMetal', salvage.scrapMetal, salvage.seconds);
+    addPulsarStormSurfaceResource('junk', salvage.junk, salvage.seconds);
+    salvage.scrapMetal = 0;
+    salvage.junk = 0;
+    salvage.seconds = 0;
+  }
+
   startStorm(pulsarParameters = null) {
     this.stormRemainingSeconds = this.getStormDurationSeconds(pulsarParameters);
   }
@@ -476,7 +532,7 @@ class PulsarHazard {
     while (remaining > 0) {
       if (this.stormRemainingSeconds > 0) {
         const activeSlice = Math.min(remaining, this.stormRemainingSeconds);
-        applyPulsarStormAttrition(activeSlice, this.hazardStrength);
+        this.queueSurfaceSalvage(applyPulsarStormAttrition(activeSlice, this.hazardStrength));
         this.stormRemainingSeconds = Math.max(0, this.stormRemainingSeconds - activeSlice);
         remaining -= activeSlice;
         continue;
