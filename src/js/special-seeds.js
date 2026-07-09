@@ -1131,7 +1131,7 @@ const shadesNightmareOverrides = {
     },
     debrisDisk: {
       debrisPerLand: 1e11,
-      attritionRatePerSecond: 0.01,
+      attritionRatePerSecond: 0.005,
       colonistGrowthPenalty: 0.9
     }
   }
