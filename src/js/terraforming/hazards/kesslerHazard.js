@@ -411,11 +411,16 @@ class KesslerHazard {
     const additions = [];
     let rawRegeneration = 0;
     for (let i = 0; i < this.periapsisDistribution.length; i += 1) {
+      const entry = this.periapsisDistribution[i];
       const baseline = this.periapsisBaseline[i];
       const baselineMass = baseline && baseline.massTons > 0
         ? baseline.massTons
         : (resource.initialValue || 0) / this.periapsisDistribution.length;
-      const added = Math.max(0, baselineMass * ratePerBinPerSecond * deltaSeconds);
+      const binCapacity = Math.max(0, baselineMass - (entry.massTons || 0));
+      const added = Math.min(
+        binCapacity,
+        Math.max(0, baselineMass * ratePerBinPerSecond * deltaSeconds)
+      );
       additions.push(added);
       rawRegeneration += added;
     }
