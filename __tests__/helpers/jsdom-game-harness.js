@@ -282,6 +282,7 @@ function setupBrowserStubs(window, options = {}) {
   window.electronWindowControls = {
     isFullscreen: () => Promise.resolve(false),
     setFullscreen: enabled => Promise.resolve(!!enabled),
+    setZoomFactor: scale => Promise.resolve(Number(scale) || 1),
     onFullscreenChanged() {},
     exitGame() {}
   };

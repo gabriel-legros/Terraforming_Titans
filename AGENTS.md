@@ -50,6 +50,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Browser-only white-noise tab keepalive is controlled by `GAME_FEATURES.whiteNoiseKeepAlive`; Steam/Electron hides the setting and forces the loop off when loading browser saves.
 - Steam/Electron builds expose an `Exit Save` slot between Autosave and Pre-travel, backed by the same save-slot storage as other local slots and written on window exit. Browser builds hide the slot.
 - Steam/Electron builds expose native window controls through `electron/preload.cjs`: F11 toggles fullscreen, Escape exits fullscreen, Settings has a fullscreen checkbox, and Save & Settings has an Exit Game button beside Pause. Browser builds hide these controls.
+- Steam/Electron builds expose a UI scale setting through `electron/preload.cjs` / Electron zoom factor; Settings shows a scale dropdown and browser builds hide it.
 - Steam/Electron builds launch fullscreen at the primary display size when Steam sets `SteamDeck=1`; regular desktop launches keep the standard 1400x950 window.
 - Steam/Electron builds disable Chromium/Electron background throttling and app suspension in `electron/main.cjs` so simulation and automation keep running while minimized or occluded.
 - Steam/Electron builds enable the ecumenopolis city-world visualizer through `GAME_FEATURES.steamExclusiveEcumenopolisVisualizer`; browser builds keep the standard planet surface visuals.

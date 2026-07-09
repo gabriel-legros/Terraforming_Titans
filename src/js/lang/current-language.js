@@ -4795,6 +4795,15 @@ setLanguageData({
       whiteNoiseLabel: 'Use white noise to keep tab active',
       whiteNoiseTooltip: 'After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution. Much more quiet on Firefox. May still work even if the tab is muted.',
       fullscreen: 'Fullscreen',
+      uiScale: 'UI scale',
+      uiScales: {
+        p75: '75%',
+        p90: '90%',
+        p100: '100%',
+        p110: '110%',
+        p125: '125%',
+        p150: '150%',
+      },
       autosaveInterval: 'Autosave interval',
       autosaveIntervals: {
         s30: '30s',

@@ -62,6 +62,7 @@ let planetVisualizerRuntimeFailureReason = '';
 let gameSettings = {
   autosaveIntervalSeconds: 300,
   framerate: 30,
+  uiScale: 1,
   useCelsius: false,
   colorblindPalette: 'redGreen',
   themeMode: 'light',

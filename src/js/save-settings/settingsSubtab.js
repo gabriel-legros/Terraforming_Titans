@@ -15,6 +15,8 @@ function cacheSettingsElements() {
     whiteNoiseTooltip: document.getElementById('white-noise-tooltip'),
     electronFullscreenOption: document.getElementById('electron-fullscreen-settings-option'),
     electronFullscreenToggle: document.getElementById('electron-fullscreen-toggle'),
+    electronUIScaleOption: document.getElementById('electron-ui-scale-settings-option'),
+    electronUIScaleSelect: document.getElementById('electron-ui-scale-select'),
     electronFullscreenKeybindOption: document.getElementById('electron-fullscreen-keybind-option'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
     celsiusToggle: document.getElementById('celsius-toggle'),
@@ -159,6 +161,33 @@ function applyThemeModeSetting() {
   const cached = cacheSettingsElements();
   if (cached.darkModeSelect && cached.darkModeSelect.value !== mode) {
     cached.darkModeSelect.value = mode;
+  }
+}
+
+function normalizeUIScale(value) {
+  const scale = Number(value);
+  const options = [0.75, 0.9, 1, 1.1, 1.25, 1.5];
+  for (let i = 0; i < options.length; i += 1) {
+    if (Math.abs(scale - options[i]) < 0.001) {
+      return options[i];
+    }
+  }
+  return 1;
+}
+
+function applyElectronUIScaleSetting() {
+  gameSettings.uiScale = normalizeUIScale(gameSettings.uiScale);
+  const cached = cacheSettingsElements();
+  if (cached.electronUIScaleSelect && cached.electronUIScaleSelect.value !== String(gameSettings.uiScale)) {
+    cached.electronUIScaleSelect.value = String(gameSettings.uiScale);
+  }
+  if (GAME_FEATURES.electronUIScale) {
+    window.electronWindowControls.setZoomFactor(gameSettings.uiScale).then(scale => {
+      gameSettings.uiScale = normalizeUIScale(scale);
+      if (cached.electronUIScaleSelect) {
+        cached.electronUIScaleSelect.value = String(gameSettings.uiScale);
+      }
+    });
   }
 }
 
@@ -467,6 +496,8 @@ function addSettingsListeners() {
 
   cached.electronFullscreenOption.hidden = !GAME_FEATURES.electronWindowControls;
   cached.electronFullscreenOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
+  cached.electronUIScaleOption.hidden = !GAME_FEATURES.electronUIScale;
+  cached.electronUIScaleOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronUIScale);
   cached.electronFullscreenKeybindOption.hidden = !GAME_FEATURES.electronWindowControls;
   cached.electronFullscreenKeybindOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
   cached.electronExitGameButton.hidden = !GAME_FEATURES.electronWindowControls;
@@ -485,6 +516,14 @@ function addSettingsListeners() {
     });
     cached.electronExitGameButton.addEventListener('click', () => {
       window.electronWindowControls.exitGame();
+    });
+  }
+
+  if (cached.electronUIScaleSelect) {
+    applyElectronUIScaleSetting();
+    cached.electronUIScaleSelect.addEventListener('change', () => {
+      gameSettings.uiScale = normalizeUIScale(cached.electronUIScaleSelect.value);
+      applyElectronUIScaleSetting();
     });
   }
 

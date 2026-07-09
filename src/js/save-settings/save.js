@@ -831,6 +831,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'themeMode')) {
         gameSettings.themeMode = gameSettings.darkMode ? 'darkBlue' : 'light';
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'uiScale')) {
+        gameSettings.uiScale = 1;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'difficultySettingsLocked')) {
         gameSettings.difficultySettingsLocked = false;
       }
@@ -876,6 +879,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
       applyThemeModeSetting();
+      applyElectronUIScaleSetting();
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;

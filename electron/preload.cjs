@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('electronWindowControls', {
   setFullscreen(enabled) {
     return ipcRenderer.invoke('window:set-fullscreen', enabled === true);
   },
+  setZoomFactor(scale) {
+    return ipcRenderer.invoke('window:set-zoom-factor', Number(scale));
+  },
   exitGame() {
     ipcRenderer.send('window:exit-game');
   },
