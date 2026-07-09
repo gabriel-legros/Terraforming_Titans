@@ -882,6 +882,13 @@ const shadesNightmareOverrides = {
       targetId: 'aerostatStructuralNet',
       type: 'enable',
       effectId: 'shades-nightmare-enable-aerostat-structural-net'
+    },
+    {
+      target: 'building',
+      targetId: 'trashIncinerator',
+      type: 'booleanFlag',
+      flagId: 'disableHazardousBiomassIncineratorRecipe',
+      value: true
     }
   ],
   star: {
