@@ -876,6 +876,12 @@ const shadesNightmareOverrides = {
       targetId: 'teleporters',
       type: 'researchDisable',
       effectId: 'shades-nightmare-disable-teleporters-research'
+    },
+    {
+      target: 'project',
+      targetId: 'aerostatStructuralNet',
+      type: 'enable',
+      effectId: 'shades-nightmare-enable-aerostat-structural-net'
     }
   ],
   star: {
