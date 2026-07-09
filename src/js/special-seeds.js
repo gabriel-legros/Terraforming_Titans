@@ -889,6 +889,14 @@ const shadesNightmareOverrides = {
       type: 'booleanFlag',
       flagId: 'disableHazardousBiomassIncineratorRecipe',
       value: true
+    },
+    {
+      target: 'building',
+      targetId: 'antimatterBattery',
+      type: 'booleanFlag',
+      flagId: 'antimatterBatteryFillDisabled',
+      value: true,
+      effectId: 'teebeepee-disable-antimatter-battery-fill'
     }
   ],
   star: {
