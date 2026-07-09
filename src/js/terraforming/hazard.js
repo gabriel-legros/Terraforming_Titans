@@ -159,6 +159,29 @@ function getPlanetHazards(parameters) {
   }
 }
 
+function migrateSavedHazardParameters(baseParameters, savedParameters) {
+  const migrated = cloneHazardParameters(savedParameters);
+  const baseDebrisDisk = baseParameters && baseParameters.debrisDisk && baseParameters.debrisDisk.constructor === Object
+    ? baseParameters.debrisDisk
+    : {};
+  const savedDebrisDisk = migrated && migrated.debrisDisk && migrated.debrisDisk.constructor === Object
+    ? migrated.debrisDisk
+    : null;
+
+  if (
+    savedDebrisDisk &&
+    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.01 &&
+    (
+      !Number.isFinite(baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond) ||
+      baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.001
+    )
+  ) {
+    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond = 0.001;
+  }
+
+  return migrated;
+}
+
 function getTerraforming() {
   try {
     return terraforming;
@@ -501,9 +524,10 @@ class HazardManager {
     const savedParameters = data && data.parameters && data.parameters.constructor === Object
       ? data.parameters
       : null;
+    const planetHazards = getPlanetHazards();
     const parameters = savedParameters
-      ? mergeHazardParameters(getPlanetHazards(), savedParameters)
-      : getPlanetHazards();
+      ? mergeHazardParameters(planetHazards, migrateSavedHazardParameters(planetHazards, savedParameters))
+      : planetHazards;
 
     this.initialize(parameters, {
       unlockOnly: true,
