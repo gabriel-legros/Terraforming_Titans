@@ -13,6 +13,7 @@ const DEBRIS_DISTRIBUTION_DRAG_LINE_MIN_METERS = 10000;
 const DEBRIS_DISTRIBUTION_MEAN_MIN_METERS = 12000;
 const DEBRIS_DECAY_DENSITY_FLOOR = 1e-20;
 const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
+const KESSLER_BIN_REGENERATION_CAP_EPSILON = 1e-9;
 const KESSLER_DECAY_CONSTANTS = {
   baseRate: DEBRIS_DECAY_BASE_RATE,
   densityFloor: DEBRIS_DECAY_DENSITY_FLOOR,
@@ -156,6 +157,13 @@ function normalizeKesslerParameters(parameters = {}) {
   return {
     orbitalDebrisPerLand: parameters.orbitalDebrisPerLand ?? 100
   };
+}
+
+function getKesslerBaselineMassForEntry(baseline, resource, entryCount) {
+  if (baseline) {
+    return Math.max(0, baseline.massTons || 0);
+  }
+  return entryCount > 0 ? (resource.initialValue || 0) / entryCount : 0;
 }
 
 class KesslerHazard {
@@ -410,19 +418,31 @@ class KesslerHazard {
 
     const additions = [];
     let rawRegeneration = 0;
+    let startingTotal = 0;
+    const baselineTotal = this.getBaselineTotalMass();
     for (let i = 0; i < this.periapsisDistribution.length; i += 1) {
       const entry = this.periapsisDistribution[i];
-      const baseline = this.periapsisBaseline[i];
-      const baselineMass = baseline && baseline.massTons > 0
-        ? baseline.massTons
-        : (resource.initialValue || 0) / this.periapsisDistribution.length;
-      const binCapacity = Math.max(0, baselineMass - (entry.massTons || 0));
+      startingTotal += entry.massTons || 0;
+      const baselineMass = getKesslerBaselineMassForEntry(
+        this.periapsisBaseline[i],
+        resource,
+        this.periapsisDistribution.length
+      );
+      const capEpsilon = baselineMass * KESSLER_BIN_REGENERATION_CAP_EPSILON;
+      const binCapacity = (baselineMass - (entry.massTons || 0)) > capEpsilon
+        ? Math.max(0, baselineMass - (entry.massTons || 0))
+        : 0;
       const added = Math.min(
         binCapacity,
         Math.max(0, baselineMass * ratePerBinPerSecond * deltaSeconds)
       );
       additions.push(added);
       rawRegeneration += added;
+    }
+
+    if (baselineTotal > 0 && startingTotal >= baselineTotal * (1 - KESSLER_BIN_REGENERATION_CAP_EPSILON)) {
+      this.clampDistributionToBaseline();
+      return 0;
     }
 
     const generationScale = rawRegeneration > 0
@@ -437,8 +457,23 @@ class KesslerHazard {
       regenerated += added;
     }
 
+    let updatedTotal = 0;
+    this.periapsisDistribution.forEach((entry) => {
+      updatedTotal += entry.massTons || 0;
+    });
+    if (baselineTotal > 0 && updatedTotal > baselineTotal) {
+      let excess = updatedTotal - baselineTotal;
+      for (let i = this.periapsisDistribution.length - 1; i >= 0 && excess > 0; i -= 1) {
+        const entry = this.periapsisDistribution[i];
+        const removed = Math.min(entry.massTons || 0, excess);
+        entry.massTons -= removed;
+        excess -= removed;
+      }
+      updatedTotal = baselineTotal;
+    }
+    regenerated = Math.max(0, updatedTotal - startingTotal);
+    resource.value = Math.max(0, updatedTotal);
     if (regenerated > 0) {
-      resource.value += regenerated;
       resource.modifyRate(
         regenerated / deltaSeconds,
         t('ui.terraforming.hazardEffects.debrisDiskKesslerRegeneration', {}, 'Debris Disk Regeneration'),
@@ -508,6 +543,32 @@ class KesslerHazard {
     this.periapsisDistribution.forEach((entry) => {
       entry.massTons *= scale;
     });
+  }
+
+  getBaselineTotalMass() {
+    const resource = resources.special.orbitalDebris;
+    const entryCount = this.periapsisDistribution.length;
+    let baselineTotal = 0;
+    for (let i = 0; i < entryCount; i += 1) {
+      baselineTotal += getKesslerBaselineMassForEntry(this.periapsisBaseline[i], resource, entryCount);
+    }
+    return baselineTotal;
+  }
+
+  clampDistributionToBaseline() {
+    const resource = resources.special.orbitalDebris;
+    const entryCount = this.periapsisDistribution.length;
+    let total = 0;
+    for (let i = 0; i < entryCount; i += 1) {
+      const entry = this.periapsisDistribution[i];
+      const baselineMass = getKesslerBaselineMassForEntry(this.periapsisBaseline[i], resource, entryCount);
+      if (baselineMass > 0 && entry.massTons > baselineMass) {
+        entry.massTons = baselineMass;
+      }
+      total += entry.massTons || 0;
+    }
+    resource.value = Math.max(0, total);
+    return total;
   }
 
   update(deltaSeconds, terraforming, kesslerParameters) {

@@ -1133,7 +1133,7 @@ const shadesNightmareOverrides = {
       }
     },
     kessler: {
-      orbitalDebrisPerLand: 100
+      orbitalDebrisPerLand: 1000
     },
     pulsar: {
       stormDurationSeconds: 25,
