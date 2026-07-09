@@ -2288,6 +2288,8 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  hazardManager.applyPostClampResourceProduction();
+
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
   applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges);
   if (hasDynamicMassEnabledSafe(terraforming, planetParameters)) {

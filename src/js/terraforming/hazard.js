@@ -622,6 +622,12 @@ class HazardManager {
     this.syncHazardLandReservation(terraformingState);
   }
 
+  applyPostClampResourceProduction() {
+    if (this.debrisDiskHazard && this.debrisDiskHazard.applyPendingSurfaceSalvage) {
+      this.debrisDiskHazard.applyPendingSurfaceSalvage();
+    }
+  }
+
   normalizeHazardLandShare(share) {
     if (normalizeLandReservationShareHelper) {
       return normalizeLandReservationShareHelper(share);

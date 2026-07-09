@@ -164,6 +164,7 @@ class DebrisDiskHazard {
     this.effectsActive = false;
     this.lastGrowthMultiplier = 1;
     this.companionMirrorReleased = false;
+    this.pendingSurfaceSalvage = { scrapMetal: 0, junk: 0, seconds: 0 };
   }
 
   normalize(parameters = {}) {
@@ -445,6 +446,21 @@ class DebrisDiskHazard {
     return salvage;
   }
 
+  queueSurfaceSalvage(scrapMetal, junk, seconds) {
+    this.pendingSurfaceSalvage.scrapMetal += scrapMetal;
+    this.pendingSurfaceSalvage.junk += junk;
+    this.pendingSurfaceSalvage.seconds += seconds > 0 ? seconds : 0;
+  }
+
+  applyPendingSurfaceSalvage() {
+    const salvage = this.pendingSurfaceSalvage;
+    addDebrisDiskSurfaceResource('scrapMetal', salvage.scrapMetal, salvage.seconds);
+    addDebrisDiskSurfaceResource('junk', salvage.junk, salvage.seconds);
+    salvage.scrapMetal = 0;
+    salvage.junk = 0;
+    salvage.seconds = 0;
+  }
+
   applyAttrition(seconds, attritionRate) {
     let losses = 0;
     let colonyResourceLoss = 0;
@@ -465,8 +481,7 @@ class DebrisDiskHazard {
     colonyResourceLoss += colonyResourceResult.resourceLoss;
     scrapMetal += colonyResourceResult.scrapMetal;
     junk += colonyResourceResult.junk;
-    addDebrisDiskSurfaceResource('scrapMetal', scrapMetal, seconds);
-    addDebrisDiskSurfaceResource('junk', junk, seconds);
+    this.queueSurfaceSalvage(scrapMetal, junk, seconds);
     this.lastAttritionLosses = losses;
     this.lastColonyResourceLossPerSecond = seconds > 0 ? colonyResourceLoss / seconds : 0;
     this.lastScrapMetalPerSecond = seconds > 0 ? scrapMetal / seconds : 0;

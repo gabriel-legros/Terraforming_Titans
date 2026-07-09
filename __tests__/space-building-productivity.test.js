@@ -916,6 +916,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('hasDynamicMassEnabled', () => false, originalGlobals);
   setGlobal('globalGameIsLoadingFromSave', false, originalGlobals);
   setGlobal('autoActivateStructures', () => {}, originalGlobals);
+  setGlobal('hazardManager', { applyPostClampResourceProduction: () => {} }, originalGlobals);
 
   const projectManager = {
     projects: {},
