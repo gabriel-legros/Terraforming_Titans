@@ -109,7 +109,8 @@ const specialSeedStoryHazards = {
   debrisDisk: {
     debrisPerLand: 1e10,
     attritionRatePerSecond: 0.01,
-    colonistGrowthPenalty: 0.9
+    colonistGrowthPenalty: 0.9,
+    kesslerRegenerationRatePerBinPerSecond: 0.001
   }
 };
 
@@ -1156,7 +1157,8 @@ const shadesNightmareOverrides = {
     debrisDisk: {
       debrisPerLand: 1e11,
       attritionRatePerSecond: 0.0025,
-      colonistGrowthPenalty: 0.9
+      colonistGrowthPenalty: 0.9,
+      kesslerRegenerationRatePerBinPerSecond: 0.001
     }
   }
 };

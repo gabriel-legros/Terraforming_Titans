@@ -4,6 +4,7 @@ const DEBRIS_DISK_STRUCTURE_MINIMUM = 10n;
 const DEBRIS_DISK_AEROSTAT_MINIMUM = 500n;
 const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = 10000;
 const DEBRIS_DISK_SPACESHIP_MINING_SOURCE = 'Spaceship Mining';
+const DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND = 0.001;
 
 function normalizeDebrisDiskParameters(parameters = {}) {
   const attritionRate = Number.isFinite(parameters.attritionRatePerSecond)
@@ -20,7 +21,7 @@ function normalizeDebrisDiskParameters(parameters = {}) {
     : 0;
   const kesslerRegenerationRatePerBinPerSecond = Number.isFinite(parameters.kesslerRegenerationRatePerBinPerSecond)
     ? Math.max(0, parameters.kesslerRegenerationRatePerBinPerSecond)
-    : 0.01;
+    : DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND;
   return {
     debrisPerLand,
     initialDebrisTons,

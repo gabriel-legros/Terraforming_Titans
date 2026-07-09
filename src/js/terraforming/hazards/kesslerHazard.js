@@ -403,7 +403,7 @@ class KesslerHazard {
     resource.value += addedTons;
   }
 
-  regenerateDebrisFromDisk(terraforming, kesslerParameters, deltaSeconds, ratePerBinPerSecond = 0.01, maxGeneratedTons = Infinity) {
+  regenerateDebrisFromDisk(terraforming, kesslerParameters, deltaSeconds, ratePerBinPerSecond = 0, maxGeneratedTons = Infinity) {
     if (!(deltaSeconds > 0) || !(ratePerBinPerSecond > 0)) {
       return 0;
     }
