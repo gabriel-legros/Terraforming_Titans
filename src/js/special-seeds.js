@@ -1143,7 +1143,7 @@ const shadesNightmareOverrides = {
     },
     debrisDisk: {
       debrisPerLand: 1e11,
-      attritionRatePerSecond: 0.005,
+      attritionRatePerSecond: 0.0025,
       colonistGrowthPenalty: 0.9
     }
   }
@@ -2181,7 +2181,7 @@ const specialSeedDefinitions = {
   },
   shadesnightmare: {
     key: 'shadesnightmare',
-    enabled: false,
+    enabled: true,
     seed: 'ShadesNightmare',
     name: 'ShadesNightmare',
     nameKey: 'catalogs.specialSeeds.shadesnightmare.name',
