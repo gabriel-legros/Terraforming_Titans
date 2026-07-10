@@ -59,6 +59,9 @@ class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
       const researches = researchManager.researches[category];
       for (let index = 0; index < researches.length; index += 1) {
         const research = researches[index];
+        if (!this.shouldIncludeResearchInAutomation(research)) {
+          continue;
+        }
         this.recordResearch(research.id);
         target[research.id] = this.normalizeEntry(target[research.id]);
       }
@@ -123,11 +126,19 @@ class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
     }
   }
 
+  shouldIncludeResearchInAutomation(research) {
+    return researchManager.isResearchDisplayable(research)
+      || (this.encounteredTargets && this.encounteredTargets.has('research', research.id));
+  }
+
   recordCurrentlyAvailableResearches() {
     for (const category in researchManager.researches) {
       const researches = researchManager.researches[category];
       for (let index = 0; index < researches.length; index += 1) {
-        this.recordResearch(researches[index].id);
+        const research = researches[index];
+        if (researchManager.isResearchDisplayable(research)) {
+          this.recordResearch(research.id);
+        }
       }
     }
   }
@@ -142,6 +153,9 @@ class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
       const researches = researchManager.researches[category];
       for (let index = 0; index < researches.length; index += 1) {
         const research = researches[index];
+        if (!this.shouldIncludeResearchInAutomation(research)) {
+          continue;
+        }
         state[research.id] = this.normalizeEntry({
           enabled: researchManager.getAutoResearchEnabled(research.id),
           priority: researchManager.getAutoResearchPriority(research.id)

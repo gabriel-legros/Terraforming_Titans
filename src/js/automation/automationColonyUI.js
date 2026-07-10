@@ -22,65 +22,7 @@ let colonyBuilderTargetSignature = '';
 let colonyBuilderSelectedSignature = '';
 
 function getColonyAutomationTargetCatalog(automation) {
-  const targets = [];
-  Object.values(colonies || {}).forEach(colony => {
-    if (!colony) {
-      return;
-    }
-    targets.push({
-      id: `colony:${colony.name}`,
-      categoryId: 'colonyBuildings',
-      categoryLabel: automation.getCategoryLabel('colonyBuildings'),
-      label: colony.displayName || colony.name,
-      supportsAutomation: true
-    });
-  });
-
-  for (const sliderId in COLONY_AUTOMATION_SLIDER_TARGETS) {
-    const config = COLONY_AUTOMATION_SLIDER_TARGETS[sliderId];
-    targets.push({
-      id: `slider:${sliderId}`,
-      categoryId: 'colonySliders',
-      categoryLabel: automation.getCategoryLabel('colonySliders'),
-      label: config.label,
-      supportsAutomation: false
-    });
-  }
-
-  targets.push(
-    {
-      id: 'constructionOffice',
-      categoryId: 'constructionOffice',
-      categoryLabel: automation.getCategoryLabel('constructionOffice'),
-      label: getAutomationCardText('colonyTargetConstructionOffice', {}, 'Construction Office'),
-      supportsAutomation: false
-    },
-    {
-      id: 'nanocolony',
-      categoryId: 'nanocolony',
-      categoryLabel: automation.getCategoryLabel('nanocolony'),
-      label: getAutomationCardText('colonyTargetNanocolony', {}, 'Nanocolony'),
-      supportsAutomation: false
-    },
-    {
-      id: 'orbitals',
-      categoryId: 'orbitals',
-      categoryLabel: automation.getCategoryLabel('orbitals'),
-      label: getAutomationCardText('colonyTargetOrbitals', {}, 'Orbitals'),
-      supportsAutomation: false
-    }
-  );
-
-  targets.sort((left, right) => {
-    const leftCategory = COLONY_AUTOMATION_CATEGORY_ORDER.indexOf(left.categoryId);
-    const rightCategory = COLONY_AUTOMATION_CATEGORY_ORDER.indexOf(right.categoryId);
-    if (leftCategory !== rightCategory) {
-      return leftCategory - rightCategory;
-    }
-    return left.label.localeCompare(right.label);
-  });
-
-  return targets;
+  return automation.getAvailableTargets();
 }
 
 function formatColonyAutomationPresetType(preset) {
