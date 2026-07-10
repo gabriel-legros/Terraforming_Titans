@@ -21,7 +21,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Building-specific logic belongs in dedicated subclasses under `src/js/buildings/` and must be registered in `initializeBuildings`.
 - Do not use `globalThis`; use the actual global variable directly.
 - Keep code short, readable, and direct.
-- For screenshots, set `DEBUG_MODE` to `true` in `src/js/debug_constants.js` so intro skip paths are available.
+- For automated world-visualizer screenshots, use `npm run screenshot:visualizer`; it drives the visualizer debug API directly, so leave `DEBUG_MODE` unchanged. Set `DEBUG_MODE` to `true` only for interactive manual screenshots that need intro skip paths, then restore it to `false`.
 
 ## Testing
 - In this repo setup (WSL working on a Windows folder), run tests with Windows binaries:
@@ -32,6 +32,15 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Report pass/fail counts.
 - Do not leave generated test result artifacts in the worktree. If you create temporary files such as `tmp-jest-results*.json`, remove them before finishing.
 - Do not add tests for new features unless explicitly requested.
+
+## World Visualizer Screenshots
+- Use the repository-owned Playwright harness rather than relying on an in-app browser connection. It starts a temporary local server, uses an isolated browser context, removes story overlays from the capture, fixes the planet rotation, and screenshots only `#planet-visualizer`.
+- From WSL on the Windows checkout, run it with Windows Node:
+  - `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm run screenshot:visualizer -- --planet mars --biomass 100,0,100 --water 0,0,0 --ice 0,0,0 --clouds 0 --size 768 --output artifacts/screenshots/biomass-zones.png"`
+- Run `npm run screenshot:visualizer -- --help` for all scene overrides, including hazardous biomass, base colour, illumination, rotation, image size, and headed mode.
+- The three-value surface arguments are ordered `tropical,temperate,polar` and use percentages from `0` to `100`.
+- Screenshot output under `artifacts/screenshots/` is ignored by Git. Inspect the generated PNG with the local image viewer before reporting visual results.
+- If Playwright Chromium is missing after `npm ci`, install it with Windows Node: `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npx playwright install chromium"`.
 
 ## Project Overview
 - Browser incremental game with script entry via `index.html`.
