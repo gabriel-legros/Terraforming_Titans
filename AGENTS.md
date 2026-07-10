@@ -254,6 +254,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Every `lifeDesign.metabolism.processes.*.growth.perBiomass` and matching `decay.perBiomass` recipe must conserve mass. For each 1 ton of biomass produced, total consumed mass must equal `1 ton biomass + all byproducts`; decay should be the matching reverse process unless there is a clearly documented reason.
 - Do not add life metabolism coefficients by feel. Check the arithmetic before committing: negative coefficients are inputs, positive coefficients are outputs, and the absolute input total must equal the output total.
 - If a metabolism is meant to represent a variant of photosynthesis, keep the chemistry explicit in the coefficients. Extreme atmospheric requirements do not justify unbalanced per-biomass recipes.
+- Surface biomass undergoes metabolism-constrained Natural Decay at 0.5% per 365 real-time seconds before growth. Its products are available to same-tick growth, and atmospheric import demand must net out those recycled products.
 
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.

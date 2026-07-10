@@ -974,6 +974,9 @@ setLanguageData({
       cannotSurviveAnywhere: 'Life cannot survive anywhere',
       metabolismFallback: 'Metabolism',
       survivesCannotGrow: 'Survives but cannot grow',
+      rateLabels: {
+        naturalDecay: 'Natural Decay',
+      },
     },
     structures: {
       common: {
