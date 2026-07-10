@@ -1992,7 +1992,7 @@ const researchParameters = {
         name: '',
         description: '',
         cost: { advancedResearch: 200000 },
-        prerequisites: [],
+        prerequisites: ['super_alloys'],
         effects: [
           {
             target: 'project',
@@ -2020,7 +2020,7 @@ const researchParameters = {
         name: '',
         description: '',
         cost: { advancedResearch: 150000 },
-        prerequisites: [],
+        prerequisites: ['super_alloys'],
         effects: [
           {
             target: 'project',
