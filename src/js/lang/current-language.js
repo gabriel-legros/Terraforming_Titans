@@ -1222,10 +1222,10 @@ setLanguageData({
         debrisDisk: 'Debris Disk',
       },
       resourceModes: {
-        spaceFirst: 'Prioritize space resources for mega+ projects',
-        colonyFirst: 'Prioritize colony resources for mega+ projects',
-        spaceOnly: 'Only use space resources for mega+ projects',
-        colonyOnly: 'Only use colony resources for mega+ projects',
+        spaceFirst: 'Prioritize space resources for projects that can use Space Storage',
+        colonyFirst: 'Prioritize colony resources for projects that can use Space Storage',
+        spaceOnly: 'Only use space resources for projects that can use Space Storage',
+        colonyOnly: 'Only use colony resources for projects that can use Space Storage',
       },
       advancedSettings: {
         button: 'Advanced settings',
@@ -5584,7 +5584,7 @@ setLanguageData({
       },
       spaceStorage: {
         name: 'Space Storage',
-        description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time.  Resources in space storage may also be used to pay for most mega projects (planetary thrusters and world specializations excepted).  Space storage capacity and resources in storage persist between worlds.',
+        description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time. Resources in space storage may also be used to pay for projects that can use Space Storage (planetary thrusters and world specializations excepted). Space storage capacity and resources in storage persist between worlds.',
         attributes: {
           expansionRecipes: {
             standard: { label: 'Standard Storage' },

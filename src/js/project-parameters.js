@@ -1207,7 +1207,7 @@ const projectParameters = {
   megaHeatSink: {
     type: 'MegaHeatSinkProject',
     name: '',
-    category: 'mega',
+    category: 'infrastructure',
     cost: {
       colony: {
         superalloys: 1_000_000_000,

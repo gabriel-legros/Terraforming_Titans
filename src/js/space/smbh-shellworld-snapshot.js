@@ -1,6 +1,6 @@
 const SMBH_SHELLWORLD_SNAPSHOT_VERSION = 1;
 const SMBH_SHELLWORLD_ALLOWED_PROJECT_CATEGORIES = new Set(['resources', 'infrastructure']);
-const SMBH_SHELLWORLD_ALLOWED_MEGA_PROJECTS = new Set(['megaHeatSink', 'spaceStorage']);
+const SMBH_SHELLWORLD_ALLOWED_EXCEPTION_PROJECTS = new Set(['spaceStorage']);
 
 function cloneSmbhShellworldSnapshotData(value) {
   return JSON.parse(JSON.stringify(value));
@@ -77,7 +77,7 @@ function restoreSmbhShellworldStructures(collection, snapshot) {
 function isSmbhShellworldSnapshotProjectAllowed(name, project) {
   const category = project.attributes?.category || projectParameters?.[name]?.category || '';
   return SMBH_SHELLWORLD_ALLOWED_PROJECT_CATEGORIES.has(category)
-    || SMBH_SHELLWORLD_ALLOWED_MEGA_PROJECTS.has(name);
+    || SMBH_SHELLWORLD_ALLOWED_EXCEPTION_PROJECTS.has(name);
 }
 
 function captureSmbhShellworldSpaceStorageSettings(project) {
