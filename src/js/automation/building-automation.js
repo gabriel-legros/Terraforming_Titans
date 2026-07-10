@@ -54,7 +54,7 @@ try {
 const BuildingAutomationPresetManagerBaseClass = BuildingAutomationPresetManagerBaseRef || class BuildingAutomationPresetManagerBaseFallback {};
 
 class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
-  constructor() {
+  constructor(encounteredTargets = null) {
     super({
       featureKey: 'automationBuildings',
       presetLabel: 'Preset',
@@ -65,6 +65,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       nextTravelKind: 'combination',
       presetCollectionKey: 'buildings'
     });
+    this.encounteredTargets = encounteredTargets;
     this.everEnabledBuildings = new Set();
     this.elapsed = 0;
   }
@@ -89,23 +90,24 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
 
   recordBuildingEnabled(buildingId) {
     const building = buildings?.[buildingId];
-    if (!building || !building.automationRequiresEverEnabled) {
+    if (!building) {
       return false;
     }
     this.everEnabledBuildings.add(buildingId);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.record('buildings', buildingId);
+    }
     return true;
   }
 
   hasEverEnabledBuilding(buildingId) {
-    return this.everEnabledBuildings.has(buildingId);
+    return this.everEnabledBuildings.has(buildingId)
+      || (this.encounteredTargets && this.encounteredTargets.has('buildings', buildingId));
   }
 
   shouldShowBuildingInAutomation(building) {
     if (!building) {
       return false;
-    }
-    if (!building.automationRequiresEverEnabled) {
-      return this.isBuildingAvailableNow(building);
     }
     if (this.isBuildingAvailableNow(building)) {
       this.recordBuildingEnabled(building.name);
@@ -118,7 +120,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     const buildingList = Object.values(buildings || {});
     for (let index = 0; index < buildingList.length; index += 1) {
       const building = buildingList[index];
-      if (!building || !building.automationRequiresEverEnabled) {
+      if (!building) {
         continue;
       }
       if (this.isBuildingAvailableNow(building)) {
@@ -313,6 +315,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       }
       importedPreset.buildings[buildingId] = { control, automation };
     }
+    this.recordPresetTargets(importedPreset);
     this.presets.push(importedPreset);
     this.selectedPresetId = importedPreset.id;
     return importedPreset.id;
@@ -345,7 +348,19 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
         preset.buildings[buildingId] = entry;
       }
     }
+    this.recordPresetTargets(preset);
     return preset;
+  }
+
+  recordPresetTargets(preset) {
+    const buildingIds = Object.keys(preset.buildings || {});
+    for (let index = 0; index < buildingIds.length; index += 1) {
+      const buildingId = buildingIds[index];
+      this.everEnabledBuildings.add(buildingId);
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('buildings', buildingId);
+      }
+    }
   }
 
   mergeMissingBuildingsIntoPreset(presetId, buildingIds = []) {
@@ -374,6 +389,9 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       }
       preset.buildings[buildingId] = entry;
       changed = true;
+    }
+    if (changed) {
+      this.recordPresetTargets(preset);
     }
     return changed;
   }
@@ -800,6 +818,12 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     this.everEnabledBuildings = new Set(
       Array.isArray(data.everEnabledBuildings) ? data.everEnabledBuildings : []
     );
+    this.everEnabledBuildings.forEach(buildingId => {
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('buildings', buildingId);
+      }
+    });
+    this.presets.forEach(preset => this.recordPresetTargets(preset));
     this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: true });
     this.recordCurrentlyAvailableBuildings();
   }

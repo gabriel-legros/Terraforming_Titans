@@ -9,7 +9,7 @@ try {
 const ResearchAutomationPresetManagerBaseClass = ResearchAutomationPresetManagerBaseRef || class ResearchAutomationPresetManagerBaseFallback {};
 
 class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
-  constructor() {
+  constructor(encounteredTargets = null) {
     super({
       featureKey: 'automationResearch',
       presetLabel: 'Preset',
@@ -18,6 +18,8 @@ class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
       useCombinations: false,
       nextTravelKind: 'preset'
     });
+    this.encounteredTargets = encounteredTargets;
+    this.encounterElapsed = 0;
     this.currentPresetId = null;
     this.currentHiddenResearchIds = [];
   }
@@ -57,6 +59,7 @@ class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
       const researches = researchManager.researches[category];
       for (let index = 0; index < researches.length; index += 1) {
         const research = researches[index];
+        this.recordResearch(research.id);
         target[research.id] = this.normalizeEntry(target[research.id]);
       }
     }
@@ -103,7 +106,30 @@ class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
       }
     }
 
+    this.recordResearchIds(Object.keys(normalized.researches));
+
     return normalized;
+  }
+
+  recordResearch(researchId) {
+    if (this.encounteredTargets) {
+      this.encounteredTargets.record('research', researchId);
+    }
+  }
+
+  recordResearchIds(researchIds) {
+    if (this.encounteredTargets) {
+      this.encounteredTargets.recordAll('research', researchIds);
+    }
+  }
+
+  recordCurrentlyAvailableResearches() {
+    for (const category in researchManager.researches) {
+      const researches = researchManager.researches[category];
+      for (let index = 0; index < researches.length; index += 1) {
+        this.recordResearch(researches[index].id);
+      }
+    }
   }
 
   ensurePresetsAreComplete() {
@@ -427,7 +453,12 @@ class ResearchAutomation extends ResearchAutomationPresetManagerBaseClass {
     }
   }
 
-  update() {
+  update(delta) {
+    this.encounterElapsed += delta || 0;
+    if (this.encounterElapsed >= 1000) {
+      this.encounterElapsed = 0;
+      this.recordCurrentlyAvailableResearches();
+    }
     this.processAutoResearchQueue();
   }
 

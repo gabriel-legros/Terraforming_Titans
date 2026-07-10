@@ -61,6 +61,15 @@ try {
   AutoTravelAutomationRef = AutoTravelAutomationRef || require('./auto-travel-automation.js').AutoTravelAutomation;
 } catch (error) {}
 
+let AutomationEncounterManagerRef;
+try {
+  AutomationEncounterManagerRef = AutomationEncounterManager;
+} catch (error) {}
+try {
+  AutomationEncounterManagerRef = AutomationEncounterManagerRef
+    || require('./automation-encounter-manager.js').AutomationEncounterManager;
+} catch (error) {}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
@@ -86,12 +95,13 @@ class AutomationManager extends EffectableEntity {
       automationColony: false,
       automationScripts: false
     };
-    this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef() : null;
+    this.encounteredTargets = new AutomationEncounterManagerRef();
+    this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef(this.encounteredTargets) : null;
     this.lifeAutomation = LifeAutomationRef ? new LifeAutomationRef() : null;
-    this.buildingsAutomation = BuildingAutomationRef ? new BuildingAutomationRef() : null;
-    this.projectsAutomation = ProjectAutomationRef ? new ProjectAutomationRef() : null;
-    this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef() : null;
-    this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef() : null;
+    this.buildingsAutomation = BuildingAutomationRef ? new BuildingAutomationRef(this.encounteredTargets) : null;
+    this.projectsAutomation = ProjectAutomationRef ? new ProjectAutomationRef(this.encounteredTargets) : null;
+    this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef(this.encounteredTargets) : null;
+    this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef(this.encounteredTargets) : null;
     this.scriptAutomation = ScriptAutomationRef ? new ScriptAutomationRef() : null;
     this.autoTravelAutomation = AutoTravelAutomationRef ? new AutoTravelAutomationRef() : null;
   }
@@ -247,6 +257,12 @@ class AutomationManager extends EffectableEntity {
     if (this.projectsAutomation) {
       this.projectsAutomation.recordCurrentlyAvailableProjects();
     }
+    if (this.colonyAutomation) {
+      this.colonyAutomation.recordCurrentlyAvailableTargets();
+    }
+    if (this.researchAutomation) {
+      this.researchAutomation.recordCurrentlyAvailableResearches();
+    }
     if (this.spaceshipAutomation) {
       this.spaceshipAutomation.recordCurrentlyAvailableTargets();
       this.spaceshipAutomation.unlockManualControls();
@@ -324,6 +340,7 @@ class AutomationManager extends EffectableEntity {
       automationCardOrder: this.getAutomationCardOrder(),
       features: { ...this.features },
       booleanFlags: Array.from(this.booleanFlags),
+      encounteredTargets: this.encounteredTargets.saveState(),
       autoTravelAutomation: this.autoTravelAutomation ? this.autoTravelAutomation.saveState() : null,
       spaceshipAutomation: this.spaceshipAutomation ? this.spaceshipAutomation.saveState() : null,
       lifeAutomation: this.lifeAutomation ? this.lifeAutomation.saveState() : null,
@@ -350,6 +367,7 @@ class AutomationManager extends EffectableEntity {
     }, data.features || {});
     const flags = Array.isArray(data.booleanFlags) ? data.booleanFlags : [];
     this.booleanFlags = new Set(flags);
+    this.encounteredTargets.loadState(data.encounteredTargets || {});
     if (data.autoTravelAutomation && this.autoTravelAutomation) {
       this.autoTravelAutomation.loadState(data.autoTravelAutomation);
     }

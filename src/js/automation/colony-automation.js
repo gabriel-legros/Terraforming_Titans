@@ -63,7 +63,7 @@ try {
 const ColonyAutomationPresetManagerBaseClass = ColonyAutomationPresetManagerBaseRef || class ColonyAutomationPresetManagerBaseFallback {};
 
 class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
-  constructor() {
+  constructor(encounteredTargets = null) {
     super({
       featureKey: 'automationColony',
       presetLabel: 'Preset',
@@ -74,6 +74,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       nextTravelKind: 'combination',
       presetCollectionKey: 'targets'
     });
+    this.encounteredTargets = encounteredTargets;
+    this.elapsed = 0;
   }
 
   setCollapsed(collapsed) {
@@ -275,6 +277,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         automation
       };
     }
+    this.recordPresetTargets(importedPreset);
     this.presets.push(importedPreset);
     this.selectedPresetId = importedPreset.id;
     return importedPreset.id;
@@ -303,7 +306,15 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         preset.targets[targetId] = entry;
       }
     }
+    this.recordPresetTargets(preset);
     return preset;
+  }
+
+  recordPresetTargets(preset) {
+    if (!this.encounteredTargets) {
+      return;
+    }
+    this.encounteredTargets.recordAll('colony', Object.keys(preset.targets || {}));
   }
 
   mergeMissingTargetsIntoPreset(presetId, targetIds = []) {
@@ -328,6 +339,9 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       }
       preset.targets[targetId] = entry;
       changed = true;
+    }
+    if (changed) {
+      this.recordPresetTargets(preset);
     }
     return changed;
   }
@@ -800,7 +814,36 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     return true;
   }
 
+  recordCurrentlyAvailableTargets() {
+    if (!this.encounteredTargets) {
+      return;
+    }
+    const colonyList = Object.values(colonies || {});
+    for (let index = 0; index < colonyList.length; index += 1) {
+      const colony = colonyList[index];
+      if (!colony || !colony.unlocked || colony.permanentlyDisabled) {
+        continue;
+      }
+      this.encounteredTargets.record('colony', `colony:${colony.name}`);
+    }
+    for (const sliderId in COLONY_AUTOMATION_SLIDER_TARGETS) {
+      if (COLONY_AUTOMATION_SLIDER_TARGETS[sliderId].isAvailable()) {
+        this.encounteredTargets.record('colony', `slider:${sliderId}`);
+      }
+    }
+    if (globalEffects.isBooleanFlagSet('automateConstruction')) {
+      this.encounteredTargets.record('colony', 'constructionOffice');
+    }
+    if (nanotechManager && nanotechManager.enabled) {
+      this.encounteredTargets.record('colony', 'nanocolony');
+    }
+    if (followersManager && followersManager.enabled) {
+      this.encounteredTargets.record('colony', 'orbitals');
+    }
+  }
+
   getAvailableTargets() {
+    this.recordCurrentlyAvailableTargets();
     const targets = [];
     const colonyList = Object.values(colonies || {});
     for (let index = 0; index < colonyList.length; index += 1) {
@@ -859,6 +902,25 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         label: t('ui.hope.automationCards.colonyTargetOrbitals', {}, 'Orbitals'),
         supportsAutomation: false
       });
+    }
+
+    if (this.encounteredTargets) {
+      this.presets.forEach(preset => this.recordPresetTargets(preset));
+      const currentTargetIds = new Set(targets.map(target => target.id));
+      const encounteredTargetIds = this.encounteredTargets.getIds('colony');
+      for (let index = 0; index < encounteredTargetIds.length; index += 1) {
+        const targetId = encounteredTargetIds[index];
+        if (currentTargetIds.has(targetId)) {
+          continue;
+        }
+        targets.push({
+          id: targetId,
+          categoryId: this.getTargetCategoryId(targetId),
+          categoryLabel: this.getCategoryLabel(this.getTargetCategoryId(targetId)),
+          label: this.getTargetLabel(targetId),
+          supportsAutomation: this.targetSupportsAutomation(targetId)
+        });
+      }
     }
 
     targets.sort((left, right) => {
@@ -1029,9 +1091,16 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     this.loadAssignmentsFromState(data.assignments);
     this.loadCombinationsFromState(data.combinations);
     this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: false });
+    this.presets.forEach(preset => this.recordPresetTargets(preset));
   }
 
-  update() {}
+  update(delta) {
+    this.elapsed += delta || 0;
+    if (this.elapsed >= 1000) {
+      this.elapsed = 0;
+      this.recordCurrentlyAvailableTargets();
+    }
+  }
 }
 
 try {

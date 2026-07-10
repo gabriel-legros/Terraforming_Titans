@@ -24,12 +24,13 @@ class SpaceshipAutomation {
     };
   }
 
-  constructor() {
+  constructor(encounteredTargets = null) {
     this.presets = [];
     this.activePresetId = null;
     this.enabled = false;
     this.disabledProjects = new Set();
     this.seenProjectTargets = new Set();
+    this.encounteredTargets = encounteredTargets;
     this.collapsed = false;
     this.nextPresetId = 1;
     this.elapsed = 0;
@@ -443,6 +444,9 @@ class SpaceshipAutomation {
       return false;
     }
     this.seenProjectTargets.add(project.name);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.record('ships', project.name);
+    }
     return true;
   }
 
@@ -463,6 +467,11 @@ class SpaceshipAutomation {
     this.seenProjectTargets.forEach((projectId) => {
       seen.add(projectId);
     });
+    if (this.encounteredTargets) {
+      this.encounteredTargets.getIds('ships').forEach((projectId) => {
+        seen.add(projectId);
+      });
+    }
 
     for (let presetIndex = 0; presetIndex < this.presets.length; presetIndex += 1) {
       const preset = this.presets[presetIndex];
@@ -1196,6 +1205,9 @@ class SpaceshipAutomation {
     this.enabled = data.enabled !== undefined ? !!data.enabled : migratedEnabled;
     this.disabledProjects = new Set(Array.isArray(data.disabledProjects) ? data.disabledProjects : []);
     this.seenProjectTargets = new Set(Array.isArray(data.seenProjectTargets) ? data.seenProjectTargets : []);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.recordAll('ships', Array.from(this.seenProjectTargets));
+    }
     this.collapsed = !!data.collapsed;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.ensureDefaultPreset();

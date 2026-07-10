@@ -22,7 +22,7 @@ let buildingsBuilderBuildingSignature = '';
 let buildingsBuilderSelectedSignature = '';
 
 function getBuildingAutomationPickerCatalog(selectedCategory) {
-  return Object.values(buildings).filter(building => (
+  return getAutomatableBuildings().filter(building => (
     selectedCategory === 'all' || building.category === selectedCategory
   ));
 }
@@ -1183,7 +1183,7 @@ function attachBuildingsAutomationHandlers() {
     const presetMode = buildingAutomationUIState.builderPresetMode;
     const showInSidebar = buildingAutomationUIState.builderShowInSidebar;
     const buildingIds = buildingAutomationUIState.builderScope === 'all'
-      ? Object.values(buildings).map(building => building.name)
+      ? getAutomatableBuildings().map(building => building.name)
       : buildingAutomationUIState.builderSelectedBuildings.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {

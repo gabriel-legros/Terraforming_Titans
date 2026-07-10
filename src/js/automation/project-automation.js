@@ -91,7 +91,7 @@ try {
 const ProjectAutomationPresetManagerBaseClass = ProjectAutomationPresetManagerBaseRef || class ProjectAutomationPresetManagerBaseFallback {};
 
 class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
-  constructor() {
+  constructor(encounteredTargets = null) {
     super({
       featureKey: 'automationProjects',
       presetLabel: 'Preset',
@@ -102,6 +102,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       nextTravelKind: 'combination',
       presetCollectionKey: 'projects'
     });
+    this.encounteredTargets = encounteredTargets;
     this.everEnabledProjects = new Set();
     this.elapsed = 0;
   }
@@ -134,15 +135,20 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   recordProjectEnabled(projectId) {
     const normalizedProjectId = this.normalizeProjectId(projectId);
     const project = this.getProjectForAutomationId(normalizedProjectId);
-    if (!project || !project.automationRequiresEverEnabled) {
+    if (!project || project.category === 'story') {
       return false;
     }
     this.everEnabledProjects.add(normalizedProjectId);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.record('projects', normalizedProjectId);
+    }
     return true;
   }
 
   hasEverEnabledProject(projectId) {
-    return this.everEnabledProjects.has(this.normalizeProjectId(projectId));
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    return this.everEnabledProjects.has(normalizedProjectId)
+      || (this.encounteredTargets && this.encounteredTargets.has('projects', normalizedProjectId));
   }
 
   getSeenProjectIdSet(extraProjectIds = []) {
@@ -151,6 +157,11 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     this.everEnabledProjects.forEach((projectId) => {
       seen.add(this.normalizeProjectId(projectId));
     });
+    if (this.encounteredTargets) {
+      this.encounteredTargets.getIds('projects').forEach((projectId) => {
+        seen.add(this.normalizeProjectId(projectId));
+      });
+    }
 
     this.presets.forEach((preset) => {
       Object.keys(preset.projects || {}).forEach((projectId) => {
@@ -181,9 +192,6 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     if (!project || project.category === 'story') {
       return false;
     }
-    if (!project.automationRequiresEverEnabled) {
-      return true;
-    }
     if (this.isProjectAvailableNow(project)) {
       this.recordProjectEnabled(project.name);
       return true;
@@ -198,7 +206,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
 
     for (let index = 0; index < order.length; index += 1) {
       const project = projectManager.projects[order[index]];
-      if (!project || !project.automationRequiresEverEnabled) {
+      if (!project || project.category === 'story') {
         continue;
       }
       if (this.isProjectAvailableNow(project)) {
@@ -364,6 +372,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       scopeAll: presetData.scopeAll === true,
       projects: this.normalizeLoadedPresetProjects(presetData.projects || {})
     };
+    this.recordPresetTargets(importedPreset);
     this.presets.push(importedPreset);
     this.selectedPresetId = importedPreset.id;
     return importedPreset.id;
@@ -390,7 +399,19 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       const entry = this.captureProjectSettingsForId(projectId, includeExpansion, includeOperations);
       this.mergePresetProjectEntry(preset.projects, projectId, entry);
     }
+    this.recordPresetTargets(preset);
     return preset;
+  }
+
+  recordPresetTargets(preset) {
+    const projectIds = Object.keys(preset.projects || {});
+    for (let index = 0; index < projectIds.length; index += 1) {
+      const projectId = this.normalizeProjectId(projectIds[index]);
+      this.everEnabledProjects.add(projectId);
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('projects', projectId);
+      }
+    }
   }
 
   mergeMissingProjectsIntoPreset(presetId, projectIds = []) {
@@ -415,6 +436,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       }
       this.mergePresetProjectEntry(preset.projects, projectId, entry);
       changed = true;
+    }
+    if (changed) {
+      this.recordPresetTargets(preset);
     }
     return changed;
   }
@@ -1375,6 +1399,12 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         ? data.everEnabledProjects.map(projectId => this.normalizeProjectId(projectId))
         : []
     );
+    this.everEnabledProjects.forEach(projectId => {
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('projects', projectId);
+      }
+    });
+    this.presets.forEach(preset => this.recordPresetTargets(preset));
     this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: true });
     this.recordCurrentlyAvailableProjects();
   }
