@@ -5002,7 +5002,7 @@ setLanguageData({
         name: 'Titania',
         difficulty: 'Hard+',
         effects: {
-          dynamicMassLowGravity: 'Gravity is low, but planetary mass can be increased from additional import resource options and from surface resources.',
+          dynamicMassLowGravity: 'Gravity is low, but planetary mass can be increased from additional import resource options on Metal and Silica imports (new drop-down option) and from surface resources.',
         },
         otherRequirements: {
           gravityMinimum: {
