@@ -40,6 +40,9 @@ class MultiRecipesBuilding extends Building {
         const requiredFlag = recipe.requiresResearchFlag;
         const requiredBuildingFlag = recipe.requiresBuildingFlag;
         const disabledBuildingFlag = recipe.disabledByBuildingFlag;
+        if (recipe.gasGiantAllowed === false && currentPlanetParameters.specialAttributes.gasGiant === true) {
+          return false;
+        }
         if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
           return false;
         }
@@ -55,6 +58,9 @@ class MultiRecipesBuilding extends Building {
       const requiredBuildingFlag = recipe.requiresBuildingFlag;
       const disabledBuildingFlag = recipe.disabledByBuildingFlag;
       if (recipe.artificialAllowed === false) {
+        return false;
+      }
+      if (recipe.gasGiantAllowed === false && currentPlanetParameters.specialAttributes.gasGiant === true) {
         return false;
       }
       if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
@@ -168,6 +174,11 @@ class MultiRecipesBuilding extends Building {
     this.ignoreRecipeRestrictionsOnLoad = true;
     super.loadState(state);
     this.ignoreRecipeRestrictionsOnLoad = false;
+    const recipe = this.recipes[this.currentRecipeKey] || {};
+    if (recipe.gasGiantAllowed === false && currentPlanetParameters.specialAttributes.gasGiant === true) {
+      this._restoredRecipeKey = null;
+      this._applyRecipeMapping();
+    }
   }
 
   initializeCustomUI(context = {}) {

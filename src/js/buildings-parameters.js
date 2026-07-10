@@ -922,7 +922,8 @@ const buildingsParameters = {
         consumption: { colony: { energy: 200_000_000} },
         realisticEnergyConsumption: 40_000_000,
         production: { atmospheric: { oxygen: 50 } },
-        artificialAllowed: false
+        artificialAllowed: false,
+        gasGiantAllowed: false
       }
     }
   },

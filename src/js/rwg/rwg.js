@@ -1953,7 +1953,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     );
   }
   const specialAttributes = type === 'jupiter-like'
-    ? { hasSand: false, dynamicMass: true }
+    ? { hasSand: false, dynamicMass: true, gasGiant: true }
     : undefined;
   const overrides = {
     name: planetName(seed, params),

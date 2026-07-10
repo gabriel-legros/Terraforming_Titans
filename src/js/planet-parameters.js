@@ -1913,6 +1913,7 @@ const zeusOverrides = {
   specialAttributes: {
     hasSand: false,
     dynamicMass: true,
+    gasGiant: true,
   },
   star: {
     name: t('catalogs.planets.zeus.star.name', {}, 'Okoth'),

@@ -861,7 +861,8 @@ const shadesNightmareOverrides = {
   gravityPenaltyEnabled: true,
   specialAttributes: {
     hasSand: false,
-    dynamicMass: true
+    dynamicMass: true,
+    gasGiant: true
   },
   effects: [
     {
@@ -1168,7 +1169,8 @@ const toi3693bOverrides = {
   gravityPenaltyEnabled: true,
   specialAttributes: {
     hasSand: false,
-    dynamicMass: true
+    dynamicMass: true,
+    gasGiant: true
   },
   star: {
     name: 'TOI-3693',
