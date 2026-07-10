@@ -1356,6 +1356,33 @@
         const detail = bioHash(x * 0.38 + base * 5.2, y * 0.38 - base * 4.1);
         return Math.max(0, Math.min(1, base * 0.9 + detail * 0.1));
       };
+      const boundarySampleCount = isDisk ? 2048 : w;
+      const buildBoundaryField = (seedOffset) => {
+        const field = new Float32Array(boundarySampleCount);
+        const periodicNoise = (position, cells, octaveOffset) => {
+          const scaled = position * cells;
+          const cell = Math.floor(scaled);
+          const fraction = scaled - cell;
+          const blend = fraction * fraction * (3 - 2 * fraction);
+          const a = bioHash(cell % cells, seedOffset + octaveOffset);
+          const b = bioHash((cell + 1) % cells, seedOffset + octaveOffset);
+          return a * (1 - blend) + b * blend;
+        };
+        for (let sample = 0; sample < boundarySampleCount; sample++) {
+          const position = sample / boundarySampleCount;
+          const broad = periodicNoise(position, 5, 0);
+          const medium = periodicNoise(position, 13, 31.7);
+          const detail = periodicNoise(position, 37, 73.1);
+          field[sample] = (broad - 0.5) * 0.9 + (medium - 0.5) * 0.65 + (detail - 0.5) * 0.35;
+        }
+        return field;
+      };
+      const boundaryFields = isRing ? null : [
+        buildBoundaryField(11.3),
+        buildBoundaryField(29.7),
+        buildBoundaryField(47.1),
+        buildBoundaryField(83.9),
+      ];
       const lifeFracs = [
         Math.max(0, Math.min(1, (zcLife.tropical?.[coverageKey] || 0))),
         Math.max(0, Math.min(1, (zcLife.temperate?.[coverageKey] || 0))),
@@ -1363,7 +1390,9 @@
       ];
       const lifeNoise = this.getLifeNoiseField(w, h);
       if (!this._lifeScore || this._lifeScore.length !== w * h) this._lifeScore = new Float32Array(w * h);
+      if (!this._lifePatch || this._lifePatch.length !== w * h) this._lifePatch = new Float32Array(w * h);
       const lifeScore = this._lifeScore;
+      const lifePatch = this._lifePatch;
       const lifeZoneHists = [
         { counts: new Uint32Array(256), total: 0 },
         { counts: new Uint32Array(256), total: 0 },
@@ -1397,6 +1426,7 @@
         const latAbs = (isRing || isDisk) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const patch = patchNoise(x, y);
+        lifePatch[i] = patch;
         let score = lifeNoise[i] * 0.55 + patch * 0.25 + (1 - latAbs) * 0.1 + (1 - hgt) * 0.05 - waterPresence * 0.35;
         if (score < 0) score = 0; else if (score > 1) score = 1;
         lifeScore[i] = score;
@@ -1429,7 +1459,8 @@
       }
       const tropicalEdge = 23.5 / 90;
       const polarEdge = 66.5 / 90;
-      const zoneBlend = 0.22;
+      const zoneBlend = 0.06;
+      const boundaryWander = 0.04;
       const softness = 0.16;
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
@@ -1450,10 +1481,13 @@
           const radius = Math.sqrt(dx * dx + dy * dy);
           const inner = this.getDiskInnerRatio();
           const annulusT = Math.max(0, Math.min(0.999999, (radius - inner) / Math.max(0.001, 1 - inner)));
-          const grain = Math.sin(x * 43.217 + y * 87.971 + bioSeed.x * 991.7 + bioSeed.y * 577.3);
-          const noiseOffset = (grain - Math.floor(grain)) * 0.13 - 0.065;
-          const firstBlend = smoothstep((1 / 3) - 0.11, (1 / 3) + 0.11, annulusT + noiseOffset);
-          const secondBlend = smoothstep((2 / 3) - 0.11, (2 / 3) + 0.11, annulusT + noiseOffset);
+          const angle = (Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2);
+          const boundaryIndex = Math.floor(angle * boundarySampleCount) % boundarySampleCount;
+          const localIntrusion = (lifeNoise[i] - 0.5) * 0.12 + (lifePatch[i] - 0.5) * 0.02;
+          const firstPosition = annulusT + boundaryFields[0][boundaryIndex] * 0.04 + localIntrusion;
+          const secondPosition = annulusT + boundaryFields[2][boundaryIndex] * 0.04 + localIntrusion;
+          const firstBlend = smoothstep((1 / 3) - 0.045, (1 / 3) + 0.045, firstPosition);
+          const secondBlend = smoothstep((2 / 3) - 0.045, (2 / 3) + 0.045, secondPosition);
           weights = [
             1 - firstBlend,
             firstBlend * (1 - secondBlend),
@@ -1461,10 +1495,12 @@
           ];
         } else {
           const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
-          const grain = Math.sin(x * 31.37 + y * 79.13 + bioSeed.x * 1871.9 + bioSeed.y * 947.1);
-          const noiseOffset = (grain - Math.floor(grain)) * 0.08 - 0.04;
-          let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, latAbs + noiseOffset);
-          let w2 = smoothstep(polarEdge - zoneBlend, polarEdge + zoneBlend, latAbs + noiseOffset);
+          const hemisphereOffset = y < h / 2 ? 0 : 1;
+          const localIntrusion = (lifeNoise[i] - 0.5) * 0.14 + (lifePatch[i] - 0.5) * 0.12;
+          const tropicalPosition = latAbs + boundaryFields[hemisphereOffset][x] * boundaryWander + localIntrusion;
+          const polarPosition = latAbs + boundaryFields[2 + hemisphereOffset][x] * boundaryWander + localIntrusion;
+          let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, tropicalPosition);
+          let w2 = smoothstep(polarEdge - zoneBlend, polarEdge + zoneBlend, polarPosition);
           let w1 = 1 - w0 - w2;
           if (w1 < 0) w1 = 0;
           const sum = w0 + w1 + w2;
