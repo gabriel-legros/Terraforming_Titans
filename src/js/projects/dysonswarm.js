@@ -1,5 +1,6 @@
 let dysonSwarmManagerInstance = null;
 let DysonContinuousExpansionBase = null;
+const DYSON_SWARM_MAX_COLLECTOR_POWER = 5e25;
 
 if (typeof module !== 'undefined' && module.exports) {
   dysonSwarmManagerInstance = require('../dyson-manager.js');
@@ -47,7 +48,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
   }
 
   getMaxCollectors() {
-    return Infinity;
+    return DYSON_SWARM_MAX_COLLECTOR_POWER / this.energyPerCollector;
   }
 
   getCollectorHeadroom() {

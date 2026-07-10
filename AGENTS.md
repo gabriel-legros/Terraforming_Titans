@@ -97,7 +97,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - `SpaceManager`
   - `GalacticInvasionManager`
   - `StoryManager`
-  - Dyson Swarm collector count (receiver must still be rebuilt for output)
+  - Dyson Swarm collector count (receiver must still be rebuilt for output); construction is capped at one sphere worth of power (5e25).
+- Dyson Sphere expansion beyond the first sphere is capped by average Warp Gate Network level, scaling from 100,000 spheres at the minimum scale to 100 billion at level 1,000,000.
 - On load/travel, call managers' `reapplyEffects` so saved modifiers apply to fresh objects.
 
 ## UI Requirements

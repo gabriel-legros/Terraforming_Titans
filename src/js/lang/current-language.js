@@ -2103,6 +2103,7 @@ setLanguageData({
       dysonSwarm: {
         title: 'Dyson Swarm Collectors',
         collectors: 'Collectors:',
+        collectorsTooltip: 'Collector construction is capped at {max} collectors.',
         powerPerCollector: 'Power/Collector:',
         totalPower: 'Total Power:',
         collectorCost: 'Collector Cost:',
@@ -2118,6 +2119,8 @@ setLanguageData({
         totalPower: 'Total Power:',
         sphereCount: 'Sphere Count:',
         maxSpheres: 'Max Spheres:',
+        maxSpheresSingleTooltip: 'Additional Dyson Spheres research is required to expand beyond one sphere. Once unlocked, the cap is {base} x max(1, {averageLevel}) / {levelCap} = {max} spheres.',
+        maxSpheresTooltip: 'Additional Dyson Sphere cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible Dyson Sphere cap: {max}',
         maxPower: 'Max Power:',
         collectorCost: 'Collector Cost:',
         collectorCostTooltip: 'After the first sphere worth of power (5e25), Dyson Sphere collector expansion adds a fixed superalloy cost per collector to build additional frames.',

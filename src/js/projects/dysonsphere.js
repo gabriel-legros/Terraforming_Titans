@@ -1,5 +1,6 @@
 const DYSON_POWER_PER_SPHERE = 5e25;
 const DYSON_MAX_SPHERE_COUNT = 100_000_000_000;
+const DYSON_SPHERE_WARP_GATE_LEVEL_CAP = 1_000_000;
 const DYSON_OVERFLOW_SUPERALLOY_COST = 2_500_000;
 
 class DysonSphereProject extends DysonSwarmReceiverProject {
@@ -13,7 +14,44 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
   }
 
   getAllowedMaxSphereCount() {
-    return this.isAdditionalSpheresUnlocked() ? DYSON_MAX_SPHERE_COUNT : 1;
+    if (!this.isAdditionalSpheresUnlocked()) {
+      return 1;
+    }
+    return Math.floor(DYSON_MAX_SPHERE_COUNT * this.getDysonSphereCapMultiplier());
+  }
+
+  getAverageWarpGateNetworkLevel() {
+    return warpGateNetworkManager.getAverageWarpGateLevelAllSectors();
+  }
+
+  getDysonSphereCapMultiplier() {
+    return Math.max(1, this.getAverageWarpGateNetworkLevel()) / DYSON_SPHERE_WARP_GATE_LEVEL_CAP;
+  }
+
+  getMaxSphereTooltipText() {
+    const averageLevel = this.getAverageWarpGateNetworkLevel();
+    const networkScale = this.getDysonSphereCapMultiplier();
+    const maxSpheres = this.getAllowedMaxSphereCount();
+    const additionalSphereCap = Math.floor(DYSON_MAX_SPHERE_COUNT * networkScale);
+    const vars = {
+      base: formatNumber(DYSON_MAX_SPHERE_COUNT, true, 2),
+      averageLevel: formatNumber(averageLevel, true, 3),
+      levelCap: formatNumber(DYSON_SPHERE_WARP_GATE_LEVEL_CAP, true),
+      networkScale: formatNumber(networkScale, true, 6),
+      max: formatNumber(maxSpheres, true, 2),
+    };
+    if (!this.isAdditionalSpheresUnlocked()) {
+      return t(
+        'ui.projects.dysonSphere.maxSpheresSingleTooltip',
+        { ...vars, max: formatNumber(additionalSphereCap, true, 2) },
+        `Additional Dyson Spheres research is required to expand beyond one sphere. Once unlocked, the cap is ${formatNumber(DYSON_MAX_SPHERE_COUNT, true, 2)} x max(1, ${formatNumber(averageLevel, true, 3)}) / ${formatNumber(DYSON_SPHERE_WARP_GATE_LEVEL_CAP, true)} = ${formatNumber(additionalSphereCap, true, 2)} spheres.`
+      );
+    }
+    return t(
+      'ui.projects.dysonSphere.maxSpheresTooltip',
+      vars,
+      `Additional Dyson Sphere cap: ${formatNumber(DYSON_MAX_SPHERE_COUNT, true, 2)}\nWarp Gate Network scale: max(1, ${formatNumber(averageLevel, true, 3)}) / ${formatNumber(DYSON_SPHERE_WARP_GATE_LEVEL_CAP, true)} = ${formatNumber(networkScale, true, 6)}\nAccessible Dyson Sphere cap: ${formatNumber(maxSpheres, true, 2)}`
+    );
   }
 
   getMaximumPowerValue() {

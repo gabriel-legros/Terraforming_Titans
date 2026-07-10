@@ -26,7 +26,7 @@ function renderDysonSwarmUI(project, container) {
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.collectors', 'Collectors:')}</span><span id="ds-collectors" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label" id="ds-collectors-label">${getDysonSwarmText('ui.projects.dysonSwarm.collectors', 'Collectors:')}</span><span id="ds-collectors" class="stat-value"></span></div>
         <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.powerPerCollector', 'Power/Collector:')}</span><span id="ds-power-per" class="stat-value"></span></div>
         <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.totalPower', 'Total Power:')}</span><span id="ds-total-power" class="stat-value"></span></div>
       </div>
@@ -53,7 +53,13 @@ function renderDysonSwarmUI(project, container) {
 
   const autoCheckbox = card.querySelector('#ds-auto');
   const travelResetCheckbox = card.querySelector('#ds-auto-travel-reset');
+  const collectorsLabel = card.querySelector('#ds-collectors-label');
   const collectorSettingsRow = card.querySelector('.dyson-collector-settings-row');
+  const collectorsInfo = document.createElement('span');
+  collectorsInfo.classList.add('info-tooltip-icon');
+  collectorsInfo.innerHTML = '&#9432;';
+  collectorsLabel.appendChild(collectorsInfo);
+  const collectorsTooltipContent = attachDynamicInfoTooltip(collectorsInfo, '');
   const advancedSettingsButton = document.createElement('button');
   advancedSettingsButton.type = 'button';
   advancedSettingsButton.classList.add('project-advanced-settings-button');
@@ -67,6 +73,7 @@ function renderDysonSwarmUI(project, container) {
     ...projectElements[project.name],
     swarmCard: card,
     collectorsDisplay: card.querySelector('#ds-collectors'),
+    collectorsTooltipContent,
     powerPerDisplay: card.querySelector('#ds-power-per'),
     totalPowerDisplay: card.querySelector('#ds-total-power'),
     costDisplay: card.querySelector('#ds-collector-cost'),
@@ -146,10 +153,12 @@ function updateDysonSwarmUI(project) {
     const startButton = swarmCard.querySelector('#ds-start');
     const autoCheckbox = swarmCard.querySelector('#ds-auto');
     const travelResetCheckbox = swarmCard.querySelector('#ds-auto-travel-reset');
+    const collectorsInfo = swarmCard.querySelector('#ds-collectors-label .info-tooltip-icon');
     projectElements[project.name] = {
       ...els,
       swarmCard,
       collectorsDisplay: swarmCard.querySelector('#ds-collectors'),
+      collectorsTooltipContent: collectorsInfo ? collectorsInfo.querySelector('.resource-tooltip.dynamic-tooltip') : null,
       powerPerDisplay: swarmCard.querySelector('#ds-power-per'),
       totalPowerDisplay: swarmCard.querySelector('#ds-total-power'),
       costDisplay: swarmCard.querySelector('#ds-collector-cost'),
@@ -168,6 +177,15 @@ function updateDysonSwarmUI(project) {
   if (!showCard) return;
 
   els.collectorsDisplay.textContent = formatNumber(project.collectors, false, 2);
+  if (els.collectorsTooltipContent) {
+    els.collectorsTooltipContent.textContent = getDysonSwarmText(
+      'ui.projects.dysonSwarm.collectorsTooltip',
+      'Collector construction is capped at {max} collectors.',
+      {
+        max: formatNumber(project.getMaxCollectors(), true, 2),
+      }
+    );
+  }
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 2);
   const total = project.energyPerCollector * project.collectors;
   els.totalPowerDisplay.textContent = formatNumber(total, false, 2);
@@ -178,7 +196,7 @@ function updateDysonSwarmUI(project) {
     const active = project.isCollectorContinuous()
       ? project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)
       : project.collectorProgress > 0;
-    const rate = active ? (1000 / project.collectorDuration) : 0;
+    const rate = active && project.getCollectorHeadroom() > 0 ? (1000 / project.collectorDuration) : 0;
     els.expansionRateDisplay.textContent = getDysonSwarmText('ui.projects.dysonSwarm.collectorsPerSecond', '{value} collectors/s', {
       value: formatNumber(rate, true, 3)
     });
