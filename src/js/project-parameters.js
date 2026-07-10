@@ -664,7 +664,8 @@ const projectParameters = {
     kesslerDebrisSize: 'large',
     attributes: {
       spaceMining: true,
-      showInResourcesRate: false
+      showInResourcesRate: false,
+      disableWhenHazard: ['debrisDisk']
     }
   },
   artificialCrust: {
