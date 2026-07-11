@@ -125,15 +125,6 @@ class NanoworldProject extends SpecializationProject {
   }
 
   applySpecializationEffects() {
-    const densityMultiplier = 1 + this.getShopPurchaseCount('density') * 0.01;
-    nanotechManager.addAndReplace({
-      type: 'nanobotDensityMultiplier',
-      value: densityMultiplier,
-      effectId: 'nanoworld-density-shop',
-      sourceId: 'nanoworld',
-      name: getNanoworldText('effectName'),
-    });
-
     for (let stage = 1; stage <= 4; stage += 1) {
       nanotechManager.addAndReplace({
         type: 'nanoworldStageMultiplier',
@@ -147,6 +138,13 @@ class NanoworldProject extends SpecializationProject {
 
     if (this.isCompleted) {
       this.consumeAllBiomass();
+      nanotechManager.addAndReplace({
+        type: 'nanobotDensityMultiplier',
+        value: 1 + this.getShopPurchaseCount('density') * 0.01,
+        effectId: 'nanoworld-density-shop',
+        sourceId: 'nanoworld',
+        name: getNanoworldText('effectName'),
+      });
       nanotechManager.addAndReplace({
         type: 'nanobotDensityMultiplier',
         value: NANOWORLD_BASE_DENSITY_MULTIPLIER,

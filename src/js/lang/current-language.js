@@ -5343,7 +5343,7 @@ setLanguageData({
       },
       massDriver: {
         name: 'Mass Driver',
-        description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.',
+        description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.  Potentially a weapon.',
       },
       biodome: {
         name: 'Biodome',
@@ -5379,7 +5379,7 @@ setLanguageData({
       },
       laserCannon: {
         name: 'Laser Cannon',
-        description: 'Vaporizes or knocks away orbital debris with sustained laser fire, prioritizing the highest bins.',
+        description: 'Vaporizes or knocks away orbital debris with sustained laser fire, prioritizing the highest bins.  Not technically a weapon.',
       },
     },
     projects: {
@@ -7037,7 +7037,7 @@ setLanguageData({
       nanoworld: {
         pointsLabel: 'Nanoworld Points:',
         shopTitle: 'Nanoworld Shop',
-        shopTooltip: 'Gain Nanoworld Points equal to log10(nanobots) / 4 when travelling after completing this project, with a minimum of 1 point, then +10% per hazard on this world. Each upgrade costs 1 point and can be purchased up to 900 times.',
+        shopTooltip: 'Gain Nanoworld Points equal to log10(nanobots) / 4 when travelling after completing this project, with a minimum of 1 point, then +10% per hazard on this world. Each upgrade costs 1 point and can be purchased up to 900 times. Maximum Density upgrades apply only while on a completed Nanoworld.',
         effectName: 'Nanoworld',
         requirements: {
           terraformed: 'World is fully terraformed',
@@ -7047,7 +7047,7 @@ setLanguageData({
         shopItems: {
           density: {
             label: 'Nanobot Maximum Density +1%',
-            description: 'Increases maximum nanobot density by 1%.',
+            description: 'Increases maximum nanobot density on completed Nanoworlds by 1%. Has no effect on other worlds.',
           },
           stage1: {
             label: 'Nanotechnology Stage I +1%',
