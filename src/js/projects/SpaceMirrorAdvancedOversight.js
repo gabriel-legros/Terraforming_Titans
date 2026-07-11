@@ -2,7 +2,7 @@ class SpaceMirrorAdvancedOversight {
   static advancedAssignmentInProgress = false;
   static solverAlgorithm = 'newton';
 
-  static runAssignments(project, settings) {
+  static runAssignments(project, settings, deltaTime = 0) {
     if (!settings || !settings.advancedOversight) return;
     if (SpaceMirrorAdvancedOversight.advancedAssignmentInProgress) return;
 
@@ -41,6 +41,7 @@ class SpaceMirrorAdvancedOversight {
 
       const assignM = settings.assignments.mirrors || (settings.assignments.mirrors = {});
       const assignL = settings.assignments.lanterns || (settings.assignments.lanterns = {});
+      const availableHeating = settings.availableHeating || (settings.availableHeating = { mirrors: 0, lanterns: 0 });
       const reverse = settings.assignments.reversalMode || (
         settings.assignments.reversalMode = {
           tropical: false,
@@ -53,7 +54,10 @@ class SpaceMirrorAdvancedOversight {
 
       const getZoneMode = (zone) => tempMode[zone] || 'average';
       const getZoneTolerance = (zone) => getZoneMode(zone) === 'flux' ? FLUX_TOL : K_TOL;
-      const getZonePriority = (zone) => zone === 'focus' ? (prio.focus || 5) : (prio[zone] || 5);
+      const getZonePriority = (zone) => {
+        const maximum = zone === 'focus' ? 5 : 3;
+        return Math.max(1, Math.min(maximum, parseInt(prio[zone], 10) || 1));
+      };
       const getZoneObjectiveWeight = (zone) => Math.pow(4, 5 - Math.min(5, Math.max(1, getZonePriority(zone))));
 
       const mirrorBuilding = buildings.spaceMirror;
@@ -106,6 +110,8 @@ class SpaceMirrorAdvancedOversight {
         }
         assignM.unassigned = 0;
         assignL.unassigned = 0;
+        availableHeating.mirrors = 0;
+        availableHeating.lanterns = 0;
         reverse.focus = false;
         reverse.any = false;
       };
@@ -705,12 +711,25 @@ class SpaceMirrorAdvancedOversight {
 
       let mirrorsLeft = totalMirrors;
       let lanternsLeft = totalLanterns;
-      const maxPriority = Math.max(
-        1,
-        ...demandBuckets.map((bucket) => bucket.priority)
-      );
+      let availableHeatingPowerTarget = 0;
 
-      for (let priorityLevel = 1; priorityLevel <= maxPriority; priorityLevel++) {
+      for (let priorityLevel = 1; priorityLevel <= 5; priorityLevel++) {
+        if (priorityLevel === 4 && settings.allowAvailableToHeat !== false && deltaTime > 0) {
+          terraforming.restoreTemperatureState(snapshot);
+          terraforming.runUpdateStep(deltaTime, { disableAvailableAdvancedHeating: true });
+          availableHeatingPowerTarget = Math.max(0, terraforming.availableAdvancedHeatingPowerDemand || 0);
+          terraforming.restoreTemperatureState(snapshot);
+          if (availableHeatingPowerTarget > POWER_EPSILON) {
+            demandBuckets.push({
+              type: 'heating',
+              zone: 'available',
+              priority: 4,
+              remainingPower: availableHeatingPowerTarget,
+              mirrorPowerPer,
+            });
+          }
+        }
+
         const coolingBuckets = demandBuckets.filter(
           (bucket) => bucket.type === 'cooling' && bucket.priority === priorityLevel && bucket.remainingPower > POWER_EPSILON
         );
@@ -740,7 +759,11 @@ class SpaceMirrorAdvancedOversight {
             heatingBuckets,
             lanternPowerPer,
             (bucket, units) => {
-              assignL[bucket.zone] = (Number(assignL[bucket.zone]) || 0) + units;
+              if (bucket.zone === 'available') {
+                availableHeating.lanterns += units;
+              } else {
+                assignL[bucket.zone] = (Number(assignL[bucket.zone]) || 0) + units;
+              }
               bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * lanternPowerPer));
             },
             false
@@ -754,7 +777,11 @@ class SpaceMirrorAdvancedOversight {
             heatingBuckets,
             mirrorPowerPer,
             (bucket, units) => {
-              assignM[bucket.zone] = (Number(assignM[bucket.zone]) || 0) + units;
+              if (bucket.zone === 'available') {
+                availableHeating.mirrors += units;
+              } else {
+                assignM[bucket.zone] = (Number(assignM[bucket.zone]) || 0) + units;
+              }
               bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * (bucket.mirrorPowerPer || mirrorPowerPer)));
             },
             false,
@@ -773,9 +800,12 @@ class SpaceMirrorAdvancedOversight {
       settings.assignments.mirrors = assignM;
       settings.assignments.lanterns = assignL;
       settings.assignments.reversalMode = reverse;
+      settings.availableHeating = availableHeating;
       settings.lastSolution = {
         mirrors: { ...assignM },
         lanterns: { ...assignL },
+        availableHeating: { ...availableHeating },
+        availableHeatingPowerTarget,
         reversalMode: { ...reverse },
       };
 

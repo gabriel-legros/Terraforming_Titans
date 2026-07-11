@@ -75,6 +75,12 @@ function normalizeMirrorOversightMode(mode) {
   return mode === 'day' || mode === 'night' || mode === 'flux' ? mode : 'average';
 }
 
+function normalizeMirrorOversightPriority(zone, priority) {
+  const value = parseInt(priority, 10) || 1;
+  const maximum = zone === 'focus' ? 5 : 3;
+  return Math.max(1, Math.min(maximum, value));
+}
+
 function isMirrorOversightFluxMode(mode) {
   return normalizeMirrorOversightMode(mode) === 'flux';
 }
@@ -129,6 +135,7 @@ function createDefaultMirrorOversightSettings() {
     waterMultiplier: 1000,
     tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
     priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
+    availableHeating: { mirrors: 0, lanterns: 0 },
     autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
       assignments: {
         mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
@@ -229,9 +236,12 @@ function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
 
   const savedPriority = saved.priority || {};
   mergeSettingKeys(settings.priority, savedPriority).forEach(zone => {
-    const val = parseInt(savedPriority[zone], 10);
-    settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
+    settings.priority[zone] = normalizeMirrorOversightPriority(zone, savedPriority[zone]);
   });
+
+  const savedAvailableHeating = saved.availableHeating || {};
+  settings.availableHeating.mirrors = Math.max(0, Math.floor(Number(savedAvailableHeating.mirrors) || 0));
+  settings.availableHeating.lanterns = Math.max(0, Math.floor(Number(savedAvailableHeating.lanterns) || 0));
 
   const savedAuto = saved.autoAssign || {};
   mergeSettingKeys(settings.autoAssign, savedAuto).forEach(zone => {
@@ -281,8 +291,7 @@ function applyMirrorOversightTravelSettings(settings, saved = {}) {
 
   const savedPriority = saved.priority || {};
   mergeSettingKeys(settings.priority, savedPriority).forEach(zone => {
-    const val = parseInt(savedPriority[zone], 10);
-    settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
+    settings.priority[zone] = normalizeMirrorOversightPriority(zone, savedPriority[zone]);
   });
 
   settings.allowAvailableToHeat = saved.allowAvailableToHeat !== false;
@@ -307,6 +316,7 @@ function buildMirrorOversightTravelSnapshot(settings) {
 
 function buildMirrorOversightAutomationSnapshot(settings) {
   const snapshot = JSON.parse(JSON.stringify(settings || {}));
+  delete snapshot.availableHeating;
   delete snapshot.lastProjectedTemperatureState;
   delete snapshot.lastSolution;
   return snapshot;
@@ -568,6 +578,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.waterMultiplier = 1000;
   mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
   mirrorOversightSettings.priority = { tropical: 1, temperate: 1, polar: 1, focus: 1 };
+  mirrorOversightSettings.availableHeating = { mirrors: 0, lanterns: 0 };
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
@@ -795,6 +806,8 @@ function updateAssignmentDisplays() {
 function toggleAdvancedOversight(enable) {
   const wasAdvanced = !!mirrorOversightSettings.advancedOversight;
   mirrorOversightSettings.advancedOversight = !!enable;
+  mirrorOversightSettings.availableHeating.mirrors = 0;
+  mirrorOversightSettings.availableHeating.lanterns = 0;
   syncMirrorAssignmentMode(mirrorOversightSettings);
   if (enable) {
     mirrorOversightSettings.useFinerControls = true;
@@ -952,10 +965,10 @@ function initializeMirrorOversightUI(container) {
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.title', 'Advanced Oversight')}</label>
-    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.')}">&#9432;</span>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Zonal targets use priorities 1 to 3, available heating uses priority 4, and melting can use priorities 1 to 5. Lower numbers are assigned first.')}">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
-    <label for="mirror-allow-available-heat">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeat', 'Allow available to heat')}</label>
-    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.')}">&#9432;</span>
+    <label for="mirror-allow-available-heat">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeat', 'Allow available to heat (Priority 4)')}</label>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'Uses only as many available mirrors and lanterns as can help warm zones toward their temperature trend. This always runs at priority 4, so set Melt to priority 5 to send the remaining facility capacity to melting.')}">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
@@ -971,7 +984,7 @@ function initializeMirrorOversightUI(container) {
   advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriority', 'Targets & Priority')}</span>
-      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriorityTooltip', 'Set temperature targets in the current unit or flux targets in W/m^2 for each zone, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.')}">&#9432;</span>
+      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriorityTooltip', 'Set temperature targets in the current unit or flux targets in W/m^2 for each zone, plus a water melt target when focusing. Zonal targets use priorities 1 to 3. Melt uses priorities 1 to 5. Lower numbers are assigned first.')}">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" data-zone="tropical" style="display:flex; gap:8px; align-items:center;">
@@ -984,7 +997,7 @@ function initializeMirrorOversightUI(container) {
           <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-tropical" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
-          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>1</option><option>2</option><option>3</option>
         </select>
       </div>
       <div class="stat-item" data-zone="temperate" style="display:flex; gap:8px; align-items:center;">
@@ -997,7 +1010,7 @@ function initializeMirrorOversightUI(container) {
           <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-temperate" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
-          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>1</option><option>2</option><option>3</option>
         </select>
       </div>
       <div class="stat-item" data-zone="polar" style="display:flex; gap:8px; align-items:center;">
@@ -1010,7 +1023,7 @@ function initializeMirrorOversightUI(container) {
           <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-polar" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
-          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>1</option><option>2</option><option>3</option>
         </select>
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
@@ -1060,6 +1073,10 @@ function initializeMirrorOversightUI(container) {
     allowHeatCheckbox.checked = mirrorOversightSettings.allowAvailableToHeat !== false;
     allowHeatCheckbox.addEventListener('change', () => {
       mirrorOversightSettings.allowAvailableToHeat = allowHeatCheckbox.checked;
+      if (!allowHeatCheckbox.checked) {
+        mirrorOversightSettings.availableHeating.mirrors = 0;
+        mirrorOversightSettings.availableHeating.lanterns = 0;
+      }
     });
   }
   const advInputs = {
@@ -1133,8 +1150,7 @@ function initializeMirrorOversightUI(container) {
     const cur = mirrorOversightSettings.priority[k] || 1;
     el.value = String(cur);
     el.addEventListener('change', () => {
-      const v = Math.max(1, Math.min(5, parseInt(el.value, 10) || 1));
-      mirrorOversightSettings.priority[k] = v;
+      mirrorOversightSettings.priority[k] = normalizeMirrorOversightPriority(k, el.value);
     });
   });
   Object.keys(advTiming).forEach(k => {
@@ -1959,9 +1975,9 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 //  - Evaluate candidates by calling terraforming.updateSurfaceTemperature() only a handful of times,
 //    pick the best improving candidate(s), commit, repeat a small, capped number of times per pass.
 //  - Save the resulting assignment as lastSolution for next tick.
-function runAdvancedOversightAssignments(project) {
+function runAdvancedOversightAssignments(project, deltaTime) {
   if (!SpaceMirrorAdvancedOversightModule) return;
-  SpaceMirrorAdvancedOversightModule.runAssignments(project, mirrorOversightSettings);
+  SpaceMirrorAdvancedOversightModule.runAssignments(project, mirrorOversightSettings, deltaTime);
 }
 
 class SpaceMirrorFacilityProject extends Project {
@@ -2019,7 +2035,7 @@ class SpaceMirrorFacilityProject extends Project {
     sanitizeMirrorDistribution();
     try {
       if (mirrorOversightSettings.advancedOversight && isSpaceMirrorFacilityFlagActive('advancedOversight')) {
-        runAdvancedOversightAssignments(this);
+        runAdvancedOversightAssignments(this, deltaTime);
       }
     } catch (e) { /* swallow to avoid breaking tick */ }
     super.update(deltaTime);

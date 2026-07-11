@@ -1695,21 +1695,16 @@ class Terraforming extends EffectableEntity{
     const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
     const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
     const allowAvailableHeating =
-        !disableAvailableAdvancedHeating &&
         !!(mirrorOversightSettings?.advancedOversight) &&
         mirrorOversightSettings.allowAvailableToHeat !== false;
     let availableAdvancedHeatingPower = 0;
-    if (allowAvailableHeating) {
+    if (allowAvailableHeating && !disableAvailableAdvancedHeating) {
       const mirrorEffect = this.calculateMirrorEffect();
-      const mirrorPowerPer = mirrorEffect?.interceptedPower || 0;
-      const totalMirrors = Math.max(
-        0,
-        Number.isFinite(buildings?.spaceMirror?.activeNumber)
-          ? buildings.spaceMirror.activeNumber
-          : (typeof buildingCountToNumber === 'function'
-            ? buildingCountToNumber(buildings?.spaceMirror?.active)
-            : Math.max(0, Math.floor(Number(buildings?.spaceMirror?.active) || 0)))
-      );
+      const mirror = buildings.spaceMirror;
+      const mirrorResourceFactor = Number.isFinite(mirror._baseProductivity)
+        ? mirror._baseProductivity
+        : mirror.productivity;
+      const mirrorPowerPer = (mirrorEffect?.interceptedPower || 0) * Math.max(0, Math.min(1, mirrorResourceFactor));
       const lantern = buildings?.hyperionLantern;
       const lanternBaseProductivity = Number.isFinite(lantern?._baseProductivity)
         ? lantern._baseProductivity
@@ -1717,27 +1712,9 @@ class Terraforming extends EffectableEntity{
       const rawLanternProductionFactor = lantern ? lantern.getEffectiveProductionMultiplier() : 1;
       const lanternProductionFactor = Number.isFinite(rawLanternProductionFactor) ? rawLanternProductionFactor : 1;
       const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternBaseProductivity * lanternProductionFactor : 0;
-      const totalLanterns = Math.max(
-        0,
-        Number.isFinite(lantern?.activeNumber)
-          ? lantern.activeNumber
-          : (typeof buildingCountToNumber === 'function'
-            ? buildingCountToNumber(lantern?.active)
-            : Math.max(0, Math.floor(Number(lantern?.active) || 0)))
-      );
-      const assignM = mirrorOversightSettings.assignments?.mirrors || {};
-      const assignL = mirrorOversightSettings.assignments?.lanterns || {};
-      const assignedMirrors =
-        Math.abs(assignM.tropical || 0) +
-        Math.abs(assignM.temperate || 0) +
-        Math.abs(assignM.polar || 0) +
-        Math.abs(assignM.focus || 0);
-      const assignedLanterns = mirrorOversightSettings.applyToLantern
-        ? (assignL.tropical || 0) + (assignL.temperate || 0) + (assignL.polar || 0) + (assignL.focus || 0)
-        : 0;
-      const availableMirrors = Math.max(0, totalMirrors - assignedMirrors);
+      const availableMirrors = Math.max(0, Number(mirrorOversightSettings.availableHeating?.mirrors) || 0);
       const availableLanterns = mirrorOversightSettings.applyToLantern
-        ? Math.max(0, totalLanterns - assignedLanterns)
+        ? Math.max(0, Number(mirrorOversightSettings.availableHeating?.lanterns) || 0)
         : 0;
       availableAdvancedHeatingPower =
         (availableMirrors * mirrorPowerPer) +
@@ -1857,22 +1834,49 @@ class Terraforming extends EffectableEntity{
         }
     }
 
-    const heatWeights = {};
-    let totalHeatWeight = 0;
-    if (availableAdvancedHeatingPower > 0) {
-        for (const zone of ORDER) {
-            const previousMean = this.temperature.zones[zone].value;
-            const desiredDelta = T[zone] - previousMean;
-            const zoneArea = z[zone].area || 0;
-            const weight = desiredDelta > 0 ? desiredDelta * zoneArea : 0;
-            heatWeights[zone] = weight;
-            totalHeatWeight += weight;
+    const baselineCombinedFluxes = {};
+    const availableHeatingPowerDemands = {};
+    let totalAvailableHeatingPowerDemand = 0;
+    for (const zone of ORDER) {
+        const previousMean = this.temperature.zones[zone].value;
+        const capacity = z[zone].capacityPerArea;
+        const greenhouseFactor = z[zone].greenhouseFactor || 1;
+        const zoneFlux = this.luminosity.zonalFluxes[zone];
+        const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
+        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25)) + netSurfaceHeatFlux;
+        const emittedFlux = greenhouseFactor > 0
+            ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
+            : 0;
+        const desiredDelta = T[zone] - previousMean;
+        const mixingDelta = T[zone] - z[zone].mean;
+        const emittedFluxPreTarget = greenhouseFactor > 0
+            ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
+            : 0;
+        const emittedFluxTarget = greenhouseFactor > 0
+            ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
+            : 0;
+        const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
+        let combinedFlux = absorbedFlux - emittedFlux - windFlux;
+
+        if (desiredDelta < 0 && megaHeatSinkCoolingFlux > 0) {
+          combinedFlux -= megaHeatSinkCoolingFlux;
         }
+        baselineCombinedFluxes[zone] = combinedFlux;
+
+        let heatingPowerDemand = 0;
+        if (allowAvailableHeating && !ignoreHeatCapacity && dtSeconds > 0 && desiredDelta > 0 && capacity > 0) {
+          const baselineTemperature = previousMean + (combinedFlux * dtSeconds) / capacity;
+          const requiredHeatingFlux = Math.max(0, (T[zone] - baselineTemperature) * capacity / dtSeconds);
+          heatingPowerDemand = requiredHeatingFlux * (z[zone].area || 0);
+        }
+        availableHeatingPowerDemands[zone] = heatingPowerDemand;
+        totalAvailableHeatingPowerDemand += heatingPowerDemand;
     }
+    this.availableAdvancedHeatingPowerDemand = totalAvailableHeatingPowerDemand;
+    const usableAvailableHeatingPower = Math.min(availableAdvancedHeatingPower, totalAvailableHeatingPowerDemand);
 
     // --- Write back temperatures; shift day/night by mean offset ------
     for (const zone of ORDER) {
-        const zoneFlux = this.luminosity.zonalFluxes[zone];
         const pct = this.getZoneWeight(zone);
         if (pct <= 0) {
           continue;
@@ -1887,42 +1891,21 @@ class Terraforming extends EffectableEntity{
 
         const previousMean = this.temperature.zones[zone].value;
         const capacity = z[zone].capacityPerArea;
-        const greenhouseFactor = z[zone].greenhouseFactor || 1;
-
-        const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
-        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25)) + netSurfaceHeatFlux;
-        const emittedFlux = greenhouseFactor > 0
-            ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
-            : 0;
-        const netFlux = absorbedFlux - emittedFlux;
 
         let newTemp = 0;
         const desiredDelta = T[zone] - previousMean;
-        const mixingDelta = T[zone] - z[zone].mean;
 
         if(ignoreHeatCapacity){
           newTemp = T[zone];
         }
         else{
-            // Represent meridional mixing as the change in outgoing flux between pre- and post-wind temperatures
             const targetTemp = T[zone];
-            const emittedFluxPreTarget = greenhouseFactor > 0
-                ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
-                : 0;
-            const emittedFluxTarget = greenhouseFactor > 0
-                ? STEFAN_BOLTZMANN * Math.pow(Math.max(targetTemp, 0), 4) / greenhouseFactor
-                : 0;
-            const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
-            let combinedFlux = netFlux - windFlux;
-
-            if (desiredDelta < 0 && megaHeatSinkCoolingFlux > 0) {
-              combinedFlux -= megaHeatSinkCoolingFlux;
-            }
-            if (desiredDelta > 0 && availableAdvancedHeatingPower > 0) {
+            let combinedFlux = baselineCombinedFluxes[zone];
+            if (desiredDelta > 0 && usableAvailableHeatingPower > 0) {
               const zoneArea = z[zone].area || 0;
-              const heatWeight = heatWeights[zone] || 0;
-              if (zoneArea > 0 && totalHeatWeight > 0 && heatWeight > 0) {
-                const heatingPower = availableAdvancedHeatingPower * (heatWeight / totalHeatWeight);
+              const heatingPowerDemand = availableHeatingPowerDemands[zone] || 0;
+              if (zoneArea > 0 && totalAvailableHeatingPowerDemand > 0 && heatingPowerDemand > 0) {
+                const heatingPower = usableAvailableHeatingPower * (heatingPowerDemand / totalAvailableHeatingPowerDemand);
                 const heatingFlux = heatingPower / zoneArea;
                 combinedFlux += heatingFlux;
               }
