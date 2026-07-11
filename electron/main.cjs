@@ -7,6 +7,8 @@ const defaultSteamAppId = 4864000;
 const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.png');
 const preloadPath = path.join(__dirname, 'preload.cjs');
 const saveSlotNames = new Set(['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
+let fullscreenKeybindCode = 'F11';
+const fullscreenKeybindCaptureResolvers = new Map();
 
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -183,6 +185,12 @@ function registerWindowControlHandlers() {
     win.setFullScreen(enabled === true);
     return win.isFullScreen();
   });
+  ipcMain.handle('window:set-fullscreen-keybind', (_event, code) => {
+    fullscreenKeybindCode = code || 'F11';
+  });
+  ipcMain.handle('window:capture-fullscreen-keybind', event => new Promise(resolve => {
+    fullscreenKeybindCaptureResolvers.set(event.sender.id, resolve);
+  }));
   ipcMain.handle('window:set-zoom-factor', (event, scale) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     const allowedScales = [0.75, 0.9, 1, 1.1, 1.25, 1.5];
@@ -236,7 +244,14 @@ function createWindow() {
     if (input.type !== 'keyDown') {
       return;
     }
-    if (input.key === 'F11') {
+    const captureKeybind = fullscreenKeybindCaptureResolvers.get(win.webContents.id);
+    if (captureKeybind) {
+      event.preventDefault();
+      fullscreenKeybindCaptureResolvers.delete(win.webContents.id);
+      captureKeybind(input.code);
+      return;
+    }
+    if (input.code === fullscreenKeybindCode) {
       event.preventDefault();
       win.setFullScreen(!win.isFullScreen());
       return;

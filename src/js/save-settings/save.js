@@ -792,6 +792,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'dialogueSkipKeybind')) {
         gameSettings.dialogueSkipKeybind = 'NumpadAdd';
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'fullscreenKeybind')) {
+        gameSettings.fullscreenKeybind = 'F11';
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noSpecializationWarningOnTravel')) {
         gameSettings.noSpecializationWarningOnTravel = false;
       }
@@ -850,6 +853,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       applyDifficultySettingEffects();
       setPauseKeybindCode(gameSettings.pauseKeybind);
       setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
+      setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
       applySpeedControlsSetting();
       applyColorblindPaletteSettings();
       if (gameSettings.showSpaceStorageInDefaultPanel) {
@@ -912,6 +916,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       updateDifficultySettingInputs();
       updatePauseKeybindButtons();
       updateDialogueSkipKeybindButtons();
+      updateFullscreenKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();
       }

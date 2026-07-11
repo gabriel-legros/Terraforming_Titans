@@ -128,6 +128,7 @@ let gameSettings = {
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
   dialogueSkipKeybind: 'NumpadAdd',
+  fullscreenKeybind: 'F11',
 };
 
 Object.defineProperty(globalThis, 'gameSettings', {

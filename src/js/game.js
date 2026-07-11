@@ -118,8 +118,12 @@ function initializeDefaultGlobals(){
   if (!gameSettings.dialogueSkipKeybind) {
     gameSettings.dialogueSkipKeybind = 'NumpadAdd';
   }
+  if (!gameSettings.fullscreenKeybind) {
+    gameSettings.fullscreenKeybind = 'F11';
+  }
   setPauseKeybindCode(gameSettings.pauseKeybind);
   setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
+  setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
   shipEfficiency = 1;
   // Instantiate the TabManager and load tabs from the constant
   tabManager = new TabManager({

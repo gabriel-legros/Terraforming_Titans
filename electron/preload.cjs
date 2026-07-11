@@ -28,6 +28,12 @@ contextBridge.exposeInMainWorld('electronWindowControls', {
   setFullscreen(enabled) {
     return ipcRenderer.invoke('window:set-fullscreen', enabled === true);
   },
+  setFullscreenKeybind(code) {
+    return ipcRenderer.invoke('window:set-fullscreen-keybind', String(code));
+  },
+  captureFullscreenKeybind() {
+    return ipcRenderer.invoke('window:capture-fullscreen-keybind');
+  },
   setZoomFactor(scale) {
     return ipcRenderer.invoke('window:set-zoom-factor', Number(scale));
   },

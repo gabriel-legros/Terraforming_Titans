@@ -3,6 +3,7 @@
   let pauseKeyHandlerAttached = false;
   const DEFAULT_PAUSE_KEYBIND_CODE = 'Space';
   const DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE = 'NumpadAdd';
+  const DEFAULT_FULLSCREEN_KEYBIND_CODE = 'F11';
   const GAME_SPEED_OPTIONS = [
     { speed: 0, label: '\u23f8\uFE0E', textKey: 'ui.common.gameSpeedPaused', fallback: 'Paused' },
     { speed: 1, label: '\u25B6', textKey: 'ui.common.gameSpeed1x', fallback: '1x speed' },
@@ -13,6 +14,7 @@
   let lastActiveGameSpeed = 1;
   let pauseKeybindCode = DEFAULT_PAUSE_KEYBIND_CODE;
   let dialogueSkipKeybindCode = DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
+  let fullscreenKeybindCode = DEFAULT_FULLSCREEN_KEYBIND_CODE;
 
   function isEditableTarget(target) {
     if (!target || !target.tagName) return false;
@@ -84,6 +86,22 @@
 
   function getDialogueSkipKeybindDisplay() {
     return formatKeybindFromCode(getDialogueSkipKeybindCode());
+  }
+
+  function setFullscreenKeybindCode(code) {
+    fullscreenKeybindCode = code || DEFAULT_FULLSCREEN_KEYBIND_CODE;
+    gameSettings.fullscreenKeybind = fullscreenKeybindCode;
+    if (GAME_FEATURES.electronWindowControls) {
+      window.electronWindowControls.setFullscreenKeybind(fullscreenKeybindCode);
+    }
+  }
+
+  function getFullscreenKeybindCode() {
+    return gameSettings.fullscreenKeybind || fullscreenKeybindCode || DEFAULT_FULLSCREEN_KEYBIND_CODE;
+  }
+
+  function getFullscreenKeybindDisplay() {
+    return formatKeybindFromCode(getFullscreenKeybindCode());
   }
 
   function handlePauseHotkey(event) {
@@ -256,7 +274,7 @@
   }
 
   if(typeof module !== 'undefined' && module.exports){
-    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, getDialogueSkipKeybindDisplay, getDialogueSkipKeybindCode, setDialogueSkipKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, updateSpeedControls, applySpeedControlsSetting, DEFAULT_PAUSE_KEYBIND_CODE, DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE };
+    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, getDialogueSkipKeybindDisplay, getDialogueSkipKeybindCode, setDialogueSkipKeybindCode, getFullscreenKeybindDisplay, getFullscreenKeybindCode, setFullscreenKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, updateSpeedControls, applySpeedControlsSetting, DEFAULT_PAUSE_KEYBIND_CODE, DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE, DEFAULT_FULLSCREEN_KEYBIND_CODE };
   } else {
     window.togglePause = togglePause;
     window.isGamePaused = isGamePaused;
@@ -266,11 +284,15 @@
     window.getDialogueSkipKeybindDisplay = getDialogueSkipKeybindDisplay;
     window.getDialogueSkipKeybindCode = getDialogueSkipKeybindCode;
     window.setDialogueSkipKeybindCode = setDialogueSkipKeybindCode;
+    window.getFullscreenKeybindDisplay = getFullscreenKeybindDisplay;
+    window.getFullscreenKeybindCode = getFullscreenKeybindCode;
+    window.setFullscreenKeybindCode = setFullscreenKeybindCode;
     window.initializeGameSpeedControls = initializeGameSpeedControls;
     window.setGameSpeedChoice = setGameSpeedChoice;
     window.updateSpeedControls = updateSpeedControls;
     window.applySpeedControlsSetting = applySpeedControlsSetting;
     window.DEFAULT_PAUSE_KEYBIND_CODE = DEFAULT_PAUSE_KEYBIND_CODE;
     window.DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE = DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
+    window.DEFAULT_FULLSCREEN_KEYBIND_CODE = DEFAULT_FULLSCREEN_KEYBIND_CODE;
   }
 })();

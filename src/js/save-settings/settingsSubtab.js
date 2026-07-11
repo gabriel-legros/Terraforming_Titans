@@ -1,6 +1,7 @@
 let settingsElements = null;
 let pauseKeybindCaptureActive = false;
 let dialogueSkipKeybindCaptureActive = false;
+let fullscreenKeybindCaptureActive = false;
 
 function cacheSettingsElements() {
   if (settingsElements) {
@@ -103,6 +104,7 @@ function cacheSettingsElements() {
     electronExitGameButton: document.getElementById('electron-exit-game-button'),
     pauseKeybindCaptureButton: document.getElementById('pause-keybind-capture-button'),
     dialogueSkipKeybindCaptureButton: document.getElementById('dialogue-skip-keybind-capture-button'),
+    fullscreenKeybindCaptureButton: document.getElementById('fullscreen-keybind-capture-button'),
   };
 
   return settingsElements;
@@ -140,6 +142,23 @@ function updateDialogueSkipKeybindButtons() {
     return;
   }
   cached.dialogueSkipKeybindCaptureButton.textContent = getDialogueSkipKeybindButtonLabel();
+}
+
+function getFullscreenKeybindButtonLabel() {
+  const current = getFullscreenKeybindDisplay();
+  return t('ui.settings.fullscreenKeybindCaptureButton', { keybind: current }, `Capture key (${current})`);
+}
+
+function updateFullscreenKeybindButtons() {
+  const cached = cacheSettingsElements();
+  if (!cached.fullscreenKeybindCaptureButton) {
+    return;
+  }
+  if (fullscreenKeybindCaptureActive) {
+    cached.fullscreenKeybindCaptureButton.textContent = t('ui.settings.keybindCapturing', {}, 'Press any key...');
+    return;
+  }
+  cached.fullscreenKeybindCaptureButton.textContent = getFullscreenKeybindButtonLabel();
 }
 
 function normalizeThemeMode(mode) {
@@ -1236,6 +1255,22 @@ function addSettingsListeners() {
         document.removeEventListener('keydown', captureKeydown, true);
       };
       document.addEventListener('keydown', captureKeydown, true);
+    });
+  }
+
+  if (GAME_FEATURES.electronWindowControls && cached.fullscreenKeybindCaptureButton) {
+    updateFullscreenKeybindButtons();
+    cached.fullscreenKeybindCaptureButton.addEventListener('click', () => {
+      if (fullscreenKeybindCaptureActive) {
+        return;
+      }
+      fullscreenKeybindCaptureActive = true;
+      updateFullscreenKeybindButtons();
+      window.electronWindowControls.captureFullscreenKeybind().then(code => {
+        fullscreenKeybindCaptureActive = false;
+        setFullscreenKeybindCode(code);
+        updateFullscreenKeybindButtons();
+      });
     });
   }
 
