@@ -5584,7 +5584,7 @@ setLanguageData({
       },
       spaceStorage: {
         name: 'Space Storage',
-        description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time. Resources in space storage may also be used to pay for projects that can use Space Storage (planetary thrusters and world specializations excepted). Space storage capacity and resources in storage persist between worlds.',
+        description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time. Resources in space storage may also be used to pay for projects that can use Space Storage. Space storage capacity and resources in storage persist between worlds.',
         attributes: {
           expansionRecipes: {
             standard: { label: 'Standard Storage' },

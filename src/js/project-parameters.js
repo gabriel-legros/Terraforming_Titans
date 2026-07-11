@@ -713,7 +713,7 @@ const projectParameters = {
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',
     name: '',
-    category: 'mega',
+    category: 'infrastructure',
     requireStar: true,
     cost: {
       colony: {
