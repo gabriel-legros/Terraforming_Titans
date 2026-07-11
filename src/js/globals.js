@@ -90,6 +90,7 @@ let gameSettings = {
   showSpaceStorageResources: false,
   showSpaceStorageInDefaultPanel: false,
   showNetResourceRateWithAutobuild: false,
+  resourceDepletionWarningSeconds: 120,
   immigrationPool: false,
   simplifyGoldenAsteroid: false,
   suppressFaith: false,

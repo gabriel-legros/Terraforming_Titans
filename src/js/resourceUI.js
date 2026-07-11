@@ -2229,7 +2229,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         if (netRate < 0) {
           if (Math.abs(netRate) > resource.value) {
             ppsColor = 'red';
-          } else if (Math.abs(netRate) > resource.value / 120) {
+          } else if (Math.abs(netRate) > resource.value / gameSettings.resourceDepletionWarningSeconds) {
             ppsColor = 'orange';
           } else {
             ppsColor = '';

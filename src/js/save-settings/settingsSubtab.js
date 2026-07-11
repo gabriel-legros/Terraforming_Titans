@@ -25,6 +25,7 @@ function cacheSettingsElements() {
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
     showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
     netResourceRateDisplayToggle: document.getElementById('net-resource-rate-display-toggle'),
+    resourceDepletionWarningSecondsInput: document.getElementById('resource-depletion-warning-seconds-input'),
     immigrationPoolToggle: document.getElementById('immigration-pool-toggle'),
     immigrationPoolTooltip: document.getElementById('immigration-pool-tooltip'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
@@ -590,6 +591,20 @@ function addSettingsListeners() {
       gameSettings.showNetResourceRateWithAutobuild = cached.netResourceRateDisplayToggle.checked;
       updateResourceDisplay(resources, 0);
     });
+  }
+
+  if (cached.resourceDepletionWarningSecondsInput) {
+    cached.resourceDepletionWarningSecondsInput.value = String(gameSettings.resourceDepletionWarningSeconds);
+    const resourceDepletionWarningWire = wireStringNumberInput(cached.resourceDepletionWarningSecondsInput, {
+      parseValue: value => Math.max(0, parseFlexibleNumber(value) || 0),
+      formatValue: value => String(value),
+      onValue: parsed => {
+        gameSettings.resourceDepletionWarningSeconds = parsed;
+        updateResourceDisplay(resources, 0);
+      },
+      datasetKey: 'resourceDepletionWarningSeconds',
+    });
+    resourceDepletionWarningWire.syncParsedValue();
   }
 
   if (cached.immigrationPoolToggle) {
