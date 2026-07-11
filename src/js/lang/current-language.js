@@ -7092,8 +7092,8 @@ setLanguageData({
             description: 'Increases Resort Vacation happiness by 1 percentage point.',
           },
           factoryThroughput: {
-            label: 'Factory Throughput +0.05',
-            description: 'Increases the unscaled Resort Vacation factory throughput bonus by 0.05.',
+            label: 'Factory and Research Output +0.05',
+            description: 'Increases the unscaled Resort Vacation factory throughput and research output bonuses by 0.05.',
           },
           fundingPerColonist: {
             label: 'Funding per Colonist +2',
@@ -7111,11 +7111,13 @@ setLanguageData({
           fundingRate: '{value} / colonist / s',
           showAboveResources: 'Show Vacation button above resources',
           happinessTooltip: 'Gain happiness during the Glow Period after the vacation.',
-          factoryThroughputTooltip: 'Factory throughput is 1 + 0.25 multiplied by colonist worker share. Colonist worker share is colonist workers divided by colonist workers plus androids plus bioworkers. The multiplier increases factory production and consumption during the Glow Period.',
+          factoryThroughputTooltip: 'Factory throughput is 1 plus the full Factory and Research Output bonus multiplied by colonist worker share. Colonist worker share is colonist workers divided by colonist workers plus androids plus bioworkers. The multiplier increases factory production and consumption during the Glow Period.',
+          researchOutputTooltip: 'Research output is increased by the full Factory and Research Output bonus during the Glow Period. It is not affected by colonist worker share.',
           fundingTooltip: 'HOPE receives royalties in the form of funding during the vacation.',
           stats: {
             happiness: 'Happiness',
             throughput: 'Factory throughput',
+            research: 'Research output',
             composition: 'Colonist workforce share',
             funding: 'Funding',
           },

@@ -3,6 +3,7 @@
   const RESORT_VACATION_EFFECT_SECONDS = 30;
   const RESORT_VACATION_COOLDOWN_SECONDS = 320;
   const RESORT_VACATION_SOURCE_ID = 'resortWorldVacation';
+  const RESORT_VACATION_RESEARCH_SOURCE_ID = 'resortWorldVacationResearch';
   const RESORT_VACATION_RESOURCE_SOURCE_ID = 'resortWorldVacationResourceGlow';
   const RESORT_VACATION_WORKER_SOURCE_ID = 'resortWorldVacationWorker';
   const RESORT_GLOW_RESOURCE_SOURCE_ID = 'resortWorldGlowResourceGlow';
@@ -63,9 +64,11 @@
       this.vacationTimer = 0;
       this.showVacationButtonAboveResources = false;
       this.factoryEffectsApplied = false;
+      this.researchEffectsApplied = false;
       this.vacationResourceEffectsApplied = false;
       this.glowResourceEffectsApplied = false;
       this.lastFactoryMultiplier = 1;
+      this.lastResearchMultiplier = 1;
       this.lastWorkerComposition = {
         colonistWorkers: 0,
         androidWorkers: 0,
@@ -239,6 +242,10 @@
       return 1 + this.getFactoryThroughputBaseBonus() * this.getWorkerCompositionRatio();
     }
 
+    getCurrentResearchMultiplier() {
+      return this.isVacationEffectActive() ? 1 + this.getFactoryThroughputBaseBonus() : 1;
+    }
+
     canStartVacation() {
       return this.hasVacationAccess() && this.vacationState === 'ready';
     }
@@ -316,6 +323,18 @@
       }
       this.factoryEffectsApplied = false;
       this.lastFactoryMultiplier = 1;
+    }
+
+    removeResearchEffects(force = false) {
+      if (!force && !this.researchEffectsApplied && this.lastResearchMultiplier === 1) {
+        return;
+      }
+      for (const id in colonies) {
+        colonies[id].removeEffect({ sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID });
+      }
+      androidResearch.removeEffect({ sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID });
+      this.researchEffectsApplied = false;
+      this.lastResearchMultiplier = 1;
     }
 
     getVacationResourceEffects() {
@@ -420,6 +439,36 @@
       this.lastFactoryMultiplier = multiplier;
     }
 
+    applyResearchEffects() {
+      const multiplier = this.getCurrentResearchMultiplier();
+      if (Math.abs(multiplier - this.lastResearchMultiplier) <= 1e-9 && this.researchEffectsApplied) {
+        return;
+      }
+      for (const id in colonies) {
+        const colony = colonies[id];
+        colony.removeEffect({ sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID });
+        if (colony.production.colony.research !== undefined) {
+          colony.addAndReplace({
+            type: 'resourceProductionMultiplier',
+            resourceCategory: 'colony',
+            resourceTarget: 'research',
+            value: multiplier,
+            effectId: `resortWorld-${id}-research-production`,
+            sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID,
+          });
+        }
+      }
+      androidResearch.removeEffect({ sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID });
+      androidResearch.addAndReplace({
+        type: 'productionMultiplier',
+        value: multiplier,
+        effectId: 'resortWorld-android-research-production',
+        sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID,
+      });
+      this.researchEffectsApplied = true;
+      this.lastResearchMultiplier = multiplier;
+    }
+
     applyVacationFunding(deltaTime) {
       if (!this.isVacationPrepActive()) {
         return;
@@ -445,12 +494,14 @@
         this.vacationState = 'ready';
         this.vacationTimer = 0;
         this.removeFactoryEffects();
+        this.removeResearchEffects();
         this.removeVacationWorkerEffect();
         this.removeAllResourceEffects();
         return;
       }
       if (this.vacationState === 'ready') {
         this.removeFactoryEffects();
+        this.removeResearchEffects();
         this.removeVacationWorkerEffect();
         this.removeAllResourceEffects();
         return;
@@ -473,10 +524,12 @@
       }
       if (this.vacationState === 'effect') {
         this.applyFactoryEffects();
+        this.applyResearchEffects();
         this.removeVacationWorkerEffect();
         this.applyGlowResourceEffects();
         if (this.vacationTimer <= 0) {
           this.removeFactoryEffects();
+          this.removeResearchEffects();
           this.removeGlowResourceEffects();
           this.vacationState = 'cooldown';
           this.vacationTimer = RESORT_VACATION_COOLDOWN_SECONDS;
@@ -502,6 +555,7 @@
       this.vacationState = 'ready';
       this.vacationTimer = 0;
       this.removeFactoryEffects(true);
+      this.removeResearchEffects(true);
       this.removeVacationWorkerEffect();
       this.removeAllResourceEffects(true);
     }
@@ -535,9 +589,10 @@
       stats.classList.add('resort-vacation-stats');
       const happiness = this.createVacationStat('happiness');
       const throughput = this.createVacationStat('throughput');
+      const research = this.createVacationStat('research');
       const composition = this.createVacationStat('composition');
       const funding = this.createVacationStat('funding');
-      stats.append(happiness.row, throughput.row, composition.row, funding.row);
+      stats.append(happiness.row, throughput.row, research.row, composition.row, funding.row);
 
       vacation.append(button, toggleRow, stats);
       container.appendChild(vacation);
@@ -548,6 +603,7 @@
         toggle,
         happiness: happiness.value,
         throughput: throughput.value,
+        research: research.value,
         composition: composition.value,
         funding: funding.value,
       };
@@ -563,6 +619,7 @@
       const tooltipKeys = {
         happiness: 'happinessTooltip',
         throughput: 'factoryThroughputTooltip',
+        research: 'researchOutputTooltip',
         funding: 'fundingTooltip',
       };
       if (tooltipKeys[key]) {
@@ -604,6 +661,7 @@
       this.ui.toggle.checked = this.showVacationButtonAboveResources;
       this.ui.happiness.textContent = `+${formatNumber(this.getHappinessBonus() * 100, false, 2)}%`;
       this.ui.throughput.textContent = `x${formatNumber(factoryMultiplier, false, 3)}`;
+      this.ui.research.textContent = `x${formatNumber(1 + this.getFactoryThroughputBaseBonus(), false, 3)}`;
       this.ui.composition.textContent = `${formatNumber(this.lastWorkerComposition.ratio * 100, false, 2)}%`;
       this.ui.funding.textContent = getResortWorldText('catalogs.specializations.resort.vacation.fundingRate', {
         value: formatNumber(this.getFundingPerColonist(), true),
@@ -629,6 +687,7 @@
         this.vacationTimer = 0;
       }
       this.removeFactoryEffects(true);
+      this.removeResearchEffects(true);
       this.removeVacationWorkerEffect();
       this.removeAllResourceEffects(true);
       this.applyVacationWorkerEffect();
@@ -652,6 +711,7 @@
       this.vacationTimer = 0;
       this.showVacationButtonAboveResources = state.showVacationButtonAboveResources === true;
       this.removeFactoryEffects(true);
+      this.removeResearchEffects(true);
       this.removeVacationWorkerEffect();
       this.removeAllResourceEffects(true);
     }
