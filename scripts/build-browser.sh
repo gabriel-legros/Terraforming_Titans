@@ -20,6 +20,7 @@ const STEAM_APP_ID = null;
 const GAME_FEATURES = {
     patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
     patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
+    browserStorageWarning: GAME_BUILD_TARGET === 'browser',
     whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
     exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
     electronWindowControls: GAME_BUILD_TARGET !== 'browser',

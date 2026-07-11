@@ -104,6 +104,7 @@ function addSaveLoadListeners() {
 }
 
 function initializeSaveSubtab() {
+  document.getElementById('save-storage-warning').hidden = !GAME_FEATURES.browserStorageWarning;
   initializeExitSaveSlot();
   loadSaveSlotNames();
   loadSaveSlotDates();
