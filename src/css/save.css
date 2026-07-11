@@ -31,6 +31,12 @@
     gap: 4px;
   }
 
+  /* Match the one-pixel control border used by the dark themes. */
+  body:not(.dark-mode):not(.dark-grey-mode) .settings-option input[type="text"],
+  body:not(.dark-mode):not(.dark-grey-mode) .settings-option select {
+    border: 1px solid #767676;
+  }
+
 .settings-option.build-target-hidden {
     display: none;
   }
