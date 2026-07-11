@@ -48,6 +48,7 @@ const SPACE_STORAGE_IMPORT_LIMIT_RESOURCE_PROJECTS = {
   hydrogen: 'hydrogenSpaceMining'
 };
 const SPACE_STORAGE_PRESSURE_LIMIT_RESOURCES = {
+  liquidWater: 'atmosphericWater',
   oxygen: 'oxygen',
   atmosphericMethane: 'atmosphericMethane',
   atmosphericAmmonia: 'atmosphericAmmonia',
@@ -1470,15 +1471,16 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getPressureWithdrawLimitRemaining(resourceKey, target, accumulatedChanges = null) {
-    if (!SPACE_STORAGE_PRESSURE_LIMIT_RESOURCES[resourceKey] || target.category !== 'atmospheric') {
+    const atmosphericResource = SPACE_STORAGE_PRESSURE_LIMIT_RESOURCES[resourceKey];
+    if (!atmosphericResource || (target.category !== 'atmospheric' && !(resourceKey === 'liquidWater' && target.category === 'surface'))) {
       return Infinity;
     }
     const limitPa = this.getPressureWithdrawLimitPa(resourceKey);
     if (limitPa <= 0) {
       return Infinity;
     }
-    const current = (resources.atmospheric[target.resource].value || 0)
-      + (accumulatedChanges?.atmospheric?.[target.resource] || 0);
+    const current = (resources.atmospheric[atmosphericResource].value || 0)
+      + (accumulatedChanges?.atmospheric?.[atmosphericResource] || 0);
     return Math.max(0, this.getPressureLimitMassFromPa(limitPa) - current);
   }
 

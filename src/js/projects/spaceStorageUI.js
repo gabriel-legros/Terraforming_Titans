@@ -43,6 +43,7 @@ const SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES = new Set([
   'hydrogen'
 ]);
 const SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES = new Set([
+  'liquidWater',
   'oxygen',
   'atmosphericMethane',
   'atmosphericAmmonia',
@@ -645,7 +646,7 @@ function renderSpaceStorageUI(project, container) {
     pressureWithdrawLimitInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       pressureWithdrawLimitInfo,
-      getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalPressureTooltip', 'When withdrawing this gas from space storage, stop once its atmospheric pressure reaches this value. Set to 0 for no pressure limit.')
+      getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalPressureTooltip', 'When withdrawing this resource from space storage, stop once its atmospheric pressure reaches this value. Set to 0 for no pressure limit.')
     );
     pressureWithdrawLimitLabel.appendChild(pressureWithdrawLimitInfo);
     pressureWithdrawLimitInput = document.createElement('input');
@@ -1017,7 +1018,8 @@ function renderSpaceStorageUI(project, container) {
       : String(Math.max(0, amountWithdrawLimit));
     limitBiomassDensityWithdrawalsRow.style.display = resourceKey === 'biomass' ? '' : 'none';
     respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(resourceKey) ? '' : 'none';
-    pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey) && !(resourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
+    pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey)
+      && !(resourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
     amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
     updateCapInputState();
     updateReserveInputState();
@@ -1709,7 +1711,8 @@ function updateSpaceStorageUI(project) {
         els.pressureWithdrawLimitInput.dataset.spaceStoragePressureWithdrawLimit = String(pressureWithdrawLimit);
         els.pressureWithdrawLimitInput.value = formatNumber(Math.max(0, pressureWithdrawLimit), true, 2);
       }
-      els.pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(els.capResourceKey) && !(els.capResourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
+      els.pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(els.capResourceKey)
+        && !(els.capResourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
     }
     if (els.amountWithdrawLimitInput) {
       const amountWithdrawLimit = els.amountWithdrawLimitDraft || 0;

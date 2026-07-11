@@ -2306,7 +2306,7 @@ setLanguageData({
         respectImportProjectLimits: 'Respect Import Project limits',
         respectImportProjectLimitsTooltip: 'When withdrawing this resource from space storage, use the matching import project limits such as pressure or coverage caps.',
         maxWithdrawalPressure: 'Max withdrawal pressure:',
-        maxWithdrawalPressureTooltip: 'When withdrawing this gas from space storage, stop once its atmospheric pressure reaches this value. Set to 0 for no pressure limit.',
+        maxWithdrawalPressureTooltip: 'When withdrawing this resource from space storage, stop once its atmospheric pressure reaches this value. Set to 0 for no pressure limit.',
         maxWithdrawalAmount: 'Max withdrawal amount:',
         maxWithdrawalAmountTooltip: 'When withdrawing this resource from space storage, stop once the destination amount reaches this value. Set to 0 for no amount limit.',
         pa: 'Pa',
