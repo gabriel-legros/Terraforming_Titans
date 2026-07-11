@@ -965,10 +965,10 @@ function initializeMirrorOversightUI(container) {
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.title', 'Advanced Oversight')}</label>
-    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Zonal targets use priorities 1 to 3, available heating uses priority 4, and melting can use priorities 1 to 5. Lower numbers are assigned first.')}">&#9432;</span>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Zonal targets use priorities 1 to 3, available heating uses priority 4.5, and melting can use priorities 1 to 5. Lower numbers are assigned first.')}">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
-    <label for="mirror-allow-available-heat">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeat', 'Allow available to heat (Priority 4)')}</label>
-    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'Uses only as many available mirrors and lanterns as can help warm zones toward their temperature trend. This always runs at priority 4, so set Melt to priority 5 to send the remaining facility capacity to melting.')}">&#9432;</span>
+    <label for="mirror-allow-available-heat">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeat', 'Allow available to heat')}</label>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'Uses only as many available mirrors and lanterns as can help warm zones toward their temperature trend. With Advanced Oversight, this always runs at priority 4.5: Melt priority 4 runs before it, while Melt priority 5 receives the remaining facility capacity.')}">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';

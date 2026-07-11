@@ -713,8 +713,9 @@ class SpaceMirrorAdvancedOversight {
       let lanternsLeft = totalLanterns;
       let availableHeatingPowerTarget = 0;
 
-      for (let priorityLevel = 1; priorityLevel <= 5; priorityLevel++) {
-        if (priorityLevel === 4 && settings.allowAvailableToHeat !== false && deltaTime > 0) {
+      const priorityLevels = [1, 2, 3, 4, 4.5, 5];
+      for (const priorityLevel of priorityLevels) {
+        if (priorityLevel === 4.5 && settings.allowAvailableToHeat !== false && deltaTime > 0) {
           terraforming.restoreTemperatureState(snapshot);
           terraforming.runUpdateStep(deltaTime, { disableAvailableAdvancedHeating: true });
           availableHeatingPowerTarget = Math.max(0, terraforming.availableAdvancedHeatingPowerDemand || 0);
@@ -723,7 +724,7 @@ class SpaceMirrorAdvancedOversight {
             demandBuckets.push({
               type: 'heating',
               zone: 'available',
-              priority: 4,
+              priority: 4.5,
               remainingPower: availableHeatingPowerTarget,
               mirrorPowerPer,
             });

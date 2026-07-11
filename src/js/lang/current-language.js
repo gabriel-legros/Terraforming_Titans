@@ -1819,9 +1819,9 @@ setLanguageData({
         },
         advanced: {
           title: 'Advanced Oversight',
-          titleTooltip: 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Zonal targets use priorities 1 to 3, available heating uses priority 4, and melting can use priorities 1 to 5. Lower numbers are assigned first.',
+          titleTooltip: 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Zonal targets use priorities 1 to 3, available heating uses priority 4.5, and melting can use priorities 1 to 5. Lower numbers are assigned first.',
           allowAvailableToHeat: 'Allow available to heat',
-          allowAvailableToHeatTooltip: 'Uses only as many available mirrors and lanterns as can help warm zones toward their temperature trend. With Advanced Oversight, this always runs at priority 4, so set Melt to priority 5 to send the remaining facility capacity to melting.',
+          allowAvailableToHeatTooltip: 'Uses only as many available mirrors and lanterns as can help warm zones toward their temperature trend. With Advanced Oversight, this always runs at priority 4.5: Melt priority 4 runs before it, while Melt priority 5 receives the remaining facility capacity.',
           targetsPriority: 'Targets & Priority',
           targetsPriorityTooltip: 'Set temperature targets in the current unit or flux targets in W/m^2 for each zone, plus a water melt target when focusing. Zonal targets use priorities 1 to 3. Melt uses priorities 1 to 5. Lower numbers are assigned first.',
           average: 'Average',
