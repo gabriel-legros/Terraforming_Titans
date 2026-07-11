@@ -28,6 +28,7 @@ function getBiodomeLandFraction(terraforming) {
 }
 
 function getLifeLandMultiplier(terraforming) {
+  if (terraforming.biomassDisabled) return 0;
   const ecumenopolisMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
   const biodomeFloorMultiplier = Math.max(0, getBiodomeLandFraction(terraforming));
   return Math.max(ecumenopolisMultiplier, biodomeFloorMultiplier);

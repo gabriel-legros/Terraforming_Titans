@@ -1006,6 +1006,7 @@ function updateRender(force = false, options = {}) {
           pv.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
             ? pct(getEcumenopolisLandFraction(terraforming))
             : 0;
+          pv.viz.coverage.nanoworld = projectManager.projects.nanoworld.isCompleted ? 100 : 0;
 
           // Zonal coverages for rendering bands
           const zones = ['tropical', 'temperate', 'polar'];

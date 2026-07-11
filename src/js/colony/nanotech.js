@@ -149,6 +149,26 @@ class NanotechManager extends EffectableEntity {
     return multiplier;
   }
 
+  getNanoworldStageMultiplier(stage) {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'nanoworldStageMultiplier' && effect.stage === stage) {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  getNanobotDensityMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'nanobotDensityMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
   isPulsarHazardActive() {
     if (!hazardManager || !hazardManager.parameters || !hazardManager.pulsarHazard) {
       return false;
@@ -192,7 +212,7 @@ class NanotechManager extends EffectableEntity {
     if (!resources.surface?.land) {
       return 1e40;
     }
-    const baseCap = resources.surface.land.value * 10000 * 1e19;
+    const baseCap = resources.surface.land.value * 10000 * 1e19 * this.getNanobotDensityMultiplier();
     return baseCap * this.getPulsarNanobotCapMultiplier();
   }
 
@@ -281,6 +301,10 @@ class NanotechManager extends EffectableEntity {
     const stage4Enabled = this.isBooleanFlagSet('stage4_enabled');
     const stageSkullEnabled = this.isBooleanFlagSet('stageSkull_enabled');
     const efficiencyMultiplier = this.getNanotechEfficiencyMultiplier();
+    const stage1Multiplier = this.getNanoworldStageMultiplier(1);
+    const stage2Multiplier = this.getNanoworldStageMultiplier(2);
+    const stage3Multiplier = this.getNanoworldStageMultiplier(3);
+    const stage4Multiplier = this.getNanoworldStageMultiplier(4);
     const siliconAllocation = 10;
     const metalAllocation = stage2Enabled ? 10 : 0;
     const biomassAllocation = stage3Enabled ? 10 : 0;
@@ -329,15 +353,15 @@ class NanotechManager extends EffectableEntity {
     let grapheneProductionFraction = 1;
     this.resetActivityState();
     this.optimalEnergyConsumption = this.nanobots * 1e-12;
-    this.optimalSiliconConsumption = this.nanobots * 1e-18 * (siliconAllocation / 10) * efficiencyMultiplier;
+    this.optimalSiliconConsumption = this.nanobots * 1e-18 * (siliconAllocation / 10) * efficiencyMultiplier * stage1Multiplier;
     this.optimalMetalConsumption = stage2Enabled
-      ? this.nanobots * 1e-19 * (metalAllocation / 10) * efficiencyMultiplier
+      ? this.nanobots * 1e-19 * (metalAllocation / 10) * efficiencyMultiplier * stage2Multiplier
       : 0;
     this.optimalBiomassConsumption = stage3Enabled
-      ? this.nanobots * 1e-19 * (biomassAllocation / 10) * efficiencyMultiplier
+      ? this.nanobots * 1e-19 * (biomassAllocation / 10) * efficiencyMultiplier * stage3Multiplier
       : 0;
     this.optimalGraphiteConsumption = stage4Enabled
-      ? this.nanobots * 1e-19 * (graphiteAllocation / 10) * efficiencyMultiplier
+      ? this.nanobots * 1e-19 * (graphiteAllocation / 10) * efficiencyMultiplier * stage4Multiplier
       : 0;
     this.optimalHazardousBiomassConsumption = stageSkullEnabled
       ? this.nanobots * 1e-19 * (1 + (this.hazardousBiomassSlider / 10) + (this.hazardousBiomass2Slider / 10)) * efficiencyMultiplier
@@ -599,7 +623,7 @@ class NanotechManager extends EffectableEntity {
       const junkRes = recyclingEnabled ? resources.surface?.junk : null;
       
       if (glassRes && accumulatedChanges?.colony) {
-        const glassRate = this.nanobots * 1e-18 * (this.glassSlider / 10) * efficiencyMultiplier;
+        const glassRate = this.nanobots * 1e-18 * (this.glassSlider / 10) * efficiencyMultiplier * stage1Multiplier;
         const glassAmount = (isArtificialWorld || !hasSandDeposits)
           ? Math.min(glassRate * (deltaTime / 1000), siliconProvided)
           : glassRate * (deltaTime / 1000);
@@ -618,7 +642,7 @@ class NanotechManager extends EffectableEntity {
 
       const componentsRes = resources.colony?.components;
       if (componentsRes && accumulatedChanges?.colony && stage2Enabled) {
-        const componentsRate = this.nanobots * 1e-19 * (this.componentsSlider / 10) * efficiencyMultiplier;
+        const componentsRate = this.nanobots * 1e-19 * (this.componentsSlider / 10) * efficiencyMultiplier * stage2Multiplier;
         const componentsAmount = (isArtificialWorld || !hasOreDeposits)
           ? Math.min(componentsRate * (deltaTime / 1000), metalProvided)
           : componentsRate * (deltaTime / 1000);
@@ -633,7 +657,7 @@ class NanotechManager extends EffectableEntity {
 
       const electronicsRes = resources.colony?.electronics;
       if (electronicsRes && accumulatedChanges?.colony && stage3Enabled) {
-        const electronicsRate = this.nanobots * 1e-19 * (this.electronicsSlider / 10) * efficiencyMultiplier;
+        const electronicsRate = this.nanobots * 1e-19 * (this.electronicsSlider / 10) * efficiencyMultiplier * stage3Multiplier;
         const biomassConsumed = this.currentBiomassConsumption * (deltaTime / 1000);
         const electronicsAmount = isArtificialWorld
           ? Math.min(electronicsRate * (deltaTime / 1000), biomassConsumed)
@@ -649,7 +673,7 @@ class NanotechManager extends EffectableEntity {
 
       const grapheneRes = resources.colony?.metal;
       if (grapheneRes && accumulatedChanges?.colony && stage4Enabled) {
-        const grapheneRate = this.nanobots * 1e-19 * (this.grapheneSlider / 10) * efficiencyMultiplier;
+        const grapheneRate = this.nanobots * 1e-19 * (this.grapheneSlider / 10) * efficiencyMultiplier * stage4Multiplier;
         const grapheneAmountBase = grapheneRate * (deltaTime / 1000);
         const grapheneAmount = (isArtificialWorld || !hasGraphiteDeposits)
           ? Math.min(grapheneAmountBase, graphiteProvided)
@@ -728,7 +752,15 @@ class NanotechManager extends EffectableEntity {
 
     // Apply growth multiplier from effects (e.g., garbage hazard)
     const growthMultiplier = this.getEffectiveGrowthMultiplier();
-    const effectiveRate = (((baseRate * this.powerFraction) + siliconRate + metalRate + biomassRate + graphiteRate + hazardousBiomassRate) * efficiencyMultiplier - penalty) * growthMultiplier;
+    const effectiveRate = (
+      (
+        ((baseRate * this.powerFraction) + siliconRate) * stage1Multiplier +
+        metalRate * stage2Multiplier +
+        biomassRate * stage3Multiplier +
+        graphiteRate * stage4Multiplier +
+        hazardousBiomassRate
+      ) * efficiencyMultiplier - penalty
+    ) * growthMultiplier;
     this.effectiveGrowthRate = effectiveRate;
     const max = this.getMaxNanobots();
     if (effectiveRate !== 0 && !isNaN(effectiveRate)) {
@@ -942,7 +974,7 @@ class NanotechManager extends EffectableEntity {
     }
     const total = totals.metal + totals.glass + totals.water;
     const coveragePerBot = 1e-18 * this.getNanotechEfficiencyMultiplier();
-    let coverage = total > 0 ? (this.nanobots * coveragePerBot) / total : 0;
+    let coverage = total > 0 ? (this.nanobots * coveragePerBot * this.getNanoworldStageMultiplier(1)) / total : 0;
     coverage = Math.min(coverage, 0.5);
     const reduction = coverage * (this.maintenanceSlider / 10);
     this.currentMaintenanceReduction = reduction;
@@ -954,7 +986,7 @@ class NanotechManager extends EffectableEntity {
     });
 
     const stage2Total = totals.components + totals.superconductors;
-    let coverage2 = stage2Total > 0 ? (this.nanobots * coveragePerBot) / stage2Total : 0;
+    let coverage2 = stage2Total > 0 ? (this.nanobots * coveragePerBot * this.getNanoworldStageMultiplier(2)) / stage2Total : 0;
     coverage2 = Math.min(coverage2, 0.5);
     const reduction2 = this.isBooleanFlagSet('stage2_enabled')
       ? coverage2 * (this.maintenance2Slider / 10)
@@ -968,7 +1000,7 @@ class NanotechManager extends EffectableEntity {
     });
 
     const stage3Total = totals.electronics;
-    let coverage3 = stage3Total > 0 ? (this.nanobots * coveragePerBot) / stage3Total : 0;
+    let coverage3 = stage3Total > 0 ? (this.nanobots * coveragePerBot * this.getNanoworldStageMultiplier(3)) / stage3Total : 0;
     coverage3 = Math.min(coverage3, 0.5);
     const reduction3 = this.isBooleanFlagSet('stage3_enabled')
       ? coverage3 * (this.maintenance3Slider / 10)
@@ -986,7 +1018,7 @@ class NanotechManager extends EffectableEntity {
     }
 
     const stage4Total = total + stage2Total + stage3Total;
-    let coverage4 = stage4Total > 0 ? (this.nanobots * coveragePerBot) / stage4Total : 0;
+    let coverage4 = stage4Total > 0 ? (this.nanobots * coveragePerBot * this.getNanoworldStageMultiplier(4)) / stage4Total : 0;
     coverage4 = Math.min(coverage4, 0.5);
     const reduction4 = this.isBooleanFlagSet('stage4_enabled')
       ? coverage4 * (this.maintenance4Slider / 10)

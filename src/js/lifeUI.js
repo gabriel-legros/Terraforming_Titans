@@ -1312,10 +1312,8 @@ function updateLifeStatusTable() {
     const moistureResults = designToCheck.moistureCheckAllZones(); // Use the aggregate function
     const radiationResult = designToCheck.radiationCheck(); // Global check
     // Calculate max density based on space efficiency
-    const spaceEfficiencyAttr = designToCheck.spaceEfficiency;
     const requirements = getActiveLifeDesignRequirementsForUI();
-    const densityMultiplier = 1 + (spaceEfficiencyAttr?.getEffectiveValue() || 0);
-    const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
+    const maxDensity = designToCheck.getMaxBiomassDensity();
 
     // Get biomass and area info
     const totalBiomass = resources.surface.biomass?.value || 0;

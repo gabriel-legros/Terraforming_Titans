@@ -314,14 +314,16 @@ class ScriptVariableRegistry {
             2: this.getScriptVariableText('terraforming.specialization.manufacturingWorld', 'Manufacturing World'),
             3: this.getScriptVariableText('terraforming.specialization.holyWorld', 'Holy World'),
             4: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World'),
-            5: this.getScriptVariableText('terraforming.specialization.resortWorld', 'Resort World')
+            5: this.getScriptVariableText('terraforming.specialization.resortWorld', 'Resort World'),
+            6: this.getScriptVariableText('terraforming.specialization.nanoworld', 'Nanoworld')
           }
         },
         { id: 'bioworld', label: this.getScriptVariableText('terraforming.specialization.bioworld', 'BioWorld'), valueType: 'boolean' },
         { id: 'manufacturingWorld', label: this.getScriptVariableText('terraforming.specialization.manufacturingWorld', 'Manufacturing World'), valueType: 'boolean' },
         { id: 'holyWorld', label: this.getScriptVariableText('terraforming.specialization.holyWorld', 'Holy World'), valueType: 'boolean' },
         { id: 'foundryWorld', label: this.getScriptVariableText('terraforming.specialization.foundryWorld', 'Foundry World'), valueType: 'boolean' },
-        { id: 'resortWorld', label: this.getScriptVariableText('terraforming.specialization.resortWorld', 'Resort World'), valueType: 'boolean' }
+        { id: 'resortWorld', label: this.getScriptVariableText('terraforming.specialization.resortWorld', 'Resort World'), valueType: 'boolean' },
+        { id: 'nanoworld', label: this.getScriptVariableText('terraforming.specialization.nanoworld', 'Nanoworld'), valueType: 'boolean' }
       ];
     }
     if (categoryId === 'life') {
@@ -830,6 +832,7 @@ class ScriptVariableRegistry {
     if (attribute === 'holyWorld') return current === 3 ? 1 : 0;
     if (attribute === 'foundryWorld') return current === 4 ? 1 : 0;
     if (attribute === 'resortWorld') return current === 5 ? 1 : 0;
+    if (attribute === 'nanoworld') return current === 6 ? 1 : 0;
     return 0;
   }
 
@@ -853,6 +856,7 @@ class ScriptVariableRegistry {
     if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) return 3;
     if (projects.foundryWorld && (projects.foundryWorld.isCompleted || projects.foundryWorld.isActive)) return 4;
     if (projects.resortWorld && (projects.resortWorld.isCompleted || projects.resortWorld.isActive)) return 5;
+    if (projects.nanoworld && (projects.nanoworld.isCompleted || projects.nanoworld.isActive)) return 6;
     return 0;
   }
 

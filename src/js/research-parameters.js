@@ -1988,6 +1988,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nanoworlds',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 5_000_000_000_000 },
+        prerequisites: ['nanotechnology_stage_4'],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'project',
+            targetId: 'nanoworld',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'orbital_rings',
         name: '',
         description: '',

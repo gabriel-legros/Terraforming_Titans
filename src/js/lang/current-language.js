@@ -4198,6 +4198,7 @@ setLanguageData({
               holyWorld: 'Holy World',
               foundryWorld: 'Foundry World',
               resortWorld: 'Resort World',
+              nanoworld: 'Nanoworld',
             },
             life: {
               category: 'Life',
@@ -5641,6 +5642,10 @@ setLanguageData({
         name: 'Manufacturing World',
         description: "Designate this world as a planet-scale manufacturing center. Completing it grants MP and banks this world's population permanently as manufacturing potential.  These benefits apply on travel.  All production is from space storage to space storage.",
       },
+      nanoworld: {
+        name: 'Nanoworld',
+        description: 'Convert the surface into oceans of nanobots. Completion consumes all biomass, reduces maximum biomass density to zero, increases nanobot maximum density by 100x, and completely disables ground colonies. Aerostat Colonies remain available.',
+      },
       resortWorld: {
         name: 'Resort World',
         description: 'Designate this world as a planet-scale resort. Requires 75% liquid-water coverage, every zone at least 293.15 K, and enough silica to beach the non-water surface. Resort effects will be added later.',
@@ -6219,6 +6224,10 @@ setLanguageData({
         nanotechnology_stage_4: {
           name: 'Nanotechnology Stage IV',
           description: 'The ultimate form of nanotechnology.',
+        },
+        nanoworlds: {
+          name: 'Nanoworlds',
+          description: 'Oceans of nanobots.  Unlocks a new world specialization.  Not a weapon.',
         },
         orbital_rings: {
           name: 'Orbital Rings',
@@ -7022,6 +7031,39 @@ setLanguageData({
           superalloyEfficiency: {
             label: 'Superalloy Manufacturing +1%',
             description: 'Increases both superalloy production and metal consumption by 1%.',
+          },
+        },
+      },
+      nanoworld: {
+        pointsLabel: 'Nanoworld Points:',
+        shopTitle: 'Nanoworld Shop',
+        shopTooltip: 'Gain Nanoworld Points equal to log10(nanobots) / 4 when travelling after completing this project, with a minimum of 1 point, then +10% per hazard on this world. Each upgrade costs 1 point and can be purchased up to 900 times.',
+        effectName: 'Nanoworld',
+        requirements: {
+          terraformed: 'World is fully terraformed',
+          nanobotCap: 'Nanobots are at their current maximum density',
+          otherSpecialization: 'No other specialization started or completed',
+        },
+        shopItems: {
+          density: {
+            label: 'Nanobot Maximum Density +1%',
+            description: 'Increases maximum nanobot density by 1%.',
+          },
+          stage1: {
+            label: 'Nanotechnology Stage I +1%',
+            description: 'Increases Stage I production, growth, material use, and maintenance effects by 1%.',
+          },
+          stage2: {
+            label: 'Nanotechnology Stage II +1%',
+            description: 'Increases Stage II production, growth, material use, and maintenance effects by 1%.',
+          },
+          stage3: {
+            label: 'Nanotechnology Stage III +1%',
+            description: 'Increases Stage III production, growth, material use, and maintenance effects by 1%.',
+          },
+          stage4: {
+            label: 'Nanotechnology Stage IV +1%',
+            description: 'Increases Stage IV production, growth, material use, and maintenance effects by 1%.',
           },
         },
       },

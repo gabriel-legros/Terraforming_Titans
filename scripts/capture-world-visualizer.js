@@ -19,6 +19,7 @@ function printHelp() {
     '  --water <tropical,temperate,polar>',
     '  --ice <tropical,temperate,polar>',
     '  --clouds <percent>              Cloud coverage override',
+    '  --nanoworld                     Enable the completed Nanoworld surface',
     '  --base-color <#rrggbb>          Surface base-colour override',
     '  --illumination <value>          Visualizer illumination override',
     '  --rotation <0..1>               Fixed day-cycle rotation. Default: 0.08',
@@ -54,6 +55,7 @@ function parseArgs(argv) {
     water: null,
     ice: null,
     clouds: null,
+    nanoworld: false,
     baseColor: null,
     illumination: null,
     rotation: 0.08,
@@ -71,6 +73,10 @@ function parseArgs(argv) {
     }
     if (arg === '--headed') {
       options.headed = true;
+      continue;
+    }
+    if (arg === '--nanoworld') {
+      options.nanoworld = true;
       continue;
     }
     if (!next || next.startsWith('--')) {
@@ -178,6 +184,7 @@ async function configureVisualizer(page, options) {
     setZones(scene.water, 'wTrop', 'wTemp', 'wPol');
     setZones(scene.ice, 'iTrop', 'iTemp', 'iPol');
     setValue(rows.cloudCov, scene.clouds);
+    setValue(rows.nanoworld, scene.nanoworld ? 100 : 0);
     setValue(rows.illum, scene.illumination);
     visualizer.applySlidersToGame();
 

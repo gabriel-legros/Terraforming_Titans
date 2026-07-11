@@ -673,6 +673,8 @@ class Colony extends Building {
       return;
     }
 
+    if (researchManager.isBooleanFlagSet('groundColoniesDisabled')) return;
+
     const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
     // Unlock the new tier

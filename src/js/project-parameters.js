@@ -1388,6 +1388,20 @@ const projectParameters = {
       spaceBuildingProductivity: true
     }
   },
+  nanoworld: {
+    type: 'NanoworldProject',
+    name: '',
+    category: 'mega',
+    cost: {},
+    duration: 300000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      projectGroup: 'specializedWorlds',
+      keepStartBarVisible: true
+    }
+  },
   resortWorld: {
     type: 'ResortWorldProject',
     buildTargets: ['steam'],

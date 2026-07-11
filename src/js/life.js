@@ -386,6 +386,7 @@ class LifeDesign {
   }
 
   getMaxBiomassDensity() {
+    if (terraforming.biomassDisabled) return 0;
     const requirements = getActiveLifeDesignRequirements();
     return (requirements.baseMaxBiomassDensityTPerM2 || 0) * (1 + this.spaceEfficiency.getEffectiveValue());
   }

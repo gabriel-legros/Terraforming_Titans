@@ -123,7 +123,7 @@
         illum: 1,
         pop: 0,
         kpa: { co2: 0, o2: 0, inert: 0, h2o: 0, ch4: 0 },
-        coverage: { water: 0, life: 0, hazardousLife: 0, cloud: 0, ecumenopolis: 0 },
+        coverage: { water: 0, life: 0, hazardousLife: 0, cloud: 0, ecumenopolis: 0, nanoworld: 0 },
         zonalCoverage: {
           tropical: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
           temperate: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
@@ -1017,6 +1017,7 @@
       this.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
         ? Math.max(0, Math.min(100, getEcumenopolisLandFraction(t) * 100))
         : 0;
+      this.viz.coverage.nanoworld = projectManager.projects.nanoworld.isCompleted ? 100 : 0;
     }
 
     getCurrentPopulation() {

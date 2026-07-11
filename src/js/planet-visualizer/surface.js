@@ -293,6 +293,10 @@
     return clamp01((this.viz.coverage?.ecumenopolis || 0) / 100);
   };
 
+  PlanetVisualizer.prototype.getNanoworldVisualizerStrength = function getNanoworldVisualizerStrength() {
+    return clamp01((this.viz.coverage?.nanoworld || 0) / 100);
+  };
+
   PlanetVisualizer.prototype.updateSurfaceHeatMaterial = function updateSurfaceHeatMaterial() {
     const surface = this.surfaceMesh || this.sphere;
     const material = surface?.material;
@@ -300,12 +304,16 @@
 
     const lava = this.getLavaTransitionStrength();
     const city = this.getEcumenopolisVisualizerStrength();
+    const nanoworld = this.getNanoworldVisualizerStrength();
     const baseRoughness = surface.userData?.baseRoughness ?? (this.isRingWorld() ? 0.85 : 0.9);
     const baseMetalness = surface.userData?.baseMetalness ?? 0;
-    material.roughness = Math.max(0.18, baseRoughness - lava * 0.45 - city * 0.28);
-    material.metalness = Math.min(0.34, baseMetalness + lava * 0.06 + city * 0.24);
+    material.roughness = Math.max(0.12, baseRoughness - lava * 0.45 - city * 0.28 - nanoworld * 0.62);
+    material.metalness = Math.min(0.82, baseMetalness + lava * 0.06 + city * 0.24 + nanoworld * 0.76);
     if (material.emissive) {
-      if (city > 0 && material.emissiveMap) {
+      if (nanoworld > 0 && material.emissiveMap) {
+        material.emissive.setRGB(0.28, 0.9, 1);
+        material.emissiveIntensity = 1.15 * nanoworld;
+      } else if (city > 0 && material.emissiveMap) {
         material.emissive.setRGB(1, 0.82, 0.18);
         material.emissiveIntensity = Math.max(lava * 0.72, 1.35 * city);
       } else {
@@ -624,7 +632,7 @@
       return { w, h };
     }
     if (this.isDiskWorld()) {
-      if (this.getEcumenopolisVisualizerStrength() > 0) {
+      if (this.getEcumenopolisVisualizerStrength() > 0 || this.getNanoworldVisualizerStrength() > 0) {
         return { w: 512, h: 512 };
       }
       return { w: 1024, h: 1024 };
@@ -671,6 +679,7 @@
     const life = (this.viz.coverage?.life || 0) / 100;
     const hazardousLife = (this.viz.coverage?.hazardousLife || 0) / 100;
     const ecumenopolis = this.getEcumenopolisVisualizerStrength();
+    const nanoworld = this.getNanoworldVisualizerStrength();
     const z = this.viz.zonalCoverage || {};
     const zKey = ['tropical', 'temperate', 'polar']
       .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}_${(z[k]?.hazardousLife ?? 0).toFixed(2)}`)
@@ -693,7 +702,7 @@
       this.heightMap = null;
       this.heightZoneHists = null;
     }
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -703,7 +712,9 @@
     if (surface && surface.material) {
       const previousMap = surface.material.map;
       surface.material.map = tex;
-      if (ecumenopolis > 0 && this._ecumenopolisEmissionTexture) {
+      if (nanoworld > 0 && this._nanoworldEmissionTexture) {
+        surface.material.emissiveMap = this._nanoworldEmissionTexture;
+      } else if (ecumenopolis > 0 && this._ecumenopolisEmissionTexture) {
         surface.material.emissiveMap = this._ecumenopolisEmissionTexture;
       } else {
         surface.material.emissiveMap = null;
@@ -902,6 +913,11 @@
       }
       this._ecumenopolisEmissionTexture = null;
       this._ecumenopolisEmissionCanvas = null;
+      if (this._nanoworldEmissionTexture && this._nanoworldEmissionTexture.dispose) {
+        this._nanoworldEmissionTexture.dispose();
+      }
+      this._nanoworldEmissionTexture = null;
+      this._nanoworldEmissionCanvas = null;
     }
     const ctx = canvas.getContext('2d');
 
@@ -1884,7 +1900,120 @@
       finishEmissionTexture();
     };
 
+    const renderNanoworldOverlay = () => {
+      const strength = this.getNanoworldVisualizerStrength();
+      if (strength <= 0) return;
+
+      if (!this._nanoworldEmissionCanvas) {
+        this._nanoworldEmissionCanvas = document.createElement('canvas');
+      }
+      const emissionCanvas = this._nanoworldEmissionCanvas;
+      if (emissionCanvas.width !== w || emissionCanvas.height !== h) {
+        emissionCanvas.width = w;
+        emissionCanvas.height = h;
+        if (this._nanoworldEmissionTexture && this._nanoworldEmissionTexture.dispose) {
+          this._nanoworldEmissionTexture.dispose();
+        }
+        this._nanoworldEmissionTexture = null;
+      }
+      const emissionCtx = emissionCanvas.getContext('2d');
+      const emissionImg = emissionCtx.createImageData(w, h);
+      const emissionData = emissionImg.data;
+      const naniteSeed = Math.floor((seed.x * 104729) ^ (seed.y * 130363)) >>> 0;
+      const hashNanite = (x, y) => {
+        const n = Math.sin(x * 91.731 + y * 159.217 + naniteSeed * 0.000071) * 43758.5453123;
+        return n - Math.floor(n);
+      };
+      const columns = this.isRingWorld() ? 144 : (isDisk ? 76 : 72);
+      const rows = isDisk ? 76 : 38;
+      const wrapColumn = (column) => ((column % columns) + columns) % columns;
+
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const u = x / Math.max(1, w - 1);
+        const v = y / Math.max(1, h - 1);
+        const px = u * columns;
+        const py = v * rows;
+        const cellX = Math.floor(px);
+        const cellY = Math.floor(py);
+        let nearest = 10;
+        let secondNearest = 10;
+        let nearestCellX = 0;
+        let nearestCellY = 0;
+
+        for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+          for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+            const candidateX = cellX + offsetX;
+            const candidateY = cellY + offsetY;
+            const wrappedX = wrapColumn(candidateX);
+            const pointX = candidateX + 0.18 + hashNanite(wrappedX, candidateY) * 0.64;
+            const pointY = candidateY + 0.18 + hashNanite(wrappedX + 37.4, candidateY - 19.7) * 0.64;
+            const dx = px - pointX;
+            const dy = py - pointY;
+            const distance = dx * dx + dy * dy;
+            if (distance < nearest) {
+              secondNearest = nearest;
+              nearest = distance;
+              nearestCellX = wrappedX;
+              nearestCellY = candidateY;
+            } else if (distance < secondNearest) {
+              secondNearest = distance;
+            }
+          }
+        }
+
+        const cellEdge = 1 - smoothstep(0.018, 0.16, secondNearest - nearest);
+        const broadCurrent = 0.5 + 0.5 * Math.sin(
+          u * Math.PI * 18 +
+          Math.sin(v * Math.PI * 7 + hashNanite(nearestCellX, nearestCellY) * 4) * 2.2 +
+          v * Math.PI * 3
+        );
+        const counterCurrent = 0.5 + 0.5 * Math.sin(
+          v * Math.PI * 31 - u * Math.PI * 11 +
+          Math.sin(u * Math.PI * 9) * 1.7
+        );
+        const filament = smoothstep(0.88, 0.985, broadCurrent * 0.64 + counterCurrent * 0.36);
+        const coreDistance = Math.sqrt(nearest);
+        const nodeChance = hashNanite(nearestCellX * 1.73 + 11.2, nearestCellY * 1.31 - 8.4);
+        const node = nodeChance > 0.82 ? 1 - smoothstep(0.045, 0.16, coreDistance) : 0;
+        const shimmer = 0.5 + 0.5 * Math.sin(
+          (u * 2.4 + v * 1.7) * Math.PI * 2 +
+          hashNanite(nearestCellX, nearestCellY) * Math.PI * 2
+        );
+        const idx = i * 4;
+        const baseNoise = hashNanite(x * 0.071 + nearestCellX, y * 0.067 + nearestCellY);
+        const purple = shimmer * (1 - cellEdge) * 0.55;
+        const cyan = Math.max(cellEdge * 0.82, filament * 0.46, node);
+        const red = Math.round(4 + baseNoise * 7 + purple * 34 + node * 52);
+        const green = Math.round(11 + baseNoise * 11 + cyan * 72 + filament * 20);
+        const blue = Math.round(22 + baseNoise * 18 + purple * 68 + cyan * 108);
+        blendPixel(tdata, idx, red, green, blue, 0.985 * strength);
+
+        const emission = clamp01(cellEdge * 0.34 + filament * 0.22 + node * 0.95) * strength;
+        if (emission > 0.01) {
+          const violetNode = node > 0.45 && nodeChance > 0.92;
+          emissionData[idx] = Math.round((violetNode ? 180 : 32) * emission);
+          emissionData[idx + 1] = Math.round((violetNode ? 92 : 224) * emission);
+          emissionData[idx + 2] = Math.round(255 * emission);
+          emissionData[idx + 3] = 255;
+        }
+      }
+
+      emissionCtx.putImageData(emissionImg, 0, 0);
+      if (!this._nanoworldEmissionTexture) {
+        this._nanoworldEmissionTexture = new THREE.CanvasTexture(emissionCanvas);
+        if (THREE && THREE.SRGBColorSpace) {
+          this._nanoworldEmissionTexture.colorSpace = THREE.SRGBColorSpace;
+        }
+        this._nanoworldEmissionTexture.wrapS = THREE.RepeatWrapping;
+        this._nanoworldEmissionTexture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+      }
+      this._nanoworldEmissionTexture.needsUpdate = true;
+    };
+
     renderEcumenopolisOverlay();
+    renderNanoworldOverlay();
 
     ctx.putImageData(timg, 0, 0);
     if (!this._surfaceCanvasTexture) {
