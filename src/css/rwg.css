@@ -415,7 +415,7 @@
 
 .rwg-lore-window {
   width: min(900px, 92vw);
-  max-height: 80vh;
+  height: min(640px, 80vh);
   background: var(--rwg-card);
   border: 1px solid var(--rwg-border);
   border-radius: 10px;
