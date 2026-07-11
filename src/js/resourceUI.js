@@ -2598,7 +2598,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (warningInfo.text && warningInfo.text.textContent !== joinedText) {
         warningInfo.text.textContent = joinedText;
       }
-      const showTooltipIcon = joinedTitle !== joinedText;
+      const showTooltipIcon = resource.name !== 'hydrogen' && joinedTitle !== joinedText;
       if (warningInfo.icon) {
         warningInfo.icon.style.display = showTooltipIcon ? 'inline-flex' : 'none';
       }
