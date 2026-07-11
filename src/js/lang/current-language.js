@@ -5644,7 +5644,7 @@ setLanguageData({
       },
       nanoworld: {
         name: 'Nanoworld',
-        description: 'Convert the surface into oceans of nanobots. Completion consumes all biomass, reduces maximum biomass density to zero, increases nanobot maximum density by 100x, and completely disables ground colonies. Aerostat Colonies remain available.',
+        description: 'Convert the surface into oceans of nanobots. Completion consumes all biomass, reduces maximum biomass density to zero, increases nanobot maximum density by 10x, and completely disables ground colonies. Aerostat Colonies remain available.',
       },
       resortWorld: {
         name: 'Resort World',

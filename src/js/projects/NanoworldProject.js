@@ -2,7 +2,7 @@ function getNanoworldText(path, vars, fallback = '') {
   return t(`catalogs.specializations.nanoworld.${path}`, vars, fallback);
 }
 
-const NANOWORLD_BASE_DENSITY_MULTIPLIER = 100;
+const NANOWORLD_BASE_DENSITY_MULTIPLIER = 10;
 const NANOWORLD_MAX_SHOP_PURCHASES = 900;
 const NANOWORLD_POINT_LOG_DIVISOR = 4;
 const NANOWORLD_GROUND_COLONY_IDS = [
