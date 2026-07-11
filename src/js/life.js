@@ -1744,11 +1744,11 @@ class LifeManager extends EffectableEntity {
 
     terraforming.biomassDyingZones = {};
     terraforming.biomassUnsurvivableZones = {};
-    const netBiomassChangeByZone = {};
+    const biomassDyingChangeByZone = {};
     zones.forEach(zoneName => {
       terraforming.biomassDyingZones[zoneName] = false;
       terraforming.biomassUnsurvivableZones[zoneName] = !canSurviveByZone[zoneName];
-      netBiomassChangeByZone[zoneName] = 0;
+      biomassDyingChangeByZone[zoneName] = 0;
     });
 
     zones.forEach(zoneName => {
@@ -1758,7 +1758,6 @@ class LifeManager extends EffectableEntity {
         0,
         terraforming.zonalSurface[zoneName].biomass - naturalDecay
       );
-      netBiomassChangeByZone[zoneName] -= naturalDecay;
       resources.surface.biomass.modifyRate(-naturalDecay / secondsMultiplier, naturalDecayReason, 'life');
       if (sterileDecayWithoutOxygen && naturalDecay > 1e-9) {
         accumulateSpecialPlanetaryMassImport(
@@ -1793,7 +1792,7 @@ class LifeManager extends EffectableEntity {
       const overflowDecay = overflowDecayByZone[zoneName] || 0;
       if (overflowDecay <= 0) return;
       terraforming.zonalSurface[zoneName].biomass -= overflowDecay;
-      netBiomassChangeByZone[zoneName] -= overflowDecay;
+      biomassDyingChangeByZone[zoneName] -= overflowDecay;
       if (secondsMultiplier > 0 && overflowDecay > 1e-9) {
         resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, 'Life Density Decay', 'life');
       }
@@ -1806,7 +1805,7 @@ class LifeManager extends EffectableEntity {
       if (zoneGrowth <= 0) return;
 
       terraforming.zonalSurface[zoneName].biomass += zoneGrowth;
-      netBiomassChangeByZone[zoneName] += zoneGrowth;
+      biomassDyingChangeByZone[zoneName] += zoneGrowth;
       resources.surface.biomass.modifyRate(zoneGrowth / secondsMultiplier, growthReason, 'life');
 
       const growthSurfaceDeltas = growthSurfaceDeltasByZone[zoneName] || {};
@@ -1845,7 +1844,7 @@ class LifeManager extends EffectableEntity {
       const supportedDecay = supportedDecayByZone[zoneName] || 0;
       terraforming.zonalSurface[zoneName].biomass -= supportedDecay;
       terraforming.zonalSurface[zoneName].biomass = Math.max(0, terraforming.zonalSurface[zoneName].biomass);
-      netBiomassChangeByZone[zoneName] -= supportedDecay;
+      biomassDyingChangeByZone[zoneName] -= supportedDecay;
       resources.surface.biomass.modifyRate(-supportedDecay / secondsMultiplier, decayReason, 'life');
       if (sterileDecayWithoutOxygen && supportedDecay > 1e-9) {
         accumulateSpecialPlanetaryMassImport(
@@ -1878,7 +1877,7 @@ class LifeManager extends EffectableEntity {
     });
 
     zones.forEach(zoneName => {
-      if (netBiomassChangeByZone[zoneName] < -1e-9) {
+      if (biomassDyingChangeByZone[zoneName] < -1e-9) {
         terraforming.biomassDyingZones[zoneName] = true;
       }
       if (terraforming.zonalSurface[zoneName].biomass < 1e-5) {

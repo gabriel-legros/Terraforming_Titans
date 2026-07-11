@@ -1194,7 +1194,6 @@ class ProjectManager extends EffectableEntity {
     const targetSpecialSeed = project?.category === 'story' ? project.attributes?.specialSeedKey : null;
     const manager = this.spaceManager || spaceManager;
     const fallbackParameters = manager?.currentPlanetParameters || currentPlanetParameters;
-    const originalParameters = targetSpecialSeed ? manager?.getCurrentWorldOriginal?.() : null;
     const currentPlanetKey =
       manager?.getCurrentPlanetKey?.() ??
       manager?.currentPlanetKey ??
@@ -1205,10 +1204,6 @@ class ProjectManager extends EffectableEntity {
       fallbackParameters?.rwgMeta?.specialSeedKey ||
       fallbackParameters?.merged?.rwgMeta?.specialSeedKey ||
       fallbackParameters?.override?.rwgMeta?.specialSeedKey ||
-      originalParameters?.specialSeedKey ||
-      originalParameters?.rwgMeta?.specialSeedKey ||
-      originalParameters?.merged?.rwgMeta?.specialSeedKey ||
-      originalParameters?.override?.rwgMeta?.specialSeedKey ||
       null;
 
     if (typeof project?.isRelevantToCurrentPlanet === 'function') {
