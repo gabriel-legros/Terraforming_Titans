@@ -1190,30 +1190,15 @@ class ProjectManager extends EffectableEntity {
   }
 
   isProjectRelevantToCurrentPlanet(project) {
-    const targetPlanet = project?.category === 'story' ? project.attributes?.planet : null;
-    const targetSpecialSeed = project?.category === 'story' ? project.attributes?.specialSeedKey : null;
-    const manager = this.spaceManager || spaceManager;
-    const fallbackParameters = manager?.currentPlanetParameters || currentPlanetParameters;
-    const currentPlanetKey =
-      manager?.getCurrentPlanetKey?.() ??
-      manager?.currentPlanetKey ??
-      fallbackParameters?.key ??
-      fallbackParameters?.planetKey ??
-      null;
-    const currentSpecialSeed =
-      fallbackParameters?.rwgMeta?.specialSeedKey ||
-      fallbackParameters?.merged?.rwgMeta?.specialSeedKey ||
-      fallbackParameters?.override?.rwgMeta?.specialSeedKey ||
-      null;
-
-    if (typeof project?.isRelevantToCurrentPlanet === 'function') {
-      return project.isRelevantToCurrentPlanet(currentPlanetKey, fallbackParameters, manager) !== false
-        && (!targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey)
-        && (!targetSpecialSeed || targetSpecialSeed === currentSpecialSeed);
+    const currentPlanetKey = spaceManager.getCurrentPlanetKey();
+    if (project.isRelevantToCurrentPlanet
+      && project.isRelevantToCurrentPlanet(currentPlanetKey, currentPlanetParameters, spaceManager) === false) {
+      return false;
     }
-
-    return (!targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey)
-      && (!targetSpecialSeed || targetSpecialSeed === currentSpecialSeed);
+    if (project.category !== 'story') return true;
+    return (!project.attributes.planet || project.attributes.planet === currentPlanetKey)
+      && (!project.attributes.specialSeedKey
+        || project.attributes.specialSeedKey === currentPlanetParameters.rwgMeta?.specialSeedKey);
   }
 
   getDurationMultiplier(project, options) {
