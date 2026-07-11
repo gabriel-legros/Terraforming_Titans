@@ -39,6 +39,15 @@
   .resource-cap-limited {
     color: orange;
   }
+
+  .resource-at-cap {
+    color: #0077b6;
+  }
+
+  .dark-mode .resource-at-cap,
+  .dark-grey-mode .resource-at-cap {
+    color: cyan;
+  }
   
   .resource-pps {
     text-align: right; /* Right-align pps */

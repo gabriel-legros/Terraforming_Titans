@@ -26,6 +26,7 @@ function cacheSettingsElements() {
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
     showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
     netResourceRateDisplayToggle: document.getElementById('net-resource-rate-display-toggle'),
+    highlightFullResourceCapsToggle: document.getElementById('highlight-full-resource-caps-toggle'),
     resourceDepletionWarningSecondsInput: document.getElementById('resource-depletion-warning-seconds-input'),
     immigrationPoolToggle: document.getElementById('immigration-pool-toggle'),
     immigrationPoolTooltip: document.getElementById('immigration-pool-tooltip'),
@@ -608,6 +609,14 @@ function addSettingsListeners() {
     cached.netResourceRateDisplayToggle.checked = gameSettings.showNetResourceRateWithAutobuild;
     cached.netResourceRateDisplayToggle.addEventListener('change', () => {
       gameSettings.showNetResourceRateWithAutobuild = cached.netResourceRateDisplayToggle.checked;
+      updateResourceDisplay(resources, 0);
+    });
+  }
+
+  if (cached.highlightFullResourceCapsToggle) {
+    cached.highlightFullResourceCapsToggle.checked = gameSettings.highlightFullResourceCaps;
+    cached.highlightFullResourceCapsToggle.addEventListener('change', () => {
+      gameSettings.highlightFullResourceCaps = cached.highlightFullResourceCapsToggle.checked;
       updateResourceDisplay(resources, 0);
     });
   }

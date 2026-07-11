@@ -281,6 +281,17 @@ function setResourceCapLimited(entry, isLimited) {
   }
 }
 
+function setResourceAtCap(entry, isAtCap) {
+  if (!entry) return;
+  const atCap = isAtCap === true;
+  if (entry.valueEl && entry.valueEl.classList.contains('resource-at-cap') !== atCap) {
+    entry.valueEl.classList.toggle('resource-at-cap', atCap);
+  }
+  if (entry.capEl && entry.capEl.classList.contains('resource-at-cap') !== atCap) {
+    entry.capEl.classList.toggle('resource-at-cap', atCap);
+  }
+}
+
 function shouldShowCapLimitedWithCooldown(timerKey, isLimited, frameDelta) {
   const timers = resourceUICache.capLimitTimers || (resourceUICache.capLimitTimers = {});
   let timer = timers[timerKey] || 0;
@@ -1792,6 +1803,10 @@ function updateResourceDisplay(resources, deltaSeconds) {
           spaceStorageTotalEntry.capEl.textContent = maxStorageText;
         }
       }
+      setResourceAtCap(
+        spaceStorageTotalEntry,
+        gameSettings.highlightFullResourceCaps && maxStorage > 0 && usedStorage >= maxStorage
+      );
       setResourceCapLimited(spaceStorageTotalEntry, false);
     }
 
@@ -1810,6 +1825,17 @@ function updateResourceDisplay(resources, deltaSeconds) {
       if (category === 'spaceStorage' && resourceName !== 'energy') {
         updateSpaceStorageCapDisplay(entry, resourceName);
       }
+
+      const resourceCap = category === 'spaceStorage' && resourceName !== 'energy'
+        ? getSpaceStorageResourceCapDisplay(resourceName)
+        : resourceObj.cap;
+      setResourceAtCap(
+        entry,
+        gameSettings.highlightFullResourceCaps
+          && Number.isFinite(resourceCap)
+          && resourceCap > 0
+          && resourceObj.value >= resourceCap
+      );
 
       let timer = smallValueTimers[resourceKey] || 0;
       let showResource = resourceObj.unlocked && !isCurrentWorldResourceDisabled(resourceObj.category, resourceObj.name);

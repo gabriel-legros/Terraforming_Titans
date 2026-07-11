@@ -4853,6 +4853,7 @@ setLanguageData({
       },
       showSpaceResources: 'Show space resources in default resource panel',
       netResourceRateDisplay: 'Net resource rate display',
+      highlightFullResourceCaps: 'Colour full resource values and caps',
       resourceDepletionWarningSeconds: 'Resource depletion warning (seconds)',
       immigrationPool: 'Immigration pool',
       immigrationPoolTooltip: 'When enabled, on any world other than Mars, a large portion of colony growth becomes directly dependent on galactic population via immigration.  Immigration will attempt to equalize the world colonist fill ratio with the galactic fill ratio, and all immigration is taken from the galactic population pool.  This may lead to very slow growth in some cases.',
