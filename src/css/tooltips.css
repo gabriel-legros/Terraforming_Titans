@@ -44,6 +44,9 @@
 }
 
 /* Ensure three-column layout wins over the generic hover rule */
+.resource-item:hover .resource-tooltip.two-column,
+.resource-item.tooltip-active .resource-tooltip.two-column,
+.resource-item:focus-within .resource-tooltip.two-column,
 .resource-item:hover .resource-tooltip.three-column,
 .resource-item.tooltip-active .resource-tooltip.three-column,
 .resource-item:focus-within .resource-tooltip.three-column {
@@ -51,17 +54,20 @@
 }
 
 /* Three-column layout for tall tooltips */
+.resource-tooltip.two-column,
 .resource-tooltip.three-column {
   width: auto;
   display: flex;
   text-align: left;
 }
 
+.resource-tooltip.two-column > div,
 .resource-tooltip.three-column > div {
   width: 220px;
   margin-right: 10px;
 }
 
+.resource-tooltip.two-column > div:last-child,
 .resource-tooltip.three-column > div:last-child {
   margin-right: 0;
 }

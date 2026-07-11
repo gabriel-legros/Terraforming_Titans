@@ -1055,9 +1055,9 @@ function setResourceTooltipColumns(tooltip, cols) {
   if (!tooltip || !tooltip._columnsInfo) return;
   const { headerDiv, productionDiv, consumptionDiv, reserveDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
   col1.innerHTML = '';
-  if (cols === 3) {
+  if (cols >= 2) {
     col2.innerHTML = '';
-    col3.innerHTML = '';
+    if (cols === 3) col3.innerHTML = '';
     // Move time and net panels into their columns
     if (timeDiv.parentNode !== col2) {
       if (timeDiv.parentNode) timeDiv.parentNode.removeChild(timeDiv);
@@ -1086,22 +1086,33 @@ function setResourceTooltipColumns(tooltip, cols) {
     if (autobuildDiv.firstChild && autobuildDiv.firstChild.tagName === 'BR') {
       autobuildDiv.removeChild(autobuildDiv.firstChild);
     }
-    col3.appendChild(netDiv);
-    col3.appendChild(reserveDiv);
-    col3.appendChild(autobuildDiv);
-    col3.appendChild(overflowLossDiv);
+    if (cols === 3) {
+      col3.appendChild(netDiv);
+      col3.appendChild(reserveDiv);
+      col3.appendChild(autobuildDiv);
+      col3.appendChild(overflowLossDiv);
+    } else {
+      col2.appendChild(netDiv);
+      col2.appendChild(reserveDiv);
+      col2.appendChild(autobuildDiv);
+      col2.appendChild(overflowLossDiv);
+    }
     if (!col2.parentNode) tooltip.appendChild(col2);
-    if (!col3.parentNode) tooltip.appendChild(col3);
+    if (cols === 3) {
+      if (!col3.parentNode) tooltip.appendChild(col3);
+    } else if (col3.parentNode) {
+      col3.parentNode.removeChild(col3);
+    }
 
     // Align headers (Production / Consumption / Autobuild) on the same baseline
     // by adding top margins so that each column's pre-header block height matches the max.
     const headerHeight = headerDiv.getBoundingClientRect().height || 0;
     const timeHeight = timeDiv ? (timeDiv.getBoundingClientRect().height || 0) : 0;
-    const netHeight = netDiv ? (netDiv.getBoundingClientRect().height || 0) : 0;
+    const netHeight = cols === 3 ? (netDiv.getBoundingClientRect().height || 0) : 0;
     const maxPreHeader = Math.max(headerHeight, timeHeight, netHeight);
     const prodMargin = Math.max(maxPreHeader - headerHeight, 0);
     const consMargin = Math.max(maxPreHeader - timeHeight, 0);
-    const autoMargin = Math.max(maxPreHeader - netHeight, 0);
+    const autoMargin = cols === 3 ? Math.max(maxPreHeader - netHeight, 0) : 0;
     const reserveVisible = reserveDiv.style.display !== 'none';
     productionDiv.style.marginTop = prodMargin ? prodMargin + 'px' : '0px';
     consumptionDiv.style.marginTop = consMargin ? consMargin + 'px' : '0px';
