@@ -24,7 +24,15 @@ function applyCompanionMirrorTravelReward(ignoreDebrisDiskBlock = false, resetMi
     return false;
   }
 
+  const stellarEngine = projectManager.projects.stellarEngine;
+  if (stellarEngine.isSpaceMirrorFacilityLocked()) {
+    return false;
+  }
+
   const mirrorProject = projectManager.projects.spaceMirrorFacility;
+  if (mirrorProject.isPermanentlyDisabled()) {
+    return false;
+  }
   mirrorProject.enable();
   if (!mirrorProject.isCompleted) {
     mirrorProject.complete();

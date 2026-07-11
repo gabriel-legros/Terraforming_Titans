@@ -1988,6 +1988,17 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorOversightSettings = this.mirrorOversightSettings;
   }
 
+  isPermanentlyDisabled() {
+    return super.isPermanentlyDisabled() || this.isBooleanFlagSet('stellarEngineMirrorFacilityLockout');
+  }
+
+  complete() {
+    if (this.isPermanentlyDisabled()) {
+      return;
+    }
+    super.complete();
+  }
+
   enableHyperionLanternIfAvailable() {
     if (this.isCompleted && this.isBooleanFlagSet('hyperionLanternFacilityAccess')) {
       addEffect({

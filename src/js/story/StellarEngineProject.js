@@ -2,6 +2,8 @@ const STELLAR_ENGINE_SOURCE_ID = 'stellarEngineProject';
 const STELLAR_ENGINE_FLUX_EFFECT_ID = 'stellar-engine-stellar-flux';
 const STELLAR_ENGINE_POPULATION_EFFECT_ID = 'stellar-engine-population-growth';
 const STELLAR_ENGINE_MAINTENANCE_EFFECT_ID = 'stellar-engine-maintenance';
+const STELLAR_ENGINE_MIRROR_LOCKOUT_EFFECT_ID = 'stellar-engine-disable-space-mirror-facility';
+const STELLAR_ENGINE_MIRROR_LOCKOUT_SOURCE_ID = 'stellar-engine-mirror-lockout';
 const STELLAR_ENGINE_STARS = ['Tee', 'Bee', 'Pee'];
 
 function getStellarEngineText(path, vars, fallback = '') {
@@ -33,6 +35,42 @@ class StellarEngineProject extends ArtificialSkyProject {
 
   getCostRateLabel() {
     return getStellarEngineText('costRateLabel', null, 'Stellar Engine');
+  }
+
+  isSpaceMirrorFacilityLocked() {
+    return projectManager.isProjectRelevantToCurrentPlanet(this) && !this.isCompleted;
+  }
+
+  syncSpaceMirrorFacilityLock() {
+    const mirrorProject = projectManager.projects.spaceMirrorFacility;
+    const isLocked = this.isSpaceMirrorFacilityLocked();
+    const hasLockout = mirrorProject.activeEffects.some(effect => effect.effectId === STELLAR_ENGINE_MIRROR_LOCKOUT_EFFECT_ID);
+    if (isLocked === hasLockout) {
+      return;
+    }
+    if (isLocked) {
+      addEffect({
+        target: 'project',
+        targetId: 'spaceMirrorFacility',
+        type: 'booleanFlag',
+        flagId: 'stellarEngineMirrorFacilityLockout',
+        value: true,
+        effectId: STELLAR_ENGINE_MIRROR_LOCKOUT_EFFECT_ID,
+        sourceId: STELLAR_ENGINE_MIRROR_LOCKOUT_SOURCE_ID
+      });
+    } else {
+      removeEffect({
+        target: 'project',
+        targetId: 'spaceMirrorFacility',
+        sourceId: STELLAR_ENGINE_MIRROR_LOCKOUT_SOURCE_ID
+      });
+    }
+    projectManager.markUIDirty();
+  }
+
+  enable() {
+    super.enable();
+    this.syncSpaceMirrorFacilityLock();
   }
 
   getMaxRepeats() {
@@ -74,6 +112,7 @@ class StellarEngineProject extends ArtificialSkyProject {
     this.isPaused = false;
     this.remainingTime = 0;
     this.startingDuration = 0;
+    this.syncSpaceMirrorFacilityLock();
   }
 
   applyArtificialSkyCompletionEffects() {}
@@ -293,6 +332,7 @@ class StellarEngineProject extends ArtificialSkyProject {
   }
 
   update(deltaTime) {
+    this.syncSpaceMirrorFacilityLock();
     this.updateInstability(deltaTime);
     if (this.engineBuilt || this.stabilized || this.isCompleted) {
       return;
@@ -352,6 +392,7 @@ class StellarEngineProject extends ArtificialSkyProject {
     this.eventDuration = 0;
     this.cooldownRemaining = 0;
     this.eventStar = '';
+    this.syncSpaceMirrorFacilityLock();
     this.clearFluxEffects();
     projectManager.markUIDirty();
   }

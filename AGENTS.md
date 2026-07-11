@@ -296,7 +296,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Matrioshka Brain cognition targets include Manufacturing World as a project throughput target, increasing both its production and consumption throughput.
 
 ### TeeBeePee Stellar Engine
-- TeeBeePee's Stellar Engine is a custom story project class that builds segmented infrastructure on Pee before spending a tunable colony energy ejection cost. While incomplete, it schedules chaotic stellar flux events with flat added terraforming solar flux, building/colony maintenance multipliers, population growth penalties, and direct colonist/android/biomass/nanobot attrition. Ejecting Pee completes the project and permanently clears the instability.
+- TeeBeePee's Stellar Engine is a custom story project class that builds segmented infrastructure on Pee before spending a tunable colony energy ejection cost. While incomplete, it schedules chaotic stellar flux events with flat added terraforming solar flux, building/colony maintenance multipliers, population growth penalties, and direct colonist/android/biomass/nanobot attrition. Ejecting Pee completes the project and permanently clears the instability. It disables the Space Mirror Facility until Bee is ejected, including blocking the Companion Mirror's automatic completion reward.
 
 ### Space Mirror Facility
 - Zonal mirror/lantern assignment with advanced oversight and reversible mirror mode; advanced oversight now stores mirror assignments as signed counts (`negative = reverse/cooling`) and derives reverse mode from the solved assignments instead of tracking a separate reverse-state decision through the solver.
