@@ -2050,6 +2050,11 @@ setLanguageData({
         massDrivers: 'Mass Drivers',
         active: 'Active: ',
         built: 'Built: ',
+        assignment: 'Assignment:',
+        quickBuild: {
+          label: 'Quick Build:',
+          build: 'Build {count} {name}',
+        },
         setActiveToTarget: 'Set active to target',
         massDriverNote: 'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.',
         hydrogen: 'Hydrogen',

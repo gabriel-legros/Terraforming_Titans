@@ -586,55 +586,89 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const sectionContainer = document.createElement('div');
     sectionContainer.classList.add('project-section-container', 'resource-disposal-builder-section');
 
-    const title = document.createElement('h4');
-    title.classList.add('section-title');
-    title.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.massDrivers', 'Mass Drivers');
-    sectionContainer.appendChild(title);
-
     const infoContent = document.createElement('div');
     infoContent.id = `${this.name}-mass-driver-info`;
-    infoContent.classList.add('spaceship-assignment-container', 'mass-driver-assignment-container');
+    infoContent.classList.add('info-card', 'mass-driver-status-card');
+
+    const cardHeader = document.createElement('div');
+    cardHeader.classList.add('card-header');
+    const title = document.createElement('span');
+    title.classList.add('card-title');
+    title.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.massDrivers', 'Mass Drivers');
+    cardHeader.appendChild(title);
+
+    const cardBody = document.createElement('div');
+    cardBody.classList.add('card-body');
 
     const statusContainer = document.createElement('div');
-    statusContainer.classList.add('assigned-and-available-container');
+    statusContainer.classList.add('stats-grid', 'two-col', 'mass-driver-status-grid');
 
     const activeContainer = document.createElement('div');
-    activeContainer.classList.add('assigned-ships-container');
+    activeContainer.classList.add('stat-item');
 
     const activeLabel = document.createElement('span');
-    activeLabel.classList.add('mass-driver-label');
+    activeLabel.classList.add('stat-label', 'mass-driver-label');
     activeLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.active', 'Active: ');
     const activeValue = document.createElement('span');
     activeValue.id = `${this.name}-active-mass-drivers`;
-    activeValue.classList.add('mass-driver-count');
+    activeValue.classList.add('stat-value', 'mass-driver-count');
     activeContainer.append(activeLabel, activeValue);
 
     const builtContainer = document.createElement('div');
-    builtContainer.classList.add('available-ships-container');
+    builtContainer.classList.add('stat-item');
     const builtLabel = document.createElement('span');
-    builtLabel.classList.add('mass-driver-built-label');
+    builtLabel.classList.add('stat-label', 'mass-driver-built-label');
     builtLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.built', 'Built: ');
     const builtValue = document.createElement('span');
     builtValue.id = `${this.name}-built-mass-drivers`;
-    builtValue.classList.add('mass-driver-built-count');
+    builtValue.classList.add('stat-value', 'mass-driver-built-count');
     builtContainer.append(builtLabel, builtValue);
 
     statusContainer.append(activeContainer, builtContainer);
 
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.classList.add('buttons-container');
+    const quickBuildContainer = document.createElement('div');
+    quickBuildContainer.classList.add('quick-build-row', 'mass-driver-quick-build-row');
+    const quickBuildLabel = document.createElement('span');
+    quickBuildLabel.classList.add('quick-build-label');
+    quickBuildLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.quickBuild.label', 'Quick Build:');
+    const quickBuildButton = document.createElement('button');
+    quickBuildButton.classList.add('quick-build-button');
+    const quickBuildSpacer = document.createElement('div');
+    quickBuildSpacer.classList.add('qb-spacer');
+    const quickBuildMultiplyButton = document.createElement('button');
+    quickBuildMultiplyButton.classList.add('increment-button', 'qb-inc');
+    quickBuildMultiplyButton.textContent = this.getSpaceDisposalText('ui.projects.common.timesTen', 'x10');
+    const quickBuildDivideButton = document.createElement('button');
+    quickBuildDivideButton.classList.add('increment-button', 'qb-inc');
+    quickBuildDivideButton.textContent = this.getSpaceDisposalText('ui.projects.common.divideTen', '/10');
+    const quickBuildCost = document.createElement('span');
+    quickBuildCost.classList.add('quick-build-cost');
+    quickBuildContainer.append(
+      quickBuildLabel,
+      quickBuildButton,
+      quickBuildSpacer,
+      quickBuildMultiplyButton,
+      quickBuildDivideButton,
+      quickBuildCost
+    );
 
-    const createButton = (text, handler, parent = buttonsContainer) => {
+    const assignmentContainer = document.createElement('div');
+    assignmentContainer.classList.add('mass-driver-assignment-row');
+    const assignmentButtons = document.createElement('div');
+    assignmentButtons.classList.add('mass-driver-assignment-buttons');
+    assignmentContainer.appendChild(assignmentButtons);
+    const assignmentLabel = document.createElement('span');
+    assignmentLabel.classList.add('mass-driver-assignment-label');
+    assignmentLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.assignment', 'Assignment:');
+
+    const createButton = (text, handler, parent = assignmentButtons) => {
       const button = document.createElement('button');
+      button.classList.add('increment-button');
       button.textContent = text;
       button.addEventListener('click', handler);
       parent.appendChild(button);
       return button;
     };
-
-    const mainButtons = document.createElement('div');
-    mainButtons.classList.add('main-buttons');
-    buttonsContainer.appendChild(mainButtons);
 
     const applyManualMassDriverChange = (change) => {
       change();
@@ -644,20 +678,20 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const zeroButton = createButton(this.getSpaceDisposalText('ui.projects.common.zero', '0'), () => {
       applyManualMassDriverChange(() => this.setMassDriverActive(0));
-    }, mainButtons);
+    });
 
     const decreaseButton = createButton('', () => {
       applyManualMassDriverChange(() => this.adjustMassDriverActive(-1));
-    }, mainButtons);
+    });
 
     const increaseButton = createButton('', () => {
       applyManualMassDriverChange(() => this.adjustMassDriverActive(1));
-    }, mainButtons);
+    });
 
     const maxButton = createButton(this.getSpaceDisposalText('ui.projects.common.max', 'Max'), () => {
       const structure = this.getMassDriverStructure();
       applyManualMassDriverChange(() => this.setMassDriverActive(structure.count));
-    }, mainButtons);
+    });
 
     const autoContainer = document.createElement('label');
     autoContainer.classList.add('auto-active-container');
@@ -687,31 +721,29 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const autoLabel = document.createElement('span');
     autoLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.setActiveToTarget', 'Set active to target');
     autoContainer.append(maxAutoActiveCheckbox, autoLabel);
-    mainButtons.appendChild(autoContainer);
+    assignmentContainer.append(assignmentLabel, autoContainer);
 
-    const multiplierContainer = document.createElement('div');
-    multiplierContainer.classList.add('multiplier-container');
-    buttonsContainer.appendChild(multiplierContainer);
-
-    const divideButton = createButton(this.getSpaceDisposalText('ui.projects.common.divideTen', '/10'), () => {
-      disableAutoActive(this.getMassDriverStructure());
-      this.shiftMassDriverStep(false);
+    quickBuildButton.addEventListener('click', () => {
+      this.getMassDriverStructure().buildStructure(this.getMassDriverBuildCount());
       this.updateUI();
-    }, multiplierContainer);
+    });
 
-    const multiplyButton = createButton(this.getSpaceDisposalText('ui.projects.common.timesTen', 'x10'), () => {
-      disableAutoActive(this.getMassDriverStructure());
+    quickBuildMultiplyButton.addEventListener('click', () => {
       this.shiftMassDriverStep(true);
       this.updateUI();
-    }, multiplierContainer);
+    });
 
-    infoContent.append(statusContainer, buttonsContainer);
-    sectionContainer.appendChild(infoContent);
+    quickBuildDivideButton.addEventListener('click', () => {
+      this.shiftMassDriverStep(false);
+      this.updateUI();
+    });
 
     const infoNote = document.createElement('p');
     infoNote.classList.add('project-description', 'mass-driver-note');
     infoNote.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.massDriverNote', 'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.');
-    sectionContainer.appendChild(infoNote);
+    cardBody.append(statusContainer, quickBuildContainer, assignmentContainer, infoNote);
+    infoContent.append(cardHeader, cardBody);
+    sectionContainer.appendChild(infoContent);
 
     const builderHeader = document.createElement('div');
     builderHeader.classList.add('resource-disposal-builder-header');
@@ -766,8 +798,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       massDriverMaxButton: maxButton,
       massDriverMaxAutoActiveCheckbox: maxAutoActiveCheckbox,
       massDriverAutoActiveContainer: autoContainer,
-      massDriverDivideButton: divideButton,
-      massDriverMultiplyButton: multiplyButton,
+      massDriverQuickBuildButton: quickBuildButton,
+      massDriverQuickBuildCost: quickBuildCost,
       massDriverInfoNoteElement: infoNote,
       disposalTargetList: targetList,
       disposalTargetRows: {},
@@ -1292,6 +1324,14 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return selectedBuildCounts.massDriver;
   }
 
+  getMassDriverBuildCount() {
+    const step = this.getMassDriverStep();
+    if (!gameSettings.roundBuildingConstruction) {
+      return step;
+    }
+    return getRoundedBuildCount(this.getMassDriverStructure().count, step);
+  }
+
   applyMassDriverChange(delta) {
     if (!delta) {
       return;
@@ -1344,6 +1384,17 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
     if (elements.massDriverIncreaseButton) {
       elements.massDriverIncreaseButton.textContent = `+${formattedStep}`;
+    }
+    if (elements.massDriverQuickBuildButton) {
+      const structure = this.getMassDriverStructure();
+      const buildCount = this.getMassDriverBuildCount();
+      elements.massDriverQuickBuildButton.textContent = this.getSpaceDisposalText(
+        'ui.projects.spaceDisposal.quickBuild.build',
+        `Build ${formatNumber(buildCount, true)} ${structure.displayName}`,
+        { count: formatNumber(buildCount, true), name: structure.displayName }
+      );
+      elements.massDriverQuickBuildButton.classList.toggle('cant-afford', !structure.canAfford(buildCount));
+      updateQuickBuildCostDisplay(elements.massDriverQuickBuildCost, structure, buildCount);
     }
   }
 

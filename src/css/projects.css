@@ -2107,6 +2107,46 @@
     gap: 4px;
 }
 
+.mass-driver-status-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mass-driver-quick-build-row {
+    margin-top: 0;
+    grid-template-columns: auto 220px 8px 50px 50px minmax(0, 1fr);
+}
+
+.mass-driver-assignment-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.mass-driver-assignment-buttons {
+    display: grid;
+    grid-template-columns: 24px 72px 72px 36px;
+    gap: 5px;
+}
+
+.mass-driver-assignment-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.mass-driver-assignment-row .increment-button {
+    min-width: 0;
+    padding: 2px 4px;
+    font-size: 0.7em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dark-mode .mass-driver-assignment-label { color: #ffffff; }
+
 /* Dark mode: make the label white for readability */
 .dark-mode .quick-build-label { color: #ffffff; }
 
