@@ -11,6 +11,8 @@ if (warningMessage) {
 }
 
 function updateWarnings() {
+  updatePulsarStormNotification();
+
   if (!warningContainer || !warningMessage) {
     return;
   }

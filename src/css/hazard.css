@@ -672,6 +672,21 @@
   background: rgba(34, 44, 48, 0.55);
 }
 
+.pulsar-storm-countdown {
+  top: 20px;
+  color: #4da6ff;
+  font-size: 15px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px #00264d;
+}
+
+#pulsar-storm-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
 .hazard-card--pulsar .hazard-bar {
   height: 60px;
 }

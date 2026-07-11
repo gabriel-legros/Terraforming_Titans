@@ -3303,6 +3303,7 @@ setLanguageData({
           thrusterCost: 'Planetary Thrusters construction cost is multiplied by x100, and Tractor Beams is disabled.',
           clearText: 'Build all Artificial Sky segments or go rogue.',
           distanceScaling: 'All pulsar effects are multiplied by (initial distance / current distance)^2 (capped at x1).',
+          stormNotification: 'Pulsar Storm! {seconds}s',
           stormProjects: 'Electromagnetic storms repeat every {period}s for {duration}s and pause spaceship projects while active.',
           shielded: '{value}% Shielded',
           exposed: '{value}% Exposed',
