@@ -822,7 +822,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.scientificNotationTooltip',
         {},
-        'Values at or above this threshold are displayed in scientific notation, such as 1e30.'
+        'Values that reach this threshold after rounding are displayed in scientific notation, such as 1e30.'
       )
     );
   }

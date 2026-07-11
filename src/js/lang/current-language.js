@@ -4873,7 +4873,7 @@ setLanguageData({
       roundBuildingConstruction: 'Round building construction',
       roundBuildingConstructionTooltip: 'When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.',
       scientificNotationPrefix: 'Use scientific notation above',
-      scientificNotationTooltip: 'Values at or above this threshold are displayed in scientific notation, such as 1e30.',
+      scientificNotationTooltip: 'Values that reach this threshold after rounding are displayed in scientific notation, such as 1e30.',
       simplifyGoldenAsteroid: 'Simplify Golden Asteroid',
       simplifyGoldenAsteroidTooltip: 'When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.',
       suppressFaith: 'Suppress Faith',
