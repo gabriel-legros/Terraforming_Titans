@@ -72,16 +72,6 @@ const KESSLER_EFFECTS = [
   getKesslerHazardText('effectsList.debrisDecay', 'Debris chart altitudes are relative to the world\'s initial radius; dynamic-mass worlds adjust the live air path for current radius before calculating decay.')
 ];
 const KESSLER_CHART_BINS = 64;
-let kesslerDecayConstants = null;
-try {
-  ({ KESSLER_DECAY_CONSTANTS: kesslerDecayConstants } = require('./kesslerHazard.js'));
-} catch (error) {
-  try {
-    kesslerDecayConstants = window.KESSLER_DECAY_CONSTANTS;
-  } catch (innerError) {
-    kesslerDecayConstants = null;
-  }
-}
 const KESSLER_DEBRIS_SOURCES = {
   small: [
     getKesslerHazardText('debrisSourcesList.smallMirror', 'Space Mirror construction.'),
@@ -655,7 +645,7 @@ function updateKesslerDebrisChart(
   const radiusAltitudeOffsetMeters = radiusContext.altitudeOffsetMeters;
   const bins = new Array(bars.length).fill(0);
   const currentBins = new Array(bars.length).fill(0);
-  const maxSinceZeroBins = new Array(bars.length).fill(0);
+  const decayRateBins = new Array(bars.length).fill(0);
 
   let minPeriapsis = 0;
   let maxPeriapsis = 1;
@@ -675,7 +665,7 @@ function updateKesslerDebrisChart(
     for (let i = 0; i < bars.length; i += 1) {
       bins[i] = sortedEntries[i].massTons;
       currentBins[i] = sortedCurrentEntries[i].massTons;
-      maxSinceZeroBins[i] = sortedCurrentEntries[i].maxSinceZero ?? sortedCurrentEntries[i].massTons ?? 0;
+      decayRateBins[i] = sortedCurrentEntries[i].lastDecayTonsPerSecond || 0;
     }
   } else {
     for (let i = 0; i < sortedEntries.length; i += 1) {
@@ -699,13 +689,13 @@ function updateKesslerDebrisChart(
         index = 0;
       }
       currentBins[index] += entry.massTons;
-      maxSinceZeroBins[index] += entry.maxSinceZero ?? entry.massTons ?? 0;
+      decayRateBins[index] += entry.lastDecayTonsPerSecond || 0;
     }
   }
   if (isCleared) {
     for (let i = 0; i < currentBins.length; i += 1) {
       currentBins[i] = 0;
-      maxSinceZeroBins[i] = 0;
+      decayRateBins[i] = 0;
     }
   }
   const displayedDragThresholdMeters = dragThresholdMeters - radiusAltitudeOffsetMeters;
@@ -781,16 +771,11 @@ function updateKesslerDebrisChart(
     entry.effectiveAltitudeKm = effectiveAltitudes[i] / 1000;
   }
   const densities = densityModel.getDensities(effectiveAltitudes);
-  const densityReference = Math.max(dragThresholdDensity, kesslerDecayConstants.densityFloor);
   for (let i = 0; i < binCount; i += 1) {
     const entry = kesslerHazardUICache.binDetails[i];
     const density = densities[i] || 0;
-    const densityRatio = Math.max(density, kesslerDecayConstants.densityFloor) / densityReference;
-    const densityFactor = Math.min(kesslerDecayConstants.maxMultiplier, Math.max(0, densityRatio));
-    const decayRate = kesslerDecayConstants.baseRate * densityFactor;
-    const decayBasis = density >= densityReference ? maxSinceZeroBins[i] : currentBins[i];
     entry.density = density;
-    entry.decayRate = decayBasis * decayRate;
+    entry.decayRate = decayRateBins[i];
   }
   if (kesslerHazardUICache.hoveredBin >= 0) {
     const entry = kesslerHazardUICache.binDetails[kesslerHazardUICache.hoveredBin];

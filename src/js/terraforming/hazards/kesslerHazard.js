@@ -220,7 +220,11 @@ class KesslerHazard {
   save() {
     return {
       permanentlyCleared: this.permanentlyCleared,
-      periapsisDistribution: this.periapsisDistribution,
+      periapsisDistribution: this.periapsisDistribution.map((entry) => {
+        const savedEntry = { ...entry };
+        delete savedEntry.lastDecayTonsPerSecond;
+        return savedEntry;
+      }),
       periapsisBaseline: this.periapsisBaseline
     };
   }
@@ -629,6 +633,7 @@ class KesslerHazard {
       const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
       const decayBasis = density >= DEBRIS_DECAY_DENSITY_REFERENCE ? entry.maxSinceZero : entry.massTons;
       const removed = Math.min(entry.massTons, decayBasis * decayFraction);
+      entry.lastDecayTonsPerSecond = deltaSeconds ? removed / deltaSeconds : 0;
       entry.massTons = Math.max(0, entry.massTons - removed);
       if (!entry.massTons) {
         entry.maxSinceZero = 0;

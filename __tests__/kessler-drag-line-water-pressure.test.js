@@ -1,4 +1,5 @@
 const { KesslerHazard } = require('../src/js/terraforming/hazards/kesslerHazard.js');
+const { JSDOM } = require('jsdom');
 
 const SOLAR_FLUX_W_M2 = 1100;
 const SURFACE_GRAVITY_M_S2 = 7;
@@ -179,5 +180,71 @@ describe('Kessler drag line altitude for low-pressure water-only atmospheres', (
 
     expect(hazard.getPeriapsisDistribution()[0].referenceRadiusKm).toBe(6500);
     expect(hazard.getPeriapsisBaseline()[0].referenceRadiusKm).toBe(6500);
+  });
+});
+
+describe('Kessler decay-rate display', () => {
+  const originalGlobals = {
+    document: global.document,
+    formatNumber: global.formatNumber,
+    formatScientific: global.formatScientific,
+    hazardManager: global.hazardManager,
+    resources: global.resources,
+    t: global.t,
+    terraforming: global.terraforming,
+    window: global.window
+  };
+
+  afterEach(() => {
+    Object.assign(global, originalGlobals);
+  });
+
+  it('sums the rendered bin decay rates to the orbital-debris resource rate', () => {
+    const dom = new JSDOM('<div id="hazard-terraforming"></div>');
+    const displayedValues = [];
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.t = (key, vars, fallback) => {
+      if (key.endsWith('.chart.binDetail') || key.endsWith('.summary.debrisDecay')) {
+        displayedValues.push({ key, vars });
+      }
+      return fallback.replace(/\{(\w+)\}/g, (match, name) => vars[name]);
+    };
+    global.formatNumber = value => Number(value).toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
+    global.formatScientific = (value, decimals) => Number(value).toExponential(decimals);
+
+    const terraforming = createTerraformingForWaterPressurePa(100);
+    let resourceDecayRate = 0;
+    terraforming.resources.special.orbitalDebris.modifyRate = (value, source, type) => {
+      if (source === 'Debris decay' && type === 'hazard') {
+        resourceDecayRate = -value;
+      }
+    };
+    global.resources = terraforming.resources;
+    global.terraforming = terraforming;
+    global.hazardManager = {
+      parameters: {
+        kessler: { orbitalDebrisPerLand: 100 }
+      }
+    };
+    global.hazardManager.kesslerHazard = new KesslerHazard(global.hazardManager);
+    global.hazardManager.kesslerHazard.update(60, terraforming, global.hazardManager.parameters.kessler);
+    expect(global.hazardManager.kesslerHazard.save().periapsisDistribution[0].lastDecayTonsPerSecond).toBeUndefined();
+
+    const { updateKesslerHazardUI } = require('../src/js/terraforming/hazards/kesslerHazardUI.js');
+    updateKesslerHazardUI(global.hazardManager.parameters.kessler);
+    dom.window.document.querySelectorAll('.kessler-debris-chart__bar').forEach((bar) => {
+      bar.dispatchEvent(new dom.window.MouseEvent('mouseenter'));
+    });
+
+    const binDecayRate = displayedValues
+      .filter(entry => entry.key.endsWith('.chart.binDetail'))
+      .reduce((total, entry) => total + Number(entry.vars.decay), 0);
+    const summaryDecayRate = Number(
+      displayedValues.find(entry => entry.key.endsWith('.summary.debrisDecay')).vars.rate
+    );
+
+    expect(binDecayRate).toBeCloseTo(resourceDecayRate, 8);
+    expect(summaryDecayRate).toBeCloseTo(resourceDecayRate, 8);
   });
 });
