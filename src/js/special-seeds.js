@@ -951,6 +951,18 @@ const shadesNightmareOverrides = {
         "initialValue": 6164253525061.392
       }
     },
+    underground: {
+      ore: {
+        initialValue: 0,
+        maxDeposits: 0,
+        areaTotal: 0
+      },
+      geothermal: {
+        initialValue: 0,
+        maxDeposits: 0,
+        areaTotal: 0
+      }
+    },
     "atmospheric": {
       "carbonDioxide": {
         "initialValue": 0
