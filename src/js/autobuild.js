@@ -1315,7 +1315,7 @@ function autoBuild(buildings, delta = 0) {
             if (desiredAmount <= 0) {
                 return;
             }
-            const canBuildFull = building.canAfford(desiredAmount, reserve, extraReserves);
+            const canBuildFull = !maxMode && building.canAfford(desiredAmount, reserve, extraReserves);
             if (!canBuildFull) {
                 building.autoBuildPartial = true;
                 markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
