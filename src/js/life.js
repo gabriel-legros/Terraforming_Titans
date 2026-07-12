@@ -177,6 +177,9 @@ function getAttributeMaxUpgrades(attributeName) {
   const requirements = getActiveLifeDesignRequirements();
   const baseMax = requirements.attributeMaxUpgrades?.[attributeName]
     ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.attributeMaxUpgrades[attributeName];
+  if (baseMax <= 0) {
+    return 0;
+  }
   const bonus = lifeDesignerConfig.attributeMaxBonuses[attributeName] || 0;
   return baseMax + bonus;
 }
@@ -341,7 +344,9 @@ class LifeDesign {
         continue;
       }
       const rawValue = Number(attribute.value) || 0;
-      if (attribute.name === 'optimalGrowthTemperature') {
+      if (attribute.maxUpgrades <= 0) {
+        attribute.value = 0;
+      } else if (attribute.name === 'optimalGrowthTemperature') {
         attribute.value = Math.sign(rawValue) * Math.floor(Math.abs(rawValue));
       } else {
         attribute.value = Math.max(0, Math.floor(rawValue));
@@ -388,7 +393,11 @@ class LifeDesign {
   getMaxBiomassDensity() {
     if (terraforming.biomassDisabled) return 0;
     const requirements = getActiveLifeDesignRequirements();
-    return (requirements.baseMaxBiomassDensityTPerM2 || 0) * (1 + this.spaceEfficiency.getEffectiveValue());
+    const baseDensity = requirements.baseMaxBiomassDensityTPerM2 || 0;
+    if (requirements.attributeMaxUpgrades.spaceEfficiency <= 0) {
+      return baseDensity;
+    }
+    return baseDensity * (1 + this.spaceEfficiency.getEffectiveValue());
   }
 
   getRadiationGrowthPenalty() {
@@ -867,6 +876,7 @@ class LifeDesigner extends EffectableEntity {
     for (const key in design) {
       design[key].maxUpgrades = getAttributeMaxUpgrades(key);
     }
+    design.normalizeAttributeValues();
   }
 
   createNewDesign(

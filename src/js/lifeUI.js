@@ -209,6 +209,11 @@ function isLifeAttributeUnlocked(attributeName) {
   return isLifeFlagActive(requiredFlag);
 }
 
+function isLifeAttributeAvailable(attributeName) {
+  return isLifeAttributeUnlocked(attributeName)
+    && lifeDesigner.currentDesign[attributeName].maxUpgrades > 0;
+}
+
 function isLifeShopCategoryUnlocked(category) {
   if (!category) {
     return false;
@@ -663,7 +668,7 @@ function initializeLifeTerraformingDesignerUI() {
 
         const attribute = lifeDesigner.currentDesign[attributeName];
         const convertedValue = getConvertedDisplay(attributeName, attribute);
-        const rowHidden = !isLifeAttributeUnlocked(attributeName);
+        const rowHidden = !isLifeAttributeAvailable(attributeName);
       const isMetabolismEfficiency = attributeName === 'photosynthesisEfficiency';
       const isOptimalGrowthTemperature = attributeName === 'optimalGrowthTemperature';
       const displayName = isMetabolismEfficiency ? metabolismStrings.displayName : attribute.displayName;
@@ -673,7 +678,7 @@ function initializeLifeTerraformingDesignerUI() {
             ? `<span id="${attributeName}-description">${getOptimalGrowthTemperatureDescription()}</span>`
             : attribute.description;
         rows += `
-          <tr id="life-attribute-row-${attributeName}"${lifeAttributeUnlockFlags[attributeName] ? ` data-life-attribute-ui="${attributeName}"` : ''}${rowHidden ? ' style="display:none;"' : ''}>
+          <tr id="life-attribute-row-${attributeName}" data-life-attribute-ui="${attributeName}"${rowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${getLifeAttributeMaxDisplay(attribute)}</span>)
               <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'radiationTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${bioworkforceTooltip}">&#9432;</span>` : ''}${attributeName === 'bioships' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.lifeDesigner.attributes.bioships.tooltip', 'Each point converts {percent}% of global biomass per second into spaceships after life growth and decay are resolved.', { percent: bioshipsPercentPerPoint })}">&#9432;</span>` : ''}`}</div>
@@ -1147,7 +1152,7 @@ function updateLifeUI() {
 
       lifeUICache.gatedAttributeElements.forEach(element => {
         const attributeName = element.dataset.lifeAttributeUi;
-        element.style.display = isLifeAttributeUnlocked(attributeName) ? '' : 'none';
+        element.style.display = isLifeAttributeAvailable(attributeName) ? '' : 'none';
       });
 
       Object.keys(lifeAttributeUnlockFlags).forEach(attributeName => {
