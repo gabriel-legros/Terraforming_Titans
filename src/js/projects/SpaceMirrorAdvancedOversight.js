@@ -90,8 +90,14 @@ class SpaceMirrorAdvancedOversight {
       const mirrorPowerPer = getMirrorPowerPer();
       const rawLanternProductionFactor = lanternBuilding ? lanternBuilding.getEffectiveProductionMultiplier() : 1;
       const lanternProductionFactor = Number.isFinite(rawLanternProductionFactor) ? rawLanternProductionFactor : 1;
+      const lanternResourceFactor = getFacilityResourceFactor(lanternBuilding);
       const lanternPowerPer = settings.applyToLantern
-        ? Math.max(0, (lanternBuilding?.powerPerBuilding || 0) * getFacilityResourceFactor(lanternBuilding) * lanternProductionFactor)
+        ? Math.max(
+            0,
+            (lanternBuilding?.powerPerBuilding || 0) *
+              (lanternResourceFactor > 0 ? lanternResourceFactor : 1) *
+              lanternProductionFactor
+          )
         : 0;
 
       const totalSurfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
