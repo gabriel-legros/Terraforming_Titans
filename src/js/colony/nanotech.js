@@ -752,7 +752,7 @@ class NanotechManager extends EffectableEntity {
       if (electronicsRes && accumulatedChanges?.colony && stage3Enabled) {
         const electronicsRate = this.getStageOutputRate(3, this.electronicsSlider);
         const biomassConsumed = this.currentBiomassConsumption * (deltaTime / 1000);
-        const electronicsAmount = isArtificialWorld
+        const electronicsAmount = (isArtificialWorld || !hasSandDeposits)
           ? Math.min(electronicsRate * (deltaTime / 1000), biomassConsumed)
           : electronicsRate * (deltaTime / 1000);
         this.currentElectronicsProduction = deltaTime > 0 ? electronicsAmount / (deltaTime / 1000) : 0;
@@ -1632,8 +1632,8 @@ class NanotechManager extends EffectableEntity {
     const stage3ResourceName = stage3UsesGraphite
       ? getNanotechText('ui.colony.nanotech.stage3.resourceGraphite', 'Graphite')
       : getNanotechText('ui.colony.nanotech.stage3.resourceBiomass', 'Biomass');
-    const stage3Warning = stage3Active && isArtificialWorld
-      ? getNanotechText('ui.colony.nanotech.warnings.noResources', '⚠️ No resources; electronics capped to {resource} allocation.', {
+    const stage3Warning = stage3Active && (isArtificialWorld || !hasSand)
+      ? getNanotechText('ui.colony.nanotech.warnings.noResources', '⚠️ No accessible local deposits; electronics capped to supplied {resource}.', {
         resource: stage3ResourceName.toLowerCase()
       })
       : '';

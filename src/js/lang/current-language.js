@@ -2779,7 +2779,7 @@ setLanguageData({
         warnings: {
           noSand: '⚠️ No sand deposits; glass capped to silica allocation.',
           noOre: '⚠️ No ore deposits; components capped to metal allocation.',
-          noResources: '⚠️ No resources; electronics capped to {resource} allocation.',
+          noResources: '⚠️ No accessible local deposits; electronics capped to supplied {resource}.',
           noDeposits: '⚠️ No deposits, metal capped to graphite.',
           noHazardousBiomass: 'No hazardous biomass available.',
         },
