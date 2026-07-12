@@ -1577,12 +1577,6 @@ body.dark-mode {
     color: #eef3fb;
 }
 
-.dark-mode .tree-of-life-status {
-    background: linear-gradient(180deg, #15251a 0%, #101d14 100%);
-    border-color: #2f5438;
-    color: #cce3d1;
-}
-
 .dark-mode .kerati-hive-status-card {
     background: linear-gradient(180deg, #132033 0%, #0f1928 100%);
 }

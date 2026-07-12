@@ -1589,6 +1589,12 @@ class Building extends EffectableEntity {
         }
         const resourceData = resources[category][resource];
         const ratio = resourceData.availabilityRatio;
+        const demandSeconds = deltaTime / 1000;
+        const largestDemands = Object.entries(resourceData.projectedConsumptionRateBySource)
+          .filter(([, rate]) => rate > 0)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([source, rate]) => ({ source, amount: rate * demandSeconds }));
         minRatio = Math.min(minRatio, ratio);
         factors.push({
           type: 'resource',
@@ -1598,6 +1604,7 @@ class Building extends EffectableEntity {
           ratio,
           availableAmount: resourceData.availabilityDetails.availableAmount,
           requiredAmount: resourceData.availabilityDetails.requiredAmount,
+          largestDemands,
         });
       }
     }

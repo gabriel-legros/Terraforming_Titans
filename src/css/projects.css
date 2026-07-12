@@ -2151,15 +2151,6 @@
     gap: 6px;
 }
 
-.tree-of-life-status {
-    padding: 10px 12px;
-    border: 1px solid #cbd7c6;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #f7fbf5 0%, #edf5e9 100%);
-    color: #35522f;
-    line-height: 1.4;
-}
-
 .mass-driver-quick-build-row {
     margin-top: 0;
     grid-template-columns: auto 220px 8px 50px 50px minmax(0, 1fr);

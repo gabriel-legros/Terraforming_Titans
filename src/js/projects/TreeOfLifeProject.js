@@ -98,13 +98,9 @@ class TreeOfLifeProject extends Project {
     });
   }
 
-  getLifeGrowthControl(totalPotentialGrowth, currentBiomass, surfaceArea) {
+  getLifeGrowthControl(totalPotentialGrowth) {
     const densityMultiplier = this.getDensityGrowthMultiplier();
-    const thresholdBiomass = TREE_OF_LIFE_DENSITY_THRESHOLD_T_PER_M2 * Math.max(0, surfaceArea);
-    const freeGrowthAllowance = Math.max(0, thresholdBiomass - Math.max(0, currentBiomass));
-    const freePotentialGrowth = Math.min(totalPotentialGrowth, freeGrowthAllowance);
-    const nutrientPotentialGrowth = Math.max(0, totalPotentialGrowth - freePotentialGrowth);
-    const baseNutrientRequirement = nutrientPotentialGrowth * TREE_OF_LIFE_NUTRIENT_PER_BIOMASS;
+    const baseNutrientRequirement = totalPotentialGrowth * TREE_OF_LIFE_NUTRIENT_PER_BIOMASS;
     const nutrientMultiplier = baseNutrientRequirement > 0
       ? Math.max(
           0,
@@ -114,18 +110,16 @@ class TreeOfLifeProject extends Project {
           )
         )
       : 1;
-    const adjustedPotentialGrowth = freePotentialGrowth
-      + nutrientPotentialGrowth * nutrientMultiplier;
+    const adjustedPotentialGrowth = totalPotentialGrowth * nutrientMultiplier;
 
     this.lastDensityMultiplier = densityMultiplier;
     this.lastNutrientMultiplier = nutrientMultiplier;
 
     return {
       adjustedPotentialGrowth,
-      freeGrowthAllowance,
       nutrientMultiplier,
       densityMultiplier,
-      nutrientLimited: nutrientPotentialGrowth > 0
+      nutrientLimited: totalPotentialGrowth > 0
         && nutrientMultiplier < TREE_OF_LIFE_MAX_NUTRIENT_MULTIPLIER,
     };
   }
@@ -135,12 +129,10 @@ class TreeOfLifeProject extends Project {
       this.lastNutrientConsumptionRate = 0;
       return;
     }
-    const freeGrowth = Math.min(actualGrowth, growthControl.freeGrowthAllowance);
-    const nutrientGrowth = Math.max(0, actualGrowth - freeGrowth);
     const nutrientResource = resources.special.yggieNutrients;
     const nutrientCost = Math.min(
       nutrientResource.value,
-      nutrientGrowth * TREE_OF_LIFE_NUTRIENT_PER_BIOMASS
+      actualGrowth * TREE_OF_LIFE_NUTRIENT_PER_BIOMASS
     );
     nutrientResource.value -= nutrientCost;
     this.lastNutrientConsumptionRate = nutrientCost / seconds;
@@ -175,14 +167,14 @@ class TreeOfLifeProject extends Project {
     label.classList.add('stat-label');
     label.textContent = labelText;
     labelRow.appendChild(label);
+    const value = document.createElement('span');
     if (tooltipText) {
       const icon = document.createElement('span');
       icon.classList.add('info-tooltip-icon');
       icon.innerHTML = '&#9432;';
-      attachDynamicInfoTooltip(icon, tooltipText);
+      value._tooltipContent = attachDynamicInfoTooltip(icon, tooltipText);
       labelRow.appendChild(icon);
     }
-    const value = document.createElement('span');
     value.classList.add('stat-value');
     box.append(labelRow, value);
     container.appendChild(box);
@@ -212,8 +204,11 @@ class TreeOfLifeProject extends Project {
       sections,
       getTreeOfLifeText('sections.canopy', 'Canopy and Land')
     );
-    const activeLand = this.createSummaryBox(canopyGrid, getTreeOfLifeText('summary.activeLand', 'Active Yggie Land'));
-    const geometricLand = this.createSummaryBox(canopyGrid, getTreeOfLifeText('summary.geometricLand', 'Geometric Land'));
+    const activeLand = this.createSummaryBox(
+      canopyGrid,
+      getTreeOfLifeText('summary.activeLand', 'Active Yggie Land'),
+      getTreeOfLifeText('tooltips.terraformingBuildingSource', 'Can be provided by a terraforming building')
+    );
     const coverage = this.createSummaryBox(
       canopyGrid,
       getTreeOfLifeText('summary.coverage', 'Supported Surface'),
@@ -233,7 +228,16 @@ class TreeOfLifeProject extends Project {
     const capacity = this.createSummaryBox(
       habitationGrid,
       getTreeOfLifeText('summary.capacity', 'Colonist Capacity'),
-      getTreeOfLifeText('tooltips.capacity', 'Capacity is active Yggie Land multiplied by global biomass density and the Tree of Life coefficient.')
+      getTreeOfLifeText(
+        'tooltips.capacityFormula',
+        'Colonist capacity = {coefficient} × {land} active Yggie Land × {density} t/m^2 biomass density = {capacity}.',
+        {
+          coefficient: TREE_OF_LIFE_COLONIST_CAPACITY_COEFFICIENT,
+          land: 0,
+          density: 0,
+          capacity: 0,
+        }
+      )
     );
     const residents = this.createSummaryBox(habitationGrid, getTreeOfLifeText('summary.residents', 'Tree Residents'));
     const occupancy = this.createSummaryBox(habitationGrid, getTreeOfLifeText('summary.occupancy', 'World Occupancy'));
@@ -243,24 +247,31 @@ class TreeOfLifeProject extends Project {
       sections,
       getTreeOfLifeText('sections.nutrients', 'Nutrients')
     );
-    const nutrients = this.createSummaryBox(nutrientGrid, getTreeOfLifeText('summary.nutrients', 'Yggie Nutrients'));
+    const nutrients = this.createSummaryBox(
+      nutrientGrid,
+      getTreeOfLifeText('summary.nutrients', 'Yggie Nutrients'),
+      getTreeOfLifeText('tooltips.terraformingBuildingSource', 'Can be provided by a terraforming building')
+    );
     const nutrientConsumption = this.createSummaryBox(nutrientGrid, getTreeOfLifeText('summary.nutrientConsumption', 'Growth Consumption'));
     const nutrientMultiplier = this.createSummaryBox(
       nutrientGrid,
       getTreeOfLifeText('summary.nutrientMultiplier', 'Nutrient Growth'),
-      getTreeOfLifeText('tooltips.nutrientMultiplier', 'Above 10 t/m^2, the pool supports between x0 and x10 of density-eased growth. Nutrients are spent in proportion to actual growth.')
+      getTreeOfLifeText(
+        'tooltips.nutrientMultiplier',
+        'Provides between 0 and {maximum} growth multiplier based on nutrients being available.',
+        {
+          maximum: TREE_OF_LIFE_MAX_NUTRIENT_MULTIPLIER,
+        }
+      )
     );
     const totalMultiplier = this.createSummaryBox(nutrientGrid, getTreeOfLifeText('summary.totalMultiplier', 'Combined Growth'));
 
-    const status = document.createElement('div');
-    status.classList.add('tree-of-life-status');
-    layout.append(sections, status);
+    layout.appendChild(sections);
     container.appendChild(layout);
 
     this.uiElements = {
       card: layout,
       activeLand,
-      geometricLand,
       coverage,
       density,
       densityMultiplier,
@@ -272,7 +283,6 @@ class TreeOfLifeProject extends Project {
       nutrientConsumption,
       nutrientMultiplier,
       totalMultiplier,
-      status,
     };
     this.updateUI();
   }
@@ -282,7 +292,6 @@ class TreeOfLifeProject extends Project {
       return;
     }
     const activeLand = this.getActiveYggieLand();
-    const geometricLand = this.getGeometricLand();
     const coverage = this.getLandCoverageMultiplier();
     const density = this.getBiomassDensity();
     const capacity = this.getColonistCapacity();
@@ -293,7 +302,6 @@ class TreeOfLifeProject extends Project {
       : 0;
 
     this.uiElements.activeLand.textContent = formatNumber(activeLand, true, 3);
-    this.uiElements.geometricLand.textContent = formatNumber(geometricLand, true, 3);
     this.uiElements.coverage.textContent = getTreeOfLifeText('values.percent', '{value}%', {
       value: formatNumber(coverage * 100, false, 2),
     });
@@ -304,6 +312,16 @@ class TreeOfLifeProject extends Project {
       value: formatNumber(this.getDensityGrowthMultiplier(), false, 3),
     });
     this.uiElements.capacity.textContent = formatNumber(capacity, true, 3);
+    this.uiElements.capacity._tooltipContent.textContent = getTreeOfLifeText(
+      'tooltips.capacityFormula',
+      'Colonist capacity = {coefficient} × {land} active Yggie Land × {density} t/m^2 biomass density = {capacity}.',
+      {
+        coefficient: TREE_OF_LIFE_COLONIST_CAPACITY_COEFFICIENT,
+        land: formatNumber(activeLand, true, 3),
+        density: formatNumber(density, true, 3),
+        capacity: formatNumber(capacity, true, 3),
+      }
+    );
     this.uiElements.residents.textContent = formatNumber(residents, true, 3);
     this.uiElements.occupancy.textContent = getTreeOfLifeText('values.percent', '{value}%', {
       value: formatNumber(occupancy * 100, false, 2),
@@ -321,15 +339,6 @@ class TreeOfLifeProject extends Project {
     this.uiElements.totalMultiplier.textContent = getTreeOfLifeText('values.multiplier', 'x{value}', {
       value: formatNumber(this.lastDensityMultiplier * this.lastNutrientMultiplier, false, 3),
     });
-    this.uiElements.status.textContent = getTreeOfLifeText(
-      'status',
-      'Yggie Land supports {coverage}% of the surface. The Tree houses {residents} colonists and holds {nutrients} nutrients.',
-      {
-        coverage: formatNumber(coverage * 100, false, 2),
-        residents: formatNumber(residents, true, 3),
-        nutrients: formatNumber(resources.special.yggieNutrients.value, true, 3),
-      }
-    );
   }
 
   loadState(state) {

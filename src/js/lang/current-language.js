@@ -1071,6 +1071,8 @@ setLanguageData({
         productivityNoActive: 'No active structures',
         productivityLimitedHeader: 'Limited to {value}%',
         productivityResourceLine: '{resource}: {available} available / {required} demanded ({percent}%) in the last tick.',
+        productivityLargestDemands: 'Largest demands:',
+        productivityDemandLine: '  {source}: {amount}',
         productivityWorkerLine: '{resource}: {available} available / {required} needed ({percent}%)',
         productivityMaintenanceLine: 'Maintenance paid: {percent}%',
         productivityDayNight: 'Inactive at night',
@@ -1793,7 +1795,6 @@ setLanguageData({
         },
         summary: {
           activeLand: 'Active Yggie Land',
-          geometricLand: 'Geometric Land',
           coverage: 'Supported Surface',
           density: 'Biomass Density',
           densityMultiplier: 'Density Growth',
@@ -1807,10 +1808,11 @@ setLanguageData({
           totalMultiplier: 'Combined Growth',
         },
         tooltips: {
+          terraformingBuildingSource: 'Can be provided by a terraforming building',
           coverage: 'Active Yggie Land determines the fraction of the planetary surface where Yggie biomass can grow.',
           densityMultiplier: 'Growth is normal through 10 t/m^2, then halves for every additional order of magnitude.',
-          capacity: 'Capacity is active Yggie Land multiplied by global biomass density and the Tree of Life coefficient.',
-          nutrientMultiplier: 'Above 10 t/m^2, the pool supports between x0 and x10 of density-eased growth. Nutrients are spent in proportion to actual growth.',
+          capacityFormula: 'Colonist capacity = {coefficient} × {land} active Yggie Land × {density} t/m^2 biomass density = {capacity}.',
+          nutrientMultiplier: 'Provides between 0 and {maximum} growth multiplier based on nutrients being available.',
         },
         values: {
           percent: '{value}%',
@@ -1818,7 +1820,6 @@ setLanguageData({
           multiplier: 'x{value}',
           perSecond: '{value}/s',
         },
-        status: 'Yggie Land supports {coverage}% of the surface. The Tree houses {residents} colonists and holds {nutrients} nutrients.',
       },
       spaceMirrorFacility: {
         common: {

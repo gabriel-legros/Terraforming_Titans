@@ -1925,12 +1925,6 @@ body.dark-grey-mode {
     color: #eef3fb;
 }
 
-.dark-grey-mode .tree-of-life-status {
-    background: linear-gradient(180deg, #1d2b20 0%, #18231a 100%);
-    border-color: #405b45;
-    color: #d2e3d5;
-}
-
 /* ============================================================
    Patience (HOPE Tab) Dark Mode
    The patience shell has a hard-coded dark-blue gradient in

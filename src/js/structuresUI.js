@@ -109,6 +109,17 @@ function buildStructureProductivityTooltip(structure) {
         required: formatNumber(factor.requiredAmount, true, 3),
         percent,
       }));
+      const largestDemands = factor.largestDemands || [];
+      if (largestDemands.length > 0) {
+        lines.push(getStructuresUIText('ui.structures.tooltips.productivityLargestDemands', 'Largest demands:'));
+        for (let demandIndex = 0; demandIndex < largestDemands.length; demandIndex += 1) {
+          const demand = largestDemands[demandIndex];
+          lines.push(getStructuresUIText('ui.structures.tooltips.productivityDemandLine', '  {source}: {amount}', {
+            source: demand.source,
+            amount: formatNumber(demand.amount, true, 3),
+          }));
+        }
+      }
     } else if (factor.type === 'workers') {
       lines.push(getStructuresUIText('ui.structures.tooltips.productivityWorkerLine', '{resource}: {available} available / {required} needed ({percent}%)', {
         resource: factor.label,

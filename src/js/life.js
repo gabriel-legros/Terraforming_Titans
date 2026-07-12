@@ -1467,14 +1467,8 @@ class LifeManager extends EffectableEntity {
 
     let yggieGrowthControl = null;
     if (yggieGrowthController && totalPotentialGrowth > 0) {
-      let currentBiomass = 0;
-      zones.forEach((zoneName) => {
-        currentBiomass += biomassByZone[zoneName] || 0;
-      });
       yggieGrowthControl = yggieGrowthController.getLifeGrowthControl(
-        totalPotentialGrowth,
-        currentBiomass,
-        terraforming.celestialParameters.surfaceArea || 0
+        totalPotentialGrowth
       );
       const adjustedPotentialGrowth = Math.max(0, yggieGrowthControl.adjustedPotentialGrowth);
       const adjustmentRatio = totalPotentialGrowth > 0
