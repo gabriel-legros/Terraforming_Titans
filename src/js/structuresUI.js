@@ -3621,7 +3621,12 @@ function updateBuildingSubtabsVisibility() {
       const isVisible = b.isVisible ? b.isVisible() : b.unlocked && !b.isHidden;
       return b.category === category && isVisible;
     });
-    const hasHiddenBuilding = Object.values(buildings).some(b => b.category === category && b.isHidden);
+    const hasHiddenBuilding = Object.values(buildings).some(b => (
+      b.category === category
+      && b.unlocked
+      && b.isHidden
+      && !b.permanentlyDisabled
+    ));
     const shouldShow = hasVisibleBuilding || hasHiddenBuilding;
     if (shouldShow) {
       anyAvailableBuilding = true;
@@ -3682,7 +3687,12 @@ function updateUnhideButtons() {
       unhideButtonContainerCache[cacheKey] = container;
     }
     if (!container) return;
-    const hasHidden = Object.values(buildings).some(b => b.category === cat && b.isHidden);
+    const hasHidden = Object.values(buildings).some(b => (
+      b.category === cat
+      && b.unlocked
+      && b.isHidden
+      && !b.permanentlyDisabled
+    ));
     container.style.display = hasHidden ? 'block' : 'none';
   });
 
