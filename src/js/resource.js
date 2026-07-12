@@ -9,7 +9,9 @@ let hasDynamicMassEnabledHelper = null;
 let disposeDynamicWorldPlanetaryMassHelper = null;
 let addDynamicWorldPlanetaryMaterialHelper = null;
 let storageProviderCacheRoot = null;
+let storageProviderProjectCacheRoot = null;
 let storageProviderCache = null;
+let projectStorageProviders = {};
 if (typeof module !== 'undefined' && module.exports) {
   ({
     resolveWorldGeometricLand: resolveWorldGeometricLandHelper,
@@ -54,15 +56,24 @@ function trackResourceDebugRate(target, category, resource, source, amount) {
   target[category][resource][source] = (target[category][resource][source] || 0) + amount;
 }
 
+function setProjectStorageProviders(projects) {
+  projectStorageProviders = projects;
+  storageProviderProjectCacheRoot = null;
+}
+
 function getStorageProvidersForResource(category, resourceName) {
-  if (storageProviderCacheRoot !== structures) {
+  const projectProviders = projectStorageProviders;
+  if (
+    storageProviderCacheRoot !== structures
+    || storageProviderProjectCacheRoot !== projectProviders
+  ) {
     storageProviderCacheRoot = structures;
+    storageProviderProjectCacheRoot = projectProviders;
     storageProviderCache = {};
-    for (const structureName in structures) {
-      const structure = structures[structureName];
-      const storage = structure.storage;
+    const addProvider = (provider) => {
+      const storage = provider.storage;
       if (!storage) {
-        continue;
+        return;
       }
       for (const storageCategory in storage) {
         const storageByCategory = storage[storageCategory];
@@ -76,9 +87,15 @@ function getStorageProvidersForResource(category, resourceName) {
           if (!storageProviderCache[storageCategory][storedResourceName]) {
             storageProviderCache[storageCategory][storedResourceName] = [];
           }
-          storageProviderCache[storageCategory][storedResourceName].push(structure);
+          storageProviderCache[storageCategory][storedResourceName].push(provider);
         }
       }
+    };
+    for (const structureName in structures) {
+      addProvider(structures[structureName]);
+    }
+    for (const projectName in projectProviders) {
+      addProvider(projectProviders[projectName]);
     }
   }
   const storageByCategory = storageProviderCache[category];
@@ -1104,14 +1121,9 @@ class Resource extends EffectableEntity {
   updateStorageCap() {
     let newCap = this.getEffectiveBaseStorageCap();
 
-    for (const structureName in structures) {
-      const structure = structures[structureName];
-      if (!structure.storage || structure.active <= 0n) continue;
-
-      const storageByCategory = structure.storage[this.category];
-      if (!storageByCategory || storageByCategory[this.name] === undefined) continue;
-
-      newCap += structure.getStorageContribution(this.category, this.name);
+    const providers = getStorageProvidersForResource(this.category, this.name);
+    for (let index = 0; index < providers.length; index += 1) {
+      newCap += providers[index].getStorageContribution(this.category, this.name);
     }
 
     if (isManagerEffectivelyEnabled(followersManager, 'followersManager') && this.hasCap) {

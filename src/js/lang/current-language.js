@@ -1548,6 +1548,7 @@ setLanguageData({
         prepay: 'Queue',
         prepayTooltip: 'You can queue rings using existing resources, which enables you to continue building them even once you move to a different world, however you can only queue rings that you can currently build, meaning that you cannot queue rings for worlds you have not yet terraformed.',
         notAllowedOnArtificial: 'Not allowed on artificial',
+        notAllowedOnCurrentWorld: 'Not allowed on this world',
         yes: 'Yes',
         no: 'No',
       },
@@ -1783,6 +1784,41 @@ setLanguageData({
           completed: 'Kerati Hive complete. Territory covers the world and provides {workers} workers.',
           progress: 'Completion {percent}% | Honey {honey}/s | Larva {larva}/s | Food {food}/s | Territory {territory}/s | Biomass use {biomass}/s',
         },
+      },
+      treeOfLife: {
+        sections: {
+          canopy: 'Canopy and Land',
+          habitation: 'Habitation and Research',
+          nutrients: 'Nutrients',
+        },
+        summary: {
+          activeLand: 'Active Yggie Land',
+          geometricLand: 'Geometric Land',
+          coverage: 'Supported Surface',
+          density: 'Biomass Density',
+          densityMultiplier: 'Density Growth',
+          capacity: 'Colonist Capacity',
+          residents: 'Tree Residents',
+          occupancy: 'World Occupancy',
+          research: 'Research Output',
+          nutrients: 'Yggie Nutrients',
+          nutrientConsumption: 'Growth Consumption',
+          nutrientMultiplier: 'Nutrient Growth',
+          totalMultiplier: 'Combined Growth',
+        },
+        tooltips: {
+          coverage: 'Active Yggie Land determines the fraction of the planetary surface where Yggie biomass can grow.',
+          densityMultiplier: 'Growth is normal through 10 t/m^2, then halves for every additional order of magnitude.',
+          capacity: 'Capacity is active Yggie Land multiplied by global biomass density and the Tree of Life coefficient.',
+          nutrientMultiplier: 'Above 10 t/m^2, the pool supports between x0 and x10 of density-eased growth. Nutrients are spent in proportion to actual growth.',
+        },
+        values: {
+          percent: '{value}%',
+          density: '{value} t/m^2',
+          multiplier: 'x{value}',
+          perSecond: '{value}/s',
+        },
+        status: 'Yggie Land supports {coverage}% of the surface. The Tree houses {residents} colonists and holds {nutrients} nutrients.',
       },
       spaceMirrorFacility: {
         common: {
@@ -5300,6 +5336,14 @@ setLanguageData({
         name: 'Vanadium Haze Seeder',
         description: 'Injects trace vanadium-rich aerosols into the upper atmosphere for Vanadophore metabolism.',
       },
+      yggieLand: {
+        name: 'Yggie Land',
+        description: 'Reserves land for Yggie roots, canopy, and symbiotic ecosystems. Active plots expand the surface area available to Yggie biomass.',
+      },
+      rareYggieNutrients: {
+        name: 'Rare Yggie Nutrients',
+        description: 'Refines metals into rare mineral nutrients that sustain extreme-density Yggie growth.',
+      },
       spaceMirror: {
         name: 'Space Mirror',
         description: 'Expands the space mirror facility.  Increases the effective luminosity.  Will cost only glass and energy after the space elevator is built.  May need billions to have any meaningful effect.',
@@ -5498,6 +5542,10 @@ setLanguageData({
       keratiHive: {
         name: 'Kerati Hive',
         description: 'Construct a planet-scale Kerati hive complex with brood basins, condensers, gas-exchange towers, and communal chambers suitable for a permanent Kerati settlement. Once complete, it provides 50 workers per base land on that world.',
+      },
+      treeOfLife: {
+        name: 'Tree of Life',
+        description: 'Coordinates Yggie land, biomass growth, nutrient reserves, habitation, and research across the planetary tree.',
       },
       artificialSky: {
         name: 'Artificial Sky',
@@ -6546,6 +6594,7 @@ setLanguageData({
         alienArtifact: { name: 'Alien artifact' },
         crusaders: { name: 'Crusaders' },
         warpCircuits: { name: 'Warp Circuits' },
+        yggieNutrients: { name: 'Yggie Nutrients' },
         antimatter: { name: 'Antimatter' },
       },
       space: {

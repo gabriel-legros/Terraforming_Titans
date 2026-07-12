@@ -1567,9 +1567,20 @@ body.dark-mode {
 
 .dark-mode .kerati-hive-status-card,
 .dark-mode .kerati-hive-panel,
-.dark-mode .kerati-hive-action-card {
+.dark-mode .kerati-hive-action-card,
+.dark-mode .tree-of-life-section {
     background: #101826;
     border-color: #24324a;
+}
+
+.dark-mode .tree-of-life-section-header {
+    color: #eef3fb;
+}
+
+.dark-mode .tree-of-life-status {
+    background: linear-gradient(180deg, #15251a 0%, #101d14 100%);
+    border-color: #2f5438;
+    color: #cce3d1;
 }
 
 .dark-mode .kerati-hive-status-card {

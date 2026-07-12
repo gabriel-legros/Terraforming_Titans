@@ -682,18 +682,33 @@ const terraformingRequirements = {
     lifeBiomassDensityTargetTPerM2: 100_000,
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
+    orbitalRingDisabled: true,
     appliedEffects: [
       {
         target: 'researchManager',
         type: 'booleanFlag',
         flagId: 'ecumenopolisDisabled',
         value: true,
+        clearOnTravel: true,
       },
       {
         target: 'researchManager',
         type: 'researchDisable',
         targetId: 'ai_ecumenopolis_expansion',
+        clearOnTravel: true,
       },
+      {
+        target: 'researchManager',
+        type: 'researchDisable',
+        targetId: 'underground_land_expansion',
+        clearOnTravel: true,
+      },
+      { target: 'project', targetId: 'undergroundExpansion', type: 'permanentProjectDisable', value: true },
+      { target: 'colony', targetId: 't7_colony', type: 'permanentBuildingDisable', value: true },
+      { target: 'project', targetId: 'treeOfLife', type: 'enable' },
+      { target: 'building', targetId: 'yggieLand', type: 'enable' },
+      { target: 'building', targetId: 'rareYggieNutrients', type: 'enable' },
+      { target: 'resource', resourceType: 'special', targetId: 'yggieNutrients', type: 'enable' },
     ],
     lifeDesign: {
       survivalTemperatureRangeK: { min: 273.15, max: 333.15 },

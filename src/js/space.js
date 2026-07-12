@@ -138,6 +138,11 @@ function getDominionIdFromWorldData(source) {
         || null;
 }
 
+function isOrbitalRingEligibleWorldData(source) {
+    const dominionId = getDominionIdFromWorldData(source);
+    return !dominionId || !getTerraformingRequirement(dominionId).orbitalRingDisabled;
+}
+
 function applyDominionIdToWorldData(source, dominionId) {
     if (!source || !dominionId) {
         return;
@@ -582,7 +587,9 @@ class SpaceManager extends EffectableEntity {
             departedPopulationCapacityTotal: 0,
             sectorUnits: {},
             sectorTerraformedCounts: {},
+            sectorOrbitalRingIneligibleCounts: {},
             sectorRingCounts: {},
+            orbitalRingIneligibleCount: 0,
             typeCounts: {},
             typeHazardBonuses: {},
             typeHazardCounts: {},
@@ -703,7 +710,9 @@ class SpaceManager extends EffectableEntity {
             ),
             sectorUnits: this._sanitizeCountMap(summary.sectorUnits),
             sectorTerraformedCounts: this._sanitizeCountMap(summary.sectorTerraformedCounts),
+            sectorOrbitalRingIneligibleCounts: this._sanitizeCountMap(summary.sectorOrbitalRingIneligibleCounts),
             sectorRingCounts: this._sanitizeCountMap(summary.sectorRingCounts),
+            orbitalRingIneligibleCount: Math.max(0, Number(summary.orbitalRingIneligibleCount) || 0),
             typeCounts: this._sanitizeCountMap(summary.typeCounts),
             typeHazardBonuses: this._sanitizeCountMap(summary.typeHazardBonuses),
             typeHazardCounts: this._sanitizeNestedCountMap(summary.typeHazardCounts),
@@ -931,12 +940,17 @@ class SpaceManager extends EffectableEntity {
         this._adjustRwgSummaryNumber('terraformedCount', 1);
         const sector = normalizeSectorLabel(status.sector || resolveSectorFromSources(status, status.original));
         this._adjustRwgSummaryMapValue('sectorTerraformedCounts', sector, 1);
-        if (status.orbitalRing) {
+        const ringEligible = isOrbitalRingEligibleWorldData(status);
+        if (!ringEligible) {
+            this._adjustRwgSummaryNumber('orbitalRingIneligibleCount', 1);
+            this._adjustRwgSummaryMapValue('sectorOrbitalRingIneligibleCounts', sector, 1);
+        }
+        if (ringEligible && status.orbitalRing) {
             this._adjustRwgSummaryNumber('orbitalRingCount', 1);
             this._adjustRwgSummaryMapValue('sectorRingCounts', sector, 1);
         }
 
-        const sectorUnits = 1 + (status.orbitalRing ? 1 : 0);
+        const sectorUnits = 1 + (ringEligible && status.orbitalRing ? 1 : 0);
         this._adjustRwgSummaryMapValue('sectorUnits', sector, sectorUnits);
 
         const worldType = this._getRandomWorldType(status);
@@ -1266,12 +1280,16 @@ class SpaceManager extends EffectableEntity {
     _getForgottenSectorRinglessCapacity(sectorLabel) {
         const sector = normalizeSectorLabel(sectorLabel);
         const terraformed = this.rwgSummary.sectorTerraformedCounts[sector] || 0;
+        const ineligible = this.rwgSummary.sectorOrbitalRingIneligibleCounts[sector] || 0;
         const rings = this.rwgSummary.sectorRingCounts[sector] || 0;
-        return Math.max(0, terraformed - rings);
+        return Math.max(0, terraformed - ineligible - rings);
     }
 
     _setForgottenOrbitalRingCount(targetCount) {
-        const maxCount = Math.max(0, this.rwgSummary.terraformedCount || 0);
+        const maxCount = Math.max(
+            0,
+            (this.rwgSummary.terraformedCount || 0) - (this.rwgSummary.orbitalRingIneligibleCount || 0)
+        );
         const target = Math.max(0, Math.min(maxCount, Number(targetCount) || 0));
         let current = Math.max(0, this.rwgSummary.orbitalRingCount || 0);
         if (target === current) {
@@ -1504,7 +1522,9 @@ class SpaceManager extends EffectableEntity {
             if (!status) {
                 return;
             }
-            status.orbitalRing = !!value;
+            status.orbitalRing = type === 'random' && !isOrbitalRingEligibleWorldData(status)
+                ? false
+                : !!value;
         });
     }
 
@@ -1727,7 +1747,15 @@ class SpaceManager extends EffectableEntity {
 
     currentWorldHasOrbitalRing() {
         if (this.currentRandomSeed !== null) {
-            return !!this.randomWorldStatuses[String(this.currentRandomSeed)]?.orbitalRing;
+            const seed = String(this.currentRandomSeed);
+            const status = this.randomWorldStatuses[seed];
+            if (!isOrbitalRingEligibleWorldData(status)) {
+                if (status?.orbitalRing) {
+                    this._setWorldOrbitalRing('random', seed, false);
+                }
+                return false;
+            }
+            return !!status?.orbitalRing;
         }
         if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
@@ -1811,6 +1839,22 @@ class SpaceManager extends EffectableEntity {
         return (this.worldStatsCache.storyOrbitalRings || 0) + this._getTotalRandomOrbitalRingCount();
     }
 
+    getOrbitalRingEligibleTerraformedWorldCount() {
+        let retainedRandomWorlds = 0;
+        Object.values(this.randomWorldStatuses).forEach((status) => {
+            if (status?.terraformed && isOrbitalRingEligibleWorldData(status)) {
+                retainedRandomWorlds += 1;
+            }
+        });
+        const forgottenRandomWorlds = Math.max(
+            0,
+            (this.rwgSummary.terraformedCount || 0) - (this.rwgSummary.orbitalRingIneligibleCount || 0)
+        );
+        return (this.worldStatsCache.storyTerraformed || 0)
+            + retainedRandomWorlds
+            + forgottenRandomWorlds;
+    }
+
     assignOrbitalRings(totalRings, options = {}) {
         const { preferCurrentWorld = false } = options;
         const normalizedTotal = Math.max(0, Number.isFinite(totalRings) ? Math.floor(totalRings) : 0);
@@ -1827,6 +1871,12 @@ class SpaceManager extends EffectableEntity {
             }
             if (!status.terraformed) {
                 if (force && status.orbitalRing) {
+                    this._setWorldOrbitalRing(type, key, false);
+                }
+                return;
+            }
+            if (type === 'random' && !isOrbitalRingEligibleWorldData(status)) {
+                if (status.orbitalRing) {
                     this._setWorldOrbitalRing(type, key, false);
                 }
                 return;
@@ -3552,6 +3602,9 @@ class SpaceManager extends EffectableEntity {
                     entry.foundryLandFactor = entry.foundryLandFactor || 0;
                     entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
                     entry.dominionId = entry.dominionId || getDominionIdFromWorldData(entry);
+                    if (!isOrbitalRingEligibleWorldData(entry)) {
+                        entry.orbitalRing = false;
+                    }
                     assignSector(entry);
                     sanitizeCachedHazards(entry);
                 });

@@ -1345,6 +1345,7 @@ class ProjectManager extends EffectableEntity {
     this.projectOrder = storyProjects.reverse().concat(otherProjects);
     this.normalizeImportProjectOrder();
     this.normalizeGroupedProjectOrder();
+    setProjectStorageProviders(this.projects);
   }
 
   startProject(projectName, options = {}) {

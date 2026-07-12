@@ -149,6 +149,7 @@ function initializeDefaultGlobals(){
   terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
 
   // Initialize buildings
+  setProjectStorageProviders({});
   buildings = initializeBuildings(buildingsParameters);
   createBuildingButtons(buildings);
   if (typeof applyDayNightSettingEffects === 'function') {
@@ -522,6 +523,7 @@ function initializeGameState(options = {}) {
   if (savedTravelResources) {
     restorePreservedTravelResourceState(resources, savedTravelResources);
   }
+  setProjectStorageProviders({});
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);

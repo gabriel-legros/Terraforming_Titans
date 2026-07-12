@@ -1396,7 +1396,8 @@ body.dark-grey-mode {
 
 .dark-grey-mode .kerati-hive-status-card,
 .dark-grey-mode .kerati-hive-panel,
-.dark-grey-mode .kerati-hive-action-card {
+.dark-grey-mode .kerati-hive-action-card,
+.dark-grey-mode .tree-of-life-section {
     background: #101826;
     border-color: #24324a;
 }
@@ -1918,6 +1919,16 @@ body.dark-grey-mode {
 /* Copy stats button */
 .dark-grey-mode .wgc-copy-team-stats-icon {
     background-color: var(--wgc-border-color);
+}
+
+.dark-grey-mode .tree-of-life-section-header {
+    color: #eef3fb;
+}
+
+.dark-grey-mode .tree-of-life-status {
+    background: linear-gradient(180deg, #1d2b20 0%, #18231a 100%);
+    border-color: #405b45;
+    color: #d2e3d5;
 }
 
 /* ============================================================

@@ -1193,6 +1193,16 @@ class LifeManager extends EffectableEntity {
     return this.getLifeGrowthMultiplierBreakdown().totalMultiplier;
   }
 
+  getYggieGrowthController() {
+    for (let index = 0; index < this.activeEffects.length; index += 1) {
+      const effect = this.activeEffects[index];
+      if (effect.type === 'yggieGrowthController') {
+        return effect.controller;
+      }
+    }
+    return null;
+  }
+
   buildAtmosphericPlan(deltaTime, accumulatedChanges = null) {
     if (accumulatedChanges) {
       accumulatedChanges.atmospheric ||= {};
@@ -1233,7 +1243,14 @@ class LifeManager extends EffectableEntity {
     const naturalDecayReason = getLifeText('ui.life.rateLabels.naturalDecay', 'Natural Decay');
     const usesLuminosity = process.growth.usesLuminosity === true;
     const secondsMultiplier = deltaTime / 1000;
-    const landMultiplier = getLifeLandMultiplier(terraforming);
+    const yggieGrowthController = this.getYggieGrowthController();
+    let landMultiplier = getLifeLandMultiplier(terraforming);
+    if (yggieGrowthController) {
+      landMultiplier = Math.min(
+        landMultiplier,
+        yggieGrowthController.getLandCoverageMultiplier()
+      );
+    }
     const zones = getZones();
 
     const biomassByZone = {};
@@ -1352,7 +1369,10 @@ class LifeManager extends EffectableEntity {
 
     const canGrowByZone = {};
     const maxBiomassDensity = design.getMaxBiomassDensity();
-    const effectiveGrowthMultiplier = this.getEffectiveLifeGrowthMultiplier();
+    let effectiveGrowthMultiplier = this.getEffectiveLifeGrowthMultiplier();
+    if (yggieGrowthController) {
+      effectiveGrowthMultiplier *= yggieGrowthController.getDensityGrowthMultiplier();
+    }
     let radPenalty = design.getRadiationGrowthPenalty();
     if (radPenalty < 0.0001) radPenalty = 0;
     const radMult = 1 - radPenalty;
@@ -1444,6 +1464,56 @@ class LifeManager extends EffectableEntity {
       potentialGrowthByZone[zoneName] = capped;
       totalPotentialGrowth += capped;
     });
+
+    let yggieGrowthControl = null;
+    if (yggieGrowthController && totalPotentialGrowth > 0) {
+      let currentBiomass = 0;
+      zones.forEach((zoneName) => {
+        currentBiomass += biomassByZone[zoneName] || 0;
+      });
+      yggieGrowthControl = yggieGrowthController.getLifeGrowthControl(
+        totalPotentialGrowth,
+        currentBiomass,
+        terraforming.celestialParameters.surfaceArea || 0
+      );
+      const adjustedPotentialGrowth = Math.max(0, yggieGrowthControl.adjustedPotentialGrowth);
+      const adjustmentRatio = totalPotentialGrowth > 0
+        ? adjustedPotentialGrowth / totalPotentialGrowth
+        : 0;
+      zones.forEach((zoneName) => {
+        potentialGrowthByZone[zoneName] *= adjustmentRatio;
+      });
+      totalPotentialGrowth = 0;
+      zones.forEach((zoneName) => {
+        const adjustedZoneGrowth = potentialGrowthByZone[zoneName];
+        let surfaceCappedGrowth = adjustedZoneGrowth;
+        let limitingSurfaceKey = '';
+        surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
+          const requiredPerBiomass = -coef;
+          let available = 0;
+          if (resourceKey.indexOf('liquid') === 0) {
+            available = liquidByZone[zoneName][resourceKey] || 0;
+          } else {
+            available = getSurfaceAvailable(zoneName, resourceKey, [naturalDecaySurfaceDeltasByZone]);
+          }
+          if (requiredPerBiomass > 0) {
+            const maxGrowth = available / requiredPerBiomass;
+            if (maxGrowth < surfaceCappedGrowth) {
+              surfaceCappedGrowth = maxGrowth;
+              limitingSurfaceKey = resourceKey;
+            }
+          }
+        });
+        if (limitingSurfaceKey) {
+          addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface');
+        }
+        potentialGrowthByZone[zoneName] = Math.max(0, surfaceCappedGrowth);
+        totalPotentialGrowth += potentialGrowthByZone[zoneName];
+      });
+      if (yggieGrowthControl.nutrientLimited) {
+        addBiomassGrowthLimiter('yggieNutrients', '', 'special');
+      }
+    }
 
     let maxByAtmosphericInputs = totalPotentialGrowth;
     let limitingAtmosphericKey = '';
@@ -1637,6 +1707,8 @@ class LifeManager extends EffectableEntity {
       growthAtmosphericDeltas,
       growthColonyDeltas,
       decayAtmosphericDeltas,
+      yggieGrowthController,
+      yggieGrowthControl,
     };
   }
 
@@ -1741,6 +1813,8 @@ class LifeManager extends EffectableEntity {
       growthAtmosphericDeltas,
       growthColonyDeltas,
       decayAtmosphericDeltas,
+      yggieGrowthController,
+      yggieGrowthControl,
     } = plan;
 
     terraforming.biomassDyingZones = {};
@@ -1817,6 +1891,18 @@ class LifeManager extends EffectableEntity {
         resources.surface[resourceKey].modifyRate(delta / secondsMultiplier, growthReason, 'life');
       });
     });
+
+    if (yggieGrowthController) {
+      let totalActualGrowth = 0;
+      zones.forEach((zoneName) => {
+        totalActualGrowth += zoneGrowthByZone[zoneName] || 0;
+      });
+      yggieGrowthController.commitLifeGrowth(
+        totalActualGrowth,
+        yggieGrowthControl,
+        secondsMultiplier
+      );
+    }
 
     Object.entries(growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
       if (!delta) return;

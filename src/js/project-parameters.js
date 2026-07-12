@@ -645,6 +645,19 @@ const projectParameters = {
       }
     }
   },
+  treeOfLife: {
+    type: 'TreeOfLifeProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 0,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    buildTargets: ['steam'],
+    automationRequiresEverEnabled: true,
+    attributes: {}
+  },
   artificialSky: {
     type: 'ArtificialSkyProject',
     name: '',

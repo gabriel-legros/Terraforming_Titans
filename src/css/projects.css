@@ -2113,6 +2113,53 @@
     gap: 8px;
 }
 
+.tree-of-life-layout {
+    display: grid;
+    gap: 12px;
+}
+
+.tree-of-life-sections {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.tree-of-life-section {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.tree-of-life-section-header {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.tree-of-life-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    margin-bottom: 0;
+}
+
+.tree-of-life-summary-label-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tree-of-life-status {
+    padding: 10px 12px;
+    border: 1px solid #cbd7c6;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #f7fbf5 0%, #edf5e9 100%);
+    color: #35522f;
+    line-height: 1.4;
+}
+
 .mass-driver-quick-build-row {
     margin-top: 0;
     grid-template-columns: auto 220px 8px 50px 50px minmax(0, 1fr);

@@ -312,10 +312,13 @@ class Building extends EffectableEntity {
         const remainingLandBackedBuilds = affordableByLand > inactiveCount
           ? affordableByLand - inactiveCount
           : 0n;
-        const maxBuildableBigInt = normalizeBuildingCount(maxBuildable);
-        const cappedBuildable = remainingLandBackedBuilds < maxBuildableBigInt
-          ? remainingLandBackedBuilds
-          : maxBuildableBigInt;
+        let cappedBuildable = remainingLandBackedBuilds;
+        if (Number.isFinite(maxBuildable)) {
+          const maxBuildableBigInt = normalizeBuildingCount(maxBuildable);
+          cappedBuildable = remainingLandBackedBuilds < maxBuildableBigInt
+            ? remainingLandBackedBuilds
+            : maxBuildableBigInt;
+        }
         maxBuildable = bigIntToConservativeNumber(cappedBuildable);
       } else {
         const inactiveCount = Math.max(0, this.countNumber - this.activeNumber);

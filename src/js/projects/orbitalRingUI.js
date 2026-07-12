@@ -61,13 +61,13 @@ function updateOrbitalRingUI(project) {
   if (!els) return;
 
   els.ringsBuiltDisplay.textContent = project.ringCount;
-  const terraformedWorlds =
-    typeof spaceManager !== 'undefined' && typeof spaceManager.getUnmodifiedTerraformedWorldCount === 'function'
-      ? spaceManager.getUnmodifiedTerraformedWorldCount({ countArtificial: false })
-      : 0;
+  const terraformedWorlds = spaceManager.getOrbitalRingEligibleTerraformedWorldCount();
   els.maxRingsDisplay.textContent = terraformedWorlds;
-  if (spaceManager && spaceManager.currentArtificialKey !== null) {
-    els.currentWorldDisplay.textContent = getOrbitalRingText('notAllowedOnArtificial', null, 'Not allowed on artificial');
+  if (
+    spaceManager.currentArtificialKey !== null
+    || getTerraformingRequirement(terraforming.requirementId).orbitalRingDisabled
+  ) {
+    els.currentWorldDisplay.textContent = getOrbitalRingText('notAllowedOnCurrentWorld', null, 'Not allowed on this world');
   } else {
     els.currentWorldDisplay.textContent = project.currentWorldHasRing
       ? getOrbitalRingText('yes', null, 'Yes')
