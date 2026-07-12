@@ -133,14 +133,6 @@ function produceAntimatter(deltaTime, resources, accumulatedChanges) {
   resources[target.category][target.resource].modifyRate?.(displayRate, 'Terraformed Worlds', 'global');
 }
 
-function applyAntimatterProductionRates(resources) {
-  const last = produceAntimatter.lastProductionRate;
-  if (!last) {
-    return;
-  }
-  resources[last.category][last.resource].modifyRate?.(last.rate, 'Terraformed Worlds', 'global');
-}
-
 function updateAntimatterStorageCap(resources) {
   const antimatter = getAntimatterResource(resources);
   if (!antimatter || (!antimatter.unlocked && !antimatter.enabled)) {
@@ -190,7 +182,6 @@ if (typeof module !== 'undefined' && module.exports) {
     spendAntimatterEquivalent,
     synchronizeAntimatterWithSpaceEnergy,
     produceAntimatter,
-    applyAntimatterProductionRates,
     updateAntimatterStorageCap,
   };
 }
@@ -207,6 +198,5 @@ if (typeof window !== 'undefined') {
   window.spendAntimatterEquivalent = spendAntimatterEquivalent;
   window.synchronizeAntimatterWithSpaceEnergy = synchronizeAntimatterWithSpaceEnergy;
   window.produceAntimatter = produceAntimatter;
-  window.applyAntimatterProductionRates = applyAntimatterProductionRates;
   window.updateAntimatterStorageCap = updateAntimatterStorageCap;
 }

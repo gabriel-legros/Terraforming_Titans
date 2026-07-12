@@ -1899,10 +1899,6 @@ function produceResources(deltaTime, buildings) {
   if (followersManager && followersManager.produceOrbitals) {
     followersManager.produceOrbitals(deltaTime);
   }
-  if (produceAntimatter) {
-    produceAntimatter(deltaTime, resources);
-  }
-
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
 
@@ -2074,8 +2070,8 @@ function produceResources(deltaTime, buildings) {
   if (followersManager && followersManager.applyOrbitalProductionRates) {
     followersManager.applyOrbitalProductionRates();
   }
-  if (typeof applyAntimatterProductionRates === 'function') {
-    applyAntimatterProductionRates(resources);
+  if (produceAntimatter) {
+    produceAntimatter(deltaTime, resources, accumulatedChanges);
   }
 
   //Productivity is now calculated, let's actually produce and consume
