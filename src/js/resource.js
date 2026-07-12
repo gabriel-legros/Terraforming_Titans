@@ -61,6 +61,12 @@ function setProjectStorageProviders(projects) {
   storageProviderProjectCacheRoot = null;
 }
 
+function invalidateStorageProviderCache() {
+  storageProviderCacheRoot = null;
+  storageProviderProjectCacheRoot = null;
+  storageProviderCache = null;
+}
+
 function getStorageProvidersForResource(category, resourceName) {
   const projectProviders = projectStorageProviders;
   if (
@@ -2585,6 +2591,7 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateProjectProductivities,
     recalculateTotalRates,
     reconcileLandResourceValue,
+    invalidateStorageProviderCache,
   };
 }
 

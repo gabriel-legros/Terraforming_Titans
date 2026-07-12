@@ -122,6 +122,7 @@ class MultiRecipesBuilding extends Building {
 
     const storageSource = recipe?.storage || this._defaultStorage;
     this.storage = MultiRecipesBuilding._clone(storageSource);
+    invalidateStorageProviderCache();
 
     this.displayName = recipe?.displayName || this._defaultDisplayName;
     this.shortName = recipe?.shortName || null;

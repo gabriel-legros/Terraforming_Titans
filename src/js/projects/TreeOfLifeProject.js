@@ -1,7 +1,7 @@
 const TREE_OF_LIFE_COLONIST_CAPACITY_COEFFICIENT = 0.01;
 const TREE_OF_LIFE_DENSITY_THRESHOLD_T_PER_M2 = 10;
 const TREE_OF_LIFE_NUTRIENT_PER_BIOMASS = 1e-5;
-const TREE_OF_LIFE_MAX_NUTRIENT_MULTIPLIER = 10;
+const TREE_OF_LIFE_MAX_NUTRIENT_MULTIPLIER = 5;
 const TREE_OF_LIFE_GROWTH_EFFECT_ID = 'tree-of-life-growth-controller';
 
 function getTreeOfLifeText(path, fallback, vars) {
