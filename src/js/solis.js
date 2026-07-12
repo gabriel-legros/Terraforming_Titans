@@ -248,9 +248,7 @@ class SolisManager extends EffectableEntity {
   }
 
   getBaseQuestQuantity() {
-    if (!this.currentQuest) return 0;
-    const factor = Math.pow(10, Math.max(0, this.rewardMultiplier - 1));
-    return Math.ceil(this.currentQuest.quantity / factor);
+    return this.getQuestBaseQuantityForMultiplier(this.currentQuest);
   }
 
   applyMultiplier(multiplier, baseQuantity) {
