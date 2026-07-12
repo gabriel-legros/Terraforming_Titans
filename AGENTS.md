@@ -129,6 +129,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### General Rule
 - Do not use `innerHTML = ''`, `replaceChildren()`, or unconditional `appendChild(document.createElement(...))` inside frequently called UI update functions.
+- `SubtabManager` tracks tabs hidden by world restrictions and restores only those tabs when the manager resets on another world, preserving unrelated unlock-driven visibility.
 - Creating static layout once during `build...UI` / `initialize...UI` is fine. Recreating the same layout during `update...UI` is not.
 - If a UI element can appear in more than one update tick with the same semantic identity, cache it and update it in place.
 - Use stable keys from game data, not list position, for repeated rows/cards wherever possible:
