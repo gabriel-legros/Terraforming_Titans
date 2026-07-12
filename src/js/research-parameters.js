@@ -2693,6 +2693,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'solid_biochemistry',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 2_000_000_000_000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'lifeDesigner',
+            type: 'booleanFlag',
+            flagId: 'solidBiochemistry',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'bioships',
         name: '',
         description: '',

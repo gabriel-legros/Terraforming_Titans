@@ -969,11 +969,15 @@ setLanguageData({
       },
       biodomeRate: '+{value}/hour',
       deploying: 'Deploying: {time}s ({percent}%)',
+      cancelDeployment: 'Cancel Deployment: {time}s ({percent}%)',
       deployDuration: 'Deploy: Duration {seconds} seconds',
       cannotDeploy: 'Cannot deploy',
       cannotSurviveAnywhere: 'Life cannot survive anywhere',
       metabolismFallback: 'Metabolism',
       survivesCannotGrow: 'Survives but cannot grow',
+      growthTooltip: {
+        solidBiochemistry: 'Solid Biochemistry (ice substitution): x{value}',
+      },
       rateLabels: {
         naturalDecay: 'Natural Decay',
       },
@@ -6461,6 +6465,10 @@ setLanguageData({
         artificial_ecosystems: {
           name: 'Artificial Ecosystems',
           description: 'Turns space storage into a living orbital greenhouse. Unlocks a persisted Space Storage operations toggle that grows stored biomass toward its configured cap by consuming stored carbon dioxide and water.',
+        },
+        solid_biochemistry: {
+          name: 'Solid Biochemistry',
+          description: 'Life usually requires a solvent and membranes to function and move nutrients around.  While we cannot completely eliminate this requirement, we have finally found some processes that can work around it.  Life can now substitute ice for liquid water at a growth penalty.',
         },
         gigafoundries: {
           name: 'Gigafoundries',

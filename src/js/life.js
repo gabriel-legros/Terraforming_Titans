@@ -704,6 +704,10 @@ class LifeDesign {
       if (liquidWater > 1e-9) {
           return { pass: true, reason: null };
       }
+      const ice = terraforming.zonalSurface[zoneName].ice || 0;
+      if (lifeDesigner.isBooleanFlagSet('solidBiochemistry') && ice > 1e-9) {
+          return { pass: true, reason: null };
+      }
 
       return { pass: false, reason: "Need liquid water" };
   }
@@ -1255,6 +1259,7 @@ class LifeManager extends EffectableEntity {
 
     const biomassByZone = {};
     const liquidByZone = {};
+    const usesIceForWaterByZone = {};
     const overflowDecayByZone = {};
     zones.forEach(zoneName => {
       biomassByZone[zoneName] = terraforming.zonalSurface[zoneName].biomass || 0;
@@ -1347,6 +1352,10 @@ class LifeManager extends EffectableEntity {
           liquidByZone[zoneName][resourceKey] = Math.max(0, (liquidByZone[zoneName][resourceKey] || 0) + delta);
         }
       });
+      usesIceForWaterByZone[zoneName] = lifeDesigner.isBooleanFlagSet('solidBiochemistry')
+        && liquidRequirementKeys.includes('liquidWater')
+        && (liquidByZone[zoneName].liquidWater || 0) <= 1e-9
+        && getSurfaceAvailable(zoneName, 'ice', [naturalDecaySurfaceDeltasByZone]) > 1e-9;
     });
 
     const surfaceInputsPerBiomass = Object.entries(growthPerBiomass.surface || {})
@@ -1380,10 +1389,13 @@ class LifeManager extends EffectableEntity {
       const lumMult = usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
       const tempMult = design.temperatureGrowthMultiplierZone(zoneName);
       const hasRequiredMoisture = requirements.requiresLiquidWaterForGrowth === false
-        || (liquidByZone[zoneName].liquidWater || 0) > 1e-9;
+        || (liquidByZone[zoneName].liquidWater || 0) > 1e-9
+        || usesIceForWaterByZone[zoneName];
       const liquidMult = hasRequiredMoisture
-        && liquidRequirementKeys.every((resourceKey) => (liquidByZone[zoneName][resourceKey] || 0) > 1e-9)
-        ? 1
+        && liquidRequirementKeys.every((resourceKey) => resourceKey === 'liquidWater' && usesIceForWaterByZone[zoneName]
+          ? getSurfaceAvailable(zoneName, 'ice', [naturalDecaySurfaceDeltasByZone]) > 1e-9
+          : (liquidByZone[zoneName][resourceKey] || 0) > 1e-9)
+        ? (usesIceForWaterByZone[zoneName] ? 0.5 : 1)
         : 0;
       const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
       const maxBiomassForZone = zoneArea * maxBiomassDensity;
@@ -1417,13 +1429,17 @@ class LifeManager extends EffectableEntity {
       const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
       const growthFactor = 1 - penaltyFraction;
       const moisturePass = requirements.requiresLiquidWaterForGrowth === false
-        || (liquidByZone[zoneName].liquidWater || 0) > 1e-9;
+        || (liquidByZone[zoneName].liquidWater || 0) > 1e-9
+        || usesIceForWaterByZone[zoneName];
       if (!moisturePass || growthFactor <= 0) return;
 
       let zonalMaxGrowthRate = baseGrowthRate;
       zonalMaxGrowthRate *= radMult;
       zonalMaxGrowthRate *= usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
       zonalMaxGrowthRate *= effectiveGrowthMultiplier;
+      if (usesIceForWaterByZone[zoneName]) {
+        zonalMaxGrowthRate *= 0.5;
+      }
 
       const logisticFactor = maxBiomassForZone > 0
         ? Math.max(0, 1 - zonalBiomass / maxBiomassForZone)
@@ -1442,17 +1458,20 @@ class LifeManager extends EffectableEntity {
       surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
         const requiredPerBiomass = -coef;
         let available = 0;
-        if (resourceKey.indexOf('liquid') === 0) {
+        const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWaterByZone[zoneName]
+          ? 'ice'
+          : resourceKey;
+        if (inputResourceKey.indexOf('liquid') === 0) {
           available = liquidByZone[zoneName][resourceKey] || 0;
         } else {
-          available = getSurfaceAvailable(zoneName, resourceKey, [naturalDecaySurfaceDeltasByZone]);
+          available = getSurfaceAvailable(zoneName, inputResourceKey, [naturalDecaySurfaceDeltasByZone]);
         }
         if (requiredPerBiomass > 0) {
           const maxGrowth = available / requiredPerBiomass;
           maxBySurfaceInputs = Math.min(maxBySurfaceInputs, maxGrowth);
           if (maxGrowth < limitingSurfaceValue) {
             limitingSurfaceValue = maxGrowth;
-            limitingSurfaceKey = resourceKey;
+            limitingSurfaceKey = inputResourceKey;
           }
         }
       });
@@ -1485,16 +1504,19 @@ class LifeManager extends EffectableEntity {
         surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
           const requiredPerBiomass = -coef;
           let available = 0;
-          if (resourceKey.indexOf('liquid') === 0) {
+          const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWaterByZone[zoneName]
+            ? 'ice'
+            : resourceKey;
+          if (inputResourceKey.indexOf('liquid') === 0) {
             available = liquidByZone[zoneName][resourceKey] || 0;
           } else {
-            available = getSurfaceAvailable(zoneName, resourceKey, [naturalDecaySurfaceDeltasByZone]);
+            available = getSurfaceAvailable(zoneName, inputResourceKey, [naturalDecaySurfaceDeltasByZone]);
           }
           if (requiredPerBiomass > 0) {
             const maxGrowth = available / requiredPerBiomass;
             if (maxGrowth < surfaceCappedGrowth) {
               surfaceCappedGrowth = maxGrowth;
-              limitingSurfaceKey = resourceKey;
+              limitingSurfaceKey = inputResourceKey;
             }
           }
         });
@@ -1622,9 +1644,14 @@ class LifeManager extends EffectableEntity {
       Object.entries(growthPerBiomass.surface || {}).forEach(([resourceKey, coef]) => {
         if (resourceKey === 'biomass' || !coef) return;
         const delta = zoneGrowth * coef;
-        growthSurfaceDeltasByZone[zoneName][resourceKey] =
-          (growthSurfaceDeltasByZone[zoneName][resourceKey] || 0) + delta;
-        if (resourceKey.indexOf('liquid') === 0) {
+        const inputResourceKey = resourceKey === 'liquidWater'
+          && coef < 0
+          && usesIceForWaterByZone[zoneName]
+          ? 'ice'
+          : resourceKey;
+        growthSurfaceDeltasByZone[zoneName][inputResourceKey] =
+          (growthSurfaceDeltasByZone[zoneName][inputResourceKey] || 0) + delta;
+        if (inputResourceKey.indexOf('liquid') === 0) {
           liquidByZone[zoneName][resourceKey] = Math.max(0, (liquidByZone[zoneName][resourceKey] || 0) + delta);
         }
       });

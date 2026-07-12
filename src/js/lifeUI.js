@@ -271,6 +271,7 @@ const lifeUICache = {
   pointShopIncreaseButton: null,
   modifyStepDecreaseButton: null,
   modifyStepIncreaseButton: null,
+  controls: {},
   tentativeCells: [],
   gatedAttributeElements: [],
   attributeCells: {}, // { [attributeName]: { row, currentDiv, tentativeDiv, tentativeDisplay, tentativeCell, modifyCell } }
@@ -339,15 +340,6 @@ function cacheLifeStatusTableElements() {
   };
 }
 
-function getLiquidRequirementLabel(resourceKey) {
-  if (resourceKey === 'liquidWater') return 'Liquid Water';
-  const groupName = Object.values(resourcePhaseGroups || {})
-    .find(group => group.surfaceKeys?.liquid === resourceKey)?.name;
-  if (groupName) return `Liquid ${groupName}`;
-  const resourceName = resources?.surface?.[resourceKey]?.name;
-  return resourceName || resourceKey || 'Liquid';
-}
-
 function getLiquidRequirementKeysFromProcess(process) {
   const surfaceInputs = Object.entries(process?.growth?.perBiomass?.surface || {})
     .filter(([, value]) => value < 0)
@@ -376,7 +368,8 @@ function buildLifeLiquidRequirementRows(zones) {
     const labelCell = document.createElement('td');
     labelCell.style.border = '1px solid #ccc';
     labelCell.style.padding = '5px';
-    const label = getLiquidRequirementLabel(resourceKey);
+    const resource = resources.surface[resourceKey];
+    const label = resource.displayName || resource.name;
     labelCell.textContent = label;
     row.appendChild(labelCell);
 
@@ -482,6 +475,7 @@ function invalidateLifeUICache() {
   lifeUICache.pointShopIncreaseButton = null;
   lifeUICache.modifyStepDecreaseButton = null;
   lifeUICache.modifyStepIncreaseButton = null;
+  lifeUICache.controls = {};
   lifeUICache.tentativeCells = [];
   lifeUICache.gatedAttributeElements = [];
   lifeUICache.attributeCells = {};
@@ -518,13 +512,15 @@ function initializeLifeTerraformingDesignerUI() {
                <div id="life-points-display" style="margin-top: 5px;">
                  <p>Points Available: <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;">Remaining: <span id="life-points-remaining"></span></span></p>
                </div>
-               <div style="margin-top: 10px;">
+               <div id="life-design-edit-controls" style="margin-top: 10px;">
                    <button id="life-new-design-btn">Create New Design</button>
                    <button id="life-revert-btn" style="display: none;">Cancel</button>
                </div>
-               <div id="life-apply-progress-container" style="display: none; margin-top: 10px;">
-                 <button id="life-apply-btn">Deploy</button>
-                 <div id="life-apply-progress"></div>
+               <div id="life-apply-progress-container" style="margin-top: 10px;">
+                 <button id="life-apply-btn" style="visibility: hidden;">
+                   <span id="life-apply-title">Deploy</span>
+                   <span id="life-apply-reason" style="display: none;"></span>
+                 </button>
                </div>
                <hr style="margin: 15px 0;">
                <div id="life-biodomes-section" style="margin-top: 10px;">
@@ -626,9 +622,6 @@ function initializeLifeTerraformingDesignerUI() {
     </div>
     `;
 
-    const applyProgressContainer = document.getElementById('life-apply-progress-container');
-    const applyProgressBar = document.getElementById('life-apply-progress');
-
     // Get the necessary elements
     const newDesignBtn = document.getElementById('life-new-design-btn');
     const applyBtn = document.getElementById('life-apply-btn');
@@ -640,6 +633,17 @@ function initializeLifeTerraformingDesignerUI() {
     const lifeAttributesBody = document.getElementById('life-attributes-body');
     const survivalMessageParagraph = document.getElementById('survival-message');
     const growthMessageParagraph = document.getElementById('growth-message');
+    lifeUICache.controls = {
+      tentativeDesignHeader,
+      lifePointsRemainingDisplay,
+      createBtn: newDesignBtn,
+      applyBtn,
+      applyTitle: document.getElementById('life-apply-title'),
+      applyReason: document.getElementById('life-apply-reason'),
+      revertBtn,
+      applyProgressContainer: document.getElementById('life-apply-progress-container'),
+      modifyHeader: document.getElementById('modify-header'),
+    };
   
 
     function generateAttributeRows() {
@@ -699,8 +703,11 @@ function initializeLifeTerraformingDesignerUI() {
 
     // Event listener for the "Apply" button
     applyBtn.addEventListener('click', () => {
-      const duration = lifeDesigner.getTentativeDuration();
-      lifeDesigner.confirmDesign(duration);
+      if (lifeDesigner.isActive) {
+        lifeDesigner.cancelDeployment();
+      } else {
+        lifeDesigner.confirmDesign();
+      }
       document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
       updateLifeUI();
     });
@@ -960,13 +967,17 @@ function updateLifeUI() {
     // updateZonalBiomassDensities(); // Remove call to old function
     updateLifeStatusTable();
 
-    const tentativeDesignHeader = document.getElementById('tentative-design-header');
-    const lifePointsRemainingDisplay = document.getElementById('life-points-remaining-display');
-    const createBtn = document.getElementById('life-new-design-btn');
-    const applyBtn = document.getElementById('life-apply-btn');
-    const revertBtn = document.getElementById('life-revert-btn');
-    const applyProgressContainer = document.getElementById('life-apply-progress-container');
-    const applyProgressBar = document.getElementById('life-apply-progress');
+    const {
+      tentativeDesignHeader,
+      lifePointsRemainingDisplay,
+      createBtn,
+      applyBtn,
+      applyTitle,
+      applyReason,
+      revertBtn,
+      applyProgressContainer,
+      modifyHeader,
+    } = lifeUICache.controls;
     const modifyButtons = lifeUICache.modifyButtons;
     const quantityDisplay = lifeUICache.pointShopQuantityDisplay;
     if (quantityDisplay) {
@@ -1005,55 +1016,52 @@ function updateLifeUI() {
 
     if (lifeDesigner.tentativeDesign) {
         tentativeDesignHeader.style.display = 'table-cell';
-        document.getElementById('modify-header').style.display = 'table-cell';
+        modifyHeader.style.display = 'table-cell';
         lifePointsRemainingDisplay.style.display = 'inline'; // Ensure it's visible here
         createBtn.style.display = 'inline-block';
+        createBtn.style.visibility = 'visible';
         applyBtn.style.display = 'inline-block';
+        applyBtn.style.visibility = 'visible';
         revertBtn.style.display = 'inline-block';
+        revertBtn.style.visibility = 'visible';
         applyProgressContainer.style.display = 'block';
         if (lifeDesigner.isActive) {
             tentativeDesignHeader.style.display = 'table-cell';
             lifePointsRemainingDisplay.style.display = 'inline'; // Keep visible even when deploying
-            revertBtn.style.display = 'inline-block';
-            createBtn.style.display = 'none';
+            createBtn.style.visibility = 'hidden';
             createBtn.disabled = true; // Disable create while deploying
-            // Keep revert enabled so deployment can be cancelled
-            revertBtn.disabled = false;
+            revertBtn.style.visibility = 'hidden';
+            revertBtn.disabled = true;
             modifyButtons.forEach(btn => btn.disabled = true);
             showTentativeDesignCells();
             const timeRemaining = Math.max(0, lifeDesigner.remainingTime / 1000).toFixed(2);
             const progressPercent = lifeDesigner.getProgress();
-            // Shorter button text
-            applyBtn.textContent = getLifeUIText(
-              'ui.life.deploying',
-              'Deploying: {time}s ({percent}%)',
+            applyTitle.textContent = getLifeUIText(
+              'ui.life.cancelDeployment',
+              'Cancel Deployment: {time}s ({percent}%)',
               { time: timeRemaining, percent: progressPercent.toFixed(0) }
             );
-            applyBtn.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
-            applyBtn.disabled = true; // Disable button during deployment
+            applyReason.style.display = 'none';
+            applyBtn.style.background = getStatusProgressBackground(progressPercent);
+            applyBtn.disabled = false;
             applyBtn.classList.remove('life-apply-blocked');
         } else {
             showTentativeDesignCells();
-            applyProgressBar.style.width = '0%';
             const survivable = lifeDesigner.tentativeDesign && lifeDesigner.tentativeDesign.canSurviveAnywhere();
             const survivalReason = survivable ? '' : lifeDesigner.tentativeDesign.getPrimarySurvivalFailureReason();
             if (survivable) {
-              applyBtn.textContent = getLifeUIText(
+              applyTitle.textContent = getLifeUIText(
                 'ui.life.deployDuration',
                 'Deploy: Duration {seconds} seconds',
                 { seconds: (lifeDesigner.getTentativeDuration() / 1000).toFixed(2) }
               );
+              applyReason.style.display = 'none';
               applyBtn.classList.remove('life-apply-blocked');
             } else {
               const reasonText = survivalReason || getLifeUIText('ui.life.cannotSurviveAnywhere', 'Life cannot survive anywhere');
-              applyBtn.textContent = '';
-              const titleLine = document.createElement('span');
-              titleLine.className = 'life-apply-title';
-              titleLine.textContent = getLifeUIText('ui.life.cannotDeploy', 'Cannot deploy');
-              const reasonLine = document.createElement('span');
-              reasonLine.className = 'life-apply-reason';
-              reasonLine.textContent = reasonText;
-              applyBtn.append(titleLine, reasonLine);
+              applyTitle.textContent = getLifeUIText('ui.life.cannotDeploy', 'Cannot deploy');
+              applyReason.textContent = reasonText;
+              applyReason.style.display = 'block';
               applyBtn.classList.add('life-apply-blocked');
             }
             applyBtn.disabled = !survivable; // Disable if design cannot survive
@@ -1065,15 +1073,21 @@ function updateLifeUI() {
     }
     else {
       tentativeDesignHeader.style.display = 'none';
-      document.getElementById('modify-header').style.display = 'none';
+      modifyHeader.style.display = 'none';
       lifePointsRemainingDisplay.style.display = 'inline'; // Ensure it's visible when no tentative design
       createBtn.style.display = 'inline-block';
+      createBtn.style.visibility = 'visible';
       createBtn.disabled = false; // Re-enable create after deployment
-      applyProgressContainer.style.display = 'none';
-      applyBtn.style.display = 'none';
+      applyProgressContainer.style.display = 'block';
+      applyBtn.style.display = 'inline-block';
+      applyBtn.style.visibility = 'hidden';
       applyBtn.disabled = true;
       applyBtn.classList.remove('life-apply-blocked');
-      revertBtn.style.display = 'none';
+      applyBtn.style.background = '';
+      applyReason.style.display = 'none';
+      revertBtn.style.display = 'inline-block';
+      revertBtn.style.visibility = 'hidden';
+      revertBtn.disabled = true;
       hideTentativeDesignCells();
     }
 
@@ -1417,7 +1431,8 @@ function updateLifeStatusTable() {
             const cell = entry.zoneCells?.[zone];
             if (!cell) return;
             const resourceKey = entry.resourceKey;
-            const label = getLiquidRequirementLabel(resourceKey);
+            const resource = resources.surface[resourceKey];
+            const label = resource.displayName || resource.name;
             if (resourceKey === 'liquidWater') {
                 updateStatusCell(cell, moistureResults[zone]);
                 return;
@@ -1487,7 +1502,17 @@ function updateLifeStatusTable() {
             if (radPenalty < 0.0001) radPenalty = 0;
             const radMult = 1 - radPenalty;
             const liquidKeys = getLiquidRequirementKeysFromProcess(metabolismProcess);
-            const liquidMult = liquidKeys.every((resourceKey) => (terraforming.zonalSurface[zone]?.[resourceKey] || 0) > 1e-9) ? 1 : 0;
+            const usesIceForWater = liquidKeys.includes('liquidWater')
+                && lifeDesigner.isBooleanFlagSet('solidBiochemistry')
+                && (terraforming.zonalSurface[zone].liquidWater || 0) <= 1e-9
+                && (terraforming.zonalSurface[zone].ice || 0) > 1e-9;
+            const liquidMult = liquidKeys.every((resourceKey) => {
+                const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWater
+                    ? 'ice'
+                    : resourceKey;
+                return (terraforming.zonalSurface[zone][inputResourceKey] || 0) > 1e-9;
+            }) ? 1 : 0;
+            const solidBiochemistryMult = usesIceForWater ? 0.5 : 1;
             const growthBreakdown = getLifeManagerSafe()?.getLifeGrowthMultiplierBreakdown?.() ?? {
                 effectMultiplier: 1,
                 nitrogenMultiplier: 1,
@@ -1495,7 +1520,7 @@ function updateLifeStatusTable() {
                 totalMultiplier: 1,
             };
             const otherMult = growthBreakdown.totalMultiplier;
-            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * liquidMult * otherMult;
+            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * liquidMult * solidBiochemistryMult * otherMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if (tooltipIcon) {
                 const lines = [
@@ -1518,6 +1543,13 @@ function updateLifeStatusTable() {
                         `Engineered Nitrogen Fixation: x${formatNumber(growthBreakdown.nitrogenMultiplier, false, 2)} (${formatNumber(growthBreakdown.nitrogenPressureKPa, false, 2)} kPa)`
                     );
                 }
+                if (usesIceForWater) {
+                    lines.push(getLifeUIText(
+                        'ui.life.growthTooltip.solidBiochemistry',
+                        'Solid Biochemistry (ice substitution): x{value}',
+                        { value: formatNumber(solidBiochemistryMult, false, 2) }
+                    ));
+                }
                 if (ecoFraction > 0) {
                     const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
                     lines.push(`Ecumenopolis: x${formatNumber(ecumenopolisLandMult, false, 2)} (-${ecumenopolisReduction.toFixed(2)}%)`);
@@ -1526,9 +1558,13 @@ function updateLifeStatusTable() {
                     }
                 }
                 liquidKeys.forEach((resourceKey) => {
-                    const zoneAmount = terraforming.zonalSurface[zone]?.[resourceKey] || 0;
+                    const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWater
+                        ? 'ice'
+                        : resourceKey;
+                    const zoneAmount = terraforming.zonalSurface[zone][inputResourceKey] || 0;
                     const mult = zoneAmount > 1e-9 ? 1 : 0;
-                    const label = getLiquidRequirementLabel(resourceKey);
+                    const inputResource = resources.surface[inputResourceKey];
+                    const label = inputResource.displayName || inputResource.name;
                     lines.push(`${label}: x${formatNumber(mult, false, 2)}`);
                 });
                 growthObj.tooltipEl = ensureDynamicInfoTooltip(tooltipIcon, growthObj.tooltipEl, lines.join('\n'));

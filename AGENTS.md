@@ -78,6 +78,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Solis shop/quests: `solis.js`, `solisUI.js`
 - Patience: `hope/patienceUI.js` (terraforming patience banking/claim UI)
 - Life Automation: Growth Temperature Tolerance supports an `Aiming for` substep cap mode with selectable zones and a target growth multiplier, defaulting to `0.95`; it spends enough points for the selected zones' daytime temperature growth multipliers to reach the target.
+- Life Designer deployment uses its Deploy button as the progress fill and cancel control while a design is applying. The edit-control and deployment rows retain their space throughout repeated late-game deployments so the surrounding UI does not jump.
 - Automation scripting variables: `script-automation.js`, `script-variable-registry.js`, and `automationScriptUI.js` expose numeric variables A-Z through the scripting registry and script variables A-Z for `GOTO Script`; Set Variable can assign numeric expressions or script selections, values persist in saves, and both variable types reset on planet travel.
 - Automation target encounters: `automation-encounter-manager.js` persists shared encountered IDs for ship, building, project, colony, and research automation. Current available targets and targets referenced by saved/imported presets count as encountered, keeping them selectable after travel or when temporarily unavailable.
 - Achievements: `src/js/save-settings/achievements.js`, `src/js/save-settings/achievementsSubtab.js` (derived Save & Settings achievement list)
@@ -270,6 +271,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Do not add life metabolism coefficients by feel. Check the arithmetic before committing: negative coefficients are inputs, positive coefficients are outputs, and the absolute input total must equal the output total.
 - If a metabolism is meant to represent a variant of photosynthesis, keep the chemistry explicit in the coefficients. Extreme atmospheric requirements do not justify unbalanced per-biomass recipes.
 - Surface biomass undergoes metabolism-constrained Natural Decay at 0.5% per 365 real-time seconds before growth. Its products are available to same-tick growth, and atmospheric import demand must net out those recycled products.
+- Steam/Electron-exclusive advanced research `Solid Biochemistry` costs `2T`, has no prerequisite, and gives the Life Designer a boolean flag that lets life consume ice in place of liquid water when no liquid water is available in a zone; any growth using ice is reduced by 50%, and the Life UI growth estimate and tooltip must include that multiplier.
 
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.
