@@ -25,6 +25,7 @@ const GAME_FEATURES = {
     exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
     electronWindowControls: GAME_BUILD_TARGET !== 'browser',
     electronUIScale: GAME_BUILD_TARGET !== 'browser',
+    electronCrashReporting: GAME_BUILD_TARGET !== 'browser',
     steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser',
     steamExclusiveResearch: GAME_BUILD_TARGET !== 'browser',
     steamExclusiveEcumenopolisVisualizer: GAME_BUILD_TARGET !== 'browser',

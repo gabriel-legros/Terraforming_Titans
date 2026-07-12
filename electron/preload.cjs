@@ -1,5 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+contextBridge.exposeInMainWorld('electronCrashReporter', {
+  report(report) {
+    ipcRenderer.send('crash-report:renderer-error', report);
+  }
+});
+
 contextBridge.exposeInMainWorld('electronSaveStorage', {
   getItem(key) {
     return ipcRenderer.sendSync('save-storage:getItem', String(key));

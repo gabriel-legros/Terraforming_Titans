@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker, screen } = require('electron');
+const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker, screen, dialog, clipboard } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -6,9 +6,14 @@ const appDisplayName = 'Terraforming Titans';
 const defaultSteamAppId = 4864000;
 const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.png');
 const preloadPath = path.join(__dirname, 'preload.cjs');
+const crashPreloadPath = path.join(__dirname, 'crash-preload.cjs');
 const saveSlotNames = new Set(['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
 let fullscreenKeybindCode = 'F11';
 const fullscreenKeybindCaptureResolvers = new Map();
+const recentCrashSignatures = new Map();
+let crashWindow = null;
+let latestCrashReport = null;
+let quitting = false;
 
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -16,6 +21,163 @@ app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 app.commandLine.appendSwitch('no-sandbox');
 app.setName(appDisplayName);
+
+function getCrashLogPath() {
+  return path.join(app.getPath('userData'), 'logs', 'crash.log');
+}
+
+function writeCrashLog(reportText) {
+  const logPath = getCrashLogPath();
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  if (fs.existsSync(logPath) && fs.statSync(logPath).size > 1024 * 1024) {
+    const existingLog = fs.readFileSync(logPath, 'utf8');
+    fs.writeFileSync(logPath, existingLog.slice(-512 * 1024), 'utf8');
+  }
+  fs.appendFileSync(logPath, `${reportText}\n\n`, 'utf8');
+  return logPath;
+}
+
+function createCrashReport(type, message, stack, details) {
+  const timestamp = new Date().toISOString();
+  const reportLines = [
+    `[${timestamp}] ${type}`,
+    `Message: ${message}`,
+    `Game: ${app.getVersion()}`,
+    `Electron: ${process.versions.electron}`,
+    `Chrome: ${process.versions.chrome}`,
+    `Platform: ${process.platform} ${process.arch}`
+  ];
+  if (details) {
+    reportLines.push(`Details: ${details}`);
+  }
+  if (stack) {
+    reportLines.push('', stack);
+  }
+  return {
+    type,
+    message,
+    text: reportLines.join('\n'),
+    logPath: ''
+  };
+}
+
+function showCrashWindow(report) {
+  latestCrashReport = report;
+  if (!app.isReady()) {
+    dialog.showErrorBox(appDisplayName, report.text);
+    return;
+  }
+  if (crashWindow && !crashWindow.isDestroyed()) {
+    crashWindow.webContents.send('crash-window:report', report);
+    if (crashWindow.isMinimized()) {
+      crashWindow.restore();
+    }
+    crashWindow.show();
+    crashWindow.focus();
+    return;
+  }
+
+  const gameWindow = BrowserWindow.getAllWindows()[0];
+  let revealTimer = null;
+  try {
+    crashWindow = new BrowserWindow({
+      width: 640,
+      height: 460,
+      minWidth: 520,
+      minHeight: 360,
+      title: appDisplayName,
+      backgroundColor: '#111827',
+      icon: appIconPath,
+      alwaysOnTop: true,
+      parent: gameWindow,
+      show: false,
+      webPreferences: {
+        preload: crashPreloadPath,
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        webSecurity: true
+      }
+    });
+    crashWindow.center();
+    crashWindow.setAlwaysOnTop(true, 'screen-saver');
+    const revealCrashWindow = () => {
+      if (!crashWindow || crashWindow.isDestroyed()) {
+        return;
+      }
+      crashWindow.webContents.send('crash-window:report', latestCrashReport);
+      crashWindow.show();
+      crashWindow.focus();
+    };
+    revealTimer = setTimeout(revealCrashWindow, 1000);
+    crashWindow.on('closed', () => {
+      clearTimeout(revealTimer);
+      crashWindow = null;
+    });
+    crashWindow.loadFile(path.join(__dirname, 'crash-window.html')).then(() => {
+      clearTimeout(revealTimer);
+      revealCrashWindow();
+    }).catch(() => {
+      clearTimeout(revealTimer);
+      dialog.showErrorBox(appDisplayName, report.text);
+    });
+  } catch (_error) {
+    clearTimeout(revealTimer);
+    crashWindow = null;
+    dialog.showErrorBox(appDisplayName, report.text);
+  }
+}
+
+function reportCrash(type, message, stack, details) {
+  const signature = `${type}\n${message}\n${stack}`;
+  const now = Date.now();
+  if (recentCrashSignatures.has(signature) && now - recentCrashSignatures.get(signature) < 3000) {
+    return;
+  }
+  recentCrashSignatures.set(signature, now);
+  for (const [knownSignature, timestamp] of recentCrashSignatures) {
+    if (now - timestamp > 30000) {
+      recentCrashSignatures.delete(knownSignature);
+    }
+  }
+
+  const report = createCrashReport(type, message, stack, details);
+  try {
+    report.logPath = writeCrashLog(report.text);
+  } catch (error) {
+    report.text += `\n\nCrash log write failed: ${error.message}`;
+  }
+  showCrashWindow(report);
+}
+
+function registerCrashHandlers() {
+  const { ipcMain } = require('electron');
+  ipcMain.on('crash-report:renderer-error', (_event, report) => {
+    reportCrash(report.type, report.message, report.stack, report.details);
+  });
+  ipcMain.on('crash-window:copy', () => {
+    clipboard.writeText(latestCrashReport.text);
+  });
+  ipcMain.on('crash-window:open-log-folder', () => {
+    shell.showItemInFolder(latestCrashReport.logPath);
+  });
+  ipcMain.on('crash-window:close', () => {
+    crashWindow.close();
+  });
+  ipcMain.on('crash-window:quit', () => {
+    app.quit();
+  });
+}
+
+process.on('uncaughtException', error => {
+  reportCrash('Main process exception', error.message, error.stack, 'The Electron main process encountered an uncaught error.');
+});
+
+process.on('unhandledRejection', reason => {
+  const message = reason instanceof Error ? reason.message : String(reason);
+  const stack = reason instanceof Error ? reason.stack : '';
+  reportCrash('Main process rejection', message, stack, 'The Electron main process encountered an unhandled promise rejection.');
+});
 
 function readBuildTargetSource() {
   const buildTargetPath = path.join(__dirname, '..', 'src', 'js', 'build-target.js');
@@ -295,6 +457,18 @@ function createWindow() {
     }
   });
 
+  win.webContents.on('render-process-gone', (_event, details) => {
+    if (quitting) {
+      return;
+    }
+    reportCrash(
+      'Renderer process crash',
+      `The game renderer stopped (${details.reason}).`,
+      '',
+      `Reason: ${details.reason}; exit code: ${details.exitCode}`
+    );
+  });
+
   win.loadFile(path.join(__dirname, '..', 'index.html'));
 }
 
@@ -304,6 +478,7 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);
   });
+  registerCrashHandlers();
   registerSaveStorageHandlers();
   registerSteamAchievementHandlers();
   registerWindowControlHandlers();
@@ -315,6 +490,10 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+app.on('before-quit', () => {
+  quitting = true;
 });
 
 app.on('window-all-closed', () => {

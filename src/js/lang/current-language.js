@@ -6,6 +6,14 @@ setLanguageData({
   ui: {
     loading: 'Loading...',
     autoTravelLoading: 'Auto travel in progress...',
+    crashWindow: {
+      title: 'Terraforming Titans encountered an error',
+      description: 'The crash report was saved locally. You can copy it for a bug report or open its folder.',
+      copyLog: 'Copy Log',
+      openLogFolder: 'Open Log Folder',
+      continue: 'Continue',
+      closeGame: 'Close Game',
+    },
     topBar: {
       dayProgress: 'Day Progress',
     },

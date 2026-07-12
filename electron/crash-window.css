@@ -1,0 +1,70 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #111827;
+  color: #f3f4f6;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  padding: 20px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+p {
+  margin: 0 0 14px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+pre {
+  box-sizing: border-box;
+  height: 270px;
+  margin: 0 0 14px;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #030712;
+  color: #e5e7eb;
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+button {
+  padding: 7px 12px;
+  border: 1px solid #4b5563;
+  border-radius: 5px;
+  background: #1f2937;
+  color: #f9fafb;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #374151;
+}
+
+button.danger {
+  border-color: #991b1b;
+  background: #7f1d1d;
+}
+
+button.danger:hover {
+  background: #991b1b;
+}
