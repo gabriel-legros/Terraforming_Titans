@@ -1612,7 +1612,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const totals = this.getDisposalConstrainedContinuousDemand(deltaTime, 1, null);
     const previousEnergyDemand = Math.max(0, this.lastDisposalEnergyDemand || 0);
     const currentEnergyDemand = totals.cost.colony?.energy || 0;
-    if (previousEnergyDemand > currentEnergyDemand) {
+    if (currentEnergyDemand > 0 && previousEnergyDemand > currentEnergyDemand) {
       if (!totals.cost.colony) {
         totals.cost.colony = {};
       }
