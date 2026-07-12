@@ -782,6 +782,9 @@ setLanguageData({
     },
     lifeDesigner: {
       attributes: {
+        bioworkforce: {
+          tooltip: 'Each point assigns {workersPerBiomass} of global biomass as temporary workers. Biomass density above {densityCap} t/m² does not provide additional workers.',
+        },
         bioships: {
           name: 'Bioships',
           description: 'Converts a fraction of global biomass into living spaceships.',

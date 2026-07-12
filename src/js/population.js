@@ -1,3 +1,5 @@
+const BIOWORKER_MAX_BIOMASS_DENSITY = 10000;
+
 class PopulationModule extends EffectableEntity {
     constructor(resources, populationParameters) {
       super({config : 'population module'})
@@ -498,7 +500,7 @@ class PopulationModule extends EffectableEntity {
       if (activeBiomass <= 0) {
         return 0;
       }
-      const maxBiomassDensity = design.getMaxBiomassDensity();
+      const maxBiomassDensity = Math.min(design.getMaxBiomassDensity(), BIOWORKER_MAX_BIOMASS_DENSITY);
       const landAreaM2 = resolveWorldGeometricLand(terraforming, resources.surface.land) * 10000;
       const maxBiomass = landAreaM2 > 0 ? landAreaM2 * maxBiomassDensity : 0;
       const cappedBiomass = Math.min(activeBiomass, maxBiomass);
