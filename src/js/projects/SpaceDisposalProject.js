@@ -15,6 +15,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.nextDisposalTargetId = 1;
     this.disposalTargets = [];
     this.lastDisposalEnergyDemand = 0;
+    this.lastActiveDisposalTargetIds = [];
     this.ensureDisposalTargets();
   }
 
@@ -362,13 +363,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return this.disposalTargets.filter(target => target.autoStart && target.selectedDisposalResource);
   }
 
-  canTargetStart(target) {
-    if (!this.canTargetRun(target)) {
+  canTargetStart(target, accumulatedChanges = null) {
+    if (!this.canTargetRun(target, accumulatedChanges)) {
       return false;
     }
 
     const selection = target.selectedDisposalResource;
-    const available = this.getSelectionAvailableAmount(selection);
+    const available = this.getSelectionAvailableAmount(selection, accumulatedChanges);
     return this.getTargetClampedDisposalAmount(
       target,
       this.getShipCapacity(),
@@ -378,13 +379,19 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     ) > 0;
   }
 
-  getRunnableTargets() {
+  getRunnableTargets(accumulatedChanges = null) {
     const autoTargets = this.getAutoStartTargets();
-    return autoTargets.filter(target => this.canTargetStart(target));
+    return autoTargets.filter(target => this.canTargetStart(target, accumulatedChanges));
   }
 
   getDisposalTargetsForDisplay() {
-    return this.getRunnableTargets();
+    const runnableTargets = this.getRunnableTargets();
+    if (!this.isActive || !this.lastActiveDisposalTargetIds.length) {
+      return runnableTargets;
+    }
+    return this.disposalTargets.filter(target => (
+      runnableTargets.includes(target) || this.lastActiveDisposalTargetIds.includes(target.id)
+    ));
   }
 
   getTargetShare(targetId, targetList = this.getDisposalTargetsForDisplay()) {
@@ -443,7 +450,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return null;
   }
 
-  canTargetRun(target) {
+  canTargetRun(target, accumulatedChanges = null) {
     if (!target || !target.selectedDisposalResource) {
       return false;
     }
@@ -458,14 +465,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
 
     if (target.disableBelowTemperature && this.isTargetSafeGhgSelection(target)) {
-      if (this.getAutomationTemperatureReading() <= target.disableTemperatureThreshold) {
+      const available = this.getSelectionAvailableAmount(target.selectedDisposalResource, accumulatedChanges);
+      if (this.calculateTemperatureForGreenhouseAmount(available) <= target.disableTemperatureThreshold) {
         return false;
       }
     }
 
     if (target.disableBelowPressure && this.shouldTargetShowPressureControl(target)) {
       const selection = target.selectedDisposalResource;
-      const amount = resources.atmospheric[selection.resource].value || 0;
+      const amount = this.getSelectionAvailableAmount(selection, accumulatedChanges);
       const pressurePa = calculateAtmosphericPressure(
         amount,
         terraforming.celestialParameters.gravity,
@@ -479,7 +487,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     if (target.disableBelowCoverage && this.shouldTargetShowCoverageControl(target)) {
       const coverageKey = this.getTargetCoverageResourceKey(target);
-      if (coverageKey && (calculateAverageCoverage(terraforming, coverageKey) || 0) <= target.disableCoverageThreshold) {
+      const selection = target.selectedDisposalResource;
+      const available = this.getSelectionAvailableAmount(selection, accumulatedChanges);
+      const floorAmount = this.getTargetCoverageFloorAmount(
+        target,
+        selection.category,
+        selection.resource,
+        available
+      );
+      if (coverageKey && available <= floorAmount) {
         return false;
       }
     }
@@ -491,13 +507,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (!target.autoStart) {
       return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.idle', 'Idle');
     }
-    if (!this.canTargetRun(target)) {
-      return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.blocked', 'Blocked');
-    }
     for (let i = 0; i < activeTargets.length; i += 1) {
       if (activeTargets[i].id === target.id) {
         return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.active', 'Active');
       }
+    }
+    if (!this.canTargetRun(target)) {
+      return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.blocked', 'Blocked');
     }
     return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.waiting', 'Waiting');
   }
@@ -1525,8 +1541,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }));
   }
 
-  getContinuousDisposalEntries(context, productivity = 1) {
-    const activeTargets = this.getRunnableTargets();
+  getContinuousDisposalEntries(context, productivity = 1, accumulatedChanges = null) {
+    const activeTargets = this.getRunnableTargets(accumulatedChanges);
     if (!activeTargets.length) {
       return [];
     }
@@ -1570,7 +1586,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       }
     }
 
-    const disposalEntries = this.getContinuousDisposalEntries(context, productivity);
+    const disposalEntries = this.getContinuousDisposalEntries(context, productivity, accumulatedChanges);
     if (!disposalEntries.length) {
       return totals;
     }
@@ -1612,7 +1628,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const totals = this.getDisposalConstrainedContinuousDemand(deltaTime, 1, null);
     const previousEnergyDemand = Math.max(0, this.lastDisposalEnergyDemand || 0);
     const currentEnergyDemand = totals.cost.colony?.energy || 0;
-    if (currentEnergyDemand > 0 && previousEnergyDemand > currentEnergyDemand) {
+    if (this.isActive && this.hasAnyAutoStartTarget() && previousEnergyDemand > currentEnergyDemand) {
       if (!totals.cost.colony) {
         totals.cost.colony = {};
       }
@@ -1685,7 +1701,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
 
     if (target.disableBelowCoverage && this.shouldTargetShowCoverageControl(target)) {
-      floorAmount = Math.max(floorAmount, this.getTargetCoverageFloorAmount(target, category, resource));
+      floorAmount = Math.max(
+        floorAmount,
+        this.getTargetCoverageFloorAmount(target, category, resource, availableAmount)
+      );
     }
 
     if (target.disableBelowTemperature && this.isTargetSafeGhgSelection(target)) {
@@ -1708,7 +1727,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return (target.disablePressureThreshold * 1000) / pressurePerUnitPa;
   }
 
-  getTargetCoverageFloorAmount(target, category, resource) {
+  getTargetCoverageFloorAmount(target, category, resource, availableAmount = null) {
     if (category !== 'surface') {
       return 0;
     }
@@ -1731,8 +1750,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       };
     });
 
-    const totalAmount = zoneEntries.reduce((sum, entry) => sum + entry.amount, 0);
-    if (totalAmount <= 0) {
+    const currentTotal = zoneEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    const totalAmount = availableAmount === null ? currentTotal : Math.max(0, availableAmount);
+    if (currentTotal <= 0 || totalAmount <= 0) {
       return 0;
     }
 
@@ -1780,13 +1800,12 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   }
 
   getTargetGreenhouseTemperatureFloorAmount(target, availableAmount) {
-    const ghg = resources.atmospheric.greenhouseGas;
-    const currentAmount = Math.max(0, Math.min(availableAmount, ghg.value));
+    const currentAmount = Math.max(0, availableAmount);
     if (currentAmount <= 0) {
       return 0;
     }
 
-    if (this.getAutomationTemperatureReading() <= target.disableTemperatureThreshold) {
+    if (this.calculateTemperatureForGreenhouseAmount(currentAmount) <= target.disableTemperatureThreshold) {
       return currentAmount;
     }
 
@@ -1804,8 +1823,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return high;
   }
 
-  shouldAutomationDisable() {
-    return this.getRunnableTargets().length === 0;
+  shouldAutomationDisable(accumulatedChanges = null) {
+    return this.getRunnableTargets(accumulatedChanges).length === 0;
   }
 
   canStart() {
@@ -1966,6 +1985,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   applyContinuousPlan(plan, accumulatedChanges = null) {
     const demand = this.getDisposalConstrainedContinuousDemand(plan.context?.deltaTime || 0, 1, accumulatedChanges);
     this.lastDisposalEnergyDemand = demand.cost.colony?.energy || 0;
+    this.lastActiveDisposalTargetIds = plan.disposalEntries
+      .filter(entry => (entry.appliedAmount || 0) > 0)
+      .map(entry => entry.targetId);
 
     if (!plan.context || !plan.hasContinuousWork) {
       return;

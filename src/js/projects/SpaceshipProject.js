@@ -1424,7 +1424,7 @@ class SpaceshipProject extends Project {
     }
 
     const disposalEntries = this.attributes.spaceExport
-      ? this.getContinuousDisposalEntries(context, productivity)
+      ? this.getContinuousDisposalEntries(context, productivity, accumulatedChanges)
       : [];
 
     const gainBase = {};
