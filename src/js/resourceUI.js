@@ -1772,6 +1772,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
     let hasUnlockedResources = false;
     let spaceStorageTotalEntry = null;
     let spaceStorageTotalCapLimited = false;
+    let spaceStorageTotalAtCap = false;
     let spaceStorageTotalHeadroom = 0;
     let spaceStorageTotalOpenPositiveRate = 0;
     if (category === 'spaceStorage') {
@@ -1790,6 +1791,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       }
       const maxStorage = storageProject ? Math.max(0, storageProject.maxStorage || 0) : 0;
+      spaceStorageTotalAtCap = maxStorage > 0 && usedStorage >= maxStorage;
       spaceStorageTotalHeadroom = Math.max(0, maxStorage - usedStorage);
       if (spaceStorageTotalEntry?.valueEl) {
         const usedStorageText = formatNumber(usedStorage, false, 1, false, true);
@@ -1803,10 +1805,6 @@ function updateResourceDisplay(resources, deltaSeconds) {
           spaceStorageTotalEntry.capEl.textContent = maxStorageText;
         }
       }
-      setResourceAtCap(
-        spaceStorageTotalEntry,
-        gameSettings.highlightFullResourceCaps && maxStorage > 0 && usedStorage >= maxStorage
-      );
       setResourceCapLimited(spaceStorageTotalEntry, false);
     }
 
@@ -1829,12 +1827,15 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const resourceCap = category === 'spaceStorage' && resourceName !== 'energy'
         ? getSpaceStorageResourceCapDisplay(resourceName)
         : resourceObj.cap;
+      const consumptionDisplay = getDisplayConsumptionRates(resourceObj);
+      const hasPositiveRate = getDisplayedNetResourceRate(resourceObj, consumptionDisplay) > 1e-9;
       setResourceAtCap(
         entry,
         gameSettings.highlightFullResourceCaps
           && Number.isFinite(resourceCap)
           && resourceCap > 0
           && resourceObj.value >= resourceCap
+          && hasPositiveRate
       );
 
       let timer = smallValueTimers[resourceKey] || 0;
@@ -1879,8 +1880,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
       }
 
       if (category === 'spaceStorage' && resourceName !== 'energy') {
-        const consumptionDisplay = getDisplayConsumptionRates(resourceObj);
-        const netRate = resourceObj.productionRate - consumptionDisplay.total;
+        const netRate = getDisplayedNetResourceRate(resourceObj, consumptionDisplay);
         const positiveRate = netRate > 1e-9;
         const capLimit = getSpaceStorageResourceCapDisplay(resourceName);
         const resourceCapRemaining = Number.isFinite(capLimit) ? (capLimit - resourceObj.value) : Infinity;
@@ -2099,6 +2099,12 @@ function updateResourceDisplay(resources, deltaSeconds) {
     if (category === 'spaceStorage') {
       const totalCapLimitedNow = spaceStorageTotalOpenPositiveRate > spaceStorageTotalHeadroom;
       spaceStorageTotalCapLimited = shouldShowCapLimitedWithCooldown('spaceStorage:total', totalCapLimitedNow, frameDelta);
+      setResourceAtCap(
+        spaceStorageTotalEntry,
+        gameSettings.highlightFullResourceCaps
+          && spaceStorageTotalAtCap
+          && spaceStorageTotalOpenPositiveRate > 1e-9
+      );
     }
     if (category === 'spaceStorage' && spaceStorageTotalEntry?.container) {
       spaceStorageTotalEntry.container.style.display = hasUnlockedResources ? 'block' : 'none';
