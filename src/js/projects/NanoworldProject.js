@@ -29,7 +29,14 @@ const NANOWORLD_SHOP_ITEMS = [
     cost: 1,
     maxPurchases: NANOWORLD_MAX_SHOP_PURCHASES,
     description: getNanoworldText(`shopItems.stage${stage}.description`),
-  }))
+  })),
+  {
+    id: 'alternateElectronicsRecipe',
+    label: getNanoworldText('shopItems.alternateElectronicsRecipe.label'),
+    cost: 10,
+    maxPurchases: 1,
+    description: getNanoworldText('shopItems.alternateElectronicsRecipe.description'),
+  }
 ];
 
 const NANOWORLD_SHOP_ITEM_MAP = NANOWORLD_SHOP_ITEMS.reduce((items, item) => {

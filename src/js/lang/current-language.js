@@ -2700,7 +2700,11 @@ setLanguageData({
         },
         stage3: {
           biomassAllocation: 'Biomass allocation',
+          graphiteAllocation: 'Graphite allocation',
           biomassDescription: 'Consumes biomass to boost growth.',
+          resourceBiomass: 'Biomass',
+          resourceGraphite: 'Graphite',
+          graphiteDescription: 'Consumes graphite to boost growth.',
           maintenance: 'Maintenance III',
           maintenanceDescription: 'Reduces electronics maintenance by up to 50%.',
           electronicsProduction: 'Electronics Production',
@@ -2723,9 +2727,12 @@ setLanguageData({
         warnings: {
           noSand: '⚠️ No sand deposits; glass capped to silica allocation.',
           noOre: '⚠️ No ore deposits; components capped to metal allocation.',
-          noResources: '⚠️ No resources; electronics capped to biomass allocation.',
+          noResources: '⚠️ No resources; electronics capped to {resource} allocation.',
           noDeposits: '⚠️ No deposits, metal capped to graphite.',
           noHazardousBiomass: 'No hazardous biomass available.',
+        },
+        sources: {
+          stage3Graphite: 'Nanotech Stage III Graphite',
         },
         status: {
           disabled: 'Disabled',
@@ -2741,7 +2748,7 @@ setLanguageData({
           travel: 'Each nanocolony stage after Stage I multiplies the preserved amount by 10.',
           silica: 'Percentage of silica production: maximum share of silicon production the swarm may consume per second.\nAbsolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: junk usage is not capped, but silica usage still follows this limit.',
           metal: 'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: scrap usage is not capped, but metal usage still follows this limit.',
-          biomass: 'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: trash usage is not capped, but biomass usage still follows this limit.',
+          biomass: 'Percentage of production: maximum share of the selected resource production the swarm may consume per second. Biomass includes estimated life growth production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second; this mode is unavailable for graphite.\nAbsolute: fixed selected-resource limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: biomass may use uncapped trash before its biomass limit; graphite is limited only by available graphite.',
           graphite: 'Percentage of graphite production: maximum share of graphite production the swarm may consume per second.\nAbsolute: fixed graphite limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: graphite usage ignores production-rate caps and is limited only by available graphite.',
           hazardousBiomass: 'Grey goo consumes Hazardous Biomass directly. The two extra sliders each add another full-rate consumption stream and reduce growth.',
         },
@@ -7038,7 +7045,7 @@ setLanguageData({
       nanoworld: {
         pointsLabel: 'Nanoworld Points:',
         shopTitle: 'Nanoworld Shop',
-        shopTooltip: 'Gain Nanoworld Points equal to log10(nanobots) / 4 when travelling after completing this project, with a minimum of 1 point, then +10% per hazard on this world. Each upgrade costs 1 point and can be purchased up to 900 times. Maximum Density upgrades apply only while on a completed Nanoworld.',
+        shopTooltip: 'Gain Nanoworld Points equal to log10(nanobots) / 4 when travelling after completing this project, with a minimum of 1 point, then +10% per hazard on this world. Percentage upgrades cost 1 point and can be purchased up to 900 times. Maximum Density upgrades apply only while on a completed Nanoworld.',
         effectName: 'Nanoworld',
         requirements: {
           terraformed: 'World is fully terraformed',
@@ -7065,6 +7072,10 @@ setLanguageData({
           stage4: {
             label: 'Nanotechnology Stage IV +1%',
             description: 'Increases Stage IV production, growth, material use, and maintenance effects by 1%.',
+          },
+          alternateElectronicsRecipe: {
+            label: 'Alternate Electronics Recipe',
+            description: 'Unlocks the option to use graphite instead of biomass for Nanotechnology Stage III at the same consumption rate.',
           },
         },
       },

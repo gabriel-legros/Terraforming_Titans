@@ -478,6 +478,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       componentsSlider: nanotechManager.componentsSlider,
       maintenance3Slider: nanotechManager.maintenance3Slider,
       electronicsSlider: nanotechManager.electronicsSlider,
+      stage3Resource: nanotechManager.stage3Resource,
       maintenance4Slider: nanotechManager.maintenance4Slider,
       grapheneSlider: nanotechManager.grapheneSlider,
       maxEnergyPercent: nanotechManager.maxEnergyPercent,
@@ -742,6 +743,10 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     nanotechManager.componentsSlider = control.componentsSlider || 0;
     nanotechManager.maintenance3Slider = control.maintenance3Slider || 0;
     nanotechManager.electronicsSlider = control.electronicsSlider || 0;
+    const alternateRecipeUnlocked = projectManager.projects.nanoworld.getShopPurchaseCount('alternateElectronicsRecipe') > 0;
+    nanotechManager.stage3Resource = control.stage3Resource === 'graphite' && alternateRecipeUnlocked
+      ? 'graphite'
+      : 'biomass';
     nanotechManager.maintenance4Slider = control.maintenance4Slider || 0;
     nanotechManager.grapheneSlider = control.grapheneSlider || 0;
     nanotechManager.maxEnergyPercent = control.maxEnergyPercent ?? 10;
