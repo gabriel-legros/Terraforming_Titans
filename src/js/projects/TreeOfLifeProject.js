@@ -1,4 +1,5 @@
 const TREE_OF_LIFE_COLONIST_CAPACITY_COEFFICIENT = 0.01;
+const TREE_OF_LIFE_COLONIST_CAPACITY_MAX_DENSITY_T_PER_M2 = 10000;
 const TREE_OF_LIFE_DENSITY_THRESHOLD_T_PER_M2 = 10;
 const TREE_OF_LIFE_NUTRIENT_PER_BIOMASS = 1e-5;
 const TREE_OF_LIFE_MAX_NUTRIENT_MULTIPLIER = 5;
@@ -74,7 +75,7 @@ class TreeOfLifeProject extends Project {
     }
     return TREE_OF_LIFE_COLONIST_CAPACITY_COEFFICIENT
       * this.getActiveYggieLand()
-      * this.getBiomassDensity();
+      * Math.min(this.getBiomassDensity(), TREE_OF_LIFE_COLONIST_CAPACITY_MAX_DENSITY_T_PER_M2);
   }
 
   getColonistCapacity() {
@@ -230,11 +231,12 @@ class TreeOfLifeProject extends Project {
       getTreeOfLifeText('summary.capacity', 'Colonist Capacity'),
       getTreeOfLifeText(
         'tooltips.capacityFormula',
-        'Colonist capacity = {coefficient} × {land} active Yggie Land × {density} t/m^2 biomass density = {capacity}.',
+        'Colonist capacity = {coefficient} × {land} active Yggie Land × min({density}, {densityCap}) t/m^2 biomass density = {capacity}.',
         {
           coefficient: TREE_OF_LIFE_COLONIST_CAPACITY_COEFFICIENT,
           land: 0,
           density: 0,
+          densityCap: TREE_OF_LIFE_COLONIST_CAPACITY_MAX_DENSITY_T_PER_M2,
           capacity: 0,
         }
       )
@@ -314,11 +316,12 @@ class TreeOfLifeProject extends Project {
     this.uiElements.capacity.textContent = formatNumber(capacity, true, 3);
     this.uiElements.capacity._tooltipContent.textContent = getTreeOfLifeText(
       'tooltips.capacityFormula',
-      'Colonist capacity = {coefficient} × {land} active Yggie Land × {density} t/m^2 biomass density = {capacity}.',
+      'Colonist capacity = {coefficient} × {land} active Yggie Land × min({density}, {densityCap}) t/m^2 biomass density = {capacity}.',
       {
         coefficient: TREE_OF_LIFE_COLONIST_CAPACITY_COEFFICIENT,
         land: formatNumber(activeLand, true, 3),
         density: formatNumber(density, true, 3),
+        densityCap: formatNumber(TREE_OF_LIFE_COLONIST_CAPACITY_MAX_DENSITY_T_PER_M2, true, 3),
         capacity: formatNumber(capacity, true, 3),
       }
     );

@@ -1826,7 +1826,7 @@ setLanguageData({
           terraformingBuildingSource: 'Can be provided by a terraforming building',
           coverage: 'Active Yggie Land determines the fraction of the planetary surface where Yggie biomass can grow.',
           densityMultiplier: 'Growth is normal through 10 t/m^2, then halves for every additional order of magnitude.',
-          capacityFormula: 'Colonist capacity = {coefficient} × {land} active Yggie Land × {density} t/m^2 biomass density = {capacity}.',
+          capacityFormula: 'Colonist capacity = {coefficient} × {land} active Yggie Land × min({density}, {densityCap}) t/m^2 biomass density = {capacity}.',
           nutrientMultiplier: 'Provides between 0 and {maximum} growth multiplier based on nutrients being available.',
         },
         values: {
