@@ -899,7 +899,8 @@ function addSettingsListeners() {
       }
       gameSettings.disableFusionConsumptionScaling = cached.disableFusionConsumptionScalingToggle.checked;
       reapplySharedManagerEffects({
-        includeConditionalReconcile: true
+        includeConditionalReconcile: true,
+        includeRWGEffects: true
       });
     });
   }
