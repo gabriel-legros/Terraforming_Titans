@@ -31,6 +31,12 @@
     gap: 4px;
   }
 
+  label.settings-option:has(> input[type="checkbox"]) {
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+  }
+
   #resource-depletion-warning-seconds-input,
   #scientific-notation-threshold-input {
     width: 64px;
