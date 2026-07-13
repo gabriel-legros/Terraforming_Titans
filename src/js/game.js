@@ -435,49 +435,11 @@ function initializeGameState(options = {}) {
   }
 
   if (!preserveManagers) {
-    gameSettings.autosaveIntervalSeconds = 300;
-    gameSettings.framerate = DEFAULT_GAME_FRAMERATE;
-    applyGameFramerateSetting();
-    gameSettings.useCelsius = false;
-    gameSettings.disableDayNightCycle = false;
-    gameSettings.showSpaceStorageResources = false;
-    gameSettings.disableFusionConsumptionScaling = false;
-    gameSettings.disableSpeedControls = false;
-    gameSettings.unfulfilledMaintenancePenalties = false;
-    gameSettings.earlyAdvancedOversight = false;
-    gameSettings.factoryHeating = false;
-    gameSettings.realisticFactoryEnergyConsumption = false;
-    gameSettings.infinitePatience = false;
-    gameSettings.liftersStrippingCap = false;
-    gameSettings.orbitalCap = false;
-    gameSettings.noOverpopulationCylinders = false;
-    gameSettings.buildingCostMultiplier = 1;
-    gameSettings.researchCostMultiplier = 1;
-    gameSettings.workerRequirementMultiplier = 1;
-    gameSettings.projectDurationMultiplier = 1;
-    gameSettings.popGrowthMultiplier = 1;
-    gameSettings.lifeGrowthMultiplier = 1;
-    gameSettings.maintenanceCostMultiplier = 1;
-    gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier = 1;
-    gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier = 1;
-    gameSettings.advancedResearchMultiplier = 1;
-    gameSettings.skillPointsGainMultiplier = 1;
-    gameSettings.solisPointsGainMultiplier = 1;
-    gameSettings.artifactsGainMultiplier = 1;
-    gameSettings.galaxyFleetCapacityMultiplier = 1;
-    gameSettings.galaxyThreatScalingMultiplier = 1;
-    gameSettings.invasionMultiplier = 1;
-    gameSettings.artificialWorldConstructionTimeMultiplier = 1;
-    gameSettings.rwgRewardsCap = null;
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;
       birchWorldTerraformTimeSeconds = null;
       birchWorldTerraformRealTimeSeconds = null;
-    }
-    const dayNightToggle = typeof document !== 'undefined' ? document.getElementById('day-night-toggle') : null;
-    if (dayNightToggle) {
-      dayNightToggle.checked = gameSettings.disableDayNightCycle;
     }
     updateDifficultySettingInputs();
     nanotechManager.reset();
@@ -1126,6 +1088,7 @@ function update(time, delta) {
 function startNewGame() {
   defaultPlanet = 'mars';
   currentPlanetParameters = getPlanetParameters('mars');
+  resetDifficultySettings();
   totalPlayTimeSeconds = 0;
   totalRealPlayTimeSeconds = 0;
   birchWorldTerraformTimeSeconds = null;

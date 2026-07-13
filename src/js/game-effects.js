@@ -27,6 +27,12 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   rwgRewardsCap: { min: 0, nullable: true, integer: true },
 };
 
+function resetDifficultySettings() {
+  for (const settingId in DIFFICULTY_SETTING_DEFAULTS) {
+    gameSettings[settingId] = DIFFICULTY_SETTING_DEFAULTS[settingId];
+  }
+}
+
 function normalizeDifficultySettingValue(settingId, value) {
   const definition = DIFFICULTY_SETTING_DEFINITIONS[settingId];
   if (definition.nullable && (value === null || value === '')) {

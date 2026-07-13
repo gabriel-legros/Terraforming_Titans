@@ -98,7 +98,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ## Reset and Travel Model
 ### New Game
 - `startNewGame()` fully rebuilds state and returns to Mars.
-- Nothing carries over; all late-set values must be reinitialized.
+- New Game preserves General settings, resets every Difficulty setting to its default, and clears the Difficulty lock and its recorded world.
+- No gameplay progression carries over; all late-set values must be reinitialized.
 
 ### Planet Travel
 - `selectPlanet(key)` performs soft reset with manager persistence.

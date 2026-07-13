@@ -425,6 +425,20 @@ function wireDifficultyNullableCapInput(input, settingId) {
 
 function updateDifficultySettingInputs() {
   const cached = cacheSettingsElements();
+  const toggles = {
+    disableDayNightCycle: cached.dayNightToggle,
+    earlyAdvancedOversight: cached.earlyAdvancedOversightToggle,
+    disableFusionConsumptionScaling: cached.disableFusionConsumptionScalingToggle,
+    disableSpeedControls: cached.disableSpeedControlsToggle,
+    immigrationPool: cached.immigrationPoolToggle,
+    unfulfilledMaintenancePenalties: cached.unfulfilledMaintenancePenaltiesToggle,
+    factoryHeating: cached.factoryHeatingToggle,
+    realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
+    infinitePatience: cached.infinitePatienceToggle,
+    liftersStrippingCap: cached.liftersStrippingCapToggle,
+    orbitalCap: cached.orbitalCapToggle,
+    noOverpopulationCylinders: cached.noOverpopulationCylindersToggle,
+  };
   const inputs = {
     buildingCostMultiplier: cached.buildingCostMultiplierInput,
     researchCostMultiplier: cached.researchCostMultiplierInput,
@@ -447,6 +461,11 @@ function updateDifficultySettingInputs() {
   };
 
   normalizeDifficultySettings();
+  for (const settingId in toggles) {
+    if (toggles[settingId]) {
+      toggles[settingId].checked = gameSettings[settingId];
+    }
+  }
   for (const settingId in inputs) {
     const input = inputs[settingId];
     if (!input) {
