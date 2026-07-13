@@ -18,6 +18,7 @@ let spaceRandomTabVisible = false;
 let spaceAtlasTabVisible = false;
 let spaceGalaxyTabVisible = false;
 let spaceSubtabManager = null;
+let spaceSubtabActivationHandlerRegistered = false;
 // Cache the last rendered world so we can skip redundant updates
 let lastWorldKey = null;
 let lastWorldSeed = null;
@@ -547,24 +548,29 @@ function updateSpaceRandomVisibility() {
     }
 }
 
+function handleSpaceSubtabActivated(id) {
+    if (id === 'space-atlas' && typeof updateAtlasUI === 'function') {
+        updateAtlasUI({ force: true });
+    }
+    if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
+        updateGalaxyUI({ force: true });
+        maybeShowGalaxyWelcomePopup();
+    }
+    if (id === 'space-invasion') {
+        updateGalacticInvasionUI({ force: true });
+    }
+    if (id === 'space-story') {
+        markSpaceStoryAlertViewed();
+    }
+}
+
 function initializeSpaceTabs() {
     if (typeof SubtabManager !== 'function') return;
     spaceSubtabManager = new SubtabManager('.space-subtab', '.space-subtab-content', true);
-    spaceSubtabManager.onActivate((id) => {
-        if (id === 'space-atlas' && typeof updateAtlasUI === 'function') {
-            updateAtlasUI({ force: true });
-        }
-        if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
-            updateGalaxyUI({ force: true });
-            maybeShowGalaxyWelcomePopup();
-        }
-        if (id === 'space-invasion') {
-            updateGalacticInvasionUI({ force: true });
-        }
-        if (id === 'space-story') {
-            markSpaceStoryAlertViewed();
-        }
-    });
+    if (!spaceSubtabActivationHandlerRegistered) {
+        registerSubtabActivationHandler('space-subtab', handleSpaceSubtabActivated);
+        spaceSubtabActivationHandlerRegistered = true;
+    }
 }
 
 function activateSpaceSubtab(subtabId) {
