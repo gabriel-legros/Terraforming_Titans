@@ -447,6 +447,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       control.landAsResearchOutpost = colony.landAsResearchOutpost === true;
       control.capWorkersToAerostatCapacity =
         colony.capWorkersToAerostatCapacity === true;
+      control.capSupportedBuildingsToAerostatCapacity =
+        colony.capSupportedBuildingsToAerostatCapacity === true;
       control.androidCapacityShare = colony.getAndroidCapacityShare();
     }
     return control;
@@ -673,6 +675,15 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       colony.capWorkersToAerostatCapacity =
         control.capWorkersToAerostatCapacity === true;
       colony.refreshWorkerCapacityCapState?.();
+      changed = true;
+    }
+    if (
+      'capSupportedBuildingsToAerostatCapacity' in control &&
+      colony.capSupportedBuildingsToAerostatCapacity !==
+        control.capSupportedBuildingsToAerostatCapacity
+    ) {
+      colony.capSupportedBuildingsToAerostatCapacity =
+        control.capSupportedBuildingsToAerostatCapacity === true;
       changed = true;
     }
     if ('androidCapacityShare' in control) {

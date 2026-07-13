@@ -896,6 +896,7 @@ setLanguageData({
         androidSpaceTooltip: 'Reserve part of each aerostat for android housing instead of colonists. The slider value is android capacity per aerostat out of 10 total housing slots.',
         capActiveToSupported: 'Cap Active to Supported',
         capWorkersToAerostatCapacity: 'Cap workers to aerostat capacity',
+        capSupportedBuildingsToAerostatCapacity: 'Cap active and autobuild buildings to aerostat capacity',
         landAsResearchOutpost: 'Land as Research Outpost',
         buoyancyTelemetryPending: 'Buoyancy telemetry pending.',
         detailsTitle: 'Aerostats Details',

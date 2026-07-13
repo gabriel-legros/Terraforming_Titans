@@ -1090,6 +1090,21 @@ function canApplyAutoActiveTarget(building) {
     return !!building.autoActiveEnabled;
 }
 
+function getAerostatSupportedBuildingLimit(building) {
+    const aerostat = colonies.aerostat_colony;
+    if (
+        !aerostat.shouldCapSupportedBuildingsToAerostatCapacity() ||
+        building.aerostatReduction <= 0
+    ) {
+        return Infinity;
+    }
+
+    return Math.max(
+        0,
+        Math.floor(aerostat.activeNumber * building.aerostatReduction)
+    );
+}
+
 function getAutoActivationTargetCount(building, population, workerCap, totalLand, collection) {
     const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
     if (usesFillMode) {
@@ -1136,19 +1151,6 @@ function autoActivateStructures(buildings) {
 
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
-        if (!building || !building.shouldClampSetActiveToSupported || !building.shouldClampSetActiveToSupported()) {
-            continue;
-        }
-        const supportedCap = Math.max(0, Math.floor(building.getSupportedActiveCap()));
-        const change = supportedCap - building.activeNumber;
-        if (change >= 0) {
-            continue;
-        }
-        adjustStructureActivation(building, change);
-    }
-
-    for (const buildingName in buildings) {
-        const building = buildings[buildingName];
         if (!canApplyAutoActiveTarget(building)) {
             continue;
         }
@@ -1164,6 +1166,27 @@ function autoActivateStructures(buildings) {
             : Math.min(targetCount, building.countNumber);
         const change = desiredActive - building.activeNumber;
         if (change !== 0) {
+            adjustStructureActivation(building, change);
+        }
+    }
+
+    for (const buildingName in buildings) {
+        const building = buildings[buildingName];
+        if (!building) {
+            continue;
+        }
+        let supportedCap = getAerostatSupportedBuildingLimit(building);
+        if (building.shouldClampSetActiveToSupported && building.shouldClampSetActiveToSupported()) {
+            supportedCap = Math.min(
+                supportedCap,
+                Math.max(0, Math.floor(building.getSupportedActiveCap()))
+            );
+        }
+        if (supportedCap === Infinity) {
+            continue;
+        }
+        const change = supportedCap - building.activeNumber;
+        if (change < 0) {
             adjustStructureActivation(building, change);
         }
     }
@@ -1197,11 +1220,16 @@ function autoBuild(buildings, delta = 0) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {
                 const fillData = getAutoBuildFillData(building);
-                if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony && fillData.requiredAmount > 0) {
+                const supportedLimit = getAerostatSupportedBuildingLimit(building);
+                const requiredAmount = Math.min(
+                    fillData.requiredAmount,
+                    supportedLimit - building.countNumber
+                );
+                if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony && requiredAmount > 0) {
                     buildableBuildings.push({
                         building,
                         currentRatio: Math.max(0, 1 - fillData.fillRatio),
-                        requiredAmount: fillData.requiredAmount,
+                        requiredAmount,
                         maxMode: false,
                     });
                 }
@@ -1222,7 +1250,7 @@ function autoBuild(buildings, delta = 0) {
             const roundedPercentTarget = building.autoBuildBasis === 'aerostatCapacity'
                 ? Math.floor(percentTarget)
                 : Math.ceil(percentTarget);
-            const targetCount = usesMaxBasis
+            const uncappedTargetCount = usesMaxBasis
                 ? (usesAdjustableMaxBasis ? building.getAutoBuildMaxTargetCount() : Infinity)
                 : usesFixedBasis
                     ? fixedTarget
@@ -1233,12 +1261,18 @@ function autoBuild(buildings, delta = 0) {
                             : usesAndroidCountBasis
                             ? building.getAndroidCountTarget(resources.colony.androids.value || 0)
                             : usesAndroidCapacityShareBasis
-                                ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
+                            ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
                             : roundedPercentTarget;
+            const targetCount = Math.min(
+                uncappedTargetCount,
+                getAerostatSupportedBuildingLimit(building)
+            );
 
             if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony) {
                 const currentRatio = usesMaxBasis && !usesAdjustableMaxBasis ? 0 : (targetCount > 0 ? building.countNumber / targetCount : 0);
-                const requiredAmount = usesMaxBasis && !usesAdjustableMaxBasis ? 1 : targetCount - building.countNumber;
+                const requiredAmount = usesMaxBasis && !usesAdjustableMaxBasis
+                    ? Math.min(1, targetCount - building.countNumber)
+                    : targetCount - building.countNumber;
 
                 if (requiredAmount > 0) {
                     buildableBuildings.push({
@@ -1304,10 +1338,13 @@ function autoBuild(buildings, delta = 0) {
             } else if (building.autoBuildPriority >= -1) {
                 extraReserves = reserveForPriorityZeroToTwo;
             }
+            const buildLimit = Math.min(
+                building.getAutoBuildCountLimit(),
+                getAerostatSupportedBuildingLimit(building)
+            );
             const maxCount = building.getAutoBuildMaxCount(reserve, extraReserves);
-            const buildLimit = building.getAutoBuildCountLimit();
             const maxTargetCount = maxMode && building.getAutoBuildMaxTargetCount
-                ? building.getAutoBuildMaxTargetCount()
+                ? Math.min(building.getAutoBuildMaxTargetCount(), buildLimit)
                 : buildLimit;
             const desiredAmount = maxMode
                 ? maxTargetCount - building.countNumber
@@ -1320,7 +1357,10 @@ function autoBuild(buildings, delta = 0) {
                 building.autoBuildPartial = true;
                 markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
             }
-            buildCount = canBuildFull ? desiredAmount : maxCount;
+            buildCount = Math.min(
+                canBuildFull ? desiredAmount : maxCount,
+                desiredAmount
+            );
 
             if (maxMode && buildCount > 0 && buildCount < desiredAmount) {
                 building.autoBuildPartial = true;

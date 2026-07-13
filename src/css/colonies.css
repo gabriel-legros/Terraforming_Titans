@@ -723,6 +723,18 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   font-variant-numeric: tabular-nums;
 }
 
+.colony-buoyancy-card .colony-buoyancy-worker-cap-row {
+  flex-wrap: wrap;
+  column-gap: 16px;
+}
+
+.colony-buoyancy-card .colony-buoyancy-worker-cap-label,
+.colony-buoyancy-card .colony-buoyancy-building-cap-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .colony-buoyancy-card .colony-buoyancy-capacity-row {
   flex-wrap: nowrap;
   gap: 8px;
