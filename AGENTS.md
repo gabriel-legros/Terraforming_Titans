@@ -63,7 +63,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Steam/Electron builds expose a UI scale setting through `electron/preload.cjs` / Electron zoom factor; Settings shows a scale dropdown and browser builds hide it.
 - Steam/Electron builds launch fullscreen at the primary display size when Steam sets `SteamDeck=1`; regular desktop launches keep the standard 1400x950 window.
 - Steam/Electron builds disable Chromium/Electron background throttling and app suspension in `electron/main.cjs` so simulation and automation keep running while minimized or occluded.
-- Steam/Electron builds capture renderer crashes, uncaught renderer errors, and main-process failures in a local `logs/crash.log`, then show a small isolated crash-report window with copy and log-folder controls.
+- Steam/Electron builds capture renderer crashes, uncaught renderer errors, and main-process failures in a local `logs/crash.log`, redact user/install paths, then show a small isolated crash-report window with copy and log-folder controls.
 - Steam/Electron builds enable the ecumenopolis city-world visualizer through `GAME_FEATURES.steamExclusiveEcumenopolisVisualizer`; browser builds keep the standard planet surface visuals.
 - Steam/Electron builds expose Steam-exclusive Atlas challenge worlds through `GAME_FEATURES.steamExclusiveAtlasWorlds`; browser builds hide them.
 - Browser builds run `scripts/purge-browser-parameters.js` after copying source files, removing Steam/Electron-exclusive research, project, Atlas seed, and dominion parameter definitions from `dist/browser` while leaving source parameters intact.

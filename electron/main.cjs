@@ -37,25 +37,46 @@ function writeCrashLog(reportText) {
   return logPath;
 }
 
+function redactCrashPaths(value) {
+  let redacted = String(value || '');
+  const privatePaths = [
+    [app.getPath('userData'), '<game-data>'],
+    [app.getAppPath(), '<game>'],
+    [app.getPath('home'), '<user-home>']
+  ];
+  privatePaths.forEach(([privatePath, replacement]) => {
+    const slashPath = privatePath.replace(/\\/g, '/');
+    const variants = new Set([privatePath, slashPath, encodeURI(slashPath)]);
+    variants.forEach(variant => {
+      const escapedVariant = variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      redacted = redacted.replace(new RegExp(escapedVariant, 'gi'), replacement);
+    });
+  });
+  return redacted;
+}
+
 function createCrashReport(type, message, stack, details) {
   const timestamp = new Date().toISOString();
+  const safeMessage = redactCrashPaths(message);
+  const safeDetails = redactCrashPaths(details);
+  const safeStack = redactCrashPaths(stack);
   const reportLines = [
     `[${timestamp}] ${type}`,
-    `Message: ${message}`,
+    `Message: ${safeMessage}`,
     `Game: ${app.getVersion()}`,
     `Electron: ${process.versions.electron}`,
     `Chrome: ${process.versions.chrome}`,
     `Platform: ${process.platform} ${process.arch}`
   ];
-  if (details) {
-    reportLines.push(`Details: ${details}`);
+  if (safeDetails) {
+    reportLines.push(`Details: ${safeDetails}`);
   }
-  if (stack) {
-    reportLines.push('', stack);
+  if (safeStack) {
+    reportLines.push('', safeStack);
   }
   return {
     type,
-    message,
+    message: safeMessage,
     text: reportLines.join('\n'),
     logPath: ''
   };
@@ -145,7 +166,7 @@ function reportCrash(type, message, stack, details) {
   try {
     report.logPath = writeCrashLog(report.text);
   } catch (error) {
-    report.text += `\n\nCrash log write failed: ${error.message}`;
+    report.text += `\n\nCrash log write failed: ${redactCrashPaths(error.message)}`;
   }
   showCrashWindow(report);
 }
