@@ -268,13 +268,29 @@ const skillParameters = {
     cost: 1,
     maxRank: 5,
     hiddenUntilRevealed: true,
-    effect: {
-      target: 'colony',
-      targetId: 't7_colony',
-      type: 'storageMultiplier',
-      baseValue: 0.2,
-      perRank: true
-    },
+    effects: [
+      {
+        target: 'colony',
+        targetId: 't7_colony',
+        type: 'storageMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'colony',
+        targetId: 't7_colony',
+        type: 'productionMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'colony',
+        targetId: 't7_colony',
+        type: 'consumptionMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      }
+    ],
     requires: []
   }
 };

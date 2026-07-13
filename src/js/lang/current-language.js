@@ -7300,7 +7300,7 @@ setLanguageData({
       },
       ecumenopolis_capacity: {
         name: 'Ecumenopolis Capacity',
-        description: 'Increases Ecumenopolis District capacity by 20% per rank',
+        description: 'Increases Ecumenopolis District capacity, production and consumption by 20% per rank',
       },
       project_speed: {
         name: 'Faster Projects',
