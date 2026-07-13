@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$ROOT_DIR/dist/browser"
 
+node "$ROOT_DIR/scripts/update-game-version.js" check
+
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR/src"
 

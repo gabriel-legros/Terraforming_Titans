@@ -58,6 +58,14 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Story-only project classes live under `src/js/story/`; keep their `index.html` script tags after required project base classes.
 - Planet travel/state: `SpaceManager`.
 
+## Versioning and Releases
+- `package.json` is the source of truth for the game version. Keep `package-lock.json` and the generated browser global in `src/js/game-version.js` synchronized through `scripts/update-game-version.js`.
+- Versions use SemVer. Playtest releases use the prerelease suffix `-playtest.N`; do not use a fourth numeric segment.
+- `scripts/upload-steam-playtest.sh` advances a stable version to the next patch at `playtest.1`, then increments the Playtest number on later uploads. For example: `1.1.0` -> `1.1.1-playtest.1` -> `1.1.1-playtest.2`.
+- `scripts/upload-steam.sh` promotes the current Playtest version to its stable version, or increments the patch when the current version is already stable. For example: `1.1.1-playtest.2` -> `1.1.1` -> `1.1.2`.
+- Uploads with `SKIP_STEAM_BUILD=1` do not change the version. Set `SKIP_VERSION_BUMP=1` when rebuilding or retrying the current version without advancing it.
+- Direct browser and Steam builds verify that all three version files agree before packaging.
+
 ## Key Systems
 - Skills: `skills.js`, `skillsUI.js`
 - Life Designer: `life.js`, `lifeUI.js`

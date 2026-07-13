@@ -344,6 +344,12 @@
   .save-slots .settings-discord-button:focus {
     background-color: #4752c4;
   }
+
+  .save-slots .settings-game-version {
+    margin-top: 2px;
+    font-size: 0.8em;
+    opacity: 0.7;
+  }
   
   .save-slots button:disabled {
     background-color: #ccc;

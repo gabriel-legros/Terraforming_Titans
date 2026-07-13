@@ -105,6 +105,11 @@ function addSaveLoadListeners() {
 
 function initializeSaveSubtab() {
   document.getElementById('save-storage-warning').hidden = !GAME_FEATURES.browserStorageWarning;
+  document.getElementById('game-version-label').textContent = t(
+    'ui.settings.gameVersion',
+    { version: GAME_VERSION },
+    `Version ${GAME_VERSION}`
+  );
   initializeExitSaveSlot();
   loadSaveSlotNames();
   loadSaveSlotDates();

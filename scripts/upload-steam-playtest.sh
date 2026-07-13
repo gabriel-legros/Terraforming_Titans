@@ -13,4 +13,5 @@ exec bash "$SCRIPT_DIR/upload-steam-target.sh" \
   "steam-playtest-win-unpacked" \
   "TerraformingTitansPlaytest" \
   "build-steam-playtest.sh" \
+  "playtest" \
   "$LINUX_DEPOT_ID:steam-playtest-linux-unpacked:linux"

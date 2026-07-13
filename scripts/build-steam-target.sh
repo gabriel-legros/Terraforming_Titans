@@ -10,6 +10,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$ROOT_DIR/dist/$OUT_DIR_NAME"
 BUILD_TARGET_FILE="$ROOT_DIR/src/js/build-target.js"
 
+node "$ROOT_DIR/scripts/update-game-version.js" check
+
 restore_build_target() {
   cat > "$BUILD_TARGET_FILE" <<'BUILD_TARGET'
 const GAME_BUILD_TARGET = 'browser';
