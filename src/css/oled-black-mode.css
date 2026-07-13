@@ -1,0 +1,185 @@
+/* OLED Black keeps large, static surfaces fully black while using subtle
+   near-black elevation to preserve boundaries and control affordances. */
+body.oled-black-mode {
+    --oled-black: #000;
+    --oled-surface-low: #050505;
+    --oled-surface: #0a0a0a;
+    --oled-surface-high: #121212;
+    --oled-surface-active: #202020;
+    --oled-border: #2c2c2c;
+    --oled-border-strong: #444;
+    --oled-text: #ededed;
+    --oled-text-muted: #aaa;
+    --wgc-bg-dark: #000;
+    --wgc-bg-medium: #080808;
+    --wgc-bg-light: #161616;
+    --rwg-bg: #000;
+    --rwg-card: #080808;
+    --rwg-panel: #101010;
+    --rwg-border: #303030;
+    --rwg-muted: #181818;
+    background-color: var(--oled-black);
+    color: var(--oled-text);
+    scrollbar-color: #666 var(--oled-black);
+}
+
+.oled-black-mode ::-webkit-scrollbar-track {
+    background: var(--oled-black);
+    border-left-color: var(--oled-border);
+}
+
+.oled-black-mode ::-webkit-scrollbar-thumb {
+    background: #666;
+    border-color: var(--oled-black);
+}
+
+.oled-black-mode .tabs,
+.oled-black-mode .buildings-subtabs,
+.oled-black-mode .colonies-subtabs,
+.oled-black-mode .research-subtabs,
+.oled-black-mode .projects-subtabs,
+.oled-black-mode .terraforming-subtabs,
+.oled-black-mode .hope-subtabs,
+.oled-black-mode .settings-subtabs,
+.oled-black-mode .space-subtabs {
+    background-color: var(--oled-surface-low);
+}
+
+.oled-black-mode .tab,
+.oled-black-mode .building-subtab,
+.oled-black-mode .colony-subtab,
+.oled-black-mode .research-subtab,
+.oled-black-mode .projects-subtab,
+.oled-black-mode .terraforming-subtab,
+.oled-black-mode .hope-subtab,
+.oled-black-mode .settings-subtab,
+.oled-black-mode .space-subtab {
+    background-color: var(--oled-surface);
+    color: var(--oled-text);
+}
+
+.oled-black-mode .tab.active,
+.oled-black-mode .building-subtab.active,
+.oled-black-mode .colony-subtab.active,
+.oled-black-mode .research-subtab.active,
+.oled-black-mode .projects-subtab.active,
+.oled-black-mode .terraforming-subtab.active,
+.oled-black-mode .hope-subtab.active,
+.oled-black-mode .settings-subtab.active,
+.oled-black-mode .space-subtab.active {
+    background-color: var(--oled-surface-active);
+}
+
+.oled-black-mode .tab-content-wrapper,
+.oled-black-mode .tab-content,
+.oled-black-mode .resource-wrapper {
+    background-color: var(--oled-black);
+}
+
+.oled-black-mode .journal,
+.oled-black-mode .journal-index-world,
+.oled-black-mode .journal-automation-section,
+.oled-black-mode .solis-container,
+.oled-black-mode .ringworld-terraforming-panel,
+.oled-black-mode #nanocolony-container .nanotech-summary-card,
+.oled-black-mode #nanocolony-container .nanotech-slider-card,
+.oled-black-mode .terraforming-graphs-window,
+.oled-black-mode .save-slots th {
+    background-color: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .journal-index-world-header,
+.oled-black-mode .card-header,
+.oled-black-mode .cult-security-panel,
+.oled-black-mode .terraforming-graphs-header {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .journal-index-chapters,
+.oled-black-mode .terraforming-graphs-canvas,
+.oled-black-mode .terraforming-graphs-phase-canvas {
+    background: var(--oled-black);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .project-card,
+.oled-black-mode .info-card,
+.oled-black-mode .mirror-oversight-card,
+.oled-black-mode .dyson-swarm-card,
+.oled-black-mode .stellar-engine-panel,
+.oled-black-mode .research-item,
+.oled-black-mode .terraforming-box,
+.oled-black-mode .solis-quest-area,
+.oled-black-mode .solis-shop-container,
+.oled-black-mode .sliders-box,
+.oled-black-mode .settings-achievement-row,
+.oled-black-mode .stat-item,
+.oled-black-mode .resource-disposal-target-card,
+.oled-black-mode .automation-import-dialog-window,
+.oled-black-mode .load-string-dialog-window,
+.oled-black-mode .space-storage-settings-window {
+    background: var(--oled-surface);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .card-footer,
+.oled-black-mode .cult-security-row,
+.oled-black-mode .solis-shop-item:hover {
+    background-color: var(--oled-surface);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode button,
+.oled-black-mode select,
+.oled-black-mode textarea,
+.oled-black-mode input[type="text"],
+.oled-black-mode input[type="number"] {
+    background-color: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+    color: var(--oled-text);
+}
+
+.oled-black-mode button:hover:not(:disabled),
+.oled-black-mode select:hover:not(:disabled) {
+    background-color: var(--oled-surface-active);
+}
+
+.oled-black-mode .toggle-completed-button,
+.oled-black-mode .research-hide-toggle,
+.oled-black-mode .save-slots button,
+.oled-black-mode .terraforming-infographic-button,
+.oled-black-mode .terraforming-graphs-button,
+.oled-black-mode .terraforming-graphs-close,
+.oled-black-mode .terraforming-graphs-menu-button,
+.oled-black-mode .terraforming-graphs-phase-button {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode .save-slots button:disabled,
+.oled-black-mode #solis-refresh-button:disabled,
+.oled-black-mode #solis-complete-button:disabled,
+.oled-black-mode .solis-shop-item button:disabled {
+    background-color: var(--oled-surface-low);
+}
+
+.oled-black-mode .mirror-details-card.facility-incomplete .mirror-facility-overlay,
+.oled-black-mode .lantern-details-card.facility-incomplete .mirror-facility-overlay {
+    background: rgba(0, 0, 0, 0.94);
+}
+
+.oled-black-mode .auto-travel-loading-popup {
+    background: rgba(5, 5, 5, 0.97);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode .stat-label,
+.oled-black-mode .terraforming-box p,
+.oled-black-mode .solis-shop-item-cost,
+.oled-black-mode .solis-shop-item-count,
+.oled-black-mode #nanocolony-container .nanotech-hint,
+.oled-black-mode #nanocolony-container .nanotech-slider-card .slider-description {
+    color: var(--oled-text-muted);
+}

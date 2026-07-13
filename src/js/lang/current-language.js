@@ -4909,6 +4909,7 @@ setLanguageData({
         light: 'Light',
         darkGrey: 'Dark grey',
         darkBlue: 'Dark blue',
+        oledBlack: 'OLED Black',
       },
       showSpaceResources: 'Show space resources in default resource panel',
       netResourceRateDisplay: 'Net resource rate display',
