@@ -1164,6 +1164,10 @@
   font-weight: 700;
 }
 
+.space-slider-allocation {
+  min-width: 55px;
+}
+
 .space-slider-energy {
   margin-top: 8px;
   color: var(--space-fg-muted);

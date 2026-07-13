@@ -364,8 +364,7 @@ class Project extends EffectableEntity {
   }
 
   updateDurationFromEffects() {
-    const base = this.getBaseDuration();
-    const newDuration = base * this.getDurationMultiplier();
+    const newDuration = this.getEffectiveDuration();
     if (this.isActive && this.isContinuous()) {
       this.startingDuration = Infinity;
       this.remainingTime = Infinity;
@@ -1202,7 +1201,7 @@ class ProjectManager extends EffectableEntity {
   }
 
   getDurationMultiplier(project, options) {
-    let multiplier = 1;
+    let multiplier = getMegaprojectsCoordinationProjectDurationMultiplier(spaceManager, project);
     const isSpaceshipProject = !!(
       options?.treatAsSpaceshipProject
       || project.attributes.spaceMining

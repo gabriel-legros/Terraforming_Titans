@@ -838,6 +838,7 @@ class ArtificialManager extends EffectableEntity {
         }
         if (!this.enabled) return;
         if (this.activeProject && this.activeProject.status === 'building') {
+            this.refreshActiveProjectDuration();
             this.setRemainingTime(this.activeProject.remainingMs - delta, false);
             if (this.activeProject && this.activeProject.status === 'completed') {
                 this.runAutomation();
@@ -969,7 +970,9 @@ class ArtificialManager extends EffectableEntity {
         const hectares = this.calculateAreaHectares(radiusEarth);
         const batches = hectares / 50_000_000_000;
         const hours = this.constructionHoursPer50B * Math.max(batches, 0);
-        return hours * 3_600_000 * this.getConstructionTimeMultiplier();
+        return hours * 3_600_000
+            * this.getConstructionTimeMultiplier()
+            / getMegaprojectsCoordinationMegaprojectSpeedMultiplier(spaceManager);
     }
 
     getConstructionTimeMultiplier() {
@@ -984,10 +987,24 @@ class ArtificialManager extends EffectableEntity {
 
     getDurationContext(radiusEarth) {
         const base = this.calculateDurationMs(radiusEarth);
-        const worlds = spaceManager && spaceManager.getTerraformedPlanetCount
-            ? Math.max(spaceManager.getTerraformedPlanetCount(), 1)
-            : 1;
+        const worlds = Math.max(spaceManager.getTerraformedPlanetCount(), 1);
         return { durationMs: base / worlds, worldCount: worlds };
+    }
+
+    refreshActiveProjectDuration() {
+        if (!this.activeProject || this.activeProject.status !== 'building') return false;
+        const previousDuration = Math.max(this.activeProject.durationMs || 0, 0);
+        const previousRemaining = Math.max(this.activeProject.remainingMs || 0, 0);
+        const context = this.getDurationContext(this.activeProject.radiusEarth);
+        if (context.durationMs === previousDuration) return false;
+        const progress = previousDuration > 0
+            ? Math.max(0, Math.min(1, 1 - previousRemaining / previousDuration))
+            : 0;
+        this.activeProject.durationMs = context.durationMs;
+        this.activeProject.remainingMs = context.durationMs * (1 - progress);
+        this.activeProject.worldDivisor = context.worldCount;
+        this.markUIDirty(false);
+        return true;
     }
 
     getAutoRadius(bounds) {

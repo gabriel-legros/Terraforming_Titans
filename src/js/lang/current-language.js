@@ -3734,6 +3734,12 @@ setLanguageData({
           productivityLine: 'Productivity: {value}%',
           tooltip: "Sets how much Warpnet access HOPE gives to the O'Neill cylinders.\n\nAt 0, the agreement is inactive and consumes no space energy. At 1, each O'Neill cylinder consumes 1Q space energy per second. Cost scales exponentially beyond that. \n\nThis slider has productivity and gives partial benefits in case of shortage.\n\n HOPE receives two bonuses in exchange.  First, Manufacturing Worlds gain extra usable manufacturing population equal to 10T per O'Neill cylinder, scaled by slider tick / 10 and by productivity. Second, every fully controlled sector gains extra Warp Gate Network growth equal to O'Neill cylinders divided across fully controlled sectors, multiplied by slider tick and productivity.  Cylinders can provide more worlds for Warp Gate Network expansion than their own value.",
         },
+        megaprojectsCoordination: {
+          label: 'Megaprojects Coordination',
+          summaryDefault: 'Megaprojects: 50% (×1 speed) | Advanced research: 50% (×1 gain)',
+          summary: 'Megaprojects: {megaprojects}% (×{megaprojectSpeed} speed) | Advanced research: {advancedResearch}% (×{advancedResearchMultiplier} gain)',
+          tooltip: 'Allocates UHF coordination between megaprojects and advanced research in 5% steps. Megaproject speed affects Mega, Giga, and Tera project expansion plus artificial-world construction. Active durations adjust immediately without changing completion percentage.',
+        },
       },
       currentWorldLabel: 'Current World',
       originalProperties: 'Original Properties',
@@ -5188,8 +5194,8 @@ setLanguageData({
         description: 'Digs through regolith to extract silica.',
       },
       iceHarvester: {
-        name: 'Ice Harvesters',
-        description: 'Drones that roam the surface looking for ice. Self sufficient, but require heavy maintenance and only work during the day.',
+        name: 'Ice Harvester',
+        description: 'A drone that roams the surface looking for ice. Self sufficient, but requires heavy maintenance and only work during the day.',
       },
       waterPump: {
         name: 'Water Pump',
@@ -6386,6 +6392,10 @@ setLanguageData({
         cylinders_hope_collaboration_agreement: {
           name: 'Cylinders-HOPE Collaboration Agreement',
           description: 'The cylinders have cheap access to space and are uniquely suited for manufacturing and for expanding the Warp Gate Network. However, their infrastructure is lacking and unstable.  If HOPE provides Warpnet access they will work in exchange. Unlocks a slider under the space story tab.',
+        },
+        megaprojects_coordination: {
+          name: 'Megaprojects coordination',
+          description: 'As the UHF grows larger and larger we must not lose focus on what is important.  Enables a new space slider.',
         },
         high_gravity_adaptation: {
           name: 'High-gravity adaptation',

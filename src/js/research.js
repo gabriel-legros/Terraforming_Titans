@@ -206,12 +206,13 @@ class Research {
     }
 
     calculateAdvancedResearchMultiplier() {
-      return this.activeEffects.reduce((multiplier, effect) => {
+      const effectMultiplier = this.activeEffects.reduce((multiplier, effect) => {
         if (effect.type === 'advancedResearchBoost') {
           return multiplier * effect.value;
         }
         return multiplier;
       }, 1);
+      return effectMultiplier * getMegaprojectsCoordinationAdvancedResearchMultiplier(spaceManager);
     }
 
     applyEffect(effect) {

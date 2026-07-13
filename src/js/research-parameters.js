@@ -2341,6 +2341,23 @@ const researchParameters = {
         ]
       },
       {
+        id: 'megaprojects_coordination',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 600000000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'spaceManager',
+            type: 'booleanFlag',
+            flagId: 'megaprojectsCoordination',
+            effectId: 'research-megaprojects-coordination-space-flag',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'high_gravity_adaptation',
         name: '',
         description: '',
