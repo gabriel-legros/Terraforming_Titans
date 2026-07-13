@@ -160,6 +160,35 @@ input[type="range"].pretty-slider {
   pointer-events: none;
 }
 
+#colony-sliders-container .slider-container .tick-marks {
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+#colony-sliders-container .slider-container {
+  --colony-slider-track-color: #c0c0c0;
+  isolation: isolate;
+}
+
+#colony-sliders-container .slider-container::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 0.5rem;
+  border-radius: 1rem;
+  background: var(--colony-slider-track-color);
+  transform: translateY(-50%);
+}
+
+#colony-sliders-container input[type="range"].pretty-slider {
+  position: relative;
+  z-index: 2;
+}
+
 .slider-container .tick-marks span {
   width: 1px;
   height: 5px;
@@ -201,6 +230,14 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   width: 1rem;
   border-radius: 1rem;
   border: none;
+}
+
+#colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+#colony-sliders-container input[type="range"].pretty-slider::-moz-range-track {
+  background: transparent;
 }
 
 #colony-controls-container {

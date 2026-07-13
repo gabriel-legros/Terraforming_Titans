@@ -42,6 +42,14 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Screenshot output under `artifacts/screenshots/` is ignored by Git. Inspect the generated PNG with the local image viewer before reporting visual results.
 - If Playwright Chromium is missing after `npm ci`, install it with Windows Node: `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npx playwright install chromium"`.
 
+## General UI Screenshots
+- Use `npm run screenshot:ui` to capture any game element by CSS selector. The harness starts a temporary local server, uses an isolated Playwright browser context, and writes PNGs under `artifacts/screenshots/` by default.
+- From WSL on the Windows checkout, run it with Windows Node:
+  - `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm run screenshot:ui -- --selector #colony-sliders-container --setup scripts/screenshot-setups/colony-sliders.js --theme darkBlue --output artifacts/screenshots/colony-sliders.png"`
+- Use `--setup <path>` for a page-side JavaScript scenario that unlocks, navigates, or configures the requested game state before capture. Setup scripts call ordered game globals directly and do not change `DEBUG_MODE` unless that scenario specifically requires it.
+- Run `npm run screenshot:ui -- --help` for selector match index, page URL, theme, viewport, padding, settle time, timeout, full-page, and headed options.
+- Inspect every generated PNG with the local image viewer before reporting visual results.
+
 ## Project Overview
 - Browser incremental game with script entry via `index.html`.
 - Core simulation: `terraforming.js`, `physics.js`, cycle modules.

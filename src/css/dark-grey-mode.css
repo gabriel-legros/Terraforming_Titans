@@ -2356,7 +2356,7 @@ body.dark-grey-mode {
 /* Colony slider track / thumb — scoped to colony tab only so we
    don't conflict with the nanocolony or automation overrides */
 .dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-runnable-track {
-    background: #4d4d4d;
+    background: transparent;
 }
 
 .dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-thumb {
@@ -2364,7 +2364,11 @@ body.dark-grey-mode {
 }
 
 .dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-track {
-    background: #4d4d4d;
+    background: transparent;
+}
+
+.dark-grey-mode #colony-sliders-container .slider-container {
+    --colony-slider-track-color: #4d4d4d;
 }
 
 .dark-grey-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-thumb {

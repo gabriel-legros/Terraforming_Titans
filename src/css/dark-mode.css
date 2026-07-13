@@ -2532,7 +2532,7 @@ body.dark-mode {
 /* Colony slider track / thumb — scoped to colony tab only so we
    don't conflict with the nanocolony or automation overrides */
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-runnable-track {
-    background: #24324a;
+    background: transparent;
 }
 
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-webkit-slider-thumb {
@@ -2540,7 +2540,11 @@ body.dark-mode {
 }
 
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-track {
-    background: #24324a;
+    background: transparent;
+}
+
+.dark-mode #colony-sliders-container .slider-container {
+    --colony-slider-track-color: #24324a;
 }
 
 .dark-mode #colony-sliders-container input[type="range"].pretty-slider::-moz-range-thumb {
