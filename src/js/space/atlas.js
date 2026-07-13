@@ -52,6 +52,20 @@ class AtlasManager extends EffectableEntity {
         return this.getChallengeDefinitions().filter((definition) => ATLAS_FEATURED_SEED_KEYS.includes(definition.key));
     }
 
+    getFeaturedAwakeningSkillIds() {
+        const skillIds = [];
+        this.getFeaturedDefinitions().forEach((definition) => {
+            (definition.completionRewards || []).forEach((reward) => {
+                (reward.effects || []).forEach((effect) => {
+                    if (effect.target === 'skillManager' && effect.type === 'skillReveal') {
+                        skillIds.push(effect.targetId);
+                    }
+                });
+            });
+        });
+        return skillIds;
+    }
+
     getFeaturedCompletionCount() {
         return this.getFeaturedDefinitions().reduce((count, definition) => (
             count + (this.isCompleted(definition.key) ? 1 : 0)

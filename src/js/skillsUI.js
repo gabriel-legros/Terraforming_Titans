@@ -146,14 +146,25 @@ const skillLayout = {
     android_efficiency: { row: 3, col: 0 },
     ship_efficiency: { row: 3, col: 2 },
     project_speed: { row: 2, col: 2 },
-    life_design_points: { row: 3, col: 6 },
-    optimized_heat_sinks: { row: 4, col: 0 },
-    nanotech_efficiency: { row: 4, col: 2 },
-    cloning_expertise: { row: 4, col: 4 },
-    chemistry_mastery: { row: 4, col: 6 },
-    mass_driver_effectiveness: { row: 5, col: 2 },
-    ecumenopolis_capacity: { row: 5, col: 4 }
+    life_design_points: { row: 3, col: 6 }
 };
+
+const atlasSkillLayoutSlots = [
+    { row: 4, col: 0 },
+    { row: 4, col: 2 },
+    { row: 4, col: 4 },
+    { row: 4, col: 6 },
+    { row: 5, col: 2 },
+    { row: 5, col: 4 }
+];
+
+function getSkillLayout() {
+    const layout = { ...skillLayout };
+    atlasManager.getFeaturedAwakeningSkillIds().forEach((id, index) => {
+        layout[id] = atlasSkillLayoutSlots[index];
+    });
+    return layout;
+}
 
 function updateSkillPointDisplay() {
     const span = document.getElementById('skill-points-value');
@@ -260,6 +271,7 @@ function createSkillTree() {
     buildSkillPrereqs();
     const container = document.getElementById('skill-tree');
     if (!container || container.nodeType !== 1) return;
+    const layout = getSkillLayout();
 
     // Cache container
     skillTreeContainerEl = container;
@@ -276,7 +288,7 @@ function createSkillTree() {
     runWithTrackedUIListeners(container, () => {
         for (const id in skillManager.skills) {
             const skill = skillManager.skills[id];
-            const pos = skillLayout[id];
+            const pos = layout[id];
             if (!pos) continue;
 
             let button = skillButtonEls[id] || document.getElementById(`skill-${id}`);
