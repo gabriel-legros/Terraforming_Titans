@@ -1,6 +1,7 @@
 const MATRIOSHKA_MIN_ADVANCED_RESEARCH = 10_000_000_000_000_000;
 const MATRIOSHKA_MIN_DURATION = 60 * 60 * 1000;
 const MATRIOSHKA_MAX_DURATION = 25 * MATRIOSHKA_MIN_DURATION;
+const MATRIOSHKA_MAX_ROLL_FLOOR = 0.5;
 const MATRIOSHKA_SOURCE_ID = 'matrioshkaBrain';
 
 const MATRIOSHKA_TARGETS = [
@@ -131,6 +132,11 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
     return 0.05 * researchFactor * timeFactor * targetFactor;
   }
 
+  getRollFloor(duration) {
+    const durationProgress = (duration - MATRIOSHKA_MIN_DURATION) / (MATRIOSHKA_MAX_DURATION - MATRIOSHKA_MIN_DURATION);
+    return durationProgress * MATRIOSHKA_MAX_ROLL_FLOOR;
+  }
+
   canStartExperiment() {
     return this.isCompleted && !this.experiment && !this.isOlympusDisabled() && this.getAvailableAdvancedResearch() >= this.getSelectedInvestment();
   }
@@ -176,7 +182,8 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
       ? MATRIOSHKA_TARGETS[Math.floor(Math.random() * MATRIOSHKA_TARGETS.length)]
       : getMatrioshkaTargetFromKey(selectedTarget);
     const maxBonus = this.getProjectedMaxBonus(experiment.investment, experiment.duration, selectedTarget);
-    const bonus = maxBonus * Math.random();
+    const rollFloor = this.getRollFloor(experiment.duration);
+    const bonus = maxBonus * (rollFloor + (1 - rollFloor) * Math.random());
     const targetKey = getMatrioshkaTargetKey(target);
     this.bonusTotals[targetKey] = (this.bonusTotals[targetKey] || 0) + bonus;
     this.experiment = null;
@@ -247,7 +254,7 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
     const info = document.createElement('span');
     info.className = 'info-tooltip-icon';
     info.innerHTML = '&#9432;';
-    attachDynamicInfoTooltip(info, getMatrioshkaText('tooltip', 'Run cognition cycles by spending advanced research and time. Throughput increases both production and consumption. Random targets receive the full roll; chosen targets receive half as much.'));
+    attachDynamicInfoTooltip(info, getMatrioshkaText('tooltip', 'Run cognition cycles by spending advanced research and time. Throughput increases both production and consumption. Random targets receive the full roll; chosen targets receive half as much. The roll floor increases linearly from 0% at 1 hour to 50% at 25 hours.'));
     header.append(title, info);
 
     const controls = document.createElement('div');
@@ -412,7 +419,11 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
     const duration = this.getSelectedDuration();
     const selectedTarget = el.targetSelect.value || 'random';
     const maxBonus = this.getProjectedMaxBonus(investment, duration, selectedTarget);
-    el.projected.textContent = getMatrioshkaText('projected', 'Max roll: +{value}% production and consumption throughput', { value: formatNumber(maxBonus * 100, false, 2) });
+    const minBonus = maxBonus * this.getRollFloor(duration);
+    el.projected.textContent = getMatrioshkaText('projected', 'Roll range: +{min}% to +{max}% production and consumption throughput', {
+      min: formatNumber(minBonus * 100, false, 2),
+      max: formatNumber(maxBonus * 100, false, 2)
+    });
     el.available.textContent = getMatrioshkaText('available', 'Available: {value}', { value: formatNumber(this.getAvailableAdvancedResearch(), true) });
 
     const running = this.experiment !== null;
