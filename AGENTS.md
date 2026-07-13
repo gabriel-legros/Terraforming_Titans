@@ -119,7 +119,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ## UI Requirements
 - Features with UI must use an `enabled` flag to reveal/hide.
 - Do not persist UI enabled flags in saves; re-enable via story/research/effects.
-- The Status colours setting controls the red/green status palette for terraforming requirement boxes, project progress bars, and resource/building rate colours; use `getStatusColor(...)` / `getStatusProgressBackground(...)` for those surfaces instead of hard-coded red/green.
+- The Status colours setting controls the red/green status palette for terraforming requirement boxes, project progress bars, and resource/building rate colours; use `getStatusColor(...)` / `getStatusProgressBackground(...)` for those surfaces instead of hard-coded red/green. OLED Black uses Festival green (`#6AA84F`) for success and clear red (`#ef7070`) for failure in the default red/green palette while leaving alternative colourblind palettes unchanged.
 - The Theme setting uses `gameSettings.themeMode` (`light`, `darkGrey`, `darkBlue`, `oledBlack`) while keeping `gameSettings.darkMode` as the compatibility flag for dark-mode code paths. OLED Black uses true-black foundations, near-black elevated surfaces, `#d4d4d4` neutral text, and muted labels no brighter than `#a0a0a0`, including Space Story/Artificial/Atlas/Galaxy/Invasion and H.O.P.E. Automation panels.
 - The Net resource rate display setting makes compact resource row rates use net rate including autobuild; keep this in sync with the resource tooltip net-rate calculation.
 - The Full resource cap highlight setting optionally colours full resource values and caps for the active theme when their displayed rate is positive and is off by default.

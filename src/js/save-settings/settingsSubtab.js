@@ -180,6 +180,7 @@ function applyThemeModeSetting() {
   document.body.classList.toggle('dark-grey-mode', mode === 'darkGrey');
   document.body.classList.toggle('dark-blue-mode', mode === 'darkBlue');
   document.body.classList.toggle('oled-black-mode', mode === 'oledBlack');
+  applyColorblindPaletteSettings();
   const cached = cacheSettingsElements();
   if (cached.darkModeSelect && cached.darkModeSelect.value !== mode) {
     cached.darkModeSelect.value = mode;

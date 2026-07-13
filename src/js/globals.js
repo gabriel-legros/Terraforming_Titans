@@ -180,7 +180,14 @@ function getColorblindPaletteKey() {
 }
 
 function getStatusColor(status) {
-  const palette = colorblindPalettes[getColorblindPaletteKey()];
+  const paletteKey = getColorblindPaletteKey();
+  const palette = colorblindPalettes[paletteKey];
+  if (status === 'success' && paletteKey === 'redGreen' && gameSettings.themeMode === 'oledBlack') {
+    return '#6AA84F';
+  }
+  if (status === 'failure' && paletteKey === 'redGreen' && gameSettings.themeMode === 'oledBlack') {
+    return '#ef7070';
+  }
   return status === 'success' ? palette.success : palette.failure;
 }
 
