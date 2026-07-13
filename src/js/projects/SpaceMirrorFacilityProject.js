@@ -2099,18 +2099,18 @@ class SpaceMirrorFacilityProject extends Project {
     const mirrorQuickButton = document.createElement('button');
     mirrorQuickButton.classList.add('quick-build-button');
     mirrorQuick.appendChild(mirrorQuickButton);
-    // Reserve space so the build button can grow without moving x10
+    // Reserve space so the build button can grow without moving the step controls
     const mirrorSpacer = document.createElement('div');
     mirrorSpacer.classList.add('qb-spacer');
     const mirrorMul = document.createElement('button');
     mirrorMul.classList.add('increment-button', 'qb-inc');
     mirrorMul.textContent = getSpaceMirrorText('ui.projects.common.timesTen', 'x10');
     mirrorQuick.appendChild(mirrorSpacer);
-    mirrorQuick.appendChild(mirrorMul);
     const mirrorDiv = document.createElement('button');
     mirrorDiv.classList.add('increment-button', 'qb-inc');
     mirrorDiv.textContent = getSpaceMirrorText('ui.projects.common.divideTen', '/10');
     mirrorQuick.appendChild(mirrorDiv);
+    mirrorQuick.appendChild(mirrorMul);
     const mirrorZero = document.createElement('button');
     mirrorZero.classList.add('increment-button', 'qb-inc');
     mirrorZero.textContent = getSpaceMirrorText('ui.projects.common.zero', '0');
@@ -2179,18 +2179,18 @@ class SpaceMirrorFacilityProject extends Project {
     const lanternQuickButton = document.createElement('button');
     lanternQuickButton.classList.add('quick-build-button');
     lanternQuick.appendChild(lanternQuickButton);
-    // Reserve space so the build button can grow without moving x10
+    // Reserve space so the build button can grow without moving the step controls
     const lanternSpacer = document.createElement('div');
     lanternSpacer.classList.add('qb-spacer');
     const lanternMul = document.createElement('button');
     lanternMul.classList.add('increment-button', 'qb-inc');
     lanternMul.textContent = getSpaceMirrorText('ui.projects.common.timesTen', 'x10');
     lanternQuick.appendChild(lanternSpacer);
-    lanternQuick.appendChild(lanternMul);
     const lanternDiv = document.createElement('button');
     lanternDiv.classList.add('increment-button', 'qb-inc');
     lanternDiv.textContent = getSpaceMirrorText('ui.projects.common.divideTen', '/10');
     lanternQuick.appendChild(lanternDiv);
+    lanternQuick.appendChild(lanternMul);
     const lanternZero = document.createElement('button');
     lanternZero.classList.add('increment-button', 'qb-inc');
     lanternZero.textContent = getSpaceMirrorText('ui.projects.common.zero', '0');

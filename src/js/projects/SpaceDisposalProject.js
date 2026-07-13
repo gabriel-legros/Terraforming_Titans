@@ -663,8 +663,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       quickBuildLabel,
       quickBuildButton,
       quickBuildSpacer,
-      quickBuildMultiplyButton,
       quickBuildDivideButton,
+      quickBuildMultiplyButton,
       quickBuildCost
     );
 
