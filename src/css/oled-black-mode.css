@@ -8,8 +8,8 @@ body.oled-black-mode {
     --oled-surface-active: #202020;
     --oled-border: #2c2c2c;
     --oled-border-strong: #444;
-    --oled-text: #ededed;
-    --oled-text-muted: #aaa;
+    --oled-text: #d4d4d4;
+    --oled-text-muted: #a0a0a0;
     --wgc-bg-dark: #000;
     --wgc-bg-medium: #080808;
     --wgc-bg-light: #161616;
@@ -18,6 +18,8 @@ body.oled-black-mode {
     --rwg-panel: #101010;
     --rwg-border: #303030;
     --rwg-muted: #181818;
+    --rwg-fg: var(--oled-text);
+    --rwg-fg-dim: var(--oled-text-muted);
     background-color: var(--oled-black);
     color: var(--oled-text);
     scrollbar-color: #666 var(--oled-black);
@@ -317,6 +319,62 @@ body.oled-black-mode {
     color: #777;
 }
 
+.oled-black-mode #space-story .space-card-title,
+.oled-black-mode #space-story .space-stat-value,
+.oled-black-mode #space-story .planet-option h3,
+.oled-black-mode #space-artificial .artificial-panel,
+.oled-black-mode #space-artificial .artificial-panel h3,
+.oled-black-mode #space-artificial .artificial-select,
+.oled-black-mode #space-artificial .artificial-radius-input,
+.oled-black-mode #space-artificial .artificial-name,
+.oled-black-mode #space-artificial .artificial-stash-grid input,
+.oled-black-mode #space-artificial .artificial-gravity,
+.oled-black-mode #space-artificial .artificial-cost-value,
+.oled-black-mode #space-artificial .artificial-duration,
+.oled-black-mode #space-artificial .artificial-gains h3,
+.oled-black-mode #space-artificial .artificial-gain-row > span:first-child,
+.oled-black-mode #space-artificial .artificial-effects h3,
+.oled-black-mode #space-artificial .artificial-stash-title,
+.oled-black-mode #space-artificial .artificial-stash-stock,
+.oled-black-mode #space-atlas .space-card-title,
+.oled-black-mode #space-atlas .space-stat-value,
+.oled-black-mode #space-atlas .planet-option h3,
+.oled-black-mode #space-atlas .atlas-world-effects-title,
+.oled-black-mode #space-galaxy,
+.oled-black-mode #space-invasion .galactic-invasion-section__header,
+.oled-black-mode #space-invasion .galactic-invasion-card__name {
+    color: var(--oled-text);
+}
+
+.oled-black-mode #space-story .space-card-subtitle,
+.oled-black-mode #space-story .space-stat-label,
+.oled-black-mode #space-story .space-stat-subvalue,
+.oled-black-mode #space-story .planet-stats,
+.oled-black-mode #space-story .planet-stats strong,
+.oled-black-mode #space-artificial .artificial-radius-row,
+.oled-black-mode #space-artificial .artificial-area,
+.oled-black-mode #space-artificial .artificial-gravity-row,
+.oled-black-mode #space-artificial .artificial-cost-row > span:first-child,
+.oled-black-mode #space-artificial .artificial-gains-list,
+.oled-black-mode #space-artificial .artificial-gain-value,
+.oled-black-mode #space-artificial .artificial-priority,
+.oled-black-mode #space-artificial .artificial-stash-recommend,
+.oled-black-mode #space-artificial .artificial-history-header-row,
+.oled-black-mode #space-atlas .space-card-subtitle,
+.oled-black-mode #space-atlas .space-stat-label,
+.oled-black-mode #space-atlas .space-stat-subvalue,
+.oled-black-mode #space-atlas .planet-stats,
+.oled-black-mode #space-atlas .planet-stats strong,
+.oled-black-mode #space-atlas .atlas-world-effects,
+.oled-black-mode #space-invasion .galactic-invasion-section__description,
+.oled-black-mode #space-invasion .galactic-invasion-card__power,
+.oled-black-mode #space-invasion .galactic-invasion-card__reward,
+.oled-black-mode #space-invasion .galactic-invasion-traits__item,
+.oled-black-mode #space-invasion .galactic-invasion-summary__empty,
+.oled-black-mode #space-invasion .galactic-invasion-summary__item {
+    color: var(--oled-text-muted);
+}
+
 /* H.O.P.E.: Automation */
 .oled-black-mode #automation-hope .automation-card {
     background: linear-gradient(180deg, var(--oled-surface-low), var(--oled-black));
@@ -461,4 +519,34 @@ body.oled-black-mode {
     background: var(--oled-surface-high);
     border-color: var(--oled-border);
     color: #777;
+}
+
+.oled-black-mode #automation-hope .automation-card-header,
+.oled-black-mode #automation-hope .automation-title,
+.oled-black-mode #automation-hope .automation-preset-json-summary,
+.oled-black-mode #automation-hope .life-automation-section-title,
+.oled-black-mode #automation-hope .building-automation-section-title,
+.oled-black-mode #automation-hope .script-line-summary,
+.oled-black-mode #automation-hope .script-editor-section-title,
+.oled-black-mode #automation-hope .script-expression-title {
+    color: var(--oled-text);
+}
+
+.oled-black-mode #automation-hope .automation-description,
+.oled-black-mode #automation-hope .automation-preset-script-usage,
+.oled-black-mode #automation-hope .automation-step-subtitle,
+.oled-black-mode #automation-hope .life-automation-enable,
+.oled-black-mode #automation-hope .life-automation-toggle,
+.oled-black-mode #automation-hope .life-automation-field,
+.oled-black-mode #automation-hope .life-automation-deploy-row,
+.oled-black-mode #automation-hope .life-automation-seed-row,
+.oled-black-mode #automation-hope .building-automation-hint,
+.oled-black-mode #automation-hope .building-automation-apply-hint,
+.oled-black-mode #automation-hope .building-automation-apply-detail,
+.oled-black-mode #automation-hope .auto-travel-section-title,
+.oled-black-mode #automation-hope .auto-travel-hazards-label,
+.oled-black-mode #automation-hope .auto-travel-random-type-settings-description,
+.oled-black-mode #automation-hope .script-labeled-node,
+.oled-black-mode #automation-hope .script-current-value {
+    color: var(--oled-text-muted);
 }
