@@ -2203,6 +2203,7 @@ setLanguageData({
         coolingPerSecond: 'Cooling per Second',
         control: 'Control',
         capTo: 'Cap to',
+        alsoCapActiveToTarget: 'Also cap active to target',
         capModeFixed: 'fixed',
         capModeGeometricLandPercent: '% of geometric land',
         capStatus: 'Cap: {value}',

@@ -2965,6 +2965,10 @@
     flex-wrap: wrap;
 }
 
+.mega-heat-sink-cap-row label {
+    font-size: 0.9em;
+}
+
 .mega-heat-sink-cap-input {
     width: 110px;
 }
