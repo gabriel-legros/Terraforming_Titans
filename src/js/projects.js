@@ -104,6 +104,7 @@ class Project extends EffectableEntity {
     this.shownStorySteps = new Set(); // Track which story steps have been displayed
     this.autoStart = false;
     this.autoStartUncheckOnTravel = false;
+    this.manualContinuousRun = false;
     this.isPaused = false; // Whether the project is paused due to missing sustain cost
     this.shortfallLastTick = false; // Tracks if resource consumption failed last tick
     this.alertedWhenUnlocked = this.unlocked ? true : false;
@@ -412,6 +413,13 @@ class Project extends EffectableEntity {
     return false;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    if (!this.manualContinuousRun || !this.isContinuous()) {
+      return deltaTime;
+    }
+    return this.getEffectiveDuration();
+  }
+
   // Method to calculate scaled cost if costScaling is enabled
   getScaledCost() {
     const cost = this.getEffectiveCost();
@@ -574,7 +582,9 @@ class Project extends EffectableEntity {
     if (this.canStart(resources)) {
       // Deduct the required resources if this isn't a resume
       if (!this.isPaused) {
-        this.deductResources(resources);
+        if (!this.manualContinuousRun || !this.isContinuous()) {
+          this.deductResources(resources);
+        }
         this.remainingTime = this.getEffectiveDuration();
         this.startingDuration = this.remainingTime;
         if (this.kesslerDebrisSize) {
@@ -1349,11 +1359,18 @@ class ProjectManager extends EffectableEntity {
 
   startProject(projectName, options = {}) {
     const project = this.projects[projectName];
-    if (project && project.start(resources)) {
+    if (!project) {
+      return;
+    }
+    project.manualContinuousRun = options.manualContinuousRun === true
+      && project.isContinuous()
+      && !project.autoStart;
+    if (project.start(resources)) {
       if (options.updateUI !== false) {
         this.markUIDirty();
       }
     } else {
+      project.manualContinuousRun = false;
     }
   }
 
@@ -1386,6 +1403,10 @@ class ProjectManager extends EffectableEntity {
       ) {
         project.isActive = false;
         project.lastActiveTime = 0;
+      }
+
+      if (!project.isActive || !project.isContinuous()) {
+        project.manualContinuousRun = false;
       }
 
       if (

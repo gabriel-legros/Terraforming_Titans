@@ -27,6 +27,10 @@ class GalacticMarketProject extends Project {
     return true;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return this.manualContinuousRun ? 1000 : deltaTime;
+  }
+
   renderUI(container) {
     const topSection = document.createElement('div');
     topSection.classList.add('project-top-section');
@@ -674,7 +678,7 @@ class GalacticMarketProject extends Project {
   }
 
   getMarketNetRateForResource(category, resourceId) {
-    if (!this.isActive || this.autoStart === false) return 0;
+    if (!this.isActive || (!this.autoStart && !this.manualContinuousRun)) return 0;
     let net = 0;
     this.buySelections.forEach((entry) => {
       if (entry.category === category && entry.resource === resourceId
@@ -1023,7 +1027,7 @@ class GalacticMarketProject extends Project {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
-    if (!this.isActive || !this.autoStart) {
+    if (!this.isActive || (!this.autoStart && !this.manualContinuousRun)) {
       return totals;
     }
 
@@ -1123,7 +1127,7 @@ class GalacticMarketProject extends Project {
     const automationUnlocked = projectManager?.isBooleanFlagSet?.('automateSpecialProjects');
     const manualRunActive = !automationUnlocked && this.manualRunRemainingTime > 0;
     this.shortfallLastTick = false;
-    if (!manualRunActive && (!this.isActive || !this.autoStart)) return;
+    if (!manualRunActive && (!this.isActive || (!this.autoStart && !this.manualContinuousRun))) return;
 
     const effectiveDeltaTime = manualRunActive ? Math.min(deltaTime, this.manualRunRemainingTime) : deltaTime;
     const seconds = effectiveDeltaTime / 1000;

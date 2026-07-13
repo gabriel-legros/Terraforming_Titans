@@ -373,6 +373,10 @@ function createDysonCollectorProject(collectorPowerPerSecond = 0) {
     isContinuous() {
       return false;
     },
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
+    },
     estimateCostAndGain(deltaTime = 1000, applyRates = true) {
       const seconds = deltaTime / 1000;
       const amount = this.collectors * this.energyPerCollector * seconds;
@@ -413,6 +417,10 @@ function createSpaceEnergyDrainProject(energyPerSecond = 0, name = 'Dyson Receiv
     isContinuous() {
       return false;
     },
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
+    },
     estimateCostAndGain() {
       return { cost: {}, gain: {} };
     },
@@ -442,6 +450,10 @@ function createSpaceStorageProject(resources) {
     },
     isContinuous() {
       return false;
+    },
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
     },
     getStoredResourceValue(resourceKey) {
       return resources.spaceStorage[resourceKey]?.value || 0;
@@ -509,6 +521,10 @@ class MockDemandProject {
     return false;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
+  }
+
   isPermanentlyDisabled() {
     return false;
   }
@@ -565,6 +581,10 @@ class MockColonyMetalDemandProject {
     return false;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
+  }
+
   isPermanentlyDisabled() {
     return false;
   }
@@ -612,6 +632,10 @@ class MockProductionProject {
     return false;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
+  }
+
   isPermanentlyDisabled() {
     return false;
   }
@@ -655,6 +679,10 @@ class MockClampedContinuousEnergyProject {
 
   isContinuous() {
     return true;
+  }
+
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
   }
 
   isPermanentlyDisabled() {
@@ -765,6 +793,10 @@ function setupHarness(initialStorage = {}) {
 
     isContinuous() {
       return false;
+    }
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
     }
 
     getDurationWithTerraformBonus(duration) {

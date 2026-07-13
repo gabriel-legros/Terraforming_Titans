@@ -1333,7 +1333,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     this.costShortfallLastTick = false;
-    if (!this.autoStart) {
+    if (!this.autoStart && !this.manualContinuousRun) {
       return;
     }
     this.expansionShortfallLastTick = false;
@@ -1593,7 +1593,9 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     const totals = { cost: {}, gain: {} };
     const storageState = this.createExpansionStorageState(accumulatedChanges);
 
-    const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
+    const expansionActive = includeExpansion
+      && this.isActive
+      && (!this.isExpansionContinuous() || this.autoStart || this.manualContinuousRun);
     if (expansionActive) {
       const duration = this.getEffectiveDuration();
       const limit = this.maxRepeatCount || Infinity;

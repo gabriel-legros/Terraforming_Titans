@@ -414,7 +414,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
       this.isActive = false;
       return;
     }
-    if (!this.autoStart) {
+    if (!this.autoStart && !this.manualContinuousRun) {
       return;
     }
     if (!this.isExpansionContinuous() || !this.isActive) {
@@ -580,7 +580,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
     const totals = { cost: {}, gain: {} };
     const storageState = this.createExpansionStorageState(accumulatedChanges);
 
-    const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
+    const expansionActive = includeExpansion
+      && this.isActive
+      && (!this.isExpansionContinuous() || this.autoStart || this.manualContinuousRun);
     if (expansionActive) {
       const duration = this.getEffectiveDuration();
       const limit = this.maxRepeatCount || Infinity;

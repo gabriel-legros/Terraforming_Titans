@@ -1733,23 +1733,26 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       }
       if (shouldApplyProjectProductivity(project)) {
         const projectProductivity = projectProductivityMap[name] ?? 1;
+        const projectDeltaTime = project.getResourceExecutionDeltaTime(deltaTime);
         if (projectRateMode === 'availability') {
           const fullCostTotals = project.estimateProductivityCostAndGain
-            ? project.estimateProductivityCostAndGain(deltaTime)
-            : project.estimateCostAndGain(deltaTime, false, 1);
-          const scaledTotals = project.estimateProductionRateCostAndGain?.(deltaTime, false, projectProductivity)
-            || project.estimateCostAndGain(deltaTime, false, projectProductivity)
+            ? project.estimateProductivityCostAndGain(
+                project.attributes?.spaceBuilding ? deltaTime : projectDeltaTime
+              )
+            : project.estimateCostAndGain(projectDeltaTime, false, 1);
+          const scaledTotals = project.estimateProductionRateCostAndGain?.(projectDeltaTime, false, projectProductivity)
+            || project.estimateCostAndGain(projectDeltaTime, false, projectProductivity)
             || {};
           applyProjectResourceRatesForAvailability(
             project,
             fullCostTotals.cost || {},
             scaledTotals.gain || {},
-            deltaTime
+            projectDeltaTime
           );
         } else {
-          const rateTotals = project.estimateProductionRateCostAndGain?.(deltaTime, true, projectProductivity);
+          const rateTotals = project.estimateProductionRateCostAndGain?.(projectDeltaTime, true, projectProductivity);
           if (!rateTotals) {
-            project.estimateCostAndGain(deltaTime, true, projectProductivity);
+            project.estimateCostAndGain(projectDeltaTime, true, projectProductivity);
           }
         }
       }
@@ -1809,19 +1812,21 @@ function applyProjectResourceEntries(entries, deltaTime, accumulatedChanges, acc
     const productivity = (isContinuousAsBuilding || project.usesContinuousWithdrawalProductivity?.() === true)
       ? project.continuousProductivity
       : 1;
+    const projectDeltaTime = project.getResourceExecutionDeltaTime(deltaTime);
     const hasActiveSpaceStorageTransfer = project.attributes?.spaceStorage
       && project.shipOperationIsActive === true
       && (project.isTeleporterTransferActive() || project.assignedSpaceships > 0);
     const shouldEstimate =
       hasActiveSpaceStorageTransfer ||
       project.autoStart !== false ||
+      project.manualContinuousRun ||
       isProjectAutoContinuousEnabled(project);
     if (!shouldEstimate) {
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
+      project.applyCostAndGain(projectDeltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
       continue;
     }
-    project.estimateCostAndGain(deltaTime, true, productivity, accumulatedChanges);
-    project.applyCostAndGain(deltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
+    project.estimateCostAndGain(projectDeltaTime, true, productivity, accumulatedChanges);
+    project.applyCostAndGain(projectDeltaTime, accumulatedChanges, productivity, accumulatedSpecialChanges);
   }
 }
 
@@ -1927,11 +1932,14 @@ function produceResources(deltaTime, buildings) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
+      const projectDeltaTime = project.getResourceExecutionDeltaTime(deltaTime);
       const estimateResult = project.estimateProductivityCostAndGain
-        ? project.estimateProductivityCostAndGain(deltaTime)
-        : project.estimateCostAndGain(deltaTime, false);
+        ? project.estimateProductivityCostAndGain(
+            project.attributes?.spaceBuilding ? deltaTime : projectDeltaTime
+          )
+        : project.estimateCostAndGain(projectDeltaTime, false);
       const { cost = {}, gain = {} } = estimateResult || {};
-      projectData[name] = { name, project, cost, gain };
+      projectData[name] = { name, project, cost, gain, deltaTime: projectDeltaTime };
     }
     projectEntries = [];
     for (const name in projectData) {
@@ -2151,7 +2159,10 @@ function produceResources(deltaTime, buildings) {
     spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
   }
   if (galacticMarketProject?.applyPostProjectTrade) {
-    galacticMarketProject.applyPostProjectTrade(deltaTime, accumulatedChanges);
+    galacticMarketProject.applyPostProjectTrade(
+      projectData.galactic_market?.deltaTime || deltaTime,
+      accumulatedChanges
+    );
   }
 
   applyProjectResourceEntries(

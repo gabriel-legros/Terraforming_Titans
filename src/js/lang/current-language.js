@@ -2434,6 +2434,7 @@ setLanguageData({
         productivitySuffix: ' ({value}% productivity)',
         withdrawalProductivitySuffix: ' (Withdrawal Productivity: {value}%)',
         stopped: 'Stopped',
+        runOnce: 'Run once',
         inProgress: 'In Progress: {time} seconds remaining',
         inProgressPercent: 'In Progress: {time} seconds remaining ({percent}%)',
         resumeStorageExpansion: 'Resume storage expansion ({time}s left)',

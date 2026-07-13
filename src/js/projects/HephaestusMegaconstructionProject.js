@@ -331,7 +331,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
     const isExpansionContinuous = project.isExpansionContinuous && project.isExpansionContinuous();
     if (isExpansionContinuous) {
-      return project.isActive && !project.isPaused && project.autoStart;
+      return project.isActive && !project.isPaused && (project.autoStart || project.manualContinuousRun);
     }
     return project.isActive && !project.isPaused;
   }
@@ -478,7 +478,8 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
 
   estimateExpansionCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
-    const expansionActive = this.isActive && (!this.isContinuous() || this.autoStart);
+    const expansionActive = this.isActive
+      && (!this.isContinuous() || this.autoStart || this.manualContinuousRun);
     if (!expansionActive) {
       return totals;
     }

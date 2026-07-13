@@ -1816,7 +1816,7 @@ function updateProjectUI(projectName) {
             const productivityLabel = showProductivity
               ? getProjectsUIText('ui.projects.status.productivitySuffix', ' ({value}% productivity)', { value: Math.round(productivity * 100) })
               : '';
-            if (project.autoStart && project.isActive && !project.isPaused) {
+            if ((project.autoStart || project.manualContinuousRun) && project.isActive && !project.isPaused) {
               const etaSeconds = getContinuousEtaSeconds(project);
               const etaLabel = Number.isFinite(etaSeconds)
                 ? getProjectsUIText(
@@ -1833,12 +1833,17 @@ function updateProjectUI(projectName) {
               }
               elements.progressButton.style.background = getStatusColor('success');
             } else {
+              const statusText = project.autoStart
+                ? getProjectsUIText('ui.projects.status.stopped', 'Stopped')
+                : getProjectsUIText('ui.projects.status.runOnce', 'Run once');
               if (isImportProject && importUI) {
-                importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.stopped', 'Stopped'));
+                importUI.setProgressLabel(elements, project, statusText);
               } else {
-                elements.progressButton.textContent = getProjectsUIText('ui.projects.status.stopped', 'Stopped');
+                elements.progressButton.textContent = statusText;
               }
-              elements.progressButton.style.background = getStatusColor('failure');
+              elements.progressButton.style.background = project.autoStart || !project.canStart()
+                ? getStatusColor('failure')
+                : getStatusColor('success');
             }
           }
         } else if (project.isActive) {
@@ -2027,12 +2032,14 @@ function updateProjectUI(projectName) {
 
 
 function startProjectWithSelectedResources(project) {
+  const manualContinuousRun = project.isContinuous() && !project.autoStart;
   if (project.isPaused) {
-    if (!project.resume()) {
+    if (project.resume()) {
+      project.manualContinuousRun = manualContinuousRun;
+    } else {
     }
-  } else if (project.canStart()) {
-    projectManager.startProject(project.name);
   } else {
+    projectManager.startProject(project.name, { manualContinuousRun });
   }
 }
 

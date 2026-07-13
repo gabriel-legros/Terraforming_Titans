@@ -12,6 +12,10 @@ class CargoRocketProject extends Project {
     return this.isBooleanFlagSet && this.isBooleanFlagSet('continuousTrading');
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return this.manualContinuousRun && this.isContinuous() ? 1000 : deltaTime;
+  }
+
   getCargoRocketText(path, fallback, vars) {
     try {
       return t(path, vars, fallback);
@@ -495,7 +499,7 @@ class CargoRocketProject extends Project {
       return false;
     }
 
-    if (this.isContinuous()) {
+    if (this.isContinuous() && !this.manualContinuousRun) {
       return true;
     }
 
@@ -588,7 +592,7 @@ class CargoRocketProject extends Project {
     const totals = { cost: {}, gain: {} };
     if (!this.isActive) return totals;
     if (this.isContinuous()) {
-      if (!this.autoStart) return totals;
+      if (!this.autoStart && !this.manualContinuousRun) return totals;
       const seconds = deltaTime / 1000;
       if (this.selectedResources && this.selectedResources.length > 0) {
         let costPerSecond = 0;
@@ -755,7 +759,7 @@ class CargoRocketProject extends Project {
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     this.shortfallLastTick = false;
-    if (!this.isActive || !this.isContinuous() || !this.autoStart) return;
+    if (!this.isActive || !this.isContinuous() || (!this.autoStart && !this.manualContinuousRun)) return;
     if (!this.selectedResources || this.selectedResources.length === 0) return;
     const seconds = deltaTime / 1000;
     const purchases = [];
