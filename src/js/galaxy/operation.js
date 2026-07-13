@@ -259,6 +259,9 @@ class GalaxyOperationManager {
         }
         if (value === true) {
             this.autoSectors.add(key);
+            if (this.autoMode === 'uncheckAll') {
+                this.autoMode = 'off';
+            }
             return true;
         }
         this.autoSectors.delete(key);
@@ -290,6 +293,9 @@ class GalaxyOperationManager {
 
     setOperationAutoMode(value) {
         this.autoMode = this.#normalizeAutoMode(value);
+        if (this.autoMode === 'uncheckAll') {
+            this.autoSectors.clear();
+        }
         return this.autoMode;
     }
 
@@ -1125,7 +1131,7 @@ class GalaxyOperationManager {
             return;
         }
         const autoMode = this.getOperationAutoMode();
-        if (autoMode === 'forceOff') {
+        if (autoMode === 'pauseAll') {
             return;
         }
         if (this.skipNextAutoLaunch) {
@@ -1319,11 +1325,11 @@ class GalaxyOperationManager {
 
     #normalizeAutoMode(value) {
         const mode = typeof value === 'string' ? value.trim().toLowerCase() : '';
-        if (mode === 'all' || mode === 'off' || mode === 'forceoff') {
-            if (mode === 'forceoff') {
-                return 'forceOff';
-            }
-            return mode;
+        if (mode === 'all' || mode === 'off' || mode === 'uncheckall') {
+            return mode === 'uncheckall' ? 'uncheckAll' : mode;
+        }
+        if (mode === 'pauseall' || mode === 'forceoff') {
+            return 'pauseAll';
         }
         return DEFAULT_OPERATION_AUTO_MODE;
     }

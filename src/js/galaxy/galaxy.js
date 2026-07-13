@@ -640,8 +640,12 @@ class GalaxyManager extends EffectableEntity {
     setOperationAutoMode(value) {
         if (!this.operationManager) {
             const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-            if (normalized === 'all' || normalized === 'off' || normalized === 'forceoff') {
-                operationAutoModeDefault = normalized === 'forceoff' ? 'forceOff' : normalized;
+            if (normalized === 'all' || normalized === 'off') {
+                operationAutoModeDefault = normalized;
+            } else if (normalized === 'uncheckall') {
+                operationAutoModeDefault = 'uncheckAll';
+            } else if (normalized === 'pauseall' || normalized === 'forceoff') {
+                operationAutoModeDefault = 'pauseAll';
             } else {
                 operationAutoModeDefault = 'off';
             }

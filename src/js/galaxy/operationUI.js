@@ -305,7 +305,7 @@ const GalaxyOperationUI = (() => {
         const manager = getManager();
         if (manager && typeof manager.getOperationAutoMode === 'function') {
             const mode = manager.getOperationAutoMode();
-            if (mode === 'all' || mode === 'off' || mode === 'forceOff') {
+            if (mode === 'all' || mode === 'off' || mode === 'pauseAll' || mode === 'uncheckAll') {
                 return mode;
             }
         }
@@ -314,7 +314,9 @@ const GalaxyOperationUI = (() => {
 
     function setOperationAutoMode(value) {
         const manager = getManager();
-        const requestedMode = value === 'all' || value === 'off' || value === 'forceOff' ? value : 'off';
+        const requestedMode = value === 'all' || value === 'off' || value === 'pauseAll' || value === 'uncheckAll'
+            ? value
+            : 'off';
         if (manager && typeof manager.setOperationAutoMode === 'function') {
             return manager.setOperationAutoMode(requestedMode);
         }
@@ -519,7 +521,7 @@ const GalaxyOperationUI = (() => {
         if (!select) {
             return;
         }
-        const mode = select.value === 'all' || select.value === 'off' || select.value === 'forceOff'
+        const mode = select.value === 'all' || select.value === 'off' || select.value === 'pauseAll' || select.value === 'uncheckAll'
             ? select.value
             : 'off';
         setOperationAutoMode(mode);
@@ -740,7 +742,8 @@ const GalaxyOperationUI = (() => {
         [
             { value: 'off', label: getOperationsText('autoOperationsOff', {}, 'Off') },
             { value: 'all', label: getOperationsText('autoOperationsAll', {}, 'All sectors') },
-            { value: 'forceOff', label: getOperationsText('autoOperationsForceOff', {}, 'Force all off') }
+            { value: 'pauseAll', label: getOperationsText('autoOperationsPauseAll', {}, 'Pause all') },
+            { value: 'uncheckAll', label: getOperationsText('autoOperationsUncheckAll', {}, 'Uncheck all') }
         ].forEach(({ value, label }) => {
             const option = doc.createElement('option');
             option.value = value;
@@ -1072,10 +1075,10 @@ const GalaxyOperationUI = (() => {
         }
         const storedAutoEnabled = selectedKey ? getOperationAutoState(selectedKey) : false;
         const autoMode = getOperationAutoMode();
-        const autoModeOverridingCards = autoMode === 'all' || autoMode === 'forceOff';
+        const autoModeOverridingCards = autoMode === 'all' || autoMode === 'pauseAll';
         const effectiveAutoEnabled = autoMode === 'all'
             ? true
-            : (autoMode === 'forceOff' ? false : storedAutoEnabled);
+            : (autoMode === 'pauseAll' ? false : storedAutoEnabled);
         if (operationsAutoModeSelect) {
             operationsAutoModeSelect.value = autoMode;
             operationsAutoModeSelect.disabled = false;
