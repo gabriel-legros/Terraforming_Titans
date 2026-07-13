@@ -7,8 +7,7 @@ STEAM_DEPOT_ID="${3:?Steam depot ID required}"
 OUT_DIR_NAME="${4:?output directory name required}"
 WORKSPACE_NAME="${5:?SteamPipe workspace name required}"
 BUILD_SCRIPT="${6:?build script required}"
-VERSION_CHANNEL="${7:?version channel required}"
-shift 7
+shift 6
 
 DEPOT_IDS=("$STEAM_DEPOT_ID")
 OUT_DIR_NAMES=("$OUT_DIR_NAME")
@@ -61,9 +60,6 @@ OUTPUT_DIR="$STEAM_PIPE_ROOT/output"
 APP_BUILD_VDF="$SCRIPTS_DIR/app_build_$STEAM_APP_ID.vdf"
 
 if [ "${SKIP_STEAM_BUILD:-0}" != "1" ]; then
-  if [ "${SKIP_VERSION_BUMP:-0}" != "1" ]; then
-    node "$SCRIPT_DIR/update-game-version.js" "$VERSION_CHANNEL"
-  fi
   bash "$SCRIPT_DIR/$BUILD_SCRIPT"
 fi
 

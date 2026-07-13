@@ -13,5 +13,4 @@ exec bash "$SCRIPT_DIR/upload-steam-target.sh" \
   "steam-win-unpacked" \
   "TerraformingTitans" \
   "build-steam.sh" \
-  "production" \
   "$LINUX_DEPOT_ID:steam-linux-unpacked:linux"
