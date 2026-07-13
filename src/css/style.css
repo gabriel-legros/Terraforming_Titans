@@ -200,9 +200,21 @@ body.journal-collapsed .space-subtabs
     flex: 1; /* Takes up the remaining space between resource and journal */
     display: none;
     min-height: 0;
-    overflow-y: auto; /* Scroll if content exceeds space */
+    overflow: hidden;
     padding-left:10px;
     padding-right:10px;
+}
+
+.tab-content > .container {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.tab-content > .container.hidden {
+    display: none;
 }
 
 /* Add extra space for show journal button when journal is collapsed */
@@ -211,7 +223,7 @@ body.journal-collapsed .tab-content {
 }
 
 .tab-content.active {
-    display: block;
+    display: flex;
 }
 
 .building-list, 
@@ -248,6 +260,22 @@ body.journal-collapsed .tab-content {
 .settings-subtab-content.active,
 .space-subtab-content.active { /* Added space-subtab-content.active */
     display: block;
+}
+
+.building-subtab-content-wrapper,
+.colony-subtab-content-wrapper,
+.projects-subtab-content-wrapper,
+.terraforming-subtab-content-wrapper,
+.hope-subtab-content-wrapper,
+.space-subtab-content-wrapper,
+.subtab-content-wrapper {
+    flex: 1 1 auto;
+    box-sizing: border-box;
+    margin-right: -10px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 10px;
+    scrollbar-gutter: stable;
 }
 
 .subtab-content-wrapper {
