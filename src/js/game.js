@@ -730,6 +730,9 @@ function initializeGameState(options = {}) {
   if (preserveManagers && skillManager && typeof skillManager.reapplyEffects === 'function') {
     skillManager.reapplyEffects();
   }
+  if (preserveManagers) {
+    applyDifficultySettingEffects();
+  }
   if (preserveManagers && automationManager && typeof automationManager.reapplyEffects === 'function') {
     automationManager.reapplyEffects();
   }
