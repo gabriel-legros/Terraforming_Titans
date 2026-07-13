@@ -146,6 +146,12 @@ body.oled-black-mode {
     background-color: var(--oled-surface-active);
 }
 
+.oled-black-mode button:disabled {
+    background-color: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+    color: #777;
+}
+
 .oled-black-mode .toggle-completed-button,
 .oled-black-mode .research-hide-toggle,
 .oled-black-mode .save-slots button,
@@ -182,4 +188,277 @@ body.oled-black-mode {
 .oled-black-mode #nanocolony-container .nanotech-hint,
 .oled-black-mode #nanocolony-container .nanotech-slider-card .slider-description {
     color: var(--oled-text-muted);
+}
+
+/* Space: Story, Artificial, Atlas */
+.oled-black-mode #space-story,
+.oled-black-mode #space-artificial,
+.oled-black-mode #space-atlas,
+.oled-black-mode #space-galaxy,
+.oled-black-mode #space-invasion,
+.oled-black-mode #automation-hope {
+    background: var(--oled-black);
+}
+
+.oled-black-mode #space-story .space-card,
+.oled-black-mode #space-artificial .space-card,
+.oled-black-mode #space-atlas .space-card {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-story .details-container,
+.oled-black-mode #space-story .planet-option,
+.oled-black-mode #space-story .space-stat-card,
+.oled-black-mode #space-artificial .artificial-panel,
+.oled-black-mode #space-atlas .details-container,
+.oled-black-mode #space-atlas .planet-option,
+.oled-black-mode #space-atlas .space-stat-card {
+    background: var(--oled-surface);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-artificial .artificial-select,
+.oled-black-mode #space-artificial .artificial-radius-input,
+.oled-black-mode #space-artificial .artificial-name,
+.oled-black-mode #space-artificial .artificial-stash-grid input,
+.oled-black-mode #space-artificial .artificial-history-name-input {
+    background: var(--oled-black);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-artificial .artificial-surface-box,
+.oled-black-mode #space-artificial .artificial-stash-row,
+.oled-black-mode #space-artificial .artificial-stash-stock,
+.oled-black-mode #space-artificial .artificial-stash-controls,
+.oled-black-mode #space-artificial .artificial-history-row {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-artificial .artificial-secondary,
+.oled-black-mode #space-artificial .artificial-stash-btn,
+.oled-black-mode #space-artificial .artificial-history-edit-btn,
+.oled-black-mode #space-artificial .artificial-history-travel-btn {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-artificial .artificial-secondary:hover:not(:disabled),
+.oled-black-mode #space-artificial .artificial-history-edit-btn:hover,
+.oled-black-mode #space-artificial .artificial-history-travel-btn:hover {
+    background: var(--oled-surface-active);
+}
+
+.oled-black-mode #space-artificial .artificial-progress {
+    background: var(--oled-black);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-artificial .artificial-primary:disabled {
+    background: var(--oled-surface-high);
+    border: 1px solid var(--oled-border-strong);
+    color: #777;
+}
+
+.oled-black-mode #space-artificial .artificial-supermassive-card {
+    background: linear-gradient(180deg, rgba(40, 60, 90, 0.14), var(--oled-surface-low));
+}
+
+/* Space: Galaxy */
+.oled-black-mode #space-galaxy .galaxy-section,
+.oled-black-mode #space-galaxy .galaxy-section--overview {
+    background: linear-gradient(160deg, var(--oled-surface), var(--oled-black));
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-galaxy .galaxy-section__body {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-galaxy .galaxy-map-wrapper {
+    background: radial-gradient(circle at top, rgba(24, 52, 90, 0.28), var(--oled-black) 70%);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-galaxy .galaxy-operations-launch__auto-threshold {
+    background: rgba(5, 5, 5, 0.92);
+    border-color: var(--oled-border-strong);
+}
+
+/* Space: Invasion */
+.oled-black-mode #space-invasion .galactic-invasion__overlay {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-section {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-section__header {
+    background: var(--oled-surface-high);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-subsection,
+.oled-black-mode #space-invasion .galactic-invasion-card {
+    background: var(--oled-surface);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-card.completed {
+    background: rgba(20, 83, 45, 0.24);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-card__button:disabled {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+    color: #777;
+}
+
+/* H.O.P.E.: Automation */
+.oled-black-mode #automation-hope .automation-card {
+    background: linear-gradient(180deg, var(--oled-surface-low), var(--oled-black));
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #automation-hope .automation-card-header {
+    background: var(--oled-surface-high);
+}
+
+.oled-black-mode #automation-hope .automation-global-toolbar {
+    border-bottom-color: var(--oled-border);
+}
+
+.oled-black-mode #automation-hope .automation-global-export,
+.oled-black-mode #automation-hope .automation-global-import,
+.oled-black-mode #automation-hope .automation-preset-buttons button,
+.oled-black-mode #automation-hope .automation-order-buttons button,
+.oled-black-mode #automation-hope .automation-step-header button,
+.oled-black-mode #automation-hope .automation-entry button,
+.oled-black-mode #automation-hope .automation-entry-scale-controls button,
+.oled-black-mode #automation-hope .life-automation-max-button,
+.oled-black-mode #automation-hope .life-automation-seed-button,
+.oled-black-mode #automation-hope .building-automation-section button,
+.oled-black-mode #automation-hope .script-automation-body button,
+.oled-black-mode #automation-hope .script-line-header button,
+.oled-black-mode #automation-hope .script-line-editor button {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #automation-hope .automation-global-export:hover,
+.oled-black-mode #automation-hope .automation-global-import:hover,
+.oled-black-mode #automation-hope .automation-preset-buttons button:hover,
+.oled-black-mode #automation-hope .automation-order-buttons button:hover,
+.oled-black-mode #automation-hope .automation-step-header button:hover,
+.oled-black-mode #automation-hope .automation-entry button:hover,
+.oled-black-mode #automation-hope .automation-entry-scale-controls button:hover,
+.oled-black-mode #automation-hope .life-automation-max-button:hover,
+.oled-black-mode #automation-hope .life-automation-seed-button:hover,
+.oled-black-mode #automation-hope .building-automation-section button:hover,
+.oled-black-mode #automation-hope .script-automation-body button:hover,
+.oled-black-mode #automation-hope .script-line-header button:hover,
+.oled-black-mode #automation-hope .script-line-editor button:hover {
+    background: var(--oled-surface-active);
+}
+
+.oled-black-mode #automation-hope .building-automation-section .building-automation-builder-save,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-add,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-combination,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-combination-save {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border-color: #3f7bf7;
+}
+
+.oled-black-mode #automation-hope .building-automation-section .building-automation-builder-save:hover,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-add:hover,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-combination:hover,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-combination-save:hover {
+    background: linear-gradient(180deg, #3a6bff 0%, #2344c2 100%);
+}
+
+.oled-black-mode #automation-hope .automation-preset-json-details,
+.oled-black-mode #automation-hope .automation-preset-script-usage,
+.oled-black-mode #automation-hope .automation-preset-row,
+.oled-black-mode #automation-hope .auto-travel-section,
+.oled-black-mode #automation-hope .life-automation-section,
+.oled-black-mode #automation-hope .building-automation-section,
+.oled-black-mode #automation-hope .script-automation-status-line,
+.oled-black-mode #automation-hope .script-automation-script-row,
+.oled-black-mode #automation-hope .script-editor-section {
+    background: var(--oled-surface);
+    border-color: var(--oled-border);
+    box-shadow: none;
+}
+
+.oled-black-mode #automation-hope .automation-step,
+.oled-black-mode #automation-hope .script-line-card {
+    background: linear-gradient(180deg, var(--oled-surface), var(--oled-black));
+    border-color: var(--oled-border);
+    border-left-color: #3f7bf7;
+}
+
+.oled-black-mode #automation-hope .automation-entry,
+.oled-black-mode #automation-hope .life-automation-row,
+.oled-black-mode #automation-hope .life-automation-zone-row,
+.oled-black-mode #automation-hope .building-automation-builder-pill,
+.oled-black-mode #automation-hope .building-automation-apply-row,
+.oled-black-mode #automation-hope .script-clause-card,
+.oled-black-mode #automation-hope .script-expression-editor,
+.oled-black-mode #automation-hope .script-term-row,
+.oled-black-mode #automation-hope .script-action-row {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #automation-hope .automation-preset-json-field-input,
+.oled-black-mode #automation-hope .automation-preset-row select,
+.oled-black-mode #automation-hope .automation-preset-row input,
+.oled-black-mode #automation-hope .automation-limit-row select,
+.oled-black-mode #automation-hope .automation-limit-row input,
+.oled-black-mode #automation-hope .automation-entry select,
+.oled-black-mode #automation-hope .automation-entry input,
+.oled-black-mode #automation-hope .life-automation-row input,
+.oled-black-mode #automation-hope .life-automation-row select,
+.oled-black-mode #automation-hope .life-automation-field input,
+.oled-black-mode #automation-hope .life-automation-field select,
+.oled-black-mode #automation-hope .building-automation-row select,
+.oled-black-mode #automation-hope .building-automation-row input,
+.oled-black-mode #automation-hope .building-automation-apply-row select,
+.oled-black-mode #automation-hope .building-automation-next-travel-select,
+.oled-black-mode #automation-hope .auto-travel-automation-body select,
+.oled-black-mode #automation-hope .auto-travel-automation-body input[type="text"],
+.oled-black-mode #automation-hope .auto-travel-random-type-settings,
+.oled-black-mode #automation-hope .script-labeled-node input,
+.oled-black-mode #automation-hope .script-labeled-node select,
+.oled-black-mode #automation-hope .script-automation-script-row input,
+.oled-black-mode #automation-hope .script-automation-script-row select,
+.oled-black-mode #automation-hope .script-term-row input,
+.oled-black-mode #automation-hope .script-term-row select,
+.oled-black-mode #automation-hope .script-action-row input,
+.oled-black-mode #automation-hope .script-action-row select,
+.oled-black-mode #automation-hope .script-editor-row input,
+.oled-black-mode #automation-hope .script-editor-row select,
+.oled-black-mode #automation-hope .script-clause-card select {
+    background: var(--oled-black);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #automation-hope .automation-preset-json-field-input-disabled,
+.oled-black-mode #automation-hope .automation-limit-row input:disabled,
+.oled-black-mode #automation-hope .automation-add-entry-row button:disabled,
+.oled-black-mode #automation-hope .automation-add-step:disabled,
+.oled-black-mode #automation-hope .automation-step-order button:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-builder-save:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-add:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-combination:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-combination-save:disabled,
+.oled-black-mode #automation-hope .script-automation-body button:disabled,
+.oled-black-mode #automation-hope .script-line-header button:disabled,
+.oled-black-mode #automation-hope .script-line-editor button:disabled {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border);
+    color: #777;
 }
