@@ -448,6 +448,30 @@ const GalaxyOperationUI = (() => {
         adjustAllocationByAction(action);
     }
 
+    function handleOperationsInputCommit(event) {
+        const input = event.currentTarget;
+        const cache = getCache();
+        const manager = getManager();
+        const key = cache?.selectedSector?.key;
+        if (!manager || !manager.enabled || !key) {
+            updateOperationsPanel(manager, cache);
+            return;
+        }
+        const faction = manager.getFaction(UHF_FACTION_ID || 'uhf');
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
+        const assignment = clampAssignment(parseFlexibleNumber(input.value), availablePower);
+        setStoredAllocation(key, assignment);
+        updateOperationsPanel(manager, cache);
+    }
+
+    function handleOperationsInputKeydown(event) {
+        if (event.key !== 'Enter') {
+            return;
+        }
+        event.preventDefault();
+        event.currentTarget.blur();
+    }
+
     function handleAutoCheckboxChange(event) {
         const checkbox = event?.target;
         const cache = getCache();
@@ -642,11 +666,10 @@ const GalaxyOperationUI = (() => {
 
         const powerInput = doc.createElement('input');
         powerInput.type = 'text';
-        powerInput.readOnly = true;
-        powerInput.tabIndex = -1;
-        powerInput.setAttribute('aria-readonly', 'true');
         powerInput.className = 'galaxy-operations-form__input';
         powerInput.value = formatOperationsInputValue(0);
+        powerInput.addEventListener('keydown', handleOperationsInputKeydown);
+        powerInput.addEventListener('blur', handleOperationsInputCommit);
         powerRow.appendChild(powerInput);
 
         const targetRow = doc.createElement('div');
@@ -1220,7 +1243,9 @@ const GalaxyOperationUI = (() => {
                 setStoredAllocation(selection.key, normalizedAdjustment);
             }
         }
-        operationsInput.value = formatOperationsInputValue(assignment);
+        if (operationsInput.ownerDocument.activeElement !== operationsInput) {
+            operationsInput.value = formatOperationsInputValue(assignment);
+        }
 
         const antimatterCost = assignment * 1000;
         operationsCostValue.textContent = formatNumber(antimatterCost, true);

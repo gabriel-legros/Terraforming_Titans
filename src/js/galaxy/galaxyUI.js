@@ -1606,7 +1606,7 @@ function updateSectorDefenseSection() {
         cache.defenseClearButton.disabled = !(manualTotal > 0);
     }
 
-    if (cache.defenseInput) {
+    if (cache.defenseInput && cache.defenseInput.ownerDocument.activeElement !== cache.defenseInput) {
         cache.defenseInput.value = formatDefenseDisplayValue(manualAssigned);
     }
     if (cache.defenseButtons) {
@@ -1691,6 +1691,29 @@ function handleDefenseButtonClick(event) {
         cache.defenseInput.value = formatDefenseDisplayValue(applied);
     }
     renderSelectedSectorDetails();
+}
+
+function handleDefenseInputCommit(event) {
+    const input = event.currentTarget;
+    const selection = galaxyUICache.selectedSector;
+    if (!selection) {
+        renderSelectedSectorDetails();
+        return;
+    }
+    galaxyManager.setDefenseAssignment({
+        factionId: UHF_FACTION_KEY,
+        sectorKey: selection.key,
+        value: parseFlexibleNumber(input.value)
+    });
+    renderSelectedSectorDetails();
+}
+
+function handleDefenseInputKeydown(event) {
+    if (event.key !== 'Enter') {
+        return;
+    }
+    event.preventDefault();
+    event.currentTarget.blur();
 }
 
 function handleDefenseClearAllClick(event) {
@@ -2901,11 +2924,10 @@ function cacheGalaxyElements() {
     defenseRow.className = 'galaxy-defense-form__row';
     const defenseInput = doc.createElement('input');
     defenseInput.type = 'text';
-    defenseInput.readOnly = true;
-    defenseInput.tabIndex = -1;
-    defenseInput.setAttribute('aria-readonly', 'true');
     defenseInput.className = 'galaxy-defense-form__input';
     defenseInput.value = formatDefenseDisplayValue(0);
+    defenseInput.addEventListener('keydown', handleDefenseInputKeydown);
+    defenseInput.addEventListener('blur', handleDefenseInputCommit);
     defenseRow.appendChild(defenseInput);
 
     const defenseButtonsContainer = doc.createElement('div');
