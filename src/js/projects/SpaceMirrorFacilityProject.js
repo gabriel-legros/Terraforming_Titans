@@ -1658,16 +1658,12 @@ function updateMirrorOversightUI() {
     if (header) header.style.display = '';
   }
 
-  // Keep assignment numbers updated in advanced mode
-  if (advancedOn && typeof updateAssignmentDisplays === 'function') {
-    updateAssignmentDisplays();
-  }
   if (C.assignmentControls) C.assignmentControls.forEach(el => { el.disabled = advancedOn || !useFiner; });
   if (useFiner && !mirrorOversightSettings.advancedOversight) {
     distributeAutoAssignments('mirrors');
     distributeAutoAssignments('lanterns');
-    updateAssignmentDisplays();
   }
+  updateAssignmentDisplays();
   if (C.focusZoneCells) C.focusZoneCells.forEach(el => {
     if (!focusEnabled) {
       el.style.display = 'none';
