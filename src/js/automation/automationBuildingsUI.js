@@ -577,14 +577,11 @@ function updateBuildingsAutomationUI() {
         return mode === 'fill';
       }
       if (leafKey === 'autoBuildPercent') {
-        if (mode === 'fixed' || mode === 'fill') {
-          return false;
-        }
-        if (mode !== 'max') {
-          return true;
-        }
+        return mode !== 'fixed' && mode !== 'fill' && mode !== 'max';
+      }
+      if (leafKey === 'autoBuildMaxPercent') {
         const building = buildings[fieldPath[1]];
-        return building.hasAdjustableAutoBuildMaxTarget();
+        return mode === 'max' && building.hasAdjustableAutoBuildMaxTarget();
       }
       return true;
     },

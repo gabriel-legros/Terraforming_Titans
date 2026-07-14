@@ -970,6 +970,7 @@ function captureAutoBuildSettings(structures) {
             autoUpgrade: s.autoUpgradeEnabled,
             step: s.autoBuildStep,
             fixed: s.autoBuildFixed,
+            maxPercent: s.autoBuildMaxPercent,
             fillPercent: s.autoBuildFillPercent,
             fillPrimary: s.autoBuildFillResourcePrimary,
             fillSecondary: s.autoBuildFillResourceSecondary,
@@ -1000,6 +1001,9 @@ function restoreAutoBuildSettings(structures) {
             s.autoUpgradeEnabled = !!savedAutoBuildSettings[name].autoUpgrade;
             if (savedAutoBuildSettings[name].fixed !== undefined) {
                 s.autoBuildFixed = Math.max(0, Math.floor(savedAutoBuildSettings[name].fixed || 0));
+            }
+            if (savedAutoBuildSettings[name].maxPercent !== undefined) {
+                s.autoBuildMaxPercent = savedAutoBuildSettings[name].maxPercent;
             }
             if (savedAutoBuildSettings[name].fillPercent !== undefined) {
                 s.autoBuildFillPercent = savedAutoBuildSettings[name].fillPercent;

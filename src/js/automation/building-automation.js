@@ -310,6 +310,13 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       if (automation && automation.autoBuildBasis === 'initialLand') {
         automation.autoBuildBasis = 'geometricLand';
       }
+      if (buildingId === 'dysonReceiver'
+        && automation
+        && automation.autoBuildBasis === 'max'
+        && !('autoBuildMaxPercent' in automation)
+        && 'autoBuildPercent' in automation) {
+        automation.autoBuildMaxPercent = automation.autoBuildPercent;
+      }
       if (!control && !automation) {
         continue;
       }
@@ -439,14 +446,11 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       return mode === 'fill';
     }
     if (leafKey === 'autoBuildPercent') {
-      if (mode === 'fixed' || mode === 'fill') {
-        return false;
-      }
-      if (mode !== 'max') {
-        return true;
-      }
+      return mode !== 'fixed' && mode !== 'fill' && mode !== 'max';
+    }
+    if (leafKey === 'autoBuildMaxPercent') {
       const building = buildings[buildingId];
-      return building.hasAdjustableAutoBuildMaxTarget();
+      return mode === 'max' && building.hasAdjustableAutoBuildMaxTarget();
     }
     return true;
   }
@@ -504,6 +508,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       autoUpgradeEnabled: building.autoUpgradeEnabled === true
     };
     if (building.name === 'dysonReceiver') {
+      settings.autoBuildMaxPercent = building.autoBuildMaxPercent;
       settings.capActiveToDysonCapacity = building.capActiveToDysonCapacity === true;
     }
     return settings;
@@ -675,6 +680,10 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       building.autoBuildPercent = automation.autoBuildPercent;
       changed = true;
     }
+    if ('autoBuildMaxPercent' in automation && building.autoBuildMaxPercent !== automation.autoBuildMaxPercent) {
+      building.autoBuildMaxPercent = automation.autoBuildMaxPercent;
+      changed = true;
+    }
     if ('autoBuildFixed' in automation && building.autoBuildFixed !== automation.autoBuildFixed) {
       building.autoBuildFixed = automation.autoBuildFixed;
       changed = true;
@@ -799,6 +808,13 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
           }
           if (automation && automation.autoBuildBasis === 'initialLand') {
             automation.autoBuildBasis = 'geometricLand';
+          }
+          if (buildingId === 'dysonReceiver'
+            && automation
+            && automation.autoBuildBasis === 'max'
+            && !('autoBuildMaxPercent' in automation)
+            && 'autoBuildPercent' in automation) {
+            automation.autoBuildMaxPercent = automation.autoBuildPercent;
           }
           if (control && Object.keys(control).length === 0) {
             control = null;

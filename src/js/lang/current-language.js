@@ -887,6 +887,7 @@ setLanguageData({
         },
       },
       dysonReceiver: {
+        percentDysonCapacity: '% Dyson Capacity',
         capToDysonCapacity: 'Cap to Dyson Capacity',
       },
       aerostat: {

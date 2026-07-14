@@ -268,7 +268,7 @@ function getAutoBuildInputValue(structure) {
     return formatAutoBuildFixedValue(structure.autoBuildFixed);
   }
   if (isAdjustableAutoBuildMaxMode(structure)) {
-    return `${structure.autoBuildPercent || 0}`;
+    return `${structure.autoBuildMaxPercent || 0}`;
   }
   if (isAutoBuildFillMode(structure)) {
     return `${structure.autoBuildFillPercent || 0}`;
@@ -367,6 +367,8 @@ function refreshAutoBuildTarget(structure) {
       ? fixedTarget
       : autoBuildUsesFill
         ? (structure.autoBuildFillPercent || 0)
+        : autoBuildUsesAdjustableMax
+          ? (structure.autoBuildMaxPercent || 0)
         : (structure.autoBuildPercent || 0);
     els.autoBuildInput.dataset.autoBuildValue = `${datasetValue}`;
   }
@@ -421,7 +423,7 @@ function applyAutoBuildDelta(structure, input, delta) {
   } else if (autoBuildUsesAdjustableMax || isAutoBuildFillMode(structure)) {
     const normalized = Math.min(100, Number(next.toFixed(6)));
     if (autoBuildUsesAdjustableMax) {
-      structure.autoBuildPercent = normalized;
+      structure.autoBuildMaxPercent = normalized;
     } else {
       structure.autoBuildFillPercent = normalized;
     }
@@ -965,6 +967,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
         structure.autoBuildFixed = parsed;
       } else if (isAutoBuildFillMode(structure)) {
         structure.autoBuildFillPercent = parsed;
+      } else if (isAdjustableAutoBuildMaxMode(structure)) {
+        structure.autoBuildMaxPercent = parsed;
       } else {
         structure.autoBuildPercent = parsed;
       }
@@ -1507,7 +1511,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       const activeCount = getStructureCountNumber(structure.active);
       const rawPercent = (activeCount * 100) / capacity;
       const bestPercent = Math.min(100, Math.max(0, Math.ceil(rawPercent * 1000000) / 1000000));
-      structure.autoBuildPercent = bestPercent;
+      structure.autoBuildMaxPercent = bestPercent;
       if (cached.autoBuildInput) {
         cached.autoBuildInput.value = `${bestPercent}`;
       }
