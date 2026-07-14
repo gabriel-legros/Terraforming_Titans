@@ -1675,6 +1675,7 @@ setLanguageData({
       },
       spaceAntimatter: {
         title: 'Battery Component',
+        showInSidebar: 'Show in sidebar',
         batteriesBuilt: 'Batteries Built',
         spaceEnergyStorage: 'Space Energy Storage',
         specialAntimatterStorage: 'Military Antimatter Equivalent',

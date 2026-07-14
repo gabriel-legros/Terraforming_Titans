@@ -1115,6 +1115,29 @@
     margin-bottom: 12px;
 }
 
+.space-antimatter-sidebar-content {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 12px;
+    width: 100%;
+}
+
+.space-antimatter-sidebar-toggle {
+    flex: 0 0 auto;
+    gap: 6px;
+}
+
+.space-antimatter-sidebar-toggle .ui-toggle__track {
+    flex: 0 0 40px;
+}
+
+.space-antimatter-sidebar-toggle .ui-toggle__label {
+    min-width: 0;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
 .project-summary-grid.four-col {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }

@@ -38,6 +38,7 @@
       this._autoBuildTargetRemaining = 0n;
       this.autoBuildTargetBlocked = false;
       this.startedCompleted = false;
+      this.showAntimatterInSidebar = true;
       this.uiElements = null;
     }
 
@@ -51,6 +52,7 @@
         return null;
       }
       const nextElements = {
+        sidebarToggle: card.querySelector('[data-space-antimatter-ui="sidebarToggle"]'),
         batteriesBuiltValue: card.querySelector('[data-space-antimatter-ui="batteriesBuiltValue"]'),
         storageBonusValue: card.querySelector('[data-space-antimatter-ui="storageBonusValue"]'),
         antimatterStorageBonusValue: card.querySelector('[data-space-antimatter-ui="antimatterStorageBonusValue"]'),
@@ -138,6 +140,17 @@
       });
     }
 
+    syncAntimatterResourceVisibility() {
+      resources.special.antimatter.showInSidebar = !this.unlocked
+        || this.isPermanentlyDisabled()
+        || this.showAntimatterInSidebar;
+    }
+
+    setAntimatterSidebarVisibility(show) {
+      this.showAntimatterInSidebar = show === true;
+      this.syncAntimatterResourceVisibility();
+    }
+
     enable() {
       const wasUnlocked = this.unlocked;
       super.enable();
@@ -145,13 +158,20 @@
         this.isCompleted = true;
         this.startedCompleted = true;
       }
+      this.syncAntimatterResourceVisibility();
       this.applyBatteryStorageEffect();
       this.applyAntimatterStorageEffect();
     }
 
     applyEffects() {
+      this.syncAntimatterResourceVisibility();
       this.applyBatteryStorageEffect();
       this.applyAntimatterStorageEffect();
+    }
+
+    applyPermanentProjectDisable(effect) {
+      super.applyPermanentProjectDisable(effect);
+      this.syncAntimatterResourceVisibility();
     }
 
     isVisible() {
@@ -445,6 +465,20 @@
       const storageBonus = createSummaryBox(getSpaceAntimatterText('spaceEnergyStorage', null, 'Space Energy Storage'));
       const antimatterStorageBonus = createSummaryBox(getSpaceAntimatterText('specialAntimatterStorage', null, 'Military Antimatter Equivalent'));
       const buildAmount = createSummaryBox(getSpaceAntimatterText('buildAmount', null, 'Build Amount'));
+      const sidebarToggle = createToggleButton({
+        onLabel: getSpaceAntimatterText('showInSidebar', null, 'Show in sidebar'),
+        offLabel: getSpaceAntimatterText('showInSidebar', null, 'Show in sidebar'),
+        isOn: this.showAntimatterInSidebar
+      });
+      sidebarToggle.dataset.spaceAntimatterUi = 'sidebarToggle';
+      sidebarToggle.classList.add('space-antimatter-sidebar-toggle');
+      sidebarToggle.addEventListener('click', () => {
+        this.setAntimatterSidebarVisibility(!this.showAntimatterInSidebar);
+        setToggleButtonState(sidebarToggle, this.showAntimatterInSidebar);
+        updateResourceDisplay(resources, 0);
+      });
+      antimatterStorageBonus.content.classList.add('space-antimatter-sidebar-content');
+      antimatterStorageBonus.content.appendChild(sidebarToggle);
       batteriesBuilt.value.dataset.spaceAntimatterUi = 'batteriesBuiltValue';
       storageBonus.value.dataset.spaceAntimatterUi = 'storageBonusValue';
       antimatterStorageBonus.value.dataset.spaceAntimatterUi = 'antimatterStorageBonusValue';
@@ -491,6 +525,7 @@
         refresh();
       });
       this.uiElements = {
+        sidebarToggle,
         batteriesBuiltValue: batteriesBuilt.value,
         storageBonusValue: storageBonus.value,
         antimatterStorageBonusValue: antimatterStorageBonus.value,
@@ -506,6 +541,7 @@
         return;
       }
       const selected = this.getSelectedBuildCount();
+      setToggleButtonState(uiElements.sidebarToggle, this.showAntimatterInSidebar);
       uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, false, 2);
       uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonusCount(), true);
       uiElements.antimatterStorageBonusValue.textContent = formatNumber(this.getTotalAntimatterStorageBonus(), true);
@@ -567,6 +603,7 @@
         autoBuildToTargetEnabled: this.autoBuildToTargetEnabled === true,
         autoBuildTargetMultiplier: Math.max(0, Number(this.autoBuildTargetMultiplier) || 0),
         autoBuildTargetBasis: this.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds',
+        showAntimatterInSidebar: this.showAntimatterInSidebar,
         startedCompleted: this.startedCompleted === true
       };
       return state;
@@ -580,8 +617,10 @@
       this.autoBuildToTargetEnabled = state.autoBuildToTargetEnabled === true;
       this.autoBuildTargetMultiplier = Math.max(0, Number(state.autoBuildTargetMultiplier ?? state.autoBuildTargetPercent) || 0);
       this.autoBuildTargetBasis = state.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
+      this.showAntimatterInSidebar = state.showAntimatterInSidebar !== false;
       this.autoBuildTargetBlocked = false;
       this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0n || this.isCompleted === true;
+      this.syncAntimatterResourceVisibility();
       this.applyBatteryStorageEffect();
     }
 
@@ -592,6 +631,7 @@
       state.autoBuildToTargetEnabled = this.autoBuildToTargetEnabled === true;
       state.autoBuildTargetMultiplier = Math.max(0, Number(this.autoBuildTargetMultiplier) || 0);
       state.autoBuildTargetBasis = this.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
+      state.showAntimatterInSidebar = this.showAntimatterInSidebar;
       state.startedCompleted = this.startedCompleted === true;
       return state;
     }
@@ -603,8 +643,10 @@
       this.autoBuildToTargetEnabled = state.autoBuildToTargetEnabled === true;
       this.autoBuildTargetMultiplier = Math.max(0, Number(state.autoBuildTargetMultiplier ?? state.autoBuildTargetPercent) || 0);
       this.autoBuildTargetBasis = state.autoBuildTargetBasis === 'hephaestusYards' ? 'hephaestusYards' : 'effectiveWorlds';
+      this.showAntimatterInSidebar = state.showAntimatterInSidebar !== false;
       this.autoBuildTargetBlocked = false;
       this.startedCompleted = state.startedCompleted === true || this.repeatCount > 0n || this.isCompleted === true;
+      this.syncAntimatterResourceVisibility();
       this.applyBatteryStorageEffect();
       this.applyAntimatterStorageEffect();
     }
