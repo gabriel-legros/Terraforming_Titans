@@ -422,6 +422,7 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && resources) {
     savedTravelResources = capturePreservedTravelResourceState(resources);
+    clearResourceTooltipRateCooldownsForTravel(resources);
   }
   if (preserveManagers && lifeDesigner?.prepareTravelState) {
     savedLifeDesignerTravelState = lifeDesigner.prepareTravelState();

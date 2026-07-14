@@ -1028,6 +1028,33 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta, 
   return displayEntries.length > 0 || totalTimer > 0;
 }
 
+function clearRateTableCooldown(container) {
+  if (!container) return;
+  container._cooldown = null;
+  container.style.display = 'none';
+  const info = container._info;
+  info.totalRow.style.display = 'none';
+  info.totalRight.textContent = '';
+  info.rows.forEach((rowInfo) => {
+    rowInfo.row.style.display = 'none';
+    rowInfo.right.textContent = '';
+  });
+}
+
+function clearResourceTooltipRateCooldownsForTravel(resourceSet) {
+  for (const category in resourceSet) {
+    if (category === 'special' || category === 'space' || category === 'spaceStorage') {
+      continue;
+    }
+    for (const resourceName in resourceSet[category]) {
+      const entry = resourceUICache.resources[getResourceUIKey(category, resourceName)];
+      if (!entry) continue;
+      clearRateTableCooldown(entry.tooltip.productionDiv);
+      clearRateTableCooldown(entry.tooltip.consumptionDiv);
+    }
+  }
+}
+
 function isAutobuildTrackedResource(resource) {
   return resource.category === 'colony'
     || resource.category === 'spaceStorage'
