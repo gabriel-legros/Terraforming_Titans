@@ -71,6 +71,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   infinitePatience: false,
   liftersStrippingCap: false,
   orbitalCap: false,
+  allowSpaceStorageBiomassWithdrawOnNonHumanDominion: false,
   noOverpopulationCylinders: false,
   buildingCostMultiplier: 1,
   researchCostMultiplier: 1,

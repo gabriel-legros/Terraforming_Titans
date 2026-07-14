@@ -392,6 +392,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - The Solis Points gain multiplier difficulty setting lives under Post-Mars and multiplies Solis Points gained from quests and artifact donations.
 - The Artifacts Gain multiplier difficulty setting lives under Post-World 4 and multiplies alien artifacts gained from story/project rewards, Dominion rewards, Atlas community completions, and Warp Gate Command operation rewards.
 - The Orbital cap difficulty setting lives under Post-World 11 and caps available Followers Orbitals to the current world geometric land value when enabled.
+- The Allow space storage biomass withdrawal on non-Human dominions difficulty setting lives under During World 9, is off by default, and blocks Space Storage biomass withdrawals on non-Human dominions while still allowing biomass storage. It applies to manual and continuous transfers.
 - The No overpopulation cylinders difficulty setting lives under During World 14 and makes Overpopulation O'Neill Cylinders grant zero O'Neill cylinders on travel while leaving the project visible and buildable.
 
 ### Immigration Pool

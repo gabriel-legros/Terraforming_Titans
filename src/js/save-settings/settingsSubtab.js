@@ -70,6 +70,7 @@ function cacheSettingsElements() {
     liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
     orbitalCapToggle: document.getElementById('orbital-cap-toggle'),
     orbitalCapTooltip: document.getElementById('orbital-cap-tooltip'),
+    allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle: document.getElementById('allow-space-storage-biomass-withdraw-on-non-human-dominion-toggle'),
     noOverpopulationCylindersToggle: document.getElementById('no-overpopulation-cylinders-toggle'),
     noOverpopulationCylindersTooltip: document.getElementById('no-overpopulation-cylinders-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
@@ -291,6 +292,7 @@ function updateDifficultyLockUI() {
     cached.infinitePatienceToggle,
     cached.liftersStrippingCapToggle,
     cached.orbitalCapToggle,
+    cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle,
     cached.noOverpopulationCylindersToggle,
     cached.buildingCostMultiplierInput,
     cached.researchCostMultiplierInput,
@@ -438,6 +440,7 @@ function updateDifficultySettingInputs() {
     infinitePatience: cached.infinitePatienceToggle,
     liftersStrippingCap: cached.liftersStrippingCapToggle,
     orbitalCap: cached.orbitalCapToggle,
+    allowSpaceStorageBiomassWithdrawOnNonHumanDominion: cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle,
     noOverpopulationCylinders: cached.noOverpopulationCylindersToggle,
   };
   const inputs = {
@@ -1121,6 +1124,18 @@ function addSettingsListeners() {
         'When enabled, available Orbitals cannot exceed the current world geometric land value.'
       )
     );
+  }
+
+  if (cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle) {
+    cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle.checked = gameSettings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion;
+    cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle.checked = gameSettings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion;
+        return;
+      }
+      gameSettings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion = cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle.checked;
+      updateProjectUI('spaceStorage');
+    });
   }
 
   if (cached.noOverpopulationCylindersToggle) {

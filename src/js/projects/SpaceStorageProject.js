@@ -776,7 +776,11 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     const selected = this.getUnlockedSelectedResources();
     for (let i = 0; i < selected.length; i += 1) {
-      if (this.getShipTransferModeForResource(selected[i].resource) === mode) {
+      const resourceKey = selected[i].resource;
+      if (mode === 'withdraw' && resourceKey === 'biomass' && !this.canWithdrawBiomass()) {
+        continue;
+      }
+      if (this.getShipTransferModeForResource(resourceKey) === mode) {
         return true;
       }
     }
@@ -972,7 +976,11 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     let requiredCapacity = 0;
     weightedSelected.forEach(({ entry, weight }) => {
-      if (weight <= 0 || this.getShipTransferModeForResource(entry.resource) !== 'withdraw') {
+      if (
+        weight <= 0
+        || this.getShipTransferModeForResource(entry.resource) !== 'withdraw'
+        || (entry.resource === 'biomass' && !this.canWithdrawBiomass())
+      ) {
         return;
       }
       const target = this.getTransferEndpoint(entry, 'withdraw');
@@ -1289,6 +1297,10 @@ class SpaceStorageProject extends SpaceshipProject {
 
   isWithdrawalDisabled() {
     return this.isBooleanFlagSet('disableWithdrawal');
+  }
+
+  canWithdrawBiomass() {
+    return gameSettings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion || terraforming.requirementId === 'human';
   }
 
   sanitizeTransferModes() {
@@ -1644,6 +1656,7 @@ class SpaceStorageProject extends SpaceshipProject {
     };
 
     const applyWithdrawForResource = (entry, weightedCapacity) => {
+      if (entry.resource === 'biomass' && !this.canWithdrawBiomass()) return;
       const stored = this.getAvailableStoredResource(entry.resource, 'transfers');
       if (stored <= 0) return;
       const target = this.getTransferEndpoint(entry, 'withdraw');
@@ -1767,6 +1780,7 @@ class SpaceStorageProject extends SpaceshipProject {
     };
 
     const applyWithdrawForResource = (entry, weightedCapacity) => {
+      if (entry.resource === 'biomass' && !this.canWithdrawBiomass()) return;
       const stored = this.getAvailableStoredResourceForTick(entry.resource, 'transfers', accumulatedChanges);
       if (stored <= 0) return;
       const target = this.getTransferEndpoint(entry, 'withdraw');

@@ -831,6 +831,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'orbitalCap')) {
         gameSettings.orbitalCap = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'allowSpaceStorageBiomassWithdrawOnNonHumanDominion')) {
+        gameSettings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noOverpopulationCylinders')) {
         gameSettings.noOverpopulationCylinders = false;
       }
