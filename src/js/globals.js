@@ -164,8 +164,8 @@ const colorblindPalettes = {
     failure: '#fdb863',
   },
   cyanMagenta: {
-    success: '#009e73',
-    failure: '#d55e00',
+    success: '#00bfc4',
+    failure: '#cc79a7',
   },
   grayscale: {
     success: '#111111',

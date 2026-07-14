@@ -6539,7 +6539,7 @@ setLanguageData({
         },
         matrioshka_brain: {
           name: 'Matrioshka Brain',
-          description: 'No HOPE we promise this is not competition.  Yes we know.  We know.  We know it is very smart.  It is not competition.  It is not hazardous either so you do not need to think about destroying it.  Thank you.  (Enables a new terastructure)',
+          description: 'No HOPE we promise this is not competition.  Yes we know.  We know.  We know it is very smart.  It is not competition.  It is not hazardous either so you do not need to think about destroying it.  Thank you.  (Enables a new terastructure capable of turning advanced research into production bonuses)',
         },
         tractor_beams: {
           name: 'Tractor Beams',
