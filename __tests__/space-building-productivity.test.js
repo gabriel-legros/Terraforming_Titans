@@ -957,6 +957,8 @@ function setupHarness(initialStorage = {}) {
     isBooleanFlagSet: () => false,
     isHighAgilityFreightersAvailable: () => false,
     getHighAgilityFreighterResearchCost: () => 0,
+    getMegaProjectCostMultiplier: () => 1,
+    getMegaProjectDurationMultiplier: () => 1,
   };
   setGlobal('projectManager', projectManager, originalGlobals);
 

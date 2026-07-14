@@ -5015,6 +5015,8 @@ setLanguageData({
       advancedResearchMultiplier: 'Advanced Research Multiplier',
       skillPointsGainMultiplier: 'Skill points gain multiplier',
       solisPointsGainMultiplier: 'Solis Points gain multiplier',
+      megaProjectDurationMultiplier: 'Megaproject duration multiplier',
+      megaProjectCostMultiplier: 'Megaproject cost multiplier',
       artifactsGainMultiplier: 'Artifacts Gain multiplier',
       galaxyFleetCapacityMultiplier: 'Galaxy fleet capacity',
       galaxyThreatScalingMultiplier: 'Galaxy threat scaling',

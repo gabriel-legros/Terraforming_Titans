@@ -97,8 +97,9 @@ function updateCollectorCostDisplay(project, costDisplay) {
   const items = [];
   const storageProj = project.createSpaceStorageAccess('expansions');
 
-  for (const category in project.collectorCost) {
-    const categoryCost = project.collectorCost[category];
+  const collectorCost = project.getCollectorCost();
+  for (const category in collectorCost) {
+    const categoryCost = collectorCost[category];
     for (const resource in categoryCost) {
       const resourceData = resources[category][resource];
       const displayName = resourceData.displayName || `${resource.charAt(0).toUpperCase()}${resource.slice(1)}`;

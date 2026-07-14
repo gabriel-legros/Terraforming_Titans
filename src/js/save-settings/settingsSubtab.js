@@ -77,6 +77,8 @@ function cacheSettingsElements() {
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
     projectDurationMultiplierInput: document.getElementById('project-duration-multiplier-input'),
+    megaProjectDurationMultiplierInput: document.getElementById('mega-project-duration-multiplier-input'),
+    megaProjectCostMultiplierInput: document.getElementById('mega-project-cost-multiplier-input'),
     popGrowthMultiplierInput: document.getElementById('pop-growth-multiplier-input'),
     lifeGrowthMultiplierInput: document.getElementById('life-growth-multiplier-input'),
     maintenanceCostMultiplierInput: document.getElementById('maintenance-cost-multiplier-input'),
@@ -298,6 +300,8 @@ function updateDifficultyLockUI() {
     cached.researchCostMultiplierInput,
     cached.workerRequirementMultiplierInput,
     cached.projectDurationMultiplierInput,
+    cached.megaProjectDurationMultiplierInput,
+    cached.megaProjectCostMultiplierInput,
     cached.popGrowthMultiplierInput,
     cached.lifeGrowthMultiplierInput,
     cached.maintenanceCostMultiplierInput,
@@ -448,6 +452,8 @@ function updateDifficultySettingInputs() {
     researchCostMultiplier: cached.researchCostMultiplierInput,
     workerRequirementMultiplier: cached.workerRequirementMultiplierInput,
     projectDurationMultiplier: cached.projectDurationMultiplierInput,
+    megaProjectDurationMultiplier: cached.megaProjectDurationMultiplierInput,
+    megaProjectCostMultiplier: cached.megaProjectCostMultiplierInput,
     popGrowthMultiplier: cached.popGrowthMultiplierInput,
     lifeGrowthMultiplier: cached.lifeGrowthMultiplierInput,
     maintenanceCostMultiplier: cached.maintenanceCostMultiplierInput,
@@ -1165,6 +1171,8 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.researchCostMultiplierInput, 'researchCostMultiplier');
   wireDifficultyMultiplierInput(cached.workerRequirementMultiplierInput, 'workerRequirementMultiplier');
   wireDifficultyMultiplierInput(cached.projectDurationMultiplierInput, 'projectDurationMultiplier');
+  wireDifficultyMultiplierInput(cached.megaProjectDurationMultiplierInput, 'megaProjectDurationMultiplier');
+  wireDifficultyMultiplierInput(cached.megaProjectCostMultiplierInput, 'megaProjectCostMultiplier');
   wireDifficultyMultiplierInput(cached.popGrowthMultiplierInput, 'popGrowthMultiplier');
   wireDifficultyMultiplierInput(cached.lifeGrowthMultiplierInput, 'lifeGrowthMultiplier');
   wireDifficultyMultiplierInput(cached.maintenanceCostMultiplierInput, 'maintenanceCostMultiplier');

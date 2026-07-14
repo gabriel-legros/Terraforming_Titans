@@ -26,6 +26,13 @@ const MEGA_PROJECT_RESOURCE_MODES = {
 
 const EARTH_RADIUS_KM = 6371;
 
+function isMegaProjectCategory(category) {
+  const projectCategory = category || 'resources';
+  return projectCategory !== 'resources' &&
+    projectCategory !== 'infrastructure' &&
+    projectCategory !== 'story';
+}
+
 const MEGA_PROJECT_RESOURCE_MODE_OPTIONS = [
   { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: getProjectsText('ui.projects.resourceModes.spaceFirst', 'Prioritize space resources for mega+ projects') },
   { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: getProjectsText('ui.projects.resourceModes.colonyFirst', 'Prioritize colony resources for mega+ projects') },
@@ -337,7 +344,7 @@ class Project extends EffectableEntity {
 
   getDurationMultiplier(options) {
     if (this.attributes.ignoreDurationModifiers) {
-      return 1;
+      return projectManager.getMegaProjectDurationMultiplier(this);
     }
     let multiplier = 1;
     if (
@@ -411,6 +418,14 @@ class Project extends EffectableEntity {
 
   isContinuous() {
     return false;
+  }
+
+  getEffectiveCostMultiplier(resourceCategory, resourceId) {
+    const multiplier = super.getEffectiveCostMultiplier(resourceCategory, resourceId);
+    if (!isMegaProjectCategory(this.category)) {
+      return multiplier;
+    }
+    return multiplier * projectManager.getMegaProjectCostMultiplier(this);
   }
 
   getResourceExecutionDeltaTime(deltaTime) {
@@ -1210,8 +1225,39 @@ class ProjectManager extends EffectableEntity {
         || project.attributes.specialSeedKey === currentPlanetParameters.rwgMeta?.specialSeedKey);
   }
 
+  isMegaProject(project) {
+    return isMegaProjectCategory(project.category);
+  }
+
+  getMegaProjectCostMultiplier(project) {
+    if (!this.isMegaProject(project)) {
+      return 1;
+    }
+    let multiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'megaProjectCostMultiplier') {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
+  }
+
+  getMegaProjectDurationMultiplier(project) {
+    if (!this.isMegaProject(project)) {
+      return 1;
+    }
+    let multiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'megaProjectDurationMultiplier') {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
+  }
+
   getDurationMultiplier(project, options) {
-    let multiplier = getMegaprojectsCoordinationProjectDurationMultiplier(spaceManager, project);
+    let multiplier = getMegaprojectsCoordinationProjectDurationMultiplier(spaceManager, project) *
+      this.getMegaProjectDurationMultiplier(project);
     const isSpaceshipProject = !!(
       options?.treatAsSpaceshipProject
       || project.attributes.spaceMining

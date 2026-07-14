@@ -44,7 +44,18 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
   }
 
   getCollectorCost() {
-    return this.collectorCost;
+    const multiplier = projectManager.getMegaProjectCostMultiplier(this);
+    if (multiplier === 1) {
+      return this.collectorCost;
+    }
+    const cost = {};
+    for (const category in this.collectorCost) {
+      cost[category] = {};
+      for (const resource in this.collectorCost[category]) {
+        cost[category][resource] = this.collectorCost[category][resource] * multiplier;
+      }
+    }
+    return cost;
   }
 
   getMaxCollectors() {

@@ -11,6 +11,8 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   researchCostMultiplier: { min: 0 },
   workerRequirementMultiplier: { min: 0 },
   projectDurationMultiplier: { min: 0.01 },
+  megaProjectDurationMultiplier: { min: 0.01 },
+  megaProjectCostMultiplier: { min: 0.01 },
   popGrowthMultiplier: { min: 0 },
   lifeGrowthMultiplier: { min: 0 },
   maintenanceCostMultiplier: { min: 0 },
@@ -170,6 +172,22 @@ function applyDifficultySettingEffects() {
       type: 'projectDurationMultiplier',
       value: gameSettings.projectDurationMultiplier,
       effectId: 'difficulty-project-duration'
+    });
+  }
+  if (gameSettings.megaProjectDurationMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'projectManager',
+      type: 'megaProjectDurationMultiplier',
+      value: gameSettings.megaProjectDurationMultiplier,
+      effectId: 'difficulty-mega-project-duration'
+    });
+  }
+  if (gameSettings.megaProjectCostMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'projectManager',
+      type: 'megaProjectCostMultiplier',
+      value: gameSettings.megaProjectCostMultiplier,
+      effectId: 'difficulty-mega-project-cost'
     });
   }
   if (gameSettings.popGrowthMultiplier !== 1) {

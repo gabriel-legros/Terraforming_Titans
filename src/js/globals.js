@@ -77,6 +77,8 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   researchCostMultiplier: 1,
   workerRequirementMultiplier: 1,
   projectDurationMultiplier: 1,
+  megaProjectDurationMultiplier: 1,
+  megaProjectCostMultiplier: 1,
   popGrowthMultiplier: 1,
   lifeGrowthMultiplier: 1,
   maintenanceCostMultiplier: 1,

@@ -104,7 +104,8 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
     if (!adjusted.colony) {
       adjusted.colony = {};
     }
-    adjusted.colony.superalloys = (adjusted.colony.superalloys || 0) + DYSON_OVERFLOW_SUPERALLOY_COST;
+    adjusted.colony.superalloys = (adjusted.colony.superalloys || 0) +
+      DYSON_OVERFLOW_SUPERALLOY_COST * projectManager.getMegaProjectCostMultiplier(this);
     return adjusted;
   }
 
