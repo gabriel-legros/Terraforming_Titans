@@ -99,6 +99,7 @@ class WarpGateCommand extends EffectableEntity {
     this.totalOperations = 0;
     this.totalArtifacts = 0;
     this.highestDifficulty = -1;
+    this.showArtifactsInSidebar = true;
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0, max: 900 },
       componentsEfficiency: { purchases: 0, max: 400 },
@@ -717,6 +718,7 @@ class WarpGateCommand extends EffectableEntity {
       return;
     }
     this.enabled = true;
+    this.syncArtifactResourceVisibility();
     warpGateNetworkManager.setWarpGateUnlocked(true);
     if (typeof showWGCTab === 'function') {
       showWGCTab();
@@ -808,6 +810,7 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   reapplyEffects() {
+    this.syncArtifactResourceVisibility();
     if (isCurrentWorldManagerDisabled('warpGateCommand')) {
       return;
     }
@@ -816,6 +819,15 @@ class WarpGateCommand extends EffectableEntity {
         this.applyUpgradeEffect(key);
       }
     }
+  }
+
+  syncArtifactResourceVisibility() {
+    resources.special.alienArtifact.showInSidebar = this.showArtifactsInSidebar;
+  }
+
+  setArtifactSidebarVisibility(show) {
+    this.showArtifactsInSidebar = show === true;
+    this.syncArtifactResourceVisibility();
   }
 
   update(_delta) {
@@ -1302,6 +1314,7 @@ class WarpGateCommand extends EffectableEntity {
       totalOperations: this.totalOperations,
       totalArtifacts: this.totalArtifacts,
       highestDifficulty: this.highestDifficulty,
+      showArtifactsInSidebar: this.showArtifactsInSidebar,
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact })),
       facilities: { ...this.facilities },
       facilityCooldown: this.facilityCooldown,
@@ -1423,6 +1436,7 @@ class WarpGateCommand extends EffectableEntity {
     this.totalOperations = data.totalOperations || 0;
     this.totalArtifacts = data.totalArtifacts || 0;
     this.highestDifficulty = typeof data.highestDifficulty === 'number' ? data.highestDifficulty : -1;
+    this.setArtifactSidebarVisibility(data.showArtifactsInSidebar !== false);
     this.operations.forEach((op, i) => {
       if (!Number.isFinite(op.baseEventsTotal) || op.baseEventsTotal <= 0) {
         op.baseEventsTotal = 10;

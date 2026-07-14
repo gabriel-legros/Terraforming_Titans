@@ -529,6 +529,7 @@ class Resource extends EffectableEntity {
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
     this.hideRate = resourceData.hideRate || false; // Flag to hide rate display in UI
+    this.showInSidebar = resourceData.showInSidebar !== false;
     this.showUndergroundRate = resourceData.showUndergroundRate === true;
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
     this.overflowLostHistory = [];
@@ -597,6 +598,9 @@ class Resource extends EffectableEntity {
     }
     if (config.hideRate !== undefined) {
       this.hideRate = config.hideRate;
+    }
+    if (config.showInSidebar !== undefined) {
+      this.showInSidebar = config.showInSidebar !== false;
     }
     if (config.showUndergroundRate !== undefined) {
       this.showUndergroundRate = config.showUndergroundRate === true;

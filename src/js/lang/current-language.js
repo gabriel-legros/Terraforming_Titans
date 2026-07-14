@@ -2711,6 +2711,7 @@ setLanguageData({
         singleRateWithUnit: '{current} {unit}',
         summary: {
           nanobots: 'Nanobots',
+          showNanobotsInSidebar: 'Show in sidebar',
           growthRate: 'Growth rate',
           energyAllocation: 'Energy allocation',
           growthBoost: 'Growth boost',
@@ -3914,6 +3915,7 @@ setLanguageData({
       completeQuest: 'Complete Quest',
       silenceQuestAlert: 'Silence quest alert',
       solisUi: {
+        showPointsInSidebar: 'Show in sidebar',
         shopTitle: 'Solis Shop',
         buyButton: 'Buy',
         buyWithMultiplier: 'Buy x{value}',
@@ -4043,6 +4045,8 @@ setLanguageData({
         statisticsTitle: 'Statistics',
         upgrade: 'Upgrade',
         purchase: 'Purchase ',
+        artifactBalance: 'Artifacts: {value}',
+        showArtifactsInSidebar: 'Show in sidebar',
         rdPurchaseTooltipIntro: 'Hold shift and click to buy as many as possible.',
         rdPurchaseTooltipAvailable: 'Available R&D upgrades (max level):',
         rdPurchaseTooltipEntry: '- {name} (Max {max})',
@@ -4133,7 +4137,7 @@ setLanguageData({
           skipVisualizer: 'Skip world visualizer initialization',
         },
         scriptAutomationTitle: 'Script Automation',
-        scriptAutomationTooltip: 'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. All conditions compare numerical values; boolean values (for example if something is enabled or not) take values 0 and 1. WAIT lines also test a condition, but they stay on that line until the condition becomes true. You should only use WAIT lines if you truly understand what it is doing, otherwise it is recommended to only use IF lines. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line, while GOTO Script jumps to row 1 of another script. Both use the same one-GOTO-per-tick limit.\n\n With automation scripting you now also have access to a new type of presets for buildings, colony and projects.  These are known as parametrized presets.  They are capable of taking a value as argument. \n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.',
+        scriptAutomationTooltip: 'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines and start new lines while fewer than 25 actions have run. Once a line starts, all its actions run even if the total goes over 25. One GOTO can take effect per tick. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. All conditions compare numerical values; boolean values (for example if something is enabled or not) take values 0 and 1. WAIT lines also test a condition, but they stay on that line until the condition becomes true. You should only use WAIT lines if you truly understand what it is doing, otherwise it is recommended to only use IF lines. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line, while GOTO Script jumps to row 1 of another script. Both use the same one-GOTO-per-tick limit.\n\n With automation scripting you now also have access to a new type of presets for buildings, colony and projects.  These are known as parametrized presets.  They are capable of taking a value as argument. \n\nUse Pause to stop without moving the current line, Step Once to execute one action at a time, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.',
         scriptVariables: {
           sources: {
             constant: 'Constant',
@@ -6627,6 +6631,8 @@ setLanguageData({
         orbitalDebris: { name: 'Orbital Debris' },
         systemDebris: { name: 'System Debris' },
         spaceships: { name: 'Spaceships' },
+        nanobots: { name: 'Nanobots' },
+        solisPoints: { name: 'Solis Points' },
         alienArtifact: { name: 'Alien artifact' },
         crusaders: { name: 'Crusaders' },
         warpCircuits: { name: 'Warp Circuits' },

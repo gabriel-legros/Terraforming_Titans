@@ -499,6 +499,60 @@
   background-color: transparent !important;
 }
 
+.wgc-rd-card-title {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.wgc-rd-artifact-controls {
+  display: contents;
+}
+
+.wgc-rd-artifact-balance {
+  grid-column: 2;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+
+.wgc-rd-artifact-toggle {
+  grid-column: 3;
+  justify-self: end;
+  font-size: 1em;
+  gap: 4px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.wgc-rd-artifact-toggle .ui-toggle__label {
+  min-width: 0;
+  color: var(--wgc-text-light) !important;
+  white-space: nowrap;
+}
+
+#wgc-rd-section {
+  container-type: inline-size;
+}
+
+@container (max-width: 420px) {
+  .wgc-rd-card-title {
+    grid-template-columns: auto 1fr;
+  }
+
+  .wgc-rd-artifact-balance {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .wgc-rd-artifact-toggle {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
+  }
+}
+
 /* Popup Dialog */
 .wgc-popup-overlay {
   position: fixed;

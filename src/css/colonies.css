@@ -772,6 +772,23 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   gap: 4px;
 }
 
+#nanocolony-container .nanotech-summary-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+#nanocolony-container .nanotech-sidebar-toggle {
+  gap: 6px;
+}
+
+#nanocolony-container .nanotech-sidebar-toggle .ui-toggle__label {
+  min-width: 0;
+  white-space: nowrap;
+}
+
 .colony-buoyancy-card .colony-buoyancy-capacity-row {
   flex-wrap: nowrap;
   gap: 8px;

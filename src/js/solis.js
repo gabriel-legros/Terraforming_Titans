@@ -31,7 +31,7 @@ class SolisManager extends EffectableEntity {
       superconductors: 100,
       food: 5,
     }, resourceValues);
-    this.solisPoints = 0;
+    this.showPointsInSidebar = false;
     this.rewardMultiplier = 1;
     this.currentQuest = null;
     this.lastQuestTime = 0;
@@ -72,6 +72,38 @@ class SolisManager extends EffectableEntity {
       automationScripting: { baseCost: 10000, purchases: 0, max: 1, enabled: false },
       autoTravel: { baseCost: 100000, purchases: 0, max: 1, enabled: false }
     };
+  }
+
+  ensureSolisPointsResource() {
+    if (!resources.special.solisPoints) {
+      const config = defaultPlanetParameters.resources.special.solisPoints;
+      resources.special.solisPoints = new Resource({
+        ...config,
+        name: 'solisPoints',
+        category: 'special',
+        displayName: config.displayName || config.name || t('catalogs.resources.special.solisPoints.name', {}, 'Solis Points')
+      });
+    }
+    return resources.special.solisPoints;
+  }
+
+  get solisPoints() {
+    return this.ensureSolisPointsResource().value;
+  }
+
+  set solisPoints(value) {
+    this.ensureSolisPointsResource().value = value;
+  }
+
+  syncSolisPointsResourceVisibility() {
+    const resource = this.ensureSolisPointsResource();
+    resource.unlocked = this.enabled && !isCurrentWorldManagerDisabled('solisManager');
+    resource.showInSidebar = this.showPointsInSidebar;
+  }
+
+  setPointsSidebarVisibility(show) {
+    this.showPointsInSidebar = show === true;
+    this.syncSolisPointsResourceVisibility();
   }
 
   isUpgradeEnabled(key) {
@@ -585,6 +617,7 @@ class SolisManager extends EffectableEntity {
   }
 
   reapplyEffects(options = {}) {
+    this.syncSolisPointsResourceVisibility();
     if (isCurrentWorldManagerDisabled('solisManager')) {
       return;
     }
@@ -838,6 +871,7 @@ class SolisManager extends EffectableEntity {
     const now = Date.now();
     return {
       solisPoints: this.solisPoints,
+      showPointsInSidebar: this.showPointsInSidebar,
       rewardMultiplier: this.rewardMultiplier,
       currentQuest: this.currentQuest,
       lastQuestTime: this.hasGeneratedQuest ? now : 0,
@@ -863,6 +897,7 @@ class SolisManager extends EffectableEntity {
 
   loadState(data) {
     this.solisPoints = data.solisPoints || 0;
+    this.setPointsSidebarVisibility(data.showPointsInSidebar === true);
     this.rewardMultiplier = this.clampRewardMultiplier(data.rewardMultiplier || 1);
     this.currentQuest = data.currentQuest;
     this.normalizeCurrentQuestQuantity();
@@ -911,6 +946,7 @@ class SolisManager extends EffectableEntity {
       return;
     }
     this.enabled = true;
+    this.syncSolisPointsResourceVisibility();
     if (typeof showSolisTab === 'function') {
       showSolisTab();
     }

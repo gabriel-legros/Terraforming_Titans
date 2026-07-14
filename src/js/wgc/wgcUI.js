@@ -2,6 +2,8 @@ let wgcTabVisible = false;
 let wgcUIInitialized = false;
 let wgcCopyStatsButton = null;
 let wgcTeamRulesInfoIcon = null;
+let wgcArtifactBalanceElement = null;
+let wgcArtifactSidebarToggle = null;
 const wgcPendingLogScroll = new Set();
 
 function getWGCText(path, fallback, vars) {
@@ -616,6 +618,29 @@ function createRDHeader() {
   div.appendChild(purchase);
 
   return div;
+}
+
+function createWGCArtifactSidebarControls() {
+  const controls = document.createElement('span');
+  controls.classList.add('wgc-rd-artifact-controls');
+
+  wgcArtifactBalanceElement = document.createElement('span');
+  wgcArtifactBalanceElement.classList.add('wgc-rd-artifact-balance');
+  controls.appendChild(wgcArtifactBalanceElement);
+
+  wgcArtifactSidebarToggle = createToggleButton({
+    onLabel: getWGCText('showArtifactsInSidebar', 'Show in sidebar'),
+    offLabel: getWGCText('showArtifactsInSidebar', 'Show in sidebar'),
+    isOn: warpGateCommand.showArtifactsInSidebar
+  });
+  wgcArtifactSidebarToggle.classList.add('wgc-rd-artifact-toggle');
+  wgcArtifactSidebarToggle.addEventListener('click', () => {
+    warpGateCommand.setArtifactSidebarVisibility(!warpGateCommand.showArtifactsInSidebar);
+    setToggleButtonState(wgcArtifactSidebarToggle, warpGateCommand.showArtifactsInSidebar);
+    updateResourceDisplay(resources, 0);
+  });
+  controls.appendChild(wgcArtifactSidebarToggle);
+  return controls;
 }
 
 function buildWGCRDPurchaseTooltipText() {
@@ -1332,7 +1357,7 @@ function generateWGCLayout() {
         </div>
         <div class="wgc-right">
           <div class="wgc-card" id="wgc-rd-section">
-            <h3>${getWGCText('rdTitle', 'R&D')}</h3>
+            <h3 class="wgc-rd-card-title"><span>${getWGCText('rdTitle', 'R&D')}</span><span id="wgc-rd-artifact-controls"></span></h3>
             <div id="wgc-rd-menu"></div>
           </div>
           <div class="wgc-card" id="wgc-facilities-section">
@@ -1358,6 +1383,7 @@ function initializeWGCUI() {
   const container = document.getElementById('wgc-hope');
   if (container) {
     container.innerHTML = generateWGCLayout();
+    container.querySelector('#wgc-rd-artifact-controls').replaceWith(createWGCArtifactSidebarControls());
     wgcTeamRulesInfoIcon = container.querySelector('#wgc-team-rules-info');
     const teamTooltip = attachDynamicInfoTooltip(wgcTeamRulesInfoIcon, teamRulesTooltip);
     if (teamTooltip) {
@@ -1612,6 +1638,14 @@ function updateOperationProgressSegments(op, refs) {
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   setTooltipText(wgcRDPurchaseTooltip, buildWGCRDPurchaseTooltipText(), wgcTooltipCache, 'wgcRDPurchase');
+  if (wgcArtifactBalanceElement) {
+    wgcArtifactBalanceElement.textContent = getWGCText('artifactBalance', 'Artifacts: {value}', {
+      value: formatNumber(resources.special.alienArtifact.value, false, 2)
+    });
+  }
+  if (wgcArtifactSidebarToggle) {
+    setToggleButtonState(wgcArtifactSidebarToggle, warpGateCommand.showArtifactsInSidebar);
+  }
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
     opEl.textContent = getWGCText('operationStatsCompleted', 'Operations Completed: {value}', {

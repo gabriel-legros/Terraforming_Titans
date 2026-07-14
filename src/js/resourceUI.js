@@ -1725,7 +1725,7 @@ function populateResourceElements(resources) {
 
 function unlockResource(resource) {
   if (resource.category === 'space') return;
-  if (resource.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
+  if (resource.unlocked && resource.showInSidebar && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
 
@@ -1839,7 +1839,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
       );
 
       let timer = smallValueTimers[resourceKey] || 0;
-      let showResource = resourceObj.unlocked && !isCurrentWorldResourceDisabled(resourceObj.category, resourceObj.name);
+      let showResource = resourceObj.unlocked
+        && resourceObj.showInSidebar
+        && !isCurrentWorldResourceDisabled(resourceObj.category, resourceObj.name);
 
       if (showResource) {
         const activityRate = (resourceObj.productionRate || 0) + (resourceObj.consumptionRate || 0);

@@ -629,6 +629,11 @@ class ScriptAutomation {
     const maxLines = forceStep ? 1 : this.maxLinesPerTick;
 
     while (linesEvaluated < maxLines) {
+      if (!forceStep && actionsUsed >= this.maxActionsPerTick) {
+        this.haltedReason = 'actionLimit';
+        this.lastStatus = 'Action limit reached';
+        break;
+      }
       const line = this.getCurrentLine(script);
       if (!line) {
         if (this.autoRestartOnCompletion) {
@@ -658,7 +663,7 @@ class ScriptAutomation {
           script,
           { actionsUsed, gotoUsed },
           this.pcActionIndex,
-          forceStep ? 1 : this.maxActionsPerTick,
+          forceStep ? 1 : Infinity,
           forceStep
         );
         actionsUsed = actionResult.actionsUsed;
@@ -692,7 +697,7 @@ class ScriptAutomation {
             script,
             { actionsUsed, gotoUsed },
             this.pcActionIndex,
-            forceStep ? 1 : this.maxActionsPerTick,
+            forceStep ? 1 : Infinity,
             forceStep
           );
           actionsUsed = actionResult.actionsUsed;
@@ -757,7 +762,7 @@ class ScriptAutomation {
           script,
           { actionsUsed, gotoUsed },
           this.pcActionIndex,
-          forceStep ? 1 : this.maxActionsPerTick,
+          forceStep ? 1 : Infinity,
           forceStep
         );
         actionsUsed = actionResult.actionsUsed;

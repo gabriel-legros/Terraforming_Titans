@@ -36,6 +36,7 @@ class NanotechManager extends EffectableEntity {
   constructor() {
     super({ description: getNanotechText('ui.colony.nanotech.managerDescription', 'Manages the nanobot swarm') });
     this.nanobots = 1; // starting nanobot count
+    this.showNanobotsInSidebar = false;
     this.siliconSlider = 10; // 0-10
     this.maintenanceSlider = 0; // 0-10
     this.glassSlider = 0; // 0-10
@@ -121,6 +122,38 @@ class NanotechManager extends EffectableEntity {
       stageSkullWarning: '',
       temperatureWarning: '',
     };
+  }
+
+  ensureNanobotsResource() {
+    if (!resources.special.nanobots) {
+      const config = defaultPlanetParameters.resources.special.nanobots;
+      resources.special.nanobots = new Resource({
+        ...config,
+        name: 'nanobots',
+        category: 'special',
+        displayName: config.displayName || config.name || t('catalogs.resources.special.nanobots.name', {}, 'Nanobots')
+      });
+    }
+    return resources.special.nanobots;
+  }
+
+  get nanobots() {
+    return this.ensureNanobotsResource().value;
+  }
+
+  set nanobots(value) {
+    this.ensureNanobotsResource().value = value;
+  }
+
+  syncNanobotsResourceVisibility() {
+    const resource = this.ensureNanobotsResource();
+    resource.unlocked = this.enabled && !isCurrentWorldManagerDisabled('nanotechManager');
+    resource.showInSidebar = this.showNanobotsInSidebar;
+  }
+
+  setNanobotsSidebarVisibility(show) {
+    this.showNanobotsInSidebar = show === true;
+    this.syncNanobotsResourceVisibility();
   }
 
   getExtraNanotechStages() {
@@ -865,6 +898,7 @@ class NanotechManager extends EffectableEntity {
       return;
     }
     this.enabled = true;
+    this.syncNanobotsResourceVisibility();
     this.markUIDirty();
   }
 
@@ -1144,7 +1178,10 @@ class NanotechManager extends EffectableEntity {
           <div id="nanotech-temperature-warning" class="nanotech-temperature-warning"></div>
           <div class="nanotech-summary-grid">
             <div class="nanotech-summary-card">
-              <span class="summary-label">${getNanotechText('ui.colony.nanotech.summary.nanobots', 'Nanobots')}</span>
+              <div class="nanotech-summary-label-row">
+                <span class="summary-label">${getNanotechText('ui.colony.nanotech.summary.nanobots', 'Nanobots')}</span>
+                <span id="nanobot-sidebar-toggle-container"></span>
+              </div>
               <div class="summary-value">
                 <span id="nanobot-count">1</span>
                 <span class="summary-divider">/</span>
@@ -1553,6 +1590,23 @@ class NanotechManager extends EffectableEntity {
     container.style.display = isManagerEffectivelyEnabled(this, 'nanotechManager') ? '' : 'none';
     const max = this.getMaxNanobots();
     const C = this.uiCache || {};
+    if (C.sidebarToggleContainer && !C.sidebarToggle) {
+      C.sidebarToggle = createToggleButton({
+        onLabel: getNanotechText('ui.colony.nanotech.summary.showNanobotsInSidebar', 'Show in sidebar'),
+        offLabel: getNanotechText('ui.colony.nanotech.summary.showNanobotsInSidebar', 'Show in sidebar'),
+        isOn: this.showNanobotsInSidebar
+      });
+      C.sidebarToggle.classList.add('nanotech-sidebar-toggle');
+      C.sidebarToggle.addEventListener('click', () => {
+        this.setNanobotsSidebarVisibility(!this.showNanobotsInSidebar);
+        setToggleButtonState(C.sidebarToggle, this.showNanobotsInSidebar);
+        updateResourceDisplay(resources, 0);
+      });
+      C.sidebarToggleContainer.appendChild(C.sidebarToggle);
+    }
+    if (C.sidebarToggle) {
+      setToggleButtonState(C.sidebarToggle, this.showNanobotsInSidebar);
+    }
     const stage2Active = this.isBooleanFlagSet('stage2_enabled');
     const stage3Active = this.isBooleanFlagSet('stage3_enabled');
     const stage4Active = this.isBooleanFlagSet('stage4_enabled');
@@ -2512,6 +2566,8 @@ class NanotechManager extends EffectableEntity {
       container,
       controls: Array.from(container.querySelectorAll('input, select')),
       temperatureWarningEl: qs('#nanotech-temperature-warning'),
+      sidebarToggleContainer: qs('#nanobot-sidebar-toggle-container'),
+      sidebarToggle: qs('.nanotech-sidebar-toggle'),
       countEl: qs('#nanobot-count'),
       capEl: qs('#nanobot-cap'),
       growthEl: qs('#nanobot-growth-rate'),
@@ -2614,6 +2670,7 @@ class NanotechManager extends EffectableEntity {
   ensureUICache(container) {
     const cacheNodes = [
       this.uiCache?.countEl,
+      this.uiCache?.sidebarToggleContainer,
       this.uiCache?.growthEl,
       this.uiCache?.siliconImpactEl,
       this.uiCache?.biomassImpactEl,
@@ -2646,6 +2703,7 @@ class NanotechManager extends EffectableEntity {
   saveState() {
     return {
       nanobots: this.nanobots,
+      showNanobotsInSidebar: this.showNanobotsInSidebar,
       travelNanobotFloor: this.getTravelNanobotFloor(),
       siliconSlider: this.siliconSlider,
       maintenanceSlider: this.maintenanceSlider,
@@ -2687,6 +2745,7 @@ class NanotechManager extends EffectableEntity {
   loadState(state) {
     if (!state) return;
     this.nanobots = state.nanobots || 1;
+    this.setNanobotsSidebarVisibility(state.showNanobotsInSidebar === true);
     this.travelNanobotFloor = Number.isFinite(state.travelNanobotFloor)
       ? Math.max(1, state.travelNanobotFloor)
       : Math.max(1, Math.min(this.nanobots, this.getTravelPreserveCap()));
@@ -2732,6 +2791,7 @@ class NanotechManager extends EffectableEntity {
 
   reset() {
     this.nanobots = 1;
+    this.showNanobotsInSidebar = false;
     this.travelNanobotFloor = 1;
     this.siliconSlider = 10;
     this.maintenanceSlider = 0;
@@ -2801,10 +2861,12 @@ class NanotechManager extends EffectableEntity {
     this.maxGraphitePercent = 10;
     this.maxGraphiteAbsolute = 1e6;
     this.graphiteLimitMode = 'percent';
+    this.syncNanobotsResourceVisibility();
     this.markUIDirty();
   }
 
   reapplyEffects() {
+    this.syncNanobotsResourceVisibility();
     if (isCurrentWorldManagerDisabled('nanotechManager')) {
       return;
     }

@@ -92,11 +92,12 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - General setting `Autobuild ignores auto-upgrade colonies` makes the autobuilder skip building colony structures that have Auto-upgrade checked and an available next tier, while leaving their auto-upgrade behavior active.
 - Construction Office guide: `autobuild.js` opens a numbered Autobuild Guide popup from the Construction Office question-mark button, using `assets/autobuild_guide/overall.png` with CSS callout markers and localized guide copy. Completing Construction Office research for the first time shows a once-per-save prompt that can open this guide immediately.
 - Milestones: `milestones.js`, `milestonesUI.js`
-- Solis shop/quests: `solis.js`, `solisUI.js`
+- Solis shop/quests: `solis.js`, `solisUI.js`. Solis Points is a preserved special resource; `SolisManager` migrates legacy saves and owns its saved, default-off resource-sidebar visibility preference. Resource sidebar preferences are synchronized to the generic `Resource.showInSidebar` flag by the owning manager.
 - Patience: `hope/patienceUI.js` (terraforming patience banking/claim UI)
 - Life Automation: Growth Temperature Tolerance supports an `Aiming for` substep cap mode with selectable zones and a target growth multiplier, defaulting to `0.95`; it spends enough points for the selected zones' daytime temperature growth multipliers to reach the target.
 - Life Designer deployment uses its Deploy button as the progress fill and cancel control while a design is applying. The edit-control and deployment rows retain their space throughout repeated late-game deployments so the surrounding UI does not jump.
 - Automation scripting variables: `script-automation.js`, `script-variable-registry.js`, and `automationScriptUI.js` expose numeric variables A-Z through the scripting registry and script variables A-Z for `GOTO Script`; Set Variable can assign numeric expressions or script selections, values persist in saves, and both variable types reset on planet travel.
+- Script automation applies its 25-action-per-tick limit between lines: normal execution finishes every action on a line once that line starts, even when doing so exceeds 25 actions. Step Once remains limited to one action per click.
 - Automation target encounters: `automation-encounter-manager.js` persists shared encountered IDs for ship, building, project, colony, and research automation. Current available targets and targets referenced by saved/imported presets count as encountered, keeping them selectable after travel or when temporarily unavailable.
 - Achievements: `src/js/save-settings/achievements.js`, `src/js/save-settings/achievementsSubtab.js` (derived Save & Settings achievement list)
 - Steam achievements: Steam builds initialize `steamworks.js` in `electron/main.cjs` only when packaged with `GAME_BUILD_TARGET = 'steam'`; `AchievementManager` publishes uppercase versions of its internal ids through `window.steamAchievements` on unlock/load resync, and the Electron main process also uppercases before calling Steam.
@@ -295,6 +296,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.
+- Nanobots are a preserved special resource; `NanotechManager` migrates legacy saves and owns its saved, default-off resource-sidebar visibility preference.
 - Growth requires surplus power; max bots scale with land area; only `1e15` persist through travel.
 - Sliders control growth tradeoffs (silica, maintenance, glass, later stage options).
 - Silica/metal allocation supports production percent or absolute caps.

@@ -24,8 +24,24 @@
 }
 
 #solis-points-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     font-size: 1.2em;
     font-weight: bold;
+}
+
+.solis-points-sidebar-toggle {
+    gap: 6px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    transform: translateY(3px);
+}
+
+.solis-points-sidebar-toggle .ui-toggle__label {
+    min-width: 0;
+    white-space: nowrap;
 }
 
 .solis-quest-area {
