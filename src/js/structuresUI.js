@@ -1103,8 +1103,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     upgradeButton.addEventListener('click', function () {
       const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
       if (structure.upgrade(upgrades)) {
+        if (gameSettings.colonyUpgradeUnchecksAutobuild) {
+          autoBuildCheckbox.checked = false;
+          structure.autoBuildEnabled = false;
+        }
         if (isColony) {
-        updateStructureDisplay(colonies);
+          updateStructureDisplay(colonies);
         } else {
           updateBuildingDisplay(buildings);
         }
@@ -1713,7 +1717,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoUpgradeCheckbox.classList.add('auto-upgrade-checkbox');
     autoUpgradeCheckbox.addEventListener('change', () => {
       structure.autoUpgradeEnabled = autoUpgradeCheckbox.checked;
-      if (autoUpgradeCheckbox.checked && isColony && gameSettings.colonyUpgradeUnchecksAutobuild) {
+      if (autoUpgradeCheckbox.checked && gameSettings.colonyUpgradeUnchecksAutobuild) {
         autoBuildCheckbox.checked = false;
         structure.autoBuildEnabled = false;
       }

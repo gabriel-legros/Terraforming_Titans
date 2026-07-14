@@ -89,6 +89,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Mega Heat Sink and Planetary Thrusters are infrastructure projects; their gameplay identities and project ids remain unchanged.
 - Shared project assignment controls: `projects/ProjectAssignmentBase.js` centralizes BigInt assignment normalization, auto-assignment weights, step controls, row button wiring, and save/preset serialization for Manufacturing World, Lifters, Hephaestus Yards, and Nuclear Alchemy-style projects.
 - Autobuild: `autobuild.js`
+- General setting `Upgrading any building also unchecks autobuild` disables autobuild when the player manually enables Auto-upgrade or successfully performs a manual upgrade, including Fusion Power Plant upgrades to Superalloy Fusion Reactors. Automation presets and automated upgrade execution do not trigger it.
 - General setting `Autobuild ignores auto-upgrade colonies` makes the autobuilder skip building colony structures that have Auto-upgrade checked and an available next tier, while leaving their auto-upgrade behavior active.
 - Construction Office guide: `autobuild.js` opens a numbered Autobuild Guide popup from the Construction Office question-mark button, using `assets/autobuild_guide/overall.png` with CSS callout markers and localized guide copy. Completing Construction Office research for the first time shows a once-per-save prompt that can open this guide immediately.
 - Milestones: `milestones.js`, `milestonesUI.js`

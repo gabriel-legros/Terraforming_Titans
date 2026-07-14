@@ -4952,7 +4952,7 @@ setLanguageData({
       automationSafetyRestoreNo: 'No',
       automationSafetyRestoreAlwaysOff: 'Always turn off automation and do not appear again.',
       autobuildSetActive: 'Checking autobuild also checks Set Active to Target',
-      colonyUpgradeUnchecksAutobuild: 'Checking Colony Upgrade unchecks autobuild',
+      colonyUpgradeUnchecksAutobuild: 'Upgrading any building also unchecks autobuild',
       autobuildIgnoreAutoUpgradeColonies: 'Autobuild ignores auto-upgrade colonies',
       roundBuildingConstruction: 'Round building construction',
       roundBuildingConstructionTooltip: 'When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.',
