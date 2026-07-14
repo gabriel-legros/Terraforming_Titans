@@ -210,6 +210,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Project automation must not create speculative spare apply rows; stale assignment rows are prepared for reuse before current assignments are rendered.
 - Atlas world cards, skill tree buttons, invasion trait/reward summaries, resource tooltip rows, statistics rows, artificial world history, import/export rule rows, and several project/space controls now use cached/reconciled DOM.
 - The fleet capacity tooltip in Galaxy Logistics reuses its header, source rows, and total row instead of clearing `innerHTML`.
+- Galaxy operation arrows are reconciled by operation key. Preserve their cached geometry and update/remove only arrows whose operation or endpoints changed; do not rebuild the arrow layer during recurring panel refreshes.
 - When extending these systems, preserve the reconciliation strategy already in the file.
 
 ### Mutation-Observer Report Triage

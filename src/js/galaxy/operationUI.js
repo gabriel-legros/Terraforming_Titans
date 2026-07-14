@@ -1,4 +1,5 @@
 const GalaxyOperationUI = (() => {
+    const OPERATION_ARROW_LINE_WIDTH = 4;
     const operationsAllocations = new Map();
     const operationsStepSizes = new Map();
     const operationsAutoStates = new Map();
@@ -1394,29 +1395,36 @@ const GalaxyOperationUI = (() => {
     function updateOperationArrows(managerOverride, cacheOverride) {
         const cache = cacheOverride || getCache();
         const manager = managerOverride || getManager();
-        if (!cache || !cache.operationArrows) {
-            return;
-        }
-        cache.operationArrows.forEach((arrow) => {
-            if (arrow?.isConnected) {
-                arrow.remove();
-            }
-        });
-        cache.operationArrows.clear();
         if (!cache || !cache.mapOperationsLayer || !cache.operationArrows) {
             return;
         }
-        const doc = cache.mapOperationsLayer.ownerDocument || globalThis.document;
-        if (!doc || !manager || !manager.enabled) {
+        const operations = manager && manager.enabled
+            ? manager.operationManager?.operations
+            : null;
+        const signatureParts = [];
+        operations?.forEach?.((operation) => {
+            if (!operation || operation.status !== 'running') {
+                return;
+            }
+            const origin = operation.originHex;
+            signatureParts.push(`${operation.sectorKey}|${operation.factionId || 'uhf'}|${origin?.q ?? ''},${origin?.r ?? ''}`);
+        });
+        const operationSignature = signatureParts.join(';');
+        if (cache.operationArrowSignature === operationSignature) {
             return;
         }
+        cache.operationArrowSignature = operationSignature;
+
         const arrowCache = cache.operationArrows;
+        const activeArrowKeys = new Set();
+        const doc = cache.mapOperationsLayer.ownerDocument || globalThis.document;
         const hexLookup = cache.hexLookup;
-        cache.mapOperationsLayer.replaceChildren();
-        const operations = manager.operationManager?.operations;
-        if (!operations || typeof operations.forEach !== 'function') {
+        if (!doc || !operations) {
+            arrowCache.forEach((arrow) => arrow.remove());
+            arrowCache.clear();
             return;
         }
+
         operations.forEach((operation) => {
             if (!operation || operation.status !== 'running') {
                 return;
@@ -1448,8 +1456,8 @@ const GalaxyOperationUI = (() => {
             }
             const unitX = deltaX / distance;
             const unitY = deltaY / distance;
-            const originTrim = (originHex.offsetWidth || 0) * 0.35;
-            const targetTrim = (targetHex.offsetWidth || 0) * 0.35;
+            const originTrim = originHex.galaxyDisplayWidth * 0.35;
+            const targetTrim = targetHex.galaxyDisplayWidth * 0.35;
             const adjustedStartX = startX + (unitX * originTrim);
             const adjustedStartY = startY + (unitY * originTrim);
             const adjustedEndX = endX - (unitX * targetTrim);
@@ -1461,31 +1469,46 @@ const GalaxyOperationUI = (() => {
                 return;
             }
 
-            const arrow = doc.createElement('div');
-            arrow.className = 'galaxy-operation-arrow';
-            arrow.dataset.sector = sectorKey;
             const factionId = typeof operation.factionId === 'string' && operation.factionId
                 ? operation.factionId
                 : null;
             const factionColor = factionId
                 ? manager.getFaction?.(factionId)?.color
                 : null;
-            if (typeof factionColor === 'string' && factionColor) {
+            const angleDeg = Math.atan2(adjustedDeltaY, adjustedDeltaX) * (180 / Math.PI);
+            const arrowKey = `${sectorKey}|${operation.factionId || 'uhf'}`;
+            activeArrowKeys.add(arrowKey);
+            let arrow = arrowCache.get(arrowKey);
+            if (!arrow) {
+                arrow = doc.createElement('div');
+                arrow.className = 'galaxy-operation-arrow';
+                arrow.dataset.sector = sectorKey;
+                arrowCache.set(arrowKey, arrow);
+                cache.mapOperationsLayer.appendChild(arrow);
+            }
+
+            const geometrySignature = `${adjustedStartX}|${adjustedStartY}|${adjustedDistance}|${angleDeg}|${factionColor || ''}`;
+            if (arrow.galaxyGeometrySignature === geometrySignature) {
+                return;
+            }
+            arrow.galaxyGeometrySignature = geometrySignature;
+            if (factionColor) {
                 arrow.style.setProperty('--operation-arrow-color', factionColor);
             } else {
                 arrow.style.removeProperty('--operation-arrow-color');
             }
             arrow.style.left = `${adjustedStartX}px`;
+            arrow.style.top = `${adjustedStartY - (OPERATION_ARROW_LINE_WIDTH / 2)}px`;
             arrow.style.width = `${adjustedDistance}px`;
-
-            cache.mapOperationsLayer.appendChild(arrow);
-            const arrowHalfHeight = (arrow.offsetHeight || 0) / 2;
-            arrow.style.top = `${adjustedStartY - arrowHalfHeight}px`;
-            const angleDeg = Math.atan2(adjustedDeltaY, adjustedDeltaX) * (180 / Math.PI);
             arrow.style.transform = `rotate(${angleDeg}deg)`;
+        });
 
-            const arrowKey = `${sectorKey}|${operation.factionId || 'uhf'}`;
-            arrowCache.set(arrowKey, arrow);
+        arrowCache.forEach((arrow, arrowKey) => {
+            if (activeArrowKeys.has(arrowKey)) {
+                return;
+            }
+            arrow.remove();
+            arrowCache.delete(arrowKey);
         });
     }
 

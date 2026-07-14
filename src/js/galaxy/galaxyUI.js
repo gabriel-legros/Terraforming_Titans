@@ -83,7 +83,6 @@ if (!galaxyOperationUI && typeof globalThis !== 'undefined' && globalThis.Galaxy
     galaxyOperationUI = globalThis.GalaxyOperationUI;
 }
 
-const OPERATION_ARROW_LINE_WIDTH = 4;
 const OPERATION_ARROW_MARGIN = 24;
 const OPERATION_ARROW_MIN_LENGTH = 18;
 const GALAXY_MAP_REFRESH_INTERVAL_MS = 1000;
@@ -520,6 +519,7 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     hex.galaxyKey = key;
     hex.galaxyCenterX = centerX;
     hex.galaxyCenterY = centerY;
+    hex.galaxyDisplayWidth = displayWidth;
     hex.dataset.controlSignature = '';
     hex.dataset.storySignature = '';
     hex.dataset.defenseSignature = '';
@@ -2038,6 +2038,7 @@ function clearOperationArrows(cache) {
         }
     });
     cache.operationArrows.clear();
+    cache.operationArrowSignature = '';
 }
 
 
@@ -3384,6 +3385,7 @@ function cacheGalaxyElements() {
         hexElements,
         hexLookup,
         operationArrows: new Map(),
+        operationArrowSignature: '',
         selectedHex: null,
         selectedSector: null
     };
