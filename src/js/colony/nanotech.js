@@ -1598,8 +1598,8 @@ class NanotechManager extends EffectableEntity {
       });
       C.sidebarToggle.classList.add('nanotech-sidebar-toggle');
       C.sidebarToggle.addEventListener('click', () => {
-        this.setNanobotsSidebarVisibility(!this.showNanobotsInSidebar);
-        setToggleButtonState(C.sidebarToggle, this.showNanobotsInSidebar);
+        nanotechManager.setNanobotsSidebarVisibility(!nanotechManager.showNanobotsInSidebar);
+        setToggleButtonState(C.sidebarToggle, nanotechManager.showNanobotsInSidebar);
         updateResourceDisplay(resources, 0);
       });
       C.sidebarToggleContainer.appendChild(C.sidebarToggle);
