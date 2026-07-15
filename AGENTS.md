@@ -64,7 +64,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - `scripts/build-steam-playtest.sh` advances a stable version to the next patch at `playtest.1`, then increments the Playtest number on later builds. For example: `1.1.0` -> `1.1.1-playtest.1` -> `1.1.1-playtest.2`. The Playtest upload script calls this build script and therefore advances the version too.
 - `scripts/build-steam.sh` promotes the current Playtest version to its stable version, or increments the patch when the current version is already stable. For example: `1.1.1-playtest.2` -> `1.1.1` -> `1.1.2`. The production upload script calls this build script and therefore advances the version too.
 - Uploads with `SKIP_STEAM_BUILD=1` do not change the version. Set `SKIP_VERSION_BUMP=1` when rebuilding or retrying the current version without advancing it.
-- Direct browser and Steam builds verify that all three version files agree before packaging.
+- Direct browser and Steam builds verify that all three source version files agree before packaging. Browser builds use the current version without the `-playtest.N` suffix in the generated artifact and do not increment the source version.
 
 ## Key Systems
 - Skills: `skills.js`, `skillsUI.js`
