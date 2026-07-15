@@ -149,7 +149,7 @@ function startEarthCredits() {
     grid.style.fontSize = 'clamp(16px, 2.4vw, 28px)';
     grid.style.lineHeight = '1.45';
 
-    const playtesters = ['Bart', 'DeltaOne', 'DreamIVerse', 'FlareTCW', 'FunnyMan', 'JamesM', 'Jebarus', 'Krisy Cross', 'Lewistodd1881', 'Lunyaru', 'Milena', 'Nebula', 'pg132', 'Pokey', 'Senn', 'Shirow'];
+    const playtesters = ['Awesomepants', 'Bart', 'blacksail', 'Citizen Power', 'DeltaOne', 'DreamIVerse', 'FlareTCW', 'FunnyMan', 'JamesM', 'Jebarus', 'Krisy Cross', 'Lewistodd1881', 'Lunyaru', 'Milena', 'Nebula', 'Neritar', 'OFHIDDENTHINGS', 'pg132', 'Pokey', 'Senn', 'Shirow', 'Vivianne'];
     for (let i = 0; i < playtesters.length; i++) {
       const name = document.createElement('div');
       name.textContent = playtesters[i];
